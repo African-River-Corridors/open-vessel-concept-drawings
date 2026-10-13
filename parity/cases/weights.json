@@ -141,6 +141,7 @@
       "id": "calculate_weights/error/no_beam_left",
       "tier": 3,
       "reason": "tier 3: error path: its tank arrangement has no beam left",
+      "knife_edge": "the error message prints the beam, side clearance and gap inputs as raw floats, so any nudge changes the text; no branch is near its edge, and Rust prints the same decimal inputs the same way (Python float formatting helper)",
       "input": {
         "fn": "calculate_weights",
         "args": {

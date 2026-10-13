@@ -8,4 +8,6 @@ pub mod vdesign;
 
 pub use eval::{ENTRY_POINTS, EvalError, eval};
 pub use profile::Profile;
-pub use vdesign::{Checked, Design, DesignOption, Report, Source, StoredInput, check, new_design};
+pub use vdesign::{
+    Checked, Design, DesignOption, Report, Source, StoredInput, check, fill, new_design,
+};

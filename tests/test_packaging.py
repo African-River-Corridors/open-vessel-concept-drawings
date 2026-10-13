@@ -52,13 +52,17 @@ def test_numpy_is_not_a_dependency():
 
 
 def test_no_package_module_imports_numpy():
-    hits = [p.name for p in (ROOT / "src").rglob("*.py") if re.search(r"^\s*(import|from)\s+numpy", p.read_text(encoding="utf-8"), re.M)]
+    files = list((ROOT / "src").rglob("*.py"))
+    assert files, "no package modules found: scanning nothing"
+    hits = [p.name for p in files if re.search(r"^\s*(import|from)\s+numpy", p.read_text(encoding="utf-8"), re.M)]
     assert not hits, hits
 
 
 def test_calculator_is_gone_from_the_package():
     assert not (ROOT / "src/vessel_designer/core/calculator.py").exists()
-    for p in (ROOT / "src").rglob("*.py"):
+    files = list((ROOT / "src").rglob("*.py"))
+    assert files, "no package modules found: scanning nothing"
+    for p in files:
         assert not re.search(r"core\.calculator|import calculator|from \.calculator", p.read_text(encoding="utf-8")), p
 
 
@@ -129,3 +133,11 @@ def test_nothing_publishes_to_pypi():
         text = path.read_text(encoding="utf-8").lower()
         for banned in ("pypi-publish", "twine", "maturin publish", "id-token", "environment: pypi"):
             assert banned not in text, f"{path.name}: {banned}"
+
+
+def test_wheel_job_skips_the_tests_that_scan_files_it_does_not_copy():
+    """The wheel job copies tests/, examples/, calibration/ and catalogue/ only. A test that
+    scans src/ or parity/ would scan zero files there, so the job must skip it."""
+    text = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+    for name in ("test_core_boundary.py", "test_test_audit.py"):
+        assert f"--ignore=tests/{name}" in text, name

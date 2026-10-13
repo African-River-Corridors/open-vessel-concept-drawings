@@ -8,4 +8,5 @@ license.workspace = true
 publish = false
 
 [dependencies]
+ovcd-format.workspace = true # parity::parse refuses integers outside the 64-bit range
 serde_json.workspace = true

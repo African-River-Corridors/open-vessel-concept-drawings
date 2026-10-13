@@ -236,6 +236,7 @@
       "id": "check_protective_location/quickstart",
       "tier": 1,
       "reason": "tier 1: named case: protective location of the quickstart run (examples/quickstart.py: CN_II_motor 90 x 14.8 m, depth 6.5 m, LPG_propane)",
+      "knife_edge": "the quickstart barge meets its clearances exactly: side 1.0 m against d(Vc) = 1.0 m, bottom 0.5 + 0.5 = 1.0 m against max(14.8 / 15, 1.0) = 1.0 m, so a hair less fails cs_ok and cb_ok; every value is an exact constant or an exact sum, so Rust compares the same doubles. Kept: it is the quickstart run",
       "input": {
         "fn": "check_protective_location",
         "args": {

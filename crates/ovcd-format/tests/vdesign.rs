@@ -1,7 +1,7 @@
 //! Seam 4: a `.vdesign` file in, a Design as used and its validation report out. Defaults, hard
 //! and soft ranges, the depth message, the convoy Formation, and the Defaults Profile.
 
-use ovcd_format::{Profile, Source, check, new_design};
+use ovcd_format::{Profile, Source, check, fill, new_design};
 use serde_json::{Value, json};
 
 fn design_with(inputs: Value) -> String {
@@ -30,14 +30,17 @@ fn with(mut inputs: Value, name: &str, value: Value) -> Value {
     inputs
 }
 
+// `errors` and `warnings` fill in the left-out inputs first, as `ovcd fill` does, so each test
+// sees only the problem it is about. `check` alone also refuses the left-out inputs.
+
 fn errors(inputs: Value) -> Vec<String> {
-    check(&design_with(inputs), &Profile::built_in())
+    fill(&design_with(inputs), &Profile::built_in())
         .report
         .errors
 }
 
 fn warnings(inputs: Value) -> Vec<String> {
-    check(&design_with(inputs), &Profile::built_in())
+    fill(&design_with(inputs), &Profile::built_in())
         .report
         .warnings
 }
@@ -59,7 +62,7 @@ fn used(inputs: Value, name: &str) -> (Value, Source) {
 #[test]
 fn a_new_design_round_trips_through_its_own_text_unchanged() {
     let profile = Profile::built_in();
-    let design = new_design(&profile);
+    let design = new_design(&profile).unwrap();
     let checked = check(&design.to_text(), &profile);
     assert_eq!(checked.report.errors, Vec::<String>::new());
     assert_eq!(checked.report.warnings, Vec::<String>::new());
@@ -129,14 +132,70 @@ fn an_input_not_used_by_the_cargo_containment_is_ignored_with_a_warning() {
 }
 
 #[test]
-fn an_input_left_out_of_the_file_is_defaulted_with_a_warning() {
+fn fill_writes_a_left_out_input_in_with_a_warning() {
     let w = warnings(required("bauxite"));
     assert!(
         has(
             &w,
-            "`block_coefficient` is not stored in the file; using the Defaults Profile value 0.85"
+            "`block_coefficient` was not stored in the file; wrote in the Defaults Profile value \
+             0.85, marked default"
         ),
         "{w:?}"
+    );
+}
+
+#[test]
+fn check_refuses_a_file_that_leaves_out_optional_inputs_and_names_them() {
+    let e = check(&design_with(required("bauxite")), &Profile::built_in())
+        .report
+        .errors;
+    assert_eq!(e.len(), 1, "{e:?}");
+    assert!(
+        has(
+            &e,
+            "Option 'A': inputs not stored in the file: cargo_containment, block_coefficient, \
+             min_freeboard_m, lightship_factor_t_per_m3, propulsive_efficiency"
+        ),
+        "{e:?}"
+    );
+    assert!(has(&e, "run `ovcd fill`"), "{e:?}");
+}
+
+#[test]
+fn a_filled_file_stores_every_input_as_used_and_then_passes_check() {
+    let profile = Profile::built_in();
+    let filled = fill(&design_with(required("LNG")), &profile);
+    assert!(filled.report.is_ok(), "{:?}", filled.report);
+    let design = filled.design.unwrap();
+    assert_eq!(
+        design.options[0].input("fill_ratio").unwrap().source,
+        Source::Default
+    );
+    assert_eq!(design.defaults_profile.as_deref(), Some("built-in"));
+    let text = design.to_text();
+    let checked = check(&text, &profile);
+    assert_eq!(checked.report.errors, Vec::<String>::new());
+    assert_eq!(checked.design.unwrap(), design);
+}
+
+#[test]
+fn a_profile_edit_never_changes_the_inputs_of_a_filled_file() {
+    let text = fill(&design_with(required("bauxite")), &Profile::built_in())
+        .design
+        .unwrap()
+        .to_text();
+    let edited = edited_profile(|p| {
+        p["inputs"]["block_coefficient"]["default"] = json!(0.9);
+        p["inputs"]["min_freeboard_m"]["default"] = json!(0.5);
+    })
+    .unwrap();
+    let before = check(&text, &Profile::built_in()).design.unwrap();
+    let after = check(&text, &edited);
+    assert!(after.report.is_ok(), "{:?}", after.report);
+    assert_eq!(after.design.unwrap(), before);
+    assert_eq!(
+        before.options[0].input("block_coefficient").unwrap().value,
+        json!(0.85)
     );
 }
 
@@ -313,7 +372,7 @@ fn several_options_are_each_checked_by_name() {
             { "name": "Wide", "inputs": with(required("LNG"), "beam_m", json!(-1.0)) }
         ]
     });
-    let checked = check(&two.to_string(), &p);
+    let checked = fill(&two.to_string(), &p);
     assert_eq!(checked.design.unwrap().options.len(), 2);
     assert!(has(&checked.report.errors, "Option 'Wide': `beam_m` = -1"));
     assert!(!has(&checked.report.errors, "Option 'Short'"));
@@ -362,7 +421,7 @@ fn a_profile_missing_a_default_is_refused() {
 #[test]
 fn an_edited_profile_range_changes_warnings_but_never_the_stored_inputs() {
     let profile = Profile::built_in();
-    let saved = new_design(&profile).to_text();
+    let saved = new_design(&profile).unwrap().to_text();
     let mut p: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
     p["inputs"]["block_coefficient"]["default"] = json!(0.9);
     p["inputs"]["block_coefficient"]["soft"] = json!({ "min": 0.88, "max": 1.0 });
@@ -381,7 +440,7 @@ fn a_whole_number_default_in_an_edited_profile_still_round_trips() {
     let mut p: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
     p["inputs"]["max_speed_kn"]["default"] = json!(12);
     let edited = Profile::from_json(&p.to_string()).unwrap();
-    let design = new_design(&edited);
+    let design = new_design(&edited).unwrap();
     assert_eq!(check(&design.to_text(), &edited).design.unwrap(), design);
 }
 
@@ -545,12 +604,12 @@ fn a_profile_with_a_keyed_default_outside_its_hard_range_is_refused() {
 
 #[test]
 fn a_new_design_records_the_name_of_the_profile_it_came_from() {
-    let built_in = new_design(&Profile::built_in());
+    let built_in = new_design(&Profile::built_in()).unwrap();
     assert_eq!(built_in.defaults_profile.as_deref(), Some("built-in"));
     let mine = edited_profile(|p| p["name"] = json!("my-yard")).expect("profile loads");
     assert_eq!(mine.name(), "my-yard");
     assert_eq!(
-        new_design(&mine).defaults_profile.as_deref(),
+        new_design(&mine).unwrap().defaults_profile.as_deref(),
         Some("my-yard")
     );
 }
@@ -641,4 +700,86 @@ fn a_profile_hard_range_that_admits_only_values_the_built_in_admits_loads() {
     for (name, hard) in tighter {
         assert!(loads_with_hard(name, hard.clone()), "{name} {hard} refused");
     }
+}
+
+#[test]
+fn a_profile_whose_defaults_break_a_cross_check_cannot_make_a_new_design() {
+    // Loads: a 4 m freeboard suits a deep hull. But the 3.5 m starter hull cannot keep it.
+    let deep = edited_profile(|p| p["inputs"]["min_freeboard_m"]["default"] = json!(4.0))
+        .expect("profile loads");
+    let err = new_design(&deep).unwrap_err();
+    assert!(
+        err.contains("`min_freeboard_m` = 4 must be less than `moulded_depth_m` = 3.5"),
+        "{err}"
+    );
+}
+
+// Physically impossible results. The frozen Python copies them faithfully (the core adds no
+// checks), so validation refuses the inputs that lead there. Rule: the dry-bulk hold section
+// must not be negative. Its width is the beam less the two fixed 1 m wing voids; its height is
+// the moulded depth less the 1.2 m double bottom plus the 1 m coaming (frozen
+// `barge_capacity._bulk_volumetric`). A negative width or height gives a negative cargo mass
+// and draught. A zero section gives zero cargo, which the engine reports as a failed check.
+
+fn bulk(containment: &str, beam: f64, depth: f64) -> Value {
+    let mut inputs = with(required("bauxite"), "cargo_containment", json!(containment));
+    inputs["beam_m"] = json!(beam);
+    inputs["moulded_depth_m"] = json!(depth);
+    inputs["min_freeboard_m"] = json!(0.0);
+    inputs
+}
+
+#[test]
+fn a_one_metre_beam_dry_bulk_hold_is_refused_for_its_negative_hold_width() {
+    for containment in ["box_hold", "sloped_hopper_hold"] {
+        let e = errors(bulk(containment, 1.0, 3.5));
+        assert!(
+            has(
+                &e,
+                "`beam_m` = 1 leaves a hold width of -1 m after the two 1 m wing voids; a \
+                 negative hold gives a negative cargo mass and draught (hard limit)"
+            ),
+            "{containment}: {e:?}"
+        );
+    }
+}
+
+#[test]
+fn a_dry_bulk_hold_width_of_exactly_zero_passes_and_just_below_is_refused() {
+    for containment in ["box_hold", "sloped_hopper_hold"] {
+        assert_eq!(errors(bulk(containment, 2.0, 3.5)), Vec::<String>::new());
+        let below = f64::from_bits(2.0f64.to_bits() - 1);
+        assert!(
+            has(
+                &errors(bulk(containment, below, 3.5)),
+                "leaves a hold width"
+            ),
+            "{containment}"
+        );
+    }
+}
+
+#[test]
+fn a_moulded_depth_that_leaves_a_negative_hold_height_is_refused() {
+    for containment in ["box_hold", "sloped_hopper_hold"] {
+        let e = errors(bulk(containment, 11.4, 0.1));
+        assert!(
+            has(
+                &e,
+                "`moulded_depth_m` = 0.1 leaves a hold height of -0.1 m (depth less the 1.2 m \
+                 double bottom, plus the 1 m coaming); a negative hold gives a negative cargo \
+                 mass and draught (hard limit)"
+            ),
+            "{containment}: {e:?}"
+        );
+        assert_eq!(errors(bulk(containment, 11.4, 0.2)), Vec::<String>::new());
+    }
+}
+
+#[test]
+fn a_one_metre_beam_gas_barge_is_not_refused_by_the_hold_rule() {
+    // Type C tanks have no wing voids; a too-narrow gas hull returns zero cargo, not a negative.
+    let mut inputs = required("LNG");
+    inputs["beam_m"] = json!(1.0);
+    assert!(!has(&errors(inputs), "hold"));
 }

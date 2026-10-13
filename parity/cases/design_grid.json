@@ -83,6 +83,7 @@
       "id": "sweep/70_80_90_beams_12_14",
       "tier": 1,
       "reason": "tier 1: inputs of audited test test_design_grid.py::test_cargo_monotonic_in_length (issue #8)",
+      "knife_edge": "the 14 m beam cells give a full-beam tank of 14.0 - 2 x 1.0 = 12.0 m OD, exactly on the 12 m tank cap, so a hair more beam moves to the capped arrangement; the subtraction is exact in binary, so Rust lands on the same side. Kept: it is the audited test's own input",
       "input": {
         "fn": "sweep",
         "args": {
