@@ -321,6 +321,17 @@ fn a_weight_split_difference_of_exactly_one_tonne_adds_no_note() {
 }
 
 #[test]
+fn block_coefficient_and_water_density_both_scale_the_draught() {
+    // Python: assess(r, payload, block_coefficient=0.8, water_density=1.025)
+    let a = assess(&narrow_deep(), PAYLOAD, 0.8, 1.025, DEFAULT_CRITERIA_SET).unwrap();
+    let draughts: Vec<f64> = a.conditions.iter().map(|c| c.draught_m).collect();
+    let want = [2.8015259766748537, 2.0984842176501832, 1.3954424586255132];
+    for (g, w) in draughts.iter().zip(want) {
+        assert!(close(*g, w), "{g} vs {w}");
+    }
+}
+
+#[test]
 fn criteria_set_follows_the_ruleset() {
     assert_eq!(criteria_set_for("ADN_G"), "ADN_9_3_1_14_2");
     assert_eq!(criteria_set_for("IGC_2G"), "IS_CODE_2008");
