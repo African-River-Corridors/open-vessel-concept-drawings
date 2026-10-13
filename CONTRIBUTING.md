@@ -1,4 +1,4 @@
-# Contributing to vessel_designer
+# Contributing to open-vessel-concept-drawings
 
 Thank you for helping. Bug reports, fixes, calibration data and new features are all welcome.
 
@@ -7,8 +7,8 @@ Thank you for helping. Bug reports, fixes, calibration data and new features are
 Python 3.12 or later. With [uv](https://docs.astral.sh/uv/):
 
 ```
-git clone https://github.com/African-River-Corridors/vessel_designer
-cd vessel_designer
+git clone https://github.com/African-River-Corridors/open-vessel-concept-drawings
+cd open-vessel-concept-drawings
 uv venv
 uv pip install -e '.[dev]'
 ```
@@ -31,7 +31,7 @@ Both must pass. CI runs them on every push and pull request.
 - Every new calculation comes with tests: a golden case (a worked number with its source), a property
   (an invariant), and a feasibility check (the checks fire when they should).
 - Cite the source of every number — standard, table and page, or the reference vessel.
-- Use the words in `CONTEXT.md`. If you need a new term, add it there.
+- Use the words in `GLOSSARY.md`. If you need a new term, add it there.
 
 ## Pull requests
 

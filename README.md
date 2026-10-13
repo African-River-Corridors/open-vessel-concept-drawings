@@ -4,8 +4,8 @@ Concept design of inland and coastal cargo vessels for feasibility studies. Give
 cargo; it gives you capacity, draught, weights, tank arrangement, stability, resistance and power —
 checked against real vessels.
 
-It is a Python library with a pure calculation core (standard library + numpy, no I/O). The same core
-runs in the browser in the static web simulator under `web/`.
+It is a Python library with a pure calculation core (standard library + numpy, no I/O). A compiled Rust
+core and a desktop app are planned; see the [roadmap](ROADMAP.md).
 
 ## What it does
 
@@ -31,7 +31,7 @@ Concept stage only. It does not replace class approval, a stability booklet or a
 Python 3.12 or later.
 
 ```
-pip install git+https://github.com/African-River-Corridors/vessel_designer
+pip install git+https://github.com/African-River-Corridors/open-vessel-concept-drawings
 ```
 
 ## Worked example
@@ -71,12 +71,11 @@ raise the eye or accept a smaller tank.
 | Path | Holds |
 |---|---|
 | `src/vessel_designer/core/` | the calculation core |
-| `src/vessel_designer/simulate.py` | one-call JSON-in, JSON-out simulation (used by the web page) |
+| `src/vessel_designer/simulate.py` | one-call JSON-in, JSON-out simulation |
 | `catalogue/` | standard vessel classes and reference vessels, with sources |
 | `calibration/` | calibration cases, fitted factors and results |
-| `web/` | static web simulator (Pyodide); build with `python tools/build_web.py` |
 | `docs/adr/` | architecture decisions |
-| `CONTEXT.md` | the domain language |
+| `GLOSSARY.md` | the domain language |
 
 ## Contributing
 
@@ -87,4 +86,4 @@ issues privately — see [SECURITY.md](SECURITY.md).
 ## Licence
 
 Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
-Copyright 2026 African River Corridors Limited.
+Copyright 2026 Mobile Clipboard Limited (trading as African River Corridors).

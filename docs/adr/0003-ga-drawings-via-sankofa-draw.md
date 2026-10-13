@@ -1,3 +1,5 @@
+Status: Superseded by ADR 0009 (one Drawing Format Standard, two implementations).
+
 # Draw General Arrangements with technical_drawings_for_agents
 
 GAs are produced through the open-source

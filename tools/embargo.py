@@ -1,4 +1,4 @@
-"""The one embargo list, shared by the release guard and the web build.
+"""The one embargo list, used by the release guard.
 
 The repo is public, so the list must not publish the names it protects. It holds the SHA-256 of
 each lowercased term instead. A term is one to three words; a multi-word term is its words joined
