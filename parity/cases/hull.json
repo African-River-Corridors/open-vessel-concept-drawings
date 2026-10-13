@@ -182,6 +182,26 @@
       }
     },
     {
+      "id": "quantities/negative_zero_bow_rake_rise",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): bow rake rise of -0.0 with positive draught and rake length, so LCB must not turn NaN; kills mutant hull.rs:104:38 `rake_rise > 0.0` -> `>=` in rake_first_moment_volume",
+      "input": {
+        "fn": "quantities",
+        "args": {
+          "hull": {
+            "loa": 60.0,
+            "beam": 10.0,
+            "depth": 4.0,
+            "bow_rake_length": 6.0,
+            "bow_rake_rise": -0.0,
+            "stern_rake_length": 4.0,
+            "stern_rake_rise": 2.0
+          },
+          "draft": 2.0
+        }
+      }
+    },
+    {
       "id": "quantities/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
