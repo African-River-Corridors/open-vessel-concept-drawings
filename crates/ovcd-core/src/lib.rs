@@ -14,3 +14,5 @@ extern crate std;
 pub mod cargo;
 pub mod checks;
 pub mod pyfmt;
+pub mod squat;
+pub mod waves;
