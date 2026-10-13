@@ -42,9 +42,13 @@ def test_maturin_builds_ovcd_py_as_a_submodule_of_the_package():
 
 
 def test_numpy_is_not_a_dependency():
+    # The shipped package never needs numpy. Only the frozen Python oracle does, so it may sit in the
+    # `parity` extra (which CI installs for `cargo xtask regen` and the oracle guard) and nowhere else.
     proj = pyproject()["project"]
-    deps = proj["dependencies"] + [d for ds in proj.get("optional-dependencies", {}).values() for d in ds]
-    assert not [d for d in deps if re.match(r"numpy\b", d, re.I)]
+    extras = proj.get("optional-dependencies", {})
+    runtime = proj["dependencies"] + [d for k, ds in extras.items() if k != "parity" for d in ds]
+    assert not [d for d in runtime if re.match(r"numpy\b", d, re.I)]
+    assert [d for d in extras.get("parity", []) if re.match(r"numpy\b", d, re.I)]
 
 
 def test_no_package_module_imports_numpy():
