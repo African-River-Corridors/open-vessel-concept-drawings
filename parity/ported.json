@@ -1,5 +1,7 @@
 [
   "cargo",
   "barge_cost",
-  "vessel_standards"
+  "vessel_standards",
+  "pressure_vessel",
+  "protective_location"
 ]
