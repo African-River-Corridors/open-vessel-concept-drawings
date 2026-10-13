@@ -11,11 +11,11 @@ from __future__ import annotations
 
 from dataclasses import asdict
 
-from vessel_designer.core.barge_capacity import BargeCapacityInputs, compute as capacity
-from vessel_designer.core.cargo import CARGO_DATABASE
-from vessel_designer.core.gas_arrangement import DEFAULT_DEPTHS_M, RULESETS, fit as gas_fit
-from vessel_designer.core.gas_stability import assess as assess_stability, criteria_set_for
-from vessel_designer.core.resistance import (EnvironmentInputs, ResistanceInputs, TugInputs,
+from vessel_designer_frozen.core.barge_capacity import BargeCapacityInputs, compute as capacity
+from vessel_designer_frozen.core.cargo import CARGO_DATABASE
+from vessel_designer_frozen.core.gas_arrangement import DEFAULT_DEPTHS_M, RULESETS, fit as gas_fit
+from vessel_designer_frozen.core.gas_stability import assess as assess_stability, criteria_set_for
+from vessel_designer_frozen.core.resistance import (EnvironmentInputs, ResistanceInputs, TugInputs,
                                              compute as resistance)
 
 RHO = 1.0  # fresh water, t/m3

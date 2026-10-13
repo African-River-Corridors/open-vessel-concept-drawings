@@ -84,7 +84,7 @@ RatesLike = Union[BargeCostRates, Mapping, str, PathLike, None]
 
 def _example_rates_text() -> str:
     """The shipped example: package data when installed, the repo's examples/ when run from source."""
-    pkg = resources.files("vessel_designer").joinpath("data", EXAMPLE_RATES_FILE)
+    pkg = resources.files("vessel_designer_frozen").joinpath("data", EXAMPLE_RATES_FILE)
     if pkg.is_file():
         return pkg.read_text(encoding="utf-8")
     repo = Path(__file__).resolve().parents[3] / "examples" / EXAMPLE_RATES_FILE
