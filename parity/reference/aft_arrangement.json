@@ -1339,6 +1339,93 @@
       }
     },
     {
+      "id": "compute/zero_thruster_pitch",
+      "output": {
+        "ok": {
+          "length_m": 19.892000000000003,
+          "zones": [
+            [
+              "THRUSTER ROOM",
+              0.0,
+              3.5
+            ],
+            [
+              "40 FT UNITS (3 ABREAST x 1)",
+              3.8,
+              15.992
+            ],
+            [
+              "WHEELHOUSE (LIFTING)",
+              16.292,
+              19.892000000000003
+            ]
+          ],
+          "thruster_offsets_m": [
+            0.0
+          ],
+          "thruster_room_length_m": 3.5,
+          "container_x0_m": 3.8,
+          "container_x1_m": 15.992,
+          "container_total_width_m": 10.914,
+          "container_top_above_keel_m": 8.596,
+          "container_labels": [
+            "BATTERY 40 FT",
+            "ACCOM 40 FT",
+            "ACCOM 40 FT"
+          ],
+          "container_unit_width_m": 2.438,
+          "container_side_gap_m": 0.9,
+          "container_rows": 1,
+          "container_per_row": 3,
+          "container_row_length_m": 12.192,
+          "container_row_gap_m": 0.8,
+          "wheelhouse_x0_m": 16.292,
+          "wheelhouse_x1_m": 19.892000000000003,
+          "wheelhouse_floor_lowered_m": 5.4,
+          "wheelhouse_top_lowered_m": 8.8,
+          "wheelhouse_floor_raised_m": 5.4,
+          "wheelhouse_top_raised_m": 8.8,
+          "wheelhouse_lift_m": 0.0,
+          "wheelhouse_width_m": 6.4,
+          "wheelhouse_height_m": 3.4,
+          "block_top_lowered_m": 8.8,
+          "checks": [
+            {
+              "name": "thrusters_fit_beam",
+              "ok": true,
+              "message": "1 x 0.00 m thrusters need 0.00 m across a 14.80 m beam",
+              "severity": "error"
+            },
+            {
+              "name": "requested_thruster_count_fits",
+              "ok": false,
+              "message": "1 of 3 requested thrusters fit; 3 would need 0.00 m of 14.80 m beam",
+              "severity": "warning"
+            },
+            {
+              "name": "containers_fit_beam",
+              "ok": true,
+              "message": "3 x 40 ft units abreast need 10.91 m across a 14.80 m beam",
+              "severity": "error"
+            },
+            {
+              "name": "units_fit_in_one_row",
+              "ok": true,
+              "message": "3 units in 1 row(s) of 3; a second row adds 12.99 m to the stern block and comes straight off the cargo zone",
+              "severity": "warning"
+            },
+            {
+              "name": "wheelhouse_fits_beam",
+              "ok": true,
+              "message": "wheelhouse 6.40 m wide on a 14.80 m beam",
+              "severity": "error"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
       "id": "compute/sweep/000",
       "output": {
         "ok": {

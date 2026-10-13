@@ -239,6 +239,33 @@ fn whole_float_digits(x: f64) -> String {
     out
 }
 
+/// The one message for an integer that no 64-bit field can hold (the integer range rule in
+/// `parity/README.md`).
+pub const INT_OVERFLOW_MESSAGE: &str = "integer does not fit in 64 bits";
+
+fn int_overflow() -> PyException {
+    PyException::OverflowError(INT_OVERFLOW_MESSAGE.to_string())
+}
+
+/// Python `-(-n // d)` for `d >= 1`: the ceiling of `n / d`, without negating `n`.
+fn ceil_div(n: i64, d: i64) -> i64 {
+    debug_assert!(d >= 1);
+    let q = n.div_euclid(d);
+    if n.rem_euclid(d) > 0 {
+        // The remainder is positive, so `q < n / d <= i64::MAX`: this cannot overflow.
+        q.saturating_add(1)
+    } else {
+        q
+    }
+}
+
+/// Python `float(n + delta)` for an integer that feeds only a float product. Python's integer is
+/// exact, so the sum is taken in `i128` (it cannot overflow there) and rounded once, to nearest
+/// even, as Python's int-to-float conversion does.
+fn wide_f64(n: i64, delta: i64) -> f64 {
+    (i128::from(n).saturating_add(i128::from(delta))) as f64
+}
+
 /// Python `max(a, b)`: the first of two equal items.
 fn py_max(a: f64, b: f64) -> f64 {
     if b > a { b } else { a }
@@ -273,7 +300,10 @@ fn py_floor_div(a: f64, b: f64) -> f64 {
 /// Build the stern block from its equipment. `Err` is a `ValueError` message.
 pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, PyException> {
     inp.validate().map_err(PyException::ValueError)?;
-    let n_units = inp.n_battery_units + inp.n_accom_units;
+    let n_units = inp
+        .n_battery_units
+        .checked_add(inp.n_accom_units)
+        .ok_or_else(int_overflow)?;
 
     // How many units go abreast, and how many rows that needs.
     let per_row_fit = py_int_floor_div(
@@ -281,9 +311,9 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, PyExc
         inp.container_width_m + inp.container_side_gap_m,
     )?;
     let n_per_row = core::cmp::max(1, core::cmp::min(n_units, per_row_fit));
-    // `-(-n_units // n_per_row)`: ceiling division. `n_per_row` is at least 1, so `div_euclid`
-    // is floor division here.
-    let n_rows = -(-n_units).div_euclid(n_per_row);
+    // `-(-n_units // n_per_row)`: ceiling division, written without negating (`-i64::MIN`
+    // overflows). `n_per_row` is at least 1, so `div_euclid` is floor division here.
+    let n_rows = ceil_div(n_units, n_per_row);
 
     // Longitudinal build-up, stern (x = 0) forward.
     let mut zones: Vec<(String, f64, f64)> = Vec::new();
@@ -295,7 +325,7 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, PyExc
     let cont_x0 = x + inp.container_foundation_m;
     let cont_x1 = cont_x0
         + n_rows as f64 * inp.container_length_m
-        + (n_rows - 1) as f64 * inp.container_gap_m;
+        + wide_f64(n_rows, -1) * inp.container_gap_m;
     // `int(round(...))`: round half to even. The integer is unbounded in Python, so print it whole.
     let feet_rounded = libm::rint(inp.container_length_m / 0.3048);
     if !feet_rounded.is_finite() {
@@ -322,14 +352,15 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, PyExc
         0
     };
     let n_thr = core::cmp::max(1, core::cmp::min(inp.n_thrusters, n_fit));
-    let span = (n_thr - 1) as f64 * pitch;
+    let span = wide_f64(n_thr, -1) * pitch;
     let offsets: Vec<f64> = (0..n_thr).map(|i| -span / 2.0 + i as f64 * pitch).collect();
     let thruster_beam_needed = span + inp.thruster_envelope_m + 2.0 * inp.thruster_clear_m;
-    let requested_beam_needed =
-        (inp.n_thrusters - 1) as f64 * pitch + inp.thruster_envelope_m + 2.0 * inp.thruster_clear_m;
+    let requested_beam_needed = wide_f64(inp.n_thrusters, -1) * pitch
+        + inp.thruster_envelope_m
+        + 2.0 * inp.thruster_clear_m;
 
     let cont_w = n_per_row as f64 * inp.container_width_m
-        + (n_per_row + 1) as f64 * inp.container_side_gap_m;
+        + wide_f64(n_per_row, 1) * inp.container_side_gap_m;
     let mut labels: Vec<String> = Vec::new();
     for _ in 0..inp.n_battery_units.max(0) {
         labels.push("BATTERY 40 FT".to_string());

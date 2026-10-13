@@ -317,6 +317,23 @@
       "knife_edge": "the feet label prints the rounded value of the container length in full, so any nudge changes the text; no branch is near its edge, and Rust prints the same whole number from the float's exact bits"
     },
     {
+      "id": "compute/zero_thruster_pitch",
+      "tier": 3,
+      "reason": "tier 3: degenerate input: thruster_envelope_m + thruster_clear_m == 0, Python skips the division and returns thruster_offsets_m [0.0]; kills mutant `pitch > 0.0` -> `pitch >= 0.0` in aft_arrangement::compute (issue #13)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 14.8,
+            "depth": 5.4,
+            "thruster_envelope_m": 0.0,
+            "thruster_clear_m": 0.0
+          }
+        }
+      },
+      "knife_edge": "the pitch sits exactly on the `pitch > 0` guard: a nudge to a positive pitch takes the division branch and fits several thrusters; Rust uses the same strict comparison on the same exact zero sum"
+    },
+    {
       "id": "compute/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",

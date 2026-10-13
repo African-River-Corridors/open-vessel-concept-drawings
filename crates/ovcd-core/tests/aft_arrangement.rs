@@ -276,3 +276,62 @@ fn the_feet_label_is_an_unbounded_integer() {
         "-9842519685039370240 FT UNITS (3 ABREAST x 1)"
     );
 }
+
+/// Integer range rule (`parity/README.md`, "What identical means"). Expected values are printed
+/// by the frozen Python 3.12: `n_battery_units = -2**63, n_accom_units = 0` returns normally.
+#[test]
+fn the_smallest_i64_unit_count_gives_pythons_answer() {
+    let mut i = gas(14.8, 5.4);
+    i.n_battery_units = i64::MIN;
+    i.n_accom_units = 0;
+    let r = compute(&i).unwrap();
+    assert_eq!(r.container_rows, i64::MIN);
+    assert_eq!(r.container_per_row, 1);
+    assert_eq!(r.container_x1_m, -1.1983004950281726e+20);
+    assert_eq!(r.length_m, -1.1983004950281726e+20);
+    assert!(r.container_labels.is_empty());
+    assert_eq!(
+        r.zones[1].0,
+        "40 FT UNITS (1 ABREAST x -9223372036854775808)"
+    );
+    assert_eq!(
+        r.checks[3].message,
+        "-9223372036854775808 units in -9223372036854775808 row(s) of 1; a second row adds \
+         12.99 m to the stern block and comes straight off the cargo zone"
+    );
+}
+
+/// Python gives `n_units = -2**63 - 1`, which no 64-bit field can hold: `OverflowError`.
+#[test]
+fn a_unit_count_below_i64_min_raises_overflow_error() {
+    let mut i = gas(14.8, 5.4);
+    i.n_battery_units = i64::MIN;
+    i.n_accom_units = -1;
+    assert_eq!(
+        compute(&i).unwrap_err(),
+        PyException::OverflowError("integer does not fit in 64 bits".to_string())
+    );
+}
+
+#[test]
+fn a_unit_count_above_i64_max_raises_overflow_error() {
+    let mut i = gas(14.8, 5.4);
+    i.n_battery_units = i64::MAX;
+    i.n_accom_units = 1;
+    assert_eq!(
+        compute(&i).unwrap_err(),
+        PyException::OverflowError("integer does not fit in 64 bits".to_string())
+    );
+}
+
+/// `thruster_envelope_m + thruster_clear_m == 0`: Python skips the division and returns one
+/// thruster at 0.0. Kills the mutant `pitch > 0.0` -> `pitch >= 0.0`.
+#[test]
+fn a_zero_thruster_pitch_gives_one_thruster_at_zero() {
+    let mut i = gas(14.8, 5.4);
+    i.thruster_envelope_m = 0.0;
+    i.thruster_clear_m = 0.0;
+    let r = compute(&i).unwrap();
+    assert_eq!(r.thruster_offsets_m.len(), 1);
+    assert_eq!(r.thruster_offsets_m[0].to_bits(), 0.0f64.to_bits());
+}
