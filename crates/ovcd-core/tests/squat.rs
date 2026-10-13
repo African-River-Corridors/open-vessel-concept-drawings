@@ -133,3 +133,15 @@ fn a_clear_vessel_at_the_top_speed_returns_the_top_speed() {
     let v = max_speed_for_ukc(1.0, 5.0, 50.0, 40.0, 5000.0, 0.85, 0.15, 20.0, 0.01);
     assert_eq!(v, Ok(20.0));
 }
+
+#[test]
+fn the_method_spread_divides_by_at_least_one_nanometre_like_python() {
+    // Barrass is 7.9e-11 m here, below Python's 1e-9 floor, so the spread is 0.66 -> "1% apart"
+    // (dividing by the Barrass value itself would print 8%).
+    let r = compute(&cn_ii(0.0001)).unwrap();
+    assert_eq!(r.method, "ICORELS");
+    assert_eq!(
+        r.checks.last().unwrap().message,
+        "Barrass 0.00 m vs ICORELS 0.00 m, 1% apart"
+    );
+}
