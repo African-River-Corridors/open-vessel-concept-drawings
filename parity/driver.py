@@ -9,7 +9,9 @@ shipped package) for each case, and writes `<out-dir>/<entry_point>.json`.
 Output rules (spec 0001):
 - floats are written as shortest round-trip text (Python's repr);
 - NaN and infinity are written as the tagged strings "float:nan", "float:inf" and "float:-inf";
-- a raised ValueError (or KeyError) is recorded as {"error": {"type": "ValueError", "message": ...}};
+- a raised ValueError is recorded as {"error": {"type": "ValueError", "message": ...}}; a KeyError the
+  frozen Python raises on purpose is recorded the same way, but only where an adapter wraps the frozen
+  call in `frozen_key_error` (a KeyError from the driver itself, such as a mistyped case, fails regen);
 - a normal return is recorded as {"ok": <value>}.
 Standard library only (plus whatever the frozen module itself imports).
 """
@@ -53,6 +55,26 @@ def to_json(value):
     if isinstance(value, (list, tuple)):
         return [to_json(v) for v in value]
     raise TypeError(f"no JSON form for {type(value).__name__}")
+
+
+class FrozenKeyError(Exception):
+    """A KeyError the frozen Python raised on purpose, to be recorded as a Reference Result."""
+
+    def __init__(self, exc: KeyError):
+        super().__init__(str(exc))
+        self.exc = exc
+
+
+class frozen_key_error:
+    """Context manager: wrap ONLY the frozen call, so driver KeyErrors still fail regen."""
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        if exc_type is not None and issubclass(exc_type, KeyError):
+            raise FrozenKeyError(exc) from exc
+        return False
 
 
 def _module(name: str):
@@ -215,7 +237,8 @@ def ga_adapter(fn: str, args: dict):
 def vessel_standards(fn: str, args: dict):
     mod = _module("core.vessel_standards")
     if fn in ("get_standard", "standards_for"):
-        return getattr(mod, fn)(**args)
+        with frozen_key_error():
+            return getattr(mod, fn)(**args)
     if fn == "validate_catalogue":
         # extra: standards added to the built-in catalogue (id -> fields); null = the built-in one.
         extra = args.get("extra")
@@ -262,7 +285,10 @@ def run_case(entry_point: str, case_input: dict) -> dict:
     adapter = ADAPTERS[entry_point]
     try:
         result = adapter(case_input["fn"], case_input.get("args", {}))
-    except (ValueError, KeyError) as exc:
+    except FrozenKeyError as wrapped:
+        exc = wrapped.exc
+        return {"error": {"type": type(exc).__name__, "message": str(exc)}}
+    except ValueError as exc:
         return {"error": {"type": type(exc).__name__, "message": str(exc)}}
     return {"ok": to_json(result)}
 
