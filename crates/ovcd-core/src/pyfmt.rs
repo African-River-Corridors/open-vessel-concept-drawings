@@ -21,7 +21,11 @@ fn non_finite(x: f64) -> Option<&'static str> {
     if x.is_nan() {
         Some("nan")
     } else if x.is_infinite() {
-        Some(if x < 0.0 { "-inf" } else { "inf" })
+        Some(if x == f64::NEG_INFINITY {
+            "-inf"
+        } else {
+            "inf"
+        })
     } else {
         None
     }
@@ -40,6 +44,7 @@ fn split_exp(text: &str) -> (bool, String, i32) {
 
 /// Python's exponent suffix: sign always shown, at least two digits.
 fn exp_suffix(exp: i32) -> String {
+    // Exponent form never has exponent 0 (it starts at 1e16, 1e6 and below 1e-4), so `<` and `<=` agree.
     let sign = if exp < 0 { '-' } else { '+' };
     format!("e{sign}{:02}", exp.unsigned_abs())
 }
