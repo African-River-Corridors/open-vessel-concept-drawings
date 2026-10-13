@@ -472,7 +472,7 @@
         "fn": "compute",
         "args": {
           "inputs": {
-            "hull_steel_t": 9007199254740993.0,
+            "hull_steel_t": 9007199254740992.0,
             "wing_plate_t": 1,
             "weather_shield_t": 0
           },
