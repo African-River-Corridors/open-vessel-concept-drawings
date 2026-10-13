@@ -324,7 +324,11 @@ def _fit_args(rng):
 
 
 def s_fit(rng):
-    return _fit_args(rng)
+    # Drawn after the shared fit arguments, so the assess points (which reuse them) stay put.
+    args = _fit_args(rng)
+    args["block_coefficient"] = u(rng, 0.78, 0.92)
+    args["max_tank_od_m"] = u(rng, 6.0, 12.0)
+    return args
 
 
 def s_smallest_loa(rng):
@@ -444,7 +448,9 @@ def s_cost(rng):
         ("hull_steel_t", 100.0, 600.0), ("wing_plate_t", 10.0, 80.0),
         ("weather_shield_t", 10.0, 90.0), ("tank_shell_t", 50.0, 500.0),
         ("tank_supports_t", 10.0, 150.0), ("insulation_t", 5.0, 60.0),
-        ("piping_machinery_t", 10.0, 60.0), ("outfitting_t", 10.0, 60.0))}
+        ("piping_machinery_t", 10.0, 60.0), ("outfitting_t", 10.0, 60.0),
+        ("tug_hull_steel_t", 60.0, 200.0), ("battery_kwh", 200.0, 2000.0),
+        ("propulsion_kw", 100.0, 600.0))}
     return {"inputs": inputs, "rates": rng.choice([None, _rates(rng)])}
 
 
