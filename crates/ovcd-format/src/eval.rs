@@ -82,6 +82,27 @@ fn value_error(message: String) -> Result<Value, EvalError> {
     Ok(json!({ "error": { "type": "ValueError", "message": message } }))
 }
 
+/// A Python exception of any recorded type.
+fn py_error(e: &ovcd_core::aft_arrangement::PyException) -> Result<Value, EvalError> {
+    Ok(json!({ "error": { "type": e.type_name(), "message": e.message() } }))
+}
+
+/// A float as the parity files write it: NaN and infinity are the tagged strings
+/// `"float:nan"`, `"float:inf"`, `"float:-inf"`. `json!` alone would write them as `null`.
+fn num(x: f64) -> Value {
+    if x.is_nan() {
+        Value::String("float:nan".into())
+    } else if x.is_infinite() {
+        Value::String(if x > 0.0 { "float:inf" } else { "float:-inf" }.into())
+    } else {
+        json!(x)
+    }
+}
+
+fn nums(xs: &[f64]) -> Value {
+    Value::Array(xs.iter().map(|x| num(*x)).collect())
+}
+
 fn str_arg<'a>(args: &'a Value, name: &str) -> Result<&'a str, EvalError> {
     args.get(name)
         .and_then(Value::as_str)
@@ -250,31 +271,31 @@ fn aft_inputs(args: &Value) -> Result<AftArrangementInputs, EvalError> {
 
 fn aft_json(r: &AftArrangementResult) -> Value {
     json!({
-        "length_m": r.length_m,
-        "zones": r.zones.iter().map(|(l, a, f)| json!([l, a, f])).collect::<Vec<_>>(),
-        "thruster_offsets_m": r.thruster_offsets_m,
-        "thruster_room_length_m": r.thruster_room_length_m,
-        "container_x0_m": r.container_x0_m,
-        "container_x1_m": r.container_x1_m,
-        "container_total_width_m": r.container_total_width_m,
-        "container_top_above_keel_m": r.container_top_above_keel_m,
+        "length_m": num(r.length_m),
+        "zones": r.zones.iter().map(|(l, a, f)| json!([l, num(*a), num(*f)])).collect::<Vec<_>>(),
+        "thruster_offsets_m": nums(&r.thruster_offsets_m),
+        "thruster_room_length_m": num(r.thruster_room_length_m),
+        "container_x0_m": num(r.container_x0_m),
+        "container_x1_m": num(r.container_x1_m),
+        "container_total_width_m": num(r.container_total_width_m),
+        "container_top_above_keel_m": num(r.container_top_above_keel_m),
         "container_labels": r.container_labels,
-        "container_unit_width_m": r.container_unit_width_m,
-        "container_side_gap_m": r.container_side_gap_m,
+        "container_unit_width_m": num(r.container_unit_width_m),
+        "container_side_gap_m": num(r.container_side_gap_m),
         "container_rows": r.container_rows,
         "container_per_row": r.container_per_row,
-        "container_row_length_m": r.container_row_length_m,
-        "container_row_gap_m": r.container_row_gap_m,
-        "wheelhouse_x0_m": r.wheelhouse_x0_m,
-        "wheelhouse_x1_m": r.wheelhouse_x1_m,
-        "wheelhouse_floor_lowered_m": r.wheelhouse_floor_lowered_m,
-        "wheelhouse_top_lowered_m": r.wheelhouse_top_lowered_m,
-        "wheelhouse_floor_raised_m": r.wheelhouse_floor_raised_m,
-        "wheelhouse_top_raised_m": r.wheelhouse_top_raised_m,
-        "wheelhouse_lift_m": r.wheelhouse_lift_m,
-        "wheelhouse_width_m": r.wheelhouse_width_m,
-        "wheelhouse_height_m": r.wheelhouse_height_m,
-        "block_top_lowered_m": r.block_top_lowered_m,
+        "container_row_length_m": num(r.container_row_length_m),
+        "container_row_gap_m": num(r.container_row_gap_m),
+        "wheelhouse_x0_m": num(r.wheelhouse_x0_m),
+        "wheelhouse_x1_m": num(r.wheelhouse_x1_m),
+        "wheelhouse_floor_lowered_m": num(r.wheelhouse_floor_lowered_m),
+        "wheelhouse_top_lowered_m": num(r.wheelhouse_top_lowered_m),
+        "wheelhouse_floor_raised_m": num(r.wheelhouse_floor_raised_m),
+        "wheelhouse_top_raised_m": num(r.wheelhouse_top_raised_m),
+        "wheelhouse_lift_m": num(r.wheelhouse_lift_m),
+        "wheelhouse_width_m": num(r.wheelhouse_width_m),
+        "wheelhouse_height_m": num(r.wheelhouse_height_m),
+        "block_top_lowered_m": num(r.block_top_lowered_m),
         "checks": checks_json(&r.checks),
         "warnings": r.warnings,
     })
@@ -284,7 +305,7 @@ fn aft_arrangement(function: &str, args: &Value) -> Result<Value, EvalError> {
     match function {
         "compute" => match ovcd_core::aft_arrangement::compute(&aft_inputs(args)?) {
             Ok(r) => ok(aft_json(&r)),
-            Err(message) => value_error(message),
+            Err(e) => py_error(&e),
         },
         other => Err(EvalError::BadInput(format!(
             "aft_arrangement has no parity function `{other}`"
@@ -326,11 +347,11 @@ fn gas_separation_inputs(args: &Value) -> Result<GasSeparationInputs, EvalError>
 
 fn gas_separation_json(r: &GasSeparationResult) -> Value {
     json!({
-        "aft_separation_m": r.aft_separation_m,
-        "fwd_separation_m": r.fwd_separation_m,
-        "cofferdam_m": r.cofferdam_m,
-        "service_space_m": r.service_space_m,
-        "total_length_taken_m": r.total_length_taken_m,
+        "aft_separation_m": num(r.aft_separation_m),
+        "fwd_separation_m": num(r.fwd_separation_m),
+        "cofferdam_m": num(r.cofferdam_m),
+        "service_space_m": num(r.service_space_m),
+        "total_length_taken_m": num(r.total_length_taken_m),
         "checks": checks_json(&r.checks),
         "warnings": r.warnings,
     })

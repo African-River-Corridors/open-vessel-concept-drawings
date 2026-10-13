@@ -9,7 +9,8 @@ shipped package) for each case, and writes `<out-dir>/<entry_point>.json`.
 Output rules (spec 0001):
 - floats are written as shortest round-trip text (Python's repr);
 - NaN and infinity are written as the tagged strings "float:nan", "float:inf" and "float:-inf";
-- a raised ValueError is recorded as {"error": {"type": "ValueError", "message": ...}}; a KeyError the
+- a raised ValueError, ZeroDivisionError or OverflowError is recorded as
+  {"error": {"type": "<class name>", "message": ...}}; a KeyError the
   frozen Python raises on purpose is recorded the same way, but only where an adapter wraps the frozen
   call in `frozen_key_error` (a KeyError from the driver itself, such as a mistyped case, fails regen);
 - a normal return is recorded as {"ok": <value>}.
@@ -394,7 +395,7 @@ def run_case(entry_point: str, case_input: dict) -> dict:
     except FrozenKeyError as wrapped:
         exc = wrapped.exc
         return {"error": {"type": type(exc).__name__, "message": str(exc)}}
-    except ValueError as exc:
+    except (ValueError, ZeroDivisionError, OverflowError) as exc:
         return {"error": {"type": type(exc).__name__, "message": str(exc)}}
     return {"ok": to_json(result)}
 

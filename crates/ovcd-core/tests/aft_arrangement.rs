@@ -1,7 +1,7 @@
 //! Seam: the public `ovcd_core::aft_arrangement` API. Expected values are printed by the frozen
 //! Python (`core/aft_arrangement.py`), not worked out by hand.
 
-use ovcd_core::aft_arrangement::{AftArrangementInputs, compute};
+use ovcd_core::aft_arrangement::{AftArrangementInputs, PyException, compute};
 
 fn gas(beam: f64, depth: f64) -> AftArrangementInputs {
     AftArrangementInputs::new(beam, depth)
@@ -122,15 +122,18 @@ fn a_failed_error_check_gates_the_result() {
 fn invalid_inputs_raise_the_python_messages() {
     assert_eq!(
         compute(&gas(0.0, 5.4)).unwrap_err(),
-        "beam and depth must be positive"
+        PyException::ValueError("beam and depth must be positive".into())
     );
     assert_eq!(
         compute(&gas(14.8, -1.0)).unwrap_err(),
-        "beam and depth must be positive"
+        PyException::ValueError("beam and depth must be positive".into())
     );
     let mut i = gas(14.8, 5.4);
     i.n_thrusters = 0;
-    assert_eq!(compute(&i).unwrap_err(), "n_thrusters must be >= 1");
+    assert_eq!(
+        compute(&i).unwrap_err(),
+        PyException::ValueError("n_thrusters must be >= 1".into())
+    );
 }
 
 /// Python `//` on floats is not `floor(a / b)`: `1.0 // 0.1` is 9.0 in Python, but `1.0 / 0.1`
@@ -213,4 +216,63 @@ fn a_lift_exactly_on_the_stroke_plus_the_slack_gives_no_warning() {
     i.wheelhouse_max_lift_m = 0.0;
     let r = compute(&i).unwrap();
     assert!(r.warnings.is_empty());
+}
+
+/// Inputs far outside any physical range still follow Python: the same exception type and message.
+#[test]
+fn a_zero_container_pitch_raises_zero_division_error() {
+    let mut i = gas(10.0, 3.0);
+    i.container_width_m = 0.0;
+    i.container_side_gap_m = 0.0;
+    assert_eq!(
+        compute(&i).unwrap_err(),
+        PyException::ZeroDivisionError("division by zero".into())
+    );
+}
+
+#[test]
+fn a_nan_quotient_raises_value_error_through_per_row_fit() {
+    let mut i = gas(1e308, 4.0);
+    i.container_side_gap_m = -1e308;
+    i.container_width_m = 1.5e308;
+    assert_eq!(
+        compute(&i).unwrap_err(),
+        PyException::ValueError("cannot convert float NaN to integer".into())
+    );
+}
+
+#[test]
+fn a_nan_quotient_raises_value_error_through_n_fit() {
+    let mut i = gas(1.7e308, 4.0);
+    i.thruster_clear_m = -1e308;
+    i.thruster_envelope_m = 1.5e308;
+    assert_eq!(
+        compute(&i).unwrap_err(),
+        PyException::ValueError("cannot convert float NaN to integer".into())
+    );
+}
+
+#[test]
+fn an_infinite_feet_label_raises_overflow_error() {
+    let mut i = gas(12.0, 4.0);
+    i.container_length_m = 1e308;
+    assert_eq!(
+        compute(&i).unwrap_err(),
+        PyException::OverflowError("cannot convert float infinity to integer".into())
+    );
+}
+
+#[test]
+fn the_feet_label_is_an_unbounded_integer() {
+    let mut i = gas(12.0, 4.0);
+    i.container_length_m = 3e18;
+    assert_eq!(
+        compute(&i).unwrap().zones[1].0,
+        "9842519685039370240 FT UNITS (3 ABREAST x 1)"
+    );
+    i.container_length_m = -3e18;
+    assert_eq!(
+        compute(&i).unwrap().zones[1].0,
+        "-9842519685039370240 FT UNITS (3 ABREAST x 1)"
+    );
 }

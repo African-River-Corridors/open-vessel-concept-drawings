@@ -302,6 +302,22 @@
       }
     },
     {
+      "id": "compute/infinite_total_length",
+      "tier": 3,
+      "reason": "tier 3: degenerate input: finite inputs whose sum overflows to infinity are written as float:inf (fix round 2, issue #13)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "cofferdam_m": 1e+308,
+            "opening_setback_m": 1e+308,
+            "fwd_end_bulkhead_m": 1e+308
+          }
+        }
+      },
+      "knife_edge": "a nudge down takes the sum below the largest float, so the infinite total becomes finite; both sides overflow the same way in Rust, which writes the tagged string float:inf"
+    },
+    {
       "id": "compute/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",

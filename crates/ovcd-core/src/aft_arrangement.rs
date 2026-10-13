@@ -130,6 +130,113 @@ impl AftArrangementResult {
     }
 }
 
+/// An exception the frozen Python raises out of `compute`. The type name and message match
+/// CPython 3.14, because the parity seam compares both.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PyException {
+    ValueError(String),
+    ZeroDivisionError(String),
+    OverflowError(String),
+}
+
+impl PyException {
+    /// The Python class name, as the Reference Results record it.
+    pub fn type_name(&self) -> &'static str {
+        match self {
+            PyException::ValueError(_) => "ValueError",
+            PyException::ZeroDivisionError(_) => "ZeroDivisionError",
+            PyException::OverflowError(_) => "OverflowError",
+        }
+    }
+
+    pub fn message(&self) -> &str {
+        match self {
+            PyException::ValueError(m)
+            | PyException::ZeroDivisionError(m)
+            | PyException::OverflowError(m) => m,
+        }
+    }
+}
+
+/// Python `int(x)` on a float, for a value that is only ever compared with small integers:
+/// a finite result saturates at the `i64` limits, which cannot change a comparison with them.
+/// NaN raises `ValueError` and infinity `OverflowError`, with CPython's messages.
+fn py_int(x: f64) -> Result<i64, PyException> {
+    if x.is_nan() {
+        Err(PyException::ValueError(
+            "cannot convert float NaN to integer".to_string(),
+        ))
+    } else if x.is_infinite() {
+        Err(PyException::OverflowError(
+            "cannot convert float infinity to integer".to_string(),
+        ))
+    } else {
+        Ok(x as i64)
+    }
+}
+
+/// Python `int(a // b)`: `ZeroDivisionError` for a zero divisor, then `py_int`.
+fn py_int_floor_div(a: f64, b: f64) -> Result<i64, PyException> {
+    if b == 0.0 {
+        return Err(PyException::ZeroDivisionError(
+            "division by zero".to_string(),
+        ));
+    }
+    py_int(py_floor_div(a, b))
+}
+
+/// The decimal digits of a whole-valued finite float, exactly as Python prints the `int`.
+/// Python ints do not saturate, so `round(3e18)` prints in full.
+fn whole_float_digits(x: f64) -> String {
+    let bits = x.to_bits();
+    let negative = bits >> 63 == 1;
+    let exp_bits = ((bits >> 52) & 0x7ff) as i32;
+    let frac = bits & ((1u64 << 52) - 1);
+    let (mantissa, exp) = if exp_bits == 0 {
+        (frac, -1074)
+    } else {
+        (frac | (1u64 << 52), exp_bits - 1075)
+    };
+    // A whole value has `exp >= 0` or a mantissa with enough trailing zeros to shift out.
+    let (mantissa, exp) = if exp < 0 {
+        (mantissa >> (-exp).min(63) as u32, 0)
+    } else {
+        (mantissa, exp)
+    };
+    // Little-endian base-10^9 limbs of `mantissa * 2^exp`.
+    let mut limbs: Vec<u32> = Vec::new();
+    let mut m = mantissa;
+    while m > 0 {
+        limbs.push((m % 1_000_000_000) as u32);
+        m /= 1_000_000_000;
+    }
+    for _ in 0..exp {
+        let mut carry = 0u32;
+        for limb in limbs.iter_mut() {
+            let v = *limb * 2 + carry;
+            *limb = v % 1_000_000_000;
+            carry = v / 1_000_000_000;
+        }
+        if carry > 0 {
+            limbs.push(carry);
+        }
+    }
+    let mut out = String::new();
+    if negative && !limbs.is_empty() {
+        out.push('-');
+    }
+    match limbs.split_last() {
+        None => out.push('0'),
+        Some((top, rest)) => {
+            out.push_str(&top.to_string());
+            for limb in rest.iter().rev() {
+                out.push_str(&format!("{limb:09}"));
+            }
+        }
+    }
+    out
+}
+
 /// Python `max(a, b)`: the first of two equal items.
 fn py_max(a: f64, b: f64) -> f64 {
     if b > a { b } else { a }
@@ -162,15 +269,15 @@ fn py_floor_div(a: f64, b: f64) -> f64 {
 }
 
 /// Build the stern block from its equipment. `Err` is a `ValueError` message.
-pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, String> {
-    inp.validate()?;
+pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, PyException> {
+    inp.validate().map_err(PyException::ValueError)?;
     let n_units = inp.n_battery_units + inp.n_accom_units;
 
     // How many units go abreast, and how many rows that needs.
-    let per_row_fit = py_floor_div(
+    let per_row_fit = py_int_floor_div(
         inp.beam - inp.container_side_gap_m,
         inp.container_width_m + inp.container_side_gap_m,
-    ) as i64;
+    )?;
     let n_per_row = core::cmp::max(1, core::cmp::min(n_units, per_row_fit));
     // `-(-n_units // n_per_row)`: ceiling division. `n_per_row` is at least 1, so `div_euclid`
     // is floor division here.
@@ -187,8 +294,12 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, Strin
     let cont_x1 = cont_x0
         + n_rows as f64 * inp.container_length_m
         + (n_rows - 1) as f64 * inp.container_gap_m;
-    // `int(round(...))`: round half to even.
-    let feet = libm::rint(inp.container_length_m / 0.3048) as i64;
+    // `int(round(...))`: round half to even. The integer is unbounded in Python, so print it whole.
+    let feet_rounded = libm::rint(inp.container_length_m / 0.3048);
+    if !feet_rounded.is_finite() {
+        py_int(feet_rounded)?;
+    }
+    let feet = whole_float_digits(feet_rounded);
     zones.push((
         format!("{feet} FT UNITS ({n_per_row} ABREAST x {n_rows})"),
         cont_x0,
@@ -204,7 +315,7 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, Strin
     let pitch = inp.thruster_envelope_m + inp.thruster_clear_m;
     let usable = inp.beam - 2.0 * inp.thruster_clear_m;
     let n_fit = if pitch > 0.0 {
-        py_floor_div(usable + inp.thruster_clear_m, pitch) as i64
+        py_int_floor_div(usable + inp.thruster_clear_m, pitch)?
     } else {
         0
     };
