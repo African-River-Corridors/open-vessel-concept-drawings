@@ -87,3 +87,36 @@ fn more_float_spellings_match_python() {
     assert_eq!(parse_float("1.5.2"), None);
     assert_eq!(parse_float("+ 1"), None);
 }
+
+#[test]
+fn identifiers_follow_pythons_unicode_tables() {
+    assert!(is_identifier("caf\u{e9}"));
+    assert!(is_identifier("a\u{301}")); // a + combining acute: XID_Continue
+    assert!(is_identifier("_x1"));
+    assert!(is_identifier("\u{6c34}\u{6e29}")); // CJK letters
+    assert!(!is_identifier("a\u{b2}")); // superscript two is No, not XID_Continue
+    assert!(!is_identifier("\u{301}a")); // a combining mark cannot start one
+    assert!(!is_identifier("1a"));
+    assert!(!is_identifier(""));
+    assert!(!is_identifier("a b"));
+}
+
+#[test]
+fn float_reads_unicode_decimal_digits() {
+    assert_eq!(parse_float("\u{661}\u{662}"), Some(12.0)); // Arabic-Indic
+    assert_eq!(parse_float("\u{967}.\u{6f5}"), Some(1.5)); // Devanagari, extended Arabic-Indic
+    assert_eq!(parse_float("\u{ff11}e\u{ff12}"), Some(100.0)); // fullwidth
+    assert_eq!(parse_float("\u{b2}"), None); // superscript is not a decimal digit
+    assert_eq!(parse_float("1\u{a0}2"), None);
+    assert_eq!(parse_float("\u{a0}12\u{3000}"), Some(12.0)); // surrounding space is stripped
+}
+
+#[test]
+fn repr_escapes_what_python_calls_not_printable() {
+    assert_eq!(repr_str("caf\u{e9}"), "'caf\u{e9}'");
+    assert_eq!(repr_str("a\u{2003}b"), "'a\\u2003b'");
+    assert_eq!(repr_str("\u{378}"), "'\\u0378'"); // unassigned
+    assert_eq!(repr_str("\u{e000}"), "'\\ue000'"); // private use
+    assert_eq!(repr_str("\u{1f600}"), "'\u{1f600}'");
+    assert_eq!(repr_str("\u{e0001}"), "'\\U000e0001'"); // a tag character
+}

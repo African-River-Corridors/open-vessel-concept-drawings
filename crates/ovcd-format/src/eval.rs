@@ -4,6 +4,7 @@
 use ovcd_core::barge_cost::{BargeCostInputs, BargeCostRates, BargeCostResult, MappingValue};
 use ovcd_core::cargo::CargoProperties;
 use ovcd_core::checks::Check;
+use ovcd_core::pyint::PyInt;
 use ovcd_core::pystr::repr_str;
 use ovcd_core::vessel_standards::{Catalogue, VesselStandard};
 use serde_json::{Value, json};
@@ -76,6 +77,16 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
 
 fn ok(value: Value) -> Result<Value, EvalError> {
     Ok(json!({ "ok": value }))
+}
+
+/// A raised Python exception of any class, as the frozen Python driver records it.
+fn raised(type_name: &str, message: &str) -> Result<Value, EvalError> {
+    Ok(json!({ "error": { "type": type_name, "message": message } }))
+}
+
+/// A JSON integer holding every digit of a Python `int`, whatever its size.
+fn int_value(i: &PyInt) -> Value {
+    serde_json::from_str(i.as_str()).expect("a PyInt is valid JSON integer text")
 }
 
 /// A Python `ValueError`, as the frozen Python driver records it.
@@ -166,21 +177,21 @@ fn rates_json(r: &BargeCostRates) -> Value {
 }
 
 fn cost_result_json(r: &BargeCostResult) -> Value {
-    let breakdown = |rows: &[(&str, i64)]| {
+    let breakdown = |rows: &[(&str, PyInt)]| {
         Value::Object(
             rows.iter()
-                .map(|(k, v)| (k.to_string(), json!(v)))
+                .map(|(k, v)| (k.to_string(), int_value(v)))
                 .collect(),
         )
     };
     json!({
         "barge_breakdown": breakdown(&r.barge_breakdown),
         "tug_breakdown": breakdown(&r.tug_breakdown),
-        "barge_subtotal": r.barge_subtotal,
-        "tug_subtotal": r.tug_subtotal,
-        "yard_margin": r.yard_margin,
+        "barge_subtotal": int_value(&r.barge_subtotal),
+        "tug_subtotal": int_value(&r.tug_subtotal),
+        "yard_margin": int_value(&r.yard_margin),
         "delivery": r.delivery,
-        "unit_total": r.unit_total,
+        "unit_total": int_value(&r.unit_total),
         "checks": checks_json(&r.checks),
         "rates": rates_json(&r.rates),
     })
@@ -291,9 +302,10 @@ fn barge_cost(function: &str, args: &Value) -> Result<Value, EvalError> {
                 }
             };
             match rates {
-                Ok(rates) => ok(cost_result_json(&ovcd_core::barge_cost::compute(
-                    &inputs, &rates,
-                ))),
+                Ok(rates) => match ovcd_core::barge_cost::compute(&inputs, &rates) {
+                    Ok(result) => ok(cost_result_json(&result)),
+                    Err(e) => raised(e.type_name(), e.message()),
+                },
                 Err(message) => value_error(message),
             }
         }

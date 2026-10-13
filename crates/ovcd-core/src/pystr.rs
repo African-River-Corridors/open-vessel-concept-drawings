@@ -2,10 +2,10 @@
 //! `splitlines`, `float(str)` and `str.isidentifier`. They exist because Python's error and check
 //! messages embed `repr` of user text, and because the rates-file reader splits and strips as Python does.
 //!
-//! Known approximation (outside ASCII only): `repr` treats a fixed list of format and space
-//! characters as non-printable, and `is_identifier` uses Rust's `is_alphabetic` / `is_alphanumeric`
-//! where Python uses XID_Start / XID_Continue. Parity cases are ASCII.
+//! Outside ASCII, the answers come from `pystr_tables.rs`, generated from Python 3.12's own Unicode
+//! database (`tools/gen_pystr_tables.py`). That is the Python the frozen oracle runs on.
 
+use crate::pystr_tables::{DECIMAL_ZEROS, IDENTIFIER_CONTINUE, IDENTIFIER_START, NOT_PRINTABLE};
 use alloc::format;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -56,14 +56,24 @@ pub fn splitlines(s: &str) -> Vec<&str> {
     lines
 }
 
-fn is_non_printable(c: char) -> bool {
+/// Is `c` inside one of the sorted, inclusive `(lo, hi)` ranges?
+fn in_ranges(ranges: &[(u32, u32)], c: char) -> bool {
     let cp = c as u32;
-    cp < 0x20
-        || cp == 0x7f
-        || (0x80..=0xa0).contains(&cp)
-        || cp == 0xad
-        || (c != ' ' && is_space(c))
-        || matches!(cp, 0x200b..=0x200f | 0x202a..=0x202e | 0x2060..=0x2064 | 0xfeff)
+    ranges
+        .binary_search_by(|&(lo, hi)| {
+            if cp < lo {
+                core::cmp::Ordering::Greater
+            } else if cp > hi {
+                core::cmp::Ordering::Less
+            } else {
+                core::cmp::Ordering::Equal
+            }
+        })
+        .is_ok()
+}
+
+fn is_non_printable(c: char) -> bool {
+    in_ranges(&NOT_PRINTABLE, c)
 }
 
 /// `repr(s)` for a `str`.
@@ -108,9 +118,31 @@ pub fn repr_str_list<S: AsRef<str>>(items: &[S]) -> String {
     format!("[{}]", parts.join(", "))
 }
 
+/// A Unicode decimal digit as the ASCII digit of the same value; any other character unchanged.
+fn decimal_to_ascii(c: char) -> char {
+    let cp = c as u32;
+    if c.is_ascii() {
+        return c;
+    }
+    match DECIMAL_ZEROS.binary_search(&cp) {
+        Ok(_) => '0',
+        Err(0) => c,
+        Err(i) => {
+            let offset = cp - DECIMAL_ZEROS[i - 1];
+            if offset < 10 {
+                char::from(b'0' + offset as u8)
+            } else {
+                c
+            }
+        }
+    }
+}
+
 /// `float(s)` for a `str`; `None` where Python raises `ValueError`.
 pub fn parse_float(s: &str) -> Option<f64> {
-    let t = strip(s);
+    // Python reads any Unicode decimal digit as its ASCII digit before it parses.
+    let ascii: String = s.chars().map(decimal_to_ascii).collect();
+    let t = strip(&ascii);
     if t.is_empty() {
         return None;
     }
@@ -148,12 +180,12 @@ pub fn parse_float(s: &str) -> Option<f64> {
     lower.parse::<f64>().ok()
 }
 
-/// `s.isidentifier()` (ASCII exact; see the module note for other characters).
+/// `s.isidentifier()`: XID_Start (or `_`) first, then XID_Continue, as Python's database has them.
 pub fn is_identifier(s: &str) -> bool {
     let mut chars = s.chars();
     match chars.next() {
-        Some(c) if c == '_' || c.is_alphabetic() => {}
+        Some(c) if in_ranges(&IDENTIFIER_START, c) => {}
         _ => return false,
     }
-    chars.all(|c| c == '_' || c.is_alphanumeric())
+    chars.all(|c| in_ranges(&IDENTIFIER_CONTINUE, c))
 }

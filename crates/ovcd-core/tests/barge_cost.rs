@@ -14,7 +14,7 @@ fn text_rates(text: &str) -> Result<BargeCostRates, String> {
 
 #[test]
 fn the_example_rates_price_the_default_barge() {
-    let result = compute(&BargeCostInputs::default(), &example_rates().unwrap());
+    let result = compute(&BargeCostInputs::default(), &example_rates().unwrap()).unwrap();
     assert_eq!(result.unit_total, 6_177_125);
     assert!(result.ok());
 }
@@ -94,7 +94,7 @@ fn line_numbers_count_every_line() {
 #[test]
 fn a_zero_mass_fails_the_error_check_and_the_result_is_not_ok() {
     let rates = example_rates().unwrap();
-    let ok = compute(&BargeCostInputs::default(), &rates);
+    let ok = compute(&BargeCostInputs::default(), &rates).unwrap();
     assert!(ok.ok());
     let bad = compute(
         &BargeCostInputs {
@@ -102,13 +102,14 @@ fn a_zero_mass_fails_the_error_check_and_the_result_is_not_ok() {
             ..BargeCostInputs::default()
         },
         &rates,
-    );
+    )
+    .unwrap();
     assert!(!bad.ok());
 }
 
 /// Masses chosen so three items are exactly 1.0 each; the other two lumps are set per case.
 /// Values are what Python 3.12 prints for the same rates: only a compensated `sum()` gets them.
-fn subtotal_with_lumps(cargo: f64, paint: f64) -> i64 {
+fn subtotal_with_lumps(cargo: f64, paint: f64) -> ovcd_core::pyint::PyInt {
     let inputs = BargeCostInputs {
         hull_steel_t: 0.0,
         wing_plate_t: 0.0,
@@ -137,7 +138,7 @@ fn subtotal_with_lumps(cargo: f64, paint: f64) -> i64 {
     rates.tug_outfitting_lump = 0.0;
     rates.yard_margin_fraction = 0.0;
     rates.delivery_lump = 0.0;
-    compute(&inputs, &rates).barge_subtotal
+    compute(&inputs, &rates).unwrap().barge_subtotal
 }
 
 #[test]
@@ -174,7 +175,81 @@ fn the_compensation_from_a_late_big_item_is_kept() {
     rates.cargo_system_lump = 0.5;
     rates.paint_anodes_misc = 1.5;
     assert_eq!(
-        compute(&inputs, &rates).barge_subtotal,
+        compute(&inputs, &rates).unwrap().barge_subtotal,
         10_000_000_000_000_004
     );
+}
+
+fn rates_with(name: &str, value: &str) -> BargeCostRates {
+    let text = EXAMPLE_RATES_TEXT
+        .lines()
+        .map(|l| {
+            if l.starts_with(name) {
+                format!("{name}: {value}")
+            } else {
+                l.to_string()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    text_rates(&text).unwrap()
+}
+
+#[test]
+fn an_infinite_or_nan_figure_fails_as_python_round_does() {
+    let inp = BargeCostInputs::default();
+    let inf = compute(&inp, &rates_with("hull_steel_rate", "inf")).unwrap_err();
+    assert_eq!(inf.type_name(), "OverflowError");
+    assert_eq!(inf.message(), "cannot convert float infinity to integer");
+    let nan = compute(&inp, &rates_with("hull_steel_rate", "nan")).unwrap_err();
+    assert_eq!(nan.type_name(), "ValueError");
+    assert_eq!(nan.message(), "cannot convert float NaN to integer");
+    // A mass so large the product overflows to infinity.
+    let huge = BargeCostInputs {
+        hull_steel_t: 1e308,
+        ..BargeCostInputs::default()
+    };
+    assert_eq!(
+        compute(&huge, &example_rates().unwrap())
+            .unwrap_err()
+            .type_name(),
+        "OverflowError"
+    );
+}
+
+#[test]
+fn a_result_past_the_i64_range_is_the_exact_python_int() {
+    // Digits printed by the frozen Python 3.12 for the same inputs.
+    let big = rates_with("hull_steel_rate", "1e30");
+    let r = compute(&BargeCostInputs::default(), &big).unwrap();
+    assert_eq!(r.unit_total.as_str(), "504460000000000010464469310242816");
+    let big_mass = BargeCostInputs {
+        hull_steel_t: 1e16,
+        ..BargeCostInputs::default()
+    };
+    let r = compute(&big_mass, &example_rates().unwrap()).unwrap();
+    assert_eq!(r.unit_total.as_str(), "27500000000005480448");
+}
+
+#[test]
+fn round_is_half_to_even_and_exact_at_any_size() {
+    use ovcd_core::pyint::{RoundError, round};
+    assert_eq!(round(0.5).unwrap(), 0);
+    assert_eq!(round(1.5).unwrap(), 2);
+    assert_eq!(round(2.5).unwrap(), 2);
+    assert_eq!(round(-2.5).unwrap(), -2);
+    assert_eq!(round(9.0e18).unwrap().as_str(), "9000000000000000000");
+    assert_eq!(round(9.3e18).unwrap().as_str(), "9300000000000000000");
+    assert_eq!(round(-1e19).unwrap().as_str(), "-10000000000000000000");
+    assert_eq!(
+        round(1180591620717411303424.0).unwrap().as_str(),
+        "1180591620717411303424"
+    );
+    assert_eq!(
+        round(f64::MAX).unwrap().as_str(),
+        "179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368"
+    );
+    assert_eq!(round(f64::NAN), Err(RoundError::Nan));
+    assert_eq!(round(f64::INFINITY), Err(RoundError::Infinity));
+    assert_eq!(round(f64::NEG_INFINITY), Err(RoundError::Infinity));
 }

@@ -5,9 +5,11 @@
 //! `compute` uses the example rates file, compiled in.
 //!
 //! Python traps copied here: `sum()` of floats is compensated (Neumaier), `round()` is half to
-//! even and returns an `int`, and `min` returns the first of equal items.
+//! even and returns an `int` of any size (and raises for inf and nan), and `min` returns the first
+//! of equal items.
 
 use crate::checks::Check;
+use crate::pyint::{self, PyInt, RoundError};
 use crate::pystr;
 use alloc::format;
 use alloc::string::{String, ToString};
@@ -245,17 +247,17 @@ pub fn example_rates() -> Result<BargeCostRates, String> {
     BargeCostRates::from_mapping(&mapping)
 }
 
-/// Unit cost and its parts. Rounded money is whole currency units (Python `int`), so `i64`.
+/// Unit cost and its parts. Rounded money is whole currency units: a Python `int`, so [`PyInt`].
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BargeCostResult {
-    pub barge_breakdown: Vec<(&'static str, i64)>,
-    pub tug_breakdown: Vec<(&'static str, i64)>,
-    pub barge_subtotal: i64,
-    pub tug_subtotal: i64,
-    pub yard_margin: i64,
+    pub barge_breakdown: Vec<(&'static str, PyInt)>,
+    pub tug_breakdown: Vec<(&'static str, PyInt)>,
+    pub barge_subtotal: PyInt,
+    pub tug_subtotal: PyInt,
+    pub yard_margin: PyInt,
     pub delivery: f64,
-    pub unit_total: i64,
+    pub unit_total: PyInt,
     pub checks: Vec<Check>,
     pub rates: BargeCostRates,
 }
@@ -285,13 +287,32 @@ fn py_sum(values: &[f64]) -> f64 {
     total
 }
 
-/// Python `round(x)` to an `int`: half to even.
-fn py_round(x: f64) -> i64 {
-    libm::rint(x) as i64
+/// Why `compute` failed: the exception Python's `round()` raises on a result that is nan or infinite.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ComputeError(pub RoundError);
+
+impl ComputeError {
+    /// The Python exception class name (`ValueError` or `OverflowError`).
+    pub fn type_name(self) -> &'static str {
+        self.0.type_name()
+    }
+
+    /// `str(exception)`.
+    pub fn message(self) -> &'static str {
+        self.0.message()
+    }
 }
 
-/// `compute`: unit cost from the masses in `inp` and the `rates`.
-pub fn compute(inp: &BargeCostInputs, rt: &BargeCostRates) -> BargeCostResult {
+fn py_round(x: f64) -> Result<PyInt, ComputeError> {
+    pyint::round(x).map_err(ComputeError)
+}
+
+/// `compute`: unit cost from the masses in `inp` and the `rates`. Fails where Python's `round()`
+/// raises: a nan or infinite figure (a rate of `nan` or `inf`, or a mass so large the cost overflows).
+pub fn compute(
+    inp: &BargeCostInputs,
+    rt: &BargeCostRates,
+) -> Result<BargeCostResult, ComputeError> {
     let barge: [(&'static str, f64); 8] = [
         (
             "hull_steel",
@@ -346,15 +367,20 @@ pub fn compute(inp: &BargeCostInputs, rt: &BargeCostRates) -> BargeCostResult {
             "warning",
         ),
     ];
-    BargeCostResult {
-        barge_breakdown: barge.iter().map(|(k, v)| (*k, py_round(*v))).collect(),
-        tug_breakdown: tug.iter().map(|(k, v)| (*k, py_round(*v))).collect(),
-        barge_subtotal: py_round(b_sub),
-        tug_subtotal: py_round(t_sub),
-        yard_margin: py_round(margin),
+    // Python builds these in this order, so the first figure that cannot round is the error.
+    let round_all =
+        |rows: &[(&'static str, f64)]| -> Result<Vec<(&'static str, PyInt)>, ComputeError> {
+            rows.iter().map(|(k, v)| Ok((*k, py_round(*v)?))).collect()
+        };
+    Ok(BargeCostResult {
+        barge_breakdown: round_all(&barge)?,
+        tug_breakdown: round_all(&tug)?,
+        barge_subtotal: py_round(b_sub)?,
+        tug_subtotal: py_round(t_sub)?,
+        yard_margin: py_round(margin)?,
         delivery: rt.delivery_lump,
-        unit_total: py_round(total),
+        unit_total: py_round(total)?,
         checks,
         rates: rt.clone(),
-    }
+    })
 }
