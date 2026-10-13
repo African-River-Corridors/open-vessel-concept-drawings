@@ -278,6 +278,22 @@
       }
     },
     {
+      "id": "compute/error/negative_bow_length",
+      "tier": 3,
+      "reason": "tier 3: error path: negative bow_waterline_length_m gives a math domain error in math.sqrt (issue #19 fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "significant_wave_height_m": 1.0,
+            "beam_waterline_m": 10.0,
+            "lpp_m": 80.0,
+            "bow_waterline_length_m": -2.0
+          }
+        }
+      }
+    },
+    {
       "id": "compute/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",

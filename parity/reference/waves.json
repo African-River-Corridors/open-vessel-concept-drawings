@@ -543,6 +543,15 @@
       }
     },
     {
+      "id": "compute/error/negative_bow_length",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "math domain error"
+        }
+      }
+    },
+    {
       "id": "compute/sweep/000",
       "output": {
         "ok": {

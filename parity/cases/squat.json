@@ -445,6 +445,24 @@
       }
     },
     {
+      "id": "compute/icorels_not_evaluated_deep_froude",
+      "tier": 1,
+      "reason": "tier 1: kills mutant squat.rs:234 (the ICORELS-not-evaluated warning, depth Froude at or above 0.99; issue #19 fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 15.0,
+            "draft_m": 1.5,
+            "beam_m": 11.4,
+            "lpp_m": 110.0,
+            "water_depth_m": 2.0,
+            "channel_area_m2": 150.0
+          }
+        }
+      }
+    },
+    {
       "id": "compute/error/negative_speed",
       "tier": 3,
       "reason": "tier 3: error path: speed_through_water_kn must be >= 0",

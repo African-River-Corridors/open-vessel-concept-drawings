@@ -1,6 +1,10 @@
 //! Added resistance in waves, the sea leg. Port of `core/waves.py`.
 //!
 //! STAwave-1, ITTC's simple estimate for head waves. The Python file holds the engineering notes.
+//!
+//! Known difference: Python raises `OverflowError` where a float power overflows (for example a
+//! wave height of 1e200); this port returns infinity. Such inputs are far outside the valid range
+//! and the evaluation format cannot carry an overflow error. See the PR for issue #19.
 
 use crate::checks::{Check, all_ok};
 use crate::pyfmt::fixed;
@@ -103,9 +107,16 @@ pub fn compute(inp: &WaveResistanceInputs) -> Result<WaveResistanceResult, Strin
     let lbwl = or_default(inp.bow_waterline_length_m, 0.2 * inp.lpp_m);
     let rho = inp.water_density_t_m3 * 1000.0; // t/m3 -> kg/m3
 
+    // `math.sqrt` raises on a negative argument; `libm::sqrt` gives NaN. A negative bow length is
+    // the only way in (the beam is validated > 0). The text is Python 3.12's, the version of the
+    // Reference Results; 3.14 words it "expected a nonnegative input, got <x>".
+    let ratio = b / lbwl;
+    if ratio < 0.0 {
+        return Err("math domain error".to_string());
+    }
+
     // STAwave-1, head seas. rho*g*Hs^2*B in N; /1000 -> kN
-    let r_head =
-        (1.0 / 16.0) * rho * GRAVITY * libm::pow(hs, 2.0) * b * libm::sqrt(b / lbwl) / 1000.0;
+    let r_head = (1.0 / 16.0) * rho * GRAVITY * libm::pow(hs, 2.0) * b * libm::sqrt(ratio) / 1000.0;
 
     // `math.radians`: x * (pi / 180).
     let mu = inp.heading_deg_off_bow * (core::f64::consts::PI / 180.0);
