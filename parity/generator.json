@@ -1,0 +1,3 @@
+{
+  "reason": "issue #39: the generator (driver.py, sweep.py, frozen_python/) is now guarded; change it only with a new reason here"
+}

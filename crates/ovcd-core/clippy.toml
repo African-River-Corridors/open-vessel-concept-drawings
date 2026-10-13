@@ -1,6 +1,7 @@
 # Platform-identical maths (spec 0001): the core uses the pure-Rust `libm` crate for every
 # transcendental, so results are bit-identical on Windows, macOS, Linux and WebAssembly.
-# The standard-library versions, `powi` and `mul_add` are banned here.
+# The standard-library versions, `powi` and `mul_add` are banned here, for f64 and for f32
+# (tests/banned_maths.rs keeps the two lists in step).
 disallowed-methods = [
   { path = "f64::sin", reason = "use libm::sin" },
   { path = "f64::cos", reason = "use libm::cos" },
@@ -31,7 +32,29 @@ disallowed-methods = [
   { path = "f64::mul_add", reason = "fused multiply-add changes rounding; write a * b + c as Python does" },
   { path = "f32::sin", reason = "the core is f64; use libm" },
   { path = "f32::cos", reason = "the core is f64; use libm" },
+  { path = "f32::tan", reason = "the core is f64; use libm" },
+  { path = "f32::sin_cos", reason = "the core is f64; use libm" },
+  { path = "f32::asin", reason = "the core is f64; use libm" },
+  { path = "f32::acos", reason = "the core is f64; use libm" },
+  { path = "f32::atan", reason = "the core is f64; use libm" },
+  { path = "f32::atan2", reason = "the core is f64; use libm" },
+  { path = "f32::sinh", reason = "the core is f64; use libm" },
+  { path = "f32::cosh", reason = "the core is f64; use libm" },
+  { path = "f32::tanh", reason = "the core is f64; use libm" },
+  { path = "f32::asinh", reason = "the core is f64; use libm" },
+  { path = "f32::acosh", reason = "the core is f64; use libm" },
+  { path = "f32::atanh", reason = "the core is f64; use libm" },
+  { path = "f32::exp", reason = "the core is f64; use libm" },
+  { path = "f32::exp2", reason = "the core is f64; use libm" },
+  { path = "f32::exp_m1", reason = "the core is f64; use libm" },
+  { path = "f32::ln", reason = "the core is f64; use libm" },
+  { path = "f32::log", reason = "the core is f64; use libm" },
+  { path = "f32::log2", reason = "the core is f64; use libm" },
+  { path = "f32::log10", reason = "the core is f64; use libm" },
+  { path = "f32::ln_1p", reason = "the core is f64; use libm" },
   { path = "f32::powf", reason = "the core is f64; use libm" },
   { path = "f32::powi", reason = "the core is f64; use libm" },
+  { path = "f32::cbrt", reason = "the core is f64; use libm" },
+  { path = "f32::hypot", reason = "the core is f64; use libm" },
   { path = "f32::mul_add", reason = "the core is f64; no fused multiply-add" },
 ]
