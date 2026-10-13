@@ -684,6 +684,41 @@
       }
     },
     {
+      "id": "int-for-float/cofferdam1",
+      "output": {
+        "ok": {
+          "aft_separation_m": 2.0,
+          "fwd_separation_m": 0.5,
+          "cofferdam_m": 1.0,
+          "service_space_m": 1.0,
+          "total_length_taken_m": 2.5,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 1.00 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
       "id": "compute/sweep/000",
       "output": {
         "ok": {

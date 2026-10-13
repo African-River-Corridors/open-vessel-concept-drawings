@@ -105,6 +105,13 @@ def _coerce(hint, value):
         return [_coerce(item, v) for v in value]
     if dataclasses.is_dataclass(hint) and isinstance(value, dict):
         return build(hint, value)
+    if hint is float and isinstance(value, int) and not isinstance(value, bool):
+        # JSON `12` and `12.0` are the same number to the Rust side, which always holds an f64.
+        # Cast here so the frozen Python also holds a float and echoes `12.0`, not `12`.
+        return float(value)
+    if hint is bool and not isinstance(value, bool):
+        # Rust rejects a non-boolean here as BadInput; Python would accept a truthy value.
+        raise TypeError(f"a bool field was given {value!r}; write true or false")
     return value
 
 

@@ -70,6 +70,10 @@ exactly: integers (an integer never matches a float), booleans, text including m
 object keys. A knife-edge case is nudged or replaced, with the reason recorded on the case. The
 tolerance is never loosened.
 
+Input numbers: the driver adapter casts a JSON integer to a float wherever the frozen Python
+dataclass hints `float`, so `"beam": 12` and `"beam": 12.0` give the same Reference Result (`12.0`).
+A non-boolean given for a `bool` field fails regen with a TypeError, because the Rust side rejects it.
+
 ## Tasks
 
 ```

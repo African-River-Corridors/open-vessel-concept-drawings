@@ -289,6 +289,19 @@
       }
     },
     {
+      "id": "int-for-float/cofferdam1",
+      "tier": 1,
+      "reason": "tier 1: integer written for a float input must give the same result as the float (fix round 1, issue #13)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "cofferdam_m": 1
+          }
+        }
+      }
+    },
+    {
       "id": "compute/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
