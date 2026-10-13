@@ -9,8 +9,9 @@ shipped package) for each case, and writes `<out-dir>/<entry_point>.json`.
 Output rules (spec 0001):
 - floats are written as shortest round-trip text (Python's repr);
 - NaN and infinity are written as the tagged strings "float:nan", "float:inf" and "float:-inf";
-- a raised ValueError or OverflowError is recorded as {"error": {"type": "ValueError", "message": ...}}
-  (Python's `round()` raises OverflowError on infinity); a KeyError the
+- a raised ValueError, ZeroDivisionError or OverflowError is recorded as
+  {"error": {"type": "<class name>", "message": ...}} (Python's `round()` raises OverflowError
+  on infinity); a KeyError the
   frozen Python raises on purpose is recorded the same way, but only where an adapter wraps the frozen
   call in `frozen_key_error` (a KeyError from the driver itself, such as a mistyped case, fails regen);
 - a normal return is recorded as {"ok": <value>}.
@@ -106,6 +107,13 @@ def _coerce(hint, value):
         return [_coerce(item, v) for v in value]
     if dataclasses.is_dataclass(hint) and isinstance(value, dict):
         return build(hint, value)
+    if hint is float and isinstance(value, int) and not isinstance(value, bool):
+        # JSON `12` and `12.0` are the same number to the Rust side, which always holds an f64.
+        # Cast here so the frozen Python also holds a float and echoes `12.0`, not `12`.
+        return float(value)
+    if hint is bool and not isinstance(value, bool):
+        # Rust rejects a non-boolean here as BadInput; Python would accept a truthy value.
+        raise TypeError(f"a bool field was given {value!r}; write true or false")
     return value
 
 
@@ -398,7 +406,7 @@ def run_case(entry_point: str, case_input: dict) -> dict:
     except FrozenKeyError as wrapped:
         exc = wrapped.exc
         return {"error": {"type": type(exc).__name__, "message": str(exc)}}
-    except (ValueError, OverflowError) as exc:
+    except (ValueError, ZeroDivisionError, OverflowError) as exc:
         return {"error": {"type": type(exc).__name__, "message": str(exc)}}
     return {"ok": to_json(result)}
 

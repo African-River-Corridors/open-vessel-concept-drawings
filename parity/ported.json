@@ -3,5 +3,7 @@
   "barge_cost",
   "vessel_standards",
   "pressure_vessel",
-  "protective_location"
+  "protective_location",
+  "aft_arrangement",
+  "gas_separation"
 ]

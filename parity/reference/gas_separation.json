@@ -684,6 +684,76 @@
       }
     },
     {
+      "id": "int-for-float/cofferdam1",
+      "output": {
+        "ok": {
+          "aft_separation_m": 2.0,
+          "fwd_separation_m": 0.5,
+          "cofferdam_m": 1.0,
+          "service_space_m": 1.0,
+          "total_length_taken_m": 2.5,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 1.00 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/infinite_total_length",
+      "output": {
+        "ok": {
+          "aft_separation_m": 1e+308,
+          "fwd_separation_m": 1e+308,
+          "cofferdam_m": 1e+308,
+          "service_space_m": 0.0,
+          "total_length_taken_m": "float:inf",
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 100000000000000001097906362944045541740492309677311846336810682903157585404911491537163328978494688899061249669721172515611590283743140088328307009198146046031271664502933027185697489699588559043338384466165001178426897626212945177628091195786707458122783970171784415105291802893207873272974885715430223118336.00 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 100000000000000001097906362944045541740492309677311846336810682903157585404911491537163328978494688899061249669721172515611590283743140088328307009198146046031271664502933027185697489699588559043338384466165001178426897626212945177628091195786707458122783970171784415105291802893207873272974885715430223118336.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 100000000000000001097906362944045541740492309677311846336810682903157585404911491537163328978494688899061249669721172515611590283743140088328307009198146046031271664502933027185697489699588559043338384466165001178426897626212945177628091195786707458122783970171784415105291802893207873272974885715430223118336.00 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
       "id": "compute/sweep/000",
       "output": {
         "ok": {
