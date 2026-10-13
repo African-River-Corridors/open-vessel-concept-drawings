@@ -182,3 +182,24 @@ fn check_rejects_an_unknown_vessel_type_before_anything_else() {
         Err("'igc_2g' is not a valid VesselType".to_string())
     );
 }
+
+#[test]
+fn unknown_type_message_uses_pythons_repr_for_spaces_and_both_quotes() {
+    // CPython: 'a b' keeps its space; a text with both quote kinds is single-quoted and the
+    // single quote is escaped; DEL is shown as \x7f; a tab is shown as \t.
+    let msg = |t: &str| VesselType::from_value(t).unwrap_err();
+    assert_eq!(msg("a b"), "'a b' is not a valid VesselType");
+    assert_eq!(msg("a'b\"c"), "'a\\'b\"c' is not a valid VesselType");
+    assert_eq!(msg("a\u{7f}b"), "'a\\x7fb' is not a valid VesselType");
+    assert_eq!(msg("tab\there"), "'tab\\there' is not a valid VesselType");
+}
+
+#[test]
+fn max_keeps_the_first_of_equal_items_including_signed_zero() {
+    // CPython: max(min(-0.0 / 5, 11.5), 0.0) is -0.0 (the first of the equal items), and so is
+    // the bottom rule. A port that returns the second item would give +0.0.
+    let s = required_side_protection(Some(VesselType::Igf), -0.0, 0.0).unwrap();
+    assert!(s == 0.0 && s.is_sign_negative());
+    let b = required_bottom_protection(-0.0, 0.0, Some(VesselType::Igf));
+    assert!(b == 0.0 && b.is_sign_negative());
+}
