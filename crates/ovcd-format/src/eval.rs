@@ -569,6 +569,10 @@ fn vessel_standards(function: &str, args: &Value) -> Result<Value, EvalError> {
         }
         other => Err(EvalError::BadInput(format!(
             "vessel_standards has no parity function `{other}`"
+        ))),
+    }
+}
+
 fn protective_location(function: &str, args: &Value) -> Result<Value, EvalError> {
     use ovcd_core::protective_location as pl;
     // A `ValueError` is a normal result; anything else is a bad case.
