@@ -257,7 +257,11 @@ fn mutants(args: &[String]) -> Result {
             count(&timeout),
             count(&unviable)
         ));
-        for (title, list) in [("Survived", &missed), ("Timed out", &timeout)] {
+        for (title, list) in [
+            ("Survived", &missed),
+            ("Timed out", &timeout),
+            ("Killed", &caught),
+        ] {
             if count(list) > 0 {
                 report.push_str(&format!("\n## {title}\n\n"));
                 for line in list.lines().filter(|l| !l.trim().is_empty()) {
