@@ -14,6 +14,8 @@ extern crate std;
 pub mod barge_cost;
 pub mod cargo;
 pub mod checks;
+pub mod pressure_vessel;
+pub mod protective_location;
 pub mod pyfmt;
 pub mod pyint;
 pub mod pystr;

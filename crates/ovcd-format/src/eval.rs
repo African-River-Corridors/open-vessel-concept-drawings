@@ -70,6 +70,8 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
         "cargo" => cargo(function, args),
         "barge_cost" => barge_cost(function, args),
         "vessel_standards" => vessel_standards(function, args),
+        "protective_location" => protective_location(function, args),
+        "pressure_vessel" => pressure_vessel(function, args),
         ep if ENTRY_POINTS.contains(&ep) => Err(EvalError::NotPorted(ep.into())),
         ep => Err(EvalError::UnknownEntryPoint(ep.into())),
     }
@@ -92,6 +94,42 @@ fn int_value(i: &PyInt) -> Value {
 /// A Python `ValueError`, as the frozen Python driver records it.
 fn value_error(message: String) -> Result<Value, EvalError> {
     Ok(json!({ "error": { "type": "ValueError", "message": message } }))
+}
+
+/// A Python exception other than `ValueError`, recorded the same way (class name and message).
+fn py_error(kind: &str, message: String) -> Result<Value, EvalError> {
+    Ok(json!({ "error": { "type": kind, "message": message } }))
+}
+
+/// A float argument. A JSON integer is refused: Python would keep an `int` and may echo it back
+/// as an `int`, which the Rust port does not model, so a case must write `18.0`, not `18`.
+fn f64_arg(args: &Value, name: &str) -> Result<f64, EvalError> {
+    match args.get(name) {
+        Some(Value::Number(n)) if n.is_f64() => Ok(n.as_f64().unwrap_or(f64::NAN)),
+        _ => Err(EvalError::BadInput(format!(
+            "`args.{name}` must be a float (write 18.0, not 18)"
+        ))),
+    }
+}
+
+/// A float argument with a default when the key is absent (a Python default argument).
+fn f64_arg_or(args: &Value, name: &str, default: f64) -> Result<f64, EvalError> {
+    if args.get(name).is_none() {
+        Ok(default)
+    } else {
+        f64_arg(args, name)
+    }
+}
+
+/// A string argument that may be null or absent (Python `None`).
+fn opt_str_arg<'a>(args: &'a Value, name: &str) -> Result<Option<&'a str>, EvalError> {
+    match args.get(name) {
+        None | Some(Value::Null) => Ok(None),
+        Some(Value::String(s)) => Ok(Some(s)),
+        Some(_) => Err(EvalError::BadInput(format!(
+            "`args.{name}` must be a string or null"
+        ))),
+    }
 }
 
 fn str_arg<'a>(args: &'a Value, name: &str) -> Result<&'a str, EvalError> {
@@ -519,6 +557,132 @@ fn vessel_standards(function: &str, args: &Value) -> Result<Value, EvalError> {
         }
         other => Err(EvalError::BadInput(format!(
             "vessel_standards has no parity function `{other}`"
+fn protective_location(function: &str, args: &Value) -> Result<Value, EvalError> {
+    use ovcd_core::protective_location as pl;
+    // A `ValueError` is a normal result; anything else is a bad case.
+    fn lift<T>(r: Result<T, String>, f: impl FnOnce(T) -> Value) -> Result<Value, EvalError> {
+        match r {
+            Ok(v) => ok(f(v)),
+            Err(message) => value_error(message),
+        }
+    }
+    let vessel_type = |args: &Value| -> Result<Result<Option<pl::VesselType>, String>, EvalError> {
+        Ok(match opt_str_arg(args, "vessel_type")? {
+            None => Ok(None),
+            Some(text) => pl::VesselType::from_value(text).map(Some),
+        })
+    };
+    match function {
+        "distance_d_vc" => ok(json!(pl::distance_d_vc(f64_arg(args, "vc")?))),
+        "d_vc_exact" => ok(json!(pl::d_vc_exact(f64_arg(args, "vc_individual_m3")?))),
+        "required_side_protection" => {
+            let (beam, d_vc) = (f64_arg(args, "beam")?, f64_arg(args, "d_vc")?);
+            match vessel_type(args)? {
+                Ok(vt) => lift(pl::required_side_protection(vt, beam, d_vc), |v| json!(v)),
+                Err(message) => value_error(message),
+            }
+        }
+        "required_bottom_protection" => {
+            let (beam, d_vc) = (f64_arg(args, "beam")?, f64_arg(args, "d_vc")?);
+            match vessel_type(args)? {
+                Ok(vt) => ok(json!(pl::required_bottom_protection(beam, d_vc, vt))),
+                Err(message) => value_error(message),
+            }
+        }
+        "compute_required_clearances" => lift(
+            pl::compute_required_clearances(
+                str_arg(args, "vessel_type_str")?,
+                f64_arg(args, "beam")?,
+                f64_arg(args, "d_vc")?,
+            ),
+            |r| {
+                json!({
+                    "cs_required": r.cs_required,
+                    "cb_required": r.cb_required,
+                    "d_vc": r.d_vc,
+                })
+            },
+        ),
+        "check_protective_location" => lift(
+            pl::check_protective_location(
+                str_arg(args, "vessel_type_str")?,
+                f64_arg(args, "beam")?,
+                f64_arg(args, "total_tank_volume")?,
+                f64_arg(args, "side_clearance")?,
+                f64_arg(args, "double_bottom_height")?,
+                f64_arg(args, "tank_support_height")?,
+            ),
+            |r| {
+                json!({
+                    "vessel_type": r.vessel_type,
+                    "d_vc": r.d_vc,
+                    "total_tank_volume": r.total_tank_volume,
+                    "cs_required": r.cs_required,
+                    "cs_actual": r.cs_actual,
+                    "cs_ok": r.cs_ok,
+                    "cb_required": r.cb_required,
+                    "cb_actual": r.cb_actual,
+                    "cb_ok": r.cb_ok,
+                })
+            },
+        ),
+        other => Err(EvalError::BadInput(format!(
+            "protective_location has no parity function `{other}`"
+        ))),
+    }
+}
+
+fn pressure_vessel(function: &str, args: &Value) -> Result<Value, EvalError> {
+    use ovcd_core::pressure_vessel as pv;
+    let weld = |args: &Value| f64_arg_or(args, "weld_efficiency", pv::DEFAULT_WELD_EFFICIENCY);
+    let thickness = |r: Result<f64, pv::PyError>| match r {
+        Ok(t) => ok(json!(t)),
+        Err(e) => py_error(e.kind, e.message),
+    };
+    match function {
+        "get_tank_material" => match pv::get_tank_material(str_arg(args, "material_key")?) {
+            Ok(m) => ok(json!({
+                "name": m.name,
+                "allowable_stress": m.allowable_stress,
+                "density": m.density,
+                "min_thickness": m.min_thickness,
+                "corrosion_allowance": m.corrosion_allowance,
+                "description": m.description,
+            })),
+            Err(e) => py_error(e.kind, e.message),
+        },
+        "cylinder_wall_thickness" => thickness(pv::cylinder_wall_thickness(
+            f64_arg(args, "design_pressure_mpa")?,
+            f64_arg(args, "inner_radius_mm")?,
+            f64_arg(args, "allowable_stress_mpa")?,
+            weld(args)?,
+        )),
+        "hemisphere_head_thickness" => thickness(pv::hemisphere_head_thickness(
+            f64_arg(args, "design_pressure_mpa")?,
+            f64_arg(args, "inner_radius_mm")?,
+            f64_arg(args, "allowable_stress_mpa")?,
+            weld(args)?,
+        )),
+        "ellipsoidal_head_thickness" => thickness(pv::ellipsoidal_head_thickness(
+            f64_arg(args, "design_pressure_mpa")?,
+            f64_arg(args, "inner_diameter_mm")?,
+            f64_arg(args, "allowable_stress_mpa")?,
+            weld(args)?,
+        )),
+        "calculate_wall_thicknesses" => {
+            match pv::calculate_wall_thicknesses(
+                f64_arg(args, "outer_diameter_m")?,
+                f64_arg(args, "design_pressure_mpa")?,
+                str_arg(args, "material_key")?,
+                str_arg(args, "head_type")?,
+                weld(args)?,
+            ) {
+                Ok((cyl, head)) => ok(json!([cyl, head])),
+                Err(e) => py_error(e.kind, e.message),
+            }
+        }
+        other => Err(EvalError::BadInput(format!(
+            "pressure_vessel has no parity function `{other}`"
         ))),
     }
 }
