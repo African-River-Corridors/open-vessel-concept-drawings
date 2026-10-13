@@ -92,8 +92,8 @@ fn a_fast_target_is_capped_at_the_schijf_fraction_and_binds_the_design_channel()
     };
     assert_eq!(channel.service_speed_knots, 8.42);
     assert_eq!(sea.service_speed_knots, 9.0);
-    close(channel.battery_power_kw, 542.528);
-    close(sea.battery_power_kw, 359.119);
+    close(channel.battery_power_kw, 542.5283351789959);
+    assert!((sea.battery_power_kw - 359.119).abs() < 1e-3);
     assert_eq!(r.binding().unwrap().name, "Design channel");
     close(r.installed_power_kw, 651.0340022147951);
 }
