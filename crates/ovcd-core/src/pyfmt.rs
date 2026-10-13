@@ -44,8 +44,7 @@ fn split_exp(text: &str) -> (bool, String, i32) {
 
 /// Python's exponent suffix: sign always shown, at least two digits.
 fn exp_suffix(exp: i32) -> String {
-    // Exponent form never has exponent 0 (it starts at 1e16, 1e6 and below 1e-4), so `<` and `<=` agree.
-    let sign = if exp < 0 { '-' } else { '+' };
+    let sign = if exp.is_negative() { '-' } else { '+' };
     format!("e{sign}{:02}", exp.unsigned_abs())
 }
 
