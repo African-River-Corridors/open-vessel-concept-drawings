@@ -147,3 +147,34 @@ fn the_subtotal_is_a_compensated_sum_as_in_python() {
     assert_eq!(subtotal_with_lumps(1e16, -1e16), 2);
     assert_eq!(subtotal_with_lumps(-1e16, 1.0), -9_999_999_999_999_996);
 }
+
+#[test]
+fn the_compensation_from_a_late_big_item_is_kept() {
+    // Items in order: 0, 0, 0, 0.5, 0.5, 1e16, 0.5, 1.5. Python 3.12 gives 10000000000000004.
+    let inputs = BargeCostInputs {
+        hull_steel_t: 0.0,
+        wing_plate_t: 0.0,
+        weather_shield_t: 0.0,
+        tank_shell_t: 0.0,
+        tank_supports_t: 0.0,
+        insulation_t: 0.5,
+        piping_machinery_t: 1e16,
+        outfitting_t: 0.5,
+        tug_hull_steel_t: 0.0,
+        battery_kwh: 0.0,
+        propulsion_kw: 0.0,
+    };
+    let mut rates = example_rates().unwrap();
+    rates.hull_steel_rate = 1.0;
+    rates.tank_shell_rate = 1.0;
+    rates.tank_supports_rate = 1.0;
+    rates.insulation_rate = 1.0;
+    rates.piping_rate = 1.0;
+    rates.outfitting_rate = 1.0;
+    rates.cargo_system_lump = 0.5;
+    rates.paint_anodes_misc = 1.5;
+    assert_eq!(
+        compute(&inputs, &rates).barge_subtotal,
+        10_000_000_000_000_004
+    );
+}
