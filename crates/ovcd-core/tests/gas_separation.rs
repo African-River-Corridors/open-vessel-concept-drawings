@@ -184,3 +184,17 @@ fn negative_separations_raise_the_python_message() {
         );
     }
 }
+
+/// `max` returns the first of equal items. `0.0` and `-0.0` are equal but differ in sign;
+/// Python gives `0.0` here, so a port that takes the second item would show `-0.0`.
+#[test]
+fn max_keeps_the_first_zero() {
+    let r = compute(&GasSeparationInputs {
+        cofferdam_m: 0.0,
+        opening_setback_m: -0.0,
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(r.aft_separation_m.is_sign_positive());
+    assert!(r.service_space_m.is_sign_positive());
+}

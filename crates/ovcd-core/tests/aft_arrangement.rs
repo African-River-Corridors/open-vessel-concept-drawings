@@ -168,11 +168,24 @@ fn the_feet_label_rounds_half_to_even() {
     assert!(label.starts_with("42 FT UNITS"), "{label}");
 }
 
-/// `max(0.0, x)` and `min(lift, max)` return the first of equal items.
+/// `max(0.0, x)` and `min(lift, max)` return the first of equal items. The two zeros are equal
+/// but differ in sign, so a port that picks the second one shows `-0.0`. Python prints `0.0` for
+/// both cases below.
 #[test]
-fn zero_lift_keeps_the_first_zero() {
+fn max_keeps_the_first_zero() {
     let mut i = gas(14.8, 5.4);
-    i.sightline_obstruction_m = Some(5.4 + 1.5 - 0.5); // needed == eye: lift is exactly 0.0
+    i.wheelhouse_eye_above_floor_m = -5.4; // eye_lo is +0.0
+    i.sightline_obstruction_m = Some(-0.0);
+    i.sightline_margin_m = -0.0; // needed is -0.0, so needed - eye_lo is -0.0
+    let r = compute(&i).unwrap();
+    assert_eq!(r.wheelhouse_lift_m, 0.0);
+    assert!(r.wheelhouse_lift_m.is_sign_positive());
+}
+
+#[test]
+fn min_keeps_the_first_zero() {
+    let mut i = gas(14.8, 5.4);
+    i.wheelhouse_max_lift_m = -0.0; // min(0.0, -0.0)
     let r = compute(&i).unwrap();
     assert!(r.wheelhouse_lift_m.is_sign_positive());
 }
