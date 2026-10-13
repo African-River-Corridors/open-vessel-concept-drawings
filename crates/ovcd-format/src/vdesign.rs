@@ -11,7 +11,14 @@
 //! value in a hand-written file counts as typed. A stored input is never replaced by a profile
 //! value, so a later profile change never changes a saved file.
 //!
-//! Validation lives here only. The core copies Python exactly and adds no checks.
+//! A file must hold every input that applies to its Cargo Containment. [`check`] refuses a file
+//! that leaves one out, because the value would come from whatever Defaults Profile is loaded
+//! today, and a profile edit would change what the file means. [`fill`] writes the left-out
+//! inputs in, as used and marked `default`, so a designer can still write only the required six.
+//!
+//! Validation lives here only. The core copies Python exactly and adds no checks. Besides the
+//! range table, validation refuses inputs the frozen Python turns into a physically impossible
+//! result (see [`DRY_BULK_WING_VOID_M`]).
 
 use crate::profile::Profile;
 use serde_json::{Map, Value, json};
@@ -50,6 +57,23 @@ pub const HULL_FORMS: &[&str] = &["raked_box"];
 /// The deepest hull the gas depth search (`optimise_depth`) tries, in m. It is fixed in the core
 /// (`DEFAULT_DEPTHS_M`, 3.5 to 7.0 m).
 pub const DEPTH_SEARCH_MAX_M: f64 = 7.0;
+
+/// The dry-bulk hold section, copied from the frozen `barge_capacity` defaults (fixed in the
+/// core, not inputs): each side has a wing void of this width, in m. The hold width is
+/// `beam - 2 * wing void`.
+///
+/// The rule (issue #41): the frozen Python returns a negative cargo mass and draught when the
+/// hold width or hold height is negative, so validation refuses those inputs. It does not set a
+/// minimum beam or depth; it refuses the impossible result. A hold of exactly zero gives zero
+/// cargo, which the engine reports itself as a failed check, so it passes.
+pub const DRY_BULK_WING_VOID_M: f64 = 1.0;
+
+/// The dry-bulk double bottom height, in m (frozen `barge_capacity` default).
+pub const DRY_BULK_DOUBLE_BOTTOM_M: f64 = 1.2;
+
+/// The dry-bulk hatch coaming height, in m (frozen `barge_capacity` default). The hold height is
+/// `(depth - double bottom) + coaming`, in that order, as the Python computes it.
+pub const DRY_BULK_COAMING_M: f64 = 1.0;
 
 /// Gas tank rulesets.
 pub const RULESETS: &[&str] = &["IGC_2G", "IGC_2G_EXACT", "ADN_G"];
@@ -252,8 +276,10 @@ pub struct Checked {
 }
 
 /// A starter Design: one Option with example required inputs (typed, for the designer to edit)
-/// and every other input from the profile, marked as defaults.
-pub fn new_design(profile: &Profile) -> Design {
+/// and every other input from the profile, marked as defaults. Fails when the profile's defaults
+/// do not make a valid Design with the example inputs (for example a minimum freeboard deeper
+/// than the example hull).
+pub fn new_design(profile: &Profile) -> Result<Design, String> {
     let typed = json!({
         "cargo": "bauxite",
         "hull_form": "raked_box",
@@ -263,17 +289,59 @@ pub fn new_design(profile: &Profile) -> Design {
         "moulded_depth_m": 3.5,
     });
     let mut report = Report::default();
-    let option = read_option("Option 1", typed.as_object().unwrap(), profile, &mut report);
-    debug_assert!(report.is_ok(), "{report:?}");
-    Design {
+    let option = read_option(
+        "Option 1",
+        typed.as_object().expect("an object"),
+        profile,
+        Missing::Fill,
+        &mut report,
+    );
+    if !report.is_ok() {
+        return Err(format!(
+            "the Defaults Profile '{}' does not make a valid starter Design: {}",
+            profile.name(),
+            report.errors.join("; ")
+        ));
+    }
+    Ok(Design {
         engine_version: ENGINE_VERSION.into(),
         defaults_profile: Some(profile.name().into()),
         options: vec![option],
-    }
+    })
 }
 
-/// Read and validate a `.vdesign` file's text, without running it.
+/// What to do with an input the file leaves out.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Missing {
+    /// A hard error: a saved file must hold every input as used.
+    Refuse,
+    /// Write the Defaults Profile value in, marked `default`, with a warning.
+    Fill,
+}
+
+/// Read and validate a `.vdesign` file's text, without running it. A file that leaves out an
+/// input is refused; the returned Design still shows the defaults it would take, so every other
+/// problem is reported too.
 pub fn check(text: &str, profile: &Profile) -> Checked {
+    read_text(text, profile, Missing::Refuse)
+}
+
+/// Read a `.vdesign` file's text and write every left-out input in, as used and marked
+/// `default`, from `profile`. The report holds every other problem, as [`check`] gives it. Save
+/// the returned Design only when the report has no hard errors.
+pub fn fill(text: &str, profile: &Profile) -> Checked {
+    let mut checked = read_text(text, profile, Missing::Fill);
+    if let Some(design) = &mut checked.design
+        && checked.report.warnings.iter().any(|w| w.contains(FILLED))
+    {
+        design.defaults_profile = Some(profile.name().into());
+    }
+    checked
+}
+
+const FILLED: &str = "was not stored in the file; wrote in the Defaults Profile value";
+
+fn read_text(text: &str, profile: &Profile, missing: Missing) -> Checked {
     let mut report = Report::default();
     let root: Value = match serde_json::from_str(text) {
         Ok(v) => v,
@@ -285,11 +353,16 @@ pub fn check(text: &str, profile: &Profile) -> Checked {
             };
         }
     };
-    let design = read_design(&root, profile, &mut report);
+    let design = read_design(&root, profile, missing, &mut report);
     Checked { design, report }
 }
 
-fn read_design(root: &Value, profile: &Profile, report: &mut Report) -> Option<Design> {
+fn read_design(
+    root: &Value,
+    profile: &Profile,
+    missing: Missing,
+    report: &mut Report,
+) -> Option<Design> {
     let Some(root) = root.as_object() else {
         report
             .errors
@@ -386,7 +459,7 @@ fn read_design(root: &Value, profile: &Profile, report: &mut Report) -> Option<D
                     .push(format!("Option '{name}': unknown key `{key}` is ignored"));
             }
         }
-        options.push(read_option(name, inputs, profile, report));
+        options.push(read_option(name, inputs, profile, missing, report));
     }
     Some(Design {
         engine_version,
@@ -424,9 +497,11 @@ fn read_option(
     name: &str,
     raw: &Map<String, Value>,
     profile: &Profile,
+    missing: Missing,
     report: &mut Report,
 ) -> DesignOption {
     let at = |msg: String| format!("Option '{name}': {msg}");
+    let mut left_out: Vec<&str> = Vec::new();
     for key in raw.keys() {
         if !INPUTS.iter().any(|s| s.name == key) {
             report.errors.push(at(format!("unknown input `{key}`")));
@@ -502,11 +577,14 @@ fn read_option(
                 continue;
             }
         };
-        report.warnings.push(at(format!(
-            "`{}` is not stored in the file; using the Defaults Profile value {}",
-            spec.name,
-            show(&default)
-        )));
+        match missing {
+            Missing::Refuse => left_out.push(spec.name),
+            Missing::Fill => report.warnings.push(at(format!(
+                "`{}` {FILLED} {}, marked default",
+                spec.name,
+                show(&default)
+            ))),
+        }
         inputs.push((
             spec.name.into(),
             StoredInput {
@@ -515,7 +593,16 @@ fn read_option(
             },
         ));
     }
+    if !left_out.is_empty() {
+        report.errors.push(at(format!(
+            "inputs not stored in the file: {}. A saved Design holds every input as used, so a \
+             Defaults Profile edit cannot change it; run `ovcd fill` to write them in from the \
+             Defaults Profile, marked default",
+            left_out.join(", ")
+        )));
+    }
     cross_checks(&inputs, report, &at);
+    impossible_results(&inputs, report, &at);
     DesignOption {
         name: name.into(),
         inputs,
@@ -766,6 +853,49 @@ fn cross_checks(
             "`channel_depth_m` = {depth} must be at least `channel_under_keel_clearance_m` = \
              {ukc} (hard limit)"
         )));
+    }
+}
+
+/// A derived length as a person reads it: rounded to the micrometre, so float noise stays out of
+/// the message.
+fn show_m(x: f64) -> String {
+    let r = (x * 1e6).round() / 1e6;
+    format!("{}", if r == 0.0 { 0.0 } else { r })
+}
+
+/// Refuse inputs the frozen Python turns into a physically impossible result. See
+/// [`DRY_BULK_WING_VOID_M`] for the rule.
+fn impossible_results(
+    inputs: &[(String, StoredInput)],
+    report: &mut Report,
+    at: &dyn Fn(String) -> String,
+) {
+    let get = |n: &str| inputs.iter().find(|(k, _)| k == n).map(|(_, i)| &i.value);
+    let containment = get("cargo_containment").and_then(Value::as_str);
+    if !matches!(containment, Some("box_hold" | "sloped_hopper_hold")) {
+        return;
+    }
+    const NEGATIVE: &str = "a negative hold gives a negative cargo mass and draught (hard limit)";
+    if let Some(beam) = get("beam_m").and_then(Value::as_f64) {
+        let width = beam - 2.0 * DRY_BULK_WING_VOID_M;
+        if width < 0.0 {
+            report.errors.push(at(format!(
+                "`beam_m` = {beam} leaves a hold width of {} m after the two \
+                 {DRY_BULK_WING_VOID_M} m wing voids; {NEGATIVE}",
+                show_m(width)
+            )));
+        }
+    }
+    if let Some(depth) = get("moulded_depth_m").and_then(Value::as_f64) {
+        let height = (depth - DRY_BULK_DOUBLE_BOTTOM_M) + DRY_BULK_COAMING_M;
+        if height < 0.0 {
+            report.errors.push(at(format!(
+                "`moulded_depth_m` = {depth} leaves a hold height of {} m (depth less the \
+                 {DRY_BULK_DOUBLE_BOTTOM_M} m double bottom, plus the {DRY_BULK_COAMING_M} m \
+                 coaming); {NEGATIVE}",
+                show_m(height)
+            )));
+        }
     }
 }
 
