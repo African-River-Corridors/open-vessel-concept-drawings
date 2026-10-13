@@ -1,0 +1,17 @@
+[workspace]
+resolver = "3"
+members = ["crates/ovcd-core", "crates/ovcd-format", "crates/ovcd-cli", "crates/ovcd-py", "xtask"]
+# ovcd-py (PyO3 bindings) is left out so `cargo build` and `cargo test` need no Python.
+default-members = ["crates/ovcd-core", "crates/ovcd-format", "crates/ovcd-cli", "xtask"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+license = "Apache-2.0"
+repository = "https://github.com/African-River-Corridors/open-vessel-concept-drawings"
+
+[workspace.dependencies]
+ovcd-core = { path = "crates/ovcd-core" }
+ovcd-format = { path = "crates/ovcd-format" }
+serde_json = "1"

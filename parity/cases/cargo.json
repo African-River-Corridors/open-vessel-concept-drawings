@@ -1,0 +1,125 @@
+{
+  "entry_point": "cargo",
+  "cases": [
+    {
+      "id": "get_cargo/LNG",
+      "tier": 1,
+      "reason": "initial case set (spec 0001 harness tracer)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": "LNG"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/LNG_ethane",
+      "tier": 1,
+      "reason": "initial case set (spec 0001 harness tracer)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": "LNG_ethane"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/LPG_propane",
+      "tier": 1,
+      "reason": "initial case set (spec 0001 harness tracer)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": "LPG_propane"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/LPG_butane",
+      "tier": 1,
+      "reason": "initial case set (spec 0001 harness tracer)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": "LPG_butane"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/LPG_mix",
+      "tier": 1,
+      "reason": "initial case set (spec 0001 harness tracer)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": "LPG_mix"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/bauxite",
+      "tier": 1,
+      "reason": "initial case set (spec 0001 harness tracer)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": "bauxite"
+        }
+      }
+    },
+    {
+      "id": "cargo_database",
+      "tier": 1,
+      "reason": "initial case set (spec 0001 harness tracer)",
+      "input": {
+        "fn": "cargo_database",
+        "args": {}
+      }
+    },
+    {
+      "id": "get_cargo/error/unknown",
+      "tier": 3,
+      "reason": "initial case set (spec 0001 harness tracer)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": "coal"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/error/empty",
+      "tier": 3,
+      "reason": "initial case set (spec 0001 harness tracer)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": ""
+        }
+      }
+    },
+    {
+      "id": "get_cargo/error/wrong-case",
+      "tier": 3,
+      "reason": "initial case set (spec 0001 harness tracer)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": "lng"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/error/display-name-not-key",
+      "tier": 3,
+      "reason": "initial case set (spec 0001 harness tracer)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": "LNG / Ethane"
+        }
+      }
+    }
+  ],
+  "retired": []
+}

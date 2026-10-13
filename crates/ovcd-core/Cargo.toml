@@ -1,0 +1,16 @@
+[package]
+name = "ovcd-core"
+description = "Pure calculation core: no_std + alloc, no I/O. Its modules mirror the Python core files one to one."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+serde = ["dep:serde"]
+
+# Only libm and an optional serde (spec 0001). Every transcendental goes through libm.
+[dependencies]
+libm = "0.2"
+serde = { version = "1", default-features = false, features = ["derive", "alloc"], optional = true }

@@ -1,0 +1,12 @@
+[package]
+name = "ovcd-py"
+description = "Python bindings (PyO3, abi3 for Python 3.12+), built by maturin. Not a default member."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+ovcd-format.workspace = true

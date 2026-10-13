@@ -1,0 +1,5 @@
+{
+  "rel": 1e-09,
+  "abs": 1e-09,
+  "reason": "spec 0001: relative and absolute tolerance 1e-9, never loosened"
+}

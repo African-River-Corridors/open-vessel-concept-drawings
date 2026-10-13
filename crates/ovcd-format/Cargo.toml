@@ -1,0 +1,12 @@
+[package]
+name = "ovcd-format"
+description = "The .vdesign format, defaults, validation, and the parity eval dispatch."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+ovcd-core.workspace = true
+serde_json.workspace = true
