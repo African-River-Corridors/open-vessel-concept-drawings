@@ -426,6 +426,23 @@
       }
     },
     {
+      "id": "max_speed_for_ukc/tol0.625_stop_exactly_on_tolerance",
+      "tier": 1,
+      "reason": "kills mutant squat.rs:304 (bisection guard > to >=): 20.0 / 0.625 = 2^5, so hi - lo lands exactly on tol_kn and the stop rule decides the answer",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "water_depth_m": 5.28,
+          "channel_area_m2": 209.5,
+          "draft_m": 4.4,
+          "beam_m": 14.8,
+          "lpp_m": 87.3,
+          "v_hi_kn": 20.0,
+          "tol_kn": 0.625
+        }
+      }
+    },
+    {
       "id": "compute/resistance_default_barge_6.5m_channel_4kn",
       "tier": 1,
       "reason": "tier 1: inputs of audited test test_resistance.py::test_feasibility_the_default_case_is_outside_barrass_validity (issue #8)",

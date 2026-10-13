@@ -985,6 +985,12 @@
       }
     },
     {
+      "id": "max_speed_for_ukc/tol0.625_stop_exactly_on_tolerance",
+      "output": {
+        "ok": 5.625
+      }
+    },
+    {
       "id": "compute/resistance_default_barge_6.5m_channel_4kn",
       "output": {
         "ok": {

@@ -1029,19 +1029,15 @@ fn squat(function: &str, args: &Value) -> Result<Value, EvalError> {
         },
         "max_speed_for_ukc" => {
             let result = core_squat::max_speed_for_ukc(
-                field_or(args, "draft_m", None)?,
-                field_or(args, "beam_m", None)?,
-                field_or(args, "lpp_m", None)?,
-                field_or(args, "water_depth_m", None)?,
-                field_or(args, "channel_area_m2", None)?,
-                field_or(args, "block_coefficient", Some(0.85))?,
-                field_or(
-                    args,
-                    "safety_margin_m",
-                    Some(core_squat::DEFAULT_SAFETY_MARGIN_M),
-                )?,
-                field_or(args, "v_hi_kn", Some(20.0))?,
-                field_or(args, "tol_kn", Some(0.01))?,
+                f64_arg(args, "draft_m")?,
+                f64_arg(args, "beam_m")?,
+                f64_arg(args, "lpp_m")?,
+                f64_arg(args, "water_depth_m")?,
+                f64_arg(args, "channel_area_m2")?,
+                f64_arg_or(args, "block_coefficient", 0.85)?,
+                f64_arg_or(args, "safety_margin_m", core_squat::DEFAULT_SAFETY_MARGIN_M)?,
+                f64_arg_or(args, "v_hi_kn", 20.0)?,
+                f64_arg_or(args, "tol_kn", 0.01)?,
             );
             match result {
                 Ok(v) => ok(num(v)),
