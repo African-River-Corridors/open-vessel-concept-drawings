@@ -198,3 +198,34 @@ fn max_keeps_the_first_zero() {
     assert!(r.aft_separation_m.is_sign_positive());
     assert!(r.service_space_m.is_sign_positive());
 }
+
+/// Zero is a valid separation: only a negative one raises.
+#[test]
+fn zero_separations_are_valid_and_fail_their_checks() {
+    let r = compute(&GasSeparationInputs {
+        cofferdam_m: 0.0,
+        opening_setback_m: 0.0,
+        fwd_end_bulkhead_m: 0.0,
+        ..Default::default()
+    })
+    .unwrap();
+    let oks: Vec<bool> = r.checks.iter().map(|c| c.ok).collect();
+    assert_eq!(oks, [false, false, false]);
+}
+
+/// The type-G floors sit exactly on their limits, with the same 1e-9 slack as the others.
+#[test]
+fn the_type_g_floors_pass_on_the_limit_and_within_the_slack() {
+    let ok_at = |side: f64, bottom: f64| {
+        let r = compute(&GasSeparationInputs {
+            side_clearance_m: side,
+            double_bottom_m: bottom,
+            ..Default::default()
+        })
+        .unwrap();
+        (r.checks[3].ok, r.checks[4].ok)
+    };
+    assert_eq!(ok_at(0.8, 0.6), (true, true));
+    assert_eq!(ok_at(0.8 - 1e-10, 0.6 - 1e-10), (true, true));
+    assert_eq!(ok_at(0.8 - 1e-8, 0.6 - 1e-8), (false, false));
+}

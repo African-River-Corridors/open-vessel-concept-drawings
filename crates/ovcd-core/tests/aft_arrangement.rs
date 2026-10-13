@@ -189,3 +189,28 @@ fn min_keeps_the_first_zero() {
     let r = compute(&i).unwrap();
     assert!(r.wheelhouse_lift_m.is_sign_positive());
 }
+
+/// The "column too short" warning has a 1e-9 slack. All values here are exact in binary, so the
+/// lift lands on the threshold with no rounding. Python gives no warning in either case.
+#[test]
+fn a_lift_exactly_at_the_column_stroke_gives_no_warning() {
+    let mut i = gas(14.8, 1.0);
+    i.wheelhouse_eye_above_floor_m = 0.0;
+    i.sightline_margin_m = 0.0;
+    i.sightline_obstruction_m = Some(7.0); // lift is exactly 6.0, the default stroke
+    let r = compute(&i).unwrap();
+    assert_eq!(r.wheelhouse_lift_m, 6.0);
+    assert!(r.warnings.is_empty());
+    assert!(r.checks.last().unwrap().ok);
+}
+
+#[test]
+fn a_lift_exactly_on_the_stroke_plus_the_slack_gives_no_warning() {
+    let mut i = gas(14.8, 1e-9);
+    i.wheelhouse_eye_above_floor_m = 0.0;
+    i.sightline_margin_m = 0.0;
+    i.sightline_obstruction_m = Some(2e-9); // lift is exactly 1e-9 = stroke (0.0) + 1e-9
+    i.wheelhouse_max_lift_m = 0.0;
+    let r = compute(&i).unwrap();
+    assert!(r.warnings.is_empty());
+}
