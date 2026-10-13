@@ -137,3 +137,39 @@ fn entry_points_not_yet_ported_say_so_and_are_not_half_ported() {
         }
     }
 }
+
+/// Spec 0001 and issue #9: every entry point has named (tier 1), seeded sweep (tier 2) and
+/// error (tier 3) cases, so every port ticket has its own green bar and no implementer picks
+/// its own cases.
+#[test]
+fn every_spec_entry_point_has_cases_in_all_three_tiers() {
+    let mut missing = Vec::new();
+    for ep in ovcd_format::ENTRY_POINTS {
+        let path = parity_dir().join("cases").join(format!("{ep}.json"));
+        if !path.exists() {
+            missing.push(format!("{ep}: no parity/cases/{ep}.json"));
+            continue;
+        }
+        let doc = read_json(&path);
+        for tier in 1..=3 {
+            let has = doc["cases"]
+                .as_array()
+                .expect("cases list")
+                .iter()
+                .any(|c| c["tier"].as_u64() == Some(tier));
+            if !has {
+                missing.push(format!("{ep}: no tier-{tier} case"));
+            }
+        }
+    }
+    assert!(missing.is_empty(), "{}", missing.join("\n"));
+}
+
+/// Every Reference Result file belongs to a case file and vice versa, so a ported entry point
+/// cannot lose its oracle by a missing file.
+#[test]
+fn every_case_file_has_its_reference_results() {
+    for ep in all_entry_points() {
+        let _ = cases(&ep);
+    }
+}

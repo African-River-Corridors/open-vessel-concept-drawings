@@ -1076,6 +1076,1715 @@
           }
         ]
       }
+    },
+    {
+      "id": "get_standard/sweep/000",
+      "output": {
+        "ok": {
+          "standard_id": "CN_II_convoy_2ab",
+          "family": "CN",
+          "class_name": "II",
+          "formation": "pushed_convoy",
+          "loa_m": [
+            186.0,
+            186.0
+          ],
+          "beam_m": 32.4,
+          "draught_m": [
+            2.6,
+            2.6
+          ],
+          "dwt_t": [
+            8000.0,
+            8000.0
+          ],
+          "n_abreast": 2,
+          "n_in_line": 2,
+          "unit_beam_m": 16.2,
+          "min_bridge_clearance_m": null,
+          "moulded_depth_m": null,
+          "source": "WG 141 Table 2.3 (p16); Table A.2 (p163): width 70 m, R 560 m",
+          "cargo_modes": [
+            "dry_bulk",
+            "liquid_gas"
+          ],
+          "notes": "4,000 t at only 2.6 m draught, but 186 m long -> R_min ~558 m. A tight meander cannot usually deliver that radius."
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/001",
+      "output": {
+        "ok": {
+          "standard_id": "CEMT_Va",
+          "family": "CEMT",
+          "class_name": "Va",
+          "formation": "motor_vessel",
+          "loa_m": [
+            95.0,
+            110.0
+          ],
+          "beam_m": 11.4,
+          "draught_m": [
+            2.5,
+            4.5
+          ],
+          "dwt_t": [
+            1500.0,
+            3000.0
+          ],
+          "n_abreast": 1,
+          "n_in_line": 1,
+          "unit_beam_m": null,
+          "min_bridge_clearance_m": 5.25,
+          "moulded_depth_m": null,
+          "source": "WG 141 Table 2.1 (p15)",
+          "cargo_modes": [
+            "dry_bulk",
+            "liquid_gas"
+          ],
+          "notes": "The workhorse European barge. The unit that pairs abreast into VIa."
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/002",
+      "output": {
+        "ok": {
+          "standard_id": "CN_I_motor",
+          "family": "CN",
+          "class_name": "I",
+          "formation": "motor_vessel",
+          "loa_m": [
+            95.0,
+            95.0
+          ],
+          "beam_m": 16.2,
+          "draught_m": [
+            3.2,
+            3.2
+          ],
+          "dwt_t": [
+            3000.0,
+            3000.0
+          ],
+          "n_abreast": 1,
+          "n_in_line": 1,
+          "unit_beam_m": null,
+          "min_bridge_clearance_m": null,
+          "moulded_depth_m": null,
+          "source": "WG 141 Table 2.3 (p16); channel rules Table A.2 (p163)",
+          "cargo_modes": [
+            "dry_bulk",
+            "liquid_gas"
+          ],
+          "notes": "SINGLE HULL at 3,000 t with no pairing: R_min only ~285 m at 3xLOA."
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/003",
+      "output": {
+        "ok": {
+          "standard_id": "CN_II_motor",
+          "family": "CN",
+          "class_name": "II",
+          "formation": "motor_vessel",
+          "loa_m": [
+            90.0,
+            90.0
+          ],
+          "beam_m": 14.8,
+          "draught_m": [
+            2.6,
+            2.6
+          ],
+          "dwt_t": [
+            2000.0,
+            2000.0
+          ],
+          "n_abreast": 1,
+          "n_in_line": 1,
+          "unit_beam_m": null,
+          "min_bridge_clearance_m": null,
+          "moulded_depth_m": 6.5,
+          "source": "WG 141 Table 2.3 (p16)",
+          "cargo_modes": [
+            "dry_bulk",
+            "liquid_gas"
+          ],
+          "notes": "2,000 t on 2.6 m draught in a single standard hull. MODIFIED CLASS: moulded depth 6.5 m, not the draught+1.0 m rule of thumb. 6.5 m is where dry bulk stops being volume-bound and exactly consumes an example 4.40 m draught limit. Beyond it payload FALLS — the steel outweighs the cargo."
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/004",
+      "output": {
+        "ok": {
+          "standard_id": "CN_I_motor",
+          "family": "CN",
+          "class_name": "I",
+          "formation": "motor_vessel",
+          "loa_m": [
+            95.0,
+            95.0
+          ],
+          "beam_m": 16.2,
+          "draught_m": [
+            3.2,
+            3.2
+          ],
+          "dwt_t": [
+            3000.0,
+            3000.0
+          ],
+          "n_abreast": 1,
+          "n_in_line": 1,
+          "unit_beam_m": null,
+          "min_bridge_clearance_m": null,
+          "moulded_depth_m": null,
+          "source": "WG 141 Table 2.3 (p16); channel rules Table A.2 (p163)",
+          "cargo_modes": [
+            "dry_bulk",
+            "liquid_gas"
+          ],
+          "notes": "SINGLE HULL at 3,000 t with no pairing: R_min only ~285 m at 3xLOA."
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/005",
+      "output": {
+        "ok": {
+          "standard_id": "CN_III_convoy_2ab",
+          "family": "CN",
+          "class_name": "III",
+          "formation": "pushed_convoy",
+          "loa_m": [
+            167.0,
+            167.0
+          ],
+          "beam_m": 21.6,
+          "draught_m": [
+            2.0,
+            2.0
+          ],
+          "dwt_t": [
+            4000.0,
+            4000.0
+          ],
+          "n_abreast": 2,
+          "n_in_line": 2,
+          "unit_beam_m": 10.8,
+          "min_bridge_clearance_m": null,
+          "moulded_depth_m": null,
+          "source": "WG 141 Table 2.3 (p16); Table A.2 (p163): width 45 m, R 500 m",
+          "cargo_modes": [
+            "dry_bulk",
+            "liquid_gas"
+          ],
+          "notes": "DWT inferred as 4 x the 1,000 t Class III unit; WG 141 does not tabulate convoy deadweight. L/B 7.73, inside the Chinese band."
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/006",
+      "output": {
+        "ok": {
+          "standard_id": "CEMT_VIa_motor_NL2011",
+          "family": "CEMT-NL-2011",
+          "class_name": "VIa",
+          "formation": "motor_vessel",
+          "loa_m": [
+            110.0,
+            135.0
+          ],
+          "beam_m": 17.0,
+          "draught_m": [
+            4.0,
+            4.0
+          ],
+          "dwt_t": [
+            6000.0,
+            6000.0
+          ],
+          "n_abreast": 1,
+          "n_in_line": 1,
+          "unit_beam_m": null,
+          "min_bridge_clearance_m": 7.0,
+          "moulded_depth_m": null,
+          "source": "WG 141 Table 2.2 (p16) + Table 2.5 (p17)",
+          "cargo_modes": [
+            "dry_bulk",
+            "liquid_gas"
+          ],
+          "notes": "Post-CEMT'92 wide single hull. Shows Europe moving toward the Chinese beam-over-draught trade. 2,400 kW, 1,135 kW bow thruster (Table 2.5)."
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/007",
+      "output": {
+        "ok": {
+          "standard_id": "CEMT_IV",
+          "family": "CEMT",
+          "class_name": "IV",
+          "formation": "motor_vessel",
+          "loa_m": [
+            80.0,
+            85.0
+          ],
+          "beam_m": 9.5,
+          "draught_m": [
+            2.5,
+            2.5
+          ],
+          "dwt_t": [
+            1000.0,
+            1500.0
+          ],
+          "n_abreast": 1,
+          "n_in_line": 1,
+          "unit_beam_m": null,
+          "min_bridge_clearance_m": 5.25,
+          "moulded_depth_m": null,
+          "source": "WG 141 Table 2.1 (p15)",
+          "cargo_modes": [
+            "dry_bulk",
+            "liquid_gas"
+          ],
+          "notes": ""
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/008",
+      "output": {
+        "ok": {
+          "standard_id": "CEMT_VIa_motor_NL2011",
+          "family": "CEMT-NL-2011",
+          "class_name": "VIa",
+          "formation": "motor_vessel",
+          "loa_m": [
+            110.0,
+            135.0
+          ],
+          "beam_m": 17.0,
+          "draught_m": [
+            4.0,
+            4.0
+          ],
+          "dwt_t": [
+            6000.0,
+            6000.0
+          ],
+          "n_abreast": 1,
+          "n_in_line": 1,
+          "unit_beam_m": null,
+          "min_bridge_clearance_m": 7.0,
+          "moulded_depth_m": null,
+          "source": "WG 141 Table 2.2 (p16) + Table 2.5 (p17)",
+          "cargo_modes": [
+            "dry_bulk",
+            "liquid_gas"
+          ],
+          "notes": "Post-CEMT'92 wide single hull. Shows Europe moving toward the Chinese beam-over-draught trade. 2,400 kW, 1,135 kW bow thruster (Table 2.5)."
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/009",
+      "output": {
+        "ok": {
+          "standard_id": "CN_III_motor",
+          "family": "CN",
+          "class_name": "III",
+          "formation": "motor_vessel",
+          "loa_m": [
+            85.0,
+            85.0
+          ],
+          "beam_m": 10.8,
+          "draught_m": [
+            2.0,
+            2.0
+          ],
+          "dwt_t": [
+            1000.0,
+            1000.0
+          ],
+          "n_abreast": 1,
+          "n_in_line": 1,
+          "unit_beam_m": null,
+          "min_bridge_clearance_m": null,
+          "moulded_depth_m": null,
+          "source": "WG 141 Table 2.3 (p16); channel rules Table A.2 (p163): width 30 m, R 480 m",
+          "cargo_modes": [
+            "dry_bulk",
+            "liquid_gas"
+          ],
+          "notes": "The SHALLOWEST standard class of real size: 1,000 t on 2.0 m draught. On a river where depth is the expensive axis this is the one to beat. Its L/B of 7.87 is the top of the Chinese band, so the Chinese width rule applies to it without extrapolation — unlike every European class."
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/010",
+      "output": {
+        "ok": {
+          "standard_id": "CN_II_convoy_2ab",
+          "family": "CN",
+          "class_name": "II",
+          "formation": "pushed_convoy",
+          "loa_m": [
+            186.0,
+            186.0
+          ],
+          "beam_m": 32.4,
+          "draught_m": [
+            2.6,
+            2.6
+          ],
+          "dwt_t": [
+            8000.0,
+            8000.0
+          ],
+          "n_abreast": 2,
+          "n_in_line": 2,
+          "unit_beam_m": 16.2,
+          "min_bridge_clearance_m": null,
+          "moulded_depth_m": null,
+          "source": "WG 141 Table 2.3 (p16); Table A.2 (p163): width 70 m, R 560 m",
+          "cargo_modes": [
+            "dry_bulk",
+            "liquid_gas"
+          ],
+          "notes": "4,000 t at only 2.6 m draught, but 186 m long -> R_min ~558 m. A tight meander cannot usually deliver that radius."
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/011",
+      "output": {
+        "ok": {
+          "standard_id": "CN_I_motor",
+          "family": "CN",
+          "class_name": "I",
+          "formation": "motor_vessel",
+          "loa_m": [
+            95.0,
+            95.0
+          ],
+          "beam_m": 16.2,
+          "draught_m": [
+            3.2,
+            3.2
+          ],
+          "dwt_t": [
+            3000.0,
+            3000.0
+          ],
+          "n_abreast": 1,
+          "n_in_line": 1,
+          "unit_beam_m": null,
+          "min_bridge_clearance_m": null,
+          "moulded_depth_m": null,
+          "source": "WG 141 Table 2.3 (p16); channel rules Table A.2 (p163)",
+          "cargo_modes": [
+            "dry_bulk",
+            "liquid_gas"
+          ],
+          "notes": "SINGLE HULL at 3,000 t with no pairing: R_min only ~285 m at 3xLOA."
+        }
+      }
+    },
+    {
+      "id": "standards_for/sweep/000",
+      "output": {
+        "ok": [
+          {
+            "standard_id": "CEMT_IV",
+            "family": "CEMT",
+            "class_name": "IV",
+            "formation": "motor_vessel",
+            "loa_m": [
+              80.0,
+              85.0
+            ],
+            "beam_m": 9.5,
+            "draught_m": [
+              2.5,
+              2.5
+            ],
+            "dwt_t": [
+              1000.0,
+              1500.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 1,
+            "unit_beam_m": null,
+            "min_bridge_clearance_m": 5.25,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.1 (p15)",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": ""
+          },
+          {
+            "standard_id": "CEMT_Va",
+            "family": "CEMT",
+            "class_name": "Va",
+            "formation": "motor_vessel",
+            "loa_m": [
+              95.0,
+              110.0
+            ],
+            "beam_m": 11.4,
+            "draught_m": [
+              2.5,
+              4.5
+            ],
+            "dwt_t": [
+              1500.0,
+              3000.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 1,
+            "unit_beam_m": null,
+            "min_bridge_clearance_m": 5.25,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.1 (p15)",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "The workhorse European barge. The unit that pairs abreast into VIa."
+          },
+          {
+            "standard_id": "CEMT_Vb",
+            "family": "CEMT",
+            "class_name": "Vb",
+            "formation": "pushed_convoy",
+            "loa_m": [
+              172.0,
+              185.0
+            ],
+            "beam_m": 11.4,
+            "draught_m": [
+              2.5,
+              4.5
+            ],
+            "dwt_t": [
+              3200.0,
+              6000.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 2,
+            "unit_beam_m": 11.4,
+            "min_bridge_clearance_m": 7.0,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.1 (p15)",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "2 IN LINE. R_min ~555 m at 3xLOA — a tight meander cannot usually deliver it."
+          },
+          {
+            "standard_id": "CEMT_VIa",
+            "family": "CEMT",
+            "class_name": "VIa",
+            "formation": "pushed_convoy",
+            "loa_m": [
+              95.0,
+              110.0
+            ],
+            "beam_m": 22.8,
+            "draught_m": [
+              2.5,
+              4.5
+            ],
+            "dwt_t": [
+              3200.0,
+              6000.0
+            ],
+            "n_abreast": 2,
+            "n_in_line": 1,
+            "unit_beam_m": 11.4,
+            "min_bridge_clearance_m": 7.0,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.1 (p15); c_C row in Table E.5 (p261)",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "2 Va ABREAST. Short and wide, so WG 141 p101 names this class as the worst case for bend widening (c_C 0.6 loaded downstream, 1.6 empty downstream)."
+          },
+          {
+            "standard_id": "CEMT_VIa_motor_NL2011",
+            "family": "CEMT-NL-2011",
+            "class_name": "VIa",
+            "formation": "motor_vessel",
+            "loa_m": [
+              110.0,
+              135.0
+            ],
+            "beam_m": 17.0,
+            "draught_m": [
+              4.0,
+              4.0
+            ],
+            "dwt_t": [
+              6000.0,
+              6000.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 1,
+            "unit_beam_m": null,
+            "min_bridge_clearance_m": 7.0,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.2 (p16) + Table 2.5 (p17)",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "Post-CEMT'92 wide single hull. Shows Europe moving toward the Chinese beam-over-draught trade. 2,400 kW, 1,135 kW bow thruster (Table 2.5)."
+          },
+          {
+            "standard_id": "CN_I_motor",
+            "family": "CN",
+            "class_name": "I",
+            "formation": "motor_vessel",
+            "loa_m": [
+              95.0,
+              95.0
+            ],
+            "beam_m": 16.2,
+            "draught_m": [
+              3.2,
+              3.2
+            ],
+            "dwt_t": [
+              3000.0,
+              3000.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 1,
+            "unit_beam_m": null,
+            "min_bridge_clearance_m": null,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.3 (p16); channel rules Table A.2 (p163)",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "SINGLE HULL at 3,000 t with no pairing: R_min only ~285 m at 3xLOA."
+          },
+          {
+            "standard_id": "CN_II_motor",
+            "family": "CN",
+            "class_name": "II",
+            "formation": "motor_vessel",
+            "loa_m": [
+              90.0,
+              90.0
+            ],
+            "beam_m": 14.8,
+            "draught_m": [
+              2.6,
+              2.6
+            ],
+            "dwt_t": [
+              2000.0,
+              2000.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 1,
+            "unit_beam_m": null,
+            "min_bridge_clearance_m": null,
+            "moulded_depth_m": 6.5,
+            "source": "WG 141 Table 2.3 (p16)",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "2,000 t on 2.6 m draught in a single standard hull. MODIFIED CLASS: moulded depth 6.5 m, not the draught+1.0 m rule of thumb. 6.5 m is where dry bulk stops being volume-bound and exactly consumes an example 4.40 m draught limit. Beyond it payload FALLS — the steel outweighs the cargo."
+          },
+          {
+            "standard_id": "CN_III_motor",
+            "family": "CN",
+            "class_name": "III",
+            "formation": "motor_vessel",
+            "loa_m": [
+              85.0,
+              85.0
+            ],
+            "beam_m": 10.8,
+            "draught_m": [
+              2.0,
+              2.0
+            ],
+            "dwt_t": [
+              1000.0,
+              1000.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 1,
+            "unit_beam_m": null,
+            "min_bridge_clearance_m": null,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.3 (p16); channel rules Table A.2 (p163): width 30 m, R 480 m",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "The SHALLOWEST standard class of real size: 1,000 t on 2.0 m draught. On a river where depth is the expensive axis this is the one to beat. Its L/B of 7.87 is the top of the Chinese band, so the Chinese width rule applies to it without extrapolation — unlike every European class."
+          },
+          {
+            "standard_id": "CN_III_convoy_2ab",
+            "family": "CN",
+            "class_name": "III",
+            "formation": "pushed_convoy",
+            "loa_m": [
+              167.0,
+              167.0
+            ],
+            "beam_m": 21.6,
+            "draught_m": [
+              2.0,
+              2.0
+            ],
+            "dwt_t": [
+              4000.0,
+              4000.0
+            ],
+            "n_abreast": 2,
+            "n_in_line": 2,
+            "unit_beam_m": 10.8,
+            "min_bridge_clearance_m": null,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.3 (p16); Table A.2 (p163): width 45 m, R 500 m",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "DWT inferred as 4 x the 1,000 t Class III unit; WG 141 does not tabulate convoy deadweight. L/B 7.73, inside the Chinese band."
+          },
+          {
+            "standard_id": "CN_IV_motor",
+            "family": "CN",
+            "class_name": "IV",
+            "formation": "motor_vessel",
+            "loa_m": [
+              67.5,
+              67.5
+            ],
+            "beam_m": 10.8,
+            "draught_m": [
+              1.6,
+              1.6
+            ],
+            "dwt_t": [
+              500.0,
+              500.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 1,
+            "unit_beam_m": null,
+            "min_bridge_clearance_m": null,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.3 (p16); Table A.2 (p163): width 30 m, R 330 m",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "1.6 m draught. Carried as the shallow-draught floor of the comparison."
+          },
+          {
+            "standard_id": "CN_II_convoy_2ab",
+            "family": "CN",
+            "class_name": "II",
+            "formation": "pushed_convoy",
+            "loa_m": [
+              186.0,
+              186.0
+            ],
+            "beam_m": 32.4,
+            "draught_m": [
+              2.6,
+              2.6
+            ],
+            "dwt_t": [
+              8000.0,
+              8000.0
+            ],
+            "n_abreast": 2,
+            "n_in_line": 2,
+            "unit_beam_m": 16.2,
+            "min_bridge_clearance_m": null,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.3 (p16); Table A.2 (p163): width 70 m, R 560 m",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "4,000 t at only 2.6 m draught, but 186 m long -> R_min ~558 m. A tight meander cannot usually deliver that radius."
+          },
+          {
+            "standard_id": "CN_I_convoy_2ab",
+            "family": "CN",
+            "class_name": "I",
+            "formation": "pushed_convoy",
+            "loa_m": [
+              223.0,
+              223.0
+            ],
+            "beam_m": 32.4,
+            "draught_m": [
+              3.5,
+              3.5
+            ],
+            "dwt_t": [
+              12000.0,
+              12000.0
+            ],
+            "n_abreast": 2,
+            "n_in_line": 2,
+            "unit_beam_m": 16.2,
+            "min_bridge_clearance_m": null,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.3 (p16); Table A.2 (p163): width 70 m, R 670 m",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "Chinese Table A.2 prices this at 70 m channel width against PIANC's 91-110 m for the same beam — the clearest single illustration of the two traditions disagreeing."
+          }
+        ]
+      }
+    },
+    {
+      "id": "standards_for/sweep/001",
+      "output": {
+        "ok": [
+          {
+            "standard_id": "CEMT_IV",
+            "family": "CEMT",
+            "class_name": "IV",
+            "formation": "motor_vessel",
+            "loa_m": [
+              80.0,
+              85.0
+            ],
+            "beam_m": 9.5,
+            "draught_m": [
+              2.5,
+              2.5
+            ],
+            "dwt_t": [
+              1000.0,
+              1500.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 1,
+            "unit_beam_m": null,
+            "min_bridge_clearance_m": 5.25,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.1 (p15)",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": ""
+          },
+          {
+            "standard_id": "CEMT_Va",
+            "family": "CEMT",
+            "class_name": "Va",
+            "formation": "motor_vessel",
+            "loa_m": [
+              95.0,
+              110.0
+            ],
+            "beam_m": 11.4,
+            "draught_m": [
+              2.5,
+              4.5
+            ],
+            "dwt_t": [
+              1500.0,
+              3000.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 1,
+            "unit_beam_m": null,
+            "min_bridge_clearance_m": 5.25,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.1 (p15)",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "The workhorse European barge. The unit that pairs abreast into VIa."
+          },
+          {
+            "standard_id": "CEMT_Vb",
+            "family": "CEMT",
+            "class_name": "Vb",
+            "formation": "pushed_convoy",
+            "loa_m": [
+              172.0,
+              185.0
+            ],
+            "beam_m": 11.4,
+            "draught_m": [
+              2.5,
+              4.5
+            ],
+            "dwt_t": [
+              3200.0,
+              6000.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 2,
+            "unit_beam_m": 11.4,
+            "min_bridge_clearance_m": 7.0,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.1 (p15)",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "2 IN LINE. R_min ~555 m at 3xLOA — a tight meander cannot usually deliver it."
+          },
+          {
+            "standard_id": "CEMT_VIa",
+            "family": "CEMT",
+            "class_name": "VIa",
+            "formation": "pushed_convoy",
+            "loa_m": [
+              95.0,
+              110.0
+            ],
+            "beam_m": 22.8,
+            "draught_m": [
+              2.5,
+              4.5
+            ],
+            "dwt_t": [
+              3200.0,
+              6000.0
+            ],
+            "n_abreast": 2,
+            "n_in_line": 1,
+            "unit_beam_m": 11.4,
+            "min_bridge_clearance_m": 7.0,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.1 (p15); c_C row in Table E.5 (p261)",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "2 Va ABREAST. Short and wide, so WG 141 p101 names this class as the worst case for bend widening (c_C 0.6 loaded downstream, 1.6 empty downstream)."
+          },
+          {
+            "standard_id": "CEMT_VIa_motor_NL2011",
+            "family": "CEMT-NL-2011",
+            "class_name": "VIa",
+            "formation": "motor_vessel",
+            "loa_m": [
+              110.0,
+              135.0
+            ],
+            "beam_m": 17.0,
+            "draught_m": [
+              4.0,
+              4.0
+            ],
+            "dwt_t": [
+              6000.0,
+              6000.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 1,
+            "unit_beam_m": null,
+            "min_bridge_clearance_m": 7.0,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.2 (p16) + Table 2.5 (p17)",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "Post-CEMT'92 wide single hull. Shows Europe moving toward the Chinese beam-over-draught trade. 2,400 kW, 1,135 kW bow thruster (Table 2.5)."
+          },
+          {
+            "standard_id": "CN_I_motor",
+            "family": "CN",
+            "class_name": "I",
+            "formation": "motor_vessel",
+            "loa_m": [
+              95.0,
+              95.0
+            ],
+            "beam_m": 16.2,
+            "draught_m": [
+              3.2,
+              3.2
+            ],
+            "dwt_t": [
+              3000.0,
+              3000.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 1,
+            "unit_beam_m": null,
+            "min_bridge_clearance_m": null,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.3 (p16); channel rules Table A.2 (p163)",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "SINGLE HULL at 3,000 t with no pairing: R_min only ~285 m at 3xLOA."
+          },
+          {
+            "standard_id": "CN_II_motor",
+            "family": "CN",
+            "class_name": "II",
+            "formation": "motor_vessel",
+            "loa_m": [
+              90.0,
+              90.0
+            ],
+            "beam_m": 14.8,
+            "draught_m": [
+              2.6,
+              2.6
+            ],
+            "dwt_t": [
+              2000.0,
+              2000.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 1,
+            "unit_beam_m": null,
+            "min_bridge_clearance_m": null,
+            "moulded_depth_m": 6.5,
+            "source": "WG 141 Table 2.3 (p16)",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "2,000 t on 2.6 m draught in a single standard hull. MODIFIED CLASS: moulded depth 6.5 m, not the draught+1.0 m rule of thumb. 6.5 m is where dry bulk stops being volume-bound and exactly consumes an example 4.40 m draught limit. Beyond it payload FALLS — the steel outweighs the cargo."
+          },
+          {
+            "standard_id": "CN_III_motor",
+            "family": "CN",
+            "class_name": "III",
+            "formation": "motor_vessel",
+            "loa_m": [
+              85.0,
+              85.0
+            ],
+            "beam_m": 10.8,
+            "draught_m": [
+              2.0,
+              2.0
+            ],
+            "dwt_t": [
+              1000.0,
+              1000.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 1,
+            "unit_beam_m": null,
+            "min_bridge_clearance_m": null,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.3 (p16); channel rules Table A.2 (p163): width 30 m, R 480 m",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "The SHALLOWEST standard class of real size: 1,000 t on 2.0 m draught. On a river where depth is the expensive axis this is the one to beat. Its L/B of 7.87 is the top of the Chinese band, so the Chinese width rule applies to it without extrapolation — unlike every European class."
+          },
+          {
+            "standard_id": "CN_III_convoy_2ab",
+            "family": "CN",
+            "class_name": "III",
+            "formation": "pushed_convoy",
+            "loa_m": [
+              167.0,
+              167.0
+            ],
+            "beam_m": 21.6,
+            "draught_m": [
+              2.0,
+              2.0
+            ],
+            "dwt_t": [
+              4000.0,
+              4000.0
+            ],
+            "n_abreast": 2,
+            "n_in_line": 2,
+            "unit_beam_m": 10.8,
+            "min_bridge_clearance_m": null,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.3 (p16); Table A.2 (p163): width 45 m, R 500 m",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "DWT inferred as 4 x the 1,000 t Class III unit; WG 141 does not tabulate convoy deadweight. L/B 7.73, inside the Chinese band."
+          },
+          {
+            "standard_id": "CN_IV_motor",
+            "family": "CN",
+            "class_name": "IV",
+            "formation": "motor_vessel",
+            "loa_m": [
+              67.5,
+              67.5
+            ],
+            "beam_m": 10.8,
+            "draught_m": [
+              1.6,
+              1.6
+            ],
+            "dwt_t": [
+              500.0,
+              500.0
+            ],
+            "n_abreast": 1,
+            "n_in_line": 1,
+            "unit_beam_m": null,
+            "min_bridge_clearance_m": null,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.3 (p16); Table A.2 (p163): width 30 m, R 330 m",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "1.6 m draught. Carried as the shallow-draught floor of the comparison."
+          },
+          {
+            "standard_id": "CN_II_convoy_2ab",
+            "family": "CN",
+            "class_name": "II",
+            "formation": "pushed_convoy",
+            "loa_m": [
+              186.0,
+              186.0
+            ],
+            "beam_m": 32.4,
+            "draught_m": [
+              2.6,
+              2.6
+            ],
+            "dwt_t": [
+              8000.0,
+              8000.0
+            ],
+            "n_abreast": 2,
+            "n_in_line": 2,
+            "unit_beam_m": 16.2,
+            "min_bridge_clearance_m": null,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.3 (p16); Table A.2 (p163): width 70 m, R 560 m",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "4,000 t at only 2.6 m draught, but 186 m long -> R_min ~558 m. A tight meander cannot usually deliver that radius."
+          },
+          {
+            "standard_id": "CN_I_convoy_2ab",
+            "family": "CN",
+            "class_name": "I",
+            "formation": "pushed_convoy",
+            "loa_m": [
+              223.0,
+              223.0
+            ],
+            "beam_m": 32.4,
+            "draught_m": [
+              3.5,
+              3.5
+            ],
+            "dwt_t": [
+              12000.0,
+              12000.0
+            ],
+            "n_abreast": 2,
+            "n_in_line": 2,
+            "unit_beam_m": 16.2,
+            "min_bridge_clearance_m": null,
+            "moulded_depth_m": null,
+            "source": "WG 141 Table 2.3 (p16); Table A.2 (p163): width 70 m, R 670 m",
+            "cargo_modes": [
+              "dry_bulk",
+              "liquid_gas"
+            ],
+            "notes": "Chinese Table A.2 prices this at 70 m channel width against PIANC's 91-110 m for the same beam — the clearest single illustration of the two traditions disagreeing."
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/000",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": false,
+            "message": "inverted range: ['SWEEP']",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": true,
+            "message": "every class cites its table",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/001",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": true,
+            "message": "every (min, max) range is ordered",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": true,
+            "message": "every class cites its table",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/002",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": false,
+            "message": "inverted range: ['SWEEP']",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": false,
+            "message": "no source: ['SWEEP']",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/003",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": false,
+            "message": "inverted range: ['SWEEP']",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": true,
+            "message": "every class cites its table",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/004",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": false,
+            "message": "inverted range: ['SWEEP']",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": false,
+            "message": "no source: ['SWEEP']",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/005",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": false,
+            "message": "inverted range: ['SWEEP']",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": false,
+            "message": "beam does not reconcile with n_abreast: ['SWEEP']",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": false,
+            "message": "no source: ['SWEEP']",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/006",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": true,
+            "message": "every (min, max) range is ordered",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": false,
+            "message": "beam does not reconcile with n_abreast: ['SWEEP']",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": false,
+            "message": "no source: ['SWEEP']",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/007",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": true,
+            "message": "every (min, max) range is ordered",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": false,
+            "message": "no source: ['SWEEP']",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/008",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": true,
+            "message": "every (min, max) range is ordered",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": false,
+            "message": "no source: ['SWEEP']",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/009",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": false,
+            "message": "inverted range: ['SWEEP']",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": false,
+            "message": "no source: ['SWEEP']",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/010",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": false,
+            "message": "inverted range: ['SWEEP']",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": false,
+            "message": "no source: ['SWEEP']",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/011",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": false,
+            "message": "inverted range: ['SWEEP']",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": true,
+            "message": "every class cites its table",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/012",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": false,
+            "message": "inverted range: ['SWEEP']",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": false,
+            "message": "no source: ['SWEEP']",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/013",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": true,
+            "message": "every (min, max) range is ordered",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": false,
+            "message": "no source: ['SWEEP']",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/014",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": true,
+            "message": "every (min, max) range is ordered",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": false,
+            "message": "beam does not reconcile with n_abreast: ['SWEEP']",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": false,
+            "message": "no source: ['SWEEP']",
+            "severity": "warning"
+          }
+        ]
+      }
     }
   ]
 }

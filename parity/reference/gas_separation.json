@@ -655,6 +655,1275 @@
           ]
         }
       }
+    },
+    {
+      "id": "compute/error/negative_cofferdam",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "separations must be non-negative"
+        }
+      }
+    },
+    {
+      "id": "compute/error/negative_setback",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "separations must be non-negative"
+        }
+      }
+    },
+    {
+      "id": "compute/error/negative_fwd_bulkhead",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "separations must be non-negative"
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/000",
+      "output": {
+        "ok": {
+          "aft_separation_m": 1.2843,
+          "fwd_separation_m": 0.7502,
+          "cofferdam_m": 1.2843,
+          "service_space_m": 0.0,
+          "total_length_taken_m": 2.0345,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 1.28 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": false,
+              "message": "aft separation 1.28 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.75 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": false,
+              "message": "double bottom 0.46 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/001",
+      "output": {
+        "ok": {
+          "aft_separation_m": 1.0913,
+          "fwd_separation_m": 0.1874,
+          "cofferdam_m": 0.4094,
+          "service_space_m": 0.6819,
+          "total_length_taken_m": 1.2787,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.41 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": false,
+              "message": "aft separation 1.09 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": false,
+              "message": "forward end-bulkhead space 0.19 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": true,
+              "message": "double bottom 0.93 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/002",
+      "output": {
+        "ok": {
+          "aft_separation_m": 3.6711,
+          "fwd_separation_m": 0.0852,
+          "cofferdam_m": 0.8495,
+          "service_space_m": 2.8216,
+          "total_length_taken_m": 3.7563,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 0.85 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 3.67 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": false,
+              "message": "forward end-bulkhead space 0.09 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": true,
+              "message": "side clearance 1.45 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": true,
+              "message": "double bottom 1.38 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/003",
+      "output": {
+        "ok": {
+          "aft_separation_m": 0.8493,
+          "fwd_separation_m": 0.5643,
+          "cofferdam_m": 0.2748,
+          "service_space_m": 0.5745,
+          "total_length_taken_m": 1.4136000000000002,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.27 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": false,
+              "message": "aft separation 0.85 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.56 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": true,
+              "message": "double bottom 1.22 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/004",
+      "output": {
+        "ok": {
+          "aft_separation_m": 3.1697,
+          "fwd_separation_m": 0.954,
+          "cofferdam_m": 1.0694,
+          "service_space_m": 2.1003000000000003,
+          "total_length_taken_m": 4.1237,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 1.07 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 3.17 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.95 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": true,
+              "message": "double bottom 1.06 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/005",
+      "output": {
+        "ok": {
+          "aft_separation_m": 2.0308,
+          "fwd_separation_m": 0.4165,
+          "cofferdam_m": 1.2535,
+          "service_space_m": 0.7773000000000001,
+          "total_length_taken_m": 2.4473000000000003,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 1.25 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 2.03 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": false,
+              "message": "forward end-bulkhead space 0.42 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": true,
+              "message": "side clearance 2.13 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/006",
+      "output": {
+        "ok": {
+          "aft_separation_m": 1.2871,
+          "fwd_separation_m": 0.8092,
+          "cofferdam_m": 1.0524,
+          "service_space_m": 0.2346999999999999,
+          "total_length_taken_m": 2.0963,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 1.05 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": false,
+              "message": "aft separation 1.29 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.81 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": true,
+              "message": "side clearance 0.81 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": true,
+              "message": "double bottom 1.30 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/007",
+      "output": {
+        "ok": {
+          "aft_separation_m": 3.1822,
+          "fwd_separation_m": 0.5813,
+          "cofferdam_m": 0.3196,
+          "service_space_m": 2.8626,
+          "total_length_taken_m": 3.7635,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.32 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 3.18 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.58 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": true,
+              "message": "side clearance 2.06 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": true,
+              "message": "double bottom 1.05 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/008",
+      "output": {
+        "ok": {
+          "aft_separation_m": 1.6609,
+          "fwd_separation_m": 0.168,
+          "cofferdam_m": 0.181,
+          "service_space_m": 1.4799,
+          "total_length_taken_m": 1.8289,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.18 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": false,
+              "message": "aft separation 1.66 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": false,
+              "message": "forward end-bulkhead space 0.17 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/009",
+      "output": {
+        "ok": {
+          "aft_separation_m": 1.2369,
+          "fwd_separation_m": 0.1836,
+          "cofferdam_m": 1.2369,
+          "service_space_m": 0.0,
+          "total_length_taken_m": 1.4205,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 1.24 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": false,
+              "message": "aft separation 1.24 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": false,
+              "message": "forward end-bulkhead space 0.18 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": true,
+              "message": "side clearance 0.82 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": true,
+              "message": "double bottom 1.08 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/010",
+      "output": {
+        "ok": {
+          "aft_separation_m": 3.3017,
+          "fwd_separation_m": 0.9787,
+          "cofferdam_m": 1.4943,
+          "service_space_m": 1.8074,
+          "total_length_taken_m": 4.2804,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 1.49 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 3.30 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.98 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/011",
+      "output": {
+        "ok": {
+          "aft_separation_m": 3.3064,
+          "fwd_separation_m": 0.5269,
+          "cofferdam_m": 1.2995,
+          "service_space_m": 2.0069,
+          "total_length_taken_m": 3.8333,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 1.30 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 3.31 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.53 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": false,
+              "message": "double bottom 0.43 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/012",
+      "output": {
+        "ok": {
+          "aft_separation_m": 2.643,
+          "fwd_separation_m": 0.8974,
+          "cofferdam_m": 0.4347,
+          "service_space_m": 2.2083,
+          "total_length_taken_m": 3.5404,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.43 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 2.64 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.90 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": true,
+              "message": "side clearance 2.27 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/013",
+      "output": {
+        "ok": {
+          "aft_separation_m": 2.9241,
+          "fwd_separation_m": 0.0292,
+          "cofferdam_m": 1.22,
+          "service_space_m": 1.7041000000000002,
+          "total_length_taken_m": 2.9533,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 1.22 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 2.92 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": false,
+              "message": "forward end-bulkhead space 0.03 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/014",
+      "output": {
+        "ok": {
+          "aft_separation_m": 1.3974,
+          "fwd_separation_m": 0.2435,
+          "cofferdam_m": 1.3974,
+          "service_space_m": 0.0,
+          "total_length_taken_m": 1.6409,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 1.40 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": false,
+              "message": "aft separation 1.40 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": false,
+              "message": "forward end-bulkhead space 0.24 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": true,
+              "message": "side clearance 1.17 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/015",
+      "output": {
+        "ok": {
+          "aft_separation_m": 0.5181,
+          "fwd_separation_m": 0.4813,
+          "cofferdam_m": 0.5181,
+          "service_space_m": 0.0,
+          "total_length_taken_m": 0.9994000000000001,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.52 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": false,
+              "message": "aft separation 0.52 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.48 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": true,
+              "message": "side clearance 1.95 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/016",
+      "output": {
+        "ok": {
+          "aft_separation_m": 0.4605,
+          "fwd_separation_m": 0.136,
+          "cofferdam_m": 0.2588,
+          "service_space_m": 0.20170000000000005,
+          "total_length_taken_m": 0.5965,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.26 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": false,
+              "message": "aft separation 0.46 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": false,
+              "message": "forward end-bulkhead space 0.14 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/017",
+      "output": {
+        "ok": {
+          "aft_separation_m": 2.8347,
+          "fwd_separation_m": 0.1492,
+          "cofferdam_m": 1.4785,
+          "service_space_m": 1.3562000000000003,
+          "total_length_taken_m": 2.9839,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 1.48 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 2.83 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": false,
+              "message": "forward end-bulkhead space 0.15 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": false,
+              "message": "double bottom 0.44 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/018",
+      "output": {
+        "ok": {
+          "aft_separation_m": 3.3576,
+          "fwd_separation_m": 0.7749,
+          "cofferdam_m": 0.052,
+          "service_space_m": 3.3056,
+          "total_length_taken_m": 4.1325,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.05 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 3.36 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.77 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": true,
+              "message": "side clearance 2.40 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": true,
+              "message": "double bottom 0.69 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/019",
+      "output": {
+        "ok": {
+          "aft_separation_m": 2.3756,
+          "fwd_separation_m": 0.2163,
+          "cofferdam_m": 0.3946,
+          "service_space_m": 1.9809999999999999,
+          "total_length_taken_m": 2.5919,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.39 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 2.38 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": false,
+              "message": "forward end-bulkhead space 0.22 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": true,
+              "message": "side clearance 0.86 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": false,
+              "message": "double bottom 0.43 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/020",
+      "output": {
+        "ok": {
+          "aft_separation_m": 1.4075,
+          "fwd_separation_m": 0.3802,
+          "cofferdam_m": 0.9688,
+          "service_space_m": 0.4387,
+          "total_length_taken_m": 1.7877,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 0.97 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": false,
+              "message": "aft separation 1.41 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.38 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": true,
+              "message": "side clearance 1.59 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": true,
+              "message": "double bottom 1.47 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/021",
+      "output": {
+        "ok": {
+          "aft_separation_m": 2.8957,
+          "fwd_separation_m": 0.4043,
+          "cofferdam_m": 0.5341,
+          "service_space_m": 2.3616,
+          "total_length_taken_m": 3.3000000000000003,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.53 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 2.90 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": false,
+              "message": "forward end-bulkhead space 0.40 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": false,
+              "message": "side clearance 0.50 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": true,
+              "message": "double bottom 0.87 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/022",
+      "output": {
+        "ok": {
+          "aft_separation_m": 0.5484,
+          "fwd_separation_m": 0.8165,
+          "cofferdam_m": 0.4964,
+          "service_space_m": 0.05199999999999999,
+          "total_length_taken_m": 1.3649,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.50 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": false,
+              "message": "aft separation 0.55 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.82 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": true,
+              "message": "side clearance 1.57 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/023",
+      "output": {
+        "ok": {
+          "aft_separation_m": 3.8827,
+          "fwd_separation_m": 0.597,
+          "cofferdam_m": 0.2668,
+          "service_space_m": 3.6159,
+          "total_length_taken_m": 4.479699999999999,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.27 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 3.88 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.60 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/024",
+      "output": {
+        "ok": {
+          "aft_separation_m": 2.916,
+          "fwd_separation_m": 0.7335,
+          "cofferdam_m": 0.0623,
+          "service_space_m": 2.8537,
+          "total_length_taken_m": 3.6494999999999997,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.06 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 2.92 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.73 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/025",
+      "output": {
+        "ok": {
+          "aft_separation_m": 2.6014,
+          "fwd_separation_m": 0.4027,
+          "cofferdam_m": 0.5516,
+          "service_space_m": 2.0498,
+          "total_length_taken_m": 3.0040999999999998,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.55 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 2.60 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": false,
+              "message": "forward end-bulkhead space 0.40 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/026",
+      "output": {
+        "ok": {
+          "aft_separation_m": 1.7376,
+          "fwd_separation_m": 0.3528,
+          "cofferdam_m": 1.037,
+          "service_space_m": 0.7006000000000001,
+          "total_length_taken_m": 2.0904,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 1.04 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": false,
+              "message": "aft separation 1.74 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.35 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": true,
+              "message": "side clearance 1.30 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": true,
+              "message": "double bottom 1.36 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/027",
+      "output": {
+        "ok": {
+          "aft_separation_m": 1.3088,
+          "fwd_separation_m": 0.0082,
+          "cofferdam_m": 1.3088,
+          "service_space_m": 0.0,
+          "total_length_taken_m": 1.317,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 1.31 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": false,
+              "message": "aft separation 1.31 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": false,
+              "message": "forward end-bulkhead space 0.01 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": true,
+              "message": "double bottom 0.80 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/028",
+      "output": {
+        "ok": {
+          "aft_separation_m": 0.7981,
+          "fwd_separation_m": 0.8703,
+          "cofferdam_m": 0.3256,
+          "service_space_m": 0.47250000000000003,
+          "total_length_taken_m": 1.6684,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.33 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": false,
+              "message": "aft separation 0.80 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.87 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/029",
+      "output": {
+        "ok": {
+          "aft_separation_m": 0.6563,
+          "fwd_separation_m": 0.7985,
+          "cofferdam_m": 0.5195,
+          "service_space_m": 0.13680000000000003,
+          "total_length_taken_m": 1.4548,
+          "checks": [
+            {
+              "name": "cofferdam_min_width",
+              "ok": false,
+              "message": "cofferdam 0.52 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": false,
+              "message": "aft separation 0.66 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.80 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": false,
+              "message": "side clearance 0.78 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": true,
+              "message": "double bottom 1.21 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
     }
   ]
 }

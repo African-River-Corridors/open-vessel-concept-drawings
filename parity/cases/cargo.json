@@ -119,6 +119,72 @@
           "cargo_type": "LNG / Ethane"
         }
       }
+    },
+    {
+      "id": "get_cargo/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": "LPG_propane"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": "LPG_butane"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": "LNG"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": "LNG_ethane"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": "LNG_ethane"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_cargo",
+        "args": {
+          "cargo_type": "LPG_propane"
+        }
+      }
     }
   ],
   "retired": []

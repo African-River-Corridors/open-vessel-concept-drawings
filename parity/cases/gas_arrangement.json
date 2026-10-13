@@ -356,6 +356,709 @@
           "self_propelled": false
         }
       }
+    },
+    {
+      "id": "fit/error/unknown_ruleset",
+      "tier": 3,
+      "reason": "tier 3: error path: ruleset must be one of RULESETS",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "loa": 90.0,
+          "beam": 14.8,
+          "cargo": "LPG_propane",
+          "t_max": 4.4,
+          "ruleset": "IGF"
+        }
+      }
+    },
+    {
+      "id": "smallest_viable_loa/error/unknown_ruleset",
+      "tier": 3,
+      "reason": "tier 3: error path: ruleset must be one of RULESETS",
+      "input": {
+        "fn": "smallest_viable_loa",
+        "args": {
+          "beam": 12.0,
+          "cargo": "LNG",
+          "t_max": 3.0,
+          "ruleset": "IGC_3G"
+        }
+      }
+    },
+    {
+      "id": "fit/error/unknown_cargo",
+      "tier": 3,
+      "reason": "tier 3: error path: unknown cargo type",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "loa": 90.0,
+          "beam": 14.8,
+          "cargo": "ammonia",
+          "t_max": 4.4
+        }
+      }
+    },
+    {
+      "id": "fit/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "loa": 58.308,
+          "beam": 15.3873,
+          "cargo": "LPG_mix",
+          "t_max": 3.4927,
+          "ruleset": "IGC_2G",
+          "fill_ratio": 0.9382,
+          "self_propelled": true,
+          "depths": [
+            4.0,
+            5.0
+          ]
+        }
+      }
+    },
+    {
+      "id": "fit/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "loa": 69.2423,
+          "beam": 10.8486,
+          "cargo": "LPG_butane",
+          "t_max": 2.5648,
+          "ruleset": "ADN_G",
+          "fill_ratio": 0.9471,
+          "self_propelled": false,
+          "depths": [
+            4.0,
+            6.0
+          ],
+          "adn_tank_cap_m3": 380.0
+        }
+      }
+    },
+    {
+      "id": "fit/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "loa": 93.2582,
+          "beam": 15.417,
+          "cargo": "LNG_ethane",
+          "t_max": 4.4199,
+          "ruleset": "ADN_G",
+          "fill_ratio": 0.9014,
+          "self_propelled": false,
+          "depths": [
+            4.0,
+            7.0
+          ],
+          "adn_tank_cap_m3": 380.0
+        }
+      }
+    },
+    {
+      "id": "fit/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "loa": 104.9884,
+          "beam": 8.2274,
+          "cargo": "LNG",
+          "t_max": 2.6403,
+          "ruleset": "IGC_2G_EXACT",
+          "fill_ratio": 0.9754,
+          "self_propelled": false,
+          "depths": [
+            5.0,
+            6.0
+          ]
+        }
+      }
+    },
+    {
+      "id": "fit/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "loa": 107.6629,
+          "beam": 14.2152,
+          "cargo": "LPG_propane",
+          "t_max": 2.8656,
+          "ruleset": "IGC_2G_EXACT",
+          "fill_ratio": 0.9632,
+          "self_propelled": true,
+          "depths": [
+            4.0,
+            5.5
+          ]
+        }
+      }
+    },
+    {
+      "id": "fit/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "loa": 112.1074,
+          "beam": 17.8464,
+          "cargo": "LPG_butane",
+          "t_max": 4.7767,
+          "ruleset": "IGC_2G",
+          "fill_ratio": 0.9621,
+          "self_propelled": false,
+          "depths": [
+            5.5,
+            6.0
+          ]
+        }
+      }
+    },
+    {
+      "id": "fit/sweep/006",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "loa": 118.4131,
+          "beam": 13.8988,
+          "cargo": "LPG_butane",
+          "t_max": 3.5566,
+          "ruleset": "IGC_2G_EXACT",
+          "fill_ratio": 0.9404,
+          "self_propelled": true,
+          "depths": [
+            4.5,
+            5.5
+          ]
+        }
+      }
+    },
+    {
+      "id": "fit/sweep/007",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "loa": 94.0796,
+          "beam": 16.061,
+          "cargo": "LNG_ethane",
+          "t_max": 4.676,
+          "ruleset": "IGC_2G",
+          "fill_ratio": 0.9119,
+          "self_propelled": true,
+          "depths": [
+            5.0,
+            5.5
+          ]
+        }
+      }
+    },
+    {
+      "id": "fit/sweep/008",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "loa": 92.7246,
+          "beam": 14.558,
+          "cargo": "LPG_propane",
+          "t_max": 2.5125,
+          "ruleset": "ADN_G",
+          "fill_ratio": 0.9023,
+          "self_propelled": true,
+          "depths": [
+            6.0,
+            6.5
+          ],
+          "adn_tank_cap_m3": 380.0
+        }
+      }
+    },
+    {
+      "id": "fit/sweep/009",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "loa": 76.482,
+          "beam": 13.2392,
+          "cargo": "LNG_ethane",
+          "t_max": 3.9843,
+          "ruleset": "IGC_2G_EXACT",
+          "fill_ratio": 0.9015,
+          "self_propelled": true,
+          "depths": [
+            4.0,
+            6.5
+          ]
+        }
+      }
+    },
+    {
+      "id": "fit/sweep/010",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "loa": 75.7441,
+          "beam": 16.9654,
+          "cargo": "LPG_mix",
+          "t_max": 3.8332,
+          "ruleset": "IGC_2G_EXACT",
+          "fill_ratio": 0.9521,
+          "self_propelled": true,
+          "depths": [
+            4.0,
+            5.0
+          ]
+        }
+      }
+    },
+    {
+      "id": "fit/sweep/011",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "loa": 99.7715,
+          "beam": 11.2526,
+          "cargo": "LNG",
+          "t_max": 3.2604,
+          "ruleset": "ADN_G",
+          "fill_ratio": 0.9495,
+          "self_propelled": true,
+          "depths": [
+            4.5,
+            7.0
+          ],
+          "adn_tank_cap_m3": 380.0
+        }
+      }
+    },
+    {
+      "id": "smallest_viable_loa/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "smallest_viable_loa",
+        "args": {
+          "beam": 14.5159,
+          "cargo": "LPG_butane",
+          "t_max": 3.6566
+        }
+      }
+    },
+    {
+      "id": "smallest_viable_loa/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "smallest_viable_loa",
+        "args": {
+          "beam": 8.8543,
+          "cargo": "LPG_butane",
+          "t_max": 3.0588
+        }
+      }
+    },
+    {
+      "id": "smallest_viable_loa/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "smallest_viable_loa",
+        "args": {
+          "beam": 9.4905,
+          "cargo": "LNG_ethane",
+          "t_max": 4.0795
+        }
+      }
+    },
+    {
+      "id": "smallest_viable_loa/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "smallest_viable_loa",
+        "args": {
+          "beam": 14.5543,
+          "cargo": "LPG_mix",
+          "t_max": 2.9743
+        }
+      }
+    },
+    {
+      "id": "smallest_viable_loa/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "smallest_viable_loa",
+        "args": {
+          "beam": 8.3129,
+          "cargo": "LNG_ethane",
+          "t_max": 3.3353
+        }
+      }
+    },
+    {
+      "id": "smallest_viable_loa/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "smallest_viable_loa",
+        "args": {
+          "beam": 10.9699,
+          "cargo": "LPG_propane",
+          "t_max": 3.6877
+        }
+      }
+    },
+    {
+      "id": "smallest_viable_loa/sweep/006",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "smallest_viable_loa",
+        "args": {
+          "beam": 11.2544,
+          "cargo": "LPG_mix",
+          "t_max": 3.8299
+        }
+      }
+    },
+    {
+      "id": "smallest_viable_loa/sweep/007",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "smallest_viable_loa",
+        "args": {
+          "beam": 9.8196,
+          "cargo": "LPG_propane",
+          "t_max": 3.648
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "IGC_2G_EXACT",
+          "beam": 12.8469,
+          "total_m3": 3000.9,
+          "per_tank_m3": 1500.4451,
+          "insulation_mm": 137.06
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "ADN_G",
+          "beam": 16.0522,
+          "total_m3": 8930.1,
+          "per_tank_m3": 1488.3525,
+          "insulation_mm": 148.7816
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "IGC_2G",
+          "beam": 13.999,
+          "total_m3": 10813.6,
+          "per_tank_m3": 1802.2608,
+          "insulation_mm": 121.3379
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "IGC_2G_EXACT",
+          "beam": 11.3635,
+          "total_m3": 9421.0,
+          "per_tank_m3": 2355.2625,
+          "insulation_mm": 377.7254
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "IGC_2G_EXACT",
+          "beam": 15.3328,
+          "total_m3": 10115.1,
+          "per_tank_m3": 1685.8464,
+          "insulation_mm": 267.2901
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "ADN_G",
+          "beam": 14.8131,
+          "total_m3": 8537.4,
+          "per_tank_m3": 1422.8973,
+          "insulation_mm": 217.0757
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/006",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "ADN_G",
+          "beam": 11.0562,
+          "total_m3": 2938.7,
+          "per_tank_m3": 1469.3473,
+          "insulation_mm": 374.5014
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/007",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "ADN_G",
+          "beam": 9.2477,
+          "total_m3": 10025.2,
+          "per_tank_m3": 1670.864,
+          "insulation_mm": 237.5534
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/008",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "ADN_G",
+          "beam": 16.1182,
+          "total_m3": 9493.9,
+          "per_tank_m3": 1582.3199,
+          "insulation_mm": 186.9264
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/009",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "IGC_2G_EXACT",
+          "beam": 13.2661,
+          "total_m3": 6754.4,
+          "per_tank_m3": 1688.6012,
+          "insulation_mm": 341.4415
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/010",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "IGC_2G_EXACT",
+          "beam": 14.7119,
+          "total_m3": 2924.9,
+          "per_tank_m3": 1462.4377,
+          "insulation_mm": 286.095
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/011",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "IGC_2G",
+          "beam": 11.9064,
+          "total_m3": 1642.8,
+          "per_tank_m3": 410.7035,
+          "insulation_mm": 289.99
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/012",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "IGC_2G_EXACT",
+          "beam": 8.548,
+          "total_m3": 15519.0,
+          "per_tank_m3": 2586.5027,
+          "insulation_mm": 374.204
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/013",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "IGC_2G",
+          "beam": 8.2805,
+          "total_m3": 653.6,
+          "per_tank_m3": 108.939,
+          "insulation_mm": 171.3516
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/014",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "IGC_2G_EXACT",
+          "beam": 14.053,
+          "total_m3": 2199.0,
+          "per_tank_m3": 1099.5224,
+          "insulation_mm": 350.5977
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/015",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "IGC_2G",
+          "beam": 9.0596,
+          "total_m3": 2564.3,
+          "per_tank_m3": 1282.1668,
+          "insulation_mm": 107.4542
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/016",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "IGC_2G",
+          "beam": 17.9681,
+          "total_m3": 2453.3,
+          "per_tank_m3": 1226.6538,
+          "insulation_mm": 202.7707
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/017",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "IGC_2G_EXACT",
+          "beam": 15.0028,
+          "total_m3": 4061.5,
+          "per_tank_m3": 676.9187,
+          "insulation_mm": 343.5794
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/018",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "IGC_2G_EXACT",
+          "beam": 9.2633,
+          "total_m3": 2856.4,
+          "per_tank_m3": 1428.1924,
+          "insulation_mm": 318.5357
+        }
+      }
+    },
+    {
+      "id": "required_side_clearance/sweep/019",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "required_side_clearance",
+        "args": {
+          "ruleset": "ADN_G",
+          "beam": 16.5459,
+          "total_m3": 7406.6,
+          "per_tank_m3": 1234.4253,
+          "insulation_mm": 329.8283
+        }
+      }
     }
   ],
   "retired": []

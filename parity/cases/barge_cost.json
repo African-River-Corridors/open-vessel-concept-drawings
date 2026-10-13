@@ -173,6 +173,971 @@
           "text": "rates:\n  hull_steel_rate: 1\n"
         }
       }
+    },
+    {
+      "id": "compute/error/rates_unknown_key",
+      "tier": 3,
+      "reason": "tier 3: error path: unknown barge cost rate key",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "hull_steel_rte": 1000.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/rates_missing_key",
+      "tier": 3,
+      "reason": "tier 3: error path: missing barge cost rate key",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "hull_steel_rate": 1000.0
+          }
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/error/duplicate_key",
+      "tier": 3,
+      "reason": "tier 3: error path: duplicate key",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "hull_steel_rate: 1\nhull_steel_rate: 2\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/error/no_value",
+      "tier": 3,
+      "reason": "tier 3: error path: expected flat 'key: value'",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "hull_steel_rate:\n"
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 399.1344,
+            "wing_plate_t": 58.9485,
+            "weather_shield_t": 78.7046,
+            "tank_shell_t": 110.7342,
+            "tank_supports_t": 41.8376,
+            "insulation_t": 10.0772,
+            "piping_machinery_t": 34.9639,
+            "outfitting_t": 52.1037
+          },
+          "rates": null
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 322.5299,
+            "wing_plate_t": 52.2454,
+            "weather_shield_t": 51.2129,
+            "tank_shell_t": 464.7491,
+            "tank_supports_t": 114.096,
+            "insulation_t": 31.5842,
+            "piping_machinery_t": 43.3066,
+            "outfitting_t": 34.8222
+          },
+          "rates": {
+            "hull_steel_rate": 2707.2511,
+            "tank_shell_rate": 2412.9864,
+            "tank_supports_rate": 7987.5131,
+            "insulation_rate": 723.0968,
+            "piping_rate": 10007.0673,
+            "outfitting_rate": 8622.1449,
+            "cargo_system_lump": 850293.0,
+            "paint_anodes_misc": 1156098.0,
+            "battery_rate_per_kwh": 18199.0506,
+            "propulsion_rate_per_kw": 1175.4124,
+            "wheelhouse_accom_lump": 695033.0,
+            "tug_outfitting_lump": 548197.0,
+            "yard_margin_fraction": 0.0225,
+            "delivery_lump": 1853581.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 514.2942,
+            "wing_plate_t": 68.9616,
+            "weather_shield_t": 86.5603,
+            "tank_shell_t": 285.7454,
+            "tank_supports_t": 79.6343,
+            "insulation_t": 51.7914,
+            "piping_machinery_t": 44.4862,
+            "outfitting_t": 21.5385
+          },
+          "rates": {
+            "hull_steel_rate": 8737.2843,
+            "tank_shell_rate": 6352.0067,
+            "tank_supports_rate": 15599.3765,
+            "insulation_rate": 10843.9331,
+            "piping_rate": 4882.1111,
+            "outfitting_rate": 13086.9933,
+            "cargo_system_lump": 1063927.0,
+            "paint_anodes_misc": 1240962.0,
+            "battery_rate_per_kwh": 6423.1612,
+            "propulsion_rate_per_kw": 19368.4568,
+            "wheelhouse_accom_lump": 388702.0,
+            "tug_outfitting_lump": 1876432.0,
+            "yard_margin_fraction": 0.0566,
+            "delivery_lump": 1966463.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 485.0565,
+            "wing_plate_t": 69.3733,
+            "weather_shield_t": 14.5023,
+            "tank_shell_t": 395.4725,
+            "tank_supports_t": 114.9911,
+            "insulation_t": 38.418,
+            "piping_machinery_t": 10.6238,
+            "outfitting_t": 38.9586
+          },
+          "rates": null
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 253.5188,
+            "wing_plate_t": 45.2696,
+            "weather_shield_t": 84.8107,
+            "tank_shell_t": 334.6486,
+            "tank_supports_t": 142.2809,
+            "insulation_t": 36.7756,
+            "piping_machinery_t": 44.5114,
+            "outfitting_t": 15.3061
+          },
+          "rates": {
+            "hull_steel_rate": 5141.8813,
+            "tank_shell_rate": 2706.9428,
+            "tank_supports_rate": 8028.9752,
+            "insulation_rate": 1980.1214,
+            "piping_rate": 19272.6669,
+            "outfitting_rate": 1676.0343,
+            "cargo_system_lump": 928715.0,
+            "paint_anodes_misc": 450892.0,
+            "battery_rate_per_kwh": 9915.0123,
+            "propulsion_rate_per_kw": 16219.1418,
+            "wheelhouse_accom_lump": 319727.0,
+            "tug_outfitting_lump": 1443925.0,
+            "yard_margin_fraction": 0.1175,
+            "delivery_lump": 1551731.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 226.6381,
+            "wing_plate_t": 47.8067,
+            "weather_shield_t": 26.3671,
+            "tank_shell_t": 355.6949,
+            "tank_supports_t": 144.1274,
+            "insulation_t": 23.8087,
+            "piping_machinery_t": 25.7503,
+            "outfitting_t": 45.9944
+          },
+          "rates": null
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/006",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 236.8714,
+            "wing_plate_t": 18.295,
+            "weather_shield_t": 77.0943,
+            "tank_shell_t": 458.1217,
+            "tank_supports_t": 111.7893,
+            "insulation_t": 44.9856,
+            "piping_machinery_t": 29.17,
+            "outfitting_t": 17.0552
+          },
+          "rates": null
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/007",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 474.557,
+            "wing_plate_t": 66.3724,
+            "weather_shield_t": 46.8115,
+            "tank_shell_t": 451.0254,
+            "tank_supports_t": 100.7515,
+            "insulation_t": 47.0314,
+            "piping_machinery_t": 18.5243,
+            "outfitting_t": 47.1267
+          },
+          "rates": null
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/008",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 221.6977,
+            "wing_plate_t": 30.0624,
+            "weather_shield_t": 51.9368,
+            "tank_shell_t": 159.5141,
+            "tank_supports_t": 98.617,
+            "insulation_t": 23.3736,
+            "piping_machinery_t": 18.0285,
+            "outfitting_t": 30.093
+          },
+          "rates": null
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/009",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 468.1541,
+            "wing_plate_t": 77.7275,
+            "weather_shield_t": 10.9964,
+            "tank_shell_t": 284.2435,
+            "tank_supports_t": 137.4305,
+            "insulation_t": 13.882,
+            "piping_machinery_t": 25.5257,
+            "outfitting_t": 42.5675
+          },
+          "rates": null
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/010",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 227.9847,
+            "wing_plate_t": 16.9914,
+            "weather_shield_t": 26.6276,
+            "tank_shell_t": 397.3271,
+            "tank_supports_t": 64.8181,
+            "insulation_t": 58.3111,
+            "piping_machinery_t": 12.4303,
+            "outfitting_t": 46.1783
+          },
+          "rates": {
+            "hull_steel_rate": 19733.3075,
+            "tank_shell_rate": 14047.5952,
+            "tank_supports_rate": 19304.2523,
+            "insulation_rate": 17273.3162,
+            "piping_rate": 13517.2831,
+            "outfitting_rate": 18317.6581,
+            "cargo_system_lump": 540394.0,
+            "paint_anodes_misc": 910361.0,
+            "battery_rate_per_kwh": 4271.4729,
+            "propulsion_rate_per_kw": 15178.4828,
+            "wheelhouse_accom_lump": 1077403.0,
+            "tug_outfitting_lump": 314099.0,
+            "yard_margin_fraction": 0.1818,
+            "delivery_lump": 525026.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/011",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 535.5835,
+            "wing_plate_t": 19.086,
+            "weather_shield_t": 24.2957,
+            "tank_shell_t": 96.3888,
+            "tank_supports_t": 12.1004,
+            "insulation_t": 56.8919,
+            "piping_machinery_t": 16.5368,
+            "outfitting_t": 21.7638
+          },
+          "rates": {
+            "hull_steel_rate": 5738.3295,
+            "tank_shell_rate": 11763.9889,
+            "tank_supports_rate": 6430.2335,
+            "insulation_rate": 9720.722,
+            "piping_rate": 10383.1528,
+            "outfitting_rate": 15297.9115,
+            "cargo_system_lump": 1877690.0,
+            "paint_anodes_misc": 1130466.0,
+            "battery_rate_per_kwh": 18022.2844,
+            "propulsion_rate_per_kw": 4624.3662,
+            "wheelhouse_accom_lump": 188166.0,
+            "tug_outfitting_lump": 1559238.0,
+            "yard_margin_fraction": 0.18,
+            "delivery_lump": 1453170.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/012",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 487.3032,
+            "wing_plate_t": 69.8045,
+            "weather_shield_t": 84.6349,
+            "tank_shell_t": 461.0605,
+            "tank_supports_t": 119.1476,
+            "insulation_t": 6.2389,
+            "piping_machinery_t": 19.1285,
+            "outfitting_t": 33.6742
+          },
+          "rates": {
+            "hull_steel_rate": 18334.2206,
+            "tank_shell_rate": 17888.6791,
+            "tank_supports_rate": 4042.6432,
+            "insulation_rate": 700.9865,
+            "piping_rate": 1648.6026,
+            "outfitting_rate": 2954.1104,
+            "cargo_system_lump": 734029.0,
+            "paint_anodes_misc": 1860058.0,
+            "battery_rate_per_kwh": 8481.0051,
+            "propulsion_rate_per_kw": 14207.5579,
+            "wheelhouse_accom_lump": 1394182.0,
+            "tug_outfitting_lump": 1124825.0,
+            "yard_margin_fraction": 0.2701,
+            "delivery_lump": 1374230.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/013",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 136.8699,
+            "wing_plate_t": 73.7218,
+            "weather_shield_t": 19.2139,
+            "tank_shell_t": 198.5607,
+            "tank_supports_t": 128.8215,
+            "insulation_t": 47.5261,
+            "piping_machinery_t": 18.3613,
+            "outfitting_t": 30.6441
+          },
+          "rates": null
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/014",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 328.2529,
+            "wing_plate_t": 22.3959,
+            "weather_shield_t": 46.6462,
+            "tank_shell_t": 282.4169,
+            "tank_supports_t": 80.9334,
+            "insulation_t": 56.6059,
+            "piping_machinery_t": 24.9374,
+            "outfitting_t": 17.81
+          },
+          "rates": {
+            "hull_steel_rate": 1625.356,
+            "tank_shell_rate": 9528.8167,
+            "tank_supports_rate": 3098.9362,
+            "insulation_rate": 7152.7921,
+            "piping_rate": 13163.6552,
+            "outfitting_rate": 2696.9849,
+            "cargo_system_lump": 1409104.0,
+            "paint_anodes_misc": 1563260.0,
+            "battery_rate_per_kwh": 3573.3301,
+            "propulsion_rate_per_kw": 14048.0828,
+            "wheelhouse_accom_lump": 1273136.0,
+            "tug_outfitting_lump": 1952343.0,
+            "yard_margin_fraction": 0.1915,
+            "delivery_lump": 1577597.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/015",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 512.7099,
+            "wing_plate_t": 69.7162,
+            "weather_shield_t": 88.4691,
+            "tank_shell_t": 263.9616,
+            "tank_supports_t": 82.9932,
+            "insulation_t": 23.0581,
+            "piping_machinery_t": 32.9308,
+            "outfitting_t": 32.6593
+          },
+          "rates": {
+            "hull_steel_rate": 15700.1501,
+            "tank_shell_rate": 11925.1876,
+            "tank_supports_rate": 5486.5497,
+            "insulation_rate": 2056.1896,
+            "piping_rate": 3719.5184,
+            "outfitting_rate": 9687.9696,
+            "cargo_system_lump": 985667.0,
+            "paint_anodes_misc": 694779.0,
+            "battery_rate_per_kwh": 7309.3567,
+            "propulsion_rate_per_kw": 17734.7683,
+            "wheelhouse_accom_lump": 1447444.0,
+            "tug_outfitting_lump": 754111.0,
+            "yard_margin_fraction": 0.1228,
+            "delivery_lump": 1893506.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/016",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 501.6521,
+            "wing_plate_t": 63.858,
+            "weather_shield_t": 68.2845,
+            "tank_shell_t": 322.0175,
+            "tank_supports_t": 137.1124,
+            "insulation_t": 27.3765,
+            "piping_machinery_t": 27.919,
+            "outfitting_t": 36.9646
+          },
+          "rates": {
+            "hull_steel_rate": 1163.7195,
+            "tank_shell_rate": 694.0,
+            "tank_supports_rate": 15485.5916,
+            "insulation_rate": 7549.6362,
+            "piping_rate": 18950.9419,
+            "outfitting_rate": 7197.4583,
+            "cargo_system_lump": 995373.0,
+            "paint_anodes_misc": 945152.0,
+            "battery_rate_per_kwh": 5369.6307,
+            "propulsion_rate_per_kw": 11085.6843,
+            "wheelhouse_accom_lump": 1470708.0,
+            "tug_outfitting_lump": 1518675.0,
+            "yard_margin_fraction": 0.1787,
+            "delivery_lump": 263686.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/017",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 489.1785,
+            "wing_plate_t": 17.9401,
+            "weather_shield_t": 30.5345,
+            "tank_shell_t": 107.3352,
+            "tank_supports_t": 85.9189,
+            "insulation_t": 56.2364,
+            "piping_machinery_t": 36.0233,
+            "outfitting_t": 52.6261
+          },
+          "rates": null
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/018",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 561.674,
+            "wing_plate_t": 25.6374,
+            "weather_shield_t": 57.9141,
+            "tank_shell_t": 493.2679,
+            "tank_supports_t": 104.0465,
+            "insulation_t": 21.6124,
+            "piping_machinery_t": 26.4938,
+            "outfitting_t": 28.6075
+          },
+          "rates": {
+            "hull_steel_rate": 17816.9198,
+            "tank_shell_rate": 508.3718,
+            "tank_supports_rate": 19260.9853,
+            "insulation_rate": 3902.3305,
+            "piping_rate": 7916.6702,
+            "outfitting_rate": 717.082,
+            "cargo_system_lump": 1039606.0,
+            "paint_anodes_misc": 1162143.0,
+            "battery_rate_per_kwh": 10878.4522,
+            "propulsion_rate_per_kw": 13722.4202,
+            "wheelhouse_accom_lump": 1114354.0,
+            "tug_outfitting_lump": 963709.0,
+            "yard_margin_fraction": 0.0097,
+            "delivery_lump": 81206.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/019",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 385.2906,
+            "wing_plate_t": 20.1496,
+            "weather_shield_t": 66.9328,
+            "tank_shell_t": 498.7361,
+            "tank_supports_t": 145.3783,
+            "insulation_t": 29.962,
+            "piping_machinery_t": 59.7636,
+            "outfitting_t": 43.6532
+          },
+          "rates": {
+            "hull_steel_rate": 14737.4649,
+            "tank_shell_rate": 12962.4129,
+            "tank_supports_rate": 19129.4825,
+            "insulation_rate": 2740.277,
+            "piping_rate": 15865.1843,
+            "outfitting_rate": 14521.0144,
+            "cargo_system_lump": 1431675.0,
+            "paint_anodes_misc": 139101.0,
+            "battery_rate_per_kwh": 9452.6523,
+            "propulsion_rate_per_kw": 9921.4123,
+            "wheelhouse_accom_lump": 181650.0,
+            "tug_outfitting_lump": 1772952.0,
+            "yard_margin_fraction": 0.1676,
+            "delivery_lump": 1621579.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/020",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 576.817,
+            "wing_plate_t": 16.272,
+            "weather_shield_t": 32.051,
+            "tank_shell_t": 499.5162,
+            "tank_supports_t": 148.8263,
+            "insulation_t": 28.7592,
+            "piping_machinery_t": 56.0497,
+            "outfitting_t": 43.0617
+          },
+          "rates": {
+            "hull_steel_rate": 7942.1737,
+            "tank_shell_rate": 12542.5686,
+            "tank_supports_rate": 11870.8104,
+            "insulation_rate": 2516.624,
+            "piping_rate": 4093.5116,
+            "outfitting_rate": 15134.3051,
+            "cargo_system_lump": 338333.0,
+            "paint_anodes_misc": 340086.0,
+            "battery_rate_per_kwh": 8672.1823,
+            "propulsion_rate_per_kw": 5104.3699,
+            "wheelhouse_accom_lump": 1987028.0,
+            "tug_outfitting_lump": 1504990.0,
+            "yard_margin_fraction": 0.0196,
+            "delivery_lump": 712035.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/021",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 367.3726,
+            "wing_plate_t": 15.3674,
+            "weather_shield_t": 22.6184,
+            "tank_shell_t": 493.2762,
+            "tank_supports_t": 109.0817,
+            "insulation_t": 7.6703,
+            "piping_machinery_t": 11.0305,
+            "outfitting_t": 19.4833
+          },
+          "rates": null
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/022",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 103.7945,
+            "wing_plate_t": 65.7901,
+            "weather_shield_t": 87.073,
+            "tank_shell_t": 475.7636,
+            "tank_supports_t": 24.7034,
+            "insulation_t": 55.9433,
+            "piping_machinery_t": 23.6949,
+            "outfitting_t": 29.5223
+          },
+          "rates": {
+            "hull_steel_rate": 14674.3924,
+            "tank_shell_rate": 7210.7758,
+            "tank_supports_rate": 12618.7025,
+            "insulation_rate": 11486.266,
+            "piping_rate": 8859.4313,
+            "outfitting_rate": 11086.5085,
+            "cargo_system_lump": 528596.0,
+            "paint_anodes_misc": 967801.0,
+            "battery_rate_per_kwh": 12757.7003,
+            "propulsion_rate_per_kw": 4504.0146,
+            "wheelhouse_accom_lump": 969835.0,
+            "tug_outfitting_lump": 1753586.0,
+            "yard_margin_fraction": 0.0257,
+            "delivery_lump": 443803.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/023",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 299.9382,
+            "wing_plate_t": 62.3372,
+            "weather_shield_t": 13.2299,
+            "tank_shell_t": 442.7839,
+            "tank_supports_t": 142.4853,
+            "insulation_t": 56.8912,
+            "piping_machinery_t": 52.0059,
+            "outfitting_t": 17.2945
+          },
+          "rates": {
+            "hull_steel_rate": 13082.6738,
+            "tank_shell_rate": 15572.2828,
+            "tank_supports_rate": 1068.2506,
+            "insulation_rate": 2842.0804,
+            "piping_rate": 12348.0842,
+            "outfitting_rate": 4813.6354,
+            "cargo_system_lump": 1363492.0,
+            "paint_anodes_misc": 159665.0,
+            "battery_rate_per_kwh": 3012.249,
+            "propulsion_rate_per_kw": 14274.9534,
+            "wheelhouse_accom_lump": 1821870.0,
+            "tug_outfitting_lump": 758784.0,
+            "yard_margin_fraction": 0.0996,
+            "delivery_lump": 919289.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/024",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 591.0939,
+            "wing_plate_t": 31.5535,
+            "weather_shield_t": 59.1905,
+            "tank_shell_t": 136.2145,
+            "tank_supports_t": 106.1563,
+            "insulation_t": 41.197,
+            "piping_machinery_t": 42.9351,
+            "outfitting_t": 31.2348
+          },
+          "rates": {
+            "hull_steel_rate": 16568.5417,
+            "tank_shell_rate": 1266.7083,
+            "tank_supports_rate": 9851.6608,
+            "insulation_rate": 14166.2312,
+            "piping_rate": 8878.1837,
+            "outfitting_rate": 16995.5342,
+            "cargo_system_lump": 1682779.0,
+            "paint_anodes_misc": 1344704.0,
+            "battery_rate_per_kwh": 5307.9705,
+            "propulsion_rate_per_kw": 8173.1488,
+            "wheelhouse_accom_lump": 1077860.0,
+            "tug_outfitting_lump": 1224233.0,
+            "yard_margin_fraction": 0.0864,
+            "delivery_lump": 1219424.0
+          }
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# sweep rates\n\nbattery_rate_per_kwh: 994677.3678\npropulsion_rate_per_kw: 563223.2244\nhull_steel_rate: 455582.7969\ncargo_system_lump: 708208.2137\ndelivery_lump: 102120.2114\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# sweep rates\n\ndelivery_lump: 821556.7779\ntank_supports_rate: 607432.8884\npropulsion_rate_per_kw: 497843.6136\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# sweep rates\ntug_outfitting_lump: 504710.4194\npropulsion_rate_per_kw: 561772.2638\ncargo_system_lump: 266492.3905\nyard_margin_fraction: 578712.8371\ninsulation_rate: 534031.5459\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# sweep rates\n\nbattery_rate_per_kwh: 933072.2672\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# sweep rates\ntank_shell_rate: 964220.7306\ndelivery_lump: 481376.1645\ncargo_system_lump: 973762.1395\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# sweep rates\nbattery_rate_per_kwh: 210333.7772\npaint_anodes_misc: 817200.8664\ninsulation_rate: 894835.3467\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/sweep/006",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# sweep rates\npiping_rate: 982265.8497\nyard_margin_fraction: 677291.1398\nwheelhouse_accom_lump: 663367.6246\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/sweep/007",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# sweep rates\npiping_rate: 721077.4002\nhull_steel_rate: 321141.9359\nbattery_rate_per_kwh: 910353.0118\ntank_supports_rate: 918837.3609\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/sweep/008",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# sweep rates\ninsulation_rate: 332052.8178\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/sweep/009",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# sweep rates\n\ntank_supports_rate: 853361.9564\ntank_shell_rate: 347238.9696\npropulsion_rate_per_kw: 428699.5514\ninsulation_rate: 778956.0529\nwheelhouse_accom_lump: 523088.5699\nbattery_rate_per_kwh: 761015.4497\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/sweep/010",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# sweep rates\ninsulation_rate: 40947.3569\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/sweep/011",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# sweep rates\nhull_steel_rate: 670402.2497\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/sweep/012",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# sweep rates\ntank_shell_rate: 482633.3493\ntank_supports_rate: 101616.1572\ninsulation_rate: 773649.7303\nbattery_rate_per_kwh: 645441.6487\npropulsion_rate_per_kw: 218966.1421\nwheelhouse_accom_lump: 286172.8533\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/sweep/013",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# sweep rates\n\nyard_margin_fraction: 770557.1522\npaint_anodes_misc: 197345.7783\ndelivery_lump: 493444.6415\nbattery_rate_per_kwh: 42318.2805\ntank_supports_rate: 442569.9435\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/sweep/014",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# sweep rates\npropulsion_rate_per_kw: 114020.6443\noutfitting_rate: 389727.2645\ndelivery_lump: 530975.6729\ninsulation_rate: 707200.127\nbattery_rate_per_kwh: 490902.6755\n"
+        }
+      }
     }
   ],
   "retired": []

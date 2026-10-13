@@ -90,6 +90,304 @@
           }
         }
       }
+    },
+    {
+      "id": "cargo_options",
+      "tier": 1,
+      "reason": "tier 1: named case: the cargo list the simulator offers",
+      "input": {
+        "fn": "cargo_options",
+        "args": {}
+      }
+    },
+    {
+      "id": "simulate/error/gas_in_hopper",
+      "tier": 3,
+      "reason": "tier 3: error path: cargo phase not carried by the vessel",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "hopper_barge",
+            "cargo": "LNG",
+            "loa_m": 76.5,
+            "beam_m": 11.4,
+            "depth_m": 3.5,
+            "cb": 0.9
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/error/bauxite_in_gas_barge",
+      "tier": 3,
+      "reason": "tier 3: error path: cargo phase not carried by the vessel",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "gas_barge",
+            "cargo": "bauxite",
+            "loa_m": 90,
+            "beam_m": 14.8,
+            "depth_m": 6.5,
+            "cb": 0.85
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/error/unknown_ruleset",
+      "tier": 3,
+      "reason": "tier 3: error path: unknown ruleset",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "gas_barge",
+            "cargo": "LPG_propane",
+            "loa_m": 90,
+            "beam_m": 14.8,
+            "depth_m": 6.5,
+            "cb": 0.85,
+            "ruleset": "IGF"
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "gas_barge",
+            "loa_m": 56.6187,
+            "beam_m": 11.2028,
+            "depth_m": 4.5806,
+            "cb": 0.8635,
+            "freeboard_min_m": 0.5742,
+            "self_propelled": true,
+            "speed_max_kn": 8.0,
+            "cargo": "LNG",
+            "ruleset": "ADN_G",
+            "fill_ratio": 0.9665,
+            "air_draft_limit_m": 9.7754
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "box_barge",
+            "loa_m": 74.0814,
+            "beam_m": 8.6143,
+            "depth_m": 4.8754,
+            "cb": 0.9173,
+            "freeboard_min_m": 0.559,
+            "self_propelled": false,
+            "speed_max_kn": 8.0,
+            "cargo": "bauxite",
+            "lightship_k_t_per_m3": 0.1106,
+            "draught_limit_m": 3.1343
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "gas_barge",
+            "loa_m": 109.4378,
+            "beam_m": 8.0156,
+            "depth_m": 3.6062,
+            "cb": 0.8532,
+            "freeboard_min_m": 0.4298,
+            "self_propelled": true,
+            "speed_max_kn": 8.0,
+            "cargo": "LPG_butane",
+            "ruleset": "IGC_2G_EXACT",
+            "fill_ratio": null
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "gas_barge",
+            "loa_m": 74.077,
+            "beam_m": 10.7203,
+            "depth_m": 4.1419,
+            "cb": 0.8684,
+            "freeboard_min_m": 0.5244,
+            "self_propelled": false,
+            "speed_max_kn": 8.0,
+            "cargo": "LPG_propane",
+            "ruleset": "IGC_2G_EXACT",
+            "fill_ratio": null,
+            "draught_limit_m": 4.4056
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "gas_barge",
+            "loa_m": 102.5644,
+            "beam_m": 11.1616,
+            "depth_m": 5.6159,
+            "cb": 0.8814,
+            "freeboard_min_m": 0.4894,
+            "self_propelled": true,
+            "speed_max_kn": 8.0,
+            "cargo": "LPG_butane",
+            "ruleset": "IGC_2G",
+            "fill_ratio": null,
+            "draught_limit_m": 4.2202,
+            "air_draft_limit_m": 11.2458
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "hopper_barge",
+            "loa_m": 67.3793,
+            "beam_m": 13.4188,
+            "depth_m": 4.9717,
+            "cb": 0.8675,
+            "freeboard_min_m": 0.5727,
+            "self_propelled": false,
+            "speed_max_kn": 8.0,
+            "cargo": "bauxite",
+            "air_draft_limit_m": 7.9754
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/sweep/006",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "box_barge",
+            "loa_m": 67.1147,
+            "beam_m": 9.7144,
+            "depth_m": 5.605,
+            "cb": 0.8103,
+            "freeboard_min_m": 0.5984,
+            "self_propelled": false,
+            "speed_max_kn": 8.0,
+            "cargo": "bauxite",
+            "lightship_k_t_per_m3": 0.1018
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/sweep/007",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "box_barge",
+            "loa_m": 95.0997,
+            "beam_m": 12.1747,
+            "depth_m": 5.529,
+            "cb": 0.8265,
+            "freeboard_min_m": 0.3695,
+            "self_propelled": false,
+            "speed_max_kn": 8.0,
+            "cargo": "bauxite",
+            "lightship_k_t_per_m3": 0.115,
+            "draught_limit_m": 2.709
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/sweep/008",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "gas_barge",
+            "loa_m": 103.038,
+            "beam_m": 9.9922,
+            "depth_m": 5.0695,
+            "cb": 0.885,
+            "freeboard_min_m": 0.3554,
+            "self_propelled": true,
+            "speed_max_kn": 8.0,
+            "cargo": "LNG_ethane",
+            "ruleset": "ADN_G",
+            "fill_ratio": 0.9031,
+            "draught_limit_m": 2.6737
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/sweep/009",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "gas_barge",
+            "loa_m": 72.0962,
+            "beam_m": 13.2923,
+            "depth_m": 6.6723,
+            "cb": 0.8933,
+            "freeboard_min_m": 0.5347,
+            "self_propelled": true,
+            "speed_max_kn": 8.0,
+            "cargo": "LPG_butane",
+            "ruleset": "ADN_G",
+            "fill_ratio": null,
+            "draught_limit_m": 3.8688
+          }
+        }
+      }
     }
   ],
   "retired": []

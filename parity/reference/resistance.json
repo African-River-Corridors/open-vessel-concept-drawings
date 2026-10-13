@@ -7865,6 +7865,2126 @@
           "warnings": []
         }
       }
+    },
+    {
+      "id": "compute/error/zero_draft",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "draft_m must be > 0"
+        }
+      }
+    },
+    {
+      "id": "compute/error/zero_beam",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "beam_m must be > 0"
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/000",
+      "output": {
+        "ok": {
+          "inputs": {
+            "loa": 87.76,
+            "lwl": 86.1238,
+            "beam": 15.8847,
+            "draft": 3.344,
+            "block_coefficient": 0.8294,
+            "wetted_surface_area": 0.0,
+            "displacement_tonnes": 0.0,
+            "tug": {
+              "engine_power_kw": 3379.487,
+              "propulsive_efficiency": 0.5998,
+              "sfc_g_per_kwh": 195.0,
+              "fuel_density_kg_per_litre": 0.845
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 3.9192,
+                "channel_width_bottom": 148.9996,
+                "channel_width_surface": 172.51,
+                "bank_slope": 3.0,
+                "current_speed_knots": 0.8154,
+                "water_density": 1.025,
+                "is_deep_water": false,
+                "significant_wave_height_m": 1.8909,
+                "wave_heading_deg_off_bow": 0.0,
+                "peak_wave_period_s": 0.0,
+                "squat_safety_margin_m": 0.15,
+                "apply_squat_limit": true
+              },
+              {
+                "name": "env1",
+                "water_depth": 5.6695,
+                "channel_width_bottom": 155.5793,
+                "channel_width_surface": 189.6,
+                "bank_slope": 3.0,
+                "current_speed_knots": 1.1441,
+                "water_density": 1.0,
+                "is_deep_water": false,
+                "significant_wave_height_m": 1.0982,
+                "wave_heading_deg_off_bow": 0.0,
+                "peak_wave_period_s": 0.0,
+                "squat_safety_margin_m": 0.15,
+                "apply_squat_limit": true
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 6.5,
+            "speed_step_knots": 1.0
+          },
+          "wetted_surface_area": 1982.9276342652001,
+          "environments": [
+            {
+              "name": "env0",
+              "limiting_speed_knots": 9.60709820572485,
+              "service_speed_knots": 5.0,
+              "blockage_ratio": 0.06992749019269509,
+              "speed_curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_through_water_knots": 2.8154,
+                  "froude_number": 0.04982473191469558,
+                  "froude_depth": 0.23356504599219724,
+                  "resistance_frictional_kn": 4.4105316430900565,
+                  "resistance_residuary_kn": 0.44105316430900565,
+                  "resistance_shallow_factor": 1.0367199394474695,
+                  "resistance_total_kn": 39.29496207810201,
+                  "effective_power_kw": 56.90860503912371,
+                  "delivered_power_kw": 94.87930149903919,
+                  "fuel_litres_per_hour": 21.8952234228552,
+                  "fuel_litres_per_nm": 10.9476117114276,
+                  "power_available": true,
+                  "resistance_waves_kn": 34.26522737035099,
+                  "squat_m": 0.06891653658708412,
+                  "dynamic_ukc_m": 0.5062834634129161,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_through_water_knots": 3.8154,
+                  "froude_number": 0.06752194435864513,
+                  "froude_depth": 0.3165248548975738,
+                  "resistance_frictional_kn": 7.756262620181314,
+                  "resistance_residuary_kn": 0.7756262620181315,
+                  "resistance_shallow_factor": 1.0762061258680233,
+                  "resistance_total_kn": 43.44729845059932,
+                  "effective_power_kw": 85.27148229832952,
+                  "delivered_power_kw": 142.1665260058845,
+                  "fuel_litres_per_hour": 32.80765984751181,
+                  "fuel_litres_per_nm": 10.93588661583727,
+                  "power_available": true,
+                  "resistance_waves_kn": 34.26522737035099,
+                  "squat_m": 0.1297394759862409,
+                  "dynamic_ukc_m": 0.44546052401375924,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_through_water_knots": 4.8154,
+                  "froude_number": 0.08521915680259469,
+                  "froude_depth": 0.39948466380295045,
+                  "resistance_frictional_kn": 11.958618738909514,
+                  "resistance_residuary_kn": 1.1958618738909514,
+                  "resistance_shallow_factor": 1.133615694244137,
+                  "resistance_total_kn": 49.17735304265183,
+                  "effective_power_kw": 121.81435713291165,
+                  "delivered_power_kw": 203.09162576344056,
+                  "fuel_litres_per_hour": 46.867298253101666,
+                  "fuel_litres_per_nm": 11.716824563275416,
+                  "power_available": true,
+                  "resistance_waves_kn": 34.26522737035099,
+                  "squat_m": 0.21384310066550138,
+                  "dynamic_ukc_m": 0.36135689933449877,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_through_water_knots": 5.8154,
+                  "froude_number": 0.10291636924654424,
+                  "froude_depth": 0.48244447270832697,
+                  "resistance_frictional_kn": 16.992889685445007,
+                  "resistance_residuary_kn": 1.7059796601378685,
+                  "resistance_shallow_factor": 1.2109330482771163,
+                  "resistance_total_kn": 56.90830622633319,
+                  "effective_power_kw": 170.2378837363211,
+                  "delivered_power_kw": 283.8244143653236,
+                  "fuel_litres_per_hour": 65.49794177661313,
+                  "fuel_litres_per_nm": 13.099588355322627,
+                  "power_available": true,
+                  "resistance_waves_kn": 34.26522737035099,
+                  "squat_m": 0.3264230029757161,
+                  "dynamic_ukc_m": 0.24877699702428407,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_through_water_knots": 6.8154,
+                  "froude_number": 0.1206135816904938,
+                  "froude_depth": 0.5654042816137036,
+                  "resistance_frictional_kn": 22.839888954620186,
+                  "resistance_residuary_kn": 2.4529801324010325,
+                  "resistance_shallow_factor": 1.3099430202422095,
+                  "resistance_total_kn": 67.39744469279438,
+                  "effective_power_kw": 236.2847761212889,
+                  "delivered_power_kw": 393.9392732932459,
+                  "fuel_litres_per_hour": 90.90906306767214,
+                  "fuel_litres_per_nm": 15.151510511278689,
+                  "power_available": true,
+                  "resistance_waves_kn": 34.26522737035099,
+                  "squat_m": 0.476139849779797,
+                  "dynamic_ukc_m": 0.09906015022020315,
+                  "squat_limited": true
+                }
+              ],
+              "resistance_at_service_kn": 56.90830622633319,
+              "power_at_service_kw": 283.8244143653236,
+              "fuel_at_service_lph": 65.49794177661313,
+              "fuel_at_service_lpnm": 13.099588355322627,
+              "squat_limited_speed_knots": 6.50390625,
+              "service_speed_governed_by": "squat"
+            },
+            {
+              "name": "env1",
+              "limiting_speed_knots": 11.657113446768259,
+              "service_speed_knots": 6.0,
+              "blockage_ratio": 0.04502459440451684,
+              "speed_curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_through_water_knots": 3.1441,
+                  "froude_number": 0.055641805645021795,
+                  "froude_depth": 0.21686547959072255,
+                  "resistance_frictional_kn": 5.249572261226715,
+                  "resistance_residuary_kn": 0.5249572261226715,
+                  "resistance_shallow_factor": 1.0181245627994469,
+                  "resistance_total_kn": 17.155201745049638,
+                  "effective_power_kw": 27.74553734852047,
+                  "delivered_power_kw": 46.2579815747257,
+                  "fuel_litres_per_hour": 10.6749188249367,
+                  "fuel_litres_per_nm": 5.33745941246835,
+                  "power_available": true,
+                  "resistance_waves_kn": 11.276011435369531,
+                  "squat_m": 0.05917889872172618,
+                  "dynamic_ukc_m": 2.2663211012782742,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_through_water_knots": 4.1441,
+                  "froude_number": 0.07333901808897134,
+                  "froude_depth": 0.2858408555618184,
+                  "resistance_frictional_kn": 8.770898385136586,
+                  "resistance_residuary_kn": 0.8770898385136587,
+                  "resistance_shallow_factor": 1.0350601020397534,
+                  "resistance_total_kn": 21.262259110619294,
+                  "effective_power_kw": 45.32529015307527,
+                  "delivered_power_kw": 75.5673393682482,
+                  "fuel_litres_per_hour": 17.438616777288043,
+                  "fuel_litres_per_nm": 5.8128722590960145,
+                  "power_available": true,
+                  "resistance_waves_kn": 11.276011435369531,
+                  "squat_m": 0.10473393031747667,
+                  "dynamic_ukc_m": 2.2207660696825235,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_through_water_knots": 5.1441,
+                  "froude_number": 0.0910362305329209,
+                  "froude_depth": 0.3548162315329143,
+                  "resistance_frictional_kn": 13.11485560274965,
+                  "resistance_residuary_kn": 1.311485560274965,
+                  "resistance_shallow_factor": 1.0588942006763913,
+                  "resistance_total_kn": 26.5519804298754,
+                  "effective_power_kw": 70.25986027708325,
+                  "delivered_power_kw": 117.13881339960528,
+                  "fuel_litres_per_hour": 27.032033861447374,
+                  "fuel_litres_per_nm": 6.7580084653618435,
+                  "power_available": true,
+                  "resistance_waves_kn": 11.276011435369531,
+                  "squat_m": 0.1654097412301244,
+                  "dynamic_ukc_m": 2.160090258769876,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_through_water_knots": 6.1441,
+                  "froude_number": 0.10873344297687045,
+                  "froude_depth": 0.4237916075040101,
+                  "resistance_frictional_kn": 18.259573489122126,
+                  "resistance_residuary_kn": 1.8632144337807075,
+                  "resistance_shallow_factor": 1.0903193631036159,
+                  "resistance_total_kn": 33.216276747338085,
+                  "effective_power_kw": 104.98087439553176,
+                  "delivered_power_kw": 175.02646614793557,
+                  "fuel_litres_per_hour": 40.3907229572159,
+                  "fuel_litres_per_nm": 8.07814459144318,
+                  "power_available": true,
+                  "resistance_waves_kn": 11.276011435369531,
+                  "squat_m": 0.24357688669793648,
+                  "dynamic_ukc_m": 2.081923113302064,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_through_water_knots": 7.1441,
+                  "froude_number": 0.12643065542082002,
+                  "froude_depth": 0.49276698347510606,
+                  "resistance_frictional_kn": 24.187774444394716,
+                  "resistance_residuary_kn": 2.678612544601239,
+                  "resistance_shallow_factor": 1.1299628456837283,
+                  "resistance_total_kn": 41.634030530695696,
+                  "effective_power_kw": 153.0019413133781,
+                  "delivered_power_kw": 255.0882649439448,
+                  "fuel_litres_per_hour": 58.86652267937188,
+                  "fuel_litres_per_nm": 9.811087113228647,
+                  "power_available": true,
+                  "resistance_waves_kn": 11.276011435369531,
+                  "squat_m": 0.3427986818789244,
+                  "dynamic_ukc_m": 1.982701318121076,
+                  "squat_limited": false
+                }
+              ],
+              "resistance_at_service_kn": 41.634030530695696,
+              "power_at_service_kw": 255.0882649439448,
+              "fuel_at_service_lph": 58.86652267937188,
+              "fuel_at_service_lpnm": 9.811087113228647,
+              "squat_limited_speed_knots": 20.0,
+              "service_speed_governed_by": "power"
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_speed_below_limiting[env0]",
+              "ok": true,
+              "message": "env0: service 5.0 kn <= 0.95 x Schijf limit 9.61 kn",
+              "severity": "error"
+            },
+            {
+              "name": "power_within_installed[env0]",
+              "ok": true,
+              "message": "env0: power 284 kW <= installed 3379 kW",
+              "severity": "error"
+            },
+            {
+              "name": "blockage_in_range[env0]",
+              "ok": true,
+              "message": "env0: blockage n = 0.070 must be in (0, 1)",
+              "severity": "error"
+            },
+            {
+              "name": "service_speed_below_limiting[env1]",
+              "ok": true,
+              "message": "env1: service 6.0 kn <= 0.95 x Schijf limit 11.66 kn",
+              "severity": "error"
+            },
+            {
+              "name": "power_within_installed[env1]",
+              "ok": true,
+              "message": "env1: power 255 kW <= installed 3379 kW",
+              "severity": "error"
+            },
+            {
+              "name": "blockage_in_range[env1]",
+              "ok": true,
+              "message": "env1: blockage n = 0.045 must be in (0, 1)",
+              "severity": "error"
+            },
+            {
+              "name": "coefficients_are_first_order",
+              "ok": true,
+              "message": "Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor are uncalibrated first-order estimates (RS1) — ITTC-1957 friction is standard.",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/001",
+      "output": {
+        "ok": {
+          "inputs": {
+            "loa": 116.05,
+            "lwl": 114.496,
+            "beam": 15.2927,
+            "draft": 1.9878,
+            "block_coefficient": 0.8917,
+            "wetted_surface_area": 0.0,
+            "displacement_tonnes": 0.0,
+            "tug": {
+              "engine_power_kw": 864.8619,
+              "propulsive_efficiency": 0.5763,
+              "sfc_g_per_kwh": 195.0,
+              "fuel_density_kg_per_litre": 0.845
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 14.2124,
+                "channel_width_bottom": 120.8852,
+                "channel_width_surface": 206.16,
+                "bank_slope": 3.0,
+                "current_speed_knots": 0.8807,
+                "water_density": 1.025,
+                "is_deep_water": false,
+                "significant_wave_height_m": 0.0,
+                "wave_heading_deg_off_bow": 0.0,
+                "peak_wave_period_s": 0.0,
+                "squat_safety_margin_m": 0.15,
+                "apply_squat_limit": true
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 6.2466,
+            "speed_step_knots": 1.0
+          },
+          "wetted_surface_area": 2250.266142336,
+          "environments": [
+            {
+              "name": "env0",
+              "limiting_speed_knots": 18.6690934980482,
+              "service_speed_knots": 6.0,
+              "blockage_ratio": 0.011663540887227035,
+              "speed_curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_through_water_knots": 2.8807,
+                  "froude_number": 0.04421496968329449,
+                  "froude_depth": 0.12549625842852918,
+                  "resistance_frictional_kn": 5.014943487890954,
+                  "resistance_residuary_kn": 0.5014943487890954,
+                  "resistance_shallow_factor": 1.0007759520780939,
+                  "resistance_total_kn": 5.520718328083097,
+                  "effective_power_kw": 8.180777523197499,
+                  "delivered_power_kw": 14.195345346516568,
+                  "fuel_litres_per_hour": 3.275848926119208,
+                  "fuel_litres_per_nm": 1.637924463059604,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.012006049094721905,
+                  "dynamic_ukc_m": 12.212593950905278,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_through_water_knots": 3.8807,
+                  "froude_number": 0.05956365912797616,
+                  "froude_depth": 0.16906075956663075,
+                  "resistance_frictional_kn": 8.72999805380695,
+                  "resistance_residuary_kn": 0.8729998053806951,
+                  "resistance_shallow_factor": 1.0015273073449833,
+                  "resistance_total_kn": 9.617664588351841,
+                  "effective_power_kw": 19.19909058594794,
+                  "delivered_power_kw": 33.31440323780659,
+                  "fuel_litres_per_hour": 7.687939208724597,
+                  "fuel_litres_per_nm": 2.562646402908199,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.022313985882498378,
+                  "dynamic_ukc_m": 12.202286014117503,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_through_water_knots": 4.8807,
+                  "froude_number": 0.07491234857265783,
+                  "froude_depth": 0.21262526070473228,
+                  "resistance_frictional_kn": 13.381410124369093,
+                  "resistance_residuary_kn": 1.3381410124369095,
+                  "resistance_shallow_factor": 1.0025811980819035,
+                  "resistance_total_kn": 14.757545213966807,
+                  "effective_power_kw": 37.05076643623553,
+                  "delivered_power_kw": 64.29076251298893,
+                  "fuel_litres_per_hour": 14.836329810689755,
+                  "fuel_litres_per_nm": 3.7090824526724386,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.03594901571903854,
+                  "dynamic_ukc_m": 12.188650984280962,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_through_water_knots": 5.8807,
+                  "froude_number": 0.0902610380173395,
+                  "froude_depth": 0.2561897618428339,
+                  "resistance_frictional_kn": 18.943048682020752,
+                  "resistance_residuary_kn": 1.8943048682020753,
+                  "resistance_shallow_factor": 1.0039637409786955,
+                  "resistance_total_kn": 20.91994742237741,
+                  "effective_power_kw": 63.28351206460497,
+                  "delivered_power_kw": 109.81001572896923,
+                  "fuel_litres_per_hour": 25.34077286053136,
+                  "fuel_litres_per_nm": 5.0681545721062715,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.052973245125110105,
+                  "dynamic_ukc_m": 12.171626754874891,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_through_water_knots": 6.8807,
+                  "froude_number": 0.10560972746202117,
+                  "froude_depth": 0.29975426298093544,
+                  "resistance_frictional_kn": 25.394537337545696,
+                  "resistance_residuary_kn": 2.566128029198523,
+                  "resistance_shallow_factor": 1.0056984609084314,
+                  "resistance_total_kn": 28.119998125310342,
+                  "effective_power_kw": 99.52882345426328,
+                  "delivered_power_kw": 172.70314671917973,
+                  "fuel_litres_per_hour": 39.85457231981071,
+                  "fuel_litres_per_nm": 6.642428719968451,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.07343786842943867,
+                  "dynamic_ukc_m": 12.151162131570562,
+                  "squat_limited": false
+                }
+              ],
+              "resistance_at_service_kn": 28.119998125310342,
+              "power_at_service_kw": 172.70314671917973,
+              "fuel_at_service_lph": 39.85457231981071,
+              "fuel_at_service_lpnm": 6.642428719968451,
+              "squat_limited_speed_knots": 20.0,
+              "service_speed_governed_by": "power"
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_speed_below_limiting[env0]",
+              "ok": true,
+              "message": "env0: service 6.0 kn <= 0.95 x Schijf limit 18.67 kn",
+              "severity": "error"
+            },
+            {
+              "name": "power_within_installed[env0]",
+              "ok": true,
+              "message": "env0: power 173 kW <= installed 865 kW",
+              "severity": "error"
+            },
+            {
+              "name": "blockage_in_range[env0]",
+              "ok": true,
+              "message": "env0: blockage n = 0.012 must be in (0, 1)",
+              "severity": "error"
+            },
+            {
+              "name": "coefficients_are_first_order",
+              "ok": true,
+              "message": "Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor are uncalibrated first-order estimates (RS1) — ITTC-1957 friction is standard.",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/002",
+      "output": {
+        "ok": {
+          "inputs": {
+            "loa": 51.21,
+            "lwl": 50.5816,
+            "beam": 10.089,
+            "draft": 2.4501,
+            "block_coefficient": 0.7627,
+            "wetted_surface_area": 0.0,
+            "displacement_tonnes": 0.0,
+            "tug": {
+              "engine_power_kw": 2566.1456,
+              "propulsive_efficiency": 0.5816,
+              "sfc_g_per_kwh": 195.0,
+              "fuel_density_kg_per_litre": 0.845
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 14.0512,
+                "channel_width_bottom": 234.6118,
+                "channel_width_surface": 318.92,
+                "bank_slope": 3.0,
+                "current_speed_knots": 0.9774,
+                "water_density": 1.0,
+                "is_deep_water": false,
+                "significant_wave_height_m": 0.0,
+                "wave_heading_deg_off_bow": 0.0,
+                "peak_wave_period_s": 0.0,
+                "squat_safety_margin_m": 0.15,
+                "apply_squat_limit": false
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 6.3238,
+            "speed_step_knots": 1.0
+          },
+          "wetted_surface_area": 773.3412730944001,
+          "environments": [
+            {
+              "name": "env0",
+              "limiting_speed_knots": 18.605489480637956,
+              "service_speed_knots": 6.0,
+              "blockage_ratio": 0.004847967314804142,
+              "speed_curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_through_water_knots": 2.9774000000000003,
+                  "froude_number": 0.06875548641045738,
+                  "froude_depth": 0.13045085579658058,
+                  "resistance_frictional_kn": 1.9999082727715627,
+                  "resistance_residuary_kn": 0.19999082727715628,
+                  "resistance_shallow_factor": 1.0007915429592005,
+                  "resistance_total_kn": 2.201640414692314,
+                  "effective_power_kw": 3.3719764494105986,
+                  "delivered_power_kw": 5.7977586819301905,
+                  "fuel_litres_per_hour": 1.3379443112146594,
+                  "fuel_litres_per_nm": 0.6689721556073297,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.0,
+                  "dynamic_ukc_m": "float:inf",
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_through_water_knots": 3.9774000000000003,
+                  "froude_number": 0.09184794506917215,
+                  "froude_depth": 0.17426453746400197,
+                  "resistance_frictional_kn": 3.419823368883945,
+                  "resistance_residuary_kn": 0.3419823368883945,
+                  "resistance_shallow_factor": 1.0015867260541198,
+                  "resistance_total_kn": 3.7677746608962246,
+                  "effective_power_kw": 7.708771104006302,
+                  "delivered_power_kw": 13.254420742789376,
+                  "fuel_litres_per_hour": 3.0587124791052407,
+                  "fuel_litres_per_nm": 1.0195708263684136,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.0,
+                  "dynamic_ukc_m": "float:inf",
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_through_water_knots": 4.9774,
+                  "froude_number": 0.11494040372788693,
+                  "froude_depth": 0.21807821913142342,
+                  "resistance_frictional_kn": 5.184716935158409,
+                  "resistance_residuary_kn": 0.5421422549739486,
+                  "resistance_shallow_factor": 1.0027250574299513,
+                  "resistance_total_kn": 5.742465210318713,
+                  "effective_power_kw": 14.702861836185082,
+                  "delivered_power_kw": 25.28002378986431,
+                  "fuel_litres_per_hour": 5.833851643814841,
+                  "fuel_litres_per_nm": 1.4584629109537102,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.0,
+                  "dynamic_ukc_m": "float:inf",
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_through_water_knots": 5.9774,
+                  "froude_number": 0.1380328623866017,
+                  "froude_depth": 0.26189190079884483,
+                  "resistance_frictional_kn": 7.284737362508719,
+                  "resistance_residuary_kn": 0.8635541634448092,
+                  "resistance_shallow_factor": 1.0042430059557181,
+                  "resistance_total_kn": 8.182864775427078,
+                  "effective_power_kw": 25.160464439403288,
+                  "delivered_power_kw": 43.26077104436604,
+                  "fuel_litres_per_hour": 9.983254856392163,
+                  "fuel_litres_per_nm": 1.9966509712784326,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.0,
+                  "dynamic_ukc_m": "float:inf",
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_through_water_knots": 6.9774,
+                  "froude_number": 0.1611253210453165,
+                  "froude_depth": 0.3057055824662663,
+                  "resistance_frictional_kn": 9.712176575348225,
+                  "resistance_residuary_kn": 1.3381519556327521,
+                  "resistance_shallow_factor": 1.0061734908071736,
+                  "resistance_total_kn": 11.118547632583235,
+                  "effective_power_kw": 39.90640830701597,
+                  "delivered_power_kw": 68.6148698538789,
+                  "fuel_litres_per_hour": 15.834200735510516,
+                  "fuel_litres_per_nm": 2.6390334559184194,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.0,
+                  "dynamic_ukc_m": "float:inf",
+                  "squat_limited": false
+                }
+              ],
+              "resistance_at_service_kn": 11.118547632583235,
+              "power_at_service_kw": 68.6148698538789,
+              "fuel_at_service_lph": 15.834200735510516,
+              "fuel_at_service_lpnm": 2.6390334559184194,
+              "squat_limited_speed_knots": null,
+              "service_speed_governed_by": "power"
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_speed_below_limiting[env0]",
+              "ok": true,
+              "message": "env0: service 6.0 kn <= 0.95 x Schijf limit 18.61 kn",
+              "severity": "error"
+            },
+            {
+              "name": "power_within_installed[env0]",
+              "ok": true,
+              "message": "env0: power 69 kW <= installed 2566 kW",
+              "severity": "error"
+            },
+            {
+              "name": "blockage_in_range[env0]",
+              "ok": true,
+              "message": "env0: blockage n = 0.005 must be in (0, 1)",
+              "severity": "error"
+            },
+            {
+              "name": "coefficients_are_first_order",
+              "ok": true,
+              "message": "Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor are uncalibrated first-order estimates (RS1) — ITTC-1957 friction is standard.",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/003",
+      "output": {
+        "ok": {
+          "inputs": {
+            "loa": 116.52,
+            "lwl": 113.0994,
+            "beam": 16.1214,
+            "draft": 1.9166,
+            "block_coefficient": 0.8224,
+            "wetted_surface_area": 0.0,
+            "displacement_tonnes": 0.0,
+            "tug": {
+              "engine_power_kw": 1031.4743,
+              "propulsive_efficiency": 0.483,
+              "sfc_g_per_kwh": 195.0,
+              "fuel_density_kg_per_litre": 0.845
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 5.954,
+                "channel_width_bottom": 197.1895,
+                "channel_width_surface": 232.91,
+                "bank_slope": 3.0,
+                "current_speed_knots": 0.3155,
+                "water_density": 1.025,
+                "is_deep_water": false,
+                "significant_wave_height_m": 0.0,
+                "wave_heading_deg_off_bow": 0.0,
+                "peak_wave_period_s": 0.0,
+                "squat_safety_margin_m": 0.15,
+                "apply_squat_limit": true
+              },
+              {
+                "name": "env1",
+                "water_depth": 17.481,
+                "channel_width_bottom": 107.0057,
+                "channel_width_surface": 211.89,
+                "bank_slope": 3.0,
+                "current_speed_knots": 1.7583,
+                "water_density": 1.0,
+                "is_deep_water": false,
+                "significant_wave_height_m": 0.6441,
+                "wave_heading_deg_off_bow": 0.0,
+                "peak_wave_period_s": 0.0,
+                "squat_safety_margin_m": 0.15,
+                "apply_squat_limit": true
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 7.4642,
+            "speed_step_knots": 1.0
+          },
+          "wetted_surface_area": 2301.9903529848,
+          "environments": [
+            {
+              "name": "env0",
+              "limiting_speed_knots": 12.050094645529454,
+              "service_speed_knots": 7.0,
+              "blockage_ratio": 0.01984584370893299,
+              "speed_curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_through_water_knots": 2.3155,
+                  "froude_number": 0.035758648073484445,
+                  "froude_depth": 0.15585000710104124,
+                  "resistance_frictional_kn": 3.4251966256001793,
+                  "resistance_residuary_kn": 0.342519662560018,
+                  "resistance_shallow_factor": 1.0034158466750391,
+                  "resistance_total_kn": 3.7805862293156,
+                  "effective_power_kw": 4.503030549751452,
+                  "delivered_power_kw": 9.323044616462635,
+                  "fuel_litres_per_hour": 2.1514718345683,
+                  "fuel_litres_per_nm": 1.07573591728415,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.013266207276117884,
+                  "dynamic_ukc_m": 4.024133792723882,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_through_water_knots": 3.3155,
+                  "froude_number": 0.0512018128644516,
+                  "froude_depth": 0.22315728721377767,
+                  "resistance_frictional_kn": 6.674342969502951,
+                  "resistance_residuary_kn": 0.6674342969502951,
+                  "resistance_shallow_factor": 1.0079916696173397,
+                  "resistance_total_kn": 7.400450324770835,
+                  "effective_power_kw": 12.621417705834451,
+                  "delivered_power_kw": 26.131299598000936,
+                  "fuel_litres_per_hour": 6.030299907230985,
+                  "fuel_litres_per_nm": 2.010099969076995,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.027562028980277598,
+                  "dynamic_ukc_m": 4.0098379710197225,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_through_water_knots": 4.3155,
+                  "froude_number": 0.06664497765541876,
+                  "froude_depth": 0.2904645673265141,
+                  "resistance_frictional_kn": 10.90197958037918,
+                  "resistance_residuary_kn": 1.090197958037918,
+                  "resistance_shallow_factor": 1.014975165275071,
+                  "resistance_total_kn": 12.171762379062887,
+                  "effective_power_kw": 27.020012537297525,
+                  "delivered_power_kw": 55.94205494264498,
+                  "fuel_litres_per_hour": 12.909704986764227,
+                  "fuel_litres_per_nm": 3.227426246691057,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.04756937024931788,
+                  "dynamic_ukc_m": 3.989830629750682,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_through_water_knots": 5.3155,
+                  "froude_number": 0.0820881424463859,
+                  "froude_depth": 0.35777184743925056,
+                  "resistance_frictional_kn": 16.076377144601615,
+                  "resistance_residuary_kn": 1.6076377144601617,
+                  "resistance_shallow_factor": 1.0246567199118262,
+                  "resistance_total_kn": 18.120044660358236,
+                  "effective_power_kw": 49.54551489851383,
+                  "delivered_power_kw": 102.5787057940245,
+                  "fuel_litres_per_hour": 23.67200902939027,
+                  "fuel_litres_per_nm": 4.734401805878054,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.07395397236390096,
+                  "dynamic_ukc_m": 3.963446027636099,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_through_water_knots": 6.3155,
+                  "froude_number": 0.09753130723735307,
+                  "froude_depth": 0.425079127551987,
+                  "resistance_frictional_kn": 22.17365180435438,
+                  "resistance_residuary_kn": 2.217365180435438,
+                  "resistance_shallow_factor": 1.037294165598212,
+                  "resistance_total_kn": 25.300659611329372,
+                  "effective_power_kw": 82.19408083484038,
+                  "delivered_power_kw": 170.17408040339623,
+                  "fuel_litres_per_hour": 39.27094163155298,
+                  "fuel_litres_per_nm": 6.5451569385921635,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.10770391621772117,
+                  "dynamic_ukc_m": 3.9296960837822787,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_through_water_knots": 7.3155,
+                  "froude_number": 0.1129744720283202,
+                  "froude_depth": 0.4923864076647234,
+                  "resistance_frictional_kn": 29.174773898235603,
+                  "resistance_residuary_kn": 3.0252682775892694,
+                  "resistance_shallow_factor": 1.053121814205061,
+                  "resistance_total_kn": 33.91056683368417,
+                  "effective_power_kw": 127.60862345998243,
+                  "delivered_power_kw": 264.2000485713922,
+                  "fuel_litres_per_hour": 60.969241978013585,
+                  "fuel_litres_per_nm": 8.709891711144797,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.15029045117382248,
+                  "dynamic_ukc_m": 3.8871095488261775,
+                  "squat_limited": false
+                }
+              ],
+              "resistance_at_service_kn": 33.91056683368417,
+              "power_at_service_kw": 264.2000485713922,
+              "fuel_at_service_lph": 60.969241978013585,
+              "fuel_at_service_lpnm": 8.709891711144797,
+              "squat_limited_speed_knots": 20.0,
+              "service_speed_governed_by": "power"
+            },
+            {
+              "name": "env1",
+              "limiting_speed_knots": 20.722647353305305,
+              "service_speed_knots": 7.0,
+              "blockage_ratio": 0.009116589476429043,
+              "speed_curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_through_water_knots": 3.7583,
+                  "froude_number": 0.058040046233891855,
+                  "froude_depth": 0.1476300489653292,
+                  "resistance_frictional_kn": 8.173470302731996,
+                  "resistance_residuary_kn": 0.8173470302731997,
+                  "resistance_shallow_factor": 1.0008229963332165,
+                  "resistance_total_kn": 12.45893523407544,
+                  "effective_power_kw": 24.086479739692116,
+                  "delivered_power_kw": 49.86848807389672,
+                  "fuel_litres_per_hour": 11.508112632437705,
+                  "fuel_litres_per_nm": 5.754056316218852,
+                  "power_available": true,
+                  "resistance_waves_kn": 3.460718491372563,
+                  "squat_m": 0.01683767955977094,
+                  "dynamic_ukc_m": 15.54756232044023,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_through_water_knots": 4.7583,
+                  "froude_number": 0.073483211024859,
+                  "froude_depth": 0.18691111991903941,
+                  "resistance_frictional_kn": 12.684594669612913,
+                  "resistance_residuary_kn": 1.2684594669612914,
+                  "resistance_shallow_factor": 1.001404640877264,
+                  "resistance_total_kn": 17.433371658149678,
+                  "effective_power_kw": 42.671132438484825,
+                  "delivered_power_kw": 88.34602989334333,
+                  "fuel_litres_per_hour": 20.38754536000231,
+                  "fuel_litres_per_nm": 6.795848453334103,
+                  "power_available": true,
+                  "resistance_waves_kn": 3.460718491372563,
+                  "squat_m": 0.02750425095401123,
+                  "dynamic_ukc_m": 15.53689574904599,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_through_water_knots": 5.7583,
+                  "froude_number": 0.08892637581582616,
+                  "froude_depth": 0.22619219087274967,
+                  "resistance_frictional_kn": 18.10360236929791,
+                  "resistance_residuary_kn": 1.810360236929791,
+                  "resistance_shallow_factor": 1.002169578131165,
+                  "resistance_total_kn": 23.417885995375578,
+                  "effective_power_kw": 69.36540632973686,
+                  "delivered_power_kw": 143.61367770131855,
+                  "fuel_litres_per_hour": 33.14161793107351,
+                  "fuel_litres_per_nm": 8.285404482768378,
+                  "power_available": true,
+                  "resistance_waves_kn": 3.460718491372563,
+                  "squat_m": 0.040898949603287674,
+                  "dynamic_ukc_m": 15.523501050396714,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_through_water_knots": 6.7583,
+                  "froude_number": 0.1043695406067933,
+                  "froude_depth": 0.26547326182645986,
+                  "resistance_frictional_kn": 24.409700845942552,
+                  "resistance_residuary_kn": 2.458596180754268,
+                  "resistance_shallow_factor": 1.0031305609866268,
+                  "resistance_total_kn": 30.41312836051826,
+                  "effective_power_kw": 105.7303137531893,
+                  "delivered_power_kw": 218.9033411039116,
+                  "fuel_litres_per_hour": 50.516155639364214,
+                  "fuel_litres_per_nm": 10.103231127872842,
+                  "power_available": true,
+                  "resistance_waves_kn": 3.460718491372563,
+                  "squat_m": 0.05706396783795585,
+                  "dynamic_ukc_m": 15.507336032162046,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_through_water_knots": 7.7583,
+                  "froude_number": 0.11981270539776047,
+                  "froude_depth": 0.30475433278017017,
+                  "resistance_frictional_kn": 31.586014948387213,
+                  "resistance_residuary_kn": 3.3788183306083672,
+                  "resistance_shallow_factor": 1.0042992671712565,
+                  "resistance_total_kn": 38.57587493023298,
+                  "effective_power_kw": 153.9512834663989,
+                  "delivered_power_kw": 318.73971732173686,
+                  "fuel_litres_per_hour": 73.55531938193927,
+                  "fuel_litres_per_nm": 12.259219896989878,
+                  "power_available": true,
+                  "resistance_waves_kn": 3.460718491372563,
+                  "squat_m": 0.07603516630881815,
+                  "dynamic_ukc_m": 15.488364833691183,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_through_water_knots": 8.7583,
+                  "froude_number": 0.13525587018872762,
+                  "froude_depth": 0.34403540373388036,
+                  "resistance_frictional_kn": 39.61840177145712,
+                  "resistance_residuary_kn": 4.617508373183526,
+                  "resistance_shallow_factor": 1.0056865333877136,
+                  "resistance_total_kn": 47.94817761598661,
+                  "effective_power_kw": 216.0194631528507,
+                  "delivered_power_kw": 447.24526532681307,
+                  "fuel_litres_per_hour": 103.21044584464917,
+                  "fuel_litres_per_nm": 14.744349406378452,
+                  "power_available": true,
+                  "resistance_waves_kn": 3.460718491372563,
+                  "squat_m": 0.0978437876090838,
+                  "dynamic_ukc_m": 15.466556212390918,
+                  "squat_limited": false
+                }
+              ],
+              "resistance_at_service_kn": 47.94817761598661,
+              "power_at_service_kw": 447.24526532681307,
+              "fuel_at_service_lph": 103.21044584464917,
+              "fuel_at_service_lpnm": 14.744349406378452,
+              "squat_limited_speed_knots": 20.0,
+              "service_speed_governed_by": "power"
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_speed_below_limiting[env0]",
+              "ok": true,
+              "message": "env0: service 7.0 kn <= 0.95 x Schijf limit 12.05 kn",
+              "severity": "error"
+            },
+            {
+              "name": "power_within_installed[env0]",
+              "ok": true,
+              "message": "env0: power 264 kW <= installed 1031 kW",
+              "severity": "error"
+            },
+            {
+              "name": "blockage_in_range[env0]",
+              "ok": true,
+              "message": "env0: blockage n = 0.020 must be in (0, 1)",
+              "severity": "error"
+            },
+            {
+              "name": "service_speed_below_limiting[env1]",
+              "ok": true,
+              "message": "env1: service 7.0 kn <= 0.95 x Schijf limit 20.72 kn",
+              "severity": "error"
+            },
+            {
+              "name": "power_within_installed[env1]",
+              "ok": true,
+              "message": "env1: power 447 kW <= installed 1031 kW",
+              "severity": "error"
+            },
+            {
+              "name": "blockage_in_range[env1]",
+              "ok": true,
+              "message": "env1: blockage n = 0.009 must be in (0, 1)",
+              "severity": "error"
+            },
+            {
+              "name": "coefficients_are_first_order",
+              "ok": true,
+              "message": "Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor are uncalibrated first-order estimates (RS1) — ITTC-1957 friction is standard.",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/004",
+      "output": {
+        "ok": {
+          "inputs": {
+            "loa": 68.44,
+            "lwl": 63.8676,
+            "beam": 22.274,
+            "draft": 2.3583,
+            "block_coefficient": 0.8431,
+            "wetted_surface_area": 0.0,
+            "displacement_tonnes": 0.0,
+            "tug": {
+              "engine_power_kw": 3688.0774,
+              "propulsive_efficiency": 0.5172,
+              "sfc_g_per_kwh": 195.0,
+              "fuel_density_kg_per_litre": 0.845
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 16.408,
+                "channel_width_bottom": 41.6801,
+                "channel_width_surface": 140.13,
+                "bank_slope": 3.0,
+                "current_speed_knots": 1.2874,
+                "water_density": 1.025,
+                "is_deep_water": false,
+                "significant_wave_height_m": 0.0,
+                "wave_heading_deg_off_bow": 0.0,
+                "peak_wave_period_s": 0.0,
+                "squat_safety_margin_m": 0.15,
+                "apply_squat_limit": true
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 7.0977,
+            "speed_step_knots": 1.0
+          },
+          "wetted_surface_area": 1758.3013414512,
+          "environments": [
+            {
+              "name": "env0",
+              "limiting_speed_knots": 19.936657323806767,
+              "service_speed_knots": 7.0,
+              "blockage_ratio": 0.029691538268167828,
+              "speed_curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_through_water_knots": 3.2874,
+                  "froude_number": 0.06755829938184149,
+                  "froude_depth": 0.13328804050799598,
+                  "resistance_frictional_kn": 5.444661907013463,
+                  "resistance_residuary_kn": 0.5444661907013464,
+                  "resistance_shallow_factor": 1.0015497722380278,
+                  "resistance_total_kn": 5.99840988217064,
+                  "effective_power_kw": 10.143542409435607,
+                  "delivered_power_kw": 19.612417651654308,
+                  "fuel_litres_per_hour": 4.5259425349971485,
+                  "fuel_litres_per_nm": 2.2629712674985742,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.03332520445687079,
+                  "dynamic_ukc_m": 14.01637479554313,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_through_water_knots": 4.2874,
+                  "froude_number": 0.08810897754143311,
+                  "froude_depth": 0.17383316446857153,
+                  "resistance_frictional_kn": 8.91249113161453,
+                  "resistance_residuary_kn": 0.891249113161453,
+                  "resistance_shallow_factor": 1.0027555495896212,
+                  "resistance_total_kn": 9.83075493718423,
+                  "effective_power_kw": 21.681126012376474,
+                  "delivered_power_kw": 41.92019723970703,
+                  "fuel_litres_per_hour": 9.673891670701622,
+                  "fuel_litres_per_nm": 3.2246305569005407,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.05790059736440627,
+                  "dynamic_ukc_m": 13.991799402635595,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_through_water_knots": 5.2874,
+                  "froude_number": 0.10865965570102473,
+                  "froude_depth": 0.21437828842914705,
+                  "resistance_frictional_kn": 13.157410822482078,
+                  "resistance_residuary_kn": 1.3422481312981895,
+                  "resistance_shallow_factor": 1.0043524167925995,
+                  "resistance_total_kn": 14.562767512897665,
+                  "effective_power_kw": 39.608376621894365,
+                  "delivered_power_kw": 76.58232138804016,
+                  "fuel_litres_per_hour": 17.672843397240037,
+                  "fuel_litres_per_nm": 4.418210849310009,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.08954951202157313,
+                  "dynamic_ukc_m": 13.960150487978428,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_through_water_knots": 6.2874,
+                  "froude_number": 0.12921033386061634,
+                  "froude_depth": 0.25492341238972255,
+                  "resistance_frictional_kn": 18.15901018592987,
+                  "resistance_residuary_kn": 2.042541227639622,
+                  "resistance_shallow_factor": 1.006362103453092,
+                  "resistance_total_kn": 20.330075773575576,
+                  "effective_power_kw": 65.75231499461995,
+                  "delivered_power_kw": 127.13131282795814,
+                  "fuel_litres_per_hour": 29.33799526799034,
+                  "fuel_litres_per_nm": 5.867599053598068,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.12839242026558004,
+                  "dynamic_ukc_m": 13.921307579734421,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_through_water_knots": 7.2874,
+                  "froude_number": 0.14976101202020797,
+                  "froude_depth": 0.2954685363502981,
+                  "resistance_frictional_kn": 23.901067074627175,
+                  "resistance_residuary_kn": 3.0533778549664303,
+                  "resistance_shallow_factor": 1.008804346551161,
+                  "resistance_total_kn": 27.191761203847932,
+                  "effective_power_kw": 101.93208456305638,
+                  "delivered_power_kw": 197.08446357899533,
+                  "fuel_litres_per_hour": 45.481030056691225,
+                  "fuel_litres_per_nm": 7.580171676115204,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.17453018221514802,
+                  "dynamic_ukc_m": 13.875169817784853,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_through_water_knots": 8.2874,
+                  "froude_number": 0.1703116901797996,
+                  "froude_depth": 0.33601366031087365,
+                  "resistance_frictional_kn": 30.370186063792275,
+                  "resistance_residuary_kn": 4.452580190135998,
+                  "resistance_shallow_factor": 1.0116973569861325,
+                  "resistance_total_kn": 35.23010058204512,
+                  "effective_power_kw": 150.18727725393677,
+                  "delivered_power_kw": 290.3853001816256,
+                  "fuel_litres_per_hour": 67.0119923496059,
+                  "fuel_litres_per_nm": 9.573141764229415,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.22804974082557758,
+                  "dynamic_ukc_m": 13.821650259174424,
+                  "squat_limited": false
+                }
+              ],
+              "resistance_at_service_kn": 35.23010058204512,
+              "power_at_service_kw": 290.3853001816256,
+              "fuel_at_service_lph": 67.0119923496059,
+              "fuel_at_service_lpnm": 9.573141764229415,
+              "squat_limited_speed_knots": 20.0,
+              "service_speed_governed_by": "power"
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_speed_below_limiting[env0]",
+              "ok": true,
+              "message": "env0: service 7.0 kn <= 0.95 x Schijf limit 19.94 kn",
+              "severity": "error"
+            },
+            {
+              "name": "power_within_installed[env0]",
+              "ok": true,
+              "message": "env0: power 290 kW <= installed 3688 kW",
+              "severity": "error"
+            },
+            {
+              "name": "blockage_in_range[env0]",
+              "ok": true,
+              "message": "env0: blockage n = 0.030 must be in (0, 1)",
+              "severity": "error"
+            },
+            {
+              "name": "coefficients_are_first_order",
+              "ok": true,
+              "message": "Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor are uncalibrated first-order estimates (RS1) — ITTC-1957 friction is standard.",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/005",
+      "output": {
+        "ok": {
+          "inputs": {
+            "loa": 107.43,
+            "lwl": 105.2059,
+            "beam": 14.1992,
+            "draft": 2.0117,
+            "block_coefficient": 0.7922,
+            "wetted_surface_area": 0.0,
+            "displacement_tonnes": 0.0,
+            "tug": {
+              "engine_power_kw": 2084.7682,
+              "propulsive_efficiency": 0.4301,
+              "sfc_g_per_kwh": 195.0,
+              "fuel_density_kg_per_litre": 0.845
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 3.7949,
+                "channel_width_bottom": 176.2636,
+                "channel_width_surface": 199.03,
+                "bank_slope": 3.0,
+                "current_speed_knots": 1.6245,
+                "water_density": 1.0,
+                "is_deep_water": false,
+                "significant_wave_height_m": 0.0,
+                "wave_heading_deg_off_bow": 0.0,
+                "peak_wave_period_s": 0.0,
+                "squat_safety_margin_m": 0.15,
+                "apply_squat_limit": true
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 9.2625,
+            "speed_step_knots": 1.0
+          },
+          "wetted_surface_area": 1955.4675340068,
+          "environments": [
+            {
+              "name": "env0",
+              "limiting_speed_knots": 9.581050551004827,
+              "service_speed_knots": 9.0,
+              "blockage_ratio": 0.03177755152073916,
+              "speed_curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_through_water_knots": 3.6245000000000003,
+                  "froude_number": 0.0580356044888831,
+                  "froude_depth": 0.3055725878648253,
+                  "resistance_frictional_kn": 6.555589714617805,
+                  "resistance_residuary_kn": 0.6555589714617805,
+                  "resistance_shallow_factor": 1.0338250634675419,
+                  "resistance_total_kn": 7.455066248060109,
+                  "effective_power_kw": 13.899544589718683,
+                  "delivered_power_kw": 32.317006718713515,
+                  "fuel_litres_per_hour": 7.457770781241581,
+                  "fuel_litres_per_nm": 3.7288853906207904,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.050650298976420906,
+                  "dynamic_ukc_m": 1.7325497010235795,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_through_water_knots": 4.6245,
+                  "froude_number": 0.07404763497277966,
+                  "froude_depth": 0.3898801027951123,
+                  "resistance_frictional_kn": 10.3188009760295,
+                  "resistance_residuary_kn": 1.03188009760295,
+                  "resistance_shallow_factor": 1.0609469309529485,
+                  "resistance_total_kn": 12.042470249296066,
+                  "effective_power_kw": 28.647143646752156,
+                  "delivered_power_kw": 66.60577457975391,
+                  "fuel_litres_per_hour": 15.370563364558594,
+                  "fuel_litres_per_nm": 5.1235211215195315,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.08525925645601062,
+                  "dynamic_ukc_m": 1.6979407435439897,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_through_water_knots": 5.6245,
+                  "froude_number": 0.09005966545667622,
+                  "froude_depth": 0.4741876177253993,
+                  "resistance_frictional_kn": 14.86277474420412,
+                  "resistance_residuary_kn": 1.4862774744204121,
+                  "resistance_shallow_factor": 1.097956395285945,
+                  "resistance_total_kn": 17.950546440302674,
+                  "effective_power_kw": 51.935289244471335,
+                  "delivered_power_kw": 120.75166064745719,
+                  "fuel_litres_per_hour": 27.865767841720892,
+                  "fuel_litres_per_nm": 6.966441960430223,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.13191574526587882,
+                  "dynamic_ukc_m": 1.6512842547341215,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_through_water_knots": 6.6245,
+                  "froude_number": 0.1060716959405728,
+                  "froude_depth": 0.5584951326556863,
+                  "resistance_frictional_kn": 20.169052255910852,
+                  "resistance_residuary_kn": 2.040760835362103,
+                  "resistance_shallow_factor": 1.1457804783932133,
+                  "resistance_total_kn": 25.447570268742577,
+                  "effective_power_kw": 86.7162296037747,
+                  "delivered_power_kw": 201.61876215711396,
+                  "fuel_litres_per_hour": 46.527406651641684,
+                  "fuel_litres_per_nm": 9.305481330328337,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.19423365877247875,
+                  "dynamic_ukc_m": 1.5889663412275217,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_through_water_knots": 7.6245,
+                  "froude_number": 0.12208372642446935,
+                  "froude_depth": 0.6428026475859733,
+                  "resistance_frictional_kn": 26.22273253270235,
+                  "resistance_residuary_kn": 2.837415892293019,
+                  "resistance_shallow_factor": 1.2052662167382977,
+                  "resistance_total_kn": 35.02521515004757,
+                  "effective_power_kw": 137.37039289769498,
+                  "delivered_power_kw": 319.3917528428156,
+                  "fuel_litres_per_hour": 73.70578911757283,
+                  "fuel_litres_per_nm": 12.28429818626214,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.2786394576872412,
+                  "dynamic_ukc_m": 1.5045605423127593,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_through_water_knots": 8.6245,
+                  "froude_number": 0.1380957569083659,
+                  "froude_depth": 0.7271101625162602,
+                  "resistance_frictional_kn": 33.01137481454902,
+                  "resistance_residuary_kn": 3.9147843615485134,
+                  "resistance_shallow_factor": 1.2771984322668073,
+                  "resistance_total_kn": 47.162032609346355,
+                  "effective_power_kw": 209.23166000309982,
+                  "delivered_power_kw": 486.47212276935556,
+                  "fuel_litres_per_hour": 112.26279756215898,
+                  "fuel_litres_per_nm": 16.037542508879856,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.39785732718024314,
+                  "dynamic_ukc_m": 1.3853426728197573,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_through_water_knots": 9.6245,
+                  "froude_number": 0.15410778739226247,
+                  "froude_depth": 0.8114176774465472,
+                  "resistance_frictional_kn": 40.52433541402909,
+                  "resistance_residuary_kn": 5.327537436099955,
+                  "resistance_shallow_factor": 1.3623117435265977,
+                  "resistance_total_kn": 62.46454484641916,
+                  "effective_power_kw": 309.25214210817137,
+                  "delivered_power_kw": 719.0238133182315,
+                  "fuel_litres_per_hour": 165.92857230420728,
+                  "fuel_litres_per_nm": 20.74107153802591,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.5821026054985516,
+                  "dynamic_ukc_m": 1.2010973945014487,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 9.0,
+                  "speed_through_water_knots": 10.6245,
+                  "froude_number": 0.17011981787615904,
+                  "froude_depth": 0.8957251923768343,
+                  "resistance_frictional_kn": 48.752337413213986,
+                  "resistance_residuary_kn": 7.138296617570813,
+                  "resistance_shallow_factor": 1.4612991395700854,
+                  "resistance_total_kn": 81.67293541921235,
+                  "effective_power_kw": 446.3624222547152,
+                  "delivered_power_kw": 1037.810793431098,
+                  "fuel_litres_per_hour": 239.49479848409956,
+                  "fuel_litres_per_nm": 26.61053316489995,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.9329970440013631,
+                  "dynamic_ukc_m": 0.8502029559986373,
+                  "squat_limited": false
+                }
+              ],
+              "resistance_at_service_kn": 81.67293541921235,
+              "power_at_service_kw": 1037.810793431098,
+              "fuel_at_service_lph": 239.49479848409956,
+              "fuel_at_service_lpnm": 26.61053316489995,
+              "squat_limited_speed_knots": 20.0,
+              "service_speed_governed_by": "power"
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_speed_below_limiting[env0]",
+              "ok": true,
+              "message": "env0: service 9.0 kn <= 0.95 x Schijf limit 9.58 kn",
+              "severity": "error"
+            },
+            {
+              "name": "power_within_installed[env0]",
+              "ok": true,
+              "message": "env0: power 1038 kW <= installed 2085 kW",
+              "severity": "error"
+            },
+            {
+              "name": "blockage_in_range[env0]",
+              "ok": true,
+              "message": "env0: blockage n = 0.032 must be in (0, 1)",
+              "severity": "error"
+            },
+            {
+              "name": "coefficients_are_first_order",
+              "ok": true,
+              "message": "Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor are uncalibrated first-order estimates (RS1) — ITTC-1957 friction is standard.",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/006",
+      "output": {
+        "ok": {
+          "inputs": {
+            "loa": 96.65,
+            "lwl": 95.4487,
+            "beam": 22.7007,
+            "draft": 4.9274,
+            "block_coefficient": 0.8851,
+            "wetted_surface_area": 0.0,
+            "displacement_tonnes": 0.0,
+            "tug": {
+              "engine_power_kw": 1090.8163,
+              "propulsive_efficiency": 0.5712,
+              "sfc_g_per_kwh": 195.0,
+              "fuel_density_kg_per_litre": 0.845
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 5.259,
+                "channel_width_bottom": 224.985,
+                "channel_width_surface": 256.54,
+                "bank_slope": 3.0,
+                "current_speed_knots": 1.5126,
+                "water_density": 1.0,
+                "is_deep_water": false,
+                "significant_wave_height_m": 0.0,
+                "wave_heading_deg_off_bow": 0.0,
+                "peak_wave_period_s": 0.0,
+                "squat_safety_margin_m": 0.15,
+                "apply_squat_limit": true
+              },
+              {
+                "name": "env1",
+                "water_depth": 14.8826,
+                "channel_width_bottom": 171.768,
+                "channel_width_surface": 261.06,
+                "bank_slope": 3.0,
+                "current_speed_knots": 0.0612,
+                "water_density": 1.0,
+                "is_deep_water": false,
+                "significant_wave_height_m": 1.0816,
+                "wave_heading_deg_off_bow": 0.0,
+                "peak_wave_period_s": 0.0,
+                "squat_safety_margin_m": 0.15,
+                "apply_squat_limit": true
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 8.5786,
+            "speed_step_knots": 1.0
+          },
+          "wetted_surface_area": 3169.527755907,
+          "environments": [
+            {
+              "name": "env0",
+              "limiting_speed_knots": 11.095659733818103,
+              "service_speed_knots": 2.0,
+              "blockage_ratio": 0.07819111283998743,
+              "speed_curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_through_water_knots": 3.5126,
+                  "froude_number": 0.0590486732975429,
+                  "froude_depth": 0.2515611479114922,
+                  "resistance_frictional_kn": 10.161013500385133,
+                  "resistance_residuary_kn": 1.0161013500385134,
+                  "resistance_shallow_factor": 1.050196698321872,
+                  "resistance_total_kn": 11.738169112679277,
+                  "effective_power_kw": 21.209479909281452,
+                  "delivered_power_kw": 37.13144241820982,
+                  "fuel_litres_per_hour": 8.568794404202267,
+                  "fuel_litres_per_nm": 4.284397202101133,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.16285598260802064,
+                  "dynamic_ukc_m": 0.16874401739198014,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_through_water_knots": 4.5126,
+                  "froude_number": 0.07585920489736722,
+                  "froude_depth": 0.3231779411448499,
+                  "resistance_frictional_kn": 16.194757671244858,
+                  "resistance_residuary_kn": 1.619475767124486,
+                  "resistance_shallow_factor": 1.0917215400789133,
+                  "resistance_total_kn": 19.448182364661854,
+                  "effective_power_kw": 45.14470476482487,
+                  "delivered_power_kw": 79.03484727735446,
+                  "fuel_litres_per_hour": 18.23881091015872,
+                  "fuel_litres_per_nm": 6.079603636719573,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.2748927492816355,
+                  "dynamic_ukc_m": 0.0567072507183653,
+                  "squat_limited": true
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_through_water_knots": 5.5126,
+                  "froude_number": 0.09266973649719154,
+                  "froude_depth": 0.39479473437820756,
+                  "resistance_frictional_kn": 23.513058710435512,
+                  "resistance_residuary_kn": 2.3513058710435515,
+                  "resistance_shallow_factor": 1.1487192017568708,
+                  "resistance_total_kn": 29.71089223598531,
+                  "effective_power_kw": 84.25062567942364,
+                  "delivered_power_kw": 147.49759397658198,
+                  "fuel_litres_per_hour": 34.03790630228815,
+                  "fuel_litres_per_nm": 8.509476575572037,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.4225421343512596,
+                  "dynamic_ukc_m": -0.09094213435125881,
+                  "squat_limited": true
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_through_water_knots": 6.5126,
+                  "froude_number": 0.10948026809701586,
+                  "froude_depth": 0.4664115276115653,
+                  "resistance_frictional_kn": 32.08464246343735,
+                  "resistance_residuary_kn": 3.2825045415132816,
+                  "resistance_shallow_factor": 1.2226547445770524,
+                  "resistance_total_kn": 43.241810087756974,
+                  "effective_power_kw": 144.8635854069994,
+                  "delivered_power_kw": 253.61271955006893,
+                  "fuel_litres_per_hour": 58.52601220386206,
+                  "fuel_litres_per_nm": 11.705202440772412,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.6125642035430966,
+                  "dynamic_ukc_m": -0.2809642035430958,
+                  "squat_limited": true
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_through_water_knots": 7.5126,
+                  "froude_number": 0.12629079969684018,
+                  "froude_depth": 0.5380283208449229,
+                  "resistance_frictional_kn": 41.884382776775034,
+                  "resistance_residuary_kn": 4.63481118091584,
+                  "resistance_shallow_factor": 1.3148642936769341,
+                  "resistance_total_kn": 61.16642710559951,
+                  "effective_power_kw": 236.3765223007022,
+                  "delivered_power_kw": 413.8244438037503,
+                  "fuel_litres_per_hour": 95.49794857009623,
+                  "fuel_litres_per_nm": 15.916324761682704,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 0.8554193206577603,
+                  "dynamic_ukc_m": -0.5238193206577595,
+                  "squat_limited": true
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_through_water_knots": 8.512599999999999,
+                  "froude_number": 0.14310133129666447,
+                  "froude_depth": 0.6096451140782805,
+                  "resistance_frictional_kn": 52.89137276165086,
+                  "resistance_residuary_kn": 6.472344669459835,
+                  "resistance_shallow_factor": 1.4265841783659317,
+                  "resistance_total_kn": 84.68734005620838,
+                  "effective_power_kw": 370.8358215750994,
+                  "delivered_power_kw": 649.2223767071067,
+                  "fuel_litres_per_hour": 149.82054847087076,
+                  "fuel_litres_per_nm": 21.40293549583868,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 1.1679881726407724,
+                  "dynamic_ukc_m": -0.8363881726407716,
+                  "squat_limited": true
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_through_water_knots": 9.512599999999999,
+                  "froude_number": 0.1599118628964888,
+                  "froude_depth": 0.6812619073116383,
+                  "resistance_frictional_kn": 65.08777075165037,
+                  "resistance_residuary_kn": 8.894986966047512,
+                  "resistance_shallow_factor": 1.5589704847182124,
+                  "resistance_total_kn": 115.33693565994953,
+                  "effective_power_kw": 564.3760866113051,
+                  "delivered_power_kw": 988.0533729189515,
+                  "fuel_litres_per_hour": 228.01231682745032,
+                  "fuel_litres_per_nm": 28.50153960343129,
+                  "power_available": true,
+                  "resistance_waves_kn": 0.0,
+                  "squat_m": 1.579440429148195,
+                  "dynamic_ukc_m": -1.2478404291481942,
+                  "squat_limited": true
+                }
+              ],
+              "resistance_at_service_kn": 11.738169112679277,
+              "power_at_service_kw": 37.13144241820982,
+              "fuel_at_service_lph": 8.568794404202267,
+              "fuel_at_service_lpnm": 4.284397202101133,
+              "squat_limited_speed_knots": 3.701171875,
+              "service_speed_governed_by": "squat"
+            },
+            {
+              "name": "env1",
+              "limiting_speed_knots": 18.98049841490574,
+              "service_speed_knots": 8.0,
+              "blockage_ratio": 0.030738682396246296,
+              "speed_curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_through_water_knots": 2.0612,
+                  "froude_number": 0.03464986773355788,
+                  "froude_depth": 0.08775001216203829,
+                  "resistance_frictional_kn": 3.7764548174950376,
+                  "resistance_residuary_kn": 0.3776454817495038,
+                  "resistance_shallow_factor": 1.001081731085089,
+                  "resistance_total_kn": 21.908371583235144,
+                  "effective_power_kw": 23.22903626498818,
+                  "delivered_power_kw": 40.667080295847654,
+                  "fuel_litres_per_hour": 9.384710837503304,
+                  "fuel_litres_per_nm": 4.692355418751652,
+                  "power_available": true,
+                  "resistance_waves_kn": 17.74977766456633,
+                  "squat_m": 0.01925249463636984,
+                  "dynamic_ukc_m": 9.935947505363632,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_through_water_knots": 3.0612,
+                  "froude_number": 0.0514603993333822,
+                  "froude_depth": 0.13032230605008327,
+                  "resistance_frictional_kn": 7.868647753175234,
+                  "resistance_residuary_kn": 0.7868647753175235,
+                  "resistance_shallow_factor": 1.0026793729288301,
+                  "resistance_total_kn": 26.42848153901308,
+                  "effective_power_kw": 41.616435138309484,
+                  "delivered_power_kw": 72.85790465390315,
+                  "fuel_litres_per_hour": 16.813362612439185,
+                  "fuel_litres_per_nm": 5.604454204146395,
+                  "power_available": true,
+                  "resistance_waves_kn": 17.74977766456633,
+                  "squat_m": 0.04266506183354911,
+                  "dynamic_ukc_m": 9.912534938166452,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_through_water_knots": 4.0612,
+                  "froude_number": 0.06827093093320653,
+                  "froude_depth": 0.17289459993812828,
+                  "resistance_frictional_kn": 13.309900402724166,
+                  "resistance_residuary_kn": 1.3309900402724166,
+                  "resistance_shallow_factor": 1.0051527650558243,
+                  "resistance_total_kn": 32.46610917622374,
+                  "effective_power_kw": 67.82434091448525,
+                  "delivered_power_kw": 118.74009263740413,
+                  "fuel_litres_per_hour": 27.401559839400953,
+                  "fuel_litres_per_nm": 6.850389959850238,
+                  "power_available": true,
+                  "resistance_waves_kn": 17.74977766456633,
+                  "squat_m": 0.0755909190087381,
+                  "dynamic_ukc_m": 9.879609080991264,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_through_water_knots": 5.0612,
+                  "froude_number": 0.08508146253303085,
+                  "froude_depth": 0.21546689382617323,
+                  "resistance_frictional_kn": 20.052696018174853,
+                  "resistance_residuary_kn": 2.0052696018174854,
+                  "resistance_shallow_factor": 1.0086017654681319,
+                  "resistance_total_kn": 39.997480731525954,
+                  "effective_power_kw": 104.13269233168853,
+                  "delivered_power_kw": 182.30513363390847,
+                  "fuel_litres_per_hour": 42.070415453978875,
+                  "fuel_litres_per_nm": 8.414083090795774,
+                  "power_available": true,
+                  "resistance_waves_kn": 17.74977766456633,
+                  "squat_m": 0.11841387029132633,
+                  "dynamic_ukc_m": 9.836786129708676,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_through_water_knots": 6.0612,
+                  "froude_number": 0.10189199413285517,
+                  "froude_depth": 0.2580391877142182,
+                  "resistance_frictional_kn": 28.06197003649476,
+                  "resistance_residuary_kn": 2.811970486009031,
+                  "resistance_shallow_factor": 1.0131143401252651,
+                  "resistance_total_kn": 49.02860954408944,
+                  "effective_power_kw": 152.8653838819458,
+                  "delivered_power_kw": 267.62147038155774,
+                  "fuel_litres_per_hour": 61.75880085728255,
+                  "fuel_litres_per_nm": 10.29313347621376,
+                  "power_available": true,
+                  "resistance_waves_kn": 17.74977766456633,
+                  "squat_m": 0.1716544094051615,
+                  "dynamic_ukc_m": 9.78354559059484,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_through_water_knots": 7.0612,
+                  "froude_number": 0.11870252573267949,
+                  "froude_depth": 0.30061148160226314,
+                  "resistance_frictional_kn": 37.31012877935625,
+                  "resistance_residuary_kn": 3.969583601731588,
+                  "resistance_shallow_factor": 1.0187700328264786,
+                  "resistance_total_kn": 59.80431160211478,
+                  "effective_power_kw": 217.22608149564832,
+                  "delivered_power_kw": 380.29776172207335,
+                  "fuel_litres_per_hour": 87.76102193586308,
+                  "fuel_litres_per_nm": 12.53728884798044,
+                  "power_available": true,
+                  "resistance_waves_kn": 17.74977766456633,
+                  "squat_m": 0.23599478527016962,
+                  "dynamic_ukc_m": 9.719205214729831,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_through_water_knots": 8.0612,
+                  "froude_number": 0.1355130573325038,
+                  "froude_depth": 0.3431837754903081,
+                  "resistance_frictional_kn": 47.77453822724448,
+                  "resistance_residuary_kn": 5.576769995776405,
+                  "resistance_shallow_factor": 1.0256420112280356,
+                  "resistance_total_kn": 72.4691207320723,
+                  "effective_power_kw": 300.50634631774403,
+                  "delivered_power_kw": 526.0965446739216,
+                  "fuel_litres_per_hour": 121.40689492475113,
+                  "fuel_litres_per_nm": 15.175861865593891,
+                  "power_available": true,
+                  "resistance_waves_kn": 17.74977766456633,
+                  "squat_m": 0.31231436707542853,
+                  "dynamic_ukc_m": 9.642885632924573,
+                  "squat_limited": false
+                }
+              ],
+              "resistance_at_service_kn": 72.4691207320723,
+              "power_at_service_kw": 526.0965446739216,
+              "fuel_at_service_lph": 121.40689492475113,
+              "fuel_at_service_lpnm": 15.175861865593891,
+              "squat_limited_speed_knots": 20.0,
+              "service_speed_governed_by": "power"
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_speed_below_limiting[env0]",
+              "ok": true,
+              "message": "env0: service 2.0 kn <= 0.95 x Schijf limit 11.10 kn",
+              "severity": "error"
+            },
+            {
+              "name": "power_within_installed[env0]",
+              "ok": true,
+              "message": "env0: power 37 kW <= installed 1091 kW",
+              "severity": "error"
+            },
+            {
+              "name": "blockage_in_range[env0]",
+              "ok": true,
+              "message": "env0: blockage n = 0.078 must be in (0, 1)",
+              "severity": "error"
+            },
+            {
+              "name": "service_speed_below_limiting[env1]",
+              "ok": true,
+              "message": "env1: service 8.0 kn <= 0.95 x Schijf limit 18.98 kn",
+              "severity": "error"
+            },
+            {
+              "name": "power_within_installed[env1]",
+              "ok": true,
+              "message": "env1: power 526 kW <= installed 1091 kW",
+              "severity": "error"
+            },
+            {
+              "name": "blockage_in_range[env1]",
+              "ok": true,
+              "message": "env1: blockage n = 0.031 must be in (0, 1)",
+              "severity": "error"
+            },
+            {
+              "name": "coefficients_are_first_order",
+              "ok": true,
+              "message": "Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor are uncalibrated first-order estimates (RS1) — ITTC-1957 friction is standard.",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/007",
+      "output": {
+        "ok": {
+          "inputs": {
+            "loa": 112.16,
+            "lwl": 107.9664,
+            "beam": 22.6111,
+            "draft": 4.5734,
+            "block_coefficient": 0.9149,
+            "wetted_surface_area": 0.0,
+            "displacement_tonnes": 0.0,
+            "tug": {
+              "engine_power_kw": 3066.7352,
+              "propulsive_efficiency": 0.4115,
+              "sfc_g_per_kwh": 195.0,
+              "fuel_density_kg_per_litre": 0.845
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 14.9381,
+                "channel_width_bottom": 257.5819,
+                "channel_width_surface": 347.21,
+                "bank_slope": 3.0,
+                "current_speed_knots": 1.1774,
+                "water_density": 1.0,
+                "is_deep_water": false,
+                "significant_wave_height_m": 1.7814,
+                "wave_heading_deg_off_bow": 0.0,
+                "peak_wave_period_s": 0.0,
+                "squat_safety_margin_m": 0.15,
+                "apply_squat_limit": true
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 8.504,
+            "speed_step_knots": 1.0
+          },
+          "wetted_surface_area": 3497.3618572512,
+          "environments": [
+            {
+              "name": "env0",
+              "limiting_speed_knots": 19.07969441255561,
+              "service_speed_knots": 8.0,
+              "blockage_ratio": 0.020944170900365527,
+              "speed_curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_through_water_knots": 3.1774,
+                  "froude_number": 0.05022200386343271,
+                  "froude_depth": 0.13501768776183423,
+                  "resistance_frictional_kn": 9.144719594474056,
+                  "resistance_residuary_kn": 0.9144719594474057,
+                  "resistance_shallow_factor": 1.0023522365990076,
+                  "resistance_total_kn": 55.08640764629052,
+                  "effective_power_kw": 90.0362301714984,
+                  "delivered_power_kw": 218.80007332077378,
+                  "fuel_litres_per_hour": 50.49232461248626,
+                  "fuel_litres_per_nm": 25.24616230624313,
+                  "power_available": true,
+                  "resistance_waves_kn": 45.003554493839495,
+                  "squat_m": 0.038713124414605046,
+                  "dynamic_ukc_m": 10.325986875585395,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_through_water_knots": 4.1774000000000004,
+                  "froude_number": 0.06602800998901738,
+                  "froude_depth": 0.1775108229547071,
+                  "resistance_frictional_kn": 15.216724096157192,
+                  "resistance_residuary_kn": 1.5216724096157193,
+                  "resistance_shallow_factor": 1.0044684212406305,
+                  "resistance_total_kn": 61.8167452060929,
+                  "effective_power_kw": 132.83519482047086,
+                  "delivered_power_kw": 322.80727781402396,
+                  "fuel_litres_per_hour": 74.49398718785169,
+                  "fuel_litres_per_nm": 24.83132906261723,
+                  "power_available": true,
+                  "resistance_waves_kn": 45.003554493839495,
+                  "squat_m": 0.06737293997308273,
+                  "dynamic_ukc_m": 10.297327060026916,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_through_water_knots": 5.1774000000000004,
+                  "froude_number": 0.08183401611460203,
+                  "froude_depth": 0.22000395814757995,
+                  "resistance_frictional_kn": 22.698307391366157,
+                  "resistance_residuary_kn": 2.2698307391366157,
+                  "resistance_shallow_factor": 1.0074116541350122,
+                  "resistance_total_kn": 70.15674782856077,
+                  "effective_power_kw": 186.84527856918456,
+                  "delivered_power_kw": 454.05900016812774,
+                  "fuel_litres_per_hour": 104.78284619264485,
+                  "fuel_litres_per_nm": 26.195711548161213,
+                  "power_available": true,
+                  "resistance_waves_kn": 45.003554493839495,
+                  "squat_m": 0.10440458810579155,
+                  "dynamic_ukc_m": 10.260295411894207,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_through_water_knots": 6.1774000000000004,
+                  "froude_number": 0.09764002224018671,
+                  "froude_depth": 0.26249709334045285,
+                  "resistance_frictional_kn": 31.55277482307093,
+                  "resistance_residuary_kn": 3.1552774823070933,
+                  "resistance_shallow_factor": 1.011258802008142,
+                  "resistance_total_kn": 80.102377888212,
+                  "effective_power_kw": 254.53768636332006,
+                  "delivered_power_kw": 618.5605986957961,
+                  "fuel_litres_per_hour": 142.7447535451837,
+                  "fuel_litres_per_nm": 28.54895070903674,
+                  "power_available": true,
+                  "resistance_waves_kn": 45.003554493839495,
+                  "squat_m": 0.15025880386412063,
+                  "dynamic_ukc_m": 10.214441196135878,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_through_water_knots": 7.1774000000000004,
+                  "froude_number": 0.11344602836577136,
+                  "froude_depth": 0.3049902285333257,
+                  "resistance_frictional_kn": 41.75107707015129,
+                  "resistance_residuary_kn": 4.337849361543034,
+                  "resistance_shallow_factor": 1.0160795351368528,
+                  "resistance_total_kn": 91.83356943751207,
+                  "effective_power_kw": 339.05454880284304,
+                  "delivered_power_kw": 823.9478707237985,
+                  "fuel_litres_per_hour": 190.14181632087656,
+                  "fuel_litres_per_nm": 31.690302720146093,
+                  "power_available": true,
+                  "resistance_waves_kn": 45.003554493839495,
+                  "squat_m": 0.20552465904892128,
+                  "dynamic_ukc_m": 10.159175340951078,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_through_water_knots": 8.1774,
+                  "froude_number": 0.12925203449135603,
+                  "froude_depth": 0.34748336372619854,
+                  "resistance_frictional_kn": 53.26928811285382,
+                  "resistance_residuary_kn": 5.993199974231762,
+                  "resistance_shallow_factor": 1.0219380424802524,
+                  "resistance_total_kn": 105.56614556206502,
+                  "effective_power_kw": 444.0591943811722,
+                  "delivered_power_kw": 1079.123194121925,
+                  "fuel_litres_per_hour": 249.02842941275193,
+                  "fuel_litres_per_nm": 35.57548991610742,
+                  "power_available": true,
+                  "resistance_waves_kn": 45.003554493839495,
+                  "squat_m": 0.2709602445507116,
+                  "dynamic_ukc_m": 10.093739755449288,
+                  "squat_limited": false
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_through_water_knots": 9.1774,
+                  "froude_number": 0.1450580406169407,
+                  "froude_depth": 0.38997649891907143,
+                  "resistance_frictional_kn": 66.08714193820683,
+                  "resistance_residuary_kn": 8.188926473496203,
+                  "resistance_shallow_factor": 1.0288941556538969,
+                  "resistance_total_kn": 121.42576718758977,
+                  "effective_power_kw": 573.2333867290316,
+                  "delivered_power_kw": 1393.0337466076103,
+                  "fuel_litres_per_hour": 321.4693261402178,
+                  "fuel_litres_per_nm": 40.18366576752722,
+                  "power_available": true,
+                  "resistance_waves_kn": 45.003554493839495,
+                  "squat_m": 0.3475358273348628,
+                  "dynamic_ukc_m": 10.017164172665137,
+                  "squat_limited": false
+                }
+              ],
+              "resistance_at_service_kn": 121.42576718758977,
+              "power_at_service_kw": 1393.0337466076103,
+              "fuel_at_service_lph": 321.4693261402178,
+              "fuel_at_service_lpnm": 40.18366576752722,
+              "squat_limited_speed_knots": 20.0,
+              "service_speed_governed_by": "power"
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_speed_below_limiting[env0]",
+              "ok": true,
+              "message": "env0: service 8.0 kn <= 0.95 x Schijf limit 19.08 kn",
+              "severity": "error"
+            },
+            {
+              "name": "power_within_installed[env0]",
+              "ok": true,
+              "message": "env0: power 1393 kW <= installed 3067 kW",
+              "severity": "error"
+            },
+            {
+              "name": "blockage_in_range[env0]",
+              "ok": true,
+              "message": "env0: blockage n = 0.021 must be in (0, 1)",
+              "severity": "error"
+            },
+            {
+              "name": "coefficients_are_first_order",
+              "ok": true,
+              "message": "Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor are uncalibrated first-order estimates (RS1) — ITTC-1957 friction is standard.",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
     }
   ]
 }

@@ -207,6 +207,654 @@
           }
         }
       }
+    },
+    {
+      "id": "get_standard/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CN_II_convoy_2ab"
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CEMT_Va"
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CN_I_motor"
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CN_II_motor"
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CN_I_motor"
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CN_III_convoy_2ab"
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/006",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CEMT_VIa_motor_NL2011"
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/007",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CEMT_IV"
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/008",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CEMT_VIa_motor_NL2011"
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/009",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CN_III_motor"
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/010",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CN_II_convoy_2ab"
+        }
+      }
+    },
+    {
+      "id": "get_standard/sweep/011",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CN_I_motor"
+        }
+      }
+    },
+    {
+      "id": "standards_for/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "standards_for",
+        "args": {
+          "cargo_mode": "dry_bulk"
+        }
+      }
+    },
+    {
+      "id": "standards_for/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "standards_for",
+        "args": {
+          "cargo_mode": "liquid_gas"
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "SWEEP": {
+              "standard_id": "SWEEP",
+              "family": "CEMT",
+              "class_name": "S",
+              "formation": "motor_vessel",
+              "loa_m": [
+                184.5167,
+                179.5
+              ],
+              "beam_m": 17.1137,
+              "draught_m": [
+                2.7633,
+                3.2
+              ],
+              "dwt_t": [
+                4666.0,
+                5532.0
+              ],
+              "source": "sweep point"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "SWEEP": {
+              "standard_id": "SWEEP",
+              "family": "CN",
+              "class_name": "S",
+              "formation": "pushed_convoy",
+              "loa_m": [
+                187.7808,
+                203.2
+              ],
+              "beam_m": 19.1995,
+              "draught_m": [
+                3.0739,
+                3.75
+              ],
+              "dwt_t": [
+                4682.0,
+                6043.0
+              ],
+              "source": "sweep point",
+              "n_abreast": 1,
+              "unit_beam_m": 8.0813
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "SWEEP": {
+              "standard_id": "SWEEP",
+              "family": "CEMT",
+              "class_name": "S",
+              "formation": "motor_vessel",
+              "loa_m": [
+                169.9962,
+                165.0
+              ],
+              "beam_m": 14.0538,
+              "draught_m": [
+                2.5799,
+                2.9
+              ],
+              "dwt_t": [
+                3735.0,
+                6436.0
+              ],
+              "source": ""
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "SWEEP": {
+              "standard_id": "SWEEP",
+              "family": "CEMT",
+              "class_name": "S",
+              "formation": "motor_vessel",
+              "loa_m": [
+                164.2888,
+                159.3
+              ],
+              "beam_m": 32.5785,
+              "draught_m": [
+                1.8286,
+                2.64
+              ],
+              "dwt_t": [
+                503.0,
+                2449.0
+              ],
+              "source": "sweep point"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "SWEEP": {
+              "standard_id": "SWEEP",
+              "family": "CEMT",
+              "class_name": "S",
+              "formation": "motor_vessel",
+              "loa_m": [
+                146.817,
+                141.8
+              ],
+              "beam_m": 8.4916,
+              "draught_m": [
+                1.6382,
+                2.12
+              ],
+              "dwt_t": [
+                978.0,
+                1548.0
+              ],
+              "source": ""
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "SWEEP": {
+              "standard_id": "SWEEP",
+              "family": "CN",
+              "class_name": "S",
+              "formation": "pushed_convoy",
+              "loa_m": [
+                141.8057,
+                136.8
+              ],
+              "beam_m": 26.2186,
+              "draught_m": [
+                2.0286,
+                2.23
+              ],
+              "dwt_t": [
+                2711.0,
+                4802.0
+              ],
+              "source": "",
+              "n_abreast": 3,
+              "unit_beam_m": 11.7372
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/006",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "SWEEP": {
+              "standard_id": "SWEEP",
+              "family": "CEMT",
+              "class_name": "S",
+              "formation": "pushed_convoy",
+              "loa_m": [
+                120.5289,
+                132.9
+              ],
+              "beam_m": 18.1906,
+              "draught_m": [
+                3.4136,
+                4.05
+              ],
+              "dwt_t": [
+                3294.0,
+                4026.0
+              ],
+              "source": "",
+              "n_abreast": 3,
+              "unit_beam_m": 8.33
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/007",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "SWEEP": {
+              "standard_id": "SWEEP",
+              "family": "CN",
+              "class_name": "S",
+              "formation": "pushed_convoy",
+              "loa_m": [
+                74.0835,
+                87.1
+              ],
+              "beam_m": 14.1358,
+              "draught_m": [
+                3.2831,
+                4.04
+              ],
+              "dwt_t": [
+                624.0,
+                2721.0
+              ],
+              "source": "",
+              "n_abreast": 1,
+              "unit_beam_m": 10.5171
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/008",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "SWEEP": {
+              "standard_id": "SWEEP",
+              "family": "CEMT",
+              "class_name": "S",
+              "formation": "motor_vessel",
+              "loa_m": [
+                160.3729,
+                172.2
+              ],
+              "beam_m": 13.6205,
+              "draught_m": [
+                2.7725,
+                3.62
+              ],
+              "dwt_t": [
+                2854.0,
+                4863.0
+              ],
+              "source": ""
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/009",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "SWEEP": {
+              "standard_id": "SWEEP",
+              "family": "CN",
+              "class_name": "S",
+              "formation": "pushed_convoy",
+              "loa_m": [
+                119.027,
+                114.0
+              ],
+              "beam_m": 13.8649,
+              "draught_m": [
+                1.6987,
+                2.25
+              ],
+              "dwt_t": [
+                3314.0,
+                4626.0
+              ],
+              "source": "",
+              "n_abreast": 1,
+              "unit_beam_m": 11.9582
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/010",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "SWEEP": {
+              "standard_id": "SWEEP",
+              "family": "CN",
+              "class_name": "S",
+              "formation": "pushed_convoy",
+              "loa_m": [
+                117.4376,
+                112.4
+              ],
+              "beam_m": 33.7775,
+              "draught_m": [
+                3.3325,
+                4.32
+              ],
+              "dwt_t": [
+                1563.0,
+                3709.0
+              ],
+              "source": "",
+              "n_abreast": 1,
+              "unit_beam_m": 10.7327
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/011",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "SWEEP": {
+              "standard_id": "SWEEP",
+              "family": "CEMT",
+              "class_name": "S",
+              "formation": "motor_vessel",
+              "loa_m": [
+                71.5242,
+                66.5
+              ],
+              "beam_m": 11.3737,
+              "draught_m": [
+                3.051,
+                3.79
+              ],
+              "dwt_t": [
+                1897.0,
+                2081.0
+              ],
+              "source": "sweep point"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/012",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "SWEEP": {
+              "standard_id": "SWEEP",
+              "family": "CEMT",
+              "class_name": "S",
+              "formation": "motor_vessel",
+              "loa_m": [
+                123.1375,
+                118.1
+              ],
+              "beam_m": 23.4031,
+              "draught_m": [
+                1.9477,
+                1.97
+              ],
+              "dwt_t": [
+                1705.0,
+                2745.0
+              ],
+              "source": ""
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/013",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "SWEEP": {
+              "standard_id": "SWEEP",
+              "family": "CN",
+              "class_name": "S",
+              "formation": "motor_vessel",
+              "loa_m": [
+                70.9309,
+                77.2
+              ],
+              "beam_m": 32.4501,
+              "draught_m": [
+                1.9937,
+                2.68
+              ],
+              "dwt_t": [
+                1456.0,
+                3204.0
+              ],
+              "source": ""
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/sweep/014",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "SWEEP": {
+              "standard_id": "SWEEP",
+              "family": "CN",
+              "class_name": "S",
+              "formation": "pushed_convoy",
+              "loa_m": [
+                170.8194,
+                182.9
+              ],
+              "beam_m": 31.1084,
+              "draught_m": [
+                3.4265,
+                3.94
+              ],
+              "dwt_t": [
+                4095.0,
+                4990.0
+              ],
+              "source": "",
+              "n_abreast": 2,
+              "unit_beam_m": 11.8992
+            }
+          }
+        }
+      }
     }
   ],
   "retired": []
