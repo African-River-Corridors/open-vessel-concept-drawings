@@ -1,10 +1,10 @@
-"""The calculation core stays pure: it imports only itself, the standard library and numpy."""
+"""The calculation core stays pure: it imports only itself, the standard library."""
 import ast
 import sys
 from pathlib import Path
 
 CORE = Path(__file__).resolve().parents[1] / "src" / "vessel_designer" / "core"
-ALLOWED_THIRD_PARTY = {"numpy"}
+ALLOWED_THIRD_PARTY: set[str] = set()
 
 
 def test_core_imports_nothing_outside_itself():

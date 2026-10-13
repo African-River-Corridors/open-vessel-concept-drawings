@@ -15,6 +15,10 @@ uv pip install -e '.[dev]'
 
 Or with plain pip: `python -m venv .venv && .venv/bin/pip install -e '.[dev]'`.
 
+The install builds a small Rust extension with maturin, so you need the Rust toolchain (`rustup` reads
+`rust-toolchain.toml`). A user who installs a built wheel needs no compiler. The release workflow
+(`.github/workflows/release.yml`) builds and tests wheels and `ovcd` binaries; it publishes nothing.
+
 ## Run the tests
 
 ```
@@ -31,7 +35,7 @@ The Rust core is being ported from the Python core with identical results (spec 
 
 ## Rules for the core
 
-- `src/vessel_designer/core/` is pure calculation: standard library and numpy only, no I/O.
+- `src/vessel_designer/core/` is pure calculation: standard library only, no I/O.
   `tests/test_core_boundary.py` enforces this.
 - Every new calculation comes with tests: a golden case (a worked number with its source), a property
   (an invariant), and a feasibility check (the checks fire when they should).

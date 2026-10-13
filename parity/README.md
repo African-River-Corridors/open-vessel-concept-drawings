@@ -33,7 +33,7 @@ tolerance is never loosened.
 
 ```
 cargo test                    # parity seam: every case of every ported entry point, in-process
-cargo xtask regen             # rewrite reference/ from the frozen Python (needs Python + numpy)
+cargo xtask regen             # rewrite reference/ from the frozen Python (needs Python + numpy: `pip install -e ".[parity]"`)
 cargo xtask oracle-guard      # what the fast gate runs; see below
 cargo xtask mutants           # cargo-mutants on the ovcd-core code this branch changed
 ```

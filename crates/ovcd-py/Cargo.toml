@@ -8,5 +8,12 @@ license.workspace = true
 repository.workspace = true
 publish = false
 
+[lib]
+name = "_native"
+crate-type = ["cdylib"]
+
 [dependencies]
 ovcd-format.workspace = true
+# abi3-py312: one wheel per platform covers Python 3.12 and later. `extension-module` is switched on
+# by maturin (pyproject.toml), so `cargo build -p ovcd-py` can still link for local checks.
+pyo3 = { version = "0.28", features = ["abi3-py312"] }

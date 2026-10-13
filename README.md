@@ -4,7 +4,7 @@ Concept design of inland and coastal cargo vessels for feasibility studies. Give
 cargo; it gives you capacity, draught, weights, tank arrangement, stability, resistance and power —
 checked against real vessels.
 
-It is a Python library with a pure calculation core (standard library + numpy, no I/O). A compiled Rust
+It is a Python library with a pure calculation core (standard library only, no I/O). A compiled Rust
 core and a desktop app are planned; see the [roadmap](ROADMAP.md).
 
 ## What it does

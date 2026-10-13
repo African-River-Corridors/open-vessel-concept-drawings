@@ -22,7 +22,7 @@ stage, which re-derives the achievable per-journey tonnage from the actual chann
 
 Worked examples: see tests/core/test_barge_capacity.py and core/design_grid.py.
 
-Pure Python apart from the hull (numpy) — runs client-side in Pyodide.
+Pure Python.
 """
 from __future__ import annotations
 
