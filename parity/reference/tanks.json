@@ -1,0 +1,1374 @@
+{
+  "entry_point": "tanks",
+  "generated_by": "cargo xtask regen (frozen Python); never edit by hand",
+  "results": [
+    {
+      "id": "calculate_tank_arrangement/quickstart",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 2,
+          "n_tanks_long": 2,
+          "n_tanks_total": 4,
+          "outer_diameter": 5.9,
+          "inner_diameter": 5.15,
+          "overall_tank_length": 27.603999999999996,
+          "cylinder_length": 21.703999999999994,
+          "head_length": 2.95,
+          "volume_per_tank": 523.6288223140365,
+          "volume_cylinder": 452.1100074061362,
+          "volume_heads": 71.5188149079003,
+          "total_tank_volume": 2094.515289256146,
+          "cargo_volume": 1989.7895247933386,
+          "tank_shell_weight": 343.67825740993516,
+          "insulation_weight": 42.97869150096367,
+          "tank_top_above_keel": 6.9,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.5,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/quickstart_auto_wall",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 2,
+          "n_tanks_long": 2,
+          "n_tanks_total": 4,
+          "outer_diameter": 5.9,
+          "inner_diameter": 5.1850000000000005,
+          "overall_tank_length": 27.603999999999996,
+          "cylinder_length": 21.703999999999994,
+          "head_length": 2.95,
+          "volume_per_tank": 531.4743232710025,
+          "volume_cylinder": 458.27607366795104,
+          "volume_heads": 73.19824960305144,
+          "total_tank_volume": 2125.89729308401,
+          "cargo_volume": 2019.6024284298094,
+          "tank_shell_weight": 96.71601494722185,
+          "insulation_weight": 42.97869150096367,
+          "tank_top_above_keel": 6.9,
+          "cylinder_wall_thickness": 7.5,
+          "head_wall_thickness": 5.0,
+          "design_pressure": 0.5,
+          "tank_material": "9Ni"
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/quickstart_ellipsoidal",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 2,
+          "n_tanks_long": 2,
+          "n_tanks_total": 4,
+          "outer_diameter": 5.9,
+          "inner_diameter": 5.15,
+          "overall_tank_length": 27.603999999999996,
+          "cylinder_length": 24.653999999999996,
+          "head_length": 1.475,
+          "volume_per_tank": 549.3200470867775,
+          "volume_cylinder": 513.5606396328274,
+          "volume_heads": 35.75940745395015,
+          "total_tank_volume": 2197.28018834711,
+          "cargo_volume": 2087.4161789297546,
+          "tank_shell_weight": 350.78552975112086,
+          "insulation_weight": 43.36450948944139,
+          "tank_top_above_keel": 6.9,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.5,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/quickstart",
+      "output": {
+        "ok": 11.887396690482028
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/error/no_beam_left",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "Tank outer diameter is -0.60m - not enough beam. Beam=14.8m, side_clearance=7.5m, n_wide=2, gap_transverse=1.0m"
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/error/wall_too_thick",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "Tank inner radius is non-positive. Wall too thick for diameter."
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/error/unknown_head",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "Unknown tank head type: flat"
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/error/heads_do_not_fit",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "Cylinder length is -0.50m - tank heads don't fit. Available length per tank=5.40m, head length=2.95m each"
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/error/unknown_material",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "Unknown tank material 'A36'. Valid: 304L, 316L, 9Ni"
+        }
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/empty",
+      "output": {
+        "ok": 0.0
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/000",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 2,
+          "n_tanks_long": 2,
+          "n_tanks_total": 4,
+          "outer_diameter": 8.18685,
+          "inner_diameter": 7.3964594,
+          "overall_tank_length": 30.889625,
+          "cylinder_length": 26.7962,
+          "head_length": 2.0467125,
+          "volume_per_tank": 1257.294423687235,
+          "volume_cylinder": 1151.3592312728292,
+          "volume_heads": 105.93519241440566,
+          "total_tank_volume": 5029.17769474894,
+          "cargo_volume": 4777.215892242018,
+          "tank_shell_weight": 564.5527858483034,
+          "insulation_weight": 71.37220634053199,
+          "tank_top_above_keel": 9.88195,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.5795,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/001",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 3,
+          "n_tanks_total": 3,
+          "outer_diameter": 8.2471,
+          "inner_diameter": 7.6637062,
+          "overall_tank_length": 14.918791666666666,
+          "cylinder_length": 10.795241666666666,
+          "head_length": 2.061775,
+          "volume_per_tank": 615.8042376168416,
+          "volume_cylinder": 497.9662905498066,
+          "volume_heads": 117.83794706703506,
+          "total_tank_volume": 1847.412712850525,
+          "cargo_volume": 1646.0447271498178,
+          "tank_shell_weight": 213.16994392156718,
+          "insulation_weight": 18.986427156874708,
+          "tank_top_above_keel": 10.1021,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.2208,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/002",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 1,
+          "n_tanks_total": 1,
+          "outer_diameter": 10.4022,
+          "inner_diameter": 9.9160342,
+          "overall_tank_length": 87.8829,
+          "cylinder_length": 82.68180000000001,
+          "head_length": 2.60055,
+          "volume_per_tank": 6640.556750963698,
+          "volume_cylinder": 6385.21956986751,
+          "volume_heads": 255.3371810961878,
+          "total_tank_volume": 6640.556750963698,
+          "cargo_volume": 6435.363547358919,
+          "tank_shell_weight": 372.2170796548199,
+          "insulation_weight": 39.15183101246028,
+          "tank_top_above_keel": 12.181000000000001,
+          "cylinder_wall_thickness": 17.0,
+          "head_wall_thickness": 16.5,
+          "design_pressure": 0.3413,
+          "tank_material": "316L"
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/003",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 2,
+          "n_tanks_long": 4,
+          "n_tanks_total": 8,
+          "outer_diameter": 8.4071,
+          "inner_diameter": 8.0989374,
+          "overall_tank_length": 17.47220625,
+          "cylinder_length": 9.06510625,
+          "head_length": 4.20355,
+          "volume_per_tank": 747.3237992143058,
+          "volume_cylinder": 467.00213320421244,
+          "volume_heads": 280.32166601009345,
+          "total_tank_volume": 5978.590393714447,
+          "cargo_volume": 5271.921009177399,
+          "tank_shell_weight": 446.76796395690764,
+          "insulation_weight": 29.478277685887896,
+          "tank_top_above_keel": 10.5262,
+          "cylinder_wall_thickness": 21.0,
+          "head_wall_thickness": 10.5,
+          "design_pressure": 0.5353,
+          "tank_material": "304L"
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/004",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 4,
+          "n_tanks_total": 4,
+          "outer_diameter": 8.3339,
+          "inner_diameter": 7.7958942,
+          "overall_tank_length": 16.11046875,
+          "cylinder_length": 7.776568749999999,
+          "head_length": 4.16695,
+          "volume_per_tank": 619.2842135101711,
+          "volume_cylinder": 371.2015408548698,
+          "volume_heads": 248.08267265530128,
+          "total_tank_volume": 2477.1368540406843,
+          "cargo_volume": 2116.4657280923607,
+          "tank_shell_weight": 301.801983839019,
+          "insulation_weight": 24.700887871034976,
+          "tank_top_above_keel": 10.392900000000001,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.8936,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/005",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 2,
+          "n_tanks_total": 2,
+          "outer_diameter": 4.969900000000001,
+          "inner_diameter": 4.506268800000001,
+          "overall_tank_length": 29.78375,
+          "cylinder_length": 24.813850000000002,
+          "head_length": 2.4849500000000004,
+          "volume_per_tank": 443.6601563136127,
+          "volume_cylinder": 395.7475380658001,
+          "volume_heads": 47.91261824781261,
+          "total_tank_volume": 887.3203126272253,
+          "cargo_volume": 829.6444923064557,
+          "tank_shell_weight": 164.24290470647392,
+          "insulation_weight": 11.540946855775521,
+          "tank_top_above_keel": 7.1004000000000005,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.2865,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/006",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 3,
+          "n_tanks_total": 3,
+          "outer_diameter": 13.2437,
+          "inner_diameter": 12.573179,
+          "overall_tank_length": 16.661866666666665,
+          "cylinder_length": 10.040016666666665,
+          "head_length": 3.310925,
+          "volume_per_tank": 1766.9238239870351,
+          "volume_cylinder": 1246.5638034705853,
+          "volume_heads": 520.3600205164497,
+          "total_tank_volume": 5300.771471961105,
+          "cargo_volume": 4914.34523165514,
+          "tank_shell_weight": 393.69140135571683,
+          "insulation_weight": 40.00769016444189,
+          "tank_top_above_keel": 15.0501,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.3235,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/007",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 3,
+          "n_tanks_total": 3,
+          "outer_diameter": 8.5911,
+          "inner_diameter": 8.192441,
+          "overall_tank_length": 28.980541666666664,
+          "cylinder_length": 24.68499166666666,
+          "head_length": 2.147775,
+          "volume_per_tank": 1445.1653289674555,
+          "volume_cylinder": 1301.2163483355112,
+          "volume_heads": 143.94898063194438,
+          "total_tank_volume": 4335.495986902366,
+          "cargo_volume": 4138.230919498308,
+          "tank_shell_weight": 492.8250483706469,
+          "insulation_weight": 24.453567727650107,
+          "tank_top_above_keel": 10.798000000000002,
+          "cylinder_wall_thickness": 27.7795,
+          "head_wall_thickness": 27.7795,
+          "design_pressure": 0.3376,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/008",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 3,
+          "n_tanks_long": 4,
+          "n_tanks_total": 12,
+          "outer_diameter": 4.485566666666666,
+          "inner_diameter": 4.204818266666666,
+          "overall_tank_length": 10.65294375,
+          "cylinder_length": 8.410160416666667,
+          "head_length": 1.1213916666666666,
+          "volume_per_tank": 136.24844249084785,
+          "volume_cylinder": 116.78541852990546,
+          "volume_heads": 19.463023960942404,
+          "total_tank_volume": 1634.981309890174,
+          "cargo_volume": 1594.2702752739087,
+          "tank_shell_weight": 335.7826468052829,
+          "insulation_weight": 12.690865871921787,
+          "tank_top_above_keel": 5.535266666666667,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.9904,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/009",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 4,
+          "n_tanks_total": 4,
+          "outer_diameter": 13.9905,
+          "inner_diameter": 13.614010600000002,
+          "overall_tank_length": 18.213375,
+          "cylinder_length": 11.218124999999999,
+          "head_length": 3.497625,
+          "volume_per_tank": 2293.567706903582,
+          "volume_cylinder": 1632.9854873660681,
+          "volume_heads": 660.582219537514,
+          "total_tank_volume": 9174.270827614328,
+          "cargo_volume": 7917.395724231164,
+          "tank_shell_weight": 822.9900883717056,
+          "insulation_weight": 30.83248251261594,
+          "tank_top_above_keel": 16.0924,
+          "cylinder_wall_thickness": 32.7793,
+          "head_wall_thickness": 32.7793,
+          "design_pressure": 0.6625,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/010",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 1,
+          "n_tanks_total": 1,
+          "outer_diameter": 5.657,
+          "inner_diameter": 5.3657464,
+          "overall_tank_length": 87.39779999999999,
+          "cylinder_length": 84.56929999999998,
+          "head_length": 1.41425,
+          "volume_per_tank": 1952.7747465773791,
+          "volume_cylinder": 1912.3302852743536,
+          "volume_heads": 40.4444613030254,
+          "total_tank_volume": 1952.7747465773791,
+          "cargo_volume": 1817.4474566395668,
+          "tank_shell_weight": 404.0240326952279,
+          "insulation_weight": 10.369877008429068,
+          "tank_top_above_keel": 7.1562,
+          "cylinder_wall_thickness": 34.6565,
+          "head_wall_thickness": 34.6565,
+          "design_pressure": 0.5929,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/011",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 2,
+          "n_tanks_total": 2,
+          "outer_diameter": 11.2385,
+          "inner_diameter": 10.673501,
+          "overall_tank_length": 35.87303750000001,
+          "cylinder_length": 24.634537500000008,
+          "head_length": 5.61925,
+          "volume_per_tank": 2847.8670416187697,
+          "volume_cylinder": 2204.1852134116343,
+          "volume_heads": 643.6818282071355,
+          "total_tank_volume": 5695.734083237539,
+          "cargo_volume": 5377.912121392885,
+          "tank_shell_weight": 629.0592243948843,
+          "insulation_weight": 37.008858842186825,
+          "tank_top_above_keel": 12.433,
+          "cylinder_wall_thickness": 39.0,
+          "head_wall_thickness": 19.5,
+          "design_pressure": 0.7382,
+          "tank_material": "316L"
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/012",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 4,
+          "n_tanks_total": 4,
+          "outer_diameter": 5.2144,
+          "inner_diameter": 4.578687,
+          "overall_tank_length": 16.489068749999998,
+          "cylinder_length": 11.274668749999996,
+          "head_length": 2.6072,
+          "volume_per_tank": 236.29781120764807,
+          "volume_cylinder": 185.6417204751636,
+          "volume_heads": 50.65609073248446,
+          "total_tank_volume": 945.1912448305923,
+          "cargo_volume": 910.7862835187588,
+          "tank_shell_weight": 75.03023447895887,
+          "insulation_weight": 19.828017830078625,
+          "tank_top_above_keel": 6.570500000000001,
+          "cylinder_wall_thickness": 12.0,
+          "head_wall_thickness": 6.0,
+          "design_pressure": 0.4896,
+          "tank_material": "316L"
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/013",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 2,
+          "n_tanks_long": 3,
+          "n_tanks_total": 6,
+          "outer_diameter": 5.3974,
+          "inner_diameter": 5.0981402000000005,
+          "overall_tank_length": 30.117716666666666,
+          "cylinder_length": 24.720316666666665,
+          "head_length": 2.6987,
+          "volume_per_tank": 574.0034309236942,
+          "volume_cylinder": 504.62348679195776,
+          "volume_heads": 69.37994413173642,
+          "total_tank_volume": 3444.020585542165,
+          "cargo_volume": 3109.606186686021,
+          "tank_shell_weight": 566.5326467547779,
+          "insulation_weight": 22.91296375255321,
+          "tank_top_above_keel": 7.1326,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.3152,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/014",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 3,
+          "n_tanks_total": 3,
+          "outer_diameter": 16.6161,
+          "inner_diameter": 16.2506652,
+          "overall_tank_length": 19.69219166666667,
+          "cylinder_length": 11.38414166666667,
+          "head_length": 4.154025,
+          "volume_per_tank": 3484.7215115403665,
+          "volume_cylinder": 2361.1982836077977,
+          "volume_heads": 1123.5232279325687,
+          "total_tank_volume": 10454.164534621099,
+          "cargo_volume": 9389.930584996671,
+          "tank_shell_weight": 609.0778462030538,
+          "insulation_weight": 30.216889426787443,
+          "tank_top_above_keel": 18.4092,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.7181,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/015",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 3,
+          "n_tanks_total": 3,
+          "outer_diameter": 4.4428,
+          "inner_diameter": 3.7629994,
+          "overall_tank_length": 15.900091666666667,
+          "cylinder_length": 11.457291666666666,
+          "head_length": 2.2214,
+          "volume_per_tank": 155.320546189406,
+          "volume_cylinder": 127.4207475070964,
+          "volume_heads": 27.899798682309605,
+          "total_tank_volume": 465.961638568218,
+          "cargo_volume": 421.2759174295259,
+          "tank_shell_weight": 107.1650387054158,
+          "insulation_weight": 12.579165860593216,
+          "tank_top_above_keel": 6.0598,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.4321,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/016",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 3,
+          "n_tanks_total": 3,
+          "outer_diameter": 9.9673,
+          "inner_diameter": 9.737275,
+          "overall_tank_length": 13.271966666666666,
+          "cylinder_length": 3.304666666666666,
+          "head_length": 4.98365,
+          "volume_per_tank": 729.493886501484,
+          "volume_cylinder": 246.08911942833896,
+          "volume_heads": 483.40476707314497,
+          "total_tank_volume": 2188.481659504452,
+          "cargo_volume": 1860.4282587447346,
+          "tank_shell_weight": 140.2829765442292,
+          "insulation_weight": 7.4921884506405085,
+          "tank_top_above_keel": 11.809899999999999,
+          "cylinder_wall_thickness": 14.8573,
+          "head_wall_thickness": 14.8573,
+          "design_pressure": 0.8692,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/017",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 2,
+          "n_tanks_long": 1,
+          "n_tanks_total": 2,
+          "outer_diameter": 8.2741,
+          "inner_diameter": 8.031406,
+          "overall_tank_length": 51.957899999999995,
+          "cylinder_length": 47.82084999999999,
+          "head_length": 2.068525,
+          "volume_per_tank": 2558.2742214246855,
+          "volume_cylinder": 2422.648091682615,
+          "volume_heads": 135.62612974207073,
+          "total_tank_volume": 5116.548442849371,
+          "cargo_volume": 4948.7256539239115,
+          "tank_shell_weight": 310.7412409218121,
+          "insulation_weight": 17.350969896641303,
+          "tank_top_above_keel": 10.386600000000001,
+          "cylinder_wall_thickness": 15.0,
+          "head_wall_thickness": 15.0,
+          "design_pressure": 0.7584,
+          "tank_material": "9Ni"
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/018",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 3,
+          "n_tanks_total": 3,
+          "outer_diameter": 13.1183,
+          "inner_diameter": 12.2637266,
+          "overall_tank_length": 22.361791666666672,
+          "cylinder_length": 9.243491666666673,
+          "head_length": 6.55915,
+          "volume_per_tank": 2057.622662736946,
+          "volume_cylinder": 1091.869803756597,
+          "volume_heads": 965.7528589803492,
+          "total_tank_volume": 6172.867988210838,
+          "cargo_volume": 5325.333213429491,
+          "tank_shell_weight": 669.9135886496092,
+          "insulation_weight": 65.22823329824917,
+          "tank_top_above_keel": 15.0194,
+          "cylinder_wall_thickness": 34.0726,
+          "head_wall_thickness": 34.0726,
+          "design_pressure": 0.7158,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/019",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 4,
+          "n_tanks_total": 4,
+          "outer_diameter": 19.75,
+          "inner_diameter": 18.9199454,
+          "overall_tank_length": 21.97929375,
+          "cylinder_length": 2.22929375,
+          "head_length": 9.875,
+          "volume_per_tank": 4190.936887892424,
+          "volume_cylinder": 626.7537445509291,
+          "volume_heads": 3564.1831433414955,
+          "total_tank_volume": 16763.747551569697,
+          "cargo_volume": 15972.498667135607,
+          "tank_shell_weight": 709.3405535342458,
+          "insulation_weight": 125.36366401499124,
+          "tank_top_above_keel": 21.1868,
+          "cylinder_wall_thickness": 32.0,
+          "head_wall_thickness": 16.0,
+          "design_pressure": 0.3443,
+          "tank_material": "304L"
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/020",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 1,
+          "n_tanks_total": 1,
+          "outer_diameter": 7.2104,
+          "inner_diameter": 6.611872,
+          "overall_tank_length": 40.778400000000005,
+          "cylinder_length": 37.17320000000001,
+          "head_length": 1.8026,
+          "volume_per_tank": 1352.020003324527,
+          "volume_cylinder": 1276.3468312893783,
+          "volume_heads": 75.67317203514864,
+          "total_tank_volume": 1352.020003324527,
+          "cargo_volume": 1164.494828863415,
+          "tank_shell_weight": 238.77853135379695,
+          "insulation_weight": 14.716808672012966,
+          "tank_top_above_keel": 8.3837,
+          "cylinder_wall_thickness": 35.6857,
+          "head_wall_thickness": 35.6857,
+          "design_pressure": 0.9182,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/021",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 3,
+          "n_tanks_total": 3,
+          "outer_diameter": 11.9323,
+          "inner_diameter": 11.6406528,
+          "overall_tank_length": 14.731041666666664,
+          "cylinder_length": 8.764891666666664,
+          "head_length": 2.983075,
+          "volume_per_tank": 1345.8649595531551,
+          "volume_cylinder": 932.8055166662134,
+          "volume_heads": 413.05944288694184,
+          "total_tank_volume": 4037.5948786594654,
+          "cargo_volume": 3692.784276021947,
+          "tank_shell_weight": 362.7359437708628,
+          "insulation_weight": 12.10992389073521,
+          "tank_top_above_keel": 13.0725,
+          "cylinder_wall_thickness": 28.0,
+          "head_wall_thickness": 27.5,
+          "design_pressure": 0.9919,
+          "tank_material": "9Ni"
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/022",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 4,
+          "n_tanks_total": 4,
+          "outer_diameter": 8.7828,
+          "inner_diameter": 8.079738800000001,
+          "overall_tank_length": 16.547775,
+          "cylinder_length": 12.156375,
+          "head_length": 2.1957,
+          "volume_per_tank": 761.3772590972269,
+          "volume_cylinder": 623.2877803310924,
+          "volume_heads": 138.0894787661345,
+          "total_tank_volume": 3045.5090363889076,
+          "cargo_volume": 2790.599930043156,
+          "tank_shell_weight": 307.78295120577945,
+          "insulation_weight": 36.803096904139814,
+          "tank_top_above_keel": 10.5801,
+          "cylinder_wall_thickness": 23.0,
+          "head_wall_thickness": 23.0,
+          "design_pressure": 0.5605,
+          "tank_material": "304L"
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/023",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 3,
+          "n_tanks_total": 3,
+          "outer_diameter": 8.0989,
+          "inner_diameter": 7.2454558,
+          "overall_tank_length": 26.774916666666666,
+          "cylinder_length": 22.725466666666666,
+          "head_length": 2.024725,
+          "volume_per_tank": 1036.566726018937,
+          "volume_cylinder": 936.9881845277728,
+          "volume_heads": 99.5785414911644,
+          "total_tank_volume": 3109.700178056811,
+          "cargo_volume": 2934.9350280500184,
+          "tank_shell_weight": 455.44283251658766,
+          "insulation_weight": 49.05744794264974,
+          "tank_top_above_keel": 9.2643,
+          "cylinder_wall_thickness": 31.6778,
+          "head_wall_thickness": 31.6778,
+          "design_pressure": 0.6102,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/024",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 1,
+          "n_tanks_total": 1,
+          "outer_diameter": 16.612,
+          "inner_diameter": 16.0209998,
+          "overall_tank_length": 38.34135,
+          "cylinder_length": 30.03535,
+          "head_length": 4.153,
+          "volume_per_tank": 7131.386067093381,
+          "volume_cylinder": 6054.827970265687,
+          "volume_heads": 1076.5580968276931,
+          "total_tank_volume": 7131.386067093381,
+          "cargo_volume": 6277.046016255594,
+          "tank_shell_weight": 240.4902888312094,
+          "insulation_weight": 34.204107860070394,
+          "tank_top_above_keel": 18.3041,
+          "cylinder_wall_thickness": 15.6948,
+          "head_wall_thickness": 15.6948,
+          "design_pressure": 0.2562,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/025",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 2,
+          "n_tanks_total": 2,
+          "outer_diameter": 11.0006,
+          "inner_diameter": 10.469591,
+          "overall_tank_length": 25.677050000000005,
+          "cylinder_length": 20.176750000000006,
+          "head_length": 2.75015,
+          "volume_per_tank": 2037.4428464871332,
+          "volume_cylinder": 1737.0028315778595,
+          "volume_heads": 300.4400149092737,
+          "total_tank_volume": 4074.8856929742665,
+          "cargo_volume": 3794.533557297637,
+          "tank_shell_weight": 244.63863970063042,
+          "insulation_weight": 26.800425530696646,
+          "tank_top_above_keel": 12.5077,
+          "cylinder_wall_thickness": 18.2729,
+          "head_wall_thickness": 18.2729,
+          "design_pressure": 0.9452,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/026",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 3,
+          "n_tanks_total": 3,
+          "outer_diameter": 10.633600000000001,
+          "inner_diameter": 9.851069,
+          "overall_tank_length": 27.759316666666663,
+          "cylinder_length": 17.125716666666662,
+          "head_length": 5.316800000000001,
+          "volume_per_tank": 1805.8364612217504,
+          "volume_cylinder": 1305.28503245079,
+          "volume_heads": 500.5514287709604,
+          "total_tank_volume": 5417.509383665251,
+          "cargo_volume": 5098.959831905735,
+          "tank_shell_weight": 494.15348451606746,
+          "insulation_weight": 61.13747260578637,
+          "tank_top_above_keel": 12.540600000000001,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.9372,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/027",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 2,
+          "n_tanks_long": 1,
+          "n_tanks_total": 2,
+          "outer_diameter": 7.79945,
+          "inner_diameter": 7.4431412,
+          "overall_tank_length": 77.603775,
+          "cylinder_length": 73.70405,
+          "head_length": 1.9498625,
+          "volume_per_tank": 3314.9151941275395,
+          "volume_cylinder": 3206.961526871042,
+          "volume_heads": 107.95366725649748,
+          "total_tank_volume": 6629.830388255079,
+          "cargo_volume": 5906.51589289645,
+          "tank_shell_weight": 716.248964053435,
+          "insulation_weight": 35.09431625315112,
+          "tank_top_above_keel": 9.68715,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.4601,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/028",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 3,
+          "n_tanks_total": 3,
+          "outer_diameter": 15.6227,
+          "inner_diameter": 15.0232138,
+          "overall_tank_length": 31.69491666666667,
+          "cylinder_length": 16.07221666666667,
+          "head_length": 7.81135,
+          "volume_per_tank": 4624.3558306081995,
+          "volume_cylinder": 2848.9928251926403,
+          "volume_heads": 1775.3630054155587,
+          "total_tank_volume": 13873.067491824599,
+          "cargo_volume": 12435.81769967157,
+          "tank_shell_weight": 1006.1611792973334,
+          "insulation_weight": 75.81693513277854,
+          "tank_top_above_keel": 17.2532,
+          "cylinder_wall_thickness": 28.9746,
+          "head_wall_thickness": 28.9746,
+          "design_pressure": 0.4705,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/029",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 3,
+          "n_tanks_long": 2,
+          "n_tanks_total": 6,
+          "outer_diameter": 5.109766666666666,
+          "inner_diameter": 4.408078066666667,
+          "overall_tank_length": 40.12820000000001,
+          "cylinder_length": 35.01843333333334,
+          "head_length": 2.554883333333333,
+          "volume_per_tank": 579.2713579244161,
+          "volume_cylinder": 534.4230095459612,
+          "volume_heads": 44.848348378454816,
+          "total_tank_volume": 3475.6281475464966,
+          "cargo_volume": 3144.4007850853154,
+          "tank_shell_weight": 479.8596837496295,
+          "insulation_weight": 77.05824015876061,
+          "tank_top_above_keel": 7.013366666666666,
+          "cylinder_wall_thickness": 18.5553,
+          "head_wall_thickness": 18.5553,
+          "design_pressure": 0.7708,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/030",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 2,
+          "n_tanks_total": 2,
+          "outer_diameter": 11.2742,
+          "inner_diameter": 10.9776768,
+          "overall_tank_length": 46.3202375,
+          "cylinder_length": 35.0460375,
+          "head_length": 5.6371,
+          "volume_per_tank": 4017.8794948460763,
+          "volume_cylinder": 3317.032168686781,
+          "volume_heads": 700.8473261592951,
+          "total_tank_volume": 8035.758989692153,
+          "cargo_volume": 7286.8262518528445,
+          "tank_shell_weight": 964.6721404953511,
+          "insulation_weight": 20.723237205911772,
+          "tank_top_above_keel": 12.8749,
+          "cylinder_wall_thickness": 43.0,
+          "head_wall_thickness": 21.5,
+          "design_pressure": 0.8172,
+          "tank_material": "316L"
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/031",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 2,
+          "n_tanks_long": 2,
+          "n_tanks_total": 4,
+          "outer_diameter": 6.5531500000000005,
+          "inner_diameter": 6.044465000000001,
+          "overall_tank_length": 49.3329875,
+          "cylinder_length": 46.0564125,
+          "head_length": 1.6382875000000001,
+          "volume_per_tank": 1379.4021162533238,
+          "volume_cylinder": 1321.5868901820068,
+          "volume_heads": 57.81522607131695,
+          "total_tank_volume": 5517.608465013295,
+          "cargo_volume": 5097.718460825784,
+          "tank_shell_weight": 799.5728657886625,
+          "insulation_weight": 55.71529419637252,
+          "tank_top_above_keel": 7.59755,
+          "cylinder_wall_thickness": 27.0372,
+          "head_wall_thickness": 27.0372,
+          "design_pressure": 0.814,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/032",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 3,
+          "n_tanks_long": 1,
+          "n_tanks_total": 3,
+          "outer_diameter": 3.6465666666666663,
+          "inner_diameter": 3.0023394666666663,
+          "overall_tank_length": 66.72465,
+          "cylinder_length": 64.90136666666666,
+          "head_length": 0.9116416666666666,
+          "volume_per_tank": 466.5616433258977,
+          "volume_cylinder": 459.4765102408604,
+          "volume_heads": 7.085133085037274,
+          "total_tank_volume": 1399.6849299776932,
+          "cargo_volume": 1363.1531533052753,
+          "tank_shell_weight": 372.7490417689383,
+          "insulation_weight": 40.97425660836249,
+          "tank_top_above_keel": 5.392166666666666,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.8558,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/033",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 4,
+          "n_tanks_total": 4,
+          "outer_diameter": 8.296700000000001,
+          "inner_diameter": 7.6017600000000005,
+          "overall_tank_length": 23.000156249999996,
+          "cylinder_length": 14.703456249999995,
+          "head_length": 4.148350000000001,
+          "volume_per_tank": 898.2412737733132,
+          "volume_cylinder": 667.3253504577244,
+          "volume_heads": 230.91592331558874,
+          "total_tank_volume": 3592.965095093253,
+          "cargo_volume": 3086.357016685104,
+          "tank_shell_weight": 155.860992526894,
+          "insulation_weight": 48.410953401025864,
+          "tank_top_above_keel": 10.274600000000001,
+          "cylinder_wall_thickness": 11.0,
+          "head_wall_thickness": 6.0,
+          "design_pressure": 0.5325,
+          "tank_material": "9Ni"
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/034",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 4,
+          "n_tanks_total": 4,
+          "outer_diameter": 8.0495,
+          "inner_diameter": 7.7238508,
+          "overall_tank_length": 13.0225875,
+          "cylinder_length": 8.9978375,
+          "head_length": 2.012375,
+          "volume_per_tank": 542.2294639548504,
+          "volume_cylinder": 421.59531778536746,
+          "volume_heads": 120.63414616948295,
+          "total_tank_volume": 2168.9178558194017,
+          "cargo_volume": 1990.6328080710468,
+          "tank_shell_weight": 252.72479756798586,
+          "insulation_weight": 11.175961150076594,
+          "tank_top_above_keel": 9.8802,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.5278,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/035",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 4,
+          "n_tanks_total": 4,
+          "outer_diameter": 8.8567,
+          "inner_diameter": 8.3295926,
+          "overall_tank_length": 22.6280625,
+          "cylinder_length": 13.771362499999999,
+          "head_length": 4.42835,
+          "volume_per_tank": 1053.0378113689403,
+          "volume_cylinder": 750.4371282407332,
+          "volume_heads": 302.6006831282071,
+          "total_tank_volume": 4212.151245475761,
+          "cargo_volume": 3606.022681251799,
+          "tank_shell_weight": 686.2217630903626,
+          "insulation_weight": 34.16881822572968,
+          "tank_top_above_keel": 10.6985,
+          "cylinder_wall_thickness": 37.4282,
+          "head_wall_thickness": 37.4282,
+          "design_pressure": 0.5263,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/036",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 3,
+          "n_tanks_long": 4,
+          "n_tanks_total": 12,
+          "outer_diameter": 3.2163000000000004,
+          "inner_diameter": 2.8830152000000004,
+          "overall_tank_length": 13.233243749999998,
+          "cylinder_length": 11.625093749999998,
+          "head_length": 0.8040750000000001,
+          "volume_per_tank": 82.16273411304141,
+          "volume_cylinder": 75.8892410375492,
+          "volume_heads": 6.2734930754922065,
+          "total_tank_volume": 985.9528093564969,
+          "cargo_volume": 893.3718405579218,
+          "tank_shell_weight": 284.60764616342345,
+          "insulation_weight": 13.775561208372753,
+          "tank_top_above_keel": 4.4922,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.2764,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/037",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 3,
+          "n_tanks_long": 1,
+          "n_tanks_total": 3,
+          "outer_diameter": 5.210133333333334,
+          "inner_diameter": 4.660879933333335,
+          "overall_tank_length": 67.91242499999998,
+          "cylinder_length": 62.70229166666665,
+          "head_length": 2.605066666666667,
+          "volume_per_tank": 1122.8315315667203,
+          "volume_cylinder": 1069.816091759545,
+          "volume_heads": 53.015439807175134,
+          "total_tank_volume": 3368.4945947001606,
+          "cargo_volume": 3218.9334346954734,
+          "tank_shell_weight": 614.2560206596066,
+          "insulation_weight": 49.69422842577863,
+          "tank_top_above_keel": 6.5419333333333345,
+          "cylinder_wall_thickness": 26.2645,
+          "head_wall_thickness": 26.2645,
+          "design_pressure": 0.6956,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/038",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 2,
+          "n_tanks_total": 2,
+          "outer_diameter": 8.583300000000001,
+          "inner_diameter": 8.306553800000001,
+          "overall_tank_length": 33.196475,
+          "cylinder_length": 24.613175,
+          "head_length": 4.291650000000001,
+          "volume_per_tank": 1633.9230616537134,
+          "volume_cylinder": 1333.8263275607073,
+          "volume_heads": 300.09673409300615,
+          "total_tank_volume": 3267.8461233074268,
+          "cargo_volume": 3103.473463305063,
+          "tank_shell_weight": 338.9698625627739,
+          "insulation_weight": 12.178320599284794,
+          "tank_top_above_keel": 10.372200000000001,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.9831,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "calculate_tank_arrangement/sweep/039",
+      "output": {
+        "ok": {
+          "n_tanks_wide": 1,
+          "n_tanks_long": 4,
+          "n_tanks_total": 4,
+          "outer_diameter": 11.262999999999998,
+          "inner_diameter": 10.805761999999998,
+          "overall_tank_length": 12.701212499999999,
+          "cylinder_length": 7.0697125,
+          "head_length": 2.8157499999999995,
+          "volume_per_tank": 978.6593849870532,
+          "volume_cylinder": 648.3394227695717,
+          "volume_heads": 330.3199622174815,
+          "total_tank_volume": 3914.6375399482126,
+          "cargo_volume": 3819.903311481466,
+          "tank_shell_weight": 346.35540079694607,
+          "insulation_weight": 22.78031260844897,
+          "tank_top_above_keel": 13.069799999999997,
+          "cylinder_wall_thickness": 25.0,
+          "head_wall_thickness": 25.0,
+          "design_pressure": 0.7129,
+          "tank_material": ""
+        }
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/000",
+      "output": {
+        "ok": 16.28792667361112
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/001",
+      "output": {
+        "ok": 231.38465747672896
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/002",
+      "output": {
+        "ok": 1752.4311412462241
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/003",
+      "output": {
+        "ok": 233.22496859833697
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/004",
+      "output": {
+        "ok": 345.3663178447447
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/005",
+      "output": {
+        "ok": 1463.4286421327683
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/006",
+      "output": {
+        "ok": 295.3860370226361
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/007",
+      "output": {
+        "ok": 424.59011953832186
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/008",
+      "output": {
+        "ok": 30.915226639286658
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/009",
+      "output": {
+        "ok": 865.4497139376933
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/010",
+      "output": {
+        "ok": 14.88464377484795
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/011",
+      "output": {
+        "ok": 7.770126884494702
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/012",
+      "output": {
+        "ok": 266.9710890727999
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/013",
+      "output": {
+        "ok": 467.04458408632377
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/014",
+      "output": {
+        "ok": 227.51258146205177
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/015",
+      "output": {
+        "ok": 2370.072089061521
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/016",
+      "output": {
+        "ok": 173.19168017286538
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/017",
+      "output": {
+        "ok": 132.31970477360545
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/018",
+      "output": {
+        "ok": 2025.4126160875958
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/019",
+      "output": {
+        "ok": 498.2634959734975
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/020",
+      "output": {
+        "ok": 76.49816042187614
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/021",
+      "output": {
+        "ok": 1046.4962692473125
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/022",
+      "output": {
+        "ok": 98.33251446178245
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/023",
+      "output": {
+        "ok": 69.81183569447361
+      }
+    },
+    {
+      "id": "free_surface_moment_cylindrical/sweep/024",
+      "output": {
+        "ok": 161.32017880097766
+      }
+    }
+  ]
+}

@@ -443,6 +443,1010 @@
           }
         }
       }
+    },
+    {
+      "id": "compute/error/negative_speed",
+      "tier": 3,
+      "reason": "tier 3: error path: speed_through_water_kn must be >= 0",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": -1.0,
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/zero_draft",
+      "tier": 3,
+      "reason": "tier 3: error path: draft_m must be > 0",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 6.0,
+            "draft_m": 0.0,
+            "beam_m": 14.8,
+            "lpp_m": 87.3
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/block_coefficient_low",
+      "tier": 3,
+      "reason": "tier 3: error path: block_coefficient outside 0.3-1.0",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 6.0,
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.2
+          }
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/error/zero_beam",
+      "tier": 3,
+      "reason": "tier 3: error path: beam_m must be > 0, from its compute calls",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "water_depth_m": 5.28,
+          "channel_area_m2": 235.5,
+          "draft_m": 4.4,
+          "beam_m": 0.0,
+          "lpp_m": 87.3
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 0.671,
+            "draft_m": 4.4366,
+            "beam_m": 8.5656,
+            "lpp_m": 96.6197,
+            "block_coefficient": 0.7115,
+            "water_depth_m": 7.961,
+            "channel_area_m2": 0.0,
+            "safety_margin_m": 0.1161
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 9.0566,
+            "draft_m": 3.2794,
+            "beam_m": 14.4211,
+            "lpp_m": 93.8076,
+            "block_coefficient": 0.8156,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 0.0,
+            "safety_margin_m": 0.4652
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 5.0316,
+            "draft_m": 3.5823,
+            "beam_m": 15.4,
+            "lpp_m": 107.2927,
+            "block_coefficient": 0.8923,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 0.0,
+            "safety_margin_m": 0.2642
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 10.5483,
+            "draft_m": 2.7582,
+            "beam_m": 10.689,
+            "lpp_m": 78.8631,
+            "block_coefficient": 0.8699,
+            "water_depth_m": 5.424,
+            "channel_area_m2": 481.9,
+            "safety_margin_m": 0.2233
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 8.3906,
+            "draft_m": 4.2363,
+            "beam_m": 19.1636,
+            "lpp_m": 77.1742,
+            "block_coefficient": 0.8975,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 0.0,
+            "safety_margin_m": 0.2454
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 6.532,
+            "draft_m": 3.8114,
+            "beam_m": 8.3852,
+            "lpp_m": 87.6522,
+            "block_coefficient": 0.8552,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 332.9,
+            "safety_margin_m": 0.1055
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/006",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 4.7996,
+            "draft_m": 1.5926,
+            "beam_m": 13.7743,
+            "lpp_m": 114.0544,
+            "block_coefficient": 0.8528,
+            "water_depth_m": 4.872,
+            "channel_area_m2": 657.3,
+            "safety_margin_m": 0.4564
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/007",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 6.9541,
+            "draft_m": 4.295,
+            "beam_m": 10.6974,
+            "lpp_m": 86.2705,
+            "block_coefficient": 0.8329,
+            "water_depth_m": 6.986,
+            "channel_area_m2": 779.8,
+            "safety_margin_m": 0.4328
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/008",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 6.6948,
+            "draft_m": 3.278,
+            "beam_m": 14.7957,
+            "lpp_m": 83.8319,
+            "block_coefficient": 0.8685,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 385.8,
+            "safety_margin_m": 0.3007
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/009",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 1.5793,
+            "draft_m": 2.3102,
+            "beam_m": 16.2405,
+            "lpp_m": 124.8788,
+            "block_coefficient": 0.8798,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 0.0,
+            "safety_margin_m": 0.281
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/010",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 2.9704,
+            "draft_m": 4.2755,
+            "beam_m": 15.1934,
+            "lpp_m": 53.1865,
+            "block_coefficient": 0.7523,
+            "water_depth_m": 6.971,
+            "channel_area_m2": 0.0,
+            "safety_margin_m": 0.2615
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/011",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 8.4656,
+            "draft_m": 3.5954,
+            "beam_m": 13.7567,
+            "lpp_m": 58.9128,
+            "block_coefficient": 0.825,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 0.0,
+            "safety_margin_m": 0.4002
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/012",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 1.7544,
+            "draft_m": 2.7205,
+            "beam_m": 9.768,
+            "lpp_m": 56.0628,
+            "block_coefficient": 0.7721,
+            "water_depth_m": 3.239,
+            "channel_area_m2": 176.3,
+            "safety_margin_m": 0.4819
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/013",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 4.1928,
+            "draft_m": 2.18,
+            "beam_m": 21.2281,
+            "lpp_m": 61.0245,
+            "block_coefficient": 0.936,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 0.0,
+            "safety_margin_m": 0.2091
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/014",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 1.618,
+            "draft_m": 3.3877,
+            "beam_m": 19.4367,
+            "lpp_m": 51.8783,
+            "block_coefficient": 0.8054,
+            "water_depth_m": 7.256,
+            "channel_area_m2": 1570.6,
+            "safety_margin_m": 0.2164
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/015",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 7.9444,
+            "draft_m": 1.7502,
+            "beam_m": 14.979,
+            "lpp_m": 82.6343,
+            "block_coefficient": 0.9305,
+            "water_depth_m": 2.697,
+            "channel_area_m2": 0.0,
+            "safety_margin_m": 0.2091
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/016",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 7.196,
+            "draft_m": 2.3804,
+            "beam_m": 10.9175,
+            "lpp_m": 126.6379,
+            "block_coefficient": 0.7044,
+            "water_depth_m": 3.643,
+            "channel_area_m2": 0.0,
+            "safety_margin_m": 0.2689
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/017",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 11.5737,
+            "draft_m": 2.1869,
+            "beam_m": 11.7943,
+            "lpp_m": 83.2892,
+            "block_coefficient": 0.7321,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 396.9,
+            "safety_margin_m": 0.1893
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/018",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 2.5482,
+            "draft_m": 1.7739,
+            "beam_m": 20.2925,
+            "lpp_m": 69.1906,
+            "block_coefficient": 0.8136,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 0.0,
+            "safety_margin_m": 0.2294
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/019",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 1.6304,
+            "draft_m": 1.6978,
+            "beam_m": 12.5475,
+            "lpp_m": 57.965,
+            "block_coefficient": 0.7221,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 176.5,
+            "safety_margin_m": 0.3265
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/020",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 5.5433,
+            "draft_m": 3.6193,
+            "beam_m": 18.7087,
+            "lpp_m": 62.6856,
+            "block_coefficient": 0.8586,
+            "water_depth_m": 4.956,
+            "channel_area_m2": 943.5,
+            "safety_margin_m": 0.176
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/021",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 8.0029,
+            "draft_m": 1.9498,
+            "beam_m": 14.4738,
+            "lpp_m": 103.1576,
+            "block_coefficient": 0.791,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 366.7,
+            "safety_margin_m": 0.2703
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/022",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 10.6392,
+            "draft_m": 4.3571,
+            "beam_m": 21.6978,
+            "lpp_m": 125.7896,
+            "block_coefficient": 0.7647,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 0.0,
+            "safety_margin_m": 0.3211
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/023",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 1.0945,
+            "draft_m": 2.0242,
+            "beam_m": 21.6496,
+            "lpp_m": 68.2868,
+            "block_coefficient": 0.8958,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 0.0,
+            "safety_margin_m": 0.1071
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/024",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 6.8583,
+            "draft_m": 2.3833,
+            "beam_m": 17.7586,
+            "lpp_m": 71.8628,
+            "block_coefficient": 0.935,
+            "water_depth_m": 4.314,
+            "channel_area_m2": 416.4,
+            "safety_margin_m": 0.4574
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/025",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 0.237,
+            "draft_m": 4.2411,
+            "beam_m": 10.1758,
+            "lpp_m": 100.4704,
+            "block_coefficient": 0.8235,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 0.0,
+            "safety_margin_m": 0.4989
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/026",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 6.9621,
+            "draft_m": 2.8733,
+            "beam_m": 13.6848,
+            "lpp_m": 83.8467,
+            "block_coefficient": 0.7492,
+            "water_depth_m": 0.0,
+            "channel_area_m2": 634.1,
+            "safety_margin_m": 0.1035
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/027",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 6.9011,
+            "draft_m": 3.987,
+            "beam_m": 13.4119,
+            "lpp_m": 68.4703,
+            "block_coefficient": 0.8153,
+            "water_depth_m": 5.868,
+            "channel_area_m2": 492.3,
+            "safety_margin_m": 0.1402
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/028",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 10.1208,
+            "draft_m": 4.3957,
+            "beam_m": 18.8902,
+            "lpp_m": 57.8986,
+            "block_coefficient": 0.9343,
+            "water_depth_m": 5.153,
+            "channel_area_m2": 809.6,
+            "safety_margin_m": 0.101
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/029",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 6.5705,
+            "draft_m": 4.6762,
+            "beam_m": 9.2467,
+            "lpp_m": 128.4585,
+            "block_coefficient": 0.9266,
+            "water_depth_m": 6.133,
+            "channel_area_m2": 336.6,
+            "safety_margin_m": 0.1415
+          }
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 1.9965,
+          "beam_m": 18.456,
+          "lpp_m": 56.5534,
+          "water_depth_m": 4.574,
+          "channel_area_m2": 323.4,
+          "block_coefficient": 0.7777,
+          "safety_margin_m": 0.3138
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 4.4103,
+          "beam_m": 11.6399,
+          "lpp_m": 75.7332,
+          "water_depth_m": 4.925,
+          "channel_area_m2": 387.0,
+          "block_coefficient": 0.8135,
+          "safety_margin_m": 0.2512
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 3.4786,
+          "beam_m": 12.1865,
+          "lpp_m": 71.7436,
+          "water_depth_m": 6.55,
+          "channel_area_m2": 955.6,
+          "block_coefficient": 0.881,
+          "safety_margin_m": 0.3463
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 4.0534,
+          "beam_m": 13.3977,
+          "lpp_m": 77.8871,
+          "water_depth_m": 5.614,
+          "channel_area_m2": 672.9,
+          "block_coefficient": 0.7405,
+          "safety_margin_m": 0.4805
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 4.0488,
+          "beam_m": 20.4717,
+          "lpp_m": 95.9651,
+          "water_depth_m": 5.076,
+          "channel_area_m2": 1047.9,
+          "block_coefficient": 0.8607,
+          "safety_margin_m": 0.3551
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 4.3617,
+          "beam_m": 21.4368,
+          "lpp_m": 63.0807,
+          "water_depth_m": 5.589,
+          "channel_area_m2": 1123.9,
+          "block_coefficient": 0.723,
+          "safety_margin_m": 0.3894
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/006",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 4.4817,
+          "beam_m": 16.7029,
+          "lpp_m": 90.1131,
+          "water_depth_m": 8.345,
+          "channel_area_m2": 1477.4,
+          "block_coefficient": 0.8801,
+          "safety_margin_m": 0.3624
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/007",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 3.5742,
+          "beam_m": 15.8363,
+          "lpp_m": 68.9041,
+          "water_depth_m": 7.454,
+          "channel_area_m2": 1367.3,
+          "block_coefficient": 0.7257,
+          "safety_margin_m": 0.3501
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/008",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 3.5331,
+          "beam_m": 19.2291,
+          "lpp_m": 67.8203,
+          "water_depth_m": 6.043,
+          "channel_area_m2": 1390.2,
+          "block_coefficient": 0.8185,
+          "safety_margin_m": 0.3449
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/009",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 2.3398,
+          "beam_m": 12.2256,
+          "lpp_m": 120.5488,
+          "water_depth_m": 3.665,
+          "channel_area_m2": 266.2,
+          "block_coefficient": 0.7676,
+          "safety_margin_m": 0.3461
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/010",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 3.1233,
+          "beam_m": 11.4447,
+          "lpp_m": 93.0732,
+          "water_depth_m": 4.325,
+          "channel_area_m2": 567.8,
+          "block_coefficient": 0.7844,
+          "safety_margin_m": 0.3104
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/011",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 3.9504,
+          "beam_m": 19.2839,
+          "lpp_m": 92.5801,
+          "water_depth_m": 5.88,
+          "channel_area_m2": 1033.9,
+          "block_coefficient": 0.89,
+          "safety_margin_m": 0.4658
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/012",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 2.1858,
+          "beam_m": 9.4659,
+          "lpp_m": 84.1686,
+          "water_depth_m": 5.559,
+          "channel_area_m2": 321.0,
+          "block_coefficient": 0.794,
+          "safety_margin_m": 0.2568
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/013",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 2.0868,
+          "beam_m": 16.7588,
+          "lpp_m": 100.7233,
+          "water_depth_m": 5.037,
+          "channel_area_m2": 908.2,
+          "block_coefficient": 0.8645,
+          "safety_margin_m": 0.4615
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/014",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 2.4477,
+          "beam_m": 19.1743,
+          "lpp_m": 70.1769,
+          "water_depth_m": 3.64,
+          "channel_area_m2": 485.0,
+          "block_coefficient": 0.8007,
+          "safety_margin_m": 0.2911
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/015",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 3.6924,
+          "beam_m": 12.67,
+          "lpp_m": 85.82,
+          "water_depth_m": 4.942,
+          "channel_area_m2": 365.8,
+          "block_coefficient": 0.7293,
+          "safety_margin_m": 0.4203
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/016",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 1.8188,
+          "beam_m": 18.4433,
+          "lpp_m": 91.142,
+          "water_depth_m": 3.647,
+          "channel_area_m2": 673.7,
+          "block_coefficient": 0.8948,
+          "safety_margin_m": 0.3845
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/017",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 3.7245,
+          "beam_m": 13.6914,
+          "lpp_m": 84.5018,
+          "water_depth_m": 4.241,
+          "channel_area_m2": 581.1,
+          "block_coefficient": 0.7761,
+          "safety_margin_m": 0.3372
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/018",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 3.7263,
+          "beam_m": 18.4173,
+          "lpp_m": 52.9934,
+          "water_depth_m": 4.055,
+          "channel_area_m2": 619.6,
+          "block_coefficient": 0.7291,
+          "safety_margin_m": 0.4952
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/sweep/019",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "draft_m": 4.3047,
+          "beam_m": 10.1581,
+          "lpp_m": 105.7113,
+          "water_depth_m": 5.105,
+          "channel_area_m2": 414.3,
+          "block_coefficient": 0.823,
+          "safety_margin_m": 0.4522
+        }
+      }
     }
   ],
   "retired": []

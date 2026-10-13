@@ -230,6 +230,910 @@
           }
         }
       }
+    },
+    {
+      "id": "compute/error/zero_loa",
+      "tier": 3,
+      "reason": "tier 3: error path: loa, beam, depth must be positive",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          },
+          "inputs": {
+            "loa": 0.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "design_depth_m": 5.5,
+            "ukc_m": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/negative_ukc",
+      "tier": 3,
+      "reason": "tier 3: error path: design_depth_m and ukc_m must be non-negative",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          },
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "design_depth_m": 5.5,
+            "ukc_m": -0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 92.2646,
+            "beam": 8.857,
+            "depth": 5.2027,
+            "cargo_type": "LNG",
+            "block_coefficient": 0.8606,
+            "self_propelled": true,
+            "vessel_type": "IGC_2G",
+            "fill_ratio": 0.9749,
+            "air_draft_limit_m": 11.3311,
+            "ballast_capacity_t": 439.998
+          },
+          "inputs": {
+            "loa": 92.2646,
+            "beam": 8.857,
+            "depth": 5.2027,
+            "block_coefficient": 0.8606,
+            "design_depth_m": 6.767,
+            "ukc_m": 0.0915
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 92.7013,
+            "beam": 18.2999,
+            "depth": 4.6438,
+            "cargo_type": "bauxite",
+            "block_coefficient": 0.8485,
+            "self_propelled": false,
+            "hold_type": "sloped_hopper",
+            "air_draft_limit_m": 7.7591
+          },
+          "inputs": {
+            "loa": 92.7013,
+            "beam": 18.2999,
+            "depth": 4.6438,
+            "block_coefficient": 0.8485,
+            "design_depth_m": 3.1532,
+            "ukc_m": 0.0767
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 123.7541,
+            "beam": 8.7469,
+            "depth": 5.4259,
+            "cargo_type": "LPG_propane",
+            "block_coefficient": 0.8327,
+            "self_propelled": true,
+            "vessel_type": "IGC_2G_EXACT",
+            "fill_ratio": 0.9318
+          },
+          "inputs": {
+            "loa": 123.7541,
+            "beam": 8.7469,
+            "depth": 5.4259,
+            "block_coefficient": 0.8327,
+            "design_depth_m": 6.833,
+            "ukc_m": 0.0781
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 113.8626,
+            "beam": 13.5219,
+            "depth": 4.5841,
+            "cargo_type": "LNG",
+            "block_coefficient": 0.8263,
+            "self_propelled": true,
+            "vessel_type": "IGC_2G_EXACT",
+            "fill_ratio": 0.9031
+          },
+          "inputs": {
+            "loa": 113.8626,
+            "beam": 13.5219,
+            "depth": 4.5841,
+            "block_coefficient": 0.8263,
+            "design_depth_m": 4.3723,
+            "ukc_m": 0.7011
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 69.9231,
+            "beam": 18.2496,
+            "depth": 5.049,
+            "cargo_type": "bauxite",
+            "block_coefficient": 0.8154,
+            "self_propelled": true,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.1027
+          },
+          "inputs": {
+            "loa": 69.9231,
+            "beam": 18.2496,
+            "depth": 5.049,
+            "block_coefficient": 0.8154,
+            "design_depth_m": 2.3993,
+            "ukc_m": 0.1591
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 67.6144,
+            "beam": 10.4348,
+            "depth": 5.0649,
+            "cargo_type": "LPG_propane",
+            "block_coefficient": 0.7966,
+            "self_propelled": true,
+            "vessel_type": "ADN_G",
+            "fill_ratio": 0.9458
+          },
+          "inputs": {
+            "loa": 67.6144,
+            "beam": 10.4348,
+            "depth": 5.0649,
+            "block_coefficient": 0.7966,
+            "design_depth_m": 6.5167,
+            "ukc_m": 0.2798
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/006",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 97.5788,
+            "beam": 18.9543,
+            "depth": 5.0053,
+            "cargo_type": "LPG_mix",
+            "block_coefficient": 0.8851,
+            "self_propelled": false,
+            "vessel_type": "IGC_2G",
+            "fill_ratio": 0.9428,
+            "n_tanks_wide": 2,
+            "air_draft_limit_m": 10.6062,
+            "ballast_capacity_t": 639.6481
+          },
+          "inputs": {
+            "loa": 97.5788,
+            "beam": 18.9543,
+            "depth": 5.0053,
+            "block_coefficient": 0.8851,
+            "design_depth_m": 4.4415,
+            "ukc_m": 0.3222
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/007",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 78.8989,
+            "beam": 10.965,
+            "depth": 5.2137,
+            "cargo_type": "LPG_butane",
+            "block_coefficient": 0.8092,
+            "self_propelled": false,
+            "vessel_type": "IGC_2G_EXACT",
+            "fill_ratio": 0.9087,
+            "ballast_capacity_t": 67.7837
+          },
+          "inputs": {
+            "loa": 78.8989,
+            "beam": 10.965,
+            "depth": 5.2137,
+            "block_coefficient": 0.8092,
+            "design_depth_m": 6.7178,
+            "ukc_m": 0.9048
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/008",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 83.7702,
+            "beam": 13.711,
+            "depth": 4.7477,
+            "cargo_type": "bauxite",
+            "block_coefficient": 0.8866,
+            "self_propelled": true,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.131
+          },
+          "inputs": {
+            "loa": 83.7702,
+            "beam": 13.711,
+            "depth": 4.7477,
+            "block_coefficient": 0.8866,
+            "design_depth_m": 2.8428,
+            "ukc_m": 0.7074
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/009",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 66.5071,
+            "beam": 12.626,
+            "depth": 4.7545,
+            "cargo_type": "LPG_mix",
+            "block_coefficient": 0.831,
+            "self_propelled": false,
+            "vessel_type": "IGC_2G_EXACT",
+            "fill_ratio": 0.949,
+            "ballast_capacity_t": 790.8331
+          },
+          "inputs": {
+            "loa": 66.5071,
+            "beam": 12.626,
+            "depth": 4.7545,
+            "block_coefficient": 0.831,
+            "design_depth_m": 6.3012,
+            "ukc_m": 0.2424
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/010",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 50.8772,
+            "beam": 21.9495,
+            "depth": 4.3262,
+            "cargo_type": "LPG_butane",
+            "block_coefficient": 0.8194,
+            "self_propelled": true,
+            "vessel_type": "IGC_2G_EXACT",
+            "fill_ratio": 0.909,
+            "air_draft_limit_m": 10.1774
+          },
+          "inputs": {
+            "loa": 50.8772,
+            "beam": 21.9495,
+            "depth": 4.3262,
+            "block_coefficient": 0.8194,
+            "design_depth_m": 1.5094,
+            "ukc_m": 0.9099
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/011",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 129.9141,
+            "beam": 8.9682,
+            "depth": 4.6739,
+            "cargo_type": "bauxite",
+            "block_coefficient": 0.8403,
+            "self_propelled": true,
+            "hold_type": "sloped_hopper",
+            "ballast_capacity_t": 771.7855
+          },
+          "inputs": {
+            "loa": 129.9141,
+            "beam": 8.9682,
+            "depth": 4.6739,
+            "block_coefficient": 0.8403,
+            "design_depth_m": 2.159,
+            "ukc_m": 0.1729
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/012",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 95.6877,
+            "beam": 19.8112,
+            "depth": 3.3283,
+            "cargo_type": "LPG_butane",
+            "block_coefficient": 0.7906,
+            "self_propelled": true,
+            "vessel_type": "IGC_2G_EXACT",
+            "fill_ratio": 0.9649,
+            "air_draft_limit_m": 7.647
+          },
+          "inputs": {
+            "loa": 95.6877,
+            "beam": 19.8112,
+            "depth": 3.3283,
+            "block_coefficient": 0.7906,
+            "design_depth_m": 5.1425,
+            "ukc_m": 0.6179
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/013",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 84.8337,
+            "beam": 18.2839,
+            "depth": 4.9889,
+            "cargo_type": "LNG_ethane",
+            "block_coefficient": 0.8176,
+            "self_propelled": true,
+            "vessel_type": "IGC_2G_EXACT",
+            "fill_ratio": 0.9781
+          },
+          "inputs": {
+            "loa": 84.8337,
+            "beam": 18.2839,
+            "depth": 4.9889,
+            "block_coefficient": 0.8176,
+            "design_depth_m": 4.8704,
+            "ukc_m": 0.8608
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/014",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 94.4532,
+            "beam": 15.2138,
+            "depth": 3.0501,
+            "cargo_type": "bauxite",
+            "block_coefficient": 0.8051,
+            "self_propelled": true,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.1306,
+            "ballast_capacity_t": 485.5549
+          },
+          "inputs": {
+            "loa": 94.4532,
+            "beam": 15.2138,
+            "depth": 3.0501,
+            "block_coefficient": 0.8051,
+            "design_depth_m": 6.1105,
+            "ukc_m": 0.7709
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/015",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 70.0539,
+            "beam": 16.9789,
+            "depth": 5.7106,
+            "cargo_type": "bauxite",
+            "block_coefficient": 0.8227,
+            "self_propelled": false,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.1119,
+            "ballast_capacity_t": 632.7126
+          },
+          "inputs": {
+            "loa": 70.0539,
+            "beam": 16.9789,
+            "depth": 5.7106,
+            "block_coefficient": 0.8227,
+            "design_depth_m": 6.5796,
+            "ukc_m": 0.0393
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/016",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 118.0045,
+            "beam": 17.9878,
+            "depth": 6.7074,
+            "cargo_type": "LPG_butane",
+            "block_coefficient": 0.8148,
+            "self_propelled": true,
+            "vessel_type": "ADN_G",
+            "fill_ratio": 0.9702,
+            "ballast_capacity_t": 237.569
+          },
+          "inputs": {
+            "loa": 118.0045,
+            "beam": 17.9878,
+            "depth": 6.7074,
+            "block_coefficient": 0.8148,
+            "design_depth_m": 3.6185,
+            "ukc_m": 0.107
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/017",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 71.8214,
+            "beam": 10.3163,
+            "depth": 5.0279,
+            "cargo_type": "bauxite",
+            "block_coefficient": 0.8379,
+            "self_propelled": true,
+            "hold_type": "sloped_hopper",
+            "air_draft_limit_m": 9.5599
+          },
+          "inputs": {
+            "loa": 71.8214,
+            "beam": 10.3163,
+            "depth": 5.0279,
+            "block_coefficient": 0.8379,
+            "design_depth_m": 3.0019,
+            "ukc_m": 0.4241
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/018",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 106.4862,
+            "beam": 18.6449,
+            "depth": 5.6539,
+            "cargo_type": "LPG_mix",
+            "block_coefficient": 0.9126,
+            "self_propelled": true,
+            "vessel_type": "IGC_2G_EXACT",
+            "fill_ratio": 0.9189,
+            "air_draft_limit_m": 11.5394
+          },
+          "inputs": {
+            "loa": 106.4862,
+            "beam": 18.6449,
+            "depth": 5.6539,
+            "block_coefficient": 0.9126,
+            "design_depth_m": 7.6625,
+            "ukc_m": 0.677
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/019",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 100.6137,
+            "beam": 16.5863,
+            "depth": 5.089,
+            "cargo_type": "LNG_ethane",
+            "block_coefficient": 0.8458,
+            "self_propelled": false,
+            "vessel_type": "IGC_2G_EXACT",
+            "fill_ratio": 0.942,
+            "n_tanks_wide": 1,
+            "ballast_capacity_t": 697.7107
+          },
+          "inputs": {
+            "loa": 100.6137,
+            "beam": 16.5863,
+            "depth": 5.089,
+            "block_coefficient": 0.8458,
+            "design_depth_m": 3.9644,
+            "ukc_m": 0.6921
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/020",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 85.8745,
+            "beam": 11.205,
+            "depth": 5.6042,
+            "cargo_type": "LNG",
+            "block_coefficient": 0.8532,
+            "self_propelled": false,
+            "vessel_type": "IGC_2G_EXACT",
+            "fill_ratio": 0.9154
+          },
+          "inputs": {
+            "loa": 85.8745,
+            "beam": 11.205,
+            "depth": 5.6042,
+            "block_coefficient": 0.8532,
+            "design_depth_m": 3.8149,
+            "ukc_m": 0.9834
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/021",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 77.5163,
+            "beam": 15.5335,
+            "depth": 6.9724,
+            "cargo_type": "LPG_mix",
+            "block_coefficient": 0.8694,
+            "self_propelled": true,
+            "vessel_type": "IGC_2G_EXACT",
+            "fill_ratio": 0.9402,
+            "air_draft_limit_m": 5.4592
+          },
+          "inputs": {
+            "loa": 77.5163,
+            "beam": 15.5335,
+            "depth": 6.9724,
+            "block_coefficient": 0.8694,
+            "design_depth_m": 3.3588,
+            "ukc_m": 0.2277
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/022",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 58.4952,
+            "beam": 17.7675,
+            "depth": 5.9346,
+            "cargo_type": "bauxite",
+            "block_coefficient": 0.8584,
+            "self_propelled": true,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.093
+          },
+          "inputs": {
+            "loa": 58.4952,
+            "beam": 17.7675,
+            "depth": 5.9346,
+            "block_coefficient": 0.8584,
+            "design_depth_m": 4.1981,
+            "ukc_m": 0.5737
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/023",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 93.9147,
+            "beam": 20.5042,
+            "depth": 6.057,
+            "cargo_type": "bauxite",
+            "block_coefficient": 0.865,
+            "self_propelled": false,
+            "hold_type": "sloped_hopper"
+          },
+          "inputs": {
+            "loa": 93.9147,
+            "beam": 20.5042,
+            "depth": 6.057,
+            "block_coefficient": 0.865,
+            "design_depth_m": 6.641,
+            "ukc_m": 0.8316
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/024",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 124.3875,
+            "beam": 14.3211,
+            "depth": 6.8464,
+            "cargo_type": "bauxite",
+            "block_coefficient": 0.8438,
+            "self_propelled": true,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.0943,
+            "air_draft_limit_m": 7.9568
+          },
+          "inputs": {
+            "loa": 124.3875,
+            "beam": 14.3211,
+            "depth": 6.8464,
+            "block_coefficient": 0.8438,
+            "design_depth_m": 4.1127,
+            "ukc_m": 0.0715
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/025",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 72.8152,
+            "beam": 14.93,
+            "depth": 3.2507,
+            "cargo_type": "LNG_ethane",
+            "block_coefficient": 0.8014,
+            "self_propelled": true,
+            "vessel_type": "ADN_G",
+            "fill_ratio": 0.9453,
+            "n_tanks_wide": 2,
+            "ballast_capacity_t": 482.4017
+          },
+          "inputs": {
+            "loa": 72.8152,
+            "beam": 14.93,
+            "depth": 3.2507,
+            "block_coefficient": 0.8014,
+            "design_depth_m": 3.7775,
+            "ukc_m": 0.1418
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/026",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 124.132,
+            "beam": 10.6524,
+            "depth": 3.8393,
+            "cargo_type": "LNG",
+            "block_coefficient": 0.91,
+            "self_propelled": false,
+            "vessel_type": "IGC_2G",
+            "fill_ratio": 0.9378
+          },
+          "inputs": {
+            "loa": 124.132,
+            "beam": 10.6524,
+            "depth": 3.8393,
+            "block_coefficient": 0.91,
+            "design_depth_m": 6.8092,
+            "ukc_m": 0.0493
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/027",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 124.0234,
+            "beam": 10.9095,
+            "depth": 3.2317,
+            "cargo_type": "bauxite",
+            "block_coefficient": 0.869,
+            "self_propelled": true,
+            "hold_type": "sloped_hopper"
+          },
+          "inputs": {
+            "loa": 124.0234,
+            "beam": 10.9095,
+            "depth": 3.2317,
+            "block_coefficient": 0.869,
+            "design_depth_m": 7.3335,
+            "ukc_m": 0.2971
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/028",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 73.0606,
+            "beam": 10.0889,
+            "depth": 6.9978,
+            "cargo_type": "LPG_butane",
+            "block_coefficient": 0.8766,
+            "self_propelled": true,
+            "vessel_type": "ADN_G",
+            "fill_ratio": 0.9401,
+            "n_tanks_wide": 1
+          },
+          "inputs": {
+            "loa": 73.0606,
+            "beam": 10.0889,
+            "depth": 6.9978,
+            "block_coefficient": 0.8766,
+            "design_depth_m": 2.4429,
+            "ukc_m": 0.7859
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/029",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 64.4198,
+            "beam": 14.2333,
+            "depth": 5.4687,
+            "cargo_type": "LPG_propane",
+            "block_coefficient": 0.9167,
+            "self_propelled": true,
+            "vessel_type": "IGC_2G_EXACT",
+            "fill_ratio": 0.9626
+          },
+          "inputs": {
+            "loa": 64.4198,
+            "beam": 14.2333,
+            "depth": 5.4687,
+            "block_coefficient": 0.9167,
+            "design_depth_m": 2.5425,
+            "ukc_m": 0.4314
+          }
+        }
+      }
     }
   ],
   "retired": []

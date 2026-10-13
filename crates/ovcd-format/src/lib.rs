@@ -4,4 +4,4 @@
 mod eval;
 pub mod parity;
 
-pub use eval::{EvalError, eval};
+pub use eval::{ENTRY_POINTS, EvalError, eval};

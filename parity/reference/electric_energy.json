@@ -1,0 +1,4166 @@
+{
+  "entry_point": "electric_energy",
+  "generated_by": "cargo xtask regen (frozen Python); never edit by hand",
+  "results": [
+    {
+      "id": "compute/defaults",
+      "output": {
+        "ok": {
+          "inputs": {
+            "beam": 12.0,
+            "loa": 80.0,
+            "lwl": 78.0,
+            "draft": 3.0,
+            "block_coefficient": 0.85,
+            "channel_depth_m": 4.0,
+            "channel_bottom_width_m": 34.0,
+            "channel_top_width_m": 58.0,
+            "current_knots": 0.5,
+            "fresh_water": true,
+            "also_open_sea": true,
+            "propulsive_coefficient": 0.45,
+            "drivetrain_efficiency": 0.92,
+            "target_service_speed_knots": 6.0,
+            "service_speed_safety_fraction": 0.9,
+            "power_margin": 1.2,
+            "one_way_km": 102.0,
+            "trips_per_year": 300.0,
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 10.0,
+            "speed_step_knots": 0.25
+          },
+          "installed_power_kw": 204.609808407916,
+          "environments": [
+            {
+              "name": "Design channel",
+              "limiting_speed_knots": 9.358087223366663,
+              "service_speed_knots": 6.0,
+              "blockage_ratio": 0.16630434782608694,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.20529410046573343,
+                  "resistance_kn": 2.8514934267571017,
+                  "shaft_power_kw": 8.148934548465851,
+                  "battery_power_kw": 8.857537552680272,
+                  "energy_kwh_per_km": 2.391343831717136
+                },
+                {
+                  "speed_knots": 2.2,
+                  "speed_kmh": 4.074400000000001,
+                  "froude_depth": 0.22171762850299212,
+                  "resistance_kn": 3.308078928002457,
+                  "shaft_power_kw": 10.210054803386784,
+                  "battery_power_kw": 11.0978856558552,
+                  "energy_kwh_per_km": 2.7238085744784994
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.2463529205588801,
+                  "resistance_kn": 4.061699443020876,
+                  "shaft_power_kw": 13.928921289932923,
+                  "battery_power_kw": 15.140131836883612,
+                  "energy_kwh_per_km": 3.2700068762167627
+                },
+                {
+                  "speed_knots": 2.8,
+                  "speed_kmh": 5.1856,
+                  "froude_depth": 0.2709882126147681,
+                  "resistance_kn": 4.901523664576589,
+                  "shaft_power_kw": 18.489854335760114,
+                  "battery_power_kw": 20.097667756260993,
+                  "energy_kwh_per_km": 3.875668728066375
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.2874117406520268,
+                  "resistance_kn": 5.511662583861679,
+                  "shaft_power_kw": 22.051549591076814,
+                  "battery_power_kw": 23.969075642474795,
+                  "energy_kwh_per_km": 4.3140884885663775
+                },
+                {
+                  "speed_knots": 3.2,
+                  "speed_kmh": 5.926400000000001,
+                  "froude_depth": 0.3038352686892855,
+                  "resistance_kn": 6.163873192912225,
+                  "shaft_power_kw": 26.070170156902176,
+                  "battery_power_kw": 28.337141474893667,
+                  "energy_kwh_per_km": 4.781510103080059
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.3284705607451735,
+                  "resistance_kn": 7.224970419798285,
+                  "shaft_power_kw": 33.03577585728211,
+                  "battery_power_kw": 35.9084520187849,
+                  "energy_kwh_per_km": 5.539717991173234
+                },
+                {
+                  "speed_knots": 3.8,
+                  "speed_kmh": 7.0376,
+                  "froude_depth": 0.35310585280106144,
+                  "resistance_kn": 8.391295985630308,
+                  "shaft_power_kw": 41.246389814523084,
+                  "battery_power_kw": 44.83303240709031,
+                  "energy_kwh_per_km": 6.370500228357722
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.3695293808383202,
+                  "resistance_kn": 9.230884600193384,
+                  "shaft_power_kw": 47.48367038339477,
+                  "battery_power_kw": 51.61268519934214,
+                  "energy_kwh_per_km": 6.967155129500828
+                },
+                {
+                  "speed_knots": 4.2,
+                  "speed_kmh": 7.7784,
+                  "froude_depth": 0.3859529088755788,
+                  "resistance_kn": 10.12282374787381,
+                  "shaft_power_kw": 54.386107819465664,
+                  "battery_power_kw": 59.11533458637572,
+                  "energy_kwh_per_km": 7.59993502344643
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.41058820093146686,
+                  "resistance_kn": 11.564396815757588,
+                  "shaft_power_kw": 66.09695246695226,
+                  "battery_power_kw": 71.84451355103506,
+                  "energy_kwh_per_km": 8.620651973966291
+                },
+                {
+                  "speed_knots": 4.8,
+                  "speed_kmh": 8.8896,
+                  "froude_depth": 0.43522349298735485,
+                  "resistance_kn": 13.138483348917802,
+                  "shaft_power_kw": 79.59935538627018,
+                  "battery_power_kw": 86.52103846333715,
+                  "energy_kwh_per_km": 9.732838200069423
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.4516470210246135,
+                  "resistance_kn": 14.269842984376814,
+                  "shaft_power_kw": 89.71608838088639,
+                  "battery_power_kw": 97.51748737052868,
+                  "energy_kwh_per_km": 10.531046152324912
+                },
+                {
+                  "speed_knots": 5.2,
+                  "speed_kmh": 9.630400000000002,
+                  "froude_depth": 0.46807054906187223,
+                  "resistance_kn": 15.476826715735841,
+                  "shaft_power_kw": 100.84287572594388,
+                  "battery_power_kw": 109.61182144124335,
+                  "energy_kwh_per_km": 11.381855524302555
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.4927058411177602,
+                  "resistance_kn": 17.432589464398173,
+                  "shaft_power_kw": 119.56432027315225,
+                  "battery_power_kw": 129.96121768820896,
+                  "energy_kwh_per_km": 12.758807941116135
+                },
+                {
+                  "speed_knots": 5.8,
+                  "speed_kmh": 10.7416,
+                  "froude_depth": 0.5173411331736482,
+                  "resistance_kn": 19.574039460056735,
+                  "shaft_power_kw": 140.96440257554457,
+                  "battery_power_kw": 153.22217671254845,
+                  "energy_kwh_per_km": 14.26437185452339
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.5337646612109069,
+                  "resistance_kn": 21.112089933224976,
+                  "shaft_power_kw": 156.86751977940227,
+                  "battery_power_kw": 170.50817367326334,
+                  "energy_kwh_per_km": 15.344508069948105
+                },
+                {
+                  "speed_knots": 6.2,
+                  "speed_kmh": 11.4824,
+                  "froude_depth": 0.5501881892481656,
+                  "resistance_kn": 22.743998954754762,
+                  "shaft_power_kw": 174.19275003907373,
+                  "battery_power_kw": 189.33994569464534,
+                  "energy_kwh_per_km": 16.489579329638868
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.5748234813040536,
+                  "resistance_kn": 25.378940291036887,
+                  "shaft_power_kw": 203.07664044436802,
+                  "battery_power_kw": 220.73547874387828,
+                  "energy_kwh_per_km": 18.336557463355895
+                },
+                {
+                  "speed_knots": 6.8,
+                  "speed_kmh": 12.5936,
+                  "froude_depth": 0.5994587733599416,
+                  "resistance_kn": 28.254566623556112,
+                  "shaft_power_kw": 235.77619604321782,
+                  "battery_power_kw": 256.27847396001937,
+                  "energy_kwh_per_km": 20.34989788146514
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.6158823013972002,
+                  "resistance_kn": 30.31490548823448,
+                  "shaft_power_kw": 259.89978971913024,
+                  "battery_power_kw": 282.4997714338372,
+                  "energy_kwh_per_km": 21.791096222912465
+                },
+                {
+                  "speed_knots": 7.2,
+                  "speed_kmh": 13.3344,
+                  "froude_depth": 0.632305829434459,
+                  "resistance_kn": 32.49691433133275,
+                  "shaft_power_kw": 286.03639563708725,
+                  "battery_power_kw": 310.90912569248616,
+                  "energy_kwh_per_km": 23.31631912140675
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.656941121490347,
+                  "resistance_kn": 36.012052367786,
+                  "shaft_power_kw": 329.32621756425095,
+                  "battery_power_kw": 357.96327996114235,
+                  "energy_kwh_per_km": 25.771294453645957
+                },
+                {
+                  "speed_knots": 7.8,
+                  "speed_kmh": 14.4456,
+                  "froude_depth": 0.681576413546235,
+                  "resistance_kn": 39.837980183200166,
+                  "shaft_power_kw": 377.97567367061504,
+                  "battery_power_kw": 410.84312355501635,
+                  "energy_kwh_per_km": 28.44071022006814
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.6979999415834937,
+                  "resistance_kn": 42.57310265204016,
+                  "shaft_power_kw": 413.65918674617865,
+                  "battery_power_kw": 449.6295508110637,
+                  "energy_kwh_per_km": 30.347566874396847
+                },
+                {
+                  "speed_knots": 8.2,
+                  "speed_kmh": 15.186399999999999,
+                  "froude_depth": 0.7144234696207523,
+                  "resistance_kn": 45.46454890177854,
+                  "shaft_power_kw": 452.14796979811433,
+                  "battery_power_kw": 491.4651845631677,
+                  "energy_kwh_per_km": 32.36219147152503
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.7390587616766404,
+                  "resistance_kn": 50.11200869080197,
+                  "shaft_power_kw": 515.5523454109707,
+                  "battery_power_kw": 560.3829841423594,
+                  "energy_kwh_per_km": 35.59795350923386
+                },
+                {
+                  "speed_knots": 8.8,
+                  "speed_kmh": 16.297600000000003,
+                  "froude_depth": 0.7636940537325284,
+                  "resistance_kn": 55.15655918977052,
+                  "shaft_power_kw": 586.3657036425044,
+                  "battery_power_kw": 637.3540256983744,
+                  "energy_kwh_per_km": 39.10723208928764
+                }
+              ],
+              "resistance_kn": 21.112089933224976,
+              "shaft_power_kw": 156.86751977940227,
+              "battery_power_kw": 170.50817367326334,
+              "energy_kwh_per_km": 15.344508069948105,
+              "energy_per_trip_kwh": 1565.1398231347068,
+              "energy_per_year_mwh": 939.0838938808241
+            },
+            {
+              "name": "Open sea",
+              "limiting_speed_knots": null,
+              "service_speed_knots": 6.0,
+              "blockage_ratio": 0.0006119999999999999,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.04645275218461199,
+                  "resistance_kn": 1.8862836007334718,
+                  "shaft_power_kw": 4.312463485410213,
+                  "battery_power_kw": 4.6874603102284915,
+                  "energy_kwh_per_km": 1.2655130427182752
+                },
+                {
+                  "speed_knots": 2.2,
+                  "speed_kmh": 4.074400000000001,
+                  "froude_depth": 0.05109802740307319,
+                  "resistance_kn": 2.250329098099118,
+                  "shaft_power_kw": 5.659227630526244,
+                  "battery_power_kw": 6.151334381006786,
+                  "energy_kwh_per_km": 1.509752204252598
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.058065940230764994,
+                  "resistance_kn": 2.8517058416126195,
+                  "shaft_power_kw": 8.14954158291962,
+                  "battery_power_kw": 8.858197372738717,
+                  "energy_kwh_per_km": 1.9132175751055545
+                },
+                {
+                  "speed_knots": 2.8,
+                  "speed_kmh": 5.1856,
+                  "froude_depth": 0.06503385305845678,
+                  "resistance_kn": 3.5184898046501347,
+                  "shaft_power_kw": 11.261669412074848,
+                  "battery_power_kw": 12.240945013124835,
+                  "energy_kwh_per_km": 2.3605648359157736
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.06967912827691798,
+                  "resistance_kn": 3.9988753220891287,
+                  "shaft_power_kw": 13.713476437884317,
+                  "battery_power_kw": 14.905952649874257,
+                  "energy_kwh_per_km": 2.6828568484294917
+                },
+                {
+                  "speed_knots": 3.2,
+                  "speed_kmh": 5.926400000000001,
+                  "froude_depth": 0.0743244034953792,
+                  "resistance_kn": 4.507653535506498,
+                  "shaft_power_kw": 16.488796292725635,
+                  "battery_power_kw": 17.922604666006123,
+                  "energy_kwh_per_km": 3.0241976015804064
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.08129231632307098,
+                  "resistance_kn": 5.323552046629241,
+                  "shaft_power_kw": 21.29894023278063,
+                  "battery_power_kw": 23.15102199215286,
+                  "energy_kwh_per_km": 3.5715862376045755
+                },
+                {
+                  "speed_knots": 3.8,
+                  "speed_kmh": 7.0376,
+                  "froude_depth": 0.08826022915076277,
+                  "resistance_kn": 6.202095640436718,
+                  "shaft_power_kw": 26.940800867276575,
+                  "battery_power_kw": 29.283479203561495,
+                  "energy_kwh_per_km": 4.161003638109795
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.09290550436922398,
+                  "resistance_kn": 6.822271573608064,
+                  "shaft_power_kw": 31.194457755235447,
+                  "battery_power_kw": 33.907019299168965,
+                  "energy_kwh_per_km": 4.577081438872701
+                },
+                {
+                  "speed_knots": 4.2,
+                  "speed_kmh": 7.7784,
+                  "froude_depth": 0.0975507795876852,
+                  "resistance_kn": 7.469823171454362,
+                  "shaft_power_kw": 35.86311903436383,
+                  "battery_power_kw": 38.981651124308506,
+                  "energy_kwh_per_km": 5.011525651073293
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.10451869241537698,
+                  "resistance_kn": 8.49211701627393,
+                  "shaft_power_kw": 43.68344993171309,
+                  "battery_power_kw": 47.482010795340315,
+                  "energy_kwh_per_km": 5.69738550460047
+                },
+                {
+                  "speed_knots": 4.8,
+                  "speed_kmh": 8.8896,
+                  "froude_depth": 0.11148660524306878,
+                  "resistance_kn": 9.575106323066327,
+                  "shaft_power_kw": 52.537970054243395,
+                  "battery_power_kw": 57.10648918939499,
+                  "energy_kwh_per_km": 6.423966116517615
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.11613188046152999,
+                  "resistance_kn": 10.330577438151009,
+                  "shaft_power_kw": 59.044989268720876,
+                  "battery_power_kw": 64.17933616165313,
+                  "energy_kwh_per_km": 6.93081384035131
+                },
+                {
+                  "speed_knots": 5.2,
+                  "speed_kmh": 9.630400000000002,
+                  "froude_depth": 0.12077715567999117,
+                  "resistance_kn": 11.112672410870607,
+                  "shaft_power_kw": 66.05570039642126,
+                  "battery_power_kw": 71.79967434393615,
+                  "energy_kwh_per_km": 7.455523586137246
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.12774506850768297,
+                  "resistance_kn": 12.338502054325224,
+                  "shaft_power_kw": 77.57353336021538,
+                  "battery_power_kw": 84.31905800023411,
+                  "energy_kwh_per_km": 8.277936186946212
+                },
+                {
+                  "speed_knots": 5.8,
+                  "speed_kmh": 10.7416,
+                  "froude_depth": 0.13471298133537477,
+                  "resistance_kn": 13.638992029358779,
+                  "shaft_power_kw": 90.42712333207221,
+                  "battery_power_kw": 98.29035144790457,
+                  "energy_kwh_per_km": 9.150438616956931
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.13935825655383596,
+                  "resistance_kn": 14.545852737396961,
+                  "shaft_power_kw": 99.76515530822661,
+                  "battery_power_kw": 108.44038620459413,
+                  "energy_kwh_per_km": 9.758854050089464
+                },
+                {
+                  "speed_knots": 6.2,
+                  "speed_kmh": 11.4824,
+                  "froude_depth": 0.1440035317722972,
+                  "resistance_kn": 15.484467759114102,
+                  "shaft_power_kw": 109.74289629952762,
+                  "battery_power_kw": 119.28575684731263,
+                  "energy_kwh_per_km": 10.388573542753486
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.15097144459998899,
+                  "resistance_kn": 16.952251592596237,
+                  "shaft_power_kw": 125.95899650001061,
+                  "battery_power_kw": 136.91195271740284,
+                  "energy_kwh_per_km": 11.373313899103076
+                },
+                {
+                  "speed_knots": 6.8,
+                  "speed_kmh": 12.5936,
+                  "froude_depth": 0.15793935742768075,
+                  "resistance_kn": 18.49258873600012,
+                  "shaft_power_kw": 143.7457688698434,
+                  "battery_power_kw": 156.24540094548195,
+                  "energy_kwh_per_km": 12.406730477820634
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.16258463264614195,
+                  "resistance_kn": 19.560271685733017,
+                  "shaft_power_kw": 156.5169473021943,
+                  "battery_power_kw": 170.12711663281988,
+                  "energy_kwh_per_km": 13.123042011170925
+                },
+                {
+                  "speed_knots": 7.2,
+                  "speed_kmh": 13.3344,
+                  "froude_depth": 0.16722990786460318,
+                  "resistance_kn": 20.66096505670623,
+                  "shaft_power_kw": 170.04800680271498,
+                  "battery_power_kw": 184.83479000295105,
+                  "energy_kwh_per_km": 13.861500330194913
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.17419782069229495,
+                  "resistance_kn": 22.374658672202372,
+                  "shaft_power_kw": 191.82540701634832,
+                  "battery_power_kw": 208.50587719168294,
+                  "energy_kwh_per_km": 15.01122226002037
+                },
+                {
+                  "speed_knots": 7.8,
+                  "speed_kmh": 14.4456,
+                  "froude_depth": 0.18116573351998677,
+                  "resistance_kn": 24.164633999738047,
+                  "shaft_power_kw": 215.45832064406434,
+                  "battery_power_kw": 234.19382678702644,
+                  "energy_kwh_per_km": 16.212121807818743
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.18581100873844797,
+                  "resistance_kn": 25.400966169361475,
+                  "shaft_power_kw": 232.2890132892363,
+                  "battery_power_kw": 252.48805792308292,
+                  "energy_kwh_per_km": 17.041580583361426
+                },
+                {
+                  "speed_knots": 8.2,
+                  "speed_kmh": 15.186399999999999,
+                  "froude_depth": 0.19045628395690914,
+                  "resistance_kn": 26.672172815616822,
+                  "shaft_power_kw": 250.01190824466,
+                  "battery_power_kw": 271.75207417897826,
+                  "energy_kwh_per_km": 17.89443674465168
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.19742419678460096,
+                  "resistance_kn": 28.645267323406614,
+                  "shaft_power_kw": 278.3301485441402,
+                  "battery_power_kw": 302.5327701566741,
+                  "energy_kwh_per_km": 19.218191472282687
+                },
+                {
+                  "speed_knots": 8.8,
+                  "speed_kmh": 16.297600000000003,
+                  "froude_depth": 0.20439210961229276,
+                  "resistance_kn": 30.69916615932115,
+                  "shaft_power_kw": 308.8145098593827,
+                  "battery_power_kw": 335.66794549932905,
+                  "energy_kwh_per_km": 20.59615805390542
+                },
+                {
+                  "speed_knots": 9.0,
+                  "speed_kmh": 16.668,
+                  "froude_depth": 0.20903738483075396,
+                  "resistance_kn": 32.114043509766454,
+                  "shaft_power_kw": 330.38927962847725,
+                  "battery_power_kw": 359.1187822048666,
+                  "energy_kwh_per_km": 21.545403300027996
+                },
+                {
+                  "speed_knots": 9.2,
+                  "speed_kmh": 17.0384,
+                  "froude_depth": 0.21368266004921513,
+                  "resistance_kn": 33.565926448735915,
+                  "shaft_power_kw": 353.0001680002527,
+                  "battery_power_kw": 383.69583478288337,
+                  "energy_kwh_per_km": 22.519475700939253
+                },
+                {
+                  "speed_knots": 9.5,
+                  "speed_kmh": 17.594,
+                  "froude_depth": 0.22065057287690695,
+                  "resistance_kn": 35.81412653220911,
+                  "shaft_power_kw": 388.92549675022104,
+                  "battery_power_kw": 422.7451051632837,
+                  "energy_kwh_per_km": 24.02779954321267
+                },
+                {
+                  "speed_knots": 9.8,
+                  "speed_kmh": 18.149600000000003,
+                  "froude_depth": 0.22761848570459878,
+                  "resistance_kn": 38.14816411653908,
+                  "shaft_power_kw": 427.35438464703884,
+                  "battery_power_kw": 464.5156354859118,
+                  "energy_kwh_per_km": 25.59371200940581
+                },
+                {
+                  "speed_knots": 10.0,
+                  "speed_kmh": 18.52,
+                  "froude_depth": 0.23226376092305998,
+                  "resistance_kn": 39.752662411026044,
+                  "shaft_power_kw": 454.4171009829288,
+                  "battery_power_kw": 493.93163150318344,
+                  "energy_kwh_per_km": 26.67017448721293
+                }
+              ],
+              "resistance_kn": 14.545852737396961,
+              "shaft_power_kw": 99.76515530822661,
+              "battery_power_kw": 108.44038620459413,
+              "energy_kwh_per_km": 9.758854050089464,
+              "energy_per_trip_kwh": 995.4031131091253,
+              "energy_per_year_mwh": 597.2418678654752
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_below_schijf",
+              "ok": true,
+              "message": "service 6.0 kn stays below the Schijf limit 9.4 kn",
+              "severity": "error"
+            },
+            {
+              "name": "energy_positive",
+              "ok": true,
+              "message": "energy 15.3 kWh/km at service speed",
+              "severity": "error"
+            },
+            {
+              "name": "resistance_coeffs_first_order",
+              "ok": true,
+              "message": "confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate (RS1) — ITTC-1957 friction is standard; anchor with a model test/CFD before class use.",
+              "severity": "warning"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/quickstart_hull",
+      "output": {
+        "ok": {
+          "inputs": {
+            "beam": 14.8,
+            "loa": 90.0,
+            "lwl": 90.0,
+            "draft": 2.3053150177001953,
+            "block_coefficient": 0.85,
+            "channel_depth_m": 4.0,
+            "channel_bottom_width_m": 34.0,
+            "channel_top_width_m": 58.0,
+            "current_knots": 0.5,
+            "fresh_water": true,
+            "also_open_sea": true,
+            "propulsive_coefficient": 0.45,
+            "drivetrain_efficiency": 0.92,
+            "target_service_speed_knots": 6.0,
+            "service_speed_safety_fraction": 0.9,
+            "power_margin": 1.2,
+            "one_way_km": 102.0,
+            "trips_per_year": 300.0,
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 10.0,
+            "speed_step_knots": 0.25
+          },
+          "installed_power_kw": 235.84827450508485,
+          "environments": [
+            {
+              "name": "Design channel",
+              "limiting_speed_knots": 9.39049305195552,
+              "service_speed_knots": 6.0,
+              "blockage_ratio": 0.15761338544928508,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.20529410046573343,
+                  "resistance_kn": 3.4534271461862525,
+                  "shaft_power_kw": 9.8691273555456,
+                  "battery_power_kw": 10.727312342984348,
+                  "energy_kwh_per_km": 2.896142641194478
+                },
+                {
+                  "speed_knots": 2.2,
+                  "speed_kmh": 4.074400000000001,
+                  "froude_depth": 0.22171762850299212,
+                  "resistance_kn": 4.001856972404064,
+                  "shaft_power_kw": 12.351331359627904,
+                  "battery_power_kw": 13.425360173508592,
+                  "energy_kwh_per_km": 3.2950520747861254
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.2463529205588801,
+                  "resistance_kn": 4.903923143070375,
+                  "shaft_power_kw": 16.817187098636005,
+                  "battery_power_kw": 18.27955119416957,
+                  "energy_kwh_per_km": 3.9480672125636223
+                },
+                {
+                  "speed_knots": 2.8,
+                  "speed_kmh": 5.1856,
+                  "froude_depth": 0.2709882126147681,
+                  "resistance_kn": 5.904520404614857,
+                  "shaft_power_kw": 22.273425504981798,
+                  "battery_power_kw": 24.21024511411065,
+                  "energy_kwh_per_km": 4.668745200962405
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.2874117406520268,
+                  "resistance_kn": 6.628399810554895,
+                  "shaft_power_kw": 26.519491153162292,
+                  "battery_power_kw": 28.825533862132925,
+                  "energy_kwh_per_km": 5.1881810407006705
+                },
+                {
+                  "speed_knots": 3.2,
+                  "speed_kmh": 5.926400000000001,
+                  "froude_depth": 0.3038352686892855,
+                  "resistance_kn": 7.399379497431461,
+                  "shaft_power_kw": 31.295757799714114,
+                  "battery_power_kw": 34.01712804316751,
+                  "energy_kwh_per_km": 5.739931162791493
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.3284705607451735,
+                  "resistance_kn": 8.64761858317901,
+                  "shaft_power_kw": 39.5407555483314,
+                  "battery_power_kw": 42.97908211775152,
+                  "energy_kwh_per_km": 6.6305279416463305
+                },
+                {
+                  "speed_knots": 3.8,
+                  "speed_kmh": 7.0376,
+                  "froude_depth": 0.35310585280106144,
+                  "resistance_kn": 10.011221552345994,
+                  "shaft_power_kw": 49.20893594681144,
+                  "battery_power_kw": 53.48797385522982,
+                  "energy_kwh_per_km": 7.600314575314001
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.3695293808383202,
+                  "resistance_kn": 10.987570597662103,
+                  "shaft_power_kw": 56.52006315437385,
+                  "battery_power_kw": 61.434851254754186,
+                  "energy_kwh_per_km": 8.293041476073729
+                },
+                {
+                  "speed_knots": 4.2,
+                  "speed_kmh": 7.7784,
+                  "froude_depth": 0.3859529088755788,
+                  "resistance_kn": 12.020171619230274,
+                  "shaft_power_kw": 64.57984115640143,
+                  "battery_power_kw": 70.19547951782764,
+                  "energy_kwh_per_km": 9.024411127973314
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.41058820093146686,
+                  "resistance_kn": 13.6794648912196,
+                  "shaft_power_kw": 78.18574155603737,
+                  "battery_power_kw": 84.98450169134496,
+                  "energy_kwh_per_km": 10.197324417008035
+                },
+                {
+                  "speed_knots": 4.8,
+                  "speed_kmh": 8.8896,
+                  "froude_depth": 0.43522349298735485,
+                  "resistance_kn": 15.478481410684362,
+                  "shaft_power_kw": 93.7762076435044,
+                  "battery_power_kw": 101.93066048207,
+                  "energy_kwh_per_km": 11.466282001672742
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.4516470210246135,
+                  "resistance_kn": 16.759762488643524,
+                  "shaft_power_kw": 105.37048896193389,
+                  "battery_power_kw": 114.5331401760151,
+                  "energy_kwh_per_km": 12.368589651837484
+                },
+                {
+                  "speed_knots": 5.2,
+                  "speed_kmh": 9.630400000000002,
+                  "froude_depth": 0.46807054906187223,
+                  "resistance_kn": 18.109811341287426,
+                  "shaft_power_kw": 117.99870141680451,
+                  "battery_power_kw": 128.25945806174403,
+                  "energy_kwh_per_km": 13.318185959227447
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.4927058411177602,
+                  "resistance_kn": 20.281333050354426,
+                  "shaft_power_kw": 139.10290294803087,
+                  "battery_power_kw": 151.19880755220746,
+                  "energy_kwh_per_km": 14.843786329492191
+                },
+                {
+                  "speed_knots": 5.8,
+                  "speed_kmh": 10.7416,
+                  "froude_depth": 0.5173411331736482,
+                  "resistance_kn": 22.64673049407595,
+                  "shaft_power_kw": 163.09269432613732,
+                  "battery_power_kw": 177.27466774580142,
+                  "energy_kwh_per_km": 16.50356257408593
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.5337646612109069,
+                  "resistance_kn": 24.335343553132635,
+                  "shaft_power_kw": 180.8170104538984,
+                  "battery_power_kw": 196.54022875423738,
+                  "energy_kwh_per_km": 17.68720561143245
+                },
+                {
+                  "speed_knots": 6.2,
+                  "speed_kmh": 11.4824,
+                  "froude_depth": 0.5501881892481656,
+                  "resistance_kn": 26.117887229247174,
+                  "shaft_power_kw": 200.0328355063462,
+                  "battery_power_kw": 217.42699511559368,
+                  "energy_kwh_per_km": 18.935675043161158
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.5748234813040536,
+                  "resistance_kn": 28.97743456428946,
+                  "shaft_power_kw": 231.87099195354105,
+                  "battery_power_kw": 252.03368690602287,
+                  "energy_kwh_per_km": 20.93650829922104
+                },
+                {
+                  "speed_knots": 6.8,
+                  "speed_kmh": 12.5936,
+                  "froude_depth": 0.5994587733599416,
+                  "resistance_kn": 32.0740617860515,
+                  "shaft_power_kw": 267.64877976452823,
+                  "battery_power_kw": 290.92258670057413,
+                  "energy_kwh_per_km": 23.100827936457733
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.6158823013972002,
+                  "resistance_kn": 34.27859532547099,
+                  "shaft_power_kw": 293.88182392370453,
+                  "battery_power_kw": 319.43676513446144,
+                  "energy_kwh_per_km": 24.64029351546293
+                },
+                {
+                  "speed_knots": 7.2,
+                  "speed_kmh": 13.3344,
+                  "froude_depth": 0.632305829434459,
+                  "resistance_kn": 36.601452975008826,
+                  "shaft_power_kw": 322.1643623547844,
+                  "battery_power_kw": 350.17865473346126,
+                  "energy_kwh_per_km": 26.2612982011535
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.656941121490347,
+                  "resistance_kn": 40.31993381022554,
+                  "shaft_power_kw": 368.72131470186696,
+                  "battery_power_kw": 400.7840377194206,
+                  "energy_kwh_per_km": 28.85414238440753
+                },
+                {
+                  "speed_knots": 7.8,
+                  "speed_kmh": 14.4456,
+                  "froude_depth": 0.681576413546235,
+                  "resistance_kn": 44.337272193113634,
+                  "shaft_power_kw": 420.66415638653893,
+                  "battery_power_kw": 457.24364824623797,
+                  "energy_kwh_per_km": 31.652797270188703
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.6979999415834937,
+                  "resistance_kn": 47.19194433064379,
+                  "shaft_power_kw": 458.53790531401535,
+                  "battery_power_kw": 498.41076664566884,
+                  "energy_kwh_per_km": 33.64003554573899
+                },
+                {
+                  "speed_knots": 8.2,
+                  "speed_kmh": 15.186399999999999,
+                  "froude_depth": 0.7144234696207523,
+                  "resistance_kn": 50.195430138704666,
+                  "shaft_power_kw": 499.1968990914271,
+                  "battery_power_kw": 542.6053250993773,
+                  "energy_kwh_per_km": 35.72968742423335
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.7390587616766404,
+                  "resistance_kn": 54.99474446891498,
+                  "shaft_power_kw": 565.7859310961973,
+                  "battery_power_kw": 614.9847077132579,
+                  "energy_kwh_per_km": 39.066491406000374
+                },
+                {
+                  "speed_knots": 8.8,
+                  "speed_kmh": 16.297600000000003,
+                  "froude_depth": 0.7636940537325284,
+                  "resistance_kn": 60.16860687284346,
+                  "shaft_power_kw": 639.6484484247406,
+                  "battery_power_kw": 695.2700526355876,
+                  "energy_kwh_per_km": 42.66088581359142
+                }
+              ],
+              "resistance_kn": 24.335343553132635,
+              "shaft_power_kw": 180.8170104538984,
+              "battery_power_kw": 196.54022875423738,
+              "energy_kwh_per_km": 17.68720561143245,
+              "energy_per_trip_kwh": 1804.09497236611,
+              "energy_per_year_mwh": 1082.456983419666
+            },
+            {
+              "name": "Open sea",
+              "limiting_speed_knots": null,
+              "service_speed_knots": 6.0,
+              "blockage_ratio": 0.0005800172584533691,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.04645275218461199,
+                  "resistance_kn": 2.2977887005728714,
+                  "shaft_power_kw": 5.253255589220823,
+                  "battery_power_kw": 5.710060423066111,
+                  "energy_kwh_per_km": 1.5415929867889069
+                },
+                {
+                  "speed_knots": 2.2,
+                  "speed_kmh": 4.074400000000001,
+                  "froude_depth": 0.05109802740307319,
+                  "resistance_kn": 2.7416609796577593,
+                  "shaft_power_kw": 6.8948508832424285,
+                  "battery_power_kw": 7.494403133959161,
+                  "energy_kwh_per_km": 1.8393881636459748
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.058065940230764994,
+                  "resistance_kn": 3.4750230849531265,
+                  "shaft_power_kw": 9.930843749443824,
+                  "battery_power_kw": 10.794395379830243,
+                  "energy_kwh_per_km": 2.3314028898121477
+                },
+                {
+                  "speed_knots": 2.8,
+                  "speed_kmh": 5.1856,
+                  "froude_depth": 0.06503385305845678,
+                  "resistance_kn": 4.288283884035845,
+                  "shaft_power_kw": 13.725557875232239,
+                  "battery_power_kw": 14.919084646991564,
+                  "energy_kwh_per_km": 2.877021877312474
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.06967912827691798,
+                  "resistance_kn": 4.87427144906162,
+                  "shaft_power_kw": 16.71550155598198,
+                  "battery_power_kw": 18.169023430415194,
+                  "energy_kwh_per_km": 3.270162604466378
+                },
+                {
+                  "speed_knots": 3.2,
+                  "speed_kmh": 5.926400000000001,
+                  "froude_depth": 0.0743244034953792,
+                  "resistance_kn": 5.494949592671378,
+                  "shaft_power_kw": 20.100281390010004,
+                  "battery_power_kw": 21.848131945663045,
+                  "energy_kwh_per_km": 3.686577339643467
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.08129231632307098,
+                  "resistance_kn": 6.490399896874318,
+                  "shaft_power_kw": 25.967368831850045,
+                  "battery_power_kw": 28.22540090418483,
+                  "energy_kwh_per_km": 4.35442778527998
+                },
+                {
+                  "speed_knots": 3.8,
+                  "speed_kmh": 7.0376,
+                  "froude_depth": 0.08826022915076277,
+                  "resistance_kn": 7.562403974402972,
+                  "shaft_power_kw": 32.84973843743328,
+                  "battery_power_kw": 35.7062374319927,
+                  "energy_kwh_per_km": 5.073638375581547
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.09290550436922398,
+                  "resistance_kn": 8.319212413348176,
+                  "shaft_power_kw": 38.03913658156712,
+                  "battery_power_kw": 41.34688758865991,
+                  "energy_kwh_per_km": 5.5813833138039834
+                },
+                {
+                  "speed_knots": 4.2,
+                  "speed_kmh": 7.7784,
+                  "froude_depth": 0.0975507795876852,
+                  "resistance_kn": 9.109479493993259,
+                  "shaft_power_kw": 43.73521834929457,
+                  "battery_power_kw": 47.538280814450616,
+                  "energy_kwh_per_km": 6.111575750083643
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.10451869241537698,
+                  "resistance_kn": 10.357175333333903,
+                  "shaft_power_kw": 53.277309914669594,
+                  "battery_power_kw": 57.910119472466945,
+                  "energy_kwh_per_km": 6.948658444020512
+                },
+                {
+                  "speed_knots": 4.8,
+                  "speed_kmh": 8.8896,
+                  "froude_depth": 0.11148660524306878,
+                  "resistance_kn": 11.679062844613483,
+                  "shaft_power_kw": 64.08223922420453,
+                  "battery_power_kw": 69.65460785239623,
+                  "energy_kwh_per_km": 7.83551654207121
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.11613188046152999,
+                  "resistance_kn": 12.60124616758951,
+                  "shaft_power_kw": 72.02312254008937,
+                  "battery_power_kw": 78.28600276096671,
+                  "energy_kwh_per_km": 8.454211961227507
+                },
+                {
+                  "speed_knots": 5.2,
+                  "speed_kmh": 9.630400000000002,
+                  "froude_depth": 0.12077715567999117,
+                  "resistance_kn": 13.555977092049686,
+                  "shaft_power_kw": 80.57913778662636,
+                  "battery_power_kw": 87.58601933328951,
+                  "energy_kwh_per_km": 9.09474365896427
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.12774506850768297,
+                  "resistance_kn": 15.048760255450887,
+                  "shaft_power_kw": 94.61322781049253,
+                  "battery_power_kw": 102.84046501140492,
+                  "energy_kwh_per_km": 10.096256136992432
+                },
+                {
+                  "speed_knots": 5.8,
+                  "speed_kmh": 10.7416,
+                  "froude_depth": 0.13471298133537477,
+                  "resistance_kn": 16.61423922437313,
+                  "shaft_power_kw": 110.15314446822602,
+                  "battery_power_kw": 119.73167876981088,
+                  "energy_kwh_per_km": 11.146540438092172
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.13935825655383596,
+                  "resistance_kn": 17.707040933760474,
+                  "shaft_power_kw": 121.44669141768517,
+                  "battery_power_kw": 132.00727328009256,
+                  "energy_kwh_per_km": 11.87970421887082
+                },
+                {
+                  "speed_knots": 6.2,
+                  "speed_kmh": 11.4824,
+                  "froude_depth": 0.1440035317722972,
+                  "resistance_kn": 18.839461020016667,
+                  "shaft_power_kw": 133.52070275981944,
+                  "battery_power_kw": 145.13119865197766,
+                  "energy_kwh_per_km": 12.639448081583785
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.15097144459998899,
+                  "resistance_kn": 20.610368559071116,
+                  "shaft_power_kw": 153.1396184758004,
+                  "battery_power_kw": 166.45610703891347,
+                  "energy_kwh_per_km": 13.827554995756227
+                },
+                {
+                  "speed_knots": 6.8,
+                  "speed_kmh": 12.5936,
+                  "froude_depth": 0.15793935742768075,
+                  "resistance_kn": 22.46793410640957,
+                  "shaft_power_kw": 174.64674682109367,
+                  "battery_power_kw": 189.8334204577105,
+                  "energy_kwh_per_km": 15.07380101461937
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.16258463264614195,
+                  "resistance_kn": 23.754769657595816,
+                  "shaft_power_kw": 190.08038796238,
+                  "battery_power_kw": 206.60911735041304,
+                  "energy_kwh_per_km": 15.9371426527625
+                },
+                {
+                  "speed_knots": 7.2,
+                  "speed_kmh": 13.3344,
+                  "froude_depth": 0.16722990786460318,
+                  "resistance_kn": 25.08070019859329,
+                  "shaft_power_kw": 206.4241949145022,
+                  "battery_power_kw": 224.3741249070676,
+                  "energy_kwh_per_km": 16.826713230971592
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.17419782069229495,
+                  "resistance_kn": 27.143623984152075,
+                  "shaft_power_kw": 232.7113362907971,
+                  "battery_power_kw": 252.9471046639099,
+                  "energy_kwh_per_km": 18.21073467702735
+                },
+                {
+                  "speed_knots": 7.8,
+                  "speed_kmh": 14.4456,
+                  "froude_depth": 0.18116573351998677,
+                  "resistance_kn": 29.29647502620704,
+                  "shaft_power_kw": 261.2151837270023,
+                  "battery_power_kw": 283.9295475293503,
+                  "energy_kwh_per_km": 19.65508857571512
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.18581100873844797,
+                  "resistance_kn": 30.782318352060756,
+                  "shaft_power_kw": 281.50088107200094,
+                  "battery_power_kw": 305.97921855652277,
+                  "energy_kwh_per_km": 20.65194509695753
+                },
+                {
+                  "speed_knots": 8.2,
+                  "speed_kmh": 15.186399999999999,
+                  "froude_depth": 0.19045628395690914,
+                  "resistance_kn": 32.30912789160064,
+                  "shaft_power_kw": 302.84996928222847,
+                  "battery_power_kw": 329.18474921981357,
+                  "energy_kwh_per_km": 21.676285967695673
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.19742419678460096,
+                  "resistance_kn": 34.67708955903606,
+                  "shaft_power_kw": 336.9380141953984,
+                  "battery_power_kw": 366.23697195152,
+                  "energy_kwh_per_km": 23.26495819791132
+                },
+                {
+                  "speed_knots": 8.8,
+                  "speed_kmh": 16.297600000000003,
+                  "froude_depth": 0.20439210961229276,
+                  "resistance_kn": 37.139677223205695,
+                  "shaft_power_kw": 373.6020437329548,
+                  "battery_power_kw": 406.08917797060303,
+                  "energy_kwh_per_km": 24.917115278973775
+                },
+                {
+                  "speed_knots": 9.0,
+                  "speed_kmh": 16.668,
+                  "froude_depth": 0.20903738483075396,
+                  "resistance_kn": 38.83473400146977,
+                  "shaft_power_kw": 399.531743407121,
+                  "battery_power_kw": 434.27363413817494,
+                  "energy_kwh_per_km": 26.05433370159437
+                },
+                {
+                  "speed_knots": 9.2,
+                  "speed_kmh": 17.0384,
+                  "froude_depth": 0.21368266004921513,
+                  "resistance_kn": 40.573004351648855,
+                  "shaft_power_kw": 426.6909591868691,
+                  "battery_power_kw": 463.7945208552925,
+                  "energy_kwh_per_km": 27.22054423275029
+                },
+                {
+                  "speed_knots": 9.5,
+                  "speed_kmh": 17.594,
+                  "froude_depth": 0.22065057287690695,
+                  "resistance_kn": 43.26248962286288,
+                  "shaft_power_kw": 469.81140953112515,
+                  "battery_power_kw": 510.6645755773099,
+                  "energy_kwh_per_km": 29.024927564926102
+                },
+                {
+                  "speed_knots": 9.8,
+                  "speed_kmh": 18.149600000000003,
+                  "froude_depth": 0.22761848570459878,
+                  "resistance_kn": 46.051950568254206,
+                  "shaft_power_kw": 515.8964645525281,
+                  "battery_power_kw": 560.7570266875305,
+                  "energy_kwh_per_km": 30.89638486178926
+                },
+                {
+                  "speed_knots": 10.0,
+                  "speed_kmh": 18.52,
+                  "froude_depth": 0.23226376092305998,
+                  "resistance_kn": 47.96797351184465,
+                  "shaft_power_kw": 548.3272349887309,
+                  "battery_power_kw": 596.0078641181857,
+                  "energy_kwh_per_km": 32.18185011437288
+                }
+              ],
+              "resistance_kn": 17.707040933760474,
+              "shaft_power_kw": 121.44669141768517,
+              "battery_power_kw": 132.00727328009256,
+              "energy_kwh_per_km": 11.87970421887082,
+              "energy_per_trip_kwh": 1211.7298303248238,
+              "energy_per_year_mwh": 727.0378981948942
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_below_schijf",
+              "ok": true,
+              "message": "service 6.0 kn stays below the Schijf limit 9.4 kn",
+              "severity": "error"
+            },
+            {
+              "name": "energy_positive",
+              "ok": true,
+              "message": "energy 17.7 kWh/km at service speed",
+              "severity": "error"
+            },
+            {
+              "name": "resistance_coeffs_first_order",
+              "ok": true,
+              "message": "confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate (RS1) — ITTC-1957 friction is standard; anchor with a model test/CFD before class use.",
+              "severity": "warning"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/error/zero_draft",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "draft_m must be > 0"
+        }
+      }
+    },
+    {
+      "id": "compute/error/zero_beam",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "beam_m must be > 0"
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/000",
+      "output": {
+        "ok": {
+          "inputs": {
+            "beam": 14.0184,
+            "loa": 104.42,
+            "lwl": 102.4232,
+            "draft": 2.0654,
+            "block_coefficient": 0.7842,
+            "channel_depth_m": 4.3942,
+            "channel_bottom_width_m": 83.4798,
+            "channel_top_width_m": 187.7761,
+            "current_knots": 0.0337,
+            "fresh_water": true,
+            "also_open_sea": true,
+            "propulsive_coefficient": 0.45,
+            "drivetrain_efficiency": 0.92,
+            "target_service_speed_knots": 4.5566,
+            "service_speed_safety_fraction": 0.9,
+            "power_margin": 1.2,
+            "one_way_km": 313.454,
+            "trips_per_year": 126.3653,
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 10.0,
+            "speed_step_knots": 0.5
+          },
+          "installed_power_kw": 78.20217602632907,
+          "environments": [
+            {
+              "name": "Design channel",
+              "limiting_speed_knots": 10.28738017327995,
+              "service_speed_knots": 4.56,
+              "blockage_ratio": 0.038097847701971624,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.15933582559132922,
+                  "resistance_kn": 2.4147674682126863,
+                  "shaft_power_kw": 5.613718758874598,
+                  "battery_power_kw": 6.101868216168041,
+                  "energy_kwh_per_km": 1.6473726285550867
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.19850970216883065,
+                  "resistance_kn": 3.6470412398908496,
+                  "shaft_power_kw": 10.562927812365972,
+                  "battery_power_kw": 11.48144327431084,
+                  "energy_kwh_per_km": 2.4797933637820386
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.23768357874633203,
+                  "resistance_kn": 5.125535765123113,
+                  "shaft_power_kw": 17.77462086750313,
+                  "battery_power_kw": 19.32024007337297,
+                  "energy_kwh_per_km": 3.4773650240052136
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.27685745532383343,
+                  "resistance_kn": 6.8556741983199325,
+                  "shaft_power_kw": 27.692890796604125,
+                  "battery_power_kw": 30.100968257178394,
+                  "energy_kwh_per_km": 4.643777886019499
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.3160313319013348,
+                  "resistance_kn": 8.846271096360429,
+                  "shaft_power_kw": 40.78986665396118,
+                  "battery_power_kw": 44.336811580392585,
+                  "energy_kwh_per_km": 5.984990764091871
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.35520520847883624,
+                  "resistance_kn": 11.10938956474459,
+                  "shaft_power_kw": 57.57466520712156,
+                  "battery_power_kw": 62.58115783382778,
+                  "energy_kwh_per_km": 7.5091382090026135
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.3943790850563377,
+                  "resistance_kn": 13.660288680861434,
+                  "shaft_power_kw": 78.60237203630928,
+                  "battery_power_kw": 85.43736090903182,
+                  "energy_kwh_per_km": 9.226496858426763
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.43355296163383905,
+                  "resistance_kn": 16.517418756373424,
+                  "shaft_power_kw": 104.48314494344592,
+                  "battery_power_kw": 113.56863580809339,
+                  "energy_kwh_per_km": 11.149483193411879
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.4727268382113404,
+                  "resistance_kn": 19.70244349436475,
+                  "shaft_power_kw": 135.89148661259188,
+                  "battery_power_kw": 147.70813762238248,
+                  "energy_kwh_per_km": 13.292668972496623
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.5119007147888419,
+                  "resistance_kn": 23.26500672016219,
+                  "shaft_power_kw": 173.7604041671782,
+                  "battery_power_kw": 188.87000452954152,
+                  "energy_kwh_per_km": 15.689483679144502
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.5510745913663433,
+                  "resistance_kn": 27.26295926001983,
+                  "shaft_power_kw": 219.20238830195652,
+                  "battery_power_kw": 238.2634655456049,
+                  "energy_kwh_per_km": 18.378854176612535
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.5902484679438447,
+                  "resistance_kn": 31.728233317751627,
+                  "shaft_power_kw": 273.238982107454,
+                  "battery_power_kw": 296.99889359505863,
+                  "energy_kwh_per_km": 21.382209762063255
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.6294223445213462,
+                  "resistance_kn": 36.70589054644425,
+                  "shaft_power_kw": 337.0853059266652,
+                  "battery_power_kw": 366.3970716594187,
+                  "energy_kwh_per_km": 24.729823951094673
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.6685962210988474,
+                  "resistance_kn": 42.24728311664612,
+                  "shaft_power_kw": 412.12086484731066,
+                  "battery_power_kw": 447.95746179055504,
+                  "energy_kwh_per_km": 28.456197547360883
+                },
+                {
+                  "speed_knots": 9.0,
+                  "speed_kmh": 16.668,
+                  "froude_depth": 0.7077700976763489,
+                  "resistance_kn": 48.409565298388046,
+                  "shaft_power_kw": 499.90248194342905,
+                  "battery_power_kw": 543.3722629819881,
+                  "energy_kwh_per_km": 32.599727800695234
+                },
+                {
+                  "speed_knots": 9.5,
+                  "speed_kmh": 17.594,
+                  "froude_depth": 0.7469439742538503,
+                  "resistance_kn": 55.25577545157791,
+                  "shaft_power_kw": 602.1817729240913,
+                  "battery_power_kw": 654.5454053522732,
+                  "energy_kwh_per_km": 37.2027626095415
+                }
+              ],
+              "resistance_kn": 11.398151344689019,
+              "shaft_power_kw": 59.95500162018563,
+              "battery_power_kw": 65.1684800219409,
+              "energy_kwh_per_km": 7.703543208117429,
+              "energy_per_trip_kwh": 2414.7064327572407,
+              "energy_per_year_mwh": 610.2702055745971
+            },
+            {
+              "name": "Open sea",
+              "limiting_speed_knots": null,
+              "service_speed_knots": 4.56,
+              "blockage_ratio": 0.00045410831509824,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.04645275218461199,
+                  "resistance_kn": 2.399071660485014,
+                  "shaft_power_kw": 5.484810942904405,
+                  "battery_power_kw": 5.961751024896092,
+                  "energy_kwh_per_km": 1.6095440132008887
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.058065940230764994,
+                  "resistance_kn": 3.6293058727376355,
+                  "shaft_power_kw": 10.371749671867999,
+                  "battery_power_kw": 11.273640947682606,
+                  "energy_kwh_per_km": 2.4349116517673015
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.06967912827691798,
+                  "resistance_kn": 5.091912323651178,
+                  "shaft_power_kw": 17.46186466190777,
+                  "battery_power_kw": 18.98028767598671,
+                  "energy_kwh_per_km": 3.4161784873986156
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.08129231632307098,
+                  "resistance_kn": 6.781559920602482,
+                  "shaft_power_kw": 27.13226773567268,
+                  "battery_power_kw": 29.49159536486161,
+                  "energy_kwh_per_km": 4.549767874862945
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.09290550436922398,
+                  "resistance_kn": 8.693890386381588,
+                  "shaft_power_kw": 39.752330797819454,
+                  "battery_power_kw": 43.209055215021145,
+                  "energy_kwh_per_km": 5.832755833561169
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.10451869241537698,
+                  "resistance_kn": 10.825232639685971,
+                  "shaft_power_kw": 55.68499669854464,
+                  "battery_power_kw": 60.527170324505036,
+                  "energy_kwh_per_km": 7.262679424586637
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.11613188046152999,
+                  "resistance_kn": 13.172425309056424,
+                  "shaft_power_kw": 75.28772865531805,
+                  "battery_power_kw": 81.83448766882397,
+                  "energy_kwh_per_km": 8.837417674819003
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.12774506850768297,
+                  "resistance_kn": 15.732699180836564,
+                  "shaft_power_kw": 98.91322782760624,
+                  "battery_power_kw": 107.51437807348503,
+                  "energy_kwh_per_km": 10.555112710925293
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.13935825655383596,
+                  "resistance_kn": 18.503595486397078,
+                  "shaft_power_kw": 126.90999357603542,
+                  "battery_power_kw": 137.94564519134283,
+                  "energy_kwh_per_km": 12.414114938025813
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.15097144459998899,
+                  "resistance_kn": 21.502727416219226,
+                  "shaft_power_kw": 159.7700430863791,
+                  "battery_power_kw": 173.66309031128162,
+                  "energy_kwh_per_km": 14.426241095803425
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.16258463264614195,
+                  "resistance_kn": 24.757520529362075,
+                  "shaft_power_kw": 198.10417760472657,
+                  "battery_power_kw": 215.33062783122452,
+                  "energy_kwh_per_km": 16.609891069980293
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.17419782069229495,
+                  "resistance_kn": 28.262948636717205,
+                  "shaft_power_kw": 242.3076796454555,
+                  "battery_power_kw": 263.3779126581038,
+                  "energy_kwh_per_km": 18.961692775961396
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.18581100873844797,
+                  "resistance_kn": 32.022699968081824,
+                  "shaft_power_kw": 292.844033130334,
+                  "battery_power_kw": 318.30873166340655,
+                  "energy_kwh_per_km": 21.48412065762733
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.19742419678460096,
+                  "resistance_kn": 36.04208203322275,
+                  "shaft_power_kw": 350.2008877379181,
+                  "battery_power_kw": 380.65313884556315,
+                  "energy_kwh_per_km": 24.180735538404466
+                },
+                {
+                  "speed_knots": 9.0,
+                  "speed_kmh": 16.668,
+                  "froude_depth": 0.20903738483075396,
+                  "resistance_kn": 40.32716709314271,
+                  "shaft_power_kw": 414.88589505425216,
+                  "battery_power_kw": 450.9629294067958,
+                  "energy_kwh_per_km": 27.05561131550251
+                },
+                {
+                  "speed_knots": 9.5,
+                  "speed_kmh": 17.594,
+                  "froude_depth": 0.22065057287690695,
+                  "resistance_kn": 44.884545012970655,
+                  "shaft_power_kw": 487.4262101541889,
+                  "battery_power_kw": 529.8110979936836,
+                  "energy_kwh_per_km": 30.113169148214364
+                },
+                {
+                  "speed_knots": 10.0,
+                  "speed_kmh": 18.52,
+                  "froude_depth": 0.23226376092305998,
+                  "resistance_kn": 49.72121721303466,
+                  "shaft_power_kw": 568.3687585418895,
+                  "battery_power_kw": 617.7921288498799,
+                  "energy_kwh_per_km": 33.35810630938876
+                }
+              ],
+              "resistance_kn": 11.090934849858709,
+              "shaft_power_kw": 57.904025956051406,
+              "battery_power_kw": 62.93915864788196,
+              "energy_kwh_per_km": 7.440939794512943,
+              "energy_per_trip_kwh": 2332.39234234926,
+              "energy_per_year_mwh": 589.4669161173339
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_below_schijf",
+              "ok": true,
+              "message": "service 4.6 kn stays below the Schijf limit 10.3 kn",
+              "severity": "error"
+            },
+            {
+              "name": "energy_positive",
+              "ok": true,
+              "message": "energy 7.7 kWh/km at service speed",
+              "severity": "error"
+            },
+            {
+              "name": "resistance_coeffs_first_order",
+              "ok": true,
+              "message": "confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate (RS1) — ITTC-1957 friction is standard; anchor with a model test/CFD before class use.",
+              "severity": "warning"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/001",
+      "output": {
+        "ok": {
+          "inputs": {
+            "beam": 9.9156,
+            "loa": 56.74,
+            "lwl": 54.7423,
+            "draft": 3.1153,
+            "block_coefficient": 0.7891,
+            "channel_depth_m": 4.6427,
+            "channel_bottom_width_m": 100.8968,
+            "channel_top_width_m": 159.2857,
+            "current_knots": 1.0863,
+            "fresh_water": true,
+            "also_open_sea": false,
+            "propulsive_coefficient": 0.45,
+            "drivetrain_efficiency": 0.92,
+            "target_service_speed_knots": 6.3525,
+            "service_speed_safety_fraction": 0.9,
+            "power_margin": 1.2,
+            "one_way_km": 32.4717,
+            "trips_per_year": 171.1381,
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 10.0,
+            "speed_step_knots": 0.5
+          },
+          "installed_power_kw": 194.4710850760387,
+          "environments": [
+            {
+              "name": "Design channel",
+              "limiting_speed_knots": 10.56597562982921,
+              "service_speed_knots": 6.35,
+              "blockage_ratio": 0.04035823911100676,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.23524439484253745,
+                  "resistance_kn": 2.77714022702126,
+                  "shaft_power_kw": 9.797705792973554,
+                  "battery_power_kw": 10.649680209753862,
+                  "energy_kwh_per_km": 2.8751836419421872
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.27335546551657064,
+                  "resistance_kn": 3.7073444054473534,
+                  "shaft_power_kw": 15.198404377115567,
+                  "battery_power_kw": 16.520004757734313,
+                  "energy_kwh_per_km": 3.568035584823826
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.3114665361906039,
+                  "resistance_kn": 4.783779006618749,
+                  "shaft_power_kw": 22.3454858800032,
+                  "battery_power_kw": 24.28857160869913,
+                  "energy_kwh_per_km": 4.371593162112874
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.3495776068646371,
+                  "resistance_kn": 6.017944374857713,
+                  "shaft_power_kw": 31.549979018953923,
+                  "battery_power_kw": 34.293455455384695,
+                  "energy_kwh_per_km": 5.290567024897361
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.38768867753867026,
+                  "resistance_kn": 7.444263530556792,
+                  "shaft_power_kw": 43.282482015800625,
+                  "battery_power_kw": 47.04617610413111,
+                  "energy_kwh_per_km": 6.35072571600042
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.4257997482127035,
+                  "resistance_kn": 9.083134458801105,
+                  "shaft_power_kw": 58.00273123464886,
+                  "battery_power_kw": 63.04644699418354,
+                  "energy_kwh_per_km": 7.564968441826679
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.46391081888673674,
+                  "resistance_kn": 10.958417089917106,
+                  "shaft_power_kw": 76.24118321741346,
+                  "battery_power_kw": 82.8708513232755,
+                  "energy_kwh_per_km": 8.949335996034073
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.50202188956077,
+                  "resistance_kn": 13.09900813429711,
+                  "shaft_power_kw": 98.62076488493196,
+                  "battery_power_kw": 107.19648357057821,
+                  "energy_kwh_per_km": 10.52390374735698
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.5401329602348032,
+                  "resistance_kn": 15.53813966456344,
+                  "shaft_power_kw": 125.86558575024418,
+                  "battery_power_kw": 136.81041929374368,
+                  "energy_kwh_per_km": 12.311952780214513
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.5782440309088364,
+                  "resistance_kn": 18.313502596368835,
+                  "shaft_power_kw": 158.81439824393516,
+                  "battery_power_kw": 172.62434591732082,
+                  "energy_kwh_per_km": 14.339952310792558
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.6163551015828695,
+                  "resistance_kn": 21.467505517455212,
+                  "shaft_power_kw": 198.43573259325893,
+                  "battery_power_kw": 215.69101368832492,
+                  "energy_kwh_per_km": 16.63769004075323
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.6544661722569027,
+                  "resistance_kn": 25.0475856678401,
+                  "shaft_power_kw": 245.84443118064993,
+                  "battery_power_kw": 267.22220780505427,
+                  "energy_kwh_per_km": 19.238459885173093
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.692577242930936,
+                  "resistance_kn": 28.34133162202946,
+                  "shaft_power_kw": 294.37150594771435,
+                  "battery_power_kw": 319.96902820403733,
+                  "energy_kwh_per_km": 21.59618170923578
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.7306883136049692,
+                  "resistance_kn": 32.4788215613834,
+                  "shaft_power_kw": 355.909618750384,
+                  "battery_power_kw": 386.8582812504174,
+                  "energy_kwh_per_km": 24.574913051100076
+                },
+                {
+                  "speed_knots": 9.0,
+                  "speed_kmh": 16.668,
+                  "froude_depth": 0.7687993842790025,
+                  "resistance_kn": 37.14939604372817,
+                  "shaft_power_kw": 428.32367996816885,
+                  "battery_power_kw": 465.5692173567052,
+                  "energy_kwh_per_km": 27.93191848792328
+                },
+                {
+                  "speed_knots": 9.5,
+                  "speed_kmh": 17.594,
+                  "froude_depth": 0.8069104549530357,
+                  "resistance_kn": 42.42495956232614,
+                  "shaft_power_kw": 513.3978909753279,
+                  "battery_power_kw": 558.0411858427476,
+                  "energy_kwh_per_km": 31.717698410978038
+                },
+                {
+                  "speed_knots": 10.0,
+                  "speed_kmh": 18.52,
+                  "froude_depth": 0.845021525627069,
+                  "resistance_kn": 48.386405338210686,
+                  "shaft_power_kw": 613.1947557993713,
+                  "battery_power_kw": 666.51603891236,
+                  "energy_kwh_per_km": 35.98898698230886
+                }
+              ],
+              "resistance_kn": 17.494770531486243,
+              "shaft_power_kw": 149.09449855829632,
+              "battery_power_kw": 162.05923756336557,
+              "energy_kwh_per_km": 13.741692449272035,
+              "energy_per_trip_kwh": 446.2161147050267,
+              "energy_per_year_mwh": 152.72915612000068
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_below_schijf",
+              "ok": true,
+              "message": "service 6.3 kn stays below the Schijf limit 10.6 kn",
+              "severity": "error"
+            },
+            {
+              "name": "energy_positive",
+              "ok": true,
+              "message": "energy 13.7 kWh/km at service speed",
+              "severity": "error"
+            },
+            {
+              "name": "resistance_coeffs_first_order",
+              "ok": true,
+              "message": "confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate (RS1) — ITTC-1957 friction is standard; anchor with a model test/CFD before class use.",
+              "severity": "warning"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/002",
+      "output": {
+        "ok": {
+          "inputs": {
+            "beam": 12.3776,
+            "loa": 120.19,
+            "lwl": 118.1946,
+            "draft": 2.8316,
+            "block_coefficient": 0.832,
+            "channel_depth_m": 3.0039,
+            "channel_bottom_width_m": 34.7606,
+            "channel_top_width_m": 152.5332,
+            "current_knots": 0.3225,
+            "fresh_water": true,
+            "also_open_sea": false,
+            "propulsive_coefficient": 0.45,
+            "drivetrain_efficiency": 0.92,
+            "target_service_speed_knots": 4.1564,
+            "service_speed_safety_fraction": 0.9,
+            "power_margin": 1.2,
+            "one_way_km": 123.9937,
+            "trips_per_year": 275.7359,
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 10.0,
+            "speed_step_knots": 0.5
+          },
+          "installed_power_kw": 93.88271731823467,
+          "environments": [
+            {
+              "name": "Design channel",
+              "limiting_speed_knots": 8.307841089101412,
+              "service_speed_knots": 4.16,
+              "blockage_ratio": 0.10366038018491859,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.2200794253772503,
+                  "resistance_kn": 3.584397605643053,
+                  "shaft_power_kw": 9.516129584613603,
+                  "battery_power_kw": 10.343619113710437,
+                  "energy_kwh_per_km": 2.792553756401306
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.26745928014092096,
+                  "resistance_kn": 5.264090096053558,
+                  "shaft_power_kw": 16.984224057599075,
+                  "battery_power_kw": 18.46111310608595,
+                  "energy_kwh_per_km": 3.9872814483986936
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.3148391349045917,
+                  "resistance_kn": 7.328454701189656,
+                  "shaft_power_kw": 27.833373242388966,
+                  "battery_power_kw": 30.253666567814093,
+                  "energy_kwh_per_km": 5.445224364257396
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.3622189896682623,
+                  "resistance_kn": 9.83242178380261,
+                  "shaft_power_kw": 42.96318213102304,
+                  "battery_power_kw": 46.699111011981564,
+                  "energy_kwh_per_km": 7.204429344643869
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.409598844431933,
+                  "resistance_kn": 12.844680044698059,
+                  "shaft_power_kw": 63.46682002512413,
+                  "battery_power_kw": 68.98567394035231,
+                  "energy_kwh_per_km": 9.31232099626786
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.4569786991956037,
+                  "resistance_kn": 16.448064634359987,
+                  "shaft_power_kw": 90.6724783334867,
+                  "battery_power_kw": 98.55704166683336,
+                  "energy_kwh_per_km": 11.825898928105754
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.5043585539592744,
+                  "resistance_kn": 20.739978480137772,
+                  "shaft_power_kw": 126.18636142421849,
+                  "battery_power_kw": 137.1590885045853,
+                  "energy_kwh_per_km": 14.811996598767312
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.5517384087229451,
+                  "resistance_kn": 25.8328221724091,
+                  "shaft_power_kw": 171.93717931477659,
+                  "battery_power_kw": 186.88823838562672,
+                  "energy_kwh_per_km": 18.347559236758954
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.5991182634866157,
+                  "resistance_kn": 31.85442103106954,
+                  "shaft_power_kw": 230.22209420626947,
+                  "battery_power_kw": 250.24140674594506,
+                  "energy_kwh_per_km": 22.519925013134003
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.6464981182502865,
+                  "resistance_kn": 38.963464437706115,
+                  "shaft_power_kw": 303.87121036298436,
+                  "battery_power_kw": 330.29479387280907,
+                  "energy_kwh_per_km": 27.437680168866013
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.6938779730139571,
+                  "resistance_kn": 47.39237231573291,
+                  "shaft_power_kw": 396.69458766097165,
+                  "battery_power_kw": 431.1897691967083,
+                  "energy_kwh_per_km": 33.2605499226094
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.7412578277776277,
+                  "resistance_kn": 57.32748276464271,
+                  "shaft_power_kw": 512.6215865149982,
+                  "battery_power_kw": 557.1973766467371,
+                  "energy_kwh_per_km": 40.11500191841159
+                }
+              ],
+              "resistance_kn": 13.971818744344308,
+              "shaft_power_kw": 71.97674994397993,
+              "battery_power_kw": 78.23559776519556,
+              "energy_kwh_per_km": 10.098568173346752,
+              "energy_per_trip_kwh": 1252.1588325155053,
+              "energy_per_year_mwh": 690.5302852532243
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_below_schijf",
+              "ok": true,
+              "message": "service 4.2 kn stays below the Schijf limit 8.3 kn",
+              "severity": "error"
+            },
+            {
+              "name": "energy_positive",
+              "ok": true,
+              "message": "energy 10.1 kWh/km at service speed",
+              "severity": "error"
+            },
+            {
+              "name": "resistance_coeffs_first_order",
+              "ok": true,
+              "message": "confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate (RS1) — ITTC-1957 friction is standard; anchor with a model test/CFD before class use.",
+              "severity": "warning"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/003",
+      "output": {
+        "ok": {
+          "inputs": {
+            "beam": 15.4218,
+            "loa": 52.06,
+            "lwl": 50.0582,
+            "draft": 2.6269,
+            "block_coefficient": 0.9137,
+            "channel_depth_m": 3.081,
+            "channel_bottom_width_m": 73.667,
+            "channel_top_width_m": 181.4641,
+            "current_knots": 1.1422,
+            "fresh_water": false,
+            "also_open_sea": true,
+            "propulsive_coefficient": 0.45,
+            "drivetrain_efficiency": 0.92,
+            "target_service_speed_knots": 4.0487,
+            "service_speed_safety_fraction": 0.9,
+            "power_margin": 1.2,
+            "one_way_km": 129.5848,
+            "trips_per_year": 216.8597,
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 10.0,
+            "speed_step_knots": 0.5
+          },
+          "installed_power_kw": 83.33996128502905,
+          "environments": [
+            {
+              "name": "Design channel",
+              "limiting_speed_knots": 8.443343393962769,
+              "service_speed_knots": 4.05,
+              "blockage_ratio": 0.09417966208521582,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.294004807092234,
+                  "resistance_kn": 3.6609500054732456,
+                  "shaft_power_kw": 13.149706773205928,
+                  "battery_power_kw": 14.2931595360934,
+                  "energy_kwh_per_km": 3.858844367195842
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.34078808108692465,
+                  "resistance_kn": 4.941479412227454,
+                  "shaft_power_kw": 20.573549530103353,
+                  "battery_power_kw": 22.362553837068862,
+                  "energy_kwh_per_km": 4.829925234788091
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.38757135508161533,
+                  "resistance_kn": 6.470753853026814,
+                  "shaft_power_kw": 30.638986133750986,
+                  "battery_power_kw": 33.30324579755542,
+                  "energy_kwh_per_km": 5.994104715182761
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.434354629076306,
+                  "resistance_kn": 8.297806819336582,
+                  "shaft_power_kw": 44.03273009627327,
+                  "battery_power_kw": 47.861663148123114,
+                  "energy_kwh_per_km": 7.38378018329576
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.4811379030709966,
+                  "resistance_kn": 10.490853757603166,
+                  "shaft_power_kw": 61.66634995142953,
+                  "battery_power_kw": 67.02864125155384,
+                  "energy_kwh_per_km": 9.048142717542364
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.5279211770656873,
+                  "resistance_kn": 13.10722980792556,
+                  "shaft_power_kw": 84.53719560946574,
+                  "battery_power_kw": 91.88825609724536,
+                  "energy_kwh_per_km": 11.025708674975446
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.5747044510603779,
+                  "resistance_kn": 16.219107410853702,
+                  "shaft_power_kw": 113.87787375918582,
+                  "battery_power_kw": 123.7802975643324,
+                  "energy_kwh_per_km": 13.367202760727041
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.6214877250550687,
+                  "resistance_kn": 19.910488914751234,
+                  "shaft_power_kw": 151.1758151269822,
+                  "battery_power_kw": 164.32153818150238,
+                  "energy_kwh_per_km": 16.132096817347573
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.6682709990497593,
+                  "resistance_kn": 24.2776931823461,
+                  "shaft_power_kw": 198.21105454007167,
+                  "battery_power_kw": 215.44679841312137,
+                  "energy_kwh_per_km": 19.388660764319777
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.7150542730444499,
+                  "resistance_kn": 29.43022626548158,
+                  "shaft_power_kw": 257.0990349009399,
+                  "battery_power_kw": 279.4554727184129,
+                  "energy_kwh_per_km": 23.21444365496037
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.7618375470391408,
+                  "resistance_kn": 35.4917822964096,
+                  "shaft_power_kw": 330.3376089782939,
+                  "battery_power_kw": 359.06261845466724,
+                  "energy_kwh_per_km": 27.696900528746315
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.8086208210338313,
+                  "resistance_kn": 41.52603044595297,
+                  "shaft_power_kw": 410.23544068581236,
+                  "battery_power_kw": 445.9080877019699,
+                  "energy_kwh_per_km": 32.10281408941468
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.855404095028522,
+                  "resistance_kn": 49.08982478788647,
+                  "shaft_power_kw": 513.0156880729769,
+                  "battery_power_kw": 557.6257479054096,
+                  "energy_kwh_per_km": 37.636727045451515
+                }
+              ],
+              "resistance_kn": 10.745688784904567,
+              "shaft_power_kw": 63.893970318522264,
+              "battery_power_kw": 69.4499677375242,
+              "energy_kwh_per_km": 9.240757641796346,
+              "energy_per_trip_kwh": 1197.4617308606512,
+              "energy_per_year_mwh": 519.3623834318431
+            },
+            {
+              "name": "Open sea",
+              "limiting_speed_knots": null,
+              "service_speed_knots": 4.05,
+              "blockage_ratio": 0.00074030763379908,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.04645275218461199,
+                  "resistance_kn": 1.4871724579851635,
+                  "shaft_power_kw": 3.4000067217225247,
+                  "battery_power_kw": 3.695659480133179,
+                  "energy_kwh_per_km": 0.9977482397767762
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.058065940230764994,
+                  "resistance_kn": 2.245813841736897,
+                  "shaft_power_kw": 6.418036889941443,
+                  "battery_power_kw": 6.976127054284177,
+                  "energy_kwh_per_km": 1.5067229058929108
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.06967912827691798,
+                  "resistance_kn": 3.1464597572450104,
+                  "shaft_power_kw": 10.79025932751222,
+                  "battery_power_kw": 11.728542747295892,
+                  "energy_kwh_per_km": 2.1109688170078997
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.08129231632307098,
+                  "resistance_kn": 4.1857039668205855,
+                  "shaft_power_kw": 16.746536493030625,
+                  "battery_power_kw": 18.202757057641982,
+                  "energy_kwh_per_km": 2.808200718550136
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.09290550436922398,
+                  "resistance_kn": 5.3607657882444,
+                  "shaft_power_kw": 24.511803746425947,
+                  "battery_power_kw": 26.643264941767335,
+                  "energy_kwh_per_km": 3.596553042895158
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.10451869241537698,
+                  "resistance_kn": 6.673817337510779,
+                  "shaft_power_kw": 34.330116384155446,
+                  "battery_power_kw": 37.31534389582114,
+                  "energy_kwh_per_km": 4.4774830688530285
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.11613188046152999,
+                  "resistance_kn": 8.14683688091026,
+                  "shaft_power_kw": 46.563698794891536,
+                  "battery_power_kw": 50.61271608140384,
+                  "energy_kwh_per_km": 5.465736077905382
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.12774506850768297,
+                  "resistance_kn": 9.780275082763609,
+                  "shaft_power_kw": 61.48967614256622,
+                  "battery_power_kw": 66.83660450278937,
+                  "energy_kwh_per_km": 6.561614422029194
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.13935825655383596,
+                  "resistance_kn": 11.578144061322815,
+                  "shaft_power_kw": 79.4106307352594,
+                  "battery_power_kw": 86.31590297310804,
+                  "energy_kwh_per_km": 7.7678098427923
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.15097144459998899,
+                  "resistance_kn": 13.545843682828366,
+                  "shaft_power_kw": 100.64862875089983,
+                  "battery_power_kw": 109.40068342489111,
+                  "energy_kwh_per_km": 9.087945125842426
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.16258463264614195,
+                  "resistance_kn": 15.689450090810482,
+                  "shaft_power_kw": 125.54349308220084,
+                  "battery_power_kw": 136.4603185676096,
+                  "energy_kwh_per_km": 10.526096773188028
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.17419782069229495,
+                  "resistance_kn": 18.015535785604804,
+                  "shaft_power_kw": 154.45319346858517,
+                  "battery_power_kw": 167.8839059441143,
+                  "energy_kwh_per_km": 12.086674294032706
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.18581100873844797,
+                  "resistance_kn": 20.531089621435754,
+                  "shaft_power_kw": 187.75453335584982,
+                  "battery_power_kw": 204.08101451722806,
+                  "energy_kwh_per_km": 13.774366530590445
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.19742419678460096,
+                  "resistance_kn": 23.243469581993924,
+                  "shaft_power_kw": 225.84388088957826,
+                  "battery_power_kw": 245.48247922780246,
+                  "energy_kwh_per_km": 15.594109975085914
+                },
+                {
+                  "speed_knots": 9.0,
+                  "speed_kmh": 16.668,
+                  "froude_depth": 0.20903738483075396,
+                  "resistance_kn": 25.29794174370206,
+                  "shaft_power_kw": 260.2652246592068,
+                  "battery_power_kw": 282.89698332522477,
+                  "energy_kwh_per_km": 16.97246120261728
+                },
+                {
+                  "speed_knots": 9.5,
+                  "speed_kmh": 17.594,
+                  "froude_depth": 0.22065057287690695,
+                  "resistance_kn": 28.04407287277795,
+                  "shaft_power_kw": 304.54616736598064,
+                  "battery_power_kw": 331.02844278910936,
+                  "energy_kwh_per_km": 18.814848402245616
+                },
+                {
+                  "speed_knots": 10.0,
+                  "speed_kmh": 18.52,
+                  "froude_depth": 0.23226376092305998,
+                  "resistance_kn": 30.986407435479045,
+                  "shaft_power_kw": 354.20906632912045,
+                  "battery_power_kw": 385.00985470556566,
+                  "energy_kwh_per_km": 20.78886904457698
+                }
+              ],
+              "resistance_kn": 5.488657009142946,
+              "shaft_power_kw": 25.468107397340805,
+              "battery_power_kw": 27.68272543189218,
+              "energy_kwh_per_km": 3.6823556274234552,
+              "energy_per_trip_kwh": 477.17731750854296,
+              "energy_per_year_mwh": 206.96105984341474
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_below_schijf",
+              "ok": true,
+              "message": "service 4.0 kn stays below the Schijf limit 8.4 kn",
+              "severity": "error"
+            },
+            {
+              "name": "energy_positive",
+              "ok": true,
+              "message": "energy 9.2 kWh/km at service speed",
+              "severity": "error"
+            },
+            {
+              "name": "resistance_coeffs_first_order",
+              "ok": true,
+              "message": "confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate (RS1) — ITTC-1957 friction is standard; anchor with a model test/CFD before class use.",
+              "severity": "warning"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/004",
+      "output": {
+        "ok": {
+          "inputs": {
+            "beam": 13.3137,
+            "loa": 96.28,
+            "lwl": 94.2797,
+            "draft": 1.9533,
+            "block_coefficient": 0.9086,
+            "channel_depth_m": 3.2794,
+            "channel_bottom_width_m": 85.8999,
+            "channel_top_width_m": 182.8483,
+            "current_knots": 1.4897,
+            "fresh_water": true,
+            "also_open_sea": false,
+            "propulsive_coefficient": 0.45,
+            "drivetrain_efficiency": 0.92,
+            "target_service_speed_knots": 6.6823,
+            "service_speed_safety_fraction": 0.9,
+            "power_margin": 1.2,
+            "one_way_km": 202.6546,
+            "trips_per_year": 339.2651,
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 10.0,
+            "speed_step_knots": 0.5
+          },
+          "installed_power_kw": 478.83184992882167,
+          "environments": [
+            {
+              "name": "Design channel",
+              "limiting_speed_knots": 8.83907649069526,
+              "service_speed_knots": 6.68,
+              "blockage_ratio": 0.05362045419977677,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.31648807696312975,
+                  "resistance_kn": 6.050824944590879,
+                  "shaft_power_kw": 24.137435607602207,
+                  "battery_power_kw": 26.236343051741528,
+                  "energy_kwh_per_km": 7.083245964293069
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.36183410627268786,
+                  "resistance_kn": 7.893332940240877,
+                  "shaft_power_kw": 35.998889897901535,
+                  "battery_power_kw": 39.129228149892974,
+                  "energy_kwh_per_km": 8.451237181402371
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.407180135582246,
+                  "resistance_kn": 10.02844985520597,
+                  "shaft_power_kw": 51.468270640875424,
+                  "battery_power_kw": 55.943772435734154,
+                  "energy_kwh_per_km": 10.069073512551144
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.4525261648918041,
+                  "resistance_kn": 12.485816219017495,
+                  "shaft_power_kw": 71.21636770116324,
+                  "battery_power_kw": 77.40909532735134,
+                  "energy_kwh_per_km": 11.942162191816003
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.4978721942013621,
+                  "resistance_kn": 15.300466599588097,
+                  "shaft_power_kw": 96.01558518969046,
+                  "battery_power_kw": 104.3647665105331,
+                  "energy_kwh_per_km": 14.088116429607599
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.5432182235109202,
+                  "resistance_kn": 18.514940797475354,
+                  "shaft_power_kw": 126.76981154711521,
+                  "battery_power_kw": 137.7932734207774,
+                  "energy_kwh_per_km": 16.53387010088522
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.5885642528204783,
+                  "resistance_kn": 22.21805588594218,
+                  "shaft_power_kw": 164.82349620083258,
+                  "battery_power_kw": 179.15597413133975,
+                  "energy_kwh_per_km": 19.347297422390902
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.6339102821300364,
+                  "resistance_kn": 26.46897256963543,
+                  "shaft_power_kw": 211.48718964888468,
+                  "battery_power_kw": 229.8773800531355,
+                  "energy_kwh_per_km": 22.5679736945941
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.6792563114395944,
+                  "resistance_kn": 31.335199136117794,
+                  "shaft_power_kw": 268.2781652330123,
+                  "battery_power_kw": 291.60670134023076,
+                  "energy_kwh_per_km": 26.242503720323143
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.7246023407491526,
+                  "resistance_kn": 36.89559456562889,
+                  "shaft_power_kw": 336.971702421949,
+                  "battery_power_kw": 366.27358958907496,
+                  "energy_kwh_per_km": 30.426448711503152
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.7699483700587106,
+                  "resistance_kn": 43.23873371759374,
+                  "shaft_power_kw": 419.61765924261385,
+                  "battery_power_kw": 456.10615135066723,
+                  "energy_kwh_per_km": 35.18251707425696
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.8152943993682688,
+                  "resistance_kn": 50.46307949792916,
+                  "shaft_power_kw": 518.5700073338829,
+                  "battery_power_kw": 563.6630514498727,
+                  "energy_kwh_per_km": 40.580493264929636
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.8606404286778269,
+                  "resistance_kn": 58.677440665743156,
+                  "shaft_power_kw": 636.5200559731678,
+                  "battery_power_kw": 691.869626057791,
+                  "energy_kwh_per_km": 46.69746396178395
+                }
+              ],
+              "resistance_kn": 39.20830310043527,
+              "shaft_power_kw": 367.1044182787633,
+              "battery_power_kw": 399.0265416073514,
+              "energy_kwh_per_km": 32.16051123656319,
+              "energy_per_trip_kwh": 6517.475540441218,
+              "energy_per_year_mwh": 4422.3039819506885
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_below_schijf",
+              "ok": true,
+              "message": "service 6.7 kn stays below the Schijf limit 8.8 kn",
+              "severity": "error"
+            },
+            {
+              "name": "energy_positive",
+              "ok": true,
+              "message": "energy 32.2 kWh/km at service speed",
+              "severity": "error"
+            },
+            {
+              "name": "resistance_coeffs_first_order",
+              "ok": true,
+              "message": "confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate (RS1) — ITTC-1957 friction is standard; anchor with a model test/CFD before class use.",
+              "severity": "warning"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/005",
+      "output": {
+        "ok": {
+          "inputs": {
+            "beam": 12.9221,
+            "loa": 121.22,
+            "lwl": 119.219,
+            "draft": 3.864,
+            "block_coefficient": 0.7845,
+            "channel_depth_m": 6.95,
+            "channel_bottom_width_m": 71.8902,
+            "channel_top_width_m": 160.8713,
+            "current_knots": 0.5873,
+            "fresh_water": true,
+            "also_open_sea": true,
+            "propulsive_coefficient": 0.45,
+            "drivetrain_efficiency": 0.92,
+            "target_service_speed_knots": 4.7654,
+            "service_speed_safety_fraction": 0.9,
+            "power_margin": 1.2,
+            "one_way_km": 127.5987,
+            "trips_per_year": 325.9335,
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 10.0,
+            "speed_step_knots": 0.5
+          },
+          "installed_power_kw": 158.48110137149382,
+          "environments": [
+            {
+              "name": "Design channel",
+              "limiting_speed_knots": 12.891225041643946,
+              "service_speed_knots": 4.77,
+              "blockage_ratio": 0.04842807507959988,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.1611835966699897,
+                  "resistance_kn": 4.902854715678316,
+                  "shaft_power_kw": 14.50054277649299,
+                  "battery_power_kw": 15.761459539666292,
+                  "energy_kwh_per_km": 4.255253655417465
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.19233259305038425,
+                  "resistance_kn": 6.839660441942689,
+                  "shaft_power_kw": 24.138029880514512,
+                  "battery_power_kw": 26.23698900055925,
+                  "energy_kwh_per_km": 5.666736285217981
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.2234815894307788,
+                  "resistance_kn": 9.093400493345026,
+                  "shaft_power_kw": 37.289148167513524,
+                  "battery_power_kw": 40.53168279077557,
+                  "energy_kwh_per_km": 7.295119292796179
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.25463058581117337,
+                  "resistance_kn": 11.671515302262987,
+                  "shaft_power_kw": 54.532097831548626,
+                  "battery_power_kw": 59.27401938211807,
+                  "energy_kwh_per_km": 9.14440286672602
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.28577958219156796,
+                  "resistance_kn": 14.584744040101377,
+                  "shaft_power_kw": 76.47938745512175,
+                  "battery_power_kw": 83.12976897295842,
+                  "energy_kwh_per_km": 11.221621081662853
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.3169285785719625,
+                  "resistance_kn": 17.84702672663261,
+                  "shaft_power_kw": 103.78669180390035,
+                  "battery_power_kw": 112.81162152597864,
+                  "energy_kwh_per_km": 13.536311678183182
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.3480775749523571,
+                  "resistance_kn": 21.475466703907635,
+                  "shaft_power_kw": 137.16175946449746,
+                  "battery_power_kw": 149.0888689831494,
+                  "energy_kwh_per_km": 16.100309825394106
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.3792265713327516,
+                  "resistance_kn": 25.490327949307165,
+                  "shaft_power_kw": 177.3734342195567,
+                  "battery_power_kw": 192.79721110821382,
+                  "energy_kwh_per_km": 18.927666513667173
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.4103755677131462,
+                  "resistance_kn": 29.915053385640647,
+                  "shaft_power_kw": 225.26082531649652,
+                  "battery_power_kw": 244.8487231701049,
+                  "energy_kwh_per_km": 22.0346223155242
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.44152456409354074,
+                  "resistance_kn": 34.8187157934229,
+                  "shaft_power_kw": 282.086311282974,
+                  "battery_power_kw": 306.61555574236303,
+                  "energy_kwh_per_km": 25.470639287453317
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.47267356047393533,
+                  "resistance_kn": 40.25696938971656,
+                  "shaft_power_kw": 349.15380546832625,
+                  "battery_power_kw": 379.5150059438329,
+                  "energy_kwh_per_km": 29.274529924701703
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.50382255685433,
+                  "resistance_kn": 46.26368394777155,
+                  "shaft_power_kw": 427.6930688634536,
+                  "battery_power_kw": 464.8837705037539,
+                  "energy_kwh_per_km": 33.46895395995348
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.5349715532347246,
+                  "resistance_kn": 52.8866980185713,
+                  "shaft_power_kw": 519.1484171349442,
+                  "battery_power_kw": 564.2917577553741,
+                  "energy_kwh_per_km": 38.08664671675041
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.566120549615119,
+                  "resistance_kn": 60.18022243922312,
+                  "shaft_power_kw": 625.1397295007383,
+                  "battery_power_kw": 679.4997059790634,
+                  "energy_kwh_per_km": 43.16476343406577
+                },
+                {
+                  "speed_knots": 9.0,
+                  "speed_kmh": 16.668,
+                  "froude_depth": 0.5972695459955136,
+                  "resistance_kn": 68.20423534898082,
+                  "shaft_power_kw": 747.4740290771653,
+                  "battery_power_kw": 812.4717707360492,
+                  "energy_kwh_per_km": 48.744406691627624
+                },
+                {
+                  "speed_knots": 9.5,
+                  "speed_kmh": 17.594,
+                  "froude_depth": 0.6284185423759082,
+                  "resistance_kn": 77.02448968778667,
+                  "shaft_power_kw": 888.1620510118286,
+                  "battery_power_kw": 965.3935337085093,
+                  "energy_kwh_per_km": 54.87061121453389
+                },
+                {
+                  "speed_knots": 10.0,
+                  "speed_kmh": 18.52,
+                  "froude_depth": 0.6595675387563027,
+                  "resistance_kn": 86.71268647181685,
+                  "shaft_power_kw": 1049.4368426410877,
+                  "battery_power_kw": 1140.6922202620517,
+                  "energy_kwh_per_km": 61.59245249795096
+                }
+              ],
+              "resistance_kn": 19.77300266657019,
+              "shaft_power_kw": 121.50217771814528,
+              "battery_power_kw": 132.06758447624486,
+              "energy_kwh_per_km": 14.897281894722738,
+              "energy_per_trip_kwh": 1900.8738033001582,
+              "energy_per_year_mwh": 1239.1169035358641
+            },
+            {
+              "name": "Open sea",
+              "limiting_speed_knots": null,
+              "service_speed_knots": 4.77,
+              "blockage_ratio": 0.000783417302136,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.04645275218461199,
+                  "resistance_kn": 3.1079671904393367,
+                  "shaft_power_kw": 7.105503656719976,
+                  "battery_power_kw": 7.723373539913017,
+                  "energy_kwh_per_km": 2.0851440442529743
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.058065940230764994,
+                  "resistance_kn": 4.703374149112231,
+                  "shaft_power_kw": 13.441198123907398,
+                  "battery_power_kw": 14.60999796076891,
+                  "energy_kwh_per_km": 3.155507118956568
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.06967912827691798,
+                  "resistance_kn": 6.600671362609402,
+                  "shaft_power_kw": 22.635902326175174,
+                  "battery_power_kw": 24.604241658886057,
+                  "energy_kwh_per_km": 4.428409225861421
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.08129231632307098,
+                  "resistance_kn": 8.792996378164503,
+                  "shaft_power_kw": 35.1798015094386,
+                  "battery_power_kw": 38.238914684172386,
+                  "energy_kwh_per_km": 5.899246325851957
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.09290550436922398,
+                  "resistance_kn": 11.27473737769081,
+                  "shaft_power_kw": 51.55311028519246,
+                  "battery_power_kw": 56.03598944042658,
+                  "energy_kwh_per_km": 7.564253434182854
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.10451869241537698,
+                  "resistance_kn": 14.041166249801591,
+                  "shaft_power_kw": 72.22775918897939,
+                  "battery_power_kw": 78.50843390106455,
+                  "energy_kwh_per_km": 9.42025844745195
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.11613188046152999,
+                  "resistance_kn": 17.088210511784528,
+                  "shaft_power_kw": 97.6686165251329,
+                  "battery_power_kw": 106.16153970123142,
+                  "energy_kwh_per_km": 11.464529125402962
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.12774506850768297,
+                  "resistance_kn": 20.412302212505733,
+                  "shaft_power_kw": 128.3344120436027,
+                  "battery_power_kw": 139.49392613435074,
+                  "energy_kwh_per_km": 13.694671719453245
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.13935825655383596,
+                  "resistance_kn": 24.010272879426765,
+                  "shaft_power_kw": 164.67845825569503,
+                  "battery_power_kw": 178.99832419097285,
+                  "energy_kwh_per_km": 16.10856049234817
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.15097144459998899,
+                  "resistance_kn": 27.879277651316368,
+                  "shaft_power_kw": 207.14922834431422,
+                  "battery_power_kw": 225.16220472208067,
+                  "energy_kwh_per_km": 18.704286818581217
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.16258463264614195,
+                  "resistance_kn": 32.04474446826478,
+                  "shaft_power_kw": 256.41492418072846,
+                  "battery_power_kw": 278.71187410948744,
+                  "energy_kwh_per_km": 21.498910375616124
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.17419782069229495,
+                  "resistance_kn": 36.54033864050795,
+                  "shaft_power_kw": 313.27250327795474,
+                  "battery_power_kw": 340.513590519516,
+                  "energy_kwh_per_km": 24.515017316019872
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.18581100873844797,
+                  "resistance_kn": 41.35854577152806,
+                  "shaft_power_kw": 378.2193056866494,
+                  "battery_power_kw": 411.10794096374934,
+                  "energy_kwh_per_km": 27.7475662097563
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.19742419678460096,
+                  "resistance_kn": 46.50341675063973,
+                  "shaft_power_kw": 451.8478653344381,
+                  "battery_power_kw": 491.13898405917183,
+                  "energy_kwh_per_km": 31.199274810009644
+                },
+                {
+                  "speed_knots": 9.0,
+                  "speed_kmh": 16.668,
+                  "froude_depth": 0.20903738483075396,
+                  "resistance_kn": 51.98106531637273,
+                  "shaft_power_kw": 534.7811999748426,
+                  "battery_power_kw": 581.2839130161333,
+                  "energy_kwh_per_km": 34.87424484138069
+                },
+                {
+                  "speed_knots": 9.5,
+                  "speed_kmh": 17.594,
+                  "froude_depth": 0.22065057287690695,
+                  "resistance_kn": 57.798557049143106,
+                  "shaft_power_kw": 627.6666413061167,
+                  "battery_power_kw": 682.246349245779,
+                  "energy_kwh_per_km": 38.777216621904
+                },
+                {
+                  "speed_knots": 10.0,
+                  "speed_kmh": 18.52,
+                  "froude_depth": 0.23226376092305998,
+                  "resistance_kn": 63.963585048734075,
+                  "shaft_power_kw": 731.1748477570846,
+                  "battery_power_kw": 794.7552693011789,
+                  "energy_kwh_per_km": 42.913351474145735
+                }
+              ],
+              "resistance_kn": 15.658537344062132,
+              "shaft_power_kw": 85.73176626300966,
+              "battery_power_kw": 93.18670245979311,
+              "energy_kwh_per_km": 10.505357323308345,
+              "energy_per_trip_kwh": 1340.4699374896245,
+              "energy_per_year_mwh": 873.808116741549
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_below_schijf",
+              "ok": true,
+              "message": "service 4.8 kn stays below the Schijf limit 12.9 kn",
+              "severity": "error"
+            },
+            {
+              "name": "energy_positive",
+              "ok": true,
+              "message": "energy 14.9 kWh/km at service speed",
+              "severity": "error"
+            },
+            {
+              "name": "resistance_coeffs_first_order",
+              "ok": true,
+              "message": "confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate (RS1) — ITTC-1957 friction is standard; anchor with a model test/CFD before class use.",
+              "severity": "warning"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/006",
+      "output": {
+        "ok": {
+          "inputs": {
+            "beam": 17.6981,
+            "loa": 115.63,
+            "lwl": 113.6304,
+            "draft": 3.102,
+            "block_coefficient": 0.8753,
+            "channel_depth_m": 4.2083,
+            "channel_bottom_width_m": 65.2731,
+            "channel_top_width_m": 168.1651,
+            "current_knots": 0.8353,
+            "fresh_water": true,
+            "also_open_sea": false,
+            "propulsive_coefficient": 0.45,
+            "drivetrain_efficiency": 0.92,
+            "target_service_speed_knots": 7.9263,
+            "service_speed_safety_fraction": 0.9,
+            "power_margin": 1.2,
+            "one_way_km": 338.4432,
+            "trips_per_year": 337.017,
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 10.0,
+            "speed_step_knots": 0.5
+          },
+          "installed_power_kw": 1018.5657855911709,
+          "environments": [
+            {
+              "name": "Design channel",
+              "limiting_speed_knots": 9.854559541259432,
+              "service_speed_knots": 7.93,
+              "blockage_ratio": 0.0978310566787575,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.2269928240771557,
+                  "resistance_kn": 6.604670305337999,
+                  "shaft_power_kw": 21.406152113518335,
+                  "battery_power_kw": 23.267556645128625,
+                  "energy_kwh_per_km": 6.281737755164316
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.26702259589621463,
+                  "resistance_kn": 9.061647640990458,
+                  "shaft_power_kw": 34.548605335836605,
+                  "battery_power_kw": 37.55283188677892,
+                  "energy_kwh_per_km": 8.110762826518124
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.3070523677152736,
+                  "resistance_kn": 11.956001815293552,
+                  "shaft_power_kw": 52.417192833940646,
+                  "battery_power_kw": 56.975209602109395,
+                  "energy_kwh_per_km": 10.254717350991612
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.3470821395343326,
+                  "resistance_kn": 15.327814202335276,
+                  "shaft_power_kw": 75.96050254581331,
+                  "battery_power_kw": 82.5657636367536,
+                  "energy_kwh_per_km": 12.737698802337796
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.38711191135339146,
+                  "resistance_kn": 19.226163837144295,
+                  "shaft_power_kw": 106.26848997532669,
+                  "battery_power_kw": 115.50922823405074,
+                  "energy_kwh_per_km": 15.592498411723911
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.42714168317245044,
+                  "resistance_kn": 23.709265463960605,
+                  "shaft_power_kw": 144.5990334421436,
+                  "battery_power_kw": 157.1728624371126,
+                  "energy_kwh_per_km": 18.85923475367322
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.4671714549915094,
+                  "resistance_kn": 28.84464493538053,
+                  "shaft_power_kw": 192.40521189028786,
+                  "battery_power_kw": 209.13609988074765,
+                  "energy_kwh_per_km": 22.584891995761087
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.5072012268105683,
+                  "resistance_kn": 34.70933328638628,
+                  "shaft_power_kw": 251.36331944146357,
+                  "battery_power_kw": 273.2209993928952,
+                  "energy_kwh_per_km": 26.82318863075743
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.5472309986296273,
+                  "resistance_kn": 41.42648596177635,
+                  "shaft_power_kw": 323.68615369774705,
+                  "battery_power_kw": 351.83277575842067,
+                  "energy_kwh_per_km": 31.662416824911865
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.5872607704486863,
+                  "resistance_kn": 49.14880743727506,
+                  "shaft_power_kw": 412.1158434598328,
+                  "battery_power_kw": 447.9520037606878,
+                  "energy_kwh_per_km": 37.21149723880111
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.6272905422677452,
+                  "resistance_kn": 57.98679662030741,
+                  "shaft_power_kw": 519.365614720885,
+                  "battery_power_kw": 564.5278420879184,
+                  "energy_kwh_per_km": 43.54580701079284
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.6673203140868041,
+                  "resistance_kn": 68.07930299821894,
+                  "shaft_power_kw": 648.6714477914984,
+                  "battery_power_kw": 705.077660642933,
+                  "energy_kwh_per_km": 50.76153064383966
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.7073500859058631,
+                  "resistance_kn": 79.58238531648936,
+                  "shaft_power_kw": 803.7605726195528,
+                  "battery_power_kw": 873.6527963256009,
+                  "energy_kwh_per_km": 58.966846404265716
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.7473798577249221,
+                  "resistance_kn": 92.66880684849545,
+                  "shaft_power_kw": 988.8952629053944,
+                  "battery_power_kw": 1074.8861553319502,
+                  "energy_kwh_per_km": 68.2814226484532
+                },
+                {
+                  "speed_knots": 9.0,
+                  "speed_kmh": 16.668,
+                  "froude_depth": 0.7874096295439811,
+                  "resistance_kn": 107.52856560165624,
+                  "shaft_power_kw": 1208.9265349536824,
+                  "battery_power_kw": 1314.0505814713938,
+                  "energy_kwh_per_km": 78.83672795004763
+                }
+              ],
+              "resistance_kn": 77.88683098277632,
+              "shaft_power_kw": 780.9004356198977,
+              "battery_power_kw": 848.8048213259758,
+              "energy_kwh_per_km": 57.757382861178925,
+              "energy_per_trip_kwh": 19547.59347916255,
+              "energy_per_year_mwh": 13175.74262313385
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_below_schijf",
+              "ok": true,
+              "message": "service 7.9 kn stays below the Schijf limit 9.9 kn",
+              "severity": "error"
+            },
+            {
+              "name": "energy_positive",
+              "ok": true,
+              "message": "energy 57.8 kWh/km at service speed",
+              "severity": "error"
+            },
+            {
+              "name": "resistance_coeffs_first_order",
+              "ok": true,
+              "message": "confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate (RS1) — ITTC-1957 friction is standard; anchor with a model test/CFD before class use.",
+              "severity": "warning"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/007",
+      "output": {
+        "ok": {
+          "inputs": {
+            "beam": 10.228,
+            "loa": 98.78,
+            "lwl": 96.7847,
+            "draft": 2.1522,
+            "block_coefficient": 0.8498,
+            "channel_depth_m": 4.4088,
+            "channel_bottom_width_m": 38.2667,
+            "channel_top_width_m": 199.8226,
+            "current_knots": 1.2905,
+            "fresh_water": true,
+            "also_open_sea": true,
+            "propulsive_coefficient": 0.45,
+            "drivetrain_efficiency": 0.92,
+            "target_service_speed_knots": 7.22,
+            "service_speed_safety_fraction": 0.9,
+            "power_margin": 1.2,
+            "one_way_km": 200.4411,
+            "trips_per_year": 262.9941,
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 10.0,
+            "speed_step_knots": 0.5
+          },
+          "installed_power_kw": 410.95794941406,
+          "environments": [
+            {
+              "name": "Design channel",
+              "limiting_speed_knots": 10.313218930796403,
+              "service_speed_knots": 7.22,
+              "blockage_ratio": 0.03564181344078475,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.2573760624223631,
+                  "resistance_kn": 4.564754894375563,
+                  "shaft_power_kw": 17.169901520183487,
+                  "battery_power_kw": 18.66293643498205,
+                  "energy_kwh_per_km": 5.038589750265132
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.29648502191520054,
+                  "resistance_kn": 5.986906161685352,
+                  "shaft_power_kw": 25.941040887419256,
+                  "battery_power_kw": 28.1967835732818,
+                  "energy_kwh_per_km": 6.090018050384838
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.335593981408038,
+                  "resistance_kn": 7.61319365445963,
+                  "shaft_power_kw": 37.339047007603845,
+                  "battery_power_kw": 40.58592066043896,
+                  "energy_kwh_per_km": 7.304881328372742
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.3747029409008754,
+                  "resistance_kn": 9.45451846389287,
+                  "shaft_power_kw": 51.77364064163957,
+                  "battery_power_kw": 56.275696349608225,
+                  "energy_kwh_per_km": 8.681841460908396
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.41381190039371285,
+                  "resistance_kn": 11.524301325200716,
+                  "shaft_power_kw": 69.69470274045605,
+                  "battery_power_kw": 75.75511167440875,
+                  "energy_kwh_per_km": 10.226121986286278
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.45292085988655023,
+                  "resistance_kn": 13.838495089060238,
+                  "shaft_power_kw": 91.59955757847061,
+                  "battery_power_kw": 99.56473649833761,
+                  "energy_kwh_per_km": 11.94681263478973
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.49202981937938767,
+                  "resistance_kn": 16.42885938958238,
+                  "shaft_power_kw": 118.13566366876088,
+                  "battery_power_kw": 128.4083300747401,
+                  "energy_kwh_per_km": 13.866990288848822
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.5311387788722252,
+                  "resistance_kn": 19.344426428066065,
+                  "shaft_power_kw": 150.15716388487147,
+                  "battery_power_kw": 163.21430857051246,
+                  "energy_kwh_per_km": 16.023395697085455
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.5702477383650626,
+                  "resistance_kn": 22.60885687268508,
+                  "shaft_power_kw": 188.41885701775945,
+                  "battery_power_kw": 204.80310545408636,
+                  "energy_kwh_per_km": 18.430805026465656
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.6093566978578999,
+                  "resistance_kn": 26.256128748632968,
+                  "shaft_power_kw": 233.82151566832488,
+                  "battery_power_kw": 254.153821378614,
+                  "energy_kwh_per_km": 21.112628458100513
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.6484656573507374,
+                  "resistance_kn": 30.32530519950117,
+                  "shaft_power_kw": 287.3917852309451,
+                  "battery_power_kw": 312.38237525102727,
+                  "energy_kwh_per_km": 24.096141256635857
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.6875746168435748,
+                  "resistance_kn": 34.86003835671447,
+                  "shaft_power_kw": 350.2917306548109,
+                  "battery_power_kw": 380.7518811465336,
+                  "energy_kwh_per_km": 27.411942487151446
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.7266835763364122,
+                  "resistance_kn": 39.90862278938858,
+                  "shaft_power_kw": 423.83251839281024,
+                  "battery_power_kw": 460.687519992185,
+                  "energy_kwh_per_km": 31.093920085865616
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.7657925358292497,
+                  "resistance_kn": 45.52417828220614,
+                  "shaft_power_kw": 509.48972903903444,
+                  "battery_power_kw": 553.7931837380809,
+                  "energy_kwh_per_km": 35.179340854915566
+                },
+                {
+                  "speed_knots": 9.0,
+                  "speed_kmh": 16.668,
+                  "froude_depth": 0.8049014953220872,
+                  "resistance_kn": 51.764883198150514,
+                  "shaft_power_kw": 608.9198918115825,
+                  "battery_power_kw": 661.8694476212853,
+                  "energy_kwh_per_km": 39.70899013806608
+                },
+                {
+                  "speed_knots": 9.5,
+                  "speed_kmh": 17.594,
+                  "froude_depth": 0.8440104548149244,
+                  "resistance_kn": 58.69423554926104,
+                  "shaft_power_kw": 723.9781610852189,
+                  "battery_power_kw": 786.9327837882813,
+                  "energy_kwh_per_km": 44.72733794408783
+                }
+              ],
+              "resistance_kn": 32.32058778867502,
+              "shaft_power_kw": 315.06776121744605,
+              "battery_power_kw": 342.46495784505004,
+              "energy_kwh_per_km": 25.555093798062714,
+              "energy_per_trip_kwh": 5122.291111486868,
+              "energy_per_year_mwh": 2694.2646816069773
+            },
+            {
+              "name": "Open sea",
+              "limiting_speed_knots": null,
+              "service_speed_knots": 7.22,
+              "blockage_ratio": 0.0003741278763936,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.04645275218461199,
+                  "resistance_kn": 1.8303346929017092,
+                  "shaft_power_kw": 4.184551849016174,
+                  "battery_power_kw": 4.548425922843667,
+                  "energy_kwh_per_km": 1.227976761026908
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.058065940230764994,
+                  "resistance_kn": 2.7685542490852613,
+                  "shaft_power_kw": 7.9119128096081015,
+                  "battery_power_kw": 8.599905227834892,
+                  "energy_kwh_per_km": 1.8574309347375577
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.06967912827691798,
+                  "resistance_kn": 3.8838683345120897,
+                  "shaft_power_kw": 13.319079141820126,
+                  "battery_power_kw": 14.477259936761005,
+                  "energy_kwh_per_km": 2.605698332750361
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.08129231632307098,
+                  "resistance_kn": 5.172199972995887,
+                  "shaft_power_kw": 20.693397403070655,
+                  "battery_power_kw": 22.49282326420723,
+                  "energy_kwh_per_km": 3.4700437001245343
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.09290550436922398,
+                  "resistance_kn": 6.630216516802014,
+                  "shaft_power_kw": 30.31629667771516,
+                  "battery_power_kw": 32.952496388820826,
+                  "energy_kwh_per_km": 4.448231153998491
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.10451869241537698,
+                  "resistance_kn": 8.255111052851063,
+                  "shaft_power_kw": 42.46429125586587,
+                  "battery_power_kw": 46.156838321593334,
+                  "energy_kwh_per_km": 5.53837752838893
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.11613188046152999,
+                  "resistance_kn": 10.044466581822402,
+                  "shaft_power_kw": 57.40970677432715,
+                  "battery_power_kw": 62.40185518948603,
+                  "energy_kwh_per_km": 6.738861251564366
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.12774506850768297,
+                  "resistance_kn": 11.996166070007938,
+                  "shaft_power_kw": 75.42122898948101,
+                  "battery_power_kw": 81.97959672769674,
+                  "energy_kwh_per_km": 8.048261999577532
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.13935825655383596,
+                  "resistance_kn": 14.108397654912805,
+                  "shaft_power_kw": 96.76479671582861,
+                  "battery_power_kw": 105.1791268650311,
+                  "energy_kwh_per_km": 9.4653641887177
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.15097144459998899,
+                  "resistance_kn": 16.408503266266642,
+                  "shaft_power_kw": 121.91882560242033,
+                  "battery_power_kw": 132.52046261132642,
+                  "energy_kwh_per_km": 11.008511597551621
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.16258463264614195,
+                  "resistance_kn": 18.901025583515562,
+                  "shaft_power_kw": 151.24180649138404,
+                  "battery_power_kw": 164.39326792541743,
+                  "energy_kwh_per_km": 12.680751922664102
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.17419782069229495,
+                  "resistance_kn": 21.58605612740104,
+                  "shaft_power_kw": 185.06445453225157,
+                  "battery_power_kw": 201.15701579592562,
+                  "energy_kwh_per_km": 14.482146565581397
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.18581100873844797,
+                  "resistance_kn": 24.46717036436678,
+                  "shaft_power_kw": 223.74955440764924,
+                  "battery_power_kw": 243.20603739961874,
+                  "energy_kwh_per_km": 16.415094316928908
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.19742419678460096,
+                  "resistance_kn": 27.54884080629384,
+                  "shaft_power_kw": 267.6767812031982,
+                  "battery_power_kw": 290.9530230469545,
+                  "energy_kwh_per_km": 18.48259579767212
+                },
+                {
+                  "speed_knots": 9.0,
+                  "speed_kmh": 16.668,
+                  "froude_depth": 0.20903738483075396,
+                  "resistance_kn": 30.836044864123572,
+                  "shaft_power_kw": 317.24122956210334,
+                  "battery_power_kw": 344.82742343706883,
+                  "energy_kwh_per_km": 20.68799036699477
+                },
+                {
+                  "speed_knots": 9.5,
+                  "speed_kmh": 17.594,
+                  "froude_depth": 0.22065057287690695,
+                  "resistance_kn": 34.33413011987373,
+                  "shaft_power_kw": 372.85339348844207,
+                  "battery_power_kw": 405.2754277048283,
+                  "energy_kwh_per_km": 23.034865732910554
+                },
+                {
+                  "speed_knots": 10.0,
+                  "speed_kmh": 18.52,
+                  "froude_depth": 0.23226376092305998,
+                  "resistance_kn": 38.048750482983664,
+                  "shaft_power_kw": 434.93949440992884,
+                  "battery_power_kw": 472.7603200107922,
+                  "energy_kwh_per_km": 25.52701511937323
+                }
+              ],
+              "resistance_kn": 20.08243902282517,
+              "shaft_power_kw": 166.12377162936573,
+              "battery_power_kw": 180.56931698844102,
+              "energy_kwh_per_km": 13.473365565547711,
+              "energy_per_trip_kwh": 2700.616214660505,
+              "energy_per_year_mwh": 1420.492261640093
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_below_schijf",
+              "ok": true,
+              "message": "service 7.2 kn stays below the Schijf limit 10.3 kn",
+              "severity": "error"
+            },
+            {
+              "name": "energy_positive",
+              "ok": true,
+              "message": "energy 25.6 kWh/km at service speed",
+              "severity": "error"
+            },
+            {
+              "name": "resistance_coeffs_first_order",
+              "ok": true,
+              "message": "confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate (RS1) — ITTC-1957 friction is standard; anchor with a model test/CFD before class use.",
+              "severity": "warning"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/008",
+      "output": {
+        "ok": {
+          "inputs": {
+            "beam": 13.5106,
+            "loa": 83.61,
+            "lwl": 81.6095,
+            "draft": 3.8756,
+            "block_coefficient": 0.8288,
+            "channel_depth_m": 5.4148,
+            "channel_bottom_width_m": 94.4182,
+            "channel_top_width_m": 199.1116,
+            "current_knots": 0.0715,
+            "fresh_water": true,
+            "also_open_sea": true,
+            "propulsive_coefficient": 0.45,
+            "drivetrain_efficiency": 0.92,
+            "target_service_speed_knots": 4.5247,
+            "service_speed_safety_fraction": 0.9,
+            "power_margin": 1.2,
+            "one_way_km": 69.2698,
+            "trips_per_year": 81.9068,
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 10.0,
+            "speed_step_knots": 0.5
+          },
+          "installed_power_kw": 76.72230931508088,
+          "environments": [
+            {
+              "name": "Design channel",
+              "limiting_speed_knots": 11.354021663504742,
+              "service_speed_knots": 4.52,
+              "blockage_ratio": 0.05460830576738745,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.1462043127720397,
+                  "resistance_kn": 2.417847461785013,
+                  "shaft_power_kw": 5.725353180421976,
+                  "battery_power_kw": 6.223209978719539,
+                  "energy_kwh_per_km": 1.6801322836715817
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.1814937920797973,
+                  "resistance_kn": 3.6320268657922203,
+                  "shaft_power_kw": 10.67638009938197,
+                  "battery_power_kw": 11.604760977589097,
+                  "energy_kwh_per_km": 2.5064278569306904
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.2167832713875549,
+                  "resistance_kn": 5.091216730810549,
+                  "shaft_power_kw": 17.875596830798575,
+                  "battery_power_kw": 19.42999655521584,
+                  "energy_kwh_per_km": 3.4971196103700217
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.2520727506953125,
+                  "resistance_kn": 6.804917039551427,
+                  "shaft_power_kw": 27.78189947723616,
+                  "battery_power_kw": 30.197716823082782,
+                  "energy_kwh_per_km": 4.658703613557973
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.2873622300030701,
+                  "resistance_kn": 8.786873526385504,
+                  "shaft_power_kw": 40.895663692093024,
+                  "battery_power_kw": 44.451808360970674,
+                  "energy_kwh_per_km": 6.000514087604032
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.3226517093108277,
+                  "resistance_kn": 11.054998416673449,
+                  "shaft_power_kw": 57.7704638992924,
+                  "battery_power_kw": 62.79398249923087,
+                  "energy_kwh_per_km": 7.534675125897633
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.3579411886185853,
+                  "resistance_kn": 13.631370905426083,
+                  "shaft_power_kw": 79.02498297357577,
+                  "battery_power_kw": 85.89672062345193,
+                  "energy_kwh_per_km": 9.276103739033685
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.3932306679263429,
+                  "resistance_kn": 16.54402164909589,
+                  "shaft_power_kw": 105.36628566281595,
+                  "battery_power_kw": 114.52857137262603,
+                  "energy_kwh_per_km": 11.243723873220699
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.4285201472341005,
+                  "resistance_kn": 19.865919601272328,
+                  "shaft_power_kw": 137.87741074207526,
+                  "battery_power_kw": 149.86675080660353,
+                  "energy_kwh_per_km": 13.486928618304853
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.4638096265418581,
+                  "resistance_kn": 23.63936389629814,
+                  "shaft_power_kw": 177.5778299378283,
+                  "battery_power_kw": 193.0193803672047,
+                  "energy_kwh_per_km": 16.03417348124312
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.4990991058496157,
+                  "resistance_kn": 27.91252738327372,
+                  "shaft_power_kw": 225.63120043075082,
+                  "battery_power_kw": 245.2513048160335,
+                  "energy_kwh_per_km": 18.91787294168725
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.5343885851573733,
+                  "resistance_kn": 32.74300660062304,
+                  "shaft_power_kw": 283.39287589060433,
+                  "battery_power_kw": 308.03573466370034,
+                  "energy_kwh_per_km": 22.176798751886274
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.5696780644651308,
+                  "resistance_kn": 38.19601231333378,
+                  "shaft_power_kw": 352.4201420584682,
+                  "battery_power_kw": 383.06537180268276,
+                  "energy_kwh_per_km": 25.854844209144353
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.6049675437728884,
+                  "resistance_kn": 44.34441946214777,
+                  "shaft_power_kw": 434.49446592521093,
+                  "battery_power_kw": 472.2765933969684,
+                  "energy_kwh_per_km": 30.001054084421824
+                },
+                {
+                  "speed_knots": 9.0,
+                  "speed_kmh": 16.668,
+                  "froude_depth": 0.640257023080646,
+                  "resistance_kn": 51.26910232142242,
+                  "shaft_power_kw": 531.6468737399961,
+                  "battery_power_kw": 577.8770366739087,
+                  "energy_kwh_per_km": 34.66984861254552
+                },
+                {
+                  "speed_knots": 9.5,
+                  "speed_kmh": 17.594,
+                  "froude_depth": 0.6755465023884036,
+                  "resistance_kn": 59.0593668418927,
+                  "shaft_power_kw": 646.1855417147984,
+                  "battery_power_kw": 702.375588820433,
+                  "energy_kwh_per_km": 39.92131344892764
+                },
+                {
+                  "speed_knots": 10.0,
+                  "speed_kmh": 18.52,
+                  "froude_depth": 0.7108359816961612,
+                  "resistance_kn": 67.81343388585731,
+                  "shaft_power_kw": 780.725455292885,
+                  "battery_power_kw": 848.6146253183533,
+                  "energy_kwh_per_km": 45.82152404526746
+                }
+              ],
+              "resistance_kn": 11.18227121761783,
+              "shaft_power_kw": 58.82043714156201,
+              "battery_power_kw": 63.935257762567396,
+              "energy_kwh_per_km": 7.620701699386554,
+              "energy_per_trip_kwh": 527.8844825761668,
+              "energy_per_year_mwh": 86.47465747493916
+            },
+            {
+              "name": "Open sea",
+              "limiting_speed_knots": null,
+              "service_speed_knots": 4.52,
+              "blockage_ratio": 0.00086794723022336,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.04645275218461199,
+                  "resistance_kn": 2.3155703951087157,
+                  "shaft_power_kw": 5.293908494417437,
+                  "battery_power_kw": 5.754248363497214,
+                  "energy_kwh_per_km": 1.553522776322142
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.058065940230764994,
+                  "resistance_kn": 3.5010913487220634,
+                  "shaft_power_kw": 10.00534105434794,
+                  "battery_power_kw": 10.875370711247761,
+                  "energy_kwh_per_km": 2.348892162256536
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.06967912827691798,
+                  "resistance_kn": 4.909920131041495,
+                  "shaft_power_kw": 16.837752769384966,
+                  "battery_power_kw": 18.301905184114094,
+                  "energy_kwh_per_km": 3.294079406787994
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.08129231632307098,
+                  "resistance_kn": 6.5368617230061385,
+                  "shaft_power_kw": 26.153257435778336,
+                  "battery_power_kw": 28.42745373454167,
+                  "energy_kwh_per_km": 4.385599156825311
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.09290550436922398,
+                  "resistance_kn": 8.377670967062457,
+                  "shaft_power_kw": 38.30643507072824,
+                  "battery_power_kw": 41.63742942470461,
+                  "energy_kwh_per_km": 5.620603324069196
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.10451869241537698,
+                  "resistance_kn": 10.428773385714067,
+                  "shaft_power_kw": 53.645610296113155,
+                  "battery_power_kw": 58.310445974036035,
+                  "energy_kwh_per_km": 6.996693781381814
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.11613188046152999,
+                  "resistance_kn": 12.687091773195057,
+                  "shaft_power_kw": 72.5137778681282,
+                  "battery_power_kw": 78.81932376970457,
+                  "energy_kwh_per_km": 8.511806022646281
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.12774506850768297,
+                  "resistance_kn": 15.149931387343221,
+                  "shaft_power_kw": 95.24930195793654,
+                  "battery_power_kw": 103.53184995427884,
+                  "energy_kwh_per_km": 10.164132137667274
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.13935825655383596,
+                  "resistance_kn": 17.849934956289605,
+                  "shaft_power_kw": 122.42675388687162,
+                  "battery_power_kw": 133.07255857268655,
+                  "energy_kwh_per_km": 11.975572225763727
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.15097144459998899,
+                  "resistance_kn": 20.794970626357006,
+                  "shaft_power_kw": 154.51125285841619,
+                  "battery_power_kw": 167.94701397653932,
+                  "energy_kwh_per_km": 13.951405048723984
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.16258463264614195,
+                  "resistance_kn": 23.985715453932457,
+                  "shaft_power_kw": 191.92836490337774,
+                  "battery_power_kw": 208.61778793845406,
+                  "energy_kwh_per_km": 16.092084845607378
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.17419782069229495,
+                  "resistance_kn": 27.427408384208206,
+                  "shaft_power_kw": 235.14431454727833,
+                  "battery_power_kw": 255.59164624704164,
+                  "energy_kwh_per_km": 18.401126439671824
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.18581100873844797,
+                  "resistance_kn": 31.126455262928104,
+                  "shaft_power_kw": 284.6479748844483,
+                  "battery_power_kw": 309.39997270048724,
+                  "energy_kwh_per_km": 20.8828275310804
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.19742419678460096,
+                  "resistance_kn": 35.089943379090776,
+                  "shaft_power_kw": 340.9494854016367,
+                  "battery_power_kw": 370.59726674090945,
+                  "energy_kwh_per_km": 23.541943002217597
+                },
+                {
+                  "speed_knots": 9.0,
+                  "speed_kmh": 16.668,
+                  "froude_depth": 0.20903738483075396,
+                  "resistance_kn": 39.32547329423981,
+                  "shaft_power_kw": 404.5804692511392,
+                  "battery_power_kw": 439.7613796208035,
+                  "energy_kwh_per_km": 26.383572091480893
+                },
+                {
+                  "speed_knots": 9.5,
+                  "speed_kmh": 17.594,
+                  "froude_depth": 0.22065057287690695,
+                  "resistance_kn": 43.841077292059246,
+                  "shaft_power_kw": 476.09461446852254,
+                  "battery_power_kw": 517.4941461614375,
+                  "energy_kwh_per_km": 29.413103680881974
+                },
+                {
+                  "speed_knots": 10.0,
+                  "speed_kmh": 18.52,
+                  "froude_depth": 0.23226376092305998,
+                  "resistance_kn": 48.64517067473839,
+                  "shaft_power_kw": 556.0683510018983,
+                  "battery_power_kw": 604.4221206542373,
+                  "energy_kwh_per_km": 32.636183620639166
+                }
+              ],
+              "resistance_kn": 10.540334314055627,
+              "shaft_power_kw": 54.5776977741707,
+              "battery_power_kw": 59.32358453714207,
+              "energy_kwh_per_km": 7.071540326100279,
+              "energy_per_trip_kwh": 489.84418408090113,
+              "energy_per_year_mwh": 80.24313923335511
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_below_schijf",
+              "ok": true,
+              "message": "service 4.5 kn stays below the Schijf limit 11.4 kn",
+              "severity": "error"
+            },
+            {
+              "name": "energy_positive",
+              "ok": true,
+              "message": "energy 7.6 kWh/km at service speed",
+              "severity": "error"
+            },
+            {
+              "name": "resistance_coeffs_first_order",
+              "ok": true,
+              "message": "confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate (RS1) — ITTC-1957 friction is standard; anchor with a model test/CFD before class use.",
+              "severity": "warning"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/009",
+      "output": {
+        "ok": {
+          "inputs": {
+            "beam": 11.5366,
+            "loa": 100.71,
+            "lwl": 98.7095,
+            "draft": 2.9544,
+            "block_coefficient": 0.7867,
+            "channel_depth_m": 6.3169,
+            "channel_bottom_width_m": 55.3534,
+            "channel_top_width_m": 138.5817,
+            "current_knots": 0.0438,
+            "fresh_water": true,
+            "also_open_sea": false,
+            "propulsive_coefficient": 0.45,
+            "drivetrain_efficiency": 0.92,
+            "target_service_speed_knots": 7.2033,
+            "service_speed_safety_fraction": 0.9,
+            "power_margin": 1.2,
+            "one_way_km": 311.5113,
+            "trips_per_year": 152.1858,
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 10.0,
+            "speed_step_knots": 0.5
+          },
+          "installed_power_kw": 282.56106298526373,
+          "environments": [
+            {
+              "name": "Design channel",
+              "limiting_speed_knots": 12.310053801545031,
+              "service_speed_knots": 7.2,
+              "blockage_ratio": 0.04377496979797274,
+              "curve": [
+                {
+                  "speed_knots": 2.0,
+                  "speed_kmh": 3.704,
+                  "froude_depth": 0.13355275463454674,
+                  "resistance_kn": 2.265213881177928,
+                  "shaft_power_kw": 5.292197645895079,
+                  "battery_power_kw": 5.752388745538129,
+                  "energy_kwh_per_km": 1.5530207196377237
+                },
+                {
+                  "speed_knots": 2.5,
+                  "speed_kmh": 4.63,
+                  "froude_depth": 0.16622541209480382,
+                  "resistance_kn": 3.4099046480196646,
+                  "shaft_power_kw": 9.915477742676709,
+                  "battery_power_kw": 10.77769319856164,
+                  "energy_kwh_per_km": 2.327795507248734
+                },
+                {
+                  "speed_knots": 3.0,
+                  "speed_kmh": 5.556,
+                  "froude_depth": 0.19889806955506087,
+                  "resistance_kn": 4.777240383711606,
+                  "shaft_power_kw": 16.621937834670774,
+                  "battery_power_kw": 18.067323733337798,
+                  "energy_kwh_per_km": 3.2518581233509356
+                },
+                {
+                  "speed_knots": 3.5,
+                  "speed_kmh": 6.482,
+                  "froude_depth": 0.23157072701531795,
+                  "resistance_kn": 6.368988106042563,
+                  "shaft_power_kw": 25.800497941821344,
+                  "battery_power_kw": 28.044019501979722,
+                  "energy_kwh_per_km": 4.326445464668269
+                },
+                {
+                  "speed_knots": 4.0,
+                  "speed_kmh": 7.408,
+                  "froude_depth": 0.264243384475575,
+                  "resistance_kn": 8.189262937284642,
+                  "shaft_power_kw": 37.85497202222937,
+                  "battery_power_kw": 41.14670871981453,
+                  "energy_kwh_per_km": 5.554361328268699
+                },
+                {
+                  "speed_knots": 4.5,
+                  "speed_kmh": 8.334,
+                  "froude_depth": 0.29691604193583204,
+                  "resistance_kn": 10.244353336822012,
+                  "shaft_power_kw": 53.20987057930799,
+                  "battery_power_kw": 57.8368158470739,
+                  "energy_kwh_per_km": 6.939862712631858
+                },
+                {
+                  "speed_knots": 5.0,
+                  "speed_kmh": 9.26,
+                  "froude_depth": 0.3295886993960891,
+                  "resistance_kn": 12.542633017966825,
+                  "shaft_power_kw": 72.31610372178052,
+                  "battery_power_kw": 78.60446056715274,
+                  "energy_kwh_per_km": 8.488602653040253
+                },
+                {
+                  "speed_knots": 5.5,
+                  "speed_kmh": 10.186,
+                  "froude_depth": 0.3622613568563462,
+                  "resistance_kn": 15.09451984616219,
+                  "shaft_power_kw": 95.6566798865564,
+                  "battery_power_kw": 103.97465205060479,
+                  "energy_kwh_per_km": 10.2076037748483
+                },
+                {
+                  "speed_knots": 6.0,
+                  "speed_kmh": 11.112,
+                  "froude_depth": 0.39493401431660324,
+                  "resistance_kn": 17.91246193504643,
+                  "shaft_power_kw": 123.75245151265887,
+                  "battery_power_kw": 134.51353425289005,
+                  "energy_kwh_per_km": 12.105249662787081
+                },
+                {
+                  "speed_knots": 6.5,
+                  "speed_kmh": 12.038,
+                  "froude_depth": 0.4276066717768603,
+                  "resistance_kn": 21.04622018571993,
+                  "shaft_power_kw": 157.43184068230212,
+                  "battery_power_kw": 171.12156595902405,
+                  "energy_kwh_per_km": 14.215115962703443
+                },
+                {
+                  "speed_knots": 7.0,
+                  "speed_kmh": 12.964,
+                  "froude_depth": 0.46027932923711734,
+                  "resistance_kn": 24.523382528396706,
+                  "shaft_power_kw": 197.45850060766898,
+                  "battery_power_kw": 214.62880500833583,
+                  "energy_kwh_per_km": 16.555754783117543
+                },
+                {
+                  "speed_knots": 7.5,
+                  "speed_kmh": 13.89,
+                  "froude_depth": 0.4929519866973744,
+                  "resistance_kn": 28.365793173469072,
+                  "shaft_power_kw": 244.60962623736225,
+                  "battery_power_kw": 265.880028518872,
+                  "energy_kwh_per_km": 19.14183070690223
+                },
+                {
+                  "speed_knots": 8.0,
+                  "speed_kmh": 14.816,
+                  "froude_depth": 0.5256246441576314,
+                  "resistance_kn": 32.602813410074056,
+                  "shaft_power_kw": 299.781472456203,
+                  "battery_power_kw": 325.8494265828293,
+                  "energy_kwh_per_km": 21.993076848193123
+                },
+                {
+                  "speed_knots": 8.5,
+                  "speed_kmh": 15.742,
+                  "froude_depth": 0.5582973016178885,
+                  "resistance_kn": 37.267818803489995,
+                  "shaft_power_kw": 363.9766260596707,
+                  "battery_power_kw": 395.6267674561638,
+                  "energy_kwh_per_km": 25.131925260841303
+                },
+                {
+                  "speed_knots": 9.0,
+                  "speed_kmh": 16.668,
+                  "froude_depth": 0.5909699590781455,
+                  "resistance_kn": 42.397881269200134,
+                  "shaft_power_kw": 438.31219092301893,
+                  "battery_power_kw": 476.4262944815423,
+                  "energy_kwh_per_km": 28.58329100561209
+                },
+                {
+                  "speed_knots": 9.5,
+                  "speed_kmh": 17.594,
+                  "froude_depth": 0.6236426165384026,
+                  "resistance_kn": 48.03379388688448,
+                  "shaft_power_kw": 524.030622060067,
+                  "battery_power_kw": 569.5985022392032,
+                  "energy_kwh_per_km": 32.374588054973465
+                },
+                {
+                  "speed_knots": 10.0,
+                  "speed_kmh": 18.52,
+                  "froude_depth": 0.6563152739986596,
+                  "resistance_kn": 54.220194185441514,
+                  "shaft_power_kw": 622.5117753409976,
+                  "battery_power_kw": 676.6432340663017,
+                  "energy_kwh_per_km": 36.535811774638326
+                }
+              ],
+              "resistance_kn": 26.085706696683125,
+              "shaft_power_kw": 216.63014828870223,
+              "battery_power_kw": 235.4675524877198,
+              "energy_kwh_per_km": 17.607253253728395,
+              "energy_per_trip_kwh": 5484.8583504981625,
+              "energy_per_year_mwh": 1669.4351119144867
+            }
+          ],
+          "checks": [
+            {
+              "name": "service_below_schijf",
+              "ok": true,
+              "message": "service 7.2 kn stays below the Schijf limit 12.3 kn",
+              "severity": "error"
+            },
+            {
+              "name": "energy_positive",
+              "ok": true,
+              "message": "energy 17.6 kWh/km at service speed",
+              "severity": "error"
+            },
+            {
+              "name": "resistance_coeffs_first_order",
+              "ok": true,
+              "message": "confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate (RS1) — ITTC-1957 friction is standard; anchor with a model test/CFD before class use.",
+              "severity": "warning"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

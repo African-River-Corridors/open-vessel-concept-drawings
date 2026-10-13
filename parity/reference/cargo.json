@@ -188,6 +188,84 @@
           "message": "Unknown cargo type 'LNG / Ethane'. Valid types: LNG, LNG_ethane, LPG_propane, LPG_butane, LPG_mix, bauxite"
         }
       }
+    },
+    {
+      "id": "get_cargo/sweep/000",
+      "output": {
+        "ok": {
+          "name": "LPG (Propane)",
+          "density": 581.0,
+          "temperature": -42.1,
+          "pressure": 0.0,
+          "description": "Fully refrigerated liquefied propane (-42.1 C, near-atmospheric)",
+          "phase": "liquid_gas"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/sweep/001",
+      "output": {
+        "ok": {
+          "name": "LPG (Butane)",
+          "density": 600.0,
+          "temperature": -1.0,
+          "pressure": 0.0,
+          "description": "Cryogenic liquefied butane",
+          "phase": "liquid_gas"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/sweep/002",
+      "output": {
+        "ok": {
+          "name": "LNG",
+          "density": 450.0,
+          "temperature": -162.0,
+          "pressure": 0.25,
+          "description": "Liquefied Natural Gas (methane-rich)",
+          "phase": "liquid_gas"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/sweep/003",
+      "output": {
+        "ok": {
+          "name": "LNG / Ethane",
+          "density": 500.0,
+          "temperature": -162.0,
+          "pressure": 0.25,
+          "description": "LNG–ethane blend at cryogenic temperature",
+          "phase": "liquid_gas"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/sweep/004",
+      "output": {
+        "ok": {
+          "name": "LNG / Ethane",
+          "density": 500.0,
+          "temperature": -162.0,
+          "pressure": 0.25,
+          "description": "LNG–ethane blend at cryogenic temperature",
+          "phase": "liquid_gas"
+        }
+      }
+    },
+    {
+      "id": "get_cargo/sweep/005",
+      "output": {
+        "ok": {
+          "name": "LPG (Propane)",
+          "density": 581.0,
+          "temperature": -42.1,
+          "pressure": 0.0,
+          "description": "Fully refrigerated liquefied propane (-42.1 C, near-atmospheric)",
+          "phase": "liquid_gas"
+        }
+      }
     }
   ]
 }

@@ -229,6 +229,930 @@
           "payload_t": 1000.0
         }
       }
+    },
+    {
+      "id": "criteria_set_for/IGC_2G",
+      "tier": 1,
+      "reason": "tier 1: named case: criteria set for the ruleset of the quickstart run (examples/quickstart.py: CN_II_motor 90 x 14.8 m, depth 6.5 m, LPG_propane)",
+      "input": {
+        "fn": "criteria_set_for",
+        "args": {
+          "ruleset": "IGC_2G"
+        }
+      }
+    },
+    {
+      "id": "assess/error/unknown_criteria_set",
+      "tier": 3,
+      "reason": "tier 3: error path: unknown criteria set",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "cargo": "LPG_propane",
+            "t_max": 4.4,
+            "depths": [
+              6.5
+            ],
+            "ruleset": "IGC_2G",
+            "fill_ratio": 0.95
+          },
+          "criteria_set": "IMO_2020"
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 12.7466,
+          "depth": 4.8707,
+          "draught": 2.4825,
+          "kg": 4.1464,
+          "phi_deg": 10.8686
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 13.3642,
+          "depth": 5.4823,
+          "draught": 2.2711,
+          "kg": 5.2677,
+          "phi_deg": 50.4763
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 12.4734,
+          "depth": 6.5093,
+          "draught": 1.3578,
+          "kg": 3.9868,
+          "phi_deg": -24.5319
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 14.9561,
+          "depth": 4.7869,
+          "draught": 1.9758,
+          "kg": 2.6851,
+          "phi_deg": -30.5115
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 19.3271,
+          "depth": 3.7529,
+          "draught": 1.4455,
+          "kg": 1.947,
+          "phi_deg": 34.6974
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 15.978,
+          "depth": 3.9346,
+          "draught": 3.1399,
+          "kg": 3.6445,
+          "phi_deg": 19.8888
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/006",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 9.8213,
+          "depth": 5.7547,
+          "draught": 4.5537,
+          "kg": 5.635,
+          "phi_deg": 29.3609
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/007",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 18.5542,
+          "depth": 5.8824,
+          "draught": 3.0374,
+          "kg": 1.7622,
+          "phi_deg": 36.9113
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/008",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 12.0137,
+          "depth": 5.2388,
+          "draught": 1.3846,
+          "kg": 4.0135,
+          "phi_deg": -2.8058
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/009",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 11.5666,
+          "depth": 5.471,
+          "draught": 2.3753,
+          "kg": 2.7868,
+          "phi_deg": 17.3435
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/010",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 15.7498,
+          "depth": 4.7957,
+          "draught": 1.2856,
+          "kg": 3.4691,
+          "phi_deg": 29.5064
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/011",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 11.8694,
+          "depth": 4.8402,
+          "draught": 3.6363,
+          "kg": 4.7245,
+          "phi_deg": 31.6545
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/012",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 16.8078,
+          "depth": 5.5168,
+          "draught": 1.0853,
+          "kg": 2.0522,
+          "phi_deg": -32.3868
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/013",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 7.8432,
+          "depth": 4.6129,
+          "draught": 2.7994,
+          "kg": 3.4673,
+          "phi_deg": 59.0936
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/014",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 7.7473,
+          "depth": 4.2464,
+          "draught": 2.5603,
+          "kg": 2.1025,
+          "phi_deg": 46.3955
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/015",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 19.3597,
+          "depth": 5.5653,
+          "draught": 3.7443,
+          "kg": 2.0959,
+          "phi_deg": -2.6148
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/016",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 12.14,
+          "depth": 6.4026,
+          "draught": 1.131,
+          "kg": 1.5848,
+          "phi_deg": 14.5162
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/017",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 14.2041,
+          "depth": 3.5129,
+          "draught": 1.5521,
+          "kg": 2.6753,
+          "phi_deg": -0.8761
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/018",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 7.3047,
+          "depth": 5.5756,
+          "draught": 2.0042,
+          "kg": 4.5053,
+          "phi_deg": -17.1636
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/019",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 14.0532,
+          "depth": 6.117,
+          "draught": 2.7188,
+          "kg": 5.2304,
+          "phi_deg": 20.346
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/020",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 16.5337,
+          "depth": 5.9487,
+          "draught": 1.9165,
+          "kg": 5.6525,
+          "phi_deg": -2.6921
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/021",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 12.4,
+          "depth": 6.4346,
+          "draught": 1.7867,
+          "kg": 1.7982,
+          "phi_deg": -2.7763
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/022",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 8.874,
+          "depth": 5.2872,
+          "draught": 1.8102,
+          "kg": 2.2983,
+          "phi_deg": 41.1809
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/023",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 11.7443,
+          "depth": 5.7445,
+          "draught": 5.0037,
+          "kg": 2.6532,
+          "phi_deg": 7.4155
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/024",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 19.8465,
+          "depth": 3.1959,
+          "draught": 1.9296,
+          "kg": 2.4085,
+          "phi_deg": 52.8628
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/025",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 14.7787,
+          "depth": 4.7115,
+          "draught": 3.0124,
+          "kg": 4.2078,
+          "phi_deg": -38.1755
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/026",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 16.0377,
+          "depth": 3.5337,
+          "draught": 2.0933,
+          "kg": 3.3612,
+          "phi_deg": 43.5418
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/027",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 10.6192,
+          "depth": 6.8873,
+          "draught": 3.4593,
+          "kg": 6.4236,
+          "phi_deg": 12.1748
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/028",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 13.6272,
+          "depth": 5.2374,
+          "draught": 2.9282,
+          "kg": 2.2338,
+          "phi_deg": -24.3989
+        }
+      }
+    },
+    {
+      "id": "box_gz/sweep/029",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 18.2274,
+          "depth": 4.2215,
+          "draught": 2.3681,
+          "kg": 2.3097,
+          "phi_deg": 28.6295
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 4.3331,
+          "volume_fraction": 0.3284
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 5.1923,
+          "volume_fraction": 0.1703
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 3.5091,
+          "volume_fraction": 0.2606
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 5.5399,
+          "volume_fraction": 0.4361
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 5.0677,
+          "volume_fraction": 0.6176
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 1.4144,
+          "volume_fraction": 0.47
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/006",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 2.623,
+          "volume_fraction": 0.2278
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/007",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 3.3771,
+          "volume_fraction": 0.4187
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/008",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 2.8287,
+          "volume_fraction": 0.1382
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/009",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 1.8214,
+          "volume_fraction": 0.4309
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/010",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 2.6589,
+          "volume_fraction": 0.3283
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/011",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 2.8089,
+          "volume_fraction": 0.7902
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/012",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 0.9984,
+          "volume_fraction": 0.2171
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/013",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 5.3229,
+          "volume_fraction": 0.9367
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/014",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 0.8794,
+          "volume_fraction": 0.8054
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/015",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 2.5756,
+          "volume_fraction": 0.1314
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/016",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 4.0664,
+          "volume_fraction": 0.2393
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/017",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 4.2572,
+          "volume_fraction": 0.3228
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/018",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 5.5674,
+          "volume_fraction": 0.5102
+        }
+      }
+    },
+    {
+      "id": "segment_fill/sweep/019",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 4.7558,
+          "volume_fraction": 0.1896
+        }
+      }
+    },
+    {
+      "id": "assess/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 112.4462,
+            "beam": 17.9385,
+            "cargo": "LNG",
+            "t_max": 3.8237,
+            "ruleset": "IGC_2G",
+            "fill_ratio": 0.9477,
+            "self_propelled": true,
+            "depths": [
+              4.0,
+              6.0
+            ]
+          },
+          "criteria_set": "IS_CODE_2008",
+          "block_coefficient": 0.9042
+        }
+      }
+    },
+    {
+      "id": "assess/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 104.903,
+            "beam": 15.3821,
+            "cargo": "LPG_butane",
+            "t_max": 4.7956,
+            "ruleset": "IGC_2G",
+            "fill_ratio": 0.9286,
+            "self_propelled": true,
+            "depths": [
+              5.5,
+              6.0
+            ]
+          },
+          "criteria_set": "IS_CODE_2008",
+          "block_coefficient": 0.8457
+        }
+      }
+    },
+    {
+      "id": "assess/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 115.529,
+            "beam": 8.5451,
+            "cargo": "LNG_ethane",
+            "t_max": 2.8149,
+            "ruleset": "IGC_2G",
+            "fill_ratio": 0.9444,
+            "self_propelled": false,
+            "depths": [
+              5.0,
+              6.0
+            ]
+          },
+          "criteria_set": "ADN_9_3_1_14_2",
+          "block_coefficient": 0.8568
+        }
+      }
+    },
+    {
+      "id": "assess/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 119.4442,
+            "beam": 8.8259,
+            "cargo": "LNG",
+            "t_max": 3.5285,
+            "ruleset": "ADN_G",
+            "fill_ratio": 0.9114,
+            "self_propelled": false,
+            "depths": [
+              5.0,
+              7.0
+            ],
+            "adn_tank_cap_m3": 1000.0
+          },
+          "criteria_set": "IS_CODE_2008",
+          "block_coefficient": 0.8936
+        }
+      }
+    },
+    {
+      "id": "assess/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 90.3841,
+            "beam": 10.3567,
+            "cargo": "LNG_ethane",
+            "t_max": 2.6337,
+            "ruleset": "IGC_2G_EXACT",
+            "fill_ratio": 0.9731,
+            "self_propelled": false,
+            "depths": [
+              4.5,
+              5.0
+            ]
+          },
+          "criteria_set": "IS_CODE_2008",
+          "block_coefficient": 0.8334
+        }
+      }
+    },
+    {
+      "id": "assess/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 107.3647,
+            "beam": 17.5412,
+            "cargo": "LPG_propane",
+            "t_max": 4.1412,
+            "ruleset": "IGC_2G_EXACT",
+            "fill_ratio": 0.9481,
+            "self_propelled": true,
+            "depths": [
+              4.5,
+              7.0
+            ]
+          },
+          "criteria_set": "ADN_9_3_1_14_2",
+          "block_coefficient": 0.9093
+        }
+      }
+    },
+    {
+      "id": "assess/sweep/006",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 109.737,
+            "beam": 16.5185,
+            "cargo": "LNG",
+            "t_max": 4.965,
+            "ruleset": "IGC_2G",
+            "fill_ratio": 0.9071,
+            "self_propelled": true,
+            "depths": [
+              4.0,
+              6.5
+            ]
+          },
+          "criteria_set": "ADN_9_3_1_14_2",
+          "block_coefficient": 0.8053
+        }
+      }
+    },
+    {
+      "id": "assess/sweep/007",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 60.6432,
+            "beam": 13.1298,
+            "cargo": "LNG_ethane",
+            "t_max": 3.8953,
+            "ruleset": "IGC_2G",
+            "fill_ratio": 0.9615,
+            "self_propelled": false,
+            "depths": [
+              4.0,
+              7.0
+            ]
+          },
+          "criteria_set": "IS_CODE_2008",
+          "block_coefficient": 0.8833
+        }
+      }
     }
   ],
   "retired": []

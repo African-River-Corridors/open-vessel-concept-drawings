@@ -1194,6 +1194,3003 @@
       "output": {
         "ok": false
       }
+    },
+    {
+      "id": "to_ga/error/unknown_cargo",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "Unknown cargo type 'coal'. Valid types: LNG, LNG_ethane, LPG_propane, LPG_butane, LPG_mix, bauxite"
+        }
+      }
+    },
+    {
+      "id": "is_gas/error/unknown_cargo",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "Unknown cargo type 'coal'. Valid types: LNG, LNG_ethane, LPG_propane, LPG_butane, LPG_mix, bauxite"
+        }
+      }
+    },
+    {
+      "id": "to_ga/sweep/000",
+      "output": {
+        "ok": [
+          {
+            "loa": 74.2055,
+            "beam": 10.7005,
+            "depth": 6.7555,
+            "max_draft": 1.5272508273124696,
+            "vertical_clearance": 0.0,
+            "vessel_type": "IGC_2G_EXACT",
+            "bow_rake_length": 10.8088,
+            "bow_rake_rise": 6.7555,
+            "stern_rake_length": 0.0,
+            "stern_rake_rise": 6.7555,
+            "bow_non_tank_pct": 0.1,
+            "stern_non_tank_pct": 0.15,
+            "bow_non_tank_length": 11.3088,
+            "stern_non_tank_length": 34.884,
+            "wing_tank_width": 0.0,
+            "wing_tank_gap": 0.6,
+            "wing_tank_height_ratio": 0.66,
+            "weather_shield_thickness": 6.0,
+            "weather_shield_clearance": 1.5,
+            "dome_height": 2.0,
+            "side_clearance": 0.45000000000000007,
+            "tank_gap_transverse": 1.0,
+            "tank_gap_longitudinal": 2.0,
+            "n_tanks_wide": 2,
+            "n_tanks_long": 2,
+            "tank_wall_thickness": 25.0,
+            "tank_head_type": "hemisphere",
+            "tank_material": "9Ni",
+            "tank_material_density": 7.85,
+            "design_pressure": 0.5,
+            "weld_efficiency": 0.95,
+            "tank_structure_factor": 1.3,
+            "insulation_thickness": 350.0,
+            "insulation_density": 60.0,
+            "cargo_type": "LPG_mix",
+            "cargo_density_override": null,
+            "fill_ratio": 0.9381,
+            "bottom_plate_thickness": 12.0,
+            "side_plate_thickness": 10.0,
+            "deck_plate_thickness": 10.0,
+            "structure_factor": 1.4,
+            "hull_steel_density": 7.85,
+            "steel_rate_per_cbm": 0.1,
+            "block_coefficient": 0.8271,
+            "water_density": 1.0,
+            "underkeel_clearance": 0.5,
+            "outfitting_factor": 0.035,
+            "piping_factor": 0.04,
+            "stores_weight": 200.0,
+            "tank_support_height": 0.5,
+            "double_bottom_height": 0.45000000000000007,
+            "aft_arrangement": {
+              "length_m": 32.884,
+              "zones": [
+                [
+                  "THRUSTER ROOM",
+                  0.0,
+                  3.5
+                ],
+                [
+                  "40 FT UNITS (2 ABREAST x 2)",
+                  3.8,
+                  28.984
+                ],
+                [
+                  "WHEELHOUSE (LIFTING)",
+                  29.284000000000002,
+                  32.884
+                ]
+              ],
+              "thruster_offsets_m": [
+                -3.2,
+                0.0,
+                3.2
+              ],
+              "thruster_room_length_m": 3.5,
+              "container_x0_m": 3.8,
+              "container_x1_m": 28.984,
+              "container_total_width_m": 7.5760000000000005,
+              "container_top_above_keel_m": 9.9515,
+              "container_labels": [
+                "BATTERY 40 FT",
+                "ACCOM 40 FT",
+                "ACCOM 40 FT"
+              ],
+              "container_unit_width_m": 2.438,
+              "container_side_gap_m": 0.9,
+              "container_rows": 2,
+              "container_per_row": 2,
+              "container_row_length_m": 12.192,
+              "container_row_gap_m": 0.8,
+              "wheelhouse_x0_m": 29.284000000000002,
+              "wheelhouse_x1_m": 32.884,
+              "wheelhouse_floor_lowered_m": 6.7555,
+              "wheelhouse_top_lowered_m": 10.1555,
+              "wheelhouse_floor_raised_m": 6.7555,
+              "wheelhouse_top_raised_m": 10.1555,
+              "wheelhouse_lift_m": 0.0,
+              "wheelhouse_width_m": 6.4,
+              "wheelhouse_height_m": 3.4,
+              "block_top_lowered_m": 10.1555,
+              "checks": [
+                {
+                  "name": "thrusters_fit_beam",
+                  "ok": true,
+                  "message": "3 x 2.60 m thrusters need 10.20 m across a 10.70 m beam",
+                  "severity": "error"
+                },
+                {
+                  "name": "requested_thruster_count_fits",
+                  "ok": true,
+                  "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 10.70 m beam",
+                  "severity": "warning"
+                },
+                {
+                  "name": "containers_fit_beam",
+                  "ok": true,
+                  "message": "2 x 40 ft units abreast need 7.58 m across a 10.70 m beam",
+                  "severity": "error"
+                },
+                {
+                  "name": "units_fit_in_one_row",
+                  "ok": false,
+                  "message": "3 units in 2 row(s) of 2; a second row adds 12.99 m to the stern block and comes straight off the cargo zone",
+                  "severity": "warning"
+                },
+                {
+                  "name": "wheelhouse_fits_beam",
+                  "ok": true,
+                  "message": "wheelhouse 6.40 m wide on a 10.70 m beam",
+                  "severity": "error"
+                },
+                {
+                  "name": "wheelhouse_sees_over_cargo",
+                  "ok": true,
+                  "message": "raised eye 8.26 m >= obstruction 6.90 m + 0.50 m margin (lift used 0.00 m of 6.00 m)",
+                  "severity": "warning"
+                }
+              ],
+              "warnings": []
+            },
+            "separation": {
+              "aft_separation_m": 2.0,
+              "fwd_separation_m": 0.5,
+              "cofferdam_m": 0.6,
+              "service_space_m": 1.4,
+              "total_length_taken_m": 2.5,
+              "checks": [
+                {
+                  "name": "cofferdam_min_width",
+                  "ok": true,
+                  "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                  "severity": "error"
+                },
+                {
+                  "name": "opening_setback",
+                  "ok": true,
+                  "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                  "severity": "error"
+                },
+                {
+                  "name": "fwd_end_bulkhead_space",
+                  "ok": true,
+                  "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                  "severity": "error"
+                },
+                {
+                  "name": "side_clearance_type_g_floor",
+                  "ok": false,
+                  "message": "side clearance 0.45 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                  "severity": "error"
+                },
+                {
+                  "name": "double_bottom_type_g_floor",
+                  "ok": false,
+                  "message": "double bottom 0.45 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                  "severity": "error"
+                }
+              ],
+              "warnings": [
+                "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+              ]
+            },
+            "tug_length": 25.0,
+            "tug_beam": 9.1,
+            "notch_depth": 3.0
+          },
+          {
+            "inputs": {
+              "loa": 74.2055,
+              "beam": 10.7005,
+              "depth": 6.7555,
+              "max_draft": 1.5272508273124696,
+              "vertical_clearance": 0.0,
+              "vessel_type": "IGC_2G_EXACT",
+              "bow_rake_length": 10.8088,
+              "bow_rake_rise": 6.7555,
+              "stern_rake_length": 0.0,
+              "stern_rake_rise": 6.7555,
+              "bow_non_tank_pct": 0.1,
+              "stern_non_tank_pct": 0.15,
+              "bow_non_tank_length": 11.3088,
+              "stern_non_tank_length": 34.884,
+              "wing_tank_width": 0.0,
+              "wing_tank_gap": 0.6,
+              "wing_tank_height_ratio": 0.66,
+              "weather_shield_thickness": 6.0,
+              "weather_shield_clearance": 1.5,
+              "dome_height": 2.0,
+              "side_clearance": 0.45000000000000007,
+              "tank_gap_transverse": 1.0,
+              "tank_gap_longitudinal": 2.0,
+              "n_tanks_wide": 2,
+              "n_tanks_long": 2,
+              "tank_wall_thickness": 25.0,
+              "tank_head_type": "hemisphere",
+              "tank_material": "9Ni",
+              "tank_material_density": 7.85,
+              "design_pressure": 0.5,
+              "weld_efficiency": 0.95,
+              "tank_structure_factor": 1.3,
+              "insulation_thickness": 350.0,
+              "insulation_density": 60.0,
+              "cargo_type": "LPG_mix",
+              "cargo_density_override": null,
+              "fill_ratio": 0.9381,
+              "bottom_plate_thickness": 12.0,
+              "side_plate_thickness": 10.0,
+              "deck_plate_thickness": 10.0,
+              "structure_factor": 1.4,
+              "hull_steel_density": 7.85,
+              "steel_rate_per_cbm": 0.1,
+              "block_coefficient": 0.8271,
+              "water_density": 1.0,
+              "underkeel_clearance": 0.5,
+              "outfitting_factor": 0.035,
+              "piping_factor": 0.04,
+              "stores_weight": 200.0,
+              "tank_support_height": 0.5,
+              "double_bottom_height": 0.45000000000000007,
+              "aft_arrangement": {
+                "length_m": 32.884,
+                "zones": [
+                  [
+                    "THRUSTER ROOM",
+                    0.0,
+                    3.5
+                  ],
+                  [
+                    "40 FT UNITS (2 ABREAST x 2)",
+                    3.8,
+                    28.984
+                  ],
+                  [
+                    "WHEELHOUSE (LIFTING)",
+                    29.284000000000002,
+                    32.884
+                  ]
+                ],
+                "thruster_offsets_m": [
+                  -3.2,
+                  0.0,
+                  3.2
+                ],
+                "thruster_room_length_m": 3.5,
+                "container_x0_m": 3.8,
+                "container_x1_m": 28.984,
+                "container_total_width_m": 7.5760000000000005,
+                "container_top_above_keel_m": 9.9515,
+                "container_labels": [
+                  "BATTERY 40 FT",
+                  "ACCOM 40 FT",
+                  "ACCOM 40 FT"
+                ],
+                "container_unit_width_m": 2.438,
+                "container_side_gap_m": 0.9,
+                "container_rows": 2,
+                "container_per_row": 2,
+                "container_row_length_m": 12.192,
+                "container_row_gap_m": 0.8,
+                "wheelhouse_x0_m": 29.284000000000002,
+                "wheelhouse_x1_m": 32.884,
+                "wheelhouse_floor_lowered_m": 6.7555,
+                "wheelhouse_top_lowered_m": 10.1555,
+                "wheelhouse_floor_raised_m": 6.7555,
+                "wheelhouse_top_raised_m": 10.1555,
+                "wheelhouse_lift_m": 0.0,
+                "wheelhouse_width_m": 6.4,
+                "wheelhouse_height_m": 3.4,
+                "block_top_lowered_m": 10.1555,
+                "checks": [
+                  {
+                    "name": "thrusters_fit_beam",
+                    "ok": true,
+                    "message": "3 x 2.60 m thrusters need 10.20 m across a 10.70 m beam",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "requested_thruster_count_fits",
+                    "ok": true,
+                    "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 10.70 m beam",
+                    "severity": "warning"
+                  },
+                  {
+                    "name": "containers_fit_beam",
+                    "ok": true,
+                    "message": "2 x 40 ft units abreast need 7.58 m across a 10.70 m beam",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "units_fit_in_one_row",
+                    "ok": false,
+                    "message": "3 units in 2 row(s) of 2; a second row adds 12.99 m to the stern block and comes straight off the cargo zone",
+                    "severity": "warning"
+                  },
+                  {
+                    "name": "wheelhouse_fits_beam",
+                    "ok": true,
+                    "message": "wheelhouse 6.40 m wide on a 10.70 m beam",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "wheelhouse_sees_over_cargo",
+                    "ok": true,
+                    "message": "raised eye 8.26 m >= obstruction 6.90 m + 0.50 m margin (lift used 0.00 m of 6.00 m)",
+                    "severity": "warning"
+                  }
+                ],
+                "warnings": []
+              },
+              "separation": {
+                "aft_separation_m": 2.0,
+                "fwd_separation_m": 0.5,
+                "cofferdam_m": 0.6,
+                "service_space_m": 1.4,
+                "total_length_taken_m": 2.5,
+                "checks": [
+                  {
+                    "name": "cofferdam_min_width",
+                    "ok": true,
+                    "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "opening_setback",
+                    "ok": true,
+                    "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "fwd_end_bulkhead_space",
+                    "ok": true,
+                    "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "side_clearance_type_g_floor",
+                    "ok": false,
+                    "message": "side clearance 0.45 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "double_bottom_type_g_floor",
+                    "ok": false,
+                    "message": "double bottom 0.45 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                    "severity": "error"
+                  }
+                ],
+                "warnings": [
+                  "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+                ]
+              },
+              "tug_length": 25.0,
+              "tug_beam": 9.1,
+              "notch_depth": 3.0
+            },
+            "tanks": {
+              "n_tanks_wide": 2,
+              "n_tanks_long": 2,
+              "n_tanks_total": 4,
+              "outer_diameter": 4.40025,
+              "inner_diameter": 3.6502499999999998,
+              "overall_tank_length": 14.689850000000002,
+              "cylinder_length": 11.039600000000002,
+              "head_length": 1.8251249999999999,
+              "volume_per_tank": 115.52831481570988,
+              "volume_cylinder": 115.52831481570988,
+              "volume_heads": 25.466335202727446,
+              "total_tank_volume": 462.1132592628395,
+              "cargo_volume": 433.50844851446976,
+              "tank_shell_weight": "float:nan",
+              "insulation_weight": "float:nan",
+              "tank_top_above_keel": 4.85025,
+              "cylinder_wall_thickness": 25.0,
+              "head_wall_thickness": 0.0,
+              "design_pressure": 0.0,
+              "tank_material": ""
+            },
+            "cargo_type": "LPG (60/40 Propane/Butane)",
+            "cargo_density": 588.4,
+            "cargo_mass": 255.07637110591398,
+            "weights": null,
+            "displacement": 1003.01760758454,
+            "deadweight": 255.0750639920294,
+            "draft": 1.5272508273124696,
+            "freeboard": 5.22824917268753,
+            "min_freeboard_ok": true,
+            "air_draft": 8.62824917268753,
+            "air_draft_ok": true,
+            "stability": null,
+            "stability_ok": true,
+            "trim": 0.0,
+            "total_depth_required": 6.7555,
+            "air_draft_unladen": 9.016638109207154,
+            "light_draft": 1.1388618907928465,
+            "air_draft_navigating_unladen": 9.016638109207154,
+            "protective_location": null,
+            "binding_constraints": [],
+            "warnings": [
+              "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "to_ga/sweep/001",
+      "output": {
+        "ok": [
+          {
+            "loa": 76.9138,
+            "beam": 16.631,
+            "depth": 6.542,
+            "max_draft": 2.3417,
+            "vertical_clearance": 0.0,
+            "vessel_type": "IGC_2G",
+            "bow_rake_length": 10.4672,
+            "bow_rake_rise": 6.542,
+            "stern_rake_length": 0.0,
+            "stern_rake_rise": 6.542,
+            "bow_non_tank_pct": 0.1,
+            "stern_non_tank_pct": 0.15,
+            "bow_non_tank_length": 10.9672,
+            "stern_non_tank_length": 5.0,
+            "wing_tank_width": 0.4,
+            "wing_tank_gap": 0.6,
+            "wing_tank_height_ratio": 0.66,
+            "weather_shield_thickness": 6.0,
+            "weather_shield_clearance": 1.5,
+            "dome_height": 2.0,
+            "side_clearance": 1.0,
+            "tank_gap_transverse": 1.0,
+            "tank_gap_longitudinal": 2.0,
+            "n_tanks_wide": 2,
+            "n_tanks_long": 2,
+            "tank_wall_thickness": 25.0,
+            "tank_head_type": "hemisphere",
+            "tank_material": "9Ni",
+            "tank_material_density": 7.85,
+            "design_pressure": 0.5,
+            "weld_efficiency": 0.95,
+            "tank_structure_factor": 1.3,
+            "insulation_thickness": 350.0,
+            "insulation_density": 60.0,
+            "cargo_type": "LPG_mix",
+            "cargo_density_override": null,
+            "fill_ratio": 0.916,
+            "bottom_plate_thickness": 12.0,
+            "side_plate_thickness": 10.0,
+            "deck_plate_thickness": 10.0,
+            "structure_factor": 1.4,
+            "hull_steel_density": 7.85,
+            "steel_rate_per_cbm": 0.1,
+            "block_coefficient": 0.9138,
+            "water_density": 1.0,
+            "underkeel_clearance": 0.5,
+            "outfitting_factor": 0.035,
+            "piping_factor": 0.04,
+            "stores_weight": 200.0,
+            "tank_support_height": 0.5,
+            "double_bottom_height": 1.1087333333333333,
+            "aft_arrangement": null,
+            "separation": {
+              "aft_separation_m": 2.0,
+              "fwd_separation_m": 0.5,
+              "cofferdam_m": 0.6,
+              "service_space_m": 1.4,
+              "total_length_taken_m": 2.5,
+              "checks": [
+                {
+                  "name": "cofferdam_min_width",
+                  "ok": true,
+                  "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                  "severity": "error"
+                },
+                {
+                  "name": "opening_setback",
+                  "ok": true,
+                  "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                  "severity": "error"
+                },
+                {
+                  "name": "fwd_end_bulkhead_space",
+                  "ok": true,
+                  "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                  "severity": "error"
+                },
+                {
+                  "name": "side_clearance_type_g_floor",
+                  "ok": true,
+                  "message": "side clearance 1.00 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                  "severity": "error"
+                },
+                {
+                  "name": "double_bottom_type_g_floor",
+                  "ok": true,
+                  "message": "double bottom 1.11 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                  "severity": "error"
+                }
+              ],
+              "warnings": [
+                "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+              ]
+            },
+            "tug_length": 25.0,
+            "tug_beam": 9.1,
+            "notch_depth": 3.0
+          },
+          {
+            "inputs": {
+              "loa": 76.9138,
+              "beam": 16.631,
+              "depth": 6.542,
+              "max_draft": 2.3417,
+              "vertical_clearance": 0.0,
+              "vessel_type": "IGC_2G",
+              "bow_rake_length": 10.4672,
+              "bow_rake_rise": 6.542,
+              "stern_rake_length": 0.0,
+              "stern_rake_rise": 6.542,
+              "bow_non_tank_pct": 0.1,
+              "stern_non_tank_pct": 0.15,
+              "bow_non_tank_length": 10.9672,
+              "stern_non_tank_length": 5.0,
+              "wing_tank_width": 0.4,
+              "wing_tank_gap": 0.6,
+              "wing_tank_height_ratio": 0.66,
+              "weather_shield_thickness": 6.0,
+              "weather_shield_clearance": 1.5,
+              "dome_height": 2.0,
+              "side_clearance": 1.0,
+              "tank_gap_transverse": 1.0,
+              "tank_gap_longitudinal": 2.0,
+              "n_tanks_wide": 2,
+              "n_tanks_long": 2,
+              "tank_wall_thickness": 25.0,
+              "tank_head_type": "hemisphere",
+              "tank_material": "9Ni",
+              "tank_material_density": 7.85,
+              "design_pressure": 0.5,
+              "weld_efficiency": 0.95,
+              "tank_structure_factor": 1.3,
+              "insulation_thickness": 350.0,
+              "insulation_density": 60.0,
+              "cargo_type": "LPG_mix",
+              "cargo_density_override": null,
+              "fill_ratio": 0.916,
+              "bottom_plate_thickness": 12.0,
+              "side_plate_thickness": 10.0,
+              "deck_plate_thickness": 10.0,
+              "structure_factor": 1.4,
+              "hull_steel_density": 7.85,
+              "steel_rate_per_cbm": 0.1,
+              "block_coefficient": 0.9138,
+              "water_density": 1.0,
+              "underkeel_clearance": 0.5,
+              "outfitting_factor": 0.035,
+              "piping_factor": 0.04,
+              "stores_weight": 200.0,
+              "tank_support_height": 0.5,
+              "double_bottom_height": 1.1087333333333333,
+              "aft_arrangement": null,
+              "separation": {
+                "aft_separation_m": 2.0,
+                "fwd_separation_m": 0.5,
+                "cofferdam_m": 0.6,
+                "service_space_m": 1.4,
+                "total_length_taken_m": 2.5,
+                "checks": [
+                  {
+                    "name": "cofferdam_min_width",
+                    "ok": true,
+                    "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "opening_setback",
+                    "ok": true,
+                    "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "fwd_end_bulkhead_space",
+                    "ok": true,
+                    "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "side_clearance_type_g_floor",
+                    "ok": true,
+                    "message": "side clearance 1.00 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "double_bottom_type_g_floor",
+                    "ok": true,
+                    "message": "double bottom 1.11 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                    "severity": "error"
+                  }
+                ],
+                "warnings": [
+                  "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+                ]
+              },
+              "tug_length": 25.0,
+              "tug_beam": 9.1,
+              "notch_depth": 3.0
+            },
+            "tanks": {
+              "n_tanks_wide": 2,
+              "n_tanks_long": 2,
+              "n_tanks_total": 4,
+              "outer_diameter": 6.8155,
+              "inner_diameter": 6.0655,
+              "overall_tank_length": 32.76696666666666,
+              "cylinder_length": 26.70146666666666,
+              "head_length": 3.03275,
+              "volume_per_tank": 771.5395840707248,
+              "volume_cylinder": 771.5395840707248,
+              "volume_heads": 116.84185505867298,
+              "total_tank_volume": 3086.158336282899,
+              "cargo_volume": 2826.921036035136,
+              "tank_shell_weight": "float:nan",
+              "insulation_weight": "float:nan",
+              "tank_top_above_keel": 7.9242333333333335,
+              "cylinder_wall_thickness": 25.0,
+              "head_wall_thickness": 0.0,
+              "design_pressure": 0.0,
+              "tank_material": ""
+            },
+            "cargo_type": "LPG (60/40 Propane/Butane)",
+            "cargo_density": 588.4,
+            "cargo_mass": 1663.3603376030737,
+            "weights": null,
+            "displacement": 3220.449011558563,
+            "deadweight": 1663.3604820507803,
+            "draft": 2.3417,
+            "freeboard": 4.2003,
+            "min_freeboard_ok": true,
+            "air_draft": 7.169099870427449,
+            "air_draft_ok": true,
+            "stability": null,
+            "stability_ok": true,
+            "trim": 0.0,
+            "total_depth_required": 6.542,
+            "air_draft_unladen": 8.592120380147298,
+            "light_draft": 1.3321129531860347,
+            "air_draft_navigating_unladen": 8.592120380147298,
+            "protective_location": null,
+            "binding_constraints": [],
+            "warnings": [
+              "PUSHED barge: crew, battery and propulsion are on the tug and are NOT in this hull's lightship, capacity or air draft. The tug is a separate vessel and must be costed and air-draft-gated separately.",
+              "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "to_ga/sweep/002",
+      "output": {
+        "ok": [
+          {
+            "loa": 113.5815,
+            "beam": 15.2386,
+            "depth": 6.9106,
+            "max_draft": 2.7494681390762334,
+            "vertical_clearance": 0.0,
+            "vessel_type": "IGC_2G_EXACT",
+            "bow_rake_length": 11.05696,
+            "bow_rake_rise": 6.9106,
+            "stern_rake_length": 0.0,
+            "stern_rake_rise": 6.9106,
+            "bow_non_tank_pct": 0.1,
+            "stern_non_tank_pct": 0.15,
+            "bow_non_tank_length": 11.55696,
+            "stern_non_tank_length": 5.0,
+            "wing_tank_width": 0.0,
+            "wing_tank_gap": 0.6,
+            "wing_tank_height_ratio": 0.66,
+            "weather_shield_thickness": 6.0,
+            "weather_shield_clearance": 1.5,
+            "dome_height": 2.0,
+            "side_clearance": 0.4613955163609006,
+            "tank_gap_transverse": 1.0,
+            "tank_gap_longitudinal": 2.0,
+            "n_tanks_wide": 2,
+            "n_tanks_long": 2,
+            "tank_wall_thickness": 25.0,
+            "tank_head_type": "hemisphere",
+            "tank_material": "9Ni",
+            "tank_material_density": 7.85,
+            "design_pressure": 0.5,
+            "weld_efficiency": 0.95,
+            "tank_structure_factor": 1.3,
+            "insulation_thickness": 350.0,
+            "insulation_density": 60.0,
+            "cargo_type": "LNG",
+            "cargo_density_override": null,
+            "fill_ratio": 0.9222,
+            "bottom_plate_thickness": 12.0,
+            "side_plate_thickness": 10.0,
+            "deck_plate_thickness": 10.0,
+            "structure_factor": 1.4,
+            "hull_steel_density": 7.85,
+            "steel_rate_per_cbm": 0.1,
+            "block_coefficient": 0.9173,
+            "water_density": 1.0,
+            "underkeel_clearance": 0.5,
+            "outfitting_factor": 0.035,
+            "piping_factor": 0.04,
+            "stores_weight": 200.0,
+            "tank_support_height": 0.5,
+            "double_bottom_height": 0.6659066666666668,
+            "aft_arrangement": null,
+            "separation": {
+              "aft_separation_m": 2.0,
+              "fwd_separation_m": 0.5,
+              "cofferdam_m": 0.6,
+              "service_space_m": 1.4,
+              "total_length_taken_m": 2.5,
+              "checks": [
+                {
+                  "name": "cofferdam_min_width",
+                  "ok": true,
+                  "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                  "severity": "error"
+                },
+                {
+                  "name": "opening_setback",
+                  "ok": true,
+                  "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                  "severity": "error"
+                },
+                {
+                  "name": "fwd_end_bulkhead_space",
+                  "ok": true,
+                  "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                  "severity": "error"
+                },
+                {
+                  "name": "side_clearance_type_g_floor",
+                  "ok": false,
+                  "message": "side clearance 0.46 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                  "severity": "error"
+                },
+                {
+                  "name": "double_bottom_type_g_floor",
+                  "ok": true,
+                  "message": "double bottom 0.67 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                  "severity": "error"
+                }
+              ],
+              "warnings": [
+                "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+              ]
+            },
+            "tug_length": 25.0,
+            "tug_beam": 9.1,
+            "notch_depth": 3.0
+          },
+          {
+            "inputs": {
+              "loa": 113.5815,
+              "beam": 15.2386,
+              "depth": 6.9106,
+              "max_draft": 2.7494681390762334,
+              "vertical_clearance": 0.0,
+              "vessel_type": "IGC_2G_EXACT",
+              "bow_rake_length": 11.05696,
+              "bow_rake_rise": 6.9106,
+              "stern_rake_length": 0.0,
+              "stern_rake_rise": 6.9106,
+              "bow_non_tank_pct": 0.1,
+              "stern_non_tank_pct": 0.15,
+              "bow_non_tank_length": 11.55696,
+              "stern_non_tank_length": 5.0,
+              "wing_tank_width": 0.0,
+              "wing_tank_gap": 0.6,
+              "wing_tank_height_ratio": 0.66,
+              "weather_shield_thickness": 6.0,
+              "weather_shield_clearance": 1.5,
+              "dome_height": 2.0,
+              "side_clearance": 0.4613955163609006,
+              "tank_gap_transverse": 1.0,
+              "tank_gap_longitudinal": 2.0,
+              "n_tanks_wide": 2,
+              "n_tanks_long": 2,
+              "tank_wall_thickness": 25.0,
+              "tank_head_type": "hemisphere",
+              "tank_material": "9Ni",
+              "tank_material_density": 7.85,
+              "design_pressure": 0.5,
+              "weld_efficiency": 0.95,
+              "tank_structure_factor": 1.3,
+              "insulation_thickness": 350.0,
+              "insulation_density": 60.0,
+              "cargo_type": "LNG",
+              "cargo_density_override": null,
+              "fill_ratio": 0.9222,
+              "bottom_plate_thickness": 12.0,
+              "side_plate_thickness": 10.0,
+              "deck_plate_thickness": 10.0,
+              "structure_factor": 1.4,
+              "hull_steel_density": 7.85,
+              "steel_rate_per_cbm": 0.1,
+              "block_coefficient": 0.9173,
+              "water_density": 1.0,
+              "underkeel_clearance": 0.5,
+              "outfitting_factor": 0.035,
+              "piping_factor": 0.04,
+              "stores_weight": 200.0,
+              "tank_support_height": 0.5,
+              "double_bottom_height": 0.6659066666666668,
+              "aft_arrangement": null,
+              "separation": {
+                "aft_separation_m": 2.0,
+                "fwd_separation_m": 0.5,
+                "cofferdam_m": 0.6,
+                "service_space_m": 1.4,
+                "total_length_taken_m": 2.5,
+                "checks": [
+                  {
+                    "name": "cofferdam_min_width",
+                    "ok": true,
+                    "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "opening_setback",
+                    "ok": true,
+                    "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "fwd_end_bulkhead_space",
+                    "ok": true,
+                    "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "side_clearance_type_g_floor",
+                    "ok": false,
+                    "message": "side clearance 0.46 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "double_bottom_type_g_floor",
+                    "ok": true,
+                    "message": "double bottom 0.67 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                    "severity": "error"
+                  }
+                ],
+                "warnings": [
+                  "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+                ]
+              },
+              "tug_length": 25.0,
+              "tug_beam": 9.1,
+              "notch_depth": 3.0
+            },
+            "tanks": {
+              "n_tanks_wide": 2,
+              "n_tanks_long": 2,
+              "n_tanks_total": 4,
+              "outer_diameter": 6.6579044836391,
+              "inner_diameter": 5.9079044836391,
+              "overall_tank_length": 50.70087298909274,
+              "cylinder_length": 44.792968505453636,
+              "head_length": 2.95395224181955,
+              "volume_per_tank": 1227.9103403800896,
+              "volume_cylinder": 1227.9103403800896,
+              "volume_heads": 107.96898482783236,
+              "total_tank_volume": 4911.641361520358,
+              "cargo_volume": 4529.515663594075,
+              "tank_shell_weight": "float:nan",
+              "insulation_weight": "float:nan",
+              "tank_top_above_keel": 7.323811150305766,
+              "cylinder_wall_thickness": 25.0,
+              "head_wall_thickness": 0.0,
+              "design_pressure": 0.0,
+              "tank_material": ""
+            },
+            "cargo_type": "LNG",
+            "cargo_density": 450.0,
+            "cargo_mass": 2038.2820486173337,
+            "weights": null,
+            "displacement": 4365.286517942939,
+            "deadweight": 2038.2942687394252,
+            "draft": 2.7494681390762334,
+            "freeboard": 4.161131860923766,
+            "min_freeboard_ok": true,
+            "air_draft": 6.574343011229532,
+            "air_draft_ok": true,
+            "stability": null,
+            "stability_ok": true,
+            "trim": 0.0,
+            "total_depth_required": 6.9106,
+            "air_draft_unladen": 7.858158365958231,
+            "light_draft": 1.465652784347534,
+            "air_draft_navigating_unladen": 7.858158365958231,
+            "protective_location": null,
+            "binding_constraints": [],
+            "warnings": [
+              "PUSHED barge: crew, battery and propulsion are on the tug and are NOT in this hull's lightship, capacity or air draft. The tug is a separate vessel and must be costed and air-draft-gated separately.",
+              "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "to_ga/sweep/003",
+      "output": {
+        "ok": [
+          {
+            "loa": 81.7512,
+            "beam": 9.1141,
+            "depth": 5.4524,
+            "max_draft": 2.5569,
+            "vertical_clearance": 0.0,
+            "vessel_type": "ADN_G",
+            "bow_rake_length": 8.723840000000001,
+            "bow_rake_rise": 5.4524,
+            "stern_rake_length": 0.0,
+            "stern_rake_rise": 5.4524,
+            "bow_non_tank_pct": 0.1,
+            "stern_non_tank_pct": 0.15,
+            "bow_non_tank_length": 9.223840000000001,
+            "stern_non_tank_length": 5.0,
+            "wing_tank_width": 0.65,
+            "wing_tank_gap": 0.6,
+            "wing_tank_height_ratio": 0.66,
+            "weather_shield_thickness": 6.0,
+            "weather_shield_clearance": 1.5,
+            "dome_height": 2.0,
+            "side_clearance": 1.25,
+            "tank_gap_transverse": 1.0,
+            "tank_gap_longitudinal": 2.0,
+            "n_tanks_wide": 1,
+            "n_tanks_long": 2,
+            "tank_wall_thickness": 25.0,
+            "tank_head_type": "hemisphere",
+            "tank_material": "9Ni",
+            "tank_material_density": 7.85,
+            "design_pressure": 0.5,
+            "weld_efficiency": 0.95,
+            "tank_structure_factor": 1.3,
+            "insulation_thickness": 350.0,
+            "insulation_density": 60.0,
+            "cargo_type": "LPG_propane",
+            "cargo_density_override": null,
+            "fill_ratio": 0.948,
+            "bottom_plate_thickness": 12.0,
+            "side_plate_thickness": 10.0,
+            "deck_plate_thickness": 10.0,
+            "structure_factor": 1.4,
+            "hull_steel_density": 7.85,
+            "steel_rate_per_cbm": 0.1,
+            "block_coefficient": 0.864,
+            "water_density": 1.0,
+            "underkeel_clearance": 0.5,
+            "outfitting_factor": 0.035,
+            "piping_factor": 0.04,
+            "stores_weight": 200.0,
+            "tank_support_height": 0.5,
+            "double_bottom_height": 1.1,
+            "aft_arrangement": null,
+            "separation": {
+              "aft_separation_m": 2.0,
+              "fwd_separation_m": 0.5,
+              "cofferdam_m": 0.6,
+              "service_space_m": 1.4,
+              "total_length_taken_m": 2.5,
+              "checks": [
+                {
+                  "name": "cofferdam_min_width",
+                  "ok": true,
+                  "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                  "severity": "error"
+                },
+                {
+                  "name": "opening_setback",
+                  "ok": true,
+                  "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                  "severity": "error"
+                },
+                {
+                  "name": "fwd_end_bulkhead_space",
+                  "ok": true,
+                  "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                  "severity": "error"
+                },
+                {
+                  "name": "side_clearance_type_g_floor",
+                  "ok": true,
+                  "message": "side clearance 1.25 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                  "severity": "error"
+                },
+                {
+                  "name": "double_bottom_type_g_floor",
+                  "ok": true,
+                  "message": "double bottom 1.10 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                  "severity": "error"
+                }
+              ],
+              "warnings": [
+                "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+              ]
+            },
+            "tug_length": 0.0,
+            "tug_beam": 9.1,
+            "notch_depth": 3.0
+          },
+          {
+            "inputs": {
+              "loa": 81.7512,
+              "beam": 9.1141,
+              "depth": 5.4524,
+              "max_draft": 2.5569,
+              "vertical_clearance": 0.0,
+              "vessel_type": "ADN_G",
+              "bow_rake_length": 8.723840000000001,
+              "bow_rake_rise": 5.4524,
+              "stern_rake_length": 0.0,
+              "stern_rake_rise": 5.4524,
+              "bow_non_tank_pct": 0.1,
+              "stern_non_tank_pct": 0.15,
+              "bow_non_tank_length": 9.223840000000001,
+              "stern_non_tank_length": 5.0,
+              "wing_tank_width": 0.65,
+              "wing_tank_gap": 0.6,
+              "wing_tank_height_ratio": 0.66,
+              "weather_shield_thickness": 6.0,
+              "weather_shield_clearance": 1.5,
+              "dome_height": 2.0,
+              "side_clearance": 1.25,
+              "tank_gap_transverse": 1.0,
+              "tank_gap_longitudinal": 2.0,
+              "n_tanks_wide": 1,
+              "n_tanks_long": 2,
+              "tank_wall_thickness": 25.0,
+              "tank_head_type": "hemisphere",
+              "tank_material": "9Ni",
+              "tank_material_density": 7.85,
+              "design_pressure": 0.5,
+              "weld_efficiency": 0.95,
+              "tank_structure_factor": 1.3,
+              "insulation_thickness": 350.0,
+              "insulation_density": 60.0,
+              "cargo_type": "LPG_propane",
+              "cargo_density_override": null,
+              "fill_ratio": 0.948,
+              "bottom_plate_thickness": 12.0,
+              "side_plate_thickness": 10.0,
+              "deck_plate_thickness": 10.0,
+              "structure_factor": 1.4,
+              "hull_steel_density": 7.85,
+              "steel_rate_per_cbm": 0.1,
+              "block_coefficient": 0.864,
+              "water_density": 1.0,
+              "underkeel_clearance": 0.5,
+              "outfitting_factor": 0.035,
+              "piping_factor": 0.04,
+              "stores_weight": 200.0,
+              "tank_support_height": 0.5,
+              "double_bottom_height": 1.1,
+              "aft_arrangement": null,
+              "separation": {
+                "aft_separation_m": 2.0,
+                "fwd_separation_m": 0.5,
+                "cofferdam_m": 0.6,
+                "service_space_m": 1.4,
+                "total_length_taken_m": 2.5,
+                "checks": [
+                  {
+                    "name": "cofferdam_min_width",
+                    "ok": true,
+                    "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "opening_setback",
+                    "ok": true,
+                    "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "fwd_end_bulkhead_space",
+                    "ok": true,
+                    "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "side_clearance_type_g_floor",
+                    "ok": true,
+                    "message": "side clearance 1.25 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "double_bottom_type_g_floor",
+                    "ok": true,
+                    "message": "double bottom 1.10 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                    "severity": "error"
+                  }
+                ],
+                "warnings": [
+                  "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+                ]
+              },
+              "tug_length": 0.0,
+              "tug_beam": 9.1,
+              "notch_depth": 3.0
+            },
+            "tanks": {
+              "n_tanks_wide": 1,
+              "n_tanks_long": 2,
+              "n_tanks_total": 2,
+              "outer_diameter": 6.6141000000000005,
+              "inner_diameter": 5.8641000000000005,
+              "overall_tank_length": 35.92308,
+              "cylinder_length": 30.05898,
+              "head_length": 2.9320500000000003,
+              "volume_per_tank": 811.8332903502599,
+              "volume_cylinder": 811.8332903502599,
+              "volume_heads": 105.58512182699832,
+              "total_tank_volume": 1623.6665807005197,
+              "cargo_volume": 1539.2359185040925,
+              "tank_shell_weight": "float:nan",
+              "insulation_weight": "float:nan",
+              "tank_top_above_keel": 7.7141,
+              "cylinder_wall_thickness": 25.0,
+              "head_wall_thickness": 0.0,
+              "design_pressure": 0.0,
+              "tank_material": ""
+            },
+            "cargo_type": "LPG (Propane)",
+            "cargo_density": 581.0,
+            "cargo_mass": 894.2960686508777,
+            "weights": null,
+            "displacement": 1686.2934155257528,
+            "deadweight": 894.3011055535646,
+            "draft": 2.5569,
+            "freeboard": 2.8954999999999997,
+            "min_freeboard_ok": true,
+            "air_draft": 7.094641778564453,
+            "air_draft_ok": true,
+            "stability": null,
+            "stability_ok": true,
+            "trim": 0.0,
+            "total_depth_required": 5.4524,
+            "air_draft_unladen": 8.48383444442749,
+            "light_draft": 1.2302655555725095,
+            "air_draft_navigating_unladen": 8.48383444442749,
+            "protective_location": null,
+            "binding_constraints": [],
+            "warnings": [
+              "PUSHED barge: crew, battery and propulsion are on the tug and are NOT in this hull's lightship, capacity or air draft. The tug is a separate vessel and must be costed and air-draft-gated separately.",
+              "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "to_ga/sweep/004",
+      "output": {
+        "ok": [
+          {
+            "loa": 118.3501,
+            "beam": 12.6435,
+            "depth": 3.4621,
+            "max_draft": 1.5577,
+            "vertical_clearance": 0.0,
+            "vessel_type": "ADN_G",
+            "bow_rake_length": 5.53936,
+            "bow_rake_rise": 3.4621,
+            "stern_rake_length": 0.0,
+            "stern_rake_rise": 3.4621,
+            "bow_non_tank_pct": 0.1,
+            "stern_non_tank_pct": 0.15,
+            "bow_non_tank_length": 6.03936,
+            "stern_non_tank_length": 5.0,
+            "wing_tank_width": 0.65,
+            "wing_tank_gap": 0.6,
+            "wing_tank_height_ratio": 0.66,
+            "weather_shield_thickness": 6.0,
+            "weather_shield_clearance": 1.5,
+            "dome_height": 2.0,
+            "side_clearance": 1.25,
+            "tank_gap_transverse": 1.0,
+            "tank_gap_longitudinal": 2.0,
+            "n_tanks_wide": 1,
+            "n_tanks_long": 2,
+            "tank_wall_thickness": 25.0,
+            "tank_head_type": "hemisphere",
+            "tank_material": "9Ni",
+            "tank_material_density": 7.85,
+            "design_pressure": 0.5,
+            "weld_efficiency": 0.95,
+            "tank_structure_factor": 1.3,
+            "insulation_thickness": 350.0,
+            "insulation_density": 60.0,
+            "cargo_type": "LPG_propane",
+            "cargo_density_override": null,
+            "fill_ratio": 0.9012,
+            "bottom_plate_thickness": 12.0,
+            "side_plate_thickness": 10.0,
+            "deck_plate_thickness": 10.0,
+            "structure_factor": 1.4,
+            "hull_steel_density": 7.85,
+            "steel_rate_per_cbm": 0.1,
+            "block_coefficient": 0.8875,
+            "water_density": 1.0,
+            "underkeel_clearance": 0.5,
+            "outfitting_factor": 0.035,
+            "piping_factor": 0.04,
+            "stores_weight": 200.0,
+            "tank_support_height": 0.5,
+            "double_bottom_height": 1.1,
+            "aft_arrangement": null,
+            "separation": {
+              "aft_separation_m": 2.0,
+              "fwd_separation_m": 0.5,
+              "cofferdam_m": 0.6,
+              "service_space_m": 1.4,
+              "total_length_taken_m": 2.5,
+              "checks": [
+                {
+                  "name": "cofferdam_min_width",
+                  "ok": true,
+                  "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                  "severity": "error"
+                },
+                {
+                  "name": "opening_setback",
+                  "ok": true,
+                  "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                  "severity": "error"
+                },
+                {
+                  "name": "fwd_end_bulkhead_space",
+                  "ok": true,
+                  "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                  "severity": "error"
+                },
+                {
+                  "name": "side_clearance_type_g_floor",
+                  "ok": true,
+                  "message": "side clearance 1.25 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                  "severity": "error"
+                },
+                {
+                  "name": "double_bottom_type_g_floor",
+                  "ok": true,
+                  "message": "double bottom 1.10 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                  "severity": "error"
+                }
+              ],
+              "warnings": [
+                "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+              ]
+            },
+            "tug_length": 0.0,
+            "tug_beam": 9.1,
+            "notch_depth": 3.0
+          },
+          {
+            "inputs": {
+              "loa": 118.3501,
+              "beam": 12.6435,
+              "depth": 3.4621,
+              "max_draft": 1.5577,
+              "vertical_clearance": 0.0,
+              "vessel_type": "ADN_G",
+              "bow_rake_length": 5.53936,
+              "bow_rake_rise": 3.4621,
+              "stern_rake_length": 0.0,
+              "stern_rake_rise": 3.4621,
+              "bow_non_tank_pct": 0.1,
+              "stern_non_tank_pct": 0.15,
+              "bow_non_tank_length": 6.03936,
+              "stern_non_tank_length": 5.0,
+              "wing_tank_width": 0.65,
+              "wing_tank_gap": 0.6,
+              "wing_tank_height_ratio": 0.66,
+              "weather_shield_thickness": 6.0,
+              "weather_shield_clearance": 1.5,
+              "dome_height": 2.0,
+              "side_clearance": 1.25,
+              "tank_gap_transverse": 1.0,
+              "tank_gap_longitudinal": 2.0,
+              "n_tanks_wide": 1,
+              "n_tanks_long": 2,
+              "tank_wall_thickness": 25.0,
+              "tank_head_type": "hemisphere",
+              "tank_material": "9Ni",
+              "tank_material_density": 7.85,
+              "design_pressure": 0.5,
+              "weld_efficiency": 0.95,
+              "tank_structure_factor": 1.3,
+              "insulation_thickness": 350.0,
+              "insulation_density": 60.0,
+              "cargo_type": "LPG_propane",
+              "cargo_density_override": null,
+              "fill_ratio": 0.9012,
+              "bottom_plate_thickness": 12.0,
+              "side_plate_thickness": 10.0,
+              "deck_plate_thickness": 10.0,
+              "structure_factor": 1.4,
+              "hull_steel_density": 7.85,
+              "steel_rate_per_cbm": 0.1,
+              "block_coefficient": 0.8875,
+              "water_density": 1.0,
+              "underkeel_clearance": 0.5,
+              "outfitting_factor": 0.035,
+              "piping_factor": 0.04,
+              "stores_weight": 200.0,
+              "tank_support_height": 0.5,
+              "double_bottom_height": 1.1,
+              "aft_arrangement": null,
+              "separation": {
+                "aft_separation_m": 2.0,
+                "fwd_separation_m": 0.5,
+                "cofferdam_m": 0.6,
+                "service_space_m": 1.4,
+                "total_length_taken_m": 2.5,
+                "checks": [
+                  {
+                    "name": "cofferdam_min_width",
+                    "ok": true,
+                    "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "opening_setback",
+                    "ok": true,
+                    "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "fwd_end_bulkhead_space",
+                    "ok": true,
+                    "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "side_clearance_type_g_floor",
+                    "ok": true,
+                    "message": "side clearance 1.25 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "double_bottom_type_g_floor",
+                    "ok": true,
+                    "message": "double bottom 1.10 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                    "severity": "error"
+                  }
+                ],
+                "warnings": [
+                  "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+                ]
+              },
+              "tug_length": 0.0,
+              "tug_beam": 9.1,
+              "notch_depth": 3.0
+            },
+            "tanks": {
+              "n_tanks_wide": 1,
+              "n_tanks_long": 2,
+              "n_tanks_total": 2,
+              "outer_diameter": 10.1435,
+              "inner_diameter": 9.3935,
+              "overall_tank_length": 58.167703333333336,
+              "cylinder_length": 48.77420333333333,
+              "head_length": 4.69675,
+              "volume_per_tank": 3380.1419987244253,
+              "volume_cylinder": 3380.141998724425,
+              "volume_heads": 433.99121796717384,
+              "total_tank_volume": 6760.283997448851,
+              "cargo_volume": 6092.3679385009045,
+              "tank_shell_weight": "float:nan",
+              "insulation_weight": "float:nan",
+              "tank_top_above_keel": 11.2435,
+              "cylinder_wall_thickness": 25.0,
+              "head_wall_thickness": 0.0,
+              "design_pressure": 0.0,
+              "tank_material": ""
+            },
+            "cargo_type": "LPG (Propane)",
+            "cargo_density": 581.0,
+            "cargo_mass": 3539.665772269025,
+            "weights": null,
+            "displacement": 4597.734741919789,
+            "deadweight": 2429.762766972575,
+            "draft": 1.5577,
+            "freeboard": 1.9043999999999999,
+            "min_freeboard_ok": true,
+            "air_draft": 9.7814,
+            "air_draft_ok": true,
+            "stability": null,
+            "stability_ok": true,
+            "trim": 0.0,
+            "total_depth_required": 3.4621,
+            "air_draft_unladen": 11.611012821578978,
+            "light_draft": 1.6324871784210209,
+            "air_draft_navigating_unladen": 11.611012821578978,
+            "protective_location": null,
+            "binding_constraints": [],
+            "warnings": [
+              "PUSHED barge: crew, battery and propulsion are on the tug and are NOT in this hull's lightship, capacity or air draft. The tug is a separate vessel and must be costed and air-draft-gated separately.",
+              "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "to_ga/sweep/005",
+      "output": {
+        "ok": [
+          {
+            "loa": 97.6696,
+            "beam": 20.3009,
+            "depth": 3.3537,
+            "max_draft": 1.9318,
+            "vertical_clearance": 0.0,
+            "vessel_type": "IGC_2G_EXACT",
+            "bow_rake_length": 5.36592,
+            "bow_rake_rise": 3.3537,
+            "stern_rake_length": 0.0,
+            "stern_rake_rise": 3.3537,
+            "bow_non_tank_pct": 0.1,
+            "stern_non_tank_pct": 0.15,
+            "bow_non_tank_length": 5.86592,
+            "stern_non_tank_length": 5.0,
+            "wing_tank_width": 0.0,
+            "wing_tank_gap": 0.6,
+            "wing_tank_height_ratio": 0.66,
+            "weather_shield_thickness": 6.0,
+            "weather_shield_clearance": 1.5,
+            "dome_height": 2.0,
+            "side_clearance": 0.507480327177617,
+            "tank_gap_transverse": 1.0,
+            "tank_gap_longitudinal": 2.0,
+            "n_tanks_wide": 2,
+            "n_tanks_long": 2,
+            "tank_wall_thickness": 25.0,
+            "tank_head_type": "hemisphere",
+            "tank_material": "9Ni",
+            "tank_material_density": 7.85,
+            "design_pressure": 0.5,
+            "weld_efficiency": 0.95,
+            "tank_structure_factor": 1.3,
+            "insulation_thickness": 350.0,
+            "insulation_density": 60.0,
+            "cargo_type": "LNG",
+            "cargo_density_override": null,
+            "fill_ratio": 0.9055,
+            "bottom_plate_thickness": 12.0,
+            "side_plate_thickness": 10.0,
+            "deck_plate_thickness": 10.0,
+            "structure_factor": 1.4,
+            "hull_steel_density": 7.85,
+            "steel_rate_per_cbm": 0.1,
+            "block_coefficient": 0.8155,
+            "water_density": 1.0,
+            "underkeel_clearance": 0.5,
+            "outfitting_factor": 0.035,
+            "piping_factor": 0.04,
+            "stores_weight": 200.0,
+            "tank_support_height": 0.5,
+            "double_bottom_height": 1.0033933333333334,
+            "aft_arrangement": null,
+            "separation": {
+              "aft_separation_m": 2.0,
+              "fwd_separation_m": 0.5,
+              "cofferdam_m": 0.6,
+              "service_space_m": 1.4,
+              "total_length_taken_m": 2.5,
+              "checks": [
+                {
+                  "name": "cofferdam_min_width",
+                  "ok": true,
+                  "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                  "severity": "error"
+                },
+                {
+                  "name": "opening_setback",
+                  "ok": true,
+                  "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                  "severity": "error"
+                },
+                {
+                  "name": "fwd_end_bulkhead_space",
+                  "ok": true,
+                  "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                  "severity": "error"
+                },
+                {
+                  "name": "side_clearance_type_g_floor",
+                  "ok": false,
+                  "message": "side clearance 0.51 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                  "severity": "error"
+                },
+                {
+                  "name": "double_bottom_type_g_floor",
+                  "ok": true,
+                  "message": "double bottom 1.00 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                  "severity": "error"
+                }
+              ],
+              "warnings": [
+                "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+              ]
+            },
+            "tug_length": 0.0,
+            "tug_beam": 9.1,
+            "notch_depth": 3.0
+          },
+          {
+            "inputs": {
+              "loa": 97.6696,
+              "beam": 20.3009,
+              "depth": 3.3537,
+              "max_draft": 1.9318,
+              "vertical_clearance": 0.0,
+              "vessel_type": "IGC_2G_EXACT",
+              "bow_rake_length": 5.36592,
+              "bow_rake_rise": 3.3537,
+              "stern_rake_length": 0.0,
+              "stern_rake_rise": 3.3537,
+              "bow_non_tank_pct": 0.1,
+              "stern_non_tank_pct": 0.15,
+              "bow_non_tank_length": 5.86592,
+              "stern_non_tank_length": 5.0,
+              "wing_tank_width": 0.0,
+              "wing_tank_gap": 0.6,
+              "wing_tank_height_ratio": 0.66,
+              "weather_shield_thickness": 6.0,
+              "weather_shield_clearance": 1.5,
+              "dome_height": 2.0,
+              "side_clearance": 0.507480327177617,
+              "tank_gap_transverse": 1.0,
+              "tank_gap_longitudinal": 2.0,
+              "n_tanks_wide": 2,
+              "n_tanks_long": 2,
+              "tank_wall_thickness": 25.0,
+              "tank_head_type": "hemisphere",
+              "tank_material": "9Ni",
+              "tank_material_density": 7.85,
+              "design_pressure": 0.5,
+              "weld_efficiency": 0.95,
+              "tank_structure_factor": 1.3,
+              "insulation_thickness": 350.0,
+              "insulation_density": 60.0,
+              "cargo_type": "LNG",
+              "cargo_density_override": null,
+              "fill_ratio": 0.9055,
+              "bottom_plate_thickness": 12.0,
+              "side_plate_thickness": 10.0,
+              "deck_plate_thickness": 10.0,
+              "structure_factor": 1.4,
+              "hull_steel_density": 7.85,
+              "steel_rate_per_cbm": 0.1,
+              "block_coefficient": 0.8155,
+              "water_density": 1.0,
+              "underkeel_clearance": 0.5,
+              "outfitting_factor": 0.035,
+              "piping_factor": 0.04,
+              "stores_weight": 200.0,
+              "tank_support_height": 0.5,
+              "double_bottom_height": 1.0033933333333334,
+              "aft_arrangement": null,
+              "separation": {
+                "aft_separation_m": 2.0,
+                "fwd_separation_m": 0.5,
+                "cofferdam_m": 0.6,
+                "service_space_m": 1.4,
+                "total_length_taken_m": 2.5,
+                "checks": [
+                  {
+                    "name": "cofferdam_min_width",
+                    "ok": true,
+                    "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "opening_setback",
+                    "ok": true,
+                    "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "fwd_end_bulkhead_space",
+                    "ok": true,
+                    "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "side_clearance_type_g_floor",
+                    "ok": false,
+                    "message": "side clearance 0.51 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "double_bottom_type_g_floor",
+                    "ok": true,
+                    "message": "double bottom 1.00 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                    "severity": "error"
+                  }
+                ],
+                "warnings": [
+                  "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+                ]
+              },
+              "tug_length": 0.0,
+              "tug_beam": 9.1,
+              "notch_depth": 3.0
+            },
+            "tanks": {
+              "n_tanks_wide": 2,
+              "n_tanks_long": 2,
+              "n_tanks_total": 4,
+              "outer_diameter": 9.142969672822382,
+              "inner_diameter": 8.392969672822382,
+              "overall_tank_length": 47.24715311521492,
+              "cylinder_length": 38.85418344239254,
+              "head_length": 4.196484836411191,
+              "volume_per_tank": 2149.6065428955894,
+              "volume_cylinder": 2149.6065428955894,
+              "volume_heads": 309.56053161813304,
+              "total_tank_volume": 8598.426171582358,
+              "cargo_volume": 7785.874898367824,
+              "tank_shell_weight": "float:nan",
+              "insulation_weight": "float:nan",
+              "tank_top_above_keel": 10.146363006155715,
+              "cylinder_wall_thickness": 25.0,
+              "head_wall_thickness": 0.0,
+              "design_pressure": 0.0,
+              "tank_material": ""
+            },
+            "cargo_type": "LNG",
+            "cargo_density": 450.0,
+            "cargo_mass": 3503.643704265521,
+            "weights": null,
+            "displacement": 5422.791133208281,
+            "deadweight": 2609.8113880465417,
+            "draft": 1.9318,
+            "freeboard": 1.4219,
+            "min_freeboard_ok": true,
+            "air_draft": 8.792663006155715,
+            "air_draft_ok": true,
+            "stability": null,
+            "stability_ok": true,
+            "trim": 0.0,
+            "total_depth_required": 3.3537,
+            "air_draft_unladen": 10.406691259901748,
+            "light_draft": 1.739671746253967,
+            "air_draft_navigating_unladen": 10.406691259901748,
+            "protective_location": null,
+            "binding_constraints": [],
+            "warnings": [
+              "PUSHED barge: crew, battery and propulsion are on the tug and are NOT in this hull's lightship, capacity or air draft. The tug is a separate vessel and must be costed and air-draft-gated separately.",
+              "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "to_ga/sweep/006",
+      "output": {
+        "ok": [
+          {
+            "loa": 123.2351,
+            "beam": 21.0995,
+            "depth": 4.0241,
+            "max_draft": 4.0241,
+            "vertical_clearance": 0.0,
+            "vessel_type": "IGC_2G_EXACT",
+            "bow_rake_length": 6.43856,
+            "bow_rake_rise": 4.0241,
+            "stern_rake_length": 0.0,
+            "stern_rake_rise": 4.0241,
+            "bow_non_tank_pct": 0.1,
+            "stern_non_tank_pct": 0.15,
+            "bow_non_tank_length": 6.93856,
+            "stern_non_tank_length": 5.0,
+            "wing_tank_width": 0.0,
+            "wing_tank_gap": 0.6,
+            "wing_tank_height_ratio": 0.66,
+            "weather_shield_thickness": 6.0,
+            "weather_shield_clearance": 1.5,
+            "dome_height": 2.0,
+            "side_clearance": 0.5531651976319616,
+            "tank_gap_transverse": 1.0,
+            "tank_gap_longitudinal": 2.0,
+            "n_tanks_wide": 2,
+            "n_tanks_long": 2,
+            "tank_wall_thickness": 25.0,
+            "tank_head_type": "hemisphere",
+            "tank_material": "9Ni",
+            "tank_material_density": 7.85,
+            "design_pressure": 0.5,
+            "weld_efficiency": 0.95,
+            "tank_structure_factor": 1.3,
+            "insulation_thickness": 350.0,
+            "insulation_density": 60.0,
+            "cargo_type": "LPG_propane",
+            "cargo_density_override": null,
+            "fill_ratio": 0.936,
+            "bottom_plate_thickness": 12.0,
+            "side_plate_thickness": 10.0,
+            "deck_plate_thickness": 10.0,
+            "structure_factor": 1.4,
+            "hull_steel_density": 7.85,
+            "steel_rate_per_cbm": 0.1,
+            "block_coefficient": 0.7978,
+            "water_density": 1.0,
+            "underkeel_clearance": 0.5,
+            "outfitting_factor": 0.035,
+            "piping_factor": 0.04,
+            "stores_weight": 200.0,
+            "tank_support_height": 0.5,
+            "double_bottom_height": 1.056633333333333,
+            "aft_arrangement": null,
+            "separation": {
+              "aft_separation_m": 2.0,
+              "fwd_separation_m": 0.5,
+              "cofferdam_m": 0.6,
+              "service_space_m": 1.4,
+              "total_length_taken_m": 2.5,
+              "checks": [
+                {
+                  "name": "cofferdam_min_width",
+                  "ok": true,
+                  "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                  "severity": "error"
+                },
+                {
+                  "name": "opening_setback",
+                  "ok": true,
+                  "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                  "severity": "error"
+                },
+                {
+                  "name": "fwd_end_bulkhead_space",
+                  "ok": true,
+                  "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                  "severity": "error"
+                },
+                {
+                  "name": "side_clearance_type_g_floor",
+                  "ok": false,
+                  "message": "side clearance 0.55 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                  "severity": "error"
+                },
+                {
+                  "name": "double_bottom_type_g_floor",
+                  "ok": true,
+                  "message": "double bottom 1.06 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                  "severity": "error"
+                }
+              ],
+              "warnings": [
+                "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+              ]
+            },
+            "tug_length": 25.0,
+            "tug_beam": 9.1,
+            "notch_depth": 3.0
+          },
+          {
+            "inputs": {
+              "loa": 123.2351,
+              "beam": 21.0995,
+              "depth": 4.0241,
+              "max_draft": 4.0241,
+              "vertical_clearance": 0.0,
+              "vessel_type": "IGC_2G_EXACT",
+              "bow_rake_length": 6.43856,
+              "bow_rake_rise": 4.0241,
+              "stern_rake_length": 0.0,
+              "stern_rake_rise": 4.0241,
+              "bow_non_tank_pct": 0.1,
+              "stern_non_tank_pct": 0.15,
+              "bow_non_tank_length": 6.93856,
+              "stern_non_tank_length": 5.0,
+              "wing_tank_width": 0.0,
+              "wing_tank_gap": 0.6,
+              "wing_tank_height_ratio": 0.66,
+              "weather_shield_thickness": 6.0,
+              "weather_shield_clearance": 1.5,
+              "dome_height": 2.0,
+              "side_clearance": 0.5531651976319616,
+              "tank_gap_transverse": 1.0,
+              "tank_gap_longitudinal": 2.0,
+              "n_tanks_wide": 2,
+              "n_tanks_long": 2,
+              "tank_wall_thickness": 25.0,
+              "tank_head_type": "hemisphere",
+              "tank_material": "9Ni",
+              "tank_material_density": 7.85,
+              "design_pressure": 0.5,
+              "weld_efficiency": 0.95,
+              "tank_structure_factor": 1.3,
+              "insulation_thickness": 350.0,
+              "insulation_density": 60.0,
+              "cargo_type": "LPG_propane",
+              "cargo_density_override": null,
+              "fill_ratio": 0.936,
+              "bottom_plate_thickness": 12.0,
+              "side_plate_thickness": 10.0,
+              "deck_plate_thickness": 10.0,
+              "structure_factor": 1.4,
+              "hull_steel_density": 7.85,
+              "steel_rate_per_cbm": 0.1,
+              "block_coefficient": 0.7978,
+              "water_density": 1.0,
+              "underkeel_clearance": 0.5,
+              "outfitting_factor": 0.035,
+              "piping_factor": 0.04,
+              "stores_weight": 200.0,
+              "tank_support_height": 0.5,
+              "double_bottom_height": 1.056633333333333,
+              "aft_arrangement": null,
+              "separation": {
+                "aft_separation_m": 2.0,
+                "fwd_separation_m": 0.5,
+                "cofferdam_m": 0.6,
+                "service_space_m": 1.4,
+                "total_length_taken_m": 2.5,
+                "checks": [
+                  {
+                    "name": "cofferdam_min_width",
+                    "ok": true,
+                    "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "opening_setback",
+                    "ok": true,
+                    "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "fwd_end_bulkhead_space",
+                    "ok": true,
+                    "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "side_clearance_type_g_floor",
+                    "ok": false,
+                    "message": "side clearance 0.55 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "double_bottom_type_g_floor",
+                    "ok": true,
+                    "message": "double bottom 1.06 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                    "severity": "error"
+                  }
+                ],
+                "warnings": [
+                  "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+                ]
+              },
+              "tug_length": 25.0,
+              "tug_beam": 9.1,
+              "notch_depth": 3.0
+            },
+            "tanks": {
+              "n_tanks_wide": 2,
+              "n_tanks_long": 2,
+              "n_tanks_total": 4,
+              "outer_diameter": 9.496584802368037,
+              "inner_diameter": 8.746584802368037,
+              "overall_tank_length": 59.72932653491202,
+              "cylinder_length": 50.982741732543985,
+              "head_length": 4.373292401184019,
+              "volume_per_tank": 3063.3039495490784,
+              "volume_cylinder": 3063.3039495490784,
+              "volume_heads": 350.3597081370355,
+              "total_tank_volume": 12253.215798196314,
+              "cargo_volume": 11469.00998711175,
+              "tank_shell_weight": "float:nan",
+              "insulation_weight": "float:nan",
+              "tank_top_above_keel": 10.553218135701371,
+              "cylinder_wall_thickness": 25.0,
+              "head_wall_thickness": 0.0,
+              "design_pressure": 0.0,
+              "tank_material": ""
+            },
+            "cargo_type": "LPG (Propane)",
+            "cargo_density": 581.0,
+            "cargo_mass": 6663.4948025119265,
+            "weights": null,
+            "displacement": 8347.748998730296,
+            "deadweight": 4531.8184074408155,
+            "draft": 4.0241,
+            "freeboard": 0.0,
+            "min_freeboard_ok": true,
+            "air_draft": 8.52911813570137,
+            "air_draft_ok": true,
+            "stability": null,
+            "stability_ok": true,
+            "trim": 0.0,
+            "total_depth_required": 4.0241,
+            "air_draft_unladen": 10.713710265217973,
+            "light_draft": 1.8395078704833985,
+            "air_draft_navigating_unladen": 10.713710265217973,
+            "protective_location": null,
+            "binding_constraints": [],
+            "warnings": [
+              "PUSHED barge: crew, battery and propulsion are on the tug and are NOT in this hull's lightship, capacity or air draft. The tug is a separate vessel and must be costed and air-draft-gated separately.",
+              "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "to_ga/sweep/007",
+      "output": {
+        "ok": [
+          {
+            "loa": 56.9069,
+            "beam": 17.42,
+            "depth": 3.1158,
+            "max_draft": 1.9609,
+            "vertical_clearance": 0.0,
+            "vessel_type": "ADN_G",
+            "bow_rake_length": 4.98528,
+            "bow_rake_rise": 3.1158,
+            "stern_rake_length": 0.0,
+            "stern_rake_rise": 3.1158,
+            "bow_non_tank_pct": 0.1,
+            "stern_non_tank_pct": 0.15,
+            "bow_non_tank_length": 5.48528,
+            "stern_non_tank_length": 5.0,
+            "wing_tank_width": 0.65,
+            "wing_tank_gap": 0.6,
+            "wing_tank_height_ratio": 0.66,
+            "weather_shield_thickness": 6.0,
+            "weather_shield_clearance": 1.5,
+            "dome_height": 2.0,
+            "side_clearance": 1.25,
+            "tank_gap_transverse": 1.0,
+            "tank_gap_longitudinal": 2.0,
+            "n_tanks_wide": 2,
+            "n_tanks_long": 2,
+            "tank_wall_thickness": 25.0,
+            "tank_head_type": "hemisphere",
+            "tank_material": "9Ni",
+            "tank_material_density": 7.85,
+            "design_pressure": 0.5,
+            "weld_efficiency": 0.95,
+            "tank_structure_factor": 1.3,
+            "insulation_thickness": 350.0,
+            "insulation_density": 60.0,
+            "cargo_type": "LNG_ethane",
+            "cargo_density_override": null,
+            "fill_ratio": 0.9193,
+            "bottom_plate_thickness": 12.0,
+            "side_plate_thickness": 10.0,
+            "deck_plate_thickness": 10.0,
+            "structure_factor": 1.4,
+            "hull_steel_density": 7.85,
+            "steel_rate_per_cbm": 0.1,
+            "block_coefficient": 0.9061,
+            "water_density": 1.0,
+            "underkeel_clearance": 0.5,
+            "outfitting_factor": 0.035,
+            "piping_factor": 0.04,
+            "stores_weight": 200.0,
+            "tank_support_height": 0.5,
+            "double_bottom_height": 1.1,
+            "aft_arrangement": null,
+            "separation": {
+              "aft_separation_m": 2.0,
+              "fwd_separation_m": 0.5,
+              "cofferdam_m": 0.6,
+              "service_space_m": 1.4,
+              "total_length_taken_m": 2.5,
+              "checks": [
+                {
+                  "name": "cofferdam_min_width",
+                  "ok": true,
+                  "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                  "severity": "error"
+                },
+                {
+                  "name": "opening_setback",
+                  "ok": true,
+                  "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                  "severity": "error"
+                },
+                {
+                  "name": "fwd_end_bulkhead_space",
+                  "ok": true,
+                  "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                  "severity": "error"
+                },
+                {
+                  "name": "side_clearance_type_g_floor",
+                  "ok": true,
+                  "message": "side clearance 1.25 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                  "severity": "error"
+                },
+                {
+                  "name": "double_bottom_type_g_floor",
+                  "ok": true,
+                  "message": "double bottom 1.10 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                  "severity": "error"
+                }
+              ],
+              "warnings": [
+                "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+              ]
+            },
+            "tug_length": 25.0,
+            "tug_beam": 9.1,
+            "notch_depth": 3.0
+          },
+          {
+            "inputs": {
+              "loa": 56.9069,
+              "beam": 17.42,
+              "depth": 3.1158,
+              "max_draft": 1.9609,
+              "vertical_clearance": 0.0,
+              "vessel_type": "ADN_G",
+              "bow_rake_length": 4.98528,
+              "bow_rake_rise": 3.1158,
+              "stern_rake_length": 0.0,
+              "stern_rake_rise": 3.1158,
+              "bow_non_tank_pct": 0.1,
+              "stern_non_tank_pct": 0.15,
+              "bow_non_tank_length": 5.48528,
+              "stern_non_tank_length": 5.0,
+              "wing_tank_width": 0.65,
+              "wing_tank_gap": 0.6,
+              "wing_tank_height_ratio": 0.66,
+              "weather_shield_thickness": 6.0,
+              "weather_shield_clearance": 1.5,
+              "dome_height": 2.0,
+              "side_clearance": 1.25,
+              "tank_gap_transverse": 1.0,
+              "tank_gap_longitudinal": 2.0,
+              "n_tanks_wide": 2,
+              "n_tanks_long": 2,
+              "tank_wall_thickness": 25.0,
+              "tank_head_type": "hemisphere",
+              "tank_material": "9Ni",
+              "tank_material_density": 7.85,
+              "design_pressure": 0.5,
+              "weld_efficiency": 0.95,
+              "tank_structure_factor": 1.3,
+              "insulation_thickness": 350.0,
+              "insulation_density": 60.0,
+              "cargo_type": "LNG_ethane",
+              "cargo_density_override": null,
+              "fill_ratio": 0.9193,
+              "bottom_plate_thickness": 12.0,
+              "side_plate_thickness": 10.0,
+              "deck_plate_thickness": 10.0,
+              "structure_factor": 1.4,
+              "hull_steel_density": 7.85,
+              "steel_rate_per_cbm": 0.1,
+              "block_coefficient": 0.9061,
+              "water_density": 1.0,
+              "underkeel_clearance": 0.5,
+              "outfitting_factor": 0.035,
+              "piping_factor": 0.04,
+              "stores_weight": 200.0,
+              "tank_support_height": 0.5,
+              "double_bottom_height": 1.1,
+              "aft_arrangement": null,
+              "separation": {
+                "aft_separation_m": 2.0,
+                "fwd_separation_m": 0.5,
+                "cofferdam_m": 0.6,
+                "service_space_m": 1.4,
+                "total_length_taken_m": 2.5,
+                "checks": [
+                  {
+                    "name": "cofferdam_min_width",
+                    "ok": true,
+                    "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "opening_setback",
+                    "ok": true,
+                    "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "fwd_end_bulkhead_space",
+                    "ok": true,
+                    "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "side_clearance_type_g_floor",
+                    "ok": true,
+                    "message": "side clearance 1.25 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "double_bottom_type_g_floor",
+                    "ok": true,
+                    "message": "double bottom 1.10 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                    "severity": "error"
+                  }
+                ],
+                "warnings": [
+                  "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+                ]
+              },
+              "tug_length": 25.0,
+              "tug_beam": 9.1,
+              "notch_depth": 3.0
+            },
+            "tanks": {
+              "n_tanks_wide": 2,
+              "n_tanks_long": 2,
+              "n_tanks_total": 4,
+              "outer_diameter": 6.960000000000001,
+              "inner_diameter": 6.210000000000001,
+              "overall_tank_length": 25.600809999999996,
+              "cylinder_length": 19.390809999999995,
+              "head_length": 3.1050000000000004,
+              "volume_per_tank": 587.3122139609183,
+              "volume_cylinder": 587.3122139609183,
+              "volume_heads": 125.39303751613276,
+              "total_tank_volume": 2349.248855843673,
+              "cargo_volume": 2159.6644731770884,
+              "tank_shell_weight": "float:nan",
+              "insulation_weight": "float:nan",
+              "tank_top_above_keel": 8.06,
+              "cylinder_wall_thickness": 25.0,
+              "head_wall_thickness": 0.0,
+              "design_pressure": 0.0,
+              "tank_material": ""
+            },
+            "cargo_type": "LNG / Ethane",
+            "cargo_density": 500.0,
+            "cargo_mass": 1079.8322365885442,
+            "weights": null,
+            "displacement": 2190.1585857188916,
+            "deadweight": 1079.8395539099427,
+            "draft": 1.9609,
+            "freeboard": 1.1549,
+            "min_freeboard_ok": true,
+            "air_draft": 7.6217044090271004,
+            "air_draft_ok": true,
+            "stability": null,
+            "stability_ok": true,
+            "trim": 0.0,
+            "total_depth_required": 3.1158,
+            "air_draft_unladen": 8.823897062683105,
+            "light_draft": 1.2361029373168944,
+            "air_draft_navigating_unladen": 8.823897062683105,
+            "protective_location": null,
+            "binding_constraints": [],
+            "warnings": [
+              "PUSHED barge: crew, battery and propulsion are on the tug and are NOT in this hull's lightship, capacity or air draft. The tug is a separate vessel and must be costed and air-draft-gated separately.",
+              "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "to_ga/sweep/008",
+      "output": {
+        "ok": [
+          {
+            "loa": 89.5089,
+            "beam": 13.9469,
+            "depth": 5.2505,
+            "max_draft": 3.898517881393433,
+            "vertical_clearance": 0.0,
+            "vessel_type": "ADN_G",
+            "bow_rake_length": 8.4008,
+            "bow_rake_rise": 5.2505,
+            "stern_rake_length": 0.0,
+            "stern_rake_rise": 5.2505,
+            "bow_non_tank_pct": 0.1,
+            "stern_non_tank_pct": 0.15,
+            "bow_non_tank_length": 8.9008,
+            "stern_non_tank_length": 21.892000000000003,
+            "wing_tank_width": 0.65,
+            "wing_tank_gap": 0.6,
+            "wing_tank_height_ratio": 0.66,
+            "weather_shield_thickness": 6.0,
+            "weather_shield_clearance": 1.5,
+            "dome_height": 2.0,
+            "side_clearance": 1.25,
+            "tank_gap_transverse": 1.0,
+            "tank_gap_longitudinal": 2.0,
+            "n_tanks_wide": 1,
+            "n_tanks_long": 2,
+            "tank_wall_thickness": 25.0,
+            "tank_head_type": "hemisphere",
+            "tank_material": "9Ni",
+            "tank_material_density": 7.85,
+            "design_pressure": 0.5,
+            "weld_efficiency": 0.95,
+            "tank_structure_factor": 1.3,
+            "insulation_thickness": 350.0,
+            "insulation_density": 60.0,
+            "cargo_type": "LNG_ethane",
+            "cargo_density_override": null,
+            "fill_ratio": 0.9698,
+            "bottom_plate_thickness": 12.0,
+            "side_plate_thickness": 10.0,
+            "deck_plate_thickness": 10.0,
+            "structure_factor": 1.4,
+            "hull_steel_density": 7.85,
+            "steel_rate_per_cbm": 0.1,
+            "block_coefficient": 0.7831,
+            "water_density": 1.0,
+            "underkeel_clearance": 0.5,
+            "outfitting_factor": 0.035,
+            "piping_factor": 0.04,
+            "stores_weight": 200.0,
+            "tank_support_height": 0.5,
+            "double_bottom_height": 1.1,
+            "aft_arrangement": {
+              "length_m": 19.892000000000003,
+              "zones": [
+                [
+                  "THRUSTER ROOM",
+                  0.0,
+                  3.5
+                ],
+                [
+                  "40 FT UNITS (3 ABREAST x 1)",
+                  3.8,
+                  15.992
+                ],
+                [
+                  "WHEELHOUSE (LIFTING)",
+                  16.292,
+                  19.892000000000003
+                ]
+              ],
+              "thruster_offsets_m": [
+                -3.2,
+                0.0,
+                3.2
+              ],
+              "thruster_room_length_m": 3.5,
+              "container_x0_m": 3.8,
+              "container_x1_m": 15.992,
+              "container_total_width_m": 10.914,
+              "container_top_above_keel_m": 8.4465,
+              "container_labels": [
+                "BATTERY 40 FT",
+                "ACCOM 40 FT",
+                "ACCOM 40 FT"
+              ],
+              "container_unit_width_m": 2.438,
+              "container_side_gap_m": 0.9,
+              "container_rows": 1,
+              "container_per_row": 3,
+              "container_row_length_m": 12.192,
+              "container_row_gap_m": 0.8,
+              "wheelhouse_x0_m": 16.292,
+              "wheelhouse_x1_m": 19.892000000000003,
+              "wheelhouse_floor_lowered_m": 5.2505,
+              "wheelhouse_top_lowered_m": 8.6505,
+              "wheelhouse_floor_raised_m": 11.250499999999999,
+              "wheelhouse_top_raised_m": 14.6505,
+              "wheelhouse_lift_m": 6.0,
+              "wheelhouse_width_m": 6.4,
+              "wheelhouse_height_m": 3.4,
+              "block_top_lowered_m": 8.6505,
+              "checks": [
+                {
+                  "name": "thrusters_fit_beam",
+                  "ok": true,
+                  "message": "3 x 2.60 m thrusters need 10.20 m across a 13.95 m beam",
+                  "severity": "error"
+                },
+                {
+                  "name": "requested_thruster_count_fits",
+                  "ok": true,
+                  "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 13.95 m beam",
+                  "severity": "warning"
+                },
+                {
+                  "name": "containers_fit_beam",
+                  "ok": true,
+                  "message": "3 x 40 ft units abreast need 10.91 m across a 13.95 m beam",
+                  "severity": "error"
+                },
+                {
+                  "name": "units_fit_in_one_row",
+                  "ok": true,
+                  "message": "3 units in 1 row(s) of 3; a second row adds 12.99 m to the stern block and comes straight off the cargo zone",
+                  "severity": "warning"
+                },
+                {
+                  "name": "wheelhouse_fits_beam",
+                  "ok": true,
+                  "message": "wheelhouse 6.40 m wide on a 13.95 m beam",
+                  "severity": "error"
+                },
+                {
+                  "name": "wheelhouse_sees_over_cargo",
+                  "ok": false,
+                  "message": "raised eye 12.75 m >= obstruction 14.55 m + 0.50 m margin (lift used 6.00 m of 6.00 m)",
+                  "severity": "warning"
+                }
+              ],
+              "warnings": [
+                "Sightline needs 8.30 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top."
+              ]
+            },
+            "separation": {
+              "aft_separation_m": 2.0,
+              "fwd_separation_m": 0.5,
+              "cofferdam_m": 0.6,
+              "service_space_m": 1.4,
+              "total_length_taken_m": 2.5,
+              "checks": [
+                {
+                  "name": "cofferdam_min_width",
+                  "ok": true,
+                  "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                  "severity": "error"
+                },
+                {
+                  "name": "opening_setback",
+                  "ok": true,
+                  "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                  "severity": "error"
+                },
+                {
+                  "name": "fwd_end_bulkhead_space",
+                  "ok": true,
+                  "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                  "severity": "error"
+                },
+                {
+                  "name": "side_clearance_type_g_floor",
+                  "ok": true,
+                  "message": "side clearance 1.25 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                  "severity": "error"
+                },
+                {
+                  "name": "double_bottom_type_g_floor",
+                  "ok": true,
+                  "message": "double bottom 1.10 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                  "severity": "error"
+                }
+              ],
+              "warnings": [
+                "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+              ]
+            },
+            "tug_length": 0.0,
+            "tug_beam": 9.1,
+            "notch_depth": 3.0
+          },
+          {
+            "inputs": {
+              "loa": 89.5089,
+              "beam": 13.9469,
+              "depth": 5.2505,
+              "max_draft": 3.898517881393433,
+              "vertical_clearance": 0.0,
+              "vessel_type": "ADN_G",
+              "bow_rake_length": 8.4008,
+              "bow_rake_rise": 5.2505,
+              "stern_rake_length": 0.0,
+              "stern_rake_rise": 5.2505,
+              "bow_non_tank_pct": 0.1,
+              "stern_non_tank_pct": 0.15,
+              "bow_non_tank_length": 8.9008,
+              "stern_non_tank_length": 21.892000000000003,
+              "wing_tank_width": 0.65,
+              "wing_tank_gap": 0.6,
+              "wing_tank_height_ratio": 0.66,
+              "weather_shield_thickness": 6.0,
+              "weather_shield_clearance": 1.5,
+              "dome_height": 2.0,
+              "side_clearance": 1.25,
+              "tank_gap_transverse": 1.0,
+              "tank_gap_longitudinal": 2.0,
+              "n_tanks_wide": 1,
+              "n_tanks_long": 2,
+              "tank_wall_thickness": 25.0,
+              "tank_head_type": "hemisphere",
+              "tank_material": "9Ni",
+              "tank_material_density": 7.85,
+              "design_pressure": 0.5,
+              "weld_efficiency": 0.95,
+              "tank_structure_factor": 1.3,
+              "insulation_thickness": 350.0,
+              "insulation_density": 60.0,
+              "cargo_type": "LNG_ethane",
+              "cargo_density_override": null,
+              "fill_ratio": 0.9698,
+              "bottom_plate_thickness": 12.0,
+              "side_plate_thickness": 10.0,
+              "deck_plate_thickness": 10.0,
+              "structure_factor": 1.4,
+              "hull_steel_density": 7.85,
+              "steel_rate_per_cbm": 0.1,
+              "block_coefficient": 0.7831,
+              "water_density": 1.0,
+              "underkeel_clearance": 0.5,
+              "outfitting_factor": 0.035,
+              "piping_factor": 0.04,
+              "stores_weight": 200.0,
+              "tank_support_height": 0.5,
+              "double_bottom_height": 1.1,
+              "aft_arrangement": {
+                "length_m": 19.892000000000003,
+                "zones": [
+                  [
+                    "THRUSTER ROOM",
+                    0.0,
+                    3.5
+                  ],
+                  [
+                    "40 FT UNITS (3 ABREAST x 1)",
+                    3.8,
+                    15.992
+                  ],
+                  [
+                    "WHEELHOUSE (LIFTING)",
+                    16.292,
+                    19.892000000000003
+                  ]
+                ],
+                "thruster_offsets_m": [
+                  -3.2,
+                  0.0,
+                  3.2
+                ],
+                "thruster_room_length_m": 3.5,
+                "container_x0_m": 3.8,
+                "container_x1_m": 15.992,
+                "container_total_width_m": 10.914,
+                "container_top_above_keel_m": 8.4465,
+                "container_labels": [
+                  "BATTERY 40 FT",
+                  "ACCOM 40 FT",
+                  "ACCOM 40 FT"
+                ],
+                "container_unit_width_m": 2.438,
+                "container_side_gap_m": 0.9,
+                "container_rows": 1,
+                "container_per_row": 3,
+                "container_row_length_m": 12.192,
+                "container_row_gap_m": 0.8,
+                "wheelhouse_x0_m": 16.292,
+                "wheelhouse_x1_m": 19.892000000000003,
+                "wheelhouse_floor_lowered_m": 5.2505,
+                "wheelhouse_top_lowered_m": 8.6505,
+                "wheelhouse_floor_raised_m": 11.250499999999999,
+                "wheelhouse_top_raised_m": 14.6505,
+                "wheelhouse_lift_m": 6.0,
+                "wheelhouse_width_m": 6.4,
+                "wheelhouse_height_m": 3.4,
+                "block_top_lowered_m": 8.6505,
+                "checks": [
+                  {
+                    "name": "thrusters_fit_beam",
+                    "ok": true,
+                    "message": "3 x 2.60 m thrusters need 10.20 m across a 13.95 m beam",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "requested_thruster_count_fits",
+                    "ok": true,
+                    "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 13.95 m beam",
+                    "severity": "warning"
+                  },
+                  {
+                    "name": "containers_fit_beam",
+                    "ok": true,
+                    "message": "3 x 40 ft units abreast need 10.91 m across a 13.95 m beam",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "units_fit_in_one_row",
+                    "ok": true,
+                    "message": "3 units in 1 row(s) of 3; a second row adds 12.99 m to the stern block and comes straight off the cargo zone",
+                    "severity": "warning"
+                  },
+                  {
+                    "name": "wheelhouse_fits_beam",
+                    "ok": true,
+                    "message": "wheelhouse 6.40 m wide on a 13.95 m beam",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "wheelhouse_sees_over_cargo",
+                    "ok": false,
+                    "message": "raised eye 12.75 m >= obstruction 14.55 m + 0.50 m margin (lift used 6.00 m of 6.00 m)",
+                    "severity": "warning"
+                  }
+                ],
+                "warnings": [
+                  "Sightline needs 8.30 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top."
+                ]
+              },
+              "separation": {
+                "aft_separation_m": 2.0,
+                "fwd_separation_m": 0.5,
+                "cofferdam_m": 0.6,
+                "service_space_m": 1.4,
+                "total_length_taken_m": 2.5,
+                "checks": [
+                  {
+                    "name": "cofferdam_min_width",
+                    "ok": true,
+                    "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "opening_setback",
+                    "ok": true,
+                    "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "fwd_end_bulkhead_space",
+                    "ok": true,
+                    "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "side_clearance_type_g_floor",
+                    "ok": true,
+                    "message": "side clearance 1.25 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "double_bottom_type_g_floor",
+                    "ok": true,
+                    "message": "double bottom 1.10 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                    "severity": "error"
+                  }
+                ],
+                "warnings": [
+                  "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+                ]
+              },
+              "tug_length": 0.0,
+              "tug_beam": 9.1,
+              "notch_depth": 3.0
+            },
+            "tanks": {
+              "n_tanks_wide": 1,
+              "n_tanks_long": 2,
+              "n_tanks_total": 2,
+              "outer_diameter": 11.4469,
+              "inner_diameter": 10.6969,
+              "overall_tank_length": 34.73931666666666,
+              "cylinder_length": 24.04241666666666,
+              "head_length": 5.34845,
+              "volume_per_tank": 2160.6472659980436,
+              "volume_cylinder": 2160.6472659980436,
+              "volume_heads": 640.8736708984324,
+              "total_tank_volume": 4321.294531996087,
+              "cargo_volume": 4190.791437129806,
+              "tank_shell_weight": "float:nan",
+              "insulation_weight": "float:nan",
+              "tank_top_above_keel": 12.546899999999999,
+              "cylinder_wall_thickness": 25.0,
+              "head_wall_thickness": 0.0,
+              "design_pressure": 0.0,
+              "tank_material": ""
+            },
+            "cargo_type": "LNG / Ethane",
+            "cargo_density": 500.0,
+            "cargo_mass": 2095.395718564903,
+            "weights": null,
+            "displacement": 3811.1905373179634,
+            "deadweight": 2095.3854111894366,
+            "draft": 3.898517881393433,
+            "freeboard": 1.3519821186065668,
+            "min_freeboard_ok": true,
+            "air_draft": 10.648382118606566,
+            "air_draft_ok": true,
+            "stability": null,
+            "stability_ok": true,
+            "trim": 0.0,
+            "total_depth_required": 5.2505,
+            "air_draft_unladen": 12.791782815361021,
+            "light_draft": 1.7551171846389773,
+            "air_draft_navigating_unladen": 12.895382815361021,
+            "protective_location": null,
+            "binding_constraints": [],
+            "warnings": [
+              "Sightline needs 8.30 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top.",
+              "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "to_ga/sweep/009",
+      "output": {
+        "ok": [
+          {
+            "loa": 72.2372,
+            "beam": 17.3968,
+            "depth": 5.9703,
+            "max_draft": 2.7505,
+            "vertical_clearance": 0.0,
+            "vessel_type": "IGC_2G",
+            "bow_rake_length": 9.552480000000001,
+            "bow_rake_rise": 5.9703,
+            "stern_rake_length": 0.0,
+            "stern_rake_rise": 5.9703,
+            "bow_non_tank_pct": 0.1,
+            "stern_non_tank_pct": 0.15,
+            "bow_non_tank_length": 10.052480000000001,
+            "stern_non_tank_length": 5.0,
+            "wing_tank_width": 0.4,
+            "wing_tank_gap": 0.6,
+            "wing_tank_height_ratio": 0.66,
+            "weather_shield_thickness": 6.0,
+            "weather_shield_clearance": 1.5,
+            "dome_height": 2.0,
+            "side_clearance": 1.0,
+            "tank_gap_transverse": 1.0,
+            "tank_gap_longitudinal": 2.0,
+            "n_tanks_wide": 2,
+            "n_tanks_long": 2,
+            "tank_wall_thickness": 25.0,
+            "tank_head_type": "hemisphere",
+            "tank_material": "9Ni",
+            "tank_material_density": 7.85,
+            "design_pressure": 0.5,
+            "weld_efficiency": 0.95,
+            "tank_structure_factor": 1.3,
+            "insulation_thickness": 350.0,
+            "insulation_density": 60.0,
+            "cargo_type": "LNG",
+            "cargo_density_override": null,
+            "fill_ratio": 0.9167,
+            "bottom_plate_thickness": 12.0,
+            "side_plate_thickness": 10.0,
+            "deck_plate_thickness": 10.0,
+            "structure_factor": 1.4,
+            "hull_steel_density": 7.85,
+            "steel_rate_per_cbm": 0.1,
+            "block_coefficient": 0.8187,
+            "water_density": 1.0,
+            "underkeel_clearance": 0.5,
+            "outfitting_factor": 0.035,
+            "piping_factor": 0.04,
+            "stores_weight": 200.0,
+            "tank_support_height": 0.5,
+            "double_bottom_height": 1.1597866666666665,
+            "aft_arrangement": null,
+            "separation": {
+              "aft_separation_m": 2.0,
+              "fwd_separation_m": 0.5,
+              "cofferdam_m": 0.6,
+              "service_space_m": 1.4,
+              "total_length_taken_m": 2.5,
+              "checks": [
+                {
+                  "name": "cofferdam_min_width",
+                  "ok": true,
+                  "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                  "severity": "error"
+                },
+                {
+                  "name": "opening_setback",
+                  "ok": true,
+                  "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                  "severity": "error"
+                },
+                {
+                  "name": "fwd_end_bulkhead_space",
+                  "ok": true,
+                  "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                  "severity": "error"
+                },
+                {
+                  "name": "side_clearance_type_g_floor",
+                  "ok": true,
+                  "message": "side clearance 1.00 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                  "severity": "error"
+                },
+                {
+                  "name": "double_bottom_type_g_floor",
+                  "ok": true,
+                  "message": "double bottom 1.16 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                  "severity": "error"
+                }
+              ],
+              "warnings": [
+                "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+              ]
+            },
+            "tug_length": 25.0,
+            "tug_beam": 9.1,
+            "notch_depth": 3.0
+          },
+          {
+            "inputs": {
+              "loa": 72.2372,
+              "beam": 17.3968,
+              "depth": 5.9703,
+              "max_draft": 2.7505,
+              "vertical_clearance": 0.0,
+              "vessel_type": "IGC_2G",
+              "bow_rake_length": 9.552480000000001,
+              "bow_rake_rise": 5.9703,
+              "stern_rake_length": 0.0,
+              "stern_rake_rise": 5.9703,
+              "bow_non_tank_pct": 0.1,
+              "stern_non_tank_pct": 0.15,
+              "bow_non_tank_length": 10.052480000000001,
+              "stern_non_tank_length": 5.0,
+              "wing_tank_width": 0.4,
+              "wing_tank_gap": 0.6,
+              "wing_tank_height_ratio": 0.66,
+              "weather_shield_thickness": 6.0,
+              "weather_shield_clearance": 1.5,
+              "dome_height": 2.0,
+              "side_clearance": 1.0,
+              "tank_gap_transverse": 1.0,
+              "tank_gap_longitudinal": 2.0,
+              "n_tanks_wide": 2,
+              "n_tanks_long": 2,
+              "tank_wall_thickness": 25.0,
+              "tank_head_type": "hemisphere",
+              "tank_material": "9Ni",
+              "tank_material_density": 7.85,
+              "design_pressure": 0.5,
+              "weld_efficiency": 0.95,
+              "tank_structure_factor": 1.3,
+              "insulation_thickness": 350.0,
+              "insulation_density": 60.0,
+              "cargo_type": "LNG",
+              "cargo_density_override": null,
+              "fill_ratio": 0.9167,
+              "bottom_plate_thickness": 12.0,
+              "side_plate_thickness": 10.0,
+              "deck_plate_thickness": 10.0,
+              "structure_factor": 1.4,
+              "hull_steel_density": 7.85,
+              "steel_rate_per_cbm": 0.1,
+              "block_coefficient": 0.8187,
+              "water_density": 1.0,
+              "underkeel_clearance": 0.5,
+              "outfitting_factor": 0.035,
+              "piping_factor": 0.04,
+              "stores_weight": 200.0,
+              "tank_support_height": 0.5,
+              "double_bottom_height": 1.1597866666666665,
+              "aft_arrangement": null,
+              "separation": {
+                "aft_separation_m": 2.0,
+                "fwd_separation_m": 0.5,
+                "cofferdam_m": 0.6,
+                "service_space_m": 1.4,
+                "total_length_taken_m": 2.5,
+                "checks": [
+                  {
+                    "name": "cofferdam_min_width",
+                    "ok": true,
+                    "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "opening_setback",
+                    "ok": true,
+                    "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "fwd_end_bulkhead_space",
+                    "ok": true,
+                    "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "side_clearance_type_g_floor",
+                    "ok": true,
+                    "message": "side clearance 1.00 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                    "severity": "error"
+                  },
+                  {
+                    "name": "double_bottom_type_g_floor",
+                    "ok": true,
+                    "message": "double bottom 1.16 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                    "severity": "error"
+                  }
+                ],
+                "warnings": [
+                  "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+                ]
+              },
+              "tug_length": 25.0,
+              "tug_beam": 9.1,
+              "notch_depth": 3.0
+            },
+            "tanks": {
+              "n_tanks_wide": 2,
+              "n_tanks_long": 2,
+              "n_tanks_total": 4,
+              "outer_diameter": 7.1983999999999995,
+              "inner_diameter": 6.4483999999999995,
+              "overall_tank_length": 31.14129333333333,
+              "cylinder_length": 24.69289333333333,
+              "head_length": 3.2241999999999997,
+              "volume_per_tank": 806.4283748027782,
+              "volume_cylinder": 806.4283748027782,
+              "volume_heads": 140.39593394693955,
+              "total_tank_volume": 3225.713499211113,
+              "cargo_volume": 2957.011564726827,
+              "tank_shell_weight": "float:nan",
+              "insulation_weight": "float:nan",
+              "tank_top_above_keel": 8.358186666666667,
+              "cylinder_wall_thickness": 25.0,
+              "head_wall_thickness": 0.0,
+              "design_pressure": 0.0,
+              "tank_material": ""
+            },
+            "cargo_type": "LNG",
+            "cargo_density": 450.0,
+            "cargo_mass": 1330.6552041270722,
+            "weights": null,
+            "displacement": 2790.1661395672973,
+            "deadweight": 1330.6603623401038,
+            "draft": 2.7505,
+            "freeboard": 3.2197999999999998,
+            "min_freeboard_ok": true,
+            "air_draft": 7.646278374468486,
+            "air_draft_ok": true,
+            "stability": null,
+            "stability_ok": true,
+            "trim": 0.0,
+            "total_depth_required": 5.9703,
+            "air_draft_unladen": 8.93963004969279,
+            "light_draft": 1.4185566169738766,
+            "air_draft_navigating_unladen": 8.93963004969279,
+            "protective_location": null,
+            "binding_constraints": [],
+            "warnings": [
+              "PUSHED barge: crew, battery and propulsion are on the tug and are NOT in this hull's lightship, capacity or air draft. The tug is a separate vessel and must be costed and air-draft-gated separately.",
+              "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "is_gas/sweep/000",
+      "output": {
+        "ok": false
+      }
+    },
+    {
+      "id": "is_gas/sweep/001",
+      "output": {
+        "ok": true
+      }
+    },
+    {
+      "id": "is_gas/sweep/002",
+      "output": {
+        "ok": true
+      }
+    },
+    {
+      "id": "is_gas/sweep/003",
+      "output": {
+        "ok": false
+      }
+    },
+    {
+      "id": "is_gas/sweep/004",
+      "output": {
+        "ok": true
+      }
+    },
+    {
+      "id": "is_gas/sweep/005",
+      "output": {
+        "ok": true
+      }
+    },
+    {
+      "id": "is_gas/sweep/006",
+      "output": {
+        "ok": true
+      }
+    },
+    {
+      "id": "is_gas/sweep/007",
+      "output": {
+        "ok": true
+      }
+    },
+    {
+      "id": "is_gas/sweep/008",
+      "output": {
+        "ok": true
+      }
+    },
+    {
+      "id": "is_gas/sweep/009",
+      "output": {
+        "ok": false
+      }
+    },
+    {
+      "id": "is_gas/sweep/010",
+      "output": {
+        "ok": true
+      }
+    },
+    {
+      "id": "is_gas/sweep/011",
+      "output": {
+        "ok": true
+      }
+    },
+    {
+      "id": "is_gas/sweep/012",
+      "output": {
+        "ok": false
+      }
+    },
+    {
+      "id": "is_gas/sweep/013",
+      "output": {
+        "ok": true
+      }
+    },
+    {
+      "id": "is_gas/sweep/014",
+      "output": {
+        "ok": true
+      }
     }
   ]
 }

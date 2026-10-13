@@ -120,9 +120,88 @@ def cargo(fn: str, args: dict):
 
 def protective_location(fn: str, args: dict):
     mod = _module("core.protective_location")
-    if fn in ("distance_d_vc", "d_vc_exact", "compute_required_clearances"):
+    if fn in ("distance_d_vc", "d_vc_exact", "compute_required_clearances",
+              "check_protective_location"):
         return getattr(mod, fn)(**args)
+    if fn in ("required_side_protection", "required_bottom_protection"):
+        # vessel_type is the VesselType value (a string); null = None. An unknown string raises
+        # the enum's own ValueError, as compute_required_clearances does.
+        args = dict(args)
+        vt = args.pop("vessel_type", None)
+        return getattr(mod, fn)(vessel_type=None if vt is None else mod.VesselType(vt), **args)
     raise KeyError(f"protective_location has no parity function {fn!r}")
+
+
+def pressure_vessel(fn: str, args: dict):
+    mod = _module("core.pressure_vessel")
+    if fn in ("get_tank_material", "cylinder_wall_thickness", "hemisphere_head_thickness",
+              "ellipsoidal_head_thickness", "calculate_wall_thicknesses"):
+        return getattr(mod, fn)(**args)
+    raise KeyError(f"pressure_vessel has no parity function {fn!r}")
+
+
+HULL_QUANTITIES = ("displaced_volume", "waterplane_area", "waterplane_length",
+                   "waterplane_inertia_transverse", "waterplane_inertia_longitudinal",
+                   "KB", "LCB", "BM_transverse", "BM_longitudinal")
+HULL_AREAS = ("bottom_area", "side_area", "deck_area", "bow_rake_area", "stern_rake_area",
+              "total_hull_surface_area")
+
+
+def hull(fn: str, args: dict):
+    mod = _module("core.hull")
+    if fn == "quantities":
+        # Every public quantity of one HullGeometry: the draft-dependent ones at args.draft,
+        # then the plating areas. Key order is fixed and part of the Reference Result.
+        h = mod.HullGeometry(**args["hull"])
+        out = {"parallel_length": h.parallel_length}
+        out.update({q: getattr(h, q)(args["draft"]) for q in HULL_QUANTITIES})
+        out.update({q: getattr(h, q)() for q in HULL_AREAS})
+        return out
+    raise KeyError(f"hull has no parity function {fn!r}")
+
+
+def _barge_chain(inputs: dict):
+    """(BargeInputs, HullGeometry, TankResult, WeightBreakdown) from plain BargeInputs data.
+
+    The hull carries the inputs' own rakes; tanks and weights come from the frozen functions.
+    Used by the tanks, weights and hydrostatics entry points.
+    """
+    models, hull_mod = _module("core.models"), _module("core.hull")
+    bi = build(models.BargeInputs, inputs)
+    h = hull_mod.HullGeometry(bi.loa, bi.beam, bi.depth, bi.bow_rake_length, bi.bow_rake_rise,
+                              bi.stern_rake_length, bi.stern_rake_rise)
+    t = _module("core.tanks").calculate_tank_arrangement(bi)
+    w = _module("core.weights").calculate_weights(bi, h, t)
+    return bi, h, t, w
+
+
+def tanks(fn: str, args: dict):
+    mod = _module("core.tanks")
+    if fn == "calculate_tank_arrangement":
+        return mod.calculate_tank_arrangement(build(_module("core.models").BargeInputs,
+                                                    args["inputs"]))
+    if fn == "free_surface_moment_cylindrical":
+        return mod.free_surface_moment_cylindrical(**args)
+    raise KeyError(f"tanks has no parity function {fn!r}")
+
+
+def weights(fn: str, args: dict):
+    if fn == "calculate_weights":
+        return _barge_chain(args["inputs"])[3]
+    raise KeyError(f"weights has no parity function {fn!r}")
+
+
+def hydrostatics(fn: str, args: dict):
+    mod = _module("core.hydrostatics")
+    if fn == "find_equilibrium_draft":
+        args = dict(args)
+        h = _module("core.hull").HullGeometry(**args.pop("hull"))
+        return mod.find_equilibrium_draft(h, **args)
+    if fn in ("calculate_stability", "calculate_trim"):
+        args = dict(args)
+        bi, h, t, w = _barge_chain(args.pop("inputs"))
+        return getattr(mod, fn)(h, bi, t, w, **args)
+    raise KeyError(f"hydrostatics has no parity function {fn!r}")
 
 
 def aft_arrangement(fn: str, args: dict):
@@ -143,6 +222,8 @@ def barge_capacity(fn: str, args: dict):
     mod = _module("core.barge_capacity")
     if fn == "compute":
         return mod.compute(build(mod.BargeCapacityInputs, args["inputs"]))
+    if fn == "tanks_wide_for_beam":
+        return mod.tanks_wide_for_beam(**args)
     raise KeyError(f"barge_capacity has no parity function {fn!r}")
 
 
@@ -203,12 +284,24 @@ def resistance(fn: str, args: dict):
     raise KeyError(f"resistance has no parity function {fn!r}")
 
 
+def electric_energy(fn: str, args: dict):
+    mod = _module("core.electric_energy")
+    if fn == "compute":
+        return mod.compute(build(mod.EnergyInputs, args["inputs"]))
+    raise KeyError(f"electric_energy has no parity function {fn!r}")
+
+
 def barge_cost(fn: str, args: dict):
     mod = _module("core.barge_cost")
     if fn == "compute":
         # rates: absent or null = the built-in example rates; an object = explicit rates.
-        rates = args.get("rates")
-        rates = build(mod.BargeCostRates, rates) if rates is not None else None
+        # rates_mapping: a plain key -> value mapping, checked by BargeCostRates.from_mapping
+        # (the path a user's rates file takes, with its unknown / missing key errors).
+        if "rates_mapping" in args:
+            rates = dict(args["rates_mapping"])
+        else:
+            rates = args.get("rates")
+            rates = build(mod.BargeCostRates, rates) if rates is not None else None
         return mod.compute(build(mod.BargeCostInputs, args["inputs"]), rates)
     if fn == "parse_flat_yaml":
         return mod.parse_flat_yaml(**args)
@@ -264,8 +357,13 @@ def simulate(fn: str, args: dict):
 ADAPTERS = {
     "cargo": cargo,
     "protective_location": protective_location,
+    "pressure_vessel": pressure_vessel,
+    "hull": hull,
     "aft_arrangement": aft_arrangement,
     "gas_separation": gas_separation,
+    "tanks": tanks,
+    "weights": weights,
+    "hydrostatics": hydrostatics,
     "barge_capacity": barge_capacity,
     "journey_derating": journey_derating,
     "gas_arrangement": gas_arrangement,
@@ -273,6 +371,7 @@ ADAPTERS = {
     "squat": squat,
     "waves": waves,
     "resistance": resistance,
+    "electric_energy": electric_energy,
     "barge_cost": barge_cost,
     "design_grid": design_grid,
     "ga_adapter": ga_adapter,

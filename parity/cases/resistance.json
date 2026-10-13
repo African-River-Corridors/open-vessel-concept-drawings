@@ -663,6 +663,350 @@
           }
         }
       }
+    },
+    {
+      "id": "compute/error/zero_draft",
+      "tier": 3,
+      "reason": "tier 3: error path: draft_m must be > 0, from squat",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/zero_beam",
+      "tier": 3,
+      "reason": "tier 3: error path: beam_m must be > 0, from squat",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/000",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 87.76,
+            "lwl": 86.1238,
+            "beam": 15.8847,
+            "draft": 3.344,
+            "block_coefficient": 0.8294,
+            "tug": {
+              "engine_power_kw": 3379.487,
+              "propulsive_efficiency": 0.5998
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 3.9192,
+                "channel_width_bottom": 148.9996,
+                "channel_width_surface": 172.51,
+                "current_speed_knots": 0.8154,
+                "water_density": 1.025,
+                "significant_wave_height_m": 1.8909,
+                "apply_squat_limit": true
+              },
+              {
+                "name": "env1",
+                "water_depth": 5.6695,
+                "channel_width_bottom": 155.5793,
+                "channel_width_surface": 189.6,
+                "current_speed_knots": 1.1441,
+                "water_density": 1.0,
+                "significant_wave_height_m": 1.0982,
+                "apply_squat_limit": true
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 6.5,
+            "speed_step_knots": 1.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/001",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 116.05,
+            "lwl": 114.496,
+            "beam": 15.2927,
+            "draft": 1.9878,
+            "block_coefficient": 0.8917,
+            "tug": {
+              "engine_power_kw": 864.8619,
+              "propulsive_efficiency": 0.5763
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 14.2124,
+                "channel_width_bottom": 120.8852,
+                "channel_width_surface": 206.16,
+                "current_speed_knots": 0.8807,
+                "water_density": 1.025,
+                "significant_wave_height_m": 0.0,
+                "apply_squat_limit": true
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 6.2466,
+            "speed_step_knots": 1.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/002",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 51.21,
+            "lwl": 50.5816,
+            "beam": 10.089,
+            "draft": 2.4501,
+            "block_coefficient": 0.7627,
+            "tug": {
+              "engine_power_kw": 2566.1456,
+              "propulsive_efficiency": 0.5816
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 14.0512,
+                "channel_width_bottom": 234.6118,
+                "channel_width_surface": 318.92,
+                "current_speed_knots": 0.9774,
+                "water_density": 1.0,
+                "significant_wave_height_m": 0.0,
+                "apply_squat_limit": false
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 6.3238,
+            "speed_step_knots": 1.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/003",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 116.52,
+            "lwl": 113.0994,
+            "beam": 16.1214,
+            "draft": 1.9166,
+            "block_coefficient": 0.8224,
+            "tug": {
+              "engine_power_kw": 1031.4743,
+              "propulsive_efficiency": 0.483
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 5.954,
+                "channel_width_bottom": 197.1895,
+                "channel_width_surface": 232.91,
+                "current_speed_knots": 0.3155,
+                "water_density": 1.025,
+                "significant_wave_height_m": 0.0,
+                "apply_squat_limit": true
+              },
+              {
+                "name": "env1",
+                "water_depth": 17.481,
+                "channel_width_bottom": 107.0057,
+                "channel_width_surface": 211.89,
+                "current_speed_knots": 1.7583,
+                "water_density": 1.0,
+                "significant_wave_height_m": 0.6441,
+                "apply_squat_limit": true
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 7.4642,
+            "speed_step_knots": 1.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/004",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 68.44,
+            "lwl": 63.8676,
+            "beam": 22.274,
+            "draft": 2.3583,
+            "block_coefficient": 0.8431,
+            "tug": {
+              "engine_power_kw": 3688.0774,
+              "propulsive_efficiency": 0.5172
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 16.408,
+                "channel_width_bottom": 41.6801,
+                "channel_width_surface": 140.13,
+                "current_speed_knots": 1.2874,
+                "water_density": 1.025,
+                "significant_wave_height_m": 0.0,
+                "apply_squat_limit": true
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 7.0977,
+            "speed_step_knots": 1.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 107.43,
+            "lwl": 105.2059,
+            "beam": 14.1992,
+            "draft": 2.0117,
+            "block_coefficient": 0.7922,
+            "tug": {
+              "engine_power_kw": 2084.7682,
+              "propulsive_efficiency": 0.4301
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 3.7949,
+                "channel_width_bottom": 176.2636,
+                "channel_width_surface": 199.03,
+                "current_speed_knots": 1.6245,
+                "water_density": 1.0,
+                "significant_wave_height_m": 0.0,
+                "apply_squat_limit": true
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 9.2625,
+            "speed_step_knots": 1.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/006",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 96.65,
+            "lwl": 95.4487,
+            "beam": 22.7007,
+            "draft": 4.9274,
+            "block_coefficient": 0.8851,
+            "tug": {
+              "engine_power_kw": 1090.8163,
+              "propulsive_efficiency": 0.5712
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 5.259,
+                "channel_width_bottom": 224.985,
+                "channel_width_surface": 256.54,
+                "current_speed_knots": 1.5126,
+                "water_density": 1.0,
+                "significant_wave_height_m": 0.0,
+                "apply_squat_limit": true
+              },
+              {
+                "name": "env1",
+                "water_depth": 14.8826,
+                "channel_width_bottom": 171.768,
+                "channel_width_surface": 261.06,
+                "current_speed_knots": 0.0612,
+                "water_density": 1.0,
+                "significant_wave_height_m": 1.0816,
+                "apply_squat_limit": true
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 8.5786,
+            "speed_step_knots": 1.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/007",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 112.16,
+            "lwl": 107.9664,
+            "beam": 22.6111,
+            "draft": 4.5734,
+            "block_coefficient": 0.9149,
+            "tug": {
+              "engine_power_kw": 3066.7352,
+              "propulsive_efficiency": 0.4115
+            },
+            "environments": [
+              {
+                "name": "env0",
+                "water_depth": 14.9381,
+                "channel_width_bottom": 257.5819,
+                "channel_width_surface": 347.21,
+                "current_speed_knots": 1.1774,
+                "water_density": 1.0,
+                "significant_wave_height_m": 1.7814,
+                "apply_squat_limit": true
+              }
+            ],
+            "speed_min_knots": 2.0,
+            "speed_max_knots": 8.504,
+            "speed_step_knots": 1.0
+          }
+        }
+      }
     }
   ],
   "retired": []

@@ -1,7 +1,8 @@
 //! Developer tasks. Run with `cargo xtask <task>`.
 //!
-//! - `regen`: run the parity cases through the frozen Python and rewrite `parity/reference/`.
-//!   The only way Reference Results may change. Needs Python, never a maturin build.
+//! - `regen`: rewrite the tier-2 parity cases from the seeded sweep (`parity/sweep.py`), then run
+//!   every case through the frozen Python and rewrite `parity/reference/`. The only way tier-2
+//!   cases and Reference Results may change. Needs Python, never a maturin build.
 //! - `oracle-guard [--base <ref>]`: fail if the parity oracle changed without `regen` and a
 //!   recorded reason per changed case (see `oracle.rs`).
 //! - `mutants [--base <ref>] [--out <file>]`: run cargo-mutants on the `ovcd-core` code this branch
@@ -92,7 +93,16 @@ fn run_driver(out_dir: &Path) -> Result {
     .map(|_| ())
 }
 
+fn run_sweep() -> Result {
+    run(Command::new(python())
+        .current_dir(root())
+        .arg("parity/sweep.py"))
+    .map(|_| ())
+}
+
 fn regen() -> Result {
+    run_sweep()?;
+    println!("Tier-2 cases rewritten in parity/cases/ from the seeded sweep.");
     let out = root().join("parity/reference");
     run_driver(&out)?;
     println!("Reference Results rewritten in parity/reference/ from the frozen Python.");
