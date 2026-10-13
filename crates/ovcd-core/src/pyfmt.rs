@@ -8,6 +8,7 @@
 //! - `fixed`: `f"{x:.Nf}"`: exact binary value rounded half to even, `-0.00` keeps its sign.
 //! - `general`: `f"{x:g}"`: six significant digits, trailing zeros removed, exponent form
 //!   below 1e-4 and from 1e6.
+//! - `round_to`: `round(x, n)`: the same exact half-to-even rounding, read back as a float.
 //! - `percent`: `f"{x:.N%}"`: `x * 100` as a float, then `fixed`, then `%`.
 //! - `comma_fixed`: `f"{x:,.Nf}"`.
 //!
@@ -104,6 +105,20 @@ pub fn fixed(x: f64, precision: usize) -> String {
         Some(s) => s.to_string(),
         None => format!("{x:.precision$}"),
     }
+}
+
+/// Python `round(x, ndigits)` on a float, for `ndigits >= 0`.
+///
+/// CPython rounds the exact binary value half to even and reads the digits back, so this is
+/// `fixed` followed by a parse. `round(2.25, 1)` is `2.2` and `round(2.675, 2)` is `2.67`.
+/// NaN and infinity come back unchanged.
+pub fn round_to(x: f64, ndigits: usize) -> f64 {
+    if !x.is_finite() {
+        return x;
+    }
+    format!("{x:.ndigits$}")
+        .parse()
+        .expect("a fixed-point float text parses")
 }
 
 /// `f"{x:g}"` (default precision 6).
