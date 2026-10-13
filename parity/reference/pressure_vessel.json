@@ -123,6 +123,42 @@
       }
     },
     {
+      "id": "calculate_wall_thicknesses/high_pressure_od5.9_304L_hemisphere",
+      "output": {
+        "ok": [
+          49.5,
+          24.5
+        ]
+      }
+    },
+    {
+      "id": "calculate_wall_thicknesses/high_pressure_od5.9_304L_ellipsoidal_2to1",
+      "output": {
+        "ok": [
+          49.5,
+          49.0
+        ]
+      }
+    },
+    {
+      "id": "calculate_wall_thicknesses/high_pressure_od4.0_9Ni_hemisphere",
+      "output": {
+        "ok": [
+          17.0,
+          9.0
+        ]
+      }
+    },
+    {
+      "id": "calculate_wall_thicknesses/high_pressure_od4.0_9Ni_ellipsoidal_2to1",
+      "output": {
+        "ok": [
+          17.0,
+          17.0
+        ]
+      }
+    },
+    {
       "id": "get_tank_material/sweep/000",
       "output": {
         "ok": {

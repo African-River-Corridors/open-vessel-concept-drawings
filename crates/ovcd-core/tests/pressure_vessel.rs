@@ -156,3 +156,14 @@ fn rounding_raises_on_nan_and_infinity_like_math_ceil() {
         (4.639964021082768e300, 2.309166243592473e300)
     );
 }
+
+#[test]
+fn inner_radius_correction_shows_at_type_c_pressure() {
+    // At 0.5 MPa the 0.5 mm rounding hides the inner-radius correction (outer radius minus the
+    // first-pass thickness); at 1.8 MPa it does not. CPython 3.12 values. Without the
+    // correction the first pair would be (51.0, 25.5) and the second (17.5, 9.0).
+    assert_eq!(wall(5.9, 1.8, "304L", "hemisphere"), (49.5, 24.5));
+    assert_eq!(wall(5.9, 1.8, "304L", "ellipsoidal_2to1"), (49.5, 49.0));
+    assert_eq!(wall(4.0, 1.8, "9Ni", "hemisphere"), (17.0, 9.0));
+    assert_eq!(wall(4.0, 1.8, "9Ni", "ellipsoidal_2to1"), (17.0, 17.0));
+}
