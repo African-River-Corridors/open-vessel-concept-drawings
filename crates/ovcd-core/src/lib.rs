@@ -14,4 +14,5 @@ extern crate std;
 pub mod cargo;
 pub mod checks;
 pub mod gas_stability;
+mod nonprintable;
 pub mod pyfmt;

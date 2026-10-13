@@ -180,6 +180,32 @@ fn an_unknown_criteria_set_names_itself_the_way_python_repr_does() {
     );
 }
 
+/// Python 3.12 `repr` escapes what `str.isprintable` rejects: `\xhh` below U+0100, `\uhhhh` below
+/// U+10000, `\Uhhhhhhhh` above. Each expected message below was printed by the frozen Python.
+#[test]
+fn an_unknown_criteria_set_escapes_non_printable_non_ascii_text_like_python() {
+    let msg = |s: &str| {
+        run(&narrow_deep(), PAYLOAD, s)
+            .unwrap_err()
+            .message()
+            .to_string()
+    };
+    assert_eq!(msg("\u{a0}"), "unknown criteria set '\\xa0'");
+    assert_eq!(msg("\u{ad}"), "unknown criteria set '\\xad'");
+    assert_eq!(msg("\u{2028}"), "unknown criteria set '\\u2028'");
+    assert_eq!(msg("a\u{200b}b"), "unknown criteria set 'a\\u200bb'");
+    assert_eq!(msg("\u{feff}"), "unknown criteria set '\\ufeff'");
+    assert_eq!(msg("\u{e000}"), "unknown criteria set '\\ue000'");
+    assert_eq!(msg("\u{378}"), "unknown criteria set '\\u0378'");
+    assert_eq!(msg("\u{e0001}"), "unknown criteria set '\\U000e0001'");
+    assert_eq!(msg("\u{10ffff}"), "unknown criteria set '\\U0010ffff'");
+    // printable non-ASCII text stays as it is
+    assert_eq!(
+        msg("\u{e9}\u{4e2d}\u{1f600}"),
+        "unknown criteria set '\u{e9}\u{4e2d}\u{1f600}'"
+    );
+}
+
 #[test]
 fn an_unknown_criteria_set_is_not_an_error_when_nothing_floats() {
     let mut r = narrow_deep();
@@ -211,6 +237,87 @@ fn segment_fill_clamps_and_keeps_python_edge_behaviour() {
     // Python divides by zero here: sin(t) == t for the smallest t the bisection reaches
     assert_eq!(segment_fill(2.0, 1e-30), Err(PyError::ZeroDivision));
     assert_eq!(segment_fill(2.0, f64::NAN), Err(PyError::ZeroDivision));
+}
+
+#[test]
+fn a_radius_whose_square_overflows_is_an_overflow_error() {
+    // Python: segment_fill(1e155, 0.5) raises OverflowError(34, 'Result too large').
+    let e = segment_fill(1e155, 0.5).unwrap_err();
+    assert_eq!(e, PyError::Overflow);
+    assert_eq!(e.type_name(), "OverflowError");
+    assert_eq!(e.message(), "(34, 'Result too large')");
+    // The clamps return before the square, as in Python.
+    assert_eq!(segment_fill(1e155, 1.0), Ok((2e155, 1e155)));
+    assert_eq!(segment_fill(1e155, 0.0), Ok((0.0, 0.0)));
+    // Just below the limit the square is finite.
+    assert!(segment_fill(1e154, 0.5).is_ok());
+}
+
+// --- boundaries: inputs that sit exactly on a comparison. Expected values: frozen Python. ---
+
+#[test]
+fn a_draught_exactly_equal_to_the_depth_does_not_float() {
+    // Light draught is 1.3461915483210831; with depth set to that value, T >= D holds.
+    let mut r = narrow_deep();
+    r.gas_basis.as_mut().unwrap().depth = 1.3461915483210831;
+    let a = run(&r, PAYLOAD, DEFAULT_CRITERIA_SET).unwrap();
+    let light = &a.conditions[2];
+    assert_eq!(light.draught_m, 1.3461915483210831);
+    assert!(light.gz.is_empty());
+    assert_eq!(light.criteria.len(), 1);
+    assert_eq!(light.criteria[0].name, "Floats with freeboard");
+    assert!(!light.criteria[0].ok);
+}
+
+#[test]
+fn a_tank_exactly_seven_tenths_of_the_beam_is_not_wide() {
+    // 0.70 * 10.0 == 7.0 in floating point, so `od > 0.70 * B` is false: one ADN criterion.
+    let mut r = narrow_deep();
+    {
+        let b = r.gas_basis.as_mut().unwrap();
+        b.beam = 10.0;
+        b.outer_diameter = 7.0;
+        b.inner_diameter = 6.25;
+    }
+    let a = run(&r, PAYLOAD, "ADN_9_3_1_14_2").unwrap();
+    for c in &a.conditions {
+        assert_eq!(c.criteria.len(), 1);
+        assert_eq!(c.criteria[0].name, "Initial GM (fluid) > 0");
+    }
+    // Just wider than 0.70 B: the three-criterion set.
+    r.gas_basis.as_mut().unwrap().outer_diameter = 7.0000001;
+    let a = run(&r, PAYLOAD, "ADN_9_3_1_14_2").unwrap();
+    for c in &a.conditions {
+        assert_eq!(c.criteria.len(), 3);
+    }
+}
+
+#[test]
+fn a_weight_split_difference_of_exactly_one_tonne_adds_no_note() {
+    let mut r = narrow_deep();
+    {
+        let b = r.gas_basis.as_mut().unwrap();
+        b.steel_top_down = 252.0;
+        b.tank_total = 179.0;
+        b.insulation = 17.0;
+        b.piping_machinery = 17.0;
+        b.outfitting = 15.0;
+    }
+    // The split sums to 480 t exactly.
+    r.lightship_t = 481.0;
+    assert_eq!(
+        run(&r, 484.0, DEFAULT_CRITERIA_SET)
+            .unwrap()
+            .limitations
+            .len(),
+        2
+    );
+    r.lightship_t = 481.5;
+    let a = run(&r, 484.0, DEFAULT_CRITERIA_SET).unwrap();
+    assert_eq!(
+        a.limitations[2],
+        "Weight split sums to 480 t vs lightship 482 t."
+    );
 }
 
 #[test]

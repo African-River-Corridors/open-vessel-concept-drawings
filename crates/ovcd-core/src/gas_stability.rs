@@ -15,8 +15,9 @@
 //! The Python `assess` takes a whole `BargeCapacityResult`. The Rust one takes only the numbers it
 //! reads (`GasCapacityResult`), because `barge_capacity` is ported in its own ticket.
 //!
-//! Not copied: Python's `OverflowError` from `radius ** 2` on a value above about 1e154.
+//! - A float `**` that overflows is Python's `OverflowError(34, 'Result too large')` (`py_pow`).
 
+use crate::nonprintable::NON_PRINTABLE;
 use crate::pyfmt;
 use alloc::format;
 use alloc::string::{String, ToString};
@@ -33,6 +34,8 @@ pub enum PyError {
     Value(String),
     /// `ZeroDivisionError("float division by zero")`.
     ZeroDivision,
+    /// `OverflowError(34, 'Result too large')`, from a float `**` that leaves the finite range.
+    Overflow,
 }
 
 impl PyError {
@@ -41,6 +44,7 @@ impl PyError {
         match self {
             PyError::Value(_) => "ValueError",
             PyError::ZeroDivision => "ZeroDivisionError",
+            PyError::Overflow => "OverflowError",
         }
     }
 
@@ -49,6 +53,7 @@ impl PyError {
         match self {
             PyError::Value(m) => m,
             PyError::ZeroDivision => "float division by zero",
+            PyError::Overflow => "(34, 'Result too large')",
         }
     }
 }
@@ -144,9 +149,20 @@ fn domain_checked(x: f64) -> Result<f64, PyError> {
     }
 }
 
+/// Float `x ** y`: a finite base with a finite exponent that gives an infinity is Python's
+/// `OverflowError`.
+fn py_pow(x: f64, y: f64) -> Result<f64, PyError> {
+    let r = libm::pow(x, y);
+    if r.is_infinite() && x.is_finite() && y.is_finite() {
+        Err(PyError::Overflow)
+    } else {
+        Ok(r)
+    }
+}
+
 /// `x ** 2`.
-fn sq(x: f64) -> f64 {
-    libm::pow(x, 2.0)
+fn sq(x: f64) -> Result<f64, PyError> {
+    py_pow(x, 2.0)
 }
 
 // --- geometry helpers ------------------------------------------------------------------------
@@ -247,7 +263,7 @@ pub fn segment_fill(radius: f64, volume_fraction: f64) -> Result<(f64, f64), PyE
     }
     let t = 0.5 * (lo + hi);
     let h = radius * (1.0 - libm::cos(t / 2.0));
-    let area = sq(radius) * (t - libm::sin(t)) / 2.0;
+    let area = sq(radius)? * (t - libm::sin(t)) / 2.0;
     let ybar_from_centre = div(
         (4.0 * radius) * libm::pow(libm::sin(t / 2.0), 3.0),
         3.0 * (t - libm::sin(t)),
@@ -450,8 +466,9 @@ fn criteria(cset: &str, c: &Condition, wide_tank: bool) -> Result<Vec<Criterion>
 }
 
 /// Python `repr(str)` for the text of a criteria set name: single quotes, unless the text holds a
-/// single quote and no double quote. Backslash, newline, return, tab and other control or
-/// non-printable ASCII characters are escaped; printable non-ASCII text stays as it is.
+/// single quote and no double quote. Backslash, newline, return and tab get their short escape.
+/// Every other character that `str.isprintable` rejects becomes `\xhh`, `\uhhhh` or `\Uhhhhhhhh`
+/// (table in `nonprintable.rs`); printable text stays as it is.
 fn py_repr_str(s: &str) -> String {
     let quote = if s.contains('\'') && !s.contains('"') {
         '"'
@@ -470,14 +487,49 @@ fn py_repr_str(s: &str) -> String {
                 out.push('\\');
                 out.push(c);
             }
-            c if (c as u32) < 0x20 || c as u32 == 0x7f => {
-                out.push_str(&format!("\\x{:02x}", c as u32));
+            c if is_non_printable(c) => {
+                let cp = c as u32;
+                if cp < 0x100 {
+                    out.push_str(&format!("\\x{cp:02x}"));
+                } else if cp < 0x10000 {
+                    out.push_str(&format!("\\u{cp:04x}"));
+                } else {
+                    out.push_str(&format!("\\U{cp:08x}"));
+                }
             }
             c => out.push(c),
         }
     }
     out.push(quote);
     out
+}
+
+/// `max(gz, key=lambda p: p[1])`: the first of equal GZ values. `gz` must not be empty.
+fn max_by_gz(gz: &[(i32, f64)]) -> (i32, f64) {
+    let (mut best_deg, mut best) = gz[0];
+    for &(deg, g) in &gz[1..] {
+        if g > best {
+            best_deg = deg;
+            best = g;
+        }
+    }
+    (best_deg, best)
+}
+
+/// `not str.isprintable(c)`.
+fn is_non_printable(c: char) -> bool {
+    let cp = c as u32;
+    NON_PRINTABLE
+        .binary_search_by(|&(lo, hi)| {
+            if hi < cp {
+                core::cmp::Ordering::Less
+            } else if lo > cp {
+                core::cmp::Ordering::Greater
+            } else {
+                core::cmp::Ordering::Equal
+            }
+        })
+        .is_ok()
 }
 
 /// The criteria set a ruleset uses.
@@ -608,8 +660,8 @@ pub fn assess(
         let gm_solid = kb + bm - kg;
         // Free surface: chord at the liquid level, along the cylindrical length, every tank.
         let i_fs = if 0.0 < frac && frac < 1.0 {
-            let chord = 2.0 * libm::sqrt(py_max2(sq(r_in) - sq(r_in - h), 0.0));
-            f64::from(basis.n_tanks_total) * basis.cylinder_length * libm::pow(chord, 3.0) / 12.0
+            let chord = 2.0 * libm::sqrt(py_max2(sq(r_in)? - sq(r_in - h)?, 0.0));
+            f64::from(basis.n_tanks_total) * basis.cylinder_length * py_pow(chord, 3.0)? / 12.0
         } else {
             0.0
         };
@@ -619,14 +671,7 @@ pub fn assess(
             let heel = box_gz(b, d, t, kg, f64::from(a))?;
             gz.push((a, heel - fsc * sin(radians(f64::from(a)))?));
         }
-        // max(gz, key=...): the first of equal GZ values.
-        let (mut max_gz_deg, mut max_gz) = gz[0];
-        for &(deg, g) in &gz[1..] {
-            if g > max_gz {
-                max_gz_deg = deg;
-                max_gz = g;
-            }
-        }
+        let (max_gz_deg, max_gz) = max_by_gz(&gz);
         let deck_edge = degrees(libm::atan(div(2.0 * (d - t), b)?));
         let mut c = Condition {
             name: name.to_string(),
@@ -677,4 +722,50 @@ pub fn assess(
         conditions: conds,
         limitations,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // These sums need Neumaier compensation. A plain left-to-right sum gives 0.9999999999999999
+    // and 0.0. Values are what Python 3.12 `sum()` prints.
+    #[test]
+    fn py_sum_is_compensated() {
+        assert_eq!(py_sum([0.1_f64; 10]), 1.0);
+        assert_eq!(py_sum([1e16, 1.0, -1e16]), 1.0);
+        assert_eq!(py_sum([1.0, 1e16, -1e16]), 1.0);
+        assert_eq!(py_sum([1e100, 1.0, -1e100, 1.0]), 2.0);
+        assert_eq!(py_sum(core::iter::empty()), 0.0);
+        // An infinite compensation is dropped, as in Python.
+        assert_eq!(py_sum([f64::INFINITY, 1.0]), f64::INFINITY);
+        assert_eq!(py_sum([1.5, 2.5]), 4.0);
+    }
+
+    #[test]
+    fn py_sum_fixed_point_rounding() {
+        // sum of 0.1 .. 0.9 step 0.1: plain sum is 4.5 - ulp; Python gives 4.5.
+        let v: Vec<f64> = (1..=9).map(|i| f64::from(i) / 10.0).collect();
+        assert_eq!(py_sum(v), 4.5);
+    }
+
+    #[test]
+    fn max_by_gz_keeps_the_first_of_equal_values() {
+        assert_eq!(
+            max_by_gz(&[(0, 0.0), (1, 0.5), (2, 0.5), (3, 0.25)]),
+            (1, 0.5)
+        );
+        assert_eq!(max_by_gz(&[(0, 0.0), (1, 0.0)]), (0, 0.0));
+        assert_eq!(max_by_gz(&[(0, 0.0), (1, -0.0)]), (0, 0.0));
+        assert_eq!(max_by_gz(&[(0, 0.0), (1, 0.5), (2, 0.6)]), (2, 0.6));
+        // NaN never replaces the first item.
+        assert_eq!(max_by_gz(&[(0, 0.0), (1, f64::NAN)]), (0, 0.0));
+    }
+
+    #[test]
+    fn py_pow_overflow() {
+        assert_eq!(sq(1e155), Err(PyError::Overflow));
+        assert_eq!(sq(f64::INFINITY), Ok(f64::INFINITY));
+        assert_eq!(py_pow(3.0, 3.0), Ok(27.0));
+    }
 }
