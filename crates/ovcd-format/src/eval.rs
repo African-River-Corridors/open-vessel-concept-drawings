@@ -10,6 +10,7 @@ use ovcd_core::hull::HullGeometry;
 use ovcd_core::pyint::PyInt;
 use ovcd_core::pystr::repr_str;
 use ovcd_core::vessel_standards::{Catalogue, VesselStandard};
+use ovcd_core::{squat as core_squat, waves as core_waves};
 use serde_json::{Value, json};
 
 /// Why `eval` could not produce a result. A Python `ValueError` is not an `EvalError`: it is a
@@ -73,6 +74,8 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
         "cargo" => cargo(function, args),
         "gas_stability" => crate::gas_stability::run(function, args),
         "hull" => hull(function, args),
+        "squat" => squat(function, args),
+        "waves" => waves(function, args),
         "aft_arrangement" => aft_arrangement(function, args),
         "gas_separation" => gas_separation(function, args),
         "barge_cost" => barge_cost(function, args),
@@ -973,6 +976,122 @@ fn hull(function: &str, args: &Value) -> Result<Value, EvalError> {
         }
         other => Err(EvalError::BadInput(format!(
             "hull has no parity function `{other}`"
+        ))),
+    }
+}
+
+/// A float field; absent means Python's default.
+fn field_or(obj: &Value, name: &str, default: Option<f64>) -> Result<f64, EvalError> {
+    match obj.get(name) {
+        Some(v) => v
+            .as_f64()
+            .ok_or_else(|| EvalError::BadInput(format!("`{name}` must be a number"))),
+        None => default.ok_or_else(|| EvalError::BadInput(format!("`{name}` is required"))),
+    }
+}
+
+fn squat_inputs(args: &Value) -> Result<core_squat::SquatInputs, EvalError> {
+    let o = args
+        .get("inputs")
+        .ok_or_else(|| EvalError::BadInput("`args.inputs` is required".into()))?;
+    let base = core_squat::SquatInputs::new(
+        field_or(o, "speed_through_water_kn", None)?,
+        field_or(o, "draft_m", None)?,
+        field_or(o, "beam_m", None)?,
+        field_or(o, "lpp_m", None)?,
+    );
+    Ok(core_squat::SquatInputs {
+        block_coefficient: field_or(o, "block_coefficient", Some(base.block_coefficient))?,
+        water_depth_m: field_or(o, "water_depth_m", Some(base.water_depth_m))?,
+        channel_area_m2: field_or(o, "channel_area_m2", Some(base.channel_area_m2))?,
+        displacement_m3: field_or(o, "displacement_m3", Some(base.displacement_m3))?,
+        safety_margin_m: field_or(o, "safety_margin_m", Some(base.safety_margin_m))?,
+        ..base
+    })
+}
+
+fn squat(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        "compute" => match core_squat::compute(&squat_inputs(args)?) {
+            Ok(r) => ok(json!({
+                "method": r.method,
+                "squat_m": num(r.squat_m),
+                "squat_barrass_m": num(r.squat_barrass_m),
+                "squat_icorels_m": r.squat_icorels_m.map_or(Value::Null, num),
+                "blockage_ratio": num(r.blockage_ratio),
+                "froude_depth": num(r.froude_depth),
+                "static_ukc_m": num(r.static_ukc_m),
+                "dynamic_ukc_m": num(r.dynamic_ukc_m),
+                "grounds": r.grounds,
+                "checks": checks_json(&r.checks),
+                "warnings": r.warnings,
+            })),
+            Err(message) => value_error(message),
+        },
+        "max_speed_for_ukc" => {
+            let result = core_squat::max_speed_for_ukc(
+                f64_arg(args, "draft_m")?,
+                f64_arg(args, "beam_m")?,
+                f64_arg(args, "lpp_m")?,
+                f64_arg(args, "water_depth_m")?,
+                f64_arg(args, "channel_area_m2")?,
+                f64_arg_or(args, "block_coefficient", 0.85)?,
+                f64_arg_or(args, "safety_margin_m", core_squat::DEFAULT_SAFETY_MARGIN_M)?,
+                f64_arg_or(args, "v_hi_kn", 20.0)?,
+                f64_arg_or(args, "tol_kn", 0.01)?,
+            );
+            match result {
+                Ok(v) => ok(num(v)),
+                Err(message) => value_error(message),
+            }
+        }
+        other => Err(EvalError::BadInput(format!(
+            "squat has no parity function `{other}`"
+        ))),
+    }
+}
+
+fn wave_inputs(args: &Value) -> Result<core_waves::WaveResistanceInputs, EvalError> {
+    let o = args
+        .get("inputs")
+        .ok_or_else(|| EvalError::BadInput("`args.inputs` is required".into()))?;
+    let base = core_waves::WaveResistanceInputs::new(
+        field_or(o, "significant_wave_height_m", None)?,
+        field_or(o, "beam_waterline_m", None)?,
+        field_or(o, "lpp_m", None)?,
+    );
+    Ok(core_waves::WaveResistanceInputs {
+        bow_waterline_length_m: field_or(
+            o,
+            "bow_waterline_length_m",
+            Some(base.bow_waterline_length_m),
+        )?,
+        heading_deg_off_bow: field_or(o, "heading_deg_off_bow", Some(base.heading_deg_off_bow))?,
+        peak_wave_period_s: field_or(o, "peak_wave_period_s", Some(base.peak_wave_period_s))?,
+        water_density_t_m3: field_or(o, "water_density_t_m3", Some(base.water_density_t_m3))?,
+        speed_kn: field_or(o, "speed_kn", Some(base.speed_kn))?,
+        ..base
+    })
+}
+
+fn waves(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        "compute" => match core_waves::compute(&wave_inputs(args)?) {
+            Ok(r) => ok(json!({
+                "added_resistance_kn": num(r.added_resistance_kn),
+                "added_resistance_head_seas_kn": num(r.added_resistance_head_seas_kn),
+                "heading_factor": num(r.heading_factor),
+                "bow_waterline_length_m": num(r.bow_waterline_length_m),
+                "wavelength_m": num(r.wavelength_m),
+                "lambda_over_lpp": num(r.lambda_over_lpp),
+                "added_power_kw": num(r.added_power_kw),
+                "checks": checks_json(&r.checks),
+                "warnings": r.warnings,
+            })),
+            Err(message) => value_error(message),
+        },
+        other => Err(EvalError::BadInput(format!(
+            "waves has no parity function `{other}`"
         ))),
     }
 }
