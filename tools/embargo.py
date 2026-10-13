@@ -119,6 +119,47 @@ def find(line: str, hashes: frozenset[str] | None = None) -> list[tuple[str, str
     return out
 
 
+def find_lines(lines, hashes: frozenset[str] | None = None) -> list[tuple[int, str, str]]:
+    """Like `find`, but a term may wrap over line ends. `lines` is (line number, text) pairs.
+    Words run on across lines whose numbers are consecutive; a gap in the numbers (a diff hunk
+    boundary) breaks the run. A hit is reported at the line of its first word, as
+    (line number, term id, matched words)."""
+    hashes = TERM_HASHES if hashes is None else hashes
+    out: list[tuple[int, str, str]] = []
+    seen: set[tuple[int, str]] = set()
+
+    def add(n: int, tid: str, gram: str) -> None:
+        if (n, tid) not in seen:
+            seen.add((n, tid))
+            out.append((n, tid, gram))
+
+    run: list[tuple[int, str]] = []             # (line number, word) since the last gap
+
+    def flush() -> None:
+        for i in range(len(run)):
+            for k in range(1, MAX_WORDS + 1):
+                if i + k > len(run):
+                    break
+                gram = " ".join(w for _, w in run[i:i + k])
+                h = hashlib.sha256(gram.encode()).hexdigest()
+                if h in hashes:
+                    add(run[i][0], h[:ID_LEN], gram)
+        run.clear()
+
+    last = None
+    for n, text in lines:
+        if last is not None and n != last + 1:
+            flush()
+        last = n
+        run.extend((n, w) for w in _WORD.findall(text.lower()))
+        for name, pat in PATH_RULES.items():
+            m = pat.search(text)
+            if m:
+                add(n, name, m.group(0))
+    flush()
+    return sorted(out, key=lambda t: t[0])
+
+
 def contains(text: str, hashes: frozenset[str] | None = None) -> list[str]:
     """Sorted term ids found anywhere in a text (any line)."""
     return sorted({tid for line in text.splitlines() for tid, _ in find(line, hashes)})

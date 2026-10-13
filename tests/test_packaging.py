@@ -129,3 +129,11 @@ def test_nothing_publishes_to_pypi():
         text = path.read_text(encoding="utf-8").lower()
         for banned in ("pypi-publish", "twine", "maturin publish", "id-token", "environment: pypi"):
             assert banned not in text, f"{path.name}: {banned}"
+
+
+def test_wheel_job_skips_the_tests_that_scan_files_it_does_not_copy():
+    """The wheel job copies tests/, examples/, calibration/ and catalogue/ only. A test that
+    scans src/ or parity/ would scan zero files there, so the job must skip it."""
+    text = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+    for name in ("test_core_boundary.py", "test_test_audit.py"):
+        assert f"--ignore=tests/{name}" in text, name

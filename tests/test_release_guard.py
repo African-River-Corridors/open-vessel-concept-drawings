@@ -60,8 +60,47 @@ def test_tree_fails_on_planted_term(tmp_path):
 
 
 def test_tree_finds_a_multi_word_term_across_punctuation(tmp_path):
-    root = _repo(tmp_path, {"a.md": "ok\nsee Quux-Harbour.\nquux\nharbour\n"})
+    root = _repo(tmp_path, {"a.md": "ok\nsee Quux-Harbour.\n"})
     assert rg.scan(root, H)[0] == [f"a.md:2:{ID[PHRASE]}"]
+
+
+def test_tree_finds_a_phrase_wrapped_over_two_lines(tmp_path):
+    root = _repo(tmp_path, {"a.md": "ok\nthe quux\nharbour project\n- quux\n  harbour\n"})
+    assert rg.scan(root, H)[0] == [f"a.md:2:{ID[PHRASE]}", f"a.md:4:{ID[PHRASE]}"]
+
+
+def test_a_wrapped_phrase_in_a_commit_message_is_found(tmp_path):
+    root = _repo(tmp_path, {"a.md": "clean\n"})
+    _commit(root, "fix for the quux\nharbour client")
+    hits, _ = rg.scan_history(root, H)
+    assert len(hits) == 1 and hits[0].endswith(f":(commit):3:{ID[PHRASE]}")
+
+
+def test_a_wrapped_phrase_in_added_history_lines_is_found(tmp_path):
+    root = _repo(tmp_path, {"a.md": "clean\nquux\nharbour\n"})
+    _commit(root)
+    (root / "a.md").write_text("clean\n")
+    _git(root, "add", ".")
+    _commit(root)
+    hits, _ = rg.scan_history(root, H)
+    assert len(hits) == 1 and hits[0].endswith(f":a.md:2:{ID[PHRASE]}")
+
+
+def test_embargo_module_is_scanned_except_its_hash_literals(tmp_path):
+    h = emb.term_hash(WORD)
+    src = f'TERM_HASHES = frozenset({{\n    "{h}",\n}})\n# {WORD} hides here\n'
+    root = _repo(tmp_path, {"tools/embargo.py": src, "tools/release_guard.py": f"# {WORD}\n"})
+    hits, _ = rg.scan(root, H)
+    assert hits == [f"tools/embargo.py:4:{ID[WORD]}"]       # the hash line is not a hit
+    _commit(root)
+    hits, _ = rg.scan_history(root, H)
+    assert len(hits) == 1 and hits[0].endswith(f":tools/embargo.py:4:{ID[WORD]}")
+
+
+def test_embargo_module_hash_literal_is_not_a_hit_when_the_term_is_listed(tmp_path):
+    h = emb.term_hash(WORD)
+    root = _repo(tmp_path, {"tools/embargo.py": f'X = (\n    "{h}",\n)\n'})
+    assert rg.scan(root, H)[0] == []
 
 
 def test_short_term_is_a_whole_word(tmp_path):

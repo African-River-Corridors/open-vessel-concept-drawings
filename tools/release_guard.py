@@ -15,11 +15,14 @@ Allowlist: `.release-guard-allow` at the repo root, one entry per line:
 
 `<path-glob>` is matched with fnmatch against the repo-relative path. `<term>` is a term id as
 the guard prints it, a path-rule name (`/Users/`), or `*` for every term. Blank lines and lines
-starting with `#` are ignored. The guard does not scan itself or the allowlist file.
+starting with `#` are ignored. The guard does not scan itself or the allowlist file. It does scan `tools/embargo.py`, with its
+64-digit hash literals blanked out. A term wrapped over two lines is found; the hit is on the
+line of its first word.
 """
 from __future__ import annotations
 
 import fnmatch
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -28,9 +31,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import embargo  # noqa: E402
 
 ALLOW_FILE = ".release-guard-allow"
-SELF = ("tools/release_guard.py", "tools/embargo.py")
-SKIP = (*SELF, ALLOW_FILE)
+SKIP = ("tools/release_guard.py", ALLOW_FILE)
+EMBARGO = "tools/embargo.py"
 COMMIT = "(commit)"
+# The embargo module is scanned like any file, except for its 64-digit hash literals: the hashes
+# are the one thing it must hold, and a hash is not a term.
+_HASH_LITERAL = re.compile(r"[0-9a-fA-F]{64}")
+
+
+def _blank_hashes(lines):
+    return [(n, _HASH_LITERAL.sub("", text)) for n, text in lines]
 
 
 def load_allow(root: Path) -> list[tuple[str, str]]:
@@ -58,9 +68,11 @@ def allowed(path: str, tid: str, allow: list[tuple[str, str]]) -> bool:
 
 
 def _scan_text(where: str, path: str, lines, allow, hashes, hits, ok) -> None:
-    for n, line in lines:
-        for tid, _ in embargo.find(line, hashes):
-            (ok if allowed(path, tid, allow) else hits).append(f"{where}:{n}:{tid}")
+    lines = list(lines)
+    if path == EMBARGO:
+        lines = _blank_hashes(lines)
+    for n, tid, _ in embargo.find_lines(lines, hashes):
+        (ok if allowed(path, tid, allow) else hits).append(f"{where}:{n}:{tid}")
 
 
 def scan(root: Path, hashes: frozenset[str] | None = None) -> tuple[list[str], list[str]]:

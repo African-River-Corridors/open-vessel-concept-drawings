@@ -47,6 +47,7 @@ LABEL = re.compile(r"^Label:\s*(sourced|snapshot|property)\b(?:\s+-\s+(.*))?$")
 
 
 def _tests():
+    assert AUDITED and all(p.exists() for p in AUDITED), "audited test files missing"
     for path in AUDITED:
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in tree.body:
@@ -56,6 +57,7 @@ def _tests():
 
 def _cases():
     ids = {}
+    assert list((ROOT / "parity" / "cases").glob("*.json")), "no parity cases found: scanning nothing"
     for f in (ROOT / "parity" / "cases").glob("*.json"):
         doc = json.loads(f.read_text(encoding="utf-8"))
         ids[doc["entry_point"]] = [c["id"] for c in doc["cases"]]
