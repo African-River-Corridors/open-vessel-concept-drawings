@@ -2,6 +2,7 @@
 //! over every parity entry point.
 
 mod eval;
+pub mod gas_stability;
 pub mod parity;
 pub mod profile;
 pub mod vdesign;

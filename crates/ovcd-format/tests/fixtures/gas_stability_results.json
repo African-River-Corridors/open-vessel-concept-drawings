@@ -1,0 +1,326 @@
+{
+ "rows": [
+  {
+   "id": "assess/CN_II_IS_CODE_2008",
+   "result": {
+    "cargo_density_t_per_m3": 0.581,
+    "lightship_t": 1813.9027562650056,
+    "has_aft_arrangement": true,
+    "payload_t": 2058.228164213275,
+    "gas_basis": {
+     "loa": 90.0,
+     "beam": 14.8,
+     "depth": 6.5,
+     "double_bottom_height": 1.5,
+     "tank_support_height": 0.5,
+     "outer_diameter": 10.8,
+     "inner_diameter": 10.05,
+     "total_tank_volume": 3729.0119833558742,
+     "n_tanks_total": 2,
+     "cylinder_length": 16.803999999999995,
+     "steel_top_down": 1215.8496000000002,
+     "tank_total": 434.9097737261847,
+     "insulation": 39.33642950935657,
+     "piping_machinery": 66.0303749490474,
+     "outfitting": 57.77657808041648
+    }
+   }
+  },
+  {
+   "id": "assess/narrow_deep_60x7_IS_CODE_2008",
+   "result": {
+    "cargo_density_t_per_m3": 0.581,
+    "lightship_t": 480.59038275062665,
+    "has_aft_arrangement": false,
+    "payload_t": 484.2551636161929,
+    "gas_basis": {
+     "loa": 60.0,
+     "beam": 7.0,
+     "depth": 6.0,
+     "double_bottom_height": 0.0,
+     "tank_support_height": 0.5,
+     "outer_diameter": 6.1,
+     "inner_diameter": 5.35,
+     "total_tank_volume": 850.4955629214109,
+     "n_tanks_total": 2,
+     "cylinder_length": 15.35,
+     "steel_top_down": 252.0,
+     "tank_total": 179.0007365011633,
+     "insulation": 17.264591011876167,
+     "piping_machinery": 17.240029460046532,
+     "outfitting": 15.085025777540716
+    }
+   }
+  },
+  {
+   "id": "assess/ADN_G_110x11.4_ADN_criteria",
+   "result": {
+    "cargo_density_t_per_m3": 0.45,
+    "lightship_t": 1537.7471500322742,
+    "has_aft_arrangement": false,
+    "payload_t": 1239.2403993415055,
+    "gas_basis": {
+     "loa": 110.0,
+     "beam": 11.4,
+     "depth": 4.5,
+     "double_bottom_height": 0.6000000000000001,
+     "tank_support_height": 0.5,
+     "outer_diameter": 8.9,
+     "inner_diameter": 8.15,
+     "total_tank_volume": 2898.8079516760363,
+     "n_tanks_total": 8,
+     "cylinder_length": 1.5124999999999993,
+     "steel_top_down": 874.5396000000001,
+     "tank_total": 510.4245084417164,
+     "insulation": 48.91073345742915,
+     "piping_machinery": 55.39856433766866,
+     "outfitting": 48.47374379546008
+    }
+   }
+  },
+  {
+   "id": "assess/error/bulk_result_refused",
+   "result": {
+    "cargo_density_t_per_m3": 1.5,
+    "lightship_t": 451.75928813512917,
+    "has_aft_arrangement": true,
+    "payload_t": 1000.0,
+    "gas_basis": null
+   }
+  },
+  {
+   "id": "assess/error/unknown_criteria_set",
+   "result": {
+    "cargo_density_t_per_m3": 0.581,
+    "lightship_t": 1813.9027562650056,
+    "has_aft_arrangement": true,
+    "payload_t": 2058.228164213275,
+    "gas_basis": {
+     "loa": 90.0,
+     "beam": 14.8,
+     "depth": 6.5,
+     "double_bottom_height": 1.5,
+     "tank_support_height": 0.5,
+     "outer_diameter": 10.8,
+     "inner_diameter": 10.05,
+     "total_tank_volume": 3729.0119833558742,
+     "n_tanks_total": 2,
+     "cylinder_length": 16.803999999999995,
+     "steel_top_down": 1215.8496000000002,
+     "tank_total": 434.9097737261847,
+     "insulation": 39.33642950935657,
+     "piping_machinery": 66.0303749490474,
+     "outfitting": 57.77657808041648
+    }
+   }
+  },
+  {
+   "id": "assess/sweep/000",
+   "result": {
+    "cargo_density_t_per_m3": 0.45,
+    "lightship_t": 2995.826393832403,
+    "has_aft_arrangement": true,
+    "payload_t": 3079.917232607525,
+    "gas_basis": {
+     "loa": 112.4462,
+     "beam": 17.9385,
+     "depth": 4.0,
+     "double_bottom_height": 1.5,
+     "tank_support_height": 0.5,
+     "outer_diameter": 12.0,
+     "inner_diameter": 11.25,
+     "total_tank_volume": 7221.969522956221,
+     "n_tanks_total": 2,
+     "cylinder_length": 28.8271,
+     "steel_top_down": 2000.9792294304004,
+     "tank_total": 725.7019674523956,
+     "insulation": 64.64410718339742,
+     "piping_machinery": 109.06724787531185,
+     "outfitting": 95.43384189089787
+    }
+   }
+  },
+  {
+   "id": "assess/sweep/001",
+   "result": {
+    "cargo_density_t_per_m3": 0.6,
+    "lightship_t": 2349.9561261311974,
+    "has_aft_arrangement": true,
+    "payload_t": 3122.4470966261783,
+    "gas_basis": {
+     "loa": 104.903,
+     "beam": 15.3821,
+     "depth": 5.5,
+     "double_bottom_height": 1.5,
+     "tank_support_height": 0.5,
+     "outer_diameter": 11.3821,
+     "inner_diameter": 10.6321,
+     "total_tank_volume": 5604.219787181741,
+     "n_tanks_total": 2,
+     "cylinder_length": 24.473400000000005,
+     "steel_top_down": 1534.9133820974753,
+     "tank_total": 601.0002581664376,
+     "insulation": 53.84896284749089,
+     "piping_machinery": 85.43654561055652,
+     "outfitting": 74.75697740923695
+    }
+   }
+  },
+  {
+   "id": "assess/sweep/002",
+   "result": {
+    "cargo_density_t_per_m3": 0.5,
+    "lightship_t": 1102.594633973919,
+    "has_aft_arrangement": false,
+    "payload_t": 1179.0437623232544,
+    "gas_basis": {
+     "loa": 115.529,
+     "beam": 8.5451,
+     "depth": 5.0,
+     "double_bottom_height": 0.5,
+     "tank_support_height": 0.5,
+     "outer_diameter": 6.5451,
+     "inner_diameter": 5.7951,
+     "total_tank_volume": 2496.916057440183,
+     "n_tanks_total": 2,
+     "cylinder_length": 43.4694,
+     "steel_top_down": 525.1709477623252,
+     "tank_total": 460.3191282665192,
+     "insulation": 43.192802242911064,
+     "piping_machinery": 39.41960304115378,
+     "outfitting": 34.492152661009555
+    }
+   }
+  },
+  {
+   "id": "assess/sweep/003",
+   "result": {
+    "cargo_density_t_per_m3": 0.45,
+    "lightship_t": 1122.5464609512924,
+    "has_aft_arrangement": false,
+    "payload_t": 942.5739790438782,
+    "gas_basis": {
+     "loa": 119.4442,
+     "beam": 8.8259,
+     "depth": 5.0,
+     "double_bottom_height": 0.6000000000000001,
+     "tank_support_height": 0.5,
+     "outer_diameter": 6.325900000000001,
+     "inner_diameter": 5.575900000000001,
+     "total_tank_volume": 2298.2322167212305,
+     "n_tanks_total": 3,
+     "cylinder_length": 27.6555,
+     "steel_top_down": 556.1017624255591,
+     "tank_total": 448.5502596493207,
+     "insulation": 42.54553722079661,
+     "piping_machinery": 40.18608088299519,
+     "outfitting": 35.1628207726208
+    }
+   }
+  },
+  {
+   "id": "assess/sweep/004",
+   "result": {
+    "cargo_density_t_per_m3": 0.5,
+    "lightship_t": 995.8407982011383,
+    "has_aft_arrangement": false,
+    "payload_t": 1099.7122710051851,
+    "gas_basis": {
+     "loa": 90.3841,
+     "beam": 10.3567,
+     "depth": 5.0,
+     "double_bottom_height": 0.0,
+     "tank_support_height": 0.5,
+     "outer_diameter": 7.35978650211303,
+     "inner_diameter": 6.60978650211303,
+     "total_tank_volume": 2366.8605519818275,
+     "n_tanks_total": 2,
+     "cylinder_length": 30.08226349788697,
+     "steel_top_down": 501.50157091094275,
+     "tank_total": 391.03869685665046,
+     "insulation": 36.3600103509757,
+     "piping_machinery": 35.701610710703726,
+     "outfitting": 31.238909371865763
+    }
+   }
+  },
+  {
+   "id": "assess/sweep/005",
+   "result": {
+    "cargo_density_t_per_m3": 0.581,
+    "lightship_t": 2552.3217098541977,
+    "has_aft_arrangement": true,
+    "payload_t": 3656.151159136815,
+    "gas_basis": {
+     "loa": 107.3647,
+     "beam": 17.5412,
+     "depth": 4.5,
+     "double_bottom_height": 0.31941333333333344,
+     "tank_support_height": 0.5,
+     "outer_diameter": 12.0,
+     "inner_diameter": 11.25,
+     "total_tank_volume": 6637.336924300299,
+     "n_tanks_total": 2,
+     "cylinder_length": 25.886349999999993,
+     "steel_top_down": 1645.8986732430558,
+     "tank_total": 672.5514444529499,
+     "insulation": 59.98783333099114,
+     "piping_machinery": 92.73800470784023,
+     "outfitting": 81.1457541193602
+    }
+   }
+  },
+  {
+   "id": "assess/sweep/006",
+   "result": {
+    "cargo_density_t_per_m3": 0.45,
+    "lightship_t": 2749.3632166789107,
+    "has_aft_arrangement": true,
+    "payload_t": 2838.0450270996,
+    "gas_basis": {
+     "loa": 109.737,
+     "beam": 16.5185,
+     "depth": 4.0,
+     "double_bottom_height": 1.5,
+     "tank_support_height": 0.5,
+     "outer_diameter": 12.0,
+     "inner_diameter": 11.25,
+     "total_tank_volume": 6952.669746321243,
+     "n_tanks_total": 2,
+     "cylinder_length": 27.472499999999997,
+     "steel_top_down": 1798.1891094239998,
+     "tank_total": 701.219199976395,
+     "insulation": 62.49928407348685,
+     "piping_machinery": 99.97633237601578,
+     "outfitting": 87.47929082901382
+    }
+   }
+  },
+  {
+   "id": "assess/sweep/007",
+   "result": {
+    "cargo_density_t_per_m3": 0.5,
+    "lightship_t": 1109.0603689490974,
+    "has_aft_arrangement": false,
+    "payload_t": 1363.748672139118,
+    "gas_basis": {
+     "loa": 60.6432,
+     "beam": 13.1298,
+     "depth": 7.0,
+     "double_bottom_height": 0.5,
+     "tank_support_height": 0.5,
+     "outer_diameter": 11.1298,
+     "inner_diameter": 10.3798,
+     "total_tank_volume": 2836.7107064776246,
+     "n_tanks_total": 2,
+     "cylinder_length": 9.8418,
+     "steel_top_down": 664.5096997721557,
+     "tank_total": 338.5253539902691,
+     "insulation": 30.797686154490567,
+     "piping_machinery": 40.12140215049699,
+     "outfitting": 35.10622688168487
+    }
+   }
+  }
+ ]
+}
