@@ -238,3 +238,27 @@ fn an_empty_or_full_tank_has_no_free_surface() {
     assert_eq!(free_surface_moment_cylindrical(2.5, 10.0, 1.0, 0.5), 0.0);
     assert_eq!(free_surface_moment_cylindrical(2.5, 10.0, 1.5, 0.5), 0.0);
 }
+
+#[test]
+fn three_by_three_tanks_with_gaps_other_than_one_metre_match_python() {
+    // A gap of 1.0 m hides a product that became a quotient; 0.7 and 1.3 do not.
+    let mut i = quickstart();
+    i.n_tanks_wide = 3;
+    i.n_tanks_long = 3;
+    i.tank_gap_transverse = 0.7;
+    i.tank_gap_longitudinal = 1.3;
+    i.insulation_thickness = 100.0;
+    let t = calculate_tank_arrangement(&i).unwrap();
+    assert_eq!(t.n_tanks_total, 9);
+    assert_eq!(t.outer_diameter, 3.8000000000000003);
+    assert_eq!(t.inner_diameter, 3.5500000000000003);
+    assert_eq!(t.overall_tank_length, 18.202666666666662);
+    assert_eq!(t.cylinder_length, 14.402666666666661);
+    assert_eq!(t.head_length, 1.9000000000000001);
+    assert_eq!(t.volume_per_tank, 165.98253188663855);
+    assert_eq!(t.total_tank_volume, 1493.842786979747);
+    assert_eq!(t.cargo_volume, 1419.1506476307595);
+    assert_eq!(t.tank_shell_weight, 357.6200212150267);
+    assert_eq!(t.insulation_weight, 11.734436667302626);
+    assert_eq!(t.tank_top_above_keel, 4.800000000000001);
+}

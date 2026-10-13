@@ -114,3 +114,15 @@ fn an_unknown_material_with_an_automatic_wall_is_a_value_error() {
         )
     );
 }
+
+#[test]
+fn a_zero_wing_tank_width_is_positive_zero() {
+    // Python `max(0.0, -0.0 - 0.0)` keeps the first of two equal zeros: +0.0.
+    let mut i = base();
+    i.side_clearance = Some(-0.0);
+    i.wing_tank_gap = 0.0;
+    i.post_init().unwrap();
+    let w = i.wing_tank_width.unwrap();
+    assert_eq!(w, 0.0);
+    assert!(w.is_sign_positive());
+}
