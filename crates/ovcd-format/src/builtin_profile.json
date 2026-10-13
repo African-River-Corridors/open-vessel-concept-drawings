@@ -1,0 +1,139 @@
+{
+  "name": "built-in",
+  "profile_version": 1,
+  "about": "The built-in Defaults Profile. Copy it (ovcd profile > my.profile.json), edit it, and pass it with --profile. All values are SI. A 'hard' range refuses an input; a 'soft' range accepts it with a warning. Hard ranges are physical limits, and keep every input inside what the engine can compute; a copy may tighten a hard range but never loosen it. Soft ranges are the catalogue's Vessel Class envelopes with headroom.",
+  "inputs": {
+    "length_overall_m": {
+      "unit": "m",
+      "hard": { "ge": 1, "le": 1000 },
+      "soft": { "min": 20.0, "max": 250.0 },
+      "basis": "catalogue single-hull classes span 32 to 225.5 m"
+    },
+    "beam_m": {
+      "unit": "m",
+      "hard": { "ge": 1, "le": 200 },
+      "soft": { "min": 4.0, "max": 35.0 },
+      "basis": "catalogue single-hull classes span 4.7 to 28.8 m"
+    },
+    "moulded_depth_m": {
+      "unit": "m",
+      "hard": { "ge": 0.1, "le": 100 },
+      "soft": { "min": 1.0, "max": 15.0 },
+      "basis": "the catalogue holds no depths; inland barge practice is about 1.5 to 12 m"
+    },
+    "formation_abreast": {
+      "unit": "barges",
+      "hard": { "ge": 1 },
+      "soft": { "min": 1.0, "max": 6.0 },
+      "basis": "catalogue pushed convoys are at most 4 abreast"
+    },
+    "formation_in_line": {
+      "unit": "barges",
+      "hard": { "ge": 1 },
+      "soft": { "min": 1.0, "max": 7.0 },
+      "basis": "catalogue pushed convoys are at most 5 in line"
+    },
+    "cargo_containment": {
+      "default_by_cargo_phase": { "dry_bulk": "box_hold", "liquid_gas": "type_c_tanks" }
+    },
+    "block_coefficient": {
+      "default": 0.85,
+      "unit": "-",
+      "hard": { "ge": 0.3, "le": 1 },
+      "soft": { "min": 0.7, "max": 1.0 },
+      "basis": "calibrated box barges span 0.883 to 0.995; widened down for shaped gas hulls; 0.3 is the squat method's validity floor (hard)"
+    },
+    "min_freeboard_m": {
+      "default": 0.3,
+      "unit": "m",
+      "hard": { "ge": 0 },
+      "soft": { "min": 0.15, "max": 1.5 },
+      "basis": "must also be less than the moulded depth (hard)"
+    },
+    "lightship_factor_t_per_m3": {
+      "default_by_cargo_containment": { "box_hold": 0.1093 },
+      "unit": "t/m3",
+      "hard": { "gt": 0, "le": 1 },
+      "soft": { "min": 0.08, "max": 0.15 },
+      "basis": "calibrated box barges span 0.095 to 0.1223 t/m3 (calibration/factors.yaml)"
+    },
+    "ruleset": {
+      "default": "IGC_2G_EXACT"
+    },
+    "fill_ratio": {
+      "default_by_ruleset": { "IGC_2G": 0.98, "IGC_2G_EXACT": 0.98, "ADN_G": 0.95 },
+      "unit": "-",
+      "hard": { "ge": 0.1, "le": 1 },
+      "soft": { "min": 0.8, "max": 0.99 },
+      "basis": "IGC 15.3 default 98 %, ADN 95 %"
+    },
+    "adn_tank_cap_m3": {
+      "default": 1000.0,
+      "unit": "m3",
+      "hard": { "ge": 1, "le": 100000 },
+      "soft": { "min": 100.0, "max": 1000.0 },
+      "basis": "ADN routes cap a tank at 380 or 1000 m3"
+    },
+    "optimise_depth": {
+      "default": false
+    },
+    "propulsive_efficiency": {
+      "default": 0.45,
+      "unit": "-",
+      "hard": { "gt": 0, "lt": 1 },
+      "soft": { "min": 0.2, "max": 0.8 }
+    },
+    "max_speed_kn": {
+      "default": 10.0,
+      "unit": "kn",
+      "hard": { "ge": 1, "le": 100 },
+      "soft": { "min": 2.0, "max": 20.0 },
+      "basis": "the speed-power grid starts at 1 kn"
+    },
+    "air_draft_limit_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 1000 },
+      "soft": { "min": 3.0, "max": 40.0 },
+      "basis": "catalogue air drafts span 3.0 to 35.5 m"
+    },
+    "draught_limit_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 100 },
+      "soft": { "min": 0.8, "max": 12.0 },
+      "basis": "catalogue single-hull draughts span 1.0 to 9 m"
+    },
+    "channel_depth_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0.1, "le": 1000 },
+      "soft": { "min": 1.0, "max": 20.0 },
+      "basis": "must also be at least the under-keel clearance (hard)"
+    },
+    "channel_under_keel_clearance_m": {
+      "default": 0.5,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 0.2, "max": 2.0 }
+    },
+    "channel_bottom_width_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 100000 },
+      "soft": { "min": 10.0, "max": 1000.0 }
+    },
+    "channel_bank_slope": {
+      "default": 3.0,
+      "unit": "H:V",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 1.0, "max": 10.0 }
+    },
+    "channel_current_kn": {
+      "default": 0.0,
+      "unit": "kn",
+      "hard": { "ge": 0, "le": 50 },
+      "soft": { "min": 0.0, "max": 5.0 }
+    }
+  }
+}

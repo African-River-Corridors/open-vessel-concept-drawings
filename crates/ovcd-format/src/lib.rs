@@ -1,7 +1,11 @@
-//! The `.vdesign` format, the Defaults Profile and validation (later tickets), and the parity
-//! `eval` dispatch over every parity entry point.
+//! The `.vdesign` format, the Defaults Profile and validation, and the parity `eval` dispatch
+//! over every parity entry point.
 
 mod eval;
 pub mod parity;
+pub mod profile;
+pub mod vdesign;
 
 pub use eval::{ENTRY_POINTS, EvalError, eval};
+pub use profile::Profile;
+pub use vdesign::{Checked, Design, DesignOption, Report, Source, StoredInput, check, new_design};
