@@ -131,7 +131,9 @@ impl AftArrangementResult {
 }
 
 /// An exception the frozen Python raises out of `compute`. The type name and message match
-/// CPython 3.14, because the parity seam compares both.
+/// CPython 3.12 (the version CI regenerates the Reference Results with), because the parity seam
+/// compares both. CPython 3.14 words the zero-divisor message "division by zero"; 3.12 and 3.13
+/// say "float floor division by zero".
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PyException {
     ValueError(String),
@@ -179,7 +181,7 @@ fn py_int(x: f64) -> Result<i64, PyException> {
 fn py_int_floor_div(a: f64, b: f64) -> Result<i64, PyException> {
     if b == 0.0 {
         return Err(PyException::ZeroDivisionError(
-            "division by zero".to_string(),
+            "float floor division by zero".to_string(),
         ));
     }
     py_int(py_floor_div(a, b))

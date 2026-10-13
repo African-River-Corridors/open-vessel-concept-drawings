@@ -226,7 +226,7 @@ fn a_zero_container_pitch_raises_zero_division_error() {
     i.container_side_gap_m = 0.0;
     assert_eq!(
         compute(&i).unwrap_err(),
-        PyException::ZeroDivisionError("division by zero".into())
+        PyException::ZeroDivisionError("float floor division by zero".into())
     );
 }
 

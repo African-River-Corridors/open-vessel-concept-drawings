@@ -1129,7 +1129,7 @@
       "output": {
         "error": {
           "type": "ZeroDivisionError",
-          "message": "division by zero"
+          "message": "float floor division by zero"
         }
       }
     },
