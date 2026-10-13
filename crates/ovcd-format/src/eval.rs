@@ -205,7 +205,7 @@ fn cost_inputs(args: &Value) -> Result<BargeCostInputs, EvalError> {
         ));
     };
     for (key, value) in map {
-        let x = number_arg(value, &format!("args.inputs.{key}"))?;
+        let x = small_int_number(value, &format!("args.inputs.{key}"))?;
         match key.as_str() {
             "hull_steel_t" => inp.hull_steel_t = x,
             "wing_plate_t" => inp.wing_plate_t = x,
@@ -267,9 +267,31 @@ fn exact_number(value: &Value, what: &str) -> Result<f64, EvalError> {
     number_arg(value, what)
 }
 
+/// Integer literals up to this size cannot make a product or a sum that `f64` holds inexactly.
+const BARGE_INT_LIMIT: u64 = 1 << 24;
+
+/// A barge-cost number held as `f64`. Python keeps a JSON integer as an exact `int` and does exact
+/// integer arithmetic; the core rounds every product and sum to a double. The two agree while
+/// every integer product and sum stays below 2^53, which holds when each integer literal is at
+/// most 2^24. A larger integer is refused loudly; write it as a float.
+fn small_int_number(value: &Value, what: &str) -> Result<f64, EvalError> {
+    let too_big = big_int_digits(value).is_some_and(|digits| {
+        digits
+            .trim_start_matches('-')
+            .parse::<u64>()
+            .map_or(true, |m| m > BARGE_INT_LIMIT)
+    });
+    if too_big {
+        return Err(EvalError::BadInput(format!(
+            "`{what}` is an integer beyond 2^24, which the core cannot hold exactly in a product; write it as a float"
+        )));
+    }
+    number_arg(value, what)
+}
+
 fn explicit_rates(map: &serde_json::Map<String, Value>) -> Result<BargeCostRates, EvalError> {
     let get = |name: &str| -> Result<f64, EvalError> {
-        number_arg(
+        small_int_number(
             map.get(name)
                 .ok_or_else(|| EvalError::BadInput(format!("`args.rates.{name}` is missing")))?,
             &format!("args.rates.{name}"),
@@ -402,9 +424,17 @@ fn optional_number(fields: &Value, name: &str) -> Result<Option<f64>, EvalError>
 fn count_field(fields: &Value, name: &str) -> Result<i64, EvalError> {
     match fields.get(name) {
         None => Ok(1),
-        Some(v) => v
-            .as_i64()
-            .ok_or_else(|| EvalError::BadInput(format!("`{name}` must be an integer"))),
+        Some(v) => {
+            let n = v
+                .as_i64()
+                .ok_or_else(|| EvalError::BadInput(format!("`{name}` must be an integer")))?;
+            if n.unsigned_abs() > 1 << 53 {
+                return Err(EvalError::BadInput(format!(
+                    "`{name}` is an integer beyond 2^53, which the core cannot hold exactly"
+                )));
+            }
+            Ok(n)
+        }
     }
 }
 
@@ -423,6 +453,15 @@ fn standard_from_fields(fields: &Value) -> Result<VesselStandard, EvalError> {
             })
             .collect::<Result<Vec<_>, _>>()?,
     };
+    // Python multiplies `unit_beam_m * n_abreast` as exact ints when both are ints; the core
+    // multiplies doubles. Refuse an integer product that a double would round.
+    let n_abreast = count_field(fields, "n_abreast")?;
+    let unit_int = fields.get("unit_beam_m").and_then(Value::as_i64);
+    if unit_int.is_some_and(|unit| i128::from(unit).abs() * i128::from(n_abreast).abs() > 1 << 53) {
+        return Err(EvalError::BadInput(
+            "`unit_beam_m` x `n_abreast` is an integer beyond 2^53, which the core cannot hold exactly; write the unit beam as a float".into(),
+        ));
+    }
     Ok(VesselStandard {
         standard_id: text_field(fields, "standard_id", None)?,
         family: text_field(fields, "family", None)?,
@@ -437,7 +476,7 @@ fn standard_from_fields(fields: &Value) -> Result<VesselStandard, EvalError> {
         )?,
         draught_m: pair_field(fields, "draught_m")?,
         dwt_t: pair_field(fields, "dwt_t")?,
-        n_abreast: count_field(fields, "n_abreast")?,
+        n_abreast,
         n_in_line: count_field(fields, "n_in_line")?,
         unit_beam_m: optional_number(fields, "unit_beam_m")?,
         min_bridge_clearance_m: optional_number(fields, "min_bridge_clearance_m")?,

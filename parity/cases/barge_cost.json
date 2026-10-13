@@ -467,12 +467,12 @@
     {
       "id": "compute/int_valued_explicit_rates",
       "tier": 1,
-      "reason": "tier 1: explicit rates written as JSON integers; the adapter reads them as floats, as the dataclass declares (review of PR 43)",
+      "reason": "tier 1: explicit rates written as JSON integers (each within 2^24, which eval accepts); the adapter reads them as floats, as the dataclass declares (review of PR 43); the big mass is now a float because eval refuses integers beyond 2^24",
       "input": {
         "fn": "compute",
         "args": {
           "inputs": {
-            "hull_steel_t": 9007199254740993,
+            "hull_steel_t": 9007199254740993.0,
             "wing_plate_t": 1,
             "weather_shield_t": 0
           },
