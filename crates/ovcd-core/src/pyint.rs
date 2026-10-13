@@ -114,3 +114,17 @@ pub fn round(x: f64) -> Result<PyInt, RoundError> {
     }
     Ok(PyInt(text))
 }
+
+/// With `serde`: a number where it fits in 128 bits, else the exact digits as text.
+#[cfg(feature = "serde")]
+impl serde::Serialize for PyInt {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        if let Ok(i) = self.0.parse::<i64>() {
+            serializer.serialize_i64(i)
+        } else if let Ok(i) = self.0.parse::<i128>() {
+            serializer.serialize_i128(i)
+        } else {
+            serializer.serialize_str(&self.0)
+        }
+    }
+}
