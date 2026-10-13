@@ -318,3 +318,31 @@ pub fn compute(inp: &EnergyInputs) -> Result<EnergyResult, PyException> {
         checks,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn env(name: &str, service: f64) -> EnergyEnvironment {
+        EnergyEnvironment {
+            name: name.to_string(),
+            limiting_speed_knots: None,
+            service_speed_knots: service,
+            blockage_ratio: 0.0,
+            curve: vec![],
+            resistance_kn: 0.0,
+            shaft_power_kw: 0.0,
+            battery_power_kw: 0.0,
+            energy_kwh_per_km: 0.0,
+            energy_per_trip_kwh: 0.0,
+            energy_per_year_mwh: 0.0,
+        }
+    }
+
+    #[test]
+    fn binding_is_the_lowest_service_speed_and_the_first_of_equals() {
+        assert!(binding_of(&[]).is_none());
+        let envs = [env("a", 8.0), env("b", 6.0), env("c", 6.0), env("d", 9.0)];
+        assert_eq!(binding_of(&envs).unwrap().name, "b");
+    }
+}

@@ -78,3 +78,35 @@ fn a_zero_draft_fails_in_the_resistance_model() {
         PyException::ValueError("draft_m must be > 0".into())
     );
 }
+
+#[test]
+fn a_fast_target_is_capped_at_the_schijf_fraction_and_binds_the_design_channel() {
+    // Frozen Python, target 9.0 kn: Design channel 0.9 x 9.358 = 8.42 kn, Open sea 9.0 kn.
+    let inp = EnergyInputs {
+        target_service_speed_knots: 9.0,
+        ..EnergyInputs::default()
+    };
+    let r = compute(&inp).unwrap();
+    let [channel, sea] = &r.environments[..] else {
+        panic!("two environments")
+    };
+    assert_eq!(channel.service_speed_knots, 8.42);
+    assert_eq!(sea.service_speed_knots, 9.0);
+    close(channel.battery_power_kw, 542.528);
+    close(sea.battery_power_kw, 359.119);
+    assert_eq!(r.binding().unwrap().name, "Design channel");
+    close(r.installed_power_kw, 651.0340022147951);
+}
+
+#[test]
+fn an_empty_sweep_fails_the_energy_check_and_ok_is_false() {
+    let inp = EnergyInputs {
+        speed_min_knots: 5.0,
+        speed_max_knots: 1.0,
+        ..EnergyInputs::default()
+    };
+    let r = compute(&inp).unwrap();
+    assert!(r.environments[0].curve.is_empty());
+    assert_eq!(r.environments[0].energy_kwh_per_km, 0.0);
+    assert!(!r.ok());
+}
