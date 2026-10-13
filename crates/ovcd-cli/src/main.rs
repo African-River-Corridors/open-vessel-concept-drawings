@@ -1,6 +1,7 @@
 //! `ovcd`: the Open Vessel Concept Drawings command-line tool. A thin layer over `ovcd-format`.
 //!
-//! `ovcd new` writes a starter Design, `ovcd validate` checks one without running it, and
+//! `ovcd new` writes a starter Design, `ovcd fill` writes the left-out inputs of a hand-written
+//! Design in from the Defaults Profile, `ovcd validate` checks one without running it, and
 //! `ovcd profile` prints the built-in Defaults Profile for a user to copy. `run` arrives in a
 //! later ticket. The hidden `ovcd eval <entry-point>` reads one parity case input as JSON on stdin
 //! and writes the result as JSON on stdout. It exists for parity only and is removed with the
@@ -18,9 +19,14 @@ Usage:
       Write a starter Design with one Option. Its six required inputs (Cargo, Hull Form,
       Formation, length, beam, moulded depth) are examples to edit; every other input comes
       from the Defaults Profile and is marked \"default\". Prints to stdout when no file is given.
+  ovcd fill [--profile <profile.json>] <in.vdesign> [<out.vdesign>]
+      Write every input a hand-written Design leaves out in, as used and marked \"default\",
+      from the Defaults Profile. Prints to stdout when no output file is given; never
+      overwrites a file. Writes nothing and exits 1 if there is any hard error.
   ovcd validate [--profile <profile.json>] [--inputs] <file.vdesign>
       List hard errors and soft warnings without running. --inputs also lists every input
-      as used, typed or default. Exits 1 if there is any hard error.
+      as used, typed or default. Exits 1 if there is any hard error. A file must store
+      every input as used, so a left-out input is a hard error: run `ovcd fill` first.
   ovcd profile
       Print the built-in Defaults Profile. Copy it, edit it, and pass it with --profile.
   ovcd --help | --version
@@ -55,6 +61,7 @@ fn main() -> ExitCode {
             ExitCode::SUCCESS
         }
         ["new", rest @ ..] => report(new(rest), "new"),
+        ["fill", rest @ ..] => report(fill(rest), "fill"),
         ["validate", rest @ ..] => match validate(rest) {
             Ok(ok) => {
                 if ok {
@@ -128,29 +135,68 @@ fn load_profile(path: Option<&str>) -> Result<Profile, String> {
 fn new(args: &[&str]) -> Result<(), String> {
     let flags = parse_flags(args, false)?;
     let profile = load_profile(flags.profile)?;
-    let text = ovcd_format::new_design(&profile).to_text();
+    let text = ovcd_format::new_design(&profile)?.to_text();
     match flags.files.as_slice() {
         [] => {
             print!("{text}");
             Ok(())
         }
-        [path] => {
-            let mut file = std::fs::OpenOptions::new()
-                .write(true)
-                .create_new(true)
-                .open(path)
-                .map_err(|e| match e.kind() {
-                    std::io::ErrorKind::AlreadyExists => {
-                        format!("{path} already exists; not overwritten")
-                    }
-                    _ => format!("cannot write {path}: {e}"),
-                })?;
-            std::io::Write::write_all(&mut file, text.as_bytes())
-                .map_err(|e| format!("cannot write {path}: {e}"))?;
-            eprintln!("wrote {path}");
+        [path] => write_new(path, &text),
+        _ => Err("give at most one file".into()),
+    }
+}
+
+/// Write `text` to a file that must not exist yet.
+fn write_new(path: &str, text: &str) -> Result<(), String> {
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(path)
+        .map_err(|e| match e.kind() {
+            std::io::ErrorKind::AlreadyExists => {
+                format!("{path} already exists; not overwritten")
+            }
+            _ => format!("cannot write {path}: {e}"),
+        })?;
+    std::io::Write::write_all(&mut file, text.as_bytes())
+        .map_err(|e| format!("cannot write {path}: {e}"))?;
+    eprintln!("wrote {path}");
+    Ok(())
+}
+
+fn fill(args: &[&str]) -> Result<(), String> {
+    let flags = parse_flags(args, false)?;
+    let (input, output) = match flags.files.as_slice() {
+        [input] => (*input, None),
+        [input, output] => (*input, Some(*output)),
+        _ => return Err("give one .vdesign file, and optionally an output file".into()),
+    };
+    let profile = load_profile(flags.profile)?;
+    let text = std::fs::read_to_string(input).map_err(|e| format!("cannot read {input}: {e}"))?;
+    let filled = ovcd_format::fill(&text, &profile);
+    let r = &filled.report;
+    for e in &r.errors {
+        eprintln!("error: {e}");
+    }
+    for w in &r.warnings {
+        eprintln!("warning: {w}");
+    }
+    let design = match (&filled.design, r.is_ok()) {
+        (Some(design), true) => design,
+        _ => {
+            return Err(format!(
+                "{} error(s); nothing written",
+                r.errors.len().max(1)
+            ));
+        }
+    };
+    let text = design.to_text();
+    match output {
+        None => {
+            print!("{text}");
             Ok(())
         }
-        _ => Err("give at most one file".into()),
+        Some(path) => write_new(path, &text),
     }
 }
 
