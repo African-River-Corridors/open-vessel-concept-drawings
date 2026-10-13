@@ -40,6 +40,8 @@ cargo clippy --version >/dev/null 2>&1 || fail "clippy is not installed (rustup 
   || fail "the $WASM_TARGET target is not installed (rustup target add $WASM_TARGET)"
 "$PY" -c "import pytest" 2>/dev/null || fail "pytest is not importable by $PY (pip install -e '.[dev]')"
 
+# Note: "$@" runs inside `||`, so bash ignores `set -e` in it. A step that is a shell function
+# must return non-zero on every failure itself (see cargo_test_without_python).
 step() {
   local name="$1"; shift
   local start=$SECONDS
@@ -60,7 +62,9 @@ cargo_test_without_python() {
       "$marker" > "$shims/$py"
     chmod +x "$shims/$py"
   done
-  PATH="$shims:$PATH" OVCD_PYTHON="$shims/python3" cargo test --all-features
+  # Explicit `|| return 1`: `step` calls this function inside `||`, where bash ignores `set -e`,
+  # so without it a failing cargo test would fall through and the step would report ok.
+  PATH="$shims:$PATH" OVCD_PYTHON="$shims/python3" cargo test --all-features || return 1
   if [ -e "$marker" ]; then
     echo "gates: cargo test called Python:" >&2
     cat "$marker" >&2

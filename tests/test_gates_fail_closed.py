@@ -49,3 +49,24 @@ def test_gates_fail_when_python_is_missing(tmp_path):
     assert "required tool 'no-such-python' is not on PATH" in result.stderr
     assert "gates: ok:" not in result.stdout
 
+
+
+def test_gates_fail_when_cargo_test_fails(tmp_path):
+    """A failing `cargo test` must fail its own step, not pass it and leave a later step to catch
+    it. Regression: `step` runs the function inside `||`, where bash ignores `set -e`."""
+    libdir = tmp_path / "wasm-libdir"
+    libdir.mkdir()
+    path = _path_with_only(tmp_path, ["dirname", "git", "mktemp", "chmod", "cat"])
+    bin_dir = Path(path)
+    # cargo passes every call except `cargo test`; rustc reports an installed wasm target.
+    (bin_dir / "cargo").write_text(
+        '#!/bin/sh\nif [ "$1" = test ]; then echo "test result: FAILED" >&2; exit 101; fi\nexit 0\n'
+    )
+    (bin_dir / "rustc").write_text(f'#!/bin/sh\necho "{libdir}"\n')
+    for stub in ("cargo", "rustc"):
+        (bin_dir / stub).chmod(0o755)
+    result = _gates(path, OVCD_PYTHON=sys.executable)
+    assert result.returncode != 0
+    assert "gates: FAIL: cargo test (no Python)" in result.stderr
+    assert "gates: ok: cargo test (no Python)" not in result.stdout
+    assert "gates: ok: clippy -D warnings" in result.stdout
