@@ -43,6 +43,12 @@ cargo xtask oracle-guard      # what the fast gate runs; see below
 cargo xtask mutants           # cargo-mutants on the ovcd-core code this branch changed
 ```
 
+Reference Results are generated on Linux, as CI does. macOS libm differs from Linux in the last
+digit for some floats, so `regen` on a Mac changes `gas_stability`, `resistance` and `simulate`, and
+the oracle guard then fails on CI. Regenerate in a Linux container (amd64, Python 3.12, numpy and
+pyyaml installed) and commit that output. The guard fails on a Mac for the same reason; CI is the
+judge.
+
 `cargo test` needs no Python. The `ovcd-cli` test also runs a few cases through `ovcd eval`.
 
 ## Oracle guard
