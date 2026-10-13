@@ -203,3 +203,24 @@ fn max_keeps_the_first_of_equal_items_including_signed_zero() {
     let b = required_bottom_protection(-0.0, 0.0, Some(VesselType::Igf));
     assert!(b == 0.0 && b.is_sign_negative());
 }
+
+#[test]
+fn enum_error_text_escapes_what_python_calls_unprintable() {
+    // Expected strings are CPython 3.12 `repr()` output.
+    assert_eq!(
+        VesselType::from_value("\u{a0}"),
+        Err("'\\xa0' is not a valid VesselType".to_string())
+    );
+    assert_eq!(
+        VesselType::from_value("\u{85}\u{ad}"),
+        Err("'\\x85\\xad' is not a valid VesselType".to_string())
+    );
+    assert_eq!(
+        VesselType::from_value("\u{2028}\u{200b}\u{e000}"),
+        Err("'\\u2028\\u200b\\ue000' is not a valid VesselType".to_string())
+    );
+    assert_eq!(
+        VesselType::from_value("\u{e0001}\u{1F600}\u{e9}"),
+        Err("'\\U000e0001\u{1F600}\u{e9}' is not a valid VesselType".to_string())
+    );
+}

@@ -77,6 +77,18 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
     }
 }
 
+/// A float result, tagged the way the frozen driver tags it: JSON has no `inf` or `nan`, so they
+/// become the strings `"float:inf"`, `"float:-inf"` and `"float:nan"`.
+fn num(x: f64) -> Value {
+    if x.is_nan() {
+        json!("float:nan")
+    } else if x.is_infinite() {
+        json!(if x > 0.0 { "float:inf" } else { "float:-inf" })
+    } else {
+        json!(x)
+    }
+}
+
 fn ok(value: Value) -> Result<Value, EvalError> {
     Ok(json!({ "ok": value }))
 }
@@ -573,19 +585,19 @@ fn protective_location(function: &str, args: &Value) -> Result<Value, EvalError>
         })
     };
     match function {
-        "distance_d_vc" => ok(json!(pl::distance_d_vc(f64_arg(args, "vc")?))),
-        "d_vc_exact" => ok(json!(pl::d_vc_exact(f64_arg(args, "vc_individual_m3")?))),
+        "distance_d_vc" => ok(num(pl::distance_d_vc(f64_arg(args, "vc")?))),
+        "d_vc_exact" => ok(num(pl::d_vc_exact(f64_arg(args, "vc_individual_m3")?))),
         "required_side_protection" => {
             let (beam, d_vc) = (f64_arg(args, "beam")?, f64_arg(args, "d_vc")?);
             match vessel_type(args)? {
-                Ok(vt) => lift(pl::required_side_protection(vt, beam, d_vc), |v| json!(v)),
+                Ok(vt) => lift(pl::required_side_protection(vt, beam, d_vc), num),
                 Err(message) => value_error(message),
             }
         }
         "required_bottom_protection" => {
             let (beam, d_vc) = (f64_arg(args, "beam")?, f64_arg(args, "d_vc")?);
             match vessel_type(args)? {
-                Ok(vt) => ok(json!(pl::required_bottom_protection(beam, d_vc, vt))),
+                Ok(vt) => ok(num(pl::required_bottom_protection(beam, d_vc, vt))),
                 Err(message) => value_error(message),
             }
         }
@@ -597,9 +609,9 @@ fn protective_location(function: &str, args: &Value) -> Result<Value, EvalError>
             ),
             |r| {
                 json!({
-                    "cs_required": r.cs_required,
-                    "cb_required": r.cb_required,
-                    "d_vc": r.d_vc,
+                    "cs_required": num(r.cs_required),
+                    "cb_required": num(r.cb_required),
+                    "d_vc": num(r.d_vc),
                 })
             },
         ),
@@ -615,13 +627,13 @@ fn protective_location(function: &str, args: &Value) -> Result<Value, EvalError>
             |r| {
                 json!({
                     "vessel_type": r.vessel_type,
-                    "d_vc": r.d_vc,
-                    "total_tank_volume": r.total_tank_volume,
-                    "cs_required": r.cs_required,
-                    "cs_actual": r.cs_actual,
+                    "d_vc": num(r.d_vc),
+                    "total_tank_volume": num(r.total_tank_volume),
+                    "cs_required": num(r.cs_required),
+                    "cs_actual": num(r.cs_actual),
                     "cs_ok": r.cs_ok,
-                    "cb_required": r.cb_required,
-                    "cb_actual": r.cb_actual,
+                    "cb_required": num(r.cb_required),
+                    "cb_actual": num(r.cb_actual),
                     "cb_ok": r.cb_ok,
                 })
             },
@@ -636,17 +648,17 @@ fn pressure_vessel(function: &str, args: &Value) -> Result<Value, EvalError> {
     use ovcd_core::pressure_vessel as pv;
     let weld = |args: &Value| f64_arg_or(args, "weld_efficiency", pv::DEFAULT_WELD_EFFICIENCY);
     let thickness = |r: Result<f64, pv::PyError>| match r {
-        Ok(t) => ok(json!(t)),
+        Ok(t) => ok(num(t)),
         Err(e) => py_error(e.kind, e.message),
     };
     match function {
         "get_tank_material" => match pv::get_tank_material(str_arg(args, "material_key")?) {
             Ok(m) => ok(json!({
                 "name": m.name,
-                "allowable_stress": m.allowable_stress,
-                "density": m.density,
-                "min_thickness": m.min_thickness,
-                "corrosion_allowance": m.corrosion_allowance,
+                "allowable_stress": num(m.allowable_stress),
+                "density": num(m.density),
+                "min_thickness": num(m.min_thickness),
+                "corrosion_allowance": num(m.corrosion_allowance),
                 "description": m.description,
             })),
             Err(e) => py_error(e.kind, e.message),
@@ -677,7 +689,7 @@ fn pressure_vessel(function: &str, args: &Value) -> Result<Value, EvalError> {
                 str_arg(args, "head_type")?,
                 weld(args)?,
             ) {
-                Ok((cyl, head)) => ok(json!([cyl, head])),
+                Ok((cyl, head)) => ok(json!([num(cyl), num(head)])),
                 Err(e) => py_error(e.kind, e.message),
             }
         }

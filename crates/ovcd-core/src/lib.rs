@@ -21,3 +21,4 @@ pub mod pyint;
 pub mod pystr;
 mod pystr_tables;
 pub mod vessel_standards;
+mod unprintable;
