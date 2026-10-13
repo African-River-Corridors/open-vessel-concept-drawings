@@ -122,3 +122,18 @@ fn barge_cost_small_integers_and_big_floats_are_accepted() {
         .is_ok()
     );
 }
+
+fn ukc_input(v_hi: &str) -> Value {
+    let text = format!(
+        r#"{{"fn":"max_speed_for_ukc","args":{{"draft_m":2.0,"beam_m":10.0,"lpp_m":50.0,"water_depth_m":10.0,"channel_area_m2":1000.0,"v_hi_kn":{v_hi}}}}}"#
+    );
+    ovcd_format::parity::parse(&text).unwrap()
+}
+
+#[test]
+fn max_speed_for_ukc_refuses_a_json_integer() {
+    // Python keeps the int and returns `1`, not `1.0`; the port does not model that.
+    let err = eval("squat", &ukc_input("1"));
+    assert!(err.is_err(), "{err:?}");
+    assert!(eval("squat", &ukc_input("1.0")).is_ok());
+}

@@ -23,5 +23,7 @@ pub mod pyfmt;
 pub mod pyint;
 pub mod pystr;
 mod pystr_tables;
+pub mod squat;
 mod unprintable;
 pub mod vessel_standards;
+pub mod waves;

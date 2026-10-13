@@ -426,6 +426,24 @@
       }
     },
     {
+      "id": "max_speed_for_ukc/tol0.625_stop_exactly_on_tolerance",
+      "tier": 1,
+      "reason": "kills mutant squat.rs:304 (bisection guard > to >=): 20.0 / 0.625 = 2^5, so hi - lo lands exactly on tol_kn and the stop rule decides the answer",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "water_depth_m": 5.28,
+          "channel_area_m2": 209.5,
+          "draft_m": 4.4,
+          "beam_m": 14.8,
+          "lpp_m": 87.3,
+          "v_hi_kn": 20.0,
+          "tol_kn": 0.625
+        }
+      },
+      "knife_edge": "hi - lo reaches exactly tol_kn (20.0 / 2^5 = 0.625, all halvings exact in binary), so the strict `hi - lo > tol_kn` stop rule decides the answer: a nudge moves off the edge and no longer tests the rule. Rust uses the same strict comparison on the same exact floats."
+    },
+    {
       "id": "compute/resistance_default_barge_6.5m_channel_4kn",
       "tier": 1,
       "reason": "tier 1: inputs of audited test test_resistance.py::test_feasibility_the_default_case_is_outside_barrass_validity (issue #8)",
@@ -440,6 +458,24 @@
             "block_coefficient": 0.85,
             "water_depth_m": 6.5,
             "channel_area_m2": 325.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/icorels_not_evaluated_deep_froude",
+      "tier": 1,
+      "reason": "tier 1: kills mutant squat.rs:234 (the ICORELS-not-evaluated warning, depth Froude at or above 0.99; issue #19 fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 15.0,
+            "draft_m": 1.5,
+            "beam_m": 11.4,
+            "lpp_m": 110.0,
+            "water_depth_m": 2.0,
+            "channel_area_m2": 150.0
           }
         }
       }
