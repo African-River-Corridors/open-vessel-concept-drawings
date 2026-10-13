@@ -826,6 +826,26 @@ mod tests {
         assert_eq!(py_sum_mixed([(0.1, false); 10]), 1.0);
     }
 
+    // Pins the compensation inside `py_sum_mixed`: the branch where the new float is larger than
+    // the running sum, and the rule that an infinite or NaN compensation is dropped. Values are
+    // what Python 3.12 `sum()` prints for the same lists (floats first, then an optional int).
+    #[test]
+    fn py_sum_mixed_compensates_floats_like_py_sum() {
+        let fl = |v: &[f64]| -> Vec<(f64, bool)> { v.iter().map(|&x| (x, false)).collect() };
+        // Larger new float than running sum: needs `c += (x - t) + sum`.
+        assert_eq!(py_sum_mixed(fl(&[1.0, 1e16, -1e16])), 1.0);
+        assert_eq!(py_sum_mixed(fl(&[1e16, 1.0, -1e16])), 1.0);
+        assert_eq!(py_sum_mixed(fl(&[1e100, 1.0, -1e100, 1.0])), 2.0);
+        // The same lists with a trailing int: the int adds no compensation, the floats still do.
+        let mut v = fl(&[1.0, 1e16, -1e16]);
+        v.push((2.0, true));
+        assert_eq!(py_sum_mixed(v), 3.0);
+        // A non-finite compensation is dropped, so the sum stays infinite, as in Python.
+        assert_eq!(py_sum_mixed(fl(&[f64::INFINITY, 1.0])), f64::INFINITY);
+        assert!(py_sum_mixed(fl(&[f64::NAN, 1.0])).is_nan());
+        assert_eq!(py_sum_mixed(core::iter::empty()), 0.0);
+    }
+
     #[test]
     fn py_sum_fixed_point_rounding() {
         // sum of 0.1 .. 0.9 step 0.1: plain sum is 4.5 - ulp; Python gives 4.5.
