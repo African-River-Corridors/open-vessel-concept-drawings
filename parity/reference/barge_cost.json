@@ -1,0 +1,433 @@
+{
+  "entry_point": "barge_cost",
+  "generated_by": "cargo xtask regen (frozen Python); never edit by hand",
+  "results": [
+    {
+      "id": "compute/test_rates_base",
+      "output": {
+        "ok": {
+          "barge_breakdown": {
+            "hull_steel": 343600,
+            "type_c_tanks": 215600,
+            "tank_supports": 64700,
+            "insulation": 25900,
+            "cargo_system": 100000,
+            "piping_machinery": 32900,
+            "outfitting": 28800,
+            "paint_anodes_misc": 100000
+          },
+          "tug_breakdown": {
+            "hull_steel": 115000,
+            "battery": 62000,
+            "propulsion": 230000,
+            "wheelhouse_accommodation": 100000,
+            "outfitting": 100000
+          },
+          "barge_subtotal": 911500,
+          "tug_subtotal": 607000,
+          "yard_margin": 151850,
+          "delivery": 50000.0,
+          "unit_total": 1720350,
+          "checks": [
+            {
+              "name": "masses_positive",
+              "ok": true,
+              "message": "mass-model inputs present",
+              "severity": "error"
+            },
+            {
+              "name": "no_reliquefaction_in_scope",
+              "ok": true,
+              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
+              "severity": "warning"
+            },
+            {
+              "name": "fabrication_rates_are_estimates",
+              "ok": false,
+              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
+              "severity": "warning"
+            }
+          ],
+          "rates": {
+            "hull_steel_rate": 1000.0,
+            "tank_shell_rate": 1000.0,
+            "tank_supports_rate": 1000.0,
+            "insulation_rate": 1000.0,
+            "piping_rate": 1000.0,
+            "outfitting_rate": 1000.0,
+            "cargo_system_lump": 100000.0,
+            "paint_anodes_misc": 100000.0,
+            "battery_rate_per_kwh": 100.0,
+            "propulsion_rate_per_kw": 1000.0,
+            "wheelhouse_accom_lump": 100000.0,
+            "tug_outfitting_lump": 100000.0,
+            "yard_margin_fraction": 0.1,
+            "delivery_lump": 50000.0,
+            "currency": "USD"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/test_rates_steel_200",
+      "output": {
+        "ok": {
+          "barge_breakdown": {
+            "hull_steel": 290400,
+            "type_c_tanks": 215600,
+            "tank_supports": 64700,
+            "insulation": 25900,
+            "cargo_system": 100000,
+            "piping_machinery": 32900,
+            "outfitting": 28800,
+            "paint_anodes_misc": 100000
+          },
+          "tug_breakdown": {
+            "hull_steel": 115000,
+            "battery": 62000,
+            "propulsion": 230000,
+            "wheelhouse_accommodation": 100000,
+            "outfitting": 100000
+          },
+          "barge_subtotal": 858300,
+          "tug_subtotal": 607000,
+          "yard_margin": 146530,
+          "delivery": 50000.0,
+          "unit_total": 1661830,
+          "checks": [
+            {
+              "name": "masses_positive",
+              "ok": true,
+              "message": "mass-model inputs present",
+              "severity": "error"
+            },
+            {
+              "name": "no_reliquefaction_in_scope",
+              "ok": true,
+              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
+              "severity": "warning"
+            },
+            {
+              "name": "fabrication_rates_are_estimates",
+              "ok": false,
+              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
+              "severity": "warning"
+            }
+          ],
+          "rates": {
+            "hull_steel_rate": 1000.0,
+            "tank_shell_rate": 1000.0,
+            "tank_supports_rate": 1000.0,
+            "insulation_rate": 1000.0,
+            "piping_rate": 1000.0,
+            "outfitting_rate": 1000.0,
+            "cargo_system_lump": 100000.0,
+            "paint_anodes_misc": 100000.0,
+            "battery_rate_per_kwh": 100.0,
+            "propulsion_rate_per_kw": 1000.0,
+            "wheelhouse_accom_lump": 100000.0,
+            "tug_outfitting_lump": 100000.0,
+            "yard_margin_fraction": 0.1,
+            "delivery_lump": 50000.0,
+            "currency": "USD"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/test_rates_steel_300",
+      "output": {
+        "ok": {
+          "barge_breakdown": {
+            "hull_steel": 390400,
+            "type_c_tanks": 215600,
+            "tank_supports": 64700,
+            "insulation": 25900,
+            "cargo_system": 100000,
+            "piping_machinery": 32900,
+            "outfitting": 28800,
+            "paint_anodes_misc": 100000
+          },
+          "tug_breakdown": {
+            "hull_steel": 115000,
+            "battery": 62000,
+            "propulsion": 230000,
+            "wheelhouse_accommodation": 100000,
+            "outfitting": 100000
+          },
+          "barge_subtotal": 958300,
+          "tug_subtotal": 607000,
+          "yard_margin": 156530,
+          "delivery": 50000.0,
+          "unit_total": 1771830,
+          "checks": [
+            {
+              "name": "masses_positive",
+              "ok": true,
+              "message": "mass-model inputs present",
+              "severity": "error"
+            },
+            {
+              "name": "no_reliquefaction_in_scope",
+              "ok": true,
+              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
+              "severity": "warning"
+            },
+            {
+              "name": "fabrication_rates_are_estimates",
+              "ok": false,
+              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
+              "severity": "warning"
+            }
+          ],
+          "rates": {
+            "hull_steel_rate": 1000.0,
+            "tank_shell_rate": 1000.0,
+            "tank_supports_rate": 1000.0,
+            "insulation_rate": 1000.0,
+            "piping_rate": 1000.0,
+            "outfitting_rate": 1000.0,
+            "cargo_system_lump": 100000.0,
+            "paint_anodes_misc": 100000.0,
+            "battery_rate_per_kwh": 100.0,
+            "propulsion_rate_per_kw": 1000.0,
+            "wheelhouse_accom_lump": 100000.0,
+            "tug_outfitting_lump": 100000.0,
+            "yard_margin_fraction": 0.1,
+            "delivery_lump": 50000.0,
+            "currency": "USD"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/test_rates_margin_0",
+      "output": {
+        "ok": {
+          "barge_breakdown": {
+            "hull_steel": 343600,
+            "type_c_tanks": 215600,
+            "tank_supports": 64700,
+            "insulation": 25900,
+            "cargo_system": 100000,
+            "piping_machinery": 32900,
+            "outfitting": 28800,
+            "paint_anodes_misc": 100000
+          },
+          "tug_breakdown": {
+            "hull_steel": 115000,
+            "battery": 62000,
+            "propulsion": 230000,
+            "wheelhouse_accommodation": 100000,
+            "outfitting": 100000
+          },
+          "barge_subtotal": 911500,
+          "tug_subtotal": 607000,
+          "yard_margin": 0,
+          "delivery": 50000.0,
+          "unit_total": 1568500,
+          "checks": [
+            {
+              "name": "masses_positive",
+              "ok": true,
+              "message": "mass-model inputs present",
+              "severity": "error"
+            },
+            {
+              "name": "no_reliquefaction_in_scope",
+              "ok": true,
+              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
+              "severity": "warning"
+            },
+            {
+              "name": "fabrication_rates_are_estimates",
+              "ok": false,
+              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
+              "severity": "warning"
+            }
+          ],
+          "rates": {
+            "hull_steel_rate": 1000.0,
+            "tank_shell_rate": 1000.0,
+            "tank_supports_rate": 1000.0,
+            "insulation_rate": 1000.0,
+            "piping_rate": 1000.0,
+            "outfitting_rate": 1000.0,
+            "cargo_system_lump": 100000.0,
+            "paint_anodes_misc": 100000.0,
+            "battery_rate_per_kwh": 100.0,
+            "propulsion_rate_per_kw": 1000.0,
+            "wheelhouse_accom_lump": 100000.0,
+            "tug_outfitting_lump": 100000.0,
+            "yard_margin_fraction": 0.0,
+            "delivery_lump": 50000.0,
+            "currency": "USD"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/test_rates_margin_20",
+      "output": {
+        "ok": {
+          "barge_breakdown": {
+            "hull_steel": 343600,
+            "type_c_tanks": 215600,
+            "tank_supports": 64700,
+            "insulation": 25900,
+            "cargo_system": 100000,
+            "piping_machinery": 32900,
+            "outfitting": 28800,
+            "paint_anodes_misc": 100000
+          },
+          "tug_breakdown": {
+            "hull_steel": 115000,
+            "battery": 62000,
+            "propulsion": 230000,
+            "wheelhouse_accommodation": 100000,
+            "outfitting": 100000
+          },
+          "barge_subtotal": 911500,
+          "tug_subtotal": 607000,
+          "yard_margin": 303700,
+          "delivery": 50000.0,
+          "unit_total": 1872200,
+          "checks": [
+            {
+              "name": "masses_positive",
+              "ok": true,
+              "message": "mass-model inputs present",
+              "severity": "error"
+            },
+            {
+              "name": "no_reliquefaction_in_scope",
+              "ok": true,
+              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
+              "severity": "warning"
+            },
+            {
+              "name": "fabrication_rates_are_estimates",
+              "ok": false,
+              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
+              "severity": "warning"
+            }
+          ],
+          "rates": {
+            "hull_steel_rate": 1000.0,
+            "tank_shell_rate": 1000.0,
+            "tank_supports_rate": 1000.0,
+            "insulation_rate": 1000.0,
+            "piping_rate": 1000.0,
+            "outfitting_rate": 1000.0,
+            "cargo_system_lump": 100000.0,
+            "paint_anodes_misc": 100000.0,
+            "battery_rate_per_kwh": 100.0,
+            "propulsion_rate_per_kw": 1000.0,
+            "wheelhouse_accom_lump": 100000.0,
+            "tug_outfitting_lump": 100000.0,
+            "yard_margin_fraction": 0.2,
+            "delivery_lump": 50000.0,
+            "currency": "USD"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/example_rates",
+      "output": {
+        "ok": {
+          "barge_breakdown": {
+            "hull_steel": 859000,
+            "type_c_tanks": 2156000,
+            "tank_supports": 129400,
+            "insulation": 103600,
+            "cargo_system": 500000,
+            "piping_machinery": 148050,
+            "outfitting": 115200,
+            "paint_anodes_misc": 100000
+          },
+          "tug_breakdown": {
+            "hull_steel": 287500,
+            "battery": 155000,
+            "propulsion": 230000,
+            "wheelhouse_accommodation": 450000,
+            "outfitting": 200000
+          },
+          "barge_subtotal": 4111250,
+          "tug_subtotal": 1322500,
+          "yard_margin": 543375,
+          "delivery": 200000.0,
+          "unit_total": 6177125,
+          "checks": [
+            {
+              "name": "masses_positive",
+              "ok": true,
+              "message": "mass-model inputs present",
+              "severity": "error"
+            },
+            {
+              "name": "no_reliquefaction_in_scope",
+              "ok": true,
+              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
+              "severity": "warning"
+            },
+            {
+              "name": "fabrication_rates_are_estimates",
+              "ok": false,
+              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
+              "severity": "warning"
+            }
+          ],
+          "rates": {
+            "hull_steel_rate": 2500.0,
+            "tank_shell_rate": 10000.0,
+            "tank_supports_rate": 2000.0,
+            "insulation_rate": 4000.0,
+            "piping_rate": 4500.0,
+            "outfitting_rate": 4000.0,
+            "cargo_system_lump": 500000.0,
+            "paint_anodes_misc": 100000.0,
+            "battery_rate_per_kwh": 250.0,
+            "propulsion_rate_per_kw": 1000.0,
+            "wheelhouse_accom_lump": 450000.0,
+            "tug_outfitting_lump": 200000.0,
+            "yard_margin_fraction": 0.1,
+            "delivery_lump": 200000.0,
+            "currency": "USD"
+          }
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/example_file",
+      "output": {
+        "ok": {
+          "currency": "USD",
+          "hull_steel_rate": "2500.0",
+          "tank_shell_rate": "10000.0",
+          "tank_supports_rate": "2000.0",
+          "insulation_rate": "4000.0",
+          "piping_rate": "4500.0",
+          "outfitting_rate": "4000.0",
+          "cargo_system_lump": "500000.0",
+          "paint_anodes_misc": "100000.0",
+          "battery_rate_per_kwh": "250.0",
+          "propulsion_rate_per_kw": "1000.0",
+          "wheelhouse_accom_lump": "450000.0",
+          "tug_outfitting_lump": "200000.0",
+          "yard_margin_fraction": "0.10",
+          "delivery_lump": "200000.0"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/nested_is_rejected",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "rates file line 1: expected flat 'key: value', got 'rates:'"
+        }
+      }
+    }
+  ]
+}

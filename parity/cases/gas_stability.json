@@ -1,0 +1,235 @@
+{
+  "entry_point": "gas_stability",
+  "cases": [
+    {
+      "id": "box_gz/14.8x6x3_kg4_2deg",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_gz_matches_the_wall_sided_formula_before_deck_edge (issue #8)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 14.8,
+          "depth": 6.0,
+          "draught": 3.0,
+          "kg": 4.0,
+          "phi_deg": 2.0
+        }
+      }
+    },
+    {
+      "id": "box_gz/14.8x6x3_kg4_5deg",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_gz_matches_the_wall_sided_formula_before_deck_edge (issue #8)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 14.8,
+          "depth": 6.0,
+          "draught": 3.0,
+          "kg": 4.0,
+          "phi_deg": 5.0
+        }
+      }
+    },
+    {
+      "id": "box_gz/14.8x6x3_kg4_10deg",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_gz_matches_the_wall_sided_formula_before_deck_edge (issue #8)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 14.8,
+          "depth": 6.0,
+          "draught": 3.0,
+          "kg": 4.0,
+          "phi_deg": 10.0
+        }
+      }
+    },
+    {
+      "id": "box_gz/14.8x6x3_kg4_15deg",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_gz_matches_the_wall_sided_formula_before_deck_edge (issue #8)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 14.8,
+          "depth": 6.0,
+          "draught": 3.0,
+          "kg": 4.0,
+          "phi_deg": 15.0
+        }
+      }
+    },
+    {
+      "id": "box_gz/14.8x6x3_kg4_20deg",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_gz_matches_the_wall_sided_formula_before_deck_edge (issue #8)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 14.8,
+          "depth": 6.0,
+          "draught": 3.0,
+          "kg": 4.0,
+          "phi_deg": 20.0
+        }
+      }
+    },
+    {
+      "id": "box_gz/14.8x4x3_kg3.5_-12deg",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_gz_is_antisymmetric_and_falls_past_the_deck_edge (issue #8)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 14.8,
+          "depth": 4.0,
+          "draught": 3.0,
+          "kg": 3.5,
+          "phi_deg": -12.0
+        }
+      }
+    },
+    {
+      "id": "box_gz/14.8x4x3_kg3.5_12deg",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_gz_is_antisymmetric_and_falls_past_the_deck_edge (issue #8)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 14.8,
+          "depth": 4.0,
+          "draught": 3.0,
+          "kg": 3.5,
+          "phi_deg": 12.0
+        }
+      }
+    },
+    {
+      "id": "box_gz/14.8x4x3_kg3.5_40deg",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_gz_is_antisymmetric_and_falls_past_the_deck_edge (issue #8)",
+      "input": {
+        "fn": "box_gz",
+        "args": {
+          "beam": 14.8,
+          "depth": 4.0,
+          "draught": 3.0,
+          "kg": 3.5,
+          "phi_deg": 40.0
+        }
+      }
+    },
+    {
+      "id": "segment_fill/radius2_half",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_half_full_cylinder_segment (issue #8)",
+      "input": {
+        "fn": "segment_fill",
+        "args": {
+          "radius": 2.0,
+          "volume_fraction": 0.5
+        }
+      }
+    },
+    {
+      "id": "assess/CN_II_IS_CODE_2008",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_cn_ii_passes_the_is_code; test_simulate.py::test_gas_stability_is_assessed_for_three_conditions (issue #8)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "cargo": "LPG_propane",
+            "t_max": 4.4,
+            "depths": [
+              6.5
+            ],
+            "ruleset": "IGC_2G",
+            "fill_ratio": 0.95
+          },
+          "criteria_set": "IS_CODE_2008"
+        }
+      }
+    },
+    {
+      "id": "assess/narrow_deep_60x7_IS_CODE_2008",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_narrow_deep_gas_barge_fails_and_half_laden_governs (issue #8)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 60.0,
+            "beam": 7.0,
+            "cargo": "LPG_propane",
+            "t_max": 10.0,
+            "depths": [
+              6.0
+            ],
+            "ruleset": "IGC_2G_EXACT",
+            "fill_ratio": 0.98,
+            "self_propelled": false
+          },
+          "criteria_set": "IS_CODE_2008"
+        }
+      }
+    },
+    {
+      "id": "assess/ADN_G_110x11.4_ADN_criteria",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_adn_extra_criteria_only_for_wide_tanks (issue #8)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 110.0,
+            "beam": 11.4,
+            "cargo": "LNG",
+            "t_max": 3.0,
+            "depths": [
+              4.5
+            ],
+            "ruleset": "ADN_G",
+            "fill_ratio": 0.95,
+            "adn_tank_cap_m3": 380.0,
+            "self_propelled": false
+          },
+          "criteria_set": "ADN_9_3_1_14_2"
+        }
+      }
+    },
+    {
+      "id": "criteria_set_for/ADN_G",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_adn_extra_criteria_only_for_wide_tanks (issue #8)",
+      "input": {
+        "fn": "criteria_set_for",
+        "args": {
+          "ruleset": "ADN_G"
+        }
+      }
+    },
+    {
+      "id": "assess/error/bulk_result_refused",
+      "tier": 3,
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_bulk_result_is_refused (issue #8)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "capacity": {
+            "loa": 60,
+            "beam": 11,
+            "depth": 4,
+            "cargo_type": "bauxite"
+          },
+          "payload_t": 1000.0
+        }
+      }
+    }
+  ],
+  "retired": []
+}

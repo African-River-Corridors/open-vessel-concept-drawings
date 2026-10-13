@@ -1,0 +1,179 @@
+{
+  "entry_point": "barge_cost",
+  "cases": [
+    {
+      "id": "compute/test_rates_base",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_cost.py::test_golden_base_case; test_barge_cost.py::test_feasibility_checks; test_barge_cost.py::test_rates_from_mapping_and_path_match_the_object (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates": {
+            "hull_steel_rate": 1000.0,
+            "tank_shell_rate": 1000.0,
+            "tank_supports_rate": 1000.0,
+            "insulation_rate": 1000.0,
+            "piping_rate": 1000.0,
+            "outfitting_rate": 1000.0,
+            "cargo_system_lump": 100000.0,
+            "paint_anodes_misc": 100000.0,
+            "battery_rate_per_kwh": 100.0,
+            "propulsion_rate_per_kw": 1000.0,
+            "wheelhouse_accom_lump": 100000.0,
+            "tug_outfitting_lump": 100000.0,
+            "yard_margin_fraction": 0.1,
+            "delivery_lump": 50000.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/test_rates_steel_200",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_cost.py::test_property_monotone_in_steel (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 200.0
+          },
+          "rates": {
+            "hull_steel_rate": 1000.0,
+            "tank_shell_rate": 1000.0,
+            "tank_supports_rate": 1000.0,
+            "insulation_rate": 1000.0,
+            "piping_rate": 1000.0,
+            "outfitting_rate": 1000.0,
+            "cargo_system_lump": 100000.0,
+            "paint_anodes_misc": 100000.0,
+            "battery_rate_per_kwh": 100.0,
+            "propulsion_rate_per_kw": 1000.0,
+            "wheelhouse_accom_lump": 100000.0,
+            "tug_outfitting_lump": 100000.0,
+            "yard_margin_fraction": 0.1,
+            "delivery_lump": 50000.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/test_rates_steel_300",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_cost.py::test_property_monotone_in_steel (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 300.0
+          },
+          "rates": {
+            "hull_steel_rate": 1000.0,
+            "tank_shell_rate": 1000.0,
+            "tank_supports_rate": 1000.0,
+            "insulation_rate": 1000.0,
+            "piping_rate": 1000.0,
+            "outfitting_rate": 1000.0,
+            "cargo_system_lump": 100000.0,
+            "paint_anodes_misc": 100000.0,
+            "battery_rate_per_kwh": 100.0,
+            "propulsion_rate_per_kw": 1000.0,
+            "wheelhouse_accom_lump": 100000.0,
+            "tug_outfitting_lump": 100000.0,
+            "yard_margin_fraction": 0.1,
+            "delivery_lump": 50000.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/test_rates_margin_0",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_cost.py::test_property_margin_scales (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates": {
+            "hull_steel_rate": 1000.0,
+            "tank_shell_rate": 1000.0,
+            "tank_supports_rate": 1000.0,
+            "insulation_rate": 1000.0,
+            "piping_rate": 1000.0,
+            "outfitting_rate": 1000.0,
+            "cargo_system_lump": 100000.0,
+            "paint_anodes_misc": 100000.0,
+            "battery_rate_per_kwh": 100.0,
+            "propulsion_rate_per_kw": 1000.0,
+            "wheelhouse_accom_lump": 100000.0,
+            "tug_outfitting_lump": 100000.0,
+            "yard_margin_fraction": 0.0,
+            "delivery_lump": 50000.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/test_rates_margin_20",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_cost.py::test_property_margin_scales (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates": {
+            "hull_steel_rate": 1000.0,
+            "tank_shell_rate": 1000.0,
+            "tank_supports_rate": 1000.0,
+            "insulation_rate": 1000.0,
+            "piping_rate": 1000.0,
+            "outfitting_rate": 1000.0,
+            "cargo_system_lump": 100000.0,
+            "paint_anodes_misc": 100000.0,
+            "battery_rate_per_kwh": 100.0,
+            "propulsion_rate_per_kw": 1000.0,
+            "wheelhouse_accom_lump": 100000.0,
+            "tug_outfitting_lump": 100000.0,
+            "yard_margin_fraction": 0.2,
+            "delivery_lump": 50000.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/example_rates",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_cost.py::test_default_rates_are_the_shipped_example_file (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates": null
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/example_file",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_cost.py::test_flat_reader_agrees_with_pyyaml_on_the_example_and_rejects_nesting (issue #8)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "# Illustrative rates for the example only — not market quotes; supply your own.\n#\n# Fabrication and supply rates for vessel_designer.core.barge_cost. Every number here is a\n# round placeholder chosen to make the example run. Do not use it for a budget or a bid.\n# Copy this file, put in rates from your own yard quotes, and pass it in:\n#\n#     from vessel_designer.core.barge_cost import BargeCostInputs, compute\n#     result = compute(BargeCostInputs(), rates=\"my_rates.yaml\")\n#\n# Units: \"_rate\" is currency per tonne of the matching mass unless stated; \"_lump\" is per\n# ATB unit (barge + tug); \"yard_margin_fraction\" is a fraction of the barge + tug subtotal.\n\ncurrency: USD\n\n# --- barge fabrication / supply (per tonne) ---\nhull_steel_rate: 2500.0          # fabricated hull structure; also used for the tug hull\ntank_shell_rate: 10000.0         # Type-C pressure-vessel shell and heads\ntank_supports_rate: 2000.0       # saddles, anti-flotation, internals\ninsulation_rate: 4000.0          # installed insulation system, per tonne equivalent\npiping_rate: 4500.0              # piping and machinery\noutfitting_rate: 4000.0\n\n# --- cargo system (lump sums per unit) ---\ncargo_system_lump: 500000.0      # pumps, manifold, ESD, relief, gauging\npaint_anodes_misc: 100000.0\n\n# --- electric pusher tug ---\nbattery_rate_per_kwh: 250.0      # per kWh installed\npropulsion_rate_per_kw: 1000.0   # per kW installed: thrusters, drives, switchboard\nwheelhouse_accom_lump: 450000.0  # wheelhouse, crew spaces, navigation and controls\ntug_outfitting_lump: 200000.0\n\n# --- yard and delivery ---\nyard_margin_fraction: 0.10       # engineering, class, trials, margin\ndelivery_lump: 200000.0          # delivery voyage or heavy-lift, per unit\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/nested_is_rejected",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_cost.py::test_flat_reader_agrees_with_pyyaml_on_the_example_and_rejects_nesting (issue #8)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "rates:\n  hull_steel_rate: 1\n"
+        }
+      }
+    }
+  ],
+  "retired": []
+}

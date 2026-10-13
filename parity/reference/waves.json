@@ -1,0 +1,519 @@
+{
+  "entry_point": "waves",
+  "generated_by": "cargo xtask regen (frozen Python); never edit by hand",
+  "results": [
+    {
+      "id": "compute/hs1.0_head",
+      "output": {
+        "ok": {
+          "added_resistance_kn": 8.560418792202103,
+          "added_resistance_head_seas_kn": 8.560418792202103,
+          "heading_factor": 1.0,
+          "bow_waterline_length_m": 17.46,
+          "wavelength_m": 24.972429162754167,
+          "lambda_over_lpp": 0.2860530259192917,
+          "added_power_kw": 37.43277672365276,
+          "checks": [
+            {
+              "name": "stawave1_short_wave_validity",
+              "ok": true,
+              "message": "lambda/Lpp = 0.29 (lambda 25 m on Lpp 87 m). STAwave-1 assumes short waves, lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x",
+              "severity": "warning"
+            },
+            {
+              "name": "wave_height_within_screening_range",
+              "ok": true,
+              "message": "H_s 1.00 m; above about 3 m a screening formula is not the right tool and voluntary speed reduction usually governs anyway",
+              "severity": "warning"
+            },
+            {
+              "name": "bow_length_supplied",
+              "ok": false,
+              "message": "L_BWL not given, assumed 17.5 m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces added resistance, so this is the conservative assumption",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "no wave period given; T_p estimated at 4.0 s from H_s, which sets only the validity check, not the resistance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/hs0.0",
+      "output": {
+        "ok": {
+          "added_resistance_kn": 0.0,
+          "added_resistance_head_seas_kn": 0.0,
+          "heading_factor": 1.0,
+          "bow_waterline_length_m": 17.46,
+          "wavelength_m": 0.0,
+          "lambda_over_lpp": 0.0,
+          "added_power_kw": 0.0,
+          "checks": [
+            {
+              "name": "stawave1_short_wave_validity",
+              "ok": false,
+              "message": "lambda/Lpp = 0.00 (lambda 0 m on Lpp 87 m). STAwave-1 assumes short waves, lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x",
+              "severity": "warning"
+            },
+            {
+              "name": "wave_height_within_screening_range",
+              "ok": true,
+              "message": "H_s 0.00 m; above about 3 m a screening formula is not the right tool and voluntary speed reduction usually governs anyway",
+              "severity": "warning"
+            },
+            {
+              "name": "bow_length_supplied",
+              "ok": false,
+              "message": "L_BWL not given, assumed 17.5 m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces added resistance, so this is the conservative assumption",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/hs0.5_head",
+      "output": {
+        "ok": {
+          "added_resistance_kn": 2.140104698050526,
+          "added_resistance_head_seas_kn": 2.140104698050526,
+          "heading_factor": 1.0,
+          "bow_waterline_length_m": 17.46,
+          "wavelength_m": 12.486214581377086,
+          "lambda_over_lpp": 0.14302651295964589,
+          "added_power_kw": 9.35819418091319,
+          "checks": [
+            {
+              "name": "stawave1_short_wave_validity",
+              "ok": true,
+              "message": "lambda/Lpp = 0.14 (lambda 12 m on Lpp 87 m). STAwave-1 assumes short waves, lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x",
+              "severity": "warning"
+            },
+            {
+              "name": "wave_height_within_screening_range",
+              "ok": true,
+              "message": "H_s 0.50 m; above about 3 m a screening formula is not the right tool and voluntary speed reduction usually governs anyway",
+              "severity": "warning"
+            },
+            {
+              "name": "bow_length_supplied",
+              "ok": false,
+              "message": "L_BWL not given, assumed 17.5 m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces added resistance, so this is the conservative assumption",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "no wave period given; T_p estimated at 2.8 s from H_s, which sets only the validity check, not the resistance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/hs1.5_head",
+      "output": {
+        "ok": {
+          "added_resistance_kn": 19.26094228245473,
+          "added_resistance_head_seas_kn": 19.26094228245473,
+          "heading_factor": 1.0,
+          "bow_waterline_length_m": 17.46,
+          "wavelength_m": 37.458643744131244,
+          "lambda_over_lpp": 0.4290795388789375,
+          "added_power_kw": 84.2237476282187,
+          "checks": [
+            {
+              "name": "stawave1_short_wave_validity",
+              "ok": true,
+              "message": "lambda/Lpp = 0.43 (lambda 37 m on Lpp 87 m). STAwave-1 assumes short waves, lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x",
+              "severity": "warning"
+            },
+            {
+              "name": "wave_height_within_screening_range",
+              "ok": true,
+              "message": "H_s 1.50 m; above about 3 m a screening formula is not the right tool and voluntary speed reduction usually governs anyway",
+              "severity": "warning"
+            },
+            {
+              "name": "bow_length_supplied",
+              "ok": false,
+              "message": "L_BWL not given, assumed 17.5 m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces added resistance, so this is the conservative assumption",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "no wave period given; T_p estimated at 4.9 s from H_s, which sets only the validity check, not the resistance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/hs2.0_head",
+      "output": {
+        "ok": {
+          "added_resistance_kn": 34.24167516880841,
+          "added_resistance_head_seas_kn": 34.24167516880841,
+          "heading_factor": 1.0,
+          "bow_waterline_length_m": 17.46,
+          "wavelength_m": 49.94485832550834,
+          "lambda_over_lpp": 0.5721060518385835,
+          "added_power_kw": 149.73110689461103,
+          "checks": [
+            {
+              "name": "stawave1_short_wave_validity",
+              "ok": false,
+              "message": "lambda/Lpp = 0.57 (lambda 50 m on Lpp 87 m). STAwave-1 assumes short waves, lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x",
+              "severity": "warning"
+            },
+            {
+              "name": "wave_height_within_screening_range",
+              "ok": true,
+              "message": "H_s 2.00 m; above about 3 m a screening formula is not the right tool and voluntary speed reduction usually governs anyway",
+              "severity": "warning"
+            },
+            {
+              "name": "bow_length_supplied",
+              "ok": false,
+              "message": "L_BWL not given, assumed 17.5 m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces added resistance, so this is the conservative assumption",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "no wave period given; T_p estimated at 5.7 s from H_s, which sets only the validity check, not the resistance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/hs3.0_head",
+      "output": {
+        "ok": {
+          "added_resistance_kn": 77.04376912981893,
+          "added_resistance_head_seas_kn": 77.04376912981893,
+          "heading_factor": 1.0,
+          "bow_waterline_length_m": 17.46,
+          "wavelength_m": 74.91728748826249,
+          "lambda_over_lpp": 0.858159077757875,
+          "added_power_kw": 336.8949905128748,
+          "checks": [
+            {
+              "name": "stawave1_short_wave_validity",
+              "ok": false,
+              "message": "lambda/Lpp = 0.86 (lambda 75 m on Lpp 87 m). STAwave-1 assumes short waves, lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x",
+              "severity": "warning"
+            },
+            {
+              "name": "wave_height_within_screening_range",
+              "ok": true,
+              "message": "H_s 3.00 m; above about 3 m a screening formula is not the right tool and voluntary speed reduction usually governs anyway",
+              "severity": "warning"
+            },
+            {
+              "name": "bow_length_supplied",
+              "ok": false,
+              "message": "L_BWL not given, assumed 17.5 m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces added resistance, so this is the conservative assumption",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "no wave period given; T_p estimated at 6.9 s from H_s, which sets only the validity check, not the resistance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/hs1.0_heading90",
+      "output": {
+        "ok": {
+          "added_resistance_kn": 0.0,
+          "added_resistance_head_seas_kn": 8.560418792202103,
+          "heading_factor": 0.0,
+          "bow_waterline_length_m": 17.46,
+          "wavelength_m": 24.972429162754167,
+          "lambda_over_lpp": 0.2860530259192917,
+          "added_power_kw": 0.0,
+          "checks": [
+            {
+              "name": "stawave1_short_wave_validity",
+              "ok": true,
+              "message": "lambda/Lpp = 0.29 (lambda 25 m on Lpp 87 m). STAwave-1 assumes short waves, lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x",
+              "severity": "warning"
+            },
+            {
+              "name": "wave_height_within_screening_range",
+              "ok": true,
+              "message": "H_s 1.00 m; above about 3 m a screening formula is not the right tool and voluntary speed reduction usually governs anyway",
+              "severity": "warning"
+            },
+            {
+              "name": "bow_length_supplied",
+              "ok": false,
+              "message": "L_BWL not given, assumed 17.5 m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces added resistance, so this is the conservative assumption",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "no wave period given; T_p estimated at 4.0 s from H_s, which sets only the validity check, not the resistance",
+            "beam-ish seas: this module returns a FLOOR, because drift, rudder and course-keeping loss is not modelled and it dominates off the bow"
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/hs1.0_heading60",
+      "output": {
+        "ok": {
+          "added_resistance_kn": 2.1401046980505267,
+          "added_resistance_head_seas_kn": 8.560418792202103,
+          "heading_factor": 0.2500000000000001,
+          "bow_waterline_length_m": 17.46,
+          "wavelength_m": 24.972429162754167,
+          "lambda_over_lpp": 0.2860530259192917,
+          "added_power_kw": 9.358194180913193,
+          "checks": [
+            {
+              "name": "stawave1_short_wave_validity",
+              "ok": true,
+              "message": "lambda/Lpp = 0.29 (lambda 25 m on Lpp 87 m). STAwave-1 assumes short waves, lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x",
+              "severity": "warning"
+            },
+            {
+              "name": "wave_height_within_screening_range",
+              "ok": true,
+              "message": "H_s 1.00 m; above about 3 m a screening formula is not the right tool and voluntary speed reduction usually governs anyway",
+              "severity": "warning"
+            },
+            {
+              "name": "bow_length_supplied",
+              "ok": false,
+              "message": "L_BWL not given, assumed 17.5 m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces added resistance, so this is the conservative assumption",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "no wave period given; T_p estimated at 4.0 s from H_s, which sets only the validity check, not the resistance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/hs1.0_bow_length_0.15_lpp",
+      "output": {
+        "ok": {
+          "added_resistance_kn": 9.88472018810763,
+          "added_resistance_head_seas_kn": 9.88472018810763,
+          "heading_factor": 1.0,
+          "bow_waterline_length_m": 13.094999999999999,
+          "wavelength_m": 24.972429162754167,
+          "lambda_over_lpp": 0.2860530259192917,
+          "added_power_kw": 43.223647435832156,
+          "checks": [
+            {
+              "name": "stawave1_short_wave_validity",
+              "ok": true,
+              "message": "lambda/Lpp = 0.29 (lambda 25 m on Lpp 87 m). STAwave-1 assumes short waves, lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x",
+              "severity": "warning"
+            },
+            {
+              "name": "wave_height_within_screening_range",
+              "ok": true,
+              "message": "H_s 1.00 m; above about 3 m a screening formula is not the right tool and voluntary speed reduction usually governs anyway",
+              "severity": "warning"
+            },
+            {
+              "name": "bow_length_supplied",
+              "ok": true,
+              "message": "L_BWL not given, assumed 13.1 m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces added resistance, so this is the conservative assumption",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "no wave period given; T_p estimated at 4.0 s from H_s, which sets only the validity check, not the resistance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/hs1.0_bow_length_0.3_lpp",
+      "output": {
+        "ok": {
+          "added_resistance_kn": 6.989552675142471,
+          "added_resistance_head_seas_kn": 6.989552675142471,
+          "heading_factor": 1.0,
+          "bow_waterline_length_m": 26.189999999999998,
+          "wavelength_m": 24.972429162754167,
+          "lambda_over_lpp": 0.2860530259192917,
+          "added_power_kw": 30.56373420949344,
+          "checks": [
+            {
+              "name": "stawave1_short_wave_validity",
+              "ok": true,
+              "message": "lambda/Lpp = 0.29 (lambda 25 m on Lpp 87 m). STAwave-1 assumes short waves, lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x",
+              "severity": "warning"
+            },
+            {
+              "name": "wave_height_within_screening_range",
+              "ok": true,
+              "message": "H_s 1.00 m; above about 3 m a screening formula is not the right tool and voluntary speed reduction usually governs anyway",
+              "severity": "warning"
+            },
+            {
+              "name": "bow_length_supplied",
+              "ok": true,
+              "message": "L_BWL not given, assumed 26.2 m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces added resistance, so this is the conservative assumption",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "no wave period given; T_p estimated at 4.0 s from H_s, which sets only the validity check, not the resistance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/hs1.2_head",
+      "output": {
+        "ok": {
+          "added_resistance_kn": 12.327003060771027,
+          "added_resistance_head_seas_kn": 12.327003060771027,
+          "heading_factor": 1.0,
+          "bow_waterline_length_m": 17.46,
+          "wavelength_m": 29.96691499530499,
+          "lambda_over_lpp": 0.34326363110314995,
+          "added_power_kw": 53.90319848205996,
+          "checks": [
+            {
+              "name": "stawave1_short_wave_validity",
+              "ok": true,
+              "message": "lambda/Lpp = 0.34 (lambda 30 m on Lpp 87 m). STAwave-1 assumes short waves, lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x",
+              "severity": "warning"
+            },
+            {
+              "name": "wave_height_within_screening_range",
+              "ok": true,
+              "message": "H_s 1.20 m; above about 3 m a screening formula is not the right tool and voluntary speed reduction usually governs anyway",
+              "severity": "warning"
+            },
+            {
+              "name": "bow_length_supplied",
+              "ok": false,
+              "message": "L_BWL not given, assumed 17.5 m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces added resistance, so this is the conservative assumption",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "no wave period given; T_p estimated at 4.4 s from H_s, which sets only the validity check, not the resistance"
+          ]
+        }
+      }
+    },
+    {
+      "id": "compute/hs1.0_period10",
+      "output": {
+        "ok": {
+          "added_resistance_kn": 8.560418792202103,
+          "added_resistance_head_seas_kn": 8.560418792202103,
+          "heading_factor": 1.0,
+          "bow_waterline_length_m": 17.46,
+          "wavelength_m": 156.07768226721353,
+          "lambda_over_lpp": 1.7878314119955732,
+          "added_power_kw": 37.43277672365276,
+          "checks": [
+            {
+              "name": "stawave1_short_wave_validity",
+              "ok": false,
+              "message": "lambda/Lpp = 1.79 (lambda 156 m on Lpp 87 m). STAwave-1 assumes short waves, lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x",
+              "severity": "warning"
+            },
+            {
+              "name": "wave_height_within_screening_range",
+              "ok": true,
+              "message": "H_s 1.00 m; above about 3 m a screening formula is not the right tool and voluntary speed reduction usually governs anyway",
+              "severity": "warning"
+            },
+            {
+              "name": "bow_length_supplied",
+              "ok": false,
+              "message": "L_BWL not given, assumed 17.5 m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces added resistance, so this is the conservative assumption",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/hs0.8_period4",
+      "output": {
+        "ok": {
+          "added_resistance_kn": 5.478668027009347,
+          "added_resistance_head_seas_kn": 5.478668027009347,
+          "heading_factor": 1.0,
+          "bow_waterline_length_m": 17.46,
+          "wavelength_m": 24.972429162754167,
+          "lambda_over_lpp": 0.2860530259192917,
+          "added_power_kw": 23.956977103137767,
+          "checks": [
+            {
+              "name": "stawave1_short_wave_validity",
+              "ok": true,
+              "message": "lambda/Lpp = 0.29 (lambda 25 m on Lpp 87 m). STAwave-1 assumes short waves, lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x",
+              "severity": "warning"
+            },
+            {
+              "name": "wave_height_within_screening_range",
+              "ok": true,
+              "message": "H_s 0.80 m; above about 3 m a screening formula is not the right tool and voluntary speed reduction usually governs anyway",
+              "severity": "warning"
+            },
+            {
+              "name": "bow_length_supplied",
+              "ok": false,
+              "message": "L_BWL not given, assumed 17.5 m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces added resistance, so this is the conservative assumption",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/hs4.0_head",
+      "output": {
+        "ok": {
+          "added_resistance_kn": 136.96670067523365,
+          "added_resistance_head_seas_kn": 136.96670067523365,
+          "heading_factor": 1.0,
+          "bow_waterline_length_m": 17.46,
+          "wavelength_m": 99.88971665101667,
+          "lambda_over_lpp": 1.1442121036771669,
+          "added_power_kw": 598.9244275784441,
+          "checks": [
+            {
+              "name": "stawave1_short_wave_validity",
+              "ok": false,
+              "message": "lambda/Lpp = 1.14 (lambda 100 m on Lpp 87 m). STAwave-1 assumes short waves, lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x",
+              "severity": "warning"
+            },
+            {
+              "name": "wave_height_within_screening_range",
+              "ok": false,
+              "message": "H_s 4.00 m; above about 3 m a screening formula is not the right tool and voluntary speed reduction usually governs anyway",
+              "severity": "warning"
+            },
+            {
+              "name": "bow_length_supplied",
+              "ok": false,
+              "message": "L_BWL not given, assumed 17.5 m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces added resistance, so this is the conservative assumption",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "no wave period given; T_p estimated at 8.0 s from H_s, which sets only the validity check, not the resistance"
+          ]
+        }
+      }
+    }
+  ]
+}

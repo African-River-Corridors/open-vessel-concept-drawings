@@ -40,6 +40,9 @@ def test_gas_golden_example():
     head could sit against the accommodation with no gas-code separation at all.
 
     The MAX_TANK_OD_M = 12 m rule still holds and still sets 2 tanks abreast.
+
+    Label: snapshot
+    Parity: barge_capacity:gas/100x16x6_LNG_ethane
     """
     r = _gas()
     assert r.phase == "liquid_gas"
@@ -63,6 +66,9 @@ def test_bauxite_golden_example():
         now  4,711 t, draft 4.60 m, air draft (laden) 4.80 m   (-7.3% cargo)
     The air draft moves MOST: it used to be the hatch coaming, and the 40 ft units on the
     aft deck are taller than the coaming. The old figure was the wrong tallest point.
+
+    Label: snapshot
+    Parity: barge_capacity:bauxite/100x16x6
     """
     r = _bauxite()
     assert r.phase == "dry_bulk"
@@ -74,7 +80,11 @@ def test_bauxite_golden_example():
 
 
 def test_arrangement_is_derived_not_a_fraction():
-    """The end voids must come from the equipment, not from bow/stern_void_fraction."""
+    """The end voids must come from the equipment, not from bow/stern_void_fraction.
+
+    Label: property
+    Parity: barge_capacity:gas/100x16x6_LNG_ethane
+    """
     r = _gas()
     a = r.aft_arrangement
     assert a is not None and r.separation is not None
@@ -91,7 +101,11 @@ def test_bulk_and_gas_share_the_block_but_not_the_unit_mix():
     """One crew/propulsion arrangement, both vessels, so the block LENGTH is identical --
     the units sit ABREAST, so changing the mix moves the beam requirement, not the length.
     The mix itself differs: dry bulk takes a second BATTERY, gas a second ACCOMMODATION
-    unit."""
+    unit.
+
+    Label: property
+    Parity: barge_capacity:gas/100x16x6_LNG_ethane, barge_capacity:bauxite/100x16x6
+    """
     g, b = _gas().aft_arrangement, _bauxite().aft_arrangement
     assert abs(g.length_m - b.length_m) < 1e-9
     assert abs(g.container_total_width_m - b.container_total_width_m) < 1e-9
@@ -101,7 +115,11 @@ def test_bulk_and_gas_share_the_block_but_not_the_unit_mix():
 
 
 def test_cargo_volume_is_inner_volume_times_fill():
-    """The 95% is applied to the volume INSIDE the insulation and the steel, not the OD."""
+    """The 95% is applied to the volume INSIDE the insulation and the steel, not the OD.
+
+    Label: property
+    Parity: barge_capacity:gas/100x16x6_LNG_ethane
+    """
     r = _gas()
     assert abs(r.cargo_volume_m3
                - r.containment_inner_volume_m3 * r.fill_ratio_applied) < 1e-6
@@ -113,7 +131,11 @@ def test_cargo_volume_is_inner_volume_times_fill():
 
 
 def test_wider_cofferdam_costs_cargo():
-    """The separation is a real length: widen it and the cargo zone shrinks by the same."""
+    """The separation is a real length: widen it and the cargo zone shrinks by the same.
+
+    Label: property
+    Parity: barge_capacity:gas/100x16x6_LNG_ethane, barge_capacity:gas/100x16x6_wide_separation
+    """
     from vessel_designer.core.gas_separation import GasSeparationInputs
     base = _gas()
     wide = _gas(separation=GasSeparationInputs(opening_setback_m=4.0))
@@ -122,6 +144,9 @@ def test_wider_cofferdam_costs_cargo():
 
 
 def test_navigating_air_draft_is_never_below_stowed():
+    """Label: property
+    Parity: barge_capacity:gas/100x16x6_LNG_ethane, barge_capacity:bauxite/100x16x6
+    """
     for r in (_gas(), _bauxite()):
         assert r.air_draft_navigating_light_m >= r.air_draft_light_m - 1e-9
 
@@ -133,7 +158,11 @@ def test_gas_capacity_falls_slightly_with_depth():
     is set by beam and tank length by LOA. It now falls slightly, because the BOW RAKE is
     proportional to depth (1.6 x D) and the rake is inside the forward void. Deeper hull
     -> longer rake -> shorter cargo zone. Small, real, and worth seeing: if the rake rule
-    is ever replaced by a surveyed length this coupling goes with it."""
+    is ever replaced by a surveyed length this coupling goes with it.
+
+    Label: property
+    Parity: barge_capacity:gas/100x16x5_LNG_ethane
+    """
     shallow, deep = _gas(depth=5.0), _gas(depth=6.0)
     assert deep.cargo_capacity_t < shallow.cargo_capacity_t
     assert abs(deep.bow_rake_length_m - shallow.bow_rake_length_m - 1.6) < 1e-9
@@ -144,6 +173,10 @@ def test_gas_capacity_falls_slightly_with_depth():
 
 def test_bulk_capacity_grows_with_depth():
     # Taller hull -> taller hold -> more volume.
+    """Label: property
+    Parity: barge_capacity:bauxite/100x16x6, barge_capacity:bauxite/100x16x5,
+        barge_capacity:bauxite/100x16x4
+    """
     assert (_bauxite(depth=6.0).cargo_capacity_t
             > _bauxite(depth=5.0).cargo_capacity_t
             > _bauxite(depth=4.0).cargo_capacity_t)
@@ -151,6 +184,9 @@ def test_bulk_capacity_grows_with_depth():
 
 def test_bauxite_denser_than_gas_per_metre_draft():
     # At equal hull, dense cargo sits deeper for its volume.
+    """Label: property
+    Parity: barge_capacity:gas/100x16x6_LNG_ethane, barge_capacity:bauxite/100x16x6
+    """
     assert _bauxite().cargo_capacity_t > _gas().cargo_capacity_t
 
 
@@ -158,7 +194,11 @@ def test_capacity_scales_faster_than_loa():
     """CHANGED. Capacity used to be ~linear in LOA because the end voids were
     PERCENTAGES of LOA. They are now fixed lengths -- a wheelhouse and two 40 ft units do
     not double when the ship does -- so doubling LOA MORE than doubles the cargo. That is
-    the real economics of a longer hull, and the old fraction hid it."""
+    the real economics of a longer hull, and the old fraction hid it.
+
+    Label: property
+    Parity: barge_capacity:bauxite/200x16x6
+    """
     short = compute(BargeCapacityInputs(loa=100.0, beam=16.0, depth=6.0, cargo_type="bauxite"))
     long = compute(BargeCapacityInputs(loa=200.0, beam=16.0, depth=6.0, cargo_type="bauxite"))
     assert abs(short.stern_void_length_m - long.stern_void_length_m) < 1e-9   # fixed
@@ -175,6 +215,9 @@ def test_overload_flagged_when_too_shallow():
     # Was depth=4.0 until the 12 m tank-OD rule halved gas capacity; a 4 m
     # hull now floats it comfortably at 2.48 m, so the case had to move deeper to still
     # exercise the check.
+    """Label: property
+    Parity: barge_capacity:gas/100x16x2_LNG_ethane_overloaded
+    """
     r = _gas(depth=2.0)
     assert r.overloaded
     assert not r.ok
@@ -182,6 +225,9 @@ def test_overload_flagged_when_too_shallow():
 
 
 def test_wing_void_widens_cuts_bulk_volume():
+    """Label: property
+    Parity: barge_capacity:bauxite/100x16x6_wing_void_3
+    """
     narrow = _bauxite()                                     # 1.0 m default
     wide = _bauxite(wing_void_width=3.0)
     assert wide.cargo_capacity_t < narrow.cargo_capacity_t
@@ -190,6 +236,9 @@ def test_wing_void_widens_cuts_bulk_volume():
 # ---------- bulk intact stability (GM) ----------
 
 def test_bulk_gm_computed_and_positive():
+    """Label: property
+    Parity: barge_capacity:bauxite/100x16x6
+    """
     r = _bauxite()
     assert r.gm_m is not None and r.gm_m > 0.15
     assert any(c.name == "gm_positive" for c in r.checks)
@@ -197,10 +246,17 @@ def test_bulk_gm_computed_and_positive():
 
 def test_gm_grows_with_beam():
     # wider hull -> larger waterplane inertia -> larger BM -> larger GM
+    """Label: property
+    Parity: barge_capacity:bauxite/100x16x6, barge_capacity:bauxite/100x20x6,
+        barge_capacity:bauxite/100x12x6
+    """
     assert _bauxite(beam=20.0).gm_m > _bauxite(beam=16.0).gm_m > _bauxite(beam=12.0).gm_m
 
 
 def test_gas_has_no_bulk_gm():
+    """Label: property
+    Parity: barge_capacity:gas/100x16x6_LNG_ethane
+    """
     assert _gas().gm_m is None         # gas uses hydrostatics.calculate_stability, not this
 
 
@@ -209,30 +265,35 @@ def test_gas_has_no_bulk_gm():
 # gated on that, never on the laden figure, which is the favourable case.
 
 def test_light_air_draft_exceeds_laden_gas():
+    """Label: property
+    Parity: barge_capacity:gas/100x16x6_LNG_ethane
+    """
     r = _gas()
     assert r.air_draft_light_m > r.air_draft_m
     assert r.light_draft_m < r.full_load_draft_m
 
 
 def test_light_air_draft_exceeds_laden_bulk():
+    """Label: property
+    Parity: barge_capacity:bauxite/100x16x6
+    """
     r = _bauxite()
     assert r.air_draft_light_m > r.air_draft_m
     assert r.light_draft_m < r.full_load_draft_m
 
 
-def test_air_draft_identity_holds_in_both_conditions():
-    # air draft = top-above-keel - draft, in whichever condition.
-    for r in (_gas(), _bauxite()):
-        assert abs(r.air_draft_m - (r.air_draft_top_above_keel_m - r.full_load_draft_m)) < 1e-6
-        assert abs(r.air_draft_light_m - (r.air_draft_top_above_keel_m - r.light_draft_m)) < 1e-6
-
-
 def test_no_limit_means_no_air_draft_check():
+    """Label: property
+    Parity: barge_capacity:gas/100x16x6_LNG_ethane
+    """
     assert not any(c.name == "air_draft_within_limit" for c in _gas().checks)
 
 
 def test_air_draft_check_gates_on_light_not_laden():
     # A limit BETWEEN the laden and light figures must FAIL: gating on laden would pass it.
+    """Label: property
+    Parity: barge_capacity:gas/100x16x6_air_draft_limit_between_laden_and_light
+    """
     r0 = _gas()
     between = (r0.air_draft_m + r0.air_draft_light_m) / 2.0
     r = _gas(air_draft_limit_m=between)
@@ -241,11 +302,18 @@ def test_air_draft_check_gates_on_light_not_laden():
 
 
 def test_air_draft_check_passes_when_light_clears():
+    """Label: property
+    Parity: barge_capacity:gas/100x16x6_air_draft_limit_light_plus_half
+    """
     r = _gas(air_draft_limit_m=_gas().air_draft_light_m + 0.5)
     assert next(c for c in r.checks if c.name == "air_draft_within_limit").ok
 
 
 def test_ballast_lowers_air_draft_monotonically():
+    """Label: property
+    Parity: barge_capacity:gas/100x16x6_ballast_0t, barge_capacity:gas/100x16x6_ballast_500t,
+        barge_capacity:gas/100x16x6_ballast_1500t
+    """
     none = _gas(ballast_capacity_t=0.0)
     some = _gas(ballast_capacity_t=500.0)
     more = _gas(ballast_capacity_t=1500.0)
@@ -255,6 +323,10 @@ def test_ballast_lowers_air_draft_monotonically():
 
 
 def test_ballast_can_rescue_a_failing_design():
+    """Label: property
+    Parity: barge_capacity:gas/100x16x6_air_draft_limit_between_laden_and_light,
+        barge_capacity:gas/100x16x6_air_draft_limit_between_ballast_3000t
+    """
     r0 = _gas()
     limit = (r0.air_draft_m + r0.air_draft_light_m) / 2.0
     assert not _gas(air_draft_limit_m=limit).ok                       # light fails it

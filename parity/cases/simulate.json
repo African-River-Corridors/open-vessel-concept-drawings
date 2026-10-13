@@ -1,0 +1,96 @@
+{
+  "entry_point": "simulate",
+  "cases": [
+    {
+      "id": "simulate/gas_CN_II",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_simulate.py::test_gas_uses_the_search_not_auto; test_simulate.py::test_gas_stability_is_assessed_for_three_conditions; test_simulate.py::test_gas_infeasible_fit_is_shown_as_a_failed_check (issue #8)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "gas_barge",
+            "cargo": "LPG_propane",
+            "loa_m": 90,
+            "beam_m": 14.8,
+            "depth_m": 6.5,
+            "cb": 0.85,
+            "freeboard_min_m": 0.3,
+            "draught_limit_m": 4.4,
+            "self_propelled": true,
+            "ruleset": "IGC_2G",
+            "fill_ratio": 0.95
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/gas_LNG_optimise_depth",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_simulate.py::test_gas_optimised_depth_matches_snapshot (issue #8)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "gas_barge",
+            "cargo": "LNG",
+            "loa_m": 90,
+            "beam_m": 14.8,
+            "depth_m": 6.5,
+            "cb": 0.85,
+            "freeboard_min_m": 0.3,
+            "draught_limit_m": 3.0,
+            "self_propelled": true,
+            "ruleset": "IGC_2G_EXACT",
+            "fill_ratio": null,
+            "optimise_depth": true
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/gas_tender_60x7",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_simulate.py::test_tender_gas_barge_shows_failed_stability_checks (issue #8)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "gas_barge",
+            "cargo": "LPG_propane",
+            "loa_m": 60,
+            "beam_m": 7.0,
+            "depth_m": 6.0,
+            "cb": 0.85,
+            "freeboard_min_m": 0.3,
+            "draught_limit_m": null,
+            "self_propelled": false,
+            "ruleset": "IGC_2G_EXACT",
+            "fill_ratio": 0.98
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/box_bauxite_76.5x11.4x3.5",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_simulate.py::test_box_barge_unchanged (issue #8)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "box_barge",
+            "cargo": "bauxite",
+            "loa_m": 76.5,
+            "beam_m": 11.4,
+            "depth_m": 3.5,
+            "cb": 0.928,
+            "lightship_k_t_per_m3": 0.1093,
+            "freeboard_min_m": 0.3
+          }
+        }
+      }
+    }
+  ],
+  "retired": []
+}

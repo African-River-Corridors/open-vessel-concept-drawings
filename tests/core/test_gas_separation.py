@@ -7,7 +7,13 @@ from vessel_designer.core.gas_separation import (COFFERDAM_MIN_M, OPENING_SETBAC
 
 def test_golden_defaults():
     """The 2,00 m opening setback governs, not the 0,60 m cofferdam: a deckhouse flush
-    with the cargo area could carry no door and no openable window."""
+    with the cargo area could carry no door and no openable window.
+
+    Label: sourced - inland dangerous-goods classification rules Part 4 Ch. 4 Sec. 3 (July
+        2022), cl. 3.3.7, 3.3.11, 3.5.3, 3.6.13 (as cited in core/gas_separation.py; clause
+        numbers not yet checked against the ADN text)
+    Parity: gas_separation:compute/defaults
+    """
     r = compute(GasSeparationInputs())
     assert abs(r.aft_separation_m - 2.00) < 1e-9
     assert abs(r.cofferdam_m - 0.60) < 1e-9
@@ -20,6 +26,20 @@ def test_golden_defaults():
 # ---------- property ----------
 
 def test_aft_separation_never_below_either_rule():
+    """Label: property
+    Parity: gas_separation:compute/cofferdam_0.0_setback_0.0,
+        gas_separation:compute/cofferdam_0.0_setback_2.0,
+        gas_separation:compute/cofferdam_0.0_setback_4.0,
+        gas_separation:compute/cofferdam_0.6_setback_0.0,
+        gas_separation:compute/cofferdam_0.6_setback_2.0,
+        gas_separation:compute/cofferdam_0.6_setback_4.0,
+        gas_separation:compute/cofferdam_1.5_setback_0.0,
+        gas_separation:compute/cofferdam_1.5_setback_2.0,
+        gas_separation:compute/cofferdam_1.5_setback_4.0,
+        gas_separation:compute/cofferdam_3.0_setback_0.0,
+        gas_separation:compute/cofferdam_3.0_setback_2.0,
+        gas_separation:compute/cofferdam_3.0_setback_4.0
+    """
     for cd in (0.0, 0.6, 1.5, 3.0):
         for os_ in (0.0, 2.0, 4.0):
             r = compute(GasSeparationInputs(cofferdam_m=cd, opening_setback_m=os_))
@@ -28,6 +48,9 @@ def test_aft_separation_never_below_either_rule():
 
 
 def test_service_space_is_the_remainder():
+    """Label: property
+    Parity: gas_separation:compute/cofferdam_0.9_setback_3.0
+    """
     r = compute(GasSeparationInputs(cofferdam_m=0.9, opening_setback_m=3.0))
     assert abs(r.cofferdam_m + r.service_space_m - r.aft_separation_m) < 1e-9
 
@@ -35,24 +58,41 @@ def test_service_space_is_the_remainder():
 # ---------- feasibility: the checks must fire ----------
 
 def test_thin_cofferdam_fails():
+    """Label: property
+    Parity: gas_separation:compute/cofferdam_0.4
+    """
     r = compute(GasSeparationInputs(cofferdam_m=0.4))
     assert any(c.name == "cofferdam_min_width" and not c.ok for c in r.checks)
 
 
 def test_short_opening_setback_fails():
+    """Label: property
+    Parity: gas_separation:compute/cofferdam_0.6_setback_1.0
+    """
     r = compute(GasSeparationInputs(cofferdam_m=0.6, opening_setback_m=1.0))
     assert any(c.name == "opening_setback" and not c.ok for c in r.checks)
 
 
 def test_type_g_side_floor_fires_below_0_80():
+    """Label: property
+    Parity: gas_separation:compute/side_0.5_double_bottom_1.0
+    """
     r = compute(GasSeparationInputs(side_clearance_m=0.5, double_bottom_m=1.0))
     assert any(c.name == "side_clearance_type_g_floor" and not c.ok for c in r.checks)
 
 
 def test_type_g_side_floor_passes_at_the_igc_default():
+    """Label: property
+    Parity: gas_separation:compute/side_1.0_double_bottom_1.0
+    """
     r = compute(GasSeparationInputs(side_clearance_m=1.0, double_bottom_m=1.0))
     assert all(c.ok for c in r.checks)
 
 
 def test_constants_are_the_cited_values():
+    """Label: sourced - inland dangerous-goods classification rules Part 4 Ch. 4 Sec. 3 (July
+        2022), cl. 3.3.7, 3.3.11, 3.6.13 (as cited in core/gas_separation.py; not yet checked
+        against the ADN text)
+    Parity: gas_separation:compute/defaults
+    """
     assert COFFERDAM_MIN_M == 0.60 and OPENING_SETBACK_M == 2.00

@@ -1,0 +1,236 @@
+{
+  "entry_point": "waves",
+  "cases": [
+    {
+      "id": "compute/hs1.0_head",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_waves.py::test_golden_stawave1_reproduces_its_own_formula; test_waves.py::test_golden_one_metre_head_seas_on_the_example_hull; test_waves.py::test_property_scales_with_the_square_of_wave_height; test_waves.py::test_property_monotone_in_wave_height; test_waves.py::test_property_heading_reduces_it_to_zero_abeam; test_waves.py::test_feasibility_assumed_bow_length_is_declared (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam_waterline_m": 14.8,
+            "lpp_m": 87.3,
+            "speed_kn": 8.5,
+            "significant_wave_height_m": 1.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/hs0.0",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_waves.py::test_golden_calm_water_is_zero; test_waves.py::test_property_monotone_in_wave_height (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam_waterline_m": 14.8,
+            "lpp_m": 87.3,
+            "speed_kn": 8.5,
+            "significant_wave_height_m": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/hs0.5_head",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_waves.py::test_property_monotone_in_wave_height (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam_waterline_m": 14.8,
+            "lpp_m": 87.3,
+            "speed_kn": 8.5,
+            "significant_wave_height_m": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/hs1.5_head",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_waves.py::test_property_monotone_in_wave_height (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam_waterline_m": 14.8,
+            "lpp_m": 87.3,
+            "speed_kn": 8.5,
+            "significant_wave_height_m": 1.5
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/hs2.0_head",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_waves.py::test_property_monotone_in_wave_height; test_waves.py::test_property_scales_with_the_square_of_wave_height (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam_waterline_m": 14.8,
+            "lpp_m": 87.3,
+            "speed_kn": 8.5,
+            "significant_wave_height_m": 2.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/hs3.0_head",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_waves.py::test_property_monotone_in_wave_height (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam_waterline_m": 14.8,
+            "lpp_m": 87.3,
+            "speed_kn": 8.5,
+            "significant_wave_height_m": 3.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/hs1.0_heading90",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_waves.py::test_property_heading_reduces_it_to_zero_abeam; test_waves.py::test_feasibility_beam_seas_are_declared_a_floor (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam_waterline_m": 14.8,
+            "lpp_m": 87.3,
+            "speed_kn": 8.5,
+            "significant_wave_height_m": 1.0,
+            "heading_deg_off_bow": 90.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/hs1.0_heading60",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_waves.py::test_property_heading_reduces_it_to_zero_abeam (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam_waterline_m": 14.8,
+            "lpp_m": 87.3,
+            "speed_kn": 8.5,
+            "significant_wave_height_m": 1.0,
+            "heading_deg_off_bow": 60.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/hs1.0_bow_length_0.15_lpp",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_waves.py::test_property_a_blunter_bow_costs_more (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam_waterline_m": 14.8,
+            "lpp_m": 87.3,
+            "speed_kn": 8.5,
+            "significant_wave_height_m": 1.0,
+            "bow_waterline_length_m": 13.094999999999999
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/hs1.0_bow_length_0.3_lpp",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_waves.py::test_property_a_blunter_bow_costs_more (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam_waterline_m": 14.8,
+            "lpp_m": 87.3,
+            "speed_kn": 8.5,
+            "significant_wave_height_m": 1.0,
+            "bow_waterline_length_m": 26.189999999999998
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/hs1.2_head",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_waves.py::test_property_added_power_is_resistance_times_speed (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam_waterline_m": 14.8,
+            "lpp_m": 87.3,
+            "speed_kn": 8.5,
+            "significant_wave_height_m": 1.2
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/hs1.0_period10",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_waves.py::test_feasibility_long_waves_are_flagged_as_underprediction (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam_waterline_m": 14.8,
+            "lpp_m": 87.3,
+            "speed_kn": 8.5,
+            "significant_wave_height_m": 1.0,
+            "peak_wave_period_s": 10.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/hs0.8_period4",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_waves.py::test_feasibility_short_steep_sea_is_inside_validity (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam_waterline_m": 14.8,
+            "lpp_m": 87.3,
+            "speed_kn": 8.5,
+            "significant_wave_height_m": 0.8,
+            "peak_wave_period_s": 4.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/hs4.0_head",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_waves.py::test_feasibility_big_seas_leave_the_screening_range (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam_waterline_m": 14.8,
+            "lpp_m": 87.3,
+            "speed_kn": 8.5,
+            "significant_wave_height_m": 4.0
+          }
+        }
+      }
+    }
+  ],
+  "retired": []
+}

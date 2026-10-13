@@ -1,0 +1,169 @@
+{
+  "entry_point": "aft_arrangement",
+  "cases": [
+    {
+      "id": "beam14.8_depth5.4",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_aft_arrangement.py::test_golden_block_length; test_aft_arrangement.py::test_golden_heights; test_aft_arrangement.py::test_three_thrusters_are_symmetric_about_the_centreline; test_aft_arrangement.py::test_extra_unit_costs_beam_not_length; test_aft_arrangement.py::test_narrow_beam_stacks_the_units_in_two_rows; test_aft_arrangement.py::test_a_wide_beam_takes_all_three; test_aft_arrangement.py::test_length_grows_with_a_longer_thruster_room; test_aft_arrangement.py::test_length_is_independent_of_the_cargo_it_must_see_over (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 14.8,
+            "depth": 5.4
+          }
+        }
+      }
+    },
+    {
+      "id": "beam14.8_depth5.4_thruster_room_5.0",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_aft_arrangement.py::test_length_grows_with_a_longer_thruster_room (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 14.8,
+            "depth": 5.4,
+            "thruster_room_length_m": 5.0
+          }
+        }
+      }
+    },
+    {
+      "id": "beam14.8_depth5.4_thruster_room_3.5",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_aft_arrangement.py::test_length_grows_with_a_longer_thruster_room (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 14.8,
+            "depth": 5.4,
+            "thruster_room_length_m": 3.5
+          }
+        }
+      }
+    },
+    {
+      "id": "beam14.8_depth5.4_accom_units_3",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_aft_arrangement.py::test_extra_unit_costs_beam_not_length (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 14.8,
+            "depth": 5.4,
+            "n_accom_units": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "beam14.8_depth5.4_sightline_20",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_aft_arrangement.py::test_length_is_independent_of_the_cargo_it_must_see_over (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 14.8,
+            "depth": 5.4,
+            "sightline_obstruction_m": 20.0
+          }
+        }
+      }
+    },
+    {
+      "id": "beam14.8_depth5.4_sightline_none",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_aft_arrangement.py::test_length_is_independent_of_the_cargo_it_must_see_over (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 14.8,
+            "depth": 5.4,
+            "sightline_obstruction_m": null
+          }
+        }
+      }
+    },
+    {
+      "id": "beam14.8_depth5.4_sightline_12",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_aft_arrangement.py::test_lift_raises_the_eye_over_the_obstruction (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 14.8,
+            "depth": 5.4,
+            "sightline_obstruction_m": 12.0
+          }
+        }
+      }
+    },
+    {
+      "id": "beam14.8_depth5.4_sightline_3",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_aft_arrangement.py::test_no_lift_when_there_is_nothing_to_see_over (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 14.8,
+            "depth": 5.4,
+            "sightline_obstruction_m": 3.0
+          }
+        }
+      }
+    },
+    {
+      "id": "beam8_depth5",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_aft_arrangement.py::test_narrow_beam_fits_fewer_thrusters_and_says_so (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 8.0,
+            "depth": 5.0
+          }
+        }
+      }
+    },
+    {
+      "id": "beam14.8_depth5.4_sightline_30_max_lift_2",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_aft_arrangement.py::test_sightline_warns_when_the_column_is_too_short (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 14.8,
+            "depth": 5.4,
+            "sightline_obstruction_m": 30.0,
+            "wheelhouse_max_lift_m": 2.0
+          }
+        }
+      }
+    },
+    {
+      "id": "beam10_depth5.4",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_aft_arrangement.py::test_narrow_beam_stacks_the_units_in_two_rows (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 10.0,
+            "depth": 5.4
+          }
+        }
+      }
+    }
+  ],
+  "retired": []
+}

@@ -19,8 +19,13 @@ Tier 1 is a named case, tier 2 a seeded sweep point, tier 3 an error case. Every
 reason it exists or last changed. A removed case moves to the file's `retired` list, with a reason.
 
 A Reference Result is `{"ok": <value>}`, or `{"error": {"type": "ValueError", "message": "..."}}`
-when Python raises. Floats are shortest round-trip text. NaN and infinity are the strings
-`"float:nan"`, `"float:inf"` and `"float:-inf"`.
+when Python raises (`ValueError`, or `KeyError` for an unknown lookup key; `type` is the class
+name). Floats are shortest round-trip text. NaN and infinity are the strings `"float:nan"`,
+`"float:inf"` and `"float:-inf"`.
+
+Tier-1 cases that come from the audit of the Python tests (issue #8) name their test in `reason`.
+The test's docstring lists the case ids back (a `Parity:` line), and `tests/test_test_audit.py`
+checks both directions.
 
 ## What "identical" means
 

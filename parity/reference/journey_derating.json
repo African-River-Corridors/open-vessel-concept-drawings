@@ -1,0 +1,438 @@
+{
+  "entry_point": "journey_derating",
+  "generated_by": "cargo xtask regen (frozen Python); never edit by hand",
+  "results": [
+    {
+      "id": "bauxite_100x16x6/design_depth_5.5_ukc_0.5",
+      "output": {
+        "ok": {
+          "cargo_capacity_t": 4710.765684,
+          "t_max_m": 5.0,
+          "full_load_draft_m": 4.603855133056641,
+          "achievable_tonnage_t": 4710.765684,
+          "binding_limit": "volume",
+          "volume_utilisation": 1.0,
+          "draft_at_achievable_m": 4.603855133056641,
+          "shed_tonnage_t": 0.0,
+          "checks": [
+            {
+              "name": "capacity_is_volume_bound",
+              "ok": true,
+              "message": "input capacity must be a feasible volume-bound design (not overloaded)",
+              "severity": "error"
+            },
+            {
+              "name": "floats",
+              "ok": true,
+              "message": "channel must float some cargo (T_max 5.00 m vs lightship draft)",
+              "severity": "error"
+            },
+            {
+              "name": "ukc_consistent",
+              "ok": true,
+              "message": "design depth must be >= UKC (pass depth + UKC, never a pre-reduced T_max)",
+              "severity": "error"
+            },
+            {
+              "name": "utilisation_reasonable",
+              "ok": true,
+              "message": "volume utilisation 100% >= floor 50%",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_2.25_ukc_0.5",
+      "output": {
+        "ok": {
+          "cargo_capacity_t": 4710.765684,
+          "t_max_m": 1.75,
+          "full_load_draft_m": 4.603855133056641,
+          "achievable_tonnage_t": 829.5246000318816,
+          "binding_limit": "draft",
+          "volume_utilisation": 0.17609124623823713,
+          "draft_at_achievable_m": 1.75,
+          "shed_tonnage_t": 3881.2410839681183,
+          "checks": [
+            {
+              "name": "capacity_is_volume_bound",
+              "ok": true,
+              "message": "input capacity must be a feasible volume-bound design (not overloaded)",
+              "severity": "error"
+            },
+            {
+              "name": "floats",
+              "ok": true,
+              "message": "channel must float some cargo (T_max 1.75 m vs lightship draft)",
+              "severity": "error"
+            },
+            {
+              "name": "ukc_consistent",
+              "ok": true,
+              "message": "design depth must be >= UKC (pass depth + UKC, never a pre-reduced T_max)",
+              "severity": "error"
+            },
+            {
+              "name": "utilisation_reasonable",
+              "ok": false,
+              "message": "volume utilisation 18% >= floor 50%",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "Draft-bound: shed 3881 t of 4711 t volume capacity to float at T_max = 1.75 m (full-load draft 4.60 m)."
+          ]
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_2_ukc_0.5",
+      "output": {
+        "ok": {
+          "cargo_capacity_t": 4710.765684,
+          "t_max_m": 1.5,
+          "full_load_draft_m": 4.603855133056641,
+          "achievable_tonnage_t": 489.5246000318816,
+          "binding_limit": "draft",
+          "volume_utilisation": 0.1039161429095359,
+          "draft_at_achievable_m": 1.5,
+          "shed_tonnage_t": 4221.241083968118,
+          "checks": [
+            {
+              "name": "capacity_is_volume_bound",
+              "ok": true,
+              "message": "input capacity must be a feasible volume-bound design (not overloaded)",
+              "severity": "error"
+            },
+            {
+              "name": "floats",
+              "ok": true,
+              "message": "channel must float some cargo (T_max 1.50 m vs lightship draft)",
+              "severity": "error"
+            },
+            {
+              "name": "ukc_consistent",
+              "ok": true,
+              "message": "design depth must be >= UKC (pass depth + UKC, never a pre-reduced T_max)",
+              "severity": "error"
+            },
+            {
+              "name": "utilisation_reasonable",
+              "ok": false,
+              "message": "volume utilisation 10% >= floor 50%",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "Draft-bound: shed 4221 t of 4711 t volume capacity to float at T_max = 1.50 m (full-load draft 4.60 m)."
+          ]
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_3_ukc_0.5",
+      "output": {
+        "ok": {
+          "cargo_capacity_t": 4710.765684,
+          "t_max_m": 2.5,
+          "full_load_draft_m": 4.603855133056641,
+          "achievable_tonnage_t": 1849.5246000318816,
+          "binding_limit": "draft",
+          "volume_utilisation": 0.3926165562243409,
+          "draft_at_achievable_m": 2.5,
+          "shed_tonnage_t": 2861.2410839681183,
+          "checks": [
+            {
+              "name": "capacity_is_volume_bound",
+              "ok": true,
+              "message": "input capacity must be a feasible volume-bound design (not overloaded)",
+              "severity": "error"
+            },
+            {
+              "name": "floats",
+              "ok": true,
+              "message": "channel must float some cargo (T_max 2.50 m vs lightship draft)",
+              "severity": "error"
+            },
+            {
+              "name": "ukc_consistent",
+              "ok": true,
+              "message": "design depth must be >= UKC (pass depth + UKC, never a pre-reduced T_max)",
+              "severity": "error"
+            },
+            {
+              "name": "utilisation_reasonable",
+              "ok": false,
+              "message": "volume utilisation 39% >= floor 50%",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "Draft-bound: shed 2861 t of 4711 t volume capacity to float at T_max = 2.50 m (full-load draft 4.60 m)."
+          ]
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_4_ukc_0.5",
+      "output": {
+        "ok": {
+          "cargo_capacity_t": 4710.765684,
+          "t_max_m": 3.5,
+          "full_load_draft_m": 4.603855133056641,
+          "achievable_tonnage_t": 3209.5246000318816,
+          "binding_limit": "draft",
+          "volume_utilisation": 0.6813169695391459,
+          "draft_at_achievable_m": 3.5,
+          "shed_tonnage_t": 1501.2410839681183,
+          "checks": [
+            {
+              "name": "capacity_is_volume_bound",
+              "ok": true,
+              "message": "input capacity must be a feasible volume-bound design (not overloaded)",
+              "severity": "error"
+            },
+            {
+              "name": "floats",
+              "ok": true,
+              "message": "channel must float some cargo (T_max 3.50 m vs lightship draft)",
+              "severity": "error"
+            },
+            {
+              "name": "ukc_consistent",
+              "ok": true,
+              "message": "design depth must be >= UKC (pass depth + UKC, never a pre-reduced T_max)",
+              "severity": "error"
+            },
+            {
+              "name": "utilisation_reasonable",
+              "ok": true,
+              "message": "volume utilisation 68% >= floor 50%",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "Draft-bound: shed 1501 t of 4711 t volume capacity to float at T_max = 3.50 m (full-load draft 4.60 m)."
+          ]
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_5_ukc_0.5",
+      "output": {
+        "ok": {
+          "cargo_capacity_t": 4710.765684,
+          "t_max_m": 4.5,
+          "full_load_draft_m": 4.603855133056641,
+          "achievable_tonnage_t": 4569.524600031882,
+          "binding_limit": "draft",
+          "volume_utilisation": 0.9700173828539509,
+          "draft_at_achievable_m": 4.5,
+          "shed_tonnage_t": 141.2410839681179,
+          "checks": [
+            {
+              "name": "capacity_is_volume_bound",
+              "ok": true,
+              "message": "input capacity must be a feasible volume-bound design (not overloaded)",
+              "severity": "error"
+            },
+            {
+              "name": "floats",
+              "ok": true,
+              "message": "channel must float some cargo (T_max 4.50 m vs lightship draft)",
+              "severity": "error"
+            },
+            {
+              "name": "ukc_consistent",
+              "ok": true,
+              "message": "design depth must be >= UKC (pass depth + UKC, never a pre-reduced T_max)",
+              "severity": "error"
+            },
+            {
+              "name": "utilisation_reasonable",
+              "ok": true,
+              "message": "volume utilisation 97% >= floor 50%",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "Draft-bound: shed 141 t of 4711 t volume capacity to float at T_max = 4.50 m (full-load draft 4.60 m)."
+          ]
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_6_ukc_0.5",
+      "output": {
+        "ok": {
+          "cargo_capacity_t": 4710.765684,
+          "t_max_m": 5.5,
+          "full_load_draft_m": 4.603855133056641,
+          "achievable_tonnage_t": 4710.765684,
+          "binding_limit": "volume",
+          "volume_utilisation": 1.0,
+          "draft_at_achievable_m": 4.603855133056641,
+          "shed_tonnage_t": 0.0,
+          "checks": [
+            {
+              "name": "capacity_is_volume_bound",
+              "ok": true,
+              "message": "input capacity must be a feasible volume-bound design (not overloaded)",
+              "severity": "error"
+            },
+            {
+              "name": "floats",
+              "ok": true,
+              "message": "channel must float some cargo (T_max 5.50 m vs lightship draft)",
+              "severity": "error"
+            },
+            {
+              "name": "ukc_consistent",
+              "ok": true,
+              "message": "design depth must be >= UKC (pass depth + UKC, never a pre-reduced T_max)",
+              "severity": "error"
+            },
+            {
+              "name": "utilisation_reasonable",
+              "ok": true,
+              "message": "volume utilisation 100% >= floor 50%",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_7_ukc_0.5",
+      "output": {
+        "ok": {
+          "cargo_capacity_t": 4710.765684,
+          "t_max_m": 6.5,
+          "full_load_draft_m": 4.603855133056641,
+          "achievable_tonnage_t": 4710.765684,
+          "binding_limit": "volume",
+          "volume_utilisation": 1.0,
+          "draft_at_achievable_m": 4.603855133056641,
+          "shed_tonnage_t": 0.0,
+          "checks": [
+            {
+              "name": "capacity_is_volume_bound",
+              "ok": true,
+              "message": "input capacity must be a feasible volume-bound design (not overloaded)",
+              "severity": "error"
+            },
+            {
+              "name": "floats",
+              "ok": true,
+              "message": "channel must float some cargo (T_max 6.50 m vs lightship draft)",
+              "severity": "error"
+            },
+            {
+              "name": "ukc_consistent",
+              "ok": true,
+              "message": "design depth must be >= UKC (pass depth + UKC, never a pre-reduced T_max)",
+              "severity": "error"
+            },
+            {
+              "name": "utilisation_reasonable",
+              "ok": true,
+              "message": "volume utilisation 100% >= floor 50%",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_full_load_draft_ukc_0",
+      "output": {
+        "ok": {
+          "cargo_capacity_t": 4710.765684,
+          "t_max_m": 4.603855133056641,
+          "full_load_draft_m": 4.603855133056641,
+          "achievable_tonnage_t": 4710.765684,
+          "binding_limit": "volume",
+          "volume_utilisation": 1.0,
+          "draft_at_achievable_m": 4.603855133056641,
+          "shed_tonnage_t": 0.0,
+          "checks": [
+            {
+              "name": "capacity_is_volume_bound",
+              "ok": true,
+              "message": "input capacity must be a feasible volume-bound design (not overloaded)",
+              "severity": "error"
+            },
+            {
+              "name": "floats",
+              "ok": true,
+              "message": "channel must float some cargo (T_max 4.60 m vs lightship draft)",
+              "severity": "error"
+            },
+            {
+              "name": "ukc_consistent",
+              "ok": true,
+              "message": "design depth must be >= UKC (pass depth + UKC, never a pre-reduced T_max)",
+              "severity": "error"
+            },
+            {
+              "name": "utilisation_reasonable",
+              "ok": true,
+              "message": "volume utilisation 100% >= floor 50%",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_0.5_ukc_0.5",
+      "output": {
+        "ok": {
+          "cargo_capacity_t": 4710.765684,
+          "t_max_m": 0.0,
+          "full_load_draft_m": 4.603855133056641,
+          "achievable_tonnage_t": 0.0,
+          "binding_limit": "draft",
+          "volume_utilisation": 0.0,
+          "draft_at_achievable_m": 0.0,
+          "shed_tonnage_t": 4710.765684,
+          "checks": [
+            {
+              "name": "capacity_is_volume_bound",
+              "ok": true,
+              "message": "input capacity must be a feasible volume-bound design (not overloaded)",
+              "severity": "error"
+            },
+            {
+              "name": "floats",
+              "ok": false,
+              "message": "channel must float some cargo (T_max 0.00 m vs lightship draft)",
+              "severity": "error"
+            },
+            {
+              "name": "ukc_consistent",
+              "ok": true,
+              "message": "design depth must be >= UKC (pass depth + UKC, never a pre-reduced T_max)",
+              "severity": "error"
+            },
+            {
+              "name": "utilisation_reasonable",
+              "ok": false,
+              "message": "volume utilisation 0% >= floor 50%",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "Draft-bound: shed 4711 t of 4711 t volume capacity to float at T_max = 0.00 m (full-load draft 4.60 m)."
+          ]
+        }
+      }
+    }
+  ]
+}

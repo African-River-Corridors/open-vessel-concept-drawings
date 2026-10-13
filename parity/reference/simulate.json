@@ -1,0 +1,3875 @@
+{
+  "entry_point": "simulate",
+  "generated_by": "cargo xtask regen (frozen Python); never edit by hand",
+  "results": [
+    {
+      "id": "simulate/gas_CN_II",
+      "output": {
+        "ok": {
+          "vessel": "Gas barge, IMO Type C tanks",
+          "cargo": "LPG (Propane)",
+          "phase": "liquid_gas",
+          "self_propelled": true,
+          "dims": {
+            "loa_m": 90.0,
+            "beam_m": 14.8,
+            "depth_m": 6.5,
+            "cb": 0.85
+          },
+          "geometry": {
+            "bow_void_length_m": 10.9,
+            "stern_void_length_m": 21.892000000000003,
+            "cargo_zone_length_m": 57.20799999999999,
+            "bow_rake_length_m": 10.4,
+            "tank_outer_diameter_m": 10.8,
+            "n_tanks_wide": 1,
+            "n_tanks_total": 2,
+            "side_clearance_m": 2.0,
+            "bottom_clearance_m": 2.0,
+            "insulation_thickness_mm": 350.0
+          },
+          "arrangement": {
+            "ruleset": "IGC_2G",
+            "fill_ratio": 0.95,
+            "n_wide": 1,
+            "n_long": 2,
+            "tank_od_m": 10.8,
+            "per_tank_m3": 1864.5059916779371,
+            "side_clearance_m": 2.0,
+            "depth_m": 6.5,
+            "depth_optimised": false,
+            "candidates_tried": 15,
+            "feasible": true
+          },
+          "results": {
+            "cargo_t": 2058.228164213275,
+            "cargo_volume_bound_t": 2058.228164213275,
+            "cargo_weight_bound_t": 3167.777243734995,
+            "governs": "tank volume",
+            "cargo_volume_m3": 3542.5613841880804,
+            "lightship_t": 1813.9027562650056,
+            "displacement_t": 3872.13092047828,
+            "deadweight_t": 2058.228164213275,
+            "draught_m": 3.4199981689453125,
+            "draught_max_m": 4.4,
+            "freeboard_m": 3.0800018310546875,
+            "light_draught_m": 1.6021013259887695,
+            "air_draft_loaded_m": 11.380001831054688,
+            "air_draft_light_m": 13.197898674011231,
+            "h_over_T": null
+          },
+          "checks": [
+            {
+              "name": "Cargo > 0",
+              "ok": true,
+              "message": "OK"
+            },
+            {
+              "name": "feasible geometry",
+              "ok": true,
+              "message": "cargo volume must be positive (tank/hold fits)",
+              "severity": "error"
+            },
+            {
+              "name": "cargo zone positive",
+              "ok": true,
+              "message": "cargo zone 57.21 m = LOA 90.0 - bow void 10.90 m - stern void 21.89 m",
+              "severity": "error"
+            },
+            {
+              "name": "thrusters fit beam",
+              "ok": true,
+              "message": "3 x 2.60 m thrusters need 10.20 m across a 14.80 m beam",
+              "severity": "error"
+            },
+            {
+              "name": "requested thruster count fits",
+              "ok": true,
+              "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 14.80 m beam",
+              "severity": "warning"
+            },
+            {
+              "name": "containers fit beam",
+              "ok": true,
+              "message": "3 x 40 ft units abreast need 10.91 m across a 14.80 m beam",
+              "severity": "error"
+            },
+            {
+              "name": "units fit in one row",
+              "ok": true,
+              "message": "3 units in 1 row(s) of 3; a second row adds 12.99 m to the stern block and comes straight off the cargo zone",
+              "severity": "warning"
+            },
+            {
+              "name": "wheelhouse fits beam",
+              "ok": true,
+              "message": "wheelhouse 6.40 m wide on a 14.80 m beam",
+              "severity": "error"
+            },
+            {
+              "name": "wheelhouse sees over cargo",
+              "ok": false,
+              "message": "raised eye 14.00 m >= obstruction 14.80 m + 0.50 m margin (lift used 6.00 m of 6.00 m)",
+              "severity": "warning"
+            },
+            {
+              "name": "cofferdam min width",
+              "ok": true,
+              "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening setback",
+              "ok": true,
+              "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd end bulkhead space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side clearance type g floor",
+              "ok": true,
+              "message": "side clearance 2.00 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            },
+            {
+              "name": "double bottom type g floor",
+              "ok": true,
+              "message": "double bottom 2.00 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            },
+            {
+              "name": "Stability — laden",
+              "ok": true,
+              "message": "GM 1.71 m (fluid), max GZ 1.02 m at 29°"
+            },
+            {
+              "name": "Stability — half laden",
+              "ok": true,
+              "message": "GM 3.20 m (fluid), max GZ 1.57 m at 31°"
+            },
+            {
+              "name": "Stability — light",
+              "ok": true,
+              "message": "GM 7.69 m (fluid), max GZ 2.43 m at 27°"
+            }
+          ],
+          "warnings": [
+            "Sightline needs 7.30 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top.",
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ],
+          "curves": [
+            {
+              "name": "Deep water",
+              "limiting_speed_kn": null,
+              "blockage": 0.0007482361211362092,
+              "points": [
+                {
+                  "kn": 1.0,
+                  "kw": 0.7879511016566876,
+                  "fuel_lph": 0.18183486961308176,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 1.5,
+                  "kw": 2.4998951394764517,
+                  "fuel_lph": 0.5768988783407196,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 2.0,
+                  "kw": 5.677771535634798,
+                  "fuel_lph": 1.3102549697618764,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 2.5,
+                  "kw": 10.734451947001489,
+                  "fuel_lph": 2.477181218538805,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 3.0,
+                  "kw": 18.069591000681225,
+                  "fuel_lph": 4.169905615541821,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 3.5,
+                  "kw": 28.07281061927549,
+                  "fuel_lph": 6.4783409121404985,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 4.0,
+                  "kw": 41.12569478376988,
+                  "fuel_lph": 9.490544950100741,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 4.5,
+                  "kw": 57.60315185088292,
+                  "fuel_lph": 13.293035042511441,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 5.0,
+                  "kw": 77.87440109345154,
+                  "fuel_lph": 17.971015636950355,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 5.5,
+                  "kw": 102.30371823443876,
+                  "fuel_lph": 23.60855036179356,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 6.0,
+                  "kw": 131.32287476454178,
+                  "fuel_lph": 30.305278791817333,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 6.5,
+                  "kw": 165.59835512941143,
+                  "fuel_lph": 38.21500502986417,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 7.0,
+                  "kw": 205.55042501683312,
+                  "fuel_lph": 47.43471346542303,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 7.5,
+                  "kw": 251.6577084765714,
+                  "fuel_lph": 58.074855802285704,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 8.0,
+                  "kw": 304.4270482667178,
+                  "fuel_lph": 70.25239575385795,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 8.5,
+                  "kw": 364.3875522098607,
+                  "fuel_lph": 84.08943512535247,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 9.0,
+                  "kw": 432.08999014755454,
+                  "fuel_lph": 99.71307464943567,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 9.5,
+                  "kw": 508.1071376819372,
+                  "fuel_lph": 117.25549331121628,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 10.0,
+                  "kw": 593.0343700082327,
+                  "fuel_lph": 136.85408538651524,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                }
+              ]
+            }
+          ],
+          "stability": {
+            "criteria_set": "IMO IS Code 2008, Part A 2.2",
+            "ok": true,
+            "governing": "Laden",
+            "limitations": [
+              "Concept-stage: prismatic box section, first-order weight heights, no downflooding openings.",
+              "No wind heel and no damage stability (ADN 9.3.1.15 / IGC 2.7 need both before approval).",
+              "The self-propelled stern block's mass is not in the gas lightship, so KG and displacement leave it out; the true GM could be lower."
+            ],
+            "conditions": [
+              {
+                "name": "Laden",
+                "cargo_t": 2058.228164213275,
+                "fill": 0.9500000000000001,
+                "displacement_t": 3872.13092047828,
+                "draught_m": 3.4200061124167815,
+                "kg_m": 4.91025377702206,
+                "gm_solid_m": 2.1369717090124674,
+                "free_surface_m": 0.4265654802750657,
+                "gm_fluid_m": 1.7104062287374018,
+                "max_gz_m": 1.016145765293205,
+                "max_gz_deg": 29,
+                "deck_edge_deg": 22.59783006964341,
+                "gz": [
+                  [
+                    0,
+                    0.0
+                  ],
+                  [
+                    1,
+                    0.029864894714917368
+                  ],
+                  [
+                    2,
+                    0.05980588875077187
+                  ],
+                  [
+                    3,
+                    0.08989934411994277
+                  ],
+                  [
+                    4,
+                    0.12022215005001448
+                  ],
+                  [
+                    5,
+                    0.15085199119260065
+                  ],
+                  [
+                    6,
+                    0.18186762141116408
+                  ],
+                  [
+                    7,
+                    0.2133491451043946
+                  ],
+                  [
+                    8,
+                    0.24537830810678826
+                  ],
+                  [
+                    9,
+                    0.2780388003170815
+                  ],
+                  [
+                    10,
+                    0.311416572339863
+                  ],
+                  [
+                    11,
+                    0.34560016858841247
+                  ],
+                  [
+                    12,
+                    0.38068107949029845
+                  ],
+                  [
+                    13,
+                    0.41675411566493126
+                  ],
+                  [
+                    14,
+                    0.4539178072081381
+                  ],
+                  [
+                    15,
+                    0.49227483152767115
+                  ],
+                  [
+                    16,
+                    0.5319324735310589
+                  ],
+                  [
+                    17,
+                    0.5730031223800773
+                  ],
+                  [
+                    18,
+                    0.615604809502192
+                  ],
+                  [
+                    19,
+                    0.6598617930979613
+                  ],
+                  [
+                    20,
+                    0.7059051950155334
+                  ],
+                  [
+                    21,
+                    0.7538736965920102
+                  ],
+                  [
+                    22,
+                    0.8039143009017645
+                  ],
+                  [
+                    23,
+                    0.8554827107777107
+                  ],
+                  [
+                    24,
+                    0.9025004898859019
+                  ],
+                  [
+                    25,
+                    0.9439635142182405
+                  ],
+                  [
+                    26,
+                    0.9762455830121518
+                  ],
+                  [
+                    27,
+                    0.9981499051282994
+                  ],
+                  [
+                    28,
+                    1.0110645704144106
+                  ],
+                  [
+                    29,
+                    1.016145765293205
+                  ],
+                  [
+                    30,
+                    1.0143633937117478
+                  ],
+                  [
+                    31,
+                    1.0065365665928763
+                  ],
+                  [
+                    32,
+                    0.9933614516606484
+                  ],
+                  [
+                    33,
+                    0.975433306631611
+                  ],
+                  [
+                    34,
+                    0.9532640435860866
+                  ],
+                  [
+                    35,
+                    0.927296330894986
+                  ],
+                  [
+                    36,
+                    0.897914991108697
+                  ],
+                  [
+                    37,
+                    0.8654562713208821
+                  ],
+                  [
+                    38,
+                    0.830215427837572
+                  ],
+                  [
+                    39,
+                    0.7924529663732993
+                  ],
+                  [
+                    40,
+                    0.7523998032132615
+                  ],
+                  [
+                    41,
+                    0.7102615552473874
+                  ],
+                  [
+                    42,
+                    0.6662221227786116
+                  ],
+                  [
+                    43,
+                    0.6204466951143024
+                  ],
+                  [
+                    44,
+                    0.5730842826689231
+                  ],
+                  [
+                    45,
+                    0.5242698587982944
+                  ],
+                  [
+                    46,
+                    0.4741261784863756
+                  ],
+                  [
+                    47,
+                    0.42276532829380126
+                  ],
+                  [
+                    48,
+                    0.3702900518855929
+                  ],
+                  [
+                    49,
+                    0.3167948874016762
+                  ],
+                  [
+                    50,
+                    0.2623671464740932
+                  ],
+                  [
+                    51,
+                    0.20708775948909897
+                  ],
+                  [
+                    52,
+                    0.15103200747777984
+                  ],
+                  [
+                    53,
+                    0.0942701575917777
+                  ],
+                  [
+                    54,
+                    0.03686801632247755
+                  ],
+                  [
+                    55,
+                    -0.02111258767243318
+                  ],
+                  [
+                    56,
+                    -0.07961338115919597
+                  ],
+                  [
+                    57,
+                    -0.13857927591925512
+                  ],
+                  [
+                    58,
+                    -0.19795804321900384
+                  ],
+                  [
+                    59,
+                    -0.2577000271113806
+                  ],
+                  [
+                    60,
+                    -0.3177578914207764
+                  ]
+                ],
+                "criteria": [
+                  {
+                    "name": "Area 0–30°",
+                    "value": 0.2727033732323301,
+                    "limit": 0.055,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 0–40°",
+                    "value": 0.4319701295627084,
+                    "limit": 0.09,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 30–40°",
+                    "value": 0.15926675633037832,
+                    "limit": 0.03,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "GZ at ≥ 30°",
+                    "value": 1.0143633937117478,
+                    "limit": 0.2,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.2"
+                  },
+                  {
+                    "name": "Angle of max GZ",
+                    "value": 29,
+                    "limit": 25.0,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.3"
+                  },
+                  {
+                    "name": "Initial GM (fluid)",
+                    "value": 1.7104062287374018,
+                    "limit": 0.15,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.4"
+                  }
+                ]
+              },
+              {
+                "name": "Half laden",
+                "cargo_t": 1029.1140821066374,
+                "fill": 0.47500000000000003,
+                "displacement_t": 2843.0168383716427,
+                "draught_m": 2.5110553244759255,
+                "kg_m": 4.742250900221001,
+                "gm_solid_m": 3.7824648023652694,
+                "free_surface_m": 0.5796294058106092,
+                "gm_fluid_m": 3.20283539655466,
+                "max_gz_m": 1.5666579269424226,
+                "max_gz_deg": 31,
+                "deck_edge_deg": 28.326735327455307,
+                "gz": [
+                  [
+                    0,
+                    0.0
+                  ],
+                  [
+                    1,
+                    0.05591651163476829
+                  ],
+                  [
+                    2,
+                    0.11193202639460725
+                  ],
+                  [
+                    3,
+                    0.16814590659915207
+                  ],
+                  [
+                    4,
+                    0.22465823545231653
+                  ],
+                  [
+                    5,
+                    0.28157018375013054
+                  ],
+                  [
+                    6,
+                    0.33898438418575744
+                  ],
+                  [
+                    7,
+                    0.39700531591606797
+                  ],
+                  [
+                    8,
+                    0.4557397021700199
+                  ],
+                  [
+                    9,
+                    0.5152969238275478
+                  ],
+                  [
+                    10,
+                    0.5757894520811154
+                  ],
+                  [
+                    11,
+                    0.637333303513685
+                  ],
+                  [
+                    12,
+                    0.7000485211903925
+                  ],
+                  [
+                    13,
+                    0.7640596856712889
+                  ],
+                  [
+                    14,
+                    0.8294964602146322
+                  ],
+                  [
+                    15,
+                    0.8964941748608248
+                  ],
+                  [
+                    16,
+                    0.9651944545740395
+                  ],
+                  [
+                    17,
+                    1.035745897180859
+                  ],
+                  [
+                    18,
+                    1.1083048074936748
+                  ],
+                  [
+                    19,
+                    1.1826172505185164
+                  ],
+                  [
+                    20,
+                    1.2503512366208636
+                  ],
+                  [
+                    21,
+                    1.3090993009727698
+                  ],
+                  [
+                    22,
+                    1.3598995513853647
+                  ],
+                  [
+                    23,
+                    1.4036322240781602
+                  ],
+                  [
+                    24,
+                    1.4410500421856658
+                  ],
+                  [
+                    25,
+                    1.4728018136617465
+                  ],
+                  [
+                    26,
+                    1.4994509809678138
+                  ],
+                  [
+                    27,
+                    1.5214903541104372
+                  ],
+                  [
+                    28,
+                    1.5393539252869828
+                  ],
+                  [
+                    29,
+                    1.5534264288043818
+                  ],
+                  [
+                    30,
+                    1.5636568352512175
+                  ],
+                  [
+                    31,
+                    1.5666579269424226
+                  ],
+                  [
+                    32,
+                    1.5623151246034794
+                  ],
+                  [
+                    33,
+                    1.551435013968782
+                  ],
+                  [
+                    34,
+                    1.534710685144393
+                  ],
+                  [
+                    35,
+                    1.512740940400707
+                  ],
+                  [
+                    36,
+                    1.4860458191143744
+                  ],
+                  [
+                    37,
+                    1.4550792250577644
+                  ],
+                  [
+                    38,
+                    1.4202392577995575
+                  ],
+                  [
+                    39,
+                    1.3818767129532141
+                  ],
+                  [
+                    40,
+                    1.3403021127953365
+                  ],
+                  [
+                    41,
+                    1.2957915504171775
+                  ],
+                  [
+                    42,
+                    1.2485915706405044
+                  ],
+                  [
+                    43,
+                    1.198923264766977
+                  ],
+                  [
+                    44,
+                    1.14698572043618
+                  ],
+                  [
+                    45,
+                    1.0929589399364423
+                  ],
+                  [
+                    46,
+                    1.0370063183853855
+                  ],
+                  [
+                    47,
+                    0.9792767558840718
+                  ],
+                  [
+                    48,
+                    0.9199064640039016
+                  ],
+                  [
+                    49,
+                    0.8590205159961563
+                  ],
+                  [
+                    50,
+                    0.7967341813162004
+                  ],
+                  [
+                    51,
+                    0.7331540779641683
+                  ],
+                  [
+                    52,
+                    0.6683791704039524
+                  ],
+                  [
+                    53,
+                    0.6025016361546413
+                  ],
+                  [
+                    54,
+                    0.5356076203374719
+                  ],
+                  [
+                    55,
+                    0.46777789433642225
+                  ],
+                  [
+                    56,
+                    0.3990884321589195
+                  ],
+                  [
+                    57,
+                    0.32961091595849085
+                  ],
+                  [
+                    58,
+                    0.25941318041983125
+                  ],
+                  [
+                    59,
+                    0.18855960424131035
+                  ],
+                  [
+                    60,
+                    0.11711145572687842
+                  ]
+                ],
+                "criteria": [
+                  {
+                    "name": "Area 0–30°",
+                    "value": 0.46036056577093265,
+                    "limit": 0.055,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 0–40°",
+                    "value": 0.7208174494511799,
+                    "limit": 0.09,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 30–40°",
+                    "value": 0.26045688368024716,
+                    "limit": 0.03,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "GZ at ≥ 30°",
+                    "value": 1.5666579269424226,
+                    "limit": 0.2,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.2"
+                  },
+                  {
+                    "name": "Angle of max GZ",
+                    "value": 31,
+                    "limit": 25.0,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.3"
+                  },
+                  {
+                    "name": "Initial GM (fluid)",
+                    "value": 3.20283539655466,
+                    "limit": 0.15,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.4"
+                  }
+                ]
+              },
+              {
+                "name": "Light",
+                "cargo_t": 0.0,
+                "fill": 0.0,
+                "displacement_t": 1813.9027562650053,
+                "draught_m": 1.6021045365350692,
+                "kg_m": 4.505087900125541,
+                "gm_solid_m": 7.689311629245501,
+                "free_surface_m": 0.0,
+                "gm_fluid_m": 7.689311629245501,
+                "max_gz_m": 2.4267698284796033,
+                "max_gz_deg": 27,
+                "deck_edge_deg": 33.499689399932116,
+                "gz": [
+                  [
+                    0,
+                    0.0
+                  ],
+                  [
+                    1,
+                    0.134227283193866
+                  ],
+                  [
+                    2,
+                    0.26859554799155677
+                  ],
+                  [
+                    3,
+                    0.40324634330241316
+                  ],
+                  [
+                    4,
+                    0.538322356556265
+                  ],
+                  [
+                    5,
+                    0.6739679927809019
+                  ],
+                  [
+                    6,
+                    0.8103299655830407
+                  ],
+                  [
+                    7,
+                    0.9475579042074403
+                  ],
+                  [
+                    8,
+                    1.0858049810305066
+                  ],
+                  [
+                    9,
+                    1.2252285640773386
+                  ],
+                  [
+                    10,
+                    1.365990899438774
+                  ],
+                  [
+                    11,
+                    1.5082598288122475
+                  ],
+                  [
+                    12,
+                    1.6522095478033694
+                  ],
+                  [
+                    13,
+                    1.7901051841065103
+                  ],
+                  [
+                    14,
+                    1.907044661770711
+                  ],
+                  [
+                    15,
+                    2.005992503949143
+                  ],
+                  [
+                    16,
+                    2.089747782953515
+                  ],
+                  [
+                    17,
+                    2.1605234309626167
+                  ],
+                  [
+                    18,
+                    2.2200957192551387
+                  ],
+                  [
+                    19,
+                    2.2699097770225096
+                  ],
+                  [
+                    20,
+                    2.311155647479078
+                  ],
+                  [
+                    21,
+                    2.344824130232638
+                  ],
+                  [
+                    22,
+                    2.3717484644217315
+                  ],
+                  [
+                    23,
+                    2.3926359079347206
+                  ],
+                  [
+                    24,
+                    2.4080919853582086
+                  ],
+                  [
+                    25,
+                    2.418639335778347
+                  ],
+                  [
+                    26,
+                    2.4247325282239824
+                  ],
+                  [
+                    27,
+                    2.4267698284796033
+                  ],
+                  [
+                    28,
+                    2.425102634763203
+                  ],
+                  [
+                    29,
+                    2.420043112379706
+                  ],
+                  [
+                    30,
+                    2.411870423718681
+                  ],
+                  [
+                    31,
+                    2.400835853275238
+                  ],
+                  [
+                    32,
+                    2.3871670566395613
+                  ],
+                  [
+                    33,
+                    2.3710716100881832
+                  ],
+                  [
+                    34,
+                    2.3527399983327006
+                  ],
+                  [
+                    35,
+                    2.332348148521482
+                  ],
+                  [
+                    36,
+                    2.310059596195423
+                  ],
+                  [
+                    37,
+                    2.2860273517486682
+                  ],
+                  [
+                    38,
+                    2.260395522727498
+                  ],
+                  [
+                    39,
+                    2.2333007370610076
+                  ],
+                  [
+                    40,
+                    2.204873404356274
+                  ],
+                  [
+                    41,
+                    2.175238846192099
+                  ],
+                  [
+                    42,
+                    2.14438246678444
+                  ],
+                  [
+                    43,
+                    2.1103489944027713
+                  ],
+                  [
+                    44,
+                    2.072688404132073
+                  ],
+                  [
+                    45,
+                    2.0316694974680765
+                  ],
+                  [
+                    46,
+                    1.987535072203857
+                  ],
+                  [
+                    47,
+                    1.9405052369614761
+                  ],
+                  [
+                    48,
+                    1.8907802466276493
+                  ],
+                  [
+                    49,
+                    1.8385429361033871
+                  ],
+                  [
+                    50,
+                    1.7839608159881686
+                  ],
+                  [
+                    51,
+                    1.7271878827065033
+                  ],
+                  [
+                    52,
+                    1.6683661865879769
+                  ],
+                  [
+                    53,
+                    1.6076271940962652
+                  ],
+                  [
+                    54,
+                    1.5450929744290733
+                  ],
+                  [
+                    55,
+                    1.4808772358132298
+                  ],
+                  [
+                    56,
+                    1.4150862327884992
+                  ],
+                  [
+                    57,
+                    1.3478195624435618
+                  ],
+                  [
+                    58,
+                    1.2791708648069666
+                  ],
+                  [
+                    59,
+                    1.2092284402990758
+                  ],
+                  [
+                    60,
+                    1.1380757952339544
+                  ]
+                ],
+                "criteria": [
+                  {
+                    "name": "Area 0–30°",
+                    "value": 0.8762746486457125,
+                    "limit": 0.055,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 0–40°",
+                    "value": 1.2819296198521053,
+                    "limit": 0.09,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 30–40°",
+                    "value": 0.40565497120639277,
+                    "limit": 0.03,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "GZ at ≥ 30°",
+                    "value": 2.411870423718681,
+                    "limit": 0.2,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.2"
+                  },
+                  {
+                    "name": "Angle of max GZ",
+                    "value": 27,
+                    "limit": 25.0,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.3"
+                  },
+                  {
+                    "name": "Initial GM (fluid)",
+                    "value": 7.689311629245501,
+                    "limit": 0.15,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.4"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/gas_LNG_optimise_depth",
+      "output": {
+        "ok": {
+          "vessel": "Gas barge, IMO Type C tanks",
+          "cargo": "LNG",
+          "phase": "liquid_gas",
+          "self_propelled": true,
+          "dims": {
+            "loa_m": 90.0,
+            "beam_m": 14.8,
+            "depth_m": 5.75,
+            "cb": 0.85
+          },
+          "geometry": {
+            "bow_void_length_m": 9.700000000000001,
+            "stern_void_length_m": 21.892000000000003,
+            "cargo_zone_length_m": 58.407999999999994,
+            "bow_rake_length_m": 9.200000000000001,
+            "tank_outer_diameter_m": 11.0,
+            "n_tanks_wide": 1,
+            "n_tanks_total": 2,
+            "side_clearance_m": 1.9000000000000004,
+            "bottom_clearance_m": 0.6366666666666667,
+            "insulation_thickness_mm": 350.0
+          },
+          "arrangement": {
+            "ruleset": "IGC_2G_EXACT",
+            "fill_ratio": 0.98,
+            "n_wide": 1,
+            "n_long": 2,
+            "tank_od_m": 11.0,
+            "per_tank_m3": 1983.462062402898,
+            "side_clearance_m": 1.9000000000000004,
+            "depth_m": 5.75,
+            "depth_optimised": true,
+            "candidates_tried": 225,
+            "feasible": true
+          },
+          "results": {
+            "cargo_t": 1737.5079636847538,
+            "cargo_volume_bound_t": 1749.4135390393562,
+            "cargo_weight_bound_t": 1737.5079636847538,
+            "governs": "draught — Draught limit",
+            "cargo_volume_m3": 3887.58564230968,
+            "lightship_t": 1659.0920363152466,
+            "displacement_t": 3396.6000000000004,
+            "deadweight_t": 1737.5079636847538,
+            "draught_m": 3.0,
+            "draught_max_m": 3.0,
+            "freeboard_m": 2.75,
+            "light_draught_m": 1.465378761291504,
+            "air_draft_loaded_m": 10.636666666666667,
+            "air_draft_light_m": 12.171287905375163,
+            "h_over_T": null
+          },
+          "checks": [
+            {
+              "name": "Cargo > 0",
+              "ok": true,
+              "message": "OK"
+            },
+            {
+              "name": "feasible geometry",
+              "ok": true,
+              "message": "cargo volume must be positive (tank/hold fits)",
+              "severity": "error"
+            },
+            {
+              "name": "cargo zone positive",
+              "ok": true,
+              "message": "cargo zone 58.41 m = LOA 90.0 - bow void 9.70 m - stern void 21.89 m",
+              "severity": "error"
+            },
+            {
+              "name": "thrusters fit beam",
+              "ok": true,
+              "message": "3 x 2.60 m thrusters need 10.20 m across a 14.80 m beam",
+              "severity": "error"
+            },
+            {
+              "name": "requested thruster count fits",
+              "ok": true,
+              "message": "3 of 3 requested thrusters fit; 3 would need 10.20 m of 14.80 m beam",
+              "severity": "warning"
+            },
+            {
+              "name": "containers fit beam",
+              "ok": true,
+              "message": "3 x 40 ft units abreast need 10.91 m across a 14.80 m beam",
+              "severity": "error"
+            },
+            {
+              "name": "units fit in one row",
+              "ok": true,
+              "message": "3 units in 1 row(s) of 3; a second row adds 12.99 m to the stern block and comes straight off the cargo zone",
+              "severity": "warning"
+            },
+            {
+              "name": "wheelhouse fits beam",
+              "ok": true,
+              "message": "wheelhouse 6.40 m wide on a 14.80 m beam",
+              "severity": "error"
+            },
+            {
+              "name": "wheelhouse sees over cargo",
+              "ok": false,
+              "message": "raised eye 13.25 m >= obstruction 13.64 m + 0.50 m margin (lift used 6.00 m of 6.00 m)",
+              "severity": "warning"
+            },
+            {
+              "name": "cofferdam min width",
+              "ok": true,
+              "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening setback",
+              "ok": true,
+              "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd end bulkhead space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side clearance type g floor",
+              "ok": true,
+              "message": "side clearance 1.90 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            },
+            {
+              "name": "double bottom type g floor",
+              "ok": true,
+              "message": "double bottom 0.64 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            },
+            {
+              "name": "Stability — laden",
+              "ok": true,
+              "message": "GM 3.20 m (fluid), max GZ 1.54 m at 28°"
+            },
+            {
+              "name": "Stability — half laden",
+              "ok": true,
+              "message": "GM 4.78 m (fluid), max GZ 2.06 m at 29°"
+            },
+            {
+              "name": "Stability — light",
+              "ok": true,
+              "message": "GM 9.19 m (fluid), max GZ 2.75 m at 28°"
+            }
+          ],
+          "warnings": [
+            "Sightline needs 6.89 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top.",
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ],
+          "curves": [
+            {
+              "name": "Deep water",
+              "limiting_speed_kn": null,
+              "blockage": 0.0006563478260869566,
+              "points": [
+                {
+                  "kn": 1.0,
+                  "kw": 0.7573653275422257,
+                  "fuel_lph": 0.17477661404820596,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 1.5,
+                  "kw": 2.402857102617177,
+                  "fuel_lph": 0.5545054852193485,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 2.0,
+                  "kw": 5.4573783699963165,
+                  "fuel_lph": 1.2593950084606884,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 2.5,
+                  "kw": 10.317774412312817,
+                  "fuel_lph": 2.3810248643798806,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 3.0,
+                  "kw": 17.368186525802592,
+                  "fuel_lph": 4.008043044415983,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 3.5,
+                  "kw": 26.983112740112773,
+                  "fuel_lph": 6.2268721707952555,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 4.0,
+                  "kw": 39.529325150791394,
+                  "fuel_lph": 9.122151957874937,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 4.5,
+                  "kw": 55.36717935577778,
+                  "fuel_lph": 12.77704138979487,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 5.0,
+                  "kw": 74.85156270140486,
+                  "fuel_lph": 17.273437546478043,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 5.5,
+                  "kw": 98.3326108771304,
+                  "fuel_lph": 22.69214097164548,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 6.0,
+                  "kw": 126.22533536753474,
+                  "fuel_lph": 29.12892354635417,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 6.5,
+                  "kw": 159.1703497962564,
+                  "fuel_lph": 36.73161918375148,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 7.0,
+                  "kw": 197.57160646390764,
+                  "fuel_lph": 45.59344764551715,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 7.5,
+                  "kw": 241.88915074571216,
+                  "fuel_lph": 55.8205732490105,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 8.0,
+                  "kw": 292.6101513640531,
+                  "fuel_lph": 67.52541954555072,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 8.5,
+                  "kw": 350.2431778462997,
+                  "fuel_lph": 80.82534873376147,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 9.0,
+                  "kw": 415.3176208876011,
+                  "fuel_lph": 95.84252789713871,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 9.5,
+                  "kw": 488.3840227495381,
+                  "fuel_lph": 112.7040052498934,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 10.0,
+                  "kw": 570.0146480419235,
+                  "fuel_lph": 131.5418418558285,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                }
+              ]
+            }
+          ],
+          "stability": {
+            "criteria_set": "IMO IS Code 2008, Part A 2.2",
+            "ok": true,
+            "governing": "Laden",
+            "limitations": [
+              "Concept-stage: prismatic box section, first-order weight heights, no downflooding openings.",
+              "No wind heel and no damage stability (ADN 9.3.1.15 / IGC 2.7 need both before approval).",
+              "The self-propelled stern block's mass is not in the gas lightship, so KG and displacement leave it out; the true GM could be lower."
+            ],
+            "conditions": [
+              {
+                "name": "Laden",
+                "cargo_t": 1737.5079636847538,
+                "fill": 0.9733306427627644,
+                "displacement_t": 3396.6000000000004,
+                "draught_m": 3.0,
+                "kg_m": 3.978800399899186,
+                "gm_solid_m": 3.6056440445452593,
+                "free_surface_m": 0.4090890812687687,
+                "gm_fluid_m": 3.1965549632764905,
+                "max_gz_m": 1.5423819071924587,
+                "max_gz_deg": 28,
+                "deck_edge_deg": 20.38615459958083,
+                "gz": [
+                  [
+                    0,
+                    0.0
+                  ],
+                  [
+                    1,
+                    0.0558037530905979
+                  ],
+                  [
+                    2,
+                    0.11168763195218695
+                  ],
+                  [
+                    3,
+                    0.16773206384337
+                  ],
+                  [
+                    4,
+                    0.22401808108621302
+                  ],
+                  [
+                    5,
+                    0.28062762884183734
+                  ],
+                  [
+                    6,
+                    0.337643879244242
+                  ],
+                  [
+                    7,
+                    0.3951515541222076
+                  ],
+                  [
+                    8,
+                    0.45323725863617614
+                  ],
+                  [
+                    9,
+                    0.5119898282812048
+                  ],
+                  [
+                    10,
+                    0.5715006918606947
+                  ],
+                  [
+                    11,
+                    0.6318642532210417
+                  ],
+                  [
+                    12,
+                    0.6931782947579503
+                  ],
+                  [
+                    13,
+                    0.7555444059647197
+                  ],
+                  [
+                    14,
+                    0.8190684405958496
+                  ],
+                  [
+                    15,
+                    0.8838610063714463
+                  ],
+                  [
+                    16,
+                    0.9500379915554379
+                  ],
+                  [
+                    17,
+                    1.0177211332112917
+                  ],
+                  [
+                    18,
+                    1.0870386324816304
+                  ],
+                  [
+                    19,
+                    1.1581258228636468
+                  ],
+                  [
+                    20,
+                    1.231125898172787
+                  ],
+                  [
+                    21,
+                    1.3042745995428755
+                  ],
+                  [
+                    22,
+                    1.3705633104983892
+                  ],
+                  [
+                    23,
+                    1.4267593844362225
+                  ],
+                  [
+                    24,
+                    1.4696531320250739
+                  ],
+                  [
+                    25,
+                    1.5011844018695097
+                  ],
+                  [
+                    26,
+                    1.5229703729660893
+                  ],
+                  [
+                    27,
+                    1.536337331748994
+                  ],
+                  [
+                    28,
+                    1.5423819071924587
+                  ],
+                  [
+                    29,
+                    1.542017787129842
+                  ],
+                  [
+                    30,
+                    1.5360117204310724
+                  ],
+                  [
+                    31,
+                    1.5250115237120185
+                  ],
+                  [
+                    32,
+                    1.5095680590797849
+                  ],
+                  [
+                    33,
+                    1.4901526215596277
+                  ],
+                  [
+                    34,
+                    1.4671707998545218
+                  ],
+                  [
+                    35,
+                    1.4409736046362167
+                  ],
+                  [
+                    36,
+                    1.4118664628775626
+                  ],
+                  [
+                    37,
+                    1.3801165331913643
+                  ],
+                  [
+                    38,
+                    1.345958690854007
+                  ],
+                  [
+                    39,
+                    1.309600451795119
+                  ],
+                  [
+                    40,
+                    1.2712260450291497
+                  ],
+                  [
+                    41,
+                    1.2309997976016138
+                  ],
+                  [
+                    42,
+                    1.1890689613965204
+                  ],
+                  [
+                    43,
+                    1.1455660844039792
+                  ],
+                  [
+                    44,
+                    1.1006110083069855
+                  ],
+                  [
+                    45,
+                    1.0543125580624106
+                  ],
+                  [
+                    46,
+                    1.0067699764460118
+                  ],
+                  [
+                    47,
+                    0.9580741464996742
+                  ],
+                  [
+                    48,
+                    0.9083086368549703
+                  ],
+                  [
+                    49,
+                    0.8575505985513359
+                  ],
+                  [
+                    50,
+                    0.805871536869337
+                  ],
+                  [
+                    51,
+                    0.753337977591363
+                  ],
+                  [
+                    52,
+                    0.7000120437760735
+                  ],
+                  [
+                    53,
+                    0.6459519564284516
+                  ],
+                  [
+                    54,
+                    0.5912124702389979
+                  ],
+                  [
+                    55,
+                    0.5358452537549664
+                  ],
+                  [
+                    56,
+                    0.4798992218564562
+                  ],
+                  [
+                    57,
+                    0.4234208271791327
+                  ],
+                  [
+                    58,
+                    0.366454316104681
+                  ],
+                  [
+                    59,
+                    0.30904195409109797
+                  ],
+                  [
+                    60,
+                    0.251224224406172
+                  ]
+                ],
+                "criteria": [
+                  {
+                    "name": "Area 0–30°",
+                    "value": 0.4593899683617994,
+                    "limit": 0.055,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 0–40°",
+                    "value": 0.7086934554891342,
+                    "limit": 0.09,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 30–40°",
+                    "value": 0.24930348712733483,
+                    "limit": 0.03,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "GZ at ≥ 30°",
+                    "value": 1.5360117204310724,
+                    "limit": 0.2,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.2"
+                  },
+                  {
+                    "name": "Angle of max GZ",
+                    "value": 28,
+                    "limit": 25.0,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.3"
+                  },
+                  {
+                    "name": "Initial GM (fluid)",
+                    "value": 3.1965549632764905,
+                    "limit": 0.15,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.4"
+                  }
+                ]
+              },
+              {
+                "name": "Half laden",
+                "cargo_t": 868.7539818423769,
+                "fill": 0.4866653213813822,
+                "displacement_t": 2527.846018157624,
+                "draught_m": 2.232685054016626,
+                "kg_m": 3.964752254315101,
+                "gm_solid_m": 5.32709774092989,
+                "free_surface_m": 0.5493204424992174,
+                "gm_fluid_m": 4.777777298430673,
+                "max_gz_m": 2.0627486195905,
+                "max_gz_deg": 29,
+                "deck_edge_deg": 25.422340604683605,
+                "gz": [
+                  [
+                    0,
+                    0.0
+                  ],
+                  [
+                    1,
+                    0.08340544744691242
+                  ],
+                  [
+                    2,
+                    0.166915991923929
+                  ],
+                  [
+                    3,
+                    0.2506371363436921
+                  ],
+                  [
+                    4,
+                    0.3346751981895808
+                  ],
+                  [
+                    5,
+                    0.4191377238465319
+                  ],
+                  [
+                    6,
+                    0.5041339114745177
+                  ],
+                  [
+                    7,
+                    0.5897750454206663
+                  ],
+                  [
+                    8,
+                    0.6761749452963421
+                  ],
+                  [
+                    9,
+                    0.7634504330124526
+                  ],
+                  [
+                    10,
+                    0.8517218212726014
+                  ],
+                  [
+                    11,
+                    0.9411134272728858
+                  ],
+                  [
+                    12,
+                    1.0317541156535883
+                  ],
+                  [
+                    13,
+                    1.1237778750967242
+                  ],
+                  [
+                    14,
+                    1.21732443337064
+                  ],
+                  [
+                    15,
+                    1.312539916095984
+                  ],
+                  [
+                    16,
+                    1.4095775550549945
+                  ],
+                  [
+                    17,
+                    1.5082595112189652
+                  ],
+                  [
+                    18,
+                    1.5989816313535483
+                  ],
+                  [
+                    19,
+                    1.6784953659557282
+                  ],
+                  [
+                    20,
+                    1.748199260697242
+                  ],
+                  [
+                    21,
+                    1.8092565600244008
+                  ],
+                  [
+                    22,
+                    1.8626444163138347
+                  ],
+                  [
+                    23,
+                    1.909191171316833
+                  ],
+                  [
+                    24,
+                    1.9496049830196402
+                  ],
+                  [
+                    25,
+                    1.9844960776225733
+                  ],
+                  [
+                    26,
+                    2.014394241320812
+                  ],
+                  [
+                    27,
+                    2.0392313155856283
+                  ],
+                  [
+                    28,
+                    2.0552929508194064
+                  ],
+                  [
+                    29,
+                    2.0627486195905
+                  ],
+                  [
+                    30,
+                    2.0626261620237396
+                  ],
+                  [
+                    31,
+                    2.055793611256589
+                  ],
+                  [
+                    32,
+                    2.042988725093073
+                  ],
+                  [
+                    33,
+                    2.0248423497680648
+                  ],
+                  [
+                    34,
+                    2.001897045021517
+                  ],
+                  [
+                    35,
+                    1.9746220376264128
+                  ],
+                  [
+                    36,
+                    1.9434253075720536
+                  ],
+                  [
+                    37,
+                    1.9086634182272573
+                  ],
+                  [
+                    38,
+                    1.8706495589929886
+                  ],
+                  [
+                    39,
+                    1.8296601622703272
+                  ],
+                  [
+                    40,
+                    1.7859403762108064
+                  ],
+                  [
+                    41,
+                    1.7397086137090514
+                  ],
+                  [
+                    42,
+                    1.6911603514370699
+                  ],
+                  [
+                    43,
+                    1.6404713167794829
+                  ],
+                  [
+                    44,
+                    1.587800172661292
+                  ],
+                  [
+                    45,
+                    1.5332907885137226
+                  ],
+                  [
+                    46,
+                    1.4770741685521114
+                  ],
+                  [
+                    47,
+                    1.419270095060523
+                  ],
+                  [
+                    48,
+                    1.3599885336766735
+                  ],
+                  [
+                    49,
+                    1.2993308391305363
+                  ],
+                  [
+                    50,
+                    1.237390793040342
+                  ],
+                  [
+                    51,
+                    1.1742554998495123
+                  ],
+                  [
+                    52,
+                    1.110006162519153
+                  ],
+                  [
+                    53,
+                    1.044718755956707
+                  ],
+                  [
+                    54,
+                    0.9784646131941406
+                  ],
+                  [
+                    55,
+                    0.9113109368961441
+                  ],
+                  [
+                    56,
+                    0.8433212467766407
+                  ],
+                  [
+                    57,
+                    0.7745557718477447
+                  ],
+                  [
+                    58,
+                    0.70507179505392
+                  ],
+                  [
+                    59,
+                    0.6349239567032723
+                  ],
+                  [
+                    60,
+                    0.5641645221555969
+                  ]
+                ],
+                "criteria": [
+                  {
+                    "name": "Area 0–30°",
+                    "value": 0.6445190985522977,
+                    "limit": 0.055,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 0–40°",
+                    "value": 0.9861991603529332,
+                    "limit": 0.09,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 30–40°",
+                    "value": 0.34168006180063554,
+                    "limit": 0.03,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "GZ at ≥ 30°",
+                    "value": 2.0626261620237396,
+                    "limit": 0.2,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.2"
+                  },
+                  {
+                    "name": "Angle of max GZ",
+                    "value": 29,
+                    "limit": 25.0,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.3"
+                  },
+                  {
+                    "name": "Initial GM (fluid)",
+                    "value": 4.777777298430673,
+                    "limit": 0.15,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.4"
+                  }
+                ]
+              },
+              {
+                "name": "Light",
+                "cargo_t": 0.0,
+                "fill": 0.0,
+                "displacement_t": 1659.0920363152468,
+                "draught_m": 1.4653701080332509,
+                "kg_m": 3.996867059888825,
+                "gm_solid_m": 9.192284270645533,
+                "free_surface_m": 0.0,
+                "gm_fluid_m": 9.192284270645533,
+                "max_gz_m": 2.75067287573315,
+                "max_gz_deg": 28,
+                "deck_edge_deg": 30.071014652132494,
+                "gz": [
+                  [
+                    0,
+                    0.0
+                  ],
+                  [
+                    1,
+                    0.16046059910322305
+                  ],
+                  [
+                    2,
+                    0.32107115913338147
+                  ],
+                  [
+                    3,
+                    0.48198226253046705
+                  ],
+                  [
+                    4,
+                    0.6433457390344344
+                  ],
+                  [
+                    5,
+                    0.8053153000675065
+                  ],
+                  [
+                    6,
+                    0.9680471861295119
+                  ],
+                  [
+                    7,
+                    1.1317008317701003
+                  ],
+                  [
+                    8,
+                    1.2964395529002526
+                  ],
+                  [
+                    9,
+                    1.4624312614598711
+                  ],
+                  [
+                    10,
+                    1.6298492127726425
+                  ],
+                  [
+                    11,
+                    1.7988727912990408
+                  ],
+                  [
+                    12,
+                    1.9600956870255941
+                  ],
+                  [
+                    13,
+                    2.096676808470852
+                  ],
+                  [
+                    14,
+                    2.212489095002963
+                  ],
+                  [
+                    15,
+                    2.3109762469440964
+                  ],
+                  [
+                    16,
+                    2.3948140526786577
+                  ],
+                  [
+                    17,
+                    2.4661177672088934
+                  ],
+                  [
+                    18,
+                    2.5265850707107598
+                  ],
+                  [
+                    19,
+                    2.5775969844296336
+                  ],
+                  [
+                    20,
+                    2.6202906091708944
+                  ],
+                  [
+                    21,
+                    2.6556125318627557
+                  ],
+                  [
+                    22,
+                    2.684358690570215
+                  ],
+                  [
+                    23,
+                    2.707204576362053
+                  ],
+                  [
+                    24,
+                    2.724728423721826
+                  ],
+                  [
+                    25,
+                    2.7374292363810975
+                  ],
+                  [
+                    26,
+                    2.7457409566940916
+                  ],
+                  [
+                    27,
+                    2.7500437193665475
+                  ],
+                  [
+                    28,
+                    2.75067287573315
+                  ],
+                  [
+                    29,
+                    2.7479262955680737
+                  ],
+                  [
+                    30,
+                    2.742070325505674
+                  ],
+                  [
+                    31,
+                    2.733344690676767
+                  ],
+                  [
+                    32,
+                    2.721966558518086
+                  ],
+                  [
+                    33,
+                    2.708133933682408
+                  ],
+                  [
+                    34,
+                    2.692028515604102
+                  ],
+                  [
+                    35,
+                    2.6738181220999473
+                  ],
+                  [
+                    36,
+                    2.6536587609675517
+                  ],
+                  [
+                    37,
+                    2.6316964151416933
+                  ],
+                  [
+                    38,
+                    2.6073574471202625
+                  ],
+                  [
+                    39,
+                    2.578715919568095
+                  ],
+                  [
+                    40,
+                    2.545977950395709
+                  ],
+                  [
+                    41,
+                    2.5094660018942996
+                  ],
+                  [
+                    42,
+                    2.4694675737375893
+                  ],
+                  [
+                    43,
+                    2.426240061847026
+                  ],
+                  [
+                    44,
+                    2.380014852233848
+                  ],
+                  [
+                    45,
+                    2.3310007842708687
+                  ],
+                  [
+                    46,
+                    2.279387091835896
+                  ],
+                  [
+                    47,
+                    2.225345910231375
+                  ],
+                  [
+                    48,
+                    2.1690344204801604
+                  ],
+                  [
+                    49,
+                    2.1105966895853063
+                  ],
+                  [
+                    50,
+                    2.05016525490528
+                  ],
+                  [
+                    51,
+                    1.98786249238545
+                  ],
+                  [
+                    52,
+                    1.9238018015775302
+                  ],
+                  [
+                    53,
+                    1.8580886348419106
+                  ],
+                  [
+                    54,
+                    1.79082139360675
+                  ],
+                  [
+                    55,
+                    1.7220922108508927
+                  ],
+                  [
+                    56,
+                    1.6519876359271102
+                  ],
+                  [
+                    57,
+                    1.5805892353217814
+                  ],
+                  [
+                    58,
+                    1.507974120857737
+                  ],
+                  [
+                    59,
+                    1.4342154151086945
+                  ],
+                  [
+                    60,
+                    1.3593826623428273
+                  ]
+                ],
+                "criteria": [
+                  {
+                    "name": "Area 0–30°",
+                    "value": 1.0077515512930877,
+                    "limit": 0.055,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 0–40°",
+                    "value": 1.472790071193944,
+                    "limit": 0.09,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 30–40°",
+                    "value": 0.46503851990085626,
+                    "limit": 0.03,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "GZ at ≥ 30°",
+                    "value": 2.742070325505674,
+                    "limit": 0.2,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.2"
+                  },
+                  {
+                    "name": "Angle of max GZ",
+                    "value": 28,
+                    "limit": 25.0,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.3"
+                  },
+                  {
+                    "name": "Initial GM (fluid)",
+                    "value": 9.192284270645533,
+                    "limit": 0.15,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.4"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/gas_tender_60x7",
+      "output": {
+        "ok": {
+          "vessel": "Gas barge, IMO Type C tanks",
+          "cargo": "LPG (Propane)",
+          "phase": "liquid_gas",
+          "self_propelled": false,
+          "dims": {
+            "loa_m": 60.0,
+            "beam_m": 7.0,
+            "depth_m": 6.0,
+            "cb": 0.85
+          },
+          "geometry": {
+            "bow_void_length_m": 10.100000000000001,
+            "stern_void_length_m": 5.0,
+            "cargo_zone_length_m": 44.9,
+            "bow_rake_length_m": 9.600000000000001,
+            "tank_outer_diameter_m": 6.1,
+            "n_tanks_wide": 1,
+            "n_tanks_total": 2,
+            "side_clearance_m": 0.45000000000000007,
+            "bottom_clearance_m": 0.45000000000000007,
+            "insulation_thickness_mm": 350.0
+          },
+          "arrangement": {
+            "ruleset": "IGC_2G_EXACT",
+            "fill_ratio": 0.98,
+            "n_wide": 1,
+            "n_long": 2,
+            "tank_od_m": 6.1,
+            "per_tank_m3": 425.2477814607054,
+            "side_clearance_m": 0.45000000000000007,
+            "depth_m": 6.0,
+            "depth_optimised": false,
+            "candidates_tried": 15,
+            "feasible": false
+          },
+          "results": {
+            "cargo_t": 484.2551636161929,
+            "cargo_volume_bound_t": 484.2551636161929,
+            "cargo_weight_bound_t": 1554.3096172493733,
+            "governs": "tank volume",
+            "cargo_volume_m3": 833.4856516629826,
+            "lightship_t": 480.59038275062665,
+            "displacement_t": 964.8455463668195,
+            "deadweight_t": 484.2551636161929,
+            "draught_m": 2.70263671875,
+            "draught_max_m": 5.7,
+            "freeboard_m": 3.29736328125,
+            "light_draught_m": 1.3462028503417969,
+            "air_draft_loaded_m": 5.89736328125,
+            "air_draft_light_m": 7.253797149658203,
+            "h_over_T": null
+          },
+          "checks": [
+            {
+              "name": "Cargo > 0",
+              "ok": true,
+              "message": "OK"
+            },
+            {
+              "name": "Feasible arrangement",
+              "ok": false,
+              "message": "No tank arrangement passes its checks on this hull; the best failing one is shown. See the failed checks."
+            },
+            {
+              "name": "feasible geometry",
+              "ok": true,
+              "message": "cargo volume must be positive (tank/hold fits)",
+              "severity": "error"
+            },
+            {
+              "name": "cargo zone positive",
+              "ok": true,
+              "message": "cargo zone 44.90 m = LOA 60.0 - bow void 10.10 m - stern void 5.00 m",
+              "severity": "error"
+            },
+            {
+              "name": "cofferdam min width",
+              "ok": true,
+              "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening setback",
+              "ok": true,
+              "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd end bulkhead space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side clearance type g floor",
+              "ok": false,
+              "message": "side clearance 0.45 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            },
+            {
+              "name": "double bottom type g floor",
+              "ok": false,
+              "message": "double bottom 0.45 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            },
+            {
+              "name": "Stability — laden",
+              "ok": false,
+              "message": "GM -0.27 m (fluid), max GZ 0.32 m at 53° — fails: Area 0–30° -0.020 < 0.055, Area 0–40° -0.009 < 0.09, Area 30–40° 0.011 < 0.03, Initial GM (fluid) -0.269 < 0.15"
+            },
+            {
+              "name": "Stability — half laden",
+              "ok": false,
+              "message": "GM -0.33 m (fluid), max GZ 0.13 m at 54° — fails: Area 0–30° -0.024 < 0.055, Area 0–40° -0.015 < 0.09, Area 30–40° 0.008 < 0.03, GZ at ≥ 30° 0.126 < 0.2, Initial GM (fluid) -0.334 < 0.15"
+            },
+            {
+              "name": "Stability — light",
+              "ok": true,
+              "message": "GM 0.33 m (fluid), max GZ 0.25 m at 27°"
+            }
+          ],
+          "warnings": [
+            "PUSHED barge: crew, battery and propulsion are on the tug and are NOT in this hull's lightship, capacity or air draft. The tug is a separate vessel and must be costed and air-draft-gated separately.",
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ],
+          "curves": [
+            {
+              "name": "Deep water",
+              "limiting_speed_kn": null,
+              "blockage": 0.00027966414741847825,
+              "points": [
+                {
+                  "kn": 1.0,
+                  "kw": 0.32097044207346015,
+                  "fuel_lph": 0.07407010201695234,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 1.5,
+                  "kw": 1.0163211036320616,
+                  "fuel_lph": 0.23453563929970656,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 2.0,
+                  "kw": 2.3052111795176335,
+                  "fuel_lph": 0.5319718106579154,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 2.5,
+                  "kw": 4.35393950960972,
+                  "fuel_lph": 1.004755271448397,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 3.0,
+                  "kw": 7.323346615208185,
+                  "fuel_lph": 1.6900030650480427,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 3.5,
+                  "kw": 11.370134339368352,
+                  "fuel_lph": 2.623877155238851,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 4.0,
+                  "kw": 16.647691588061377,
+                  "fuel_lph": 3.841774981860318,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 4.5,
+                  "kw": 23.30665777277356,
+                  "fuel_lph": 5.378459486024668,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 5.0,
+                  "kw": 31.528709710641163,
+                  "fuel_lph": 7.275856087071038,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 5.5,
+                  "kw": 41.561285240185505,
+                  "fuel_lph": 9.591065824658195,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 6.0,
+                  "kw": 53.586348903203636,
+                  "fuel_lph": 12.366080516123915,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 6.5,
+                  "kw": 67.80817863603934,
+                  "fuel_lph": 15.648041223701387,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 7.0,
+                  "kw": 84.4429482287144,
+                  "fuel_lph": 19.486834206626398,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 7.5,
+                  "kw": 103.71776476604738,
+                  "fuel_lph": 23.93486879216478,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 8.0,
+                  "kw": 125.87084772744994,
+                  "fuel_lph": 29.0471187063346,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 8.5,
+                  "kw": 151.15190230481986,
+                  "fuel_lph": 34.881208224189194,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 9.0,
+                  "kw": 179.82253077856365,
+                  "fuel_lph": 41.49750710274546,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 9.5,
+                  "kw": 206.63382607153585,
+                  "fuel_lph": 47.68472909343134,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 10.0,
+                  "kw": 239.5786045446917,
+                  "fuel_lph": 55.287370279544234,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                }
+              ]
+            }
+          ],
+          "stability": {
+            "criteria_set": "IMO IS Code 2008, Part A 2.2",
+            "ok": false,
+            "governing": "Half laden",
+            "limitations": [
+              "Concept-stage: prismatic box section, first-order weight heights, no downflooding openings.",
+              "No wind heel and no damage stability (ADN 9.3.1.15 / IGC 2.7 need both before approval)."
+            ],
+            "conditions": [
+              {
+                "name": "Laden",
+                "cargo_t": 484.2551636161929,
+                "fill": 0.98,
+                "displacement_t": 964.8455463668196,
+                "draught_m": 2.7026485892628,
+                "kg_m": 2.895171265495622,
+                "gm_solid_m": -0.03298338706136361,
+                "free_surface_m": 0.23590481831068852,
+                "gm_fluid_m": -0.26888820537205216,
+                "max_gz_m": 0.31771425419986027,
+                "max_gz_deg": 53,
+                "deck_edge_deg": 43.29235387924669,
+                "gz": [
+                  [
+                    0,
+                    0.0
+                  ],
+                  [
+                    1,
+                    -0.0046887293232831554
+                  ],
+                  [
+                    2,
+                    -0.009351912958661368
+                  ],
+                  [
+                    3,
+                    -0.01396393207489769
+                  ],
+                  [
+                    4,
+                    -0.018499021035021674
+                  ],
+                  [
+                    5,
+                    -0.022931192690019503
+                  ],
+                  [
+                    6,
+                    -0.02723416209210462
+                  ],
+                  [
+                    7,
+                    -0.031381268073333815
+                  ],
+                  [
+                    8,
+                    -0.03534539211124786
+                  ],
+                  [
+                    9,
+                    -0.03909887387236361
+                  ],
+                  [
+                    10,
+                    -0.042613422786211164
+                  ],
+                  [
+                    11,
+                    -0.045860024956559504
+                  ],
+                  [
+                    12,
+                    -0.04880884466169152
+                  ],
+                  [
+                    13,
+                    -0.05142911963115328
+                  ],
+                  [
+                    14,
+                    -0.05368904921113062
+                  ],
+                  [
+                    15,
+                    -0.05555567444319171
+                  ],
+                  [
+                    16,
+                    -0.05699474897992132
+                  ],
+                  [
+                    17,
+                    -0.05797059964411046
+                  ],
+                  [
+                    18,
+                    -0.05844597530339242
+                  ],
+                  [
+                    19,
+                    -0.05838188257691233
+                  ],
+                  [
+                    20,
+                    -0.05773740671167081
+                  ],
+                  [
+                    21,
+                    -0.056469515759920985
+                  ],
+                  [
+                    22,
+                    -0.05453284595112
+                  ],
+                  [
+                    23,
+                    -0.05187946587726816
+                  ],
+                  [
+                    24,
+                    -0.04845861679296637
+                  ],
+                  [
+                    25,
+                    -0.044216425964006795
+                  ],
+                  [
+                    26,
+                    -0.039095589572061384
+                  ],
+                  [
+                    27,
+                    -0.03303502118800748
+                  ],
+                  [
+                    28,
+                    -0.025969461250163917
+                  ],
+                  [
+                    29,
+                    -0.017829042311681448
+                  ],
+                  [
+                    30,
+                    -0.008538804035787578
+                  ],
+                  [
+                    31,
+                    0.001981849002707717
+                  ],
+                  [
+                    32,
+                    0.013819754732040668
+                  ],
+                  [
+                    33,
+                    0.027068675509108686
+                  ],
+                  [
+                    34,
+                    0.04183006535305531
+                  ],
+                  [
+                    35,
+                    0.05821393506180378
+                  ],
+                  [
+                    36,
+                    0.07633982989716012
+                  ],
+                  [
+                    37,
+                    0.09633793703695587
+                  ],
+                  [
+                    38,
+                    0.11819784566751701
+                  ],
+                  [
+                    39,
+                    0.13998286805953356
+                  ],
+                  [
+                    40,
+                    0.1611426246581695
+                  ],
+                  [
+                    41,
+                    0.18177487731079647
+                  ],
+                  [
+                    42,
+                    0.20197359118445443
+                  ],
+                  [
+                    43,
+                    0.22182978138181042
+                  ],
+                  [
+                    44,
+                    0.24119396397376283
+                  ],
+                  [
+                    45,
+                    0.258240681306409
+                  ],
+                  [
+                    46,
+                    0.27274759383263864
+                  ],
+                  [
+                    47,
+                    0.284914008035159
+                  ],
+                  [
+                    48,
+                    0.2949195025563763
+                  ],
+                  [
+                    49,
+                    0.3029263327630933
+                  ],
+                  [
+                    50,
+                    0.3090815021000968
+                  ],
+                  [
+                    51,
+                    0.31351855199200773
+                  ],
+                  [
+                    52,
+                    0.31635911318392207
+                  ],
+                  [
+                    53,
+                    0.31771425419986027
+                  ],
+                  [
+                    54,
+                    0.31768565670935545
+                  ],
+                  [
+                    55,
+                    0.3163666427645907
+                  ],
+                  [
+                    56,
+                    0.3138430748969683
+                  ],
+                  [
+                    57,
+                    0.3101941467793933
+                  ],
+                  [
+                    58,
+                    0.3054930794390508
+                  ],
+                  [
+                    59,
+                    0.29980773574137554
+                  ],
+                  [
+                    60,
+                    0.2932011639761305
+                  ]
+                ],
+                "criteria": [
+                  {
+                    "name": "Area 0–30°",
+                    "value": -0.02034594222696275,
+                    "limit": 0.055,
+                    "ok": false,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 0–40°",
+                    "value": -0.00899999884063283,
+                    "limit": 0.09,
+                    "ok": false,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 30–40°",
+                    "value": 0.011345943386329918,
+                    "limit": 0.03,
+                    "ok": false,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "GZ at ≥ 30°",
+                    "value": 0.31771425419986027,
+                    "limit": 0.2,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.2"
+                  },
+                  {
+                    "name": "Angle of max GZ",
+                    "value": 53,
+                    "limit": 25.0,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.3"
+                  },
+                  {
+                    "name": "Initial GM (fluid)",
+                    "value": -0.26888820537205216,
+                    "limit": 0.15,
+                    "ok": false,
+                    "source": "IMO IS Code 2008, Part A 2.2.4"
+                  }
+                ]
+              },
+              {
+                "name": "Half laden",
+                "cargo_t": 242.12758180809644,
+                "fill": 0.49,
+                "displacement_t": 722.7179645587231,
+                "draught_m": 2.0244200687919416,
+                "kg_m": 3.04852356690652,
+                "gm_solid_m": -0.0192749759969133,
+                "free_surface_m": 0.31482193792063234,
+                "gm_fluid_m": -0.33409691391754565,
+                "max_gz_m": 0.12551171648400838,
+                "max_gz_deg": 54,
+                "deck_edge_deg": 48.6401257930656,
+                "gz": [
+                  [
+                    0,
+                    0.0
+                  ],
+                  [
+                    1,
+                    -0.005825432444002292
+                  ],
+                  [
+                    2,
+                    -0.011616893032291395
+                  ],
+                  [
+                    3,
+                    -0.017340312220795503
+                  ],
+                  [
+                    4,
+                    -0.022961424395772367
+                  ],
+                  [
+                    5,
+                    -0.02844566809887547
+                  ],
+                  [
+                    6,
+                    -0.0337580841423604
+                  ],
+                  [
+                    7,
+                    -0.038863210874527265
+                  ],
+                  [
+                    8,
+                    -0.04372497582333737
+                  ],
+                  [
+                    9,
+                    -0.04830658290495623
+                  ],
+                  [
+                    10,
+                    -0.05257039433306817
+                  ],
+                  [
+                    11,
+                    -0.056477806303320985
+                  ],
+                  [
+                    12,
+                    -0.05998911745413987
+                  ],
+                  [
+                    13,
+                    -0.06306338901910337
+                  ],
+                  [
+                    14,
+                    -0.06565829548560786
+                  ],
+                  [
+                    15,
+                    -0.06772996445782896
+                  ],
+                  [
+                    16,
+                    -0.06923280428687477
+                  ],
+                  [
+                    17,
+                    -0.07011931787501083
+                  ],
+                  [
+                    18,
+                    -0.07033990088091387
+                  ],
+                  [
+                    19,
+                    -0.06984262234557277
+                  ],
+                  [
+                    20,
+                    -0.06857298551955625
+                  ],
+                  [
+                    21,
+                    -0.06647366639701636
+                  ],
+                  [
+                    22,
+                    -0.06348422714420228
+                  ],
+                  [
+                    23,
+                    -0.0595408012435851
+                  ],
+                  [
+                    24,
+                    -0.05457574675082996
+                  ],
+                  [
+                    25,
+                    -0.04851726357116895
+                  ],
+                  [
+                    26,
+                    -0.04128897009274246
+                  ],
+                  [
+                    27,
+                    -0.03280943385352533
+                  ],
+                  [
+                    28,
+                    -0.02299165014919477
+                  ],
+                  [
+                    29,
+                    -0.011742461592081338
+                  ],
+                  [
+                    30,
+                    0.001038089417363719
+                  ],
+                  [
+                    31,
+                    0.013972082722552986
+                  ],
+                  [
+                    32,
+                    0.02543409428448648
+                  ],
+                  [
+                    33,
+                    0.0355745164213499
+                  ],
+                  [
+                    34,
+                    0.04453372944704087
+                  ],
+                  [
+                    35,
+                    0.05244069277044572
+                  ],
+                  [
+                    36,
+                    0.05941462149343846
+                  ],
+                  [
+                    37,
+                    0.06556643152613831
+                  ],
+                  [
+                    38,
+                    0.07099999599561721
+                  ],
+                  [
+                    39,
+                    0.07581324780825424
+                  ],
+                  [
+                    40,
+                    0.08009915707146573
+                  ],
+                  [
+                    41,
+                    0.08394660728857514
+                  ],
+                  [
+                    42,
+                    0.08744119051502564
+                  ],
+                  [
+                    43,
+                    0.09066593878514545
+                  ],
+                  [
+                    44,
+                    0.09370200692276479
+                  ],
+                  [
+                    45,
+                    0.09662932021634416
+                  ],
+                  [
+                    46,
+                    0.099527199282918
+                  ],
+                  [
+                    47,
+                    0.10247497370546649
+                  ],
+                  [
+                    48,
+                    0.10555259566757313
+                  ],
+                  [
+                    49,
+                    0.108841264809167
+                  ],
+                  [
+                    50,
+                    0.11242407588799946
+                  ],
+                  [
+                    51,
+                    0.11638670157116071
+                  ],
+                  [
+                    52,
+                    0.12076264270021367
+                  ],
+                  [
+                    53,
+                    0.12401512846731272
+                  ],
+                  [
+                    54,
+                    0.12551171648400838
+                  ],
+                  [
+                    55,
+                    0.1253765263886445
+                  ],
+                  [
+                    56,
+                    0.12372369147641377
+                  ],
+                  [
+                    57,
+                    0.12065841440301855
+                  ],
+                  [
+                    58,
+                    0.11627789680441075
+                  ],
+                  [
+                    59,
+                    0.1106721598149849
+                  ],
+                  [
+                    60,
+                    0.10392476994369781
+                  ]
+                ],
+                "criteria": [
+                  {
+                    "name": "Area 0–30°",
+                    "value": -0.02382975447034161,
+                    "limit": 0.055,
+                    "ok": false,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 0–40°",
+                    "value": -0.01537681012034538,
+                    "limit": 0.09,
+                    "ok": false,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 30–40°",
+                    "value": 0.008452944349996229,
+                    "limit": 0.03,
+                    "ok": false,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "GZ at ≥ 30°",
+                    "value": 0.12551171648400838,
+                    "limit": 0.2,
+                    "ok": false,
+                    "source": "IMO IS Code 2008, Part A 2.2.2"
+                  },
+                  {
+                    "name": "Angle of max GZ",
+                    "value": 54,
+                    "limit": 25.0,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.3"
+                  },
+                  {
+                    "name": "Initial GM (fluid)",
+                    "value": -0.33409691391754565,
+                    "limit": 0.15,
+                    "ok": false,
+                    "source": "IMO IS Code 2008, Part A 2.2.4"
+                  }
+                ]
+              },
+              {
+                "name": "Light",
+                "cargo_t": 0.0,
+                "fill": 0.0,
+                "displacement_t": 480.5903827506267,
+                "draught_m": 1.3461915483210831,
+                "kg_m": 3.37931170435679,
+                "gm_solid_m": 0.3270324499662216,
+                "free_surface_m": 0.0,
+                "gm_fluid_m": 0.3270324499662216,
+                "max_gz_m": 0.24697903596890258,
+                "max_gz_deg": 27,
+                "deck_edge_deg": 53.054191472791246,
+                "gz": [
+                  [
+                    0,
+                    0.0
+                  ],
+                  [
+                    1,
+                    0.005715567712486831
+                  ],
+                  [
+                    2,
+                    0.01147781322835334
+                  ],
+                  [
+                    3,
+                    0.017333562599161884
+                  ],
+                  [
+                    4,
+                    0.023329939414500817
+                  ],
+                  [
+                    5,
+                    0.029514516186758544
+                  ],
+                  [
+                    6,
+                    0.03593546890750321
+                  ],
+                  [
+                    7,
+                    0.04264173588774012
+                  ],
+                  [
+                    8,
+                    0.04968318204267208
+                  ],
+                  [
+                    9,
+                    0.05711076984353025
+                  ],
+                  [
+                    10,
+                    0.06497673823559735
+                  ],
+                  [
+                    11,
+                    0.07333479091400352
+                  ],
+                  [
+                    12,
+                    0.0822402954588457
+                  ],
+                  [
+                    13,
+                    0.09175049496057297
+                  ],
+                  [
+                    14,
+                    0.10192473391765611
+                  ],
+                  [
+                    15,
+                    0.11282470036410974
+                  ],
+                  [
+                    16,
+                    0.12451468638758789
+                  ],
+                  [
+                    17,
+                    0.13706186943341447
+                  ],
+                  [
+                    18,
+                    0.15053661706048205
+                  ],
+                  [
+                    19,
+                    0.16501281812674629
+                  ],
+                  [
+                    20,
+                    0.18056824374129476
+                  ],
+                  [
+                    21,
+                    0.1972849417340803
+                  ],
+                  [
+                    22,
+                    0.21295066770131754
+                  ],
+                  [
+                    23,
+                    0.2252049175665447
+                  ],
+                  [
+                    24,
+                    0.2344260148200772
+                  ],
+                  [
+                    25,
+                    0.24094359790030806
+                  ],
+                  [
+                    26,
+                    0.24504427378915605
+                  ],
+                  [
+                    27,
+                    0.24697903596890258
+                  ],
+                  [
+                    28,
+                    0.24696921283402906
+                  ],
+                  [
+                    29,
+                    0.24521128074750753
+                  ],
+                  [
+                    30,
+                    0.24188079161805653
+                  ],
+                  [
+                    31,
+                    0.23713560392027278
+                  ],
+                  [
+                    32,
+                    0.23111856148809817
+                  ],
+                  [
+                    33,
+                    0.22395973143367276
+                  ],
+                  [
+                    34,
+                    0.21577828790856524
+                  ],
+                  [
+                    35,
+                    0.2066841098523413
+                  ],
+                  [
+                    36,
+                    0.19677914675555974
+                  ],
+                  [
+                    37,
+                    0.1861585956525853
+                  ],
+                  [
+                    38,
+                    0.17491192422696855
+                  ],
+                  [
+                    39,
+                    0.16312376845695065
+                  ],
+                  [
+                    40,
+                    0.1508747282099434
+                  ],
+                  [
+                    41,
+                    0.13824208028715423
+                  ],
+                  [
+                    42,
+                    0.12530042538150843
+                  ],
+                  [
+                    43,
+                    0.11212228306426875
+                  ],
+                  [
+                    44,
+                    0.09877864712512752
+                  ],
+                  [
+                    45,
+                    0.0853395122591607
+                  ],
+                  [
+                    46,
+                    0.07187438215105724
+                  ],
+                  [
+                    47,
+                    0.05845276840390934
+                  ],
+                  [
+                    48,
+                    0.045144689465586474
+                  ],
+                  [
+                    49,
+                    0.03202117870573762
+                  ],
+                  [
+                    50,
+                    0.019154811090678514
+                  ],
+                  [
+                    51,
+                    0.006620258506617738
+                  ],
+                  [
+                    52,
+                    -0.00550511527541353
+                  ],
+                  [
+                    53,
+                    -0.017140607668131302
+                  ],
+                  [
+                    54,
+                    -0.028201464254661524
+                  ],
+                  [
+                    55,
+                    -0.03859808323013825
+                  ],
+                  [
+                    56,
+                    -0.048235117797051696
+                  ],
+                  [
+                    57,
+                    -0.057010453105490466
+                  ],
+                  [
+                    58,
+                    -0.0648140293106998
+                  ],
+                  [
+                    59,
+                    -0.0715264758651899
+                  ],
+                  [
+                    60,
+                    -0.0770175138299849
+                  ]
+                ],
+                "criteria": [
+                  {
+                    "name": "Area 0–30°",
+                    "value": 0.0658590024494279,
+                    "limit": 0.055,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 0–40°",
+                    "value": 0.10132457263414006,
+                    "limit": 0.09,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "Area 30–40°",
+                    "value": 0.035465570184712164,
+                    "limit": 0.03,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.1"
+                  },
+                  {
+                    "name": "GZ at ≥ 30°",
+                    "value": 0.24188079161805653,
+                    "limit": 0.2,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.2"
+                  },
+                  {
+                    "name": "Angle of max GZ",
+                    "value": 27,
+                    "limit": 25.0,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.3"
+                  },
+                  {
+                    "name": "Initial GM (fluid)",
+                    "value": 0.3270324499662216,
+                    "limit": 0.15,
+                    "ok": true,
+                    "source": "IMO IS Code 2008, Part A 2.2.4"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/box_bauxite_76.5x11.4x3.5",
+      "output": {
+        "ok": {
+          "vessel": "Box-hold dry bulk barge",
+          "cargo": "Bauxite",
+          "phase": "dry_bulk",
+          "self_propelled": false,
+          "arrangement": null,
+          "dims": {
+            "loa_m": 76.5,
+            "beam_m": 11.4,
+            "depth_m": 3.5,
+            "cb": 0.928
+          },
+          "geometry": {
+            "bow_void_length_m": 6.1000000000000005,
+            "stern_void_length_m": 3.5,
+            "cargo_zone_length_m": 66.9,
+            "bow_rake_length_m": 5.6000000000000005,
+            "tank_outer_diameter_m": null,
+            "n_tanks_wide": null,
+            "n_tanks_total": null,
+            "side_clearance_m": null,
+            "bottom_clearance_m": null,
+            "hold_height_m": 3.3,
+            "hold_top_width_m": 9.4,
+            "hold_bottom_width_m": 9.4,
+            "insulation_thickness_mm": null
+          },
+          "results": {
+            "cargo_t": 2256.166305,
+            "cargo_volume_bound_t": 2957.2141500000002,
+            "cargo_weight_bound_t": 2256.166305,
+            "governs": "draught — Hull (depth − min. freeboard)",
+            "cargo_volume_m3": 1971.4761,
+            "lightship_t": 333.62185500000004,
+            "displacement_t": 2589.78816,
+            "deadweight_t": 2256.166305,
+            "draught_m": 3.2,
+            "draught_max_m": 3.2,
+            "freeboard_m": 0.2999999999999998,
+            "light_draught_m": 0.41223907470703125,
+            "air_draft_loaded_m": 1.2999999999999998,
+            "air_draft_light_m": 4.087760925292969,
+            "h_over_T": null
+          },
+          "checks": [
+            {
+              "name": "Cargo > 0",
+              "ok": true,
+              "message": "OK"
+            },
+            {
+              "name": "feasible geometry",
+              "ok": true,
+              "message": "cargo volume must be positive (tank/hold fits)",
+              "severity": "error"
+            },
+            {
+              "name": "cargo zone positive",
+              "ok": true,
+              "message": "cargo zone 66.90 m = LOA 76.5 - bow void 6.10 m - stern void 3.50 m",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "PUSHED barge: crew, battery and propulsion are on the tug and are NOT in this hull's lightship, capacity or air draft. The tug is a separate vessel and must be costed and air-draft-gated separately."
+          ],
+          "curves": [
+            {
+              "name": "Deep water",
+              "limiting_speed_kn": null,
+              "blockage": 0.0005887554782608697,
+              "points": [
+                {
+                  "kn": 1.0,
+                  "kw": 0.5650423507665053,
+                  "fuel_lph": 0.1303943886384243,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 1.5,
+                  "kw": 1.7912929384103495,
+                  "fuel_lph": 0.41337529347931146,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 2.0,
+                  "kw": 4.066267474272252,
+                  "fuel_lph": 0.9383694171397505,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 2.5,
+                  "kw": 7.684728484755359,
+                  "fuel_lph": 1.7733988810973906,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 3.0,
+                  "kw": 12.931908113049376,
+                  "fuel_lph": 2.984286487626779,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 3.5,
+                  "kw": 20.08580740456898,
+                  "fuel_lph": 4.635186324131303,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 4.0,
+                  "kw": 29.41863601642937,
+                  "fuel_lph": 6.788916003791393,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 4.5,
+                  "kw": 41.19779512159492,
+                  "fuel_lph": 9.507183489598829,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 5.0,
+                  "kw": 55.686588988534226,
+                  "fuel_lph": 12.85075130504636,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 5.5,
+                  "kw": 73.17592995534748,
+                  "fuel_lph": 16.886753066618652,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 6.0,
+                  "kw": 94.13284505347205,
+                  "fuel_lph": 21.722964243108937,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 6.5,
+                  "kw": 118.87109985975927,
+                  "fuel_lph": 27.431792275329062,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 7.0,
+                  "kw": 147.73641369666095,
+                  "fuel_lph": 34.093018545383295,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 7.5,
+                  "kw": 181.0961513270139,
+                  "fuel_lph": 41.79141953700321,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 8.0,
+                  "kw": 219.33490961612853,
+                  "fuel_lph": 50.61574837295274,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 8.5,
+                  "kw": 262.8542365918253,
+                  "fuel_lph": 60.65866998272892,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 9.0,
+                  "kw": 312.0730050181326,
+                  "fuel_lph": 72.01684731187676,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 9.5,
+                  "kw": 367.42794419124726,
+                  "fuel_lph": 84.79106404413399,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                },
+                {
+                  "kn": 10.0,
+                  "kw": 429.3742080640702,
+                  "fuel_lph": 99.08635570709313,
+                  "squat_m": 0.0,
+                  "squat_limited": false
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

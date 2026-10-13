@@ -1,0 +1,123 @@
+{
+  "entry_point": "design_grid",
+  "cases": [
+    {
+      "id": "sweep/60x12",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_design_grid.py::test_base_point_regression_anchor (issue #8)",
+      "input": {
+        "fn": "sweep",
+        "args": {
+          "barge_lengths_m": [
+            60
+          ],
+          "beams_m": [
+            12.0
+          ]
+        }
+      }
+    },
+    {
+      "id": "n_tanks_for_length/60",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_design_grid.py::test_tank_count_rule_length_only (issue #8)",
+      "input": {
+        "fn": "n_tanks_for_length",
+        "args": {
+          "barge_length_m": 60
+        }
+      }
+    },
+    {
+      "id": "n_tanks_for_length/50",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_design_grid.py::test_tank_count_rule_length_only (issue #8)",
+      "input": {
+        "fn": "n_tanks_for_length",
+        "args": {
+          "barge_length_m": 50
+        }
+      }
+    },
+    {
+      "id": "n_tanks_for_length/70",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_design_grid.py::test_tank_count_rule_length_only (issue #8)",
+      "input": {
+        "fn": "n_tanks_for_length",
+        "args": {
+          "barge_length_m": 70
+        }
+      }
+    },
+    {
+      "id": "n_tanks_for_length/80",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_design_grid.py::test_tank_count_rule_length_only (issue #8)",
+      "input": {
+        "fn": "n_tanks_for_length",
+        "args": {
+          "barge_length_m": 80
+        }
+      }
+    },
+    {
+      "id": "sweep/70_beams_8_12_16",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_design_grid.py::test_tank_count_rule_length_only (issue #8)",
+      "input": {
+        "fn": "sweep",
+        "args": {
+          "barge_lengths_m": [
+            70
+          ],
+          "beams_m": [
+            8.0,
+            12.0,
+            16.0
+          ]
+        }
+      }
+    },
+    {
+      "id": "sweep/70_80_90_beams_12_14",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_design_grid.py::test_cargo_monotonic_in_length (issue #8)",
+      "input": {
+        "fn": "sweep",
+        "args": {
+          "barge_lengths_m": [
+            70,
+            80,
+            90
+          ],
+          "beams_m": [
+            12.0,
+            14.0
+          ]
+        }
+      }
+    },
+    {
+      "id": "sweep/45_60_90_beams_8_12_16",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_design_grid.py::test_short_hulls_are_now_infeasible_for_gas (issue #8)",
+      "input": {
+        "fn": "sweep",
+        "args": {
+          "barge_lengths_m": [
+            45,
+            60,
+            90
+          ],
+          "beams_m": [
+            8.0,
+            12.0,
+            16.0
+          ]
+        }
+      }
+    }
+  ],
+  "retired": []
+}

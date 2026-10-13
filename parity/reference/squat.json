@@ -1,0 +1,1037 @@
+{
+  "entry_point": "squat",
+  "generated_by": "cargo xtask regen (frozen Python); never edit by hand",
+  "results": [
+    {
+      "id": "compute/CN_II_4.8m_6kn",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.68531955807082,
+          "squat_barrass_m": 0.68531955807082,
+          "squat_icorels_m": 0.34486994034316343,
+          "blockage_ratio": 0.3108353221957041,
+          "froude_depth": 0.4498921343532364,
+          "static_ukc_m": 0.39999999999999947,
+          "dynamic_ukc_m": -0.28531955807082054,
+          "grounds": true,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": false,
+              "message": "dynamic UKC -0.29 m = static 0.40 m - squat 0.69 m (Barrass II) at 6.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": false,
+              "message": "dynamic UKC -0.29 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.45; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.311; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": true,
+              "message": "Barrass 0.69 m vs ICORELS 0.34 m, 50% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_0kn",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.0,
+          "squat_barrass_m": 0.0,
+          "squat_icorels_m": 0.0,
+          "blockage_ratio": 0.3108353221957041,
+          "froude_depth": 0.0,
+          "static_ukc_m": 0.39999999999999947,
+          "dynamic_ukc_m": 0.39999999999999947,
+          "grounds": false,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": true,
+              "message": "dynamic UKC 0.40 m = static 0.40 m - squat 0.00 m (Barrass II) at 0.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": true,
+              "message": "dynamic UKC 0.40 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.00; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.311; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_9.2kn",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 1.6673132682383582,
+          "squat_barrass_m": 1.6673132682383582,
+          "squat_icorels_m": 1.0002337393429859,
+          "blockage_ratio": 0.3108353221957041,
+          "froude_depth": 0.6898346060082958,
+          "static_ukc_m": 0.39999999999999947,
+          "dynamic_ukc_m": -1.2673132682383588,
+          "grounds": true,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": false,
+              "message": "dynamic UKC -1.27 m = static 0.40 m - squat 1.67 m (Barrass II) at 9.20 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": false,
+              "message": "dynamic UKC -1.27 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.69; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.311; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": true,
+              "message": "Barrass 1.67 m vs ICORELS 1.00 m, 40% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_1kn",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.016494476076626605,
+          "squat_barrass_m": 0.016494476076626605,
+          "squat_icorels_m": 0.008579637289167268,
+          "blockage_ratio": 0.3108353221957041,
+          "froude_depth": 0.07498202239220607,
+          "static_ukc_m": 0.39999999999999947,
+          "dynamic_ukc_m": 0.38350552392337284,
+          "grounds": false,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": true,
+              "message": "dynamic UKC 0.38 m = static 0.40 m - squat 0.02 m (Barrass II) at 1.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": true,
+              "message": "dynamic UKC 0.38 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.07; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.311; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": true,
+              "message": "Barrass 0.02 m vs ICORELS 0.01 m, 48% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_2kn",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.06973983513040968,
+          "squat_barrass_m": 0.06973983513040968,
+          "squat_icorels_m": 0.03461336545852681,
+          "blockage_ratio": 0.3108353221957041,
+          "froude_depth": 0.14996404478441214,
+          "static_ukc_m": 0.39999999999999947,
+          "dynamic_ukc_m": 0.33026016486958976,
+          "grounds": false,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": true,
+              "message": "dynamic UKC 0.33 m = static 0.40 m - squat 0.07 m (Barrass II) at 2.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": true,
+              "message": "dynamic UKC 0.33 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.15; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.311; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": false,
+              "message": "Barrass 0.07 m vs ICORELS 0.03 m, 50% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_4kn",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.29486505551447745,
+          "squat_barrass_m": 0.29486505551447745,
+          "squat_icorels_m": 0.1434939556056896,
+          "blockage_ratio": 0.3108353221957041,
+          "froude_depth": 0.2999280895688243,
+          "static_ukc_m": 0.39999999999999947,
+          "dynamic_ukc_m": 0.10513494448552202,
+          "grounds": false,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": true,
+              "message": "dynamic UKC 0.11 m = static 0.40 m - squat 0.29 m (Barrass II) at 4.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": false,
+              "message": "dynamic UKC 0.11 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.30; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.311; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": false,
+              "message": "Barrass 0.29 m vs ICORELS 0.14 m, 51% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_8kn",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 1.2467107328397424,
+          "squat_barrass_m": 1.2467107328397424,
+          "squat_icorels_m": 0.6843465158083742,
+          "blockage_ratio": 0.3108353221957041,
+          "froude_depth": 0.5998561791376485,
+          "static_ukc_m": 0.39999999999999947,
+          "dynamic_ukc_m": -0.846710732839743,
+          "grounds": true,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": false,
+              "message": "dynamic UKC -0.85 m = static 0.40 m - squat 1.25 m (Barrass II) at 8.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": false,
+              "message": "dynamic UKC -0.85 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.60; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.311; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": true,
+              "message": "Barrass 1.25 m vs ICORELS 0.68 m, 45% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_3kn",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.16208795209087629,
+          "squat_barrass_m": 0.16208795209087629,
+          "squat_icorels_m": 0.07902466779762371,
+          "blockage_ratio": 0.3108353221957041,
+          "froude_depth": 0.2249460671766182,
+          "static_ukc_m": 0.39999999999999947,
+          "dynamic_ukc_m": 0.23791204790912318,
+          "grounds": false,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": true,
+              "message": "dynamic UKC 0.24 m = static 0.40 m - squat 0.16 m (Barrass II) at 3.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": true,
+              "message": "dynamic UKC 0.24 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.22; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.311; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": false,
+              "message": "Barrass 0.16 m vs ICORELS 0.08 m, 51% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_5kn",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.4690251536303928,
+          "squat_barrass_m": 0.4690251536303928,
+          "squat_icorels_m": 0.23071521414568097,
+          "blockage_ratio": 0.3108353221957041,
+          "froude_depth": 0.37491011196103036,
+          "static_ukc_m": 0.39999999999999947,
+          "dynamic_ukc_m": -0.06902515363039335,
+          "grounds": true,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": false,
+              "message": "dynamic UKC -0.07 m = static 0.40 m - squat 0.47 m (Barrass II) at 5.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": false,
+              "message": "dynamic UKC -0.07 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.37; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.311; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": false,
+              "message": "Barrass 0.47 m vs ICORELS 0.23 m, 51% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_7kn",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.9443705790391119,
+          "squat_barrass_m": 0.9443705790391119,
+          "squat_icorels_m": 0.49251489201852333,
+          "blockage_ratio": 0.3108353221957041,
+          "froude_depth": 0.5248741567454425,
+          "static_ukc_m": 0.39999999999999947,
+          "dynamic_ukc_m": -0.5443705790391125,
+          "grounds": true,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": false,
+              "message": "dynamic UKC -0.54 m = static 0.40 m - squat 0.94 m (Barrass II) at 7.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": false,
+              "message": "dynamic UKC -0.54 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.52; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.311; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": true,
+              "message": "Barrass 0.94 m vs ICORELS 0.49 m, 48% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_5kn_area_400",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.2777708088896782,
+          "squat_barrass_m": 0.2777708088896782,
+          "squat_icorels_m": 0.23071521414568097,
+          "blockage_ratio": 0.1628,
+          "froude_depth": 0.37491011196103036,
+          "static_ukc_m": 0.39999999999999947,
+          "dynamic_ukc_m": 0.12222919111032127,
+          "grounds": false,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": true,
+              "message": "dynamic UKC 0.12 m = static 0.40 m - squat 0.28 m (Barrass II) at 5.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": false,
+              "message": "dynamic UKC 0.12 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.37; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.163; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": true,
+              "message": "Barrass 0.28 m vs ICORELS 0.23 m, 17% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_5kn_area_300",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.3506606069411456,
+          "squat_barrass_m": 0.3506606069411456,
+          "squat_icorels_m": 0.23071521414568097,
+          "blockage_ratio": 0.21706666666666669,
+          "froude_depth": 0.37491011196103036,
+          "static_ukc_m": 0.39999999999999947,
+          "dynamic_ukc_m": 0.049339393058853875,
+          "grounds": false,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": true,
+              "message": "dynamic UKC 0.05 m = static 0.40 m - squat 0.35 m (Barrass II) at 5.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": false,
+              "message": "dynamic UKC 0.05 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.37; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.217; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": true,
+              "message": "Barrass 0.35 m vs ICORELS 0.23 m, 34% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_5kn_area_250",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.40646559363333373,
+          "squat_barrass_m": 0.40646559363333373,
+          "squat_icorels_m": 0.23071521414568097,
+          "blockage_ratio": 0.26048000000000004,
+          "froude_depth": 0.37491011196103036,
+          "static_ukc_m": 0.39999999999999947,
+          "dynamic_ukc_m": -0.006465593633334266,
+          "grounds": true,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": false,
+              "message": "dynamic UKC -0.01 m = static 0.40 m - squat 0.41 m (Barrass II) at 5.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": false,
+              "message": "dynamic UKC -0.01 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.37; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.260; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": true,
+              "message": "Barrass 0.41 m vs ICORELS 0.23 m, 43% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_depth_5.28_5kn",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.4690251536303928,
+          "squat_barrass_m": 0.4690251536303928,
+          "squat_icorels_m": 0.20819908962638844,
+          "blockage_ratio": 0.3108353221957041,
+          "froude_depth": 0.35746276608471894,
+          "static_ukc_m": 0.8799999999999999,
+          "dynamic_ukc_m": 0.41097484636960707,
+          "grounds": false,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": true,
+              "message": "dynamic UKC 0.41 m = static 0.88 m - squat 0.47 m (Barrass II) at 5.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": true,
+              "message": "dynamic UKC 0.41 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.36; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.311; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": false,
+              "message": "Barrass 0.47 m vs ICORELS 0.21 m, 56% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_depth_6_5kn",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.4690251536303928,
+          "squat_barrass_m": 0.4690251536303928,
+          "squat_icorels_m": 0.18162567288737463,
+          "blockage_ratio": 0.3108353221957041,
+          "froude_depth": 0.33532979831876836,
+          "static_ukc_m": 1.5999999999999996,
+          "dynamic_ukc_m": 1.1309748463696068,
+          "grounds": false,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": true,
+              "message": "dynamic UKC 1.13 m = static 1.60 m - squat 0.47 m (Barrass II) at 5.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": true,
+              "message": "dynamic UKC 1.13 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.34; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.311; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": false,
+              "message": "Barrass 0.47 m vs ICORELS 0.18 m, 61% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_depth_8_5kn",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.4690251536303928,
+          "squat_barrass_m": 0.4690251536303928,
+          "squat_icorels_m": 0.13411194525676984,
+          "blockage_ratio": 0.3108353221957041,
+          "froude_depth": 0.2904041239899658,
+          "static_ukc_m": 3.5999999999999996,
+          "dynamic_ukc_m": 3.130974846369607,
+          "grounds": false,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": true,
+              "message": "dynamic UKC 3.13 m = static 3.60 m - squat 0.47 m (Barrass II) at 5.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": true,
+              "message": "dynamic UKC 3.13 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.29; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.311; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": false,
+              "message": "Barrass 0.47 m vs ICORELS 0.13 m, 71% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_depth_3_9kn",
+      "output": {
+        "ok": {
+          "method": "ICORELS",
+          "squat_m": 2.128556340103588,
+          "squat_barrass_m": 1.5928062274280725,
+          "squat_icorels_m": 2.128556340103588,
+          "blockage_ratio": 0.3108353221957041,
+          "froude_depth": 0.8536103075704263,
+          "static_ukc_m": -1.4000000000000004,
+          "dynamic_ukc_m": -3.5285563401035884,
+          "grounds": true,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": false,
+              "message": "dynamic UKC -3.53 m = static -1.40 m - squat 2.13 m (ICORELS) at 9.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": false,
+              "message": "dynamic UKC -3.53 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": false,
+              "message": "depth Froude 0.85; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.311; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": true,
+              "message": "Barrass 1.59 m vs ICORELS 2.13 m, 34% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_open_water_8kn",
+      "output": {
+        "ok": {
+          "method": "ICORELS",
+          "squat_m": 0.6843465158083742,
+          "squat_barrass_m": 0.0,
+          "squat_icorels_m": 0.6843465158083742,
+          "blockage_ratio": 0.0,
+          "froude_depth": 0.5998561791376485,
+          "static_ukc_m": 0.39999999999999947,
+          "dynamic_ukc_m": -0.2843465158083748,
+          "grounds": true,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": false,
+              "message": "dynamic UKC -0.28 m = static 0.40 m - squat 0.68 m (ICORELS) at 8.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": false,
+              "message": "dynamic UKC -0.28 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.60; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            }
+          ],
+          "warnings": [
+            "no channel area given, so blockage is 0 and Barrass returns 0 — this is the OPEN-WATER case and squat is then ICORELS only"
+          ]
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/depth5.28_area235.5_margin0.15",
+      "output": {
+        "ok": 6.46484375
+      }
+    },
+    {
+      "id": "compute/depth5.28_area235.5_at_solver",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.7280239345116792,
+          "squat_barrass_m": 0.7280239345116792,
+          "squat_icorels_m": 0.3665651652151458,
+          "blockage_ratio": 0.27651804670912955,
+          "froude_depth": 0.46218818583610144,
+          "static_ukc_m": 0.8799999999999999,
+          "dynamic_ukc_m": 0.15197606548832066,
+          "grounds": false,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": true,
+              "message": "dynamic UKC 0.15 m = static 0.88 m - squat 0.73 m (Barrass II) at 6.46 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": true,
+              "message": "dynamic UKC 0.15 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.46; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.277; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": true,
+              "message": "Barrass 0.73 m vs ICORELS 0.37 m, 50% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "compute/depth5.28_area235.5_solver_plus_0.1",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.7516431232753776,
+          "squat_barrass_m": 0.7516431232753776,
+          "squat_icorels_m": 0.37960394921837015,
+          "blockage_ratio": 0.27651804670912955,
+          "froude_depth": 0.4693374411577958,
+          "static_ukc_m": 0.8799999999999999,
+          "dynamic_ukc_m": 0.12835687672462226,
+          "grounds": false,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": true,
+              "message": "dynamic UKC 0.13 m = static 0.88 m - squat 0.75 m (Barrass II) at 6.56 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": false,
+              "message": "dynamic UKC 0.13 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.47; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": true,
+              "message": "blockage 0.277; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": true,
+              "message": "Barrass 0.75 m vs ICORELS 0.38 m, 49% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/depth4.8_area209.5",
+      "output": {
+        "ok": 3.69140625
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/depth5.28_area235.5",
+      "output": {
+        "ok": 6.46484375
+      }
+    },
+    {
+      "id": "compute/resistance_default_barge_6.5m_channel_4kn",
+      "output": {
+        "ok": {
+          "method": "Barrass II",
+          "squat_m": 0.39293598950633357,
+          "squat_barrass_m": 0.39293598950633357,
+          "squat_icorels_m": 0.16157393117326854,
+          "blockage_ratio": 0.4430769230769231,
+          "froude_depth": 0.25773955929895964,
+          "static_ukc_m": 0.5,
+          "dynamic_ukc_m": 0.10706401049366643,
+          "grounds": false,
+          "checks": [
+            {
+              "name": "keel_clears_bed",
+              "ok": true,
+              "message": "dynamic UKC 0.11 m = static 0.50 m - squat 0.39 m (Barrass II) at 4.00 kn",
+              "severity": "error"
+            },
+            {
+              "name": "keel_clears_bed_with_margin",
+              "ok": false,
+              "message": "dynamic UKC 0.11 m against a 0.15 m working margin",
+              "severity": "warning"
+            },
+            {
+              "name": "froude_depth_subcritical",
+              "ok": true,
+              "message": "depth Froude 0.26; above 0.7 the flow approaches critical and both squat forms lose validity",
+              "severity": "warning"
+            },
+            {
+              "name": "blockage_within_barrass_range",
+              "ok": false,
+              "message": "blockage 0.443; Barrass is fitted below about 0.35 and extrapolates above it",
+              "severity": "warning"
+            },
+            {
+              "name": "methods_agree_within_50pct",
+              "ok": false,
+              "message": "Barrass 0.39 m vs ICORELS 0.16 m, 59% apart",
+              "severity": "warning"
+            }
+          ],
+          "warnings": []
+        }
+      }
+    }
+  ]
+}

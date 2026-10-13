@@ -1,0 +1,835 @@
+{
+  "entry_point": "barge_capacity",
+  "cases": [
+    {
+      "id": "gas/100x16x6_LNG_ethane",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_gas_golden_example; test_barge_capacity.py::test_arrangement_is_derived_not_a_fraction; test_barge_capacity.py::test_bulk_and_gas_share_the_block_but_not_the_unit_mix; test_barge_capacity.py::test_cargo_volume_is_inner_volume_times_fill; test_barge_capacity.py::test_wider_cofferdam_costs_cargo; test_barge_capacity.py::test_navigating_air_draft_is_never_below_stowed; test_barge_capacity.py::test_bauxite_denser_than_gas_per_metre_draft; test_barge_capacity.py::test_gas_has_no_bulk_gm; test_barge_capacity.py::test_light_air_draft_exceeds_laden_gas; test_barge_capacity.py::test_no_limit_means_no_air_draft_check (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "LNG_ethane"
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/100x16x6",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_bauxite_golden_example; test_barge_capacity.py::test_bulk_and_gas_share_the_block_but_not_the_unit_mix; test_barge_capacity.py::test_navigating_air_draft_is_never_below_stowed; test_barge_capacity.py::test_bauxite_denser_than_gas_per_metre_draft; test_barge_capacity.py::test_bulk_capacity_grows_with_depth; test_barge_capacity.py::test_bulk_gm_computed_and_positive; test_barge_capacity.py::test_gm_grows_with_beam; test_barge_capacity.py::test_light_air_draft_exceeds_laden_bulk (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          }
+        }
+      }
+    },
+    {
+      "id": "gas/100x16x6_wide_separation",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_wider_cofferdam_costs_cargo (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "LNG_ethane",
+            "separation": {
+              "opening_setback_m": 4.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "gas/100x16x5_LNG_ethane",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_gas_capacity_falls_slightly_with_depth (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 5.0,
+            "cargo_type": "LNG_ethane"
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/100x16x5",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_bulk_capacity_grows_with_depth (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 5.0,
+            "cargo_type": "bauxite"
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/100x16x4",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_bulk_capacity_grows_with_depth (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 4.0,
+            "cargo_type": "bauxite"
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/200x16x6",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_capacity_scales_faster_than_loa (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 200.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          }
+        }
+      }
+    },
+    {
+      "id": "gas/100x16x2_LNG_ethane_overloaded",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_overload_flagged_when_too_shallow (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 2.0,
+            "cargo_type": "LNG_ethane"
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/100x16x6_wing_void_3",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_wing_void_widens_cuts_bulk_volume (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "wing_void_width": 3.0
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/100x20x6",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_gm_grows_with_beam (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 20.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/100x12x6",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_gm_grows_with_beam (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 12.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          }
+        }
+      }
+    },
+    {
+      "id": "gas/100x16x6_air_draft_limit_between_laden_and_light",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_air_draft_check_gates_on_light_not_laden; test_barge_capacity.py::test_ballast_can_rescue_a_failing_design (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "LNG_ethane",
+            "air_draft_limit_m": 7.742807451883952
+          }
+        }
+      }
+    },
+    {
+      "id": "gas/100x16x6_air_draft_limit_light_plus_half",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_air_draft_check_passes_when_light_clears (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "LNG_ethane",
+            "air_draft_limit_m": 8.793093744913737
+          }
+        }
+      }
+    },
+    {
+      "id": "gas/100x16x6_ballast_0t",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_ballast_lowers_air_draft_monotonically (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "LNG_ethane",
+            "ballast_capacity_t": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "gas/100x16x6_ballast_500t",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_ballast_lowers_air_draft_monotonically (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "LNG_ethane",
+            "ballast_capacity_t": 500.0
+          }
+        }
+      }
+    },
+    {
+      "id": "gas/100x16x6_ballast_1500t",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_ballast_lowers_air_draft_monotonically (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "LNG_ethane",
+            "ballast_capacity_t": 1500.0
+          }
+        }
+      }
+    },
+    {
+      "id": "gas/100x16x6_air_draft_limit_between_ballast_3000t",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_barge_capacity.py::test_ballast_can_rescue_a_failing_design (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "LNG_ethane",
+            "air_draft_limit_m": 7.742807451883952,
+            "ballast_capacity_t": 3000.0
+          }
+        }
+      }
+    },
+    {
+      "id": "gas/ADN_G_90x18x6_LNG_2_wide",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_adn_g_tank_diameter_follows_its_side_clearance (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 18.0,
+            "depth": 6.0,
+            "cargo_type": "LNG",
+            "n_tanks_wide": 2,
+            "vessel_type": "ADN_G"
+          }
+        }
+      }
+    },
+    {
+      "id": "gas/IGC_2G_EXACT_90x14.8x6_LNG_1_wide",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_igc_exact_measures_to_steel_and_uses_each_tank (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.0,
+            "cargo_type": "LNG",
+            "n_tanks_wide": 1,
+            "vessel_type": "IGC_2G_EXACT"
+          }
+        }
+      }
+    },
+    {
+      "id": "gas/IGC_2G_90x14.8x6_LNG_1_wide",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_igc_exact_measures_to_steel_and_uses_each_tank (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.0,
+            "cargo_type": "LNG",
+            "n_tanks_wide": 1,
+            "vessel_type": "IGC_2G"
+          }
+        }
+      }
+    },
+    {
+      "id": "gas/90x14.8x6.5_LPG_propane_auto",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_gas_arrangement.py::test_search_beats_the_auto_seed_on_cn_ii (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LPG_propane"
+          }
+        }
+      }
+    },
+    {
+      "id": "gas/quickstart_CN_II_motor_90x14.8x6.5_LPG_propane",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_examples.py::test_quickstart_runs (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LPG_propane"
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/60x11x4",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_bulk_result_is_refused (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 60,
+            "beam": 11,
+            "depth": 4,
+            "cargo_type": "bauxite"
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/para-mississippi-2200/ported",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 60.96,
+            "beam": 10.67,
+            "depth": 4.27,
+            "cargo_type": "bauxite",
+            "self_propelled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/para-mississippi-2200/calibrated",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 60.96,
+            "beam": 10.67,
+            "depth": 4.27,
+            "cargo_type": "bauxite",
+            "self_propelled": false,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.1093,
+            "block_coefficient": 0.928
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/amaggi-box-2000/ported",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 60.96,
+            "beam": 10.67,
+            "depth": 4.27,
+            "cargo_type": "bauxite",
+            "self_propelled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/amaggi-box-2000/calibrated",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 60.96,
+            "beam": 10.67,
+            "depth": 4.27,
+            "cargo_type": "bauxite",
+            "self_propelled": false,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.1093,
+            "block_coefficient": 0.928
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/mcdonough-195x35x12/ported",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 59.44,
+            "beam": 10.67,
+            "depth": 3.66,
+            "cargo_type": "bauxite",
+            "self_propelled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/mcdonough-195x35x12/calibrated",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 59.44,
+            "beam": 10.67,
+            "depth": 3.66,
+            "cargo_type": "bauxite",
+            "self_propelled": false,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.1093,
+            "block_coefficient": 0.928
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/jeffboat-am2100/ported",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 60.96,
+            "beam": 10.67,
+            "depth": 4.57,
+            "cargo_type": "bauxite",
+            "self_propelled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/jeffboat-am2100/calibrated",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 60.96,
+            "beam": 10.67,
+            "depth": 4.57,
+            "cargo_type": "bauxite",
+            "self_propelled": false,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.1093,
+            "block_coefficient": 0.928
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/hidrovia-lhg-3200/ported",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 61.0,
+            "beam": 15.0,
+            "depth": 4.27,
+            "cargo_type": "bauxite",
+            "self_propelled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/hidrovia-lhg-3200/calibrated",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 61.0,
+            "beam": 15.0,
+            "depth": 4.27,
+            "cargo_type": "bauxite",
+            "self_propelled": false,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.1093,
+            "block_coefficient": 0.928
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/cargill-amazon-jumbo/ported",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 61.0,
+            "beam": 15.0,
+            "depth": 4.27,
+            "cargo_type": "bauxite",
+            "self_propelled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/cargill-amazon-jumbo/calibrated",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 61.0,
+            "beam": 15.0,
+            "depth": 4.27,
+            "cargo_type": "bauxite",
+            "self_propelled": false,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.1093,
+            "block_coefficient": 0.928
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/europa-iib-rdb06/ported",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 76.02,
+            "beam": 11.44,
+            "depth": 3.2,
+            "cargo_type": "bauxite",
+            "self_propelled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/europa-iib-rdb06/calibrated",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 76.02,
+            "beam": 11.44,
+            "depth": 3.2,
+            "cargo_type": "bauxite",
+            "self_propelled": false,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.1093,
+            "block_coefficient": 0.928
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/europa-iib-1635ou/ported",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 76.5,
+            "beam": 11.0,
+            "depth": 3.9,
+            "cargo_type": "bauxite",
+            "self_propelled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/europa-iib-1635ou/calibrated",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 76.5,
+            "beam": 11.0,
+            "depth": 3.9,
+            "cargo_type": "bauxite",
+            "self_propelled": false,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.1093,
+            "block_coefficient": 0.928
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/danube-barge-77/ported",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 77.0,
+            "beam": 11.0,
+            "depth": 2.8,
+            "cargo_type": "bauxite",
+            "self_propelled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/danube-barge-77/calibrated",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 77.0,
+            "beam": 11.0,
+            "depth": 2.8,
+            "cargo_type": "bauxite",
+            "self_propelled": false,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.1093,
+            "block_coefficient": 0.928
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/victor-83-container-barge/ported",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 83.0,
+            "beam": 11.45,
+            "depth": 2.8,
+            "cargo_type": "bauxite",
+            "self_propelled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/victor-83-container-barge/calibrated",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 83.0,
+            "beam": 11.45,
+            "depth": 2.8,
+            "cargo_type": "bauxite",
+            "self_propelled": false,
+            "hold_type": "container",
+            "lightship_k_t_per_m3": 0.1711,
+            "block_coefficient": 0.928
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/stretch-hopper-light/ported",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 60.96,
+            "beam": 10.67,
+            "depth": 3.66,
+            "cargo_type": "bauxite",
+            "self_propelled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/stretch-hopper-light/calibrated",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 60.96,
+            "beam": 10.67,
+            "depth": 3.66,
+            "cargo_type": "bauxite",
+            "self_propelled": false,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.1093,
+            "block_coefficient": 0.928
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/us-hopper-195x35-generic/ported",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 59.44,
+            "beam": 10.67,
+            "depth": 3.81,
+            "cargo_type": "bauxite",
+            "self_propelled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/calibration/us-hopper-195x35-generic/calibrated",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 59.44,
+            "beam": 10.67,
+            "depth": 3.81,
+            "cargo_type": "bauxite",
+            "self_propelled": false,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.1093,
+            "block_coefficient": 0.928
+          }
+        }
+      }
+    }
+  ],
+  "retired": []
+}

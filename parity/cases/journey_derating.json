@@ -1,0 +1,236 @@
+{
+  "entry_point": "journey_derating",
+  "cases": [
+    {
+      "id": "bauxite_100x16x6/design_depth_5.5_ukc_0.5",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_journey_derating.py::test_deep_channel_is_volume_bound (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          },
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "design_depth_m": 5.5,
+            "ukc_m": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_2.25_ukc_0.5",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_journey_derating.py::test_shallow_channel_is_draft_bound; test_journey_derating.py::test_utilisation_warning_fires_when_shallow (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          },
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "design_depth_m": 2.25,
+            "ukc_m": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_2_ukc_0.5",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_journey_derating.py::test_achievable_never_exceeds_capacity; test_journey_derating.py::test_monotone_in_depth (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          },
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "design_depth_m": 2.0,
+            "ukc_m": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_3_ukc_0.5",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_journey_derating.py::test_achievable_never_exceeds_capacity; test_journey_derating.py::test_monotone_in_depth (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          },
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "design_depth_m": 3.0,
+            "ukc_m": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_4_ukc_0.5",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_journey_derating.py::test_achievable_never_exceeds_capacity; test_journey_derating.py::test_monotone_in_depth (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          },
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "design_depth_m": 4.0,
+            "ukc_m": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_5_ukc_0.5",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_journey_derating.py::test_achievable_never_exceeds_capacity; test_journey_derating.py::test_monotone_in_depth (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          },
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "design_depth_m": 5.0,
+            "ukc_m": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_6_ukc_0.5",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_journey_derating.py::test_achievable_never_exceeds_capacity; test_journey_derating.py::test_monotone_in_depth (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          },
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "design_depth_m": 6.0,
+            "ukc_m": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_7_ukc_0.5",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_journey_derating.py::test_achievable_never_exceeds_capacity (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          },
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "design_depth_m": 7.0,
+            "ukc_m": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_full_load_draft_ukc_0",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_journey_derating.py::test_flip_at_full_load_draft (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          },
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "design_depth_m": 4.603855133056641,
+            "ukc_m": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite_100x16x6/design_depth_0.5_ukc_0.5",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_journey_derating.py::test_floats_fails_when_no_depth (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "capacity_inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          },
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "design_depth_m": 0.5,
+            "ukc_m": 0.5
+          }
+        }
+      }
+    }
+  ],
+  "retired": []
+}

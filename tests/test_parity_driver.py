@@ -37,3 +37,17 @@ def test_driver_runs_the_frozen_copy_not_the_shipped_package():
     mod = driver._module("core.cargo")
     assert mod.__name__ == "vessel_designer_frozen.core.cargo"
     assert "frozen_python" in Path(mod.__file__).parts
+
+
+def test_key_error_is_recorded_with_its_class_name():
+    out = driver.run_case("vessel_standards", {"fn": "get_standard", "args": {"standard_id": "nope"}})
+    assert out["error"]["type"] == "KeyError"
+    assert "unknown vessel standard" in out["error"]["message"]
+
+
+def test_nested_inputs_are_built_from_plain_json():
+    mod = driver._module("core.resistance")
+    built = driver.build(mod.ResistanceInputs, {"tug": {"engine_power_kw": 5.0},
+                                                "environments": [{"name": "x"}]})
+    assert isinstance(built.tug, mod.TugInputs) and built.tug.engine_power_kw == 5.0
+    assert isinstance(built.environments[0], mod.EnvironmentInputs)

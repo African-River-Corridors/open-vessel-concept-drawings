@@ -9,7 +9,7 @@ shipped package) for each case, and writes `<out-dir>/<entry_point>.json`.
 Output rules (spec 0001):
 - floats are written as shortest round-trip text (Python's repr);
 - NaN and infinity are written as the tagged strings "float:nan", "float:inf" and "float:-inf";
-- a raised ValueError is recorded as {"error": {"type": "ValueError", "message": ...}};
+- a raised ValueError (or KeyError) is recorded as {"error": {"type": "ValueError", "message": ...}};
 - a normal return is recorded as {"ok": <value>}.
 Standard library only (plus whatever the frozen module itself imports).
 """
@@ -21,6 +21,7 @@ import importlib
 import json
 import math
 import sys
+import typing
 from pathlib import Path
 
 PARITY = Path(__file__).resolve().parent
@@ -58,6 +59,33 @@ def _module(name: str):
     return importlib.import_module(f"{FROZEN}.{name}")
 
 
+def build(cls, data):
+    """Build a (nested) dataclass from plain JSON data, using its type hints."""
+    if data is None or not isinstance(data, dict):
+        return data
+    hints = typing.get_type_hints(cls)
+    kwargs = {}
+    for key, value in data.items():
+        hint = hints[key]
+        kwargs[key] = _coerce(hint, value)
+    return cls(**kwargs)
+
+
+def _coerce(hint, value):
+    if value is None:
+        return None
+    origin = typing.get_origin(hint)
+    if origin is typing.Union:
+        inner = [a for a in typing.get_args(hint) if a is not type(None)]
+        return _coerce(inner[0], value) if len(inner) == 1 else value
+    if origin in (list, typing.List):
+        (item,) = typing.get_args(hint)
+        return [_coerce(item, v) for v in value]
+    if dataclasses.is_dataclass(hint) and isinstance(value, dict):
+        return build(hint, value)
+    return value
+
+
 # One adapter per entry point: (function name, args) -> Python result.
 def cargo(fn: str, args: dict):
     mod = _module("core.cargo")
@@ -68,15 +96,174 @@ def cargo(fn: str, args: dict):
     raise KeyError(f"cargo has no parity function {fn!r}")
 
 
-ADAPTERS = {"cargo": cargo}
+def protective_location(fn: str, args: dict):
+    mod = _module("core.protective_location")
+    if fn in ("distance_d_vc", "d_vc_exact", "compute_required_clearances"):
+        return getattr(mod, fn)(**args)
+    raise KeyError(f"protective_location has no parity function {fn!r}")
+
+
+def aft_arrangement(fn: str, args: dict):
+    mod = _module("core.aft_arrangement")
+    if fn == "compute":
+        return mod.compute(build(mod.AftArrangementInputs, args["inputs"]))
+    raise KeyError(f"aft_arrangement has no parity function {fn!r}")
+
+
+def gas_separation(fn: str, args: dict):
+    mod = _module("core.gas_separation")
+    if fn == "compute":
+        return mod.compute(build(mod.GasSeparationInputs, args["inputs"]))
+    raise KeyError(f"gas_separation has no parity function {fn!r}")
+
+
+def barge_capacity(fn: str, args: dict):
+    mod = _module("core.barge_capacity")
+    if fn == "compute":
+        return mod.compute(build(mod.BargeCapacityInputs, args["inputs"]))
+    raise KeyError(f"barge_capacity has no parity function {fn!r}")
+
+
+def journey_derating(fn: str, args: dict):
+    mod = _module("core.journey_derating")
+    if fn == "compute":
+        cap = _module("core.barge_capacity")
+        capacity = cap.compute(build(cap.BargeCapacityInputs, args["capacity_inputs"]))
+        return mod.compute(mod.JourneyDeratingInputs(capacity=capacity, **args["inputs"]))
+    raise KeyError(f"journey_derating has no parity function {fn!r}")
+
+
+def gas_arrangement(fn: str, args: dict):
+    mod = _module("core.gas_arrangement")
+    if fn in ("fit", "smallest_viable_loa", "required_side_clearance"):
+        return getattr(mod, fn)(**args)
+    raise KeyError(f"gas_arrangement has no parity function {fn!r}")
+
+
+def gas_stability(fn: str, args: dict):
+    mod = _module("core.gas_stability")
+    if fn in ("box_gz", "segment_fill", "criteria_set_for"):
+        return getattr(mod, fn)(**args)
+    if fn == "assess":
+        # The result to assess comes from a gas fit ("fit") or a capacity run ("capacity").
+        args = dict(args)
+        if "fit" in args:
+            f = _module("core.gas_arrangement").fit(**args.pop("fit"))
+            result, payload = f.engine_result, args.pop("payload_t", f.payload_t)
+        else:
+            cap = _module("core.barge_capacity")
+            result = cap.compute(build(cap.BargeCapacityInputs, args.pop("capacity")))
+            payload = args.pop("payload_t")
+        return mod.assess(result, payload, **args)
+    raise KeyError(f"gas_stability has no parity function {fn!r}")
+
+
+def squat(fn: str, args: dict):
+    mod = _module("core.squat")
+    if fn == "compute":
+        return mod.compute(build(mod.SquatInputs, args["inputs"]))
+    if fn == "max_speed_for_ukc":
+        return mod.max_speed_for_ukc(**args)
+    raise KeyError(f"squat has no parity function {fn!r}")
+
+
+def waves(fn: str, args: dict):
+    mod = _module("core.waves")
+    if fn == "compute":
+        return mod.compute(build(mod.WaveResistanceInputs, args["inputs"]))
+    raise KeyError(f"waves has no parity function {fn!r}")
+
+
+def resistance(fn: str, args: dict):
+    mod = _module("core.resistance")
+    if fn == "compute":
+        return mod.compute(build(mod.ResistanceInputs, args["inputs"]))
+    raise KeyError(f"resistance has no parity function {fn!r}")
+
+
+def barge_cost(fn: str, args: dict):
+    mod = _module("core.barge_cost")
+    if fn == "compute":
+        # rates: absent or null = the built-in example rates; an object = explicit rates.
+        rates = args.get("rates")
+        rates = build(mod.BargeCostRates, rates) if rates is not None else None
+        return mod.compute(build(mod.BargeCostInputs, args["inputs"]), rates)
+    if fn == "parse_flat_yaml":
+        return mod.parse_flat_yaml(**args)
+    raise KeyError(f"barge_cost has no parity function {fn!r}")
+
+
+def design_grid(fn: str, args: dict):
+    mod = _module("core.design_grid")
+    if fn in ("sweep", "n_tanks_for_length"):
+        return getattr(mod, fn)(**args)
+    raise KeyError(f"design_grid has no parity function {fn!r}")
+
+
+def ga_adapter(fn: str, args: dict):
+    mod = _module("core.ga_adapter")
+    cap = _module("core.barge_capacity")
+    inp = build(cap.BargeCapacityInputs, args["inputs"])
+    res = cap.compute(inp)
+    if fn == "to_ga":
+        return mod.to_ga(inp, res, **args.get("kwargs", {}))
+    if fn == "is_gas":
+        return mod.is_gas(res)
+    raise KeyError(f"ga_adapter has no parity function {fn!r}")
+
+
+def vessel_standards(fn: str, args: dict):
+    mod = _module("core.vessel_standards")
+    if fn in ("get_standard", "standards_for"):
+        return getattr(mod, fn)(**args)
+    if fn == "validate_catalogue":
+        # extra: standards added to the built-in catalogue (id -> fields); null = the built-in one.
+        extra = args.get("extra")
+        if extra is None:
+            return mod.validate_catalogue()
+        catalogue = dict(mod.VESSEL_STANDARDS)
+        for key, fields in extra.items():
+            fields = {k: tuple(v) if isinstance(v, list) else v for k, v in fields.items()}
+            catalogue[key] = mod.VesselStandard(**fields)
+        return mod.validate_catalogue(catalogue)
+    raise KeyError(f"vessel_standards has no parity function {fn!r}")
+
+
+def simulate(fn: str, args: dict):
+    mod = importlib.import_module(f"{FROZEN}.simulate")
+    if fn == "simulate":
+        return mod.simulate(args["params"])
+    if fn == "cargo_options":
+        return mod.cargo_options()
+    raise KeyError(f"simulate has no parity function {fn!r}")
+
+
+ADAPTERS = {
+    "cargo": cargo,
+    "protective_location": protective_location,
+    "aft_arrangement": aft_arrangement,
+    "gas_separation": gas_separation,
+    "barge_capacity": barge_capacity,
+    "journey_derating": journey_derating,
+    "gas_arrangement": gas_arrangement,
+    "gas_stability": gas_stability,
+    "squat": squat,
+    "waves": waves,
+    "resistance": resistance,
+    "barge_cost": barge_cost,
+    "design_grid": design_grid,
+    "ga_adapter": ga_adapter,
+    "vessel_standards": vessel_standards,
+    "simulate": simulate,
+}
 
 
 def run_case(entry_point: str, case_input: dict) -> dict:
     adapter = ADAPTERS[entry_point]
     try:
         result = adapter(case_input["fn"], case_input.get("args", {}))
-    except ValueError as exc:
-        return {"error": {"type": "ValueError", "message": str(exc)}}
+    except (ValueError, KeyError) as exc:
+        return {"error": {"type": type(exc).__name__, "message": str(exc)}}
     return {"ok": to_json(result)}
 
 

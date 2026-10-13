@@ -1,0 +1,172 @@
+{
+  "entry_point": "protective_location",
+  "cases": [
+    {
+      "id": "distance_d_vc/500",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_adn_g_distances_are_constant_not_volume_stepped (issue #8)",
+      "input": {
+        "fn": "distance_d_vc",
+        "args": {
+          "vc": 500.0
+        }
+      }
+    },
+    {
+      "id": "compute_required_clearances/ADN_G_beam18_d_vc_of_500",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_adn_g_distances_are_constant_not_volume_stepped (issue #8)",
+      "input": {
+        "fn": "compute_required_clearances",
+        "args": {
+          "vessel_type_str": "ADN_G",
+          "beam": 18.0,
+          "d_vc": 0.8
+        }
+      }
+    },
+    {
+      "id": "distance_d_vc/3000",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_adn_g_distances_are_constant_not_volume_stepped (issue #8)",
+      "input": {
+        "fn": "distance_d_vc",
+        "args": {
+          "vc": 3000.0
+        }
+      }
+    },
+    {
+      "id": "compute_required_clearances/ADN_G_beam18_d_vc_of_3000",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_adn_g_distances_are_constant_not_volume_stepped (issue #8)",
+      "input": {
+        "fn": "compute_required_clearances",
+        "args": {
+          "vessel_type_str": "ADN_G",
+          "beam": 18.0,
+          "d_vc": 1.0
+        }
+      }
+    },
+    {
+      "id": "distance_d_vc/20000",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_adn_g_distances_are_constant_not_volume_stepped (issue #8)",
+      "input": {
+        "fn": "distance_d_vc",
+        "args": {
+          "vc": 20000.0
+        }
+      }
+    },
+    {
+      "id": "compute_required_clearances/ADN_G_beam18_d_vc_of_20000",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_adn_g_distances_are_constant_not_volume_stepped (issue #8)",
+      "input": {
+        "fn": "compute_required_clearances",
+        "args": {
+          "vessel_type_str": "ADN_G",
+          "beam": 18.0,
+          "d_vc": 2.0
+        }
+      }
+    },
+    {
+      "id": "compute_required_clearances/IGC_2G_beam14.8_d_vc_1.0",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_igc_2g_unchanged (issue #8)",
+      "input": {
+        "fn": "compute_required_clearances",
+        "args": {
+          "vessel_type_str": "IGC_2G",
+          "beam": 14.8,
+          "d_vc": 1.0
+        }
+      }
+    },
+    {
+      "id": "compute_required_clearances/IGC_2G_beam14.8_d_vc_2.0",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_igc_2g_unchanged (issue #8)",
+      "input": {
+        "fn": "compute_required_clearances",
+        "args": {
+          "vessel_type_str": "IGC_2G",
+          "beam": 14.8,
+          "d_vc": 2.0
+        }
+      }
+    },
+    {
+      "id": "compute_required_clearances/IGC_2G_beam14.8_d_vc_0.8",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_igc_2g_unchanged (issue #8)",
+      "input": {
+        "fn": "compute_required_clearances",
+        "args": {
+          "vessel_type_str": "IGC_2G",
+          "beam": 14.8,
+          "d_vc": 0.8
+        }
+      }
+    },
+    {
+      "id": "d_vc_exact/800",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_d_vc_exact_bands (issue #8)",
+      "input": {
+        "fn": "d_vc_exact",
+        "args": {
+          "vc_individual_m3": 800.0
+        }
+      }
+    },
+    {
+      "id": "d_vc_exact/3000",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_d_vc_exact_bands (issue #8)",
+      "input": {
+        "fn": "d_vc_exact",
+        "args": {
+          "vc_individual_m3": 3000.0
+        }
+      }
+    },
+    {
+      "id": "d_vc_exact/5000",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_d_vc_exact_bands (issue #8)",
+      "input": {
+        "fn": "d_vc_exact",
+        "args": {
+          "vc_individual_m3": 5000.0
+        }
+      }
+    },
+    {
+      "id": "d_vc_exact/10000",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_d_vc_exact_bands (issue #8)",
+      "input": {
+        "fn": "d_vc_exact",
+        "args": {
+          "vc_individual_m3": 10000.0
+        }
+      }
+    },
+    {
+      "id": "d_vc_exact/40000",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_tank_rulesets.py::test_d_vc_exact_bands (issue #8)",
+      "input": {
+        "fn": "d_vc_exact",
+        "args": {
+          "vc_individual_m3": 40000.0
+        }
+      }
+    }
+  ],
+  "retired": []
+}

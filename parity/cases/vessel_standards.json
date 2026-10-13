@@ -1,0 +1,213 @@
+{
+  "entry_point": "vessel_standards",
+  "cases": [
+    {
+      "id": "get_standard/CN_II_motor",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_examples.py::test_quickstart_runs; test_vessel_standards.py::test_golden_chinese_classes; test_vessel_standards.py::test_golden_beam_over_draught_tradeoff (issue #8)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CN_II_motor"
+        }
+      }
+    },
+    {
+      "id": "get_standard/CEMT_VIa",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_vessel_standards.py::test_golden_cemt_via; test_vessel_standards.py::test_property_r_min_scales_with_length_not_beam (issue #8)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CEMT_VIa"
+        }
+      }
+    },
+    {
+      "id": "get_standard/CN_I_motor",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_vessel_standards.py::test_golden_chinese_classes (issue #8)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CN_I_motor"
+        }
+      }
+    },
+    {
+      "id": "get_standard/CEMT_Va",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_vessel_standards.py::test_golden_beam_over_draught_tradeoff; test_vessel_standards.py::test_property_r_min_scales_with_length_not_beam (issue #8)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CEMT_Va"
+        }
+      }
+    },
+    {
+      "id": "get_standard/CEMT_Vb",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_vessel_standards.py::test_property_r_min_scales_with_length_not_beam (issue #8)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "CEMT_Vb"
+        }
+      }
+    },
+    {
+      "id": "get_standard/error/unknown_id",
+      "tier": 3,
+      "reason": "tier 1: inputs of audited test test_vessel_standards.py::test_unknown_standard_id_raises_keyerror (issue #8)",
+      "input": {
+        "fn": "get_standard",
+        "args": {
+          "standard_id": "no_such_class"
+        }
+      }
+    },
+    {
+      "id": "standards_for/dry_bulk",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_vessel_standards.py::test_property_cargo_modes (issue #8)",
+      "input": {
+        "fn": "standards_for",
+        "args": {
+          "cargo_mode": "dry_bulk"
+        }
+      }
+    },
+    {
+      "id": "standards_for/liquid_gas",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_vessel_standards.py::test_property_cargo_modes (issue #8)",
+      "input": {
+        "fn": "standards_for",
+        "args": {
+          "cargo_mode": "liquid_gas"
+        }
+      }
+    },
+    {
+      "id": "standards_for/error/bananas",
+      "tier": 3,
+      "reason": "tier 1: inputs of audited test test_vessel_standards.py::test_property_cargo_modes (issue #8)",
+      "input": {
+        "fn": "standards_for",
+        "args": {
+          "cargo_mode": "bananas"
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/built_in",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_vessel_standards.py::test_feasibility_catalogue_is_clean (issue #8)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": null
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/with_broken_convoy",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_vessel_standards.py::test_feasibility_checks_catch_a_bad_entry (issue #8)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "BROKEN": {
+              "standard_id": "BROKEN",
+              "family": "CEMT",
+              "class_name": "X",
+              "formation": "pushed_convoy",
+              "loa_m": [
+                100.0,
+                110.0
+              ],
+              "beam_m": 30.0,
+              "draught_m": [
+                2.5,
+                3.0
+              ],
+              "dwt_t": [
+                1000.0,
+                2000.0
+              ],
+              "n_abreast": 2,
+              "unit_beam_m": 11.4,
+              "source": "fabricated for the test"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/with_inverted_range",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_vessel_standards.py::test_feasibility_inverted_range_is_caught (issue #8)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "BACKWARDS": {
+              "standard_id": "BACKWARDS",
+              "family": "CN",
+              "class_name": "X",
+              "formation": "motor_vessel",
+              "loa_m": [
+                120.0,
+                90.0
+              ],
+              "beam_m": 14.0,
+              "draught_m": [
+                2.5,
+                3.0
+              ],
+              "dwt_t": [
+                1000.0,
+                2000.0
+              ],
+              "source": "fabricated for the test"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/with_missing_source",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_vessel_standards.py::test_feasibility_missing_source_warns_but_does_not_gate (issue #8)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "UNSOURCED": {
+              "standard_id": "UNSOURCED",
+              "family": "CN",
+              "class_name": "X",
+              "formation": "motor_vessel",
+              "loa_m": [
+                90.0,
+                90.0
+              ],
+              "beam_m": 14.0,
+              "draught_m": [
+                2.5,
+                3.0
+              ],
+              "dwt_t": [
+                1000.0,
+                2000.0
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "retired": []
+}

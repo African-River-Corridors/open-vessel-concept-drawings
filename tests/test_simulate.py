@@ -7,10 +7,16 @@ CN_II = dict(vessel="gas_barge", cargo="LPG_propane", loa_m=90, beam_m=14.8, dep
 
 
 def test_gas_uses_the_search_not_auto():
+    """Label: snapshot
+    Parity: gas_arrangement:fit/CN_II_90x14.8_LPG_propane_depth6.5, simulate:simulate/gas_CN_II
+    """
     assert abs(simulate(CN_II)["results"]["cargo_t"] - 2058) < 1.0
 
 
 def test_gas_optimised_depth_matches_snapshot():
+    """Label: snapshot
+    Parity: simulate:simulate/gas_LNG_optimise_depth
+    """
     o = simulate(dict(CN_II, cargo="LNG", draught_limit_m=3.0, ruleset="IGC_2G_EXACT",
                       fill_ratio=None, optimise_depth=True))
     assert abs(o["results"]["cargo_t"] - 1738) < 1.0
@@ -18,6 +24,9 @@ def test_gas_optimised_depth_matches_snapshot():
 
 
 def test_gas_stability_is_assessed_for_three_conditions():
+    """Label: property
+    Parity: gas_stability:assess/CN_II_IS_CODE_2008, simulate:simulate/gas_CN_II
+    """
     o = simulate(CN_II)
     assert [c["name"] for c in o["stability"]["conditions"]] == ["Laden", "Half laden", "Light"]
     assert o["stability"]["ok"]
@@ -25,6 +34,9 @@ def test_gas_stability_is_assessed_for_three_conditions():
 
 
 def test_tender_gas_barge_shows_failed_stability_checks():
+    """Label: property
+    Parity: simulate:simulate/gas_tender_60x7
+    """
     o = simulate(dict(CN_II, loa_m=60, beam_m=7.0, depth_m=6.0, draught_limit_m=None,
                       ruleset="IGC_2G_EXACT", fill_ratio=0.98, self_propelled=False))
     assert not o["stability"]["ok"]
@@ -32,13 +44,20 @@ def test_tender_gas_barge_shows_failed_stability_checks():
 
 
 def test_box_barge_unchanged():
+    """Label: snapshot
+    Parity: simulate:simulate/box_bauxite_76.5x11.4x3.5
+    """
     o = simulate(dict(vessel="box_barge", cargo="bauxite", loa_m=76.5, beam_m=11.4, depth_m=3.5,
                       cb=0.928, lightship_k_t_per_m3=0.1093, freeboard_min_m=0.3))
     assert 2200 < o["results"]["cargo_t"] < 2300
 
 
 def test_gas_infeasible_fit_is_shown_as_a_failed_check(monkeypatch):
-    """Issue #6: when fit() finds no passing arrangement, the page says so, not just the tonnage."""
+    """Issue #6: when fit() finds no passing arrangement, the page says so, not just the tonnage.
+
+    Label: property
+    Parity: simulate:simulate/gas_CN_II
+    """
     from dataclasses import replace
     import vessel_designer.simulate as sim
     real = sim.gas_fit
