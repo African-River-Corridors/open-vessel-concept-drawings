@@ -24,7 +24,7 @@ def test_search_beats_the_auto_seed_on_cn_ii():
 
     Label: property
     Parity: barge_capacity:gas/90x14.8x6.5_LPG_propane_auto,
-        gas_arrangement:fit/90x14.8_LPG_propane_free_depth
+        gas_arrangement:fit/CN_II_90x14.8_LPG_propane_depth6.5
     """
     auto = capacity(BargeCapacityInputs(loa=90, beam=14.8, depth=6.5, cargo_type="LPG_propane"))
     best = fit(90.0, 14.8, "LPG_propane", 4.4, depths=[6.5])

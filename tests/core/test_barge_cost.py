@@ -29,7 +29,7 @@ def test_golden_base_case():
     Parity: barge_cost:compute/test_rates_base
     """
     r = compute(BargeCostInputs(), RATES)
-    assert r.barge_subtotal == 911_500       # 811.5 t x 1,000 + two 100,000 lumps
+    assert r.barge_subtotal == 911_500       # 711.5 t x 1,000 + two 100,000 lumps
     assert r.tug_subtotal == 607_000         # 115 t x 1,000 + 620 kWh x 100 + 230 kW x 1,000 + 200,000
     assert r.unit_total == 1_720_350         # + 10 % margin + 50,000 delivery
 

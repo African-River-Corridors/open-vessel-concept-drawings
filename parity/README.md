@@ -19,6 +19,8 @@ deleted, with the frozen Python and the hidden `ovcd eval` command, when the por
 A case: `{"id": "get_cargo/LNG", "tier": 1, "reason": "...", "input": {"fn": "get_cargo", "args": {...}}}`.
 Tier 1 is a named case, tier 2 a seeded sweep point, tier 3 an error case. Every case carries the
 reason it exists or last changed. A removed case moves to the file's `retired` list, with a reason.
+A tier-1 or tier-3 case that sits on a knife edge also carries `knife_edge`: what flips, and why Rust
+reaches the same side (see "What identical means").
 
 A Reference Result is `{"ok": <value>}`, or `{"error": {"type": "ValueError", "message": "..."}}`
 when Python raises (`ValueError`, or `KeyError` for an unknown lookup key; `type` is the class
@@ -40,7 +42,10 @@ tiers per entry point.
   by a relative 1e-12 (speed-grid inputs excepted) must not change any discrete output, and must
   not move any float output outside the parity tolerance. Nobody edits tier-2 cases by hand;
   `cargo xtask regen` rewrites them, and the test fails if the committed files differ from the
-  generator by one byte. To change tier 2, change `sweep.py`.
+  generator by one byte. To change tier 2, change `sweep.py`, and say why in its `REVISIONS`
+  entry for that function: the note goes into every changed point's `reason`, which the oracle
+  guard needs. `tests/test_parity_cases.py` also lists inputs a port could hardcode at their
+  defaults (`MUST_VARY`); the sweep must move each one.
 - **Tier 3, errors.** A `ValueError`, a `KeyError` from a lookup, or a `{"error": ...}` result. The
   reason starts `tier 3: error path`. Where Python has no error path (hull geometry, for
   example), tier 3 holds degenerate inputs instead, with a reason that starts
@@ -69,7 +74,9 @@ checks both directions.
 Floats match within `tolerance.json` (Python's `math.isclose` rule). Everything else matches
 exactly: integers (an integer never matches a float), booleans, text including messages, list order,
 object keys. A knife-edge case is nudged or replaced, with the reason recorded on the case. The
-tolerance is never loosened.
+tolerance is never loosened. A tier-1 or tier-3 case may stay on a knife edge (an audited test that
+checks the flip itself, or an input exactly on a rule's bound) only with a `knife_edge` text; the
+test fails if the sweep's own detector flags a tier-1 or tier-3 case that has none.
 
 ## Tasks
 

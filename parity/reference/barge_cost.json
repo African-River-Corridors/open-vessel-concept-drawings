@@ -480,17 +480,17 @@
             "paint_anodes_misc": 100000
           },
           "tug_breakdown": {
-            "hull_steel": 287500,
-            "battery": 155000,
-            "propulsion": 230000,
+            "hull_steel": 374150,
+            "battery": 232848,
+            "propulsion": 535768,
             "wheelhouse_accommodation": 450000,
             "outfitting": 200000
           },
           "barge_subtotal": 3539047,
-          "tug_subtotal": 1322500,
-          "yard_margin": 486155,
+          "tug_subtotal": 1792766,
+          "yard_margin": 533181,
           "delivery": 200000.0,
-          "unit_total": 5547702,
+          "unit_total": 6064994,
           "checks": [
             {
               "name": "masses_positive",
@@ -536,27 +536,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 1153257,
-            "type_c_tanks": 1121433,
-            "tank_supports": 911343,
-            "insulation": 22838,
-            "cargo_system": 850293,
-            "piping_machinery": 433372,
-            "outfitting": 300242,
-            "paint_anodes_misc": 1156098
+            "hull_steel": 1287024,
+            "type_c_tanks": 1850463,
+            "tank_supports": 236812,
+            "insulation": 136701,
+            "cargo_system": 500000,
+            "piping_machinery": 95563,
+            "outfitting": 169097,
+            "paint_anodes_misc": 100000
           },
           "tug_breakdown": {
-            "hull_steel": 311334,
-            "battery": 11283411,
-            "propulsion": 270345,
-            "wheelhouse_accommodation": 695033,
-            "outfitting": 548197
+            "hull_steel": 404289,
+            "battery": 184455,
+            "propulsion": 251876,
+            "wheelhouse_accommodation": 450000,
+            "outfitting": 200000
           },
-          "barge_subtotal": 5948877,
-          "tug_subtotal": 13108320,
-          "yard_margin": 428787,
-          "delivery": 1853581.0,
-          "unit_total": 21339565,
+          "barge_subtotal": 4375660,
+          "tug_subtotal": 1490620,
+          "yard_margin": 586628,
+          "delivery": 200000.0,
+          "unit_total": 6652908,
           "checks": [
             {
               "name": "masses_positive",
@@ -578,20 +578,20 @@
             }
           ],
           "rates": {
-            "hull_steel_rate": 2707.2511,
-            "tank_shell_rate": 2412.9864,
-            "tank_supports_rate": 7987.5131,
-            "insulation_rate": 723.0968,
-            "piping_rate": 10007.0673,
-            "outfitting_rate": 8622.1449,
-            "cargo_system_lump": 850293.0,
-            "paint_anodes_misc": 1156098.0,
-            "battery_rate_per_kwh": 18199.0506,
-            "propulsion_rate_per_kw": 1175.4124,
-            "wheelhouse_accom_lump": 695033.0,
-            "tug_outfitting_lump": 548197.0,
-            "yard_margin_fraction": 0.0225,
-            "delivery_lump": 1853581.0,
+            "hull_steel_rate": 2500.0,
+            "tank_shell_rate": 10000.0,
+            "tank_supports_rate": 2000.0,
+            "insulation_rate": 4000.0,
+            "piping_rate": 4500.0,
+            "outfitting_rate": 4000.0,
+            "cargo_system_lump": 500000.0,
+            "paint_anodes_misc": 100000.0,
+            "battery_rate_per_kwh": 250.0,
+            "propulsion_rate_per_kw": 1000.0,
+            "wheelhouse_accom_lump": 450000.0,
+            "tug_outfitting_lump": 200000.0,
+            "yard_margin_fraction": 0.1,
+            "delivery_lump": 200000.0,
             "currency": "USD"
           }
         }
@@ -602,27 +602,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 5852374,
-            "type_c_tanks": 1815057,
-            "tank_supports": 1242245,
-            "insulation": 561622,
-            "cargo_system": 1063927,
-            "piping_machinery": 217187,
-            "outfitting": 281874,
-            "paint_anodes_misc": 1240962
+            "hull_steel": 764511,
+            "type_c_tanks": 4351391,
+            "tank_supports": 66965,
+            "insulation": 209699,
+            "cargo_system": 500000,
+            "piping_machinery": 97125,
+            "outfitting": 198406,
+            "paint_anodes_misc": 100000
           },
           "tug_breakdown": {
-            "hull_steel": 1004788,
-            "battery": 3982360,
-            "propulsion": 4454745,
-            "wheelhouse_accommodation": 388702,
-            "outfitting": 1876432
+            "hull_steel": 359505,
+            "battery": 267554,
+            "propulsion": 144608,
+            "wheelhouse_accommodation": 450000,
+            "outfitting": 200000
           },
-          "barge_subtotal": 12275248,
-          "tug_subtotal": 11707027,
-          "yard_margin": 1357397,
-          "delivery": 1966463.0,
-          "unit_total": 27306135,
+          "barge_subtotal": 6288097,
+          "tug_subtotal": 1421667,
+          "yard_margin": 770976,
+          "delivery": 200000.0,
+          "unit_total": 8680740,
           "checks": [
             {
               "name": "masses_positive",
@@ -644,20 +644,20 @@
             }
           ],
           "rates": {
-            "hull_steel_rate": 8737.2843,
-            "tank_shell_rate": 6352.0067,
-            "tank_supports_rate": 15599.3765,
-            "insulation_rate": 10843.9331,
-            "piping_rate": 4882.1111,
-            "outfitting_rate": 13086.9933,
-            "cargo_system_lump": 1063927.0,
-            "paint_anodes_misc": 1240962.0,
-            "battery_rate_per_kwh": 6423.1612,
-            "propulsion_rate_per_kw": 19368.4568,
-            "wheelhouse_accom_lump": 388702.0,
-            "tug_outfitting_lump": 1876432.0,
-            "yard_margin_fraction": 0.0566,
-            "delivery_lump": 1966463.0,
+            "hull_steel_rate": 2500.0,
+            "tank_shell_rate": 10000.0,
+            "tank_supports_rate": 2000.0,
+            "insulation_rate": 4000.0,
+            "piping_rate": 4500.0,
+            "outfitting_rate": 4000.0,
+            "cargo_system_lump": 500000.0,
+            "paint_anodes_misc": 100000.0,
+            "battery_rate_per_kwh": 250.0,
+            "propulsion_rate_per_kw": 1000.0,
+            "wheelhouse_accom_lump": 450000.0,
+            "tug_outfitting_lump": 200000.0,
+            "yard_margin_fraction": 0.1,
+            "delivery_lump": 200000.0,
             "currency": "USD"
           }
         }
@@ -668,27 +668,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 1422330,
-            "type_c_tanks": 3954725,
-            "tank_supports": 229982,
-            "insulation": 153672,
+            "hull_steel": 890729,
+            "type_c_tanks": 1129579,
+            "tank_supports": 262769,
+            "insulation": 121531,
             "cargo_system": 500000,
-            "piping_machinery": 47807,
-            "outfitting": 155834,
+            "piping_machinery": 157919,
+            "outfitting": 214071,
             "paint_anodes_misc": 100000
           },
           "tug_breakdown": {
-            "hull_steel": 287500,
-            "battery": 155000,
-            "propulsion": 230000,
+            "hull_steel": 315352,
+            "battery": 64281,
+            "propulsion": 304012,
             "wheelhouse_accommodation": 450000,
             "outfitting": 200000
           },
-          "barge_subtotal": 6564351,
-          "tug_subtotal": 1322500,
-          "yard_margin": 788685,
+          "barge_subtotal": 3376598,
+          "tug_subtotal": 1333645,
+          "yard_margin": 471024,
           "delivery": 200000.0,
-          "unit_total": 8875536,
+          "unit_total": 5381267,
           "checks": [
             {
               "name": "masses_positive",
@@ -734,27 +734,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 1972421,
-            "type_c_tanks": 905875,
-            "tank_supports": 1142370,
-            "insulation": 72820,
-            "cargo_system": 928715,
-            "piping_machinery": 857853,
-            "outfitting": 25654,
-            "paint_anodes_misc": 450892
+            "hull_steel": 1217102,
+            "type_c_tanks": 165436,
+            "tank_supports": 1603388,
+            "insulation": 406665,
+            "cargo_system": 1256829,
+            "piping_machinery": 871579,
+            "outfitting": 866090,
+            "paint_anodes_misc": 222507
           },
           "tug_breakdown": {
-            "hull_steel": 591316,
-            "battery": 6147308,
-            "propulsion": 3730403,
-            "wheelhouse_accommodation": 319727,
-            "outfitting": 1443925
+            "hull_steel": 1104684,
+            "battery": 29409886,
+            "propulsion": 4664469,
+            "wheelhouse_accommodation": 1873368,
+            "outfitting": 273432
           },
-          "barge_subtotal": 6356600,
-          "tug_subtotal": 12232679,
-          "yard_margin": 2184240,
-          "delivery": 1551731.0,
-          "unit_total": 22325249,
+          "barge_subtotal": 6609595,
+          "tug_subtotal": 37325840,
+          "yard_margin": 13149876,
+          "delivery": 64003.0,
+          "unit_total": 57149314,
           "checks": [
             {
               "name": "masses_positive",
@@ -776,20 +776,20 @@
             }
           ],
           "rates": {
-            "hull_steel_rate": 5141.8813,
-            "tank_shell_rate": 2706.9428,
-            "tank_supports_rate": 8028.9752,
-            "insulation_rate": 1980.1214,
-            "piping_rate": 19272.6669,
-            "outfitting_rate": 1676.0343,
-            "cargo_system_lump": 928715.0,
-            "paint_anodes_misc": 450892.0,
-            "battery_rate_per_kwh": 9915.0123,
-            "propulsion_rate_per_kw": 16219.1418,
-            "wheelhouse_accom_lump": 319727.0,
-            "tug_outfitting_lump": 1443925.0,
-            "yard_margin_fraction": 0.1175,
-            "delivery_lump": 1551731.0,
+            "hull_steel_rate": 5837.9834,
+            "tank_shell_rate": 2810.7548,
+            "tank_supports_rate": 16854.2428,
+            "insulation_rate": 18185.2758,
+            "piping_rate": 14677.7912,
+            "outfitting_rate": 14676.7027,
+            "cargo_system_lump": 1256829.0,
+            "paint_anodes_misc": 222507.0,
+            "battery_rate_per_kwh": 16933.7401,
+            "propulsion_rate_per_kw": 10136.2628,
+            "wheelhouse_accom_lump": 1873368.0,
+            "tug_outfitting_lump": 273432.0,
+            "yard_margin_fraction": 0.2993,
+            "delivery_lump": 64003.0,
             "currency": "USD"
           }
         }
@@ -800,27 +800,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 752030,
-            "type_c_tanks": 3556949,
-            "tank_supports": 288255,
-            "insulation": 95235,
+            "hull_steel": 1527718,
+            "type_c_tanks": 2441881,
+            "tank_supports": 183643,
+            "insulation": 87300,
             "cargo_system": 500000,
-            "piping_machinery": 115876,
-            "outfitting": 183978,
+            "piping_machinery": 233211,
+            "outfitting": 200126,
             "paint_anodes_misc": 100000
           },
           "tug_breakdown": {
-            "hull_steel": 287500,
-            "battery": 155000,
-            "propulsion": 230000,
+            "hull_steel": 185848,
+            "battery": 183844,
+            "propulsion": 131464,
             "wheelhouse_accommodation": 450000,
             "outfitting": 200000
           },
-          "barge_subtotal": 5592322,
-          "tug_subtotal": 1322500,
-          "yard_margin": 691482,
+          "barge_subtotal": 5273878,
+          "tug_subtotal": 1151156,
+          "yard_margin": 642503,
           "delivery": 200000.0,
-          "unit_total": 7806305,
+          "unit_total": 7267538,
           "checks": [
             {
               "name": "masses_positive",
@@ -866,27 +866,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 830652,
-            "type_c_tanks": 4581217,
-            "tank_supports": 223579,
-            "insulation": 179942,
+            "hull_steel": 1387466,
+            "type_c_tanks": 3129849,
+            "tank_supports": 107665,
+            "insulation": 127648,
             "cargo_system": 500000,
-            "piping_machinery": 131265,
-            "outfitting": 68221,
+            "piping_machinery": 106821,
+            "outfitting": 176140,
             "paint_anodes_misc": 100000
           },
           "tug_breakdown": {
-            "hull_steel": 287500,
-            "battery": 155000,
-            "propulsion": 230000,
+            "hull_steel": 447450,
+            "battery": 268753,
+            "propulsion": 292837,
             "wheelhouse_accommodation": 450000,
             "outfitting": 200000
           },
-          "barge_subtotal": 6614876,
-          "tug_subtotal": 1322500,
-          "yard_margin": 793738,
+          "barge_subtotal": 5635588,
+          "tug_subtotal": 1659040,
+          "yard_margin": 729463,
           "delivery": 200000.0,
-          "unit_total": 8931113,
+          "unit_total": 8224091,
           "checks": [
             {
               "name": "masses_positive",
@@ -932,27 +932,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 1469352,
-            "type_c_tanks": 4510254,
-            "tank_supports": 201503,
-            "insulation": 188126,
-            "cargo_system": 500000,
-            "piping_machinery": 83359,
-            "outfitting": 188507,
-            "paint_anodes_misc": 100000
+            "hull_steel": 7225145,
+            "type_c_tanks": 5689290,
+            "tank_supports": 1794078,
+            "insulation": 298594,
+            "cargo_system": 79255,
+            "piping_machinery": 233138,
+            "outfitting": 300765,
+            "paint_anodes_misc": 1889804
           },
           "tug_breakdown": {
-            "hull_steel": 287500,
-            "battery": 155000,
-            "propulsion": 230000,
-            "wheelhouse_accommodation": 450000,
-            "outfitting": 200000
+            "hull_steel": 851416,
+            "battery": 19154689,
+            "propulsion": 8988484,
+            "wheelhouse_accommodation": 304936,
+            "outfitting": 508788
           },
-          "barge_subtotal": 7241101,
-          "tug_subtotal": 1322500,
-          "yard_margin": 856360,
-          "delivery": 200000.0,
-          "unit_total": 9619961,
+          "barge_subtotal": 17510069,
+          "tug_subtotal": 29808313,
+          "yard_margin": 8200276,
+          "delivery": 573833.0,
+          "unit_total": 56092491,
           "checks": [
             {
               "name": "masses_positive",
@@ -974,20 +974,20 @@
             }
           ],
           "rates": {
-            "hull_steel_rate": 2500.0,
-            "tank_shell_rate": 10000.0,
-            "tank_supports_rate": 2000.0,
-            "insulation_rate": 4000.0,
-            "piping_rate": 4500.0,
-            "outfitting_rate": 4000.0,
-            "cargo_system_lump": 500000.0,
-            "paint_anodes_misc": 100000.0,
-            "battery_rate_per_kwh": 250.0,
-            "propulsion_rate_per_kw": 1000.0,
-            "wheelhouse_accom_lump": 450000.0,
-            "tug_outfitting_lump": 200000.0,
-            "yard_margin_fraction": 0.1,
-            "delivery_lump": 200000.0,
+            "hull_steel_rate": 9777.7184,
+            "tank_shell_rate": 13016.6919,
+            "tank_supports_rate": 17341.2248,
+            "insulation_rate": 5403.9409,
+            "piping_rate": 9103.6102,
+            "outfitting_rate": 10774.0275,
+            "cargo_system_lump": 79255.0,
+            "paint_anodes_misc": 1889804.0,
+            "battery_rate_per_kwh": 12318.6278,
+            "propulsion_rate_per_kw": 16789.8734,
+            "wheelhouse_accom_lump": 304936.0,
+            "tug_outfitting_lump": 508788.0,
+            "yard_margin_fraction": 0.1733,
+            "delivery_lump": 573833.0,
             "currency": "USD"
           }
         }
@@ -998,27 +998,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 759242,
-            "type_c_tanks": 1595141,
-            "tank_supports": 197234,
-            "insulation": 93494,
+            "hull_steel": 708809,
+            "type_c_tanks": 1586177,
+            "tank_supports": 85745,
+            "insulation": 28835,
             "cargo_system": 500000,
-            "piping_machinery": 81128,
-            "outfitting": 120372,
+            "piping_machinery": 249105,
+            "outfitting": 80132,
             "paint_anodes_misc": 100000
           },
           "tug_breakdown": {
-            "hull_steel": 287500,
-            "battery": 155000,
-            "propulsion": 230000,
+            "hull_steel": 425641,
+            "battery": 493812,
+            "propulsion": 181174,
             "wheelhouse_accommodation": 450000,
             "outfitting": 200000
           },
-          "barge_subtotal": 3446612,
-          "tug_subtotal": 1322500,
-          "yard_margin": 476911,
+          "barge_subtotal": 3338803,
+          "tug_subtotal": 1750627,
+          "yard_margin": 508943,
           "delivery": 200000.0,
-          "unit_total": 5446023,
+          "unit_total": 5798373,
           "checks": [
             {
               "name": "masses_positive",
@@ -1064,27 +1064,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 1392195,
-            "type_c_tanks": 2842435,
-            "tank_supports": 274861,
-            "insulation": 55528,
-            "cargo_system": 500000,
-            "piping_machinery": 114866,
-            "outfitting": 170270,
-            "paint_anodes_misc": 100000
+            "hull_steel": 8069173,
+            "type_c_tanks": 8501859,
+            "tank_supports": 630793,
+            "insulation": 252756,
+            "cargo_system": 1122386,
+            "piping_machinery": 33924,
+            "outfitting": 71469,
+            "paint_anodes_misc": 595826
           },
           "tug_breakdown": {
-            "hull_steel": 287500,
-            "battery": 155000,
-            "propulsion": 230000,
-            "wheelhouse_accommodation": 450000,
-            "outfitting": 200000
+            "hull_steel": 2610390,
+            "battery": 18855726,
+            "propulsion": 6184904,
+            "wheelhouse_accommodation": 306176,
+            "outfitting": 610390
           },
-          "barge_subtotal": 5450155,
-          "tug_subtotal": 1322500,
-          "yard_margin": 677265,
-          "delivery": 200000.0,
-          "unit_total": 7649920,
+          "barge_subtotal": 19278186,
+          "tug_subtotal": 28567586,
+          "yard_margin": 4301335,
+          "delivery": 1088063.0,
+          "unit_total": 53235170,
           "checks": [
             {
               "name": "masses_positive",
@@ -1106,20 +1106,20 @@
             }
           ],
           "rates": {
-            "hull_steel_rate": 2500.0,
-            "tank_shell_rate": 10000.0,
-            "tank_supports_rate": 2000.0,
-            "insulation_rate": 4000.0,
-            "piping_rate": 4500.0,
-            "outfitting_rate": 4000.0,
-            "cargo_system_lump": 500000.0,
-            "paint_anodes_misc": 100000.0,
-            "battery_rate_per_kwh": 250.0,
-            "propulsion_rate_per_kw": 1000.0,
-            "wheelhouse_accom_lump": 450000.0,
-            "tug_outfitting_lump": 200000.0,
-            "yard_margin_fraction": 0.1,
-            "delivery_lump": 200000.0,
+            "hull_steel_rate": 13742.3033,
+            "tank_shell_rate": 18058.5513,
+            "tank_supports_rate": 7020.3768,
+            "insulation_rate": 17545.0376,
+            "piping_rate": 618.9166,
+            "outfitting_rate": 2595.1834,
+            "cargo_system_lump": 1122386.0,
+            "paint_anodes_misc": 595826.0,
+            "battery_rate_per_kwh": 13087.1377,
+            "propulsion_rate_per_kw": 16466.8966,
+            "wheelhouse_accom_lump": 306176.0,
+            "tug_outfitting_lump": 610390.0,
+            "yard_margin_fraction": 0.0899,
+            "delivery_lump": 1088063.0,
             "currency": "USD"
           }
         }
@@ -1130,225 +1130,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 5359639,
-            "type_c_tanks": 5581490,
-            "tank_supports": 1251265,
-            "insulation": 1007226,
-            "cargo_system": 540394,
-            "piping_machinery": 168024,
-            "outfitting": 845878,
-            "paint_anodes_misc": 910361
-          },
-          "tug_breakdown": {
-            "hull_steel": 2269330,
-            "battery": 2648313,
-            "propulsion": 3491051,
-            "wheelhouse_accommodation": 1077403,
-            "outfitting": 314099
-          },
-          "barge_subtotal": 15664278,
-          "tug_subtotal": 9800197,
-          "yard_margin": 4629441,
-          "delivery": 525026.0,
-          "unit_total": 30618942,
-          "checks": [
-            {
-              "name": "masses_positive",
-              "ok": true,
-              "message": "mass-model inputs present",
-              "severity": "error"
-            },
-            {
-              "name": "no_reliquefaction_in_scope",
-              "ok": true,
-              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
-              "severity": "warning"
-            },
-            {
-              "name": "fabrication_rates_are_estimates",
-              "ok": false,
-              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
-              "severity": "warning"
-            }
-          ],
-          "rates": {
-            "hull_steel_rate": 19733.3075,
-            "tank_shell_rate": 14047.5952,
-            "tank_supports_rate": 19304.2523,
-            "insulation_rate": 17273.3162,
-            "piping_rate": 13517.2831,
-            "outfitting_rate": 18317.6581,
-            "cargo_system_lump": 540394.0,
-            "paint_anodes_misc": 910361.0,
-            "battery_rate_per_kwh": 4271.4729,
-            "propulsion_rate_per_kw": 15178.4828,
-            "wheelhouse_accom_lump": 1077403.0,
-            "tug_outfitting_lump": 314099.0,
-            "yard_margin_fraction": 0.1818,
-            "delivery_lump": 525026.0,
-            "currency": "USD"
-          }
-        }
-      }
-    },
-    {
-      "id": "compute/sweep/011",
-      "output": {
-        "ok": {
-          "barge_breakdown": {
-            "hull_steel": 3322293,
-            "type_c_tanks": 1133917,
-            "tank_supports": 77808,
-            "insulation": 553030,
-            "cargo_system": 1877690,
-            "piping_machinery": 171704,
-            "outfitting": 332941,
-            "paint_anodes_misc": 1130466
-          },
-          "tug_breakdown": {
-            "hull_steel": 659908,
-            "battery": 11173816,
-            "propulsion": 1063604,
-            "wheelhouse_accommodation": 188166,
-            "outfitting": 1559238
-          },
-          "barge_subtotal": 8599849,
-          "tug_subtotal": 14644732,
-          "yard_margin": 4184025,
-          "delivery": 1453170.0,
-          "unit_total": 28881777,
-          "checks": [
-            {
-              "name": "masses_positive",
-              "ok": true,
-              "message": "mass-model inputs present",
-              "severity": "error"
-            },
-            {
-              "name": "no_reliquefaction_in_scope",
-              "ok": true,
-              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
-              "severity": "warning"
-            },
-            {
-              "name": "fabrication_rates_are_estimates",
-              "ok": false,
-              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
-              "severity": "warning"
-            }
-          ],
-          "rates": {
-            "hull_steel_rate": 5738.3295,
-            "tank_shell_rate": 11763.9889,
-            "tank_supports_rate": 6430.2335,
-            "insulation_rate": 9720.722,
-            "piping_rate": 10383.1528,
-            "outfitting_rate": 15297.9115,
-            "cargo_system_lump": 1877690.0,
-            "paint_anodes_misc": 1130466.0,
-            "battery_rate_per_kwh": 18022.2844,
-            "propulsion_rate_per_kw": 4624.3662,
-            "wheelhouse_accom_lump": 188166.0,
-            "tug_outfitting_lump": 1559238.0,
-            "yard_margin_fraction": 0.18,
-            "delivery_lump": 1453170.0,
-            "currency": "USD"
-          }
-        }
-      }
-    },
-    {
-      "id": "compute/sweep/012",
-      "output": {
-        "ok": {
-          "barge_breakdown": {
-            "hull_steel": 11765850,
-            "type_c_tanks": 8247763,
-            "tank_supports": 481671,
-            "insulation": 4373,
-            "cargo_system": 734029,
-            "piping_machinery": 31535,
-            "outfitting": 99477,
-            "paint_anodes_misc": 1860058
-          },
-          "tug_breakdown": {
-            "hull_steel": 2108435,
-            "battery": 5258223,
-            "propulsion": 3267738,
-            "wheelhouse_accommodation": 1394182,
-            "outfitting": 1124825
-          },
-          "barge_subtotal": 23224758,
-          "tug_subtotal": 13153404,
-          "yard_margin": 9825742,
-          "delivery": 1374230.0,
-          "unit_total": 47578133,
-          "checks": [
-            {
-              "name": "masses_positive",
-              "ok": true,
-              "message": "mass-model inputs present",
-              "severity": "error"
-            },
-            {
-              "name": "no_reliquefaction_in_scope",
-              "ok": true,
-              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
-              "severity": "warning"
-            },
-            {
-              "name": "fabrication_rates_are_estimates",
-              "ok": false,
-              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
-              "severity": "warning"
-            }
-          ],
-          "rates": {
-            "hull_steel_rate": 18334.2206,
-            "tank_shell_rate": 17888.6791,
-            "tank_supports_rate": 4042.6432,
-            "insulation_rate": 700.9865,
-            "piping_rate": 1648.6026,
-            "outfitting_rate": 2954.1104,
-            "cargo_system_lump": 734029.0,
-            "paint_anodes_misc": 1860058.0,
-            "battery_rate_per_kwh": 8481.0051,
-            "propulsion_rate_per_kw": 14207.5579,
-            "wheelhouse_accom_lump": 1394182.0,
-            "tug_outfitting_lump": 1124825.0,
-            "yard_margin_fraction": 0.2701,
-            "delivery_lump": 1374230.0,
-            "currency": "USD"
-          }
-        }
-      }
-    },
-    {
-      "id": "compute/sweep/013",
-      "output": {
-        "ok": {
-          "barge_breakdown": {
-            "hull_steel": 574514,
-            "type_c_tanks": 1985607,
-            "tank_supports": 257643,
-            "insulation": 190104,
+            "hull_steel": 704796,
+            "type_c_tanks": 4699969,
+            "tank_supports": 205731,
+            "insulation": 67084,
             "cargo_system": 500000,
-            "piping_machinery": 82626,
-            "outfitting": 122576,
+            "piping_machinery": 218585,
+            "outfitting": 59025,
             "paint_anodes_misc": 100000
           },
           "tug_breakdown": {
-            "hull_steel": 287500,
-            "battery": 155000,
-            "propulsion": 230000,
+            "hull_steel": 341404,
+            "battery": 166893,
+            "propulsion": 472901,
             "wheelhouse_accommodation": 450000,
             "outfitting": 200000
           },
-          "barge_subtotal": 3813071,
-          "tug_subtotal": 1322500,
-          "yard_margin": 513557,
+          "barge_subtotal": 6555190,
+          "tug_subtotal": 1631198,
+          "yard_margin": 818639,
           "delivery": 200000.0,
-          "unit_total": 5849128,
+          "unit_total": 9205026,
           "checks": [
             {
               "name": "masses_positive",
@@ -1390,31 +1192,31 @@
       }
     },
     {
-      "id": "compute/sweep/014",
+      "id": "compute/sweep/011",
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 645746,
-            "type_c_tanks": 2691099,
-            "tank_supports": 250807,
-            "insulation": 404890,
-            "cargo_system": 1409104,
-            "piping_machinery": 328267,
-            "outfitting": 48033,
-            "paint_anodes_misc": 1563260
+            "hull_steel": 10612054,
+            "type_c_tanks": 1742178,
+            "tank_supports": 962549,
+            "insulation": 639200,
+            "cargo_system": 81379,
+            "piping_machinery": 119045,
+            "outfitting": 207364,
+            "paint_anodes_misc": 730936
           },
           "tug_breakdown": {
-            "hull_steel": 186916,
-            "battery": 2215465,
-            "propulsion": 3231059,
-            "wheelhouse_accommodation": 1273136,
-            "outfitting": 1952343
+            "hull_steel": 2244207,
+            "battery": 15985495,
+            "propulsion": 2813008,
+            "wheelhouse_accommodation": 1773477,
+            "outfitting": 1803110
           },
-          "barge_subtotal": 7341207,
-          "tug_subtotal": 8858919,
-          "yard_margin": 3102324,
-          "delivery": 1577597.0,
-          "unit_total": 20880047,
+          "barge_subtotal": 15094704,
+          "tug_subtotal": 24619297,
+          "yard_margin": 11139777,
+          "delivery": 1899913.0,
+          "unit_total": 52753691,
           "checks": [
             {
               "name": "masses_positive",
@@ -1436,20 +1238,218 @@
             }
           ],
           "rates": {
-            "hull_steel_rate": 1625.356,
-            "tank_shell_rate": 9528.8167,
-            "tank_supports_rate": 3098.9362,
-            "insulation_rate": 7152.7921,
-            "piping_rate": 13163.6552,
-            "outfitting_rate": 2696.9849,
-            "cargo_system_lump": 1409104.0,
-            "paint_anodes_misc": 1563260.0,
-            "battery_rate_per_kwh": 3573.3301,
-            "propulsion_rate_per_kw": 14048.0828,
-            "wheelhouse_accom_lump": 1273136.0,
-            "tug_outfitting_lump": 1952343.0,
-            "yard_margin_fraction": 0.1915,
-            "delivery_lump": 1577597.0,
+            "hull_steel_rate": 17135.223,
+            "tank_shell_rate": 19626.8363,
+            "tank_supports_rate": 9771.6705,
+            "insulation_rate": 10666.9093,
+            "piping_rate": 6902.4237,
+            "outfitting_rate": 9443.0063,
+            "cargo_system_lump": 81379.0,
+            "paint_anodes_misc": 730936.0,
+            "battery_rate_per_kwh": 11925.1876,
+            "propulsion_rate_per_kw": 5486.5497,
+            "wheelhouse_accom_lump": 1773477.0,
+            "tug_outfitting_lump": 1803110.0,
+            "yard_margin_fraction": 0.2805,
+            "delivery_lump": 1899913.0,
+            "currency": "USD"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/012",
+      "output": {
+        "ok": {
+          "barge_breakdown": {
+            "hull_steel": 8561540,
+            "type_c_tanks": 1836290,
+            "tank_supports": 92587,
+            "insulation": 486213,
+            "cargo_system": 263271,
+            "piping_machinery": 516915,
+            "outfitting": 809847,
+            "paint_anodes_misc": 1693120
+          },
+          "tug_breakdown": {
+            "hull_steel": 1898408,
+            "battery": 13298137,
+            "propulsion": 1316637,
+            "wheelhouse_accommodation": 1321852,
+            "outfitting": 1398230
+          },
+          "barge_subtotal": 14259784,
+          "tug_subtotal": 19233264,
+          "yard_margin": 6350282,
+          "delivery": 1391949.0,
+          "unit_total": 41235279,
+          "checks": [
+            {
+              "name": "masses_positive",
+              "ok": true,
+              "message": "mass-model inputs present",
+              "severity": "error"
+            },
+            {
+              "name": "no_reliquefaction_in_scope",
+              "ok": true,
+              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
+              "severity": "warning"
+            },
+            {
+              "name": "fabrication_rates_are_estimates",
+              "ok": false,
+              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
+              "severity": "warning"
+            }
+          ],
+          "rates": {
+            "hull_steel_rate": 13897.0132,
+            "tank_shell_rate": 6405.5847,
+            "tank_supports_rate": 2331.3846,
+            "insulation_rate": 15826.7986,
+            "piping_rate": 15385.3006,
+            "outfitting_rate": 16661.4321,
+            "cargo_system_lump": 263271.0,
+            "paint_anodes_misc": 1693120.0,
+            "battery_rate_per_kwh": 12854.0438,
+            "propulsion_rate_per_kw": 4666.6006,
+            "wheelhouse_accom_lump": 1321852.0,
+            "tug_outfitting_lump": 1398230.0,
+            "yard_margin_fraction": 0.1896,
+            "delivery_lump": 1391949.0,
+            "currency": "USD"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/013",
+      "output": {
+        "ok": {
+          "barge_breakdown": {
+            "hull_steel": 2692975,
+            "type_c_tanks": 2556723,
+            "tank_supports": 1184911,
+            "insulation": 323971,
+            "cargo_system": 721078,
+            "piping_machinery": 466860,
+            "outfitting": 36145,
+            "paint_anodes_misc": 1261870
+          },
+          "tug_breakdown": {
+            "hull_steel": 521404,
+            "battery": 8440609,
+            "propulsion": 920349,
+            "wheelhouse_accommodation": 1148627,
+            "outfitting": 885943
+          },
+          "barge_subtotal": 9244533,
+          "tug_subtotal": 11916931,
+          "yard_margin": 5544304,
+          "delivery": 1108651.0,
+          "unit_total": 27814419,
+          "checks": [
+            {
+              "name": "masses_positive",
+              "ok": true,
+              "message": "mass-model inputs present",
+              "severity": "error"
+            },
+            {
+              "name": "no_reliquefaction_in_scope",
+              "ok": true,
+              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
+              "severity": "warning"
+            },
+            {
+              "name": "fabrication_rates_are_estimates",
+              "ok": false,
+              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
+              "severity": "warning"
+            }
+          ],
+          "rates": {
+            "hull_steel_rate": 4409.746,
+            "tank_shell_rate": 9288.398,
+            "tank_supports_rate": 13425.7037,
+            "insulation_rate": 10193.1374,
+            "piping_rate": 18669.109,
+            "outfitting_rate": 647.9869,
+            "cargo_system_lump": 721078.0,
+            "paint_anodes_misc": 1261870.0,
+            "battery_rate_per_kwh": 18949.758,
+            "propulsion_rate_per_kw": 2547.9702,
+            "wheelhouse_accom_lump": 1148627.0,
+            "tug_outfitting_lump": 885943.0,
+            "yard_margin_fraction": 0.262,
+            "delivery_lump": 1108651.0,
+            "currency": "USD"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/014",
+      "output": {
+        "ok": {
+          "barge_breakdown": {
+            "hull_steel": 1173954,
+            "type_c_tanks": 1249086,
+            "tank_supports": 159376,
+            "insulation": 187112,
+            "cargo_system": 500000,
+            "piping_machinery": 122964,
+            "outfitting": 95316,
+            "paint_anodes_misc": 100000
+          },
+          "tug_breakdown": {
+            "hull_steel": 470761,
+            "battery": 229944,
+            "propulsion": 473837,
+            "wheelhouse_accommodation": 450000,
+            "outfitting": 200000
+          },
+          "barge_subtotal": 3587808,
+          "tug_subtotal": 1824542,
+          "yard_margin": 541235,
+          "delivery": 200000.0,
+          "unit_total": 6153585,
+          "checks": [
+            {
+              "name": "masses_positive",
+              "ok": true,
+              "message": "mass-model inputs present",
+              "severity": "error"
+            },
+            {
+              "name": "no_reliquefaction_in_scope",
+              "ok": true,
+              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
+              "severity": "warning"
+            },
+            {
+              "name": "fabrication_rates_are_estimates",
+              "ok": false,
+              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
+              "severity": "warning"
+            }
+          ],
+          "rates": {
+            "hull_steel_rate": 2500.0,
+            "tank_shell_rate": 10000.0,
+            "tank_supports_rate": 2000.0,
+            "insulation_rate": 4000.0,
+            "piping_rate": 4500.0,
+            "outfitting_rate": 4000.0,
+            "cargo_system_lump": 500000.0,
+            "paint_anodes_misc": 100000.0,
+            "battery_rate_per_kwh": 250.0,
+            "propulsion_rate_per_kw": 1000.0,
+            "wheelhouse_accom_lump": 450000.0,
+            "tug_outfitting_lump": 200000.0,
+            "yard_margin_fraction": 0.1,
+            "delivery_lump": 200000.0,
             "currency": "USD"
           }
         }
@@ -1460,27 +1460,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 10533155,
-            "type_c_tanks": 3147792,
-            "tank_supports": 455346,
-            "insulation": 47412,
-            "cargo_system": 985667,
-            "piping_machinery": 122487,
-            "outfitting": 316402,
-            "paint_anodes_misc": 694779
+            "hull_steel": 3459136,
+            "type_c_tanks": 5472756,
+            "tank_supports": 1038648,
+            "insulation": 285958,
+            "cargo_system": 1979852,
+            "piping_machinery": 279664,
+            "outfitting": 127474,
+            "paint_anodes_misc": 1794662
           },
           "tug_breakdown": {
-            "hull_steel": 1805517,
-            "battery": 4531801,
-            "propulsion": 4078997,
-            "wheelhouse_accommodation": 1447444,
-            "outfitting": 754111
+            "hull_steel": 606198,
+            "battery": 10025247,
+            "propulsion": 3040645,
+            "wheelhouse_accommodation": 1445153,
+            "outfitting": 1669602
           },
-          "barge_subtotal": 16303040,
-          "tug_subtotal": 12617870,
-          "yard_margin": 3551488,
-          "delivery": 1893506.0,
-          "unit_total": 34365904,
+          "barge_subtotal": 14438152,
+          "tug_subtotal": 16786844,
+          "yard_margin": 2235710,
+          "delivery": 822100.0,
+          "unit_total": 34282806,
           "checks": [
             {
               "name": "masses_positive",
@@ -1502,20 +1502,20 @@
             }
           ],
           "rates": {
-            "hull_steel_rate": 15700.1501,
-            "tank_shell_rate": 11925.1876,
-            "tank_supports_rate": 5486.5497,
-            "insulation_rate": 2056.1896,
-            "piping_rate": 3719.5184,
-            "outfitting_rate": 9687.9696,
-            "cargo_system_lump": 985667.0,
-            "paint_anodes_misc": 694779.0,
-            "battery_rate_per_kwh": 7309.3567,
-            "propulsion_rate_per_kw": 17734.7683,
-            "wheelhouse_accom_lump": 1447444.0,
-            "tug_outfitting_lump": 754111.0,
-            "yard_margin_fraction": 0.1228,
-            "delivery_lump": 1893506.0,
+            "hull_steel_rate": 9676.5952,
+            "tank_shell_rate": 12637.0911,
+            "tank_supports_rate": 12740.1625,
+            "insulation_rate": 10713.2611,
+            "piping_rate": 15401.2925,
+            "outfitting_rate": 2129.5306,
+            "cargo_system_lump": 1979852.0,
+            "paint_anodes_misc": 1794662.0,
+            "battery_rate_per_kwh": 18749.5591,
+            "propulsion_rate_per_kw": 5445.4648,
+            "wheelhouse_accom_lump": 1445153.0,
+            "tug_outfitting_lump": 1669602.0,
+            "yard_margin_fraction": 0.0716,
+            "delivery_lump": 822100.0,
             "currency": "USD"
           }
         }
@@ -1526,27 +1526,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 737559,
-            "type_c_tanks": 223480,
-            "tank_supports": 2123267,
-            "insulation": 206683,
-            "cargo_system": 995373,
-            "piping_machinery": 529091,
-            "outfitting": 266051,
-            "paint_anodes_misc": 945152
+            "hull_steel": 1525047,
+            "type_c_tanks": 197154,
+            "tank_supports": 2025446,
+            "insulation": 335935,
+            "cargo_system": 1825914,
+            "piping_machinery": 243154,
+            "outfitting": 788367,
+            "paint_anodes_misc": 1025878
           },
           "tug_breakdown": {
-            "hull_steel": 133828,
-            "battery": 3329171,
-            "propulsion": 2549707,
-            "wheelhouse_accommodation": 1470708,
-            "outfitting": 1518675
+            "hull_steel": 892230,
+            "battery": 4975308,
+            "propulsion": 3078592,
+            "wheelhouse_accommodation": 585982,
+            "outfitting": 1496021
           },
-          "barge_subtotal": 6026656,
-          "tug_subtotal": 9002089,
-          "yard_margin": 2685637,
-          "delivery": 263686.0,
-          "unit_total": 17978068,
+          "barge_subtotal": 7966896,
+          "tug_subtotal": 11028133,
+          "yard_margin": 773098,
+          "delivery": 1911201.0,
+          "unit_total": 21679327,
           "checks": [
             {
               "name": "masses_positive",
@@ -1568,20 +1568,20 @@
             }
           ],
           "rates": {
-            "hull_steel_rate": 1163.7195,
-            "tank_shell_rate": 694.0,
-            "tank_supports_rate": 15485.5916,
-            "insulation_rate": 7549.6362,
-            "piping_rate": 18950.9419,
-            "outfitting_rate": 7197.4583,
-            "cargo_system_lump": 995373.0,
-            "paint_anodes_misc": 945152.0,
-            "battery_rate_per_kwh": 5369.6307,
-            "propulsion_rate_per_kw": 11085.6843,
-            "wheelhouse_accom_lump": 1470708.0,
-            "tug_outfitting_lump": 1518675.0,
-            "yard_margin_fraction": 0.1787,
-            "delivery_lump": 263686.0,
+            "hull_steel_rate": 4683.9742,
+            "tank_shell_rate": 1684.4276,
+            "tank_supports_rate": 13677.3883,
+            "insulation_rate": 19041.6831,
+            "piping_rate": 5490.8967,
+            "outfitting_rate": 18444.9141,
+            "cargo_system_lump": 1825914.0,
+            "paint_anodes_misc": 1025878.0,
+            "battery_rate_per_kwh": 17371.0917,
+            "propulsion_rate_per_kw": 10358.646,
+            "wheelhouse_accom_lump": 585982.0,
+            "tug_outfitting_lump": 1496021.0,
+            "yard_margin_fraction": 0.0407,
+            "delivery_lump": 1911201.0,
             "currency": "USD"
           }
         }
@@ -1592,27 +1592,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 1344133,
-            "type_c_tanks": 1073352,
-            "tank_supports": 171838,
-            "insulation": 224946,
+            "hull_steel": 1692031,
+            "type_c_tanks": 4368541,
+            "tank_supports": 91177,
+            "insulation": 196937,
             "cargo_system": 500000,
-            "piping_machinery": 162105,
-            "outfitting": 210504,
+            "piping_machinery": 249375,
+            "outfitting": 105784,
             "paint_anodes_misc": 100000
           },
           "tug_breakdown": {
-            "hull_steel": 287500,
-            "battery": 155000,
-            "propulsion": 230000,
+            "hull_steel": 362561,
+            "battery": 298518,
+            "propulsion": 426523,
             "wheelhouse_accommodation": 450000,
             "outfitting": 200000
           },
-          "barge_subtotal": 3786877,
-          "tug_subtotal": 1322500,
-          "yard_margin": 510938,
+          "barge_subtotal": 7303845,
+          "tug_subtotal": 1737602,
+          "yard_margin": 904145,
           "delivery": 200000.0,
-          "unit_total": 5820315,
+          "unit_total": 10145592,
           "checks": [
             {
               "name": "masses_positive",
@@ -1658,27 +1658,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 11495931,
-            "type_c_tanks": 250763,
-            "tank_supports": 2004038,
-            "insulation": 84339,
-            "cargo_system": 1039606,
-            "piping_machinery": 209743,
-            "outfitting": 20514,
-            "paint_anodes_misc": 1162143
+            "hull_steel": 3969692,
+            "type_c_tanks": 1331066,
+            "tank_supports": 315503,
+            "insulation": 696938,
+            "cargo_system": 655912,
+            "piping_machinery": 761957,
+            "outfitting": 129289,
+            "paint_anodes_misc": 1470043
           },
           "tug_breakdown": {
-            "hull_steel": 2048946,
-            "battery": 6744640,
-            "propulsion": 3156157,
-            "wheelhouse_accommodation": 1114354,
-            "outfitting": 963709
+            "hull_steel": 1201827,
+            "battery": 13338734,
+            "propulsion": 6816488,
+            "wheelhouse_accommodation": 587308,
+            "outfitting": 1558890
           },
-          "barge_subtotal": 16267077,
-          "tug_subtotal": 14027806,
-          "yard_margin": 293860,
-          "delivery": 81206.0,
-          "unit_total": 30669949,
+          "barge_subtotal": 9330401,
+          "tug_subtotal": 23503247,
+          "yard_margin": 7495922,
+          "delivery": 244644.0,
+          "unit_total": 40574214,
           "checks": [
             {
               "name": "masses_positive",
@@ -1700,20 +1700,20 @@
             }
           ],
           "rates": {
-            "hull_steel_rate": 17816.9198,
-            "tank_shell_rate": 508.3718,
-            "tank_supports_rate": 19260.9853,
-            "insulation_rate": 3902.3305,
-            "piping_rate": 7916.6702,
-            "outfitting_rate": 717.082,
-            "cargo_system_lump": 1039606.0,
-            "paint_anodes_misc": 1162143.0,
-            "battery_rate_per_kwh": 10878.4522,
-            "propulsion_rate_per_kw": 13722.4202,
-            "wheelhouse_accom_lump": 1114354.0,
-            "tug_outfitting_lump": 963709.0,
-            "yard_margin_fraction": 0.0097,
-            "delivery_lump": 81206.0,
+            "hull_steel_rate": 11504.96,
+            "tank_shell_rate": 19240.4252,
+            "tank_supports_rate": 6199.4214,
+            "insulation_rate": 14212.8352,
+            "piping_rate": 16465.4616,
+            "outfitting_rate": 4697.8462,
+            "cargo_system_lump": 655912.0,
+            "paint_anodes_misc": 1470043.0,
+            "battery_rate_per_kwh": 8762.9083,
+            "propulsion_rate_per_kw": 15668.2839,
+            "wheelhouse_accom_lump": 587308.0,
+            "tug_outfitting_lump": 1558890.0,
+            "yard_margin_fraction": 0.2283,
+            "delivery_lump": 244644.0,
             "currency": "USD"
           }
         }
@@ -1724,27 +1724,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 6961581,
-            "type_c_tanks": 6464823,
-            "tank_supports": 2781012,
-            "insulation": 82104,
-            "cargo_system": 1431675,
-            "piping_machinery": 948161,
-            "outfitting": 633889,
-            "paint_anodes_misc": 139101
+            "hull_steel": 6690910,
+            "type_c_tanks": 3389780,
+            "tank_supports": 87952,
+            "insulation": 363441,
+            "cargo_system": 474740,
+            "piping_machinery": 407377,
+            "outfitting": 130225,
+            "paint_anodes_misc": 1108474
           },
           "tug_breakdown": {
-            "hull_steel": 1694808,
-            "battery": 5860644,
-            "propulsion": 2281925,
-            "wheelhouse_accommodation": 181650,
-            "outfitting": 1772952
+            "hull_steel": 3013477,
+            "battery": 15536351,
+            "propulsion": 376812,
+            "wheelhouse_accommodation": 1104891,
+            "outfitting": 237441
           },
-          "barge_subtotal": 19442345,
-          "tug_subtotal": 11791980,
-          "yard_margin": 5234873,
-          "delivery": 1621579.0,
-          "unit_total": 38090776,
+          "barge_subtotal": 12652899,
+          "tug_subtotal": 20268973,
+          "yard_margin": 1873254,
+          "delivery": 1456615.0,
+          "unit_total": 36251741,
           "checks": [
             {
               "name": "masses_positive",
@@ -1766,20 +1766,20 @@
             }
           ],
           "rates": {
-            "hull_steel_rate": 14737.4649,
-            "tank_shell_rate": 12962.4129,
-            "tank_supports_rate": 19129.4825,
-            "insulation_rate": 2740.277,
-            "piping_rate": 15865.1843,
-            "outfitting_rate": 14521.0144,
-            "cargo_system_lump": 1431675.0,
-            "paint_anodes_misc": 139101.0,
-            "battery_rate_per_kwh": 9452.6523,
-            "propulsion_rate_per_kw": 9921.4123,
-            "wheelhouse_accom_lump": 181650.0,
-            "tug_outfitting_lump": 1772952.0,
-            "yard_margin_fraction": 0.1676,
-            "delivery_lump": 1621579.0,
+            "hull_steel_rate": 15186.1199,
+            "tank_shell_rate": 11608.1004,
+            "tank_supports_rate": 5079.2832,
+            "insulation_rate": 8625.4011,
+            "piping_rate": 7242.6063,
+            "outfitting_rate": 5634.7222,
+            "cargo_system_lump": 474740.0,
+            "paint_anodes_misc": 1108474.0,
+            "battery_rate_per_kwh": 13231.0268,
+            "propulsion_rate_per_kw": 814.1996,
+            "wheelhouse_accom_lump": 1104891.0,
+            "tug_outfitting_lump": 237441.0,
+            "yard_margin_fraction": 0.0569,
+            "delivery_lump": 1456615.0,
             "currency": "USD"
           }
         }
@@ -1790,27 +1790,27 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 4964970,
-            "type_c_tanks": 6265216,
-            "tank_supports": 1766689,
-            "insulation": 72376,
-            "cargo_system": 338333,
-            "piping_machinery": 229440,
-            "outfitting": 651709,
-            "paint_anodes_misc": 340086
+            "hull_steel": 11971880,
+            "type_c_tanks": 6840766,
+            "tank_supports": 394892,
+            "insulation": 716574,
+            "cargo_system": 1542198,
+            "piping_machinery": 527189,
+            "outfitting": 224722,
+            "paint_anodes_misc": 1172574
           },
           "tug_breakdown": {
-            "hull_steel": 913350,
-            "battery": 5376753,
-            "propulsion": 1174005,
-            "wheelhouse_accommodation": 1987028,
-            "outfitting": 1504990
+            "hull_steel": 2496586,
+            "battery": 1638436,
+            "propulsion": 4324434,
+            "wheelhouse_accommodation": 355826,
+            "outfitting": 1748654
           },
-          "barge_subtotal": 14628820,
-          "tug_subtotal": 10956126,
-          "yard_margin": 501465,
-          "delivery": 712035.0,
-          "unit_total": 26798446,
+          "barge_subtotal": 23390796,
+          "tug_subtotal": 10563936,
+          "yard_margin": 5717977,
+          "delivery": 153995.0,
+          "unit_total": 39826703,
           "checks": [
             {
               "name": "masses_positive",
@@ -1832,20 +1832,20 @@
             }
           ],
           "rates": {
-            "hull_steel_rate": 7942.1737,
-            "tank_shell_rate": 12542.5686,
-            "tank_supports_rate": 11870.8104,
-            "insulation_rate": 2516.624,
-            "piping_rate": 4093.5116,
-            "outfitting_rate": 15134.3051,
-            "cargo_system_lump": 338333.0,
-            "paint_anodes_misc": 340086.0,
-            "battery_rate_per_kwh": 8672.1823,
-            "propulsion_rate_per_kw": 5104.3699,
-            "wheelhouse_accom_lump": 1987028.0,
-            "tug_outfitting_lump": 1504990.0,
-            "yard_margin_fraction": 0.0196,
-            "delivery_lump": 712035.0,
+            "hull_steel_rate": 19538.2808,
+            "tank_shell_rate": 19553.6042,
+            "tank_supports_rate": 2964.5794,
+            "insulation_rate": 17712.2149,
+            "piping_rate": 12949.9642,
+            "outfitting_rate": 7954.4251,
+            "cargo_system_lump": 1542198.0,
+            "paint_anodes_misc": 1172574.0,
+            "battery_rate_per_kwh": 1703.0717,
+            "propulsion_rate_per_kw": 7450.0634,
+            "wheelhouse_accom_lump": 355826.0,
+            "tug_outfitting_lump": 1748654.0,
+            "yard_margin_fraction": 0.1684,
+            "delivery_lump": 153995.0,
             "currency": "USD"
           }
         }
@@ -1856,27 +1856,225 @@
       "output": {
         "ok": {
           "barge_breakdown": {
-            "hull_steel": 1013396,
-            "type_c_tanks": 4932762,
-            "tank_supports": 218163,
-            "insulation": 30681,
+            "hull_steel": 7721507,
+            "type_c_tanks": 1077870,
+            "tank_supports": 184566,
+            "insulation": 275820,
+            "cargo_system": 421427,
+            "piping_machinery": 46546,
+            "outfitting": 654412,
+            "paint_anodes_misc": 1218845
+          },
+          "tug_breakdown": {
+            "hull_steel": 1280450,
+            "battery": 28185924,
+            "propulsion": 6096402,
+            "wheelhouse_accommodation": 1571173,
+            "outfitting": 1432747
+          },
+          "barge_subtotal": 11600992,
+          "tug_subtotal": 38566696,
+          "yard_margin": 13740930,
+          "delivery": 616576.0,
+          "unit_total": 64525195,
+          "checks": [
+            {
+              "name": "masses_positive",
+              "ok": true,
+              "message": "mass-model inputs present",
+              "severity": "error"
+            },
+            {
+              "name": "no_reliquefaction_in_scope",
+              "ok": true,
+              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
+              "severity": "warning"
+            },
+            {
+              "name": "fabrication_rates_are_estimates",
+              "ok": false,
+              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
+              "severity": "warning"
+            }
+          ],
+          "rates": {
+            "hull_steel_rate": 13634.7439,
+            "tank_shell_rate": 3350.1114,
+            "tank_supports_rate": 4649.114,
+            "insulation_rate": 16525.8471,
+            "piping_rate": 1232.1836,
+            "outfitting_rate": 11285.1038,
+            "cargo_system_lump": 421427.0,
+            "paint_anodes_misc": 1218845.0,
+            "battery_rate_per_kwh": 16915.812,
+            "propulsion_rate_per_kw": 15184.9316,
+            "wheelhouse_accom_lump": 1571173.0,
+            "tug_outfitting_lump": 1432747.0,
+            "yard_margin_fraction": 0.2739,
+            "delivery_lump": 616576.0,
+            "currency": "USD"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/022",
+      "output": {
+        "ok": {
+          "barge_breakdown": {
+            "hull_steel": 11422761,
+            "type_c_tanks": 3704655,
+            "tank_supports": 1063312,
+            "insulation": 192245,
+            "cargo_system": 666533,
+            "piping_machinery": 249468,
+            "outfitting": 154860,
+            "paint_anodes_misc": 1491710
+          },
+          "tug_breakdown": {
+            "hull_steel": 3409198,
+            "battery": 3594789,
+            "propulsion": 1156938,
+            "wheelhouse_accommodation": 291043,
+            "outfitting": 268912
+          },
+          "barge_subtotal": 18945543,
+          "tug_subtotal": 8720880,
+          "yard_margin": 4932923,
+          "delivery": 1439498.0,
+          "unit_total": 34038844,
+          "checks": [
+            {
+              "name": "masses_positive",
+              "ok": true,
+              "message": "mass-model inputs present",
+              "severity": "error"
+            },
+            {
+              "name": "no_reliquefaction_in_scope",
+              "ok": true,
+              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
+              "severity": "warning"
+            },
+            {
+              "name": "fabrication_rates_are_estimates",
+              "ok": false,
+              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
+              "severity": "warning"
+            }
+          ],
+          "rates": {
+            "hull_steel_rate": 17333.4745,
+            "tank_shell_rate": 10670.3555,
+            "tank_supports_rate": 16386.4773,
+            "insulation_rate": 16186.1547,
+            "piping_rate": 12238.4179,
+            "outfitting_rate": 9155.8913,
+            "cargo_system_lump": 666533.0,
+            "paint_anodes_misc": 1491710.0,
+            "battery_rate_per_kwh": 4326.8097,
+            "propulsion_rate_per_kw": 5689.9014,
+            "wheelhouse_accom_lump": 291043.0,
+            "tug_outfitting_lump": 268912.0,
+            "yard_margin_fraction": 0.1783,
+            "delivery_lump": 1439498.0,
+            "currency": "USD"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/023",
+      "output": {
+        "ok": {
+          "barge_breakdown": {
+            "hull_steel": 4367549,
+            "type_c_tanks": 3086916,
+            "tank_supports": 1801033,
+            "insulation": 42613,
+            "cargo_system": 1835740,
+            "piping_machinery": 390701,
+            "outfitting": 125575,
+            "paint_anodes_misc": 1947098
+          },
+          "tug_breakdown": {
+            "hull_steel": 1087465,
+            "battery": 16853232,
+            "propulsion": 4513739,
+            "wheelhouse_accommodation": 1857334,
+            "outfitting": 189550
+          },
+          "barge_subtotal": 13597223,
+          "tug_subtotal": 24501320,
+          "yard_margin": 5440472,
+          "delivery": 1921726.0,
+          "unit_total": 45460741,
+          "checks": [
+            {
+              "name": "masses_positive",
+              "ok": true,
+              "message": "mass-model inputs present",
+              "severity": "error"
+            },
+            {
+              "name": "no_reliquefaction_in_scope",
+              "ok": true,
+              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
+              "severity": "warning"
+            },
+            {
+              "name": "fabrication_rates_are_estimates",
+              "ok": false,
+              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
+              "severity": "warning"
+            }
+          ],
+          "rates": {
+            "hull_steel_rate": 9579.2199,
+            "tank_shell_rate": 12114.8582,
+            "tank_supports_rate": 13538.7907,
+            "insulation_rate": 4399.3694,
+            "piping_rate": 7746.4792,
+            "outfitting_rate": 2750.963,
+            "cargo_system_lump": 1835740.0,
+            "paint_anodes_misc": 1947098.0,
+            "battery_rate_per_kwh": 12228.0415,
+            "propulsion_rate_per_kw": 16233.7622,
+            "wheelhouse_accom_lump": 1857334.0,
+            "tug_outfitting_lump": 189550.0,
+            "yard_margin_fraction": 0.1428,
+            "delivery_lump": 1921726.0,
+            "currency": "USD"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/sweep/024",
+      "output": {
+        "ok": {
+          "barge_breakdown": {
+            "hull_steel": 1157587,
+            "type_c_tanks": 773229,
+            "tank_supports": 166182,
+            "insulation": 72139,
             "cargo_system": 500000,
-            "piping_machinery": 49637,
-            "outfitting": 77933,
+            "piping_machinery": 253032,
+            "outfitting": 211419,
             "paint_anodes_misc": 100000
           },
           "tug_breakdown": {
-            "hull_steel": 287500,
-            "battery": 155000,
-            "propulsion": 230000,
+            "hull_steel": 229047,
+            "battery": 337338,
+            "propulsion": 560906,
             "wheelhouse_accommodation": 450000,
             "outfitting": 200000
           },
-          "barge_subtotal": 6922573,
-          "tug_subtotal": 1322500,
-          "yard_margin": 824507,
+          "barge_subtotal": 3233588,
+          "tug_subtotal": 1777290,
+          "yard_margin": 501088,
           "delivery": 200000.0,
-          "unit_total": 9269580,
+          "unit_total": 5711966,
           "checks": [
             {
               "name": "masses_positive",
@@ -1912,204 +2110,6 @@
             "tug_outfitting_lump": 200000.0,
             "yard_margin_fraction": 0.1,
             "delivery_lump": 200000.0,
-            "currency": "USD"
-          }
-        }
-      }
-    },
-    {
-      "id": "compute/sweep/022",
-      "output": {
-        "ok": {
-          "barge_breakdown": {
-            "hull_steel": 3766294,
-            "type_c_tanks": 3430625,
-            "tank_supports": 311725,
-            "insulation": 642580,
-            "cargo_system": 528596,
-            "piping_machinery": 209923,
-            "outfitting": 327299,
-            "paint_anodes_misc": 967801
-          },
-          "tug_breakdown": {
-            "hull_steel": 1687555,
-            "battery": 7909774,
-            "propulsion": 1035923,
-            "wheelhouse_accommodation": 969835,
-            "outfitting": 1753586
-          },
-          "barge_subtotal": 10184843,
-          "tug_subtotal": 13356674,
-          "yard_margin": 605017,
-          "delivery": 443803.0,
-          "unit_total": 24590337,
-          "checks": [
-            {
-              "name": "masses_positive",
-              "ok": true,
-              "message": "mass-model inputs present",
-              "severity": "error"
-            },
-            {
-              "name": "no_reliquefaction_in_scope",
-              "ok": true,
-              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
-              "severity": "warning"
-            },
-            {
-              "name": "fabrication_rates_are_estimates",
-              "ok": false,
-              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
-              "severity": "warning"
-            }
-          ],
-          "rates": {
-            "hull_steel_rate": 14674.3924,
-            "tank_shell_rate": 7210.7758,
-            "tank_supports_rate": 12618.7025,
-            "insulation_rate": 11486.266,
-            "piping_rate": 8859.4313,
-            "outfitting_rate": 11086.5085,
-            "cargo_system_lump": 528596.0,
-            "paint_anodes_misc": 967801.0,
-            "battery_rate_per_kwh": 12757.7003,
-            "propulsion_rate_per_kw": 4504.0146,
-            "wheelhouse_accom_lump": 969835.0,
-            "tug_outfitting_lump": 1753586.0,
-            "yard_margin_fraction": 0.0257,
-            "delivery_lump": 443803.0,
-            "currency": "USD"
-          }
-        }
-      }
-    },
-    {
-      "id": "compute/sweep/023",
-      "output": {
-        "ok": {
-          "barge_breakdown": {
-            "hull_steel": 4912613,
-            "type_c_tanks": 6895156,
-            "tank_supports": 152210,
-            "insulation": 161689,
-            "cargo_system": 1363492,
-            "piping_machinery": 642173,
-            "outfitting": 83249,
-            "paint_anodes_misc": 159665
-          },
-          "tug_breakdown": {
-            "hull_steel": 1504507,
-            "battery": 1867594,
-            "propulsion": 3283239,
-            "wheelhouse_accommodation": 1821870,
-            "outfitting": 758784
-          },
-          "barge_subtotal": 14370248,
-          "tug_subtotal": 9235995,
-          "yard_margin": 2351182,
-          "delivery": 919289.0,
-          "unit_total": 26876714,
-          "checks": [
-            {
-              "name": "masses_positive",
-              "ok": true,
-              "message": "mass-model inputs present",
-              "severity": "error"
-            },
-            {
-              "name": "no_reliquefaction_in_scope",
-              "ok": true,
-              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
-              "severity": "warning"
-            },
-            {
-              "name": "fabrication_rates_are_estimates",
-              "ok": false,
-              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
-              "severity": "warning"
-            }
-          ],
-          "rates": {
-            "hull_steel_rate": 13082.6738,
-            "tank_shell_rate": 15572.2828,
-            "tank_supports_rate": 1068.2506,
-            "insulation_rate": 2842.0804,
-            "piping_rate": 12348.0842,
-            "outfitting_rate": 4813.6354,
-            "cargo_system_lump": 1363492.0,
-            "paint_anodes_misc": 159665.0,
-            "battery_rate_per_kwh": 3012.249,
-            "propulsion_rate_per_kw": 14274.9534,
-            "wheelhouse_accom_lump": 1821870.0,
-            "tug_outfitting_lump": 758784.0,
-            "yard_margin_fraction": 0.0996,
-            "delivery_lump": 919289.0,
-            "currency": "USD"
-          }
-        }
-      }
-    },
-    {
-      "id": "compute/sweep/024",
-      "output": {
-        "ok": {
-          "barge_breakdown": {
-            "hull_steel": 11297060,
-            "type_c_tanks": 172544,
-            "tank_supports": 1045816,
-            "insulation": 583606,
-            "cargo_system": 1682779,
-            "piping_machinery": 381186,
-            "outfitting": 530852,
-            "paint_anodes_misc": 1344704
-          },
-          "tug_breakdown": {
-            "hull_steel": 1905382,
-            "battery": 3290942,
-            "propulsion": 1879824,
-            "wheelhouse_accommodation": 1077860,
-            "outfitting": 1224233
-          },
-          "barge_subtotal": 17038547,
-          "tug_subtotal": 9378241,
-          "yard_margin": 2282410,
-          "delivery": 1219424.0,
-          "unit_total": 29918622,
-          "checks": [
-            {
-              "name": "masses_positive",
-              "ok": true,
-              "message": "mass-model inputs present",
-              "severity": "error"
-            },
-            {
-              "name": "no_reliquefaction_in_scope",
-              "ok": true,
-              "message": "cargo system excludes reliquefaction and nitrogen plant per the pressure-accumulation operating concept",
-              "severity": "warning"
-            },
-            {
-              "name": "fabrication_rates_are_estimates",
-              "ok": false,
-              "message": "fabrication/supply rates are user-supplied estimates; replace them with yard quotes before relying on the total",
-              "severity": "warning"
-            }
-          ],
-          "rates": {
-            "hull_steel_rate": 16568.5417,
-            "tank_shell_rate": 1266.7083,
-            "tank_supports_rate": 9851.6608,
-            "insulation_rate": 14166.2312,
-            "piping_rate": 8878.1837,
-            "outfitting_rate": 16995.5342,
-            "cargo_system_lump": 1682779.0,
-            "paint_anodes_misc": 1344704.0,
-            "battery_rate_per_kwh": 5307.9705,
-            "propulsion_rate_per_kw": 8173.1488,
-            "wheelhouse_accom_lump": 1077860.0,
-            "tug_outfitting_lump": 1224233.0,
-            "yard_margin_fraction": 0.0864,
-            "delivery_lump": 1219424.0,
             "currency": "USD"
           }
         }

@@ -189,6 +189,7 @@
       "id": "bauxite_100x16x6/design_depth_full_load_draft_ukc_0",
       "tier": 1,
       "reason": "tier 1: inputs of audited test test_journey_derating.py::test_flip_at_full_load_draft (issue #8)",
+      "knife_edge": "the design depth is set to the full-load draft itself with zero under-keel clearance, the point where the binding limit flips from volume to draft; the audited test checks that very flip. The draft is a bisection midpoint (halved endpoints, early stop on tolerance, no transcendental function); the port must repeat that path bit for bit, a known trap in spec 0001, and this case proves it does",
       "input": {
         "fn": "compute",
         "args": {
