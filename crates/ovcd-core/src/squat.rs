@@ -4,6 +4,11 @@
 //! The Python file holds the engineering notes. Copied exactly, quirks included: the `max` picks
 //! the first of equal estimates, and the speed solver is a bisection that stops early on
 //! tolerance, so its answer depends on the path taken.
+//!
+//! Known difference: Python raises `OverflowError` or `ZeroDivisionError` where a float power
+//! overflows or underflows (a speed of 1e200, an Lpp of 1e-200); this port returns infinity or
+//! NaN. Such inputs are far outside the valid range and the evaluation format cannot carry the
+//! error.
 
 use crate::checks::{Check, all_ok};
 use crate::pyfmt::fixed;
