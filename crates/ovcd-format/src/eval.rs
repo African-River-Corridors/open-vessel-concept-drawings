@@ -231,6 +231,8 @@ fn cost_inputs(args: &Value) -> Result<BargeCostInputs, EvalError> {
 fn mapping_value(value: &Value, key: &str) -> Result<MappingValue, EvalError> {
     if let Some(i) = value.as_i64() {
         Ok(MappingValue::Int(i))
+    } else if let Some(digits) = big_int_digits(value) {
+        Ok(MappingValue::BigInt(digits))
     } else if let Some(f) = value.as_f64() {
         Ok(MappingValue::Float(f))
     } else if let Some(s) = value.as_str() {
@@ -240,6 +242,29 @@ fn mapping_value(value: &Value, key: &str) -> Result<MappingValue, EvalError> {
             "`args.rates_mapping.{key}` must be a number or text"
         )))
     }
+}
+
+/// The exact digits of a JSON integer literal that does not fit `i64` (Python keeps such an `int`).
+fn big_int_digits(value: &Value) -> Option<String> {
+    let Value::Number(n) = value else { return None };
+    let text = n.to_string();
+    let digits = text.strip_prefix('-').unwrap_or(&text);
+    (!digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit())).then_some(text)
+}
+
+/// A number the core holds as `f64`, refused when it is an integer literal beyond 2^53: Python
+/// compares such ints exactly, and rounding them to a double could change a verdict.
+fn exact_number(value: &Value, what: &str) -> Result<f64, EvalError> {
+    if let Some(digits) = big_int_digits(value) {
+        let magnitude = digits.trim_start_matches('-');
+        let exact = magnitude.parse::<u64>().is_ok_and(|m| m <= 1 << 53);
+        if !exact {
+            return Err(EvalError::BadInput(format!(
+                "`{what}` is an integer beyond 2^53, which the core cannot hold exactly; write it as a float"
+            )));
+        }
+    }
+    number_arg(value, what)
 }
 
 fn explicit_rates(map: &serde_json::Map<String, Value>) -> Result<BargeCostRates, EvalError> {
@@ -346,7 +371,10 @@ fn pair_field(fields: &Value, name: &str) -> Result<(f64, f64), EvalError> {
     let bad = || EvalError::BadInput(format!("`{name}` must be a list of two numbers"));
     let items = fields.get(name).and_then(Value::as_array).ok_or_else(bad)?;
     match items.as_slice() {
-        [a, b] => Ok((a.as_f64().ok_or_else(bad)?, b.as_f64().ok_or_else(bad)?)),
+        [a, b] => {
+            let _ = (a.as_f64().ok_or_else(bad)?, b.as_f64().ok_or_else(bad)?);
+            Ok((exact_number(a, name)?, exact_number(b, name)?))
+        }
         _ => Err(bad()),
     }
 }
@@ -365,7 +393,7 @@ fn text_field(fields: &Value, name: &str, default: Option<&str>) -> Result<Strin
 fn optional_number(fields: &Value, name: &str) -> Result<Option<f64>, EvalError> {
     match fields.get(name) {
         None | Some(Value::Null) => Ok(None),
-        Some(v) => Ok(Some(number_arg(v, name)?)),
+        Some(v) => Ok(Some(exact_number(v, name)?)),
     }
 }
 
@@ -399,7 +427,7 @@ fn standard_from_fields(fields: &Value) -> Result<VesselStandard, EvalError> {
         class_name: text_field(fields, "class_name", None)?,
         formation: text_field(fields, "formation", None)?,
         loa_m: pair_field(fields, "loa_m")?,
-        beam_m: number_arg(
+        beam_m: exact_number(
             fields
                 .get("beam_m")
                 .ok_or_else(|| EvalError::BadInput("`beam_m` is required".into()))?,

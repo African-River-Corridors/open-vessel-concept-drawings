@@ -519,6 +519,118 @@
       }
     },
     {
+      "id": "compute/error/rate_control_whitespace",
+      "tier": 3,
+      "reason": "tier 3: error path. float() strips only ASCII C whitespace, so a leading U+001F is a ValueError (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "\u001f1",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/rate_nbsp_padded",
+      "tier": 1,
+      "reason": "tier 1: float() reads U+00A0 and U+0085 as spaces, so a padded rate is 1.0 (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": " 1",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/currency_int_beyond_i64",
+      "tier": 1,
+      "reason": "tier 1: a JSON int beyond i64 keeps its exact digits through str(), as Python does (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": 10000000000000000000,
+            "hull_steel_rate": "1000.0",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/currency_negative_int_beyond_i64",
+      "tier": 1,
+      "reason": "tier 1: a negative JSON int beyond i64 keeps its exact digits through str() (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": -9223372036854775809,
+            "hull_steel_rate": "1000.0",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
       "id": "compute/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",

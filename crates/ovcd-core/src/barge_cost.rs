@@ -79,6 +79,8 @@ pub struct BargeCostRates {
 #[derive(Debug, Clone, PartialEq)]
 pub enum MappingValue {
     Int(i64),
+    /// A Python `int` too big for `i64`: its exact decimal digits, as `str(v)` prints them.
+    BigInt(String),
     Float(f64),
     Text(String),
 }
@@ -88,6 +90,10 @@ impl MappingValue {
     fn to_float(&self) -> Result<f64, String> {
         match self {
             MappingValue::Int(i) => Ok(*i as f64),
+            MappingValue::BigInt(d) => match d.parse::<f64>() {
+                Ok(f) if f.is_finite() => Ok(f),
+                _ => Err("int too large to convert to float".to_string()),
+            },
             MappingValue::Float(f) => Ok(*f),
             MappingValue::Text(s) => pystr::parse_float(s).ok_or_else(|| {
                 format!("could not convert string to float: {}", pystr::repr_str(s))
@@ -99,6 +105,7 @@ impl MappingValue {
     fn to_text(&self) -> String {
         match self {
             MappingValue::Int(i) => i.to_string(),
+            MappingValue::BigInt(d) => d.clone(),
             MappingValue::Float(f) => crate::pyfmt::py_str(*f),
             MappingValue::Text(s) => s.clone(),
         }

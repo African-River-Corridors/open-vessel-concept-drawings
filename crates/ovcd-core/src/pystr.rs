@@ -141,8 +141,19 @@ fn decimal_to_ascii(c: char) -> char {
 /// `float(s)` for a `str`; `None` where Python raises `ValueError`.
 pub fn parse_float(s: &str) -> Option<f64> {
     // Python reads any Unicode decimal digit as its ASCII digit before it parses.
-    let ascii: String = s.chars().map(decimal_to_ascii).collect();
-    let t = strip(&ascii);
+    // Python turns non-ASCII whitespace into a space, then strips only the ASCII C whitespace
+    // (` \t\n\r\v\f`). So `\x1c`-`\x1f` are whitespace for `str.strip` but not for `float`.
+    let ascii: String = s
+        .chars()
+        .map(|c| {
+            if !c.is_ascii() && is_space(c) {
+                ' '
+            } else {
+                decimal_to_ascii(c)
+            }
+        })
+        .collect();
+    let t = ascii.trim_matches(|c| matches!(c, ' ' | '\t' | '\n' | '\r' | '\u{b}' | '\u{c}'));
     if t.is_empty() {
         return None;
     }

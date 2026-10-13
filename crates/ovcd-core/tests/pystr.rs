@@ -120,3 +120,11 @@ fn repr_escapes_what_python_calls_not_printable() {
     assert_eq!(repr_str("\u{1f600}"), "'\u{1f600}'");
     assert_eq!(repr_str("\u{e0001}"), "'\\U000e0001'"); // a tag character
 }
+
+#[test]
+fn float_strips_only_ascii_c_whitespace_and_reads_other_spaces_as_blanks() {
+    assert_eq!(parse_float("\u{1f}1"), None);
+    assert_eq!(parse_float("1\u{1c}"), None);
+    assert_eq!(parse_float(" \t\n\r\u{b}\u{c}1\u{b}"), Some(1.0));
+    assert_eq!(parse_float("\u{a0}1\u{85}\u{2003}"), Some(1.0));
+}
