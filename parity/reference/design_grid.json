@@ -1,0 +1,362 @@
+{
+  "entry_point": "design_grid",
+  "generated_by": "cargo xtask regen (frozen Python); never edit by hand",
+  "results": [
+    {
+      "id": "sweep/60x12",
+      "output": {
+        "ok": {
+          "barge_lengths_m": [
+            60
+          ],
+          "beams_m": [
+            12.0
+          ],
+          "depth_m": 6.0,
+          "cargo_type": "LPG_propane",
+          "clearance_basis": "1.0 m standard side clearance per side (IGC-2G protective location)",
+          "max_tank_length_m": 28.0,
+          "cells": [
+            {
+              "barge_length_m": 60.0,
+              "beam_m": 12.0,
+              "n_tanks_long": 2,
+              "feasible": true,
+              "cargo_t": 680.3055097251973,
+              "tank_outer_diameter_m": 10.0,
+              "tank_length_m": 21.5,
+              "slenderness": 2.15,
+              "full_load_draft_m": 2.4227943420410156,
+              "air_draft_m": 10.577205657958984,
+              "reason": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n_tanks_for_length/60",
+      "output": {
+        "ok": 2
+      }
+    },
+    {
+      "id": "n_tanks_for_length/50",
+      "output": {
+        "ok": 2
+      }
+    },
+    {
+      "id": "n_tanks_for_length/70",
+      "output": {
+        "ok": 2
+      }
+    },
+    {
+      "id": "n_tanks_for_length/80",
+      "output": {
+        "ok": 3
+      }
+    },
+    {
+      "id": "sweep/70_beams_8_12_16",
+      "output": {
+        "ok": {
+          "barge_lengths_m": [
+            70
+          ],
+          "beams_m": [
+            8.0,
+            12.0,
+            16.0
+          ],
+          "depth_m": 6.0,
+          "cargo_type": "LPG_propane",
+          "clearance_basis": "1.0 m standard side clearance per side (IGC-2G protective location)",
+          "max_tank_length_m": 28.0,
+          "cells": [
+            {
+              "barge_length_m": 70.0,
+              "beam_m": 8.0,
+              "n_tanks_long": 2,
+              "feasible": true,
+              "cargo_t": 215.2616173706804,
+              "tank_outer_diameter_m": 6.0,
+              "tank_length_m": 25.25,
+              "slenderness": 4.208333333333333,
+              "full_load_draft_m": 1.4370803833007812,
+              "air_draft_m": 7.962919616699219,
+              "reason": ""
+            },
+            {
+              "barge_length_m": 70.0,
+              "beam_m": 12.0,
+              "n_tanks_long": 2,
+              "feasible": true,
+              "cargo_t": 1051.2193889734513,
+              "tank_outer_diameter_m": 10.0,
+              "tank_length_m": 25.25,
+              "slenderness": 2.525,
+              "full_load_draft_m": 2.8546600341796875,
+              "air_draft_m": 10.145339965820312,
+              "reason": ""
+            },
+            {
+              "barge_length_m": 70.0,
+              "beam_m": 16.0,
+              "n_tanks_long": 2,
+              "feasible": true,
+              "cargo_t": 879.2961187175532,
+              "tank_outer_diameter_m": 6.5,
+              "tank_length_m": 25.25,
+              "slenderness": 3.8846153846153846,
+              "full_load_draft_m": 2.077188491821289,
+              "air_draft_m": 7.489478174845377,
+              "reason": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "sweep/70_80_90_beams_12_14",
+      "output": {
+        "ok": {
+          "barge_lengths_m": [
+            70,
+            80,
+            90
+          ],
+          "beams_m": [
+            12.0,
+            14.0
+          ],
+          "depth_m": 6.0,
+          "cargo_type": "LPG_propane",
+          "clearance_basis": "1.0 m standard side clearance per side (IGC-2G protective location)",
+          "max_tank_length_m": 28.0,
+          "cells": [
+            {
+              "barge_length_m": 70.0,
+              "beam_m": 12.0,
+              "n_tanks_long": 2,
+              "feasible": true,
+              "cargo_t": 1051.2193889734513,
+              "tank_outer_diameter_m": 10.0,
+              "tank_length_m": 25.25,
+              "slenderness": 2.525,
+              "full_load_draft_m": 2.8546600341796875,
+              "air_draft_m": 10.145339965820312,
+              "reason": ""
+            },
+            {
+              "barge_length_m": 70.0,
+              "beam_m": 14.0,
+              "n_tanks_long": 2,
+              "feasible": true,
+              "cargo_t": 1481.7914647729804,
+              "tank_outer_diameter_m": 12.0,
+              "tank_length_m": 25.25,
+              "slenderness": 2.1041666666666665,
+              "full_load_draft_m": 3.3454055786132812,
+              "air_draft_m": 11.654594421386719,
+              "reason": ""
+            },
+            {
+              "barge_length_m": 80.0,
+              "beam_m": 12.0,
+              "n_tanks_long": 3,
+              "feasible": true,
+              "cargo_t": 1205.7668386602238,
+              "tank_outer_diameter_m": 10.0,
+              "tank_length_m": 18.666666666666668,
+              "slenderness": 1.8666666666666667,
+              "full_load_draft_m": 2.8855762481689453,
+              "air_draft_m": 10.114423751831055,
+              "reason": ""
+            },
+            {
+              "barge_length_m": 80.0,
+              "beam_m": 14.0,
+              "n_tanks_long": 3,
+              "feasible": true,
+              "cargo_t": 1673.8186465970857,
+              "tank_outer_diameter_m": 12.0,
+              "tank_length_m": 18.666666666666668,
+              "slenderness": 1.5555555555555556,
+              "full_load_draft_m": 3.3513450622558594,
+              "air_draft_m": 11.64865493774414,
+              "reason": ""
+            },
+            {
+              "barge_length_m": 90.0,
+              "beam_m": 12.0,
+              "n_tanks_long": 3,
+              "feasible": true,
+              "cargo_t": 1576.6807179084778,
+              "tank_outer_diameter_m": 10.0,
+              "tank_length_m": 21.166666666666668,
+              "slenderness": 2.1166666666666667,
+              "full_load_draft_m": 3.1700363159179688,
+              "air_draft_m": 9.829963684082031,
+              "reason": ""
+            },
+            {
+              "barge_length_m": 90.0,
+              "beam_m": 14.0,
+              "n_tanks_long": 3,
+              "feasible": true,
+              "cargo_t": 2222.4677375231004,
+              "tank_outer_diameter_m": 12.0,
+              "tank_length_m": 21.166666666666668,
+              "slenderness": 1.763888888888889,
+              "full_load_draft_m": 3.714700698852539,
+              "air_draft_m": 11.285299301147461,
+              "reason": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "sweep/45_60_90_beams_8_12_16",
+      "output": {
+        "ok": {
+          "barge_lengths_m": [
+            45,
+            60,
+            90
+          ],
+          "beams_m": [
+            8.0,
+            12.0,
+            16.0
+          ],
+          "depth_m": 6.0,
+          "cargo_type": "LPG_propane",
+          "clearance_basis": "1.0 m standard side clearance per side (IGC-2G protective location)",
+          "max_tank_length_m": 28.0,
+          "cells": [
+            {
+              "barge_length_m": 45.0,
+              "beam_m": 8.0,
+              "n_tanks_long": 2,
+              "feasible": false,
+              "cargo_t": null,
+              "tank_outer_diameter_m": null,
+              "tank_length_m": null,
+              "slenderness": null,
+              "full_load_draft_m": null,
+              "air_draft_m": null,
+              "reason": "Cylinder length is -6.99m - tank heads don't fit. Available length per tank=-0.9"
+            },
+            {
+              "barge_length_m": 45.0,
+              "beam_m": 12.0,
+              "n_tanks_long": 2,
+              "feasible": false,
+              "cargo_t": null,
+              "tank_outer_diameter_m": null,
+              "tank_length_m": null,
+              "slenderness": null,
+              "full_load_draft_m": null,
+              "air_draft_m": null,
+              "reason": "Cylinder length is -4.50m - tank heads don't fit. Available length per tank=5.50"
+            },
+            {
+              "barge_length_m": 45.0,
+              "beam_m": 16.0,
+              "n_tanks_long": 2,
+              "feasible": false,
+              "cargo_t": null,
+              "tank_outer_diameter_m": null,
+              "tank_length_m": null,
+              "slenderness": null,
+              "full_load_draft_m": null,
+              "air_draft_m": null,
+              "reason": "Cylinder length is -1.00m - tank heads don't fit. Available length per tank=5.50"
+            },
+            {
+              "barge_length_m": 60.0,
+              "beam_m": 8.0,
+              "n_tanks_long": 2,
+              "feasible": true,
+              "cargo_t": 95.77803756901497,
+              "tank_outer_diameter_m": 6.0,
+              "tank_length_m": 21.5,
+              "slenderness": 3.5833333333333335,
+              "full_load_draft_m": 1.1361579895019531,
+              "air_draft_m": 8.263842010498047,
+              "reason": ""
+            },
+            {
+              "barge_length_m": 60.0,
+              "beam_m": 12.0,
+              "n_tanks_long": 2,
+              "feasible": true,
+              "cargo_t": 680.3055097251973,
+              "tank_outer_diameter_m": 10.0,
+              "tank_length_m": 21.5,
+              "slenderness": 2.15,
+              "full_load_draft_m": 2.4227943420410156,
+              "air_draft_m": 10.577205657958984,
+              "reason": ""
+            },
+            {
+              "barge_length_m": 60.0,
+              "beam_m": 16.0,
+              "n_tanks_long": 2,
+              "feasible": true,
+              "cargo_t": 592.6439023226279,
+              "tank_outer_diameter_m": 6.5,
+              "tank_length_m": 21.5,
+              "slenderness": 3.3076923076923075,
+              "full_load_draft_m": 1.8131561279296875,
+              "air_draft_m": 7.753510538736979,
+              "reason": ""
+            },
+            {
+              "barge_length_m": 90.0,
+              "beam_m": 8.0,
+              "n_tanks_long": 3,
+              "feasible": true,
+              "cargo_t": 400.46116606326194,
+              "tank_outer_diameter_m": 6.0,
+              "tank_length_m": 21.166666666666668,
+              "slenderness": 3.527777777777778,
+              "full_load_draft_m": 1.7292652130126953,
+              "air_draft_m": 7.670734786987305,
+              "reason": ""
+            },
+            {
+              "barge_length_m": 90.0,
+              "beam_m": 12.0,
+              "n_tanks_long": 3,
+              "feasible": true,
+              "cargo_t": 1576.6807179084778,
+              "tank_outer_diameter_m": 10.0,
+              "tank_length_m": 21.166666666666668,
+              "slenderness": 2.1166666666666667,
+              "full_load_draft_m": 3.1700363159179688,
+              "air_draft_m": 9.829963684082031,
+              "reason": ""
+            },
+            {
+              "barge_length_m": 90.0,
+              "beam_m": 16.0,
+              "n_tanks_long": 3,
+              "feasible": true,
+              "cargo_t": 1318.829517189772,
+              "tank_outer_diameter_m": 6.5,
+              "tank_length_m": 21.166666666666668,
+              "slenderness": 3.2564102564102564,
+              "full_load_draft_m": 2.296794891357422,
+              "air_draft_m": 7.2698717753092446,
+              "reason": ""
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

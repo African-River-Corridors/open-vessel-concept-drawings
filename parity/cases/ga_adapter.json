@@ -1,0 +1,76 @@
+{
+  "entry_point": "ga_adapter",
+  "cases": [
+    {
+      "id": "to_ga/gas_100x16x6_LNG_ethane",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_ga_adapter.py::test_geometry_passes_through_unchanged; test_ga_adapter.py::test_tank_volume_reconciles_with_capacity; test_ga_adapter.py::test_laden_draft_override_and_tug_flag (issue #8)",
+      "input": {
+        "fn": "to_ga",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "LNG_ethane"
+          },
+          "kwargs": {}
+        }
+      }
+    },
+    {
+      "id": "to_ga/gas_laden_draft_2_pushed",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_ga_adapter.py::test_laden_draft_override_and_tug_flag (issue #8)",
+      "input": {
+        "fn": "to_ga",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "LNG_ethane"
+          },
+          "kwargs": {
+            "laden_draft_m": 2.0,
+            "motor_vessel": false
+          }
+        }
+      }
+    },
+    {
+      "id": "to_ga/bauxite_100x16x6",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_ga_adapter.py::test_bulk_has_no_tank_geometry (issue #8)",
+      "input": {
+        "fn": "to_ga",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          },
+          "kwargs": {}
+        }
+      }
+    },
+    {
+      "id": "is_gas/bauxite_100x16x6",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_ga_adapter.py::test_bulk_has_no_tank_geometry (issue #8)",
+      "input": {
+        "fn": "is_gas",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite"
+          }
+        }
+      }
+    }
+  ],
+  "retired": []
+}

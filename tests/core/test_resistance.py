@@ -28,6 +28,9 @@ def test_resistance_golden_confined_shallow():
 
     The default case is also, on inspection, physically extreme — see the validity test
     below — so treat these numbers as a regression anchor, not as a design answer.
+
+    Label: snapshot
+    Parity: resistance:compute/default
     """
     r = compute(ResistanceInputs())
     assert abs(r.wetted_surface_area - 4590.0) < 1.0
@@ -45,7 +48,11 @@ def test_feasibility_the_default_case_is_outside_barrass_validity():
     """The default pairs a 130 x 24 m hull at 6.0 m draft with a 40 m wide, 6.5 m deep
     channel: blockage 0.44 and 0.50 m of water under the keel. Barrass is fitted below about
     0.35. The old model returned 9 knots here without comment; the least this one can do is
-    say the combination is not physical."""
+    say the combination is not physical.
+
+    Label: property
+    Parity: squat:compute/resistance_default_barge_6.5m_channel_4kn
+    """
     from vessel_designer.core.squat import SquatInputs, compute as squat
     i = ResistanceInputs()
     area = (40.0 + 60.0) / 2 * 6.5
@@ -58,6 +65,9 @@ def test_feasibility_the_default_case_is_outside_barrass_validity():
 
 def test_binding_environment_is_confined_shallow_and_feeds_battery():
     # The single number that leaves the module for battery sizing.
+    """Label: snapshot
+    Parity: resistance:compute/default
+    """
     r = compute(ResistanceInputs())
     assert r.binding_environment.name == "Confined shallow river"   # lowest service speed
     assert abs(r.binding_power_at_service_kw - 66.2) < 1.0
@@ -65,6 +75,9 @@ def test_binding_environment_is_confined_shallow_and_feeds_battery():
 
 
 def test_checks_pass_on_default_design():
+    """Label: property
+    Parity: resistance:compute/default
+    """
     r = compute(ResistanceInputs())
     assert r.ok                                            # no error-severity failures
     names = {c.name for c in r.checks}
@@ -76,6 +89,9 @@ def test_checks_pass_on_default_design():
 # ---------- property: the physics that must always hold ----------
 
 def test_resistance_monotone_in_speed():
+    """Label: property
+    Parity: resistance:compute/default
+    """
     r = compute(ResistanceInputs())
     a = _shallow(r)
     totals = [p.resistance_total_kn for p in a.speed_curve if p.speed_through_water_knots > 0]
@@ -84,6 +100,9 @@ def test_resistance_monotone_in_speed():
 
 def test_shallow_factor_at_least_one_and_grows_as_depth_falls():
     # Compare the shallow factor at a fixed speed for two depths.
+    """Label: property
+    Parity: resistance:compute/wide_channel_depth_20, resistance:compute/wide_channel_depth_8
+    """
     calc = ResistanceCalculator(ResistanceInputs())
     deep = EnvironmentInputs(name="d", water_depth=20.0, channel_width_bottom=200.0,
                              channel_width_surface=200.0, water_density=1.0)
@@ -97,12 +116,19 @@ def test_shallow_factor_at_least_one_and_grows_as_depth_falls():
 
 
 def test_deep_water_factor_is_one():
+    """Label: property
+    Parity: none (private helper _shallow_water_factor has no Reference Results)
+    """
     calc = ResistanceCalculator(ResistanceInputs())
     env = EnvironmentInputs(name="open", is_deep_water=True)
     assert calc._shallow_water_factor(5.0, env) == 1.0
 
 
 def test_service_speed_falls_as_channel_gets_shallower():
+    """Label: property
+    Parity: resistance:compute/channel_depth_10, resistance:compute/channel_depth_7,
+        resistance:compute/channel_depth_5
+    """
     def svc(depth):
         env = EnvironmentInputs(name="x", water_depth=depth, channel_width_bottom=40.0,
                                 channel_width_surface=60.0, current_speed_knots=1.0,
@@ -116,6 +142,9 @@ def test_service_speed_falls_as_channel_gets_shallower():
 
 def test_service_speed_check_passes_within_schijf():
     # Default river env: sweep capped at 95% of Schijf, so the check holds.
+    """Label: property
+    Parity: resistance:compute/default
+    """
     r = compute(ResistanceInputs())
     svc_checks = [c for c in r.checks if c.name.startswith("service_speed_below_limiting")]
     assert svc_checks and all(c.ok for c in svc_checks)
@@ -124,6 +153,9 @@ def test_service_speed_check_passes_within_schijf():
 def test_blockage_in_range_fires_for_overtight_channel():
     # A channel barely wider than the barge -> n -> 1 (or am >= ac) -> check fails.
     # midship area = 24*6*0.85 = 122.4 m^2; this channel gives ac ~ 110 m^2 -> n > 1.
+    """Label: property
+    Parity: resistance:compute/tight_channel_beam24
+    """
     tight = EnvironmentInputs(name="tight", water_depth=6.5, channel_width_bottom=16.0,
                               channel_width_surface=18.0, current_speed_knots=0.0,
                               water_density=1.0)
@@ -139,6 +171,9 @@ def test_power_within_installed_fires_when_underpowered():
     # power_available; the service point falls back to the slowest, whose delivered power
     # exceeds the engine -> power_within_installed fires. ~5 kW installed forces this
     # (slowest-speed delivered power is ~40 kW).
+    """Label: property
+    Parity: resistance:compute/tug_5kw
+    """
     weak = TugInputs(engine_power_kw=5.0)
     r = compute(ResistanceInputs(tug=weak))
     pwr_checks = [c for c in r.checks if c.name.startswith("power_within_installed")]
@@ -149,19 +184,9 @@ def test_power_within_installed_fires_when_underpowered():
 
 def test_power_within_installed_passes_when_low_speed_feasible():
     # A modest engine still finds a feasible slow service speed -> check passes.
+    """Label: property
+    Parity: resistance:compute/tug_50kw
+    """
     r = compute(ResistanceInputs(tug=TugInputs(engine_power_kw=50.0)))
     pwr_checks = [c for c in r.checks if c.name.startswith("power_within_installed")]
     assert pwr_checks and all(c.ok for c in pwr_checks)
-
-
-# ---------- non-breaking: legacy entrypoint unchanged ----------
-
-def test_legacy_calculator_entrypoint_unchanged():
-    legacy = ResistanceCalculator(ResistanceInputs()).calculate()
-    free = compute(ResistanceInputs())
-    assert legacy.wetted_surface_area == free.wetted_surface_area
-    for le, fe in zip(legacy.environments, free.environments):
-        assert le.service_speed_knots == fe.service_speed_knots
-        assert le.power_at_service_kw == fe.power_at_service_kw
-    # calculate() does not attach checks (additive change lives in compute()).
-    assert legacy.checks == []

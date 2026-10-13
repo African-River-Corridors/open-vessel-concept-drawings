@@ -1,0 +1,114 @@
+{
+  "entry_point": "protective_location",
+  "generated_by": "cargo xtask regen (frozen Python); never edit by hand",
+  "results": [
+    {
+      "id": "distance_d_vc/500",
+      "output": {
+        "ok": 0.8
+      }
+    },
+    {
+      "id": "compute_required_clearances/ADN_G_beam18_d_vc_of_500",
+      "output": {
+        "ok": {
+          "cs_required": 1.25,
+          "cb_required": 1.1,
+          "d_vc": 0.8
+        }
+      }
+    },
+    {
+      "id": "distance_d_vc/3000",
+      "output": {
+        "ok": 1.0
+      }
+    },
+    {
+      "id": "compute_required_clearances/ADN_G_beam18_d_vc_of_3000",
+      "output": {
+        "ok": {
+          "cs_required": 1.25,
+          "cb_required": 1.1,
+          "d_vc": 1.0
+        }
+      }
+    },
+    {
+      "id": "distance_d_vc/20000",
+      "output": {
+        "ok": 2.0
+      }
+    },
+    {
+      "id": "compute_required_clearances/ADN_G_beam18_d_vc_of_20000",
+      "output": {
+        "ok": {
+          "cs_required": 1.25,
+          "cb_required": 1.1,
+          "d_vc": 2.0
+        }
+      }
+    },
+    {
+      "id": "compute_required_clearances/IGC_2G_beam14.8_d_vc_1.0",
+      "output": {
+        "ok": {
+          "cs_required": 1.0,
+          "cb_required": 1.0,
+          "d_vc": 1.0
+        }
+      }
+    },
+    {
+      "id": "compute_required_clearances/IGC_2G_beam14.8_d_vc_2.0",
+      "output": {
+        "ok": {
+          "cs_required": 2.0,
+          "cb_required": 2.0,
+          "d_vc": 2.0
+        }
+      }
+    },
+    {
+      "id": "compute_required_clearances/IGC_2G_beam14.8_d_vc_0.8",
+      "output": {
+        "ok": {
+          "cs_required": 0.8,
+          "cb_required": 0.9866666666666667,
+          "d_vc": 0.8
+        }
+      }
+    },
+    {
+      "id": "d_vc_exact/800",
+      "output": {
+        "ok": 0.8
+      }
+    },
+    {
+      "id": "d_vc_exact/3000",
+      "output": {
+        "ok": 0.9
+      }
+    },
+    {
+      "id": "d_vc_exact/5000",
+      "output": {
+        "ok": 1.0
+      }
+    },
+    {
+      "id": "d_vc_exact/10000",
+      "output": {
+        "ok": 1.2000000000000002
+      }
+    },
+    {
+      "id": "d_vc_exact/40000",
+      "output": {
+        "ok": 2.0
+      }
+    }
+  ]
+}

@@ -14,6 +14,9 @@ def test_base_point_regression_anchor():
     cargo zone instead of 45.0 m. The drop is 48% -- far larger than on the 100 m
     reference vessel (-10%), because the stern block is a FIXED length and a short hull
     pays the same 21.9 m as a long one.
+
+    Label: snapshot
+    Parity: design_grid:sweep/60x12
     """
     g = sweep([60], [12.0])
     c = g.curve(60)[0]
@@ -22,7 +25,13 @@ def test_base_point_regression_anchor():
 
 
 def test_tank_count_rule_length_only():
-    """Count steps by length only (so each fixed-length curve is smooth)."""
+    """Count steps by length only (so each fixed-length curve is smooth).
+
+    Label: snapshot
+    Parity: design_grid:n_tanks_for_length/60, design_grid:n_tanks_for_length/50,
+        design_grid:n_tanks_for_length/70, design_grid:n_tanks_for_length/80,
+        design_grid:sweep/70_beams_8_12_16
+    """
     assert n_tanks_for_length(60) == 2       # base: 2 tanks
     assert n_tanks_for_length(50) == 2
     assert n_tanks_for_length(70) == 2
@@ -42,6 +51,9 @@ def test_cargo_monotonic_in_length():
     are paid. Narrow beams are out of this test's sample: below 11 m the three 40 ft units
     go into two rows, which lengthens the stern block, and short narrow hulls then have no
     cargo zone at all.
+
+    Label: property
+    Parity: design_grid:sweep/70_80_90_beams_12_14
     """
     lengths = [70, 80, 90]
     beams = [12.0, 14.0]
@@ -65,6 +77,9 @@ def test_short_hulls_are_now_infeasible_for_gas():
     So the old lower bound of the envelope does not survive the arrangement. Either
     the small vessels are pushed (a barge + separate tug, which moves the crew block off
     the cargo hull) or the envelope starts nearer 55-60 m. That is a design decision for the user.
+
+    Label: snapshot
+    Parity: design_grid:sweep/45_60_90_beams_8_12_16
     """
     g = sweep([45, 60, 90], [8.0, 12.0, 16.0])
     by_loa = {}

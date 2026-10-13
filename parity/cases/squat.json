@@ -1,0 +1,449 @@
+{
+  "entry_point": "squat",
+  "cases": [
+    {
+      "id": "compute/CN_II_4.8m_6kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_golden_barrass_reproduces_its_own_formula; test_squat.py::test_feasibility_method_disagreement_is_surfaced (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 4.8,
+            "channel_area_m2": 209.5,
+            "speed_through_water_kn": 6.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_0kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_golden_zero_speed_is_zero_squat (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 4.8,
+            "channel_area_m2": 209.5,
+            "speed_through_water_kn": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_9.2kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_golden_the_finding_that_created_this_module (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 4.8,
+            "channel_area_m2": 209.5,
+            "speed_through_water_kn": 9.2
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_1kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_squat_rises_monotonically_with_speed (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 4.8,
+            "channel_area_m2": 209.5,
+            "speed_through_water_kn": 1.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_2kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_squat_rises_monotonically_with_speed (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 4.8,
+            "channel_area_m2": 209.5,
+            "speed_through_water_kn": 2.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_4kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_squat_rises_monotonically_with_speed (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 4.8,
+            "channel_area_m2": 209.5,
+            "speed_through_water_kn": 4.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_8kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_squat_rises_monotonically_with_speed; test_squat.py::test_feasibility_grounding_is_reported_not_returned_silently (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 4.8,
+            "channel_area_m2": 209.5,
+            "speed_through_water_kn": 8.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_3kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_dynamic_ukc_is_static_minus_squat (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 4.8,
+            "channel_area_m2": 209.5,
+            "speed_through_water_kn": 3.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_5kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_dynamic_ukc_is_static_minus_squat; test_squat.py::test_property_squat_rises_with_blockage (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 4.8,
+            "channel_area_m2": 209.5,
+            "speed_through_water_kn": 5.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_7kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_dynamic_ukc_is_static_minus_squat (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 4.8,
+            "channel_area_m2": 209.5,
+            "speed_through_water_kn": 7.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_5kn_area_400",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_squat_rises_with_blockage (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 4.8,
+            "channel_area_m2": 400.0,
+            "speed_through_water_kn": 5.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_5kn_area_300",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_squat_rises_with_blockage (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 4.8,
+            "channel_area_m2": 300.0,
+            "speed_through_water_kn": 5.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_4.8m_5kn_area_250",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_squat_rises_with_blockage (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 4.8,
+            "channel_area_m2": 250.0,
+            "speed_through_water_kn": 5.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_depth_5.28_5kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_deeper_water_squats_less (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 5.28,
+            "channel_area_m2": 209.5,
+            "speed_through_water_kn": 5.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_depth_6_5kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_deeper_water_squats_less (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 6.0,
+            "channel_area_m2": 209.5,
+            "speed_through_water_kn": 5.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_depth_8_5kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_deeper_water_squats_less (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 8.0,
+            "channel_area_m2": 209.5,
+            "speed_through_water_kn": 5.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_depth_3_9kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_feasibility_supercritical_froude_is_flagged (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 3.0,
+            "channel_area_m2": 209.5,
+            "speed_through_water_kn": 9.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/CN_II_open_water_8kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_feasibility_open_water_says_so (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "block_coefficient": 0.85,
+            "water_depth_m": 4.8,
+            "channel_area_m2": 0.0,
+            "speed_through_water_kn": 8.0
+          }
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/depth5.28_area235.5_margin0.15",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_max_speed_solver_lands_on_the_margin (issue #8)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "water_depth_m": 5.28,
+          "channel_area_m2": 235.5,
+          "draft_m": 4.4,
+          "beam_m": 14.8,
+          "lpp_m": 87.3,
+          "safety_margin_m": 0.15
+        }
+      }
+    },
+    {
+      "id": "compute/depth5.28_area235.5_at_solver",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_max_speed_solver_lands_on_the_margin (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 6.46484375,
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "water_depth_m": 5.28,
+            "channel_area_m2": 235.5
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/depth5.28_area235.5_solver_plus_0.1",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_max_speed_solver_lands_on_the_margin (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 6.56484375,
+            "draft_m": 4.4,
+            "beam_m": 14.8,
+            "lpp_m": 87.3,
+            "water_depth_m": 5.28,
+            "channel_area_m2": 235.5
+          }
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/depth4.8_area209.5",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_deeper_channel_buys_speed (issue #8)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "water_depth_m": 4.8,
+          "channel_area_m2": 209.5,
+          "draft_m": 4.4,
+          "beam_m": 14.8,
+          "lpp_m": 87.3
+        }
+      }
+    },
+    {
+      "id": "max_speed_for_ukc/depth5.28_area235.5",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_squat.py::test_property_deeper_channel_buys_speed (issue #8)",
+      "input": {
+        "fn": "max_speed_for_ukc",
+        "args": {
+          "water_depth_m": 5.28,
+          "channel_area_m2": 235.5,
+          "draft_m": 4.4,
+          "beam_m": 14.8,
+          "lpp_m": 87.3
+        }
+      }
+    },
+    {
+      "id": "compute/resistance_default_barge_6.5m_channel_4kn",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_resistance.py::test_feasibility_the_default_case_is_outside_barrass_validity (issue #8)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "speed_through_water_kn": 4.0,
+            "draft_m": 6.0,
+            "beam_m": 24.0,
+            "lpp_m": 125.0,
+            "block_coefficient": 0.85,
+            "water_depth_m": 6.5,
+            "channel_area_m2": 325.0
+          }
+        }
+      }
+    }
+  ],
+  "retired": []
+}

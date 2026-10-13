@@ -27,6 +27,9 @@ def test_golden_block_length():
 
     The units sit ABREAST, so going from two to three does not lengthen the
     block -- it widens the requirement to 10.914 m of beam.
+
+    Label: snapshot
+    Parity: aft_arrangement:beam14.8_depth5.4
     """
     r = _a()
     assert abs(r.length_m - 19.892) < 1e-3
@@ -44,7 +47,11 @@ def test_golden_heights():
 
     The 3.40 m wheelhouse (was 2.80 m) now TOPS the containers, so it — not
     the 40 ft units — sets the transit air draft. Worth knowing: a taller cab is paid for
-    at every bridge, stowed or not."""
+    at every bridge, stowed or not.
+
+    Label: snapshot
+    Parity: aft_arrangement:beam14.8_depth5.4
+    """
     r = _a()
     assert abs(r.container_top_above_keel_m - 8.596) < 1e-3
     assert abs(r.wheelhouse_top_lowered_m - 8.80) < 1e-3
@@ -54,6 +61,9 @@ def test_golden_heights():
 # ---------- property ----------
 
 def test_three_thrusters_are_symmetric_about_the_centreline():
+    """Label: property
+    Parity: aft_arrangement:beam14.8_depth5.4
+    """
     r = _a()
     assert len(r.thruster_offsets_m) == 3
     assert abs(sum(r.thruster_offsets_m)) < 1e-9
@@ -61,13 +71,22 @@ def test_three_thrusters_are_symmetric_about_the_centreline():
 
 
 def test_length_grows_with_a_longer_thruster_room():
+    """Label: property
+    Parity: aft_arrangement:beam14.8_depth5.4,
+        aft_arrangement:beam14.8_depth5.4_thruster_room_5.0,
+        aft_arrangement:beam14.8_depth5.4_thruster_room_3.5
+    """
     assert (_a(thruster_room_length_m=5.0).length_m
             - _a(thruster_room_length_m=3.5).length_m) == 1.5
 
 
 def test_extra_unit_costs_beam_not_length():
     """Units are ABREAST, so a fourth one widens the block and leaves its length alone.
-    This is the property that lets the mix differ by cargo for free."""
+    This is the property that lets the mix differ by cargo for free.
+
+    Label: property
+    Parity: aft_arrangement:beam14.8_depth5.4, aft_arrangement:beam14.8_depth5.4_accom_units_3
+    """
     three, four = _a(), _a(n_accom_units=3)
     assert abs(three.length_m - four.length_m) < 1e-9
     assert four.container_total_width_m > three.container_total_width_m
@@ -75,12 +94,20 @@ def test_extra_unit_costs_beam_not_length():
 
 def test_length_is_independent_of_the_cargo_it_must_see_over():
     """The LIFT depends on the cargo; the LENGTH must not, or the capacity model would be
-    circular (cargo zone -> cargo top -> block length -> cargo zone)."""
+    circular (cargo zone -> cargo top -> block length -> cargo zone).
+
+    Label: property
+    Parity: aft_arrangement:beam14.8_depth5.4, aft_arrangement:beam14.8_depth5.4_sightline_20,
+        aft_arrangement:beam14.8_depth5.4_sightline_none
+    """
     assert (_a(sightline_obstruction_m=20.0).length_m
             == _a(sightline_obstruction_m=None).length_m)
 
 
 def test_lift_raises_the_eye_over_the_obstruction():
+    """Label: property
+    Parity: aft_arrangement:beam14.8_depth5.4_sightline_12
+    """
     r = _a(sightline_obstruction_m=12.0)
     eye = r.wheelhouse_floor_raised_m + 1.5
     assert eye >= 12.0 + 0.5 - 1e-9
@@ -88,6 +115,9 @@ def test_lift_raises_the_eye_over_the_obstruction():
 
 
 def test_no_lift_when_there_is_nothing_to_see_over():
+    """Label: property
+    Parity: aft_arrangement:beam14.8_depth5.4_sightline_3
+    """
     assert _a(sightline_obstruction_m=3.0).wheelhouse_lift_m == 0.0
 
 
@@ -97,7 +127,11 @@ def test_narrow_beam_fits_fewer_thrusters_and_says_so():
     """Three 2.60 m units do not go across a narrow hull at any clearance. The module
     fits what fits and WARNS about the shortfall -- it does not declare the vessel
     impossible, because thruster size is an estimate and gating on it would delete half
-    the design grid."""
+    the design grid.
+
+    Label: snapshot
+    Parity: aft_arrangement:beam8_depth5
+    """
     r = compute(AftArrangementInputs(beam=8.0, depth=5.0))
     assert len(r.thruster_offsets_m) == 2          # two fit, three do not
     warn = next(c for c in r.checks if c.name == "requested_thruster_count_fits")
@@ -107,6 +141,9 @@ def test_narrow_beam_fits_fewer_thrusters_and_says_so():
 
 
 def test_a_wide_beam_takes_all_three():
+    """Label: snapshot
+    Parity: aft_arrangement:beam14.8_depth5.4
+    """
     r = compute(AftArrangementInputs(beam=14.8, depth=5.4))
     assert len(r.thruster_offsets_m) == 3
     assert all(c.ok for c in r.checks)
@@ -115,7 +152,11 @@ def test_a_wide_beam_takes_all_three():
 def test_narrow_beam_stacks_the_units_in_two_rows():
     """Three 40 ft units abreast need 10.91 m. A 10 m hull puts two abreast and the third
     in a second row, which LENGTHENS the stern block -- the real trade, and the reason the
-    8 m and 10 m columns of the design grid still exist."""
+    8 m and 10 m columns of the design grid still exist.
+
+    Label: snapshot
+    Parity: aft_arrangement:beam14.8_depth5.4, aft_arrangement:beam10_depth5.4
+    """
     wide, narrow = _a(), _a(beam=10.0)
     assert wide.container_rows == 1 and wide.container_per_row == 3
     assert narrow.container_rows == 2 and narrow.container_per_row == 2
@@ -128,7 +169,11 @@ def test_narrow_beam_stacks_the_units_in_two_rows():
 def test_sightline_warns_when_the_column_is_too_short():
     """A cargo top the wheelhouse cannot see over is a real design problem, reported as a
     warning: it is solved by a taller column or a lower tank, not by calling the vessel
-    impossible on the strength of an assumed stroke."""
+    impossible on the strength of an assumed stroke.
+
+    Label: property
+    Parity: aft_arrangement:beam14.8_depth5.4_sightline_30_max_lift_2
+    """
     r = _a(sightline_obstruction_m=30.0, wheelhouse_max_lift_m=2.0)
     c = next(c for c in r.checks if c.name == "wheelhouse_sees_over_cargo")
     assert not c.ok and c.severity == "warning"

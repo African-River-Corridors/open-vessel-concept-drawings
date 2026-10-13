@@ -5,18 +5,34 @@ from vessel_designer.core.barge_capacity import BargeCapacityInputs, compute
 
 
 def test_adn_g_distances_are_constant_not_volume_stepped():
+    """Label: snapshot
+    Parity: protective_location:distance_d_vc/500,
+        protective_location:compute_required_clearances/ADN_G_beam18_d_vc_of_500,
+        protective_location:distance_d_vc/3000,
+        protective_location:compute_required_clearances/ADN_G_beam18_d_vc_of_3000,
+        protective_location:distance_d_vc/20000,
+        protective_location:compute_required_clearances/ADN_G_beam18_d_vc_of_20000
+    """
     for vc in (500.0, 3000.0, 20000.0):
         r = compute_required_clearances("ADN_G", 18.0, distance_d_vc(vc))
         assert r.cs_required == ADN_G_SIDE_M and r.cb_required == ADN_G_BOTTOM_M
 
 
 def test_igc_2g_unchanged():
+    """Label: snapshot
+    Parity: protective_location:compute_required_clearances/IGC_2G_beam14.8_d_vc_1.0,
+        protective_location:compute_required_clearances/IGC_2G_beam14.8_d_vc_2.0,
+        protective_location:compute_required_clearances/IGC_2G_beam14.8_d_vc_0.8
+    """
     assert compute_required_clearances("IGC_2G", 14.8, 1.0).cs_required == 1.0
     assert compute_required_clearances("IGC_2G", 14.8, 2.0).cb_required == 2.0
     assert compute_required_clearances("IGC_2G", 14.8, 0.8).cb_required == 14.8 / 15.0
 
 
 def test_adn_g_tank_diameter_follows_its_side_clearance():
+    """Label: property
+    Parity: barge_capacity:gas/ADN_G_90x18x6_LNG_2_wide
+    """
     common = dict(loa=90.0, beam=18.0, depth=6.0, cargo_type="LNG", n_tanks_wide=2)
     adn = compute(BargeCapacityInputs(vessel_type="ADN_G", **common))
     assert abs(adn.side_clearance_m - ADN_G_SIDE_M) < 1e-9
@@ -25,11 +41,20 @@ def test_adn_g_tank_diameter_follows_its_side_clearance():
 
 
 def test_adn_side_includes_double_hull_and_gap():
+    """Label: snapshot
+    Parity: protective_location:compute_required_clearances/ADN_G_beam18_d_vc_of_500
+    """
     assert ADN_G_SIDE_M > ADN_G_DOUBLE_HULL_M          # LNG must sit inside a double hull
     assert abs(ADN_G_SIDE_M - 1.25) < 1e-9 and abs(ADN_G_BOTTOM_M - 1.10) < 1e-9
 
 
 def test_d_vc_exact_bands():
+    """Label: sourced - IGC Code 2.4.1.1 d(Vc) bands (as cited in core/protective_location.py),
+        evaluated by hand for 800, 3000, 5000, 10000 and 40000 m3
+    Parity: protective_location:d_vc_exact/800, protective_location:d_vc_exact/3000,
+        protective_location:d_vc_exact/5000, protective_location:d_vc_exact/10000,
+        protective_location:d_vc_exact/40000
+    """
     from vessel_designer.core.protective_location import d_vc_exact
     assert d_vc_exact(800) == 0.8
     assert abs(d_vc_exact(3000) - 0.9) < 1e-12 and abs(d_vc_exact(5000) - 1.0) < 1e-12
@@ -37,6 +62,10 @@ def test_d_vc_exact_bands():
 
 
 def test_igc_exact_measures_to_steel_and_uses_each_tank():
+    """Label: property
+    Parity: barge_capacity:gas/IGC_2G_EXACT_90x14.8x6_LNG_1_wide,
+        barge_capacity:gas/IGC_2G_90x14.8x6_LNG_1_wide
+    """
     from vessel_designer.core.protective_location import d_vc_exact
     r = compute(BargeCapacityInputs(loa=90.0, beam=14.8, depth=6.0, cargo_type="LNG",
                                     n_tanks_wide=1, vessel_type="IGC_2G_EXACT"))

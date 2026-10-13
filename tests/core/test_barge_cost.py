@@ -24,6 +24,10 @@ EXAMPLE = Path(__file__).resolve().parents[2] / "examples" / EXAMPLE_RATES_FILE
 
 
 def test_golden_base_case():
+    """Label: sourced - hand calculation with round test rates, shown in the test comments (911,500
+        + 607,000, plus 10 % margin and 50,000 delivery)
+    Parity: barge_cost:compute/test_rates_base
+    """
     r = compute(BargeCostInputs(), RATES)
     assert r.barge_subtotal == 911_500       # 811.5 t x 1,000 + two 100,000 lumps
     assert r.tug_subtotal == 607_000         # 115 t x 1,000 + 620 kWh x 100 + 230 kW x 1,000 + 200,000
@@ -31,6 +35,9 @@ def test_golden_base_case():
 
 
 def test_property_monotone_in_steel():
+    """Label: property
+    Parity: barge_cost:compute/test_rates_steel_200, barge_cost:compute/test_rates_steel_300
+    """
     lo = compute(BargeCostInputs(hull_steel_t=200.0), RATES)
     hi = compute(BargeCostInputs(hull_steel_t=300.0), RATES)
     assert hi.unit_total > lo.unit_total
@@ -38,12 +45,18 @@ def test_property_monotone_in_steel():
 
 
 def test_property_margin_scales():
+    """Label: property
+    Parity: barge_cost:compute/test_rates_margin_0, barge_cost:compute/test_rates_margin_20
+    """
     base = compute(BargeCostInputs(), replace(RATES, yard_margin_fraction=0.0))
     plus = compute(BargeCostInputs(), replace(RATES, yard_margin_fraction=0.20))
     assert abs(plus.unit_total - (base.unit_total + 0.20 * (base.barge_subtotal + base.tug_subtotal))) < 2.0
 
 
 def test_feasibility_checks():
+    """Label: property
+    Parity: barge_cost:compute/test_rates_base
+    """
     r = compute(BargeCostInputs(), RATES)
     names = {c.name for c in r.checks}
     assert {"masses_positive", "no_reliquefaction_in_scope", "fabrication_rates_are_estimates"} <= names
@@ -51,6 +64,9 @@ def test_feasibility_checks():
 
 
 def test_rates_from_mapping_and_path_match_the_object(tmp_path):
+    """Label: property
+    Parity: barge_cost:compute/test_rates_base
+    """
     data = {k: v for k, v in RATES.__dict__.items()}
     path = tmp_path / "rates.yaml"
     path.write_text(yaml.safe_dump(data))
@@ -61,18 +77,28 @@ def test_rates_from_mapping_and_path_match_the_object(tmp_path):
 
 
 def test_default_rates_are_the_shipped_example_file():
-    """No rates given -> the illustrative example file, read through the package loader."""
+    """No rates given -> the illustrative example file, read through the package loader.
+
+    Label: property
+    Parity: barge_cost:compute/example_rates
+    """
     from_file = BargeCostRates.from_mapping(yaml.safe_load(EXAMPLE.read_text()))
     assert load_rates() == from_file
     assert compute(BargeCostInputs()).unit_total == compute(BargeCostInputs(), from_file).unit_total
 
 
 def test_example_file_says_it_is_illustrative():
+    """Label: property
+    Parity: none (reads the text of the example rates file, no calculation input)
+    """
     first = EXAMPLE.read_text(encoding="utf-8").splitlines()[0]
     assert "Illustrative rates for the example only" in first and "supply your own" in first
 
 
 def test_bad_rates_are_rejected():
+    """Label: property
+    Parity: none (BargeCostRates.from_mapping is not on the spec's entry-point list)
+    """
     with pytest.raises(ValueError, match="missing"):
         BargeCostRates.from_mapping({"hull_steel_rate": 1.0})
     with pytest.raises(ValueError, match="unknown"):
@@ -80,6 +106,10 @@ def test_bad_rates_are_rejected():
 
 
 def test_flat_reader_agrees_with_pyyaml_on_the_example_and_rejects_nesting(tmp_path):
+    """Label: property
+    Parity: barge_cost:parse_flat_yaml/example_file,
+        barge_cost:parse_flat_yaml/nested_is_rejected
+    """
     from vessel_designer.core.barge_cost import parse_flat_yaml
     text = EXAMPLE.read_text(encoding="utf-8")
     assert BargeCostRates.from_mapping(parse_flat_yaml(text)) == \
