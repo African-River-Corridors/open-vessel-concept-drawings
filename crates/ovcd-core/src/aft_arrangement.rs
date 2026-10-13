@@ -359,3 +359,62 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, Strin
         warnings,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::py_floor_div;
+
+    /// Expected values are printed by CPython 3.14 (`a // b`). The sign of a zero is part of
+    /// the answer, so the comparison is on the bits.
+    #[track_caller]
+    fn check(a: f64, b: f64, expected: f64) {
+        let got = py_floor_div(a, b);
+        assert_eq!(
+            got.to_bits(),
+            expected.to_bits(),
+            "{a} // {b}: got {got}, Python gives {expected}"
+        );
+    }
+
+    #[test]
+    fn positive_operands() {
+        check(1.0, 0.1, 9.0);
+        check(7.0, 2.0, 3.0);
+        check(6.0, 2.0, 3.0);
+        check(0.0, 2.0, 0.0);
+    }
+
+    #[test]
+    fn a_remainder_of_the_wrong_sign_moves_the_quotient_down() {
+        check(-7.0, 2.0, -4.0);
+        check(7.0, -2.0, -4.0);
+        check(-0.5, 2.0, -1.0);
+        check(-16.2, 3.93, -5.0);
+        check(16.2, -3.93, -5.0);
+    }
+
+    #[test]
+    fn a_remainder_of_the_right_sign_does_not() {
+        check(-7.0, -2.0, 3.0);
+        check(-6.0, 2.0, -3.0);
+        check(6.0, -2.0, -3.0);
+        check(1.5, -0.5, -3.0);
+        check(-1.5, 0.5, -3.0);
+    }
+
+    /// When `(a - mod) / b` lands a hair under a whole number, Python rounds it up.
+    #[test]
+    fn a_quotient_just_under_a_whole_number_is_rounded_up() {
+        check(17.567, -2.7, -7.0);
+        check(-17.567, 2.7, -7.0);
+    }
+
+    #[test]
+    fn a_zero_quotient_takes_the_sign_of_a_over_b() {
+        check(1.66, 1.86, 0.0);
+        check(0.0, 2.0, 0.0);
+        check(0.0, -2.0, -0.0);
+        check(-0.0, 2.0, -0.0);
+        check(-0.0, -2.0, 0.0);
+    }
+}
