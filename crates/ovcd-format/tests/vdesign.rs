@@ -1,0 +1,382 @@
+//! Seam 4: a `.vdesign` file in, a Design as used and its validation report out. Defaults, hard
+//! and soft ranges, the depth message, the convoy Formation, and the Defaults Profile.
+
+use ovcd_format::{Profile, Source, check, new_design};
+use serde_json::{Value, json};
+
+fn design_with(inputs: Value) -> String {
+    json!({
+        "format": "vdesign",
+        "format_version": 1,
+        "engine_version": "0.1.0",
+        "options": [{ "name": "A", "inputs": inputs }]
+    })
+    .to_string()
+}
+
+fn required(cargo: &str) -> Value {
+    json!({
+        "cargo": cargo,
+        "hull_form": "raked_box",
+        "length_overall_m": 76.5,
+        "beam_m": 11.4,
+        "moulded_depth_m": 3.5,
+        "formation": { "kind": "self_propelled" }
+    })
+}
+
+fn with(mut inputs: Value, name: &str, value: Value) -> Value {
+    inputs[name] = value;
+    inputs
+}
+
+fn errors(inputs: Value) -> Vec<String> {
+    check(&design_with(inputs), &Profile::built_in())
+        .report
+        .errors
+}
+
+fn warnings(inputs: Value) -> Vec<String> {
+    check(&design_with(inputs), &Profile::built_in())
+        .report
+        .warnings
+}
+
+fn has(list: &[String], text: &str) -> bool {
+    list.iter().any(|m| m.contains(text))
+}
+
+fn used(inputs: Value, name: &str) -> (Value, Source) {
+    let checked = check(&design_with(inputs), &Profile::built_in());
+    let design = checked.design.expect("design read");
+    let input = design.options[0]
+        .input(name)
+        .expect("input present")
+        .clone();
+    (input.value, input.source)
+}
+
+#[test]
+fn a_new_design_round_trips_through_its_own_text_unchanged() {
+    let profile = Profile::built_in();
+    let design = new_design(&profile);
+    let checked = check(&design.to_text(), &profile);
+    assert_eq!(checked.report.errors, Vec::<String>::new());
+    assert_eq!(checked.report.warnings, Vec::<String>::new());
+    assert_eq!(checked.design.unwrap(), design);
+}
+
+#[test]
+fn gas_cargo_defaults_to_type_c_tanks_with_ruleset_and_fill_ratio() {
+    let inputs = required("LNG");
+    assert_eq!(
+        used(inputs.clone(), "cargo_containment"),
+        (json!("type_c_tanks"), Source::Default)
+    );
+    assert_eq!(
+        used(inputs.clone(), "ruleset"),
+        (json!("IGC_2G_EXACT"), Source::Default)
+    );
+    assert_eq!(
+        used(inputs.clone(), "fill_ratio"),
+        (json!(0.98), Source::Default)
+    );
+    assert_eq!(
+        used(inputs.clone(), "adn_tank_cap_m3"),
+        (json!(1000.0), Source::Default)
+    );
+    // The fill ratio default follows a typed ruleset: ADN 95 %.
+    let adn = with(inputs, "ruleset", json!("ADN_G"));
+    assert_eq!(
+        used(adn.clone(), "ruleset"),
+        (json!("ADN_G"), Source::Typed)
+    );
+    assert_eq!(used(adn, "fill_ratio"), (json!(0.95), Source::Default));
+}
+
+#[test]
+fn a_box_hold_has_no_gas_inputs_and_a_tank_barge_has_no_lightship_factor() {
+    let design = check(&design_with(required("bauxite")), &Profile::built_in())
+        .design
+        .unwrap();
+    assert!(
+        design.options[0]
+            .input("lightship_factor_t_per_m3")
+            .is_some()
+    );
+    assert!(design.options[0].input("ruleset").is_none());
+    let design = check(&design_with(required("LNG")), &Profile::built_in())
+        .design
+        .unwrap();
+    assert!(
+        design.options[0]
+            .input("lightship_factor_t_per_m3")
+            .is_none()
+    );
+    assert!(design.options[0].input("ruleset").is_some());
+}
+
+#[test]
+fn an_input_not_used_by_the_cargo_containment_is_ignored_with_a_warning() {
+    let w = warnings(with(required("bauxite"), "ruleset", json!("ADN_G")));
+    assert!(
+        has(
+            &w,
+            "`ruleset` is not used for a box_hold Cargo Containment; ignored"
+        ),
+        "{w:?}"
+    );
+}
+
+#[test]
+fn an_input_left_out_of_the_file_is_defaulted_with_a_warning() {
+    let w = warnings(required("bauxite"));
+    assert!(
+        has(
+            &w,
+            "`block_coefficient` is not stored in the file; using the Defaults Profile value 0.85"
+        ),
+        "{w:?}"
+    );
+}
+
+#[test]
+fn a_stored_default_is_kept_even_when_the_profile_now_says_otherwise() {
+    let inputs = with(
+        required("bauxite"),
+        "block_coefficient",
+        json!({ "value": 0.9, "source": "default" }),
+    );
+    assert_eq!(
+        used(inputs, "block_coefficient"),
+        (json!(0.9), Source::Default)
+    );
+}
+
+#[test]
+fn a_bare_value_counts_as_typed() {
+    assert_eq!(
+        used(required("bauxite"), "beam_m"),
+        (json!(11.4), Source::Typed)
+    );
+}
+
+#[test]
+fn an_unknown_input_is_refused() {
+    let e = errors(with(required("bauxite"), "vessel", json!("box_barge")));
+    assert!(has(&e, "Option 'A': unknown input `vessel`"), "{e:?}");
+}
+
+#[test]
+fn a_cargo_containment_that_cannot_carry_the_cargo_is_refused() {
+    let e = errors(with(
+        required("bauxite"),
+        "cargo_containment",
+        json!("type_c_tanks"),
+    ));
+    assert!(
+        has(
+            &e,
+            "`cargo_containment` = type_c_tanks cannot carry bauxite (dry_bulk); use box_hold or \
+             sloped_hopper_hold"
+        ),
+        "{e:?}"
+    );
+}
+
+#[test]
+fn an_unknown_cargo_is_refused_with_the_core_message() {
+    let e = errors(required("gravel"));
+    assert!(
+        has(&e, "`cargo`: Unknown cargo type 'gravel'. Valid types: LNG"),
+        "{e:?}"
+    );
+}
+
+#[test]
+fn freeboard_at_or_above_depth_is_a_hard_error() {
+    let e = errors(with(required("bauxite"), "min_freeboard_m", json!(3.5)));
+    assert!(
+        has(
+            &e,
+            "`min_freeboard_m` = 3.5 must be less than `moulded_depth_m` = 3.5 (hard limit)"
+        ),
+        "{e:?}"
+    );
+}
+
+#[test]
+fn a_text_where_a_number_belongs_is_refused() {
+    let e = errors(with(required("bauxite"), "beam_m", json!("NaN")));
+    assert!(has(&e, "`beam_m` must be a number"), "{e:?}");
+}
+
+#[test]
+fn zero_length_is_refused_but_a_tiny_one_only_warns() {
+    let e = errors(with(required("bauxite"), "length_overall_m", json!(0.0)));
+    assert!(
+        has(&e, "`length_overall_m` = 0 is out of range: must be > 0"),
+        "{e:?}"
+    );
+    let small = with(required("bauxite"), "length_overall_m", json!(12.0));
+    assert!(errors(small.clone()).is_empty());
+    assert!(has(
+        &warnings(small),
+        "`length_overall_m` = 12 m is outside the usual range"
+    ));
+}
+
+#[test]
+fn an_optional_limit_takes_null_for_none_but_not_zero() {
+    let none = with(required("bauxite"), "draught_limit_m", json!(null));
+    assert_eq!(used(none, "draught_limit_m"), (Value::Null, Source::Typed));
+    let e = errors(with(required("bauxite"), "draught_limit_m", json!(0.0)));
+    assert!(
+        has(&e, "`draught_limit_m` = 0 is out of range: must be > 0"),
+        "{e:?}"
+    );
+}
+
+#[test]
+fn only_the_raked_box_hull_form_exists() {
+    let e = errors(with(required("bauxite"), "hull_form", json!("v_bottom")));
+    assert!(has(&e, "only raked_box exists for now"), "{e:?}");
+}
+
+#[test]
+fn a_convoy_needs_whole_numbers_abreast_and_in_line() {
+    let e = errors(with(
+        required("bauxite"),
+        "formation",
+        json!({ "kind": "pushed_convoy", "abreast": 0, "in_line": 2 }),
+    ));
+    assert!(
+        has(&e, "`formation.abreast` = 0 is out of range: must be >= 1"),
+        "{e:?}"
+    );
+    let e = errors(with(
+        required("bauxite"),
+        "formation",
+        json!({ "kind": "pushed_convoy", "abreast": 2 }),
+    ));
+    assert!(
+        has(&e, "`formation.in_line` must be a whole number"),
+        "{e:?}"
+    );
+    let big = with(
+        required("bauxite"),
+        "formation",
+        json!({ "kind": "pushed_convoy", "abreast": 8, "in_line": 2 }),
+    );
+    assert!(errors(big.clone()).is_empty());
+    assert!(has(
+        &warnings(big),
+        "`formation.abreast` = 8 barges is outside"
+    ));
+}
+
+#[test]
+fn file_level_problems_are_hard_errors() {
+    let p = Profile::built_in();
+    let r = check(
+        r#"{"format": "vdesign", "format_version": 2, "engine_version": "0.1.0", "options": []}"#,
+        &p,
+    )
+    .report;
+    assert!(has(&r.errors, "format_version 2 is not supported"), "{r:?}");
+    assert!(
+        has(&r.errors, "a Design needs at least one Option"),
+        "{r:?}"
+    );
+    let two = json!({
+        "format": "vdesign", "format_version": 1, "engine_version": "0.1.0",
+        "options": [
+            { "name": "A", "inputs": required("bauxite") },
+            { "name": "A", "inputs": required("bauxite") }
+        ]
+    });
+    let r = check(&two.to_string(), &p).report;
+    assert!(has(&r.errors, "two Options are named 'A'"), "{r:?}");
+}
+
+#[test]
+fn several_options_are_each_checked_by_name() {
+    let p = Profile::built_in();
+    let two = json!({
+        "format": "vdesign", "format_version": 1, "engine_version": "0.1.0",
+        "options": [
+            { "name": "Short", "inputs": required("bauxite") },
+            { "name": "Wide", "inputs": with(required("LNG"), "beam_m", json!(-1.0)) }
+        ]
+    });
+    let checked = check(&two.to_string(), &p);
+    assert_eq!(checked.design.unwrap().options.len(), 2);
+    assert!(has(&checked.report.errors, "Option 'Wide': `beam_m` = -1"));
+    assert!(!has(&checked.report.errors, "Option 'Short'"));
+}
+
+#[test]
+fn every_built_in_default_lies_inside_its_own_soft_range() {
+    // Otherwise `ovcd new` would warn about its own defaults.
+    let profile = Profile::built_in();
+    for cargo in ["bauxite", "LNG"] {
+        for containment in ["box_hold", "sloped_hopper_hold", "type_c_tanks"] {
+            let inputs = with(required(cargo), "cargo_containment", json!(containment));
+            let r = check(&design_with(inputs), &profile).report;
+            let range_warnings: Vec<_> = r
+                .warnings
+                .iter()
+                .filter(|w| w.contains("soft limit"))
+                .collect();
+            assert!(
+                range_warnings.is_empty(),
+                "{cargo} {containment}: {range_warnings:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_profile_with_a_default_outside_its_hard_range_is_refused() {
+    let mut p: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
+    p["inputs"]["block_coefficient"]["default"] = json!(1.5);
+    let err = Profile::from_json(&p.to_string()).unwrap_err();
+    assert!(
+        err.contains("`block_coefficient` = 1.5 is out of range"),
+        "{err}"
+    );
+}
+
+#[test]
+fn a_profile_missing_a_default_is_refused() {
+    let mut p: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
+    p["inputs"].as_object_mut().unwrap().remove("max_speed_kn");
+    let err = Profile::from_json(&p.to_string()).unwrap_err();
+    assert!(err.contains("no entry for `max_speed_kn`"), "{err}");
+}
+
+#[test]
+fn an_edited_profile_range_changes_warnings_but_never_the_stored_inputs() {
+    let profile = Profile::built_in();
+    let saved = new_design(&profile).to_text();
+    let mut p: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
+    p["inputs"]["block_coefficient"]["default"] = json!(0.9);
+    p["inputs"]["block_coefficient"]["soft"] = json!({ "min": 0.88, "max": 1.0 });
+    let edited = Profile::from_json(&p.to_string()).unwrap();
+    let a = check(&saved, &profile).design.unwrap();
+    let checked = check(&saved, &edited);
+    assert_eq!(checked.design.unwrap(), a);
+    assert!(has(
+        &checked.report.warnings,
+        "`block_coefficient` = 0.85 is outside"
+    ));
+}
+
+#[test]
+fn a_whole_number_default_in_an_edited_profile_still_round_trips() {
+    let mut p: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
+    p["inputs"]["max_speed_kn"]["default"] = json!(12);
+    let edited = Profile::from_json(&p.to_string()).unwrap();
+    let design = new_design(&edited);
+    assert_eq!(check(&design.to_text(), &edited).design.unwrap(), design);
+}
