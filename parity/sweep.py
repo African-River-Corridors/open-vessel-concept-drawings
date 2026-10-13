@@ -43,8 +43,20 @@ MAX_DRAWS = 40          # draws per wanted point before the generator gives up
 NOT_NUDGED = {"speed_min_knots", "speed_max_knots", "speed_step_knots", "speed_max_kn"}
 
 
-def reason() -> str:
-    return f"tier 2: seeded sweep (parity/sweep.py, seed {SEED})"
+# Why a function's sweep points last changed. The oracle guard needs a new reason on every
+# changed case, so a change to a sampler adds (or replaces) its entry here.
+REVISIONS = {
+    ("barge_cost", "compute"): "issue #40: the tug hull steel, battery energy and propulsion "
+                               "power are varied, not left at their defaults",
+    ("gas_arrangement", "fit"): "issue #40: the block coefficient and the tank diameter cap are "
+                                "varied, not left at their defaults",
+}
+
+
+def reason(entry_point: str = "", fn: str = "") -> str:
+    text = f"tier 2: seeded sweep (parity/sweep.py, seed {SEED})"
+    note = REVISIONS.get((entry_point, fn))
+    return f"{text}; last changed: {note}" if note else text
 
 
 # --- Knife-edge test ---------------------------------------------------------------------------
@@ -597,7 +609,7 @@ def points(entry_point: str, fn: str, n: int, sampler) -> list[dict]:
         case_input = {"fn": fn, "args": sampler(rng)}
         if is_error(_run(entry_point, case_input)) or is_knife_edge(entry_point, case_input):
             continue
-        out.append({"id": f"{fn}/sweep/{len(out):03d}", "tier": 2, "reason": reason(),
+        out.append({"id": f"{fn}/sweep/{len(out):03d}", "tier": 2, "reason": reason(entry_point, fn),
                     "input": case_input})
     return out
 

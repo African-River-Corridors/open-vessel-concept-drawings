@@ -227,7 +227,7 @@
     {
       "id": "compute/sweep/000",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -251,7 +251,7 @@
     {
       "id": "compute/sweep/001",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -275,7 +275,7 @@
     {
       "id": "compute/sweep/002",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -299,7 +299,7 @@
     {
       "id": "compute/sweep/003",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -323,7 +323,7 @@
     {
       "id": "compute/sweep/004",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -362,7 +362,7 @@
     {
       "id": "compute/sweep/005",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -386,7 +386,7 @@
     {
       "id": "compute/sweep/006",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -410,7 +410,7 @@
     {
       "id": "compute/sweep/007",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -449,7 +449,7 @@
     {
       "id": "compute/sweep/008",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -473,7 +473,7 @@
     {
       "id": "compute/sweep/009",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -512,7 +512,7 @@
     {
       "id": "compute/sweep/010",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -536,7 +536,7 @@
     {
       "id": "compute/sweep/011",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -575,7 +575,7 @@
     {
       "id": "compute/sweep/012",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -614,7 +614,7 @@
     {
       "id": "compute/sweep/013",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -653,7 +653,7 @@
     {
       "id": "compute/sweep/014",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -677,7 +677,7 @@
     {
       "id": "compute/sweep/015",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -716,7 +716,7 @@
     {
       "id": "compute/sweep/016",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -755,7 +755,7 @@
     {
       "id": "compute/sweep/017",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -779,7 +779,7 @@
     {
       "id": "compute/sweep/018",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -818,7 +818,7 @@
     {
       "id": "compute/sweep/019",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -857,7 +857,7 @@
     {
       "id": "compute/sweep/020",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -896,7 +896,7 @@
     {
       "id": "compute/sweep/021",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -935,7 +935,7 @@
     {
       "id": "compute/sweep/022",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -974,7 +974,7 @@
     {
       "id": "compute/sweep/023",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {
@@ -1013,7 +1013,7 @@
     {
       "id": "compute/sweep/024",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",
       "input": {
         "fn": "compute",
         "args": {

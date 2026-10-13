@@ -403,7 +403,7 @@
     {
       "id": "fit/sweep/000",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
@@ -426,7 +426,7 @@
     {
       "id": "fit/sweep/001",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
@@ -450,7 +450,7 @@
     {
       "id": "fit/sweep/002",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
@@ -474,7 +474,7 @@
     {
       "id": "fit/sweep/003",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
@@ -498,7 +498,7 @@
     {
       "id": "fit/sweep/004",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
@@ -521,7 +521,7 @@
     {
       "id": "fit/sweep/005",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
@@ -544,7 +544,7 @@
     {
       "id": "fit/sweep/006",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
@@ -568,7 +568,7 @@
     {
       "id": "fit/sweep/007",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
@@ -591,7 +591,7 @@
     {
       "id": "fit/sweep/008",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
@@ -615,7 +615,7 @@
     {
       "id": "fit/sweep/009",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
@@ -639,7 +639,7 @@
     {
       "id": "fit/sweep/010",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
@@ -663,7 +663,7 @@
     {
       "id": "fit/sweep/011",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
