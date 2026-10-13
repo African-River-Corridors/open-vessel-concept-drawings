@@ -18,8 +18,6 @@ pushed/ATB barges on inland waterways.
 import math
 from dataclasses import dataclass
 
-import numpy as np
-
 
 @dataclass
 class HullGeometry:

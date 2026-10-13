@@ -10,7 +10,7 @@ The weight branch inverts the *same* box-hull hydrostatics ``barge_capacity`` us
 
 Worked examples: see tests/core/test_journey_derating.py.
 
-Pure Python apart from the hull (numpy) — runs client-side in Pyodide.
+Pure Python.
 """
 from __future__ import annotations
 
