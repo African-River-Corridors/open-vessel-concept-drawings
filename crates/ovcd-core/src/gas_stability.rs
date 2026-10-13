@@ -884,6 +884,19 @@ mod tests {
     }
 
     #[test]
+    fn py_max_and_py_min_of_a_list_keep_the_first_of_equal_items() {
+        assert_eq!(py_max([3.0, 1.0, 2.0]), 3.0);
+        assert_eq!(py_max([1.0, 3.0, 2.0]), 3.0);
+        assert_eq!(py_min([3.0, 1.0, 2.0]), 1.0);
+        assert_eq!(py_min([1.0, 3.0, 0.5]), 0.5);
+        assert_eq!(py_min([-2.0, 4.0]), -2.0);
+        assert!(py_max([0.0, -0.0]).is_sign_positive());
+        assert!(py_max([-0.0, 0.0]).is_sign_negative());
+        assert!(py_min([0.0, -0.0]).is_sign_positive());
+        assert!(py_min([-0.0, 0.0]).is_sign_negative());
+    }
+
+    #[test]
     fn py_pow_overflow() {
         assert_eq!(sq(1e155), Err(PyError::Overflow));
         assert_eq!(sq(f64::INFINITY), Ok(f64::INFINITY));
