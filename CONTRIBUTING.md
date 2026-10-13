@@ -18,11 +18,16 @@ Or with plain pip: `python -m venv .venv && .venv/bin/pip install -e '.[dev]'`.
 ## Run the tests
 
 ```
-.venv/bin/python -m pytest
+OVCD_PYTHON=.venv/bin/python bash tools/gates.sh   # the fast gate: Rust and Python
 python tools/release_guard.py
 ```
 
-Both must pass. CI runs them on every push and pull request.
+Both must pass. CI runs them on every push and pull request. The gate needs the pinned Rust
+toolchain (`rust-toolchain.toml`; rustup installs it on first use) and fails if any tool is
+missing. For the Rust loop alone, `cargo test` needs no Python.
+
+The Rust core is being ported from the Python core with identical results (spec 0001). See
+`parity/README.md` for the parity harness, and never edit Reference Results by hand.
 
 ## Rules for the core
 

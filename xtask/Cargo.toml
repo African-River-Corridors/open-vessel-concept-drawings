@@ -1,0 +1,11 @@
+[package]
+name = "xtask"
+description = "Developer tasks: regenerate Reference Results, oracle guard, mutation report, gates."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+serde_json.workspace = true

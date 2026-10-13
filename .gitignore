@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 .venv/
+target/
+mutants.out/
+mutants.out.old/
