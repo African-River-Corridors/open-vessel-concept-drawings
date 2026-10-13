@@ -34,7 +34,9 @@ def test_frozen_root_holds_only_the_frozen_package():
 
 def test_frozen_code_never_names_the_shipped_package():
     bad = []
-    for path in (FROZEN_ROOT / FROZEN_PKG).rglob("*.py"):
+    files = list((FROZEN_ROOT / FROZEN_PKG).rglob("*.py"))
+    assert files, "no frozen modules found: scanning nothing"
+    for path in files:
         for name in _imported_names(path):
             if name.split(".")[0] == SHIPPED_PKG:
                 bad.append(f"{path.relative_to(ROOT)}: {name}")

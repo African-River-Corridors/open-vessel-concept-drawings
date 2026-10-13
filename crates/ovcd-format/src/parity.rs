@@ -4,6 +4,7 @@
 //! - Everything discrete matches exactly: integers, booleans, strings (including messages), null,
 //!   list length and order, object keys.
 //! - An integer never matches a float, so a Python `int` result stays an `int`.
+//! - An integer of any size stays an integer, digit for digit (Python `int` has no upper bound).
 //! - NaN and infinity are the tagged strings `"float:nan"`, `"float:inf"`, `"float:-inf"`, and so
 //!   match exactly.
 //!
@@ -37,6 +38,13 @@ impl Tolerance {
     pub fn close(&self, a: f64, b: f64) -> bool {
         a == b || (a - b).abs() <= (self.rel * a.abs().max(b.abs())).max(self.abs)
     }
+}
+
+/// Parse a parity file or an `eval` output. `serde_json` keeps every number as written
+/// (`arbitrary_precision`), so a Python `int` of any size stays exact and two different big
+/// integers never compare equal.
+pub fn parse(text: &str) -> Result<Value, String> {
+    serde_json::from_str(text).map_err(|e| e.to_string())
 }
 
 /// Compare `actual` (from `eval`) with `expected` (the Reference Result). On a mismatch, returns
@@ -166,6 +174,31 @@ mod tests {
             diffs.contains(&"$.ok.extra: unexpected".to_string()),
             "{diffs:?}"
         );
+    }
+
+    #[test]
+    fn big_integers_stay_exact_and_differ_when_their_digits_differ() {
+        let a = parse(r#"{"ok": 100000000000000000000}"#).unwrap();
+        let b = parse(r#"{"ok": 100000000000000000001}"#).unwrap();
+        assert!(compare(&a, &a, TOL).is_ok());
+        assert!(compare(&a, &b, TOL).is_err());
+        // A huge integer never matches the float of the same size.
+        let f = parse(r#"{"ok": 1e20}"#).unwrap();
+        assert!(compare(&a, &f, TOL).is_err());
+    }
+
+    #[test]
+    fn numbers_big_and_small_parse() {
+        let v = parse(
+            r#"{"ok": [18446744073709551615, -9223372036854775808, 1e+20, 1.5E300, -0.0,
+                "100000000000000000000", "a \" 100000000000000000000"]}"#,
+        )
+        .unwrap();
+        assert_eq!(v["ok"][0], json!(18446744073709551615u64));
+        assert_eq!(v["ok"][1], json!(i64::MIN));
+        assert_eq!(v["ok"][2].as_f64(), Some(1e20));
+        assert_eq!(v["ok"][5], json!("100000000000000000000"));
+        assert!(parse("{not json").is_err());
     }
 
     #[test]

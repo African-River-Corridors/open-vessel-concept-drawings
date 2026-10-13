@@ -9,7 +9,11 @@ ALLOWED_THIRD_PARTY: set[str] = set()
 
 def test_core_imports_nothing_outside_itself():
     bad = []
-    for path in CORE.glob("*.py"):
+    files = sorted(CORE.glob("*.py"))
+    # Risk stopped: a scan of zero files passes. This test reads the source tree, so it runs
+    # in `test`, not in the wheel job (which has no src/).
+    assert files, f"no core modules found under {CORE}"
+    for path in files:
         for node in ast.walk(ast.parse(path.read_text())):
             if isinstance(node, ast.Import):
                 names = [a.name for a in node.names]

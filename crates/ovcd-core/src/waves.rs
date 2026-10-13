@@ -4,7 +4,8 @@
 //!
 //! Known difference: Python raises `OverflowError` where a float power overflows (for example a
 //! wave height of 1e200); this port returns infinity. Such inputs are far outside the valid range
-//! and the evaluation format cannot carry an overflow error. See the PR for issue #19.
+//! and no parity case covers them. The evaluation format can carry an `OverflowError` now, so a later
+//! change may port it. See the PR for issue #19.
 
 use crate::checks::{Check, all_ok};
 use crate::pyfmt::fixed;

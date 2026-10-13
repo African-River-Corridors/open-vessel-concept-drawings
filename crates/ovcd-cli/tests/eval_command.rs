@@ -2,7 +2,7 @@
 //! point. Proves the binary wires stdin -> `ovcd_format::eval` -> stdout. The full case set runs
 //! in-process in `ovcd-format/tests/parity.rs`.
 
-use ovcd_format::parity::{Tolerance, compare};
+use ovcd_format::parity::{Tolerance, compare, parse};
 use serde_json::Value;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -16,7 +16,7 @@ fn parity_dir() -> PathBuf {
 }
 
 fn read_json(path: &Path) -> Value {
-    serde_json::from_str(&std::fs::read_to_string(path).expect("parity file")).expect("JSON")
+    parse(&std::fs::read_to_string(path).expect("parity file")).expect("JSON")
 }
 
 fn ovcd(args: &[&str], stdin: &str) -> Output {
@@ -87,7 +87,8 @@ fn eval_command_matches_reference_results_for_sampled_cases() {
                 "{ep} {id}: {}",
                 String::from_utf8_lossy(&out.stderr)
             );
-            let actual: Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+            let actual: Value =
+                parse(&String::from_utf8_lossy(&out.stdout)).expect("stdout is JSON");
             if let Err(diffs) = compare(&expected, &actual, tol) {
                 panic!("{ep} {id}:\n{}", diffs.join("\n"));
             }

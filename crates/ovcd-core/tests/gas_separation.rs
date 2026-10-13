@@ -1,0 +1,231 @@
+//! Seam: the public `ovcd_core::gas_separation` API. Expected values are printed by the frozen
+//! Python (`core/gas_separation.py`), not worked out by hand.
+
+use ovcd_core::gas_separation::{
+    COFFERDAM_MIN_M, DOUBLE_BOTTOM_MIN_TYPE_G_M, END_BULKHEAD_SPACE_M,
+    END_BULKHEAD_SPACE_PRESSURE_M, GasSeparationInputs, OPENING_SETBACK_M, SIDE_MIN_TYPE_G_M,
+    compute,
+};
+
+const CLAUSE_WARNING: &str = "Separation clauses are cited from the classification rules for \
+inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release.";
+
+#[test]
+fn constants_are_the_cited_values() {
+    assert_eq!(COFFERDAM_MIN_M, 0.60);
+    assert_eq!(OPENING_SETBACK_M, 2.00);
+    assert_eq!(END_BULKHEAD_SPACE_M, 0.50);
+    assert_eq!(END_BULKHEAD_SPACE_PRESSURE_M, 0.20);
+    assert_eq!(SIDE_MIN_TYPE_G_M, 0.80);
+    assert_eq!(DOUBLE_BOTTOM_MIN_TYPE_G_M, 0.60);
+}
+
+#[test]
+fn defaults_match_the_python_dataclass() {
+    let i = GasSeparationInputs::default();
+    assert_eq!(i.cofferdam_m, 0.60);
+    assert_eq!(i.opening_setback_m, 2.00);
+    assert_eq!(i.fwd_end_bulkhead_m, 0.50);
+    assert!(i.is_pressure_tank);
+    assert_eq!(i.side_clearance_m, 0.0);
+    assert_eq!(i.double_bottom_m, 0.0);
+}
+
+#[test]
+fn golden_defaults() {
+    let r = compute(&GasSeparationInputs::default()).unwrap();
+    assert_eq!(r.aft_separation_m, 2.0);
+    assert_eq!(r.fwd_separation_m, 0.5);
+    assert_eq!(r.cofferdam_m, 0.6);
+    assert_eq!(r.service_space_m, 1.4);
+    assert_eq!(r.total_length_taken_m, 2.5);
+    assert!(r.ok());
+    assert_eq!(r.warnings, vec![CLAUSE_WARNING]);
+    let names: Vec<&str> = r.checks.iter().map(|c| c.name.as_str()).collect();
+    assert_eq!(
+        names,
+        [
+            "cofferdam_min_width",
+            "opening_setback",
+            "fwd_end_bulkhead_space"
+        ]
+    );
+    assert_eq!(
+        r.checks[0].message,
+        "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)"
+    );
+    assert_eq!(
+        r.checks[1].message,
+        "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable \
+         window (cl. 3.3.7 / 3.3.11)"
+    );
+    assert_eq!(
+        r.checks[2].message,
+        "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)"
+    );
+}
+
+#[test]
+fn a_thin_cofferdam_fails_and_the_setback_still_governs_aft() {
+    let r = compute(&GasSeparationInputs {
+        cofferdam_m: 0.4,
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(!r.ok());
+    assert_eq!(r.aft_separation_m, 2.0);
+    assert_eq!(r.service_space_m, 1.6);
+    assert_eq!(
+        r.checks[0].message,
+        "cofferdam 0.40 m >= 0.60 m (cl. 3.6.13)"
+    );
+}
+
+#[test]
+fn a_short_setback_fails_the_opening_check() {
+    let r = compute(&GasSeparationInputs {
+        opening_setback_m: 1.0,
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(!r.ok());
+    assert_eq!(r.aft_separation_m, 1.0);
+    assert_eq!(r.service_space_m, 0.4);
+    assert_eq!(r.total_length_taken_m, 1.5);
+}
+
+#[test]
+fn a_cofferdam_wider_than_the_setback_leaves_no_service_space() {
+    let r = compute(&GasSeparationInputs {
+        cofferdam_m: 3.0,
+        ..Default::default()
+    })
+    .unwrap();
+    assert_eq!(r.aft_separation_m, 3.0);
+    assert_eq!(r.service_space_m, 0.0);
+    assert_eq!(r.total_length_taken_m, 3.5);
+}
+
+#[test]
+fn as_designed_clearances_add_checks_in_python_order() {
+    let r = compute(&GasSeparationInputs {
+        fwd_end_bulkhead_m: 0.3,
+        is_pressure_tank: false,
+        side_clearance_m: 0.5,
+        double_bottom_m: 1.0,
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(!r.ok());
+    assert_eq!(r.total_length_taken_m, 2.3);
+    let names: Vec<&str> = r.checks.iter().map(|c| c.name.as_str()).collect();
+    assert_eq!(
+        names,
+        [
+            "cofferdam_min_width",
+            "opening_setback",
+            "fwd_end_bulkhead_space",
+            "side_clearance_type_g_floor",
+            "double_bottom_type_g_floor"
+        ]
+    );
+    assert_eq!(
+        r.checks[2].message,
+        "forward end-bulkhead space 0.30 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)"
+    );
+    assert_eq!(
+        r.checks[3].message,
+        "side clearance 0.50 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more"
+    );
+    assert!(!r.checks[3].ok);
+    assert!(r.checks[4].ok);
+    assert_eq!(
+        r.checks[4].message,
+        "double bottom 1.00 m >= 0.60 m inland type-G floor (cl. 3.5.2)"
+    );
+}
+
+/// The checks allow a 1e-9 slack, so a value a hair under the floor still passes.
+#[test]
+fn the_checks_allow_one_nano_metre_of_slack() {
+    let r = compute(&GasSeparationInputs {
+        cofferdam_m: 0.6 - 1e-10,
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(r.checks[0].ok);
+    let r = compute(&GasSeparationInputs {
+        cofferdam_m: 0.6 - 1e-8,
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(!r.checks[0].ok);
+}
+
+#[test]
+fn negative_separations_raise_the_python_message() {
+    for bad in [
+        GasSeparationInputs {
+            cofferdam_m: -0.1,
+            ..Default::default()
+        },
+        GasSeparationInputs {
+            opening_setback_m: -0.1,
+            ..Default::default()
+        },
+        GasSeparationInputs {
+            fwd_end_bulkhead_m: -0.1,
+            ..Default::default()
+        },
+    ] {
+        assert_eq!(
+            compute(&bad).unwrap_err(),
+            "separations must be non-negative"
+        );
+    }
+}
+
+/// `max` returns the first of equal items. `0.0` and `-0.0` are equal but differ in sign;
+/// Python gives `0.0` here, so a port that takes the second item would show `-0.0`.
+#[test]
+fn max_keeps_the_first_zero() {
+    let r = compute(&GasSeparationInputs {
+        cofferdam_m: 0.0,
+        opening_setback_m: -0.0,
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(r.aft_separation_m.is_sign_positive());
+    assert!(r.service_space_m.is_sign_positive());
+}
+
+/// Zero is a valid separation: only a negative one raises.
+#[test]
+fn zero_separations_are_valid_and_fail_their_checks() {
+    let r = compute(&GasSeparationInputs {
+        cofferdam_m: 0.0,
+        opening_setback_m: 0.0,
+        fwd_end_bulkhead_m: 0.0,
+        ..Default::default()
+    })
+    .unwrap();
+    let oks: Vec<bool> = r.checks.iter().map(|c| c.ok).collect();
+    assert_eq!(oks, [false, false, false]);
+}
+
+/// The type-G floors sit exactly on their limits, with the same 1e-9 slack as the others.
+#[test]
+fn the_type_g_floors_pass_on_the_limit_and_within_the_slack() {
+    let ok_at = |side: f64, bottom: f64| {
+        let r = compute(&GasSeparationInputs {
+            side_clearance_m: side,
+            double_bottom_m: bottom,
+            ..Default::default()
+        })
+        .unwrap();
+        (r.checks[3].ok, r.checks[4].ok)
+    };
+    assert_eq!(ok_at(0.8, 0.6), (true, true));
+    assert_eq!(ok_at(0.8 - 1e-10, 0.6 - 1e-10), (true, true));
+    assert_eq!(ok_at(0.8 - 1e-8, 0.6 - 1e-8), (false, false));
+}

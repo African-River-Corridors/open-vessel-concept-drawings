@@ -209,6 +209,253 @@
       }
     },
     {
+      "id": "validate_catalogue/only_loa_inverted",
+      "tier": 1,
+      "reason": "tier 1: kills mutant `||` to `&&` in the ranges_ordered test: only the loa range is inverted (review of PR 43)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "X1": {
+              "standard_id": "X1",
+              "family": "CN",
+              "class_name": "X",
+              "formation": "motor_vessel",
+              "loa_m": [
+                100.0,
+                90.0
+              ],
+              "beam_m": 14.0,
+              "draught_m": [
+                2.5,
+                3.0
+              ],
+              "dwt_t": [
+                1000.0,
+                2000.0
+              ],
+              "source": "test table"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/only_draught_inverted",
+      "tier": 1,
+      "reason": "tier 1: kills mutant `||` to `&&` in the ranges_ordered test: only the draught range is inverted (review of PR 43)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "X2": {
+              "standard_id": "X2",
+              "family": "CN",
+              "class_name": "X",
+              "formation": "motor_vessel",
+              "loa_m": [
+                90.0,
+                90.0
+              ],
+              "beam_m": 14.0,
+              "draught_m": [
+                3.0,
+                2.5
+              ],
+              "dwt_t": [
+                1000.0,
+                2000.0
+              ],
+              "source": "test table"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/only_dwt_inverted",
+      "tier": 1,
+      "reason": "tier 1: kills mutant `||` to `&&` in the ranges_ordered test: only the dwt range is inverted (review of PR 43)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "X3": {
+              "standard_id": "X3",
+              "family": "CN",
+              "class_name": "X",
+              "formation": "motor_vessel",
+              "loa_m": [
+                90.0,
+                90.0
+              ],
+              "beam_m": 14.0,
+              "draught_m": [
+                2.5,
+                3.0
+              ],
+              "dwt_t": [
+                2000.0,
+                1000.0
+              ],
+              "source": "test table"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/only_beam_non_positive",
+      "tier": 1,
+      "reason": "tier 1: kills mutant `||` to `&&` in the positive_dimensions test: only the beam is zero (review of PR 43)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "X4": {
+              "standard_id": "X4",
+              "family": "CN",
+              "class_name": "X",
+              "formation": "motor_vessel",
+              "loa_m": [
+                90.0,
+                90.0
+              ],
+              "beam_m": 0.0,
+              "draught_m": [
+                2.5,
+                3.0
+              ],
+              "dwt_t": [
+                1000.0,
+                2000.0
+              ],
+              "source": "test table"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/only_loa_non_positive",
+      "tier": 1,
+      "reason": "tier 1: kills mutant `||` to `&&` in the positive_dimensions test: only the minimum length is zero (review of PR 43)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "X5": {
+              "standard_id": "X5",
+              "family": "CN",
+              "class_name": "X",
+              "formation": "motor_vessel",
+              "loa_m": [
+                0.0,
+                90.0
+              ],
+              "beam_m": 14.0,
+              "draught_m": [
+                2.5,
+                3.0
+              ],
+              "dwt_t": [
+                1000.0,
+                2000.0
+              ],
+              "source": "test table"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/mismatched_keys_keep_order",
+      "tier": 1,
+      "reason": "tier 1: kills the case where mismatched keys are reported sorted: two mismatched extra standards are listed in the order they were added (review of PR 43)",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "zz": {
+              "standard_id": "x1",
+              "family": "CN",
+              "class_name": "X",
+              "formation": "motor_vessel",
+              "loa_m": [
+                90.0,
+                90.0
+              ],
+              "beam_m": 14.0,
+              "draught_m": [
+                2.5,
+                3.0
+              ],
+              "dwt_t": [
+                1000.0,
+                2000.0
+              ],
+              "source": "test table"
+            },
+            "aa": {
+              "standard_id": "x2",
+              "family": "CN",
+              "class_name": "X",
+              "formation": "motor_vessel",
+              "loa_m": [
+                90.0,
+                90.0
+              ],
+              "beam_m": 14.0,
+              "draught_m": [
+                2.5,
+                3.0
+              ],
+              "dwt_t": [
+                1000.0,
+                2000.0
+              ],
+              "source": "test table"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "validate_catalogue/convoy_beam_exactly_at_tolerance",
+      "tier": 1,
+      "reason": "tier 1: kills mutant `>` to `>=` in the convoy_beam_consistent test: the beam differs from unit beam x n_abreast by exactly 0.05 (review of PR 43)",
+      "knife_edge": "The difference is exactly the 0.05 tolerance: 0.05 x 2 = 0.1 is twice 0.05 in binary, so 0.1 - 0.05 is exactly 0.05 in IEEE doubles, and Python's strict > passes it. Rust does the same IEEE operations, so it lands on the same side; the case exists to check that.",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "X6": {
+              "standard_id": "X6",
+              "family": "CN",
+              "class_name": "X",
+              "formation": "motor_vessel",
+              "loa_m": [
+                90.0,
+                90.0
+              ],
+              "beam_m": 0.05,
+              "draught_m": [
+                2.5,
+                3.0
+              ],
+              "dwt_t": [
+                1000.0,
+                2000.0
+              ],
+              "n_abreast": 2,
+              "unit_beam_m": 0.05,
+              "source": "test table"
+            }
+          }
+        }
+      }
+    },
+    {
       "id": "get_standard/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",

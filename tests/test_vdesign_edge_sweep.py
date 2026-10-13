@@ -1,5 +1,6 @@
-"""Validation is the only guard (issue #24): a file `ovcd validate` passes with 0 errors never makes
-the frozen Python `simulate` raise.
+"""Validation is the only guard (issues #24, #41): a file `ovcd validate` passes with 0 errors never
+makes the frozen Python `simulate` raise, return an error value, or return a physically impossible
+result (a negative cargo mass, cargo volume, draught, displacement, or hold width or height).
 
 Label: property
 Parity: none (a sweep over the Defaults Profile's hard-range edges, not a calculation input)
@@ -8,10 +9,11 @@ The sweep is seeded, so it is the same every run. It writes one Design whose Opt
 hard-range edges of the built-in Defaults Profile, just inside and just outside them, at the soft
 edges and in between, and at the cross-check boundaries (channel depth equal to its clearance,
 freeboard just below the moulded depth). It runs the real `ovcd validate` on the file and feeds every
-Option with 0 errors to the frozen `simulate` (`parity/frozen_python`). None may raise.
+Option with 0 errors to the frozen `simulate` (`parity/frozen_python`). None may raise, return
+`{"error": ...}`, or return a negative result.
 
-Risk stopped: an input combination the core refuses with an exception gets past validation, so a
-"valid" Design crashes the engine.
+Risk stopped: an input combination the core refuses with an exception, or turns into a confident
+wrong number (a 1 m beam gave negative cargo and draught), gets past validation.
 """
 import json
 import math
@@ -63,6 +65,9 @@ ONLY_FOR = {"lightship_factor_t_per_m3": "box_hold", "ruleset": "type_c_tanks",
             "fill_ratio": "type_c_tanks", "adn_tank_cap_m3": "type_c_tanks",
             "optimise_depth": "type_c_tanks"}
 NULLABLE = {"air_draft_limit_m", "draught_limit_m", "channel_depth_m", "channel_bottom_width_m"}
+# Results that can never be negative on a real barge. Each is checked when present.
+NON_NEGATIVE_RESULTS = ("cargo_t", "cargo_volume_m3", "draught_m", "displacement_t", "lightship_t")
+NON_NEGATIVE_GEOMETRY = ("hold_top_width_m", "hold_bottom_width_m", "hold_height_m")
 # The deepest hull the gas depth search tries (the frozen core's DEFAULT_DEPTHS_M ends at 7.0 m).
 DEPTH_SEARCH_MAX_M = 7.0
 NUMBERS = [n for n in list(TOP_LEVEL) + list(CHANNEL)
@@ -185,6 +190,11 @@ def boundary_options() -> list:
             {"channel_depth_m": 3.0, "block_coefficient": 0.3},
             {"min_freeboard_m": math.nextafter(3.5, 0.0)},
         ]
+        if containment != "type_c_tanks":
+            # The dry-bulk hold section at exactly zero width, and at exactly zero height: zero
+            # cargo, which the engine reports as a failed check. Not negative, so not refused.
+            cases.append({"beam_m": 2.0})
+            cases.append({"moulded_depth_m": 0.2, "min_freeboard_m": 0.0})
         if containment == "type_c_tanks":
             cases.append({"moulded_depth_m": 12.0, "optimise_depth": True,
                           "min_freeboard_m": DEPTH_SEARCH_MAX_M})
@@ -193,6 +203,36 @@ def boundary_options() -> list:
             out.append({"name": f"B{containment[:4]}{j}",
                         "inputs": {k: {"value": v, "source": "typed"} for k, v in inputs.items()}})
     return out
+
+
+def impossible(result: dict) -> list:
+    """What is wrong with one `simulate` result: an error value or a negative result."""
+    if "error" in result:
+        return [f"error value: {result['error']}"]
+    found = [f"{k} = {result['results'][k]}" for k in NON_NEGATIVE_RESULTS
+             if result["results"].get(k) is not None and result["results"][k] < 0]
+    found += [f"{k} = {result['geometry'][k]}" for k in NON_NEGATIVE_GEOMETRY
+              if result["geometry"].get(k) is not None and result["geometry"][k] < 0]
+    return found
+
+
+def test_the_impossible_result_check_catches_an_error_value_and_a_negative():
+    """The sweep's own check can fail: an error value and the 1 m beam's negatives are caught."""
+    assert impossible({"error": "Bauxite cannot be carried in a gas barge."})
+    sys.path.insert(0, str(ROOT / "parity" / "frozen_python"))
+    try:
+        from vessel_designer_frozen.simulate import simulate
+    finally:
+        sys.path.pop(0)
+    one_metre = simulate(to_simulate({
+        "cargo": "bauxite", "hull_form": "raked_box", "formation": {"kind": "pushed_barge"},
+        "cargo_containment": "box_hold", "length_overall_m": 76.5, "beam_m": 1.0,
+        "moulded_depth_m": 3.5, "channel_bottom_width_m": None, **{k: v for k, v in TYPICAL.items()
+                                   if ONLY_FOR.get(k, "box_hold") == "box_hold"}}))
+    found = impossible(one_metre)
+    assert any(f.startswith("cargo_t = -") for f in found), found
+    assert any(f.startswith("draught_m = -") for f in found), found
+    assert any(f.startswith("hold_top_width_m = -") for f in found), found
 
 
 def test_every_option_validate_passes_runs_in_the_frozen_simulate(ovcd, tmp_path):
@@ -219,15 +259,21 @@ def test_every_option_validate_passes_runs_in_the_frozen_simulate(ovcd, tmp_path
         from vessel_designer_frozen.simulate import simulate
     finally:
         sys.path.pop(0)
-    raised = []
+    raised, wrong = [], []
     for o in passed:
         inputs = {k: v["value"] for k, v in o["inputs"].items()}
         try:
-            simulate(to_simulate(inputs))
+            result = simulate(to_simulate(inputs))
         except Exception as exc:  # noqa: BLE001 - any exception breaks the rule
             raised.append(f"{o['name']}: {type(exc).__name__}: {exc}\n  {json.dumps(inputs)}")
+            continue
+        found = impossible(result)
+        if found:
+            wrong.append(f"{o['name']}: {', '.join(found)}\n  {json.dumps(inputs)}")
     assert not raised, f"{len(raised)} valid Option(s) made simulate raise:\n" + "\n".join(
         raised[:10])
+    assert not wrong, (f"{len(wrong)} valid Option(s) gave an error value or an impossible "
+                       "result:\n" + "\n".join(wrong[:10]))
     # Every just-inside hard edge of every number appears in at least one valid Option.
     seen = {n: {o["inputs"][n]["value"] for o in passed if n in o["inputs"]} for n in NUMBERS}
     for name in NUMBERS:

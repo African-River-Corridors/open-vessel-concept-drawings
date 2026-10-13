@@ -10,14 +10,17 @@ deleted, with the frozen Python and the hidden `ovcd eval` command, when the por
 | `tolerance.json` | Float tolerance: relative and absolute 1e-9 | Never loosened |
 | `ported.json` | Entry points the Rust dispatch has ported; each must be fully green | Port tickets add to it |
 | `frozen_python/vessel_designer_frozen/` | Frozen copy of the pure-Python code, under its own import name | Nobody: it does not change |
-| `driver.py` | Runs the cases through the frozen Python | |
-| `sweep.py` | Generates the tier-2 cases: a seeded sweep, knife-edge points dropped | |
+| `driver.py` | Runs the cases through the frozen Python | Guarded: a change needs a reason in `generator.json` |
+| `sweep.py` | Generates the tier-2 cases: a seeded sweep, knife-edge points dropped | Guarded: a change needs a reason in `generator.json` |
+| `generator.json` | `{"reason": ...}`: why the generator (`driver.py`, `sweep.py`, `frozen_python/`) last changed | Whoever changes the generator |
 
 ## Case and result shapes
 
 A case: `{"id": "get_cargo/LNG", "tier": 1, "reason": "...", "input": {"fn": "get_cargo", "args": {...}}}`.
 Tier 1 is a named case, tier 2 a seeded sweep point, tier 3 an error case. Every case carries the
 reason it exists or last changed. A removed case moves to the file's `retired` list, with a reason.
+A tier-1 or tier-3 case that sits on a knife edge also carries `knife_edge`: what flips, and why Rust
+reaches the same side (see "What identical means").
 
 A Reference Result is `{"ok": <value>}`, or `{"error": {"type": "ValueError", "message": "..."}}`
 when Python raises (`ValueError`, or `KeyError` for an unknown lookup key; `type` is the class
@@ -39,7 +42,10 @@ tiers per entry point.
   by a relative 1e-12 (speed-grid inputs excepted) must not change any discrete output, and must
   not move any float output outside the parity tolerance. Nobody edits tier-2 cases by hand;
   `cargo xtask regen` rewrites them, and the test fails if the committed files differ from the
-  generator by one byte. To change tier 2, change `sweep.py`.
+  generator by one byte. To change tier 2, change `sweep.py`, and say why in its `REVISIONS`
+  entry for that function: the note goes into every changed point's `reason`, which the oracle
+  guard needs. `tests/test_parity_cases.py` also lists inputs a port could hardcode at their
+  defaults (`MUST_VARY`); the sweep must move each one.
 - **Tier 3, errors.** A `ValueError`, a `KeyError` from a lookup, or a `{"error": ...}` result. The
   reason starts `tier 3: error path`. Where Python has no error path (hull geometry, for
   example), tier 3 holds degenerate inputs instead, with a reason that starts
@@ -68,7 +74,30 @@ checks both directions.
 Floats match within `tolerance.json` (Python's `math.isclose` rule). Everything else matches
 exactly: integers (an integer never matches a float), booleans, text including messages, list order,
 object keys. A knife-edge case is nudged or replaced, with the reason recorded on the case. The
-tolerance is never loosened.
+tolerance is never loosened. A tier-1 or tier-3 case may stay on a knife edge (an audited test that
+checks the flip itself, or an input exactly on a rule's bound) only with a `knife_edge` text; the
+test fails if the sweep's own detector flags a tier-1 or tier-3 case that has none.
+
+Input numbers: the driver adapter casts a JSON integer to a float wherever the frozen Python
+dataclass hints `float`, so `"beam": 12` and `"beam": 12.0` give the same Reference Result (`12.0`).
+A non-boolean given for a `bool` field fails regen with a TypeError, because the Rust side rejects it.
+
+Integer range: Python integers are unbounded and the parity format stops at 64 bits (the oracle
+guard and `eval` refuse a larger integer). One rule covers every port:
+
+- **In range, copy Python exactly.** While every integer input, every integer a result or message
+  carries, and every integer compared fits in `i64`, Rust gives Python's answer, including for
+  negative or zero counts. Integer arithmetic is exact: ceiling division does not negate (use
+  `div_euclid` plus a remainder test, so `i64::MIN` works), and an integer that only feeds a float
+  product is summed in `i128` and rounded once to a float, as Python's int-to-float conversion does.
+- **Out of range, fail loudly.** Every integer `+`, `-`, `*` and negation uses checked arithmetic.
+  A value that Python holds but no 64-bit field can (an output count, for example) returns
+  `OverflowError` with one fixed message per module, never a panic and never a wrap.
+- **Inputs.** `eval` refuses an integer input outside `i64` as bad input. No parity case holds one.
+- **Memory.** A count so large that Python's own answer cannot fit in memory (a label list of
+  `10**18` items) is outside parity: Python raises `MemoryError` and no case covers it.
+- **Float to int.** `int(x)` of a finite float that saturates at the `i64` limits is allowed when
+  the integer is only compared with a small integer, so the comparison cannot change.
 
 ## Tasks
 
@@ -96,15 +125,29 @@ differ. The guard fails on a Mac for the same reason; CI is the judge.
 
 ## Oracle guard
 
-The fast gate fails a pull request that changes `cases/`, `reference/`, `tolerance.json` or
-`ported.json`, unless:
+The fast gate fails a pull request that changes `cases/`, `reference/`, `tolerance.json`,
+`ported.json` or the generator (`driver.py`, `sweep.py`, any file under `frozen_python/`), unless:
 
 - re-running the frozen Python reproduces every committed Reference Result byte for byte (so the
   change came from `cargo xtask regen`, not a hand edit);
 - every new case, and every case whose input or Reference Result changed, carries a new `reason`;
 - every removed case is in `retired` with a reason;
-- the tolerance is not loosened (and never above 1e-9), and a tightened tolerance has a new reason;
-- no entry point leaves `ported.json`.
+- the tolerance is not loosened (and never above 1e-9), never negative, always has a non-empty
+  `reason`, and a tightened tolerance has a new reason;
+- no entry point leaves `ported.json`;
+- `cases/` and `reference/` hold only top-level `.json` files (the driver never reads a nested
+  folder, so a nested file would be an unchecked oracle);
+- no number in a guarded file is an integer outside the 64-bit range (it would read as a float,
+  and two different big integers would compare equal);
+- a changed, added or removed generator file comes with a new, non-empty `reason` in
+  `generator.json`. The guard then re-runs the changed generator, which must still reproduce
+  every committed Reference Result.
+
+The guard re-runs the PR's own generator, not the base branch's, and guards the generator
+instead. Running the base generator would block every legitimate generator change: a tier-2
+change is made by changing `sweep.py`, and its new cases can only be reproduced by the new
+`sweep.py`. So a generator change is allowed, but never silently: it fails without a recorded
+reason, and the reason and the diff are then in front of the reviewers.
 
 ## Mutation test
 

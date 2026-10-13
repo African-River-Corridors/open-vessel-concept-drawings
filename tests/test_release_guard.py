@@ -60,8 +60,64 @@ def test_tree_fails_on_planted_term(tmp_path):
 
 
 def test_tree_finds_a_multi_word_term_across_punctuation(tmp_path):
-    root = _repo(tmp_path, {"a.md": "ok\nsee Quux-Harbour.\nquux\nharbour\n"})
+    root = _repo(tmp_path, {"a.md": "ok\nsee Quux-Harbour.\n"})
     assert rg.scan(root, H)[0] == [f"a.md:2:{ID[PHRASE]}"]
+
+
+def test_tree_finds_a_phrase_wrapped_over_two_lines(tmp_path):
+    root = _repo(tmp_path, {"a.md": "ok\nthe quux\nharbour project\n- quux\n  harbour\n"})
+    assert rg.scan(root, H)[0] == [f"a.md:2:{ID[PHRASE]}", f"a.md:4:{ID[PHRASE]}"]
+
+
+def test_a_wrapped_phrase_in_a_commit_message_is_found(tmp_path):
+    root = _repo(tmp_path, {"a.md": "clean\n"})
+    _commit(root, "fix for the quux\nharbour client")
+    hits, _ = rg.scan_history(root, H)
+    assert len(hits) == 1 and hits[0].endswith(f":(commit):3:{ID[PHRASE]}")
+
+
+def test_a_wrapped_phrase_in_added_history_lines_is_found(tmp_path):
+    root = _repo(tmp_path, {"a.md": "clean\nquux\nharbour\n"})
+    _commit(root)
+    (root / "a.md").write_text("clean\n")
+    _git(root, "add", ".")
+    _commit(root)
+    hits, _ = rg.scan_history(root, H)
+    assert len(hits) == 1 and hits[0].endswith(f":a.md:2:{ID[PHRASE]}")
+
+
+def test_a_phrase_split_over_two_commits_is_found_in_history(tmp_path):
+    root = _repo(tmp_path, {"a.md": "quux\nfiller\n"})
+    for text in ("quux\nharbour\n", "x\n"):             # line 2 is edited next to an unchanged line
+        (root / "a.md").write_text(text)
+        _git(root, "add", ".")
+        _commit(root)
+    hits, _ = rg.scan_history(root, H)
+    assert hits and all(h.endswith(f":a.md:1:{ID[PHRASE]}") for h in hits)
+
+
+def test_a_local_path_in_the_embargo_module_is_a_hit_in_tree_and_history(tmp_path):
+    root = _repo(tmp_path, {"tools/embargo.py": "# from /" + "Users/someone/terms.txt\n"})
+    assert len(rg.scan(root, H)[0]) == 1
+    _commit(root)
+    assert len(rg.scan_history(root, H)[0]) == 1
+
+
+def test_embargo_module_is_scanned_except_its_hash_literals(tmp_path):
+    h = emb.term_hash(WORD)
+    src = f'TERM_HASHES = frozenset({{\n    "{h}",\n}})\n# {WORD} hides here\n'
+    root = _repo(tmp_path, {"tools/embargo.py": src, "tools/release_guard.py": f"# {WORD}\n"})
+    hits, _ = rg.scan(root, H)
+    assert hits == [f"tools/embargo.py:4:{ID[WORD]}"]       # the hash line is not a hit
+    _commit(root)
+    hits, _ = rg.scan_history(root, H)
+    assert len(hits) == 1 and hits[0].endswith(f":tools/embargo.py:4:{ID[WORD]}")
+
+
+def test_embargo_module_hash_literal_is_not_a_hit_when_the_term_is_listed(tmp_path):
+    h = emb.term_hash(WORD)
+    root = _repo(tmp_path, {"tools/embargo.py": f'X = (\n    "{h}",\n)\n'})
+    assert rg.scan(root, H)[0] == []
 
 
 def test_short_term_is_a_whole_word(tmp_path):
@@ -93,6 +149,17 @@ def test_history_fails_on_a_term_removed_from_the_tree(tmp_path):
     assert rg.scan(root, H)[0] == []                       # the tree is clean ...
     hits, _ = rg.scan_history(root, H)                     # ... the history is not
     assert len(hits) == 1 and hits[0].endswith(f":a.md:2:{ID[WORD]}")
+
+
+def test_a_commit_qualified_allow_entry_excuses_history_but_not_the_tree(tmp_path, monkeypatch):
+    monkeypatch.setattr(emb, "TERM_HASHES", H)
+    root = _repo(tmp_path, {"a.md": "clean\nzorblax\n"})
+    _commit(root)
+    sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True,
+                         text=True).stdout.strip()[:12]
+    (root / ".release-guard-allow").write_text(f"{sha}:a.md  {ID[WORD]}  # one commit only\n")
+    assert rg.scan_history(root, H)[0] == []
+    assert len(rg.scan(root, H)[0]) == 1
 
 
 def test_history_scans_commit_messages_and_authors(tmp_path):

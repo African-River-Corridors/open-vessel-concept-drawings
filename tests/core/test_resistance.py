@@ -84,6 +84,8 @@ def test_checks_pass_on_default_design():
     assert "coefficients_are_first_order" in names
     advisory = next(c for c in r.checks if c.name == "coefficients_are_first_order")
     assert advisory.severity == "warning" and advisory.ok
+    # the legacy entry point stays check-free: checks are the additive change in compute()
+    assert ResistanceCalculator(ResistanceInputs()).calculate().checks == []
 
 
 # ---------- property: the physics that must always hold ----------
