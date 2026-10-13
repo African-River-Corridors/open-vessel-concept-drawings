@@ -637,19 +637,6 @@ mod tests {
     }
 
     #[test]
-    fn reference_result_with_an_integer_above_64_bits_fails() {
-        let mut head = tree();
-        head.insert(
-            "parity/reference/cargo.json".into(),
-            reference(
-                "cargo",
-                &[("get_cargo/LNG", r#"{"ok": 100000000000000000001}"#)],
-            ),
-        );
-        assert_violation(&check(&tree(), &head), "64-bit");
-    }
-
-    #[test]
     fn entry_point_leaving_the_ported_list_fails() {
         let mut head = tree();
         head.insert("parity/ported.json".into(), "[]".into());

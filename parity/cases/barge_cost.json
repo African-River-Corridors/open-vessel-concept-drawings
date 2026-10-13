@@ -225,6 +225,609 @@
       }
     },
     {
+      "id": "compute/error/rate_inf",
+      "tier": 3,
+      "reason": "tier 3: error path. A rate of inf makes round() raise OverflowError; Rust saturated to i64 (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "inf",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/rate_nan",
+      "tier": 3,
+      "reason": "tier 3: error path. A rate of nan makes round() raise ValueError; Rust returned zeros (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "nan",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/mass_overflows",
+      "tier": 3,
+      "reason": "tier 3: error path. A mass so large the cost is inf makes round() raise OverflowError (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 1e+308
+          },
+          "rates": null
+        }
+      }
+    },
+    {
+      "id": "compute/error/rates_first_bad_value_in_order",
+      "tier": 3,
+      "reason": "tier 3: error path. The first bad value in file order is the one reported, so the mapping keeps its key order (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "tank_shell_rate": "10000.0",
+            "currency": "USD",
+            "hull_steel_rate": "bad2",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/rates_unknown_key_escapes",
+      "tier": 3,
+      "reason": "tier 3: error path. The unknown-key message holds repr of non-ASCII text: a space (U+2003) and an unassigned code point (U+0378) are escaped (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "2500.0",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0",
+            "k ͸": 1.0,
+            "café": 2.0
+          }
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/error/superscript_is_not_identifier",
+      "tier": 3,
+      "reason": "tier 3: error path. 'a' + superscript two is not an identifier in Python; Rust accepted it (review of PR 43)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "a²: 1\n"
+        }
+      }
+    },
+    {
+      "id": "compute/big_int_total",
+      "tier": 1,
+      "reason": "tier 1: a mass of 1e16 t gives a total past 2^63; Python round() returns the exact int (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 1e+16
+          },
+          "rates": null
+        }
+      },
+      "knife_edge": "The result is an exact integer made from one IEEE product; Rust makes the same product and converts it exactly, so the digits match on both sides. A nudge changes the digits, which is why the case checks them."
+    },
+    {
+      "id": "compute/big_int_rate_1e30",
+      "tier": 1,
+      "reason": "tier 1: a rate of 1e30 gives money past 2^63 as an exact Python int (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "1e30",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      },
+      "knife_edge": "The result is an exact integer made from one IEEE product; Rust makes the same product and converts it exactly, so the digits match on both sides. A nudge changes the digits, which is why the case checks them."
+    },
+    {
+      "id": "compute/big_int_rate_1e300",
+      "tier": 1,
+      "reason": "tier 1: a rate of 1e300 gives a 300-digit exact Python int (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "1e300",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      },
+      "knife_edge": "The result is an exact integer made from one IEEE product; Rust makes the same product and converts it exactly, so the digits match on both sides. A nudge changes the digits, which is why the case checks them."
+    },
+    {
+      "id": "compute/unicode_digit_rate",
+      "tier": 1,
+      "reason": "tier 1: float() reads Arabic-Indic digits, so a rate of U+0661 U+0662 is 12.0 (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "١٢",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/int_valued_explicit_rates",
+      "tier": 1,
+      "reason": "tier 1: explicit rates written as JSON integers (each within 2^24, which eval accepts); the adapter reads them as floats, as the dataclass declares (review of PR 43); the big mass is now a float because eval refuses integers beyond 2^24",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "hull_steel_t": 9007199254740992.0,
+            "wing_plate_t": 1,
+            "weather_shield_t": 0
+          },
+          "rates": {
+            "hull_steel_rate": 1,
+            "tank_shell_rate": 10000.0,
+            "tank_supports_rate": 2000.0,
+            "insulation_rate": 4000.0,
+            "piping_rate": 4500.0,
+            "outfitting_rate": 4000.0,
+            "cargo_system_lump": 500000.0,
+            "paint_anodes_misc": 100000.0,
+            "battery_rate_per_kwh": 250.0,
+            "propulsion_rate_per_kw": 1000.0,
+            "wheelhouse_accom_lump": 450000.0,
+            "tug_outfitting_lump": 200000.0,
+            "yard_margin_fraction": 0.1,
+            "delivery_lump": 50000
+          }
+        }
+      },
+      "knife_edge": "The result is an exact integer made from one IEEE product; Rust makes the same product and converts it exactly, so the digits match on both sides. A nudge changes the digits, which is why the case checks them."
+    },
+    {
+      "id": "parse_flat_yaml/non_ascii_identifier_precomposed",
+      "tier": 1,
+      "reason": "tier 1: a key with a precomposed accented letter is an identifier in Python; Rust refused it (review of PR 43)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "café: 1\n"
+        }
+      }
+    },
+    {
+      "id": "parse_flat_yaml/non_ascii_identifier_combining",
+      "tier": 1,
+      "reason": "tier 1: a key with a combining accent (XID_Continue, not a letter) is an identifier in Python (review of PR 43)",
+      "input": {
+        "fn": "parse_flat_yaml",
+        "args": {
+          "text": "á: 1\n"
+        }
+      }
+    },
+    {
+      "id": "compute/error/rate_control_whitespace",
+      "tier": 3,
+      "reason": "tier 3: error path. float() strips only ASCII C whitespace, so a leading U+001F is a ValueError (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "\u001f1",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/rate_nbsp_padded",
+      "tier": 1,
+      "reason": "tier 1: float() reads U+00A0 and U+0085 as spaces, so a padded rate is 1.0 (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": " 1",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/currency_int_beyond_i64",
+      "tier": 1,
+      "reason": "tier 1: a JSON int beyond i64 keeps its exact digits through str(), as Python does (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": 10000000000000000000,
+            "hull_steel_rate": "1000.0",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/currency_negative_int_beyond_i64",
+      "tier": 1,
+      "reason": "tier 1: a negative JSON int beyond i64 keeps its exact digits through str() (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": -9223372036854775809,
+            "hull_steel_rate": "1000.0",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/rate_int_too_big_for_float",
+      "tier": 3,
+      "reason": "tier 3: error path. A JSON int of 400 digits makes float() raise OverflowError, not ValueError (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/rate_int_2_pow_64",
+      "tier": 1,
+      "reason": "tier 1: a JSON int of 2^64 is converted by float() exactly; the rounded money is a big int (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": 18446744073709551616,
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      },
+      "knife_edge": "The result is an exact integer made from one IEEE product; Rust makes the same product and converts it exactly, so the digits match on both sides. A nudge changes the digits, which is why the case checks them."
+    },
+    {
+      "id": "compute/error/two_lumps_overflow_sum",
+      "tier": 3,
+      "reason": "tier 3: error path. Two lumps of 1e308 add to inf inside sum(); the compensation step must not make it nan (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "2500.0",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "1e308",
+            "paint_anodes_misc": "1e308",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/rate_underscore_between_digits",
+      "tier": 1,
+      "reason": "tier 1: float() accepts an underscore between digits, so '1_000' is 1000.0 (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "1_000",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/rate_underscore_after_e",
+      "tier": 3,
+      "reason": "tier 3: error path. '1e_5' has an underscore not between digits; float() raises ValueError (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "1e_5",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/rate_trailing_underscore",
+      "tier": 3,
+      "reason": "tier 3: error path. '1_' ends with an underscore; float() raises ValueError (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "1_",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/rate_leading_underscore",
+      "tier": 3,
+      "reason": "tier 3: error path. '_1' starts with an underscore; float() raises ValueError (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "_1",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
       "id": "compute/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",

@@ -1,3 +1,5 @@
 [
-  "cargo"
+  "cargo",
+  "barge_cost",
+  "vessel_standards"
 ]

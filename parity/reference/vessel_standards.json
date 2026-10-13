@@ -1078,6 +1078,265 @@
       }
     },
     {
+      "id": "validate_catalogue/only_loa_inverted",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": false,
+            "message": "inverted range: ['X1']",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": true,
+            "message": "every class cites its table",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/only_draught_inverted",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": false,
+            "message": "inverted range: ['X2']",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": true,
+            "message": "every class cites its table",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/only_dwt_inverted",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": false,
+            "message": "inverted range: ['X3']",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": true,
+            "message": "every class cites its table",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/only_beam_non_positive",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": true,
+            "message": "every (min, max) range is ordered",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": false,
+            "message": "non-positive dimension: ['X4']",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": true,
+            "message": "every class cites its table",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/only_loa_non_positive",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": true,
+            "message": "every (min, max) range is ordered",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": false,
+            "message": "non-positive dimension: ['X5']",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": true,
+            "message": "every class cites its table",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/mismatched_keys_keep_order",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": false,
+            "message": "key/standard_id mismatch: ['zz', 'aa']",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": true,
+            "message": "every (min, max) range is ordered",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": true,
+            "message": "every class cites its table",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "validate_catalogue/convoy_beam_exactly_at_tolerance",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": true,
+            "message": "every (min, max) range is ordered",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": true,
+            "message": "every class cites its table",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
       "id": "get_standard/sweep/000",
       "output": {
         "ok": {

@@ -11,6 +11,11 @@ extern crate alloc;
 #[cfg(test)]
 extern crate std;
 
+pub mod barge_cost;
 pub mod cargo;
 pub mod checks;
 pub mod pyfmt;
+pub mod pyint;
+pub mod pystr;
+mod pystr_tables;
+pub mod vessel_standards;

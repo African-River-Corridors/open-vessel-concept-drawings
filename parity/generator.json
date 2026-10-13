@@ -1,3 +1,3 @@
 {
-  "reason": "issue #40: sweep.py now varies the tug inputs of barge_cost and the block coefficient and tank cap of gas_arrangement.fit, so the retro-review case-set gaps close; REVISIONS in sweep.py says why each sweep point changed"
+  "reason": "issue #21 fix round 1: the driver records OverflowError (round(inf)) as an error result, and the barge_cost adapter reads JSON ints as floats, as the dataclass declares, so explicit int rates no longer echo back as ints"
 }
