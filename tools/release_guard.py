@@ -13,6 +13,9 @@ Allowlist: `.release-guard-allow` at the repo root, one entry per line:
 
     <path-glob>  <term>  # reason
 
+A glob may also name one commit in history mode, as `<commit12>:<path>`, to excuse a hit that is
+already in published history without excusing the same text in the tree.
+
 `<path-glob>` is matched with fnmatch against the repo-relative path. `<term>` is a term id as
 the guard prints it, a path-rule name (`/Users/`), or `*` for every term. Blank lines and lines
 starting with `#` are ignored. The guard does not scan itself or the allowlist file. It does scan `tools/embargo.py`, with its
@@ -63,8 +66,10 @@ def load_allow(root: Path) -> list[tuple[str, str]]:
     return entries
 
 
-def allowed(path: str, tid: str, allow: list[tuple[str, str]]) -> bool:
-    return any(fnmatch.fnmatch(path, g) and t in ("*", tid) for g, t in allow)
+def allowed(path: str, tid: str, allow: list[tuple[str, str]], where: str = "") -> bool:
+    """`<path-glob>` may match the path, or (history mode) the `<commit12>:<path>` the hit prints."""
+    return any((fnmatch.fnmatch(path, g) or fnmatch.fnmatch(where, g)) and t in ("*", tid)
+               for g, t in allow)
 
 
 def _scan_text(where: str, path: str, lines, allow, hashes, hits, ok) -> None:
@@ -72,7 +77,7 @@ def _scan_text(where: str, path: str, lines, allow, hashes, hits, ok) -> None:
     if path == EMBARGO:
         lines = _blank_hashes(lines)
     for n, tid, _ in embargo.find_lines(lines, hashes):
-        (ok if allowed(path, tid, allow) else hits).append(f"{where}:{n}:{tid}")
+        (ok if allowed(path, tid, allow, where) else hits).append(f"{where}:{n}:{tid}")
 
 
 def scan(root: Path, hashes: frozenset[str] | None = None) -> tuple[list[str], list[str]]:
@@ -101,7 +106,8 @@ def _git(root: Path, *args: str) -> str:
 
 
 def scan_history(root: Path, hashes: frozenset[str] | None = None) -> tuple[list[str], list[str]]:
-    """History mode: every added line in every commit reachable from any ref, plus each commit's
+    """History mode: every added line in every commit reachable from any ref, each with one line of
+    context so a wrapped phrase split across two commits is still joined, plus each commit's
     author, committer and message. Hits as '<commit12>:<path>:<line>:<term-id>'."""
     allow = load_allow(root)
     hits, ok = [], []
@@ -112,7 +118,7 @@ def scan_history(root: Path, hashes: frozenset[str] | None = None) -> tuple[list
         _scan_text(f"{sha[:12]}:{COMMIT}", COMMIT, enumerate(body.splitlines(), 1),
                    allow, hashes, hits, ok)
 
-    patch = _git(root, "log", "--all", "-p", "--no-color", "--no-ext-diff", "-U0",
+    patch = _git(root, "log", "--all", "-p", "--no-color", "--no-ext-diff", "-U1",
                  "--format=commit %H")
     sha, path, lines, n, header = "", None, [], 0, False
 
@@ -136,8 +142,8 @@ def scan_history(root: Path, hashes: frozenset[str] | None = None) -> tuple[list
                 n = int(raw.split("+", 1)[1].split()[0].split(",")[0])
             except (IndexError, ValueError):
                 n = 0
-        elif not header and raw.startswith("+") and path is not None:
-            lines.append((n, raw[1:]))
+        elif not header and raw[:1] in ("+", " ") and path is not None:
+            lines.append((n, raw[1:]))                  # added line, or one line of context
             n += 1
     flush()
     return hits, ok

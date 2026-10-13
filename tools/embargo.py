@@ -81,7 +81,7 @@ TERM_HASHES = frozenset({
 
 # Path rules: not secret, so plain patterns. name -> pattern.
 PATH_RULES = {
-    "/Users/": re.compile(r"/users/", re.IGNORECASE),
+    "/" "Users/": re.compile(r"/[u]sers/", re.IGNORECASE),
 }
 
 _WORD = re.compile(r"[a-z0-9]+")
