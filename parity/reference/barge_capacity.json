@@ -6583,7 +6583,7 @@
           "navigating_top_above_keel_m": 11.3,
           "gas_basis": {
             "inputs": {
-              "loa": 90,
+              "loa": 90.0,
               "beam": 14.8,
               "depth": 6.5,
               "max_draft": 6.5,
@@ -7236,7 +7236,7 @@
             "container_row_gap_m": 0.8,
             "wheelhouse_x0_m": 16.292,
             "wheelhouse_x1_m": 19.892000000000003,
-            "wheelhouse_floor_lowered_m": 4,
+            "wheelhouse_floor_lowered_m": 4.0,
             "wheelhouse_top_lowered_m": 7.4,
             "wheelhouse_floor_raised_m": 4.0,
             "wheelhouse_top_raised_m": 7.4,
