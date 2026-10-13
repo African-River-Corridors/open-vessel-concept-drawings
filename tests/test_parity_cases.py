@@ -134,8 +134,9 @@ def test_tier_3_is_an_error_path_or_a_named_degenerate_input(ep):
 
 
 def test_committed_parity_files_stay_under_5_mb():
-    total = sum(p.stat().st_size for d in ("cases", "reference")
-                for p in (PARITY / d).glob("*.json"))
+    files = [p for d in ("cases", "reference") for p in (PARITY / d).glob("*.json")]
+    assert files, "no parity files found: scanning nothing"
+    total = sum(p.stat().st_size for p in files)
     assert total < 5_000_000, f"parity files are {total / 1e6:.2f} MB"
 
 
