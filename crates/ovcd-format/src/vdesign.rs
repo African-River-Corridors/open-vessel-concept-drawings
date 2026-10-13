@@ -29,6 +29,21 @@ pub const CARGO_CONTAINMENTS: &[(&str, &str)] = &[
     ("type_c_tanks", "liquid_gas"),
 ];
 
+/// Cargo phases, as the Python cargo database names them.
+pub const CARGO_PHASES: &[&str] = &["dry_bulk", "liquid_gas"];
+
+/// Inputs whose default is chosen by another value: `(input, by, keys)`. The Defaults Profile
+/// must give `default_by_<by>[key]` for every key, because each is a lookup the schema can make.
+pub const KEYED_DEFAULTS: &[(&str, &str, &[&str])] = &[
+    ("cargo_containment", "cargo_phase", CARGO_PHASES),
+    (
+        "lightship_factor_t_per_m3",
+        "cargo_containment",
+        &["box_hold"],
+    ),
+    ("fill_ratio", "ruleset", RULESETS),
+];
+
 /// Hull Forms that exist today.
 pub const HULL_FORMS: &[&str] = &["raked_box"];
 
@@ -474,9 +489,14 @@ fn read_option(
         if !applies {
             continue;
         }
-        let Some(default) = default_for(spec.name, &inputs, profile) else {
+        let default = match default_for(spec.name, &inputs, profile) {
+            Ok(Some(d)) => d,
             // The input it depends on is missing or wrong; that error is already reported.
-            continue;
+            Ok(None) => continue,
+            Err(e) => {
+                report.errors.push(at(e));
+                continue;
+            }
         };
         report.warnings.push(at(format!(
             "`{}` is not stored in the file; using the Defaults Profile value {}",
@@ -498,27 +518,51 @@ fn read_option(
     }
 }
 
-/// The profile's default for an input, given the inputs resolved so far.
-fn default_for(name: &str, inputs: &[(String, StoredInput)], profile: &Profile) -> Option<Value> {
+/// The profile's default for an input, given the inputs resolved so far. `Ok(None)` when an
+/// input it depends on is missing or wrong (that error is reported elsewhere); `Err` when the
+/// profile has no default for this case.
+fn default_for(
+    name: &str,
+    inputs: &[(String, StoredInput)],
+    profile: &Profile,
+) -> Result<Option<Value>, String> {
     let got = |n: &str| {
         inputs
             .iter()
             .find(|(k, _)| k == n)
             .and_then(|(_, i)| i.value.as_str().map(String::from))
     };
-    let value = match name {
-        "cargo_containment" => {
-            let cargo = got("cargo")?;
-            let phase = ovcd_core::cargo::get_cargo(&cargo).ok()?.phase;
-            profile.default_by(name, "cargo_phase", phase)
+    let (value, case) = match KEYED_DEFAULTS.iter().find(|(n, _, _)| *n == name) {
+        Some((_, by, _)) => {
+            let key = match *by {
+                "cargo_phase" => {
+                    let Some(cargo) = got("cargo") else {
+                        return Ok(None);
+                    };
+                    let Ok(props) = ovcd_core::cargo::get_cargo(&cargo) else {
+                        return Ok(None);
+                    };
+                    props.phase.to_string()
+                }
+                other => match got(other) {
+                    Some(k) => k,
+                    None => return Ok(None),
+                },
+            };
+            (
+                profile.default_by(name, by, &key),
+                format!("`default_by_{by}` for {key}"),
+            )
         }
-        "lightship_factor_t_per_m3" => {
-            profile.default_by(name, "cargo_containment", &got("cargo_containment")?)
-        }
-        "fill_ratio" => profile.default_by(name, "ruleset", &got("ruleset")?),
-        _ => profile.default(name),
+        None => (profile.default(name), "a `default`".to_string()),
     };
-    value.cloned().map(normalise)
+    match value {
+        Some(v) => Ok(Some(normalise(v.clone()))),
+        None => Err(format!(
+            "the Defaults Profile '{}' gives no default for `{name}` ({case} is missing)",
+            profile.name()
+        )),
+    }
 }
 
 /// Store every number as a float, so `10` and `10.0` are the same input.
@@ -703,12 +747,8 @@ fn cross_checks(
 pub(crate) fn check_profile_defaults(profile: &Profile) -> Result<(), String> {
     for spec in INPUTS.iter().filter(|s| !s.required) {
         let mut defaults: Vec<Value> = profile.default(spec.name).cloned().into_iter().collect();
-        for (by, keys) in [
-            ("cargo_phase", &["dry_bulk", "liquid_gas"][..]),
-            ("cargo_containment", &["box_hold"][..]),
-            ("ruleset", RULESETS),
-        ] {
-            for key in keys {
+        for (_, by, keys) in KEYED_DEFAULTS.iter().filter(|(n, _, _)| *n == spec.name) {
+            for key in *keys {
                 defaults.extend(profile.default_by(spec.name, by, key).cloned());
             }
         }

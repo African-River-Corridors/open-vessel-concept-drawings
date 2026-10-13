@@ -307,3 +307,35 @@ fn help_lists_new_and_validate() {
     assert!(help.contains("ovcd new"), "{help}");
     assert!(help.contains("ovcd validate"), "{help}");
 }
+
+#[test]
+fn a_profile_with_a_gap_in_a_keyed_default_is_refused_by_validate_and_new() {
+    let dir = temp_dir("profile-gap");
+    let out = ovcd(&["profile"]);
+    let mut profile: Value = serde_json::from_slice(&out.stdout).unwrap();
+    profile["inputs"]["cargo_containment"]["default_by_cargo_phase"]
+        .as_object_mut()
+        .unwrap()
+        .remove("liquid_gas");
+    let gap = dir.join("gap.profile.json");
+    write_json(&gap, &profile);
+    let gas = dir.join("gas.vdesign");
+    write_json(
+        &gas,
+        &design_with(json!({
+            "cargo": "LNG",
+            "hull_form": "raked_box",
+            "length_overall_m": 76.5,
+            "beam_m": 11.4,
+            "moulded_depth_m": 3.5,
+            "formation": { "kind": "self_propelled" }
+        })),
+    );
+    let message = "no default for `cargo_containment` when cargo_phase is liquid_gas";
+    let out = ovcd(&["validate", "--profile", path_str(&gap), path_str(&gas)]);
+    assert!(!out.status.success(), "{}", stdout(&out));
+    assert!(stderr(&out).contains(message), "{}", stderr(&out));
+    let out = ovcd(&["new", "--profile", path_str(&gap)]);
+    assert!(!out.status.success(), "{}", stdout(&out));
+    assert!(stderr(&out).contains(message), "{}", stderr(&out));
+}

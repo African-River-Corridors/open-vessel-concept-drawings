@@ -4,7 +4,7 @@
 //! The profile holds values only. Which inputs exist, and their types, is fixed by the schema in
 //! `vdesign.rs`.
 
-use crate::vdesign::{INPUTS, InputKind};
+use crate::vdesign::{INPUTS, InputKind, KEYED_DEFAULTS};
 use serde_json::{Map, Value};
 
 const BUILT_IN: &str = include_str!("builtin_profile.json");
@@ -96,12 +96,30 @@ impl Profile {
                 .inputs
                 .get(spec.name)
                 .ok_or_else(|| format!("profile has no entry for `{}`", spec.name))?;
-            let has_default = entry.as_object().is_some_and(|o| {
-                o.keys()
-                    .any(|k| k == "default" || k.starts_with("default_by_"))
-            });
-            if !has_default {
-                return Err(format!("profile gives no default for `{}`", spec.name));
+            let entry = entry
+                .as_object()
+                .ok_or_else(|| format!("profile `{}` must be an object", spec.name))?;
+            // Every lookup the schema can make must find a value; a gap would leave an
+            // Option silently short of an input.
+            match KEYED_DEFAULTS.iter().find(|(n, _, _)| *n == spec.name) {
+                Some((_, by, keys)) => {
+                    let field = format!("default_by_{by}");
+                    let table = entry.get(&field).and_then(Value::as_object);
+                    for key in *keys {
+                        if !table.is_some_and(|t| t.contains_key(*key)) {
+                            return Err(format!(
+                                "profile gives no default for `{}` when {by} is {key} \
+                                 (`{}.{field}.{key}` is missing)",
+                                spec.name, spec.name
+                            ));
+                        }
+                    }
+                }
+                None => {
+                    if !entry.contains_key("default") {
+                        return Err(format!("profile gives no default for `{}`", spec.name));
+                    }
+                }
             }
         }
         for spec in INPUTS {

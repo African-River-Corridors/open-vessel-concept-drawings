@@ -380,3 +380,154 @@ fn a_whole_number_default_in_an_edited_profile_still_round_trips() {
     let design = new_design(&edited);
     assert_eq!(check(&design.to_text(), &edited).design.unwrap(), design);
 }
+
+fn edited_profile(edit: impl FnOnce(&mut Value)) -> Result<Profile, String> {
+    let mut p: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
+    edit(&mut p);
+    Profile::from_json(&p.to_string())
+}
+
+#[test]
+fn a_profile_missing_any_keyed_default_is_refused() {
+    use ovcd_format::vdesign::KEYED_DEFAULTS;
+    for (name, by, keys) in KEYED_DEFAULTS {
+        for key in *keys {
+            let err = edited_profile(|p| {
+                p["inputs"][*name][format!("default_by_{by}")]
+                    .as_object_mut()
+                    .unwrap()
+                    .remove(*key);
+            })
+            .unwrap_err();
+            assert!(
+                err.contains(&format!("no default for `{name}` when {by} is {key}")),
+                "{err}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_profile_with_only_a_keyed_default_for_a_plain_input_is_refused() {
+    let err = edited_profile(|p| {
+        let e = p["inputs"]["max_speed_kn"].as_object_mut().unwrap();
+        e.remove("default");
+        e.insert("default_by_ruleset".into(), json!({ "ADN_G": 10.0 }));
+    })
+    .unwrap_err();
+    assert!(err.contains("no default for `max_speed_kn`"), "{err}");
+}
+
+#[test]
+fn every_cargo_phase_has_a_keyed_default_lookup() {
+    use ovcd_format::vdesign::{CARGO_CONTAINMENTS, CARGO_PHASES};
+    for (_, props) in ovcd_core::cargo::CARGO_DATABASE.iter() {
+        assert!(CARGO_PHASES.contains(&props.phase), "{}", props.phase);
+    }
+    for (_, phase) in CARGO_CONTAINMENTS {
+        assert!(CARGO_PHASES.contains(phase), "{phase}");
+    }
+}
+
+// The knife edges of the range table: a hard `lt`/`gt` bound excludes the bound itself; a soft
+// range includes both ends.
+
+#[test]
+fn a_hard_lt_bound_refuses_the_bound_itself() {
+    let e = errors(with(
+        required("bauxite"),
+        "propulsive_efficiency",
+        json!(1.0),
+    ));
+    assert!(
+        has(
+            &e,
+            "`propulsive_efficiency` = 1 is out of range: must be < 1"
+        ),
+        "{e:?}"
+    );
+    assert!(
+        errors(with(
+            required("bauxite"),
+            "propulsive_efficiency",
+            json!(0.9999)
+        ))
+        .is_empty()
+    );
+}
+
+#[test]
+fn a_hard_gt_bound_refuses_the_bound_itself() {
+    let e = errors(with(required("bauxite"), "beam_m", json!(0.0)));
+    assert!(
+        has(&e, "`beam_m` = 0 is out of range: must be > 0"),
+        "{e:?}"
+    );
+    assert!(errors(with(required("bauxite"), "beam_m", json!(0.0001))).is_empty());
+}
+
+#[test]
+fn a_soft_range_includes_both_ends() {
+    for beam in [4.0, 35.0] {
+        let w = warnings(with(required("bauxite"), "beam_m", json!(beam)));
+        assert!(!has(&w, "`beam_m`"), "{beam}: {w:?}");
+    }
+    for beam in [3.9999, 35.0001] {
+        let w = warnings(with(required("bauxite"), "beam_m", json!(beam)));
+        assert!(has(&w, "`beam_m` ="), "{beam}: {w:?}");
+    }
+}
+
+#[test]
+fn a_profile_soft_range_with_min_equal_to_max_is_accepted() {
+    let profile = edited_profile(|p| {
+        p["inputs"]["block_coefficient"]["soft"] = json!({ "min": 0.85, "max": 0.85 });
+    })
+    .expect("min == max is a valid soft range");
+    let checked = check(&design_with(required("bauxite")), &profile);
+    assert!(!has(
+        &checked.report.warnings,
+        "`block_coefficient` = 0.85 is outside"
+    ));
+    let err = edited_profile(|p| {
+        p["inputs"]["block_coefficient"]["soft"] = json!({ "min": 0.9, "max": 0.85 });
+    })
+    .unwrap_err();
+    assert!(err.contains("min above max"), "{err}");
+}
+
+#[test]
+fn a_profile_may_set_the_convoy_ranges() {
+    for key in ["formation_abreast", "formation_in_line"] {
+        let profile = edited_profile(|p| {
+            p["inputs"][key]["soft"] = json!({ "min": 1.0, "max": 2.0 });
+        })
+        .unwrap_or_else(|e| panic!("{key}: {e}"));
+        let convoy = with(
+            required("bauxite"),
+            "formation",
+            json!({ "kind": "pushed_convoy", "abreast": 3, "in_line": 3 }),
+        );
+        let w = check(&design_with(convoy), &profile).report.warnings;
+        let label = key.replace("formation_", "formation.");
+        assert!(has(&w, &format!("`{label}` = 3")), "{key}: {w:?}");
+    }
+}
+
+#[test]
+fn a_profile_with_an_unknown_input_is_refused() {
+    let err = edited_profile(|p| {
+        p["inputs"]["formation_sideways"] = json!({ "default": 1.0 });
+    })
+    .unwrap_err();
+    assert!(err.contains("unknown input `formation_sideways`"), "{err}");
+}
+
+#[test]
+fn a_profile_with_a_keyed_default_outside_its_hard_range_is_refused() {
+    let err = edited_profile(|p| {
+        p["inputs"]["fill_ratio"]["default_by_ruleset"]["ADN_G"] = json!(1.5);
+    })
+    .unwrap_err();
+    assert!(err.contains("`fill_ratio` = 1.5 is out of range"), "{err}");
+}
