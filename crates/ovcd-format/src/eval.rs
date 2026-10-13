@@ -314,10 +314,12 @@ fn barge_cost(function: &str, args: &Value) -> Result<Value, EvalError> {
                     .iter()
                     .map(|(k, v)| Ok((k.clone(), mapping_value(v, k)?)))
                     .collect::<Result<Vec<_>, EvalError>>()?;
-                BargeCostRates::from_mapping(&pairs)
+                BargeCostRates::from_mapping(&pairs).map_err(|e| (e.type_name, e.message))
             } else {
                 match args.get("rates") {
-                    None | Some(Value::Null) => ovcd_core::barge_cost::example_rates(),
+                    None | Some(Value::Null) => {
+                        ovcd_core::barge_cost::example_rates().map_err(|m| ("ValueError", m))
+                    }
                     Some(Value::Object(map)) => Ok(explicit_rates(map)?),
                     Some(_) => {
                         return Err(EvalError::BadInput(
@@ -331,7 +333,7 @@ fn barge_cost(function: &str, args: &Value) -> Result<Value, EvalError> {
                     Ok(result) => ok(cost_result_json(&result)),
                     Err(e) => raised(e.type_name(), e.message()),
                 },
-                Err(message) => value_error(message),
+                Err((type_name, message)) => raised(type_name, &message),
             }
         }
         "parse_flat_yaml" => match ovcd_core::barge_cost::parse_flat_yaml(str_arg(args, "text")?) {

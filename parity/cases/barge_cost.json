@@ -631,6 +631,203 @@
       }
     },
     {
+      "id": "compute/error/rate_int_too_big_for_float",
+      "tier": 3,
+      "reason": "tier 3: error path. A JSON int of 400 digits makes float() raise OverflowError, not ValueError (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/rate_int_2_pow_64",
+      "tier": 1,
+      "reason": "tier 1: a JSON int of 2^64 is converted by float() exactly; the rounded money is a big int (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": 18446744073709551616,
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      },
+      "knife_edge": "The result is an exact integer made from one IEEE product; Rust makes the same product and converts it exactly, so the digits match on both sides. A nudge changes the digits, which is why the case checks them."
+    },
+    {
+      "id": "compute/error/two_lumps_overflow_sum",
+      "tier": 3,
+      "reason": "tier 3: error path. Two lumps of 1e308 add to inf inside sum(); the compensation step must not make it nan (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "2500.0",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "1e308",
+            "paint_anodes_misc": "1e308",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/rate_underscore_between_digits",
+      "tier": 1,
+      "reason": "tier 1: float() accepts an underscore between digits, so '1_000' is 1000.0 (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "1_000",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/rate_underscore_after_e",
+      "tier": 3,
+      "reason": "tier 3: error path. '1e_5' has an underscore not between digits; float() raises ValueError (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "1e_5",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/rate_trailing_underscore",
+      "tier": 3,
+      "reason": "tier 3: error path. '1_' ends with an underscore; float() raises ValueError (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "1_",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/rate_leading_underscore",
+      "tier": 3,
+      "reason": "tier 3: error path. '_1' starts with an underscore; float() raises ValueError (review of PR 43)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {},
+          "rates_mapping": {
+            "currency": "USD",
+            "hull_steel_rate": "_1",
+            "tank_shell_rate": "10000.0",
+            "tank_supports_rate": "2000.0",
+            "insulation_rate": "4000.0",
+            "piping_rate": "4500.0",
+            "outfitting_rate": "4000.0",
+            "cargo_system_lump": "500000.0",
+            "paint_anodes_misc": "100000.0",
+            "battery_rate_per_kwh": "250.0",
+            "propulsion_rate_per_kw": "1000.0",
+            "wheelhouse_accom_lump": "450000.0",
+            "tug_outfitting_lump": "200000.0",
+            "yard_margin_fraction": "0.10",
+            "delivery_lump": "200000.0"
+          }
+        }
+      }
+    },
+    {
       "id": "compute/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the tug hull steel, battery energy and propulsion power are varied, not left at their defaults",

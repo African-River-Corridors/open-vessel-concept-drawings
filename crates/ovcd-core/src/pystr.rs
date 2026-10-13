@@ -181,10 +181,10 @@ pub fn parse_float(s: &str) -> Option<f64> {
     if matches!(body, "inf" | "infinity" | "nan") {
         return lower.parse::<f64>().ok();
     }
-    if body.is_empty()
-        || !body
-            .chars()
-            .all(|c| c.is_ascii_digit() || matches!(c, '.' | 'e' | '+' | '-'))
+    // An empty body ("+", "-") is not rejected here: `parse::<f64>` refuses it below.
+    if !body
+        .chars()
+        .all(|c| c.is_ascii_digit() || matches!(c, '.' | 'e' | '+' | '-'))
     {
         return None;
     }

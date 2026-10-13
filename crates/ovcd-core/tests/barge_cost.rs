@@ -9,7 +9,7 @@ fn text_rates(text: &str) -> Result<BargeCostRates, String> {
         .into_iter()
         .map(|(k, v)| (k, MappingValue::Text(v)))
         .collect();
-    BargeCostRates::from_mapping(&mapping)
+    BargeCostRates::from_mapping(&mapping).map_err(|e| e.message)
 }
 
 #[test]

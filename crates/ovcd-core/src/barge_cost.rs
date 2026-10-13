@@ -75,6 +75,22 @@ pub struct BargeCostRates {
     pub currency: String,
 }
 
+/// Why `from_mapping` failed: a Python exception class name and its `str()`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MappingError {
+    pub type_name: &'static str,
+    pub message: String,
+}
+
+impl MappingError {
+    fn value(message: String) -> Self {
+        Self {
+            type_name: "ValueError",
+            message,
+        }
+    }
+}
+
 /// A value in a rates mapping: what Python's `float(v)` and `str(v)` are applied to.
 #[derive(Debug, Clone, PartialEq)]
 pub enum MappingValue {
@@ -86,17 +102,24 @@ pub enum MappingValue {
 }
 
 impl MappingValue {
-    /// `float(v)`. The error is Python's `ValueError` message.
-    fn to_float(&self) -> Result<f64, String> {
+    /// `float(v)`. The error is the exception Python raises: `OverflowError` for an int too big
+    /// for a float, `ValueError` for text that is not a number.
+    fn to_float(&self) -> Result<f64, MappingError> {
         match self {
             MappingValue::Int(i) => Ok(*i as f64),
             MappingValue::BigInt(d) => match d.parse::<f64>() {
                 Ok(f) if f.is_finite() => Ok(f),
-                _ => Err("int too large to convert to float".to_string()),
+                _ => Err(MappingError {
+                    type_name: "OverflowError",
+                    message: "int too large to convert to float".to_string(),
+                }),
             },
             MappingValue::Float(f) => Ok(*f),
             MappingValue::Text(s) => pystr::parse_float(s).ok_or_else(|| {
-                format!("could not convert string to float: {}", pystr::repr_str(s))
+                MappingError::value(format!(
+                    "could not convert string to float: {}",
+                    pystr::repr_str(s)
+                ))
             }),
         }
     }
@@ -131,8 +154,8 @@ const RATE_NAMES: [&str; 14] = [
 ];
 
 impl BargeCostRates {
-    /// `BargeCostRates.from_mapping`. Errors are Python's `ValueError` messages.
-    pub fn from_mapping(data: &[(String, MappingValue)]) -> Result<Self, String> {
+    /// `BargeCostRates.from_mapping`. Errors are the exceptions Python raises.
+    pub fn from_mapping(data: &[(String, MappingValue)]) -> Result<Self, MappingError> {
         let is_name = |k: &str| k == "currency" || RATE_NAMES.contains(&k);
         let mut unknown: Vec<&str> = data
             .iter()
@@ -142,10 +165,10 @@ impl BargeCostRates {
         unknown.sort_unstable();
         unknown.dedup();
         if !unknown.is_empty() {
-            return Err(format!(
+            return Err(MappingError::value(format!(
                 "unknown barge cost rate key(s): {}",
                 pystr::repr_str_list(&unknown)
-            ));
+            )));
         }
         let mut missing: Vec<&str> = RATE_NAMES
             .iter()
@@ -154,10 +177,10 @@ impl BargeCostRates {
             .collect();
         missing.sort_unstable();
         if !missing.is_empty() {
-            return Err(format!(
+            return Err(MappingError::value(format!(
                 "missing barge cost rate key(s): {}",
                 pystr::repr_str_list(&missing)
-            ));
+            )));
         }
         // Convert in mapping order, so the first bad value is the one reported.
         let mut rates = Self {
@@ -251,7 +274,7 @@ pub fn example_rates() -> Result<BargeCostRates, String> {
         .into_iter()
         .map(|(k, v)| (k, MappingValue::Text(v)))
         .collect();
-    BargeCostRates::from_mapping(&mapping)
+    BargeCostRates::from_mapping(&mapping).map_err(|e| e.message)
 }
 
 /// Unit cost and its parts. Rounded money is whole currency units: a Python `int`, so [`PyInt`].
