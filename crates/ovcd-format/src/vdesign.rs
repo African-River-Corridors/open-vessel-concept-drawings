@@ -568,7 +568,7 @@ fn default_for(
 /// Store every number as a float, so `10` and `10.0` are the same input.
 fn normalise(v: Value) -> Value {
     match v.as_f64() {
-        Some(x) if v.is_number() => json!(x),
+        Some(x) => json!(x),
         _ => v,
     }
 }

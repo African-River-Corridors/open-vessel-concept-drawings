@@ -339,3 +339,43 @@ fn a_profile_with_a_gap_in_a_keyed_default_is_refused_by_validate_and_new() {
     assert!(!out.status.success(), "{}", stdout(&out));
     assert!(stderr(&out).contains(message), "{}", stderr(&out));
 }
+
+#[test]
+fn new_records_the_built_in_profile_name() {
+    let dir = temp_dir("new-profile-name");
+    let (_, design) = new_design(&dir);
+    assert_eq!(design["defaults_profile"], "built-in");
+}
+
+#[test]
+fn validate_inputs_shows_a_convoy_and_a_self_propelled_formation() {
+    let dir = temp_dir("inputs-formation");
+    let file = dir.join("d.vdesign");
+    let mut convoy = required_inputs();
+    convoy["formation"] = json!({ "kind": "pushed_convoy", "abreast": 2, "in_line": 3 });
+    let mut solo = required_inputs();
+    solo["formation"] = json!({ "kind": "self_propelled" });
+    write_json(
+        &file,
+        &json!({
+            "format": "vdesign",
+            "format_version": 1,
+            "engine_version": "0.1.0",
+            "options": [
+                { "name": "Convoy", "inputs": convoy },
+                { "name": "Solo", "inputs": solo }
+            ]
+        }),
+    );
+    let out = ovcd(&["validate", "--inputs", path_str(&file)]);
+    let text = stdout(&out);
+    assert!(out.status.success(), "{text}");
+    assert!(
+        text.contains("formation = pushed_convoy (2 abreast, 3 in line) (typed)"),
+        "{text}"
+    );
+    assert!(
+        text.contains("formation = self_propelled (typed)"),
+        "{text}"
+    );
+}

@@ -531,3 +531,31 @@ fn a_profile_with_a_keyed_default_outside_its_hard_range_is_refused() {
     .unwrap_err();
     assert!(err.contains("`fill_ratio` = 1.5 is out of range"), "{err}");
 }
+
+#[test]
+fn a_new_design_records_the_name_of_the_profile_it_came_from() {
+    let built_in = new_design(&Profile::built_in());
+    assert_eq!(built_in.defaults_profile.as_deref(), Some("built-in"));
+    let mine = edited_profile(|p| p["name"] = json!("my-yard")).expect("profile loads");
+    assert_eq!(mine.name(), "my-yard");
+    assert_eq!(
+        new_design(&mine).defaults_profile.as_deref(),
+        Some("my-yard")
+    );
+}
+
+#[test]
+fn show_writes_a_formation_as_a_person_reads_it() {
+    use ovcd_format::vdesign::show;
+    assert_eq!(
+        show(&json!({ "kind": "pushed_convoy", "abreast": 2, "in_line": 3 })),
+        "pushed_convoy (2 abreast, 3 in line)"
+    );
+    assert_eq!(show(&json!({ "kind": "self_propelled" })), "self_propelled");
+    assert_eq!(show(&json!({ "kind": "pushed_barge" })), "pushed_barge");
+    // An object that is not a formation is shown as its JSON text.
+    assert_eq!(show(&json!({ "a": 1 })), r#"{"a":1}"#);
+    assert_eq!(show(&Value::Null), "none");
+    assert_eq!(show(&json!(11.4)), "11.4");
+    assert_eq!(show(&json!("bauxite")), "bauxite");
+}
