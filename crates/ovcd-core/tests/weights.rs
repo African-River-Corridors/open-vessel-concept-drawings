@@ -1,0 +1,181 @@
+//! Seam: the public `ovcd_core::weights` API. Expected values are printed by the frozen Python
+//! (`core/weights.py`), not worked out by hand.
+
+use ovcd_core::hull::HullGeometry;
+use ovcd_core::models::{BargeInputs, WeightBreakdown};
+use ovcd_core::tanks::calculate_tank_arrangement;
+use ovcd_core::weights::calculate_weights;
+
+fn quickstart() -> BargeInputs {
+    let mut i = BargeInputs::new(90.0, 14.8, 6.5, 6.5, 65.0);
+    i.bow_rake_rise = Some(6.5);
+    i.stern_rake_rise = Some(6.5);
+    i.bow_non_tank_length = Some(10.9);
+    i.stern_non_tank_length = Some(21.892000000000003);
+    i.n_tanks_wide = 2;
+    i.n_tanks_long = 2;
+    i.double_bottom_height = Some(0.5);
+    i.post_init().unwrap();
+    i
+}
+
+/// The frozen chain: the hull carries the inputs' own rakes, then tanks, then weights.
+fn weigh(i: &BargeInputs) -> WeightBreakdown {
+    let hull = HullGeometry::new(
+        i.loa,
+        i.beam,
+        i.depth,
+        i.bow_rake_length,
+        i.bow_rake_rise.unwrap(),
+        i.stern_rake_length,
+        i.stern_rake_rise.unwrap(),
+    );
+    let tanks = calculate_tank_arrangement(i).unwrap();
+    calculate_weights(i, &hull, &tanks).unwrap()
+}
+
+#[test]
+fn the_quickstart_weights_match_python() {
+    let w = weigh(&quickstart());
+    assert_eq!(w.hull_bottom_plating, 125.47439999999999);
+    assert_eq!(w.hull_side_plating, 91.845);
+    assert_eq!(w.hull_deck_plating, 104.562);
+    assert_eq!(w.hull_rake_plating, 0.0);
+    assert_eq!(w.hull_internal_structure, 128.75255999999996);
+    assert_eq!(w.hull_steel_total, 450.63395999999995);
+    assert_eq!(w.tank_shells, 343.67825740993516);
+    assert_eq!(w.tank_internals_supports, 103.10347722298056);
+    assert_eq!(w.tank_total, 446.7817346329157);
+    assert_eq!(w.insulation, 42.97869150096367);
+    assert_eq!(w.wing_plate, 54.356667110341945);
+    assert_eq!(w.weather_shield, 63.660289161599984);
+    assert_eq!(w.piping_machinery, 52.503269385316635);
+    assert_eq!(w.outfitting, 45.94036071215206);
+    assert_eq!(w.stores, 0.0);
+    assert_eq!(w.moulded_volume, 8658.0);
+    assert_eq!(w.moulded_depth, 6.5);
+    assert_eq!(w.steel_top_down, 865.8000000000001);
+    assert_eq!(w.steel_bottom_up, 568.6509162719419);
+    assert_eq!(w.steel_delta, 297.14908372805814);
+    assert_eq!(w.lightship, 1454.0040562313482);
+}
+
+#[test]
+fn raked_ends_add_rake_plating() {
+    let mut i = quickstart();
+    i.bow_rake_length = 4.0;
+    i.bow_rake_rise = Some(2.0);
+    i.stern_rake_length = 3.0;
+    i.stern_rake_rise = Some(1.5);
+    let w = weigh(&i);
+    assert!(w.hull_rake_plating > 0.0);
+    assert!(w.hull_bottom_plating < 125.47439999999999);
+}
+
+#[test]
+fn no_weather_shield_weighs_nothing() {
+    let mut i = quickstart();
+    i.weather_shield_thickness = 0.0;
+    let w = weigh(&i);
+    assert_eq!(w.weather_shield, 0.0);
+    assert_eq!(w.wing_plate, 54.356667110341945);
+    assert_eq!(w.steel_bottom_up, 504.9906271103419);
+}
+
+#[test]
+fn no_wing_tank_means_no_wing_plate_or_shield_and_the_hull_depth_rules() {
+    let mut i = quickstart();
+    i.wing_tank_width = Some(0.0);
+    i.depth = 3.0;
+    let w = weigh(&i);
+    assert_eq!((w.wing_plate, w.weather_shield), (0.0, 0.0));
+    assert_eq!(w.moulded_depth, 3.0);
+    assert_eq!(w.moulded_volume, 3996.0);
+    assert_eq!(w.lightship, 952.8390562313481);
+}
+
+#[test]
+fn a_full_height_wing_tank_has_no_plate_but_raises_the_moulded_depth() {
+    let mut i = quickstart();
+    i.wing_tank_height_ratio = 1.0;
+    let w = weigh(&i);
+    assert_eq!((w.wing_plate, w.weather_shield), (0.0, 0.0));
+    assert_eq!(w.moulded_depth, 6.9);
+    assert_eq!(w.moulded_volume, 9190.800000000001);
+    assert_eq!(w.lightship, 1511.280056231348);
+}
+
+#[test]
+fn a_wing_plate_above_the_deck_adds_a_side_extension() {
+    let mut i = quickstart();
+    i.wing_tank_height_ratio = 0.9;
+    i.depth = 3.0;
+    let w = weigh(&i);
+    assert_eq!(w.wing_plate, 119.53723776000002);
+    assert_eq!(w.weather_shield, 54.055343664);
+    assert_eq!(w.moulded_depth, 6.3100000000000005);
+    assert_eq!(w.steel_bottom_up, 554.989541424);
+}
+
+#[test]
+fn a_wing_plate_below_the_deck_has_no_side_extension() {
+    let mut i = quickstart();
+    i.n_tanks_wide = 1;
+    i.side_clearance = Some(3.0);
+    i.wing_tank_width = None;
+    i.post_init().unwrap();
+    let w = weigh(&i);
+    assert_eq!(w.wing_plate, 71.47277479415334);
+    assert_eq!(w.moulded_depth, 6.808000000000001);
+}
+
+#[test]
+fn a_none_double_bottom_counts_as_zero() {
+    let mut i = quickstart();
+    i.double_bottom_height = None;
+    let w = weigh(&i);
+    assert_eq!(w.wing_plate, 54.356667110341945);
+    assert_eq!(w.moulded_depth, 6.5);
+}
+
+#[test]
+fn an_unset_wing_tank_width_raises_the_python_type_error() {
+    let i = quickstart();
+    let hull = HullGeometry::new(90.0, 14.8, 6.5, 0.0, 6.5, 0.0, 6.5);
+    let tanks = calculate_tank_arrangement(&i).unwrap();
+    let mut bad = i.clone();
+    bad.wing_tank_width = None;
+    let e = calculate_weights(&bad, &hull, &tanks).unwrap_err();
+    assert_eq!(
+        (e.kind, e.message.as_str()),
+        (
+            "TypeError",
+            "'>' not supported between instances of 'NoneType' and 'int'"
+        )
+    );
+    // The same field is read again behind a zero shield thickness: still the first read.
+    bad.weather_shield_thickness = 0.0;
+    assert_eq!(
+        calculate_weights(&bad, &hull, &tanks).unwrap_err().kind,
+        "TypeError"
+    );
+}
+
+#[test]
+fn an_unset_non_tank_length_raises_the_python_type_error() {
+    let i = quickstart();
+    let hull = HullGeometry::new(90.0, 14.8, 6.5, 0.0, 6.5, 0.0, 6.5);
+    let tanks = calculate_tank_arrangement(&i).unwrap();
+    let mut bad = i.clone();
+    bad.bow_non_tank_length = None;
+    assert_eq!(
+        calculate_weights(&bad, &hull, &tanks).unwrap_err().kind,
+        "TypeError"
+    );
+    let mut bad = i;
+    bad.stern_non_tank_length = None;
+    assert_eq!(
+        calculate_weights(&bad, &hull, &tanks).unwrap_err().kind,
+        "TypeError"
+    );
+}
