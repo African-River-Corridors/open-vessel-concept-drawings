@@ -157,6 +157,7 @@
       "id": "compute/wide_channel_depth_8",
       "tier": 1,
       "reason": "tier 1: inputs of audited test test_resistance.py::test_shallow_factor_at_least_one_and_grows_as_depth_falls (issue #8, fix round 2); the test calls private _shallow_water_factor, these are the same EnvironmentInputs through the public compute entry point",
+      "knife_edge": "the blockage ratio n is about 0.0765 and the check message prints it to 3 decimals, so a hair less prints 0.077; n is one division of exact inputs (no transcendental function) and Python formatting is correctly rounded, so the Rust formatting helper prints 0.076 too",
       "input": {
         "fn": "compute",
         "args": {

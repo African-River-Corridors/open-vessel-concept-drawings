@@ -5,3 +5,4 @@ CODE_OF_CONDUCT.md  f6018825e847  # the maintainer's contact address is intentio
 (commit)  f6018825e847  # history mode: the maintainer's commit author/committer identity
 
 tests/test_release_guard.py  /Users/  # the guard's own tests plant a local path to prove it fails
+7d4827e25d33:tools/embargo.py  /Users/  # the first commit wrote the path rule's name out; history is fixed

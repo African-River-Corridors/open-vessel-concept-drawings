@@ -17,7 +17,6 @@
 //!
 //! - A float `**` that overflows is Python's `OverflowError(34, 'Result too large')` (`py_pow`).
 
-use crate::nonprintable::NON_PRINTABLE;
 use crate::pyfmt;
 use alloc::format;
 use alloc::string::{String, ToString};
@@ -488,47 +487,8 @@ fn criteria(cset: &str, c: &Condition, wide_tank: bool) -> Result<Vec<Criterion>
     }
     Err(PyError::Value(format!(
         "unknown criteria set {}",
-        py_repr_str(cset)
+        crate::pystr::repr_str(cset)
     )))
-}
-
-/// Python `repr(str)` for the text of a criteria set name: single quotes, unless the text holds a
-/// single quote and no double quote. Backslash, newline, return and tab get their short escape.
-/// Every other character that `str.isprintable` rejects becomes `\xhh`, `\uhhhh` or `\Uhhhhhhhh`
-/// (table in `nonprintable.rs`); printable text stays as it is.
-fn py_repr_str(s: &str) -> String {
-    let quote = if s.contains('\'') && !s.contains('"') {
-        '"'
-    } else {
-        '\''
-    };
-    let mut out = String::new();
-    out.push(quote);
-    for ch in s.chars() {
-        match ch {
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            c if c == quote => {
-                out.push('\\');
-                out.push(c);
-            }
-            c if is_non_printable(c) => {
-                let cp = c as u32;
-                if cp < 0x100 {
-                    out.push_str(&format!("\\x{cp:02x}"));
-                } else if cp < 0x10000 {
-                    out.push_str(&format!("\\u{cp:04x}"));
-                } else {
-                    out.push_str(&format!("\\U{cp:08x}"));
-                }
-            }
-            c => out.push(c),
-        }
-    }
-    out.push(quote);
-    out
 }
 
 /// `max(gz, key=lambda p: p[1])`: the first of equal GZ values. `gz` must not be empty.
@@ -541,22 +501,6 @@ fn max_by_gz(gz: &[(i32, f64)]) -> (i32, f64) {
         }
     }
     (best_deg, best)
-}
-
-/// `not str.isprintable(c)`.
-fn is_non_printable(c: char) -> bool {
-    let cp = c as u32;
-    NON_PRINTABLE
-        .binary_search_by(|&(lo, hi)| {
-            if hi < cp {
-                core::cmp::Ordering::Less
-            } else if lo > cp {
-                core::cmp::Ordering::Greater
-            } else {
-                core::cmp::Ordering::Equal
-            }
-        })
-        .is_ok()
 }
 
 /// The criteria set a ruleset uses.

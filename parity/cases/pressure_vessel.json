@@ -176,6 +176,66 @@
       }
     },
     {
+      "id": "calculate_wall_thicknesses/high_pressure_od5.9_304L_hemisphere",
+      "tier": 1,
+      "reason": "tier 1: kills mutant `replace - with + in calculate_wall_thicknesses` (inner radius = outer radius - t_cyl): at 0.5 MPa the 0.5 mm rounding hides the inner-radius correction, at 1.8 MPa (the top of the type C range) it does not (issue #11)",
+      "input": {
+        "fn": "calculate_wall_thicknesses",
+        "args": {
+          "outer_diameter_m": 5.9,
+          "design_pressure_mpa": 1.8,
+          "material_key": "304L",
+          "head_type": "hemisphere",
+          "weld_efficiency": 0.95
+        }
+      }
+    },
+    {
+      "id": "calculate_wall_thicknesses/high_pressure_od5.9_304L_ellipsoidal_2to1",
+      "tier": 1,
+      "reason": "tier 1: kills mutant `replace - with + in calculate_wall_thicknesses` (inner radius = outer radius - t_cyl): at 0.5 MPa the 0.5 mm rounding hides the inner-radius correction, at 1.8 MPa (the top of the type C range) it does not (issue #11)",
+      "input": {
+        "fn": "calculate_wall_thicknesses",
+        "args": {
+          "outer_diameter_m": 5.9,
+          "design_pressure_mpa": 1.8,
+          "material_key": "304L",
+          "head_type": "ellipsoidal_2to1",
+          "weld_efficiency": 0.95
+        }
+      }
+    },
+    {
+      "id": "calculate_wall_thicknesses/high_pressure_od4.0_9Ni_hemisphere",
+      "tier": 1,
+      "reason": "tier 1: kills mutant `replace - with + in calculate_wall_thicknesses` (inner radius = outer radius - t_cyl): at 0.5 MPa the 0.5 mm rounding hides the inner-radius correction, at 1.8 MPa (the top of the type C range) it does not (issue #11)",
+      "input": {
+        "fn": "calculate_wall_thicknesses",
+        "args": {
+          "outer_diameter_m": 4.0,
+          "design_pressure_mpa": 1.8,
+          "material_key": "9Ni",
+          "head_type": "hemisphere",
+          "weld_efficiency": 0.95
+        }
+      }
+    },
+    {
+      "id": "calculate_wall_thicknesses/high_pressure_od4.0_9Ni_ellipsoidal_2to1",
+      "tier": 1,
+      "reason": "tier 1: kills mutant `replace - with + in calculate_wall_thicknesses` (inner radius = outer radius - t_cyl): at 0.5 MPa the 0.5 mm rounding hides the inner-radius correction, at 1.8 MPa (the top of the type C range) it does not (issue #11)",
+      "input": {
+        "fn": "calculate_wall_thicknesses",
+        "args": {
+          "outer_diameter_m": 4.0,
+          "design_pressure_mpa": 1.8,
+          "material_key": "9Ni",
+          "head_type": "ellipsoidal_2to1",
+          "weld_efficiency": 0.95
+        }
+      }
+    },
+    {
       "id": "get_tank_material/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",

@@ -85,6 +85,7 @@
       "id": "compute/hs3.0_head",
       "tier": 1,
       "reason": "tier 1: inputs of audited test test_waves.py::test_property_monotone_in_wave_height (issue #8)",
+      "knife_edge": "H_s = 3.0 m sits exactly on the screening range bound (H_s <= 3.0), compared with no arithmetic in between, so Rust reads the same double and passes the check too. Kept: it is the audited test's own input (the head-sea case at the top of the range)",
       "input": {
         "fn": "compute",
         "args": {
@@ -118,6 +119,7 @@
       "id": "compute/hs1.0_heading60",
       "tier": 1,
       "reason": "tier 1: inputs of audited test test_waves.py::test_property_heading_reduces_it_to_zero_abeam (issue #8)",
+      "knife_edge": "a heading of 60.0 deg sits exactly on the beam-seas warning bound (heading > 60), compared with no arithmetic in between, so Rust gives the same single warning. Kept: it is the audited test's own input",
       "input": {
         "fn": "compute",
         "args": {

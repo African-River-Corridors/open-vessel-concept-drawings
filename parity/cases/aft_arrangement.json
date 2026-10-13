@@ -208,6 +208,132 @@
       }
     },
     {
+      "id": "int-for-float/beam12_depth4",
+      "tier": 1,
+      "reason": "tier 1: integer written for a float input must give the same result as the float (fix round 1, issue #13)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 12,
+            "depth": 4
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/zero_container_pitch",
+      "tier": 3,
+      "reason": "tier 3: zero float floor-division divisor raises ZeroDivisionError (fix round 2, issue #13)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 10,
+            "depth": 3,
+            "container_width_m": 0.0,
+            "container_side_gap_m": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/nan_quotient_per_row_fit",
+      "tier": 3,
+      "reason": "tier 3: NaN floor-division quotient raises ValueError (fix round 2, issue #13)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 1e+308,
+            "depth": 4,
+            "container_side_gap_m": -1e+308,
+            "container_width_m": 1.5e+308
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/nan_quotient_n_fit",
+      "tier": 3,
+      "reason": "tier 3: NaN floor-division quotient raises ValueError through n_fit (fix round 2, issue #13)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 1.7e+308,
+            "depth": 4,
+            "thruster_clear_m": -1e+308,
+            "thruster_envelope_m": 1.5e+308
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/infinite_feet",
+      "tier": 3,
+      "reason": "tier 3: infinite feet label raises OverflowError (fix round 2, issue #13)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 12,
+            "depth": 4,
+            "container_length_m": 1e+308
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/huge_feet_label",
+      "tier": 3,
+      "reason": "tier 3: degenerate input: feet label is an unbounded Python int (fix round 2, issue #13)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 12,
+            "depth": 4,
+            "container_length_m": 3e+18
+          }
+        }
+      },
+      "knife_edge": "the feet label prints the rounded value of the container length in full, so any nudge changes the text; no branch is near its edge, and Rust prints the same whole number from the float's exact bits"
+    },
+    {
+      "id": "compute/huge_negative_feet_label",
+      "tier": 3,
+      "reason": "tier 3: degenerate input: negative unbounded feet label (fix round 2, issue #13)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 12,
+            "depth": 4,
+            "container_length_m": -3e+18
+          }
+        }
+      },
+      "knife_edge": "the feet label prints the rounded value of the container length in full, so any nudge changes the text; no branch is near its edge, and Rust prints the same whole number from the float's exact bits"
+    },
+    {
+      "id": "compute/zero_thruster_pitch",
+      "tier": 3,
+      "reason": "tier 3: degenerate input: thruster_envelope_m + thruster_clear_m == 0, Python skips the division and returns thruster_offsets_m [0.0]; kills mutant `pitch > 0.0` -> `pitch >= 0.0` in aft_arrangement::compute (issue #13)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "beam": 14.8,
+            "depth": 5.4,
+            "thruster_envelope_m": 0.0,
+            "thruster_clear_m": 0.0
+          }
+        }
+      },
+      "knife_edge": "the pitch sits exactly on the `pitch > 0` guard: a nudge to a positive pitch takes the division branch and fits several thrusters; Rust uses the same strict comparison on the same exact zero sum"
+    },
+    {
       "id": "compute/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",

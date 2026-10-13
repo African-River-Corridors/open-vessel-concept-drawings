@@ -71,11 +71,22 @@ fn required_inputs() -> Value {
     })
 }
 
+/// Write a Design holding `inputs`, `ovcd fill` in the left-out inputs as a designer would, and
+/// validate the filled file. When fill refuses (a hard error), validate the file as written, so
+/// the test still sees every error.
 fn validate_inputs(test: &str, inputs: Value) -> Output {
     let dir = temp_dir(test);
     let file = dir.join("d.vdesign");
     write_json(&file, &design_with(inputs));
-    ovcd(&["validate", path_str(&file)])
+    let filled = dir.join("filled.vdesign");
+    if ovcd(&["fill", path_str(&file), path_str(&filled)])
+        .status
+        .success()
+    {
+        ovcd(&["validate", path_str(&filled)])
+    } else {
+        ovcd(&["validate", path_str(&file)])
+    }
 }
 
 #[test]
@@ -303,9 +314,10 @@ fn validate_fails_loudly_on_a_file_that_is_not_json() {
 }
 
 #[test]
-fn help_lists_new_and_validate() {
+fn help_lists_new_fill_and_validate() {
     let out = ovcd(&["--help"]);
     let help = stdout(&out);
+    assert!(help.contains("ovcd fill"), "{help}");
     assert!(help.contains("ovcd new"), "{help}");
     assert!(help.contains("ovcd validate"), "{help}");
 }
@@ -369,7 +381,10 @@ fn validate_inputs_shows_a_convoy_and_a_self_propelled_formation() {
             ]
         }),
     );
-    let out = ovcd(&["validate", "--inputs", path_str(&file)]);
+    let filled = dir.join("filled.vdesign");
+    let out = ovcd(&["fill", path_str(&file), path_str(&filled)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let out = ovcd(&["validate", "--inputs", path_str(&filled)]);
     let text = stdout(&out);
     assert!(out.status.success(), "{text}");
     assert!(
@@ -578,8 +593,7 @@ fn a_profile_may_not_loosen_a_hard_range() {
 #[test]
 fn a_profile_may_tighten_a_hard_range() {
     let dir = temp_dir("profile-tighten");
-    let design = dir.join("d.vdesign");
-    write_json(&design, &design_with(required_inputs()));
+    let (design, _) = new_design(&dir);
     for hard in [json!({ "gt": 0.3, "le": 1 }), json!({ "ge": 0.5, "lt": 1 })] {
         let profile = profile_with_hard(&dir, "block_coefficient", hard.clone());
         let out = ovcd(&[
@@ -595,4 +609,151 @@ fn a_profile_may_tighten_a_hard_range() {
             stderr(&out)
         );
     }
+}
+
+// Inputs stored as used (issue #41): a hand-written file that leaves inputs out is refused until
+// `ovcd fill` writes them in; after that, a profile edit never changes the file.
+
+fn edited_profile(dir: &Path) -> PathBuf {
+    let mut profile: Value = serde_json::from_slice(&ovcd(&["profile"]).stdout).unwrap();
+    profile["inputs"]["block_coefficient"]["default"] = json!(0.9);
+    profile["inputs"]["min_freeboard_m"]["default"] = json!(0.5);
+    let path = dir.join("edited.profile.json");
+    write_json(&path, &profile);
+    path
+}
+
+#[test]
+fn validate_refuses_a_hand_written_file_that_leaves_out_inputs() {
+    let dir = temp_dir("left-out");
+    let file = dir.join("hand.vdesign");
+    write_json(&file, &design_with(required_inputs()));
+    let out = ovcd(&["validate", path_str(&file)]);
+    assert_eq!(out.status.code(), Some(1), "{}", stdout(&out));
+    let text = stdout(&out);
+    assert!(
+        text.contains("error: Option 'A': inputs not stored in the file: cargo_containment, "),
+        "{text}"
+    );
+    assert!(text.contains("run `ovcd fill`"), "{text}");
+}
+
+#[test]
+fn fill_writes_left_out_inputs_in_and_a_profile_edit_then_changes_nothing() {
+    let dir = temp_dir("fill");
+    let hand = dir.join("hand.vdesign");
+    write_json(&hand, &design_with(required_inputs()));
+    let filled = dir.join("filled.vdesign");
+    let out = ovcd(&["fill", path_str(&hand), path_str(&filled)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert!(
+        stderr(&out).contains(
+            "`block_coefficient` was not stored in the file; wrote in the Defaults Profile value \
+             0.85, marked default"
+        ),
+        "{}",
+        stderr(&out)
+    );
+    let design = read_json(&filled);
+    assert_eq!(
+        design["options"][0]["inputs"]["block_coefficient"],
+        json!({ "value": 0.85, "source": "default" })
+    );
+    assert_eq!(
+        design["options"][0]["inputs"]["beam_m"],
+        json!({ "value": 11.4, "source": "typed" })
+    );
+    assert_eq!(design["defaults_profile"], "built-in");
+
+    let before = ovcd(&["validate", "--inputs", path_str(&filled)]);
+    assert!(before.status.success(), "{}", stdout(&before));
+    let edited = edited_profile(&dir);
+    let after = ovcd(&[
+        "validate",
+        "--inputs",
+        "--profile",
+        path_str(&edited),
+        path_str(&filled),
+    ]);
+    assert!(after.status.success(), "{}", stdout(&after));
+    assert_eq!(stdout(&before), stdout(&after));
+    assert!(stdout(&after).contains("min_freeboard_m = 0.3 (default)"));
+    assert_eq!(read_json(&filled), design);
+}
+
+#[test]
+fn fill_prints_to_stdout_without_an_output_file_and_never_overwrites() {
+    let dir = temp_dir("fill-stdout");
+    let hand = dir.join("hand.vdesign");
+    write_json(&hand, &design_with(required_inputs()));
+    let out = ovcd(&["fill", path_str(&hand)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let design: Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(
+        design["options"][0]["inputs"]["max_speed_kn"]["source"],
+        "default"
+    );
+    let out = ovcd(&["fill", path_str(&hand), path_str(&hand)]);
+    assert!(!out.status.success());
+    assert!(stderr(&out).contains("already exists"), "{}", stderr(&out));
+    assert_eq!(read_json(&hand), design_with(required_inputs()));
+}
+
+#[test]
+fn fill_refuses_a_file_with_a_hard_error_and_writes_nothing() {
+    let dir = temp_dir("fill-refuses");
+    let hand = dir.join("hand.vdesign");
+    let mut inputs = required_inputs();
+    inputs["beam_m"] = json!(1.0);
+    write_json(&hand, &design_with(inputs));
+    let filled = dir.join("filled.vdesign");
+    let out = ovcd(&["fill", path_str(&hand), path_str(&filled)]);
+    assert_eq!(out.status.code(), Some(1), "{}", stderr(&out));
+    assert!(
+        stderr(&out).contains("error: Option 'A': `beam_m` = 1 leaves a hold width of -1 m"),
+        "{}",
+        stderr(&out)
+    );
+    assert!(!filled.exists());
+}
+
+// A bad Defaults Profile is an error message and a non-zero exit, never a panic.
+
+#[test]
+fn new_with_a_profile_whose_defaults_break_a_cross_check_fails_without_a_panic() {
+    let dir = temp_dir("bad-profile-new");
+    let mut profile: Value = serde_json::from_slice(&ovcd(&["profile"]).stdout).unwrap();
+    profile["inputs"]["min_freeboard_m"]["default"] = json!(4.0);
+    let bad = dir.join("deep.profile.json");
+    write_json(&bad, &profile);
+    let file = dir.join("new.vdesign");
+    let out = ovcd(&["new", "--profile", path_str(&bad), path_str(&file)]);
+    assert_eq!(out.status.code(), Some(1), "{}", stderr(&out));
+    let err = stderr(&out);
+    assert!(!err.contains("panicked"), "{err}");
+    assert!(
+        err.contains("does not make a valid starter Design"),
+        "{err}"
+    );
+    assert!(
+        err.contains("`min_freeboard_m` = 4 must be less than `moulded_depth_m` = 3.5"),
+        "{err}"
+    );
+    assert!(!file.exists());
+}
+
+#[test]
+fn validate_refuses_a_one_metre_beam_box_barge() {
+    let mut inputs = required_inputs();
+    inputs["beam_m"] = json!(1.0);
+    let out = validate_inputs("one-metre-beam", inputs);
+    assert_eq!(out.status.code(), Some(1), "{}", stdout(&out));
+    assert!(
+        stdout(&out).contains(
+            "`beam_m` = 1 leaves a hold width of -1 m after the two 1 m wing voids; a negative \
+             hold gives a negative cargo mass and draught (hard limit)"
+        ),
+        "{}",
+        stdout(&out)
+    );
 }

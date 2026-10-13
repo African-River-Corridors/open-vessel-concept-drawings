@@ -134,6 +134,54 @@ def test_tier_3_is_an_error_path_or_a_named_degenerate_input(ep):
 
 
 def test_committed_parity_files_stay_under_5_mb():
-    total = sum(p.stat().st_size for d in ("cases", "reference")
-                for p in (PARITY / d).glob("*.json"))
+    files = [p for d in ("cases", "reference") for p in (PARITY / d).glob("*.json")]
+    assert files, "no parity files found: scanning nothing"
+    total = sum(p.stat().st_size for p in files)
     assert total < 5_000_000, f"parity files are {total / 1e6:.2f} MB"
+
+
+# Inputs a port could hardcode at their defaults and still pass, unless the sweep moves them
+# (issue #40). (entry point, fn, path to the input inside `args`).
+MUST_VARY = [
+    ("barge_cost", "compute", ("inputs", "tug_hull_steel_t")),
+    ("barge_cost", "compute", ("inputs", "battery_kwh")),
+    ("barge_cost", "compute", ("inputs", "propulsion_kw")),
+    ("gas_arrangement", "fit", ("block_coefficient",)),
+    ("gas_arrangement", "fit", ("max_tank_od_m",)),
+]
+
+
+@pytest.mark.parametrize("ep,fn,path", MUST_VARY, ids=[f"{e}.{f}.{p[-1]}" for e, f, p in MUST_VARY])
+def test_the_sweep_varies_every_input_a_port_could_hardcode(ep, fn, path):
+    values = set()
+    for c in _cases(ep):
+        if c["tier"] != 2 or c["input"]["fn"] != fn:
+            continue
+        v = c["input"]["args"]
+        for key in path:
+            v = v.get(key) if isinstance(v, dict) else None
+        values.add(v)
+    assert None not in values, f"{ep}.{fn}: some sweep points leave {path[-1]} at its default"
+    assert len(values) >= 5, f"{ep}.{fn}: the sweep gives {path[-1]} only {sorted(values)}"
+
+
+@pytest.mark.parametrize("ep", sorted(SPEC_FUNCTIONS))
+def test_a_knife_edge_named_or_error_case_records_why_it_stays(ep):
+    # Tier 2 drops knife-edge points; a tier-1 or tier-3 case on one stays only with a
+    # `knife_edge` text that says what flips and why Rust reaches the same side (issue #40).
+    for c in (c for c in _cases(ep) if c["tier"] != 2):
+        note = c.get("knife_edge")
+        assert note is None or (isinstance(note, str) and len(note.strip()) >= 20), \
+            f"{ep} {c['id']}: `knife_edge` must say what flips and why the case stays"
+        if note is None:
+            assert not sweep.is_knife_edge(ep, c["input"]), \
+                f"{ep} {c['id']}: sits on a knife edge; nudge it, or record a `knife_edge` reason"
+
+
+def test_simulate_has_a_tier_3_case_that_raises_value_error():
+    # Its other error cases return an {"error": ...} value; a raised ValueError is a separate
+    # path the port must copy (issue #40).
+    results = _results("simulate")
+    raised = [c["id"] for c in _cases("simulate") if c["tier"] == 3
+              and results[c["id"]].get("error", {}).get("type") == "ValueError"]
+    assert raised, "simulate: no tier-3 case raises ValueError"

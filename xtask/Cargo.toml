@@ -8,4 +8,5 @@ license.workspace = true
 publish = false
 
 [dependencies]
+ovcd-format.workspace = true # parity::parse reads every integer exactly, whatever its size
 serde_json.workspace = true

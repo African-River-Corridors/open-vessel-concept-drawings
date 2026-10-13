@@ -1,4 +1,11 @@
 [
   "cargo",
+  "barge_cost",
+  "vessel_standards",
+  "pressure_vessel",
+  "protective_location",
+  "aft_arrangement",
+  "gas_separation",
+  "hull",
   "gas_stability"
 ]

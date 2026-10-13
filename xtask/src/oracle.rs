@@ -24,15 +24,42 @@ pub const REFERENCE_DIR: &str = "parity/reference/";
 pub const TOLERANCE: &str = "parity/tolerance.json";
 pub const PORTED: &str = "parity/ported.json";
 
+/// The generator: the code that writes tier-2 cases and Reference Results. The guard re-runs it to
+/// prove the committed results, so a change to it needs a recorded reason in [`GENERATOR_REASON`].
+pub const DRIVER: &str = "parity/driver.py";
+pub const SWEEP: &str = "parity/sweep.py";
+pub const FROZEN_DIR: &str = "parity/frozen_python/";
+/// `{"reason": "..."}`: why the generator last changed. A generator change needs a new reason.
+pub const GENERATOR_REASON: &str = "parity/generator.json";
+
 /// Spec 0001: relative and absolute tolerance 1e-9. Nothing may go above it.
 pub const SPEC_TOLERANCE: f64 = 1e-9;
 
 /// Is this repo path one the oracle guard watches?
 pub fn is_guarded(path: &str) -> bool {
-    path.starts_with(CASES_DIR)
-        || path.starts_with(REFERENCE_DIR)
+    is_entry_file(path)
         || path == TOLERANCE
         || path == PORTED
+        || path == GENERATOR_REASON
+        || is_generator(path)
+}
+
+/// Is this repo path part of the generator (driver, sweep or the frozen Python source)?
+pub fn is_generator(path: &str) -> bool {
+    path == DRIVER || path == SWEEP || path.starts_with(FROZEN_DIR)
+}
+
+/// Is this path inside the cases or reference folder, at any depth?
+fn is_entry_file(path: &str) -> bool {
+    path.starts_with(CASES_DIR) || path.starts_with(REFERENCE_DIR)
+}
+
+/// A file directly inside the cases or reference folder, named `*.json`.
+fn is_top_level_json(path: &str) -> bool {
+    [CASES_DIR, REFERENCE_DIR].iter().any(|dir| {
+        path.strip_prefix(dir)
+            .is_some_and(|rest| !rest.contains('/') && rest.ends_with(".json"))
+    })
 }
 
 /// Compare the guarded files on the base branch with those on the head.
@@ -47,11 +74,21 @@ pub fn check(base: &Tree, head: &Tree) -> Report {
     let v = &mut report.violations;
     check_tolerance(base.get(TOLERANCE), head.get(TOLERANCE), v);
     check_ported(base.get(PORTED), head.get(PORTED), v);
+    check_generator(base, head, v);
+
+    for path in head
+        .keys()
+        .filter(|p| is_entry_file(p) && !is_top_level_json(p))
+    {
+        v.push(format!(
+            "{path}: only top-level `.json` files may sit in {CASES_DIR} and {REFERENCE_DIR}; the driver never reads nested folders or other files"
+        ));
+    }
 
     let mut entry_files: Vec<&String> = base
         .keys()
         .chain(head.keys())
-        .filter(|p| p.starts_with(CASES_DIR) || p.starts_with(REFERENCE_DIR))
+        .filter(|p| is_top_level_json(p))
         .collect();
     entry_files.sort();
     entry_files.dedup();
@@ -69,7 +106,7 @@ pub fn check(base: &Tree, head: &Tree) -> Report {
 
 fn parse(path: &str, text: Option<&String>, v: &mut Vec<String>) -> Option<Value> {
     let text = text?;
-    match serde_json::from_str(text) {
+    match ovcd_format::parity::parse(text) {
         Ok(value) => Some(value),
         Err(e) => {
             v.push(format!("{path}: not valid JSON ({e})"));
@@ -98,12 +135,22 @@ fn check_tolerance(base: Option<&String>, head: Option<&String>, v: &mut Vec<Str
             .and_then(|b| b.get(key))
             .and_then(Value::as_f64)
             .map_or(SPEC_TOLERANCE, |old| old.min(SPEC_TOLERANCE));
+        if new < 0.0 {
+            v.push(format!(
+                "{TOLERANCE}: `{key}` = {new:e} is negative; a tolerance is never below zero"
+            ));
+        }
         // NaN fails too: it is not `<=` anything.
         if new.is_nan() || new > ceiling {
             v.push(format!(
                 "{TOLERANCE}: `{key}` = {new:e} would loosen the parity tolerance (ceiling {ceiling:e}); never loosen it"
             ));
         }
+    }
+    if str_field(&head_val, "reason").trim().is_empty() {
+        v.push(format!(
+            "{TOLERANCE}: `reason` is empty; the tolerance must carry its recorded reason"
+        ));
     }
     if let Some(base_val) = base_val {
         let numbers = |t: &Value| (t.get("rel").cloned(), t.get("abs").cloned());
@@ -112,6 +159,33 @@ fn check_tolerance(base: Option<&String>, head: Option<&String>, v: &mut Vec<Str
         {
             v.push(format!(
                 "{TOLERANCE}: the tolerance changed but its `reason` did not; record why"
+            ));
+        }
+    }
+}
+
+fn check_generator(base: &Tree, head: &Tree, v: &mut Vec<String>) {
+    let mut changed: Vec<&String> = base
+        .keys()
+        .chain(head.keys())
+        .filter(|p| is_generator(p) && base.get(*p) != head.get(*p))
+        .collect();
+    changed.sort();
+    changed.dedup();
+    if changed.is_empty() {
+        return;
+    }
+    let reason = |tree: &Tree, v: &mut Vec<String>| {
+        parse(GENERATOR_REASON, tree.get(GENERATOR_REASON), v)
+            .map(|r| str_field(&r, "reason").trim().to_string())
+            .unwrap_or_default()
+    };
+    let new = reason(head, v);
+    let old = reason(base, v);
+    if new.is_empty() || new == old {
+        for path in changed {
+            v.push(format!(
+                "{path}: the generator changed without a new recorded reason in {GENERATOR_REASON}"
             ));
         }
     }
@@ -312,6 +386,16 @@ mod tests {
             tolerance("1e-9", "1e-9", "spec"),
         );
         t.insert("parity/ported.json".into(), r#"["cargo"]"#.into());
+        t.insert("parity/driver.py".into(), "print('driver')\n".into());
+        t.insert("parity/sweep.py".into(), "print('sweep')\n".into());
+        t.insert(
+            "parity/frozen_python/vessel_designer_frozen/core/cargo.py".into(),
+            "DENSITY = 450.0\n".into(),
+        );
+        t.insert(
+            "parity/generator.json".into(),
+            r#"{"reason": "initial generator"}"#.into(),
+        );
         t
     }
 
@@ -456,6 +540,100 @@ mod tests {
         );
         let report = check(&tree(), &head);
         assert!(report.violations.is_empty(), "{:?}", report.violations);
+    }
+
+    #[test]
+    fn tolerance_with_an_empty_reason_fails() {
+        let mut head = tree();
+        head.insert(
+            "parity/tolerance.json".into(),
+            tolerance("1e-10", "1e-9", "  "),
+        );
+        assert_violation(&check(&tree(), &head), "reason");
+        // Even with unchanged numbers, a deleted reason fails.
+        head.insert(
+            "parity/tolerance.json".into(),
+            tolerance("1e-9", "1e-9", ""),
+        );
+        assert_violation(&check(&tree(), &head), "reason");
+    }
+
+    #[test]
+    fn negative_tolerance_fails() {
+        let mut head = tree();
+        head.insert(
+            "parity/tolerance.json".into(),
+            tolerance("-1e-9", "1e-9", "a new reason"),
+        );
+        assert_violation(&check(&tree(), &head), "negative");
+    }
+
+    #[test]
+    fn case_or_result_file_in_a_nested_folder_fails() {
+        for path in [
+            "parity/cases/extra/cargo.json",
+            "parity/reference/extra/cargo.json",
+        ] {
+            let mut head = tree();
+            head.insert(path.into(), head["parity/reference/cargo.json"].clone());
+            let report = check(&tree(), &head);
+            assert!(report.changed);
+            assert_violation(&report, path);
+        }
+    }
+
+    #[test]
+    fn non_json_file_in_the_cases_folder_fails() {
+        let mut head = tree();
+        head.insert("parity/cases/cargo.json5".into(), "{}".into());
+        assert_violation(&check(&tree(), &head), "parity/cases/cargo.json5");
+    }
+
+    #[test]
+    fn changed_generator_without_a_new_reason_fails() {
+        for path in [
+            "parity/driver.py",
+            "parity/sweep.py",
+            "parity/frozen_python/vessel_designer_frozen/core/cargo.py",
+        ] {
+            let mut head = tree();
+            head.insert(path.into(), "copy parity/hand_edited.json\n".into());
+            let report = check(&tree(), &head);
+            assert!(
+                report.changed,
+                "{path}: a generator change must trigger reproduction"
+            );
+            assert_violation(&report, path);
+
+            head.insert("parity/generator.json".into(), r#"{"reason": "  "}"#.into());
+            assert_violation(&check(&tree(), &head), path);
+
+            head.insert(
+                "parity/generator.json".into(),
+                r#"{"reason": "fixed the sweep seed handling"}"#.into(),
+            );
+            let report = check(&tree(), &head);
+            assert!(report.changed);
+            assert!(
+                report.violations.is_empty(),
+                "{path}: {:?}",
+                report.violations
+            );
+        }
+    }
+
+    #[test]
+    fn added_or_removed_frozen_python_file_needs_a_new_reason() {
+        let mut head = tree();
+        head.insert(
+            "parity/frozen_python/vessel_designer_frozen/core/new.py".into(),
+            "X = 1\n".into(),
+        );
+        assert_violation(&check(&tree(), &head), "core/new.py");
+
+        let mut head = tree();
+        head.remove("parity/frozen_python/vessel_designer_frozen/core/cargo.py");
+        assert_violation(&check(&tree(), &head), "core/cargo.py");
     }
 
     #[test]
