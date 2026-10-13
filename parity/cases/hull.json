@@ -122,6 +122,66 @@
       }
     },
     {
+      "id": "quantities/subnormal_draft_overflow",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): subnormal draught 1e-310, so the displaced volume is tiny and BM overflows to infinity; kills the null-for-infinity eval bug (review of PR #48)",
+      "input": {
+        "fn": "quantities",
+        "args": {
+          "hull": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "bow_rake_length": 0.0,
+            "bow_rake_rise": 6.5,
+            "stern_rake_length": 0.0,
+            "stern_rake_rise": 6.5
+          },
+          "draft": 1e-310
+        }
+      }
+    },
+    {
+      "id": "quantities/negative_bow_rake_length",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): negative bow rake length; kills mutant hull.rs:101:35 `||` -> `&&` in rake_first_moment_volume",
+      "input": {
+        "fn": "quantities",
+        "args": {
+          "hull": {
+            "loa": 60.0,
+            "beam": 10.0,
+            "depth": 4.0,
+            "bow_rake_length": -6.0,
+            "bow_rake_rise": 2.0,
+            "stern_rake_length": 4.0,
+            "stern_rake_rise": 2.0
+          },
+          "draft": 2.0
+        }
+      }
+    },
+    {
+      "id": "quantities/zero_beam_positive_draft",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): zero beam at positive draught, so volume is zero and LCB falls back to loa/2; kills mutant hull.rs:198:33 `/` -> `*` and `/` -> `%`",
+      "input": {
+        "fn": "quantities",
+        "args": {
+          "hull": {
+            "loa": 60.0,
+            "beam": 0.0,
+            "depth": 4.0,
+            "bow_rake_length": 0.0,
+            "bow_rake_rise": 4.0,
+            "stern_rake_length": 0.0,
+            "stern_rake_rise": 4.0
+          },
+          "draft": 2.0
+        }
+      }
+    },
+    {
       "id": "quantities/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",

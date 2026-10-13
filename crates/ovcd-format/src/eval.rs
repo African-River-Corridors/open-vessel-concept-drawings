@@ -114,6 +114,18 @@ fn cargo(function: &str, args: &Value) -> Result<Value, EvalError> {
     }
 }
 
+/// A float as the frozen driver writes it (`tag_float`): NaN and infinity become the tagged
+/// strings, because `json!` would turn them into `null`.
+fn float(x: f64) -> Value {
+    if x.is_nan() {
+        json!("float:nan")
+    } else if x.is_infinite() {
+        json!(if x > 0.0 { "float:inf" } else { "float:-inf" })
+    } else {
+        json!(x)
+    }
+}
+
 fn f64_arg(args: &Value, name: &str) -> Result<f64, EvalError> {
     args.get(name)
         .and_then(Value::as_f64)
@@ -139,22 +151,22 @@ fn hull(function: &str, args: &Value) -> Result<Value, EvalError> {
             );
             let d = f64_arg(args, "draft")?;
             ok(json!({
-                "parallel_length": h.parallel_length(),
-                "displaced_volume": h.displaced_volume(d),
-                "waterplane_area": h.waterplane_area(d),
-                "waterplane_length": h.waterplane_length(d),
-                "waterplane_inertia_transverse": h.waterplane_inertia_transverse(d),
-                "waterplane_inertia_longitudinal": h.waterplane_inertia_longitudinal(d),
-                "KB": h.KB(d),
-                "LCB": h.LCB(d),
-                "BM_transverse": h.BM_transverse(d),
-                "BM_longitudinal": h.BM_longitudinal(d),
-                "bottom_area": h.bottom_area(),
-                "side_area": h.side_area(),
-                "deck_area": h.deck_area(),
-                "bow_rake_area": h.bow_rake_area(),
-                "stern_rake_area": h.stern_rake_area(),
-                "total_hull_surface_area": h.total_hull_surface_area(),
+                "parallel_length": float(h.parallel_length()),
+                "displaced_volume": float(h.displaced_volume(d)),
+                "waterplane_area": float(h.waterplane_area(d)),
+                "waterplane_length": float(h.waterplane_length(d)),
+                "waterplane_inertia_transverse": float(h.waterplane_inertia_transverse(d)),
+                "waterplane_inertia_longitudinal": float(h.waterplane_inertia_longitudinal(d)),
+                "KB": float(h.KB(d)),
+                "LCB": float(h.LCB(d)),
+                "BM_transverse": float(h.BM_transverse(d)),
+                "BM_longitudinal": float(h.BM_longitudinal(d)),
+                "bottom_area": float(h.bottom_area()),
+                "side_area": float(h.side_area()),
+                "deck_area": float(h.deck_area()),
+                "bow_rake_area": float(h.bow_rake_area()),
+                "stern_rake_area": float(h.stern_rake_area()),
+                "total_hull_surface_area": float(h.total_hull_surface_area()),
             }))
         }
         other => Err(EvalError::BadInput(format!(

@@ -141,6 +141,75 @@
       }
     },
     {
+      "id": "quantities/subnormal_draft_overflow",
+      "output": {
+        "ok": {
+          "parallel_length": 90.0,
+          "displaced_volume": 1.331999999999997e-307,
+          "waterplane_area": 1332.0,
+          "waterplane_length": 90.0,
+          "waterplane_inertia_transverse": 24313.440000000002,
+          "waterplane_inertia_longitudinal": 899100.0,
+          "KB": 0.0,
+          "LCB": 45.00000000000001,
+          "BM_transverse": "float:inf",
+          "BM_longitudinal": "float:inf",
+          "bottom_area": 1332.0,
+          "side_area": 1170.0,
+          "deck_area": 1332.0,
+          "bow_rake_area": 0.0,
+          "stern_rake_area": 0.0,
+          "total_hull_surface_area": 3834.0
+        }
+      }
+    },
+    {
+      "id": "quantities/negative_bow_rake_length",
+      "output": {
+        "ok": {
+          "parallel_length": 62.0,
+          "displaced_volume": 1280.0,
+          "waterplane_area": 660.0,
+          "waterplane_length": 66.0,
+          "waterplane_inertia_transverse": 5500.0,
+          "waterplane_inertia_longitudinal": 239580.0,
+          "KB": 1.0104156249999998,
+          "LCB": 33.94791666666667,
+          "BM_transverse": 4.296875,
+          "BM_longitudinal": 187.171875,
+          "bottom_area": 620.0,
+          "side_area": 480.0,
+          "deck_area": 600.0,
+          "bow_rake_area": 0.0,
+          "stern_rake_area": 44.721359549995796,
+          "total_hull_surface_area": 1744.721359549996
+        }
+      }
+    },
+    {
+      "id": "quantities/zero_beam_positive_draft",
+      "output": {
+        "ok": {
+          "parallel_length": 60.0,
+          "displaced_volume": 0.0,
+          "waterplane_area": 0.0,
+          "waterplane_length": 60.0,
+          "waterplane_inertia_transverse": 0.0,
+          "waterplane_inertia_longitudinal": 0.0,
+          "KB": 0.0,
+          "LCB": 30.0,
+          "BM_transverse": 0.0,
+          "BM_longitudinal": 0.0,
+          "bottom_area": 0.0,
+          "side_area": 480.0,
+          "deck_area": 0.0,
+          "bow_rake_area": 0.0,
+          "stern_rake_area": 0.0,
+          "total_hull_surface_area": 480.0
+        }
+      }
+    },
+    {
       "id": "quantities/sweep/000",
       "output": {
         "ok": {
