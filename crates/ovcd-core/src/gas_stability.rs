@@ -846,6 +846,23 @@ mod tests {
         assert_eq!(py_sum_mixed(core::iter::empty()), 0.0);
     }
 
+    // Python `max(a, b)` and `min(a, b)` keep the first of equal items, so the sign of a zero
+    // shows which one was kept: `max(-0.0, 0.0)` is `-0.0`, `min(0.0, -0.0)` is `0.0`.
+    #[test]
+    fn py_max2_and_py_min2_keep_the_first_of_equal_items() {
+        assert_eq!(py_max2(1.0, 2.0), 2.0);
+        assert_eq!(py_max2(2.0, 1.0), 2.0);
+        assert!(py_max2(-0.0, 0.0).is_sign_negative());
+        assert!(py_max2(0.0, -0.0).is_sign_positive());
+        assert_eq!(py_min2(1.0, 2.0), 1.0);
+        assert_eq!(py_min2(2.0, 1.0), 1.0);
+        assert!(py_min2(0.0, -0.0).is_sign_positive());
+        assert!(py_min2(-0.0, 0.0).is_sign_negative());
+        // NaN never replaces the first item.
+        assert_eq!(py_max2(1.0, f64::NAN), 1.0);
+        assert_eq!(py_min2(1.0, f64::NAN), 1.0);
+    }
+
     #[test]
     fn py_sum_fixed_point_rounding() {
         // sum of 0.1 .. 0.9 step 0.1: plain sum is 4.5 - ulp; Python gives 4.5.
