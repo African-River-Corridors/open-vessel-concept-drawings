@@ -133,6 +133,48 @@
       }
     },
     {
+      "id": "compute/wide_channel_depth_20",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_resistance.py::test_shallow_factor_at_least_one_and_grows_as_depth_falls (issue #8, fix round 2); the test calls private _shallow_water_factor, these are the same EnvironmentInputs through the public compute entry point",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "environments": [
+              {
+                "name": "d",
+                "water_depth": 20.0,
+                "channel_width_bottom": 200.0,
+                "channel_width_surface": 200.0,
+                "water_density": 1.0
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/wide_channel_depth_8",
+      "tier": 1,
+      "reason": "tier 1: inputs of audited test test_resistance.py::test_shallow_factor_at_least_one_and_grows_as_depth_falls (issue #8, fix round 2); the test calls private _shallow_water_factor, these are the same EnvironmentInputs through the public compute entry point",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "environments": [
+              {
+                "name": "s",
+                "water_depth": 8.0,
+                "channel_width_bottom": 200.0,
+                "channel_width_surface": 200.0,
+                "water_density": 1.0
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
       "id": "compute/calibration/yangtze_bulk_88x16.3x4.3",
       "tier": 1,
       "reason": "tier 1: inputs of audited test test_calibration_runs.py::test_report_covers_every_case (issue #8)",

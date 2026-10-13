@@ -101,7 +101,7 @@ def test_resistance_monotone_in_speed():
 def test_shallow_factor_at_least_one_and_grows_as_depth_falls():
     # Compare the shallow factor at a fixed speed for two depths.
     """Label: property
-    Parity: none (private helper _shallow_water_factor has no Reference Results)
+    Parity: resistance:compute/wide_channel_depth_20, resistance:compute/wide_channel_depth_8
     """
     calc = ResistanceCalculator(ResistanceInputs())
     deep = EnvironmentInputs(name="d", water_depth=20.0, channel_width_bottom=200.0,
