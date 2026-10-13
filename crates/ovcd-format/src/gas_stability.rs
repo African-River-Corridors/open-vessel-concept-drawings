@@ -2,12 +2,14 @@
 //! `criteria_set_for` and `assess`. It copies the frozen Python driver's output shapes
 //! (`parity/driver.py`, `to_json`), including which numbers are ints.
 //!
-//! `assess` is not yet reachable through `eval`. The parity cases describe the arrangement to
-//! assess by `fit` (`gas_arrangement.fit`) or `capacity` (`barge_capacity.compute`), and neither is
-//! ported. Until both are, `assess` here takes the numbers it reads as `args.result` (see
-//! `parity/gas_basis_fixtures.py` and `tests/gas_stability.rs`), and `gas_stability` stays out of
-//! `parity/ported.json`. When `fit` lands: build `args.result` from the Rust `fit`, route
-//! `eval("gas_stability", ..)` here, and add the entry point to `ported.json`.
+//! `eval("gas_stability", ..)` routes here, and `gas_stability` is in `parity/ported.json`. Three
+//! functions are fully green on the seam. `assess` is not: the parity cases describe the
+//! arrangement to assess by `fit` (`gas_arrangement.fit`) or `capacity`
+//! (`barge_capacity.compute`), and neither is ported. A case with `fit` or `capacity` returns
+//! `NotPorted`, and `parity/pending.json` records that gap. `assess` also takes the numbers it
+//! reads as `args.result` (see `parity/gas_basis_fixtures.py` and `tests/gas_stability.rs`), which
+//! checks the maths against the Reference Results meanwhile. When `fit` and `capacity` land: build
+//! `args.result` from them, and empty `parity/pending.json`.
 
 use crate::EvalError;
 use ovcd_core::gas_stability::{
@@ -30,6 +32,14 @@ fn num_arg(args: &Value, name: &str) -> Result<f64, EvalError> {
     args.get(name)
         .and_then(Value::as_f64)
         .ok_or_else(|| EvalError::BadInput(format!("`args.{name}` must be a number")))
+}
+
+/// A number that Python may hold as an int: a JSON integer stays an int.
+fn py_num_arg(args: &Value, name: &str) -> Result<PyNum, EvalError> {
+    match args.get(name).and_then(Value::as_i64) {
+        Some(i) => Ok(PyNum::Int(i)),
+        None => num_arg(args, name).map(PyNum::Float),
+    }
 }
 
 fn opt_num_arg(args: &Value, name: &str, default: f64) -> Result<f64, EvalError> {
@@ -67,7 +77,14 @@ fn condition_json(c: &Condition) -> Value {
     let fl_or_int = |x: f64| if floats { float(x) } else { json!(x as i64) };
     let mut m = Map::new();
     m.insert("name".into(), json!(c.name));
-    m.insert("cargo_t".into(), float(c.cargo_t));
+    m.insert(
+        "cargo_t".into(),
+        if c.cargo_is_int {
+            json!(c.cargo_t as i64)
+        } else {
+            float(c.cargo_t)
+        },
+    );
     m.insert("fill_fraction".into(), float(c.fill_fraction));
     m.insert("displacement_t".into(), float(c.displacement_t));
     m.insert("draught_m".into(), float(c.draught_m));
@@ -154,10 +171,19 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
             )
             .map(float),
         ),
-        "segment_fill" => py_result(
-            gs::segment_fill(num_arg(args, "radius")?, num_arg(args, "volume_fraction")?)
-                .map(|(h, y)| json!([float(h), float(y)])),
-        ),
+        "segment_fill" => {
+            let radius = num_arg(args, "radius")?;
+            let fraction = num_arg(args, "volume_fraction")?;
+            // A full tank returns `(2 * radius, radius)` in the type of `radius`: ints for an int.
+            let int_radius = args
+                .get("radius")
+                .and_then(Value::as_i64)
+                .filter(|r| fraction >= 1.0 && r.checked_mul(2).is_some());
+            if let Some(r) = int_radius {
+                return py_result(Ok(json!([r * 2, r])));
+            }
+            py_result(gs::segment_fill(radius, fraction).map(|(h, y)| json!([float(h), float(y)])))
+        }
         "criteria_set_for" => {
             let ruleset = args
                 .get("ruleset")
@@ -166,11 +192,14 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
             py_result(Ok(json!(gs::criteria_set_for(ruleset))))
         }
         "assess" => {
+            if args.get("fit").is_some() || args.get("capacity").is_some() {
+                return Err(EvalError::NotPorted("gas_stability".into()));
+            }
             let result = capacity_result(
                 args.get("result")
                     .ok_or_else(|| EvalError::BadInput("`args.result` is required".into()))?,
             )?;
-            let payload = num_arg(args, "payload_t")?;
+            let payload = py_num_arg(args, "payload_t")?;
             let cb = opt_num_arg(args, "block_coefficient", gs::DEFAULT_BLOCK_COEFFICIENT)?;
             let rho = opt_num_arg(args, "water_density", gs::DEFAULT_WATER_DENSITY)?;
             let cset = match args.get("criteria_set") {
@@ -179,7 +208,7 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
                     EvalError::BadInput("`args.criteria_set` must be a string".into())
                 })?,
             };
-            py_result(gs::assess(&result, payload, cb, rho, cset).map(|a| {
+            py_result(gs::assess_num(&result, payload, cb, rho, cset).map(|a| {
                 json!({
                     "criteria_set": a.criteria_set,
                     "conditions": a.conditions.iter().map(condition_json).collect::<Vec<_>>(),

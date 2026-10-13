@@ -1,13 +1,13 @@
-//! `gas_stability` against its Reference Results (issue #18).
+//! `gas_stability` against its Reference Results (issue #18), through `ovcd_format::eval`.
 //!
-//! `box_gz`, `segment_fill` and `criteria_set_for` cases run straight from `parity/cases`.
-//! `assess` cases describe the arrangement by `fit` or `capacity`, which need `gas_arrangement`
-//! and `barge_capacity` (not ported yet). So the numbers `assess` reads come from
-//! `tests/fixtures/gas_stability_results.json`, made by `parity/gas_basis_fixtures.py` from the
-//! frozen Python. The Reference Results are the same files `parity.rs` uses. When `fit` lands this
-//! test is replaced by the entry point in `parity/ported.json`.
+//! `parity.rs` runs `box_gz`, `segment_fill` and `criteria_set_for` on the seam. `assess` cases
+//! describe the arrangement by `fit` or `capacity`, which need `gas_arrangement` and
+//! `barge_capacity` (not ported yet), so `parity.rs` skips them (`parity/pending.json`). Here the
+//! numbers `assess` reads come from `tests/fixtures/gas_stability_results.json`, made by
+//! `parity/gas_basis_fixtures.py` from the frozen Python, and go to `eval` as `args.result`. The
+//! Reference Results are the same files `parity.rs` uses. The fixture also holds int-`payload_t`
+//! rows with the frozen Python's own output. When `fit` lands, `assess` joins the seam proper.
 
-use ovcd_format::gas_stability::run;
 use ovcd_format::parity::{Tolerance, compare};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
@@ -63,7 +63,7 @@ fn failures(only: &str) -> (usize, Vec<String>) {
             continue;
         }
         count += 1;
-        match run(function, &args) {
+        match ovcd_format::eval("gas_stability", &json!({ "fn": function, "args": args })) {
             Ok(actual) => {
                 if let Err(diffs) = compare(&result["output"], &actual, tol) {
                     bad.push(format!("{id}:\n    {}", diffs.join("\n    ")));
@@ -102,7 +102,89 @@ fn assess_matches_every_reference_result() {
     green("assess", 13);
 }
 
+fn eval(function: &str, args: Value) -> Result<Value, ovcd_format::EvalError> {
+    ovcd_format::eval("gas_stability", &json!({ "fn": function, "args": args }))
+}
+
 #[test]
 fn unknown_function_is_a_bad_input() {
-    assert!(run("nope", &json!({})).is_err());
+    assert!(eval("nope", json!({})).is_err());
+}
+
+#[test]
+fn assess_by_fit_or_capacity_is_not_ported() {
+    for key in ["fit", "capacity"] {
+        assert_eq!(
+            eval("assess", json!({ key: {}, "payload_t": 1.0 })),
+            Err(ovcd_format::EvalError::NotPorted("gas_stability".into()))
+        );
+    }
+}
+
+/// Python returns `(2 * radius, radius)` for a full tank, in the type of `radius`.
+#[test]
+fn segment_fill_of_a_full_tank_keeps_an_int_radius_an_int() {
+    // Values are the frozen Python driver's output.
+    for (args, expected) in [
+        (
+            json!({"radius": 2, "volume_fraction": 1}),
+            json!({"ok": [4, 2]}),
+        ),
+        (
+            json!({"radius": 2, "volume_fraction": 1.5}),
+            json!({"ok": [4, 2]}),
+        ),
+        (
+            json!({"radius": 2.0, "volume_fraction": 1}),
+            json!({"ok": [4.0, 2.0]}),
+        ),
+        (
+            json!({"radius": 2, "volume_fraction": 0}),
+            json!({"ok": [0.0, 0.0]}),
+        ),
+    ] {
+        let actual = eval("segment_fill", args.clone()).unwrap();
+        assert_eq!(actual, expected, "{args}");
+        // Type-strict: compare would reject int against float.
+        assert_eq!(compare(&expected, &actual, tolerance()), Ok(()), "{args}");
+    }
+}
+
+/// Python keeps an int `payload_t` as an int in the Laden `cargo_t`, and its `sum()` (3.12) adds
+/// the int without compensation. The rows hold the frozen Python's `cargo_t`, `displacement_t`,
+/// `draught_m` and `kg_m` per condition. They must match exactly, to the last bit and in type. The
+/// rest of the result is covered by the Reference Results.
+#[test]
+fn assess_with_an_int_payload_matches_python_exactly() {
+    let fixtures = read_json(&dir("tests/fixtures/gas_stability_results.json"));
+    let rows = fixtures["int_payload_rows"].as_array().expect("int rows");
+    assert!(
+        rows.len() >= 12,
+        "fixture is stale: rerun parity/gas_basis_fixtures.py"
+    );
+    let mut bad = Vec::new();
+    for row in rows {
+        let mut args = row["options"].as_object().expect("options").clone();
+        args.insert("result".into(), row["result"].clone());
+        args.insert("payload_t".into(), row["payload_t"].clone());
+        let actual = eval("assess", Value::Object(args)).unwrap();
+        let id = format!("{} payload {}", row["id"], row["payload_t"]);
+        let Some(want) = row["output"]["ok"].as_array() else {
+            assert_eq!(actual, row["output"], "{id}");
+            continue;
+        };
+        let got = actual["ok"]["conditions"].as_array().expect("conditions");
+        assert_eq!(want.len(), got.len(), "{id}");
+        for (w, g) in want.iter().zip(got) {
+            for key in ["name", "cargo_t", "displacement_t", "draught_m", "kg_m"] {
+                if w[key] != g[key] {
+                    bad.push(format!(
+                        "{id} {}.{key}: python {} rust {}",
+                        w["name"], w[key], g[key]
+                    ));
+                }
+            }
+        }
+    }
+    assert!(bad.is_empty(), "{} differ:\n{}", bad.len(), bad.join("\n"));
 }

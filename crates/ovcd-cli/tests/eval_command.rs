@@ -36,7 +36,15 @@ fn ovcd(args: &[&str], stdin: &str) -> Output {
     child.wait_with_output().unwrap()
 }
 
-/// First, last and one error case (if any) of an entry point: (id, input, Reference Result).
+/// Does `parity/pending.json` list this case's function? `eval` answers those with `NotPorted`.
+fn is_pending(entry_point: &str, input: &Value) -> bool {
+    read_json(&parity_dir().join("pending.json"))["pending"][entry_point]
+        .get(input["fn"].as_str().unwrap_or(""))
+        .is_some()
+}
+
+/// First, last and one error case (if any) of an entry point, leaving out pending functions:
+/// (id, input, Reference Result).
 fn sample(entry_point: &str) -> Vec<(String, Value, Value)> {
     let cases = read_json(&parity_dir().join(format!("cases/{entry_point}.json")));
     let refs = read_json(&parity_dir().join(format!("reference/{entry_point}.json")));
@@ -45,6 +53,7 @@ fn sample(entry_point: &str) -> Vec<(String, Value, Value)> {
         .unwrap()
         .iter()
         .zip(refs["results"].as_array().unwrap())
+        .filter(|(c, _)| !is_pending(entry_point, &c["input"]))
         .map(|(c, r)| {
             (
                 c["id"].as_str().unwrap().into(),

@@ -79,6 +79,31 @@ fn py_sum(items: impl IntoIterator<Item = f64>) -> f64 {
     sum
 }
 
+/// Python 3.12 `sum()` of a list of floats that ends with items that may be ints. An int item
+/// in the float loop is added to the running sum with no compensation (`f_result += (double)value`).
+/// Every int here comes after a float, so the loop is already in float mode.
+fn py_sum_mixed(items: impl IntoIterator<Item = (f64, bool)>) -> f64 {
+    let mut sum = 0.0_f64;
+    let mut c = 0.0_f64;
+    for (x, is_int) in items {
+        if is_int {
+            sum += x;
+            continue;
+        }
+        let t = sum + x;
+        if sum.abs() >= x.abs() {
+            c += (sum - t) + x;
+        } else {
+            c += (x - t) + sum;
+        }
+        sum = t;
+    }
+    if c != 0.0 && c.is_finite() {
+        sum += c;
+    }
+    sum
+}
+
 /// Python `max(a, b)`: the first of equal items; NaN never replaces the first item.
 fn py_max2(a: f64, b: f64) -> f64 {
     if b > a { b } else { a }
@@ -301,6 +326,8 @@ pub struct Criterion {
 pub struct Condition {
     pub name: String,
     pub cargo_t: f64,
+    /// Python holds `cargo_t` as an int: the Laden condition of an int `payload_t`.
+    pub cargo_is_int: bool,
     pub fill_fraction: f64,
     pub displacement_t: f64,
     pub draught_m: f64,
@@ -585,6 +612,28 @@ pub fn assess(
     water_density: f64,
     criteria_set: &str,
 ) -> Result<StabilityAssessment, PyError> {
+    assess_num(
+        result,
+        PyNum::Float(payload_t),
+        block_coefficient,
+        water_density,
+        criteria_set,
+    )
+}
+
+/// `assess` with a `payload_t` that Python may hold as an int. An int payload stays an int in the
+/// Laden condition and is summed without compensation.
+pub fn assess_num(
+    result: &GasCapacityResult,
+    payload: PyNum,
+    block_coefficient: f64,
+    water_density: f64,
+    criteria_set: &str,
+) -> Result<StabilityAssessment, PyError> {
+    let (payload_t, payload_is_int) = match payload {
+        PyNum::Int(i) => (i as f64, true),
+        PyNum::Float(x) => (x, false),
+    };
     let basis = result.gas_basis.as_ref().ok_or_else(|| {
         PyError::Value("assess() needs a gas BargeCapacityResult (gas_basis is None)".to_string())
     })?;
@@ -608,10 +657,10 @@ pub fn assess(
     let lightship = py_sum(light_items.iter().map(|&(m, _)| m));
 
     let mut conds = Vec::new();
-    for (name, cargo) in [
-        ("Laden", payload_t),
-        ("Half laden", 0.5 * payload_t),
-        ("Light", 0.0),
+    for (name, cargo, cargo_is_int) in [
+        ("Laden", payload_t, payload_is_int),
+        ("Half laden", 0.5 * payload_t, false),
+        ("Light", 0.0, false),
     ] {
         let frac = if v_inner_total > 0.0 {
             div(cargo, rho_c * v_inner_total)?
@@ -620,17 +669,20 @@ pub fn assess(
         };
         let (h, ybar) = segment_fill(r_in, frac)?;
         let kg_cargo = inner_bottom + ybar;
-        let mut items: Vec<(f64, f64)> = light_items.to_vec();
+        let mut items: Vec<(f64, f64, bool)> =
+            light_items.iter().map(|&(m, z)| (m, z, false)).collect();
         if cargo > 0.0 {
-            items.push((cargo, kg_cargo));
+            items.push((cargo, kg_cargo, cargo_is_int));
         }
-        let disp = py_sum(items.iter().map(|&(m, _)| m));
-        let kg = div(py_sum(items.iter().map(|&(m, z)| m * z)), disp)?;
+        let disp = py_sum_mixed(items.iter().map(|&(m, _, i)| (m, i)));
+        // An int mass times a float height is a float, so the products are all floats.
+        let kg = div(py_sum(items.iter().map(|&(m, z, _)| m * z)), disp)?;
         let t = div(disp, block_coefficient * l * b * water_density)?;
         if t >= d {
             conds.push(Condition {
                 name: name.to_string(),
                 cargo_t: cargo,
+                cargo_is_int,
                 fill_fraction: frac,
                 displacement_t: disp,
                 draught_m: t,
@@ -676,6 +728,7 @@ pub fn assess(
         let mut c = Condition {
             name: name.to_string(),
             cargo_t: cargo,
+            cargo_is_int,
             fill_fraction: frac,
             displacement_t: disp,
             draught_m: t,
@@ -740,6 +793,37 @@ mod tests {
         // An infinite compensation is dropped, as in Python.
         assert_eq!(py_sum([f64::INFINITY, 1.0]), f64::INFINITY);
         assert_eq!(py_sum([1.5, 2.5]), 4.0);
+    }
+
+    // Python 3.12 `sum()` (the version the frozen Python runs on) adds an int item to the running
+    // total with no compensation, so a trailing int gives a different last bit. Values are what
+    // Python 3.12 prints. (3.14 compensates ints too; the port follows 3.12.)
+    #[test]
+    fn py_sum_mixed_adds_an_int_without_compensation() {
+        let f = |x: f64| (x, false);
+        let cases: [([f64; 4], f64, f64); 3] = [
+            (
+                [895.575, 973.252, 500.8, 967.21],
+                4160.0,
+                7496.8369999999995,
+            ),
+            ([86.468, 663.758, 107.931, 163.698], 3222.0, 4243.855),
+            (
+                [343.826, 847.461, 353.274, 909.755],
+                4490.0,
+                6944.316000000001,
+            ),
+        ];
+        for (floats, int, want) in cases {
+            let mut items: Vec<(f64, bool)> = floats.iter().map(|&x| f(x)).collect();
+            items.push((int, true));
+            assert_eq!(py_sum_mixed(items), want);
+            // The same numbers all compensated give a different last bit.
+            let all: Vec<f64> = floats.iter().copied().chain([int]).collect();
+            assert_ne!(py_sum(all), want);
+        }
+        // An all-float list is the compensated sum.
+        assert_eq!(py_sum_mixed([(0.1, false); 10]), 1.0);
     }
 
     #[test]

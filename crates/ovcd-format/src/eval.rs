@@ -63,6 +63,7 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
     let args = input.get("args").unwrap_or(&Value::Null);
     match entry_point {
         "cargo" => cargo(function, args),
+        "gas_stability" => crate::gas_stability::run(function, args),
         ep if ENTRY_POINTS.contains(&ep) => Err(EvalError::NotPorted(ep.into())),
         ep => Err(EvalError::UnknownEntryPoint(ep.into())),
     }

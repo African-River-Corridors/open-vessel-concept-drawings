@@ -58,12 +58,33 @@ def derived(args: dict) -> dict:
 def main(out_path: str) -> None:
     cases = json.loads((PARITY / "cases" / "gas_stability.json").read_text())["cases"]
     rows = []
+    int_rows = []
     for case in cases:
         inp = case["input"]
         if inp["fn"] != "assess":
             continue
-        rows.append({"id": case["id"], "result": derived(inp["args"])})
-    Path(out_path).write_text(json.dumps({"rows": rows}, indent=1, allow_nan=False) + "\n")
+        row = {"id": case["id"], "result": derived(inp["args"])}
+        rows.append(row)
+        # Python keeps an int `payload_t` as an int (Laden `cargo_t`) and sums it without
+        # compensation (Python 3.12 and 3.13; 3.14 compensates it, so run this script on 3.12).
+        # The cases only hold float payloads, so record int ones too.
+        for payload in sorted({round(row["result"]["payload_t"]), 1000}):
+            args = json.loads(json.dumps(inp["args"]))
+            args["payload_t"] = payload
+            options = {k: v for k, v in inp["args"].items()
+                       if k not in ("fit", "capacity", "payload_t")}
+            out = driver.run_case("gas_stability", {"fn": "assess", "args": args})
+            # Keep the fields the int payload touches, in full precision. (The whole output
+            # would add 20 000 lines.)
+            kept = out if "error" in out else {"ok": [
+                {k: c[k] for k in ("name", "cargo_t", "displacement_t", "draught_m", "kg_m")}
+                for c in out["ok"]["conditions"]]}
+            int_rows.append({
+                "id": case["id"], "payload_t": payload, "options": options,
+                "result": row["result"], "output": kept,
+            })
+    doc = {"rows": rows, "int_payload_rows": int_rows}
+    Path(out_path).write_text(json.dumps(doc, indent=1, allow_nan=False) + "\n")
 
 
 if __name__ == "__main__":
