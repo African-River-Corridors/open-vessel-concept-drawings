@@ -21,6 +21,11 @@ A Vessel Class that is a single floating body and so gets a General Arrangement 
 (motor vessel, push barge, pusher, towboat).
 _Avoid_: ship type
 
+**Hull Form**:
+The shape family of a Hull (e.g. flat-bottom raked box, V-bottom) and the parameters that set it,
+such as block coefficient and rake lengths.
+_Avoid_: hull type, hull shape
+
 **Formation**:
 An arrangement of Hulls that moves as one — a pushed convoy, a tow, a coupled unit — described by its
 Hulls and how they are placed (abreast, in line). It has no General Arrangement of its own, only an
@@ -38,10 +43,32 @@ _Avoid_: lock class
 What the vessel carries (e.g. LNG, bauxite, containers). An input to every design, never a property of a
 Vessel Class.
 
+**Cargo Containment**:
+How a Hull holds its Cargo: a box hold, a sloped hopper hold, or IMO Type C tanks.
+_Avoid_: vessel type, barge type
+
+**Design**:
+One study saved as a single file: one or more Options, compared side by side.
+_Avoid_: project, model
+
+**Option**:
+One complete set of inputs within a Design, giving one set of results.
+_Avoid_: variant, scenario, case
+
+**Defaults Profile**:
+The named set of default input values and allowed input ranges used when an Option leaves an input
+out. Each range is hard (the input is refused) or soft (the input is accepted with a warning).
+_Avoid_: settings, config (on its own)
+
 **Calibration**:
 Running the design calculations from a Reference Vessel's inputs and comparing the results with its
 published particulars, to measure and correct the calculation logic.
 _Avoid_: validation, tuning
+
+**Calibration Band**:
+The accepted range around a Reference Vessel's published figure (e.g. lightship ±20 %). A Calibration
+result outside its band is either accepted with a reason or logged as a bug.
+_Avoid_: tolerance, error margin
 
 **General Arrangement (GA)**:
 A concept drawing set for one Hull — plan, elevation and cross-section — for feasibility studies, not
