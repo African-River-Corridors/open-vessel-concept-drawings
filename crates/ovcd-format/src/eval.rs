@@ -1,7 +1,11 @@
 //! `eval(entry_point, json) -> json`: the parity seam. One dispatch over every parity entry
 //! point. Input and output use the case and Reference Result shapes in `parity/README.md`.
 
+use ovcd_core::barge_cost::{BargeCostInputs, BargeCostRates, BargeCostResult, MappingValue};
 use ovcd_core::cargo::CargoProperties;
+use ovcd_core::checks::Check;
+use ovcd_core::pystr::repr_str;
+use ovcd_core::vessel_standards::{Catalogue, VesselStandard};
 use serde_json::{Value, json};
 
 /// Why `eval` could not produce a result. A Python `ValueError` is not an `EvalError`: it is a
@@ -63,6 +67,8 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
     let args = input.get("args").unwrap_or(&Value::Null);
     match entry_point {
         "cargo" => cargo(function, args),
+        "barge_cost" => barge_cost(function, args),
+        "vessel_standards" => vessel_standards(function, args),
         ep if ENTRY_POINTS.contains(&ep) => Err(EvalError::NotPorted(ep.into())),
         ep => Err(EvalError::UnknownEntryPoint(ep.into())),
     }
@@ -108,6 +114,330 @@ fn cargo(function: &str, args: &Value) -> Result<Value, EvalError> {
         )),
         other => Err(EvalError::BadInput(format!(
             "cargo has no parity function `{other}`"
+        ))),
+    }
+}
+
+fn checks_json(checks: &[Check]) -> Value {
+    Value::Array(
+        checks
+            .iter()
+            .map(|c| {
+                json!({
+                    "name": c.name,
+                    "ok": c.ok,
+                    "message": c.message,
+                    "severity": c.severity,
+                })
+            })
+            .collect(),
+    )
+}
+
+/// A Python `KeyError`: `str(KeyError(msg))` is `repr(msg)`.
+fn key_error(message: &str) -> Result<Value, EvalError> {
+    Ok(json!({ "error": { "type": "KeyError", "message": repr_str(message) } }))
+}
+
+fn number_arg(value: &Value, what: &str) -> Result<f64, EvalError> {
+    value
+        .as_f64()
+        .ok_or_else(|| EvalError::BadInput(format!("`{what}` must be a number")))
+}
+
+fn rates_json(r: &BargeCostRates) -> Value {
+    json!({
+        "hull_steel_rate": r.hull_steel_rate,
+        "tank_shell_rate": r.tank_shell_rate,
+        "tank_supports_rate": r.tank_supports_rate,
+        "insulation_rate": r.insulation_rate,
+        "piping_rate": r.piping_rate,
+        "outfitting_rate": r.outfitting_rate,
+        "cargo_system_lump": r.cargo_system_lump,
+        "paint_anodes_misc": r.paint_anodes_misc,
+        "battery_rate_per_kwh": r.battery_rate_per_kwh,
+        "propulsion_rate_per_kw": r.propulsion_rate_per_kw,
+        "wheelhouse_accom_lump": r.wheelhouse_accom_lump,
+        "tug_outfitting_lump": r.tug_outfitting_lump,
+        "yard_margin_fraction": r.yard_margin_fraction,
+        "delivery_lump": r.delivery_lump,
+        "currency": r.currency,
+    })
+}
+
+fn cost_result_json(r: &BargeCostResult) -> Value {
+    let breakdown = |rows: &[(&str, i64)]| {
+        Value::Object(
+            rows.iter()
+                .map(|(k, v)| (k.to_string(), json!(v)))
+                .collect(),
+        )
+    };
+    json!({
+        "barge_breakdown": breakdown(&r.barge_breakdown),
+        "tug_breakdown": breakdown(&r.tug_breakdown),
+        "barge_subtotal": r.barge_subtotal,
+        "tug_subtotal": r.tug_subtotal,
+        "yard_margin": r.yard_margin,
+        "delivery": r.delivery,
+        "unit_total": r.unit_total,
+        "checks": checks_json(&r.checks),
+        "rates": rates_json(&r.rates),
+    })
+}
+
+fn cost_inputs(args: &Value) -> Result<BargeCostInputs, EvalError> {
+    let mut inp = BargeCostInputs::default();
+    let Some(map) = args.get("inputs").and_then(Value::as_object) else {
+        return Err(EvalError::BadInput(
+            "`args.inputs` must be an object".into(),
+        ));
+    };
+    for (key, value) in map {
+        let x = number_arg(value, &format!("args.inputs.{key}"))?;
+        match key.as_str() {
+            "hull_steel_t" => inp.hull_steel_t = x,
+            "wing_plate_t" => inp.wing_plate_t = x,
+            "weather_shield_t" => inp.weather_shield_t = x,
+            "tank_shell_t" => inp.tank_shell_t = x,
+            "tank_supports_t" => inp.tank_supports_t = x,
+            "insulation_t" => inp.insulation_t = x,
+            "piping_machinery_t" => inp.piping_machinery_t = x,
+            "outfitting_t" => inp.outfitting_t = x,
+            "tug_hull_steel_t" => inp.tug_hull_steel_t = x,
+            "battery_kwh" => inp.battery_kwh = x,
+            "propulsion_kw" => inp.propulsion_kw = x,
+            other => {
+                return Err(EvalError::BadInput(format!(
+                    "barge_cost inputs have no field `{other}`"
+                )));
+            }
+        }
+    }
+    Ok(inp)
+}
+
+fn mapping_value(value: &Value, key: &str) -> Result<MappingValue, EvalError> {
+    if let Some(i) = value.as_i64() {
+        Ok(MappingValue::Int(i))
+    } else if let Some(f) = value.as_f64() {
+        Ok(MappingValue::Float(f))
+    } else if let Some(s) = value.as_str() {
+        Ok(MappingValue::Text(s.to_string()))
+    } else {
+        Err(EvalError::BadInput(format!(
+            "`args.rates_mapping.{key}` must be a number or text"
+        )))
+    }
+}
+
+fn explicit_rates(map: &serde_json::Map<String, Value>) -> Result<BargeCostRates, EvalError> {
+    let get = |name: &str| -> Result<f64, EvalError> {
+        number_arg(
+            map.get(name)
+                .ok_or_else(|| EvalError::BadInput(format!("`args.rates.{name}` is missing")))?,
+            &format!("args.rates.{name}"),
+        )
+    };
+    Ok(BargeCostRates {
+        hull_steel_rate: get("hull_steel_rate")?,
+        tank_shell_rate: get("tank_shell_rate")?,
+        tank_supports_rate: get("tank_supports_rate")?,
+        insulation_rate: get("insulation_rate")?,
+        piping_rate: get("piping_rate")?,
+        outfitting_rate: get("outfitting_rate")?,
+        cargo_system_lump: get("cargo_system_lump")?,
+        paint_anodes_misc: get("paint_anodes_misc")?,
+        battery_rate_per_kwh: get("battery_rate_per_kwh")?,
+        propulsion_rate_per_kw: get("propulsion_rate_per_kw")?,
+        wheelhouse_accom_lump: get("wheelhouse_accom_lump")?,
+        tug_outfitting_lump: get("tug_outfitting_lump")?,
+        yard_margin_fraction: get("yard_margin_fraction")?,
+        delivery_lump: get("delivery_lump")?,
+        currency: match map.get("currency") {
+            None => "USD".to_string(),
+            Some(v) => v
+                .as_str()
+                .ok_or_else(|| EvalError::BadInput("`args.rates.currency` must be text".into()))?
+                .to_string(),
+        },
+    })
+}
+
+fn barge_cost(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        "compute" => {
+            let inputs = cost_inputs(args)?;
+            let rates = if let Some(mapping) = args.get("rates_mapping") {
+                let Some(map) = mapping.as_object() else {
+                    return Err(EvalError::BadInput(
+                        "`args.rates_mapping` must be an object".into(),
+                    ));
+                };
+                let pairs = map
+                    .iter()
+                    .map(|(k, v)| Ok((k.clone(), mapping_value(v, k)?)))
+                    .collect::<Result<Vec<_>, EvalError>>()?;
+                BargeCostRates::from_mapping(&pairs)
+            } else {
+                match args.get("rates") {
+                    None | Some(Value::Null) => ovcd_core::barge_cost::example_rates(),
+                    Some(Value::Object(map)) => Ok(explicit_rates(map)?),
+                    Some(_) => {
+                        return Err(EvalError::BadInput(
+                            "`args.rates` must be an object or null".into(),
+                        ));
+                    }
+                }
+            };
+            match rates {
+                Ok(rates) => ok(cost_result_json(&ovcd_core::barge_cost::compute(
+                    &inputs, &rates,
+                ))),
+                Err(message) => value_error(message),
+            }
+        }
+        "parse_flat_yaml" => match ovcd_core::barge_cost::parse_flat_yaml(str_arg(args, "text")?) {
+            Ok(pairs) => ok(Value::Object(
+                pairs.into_iter().map(|(k, v)| (k, json!(v))).collect(),
+            )),
+            Err(message) => value_error(message),
+        },
+        other => Err(EvalError::BadInput(format!(
+            "barge_cost has no parity function `{other}`"
+        ))),
+    }
+}
+
+fn standard_json(s: &VesselStandard) -> Value {
+    json!({
+        "standard_id": s.standard_id,
+        "family": s.family,
+        "class_name": s.class_name,
+        "formation": s.formation,
+        "loa_m": [s.loa_m.0, s.loa_m.1],
+        "beam_m": s.beam_m,
+        "draught_m": [s.draught_m.0, s.draught_m.1],
+        "dwt_t": [s.dwt_t.0, s.dwt_t.1],
+        "n_abreast": s.n_abreast,
+        "n_in_line": s.n_in_line,
+        "unit_beam_m": s.unit_beam_m,
+        "min_bridge_clearance_m": s.min_bridge_clearance_m,
+        "moulded_depth_m": s.moulded_depth_m,
+        "source": s.source,
+        "cargo_modes": s.cargo_modes,
+        "notes": s.notes,
+    })
+}
+
+fn pair_field(fields: &Value, name: &str) -> Result<(f64, f64), EvalError> {
+    let bad = || EvalError::BadInput(format!("`{name}` must be a list of two numbers"));
+    let items = fields.get(name).and_then(Value::as_array).ok_or_else(bad)?;
+    match items.as_slice() {
+        [a, b] => Ok((a.as_f64().ok_or_else(bad)?, b.as_f64().ok_or_else(bad)?)),
+        _ => Err(bad()),
+    }
+}
+
+fn text_field(fields: &Value, name: &str, default: Option<&str>) -> Result<String, EvalError> {
+    match (fields.get(name), default) {
+        (Some(v), _) => v
+            .as_str()
+            .map(str::to_string)
+            .ok_or_else(|| EvalError::BadInput(format!("`{name}` must be text"))),
+        (None, Some(d)) => Ok(d.to_string()),
+        (None, None) => Err(EvalError::BadInput(format!("`{name}` is required"))),
+    }
+}
+
+fn optional_number(fields: &Value, name: &str) -> Result<Option<f64>, EvalError> {
+    match fields.get(name) {
+        None | Some(Value::Null) => Ok(None),
+        Some(v) => Ok(Some(number_arg(v, name)?)),
+    }
+}
+
+fn count_field(fields: &Value, name: &str) -> Result<i64, EvalError> {
+    match fields.get(name) {
+        None => Ok(1),
+        Some(v) => v
+            .as_i64()
+            .ok_or_else(|| EvalError::BadInput(format!("`{name}` must be an integer"))),
+    }
+}
+
+/// One `VesselStandard(**fields)`, with the Python dataclass defaults.
+fn standard_from_fields(fields: &Value) -> Result<VesselStandard, EvalError> {
+    let cargo_modes = match fields.get("cargo_modes") {
+        None => vec!["dry_bulk".to_string(), "liquid_gas".to_string()],
+        Some(v) => v
+            .as_array()
+            .ok_or_else(|| EvalError::BadInput("`cargo_modes` must be a list".into()))?
+            .iter()
+            .map(|m| {
+                m.as_str()
+                    .map(str::to_string)
+                    .ok_or_else(|| EvalError::BadInput("`cargo_modes` must hold text".into()))
+            })
+            .collect::<Result<Vec<_>, _>>()?,
+    };
+    Ok(VesselStandard {
+        standard_id: text_field(fields, "standard_id", None)?,
+        family: text_field(fields, "family", None)?,
+        class_name: text_field(fields, "class_name", None)?,
+        formation: text_field(fields, "formation", None)?,
+        loa_m: pair_field(fields, "loa_m")?,
+        beam_m: number_arg(
+            fields
+                .get("beam_m")
+                .ok_or_else(|| EvalError::BadInput("`beam_m` is required".into()))?,
+            "beam_m",
+        )?,
+        draught_m: pair_field(fields, "draught_m")?,
+        dwt_t: pair_field(fields, "dwt_t")?,
+        n_abreast: count_field(fields, "n_abreast")?,
+        n_in_line: count_field(fields, "n_in_line")?,
+        unit_beam_m: optional_number(fields, "unit_beam_m")?,
+        min_bridge_clearance_m: optional_number(fields, "min_bridge_clearance_m")?,
+        moulded_depth_m: optional_number(fields, "moulded_depth_m")?,
+        source: text_field(fields, "source", Some(""))?,
+        cargo_modes,
+        notes: text_field(fields, "notes", Some(""))?,
+    })
+}
+
+fn vessel_standards(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        "get_standard" => {
+            match ovcd_core::vessel_standards::get_standard(str_arg(args, "standard_id")?) {
+                Ok(s) => ok(standard_json(&s)),
+                Err(message) => key_error(&message),
+            }
+        }
+        "standards_for" => {
+            match ovcd_core::vessel_standards::standards_for(str_arg(args, "cargo_mode")?) {
+                Ok(list) => ok(Value::Array(list.iter().map(standard_json).collect())),
+                Err(message) => value_error(message),
+            }
+        }
+        "validate_catalogue" => {
+            let mut catalogue: Catalogue = ovcd_core::vessel_standards::built_in_catalogue();
+            if let Some(extra) = args.get("extra").and_then(Value::as_object) {
+                for (key, fields) in extra {
+                    let standard = standard_from_fields(fields)?;
+                    // A dict assignment keeps an existing key's position.
+                    match catalogue.iter_mut().find(|(k, _)| k == key) {
+                        Some(slot) => slot.1 = standard,
+                        None => catalogue.push((key.clone(), standard)),
+                    }
+                }
+            }
+            ok(checks_json(
+                &ovcd_core::vessel_standards::validate_catalogue(&catalogue),
+            ))
+        }
+        other => Err(EvalError::BadInput(format!(
+            "vessel_standards has no parity function `{other}`"
         ))),
     }
 }
