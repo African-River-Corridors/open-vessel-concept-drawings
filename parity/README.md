@@ -78,6 +78,27 @@ tolerance is never loosened. A tier-1 or tier-3 case may stay on a knife edge (a
 checks the flip itself, or an input exactly on a rule's bound) only with a `knife_edge` text; the
 test fails if the sweep's own detector flags a tier-1 or tier-3 case that has none.
 
+Input numbers: the driver adapter casts a JSON integer to a float wherever the frozen Python
+dataclass hints `float`, so `"beam": 12` and `"beam": 12.0` give the same Reference Result (`12.0`).
+A non-boolean given for a `bool` field fails regen with a TypeError, because the Rust side rejects it.
+
+Integer range: Python integers are unbounded and the parity format stops at 64 bits (the oracle
+guard and `eval` refuse a larger integer). One rule covers every port:
+
+- **In range, copy Python exactly.** While every integer input, every integer a result or message
+  carries, and every integer compared fits in `i64`, Rust gives Python's answer, including for
+  negative or zero counts. Integer arithmetic is exact: ceiling division does not negate (use
+  `div_euclid` plus a remainder test, so `i64::MIN` works), and an integer that only feeds a float
+  product is summed in `i128` and rounded once to a float, as Python's int-to-float conversion does.
+- **Out of range, fail loudly.** Every integer `+`, `-`, `*` and negation uses checked arithmetic.
+  A value that Python holds but no 64-bit field can (an output count, for example) returns
+  `OverflowError` with one fixed message per module, never a panic and never a wrap.
+- **Inputs.** `eval` refuses an integer input outside `i64` as bad input. No parity case holds one.
+- **Memory.** A count so large that Python's own answer cannot fit in memory (a label list of
+  `10**18` items) is outside parity: Python raises `MemoryError` and no case covers it.
+- **Float to int.** `int(x)` of a finite float that saturates at the `i64` limits is allowed when
+  the integer is only compared with a small integer, so the comparison cannot change.
+
 ## Tasks
 
 ```

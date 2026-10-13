@@ -341,7 +341,7 @@
     {
       "id": "gas/90x14.8x6.5_LPG_propane_auto",
       "tier": 1,
-      "reason": "tier 1: inputs of audited test test_gas_arrangement.py::test_search_beats_the_auto_seed_on_cn_ii (issue #8)",
+      "reason": "tier 1: inputs of audited test test_gas_arrangement.py::test_search_beats_the_auto_seed_on_cn_ii (issue #8) Reference Result changed (issue #13): the driver now casts an integer echoed into the output (loa, wheelhouse_floor_lowered_m) to float, so 90 became 90.0 and 4 became 4.0; no value changed.",
       "input": {
         "fn": "compute",
         "args": {
@@ -373,7 +373,7 @@
     {
       "id": "bauxite/60x11x4",
       "tier": 1,
-      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_bulk_result_is_refused (issue #8)",
+      "reason": "tier 1: inputs of audited test test_gas_stability.py::test_bulk_result_is_refused (issue #8) Reference Result changed (issue #13): the driver now casts an integer echoed into the output (loa, wheelhouse_floor_lowered_m) to float, so 90 became 90.0 and 4 became 4.0; no value changed.",
       "input": {
         "fn": "compute",
         "args": {
