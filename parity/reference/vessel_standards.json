@@ -1300,6 +1300,43 @@
       }
     },
     {
+      "id": "validate_catalogue/convoy_beam_exactly_at_tolerance",
+      "output": {
+        "ok": [
+          {
+            "name": "unique_ids",
+            "ok": true,
+            "message": "every key matches its standard_id",
+            "severity": "error"
+          },
+          {
+            "name": "ranges_ordered",
+            "ok": true,
+            "message": "every (min, max) range is ordered",
+            "severity": "error"
+          },
+          {
+            "name": "positive_dimensions",
+            "ok": true,
+            "message": "all beams and lengths positive",
+            "severity": "error"
+          },
+          {
+            "name": "convoy_beam_consistent",
+            "ok": true,
+            "message": "convoy beam = unit beam x n_abreast",
+            "severity": "error"
+          },
+          {
+            "name": "source_cited",
+            "ok": true,
+            "message": "every class cites its table",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
       "id": "get_standard/sweep/000",
       "output": {
         "ok": {

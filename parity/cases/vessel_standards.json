@@ -421,6 +421,41 @@
       }
     },
     {
+      "id": "validate_catalogue/convoy_beam_exactly_at_tolerance",
+      "tier": 1,
+      "reason": "tier 1: kills mutant `>` to `>=` in the convoy_beam_consistent test: the beam differs from unit beam x n_abreast by exactly 0.05 (review of PR 43)",
+      "knife_edge": "The difference is exactly the 0.05 tolerance: 0.05 x 2 = 0.1 is twice 0.05 in binary, so 0.1 - 0.05 is exactly 0.05 in IEEE doubles, and Python's strict > passes it. Rust does the same IEEE operations, so it lands on the same side; the case exists to check that.",
+      "input": {
+        "fn": "validate_catalogue",
+        "args": {
+          "extra": {
+            "X6": {
+              "standard_id": "X6",
+              "family": "CN",
+              "class_name": "X",
+              "formation": "motor_vessel",
+              "loa_m": [
+                90.0,
+                90.0
+              ],
+              "beam_m": 0.05,
+              "draught_m": [
+                2.5,
+                3.0
+              ],
+              "dwt_t": [
+                1000.0,
+                2000.0
+              ],
+              "n_abreast": 2,
+              "unit_beam_m": 0.05,
+              "source": "test table"
+            }
+          }
+        }
+      }
+    },
+    {
       "id": "get_standard/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
