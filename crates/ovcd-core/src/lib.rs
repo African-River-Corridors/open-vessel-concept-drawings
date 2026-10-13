@@ -11,6 +11,8 @@ extern crate alloc;
 #[cfg(test)]
 extern crate std;
 
+pub mod aft_arrangement;
 pub mod cargo;
 pub mod checks;
+pub mod gas_separation;
 pub mod pyfmt;
