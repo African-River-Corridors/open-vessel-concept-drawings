@@ -4,7 +4,7 @@
     {
       "id": "fit/CN_II_90x14.8_LPG_propane_depth6.5",
       "tier": 1,
-      "reason": "tier 1: inputs of audited test test_gas_arrangement.py::test_cn_ii_benchmark_is_reproduced; test_gas_stability.py::test_cn_ii_passes_the_is_code; test_simulate.py::test_gas_uses_the_search_not_auto (issue #8)",
+      "reason": "tier 1: inputs of audited test test_gas_arrangement.py::test_cn_ii_benchmark_is_reproduced; test_gas_arrangement.py::test_search_beats_the_auto_seed_on_cn_ii; test_gas_stability.py::test_cn_ii_passes_the_is_code; test_simulate.py::test_gas_uses_the_search_not_auto (issue #8; issue #40 moved the fixed-depth search test here from the free-depth case)",
       "input": {
         "fn": "fit",
         "args": {
@@ -23,7 +23,7 @@
     {
       "id": "fit/90x14.8_LPG_propane_free_depth",
       "tier": 1,
-      "reason": "tier 1: inputs of audited test test_gas_arrangement.py::test_search_beats_the_auto_seed_on_cn_ii; test_gas_arrangement.py::test_cn_ii_free_depth_picks_a_passing_hull (issue #8)",
+      "reason": "tier 1: inputs of audited test test_gas_arrangement.py::test_cn_ii_free_depth_picks_a_passing_hull (issue #8; issue #40 moved the fixed-depth search test to fit/CN_II_90x14.8_LPG_propane_depth6.5)",
       "input": {
         "fn": "fit",
         "args": {
@@ -403,7 +403,7 @@
     {
       "id": "fit/sweep/000",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
@@ -417,100 +417,88 @@
           "depths": [
             4.0,
             5.0
-          ]
+          ],
+          "block_coefficient": 0.8548,
+          "max_tank_od_m": 6.5155
         }
       }
     },
     {
       "id": "fit/sweep/001",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
-          "loa": 69.2423,
-          "beam": 10.8486,
-          "cargo": "LPG_butane",
-          "t_max": 2.5648,
+          "loa": 79.4637,
+          "beam": 14.3547,
+          "cargo": "LPG_mix",
+          "t_max": 3.8915,
           "ruleset": "ADN_G",
-          "fill_ratio": 0.9471,
-          "self_propelled": false,
+          "fill_ratio": 0.9507,
+          "self_propelled": true,
           "depths": [
-            4.0,
-            6.0
+            4.5,
+            6.5
           ],
-          "adn_tank_cap_m3": 380.0
+          "adn_tank_cap_m3": 1000.0,
+          "block_coefficient": 0.8077,
+          "max_tank_od_m": 10.1678
         }
       }
     },
     {
       "id": "fit/sweep/002",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
-          "loa": 93.2582,
-          "beam": 15.417,
-          "cargo": "LNG_ethane",
-          "t_max": 4.4199,
+          "loa": 82.6769,
+          "beam": 17.1254,
+          "cargo": "LNG",
+          "t_max": 3.8867,
           "ruleset": "ADN_G",
-          "fill_ratio": 0.9014,
+          "fill_ratio": 0.9552,
           "self_propelled": false,
           "depths": [
             4.0,
             7.0
           ],
-          "adn_tank_cap_m3": 380.0
+          "adn_tank_cap_m3": 380.0,
+          "block_coefficient": 0.7975,
+          "max_tank_od_m": 6.3367
         }
       }
     },
     {
       "id": "fit/sweep/003",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
-          "loa": 104.9884,
-          "beam": 8.2274,
+          "loa": 81.6554,
+          "beam": 13.6926,
           "cargo": "LNG",
-          "t_max": 2.6403,
-          "ruleset": "IGC_2G_EXACT",
-          "fill_ratio": 0.9754,
+          "t_max": 4.0538,
+          "ruleset": "ADN_G",
+          "fill_ratio": 0.9705,
           "self_propelled": false,
           "depths": [
-            5.0,
-            6.0
-          ]
+            4.0,
+            4.5
+          ],
+          "adn_tank_cap_m3": 380.0,
+          "block_coefficient": 0.8437,
+          "max_tank_od_m": 11.1358
         }
       }
     },
     {
       "id": "fit/sweep/004",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
-      "input": {
-        "fn": "fit",
-        "args": {
-          "loa": 107.6629,
-          "beam": 14.2152,
-          "cargo": "LPG_propane",
-          "t_max": 2.8656,
-          "ruleset": "IGC_2G_EXACT",
-          "fill_ratio": 0.9632,
-          "self_propelled": true,
-          "depths": [
-            4.0,
-            5.5
-          ]
-        }
-      }
-    },
-    {
-      "id": "fit/sweep/005",
-      "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
@@ -524,135 +512,174 @@
           "depths": [
             5.5,
             6.0
-          ]
+          ],
+          "block_coefficient": 0.8411,
+          "max_tank_od_m": 9.4701
+        }
+      }
+    },
+    {
+      "id": "fit/sweep/005",
+      "tier": 2,
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "loa": 104.008,
+          "beam": 12.2265,
+          "cargo": "LPG_mix",
+          "t_max": 4.5407,
+          "ruleset": "IGC_2G_EXACT",
+          "fill_ratio": 0.979,
+          "self_propelled": true,
+          "depths": [
+            4.0,
+            7.0
+          ],
+          "block_coefficient": 0.8642,
+          "max_tank_od_m": 10.8366
         }
       }
     },
     {
       "id": "fit/sweep/006",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
-          "loa": 118.4131,
-          "beam": 13.8988,
+          "loa": 102.9493,
+          "beam": 9.5409,
           "cargo": "LPG_butane",
-          "t_max": 3.5566,
-          "ruleset": "IGC_2G_EXACT",
-          "fill_ratio": 0.9404,
-          "self_propelled": true,
+          "t_max": 2.8703,
+          "ruleset": "ADN_G",
+          "fill_ratio": 0.903,
+          "self_propelled": false,
           "depths": [
-            4.5,
-            5.5
-          ]
+            6.5,
+            7.0
+          ],
+          "adn_tank_cap_m3": 380.0,
+          "block_coefficient": 0.8718,
+          "max_tank_od_m": 8.1316
         }
       }
     },
     {
       "id": "fit/sweep/007",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
-          "loa": 94.0796,
-          "beam": 16.061,
-          "cargo": "LNG_ethane",
-          "t_max": 4.676,
+          "loa": 56.8471,
+          "beam": 9.4707,
+          "cargo": "LNG",
+          "t_max": 3.5885,
           "ruleset": "IGC_2G",
-          "fill_ratio": 0.9119,
+          "fill_ratio": 0.939,
           "self_propelled": true,
           "depths": [
-            5.0,
-            5.5
-          ]
+            6.0,
+            7.0
+          ],
+          "block_coefficient": 0.7826,
+          "max_tank_od_m": 10.1173
         }
       }
     },
     {
       "id": "fit/sweep/008",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
-          "loa": 92.7246,
-          "beam": 14.558,
-          "cargo": "LPG_propane",
-          "t_max": 2.5125,
+          "loa": 103.001,
+          "beam": 9.6873,
+          "cargo": "LNG_ethane",
+          "t_max": 3.4492,
           "ruleset": "ADN_G",
-          "fill_ratio": 0.9023,
-          "self_propelled": true,
+          "fill_ratio": 0.9679,
+          "self_propelled": false,
           "depths": [
-            6.0,
+            4.0,
             6.5
           ],
-          "adn_tank_cap_m3": 380.0
+          "adn_tank_cap_m3": 1000.0,
+          "block_coefficient": 0.9195,
+          "max_tank_od_m": 10.4701
         }
       }
     },
     {
       "id": "fit/sweep/009",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
-          "loa": 76.482,
-          "beam": 13.2392,
-          "cargo": "LNG_ethane",
-          "t_max": 3.9843,
-          "ruleset": "IGC_2G_EXACT",
-          "fill_ratio": 0.9015,
+          "loa": 116.7777,
+          "beam": 10.8495,
+          "cargo": "LPG_mix",
+          "t_max": 3.5027,
+          "ruleset": "ADN_G",
+          "fill_ratio": 0.9277,
           "self_propelled": true,
           "depths": [
-            4.0,
+            5.5,
             6.5
-          ]
+          ],
+          "adn_tank_cap_m3": 1000.0,
+          "block_coefficient": 0.9007,
+          "max_tank_od_m": 6.8035
         }
       }
     },
     {
       "id": "fit/sweep/010",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
-          "loa": 75.7441,
-          "beam": 16.9654,
+          "loa": 106.8651,
+          "beam": 13.1462,
           "cargo": "LPG_mix",
-          "t_max": 3.8332,
-          "ruleset": "IGC_2G_EXACT",
-          "fill_ratio": 0.9521,
+          "t_max": 4.2619,
+          "ruleset": "ADN_G",
+          "fill_ratio": 0.9326,
           "self_propelled": true,
           "depths": [
-            4.0,
-            5.0
-          ]
+            6.5,
+            7.0
+          ],
+          "adn_tank_cap_m3": 380.0,
+          "block_coefficient": 0.7849,
+          "max_tank_od_m": 11.5542
         }
       }
     },
     {
       "id": "fit/sweep/011",
       "tier": 2,
-      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
+      "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013); last changed: issue #40: the block coefficient and the tank diameter cap are varied, not left at their defaults",
       "input": {
         "fn": "fit",
         "args": {
-          "loa": 99.7715,
-          "beam": 11.2526,
-          "cargo": "LNG",
-          "t_max": 3.2604,
-          "ruleset": "ADN_G",
-          "fill_ratio": 0.9495,
-          "self_propelled": true,
+          "loa": 97.7374,
+          "beam": 8.696,
+          "cargo": "LPG_mix",
+          "t_max": 3.003,
+          "ruleset": "IGC_2G_EXACT",
+          "fill_ratio": 0.9114,
+          "self_propelled": false,
           "depths": [
-            4.5,
-            7.0
+            5.5,
+            6.5
           ],
-          "adn_tank_cap_m3": 380.0
+          "block_coefficient": 0.8102,
+          "max_tank_od_m": 6.3072
         }
       }
     },

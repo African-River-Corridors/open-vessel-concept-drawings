@@ -223,6 +223,7 @@
       "id": "calculate_tank_arrangement/error/no_beam_left",
       "tier": 3,
       "reason": "tier 3: error path: tank outer diameter <= 0",
+      "knife_edge": "the error message prints the beam, side clearance and gap inputs as raw floats, so any nudge changes the text; no branch is near its edge, and Rust prints the same decimal inputs the same way (Python float formatting helper)",
       "input": {
         "fn": "calculate_tank_arrangement",
         "args": {

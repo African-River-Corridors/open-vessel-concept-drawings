@@ -4,7 +4,8 @@
 //!   every case through the frozen Python and rewrite `parity/reference/`. The only way tier-2
 //!   cases and Reference Results may change. Needs Python, never a maturin build.
 //! - `oracle-guard [--base <ref>]`: fail if the parity oracle changed without `regen` and a
-//!   recorded reason per changed case (see `oracle.rs`).
+//!   recorded reason per changed case, or the generator (driver, sweep, frozen Python) changed
+//!   without a recorded reason (see `oracle.rs`).
 //! - `mutants [--base <ref>] [--out <file>]`: run cargo-mutants on the `ovcd-core` code this branch
 //!   changed and write a short killed / survived / timeout report.
 //! - `gates`: run the fail-closed fast gate, `tools/gates.sh`.
@@ -121,19 +122,56 @@ fn json_files(dir: &Path) -> Vec<PathBuf> {
     files
 }
 
-fn head_tree() -> Result<oracle::Tree> {
-    let root = root();
-    let mut tree = oracle::Tree::new();
-    for dir in [oracle::CASES_DIR, oracle::REFERENCE_DIR] {
-        for path in json_files(&root.join(dir)) {
-            let name = path.file_name().unwrap_or_default().to_string_lossy();
-            let text = std::fs::read_to_string(&path).map_err(|e| format!("{path:?}: {e}"))?;
-            tree.insert(format!("{dir}{name}"), text);
+/// File bytes as tree text: UTF-8 as is, anything else as `bytes:` plus hex, so no two different
+/// files compare equal.
+fn tree_text(bytes: Vec<u8>) -> String {
+    match String::from_utf8(bytes) {
+        Ok(text) => text,
+        Err(e) => {
+            let hex: String = e.into_bytes().iter().map(|b| format!("{b:02x}")).collect();
+            format!("bytes:{hex}")
         }
     }
-    for file in [oracle::TOLERANCE, oracle::PORTED] {
-        if let Ok(text) = std::fs::read_to_string(root.join(file)) {
-            tree.insert(file.to_string(), text);
+}
+
+fn git_bytes(args: &[&str]) -> Result<Vec<u8>> {
+    let mut cmd = Command::new("git");
+    cmd.current_dir(root()).args(args);
+    let out = cmd
+        .output()
+        .map_err(|e| format!("cannot run {cmd:?}: {e}"))?;
+    if !out.status.success() {
+        return Err(format!(
+            "{cmd:?} failed ({}):\n{}",
+            out.status,
+            String::from_utf8_lossy(&out.stderr)
+        ));
+    }
+    Ok(out.stdout)
+}
+
+/// Every guarded file in the working tree, at any depth: tracked files plus untracked files that
+/// git does not ignore, so a new nested case file or a new frozen-source file is seen.
+fn head_tree() -> Result<oracle::Tree> {
+    let root = root();
+    let listing = git(&[
+        "ls-files",
+        "-z",
+        "--cached",
+        "--others",
+        "--exclude-standard",
+        "--",
+        "parity",
+    ])?;
+    let mut tree = oracle::Tree::new();
+    for path in listing.split('\0').filter(|p| oracle::is_guarded(p)) {
+        match std::fs::read(root.join(path)) {
+            Ok(bytes) => {
+                tree.insert(path.to_string(), tree_text(bytes));
+            }
+            // Listed by the index but deleted in the working tree: absent at head.
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+            Err(e) => return Err(format!("{path}: {e}")),
         }
     }
     Ok(tree)
@@ -141,10 +179,10 @@ fn head_tree() -> Result<oracle::Tree> {
 
 fn base_tree(sha: &str) -> Result<oracle::Tree> {
     let mut tree = oracle::Tree::new();
-    for path in git(&["ls-tree", "-r", "--name-only", sha, "--", "parity"])?.lines() {
-        if oracle::is_guarded(path) && path.ends_with(".json") {
-            tree.insert(path.to_string(), git(&["show", &format!("{sha}:{path}")])?);
-        }
+    let listing = git(&["ls-tree", "-r", "-z", "--name-only", sha, "--", "parity"])?;
+    for path in listing.split('\0').filter(|p| oracle::is_guarded(p)) {
+        let bytes = git_bytes(&["show", &format!("{sha}:{path}")])?;
+        tree.insert(path.to_string(), tree_text(bytes));
     }
     Ok(tree)
 }
@@ -197,7 +235,7 @@ fn oracle_guard(args: &[String]) -> Result {
     violations.extend(reproduces()?);
     if violations.is_empty() {
         println!(
-            "oracle guard: parity oracle changed against {base} ({sha:.12}); every change came from `cargo xtask regen` and carries a recorded reason."
+            "oracle guard: parity oracle or generator changed against {base} ({sha:.12}); every change came from `cargo xtask regen` and carries a recorded reason."
         );
         return Ok(());
     }

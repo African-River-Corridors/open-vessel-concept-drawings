@@ -3939,6 +3939,15 @@
       }
     },
     {
+      "id": "simulate/error/negative_beam",
+      "output": {
+        "error": {
+          "type": "ValueError",
+          "message": "beam and depth must be positive"
+        }
+      }
+    },
+    {
       "id": "simulate/sweep/000",
       "output": {
         "ok": {

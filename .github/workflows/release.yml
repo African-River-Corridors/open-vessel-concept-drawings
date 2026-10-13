@@ -66,7 +66,8 @@ jobs:
           "$PY" -m pip install --only-binary :all: --no-index --no-deps --find-links dist vessel-designer
           "$PY" -m pip check
           # Test from a scratch copy so the checkout's src/ cannot shadow the installed wheel.
-          # Tests that read the repo itself (workflows, tools, parity, calibration) run in `test`.
+          # Tests that read the repo itself (workflows, tools, src/, parity, calibration) run in `test`;
+          # a test that scans a file list asserts the list is not empty, so it cannot pass here.
           mkdir "$RUNNER_TEMP/wheel-check"
           cp -r tests examples calibration catalogue "$RUNNER_TEMP/wheel-check/"
           cd "$RUNNER_TEMP/wheel-check"
@@ -76,7 +77,8 @@ jobs:
             --ignore=tests/test_release_guard.py --ignore=tests/test_gates_fail_closed.py \
             --ignore=tests/test_parity_driver.py --ignore=tests/test_frozen_reference.py \
             --ignore=tests/test_parity_cases.py \
-            --ignore=tests/test_calibration_runs.py
+            --ignore=tests/test_calibration_runs.py \
+            --ignore=tests/test_core_boundary.py --ignore=tests/test_test_audit.py
       - uses: actions/upload-artifact@v4
         with:
           name: wheel-${{ matrix.os }}

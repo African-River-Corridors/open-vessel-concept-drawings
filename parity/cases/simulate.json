@@ -156,6 +156,24 @@
       }
     },
     {
+      "id": "simulate/error/negative_beam",
+      "tier": 3,
+      "reason": "tier 3: error path: a negative beam raises ValueError in the gas fit (the other simulate error cases return an error value; issue #40)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "vessel": "gas_barge",
+            "cargo": "LPG_propane",
+            "loa_m": 90,
+            "beam_m": -14.8,
+            "depth_m": 6.5,
+            "cb": 0.85
+          }
+        }
+      }
+    },
+    {
       "id": "simulate/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",

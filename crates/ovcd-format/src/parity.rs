@@ -4,6 +4,7 @@
 //! - Everything discrete matches exactly: integers, booleans, strings (including messages), null,
 //!   list length and order, object keys.
 //! - An integer never matches a float, so a Python `int` result stays an `int`.
+//! - An integer outside the 64-bit range is refused by [`parse`]: it would read as a float.
 //! - NaN and infinity are the tagged strings `"float:nan"`, `"float:inf"`, `"float:-inf"`, and so
 //!   match exactly.
 //!
@@ -37,6 +38,45 @@ impl Tolerance {
     pub fn close(&self, a: f64, b: f64) -> bool {
         a == b || (a - b).abs() <= (self.rel * a.abs().max(b.abs())).max(self.abs)
     }
+}
+
+/// Parse a parity file or an `eval` output. Refuses an integer outside the 64-bit range
+/// (`i64::MIN..=u64::MAX`): `serde_json` would read it as a float, so two different big integers
+/// would compare equal.
+pub fn parse(text: &str) -> Result<Value, String> {
+    let value: Value = serde_json::from_str(text).map_err(|e| e.to_string())?;
+    // The text is valid JSON now, so outside a string a `-` or a digit starts a number.
+    let bytes = text.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'"' => {
+                i += 1;
+                while bytes[i] != b'"' {
+                    i += if bytes[i] == b'\\' { 2 } else { 1 };
+                }
+                i += 1;
+            }
+            b'-' | b'0'..=b'9' => {
+                let start = i;
+                while i < bytes.len()
+                    && matches!(bytes[i], b'-' | b'+' | b'.' | b'e' | b'E' | b'0'..=b'9')
+                {
+                    i += 1;
+                }
+                let token = &text[start..i];
+                let integer = !token.contains(['.', 'e', 'E']);
+                let fits = token.parse::<i64>().is_ok() || token.parse::<u64>().is_ok();
+                if integer && !fits {
+                    return Err(format!(
+                        "integer {token} is outside the 64-bit range; it would compare as a float, so it is refused"
+                    ));
+                }
+            }
+            _ => i += 1,
+        }
+    }
+    Ok(value)
 }
 
 /// Compare `actual` (from `eval`) with `expected` (the Reference Result). On a mismatch, returns
@@ -166,6 +206,34 @@ mod tests {
             diffs.contains(&"$.ok.extra: unexpected".to_string()),
             "{diffs:?}"
         );
+    }
+
+    #[test]
+    fn integers_above_the_64_bit_range_are_refused() {
+        // Without the refusal both parse to the same f64 and compare equal.
+        for text in [
+            "100000000000000000000",
+            "100000000000000000001",
+            r#"{"ok": [1, -9223372036854775809]}"#,
+            r#"{"ok": {"n": 18446744073709551616}}"#,
+        ] {
+            let err = parse(text).unwrap_err();
+            assert!(err.contains("64-bit"), "{text}: {err}");
+        }
+    }
+
+    #[test]
+    fn numbers_inside_the_64_bit_range_and_big_floats_parse() {
+        let v = parse(
+            r#"{"ok": [18446744073709551615, -9223372036854775808, 1e+20, 1.5E300, -0.0,
+                "100000000000000000000", "a \" 100000000000000000000"]}"#,
+        )
+        .unwrap();
+        assert_eq!(v["ok"][0], json!(18446744073709551615u64));
+        assert_eq!(v["ok"][1], json!(i64::MIN));
+        assert_eq!(v["ok"][2], json!(1e20));
+        assert_eq!(v["ok"][5], json!("100000000000000000000"));
+        assert!(parse("{not json").is_err());
     }
 
     #[test]
