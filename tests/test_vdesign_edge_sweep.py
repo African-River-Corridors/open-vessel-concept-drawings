@@ -1,0 +1,237 @@
+"""Validation is the only guard (issue #24): a file `ovcd validate` passes with 0 errors never makes
+the frozen Python `simulate` raise.
+
+Label: property
+Parity: none (a sweep over the Defaults Profile's hard-range edges, not a calculation input)
+
+The sweep is seeded, so it is the same every run. It writes one Design whose Options sit at the
+hard-range edges of the built-in Defaults Profile, just inside and just outside them, at the soft
+edges and in between, and at the cross-check boundaries (channel depth equal to its clearance,
+freeboard just below the moulded depth). It runs the real `ovcd validate` on the file and feeds every
+Option with 0 errors to the frozen `simulate` (`parity/frozen_python`). None may raise.
+
+Risk stopped: an input combination the core refuses with an exception gets past validation, so a
+"valid" Design crashes the engine.
+"""
+import json
+import math
+import random
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+SEED = 24
+OPTIONS = 3000
+
+# Glossary input name -> frozen `simulate` key. A small test helper only; the full mapping belongs
+# to the engine tickets (#23, #25).
+TOP_LEVEL = {
+    "cargo": "cargo",
+    "length_overall_m": "loa_m",
+    "beam_m": "beam_m",
+    "moulded_depth_m": "depth_m",
+    "block_coefficient": "cb",
+    "min_freeboard_m": "freeboard_min_m",
+    "lightship_factor_t_per_m3": "lightship_k_t_per_m3",
+    "ruleset": "ruleset",
+    "fill_ratio": "fill_ratio",
+    "adn_tank_cap_m3": "adn_tank_cap_m3",
+    "optimise_depth": "optimise_depth",
+    "propulsive_efficiency": "eta_d",
+    "max_speed_kn": "speed_max_kn",
+    "air_draft_limit_m": "air_draft_limit_m",
+    "draught_limit_m": "draught_limit_m",
+}
+CHANNEL = {
+    "channel_depth_m": "depth_m",
+    "channel_under_keel_clearance_m": "ukc_m",
+    "channel_bottom_width_m": "bottom_width_m",
+    "channel_bank_slope": "bank_slope",
+    "channel_current_kn": "current_kn",
+}
+VESSEL = {"box_hold": "box_barge", "sloped_hopper_hold": "hopper_barge",
+          "type_c_tanks": "gas_barge"}
+CARGOS = {"dry_bulk": ["bauxite"], "liquid_gas": ["LNG", "LNG_ethane", "LPG_propane",
+                                                  "LPG_butane", "LPG_mix"]}
+CONTAINMENT_PHASE = {"box_hold": "dry_bulk", "sloped_hopper_hold": "dry_bulk",
+                     "type_c_tanks": "liquid_gas"}
+ONLY_FOR = {"lightship_factor_t_per_m3": "box_hold", "ruleset": "type_c_tanks",
+            "fill_ratio": "type_c_tanks", "adn_tank_cap_m3": "type_c_tanks",
+            "optimise_depth": "type_c_tanks"}
+NULLABLE = {"air_draft_limit_m", "draught_limit_m", "channel_depth_m", "channel_bottom_width_m"}
+# The deepest hull the gas depth search tries (the frozen core's DEFAULT_DEPTHS_M ends at 7.0 m).
+DEPTH_SEARCH_MAX_M = 7.0
+NUMBERS = [n for n in list(TOP_LEVEL) + list(CHANNEL)
+           if n not in ("cargo", "ruleset", "optimise_depth")]
+
+
+def to_simulate(inputs: dict) -> dict:
+    """An Option's inputs (glossary names) as the frozen `simulate` parameters."""
+    p = {"vessel": VESSEL[inputs["cargo_containment"]],
+         "self_propelled": inputs["formation"]["kind"] == "self_propelled"}
+    for name, key in TOP_LEVEL.items():
+        if name in inputs:
+            p[key] = inputs[name]
+    p["channel"] = {key: inputs[name] for name, key in CHANNEL.items()}
+    return p
+
+
+@pytest.fixture(scope="module")
+def ovcd() -> str:
+    """Build the `ovcd` binary and return its path."""
+    out = subprocess.run(
+        ["cargo", "build", "-q", "-p", "ovcd-cli", "--bin", "ovcd", "--message-format=json"],
+        cwd=ROOT, check=True, capture_output=True, text=True).stdout
+    exes = [m["executable"] for m in map(json.loads, out.splitlines())
+            if m.get("reason") == "compiler-artifact" and m.get("executable")]
+    assert exes, "cargo built no ovcd binary"
+    return exes[-1]
+
+
+def candidates(entry: dict, rng: random.Random) -> list:
+    """(inside, outside): values at, just inside and just outside the hard range, at the soft
+    edges and between. An edge value goes to whichever side the hard range puts it."""
+    hard, soft = entry.get("hard", {}), entry["soft"]
+    vals = [soft["min"], soft["max"], rng.uniform(soft["min"], soft["max"]),
+            rng.uniform(soft["min"], soft["max"]), soft["max"] * 3, soft["max"] * 10]
+    if "default" in entry and entry["default"] is not None:
+        vals.append(entry["default"])
+    for key, inward in (("gt", math.inf), ("ge", math.inf), ("lt", -math.inf), ("le", -math.inf)):
+        if key in hard:
+            b = hard[key]
+            vals += [b, math.nextafter(b, inward), math.nextafter(b, -inward),
+                     b + (1e-3 if inward > 0 else -1e-3)]
+            lo = b if inward > 0 else soft["min"]
+            hi = soft["max"] if inward > 0 else b
+            vals.append(rng.uniform(min(lo, hi), max(lo, hi)))
+    ops = {"gt": float.__gt__, "ge": float.__ge__, "lt": float.__lt__, "le": float.__le__}
+    inside = [v for v in vals if all(ops[k](float(v), b) for k, b in hard.items())]
+    outside = [v for v in vals if v not in inside]
+    return inside, outside
+
+
+def sweep_options(profile: dict) -> list:
+    rng = random.Random(SEED)
+    entries = profile["inputs"]
+    cand = {n: candidates(entries[n], rng) for n in NUMBERS}
+    formations = [{"kind": "pushed_barge"}, {"kind": "self_propelled"},
+                  {"kind": "pushed_convoy", "abreast": 2, "in_line": 3}]
+    options = []
+    for i in range(OPTIONS):
+        containment = rng.choice(list(VESSEL))
+        inputs = {
+            "cargo": rng.choice(CARGOS[CONTAINMENT_PHASE[containment]]),
+            "hull_form": "raked_box",
+            "formation": rng.choice(formations),
+            "cargo_containment": containment,
+        }
+        for name in NUMBERS:
+            if ONLY_FOR.get(name, containment) != containment:
+                continue
+            if name in NULLABLE and rng.random() < 0.25:
+                inputs[name] = None
+            else:
+                inside, outside = cand[name]
+                inputs[name] = rng.choice(outside if outside and rng.random() < 0.03 else inside)
+        if containment == "type_c_tanks":
+            inputs["ruleset"] = rng.choice(["IGC_2G", "IGC_2G_EXACT", "ADN_G"])
+            inputs["optimise_depth"] = rng.random() < 0.3
+        # The cross-check boundaries, which a random pick would rarely hit.
+        roll = rng.random()
+        if roll < 0.15 and inputs["channel_depth_m"] is not None:
+            inputs["channel_depth_m"] = inputs["channel_under_keel_clearance_m"]
+        elif roll < 0.25 and inputs["channel_depth_m"] is not None:
+            inputs["channel_depth_m"] = math.nextafter(
+                inputs["channel_under_keel_clearance_m"], -math.inf)
+        elif roll < 0.35:
+            inputs["min_freeboard_m"] = math.nextafter(inputs["moulded_depth_m"], 0.0)
+        elif roll < 0.4:
+            inputs["min_freeboard_m"] = inputs["moulded_depth_m"]
+        elif roll < 0.5 and inputs.get("optimise_depth"):
+            inputs["moulded_depth_m"] = 12.0
+            inputs["min_freeboard_m"] = rng.choice(
+                [DEPTH_SEARCH_MAX_M, math.nextafter(DEPTH_SEARCH_MAX_M, math.inf)])
+        options.append({"name": f"S{i:04d}",
+                        "inputs": {k: {"value": v, "source": "typed"} for k, v in inputs.items()}})
+    return options + boundary_options()
+
+
+# The built-in defaults, written out so each boundary Option holds every input.
+TYPICAL = {"block_coefficient": 0.85, "min_freeboard_m": 0.3, "lightship_factor_t_per_m3": 0.1093,
+           "ruleset": "IGC_2G_EXACT", "fill_ratio": 0.98, "adn_tank_cap_m3": 1000.0,
+           "optimise_depth": False, "propulsive_efficiency": 0.45, "max_speed_kn": 10.0,
+           "air_draft_limit_m": None, "draught_limit_m": None, "channel_depth_m": None,
+           "channel_under_keel_clearance_m": 0.5, "channel_bank_slope": 3.0,
+           "channel_current_kn": 0.0}
+
+
+def boundary_options() -> list:
+    """Each cross-check exactly at its boundary, for each Cargo Containment. All must pass."""
+    out = []
+    for containment in VESSEL:
+        base = {"cargo": CARGOS[CONTAINMENT_PHASE[containment]][0], "hull_form": "raked_box",
+                "formation": {"kind": "pushed_barge"}, "cargo_containment": containment,
+                "length_overall_m": 76.5, "beam_m": 11.4, "moulded_depth_m": 3.5,
+                "channel_bottom_width_m": 60.0}
+        base.update({k: v for k, v in TYPICAL.items() if ONLY_FOR.get(k, containment) == containment})
+        cases = [
+            {"channel_depth_m": 0.5, "channel_under_keel_clearance_m": 0.5},
+            {"channel_depth_m": 2.0, "channel_under_keel_clearance_m": 2.0},
+            {"channel_depth_m": 0.1, "channel_under_keel_clearance_m": 0.1},
+            {"channel_depth_m": 3.0, "block_coefficient": 0.3},
+            {"min_freeboard_m": math.nextafter(3.5, 0.0)},
+        ]
+        if containment == "type_c_tanks":
+            cases.append({"moulded_depth_m": 12.0, "optimise_depth": True,
+                          "min_freeboard_m": DEPTH_SEARCH_MAX_M})
+        for j, case in enumerate(cases):
+            inputs = {**base, **case}
+            out.append({"name": f"B{containment[:4]}{j}",
+                        "inputs": {k: {"value": v, "source": "typed"} for k, v in inputs.items()}})
+    return out
+
+
+def test_every_option_validate_passes_runs_in_the_frozen_simulate(ovcd, tmp_path):
+    profile = json.loads(subprocess.run([ovcd, "profile"], check=True, capture_output=True,
+                                        text=True).stdout)
+    options = sweep_options(profile)
+    design = {"format": "vdesign", "format_version": 1, "engine_version": "0.1.0",
+              "options": options}
+    path = tmp_path / "sweep.vdesign"
+    path.write_text(json.dumps(design), encoding="utf-8")
+    out = subprocess.run([ovcd, "validate", str(path)], capture_output=True, text=True)
+    refused = set(re.findall(r"^error: Option '(\w+)':", out.stdout, re.M))
+    assert out.returncode in (0, 1), out.stdout + out.stderr
+
+    passed = [o for o in options if o["name"] not in refused]
+    boundaries = sorted(n for n in refused if n.startswith("B"))
+    assert not boundaries, f"boundary Options were refused: {boundaries}\n{out.stdout}"
+    # The sweep must exercise both sides of the guard, or it proves nothing.
+    assert len(passed) >= 200, f"only {len(passed)} Options passed validation"
+    assert len(refused) >= 200, f"only {len(refused)} Options were refused"
+
+    sys.path.insert(0, str(ROOT / "parity" / "frozen_python"))
+    try:
+        from vessel_designer_frozen.simulate import simulate
+    finally:
+        sys.path.pop(0)
+    raised = []
+    for o in passed:
+        inputs = {k: v["value"] for k, v in o["inputs"].items()}
+        try:
+            simulate(to_simulate(inputs))
+        except Exception as exc:  # noqa: BLE001 - any exception breaks the rule
+            raised.append(f"{o['name']}: {type(exc).__name__}: {exc}\n  {json.dumps(inputs)}")
+    assert not raised, f"{len(raised)} valid Option(s) made simulate raise:\n" + "\n".join(
+        raised[:10])
+    # Every just-inside hard edge of every number appears in at least one valid Option.
+    seen = {n: {o["inputs"][n]["value"] for o in passed if n in o["inputs"]} for n in NUMBERS}
+    for name in NUMBERS:
+        for key, b in profile["inputs"][name].get("hard", {}).items():
+            edge = b if key in ("ge", "le") else math.nextafter(
+                b, math.inf if key == "gt" else -math.inf)
+            assert edge in seen[name], f"no valid Option holds {name} = {edge} ({key} {b})"

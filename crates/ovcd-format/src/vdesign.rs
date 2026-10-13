@@ -47,6 +47,10 @@ pub const KEYED_DEFAULTS: &[(&str, &str, &[&str])] = &[
 /// Hull Forms that exist today.
 pub const HULL_FORMS: &[&str] = &["raked_box"];
 
+/// The deepest hull the gas depth search (`optimise_depth`) tries, in m. It is fixed in the core
+/// (`DEFAULT_DEPTHS_M`, 3.5 to 7.0 m).
+pub const DEPTH_SEARCH_MAX_M: f64 = 7.0;
+
 /// Gas tank rulesets.
 pub const RULESETS: &[&str] = &["IGC_2G", "IGC_2G_EXACT", "ADN_G"];
 
@@ -739,6 +743,28 @@ fn cross_checks(
     {
         report.errors.push(at(format!(
             "`min_freeboard_m` = {fb} must be less than `moulded_depth_m` = {d} (hard limit)"
+        )));
+    }
+    // The depth search tries hulls up to a fixed depth; above it no searched hull keeps the
+    // freeboard, and the core raises when no waterway limit caps the draught.
+    if get("optimise_depth").and_then(Value::as_bool) == Some(true)
+        && let Some(fb) = get("min_freeboard_m").and_then(Value::as_f64)
+        && fb > DEPTH_SEARCH_MAX_M
+    {
+        report.errors.push(at(format!(
+            "`min_freeboard_m` = {fb} must be at most {DEPTH_SEARCH_MAX_M}, the deepest hull \
+             `optimise_depth` searches (hard limit)"
+        )));
+    }
+    // A channel shallower than its own clearance leaves no water to float in.
+    if let (Some(depth), Some(ukc)) = (
+        get("channel_depth_m").and_then(Value::as_f64),
+        get("channel_under_keel_clearance_m").and_then(Value::as_f64),
+    ) && depth < ukc
+    {
+        report.errors.push(at(format!(
+            "`channel_depth_m` = {depth} must be at least `channel_under_keel_clearance_m` = \
+             {ukc} (hard limit)"
         )));
     }
 }

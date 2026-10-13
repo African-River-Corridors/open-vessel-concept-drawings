@@ -14,4 +14,4 @@ repository = "https://github.com/African-River-Corridors/open-vessel-concept-dra
 [workspace.dependencies]
 ovcd-core = { path = "crates/ovcd-core" }
 ovcd-format = { path = "crates/ovcd-format" }
-serde_json = "1"
+serde_json = { version = "1", features = ["float_roundtrip"] }  # read every number exactly as written

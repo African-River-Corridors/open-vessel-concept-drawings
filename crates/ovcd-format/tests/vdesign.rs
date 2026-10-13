@@ -212,12 +212,16 @@ fn a_text_where_a_number_belongs_is_refused() {
 }
 
 #[test]
-fn zero_length_is_refused_but_a_tiny_one_only_warns() {
-    let e = errors(with(required("bauxite"), "length_overall_m", json!(0.0)));
+fn a_length_under_one_metre_is_refused_but_a_short_one_only_warns() {
+    let e = errors(with(required("bauxite"), "length_overall_m", json!(0.999)));
     assert!(
-        has(&e, "`length_overall_m` = 0 is out of range: must be > 0"),
+        has(
+            &e,
+            "`length_overall_m` = 0.999 is out of range: must be >= 1"
+        ),
         "{e:?}"
     );
+    assert!(errors(with(required("bauxite"), "length_overall_m", json!(1.0))).is_empty());
     let small = with(required("bauxite"), "length_overall_m", json!(12.0));
     assert!(errors(small.clone()).is_empty());
     assert!(has(
@@ -458,12 +462,19 @@ fn a_hard_lt_bound_refuses_the_bound_itself() {
 
 #[test]
 fn a_hard_gt_bound_refuses_the_bound_itself() {
-    let e = errors(with(required("bauxite"), "beam_m", json!(0.0)));
+    let e = errors(with(required("bauxite"), "air_draft_limit_m", json!(0.0)));
     assert!(
-        has(&e, "`beam_m` = 0 is out of range: must be > 0"),
+        has(&e, "`air_draft_limit_m` = 0 is out of range: must be > 0"),
         "{e:?}"
     );
-    assert!(errors(with(required("bauxite"), "beam_m", json!(0.0001))).is_empty());
+    assert!(
+        errors(with(
+            required("bauxite"),
+            "air_draft_limit_m",
+            json!(0.0001)
+        ))
+        .is_empty()
+    );
 }
 
 #[test]
@@ -558,4 +569,76 @@ fn show_writes_a_formation_as_a_person_reads_it() {
     assert_eq!(show(&Value::Null), "none");
     assert_eq!(show(&json!(11.4)), "11.4");
     assert_eq!(show(&json!("bauxite")), "bauxite");
+}
+
+// A profile may tighten a hard range but never loosen it. Built-in: `block_coefficient` is
+// `>= 0.3, <= 1`; `propulsive_efficiency` is `> 0, < 1`.
+
+fn loads_with_hard(name: &str, hard: Value) -> bool {
+    let mut p: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
+    p["inputs"][name]["hard"] = hard;
+    match Profile::from_json(&p.to_string()) {
+        Ok(_) => true,
+        Err(e) => {
+            assert!(e.contains("profile loosens the hard range"), "{e}");
+            false
+        }
+    }
+}
+
+#[test]
+fn a_profile_hard_range_is_refused_when_it_admits_a_value_the_built_in_refuses() {
+    let looser = [
+        ("block_coefficient", json!({ "gt": 0, "le": 1 })),
+        ("block_coefficient", json!({ "ge": 0.3, "le": 1.5 })),
+        (
+            "block_coefficient",
+            json!({ "ge": 0.25, "gt": 0.2, "le": 1 }),
+        ),
+        ("propulsive_efficiency", json!({ "gt": 0, "lt": 2 })),
+        // Same value, but the bound now admits it: `>= 0` where the built-in says `> 0`.
+        ("propulsive_efficiency", json!({ "ge": 0, "lt": 1 })),
+        ("propulsive_efficiency", json!({ "gt": 0, "le": 1 })),
+    ];
+    for (name, hard) in looser {
+        assert!(!loads_with_hard(name, hard.clone()), "{name} {hard} loaded");
+    }
+}
+
+#[test]
+fn a_profile_hard_range_that_admits_only_values_the_built_in_admits_loads() {
+    let tighter = [
+        ("block_coefficient", json!({ "ge": 0.3, "le": 1 })),
+        ("block_coefficient", json!({ "gt": 0.3, "le": 0.9 })),
+        // Both bounds apply, so the tighter one governs, whichever kind it is.
+        (
+            "block_coefficient",
+            json!({ "gt": 0.1, "ge": 0.4, "le": 1 }),
+        ),
+        (
+            "block_coefficient",
+            json!({ "gt": 0.4, "ge": 0.1, "le": 1 }),
+        ),
+        (
+            "block_coefficient",
+            json!({ "ge": 0.3, "lt": 2, "le": 0.9 }),
+        ),
+        (
+            "block_coefficient",
+            json!({ "ge": 0.3, "lt": 0.9, "le": 2 }),
+        ),
+        // Two bounds at the same value: the strict one governs.
+        (
+            "propulsive_efficiency",
+            json!({ "gt": 0, "ge": 0, "lt": 1 }),
+        ),
+        (
+            "propulsive_efficiency",
+            json!({ "gt": 0, "lt": 1, "le": 1 }),
+        ),
+        ("propulsive_efficiency", json!({ "gt": 0, "lt": 0.5 })),
+    ];
+    for (name, hard) in tighter {
+        assert!(loads_with_hard(name, hard.clone()), "{name} {hard} refused");
+    }
 }

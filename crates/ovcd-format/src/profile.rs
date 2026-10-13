@@ -26,6 +26,57 @@ pub struct HardRange {
 }
 
 impl HardRange {
+    /// The tighter lower bound, as (value, strict).
+    fn lower(&self) -> Option<(f64, bool)> {
+        match (self.gt, self.ge) {
+            (Some(g), Some(e)) if e > g => Some((e, false)),
+            (Some(g), _) => Some((g, true)),
+            (None, e) => e.map(|e| (e, false)),
+        }
+    }
+
+    /// The tighter upper bound, as (value, strict).
+    fn upper(&self) -> Option<(f64, bool)> {
+        match (self.lt, self.le) {
+            (Some(l), Some(e)) if e < l => Some((e, false)),
+            (Some(l), _) => Some((l, true)),
+            (None, e) => e.map(|e| (e, false)),
+        }
+    }
+
+    /// Whether every value this range accepts, `base` accepts too.
+    pub fn within(&self, base: &HardRange) -> bool {
+        let lower_ok = match (base.lower(), self.lower()) {
+            (None, _) => true,
+            (Some(_), None) => false,
+            (Some((b, b_strict)), Some((s, s_strict))) => {
+                s > b || (s == b && (s_strict || !b_strict))
+            }
+        };
+        let upper_ok = match (base.upper(), self.upper()) {
+            (None, _) => true,
+            (Some(_), None) => false,
+            (Some((b, b_strict)), Some((s, s_strict))) => {
+                s < b || (s == b && (s_strict || !b_strict))
+            }
+        };
+        lower_ok && upper_ok
+    }
+
+    /// The bounds as text: ">= 0.3 and <= 1".
+    fn describe(&self) -> String {
+        [
+            (self.gt, ">"),
+            (self.ge, ">="),
+            (self.lt, "<"),
+            (self.le, "<="),
+        ]
+        .into_iter()
+        .filter_map(|(b, op)| b.map(|b| format!("{op} {b}")))
+        .collect::<Vec<_>>()
+        .join(" and ")
+    }
+
     /// The first bound `x` breaks, as text ("> 0"), or `None` when `x` is inside.
     pub fn breach(&self, x: f64) -> Option<String> {
         let checks = [
@@ -61,6 +112,13 @@ impl Profile {
 
     /// Load a profile and check it covers every input it must, with well-formed ranges.
     pub fn from_json(text: &str) -> Result<Profile, String> {
+        let profile = Profile::unchecked(text)?;
+        profile.check()?;
+        Ok(profile)
+    }
+
+    /// Parse a profile without checking it.
+    fn unchecked(text: &str) -> Result<Profile, String> {
         let root: Value =
             serde_json::from_str(text).map_err(|e| format!("profile is not JSON: {e}"))?;
         let name = root
@@ -73,9 +131,7 @@ impl Profile {
             .and_then(Value::as_object)
             .ok_or("profile needs an object `inputs`")?
             .clone();
-        let profile = Profile { name, inputs };
-        profile.check()?;
-        Ok(profile)
+        Ok(Profile { name, inputs })
     }
 
     pub fn name(&self) -> &str {
@@ -122,14 +178,23 @@ impl Profile {
                 }
             }
         }
-        for spec in INPUTS {
-            if matches!(spec.kind, InputKind::Number { .. }) {
-                self.hard(spec.name)?;
-                self.soft(spec.name)?;
+        // Hard ranges are physical limits and the only guard in front of the core, so a profile
+        // may tighten one but never loosen it.
+        let base = Profile::unchecked(BUILT_IN)?;
+        let numbers = INPUTS
+            .iter()
+            .filter(|s| matches!(s.kind, InputKind::Number { .. }))
+            .map(|s| s.name)
+            .chain(["formation_abreast", "formation_in_line"]);
+        for name in numbers {
+            let (hard, base_hard) = (self.hard(name)?, base.hard(name)?);
+            if !hard.within(&base_hard) {
+                return Err(format!(
+                    "profile loosens the hard range of `{name}`; it must be {} at least \
+                     (a profile may tighten a hard range, never loosen it)",
+                    base_hard.describe()
+                ));
             }
-        }
-        for name in ["formation_abreast", "formation_in_line"] {
-            self.hard(name)?;
             self.soft(name)?;
         }
         crate::vdesign::check_profile_defaults(self)

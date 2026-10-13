@@ -207,7 +207,9 @@ fn hard_range_breach_is_refused_with_the_stated_message() {
     assert!(!out.status.success());
     let text = stdout(&out);
     assert!(
-        text.contains("error: Option 'A': `beam_m` = -2 is out of range: must be > 0 (hard limit)"),
+        text.contains(
+            "error: Option 'A': `beam_m` = -2 is out of range: must be >= 1 (hard limit)"
+        ),
         "{text}"
     );
 }
@@ -378,4 +380,219 @@ fn validate_inputs_shows_a_convoy_and_a_self_propelled_formation() {
         text.contains("formation = self_propelled (typed)"),
         "{text}"
     );
+}
+
+// Validation is the only guard: each hard cross-check refuses the breach and passes its boundary.
+
+fn assert_zero_errors(test: &str, inputs: Value) {
+    let out = validate_inputs(test, inputs);
+    let text = stdout(&out);
+    assert!(out.status.success(), "{text}{}", stderr(&out));
+    assert!(text.contains("0 error(s)"), "{text}");
+}
+
+#[test]
+fn freeboard_at_depth_is_a_hard_error_and_just_below_passes() {
+    let mut inputs = required_inputs();
+    inputs["min_freeboard_m"] = json!(3.5);
+    let out = validate_inputs("fb-breach", inputs);
+    assert!(!out.status.success());
+    let text = stdout(&out);
+    assert!(
+        text.contains(
+            "error: Option 'A': `min_freeboard_m` = 3.5 must be less than `moulded_depth_m` = 3.5 (hard limit)"
+        ),
+        "{text}"
+    );
+    let mut inputs = required_inputs();
+    inputs["min_freeboard_m"] = json!(3.49);
+    assert_zero_errors("fb-boundary", inputs);
+}
+
+#[test]
+fn channel_shallower_than_its_clearance_is_a_hard_error_for_every_cargo() {
+    for cargo in ["bauxite", "LNG"] {
+        let mut inputs = required_inputs();
+        inputs["cargo"] = json!(cargo);
+        inputs["channel_depth_m"] = json!(0.4);
+        inputs["channel_under_keel_clearance_m"] = json!(0.5);
+        let out = validate_inputs(&format!("chan-breach-{cargo}"), inputs);
+        assert!(!out.status.success(), "{cargo}");
+        let text = stdout(&out);
+        assert!(
+            text.contains(
+                "error: Option 'A': `channel_depth_m` = 0.4 must be at least \
+                 `channel_under_keel_clearance_m` = 0.5 (hard limit)"
+            ),
+            "{text}"
+        );
+    }
+}
+
+#[test]
+fn channel_depth_equal_to_its_clearance_passes() {
+    for cargo in ["bauxite", "LNG"] {
+        let mut inputs = required_inputs();
+        inputs["cargo"] = json!(cargo);
+        inputs["channel_depth_m"] = json!(0.5);
+        inputs["channel_under_keel_clearance_m"] = json!(0.5);
+        assert_zero_errors(&format!("chan-boundary-{cargo}"), inputs);
+    }
+}
+
+#[test]
+fn channel_clearance_is_checked_against_its_default_when_not_typed() {
+    let mut inputs = required_inputs();
+    inputs["channel_depth_m"] = json!(0.3);
+    let out = validate_inputs("chan-default-ukc", inputs);
+    assert!(!out.status.success());
+    assert!(
+        stdout(&out).contains("must be at least `channel_under_keel_clearance_m` = 0.5"),
+        "{}",
+        stdout(&out)
+    );
+}
+
+#[test]
+fn block_coefficient_below_point_three_is_a_hard_error_and_point_three_passes() {
+    let mut inputs = required_inputs();
+    inputs["block_coefficient"] = json!(0.29);
+    let out = validate_inputs("cb-floor", inputs);
+    assert!(!out.status.success());
+    let text = stdout(&out);
+    assert!(
+        text.contains("`block_coefficient` = 0.29 is out of range: must be >= 0.3 (hard limit)"),
+        "{text}"
+    );
+    let mut inputs = required_inputs();
+    inputs["block_coefficient"] = json!(0.3);
+    inputs["channel_bottom_width_m"] = json!(60.0);
+    let out = validate_inputs("cb-floor-boundary", inputs);
+    let text = stdout(&out);
+    assert!(out.status.success(), "{text}");
+    assert!(text.contains("0 error(s)"), "{text}");
+}
+
+#[test]
+fn a_channel_one_ulp_shallower_than_its_clearance_is_refused() {
+    // The file's number must be read exactly: 1.9999999999999998 is not 2.
+    let mut inputs = required_inputs();
+    inputs["channel_depth_m"] = json!(1.999_999_999_999_999_8_f64);
+    inputs["channel_under_keel_clearance_m"] = json!(2.0);
+    let out = validate_inputs("chan-ulp", inputs);
+    assert!(!out.status.success(), "{}", stdout(&out));
+    assert!(
+        stdout(&out).contains("`channel_depth_m` = 1.9999999999999998 must be at least"),
+        "{}",
+        stdout(&out)
+    );
+}
+
+/// A gas Option that searches its depth, with a deep hull so freeboard alone is the question.
+fn depth_search_inputs(min_freeboard_m: f64) -> Value {
+    let mut inputs = required_inputs();
+    inputs["cargo"] = json!("LNG");
+    inputs["moulded_depth_m"] = json!(12.0);
+    inputs["optimise_depth"] = json!(true);
+    inputs["min_freeboard_m"] = json!(min_freeboard_m);
+    inputs
+}
+
+#[test]
+fn a_depth_search_with_freeboard_above_the_deepest_hull_is_a_hard_error() {
+    let out = validate_inputs("depth-search-breach", depth_search_inputs(7.5));
+    assert!(!out.status.success());
+    let text = stdout(&out);
+    assert!(
+        text.contains(
+            "error: Option 'A': `min_freeboard_m` = 7.5 must be at most 7, the deepest hull \
+             `optimise_depth` searches (hard limit)"
+        ),
+        "{text}"
+    );
+}
+
+#[test]
+fn a_depth_search_with_freeboard_equal_to_the_deepest_hull_passes() {
+    assert_zero_errors("depth-search-boundary", depth_search_inputs(7.0));
+}
+
+#[test]
+fn a_huge_length_is_a_hard_error() {
+    let mut inputs = required_inputs();
+    inputs["length_overall_m"] = json!(1e308);
+    let out = validate_inputs("huge-length", inputs);
+    assert!(!out.status.success());
+    assert!(
+        stdout(&out).contains("is out of range: must be <= 1000 (hard limit)"),
+        "{}",
+        stdout(&out)
+    );
+}
+
+/// The built-in profile with one input's hard range replaced (removed for `null`), in a file.
+fn profile_with_hard(dir: &Path, name: &str, hard: Value) -> PathBuf {
+    let mut profile: Value = serde_json::from_slice(&ovcd(&["profile"]).stdout).unwrap();
+    if hard.is_null() {
+        profile["inputs"][name]
+            .as_object_mut()
+            .unwrap()
+            .remove("hard");
+    } else {
+        profile["inputs"][name]["hard"] = hard;
+    }
+    let path = dir.join("edited.profile.json");
+    write_json(&path, &profile);
+    path
+}
+
+#[test]
+fn a_profile_may_not_loosen_a_hard_range() {
+    let dir = temp_dir("profile-loosen");
+    let design = dir.join("d.vdesign");
+    write_json(&design, &design_with(required_inputs()));
+    for hard in [
+        json!({ "gt": 0, "le": 1 }),
+        json!({ "ge": 0.3 }),
+        json!(null),
+    ] {
+        let profile = profile_with_hard(&dir, "block_coefficient", hard.clone());
+        let out = ovcd(&[
+            "validate",
+            "--profile",
+            path_str(&profile),
+            path_str(&design),
+        ]);
+        assert!(!out.status.success(), "{hard}: {}", stdout(&out));
+        assert!(
+            stderr(&out).contains(
+                "profile loosens the hard range of `block_coefficient`; it must be >= 0.3 \
+                 and <= 1 at least (a profile may tighten a hard range, never loosen it)"
+            ),
+            "{hard}: {}",
+            stderr(&out)
+        );
+    }
+}
+
+#[test]
+fn a_profile_may_tighten_a_hard_range() {
+    let dir = temp_dir("profile-tighten");
+    let design = dir.join("d.vdesign");
+    write_json(&design, &design_with(required_inputs()));
+    for hard in [json!({ "gt": 0.3, "le": 1 }), json!({ "ge": 0.5, "lt": 1 })] {
+        let profile = profile_with_hard(&dir, "block_coefficient", hard.clone());
+        let out = ovcd(&[
+            "validate",
+            "--profile",
+            path_str(&profile),
+            path_str(&design),
+        ]);
+        assert!(
+            out.status.success(),
+            "{hard}: {}{}",
+            stdout(&out),
+            stderr(&out)
+        );
+    }
 }
