@@ -10,7 +10,8 @@ Output rules (spec 0001):
 - floats are written as shortest round-trip text (Python's repr);
 - NaN and infinity are written as the tagged strings "float:nan", "float:inf" and "float:-inf";
 - a raised ValueError, ZeroDivisionError or OverflowError is recorded as
-  {"error": {"type": "<class name>", "message": ...}}; a KeyError the
+  {"error": {"type": "<class name>", "message": ...}} (Python's `round()` raises OverflowError
+  on infinity); a KeyError the
   frozen Python raises on purpose is recorded the same way, but only where an adapter wraps the frozen
   call in `frozen_key_error` (a KeyError from the driver itself, such as a mistyped case, fails regen);
 - a normal return is recorded as {"ok": <value>}.
@@ -299,6 +300,16 @@ def electric_energy(fn: str, args: dict):
     raise KeyError(f"electric_energy has no parity function {fn!r}")
 
 
+def _floats(data: dict) -> dict:
+    """JSON ints in a float field become floats, as the dataclass declares (`currency` stays text).
+
+    Python would keep an int and do exact integer arithmetic, and echo an int back; the Rust core
+    holds every rate and mass as an f64, so the cases state them as floats.
+    """
+    return {k: float(v) if isinstance(v, int) and not isinstance(v, bool) else v
+            for k, v in data.items()}
+
+
 def barge_cost(fn: str, args: dict):
     mod = _module("core.barge_cost")
     if fn == "compute":
@@ -309,8 +320,8 @@ def barge_cost(fn: str, args: dict):
             rates = dict(args["rates_mapping"])
         else:
             rates = args.get("rates")
-            rates = build(mod.BargeCostRates, rates) if rates is not None else None
-        return mod.compute(build(mod.BargeCostInputs, args["inputs"]), rates)
+            rates = build(mod.BargeCostRates, _floats(rates)) if rates is not None else None
+        return mod.compute(build(mod.BargeCostInputs, _floats(args["inputs"])), rates)
     if fn == "parse_flat_yaml":
         return mod.parse_flat_yaml(**args)
     raise KeyError(f"barge_cost has no parity function {fn!r}")
