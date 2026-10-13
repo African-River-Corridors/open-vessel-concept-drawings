@@ -17,20 +17,28 @@
 # OVCD_PYTHON picks the Python for steps 5 and 6 (default python3).
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
-PY="${OVCD_PYTHON:-python3}"
-WASM_TARGET="wasm32-unknown-unknown"
-EXPECTED_STEPS=6
-steps_run=0
-
 fail() { echo "gates: FAIL: $*" >&2; exit 1; }
 
 need() {
   command -v "$1" >/dev/null 2>&1 || fail "required tool '$1' is not on PATH"
 }
 
-# --- Tool check: every tool the steps need, before anything runs. -------------------------------
+# --- Tool check: every external tool the script calls, before anything runs. --------------------
+# A missing tool must fail here, not make a step run inert: without `dirname` the `cd` below lands
+# in `/`; without `mktemp` or `chmod` the no-Python shims are never made. Add a `need` line for any
+# new tool (tests/test_gates_fail_closed.py lists them too).
+need dirname
+cd "$(dirname "$0")/.."
+PY="${OVCD_PYTHON:-python3}"
+WASM_TARGET="wasm32-unknown-unknown"
+EXPECTED_STEPS=6
+steps_run=0
+
 need git
+need mktemp
+need chmod
+need cat
+need env
 need cargo
 need rustc
 need "$PY"

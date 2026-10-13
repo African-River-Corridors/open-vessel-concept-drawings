@@ -106,7 +106,7 @@ pub fn check(base: &Tree, head: &Tree) -> Report {
 
 fn parse(path: &str, text: Option<&String>, v: &mut Vec<String>) -> Option<Value> {
     let text = text?;
-    match serde_json::from_str(text) {
+    match ovcd_format::parity::parse(text) {
         Ok(value) => Some(value),
         Err(e) => {
             v.push(format!("{path}: not valid JSON ({e})"));
@@ -634,6 +634,19 @@ mod tests {
         let mut head = tree();
         head.remove("parity/frozen_python/vessel_designer_frozen/core/cargo.py");
         assert_violation(&check(&tree(), &head), "core/cargo.py");
+    }
+
+    #[test]
+    fn reference_result_with_an_integer_above_64_bits_fails() {
+        let mut head = tree();
+        head.insert(
+            "parity/reference/cargo.json".into(),
+            reference(
+                "cargo",
+                &[("get_cargo/LNG", r#"{"ok": 100000000000000000001}"#)],
+            ),
+        );
+        assert_violation(&check(&tree(), &head), "64-bit");
     }
 
     #[test]

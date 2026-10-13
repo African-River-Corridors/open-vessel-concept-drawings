@@ -3,7 +3,7 @@
 //!
 //! Needs no Python: it reads the committed files in `parity/` only.
 
-use ovcd_format::parity::{Tolerance, compare};
+use ovcd_format::parity::{Tolerance, compare, parse};
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 
@@ -13,7 +13,7 @@ fn parity_dir() -> PathBuf {
 
 fn read_json(path: &Path) -> Value {
     let text = std::fs::read_to_string(path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
-    serde_json::from_str(&text).unwrap_or_else(|e| panic!("{}: {e}", path.display()))
+    parse(&text).unwrap_or_else(|e| panic!("{}: {e}", path.display()))
 }
 
 fn ported() -> Vec<String> {

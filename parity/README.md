@@ -10,8 +10,9 @@ deleted, with the frozen Python and the hidden `ovcd eval` command, when the por
 | `tolerance.json` | Float tolerance: relative and absolute 1e-9 | Never loosened |
 | `ported.json` | Entry points the Rust dispatch has ported; each must be fully green | Port tickets add to it |
 | `frozen_python/vessel_designer_frozen/` | Frozen copy of the pure-Python code, under its own import name | Nobody: it does not change |
-| `driver.py` | Runs the cases through the frozen Python | |
-| `sweep.py` | Generates the tier-2 cases: a seeded sweep, knife-edge points dropped | |
+| `driver.py` | Runs the cases through the frozen Python | Guarded: a change needs a reason in `generator.json` |
+| `sweep.py` | Generates the tier-2 cases: a seeded sweep, knife-edge points dropped | Guarded: a change needs a reason in `generator.json` |
+| `generator.json` | `{"reason": ...}`: why the generator (`driver.py`, `sweep.py`, `frozen_python/`) last changed | Whoever changes the generator |
 
 ## Case and result shapes
 
@@ -96,15 +97,29 @@ differ. The guard fails on a Mac for the same reason; CI is the judge.
 
 ## Oracle guard
 
-The fast gate fails a pull request that changes `cases/`, `reference/`, `tolerance.json` or
-`ported.json`, unless:
+The fast gate fails a pull request that changes `cases/`, `reference/`, `tolerance.json`,
+`ported.json` or the generator (`driver.py`, `sweep.py`, any file under `frozen_python/`), unless:
 
 - re-running the frozen Python reproduces every committed Reference Result byte for byte (so the
   change came from `cargo xtask regen`, not a hand edit);
 - every new case, and every case whose input or Reference Result changed, carries a new `reason`;
 - every removed case is in `retired` with a reason;
-- the tolerance is not loosened (and never above 1e-9), and a tightened tolerance has a new reason;
-- no entry point leaves `ported.json`.
+- the tolerance is not loosened (and never above 1e-9), never negative, always has a non-empty
+  `reason`, and a tightened tolerance has a new reason;
+- no entry point leaves `ported.json`;
+- `cases/` and `reference/` hold only top-level `.json` files (the driver never reads a nested
+  folder, so a nested file would be an unchecked oracle);
+- no number in a guarded file is an integer outside the 64-bit range (it would read as a float,
+  and two different big integers would compare equal);
+- a changed, added or removed generator file comes with a new, non-empty `reason` in
+  `generator.json`. The guard then re-runs the changed generator, which must still reproduce
+  every committed Reference Result.
+
+The guard re-runs the PR's own generator, not the base branch's, and guards the generator
+instead. Running the base generator would block every legitimate generator change: a tier-2
+change is made by changing `sweep.py`, and its new cases can only be reproduced by the new
+`sweep.py`. So a generator change is allowed, but never silently: it fails without a recorded
+reason, and the reason and the diff are then in front of the reviewers.
 
 ## Mutation test
 
