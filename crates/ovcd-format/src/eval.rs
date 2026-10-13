@@ -2,6 +2,7 @@
 //! point. Input and output use the case and Reference Result shapes in `parity/README.md`.
 
 use ovcd_core::cargo::CargoProperties;
+use ovcd_core::hull::HullGeometry;
 use serde_json::{Value, json};
 
 /// Why `eval` could not produce a result. A Python `ValueError` is not an `EvalError`: it is a
@@ -63,6 +64,7 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
     let args = input.get("args").unwrap_or(&Value::Null);
     match entry_point {
         "cargo" => cargo(function, args),
+        "hull" => hull(function, args),
         ep if ENTRY_POINTS.contains(&ep) => Err(EvalError::NotPorted(ep.into())),
         ep => Err(EvalError::UnknownEntryPoint(ep.into())),
     }
@@ -108,6 +110,55 @@ fn cargo(function: &str, args: &Value) -> Result<Value, EvalError> {
         )),
         other => Err(EvalError::BadInput(format!(
             "cargo has no parity function `{other}`"
+        ))),
+    }
+}
+
+fn f64_arg(args: &Value, name: &str) -> Result<f64, EvalError> {
+    args.get(name)
+        .and_then(Value::as_f64)
+        .ok_or_else(|| EvalError::BadInput(format!("`args.{name}` must be a number")))
+}
+
+fn hull(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        // One hull, every public quantity at `args.draft`, then the plating areas, in the key
+        // order of the frozen driver.
+        "quantities" => {
+            let spec = args
+                .get("hull")
+                .ok_or_else(|| EvalError::BadInput("`args.hull` is missing".into()))?;
+            let h = HullGeometry::new(
+                f64_arg(spec, "loa")?,
+                f64_arg(spec, "beam")?,
+                f64_arg(spec, "depth")?,
+                f64_arg(spec, "bow_rake_length")?,
+                f64_arg(spec, "bow_rake_rise")?,
+                f64_arg(spec, "stern_rake_length")?,
+                f64_arg(spec, "stern_rake_rise")?,
+            );
+            let d = f64_arg(args, "draft")?;
+            ok(json!({
+                "parallel_length": h.parallel_length(),
+                "displaced_volume": h.displaced_volume(d),
+                "waterplane_area": h.waterplane_area(d),
+                "waterplane_length": h.waterplane_length(d),
+                "waterplane_inertia_transverse": h.waterplane_inertia_transverse(d),
+                "waterplane_inertia_longitudinal": h.waterplane_inertia_longitudinal(d),
+                "KB": h.KB(d),
+                "LCB": h.LCB(d),
+                "BM_transverse": h.BM_transverse(d),
+                "BM_longitudinal": h.BM_longitudinal(d),
+                "bottom_area": h.bottom_area(),
+                "side_area": h.side_area(),
+                "deck_area": h.deck_area(),
+                "bow_rake_area": h.bow_rake_area(),
+                "stern_rake_area": h.stern_rake_area(),
+                "total_hull_surface_area": h.total_hull_surface_area(),
+            }))
+        }
+        other => Err(EvalError::BadInput(format!(
+            "hull has no parity function `{other}`"
         ))),
     }
 }
