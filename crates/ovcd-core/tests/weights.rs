@@ -3,7 +3,7 @@
 
 use ovcd_core::hull::HullGeometry;
 use ovcd_core::models::{BargeInputs, WeightBreakdown};
-use ovcd_core::tanks::calculate_tank_arrangement;
+use ovcd_core::tanks::{calculate_tank_arrangement, calculate_tank_arrangement_wide};
 use ovcd_core::weights::calculate_weights;
 
 fn quickstart() -> BargeInputs {
@@ -30,7 +30,7 @@ fn weigh(i: &BargeInputs) -> WeightBreakdown {
         i.stern_rake_length,
         i.stern_rake_rise.unwrap(),
     );
-    let tanks = calculate_tank_arrangement(i).unwrap();
+    let (tanks, _) = calculate_tank_arrangement_wide(i).unwrap();
     calculate_weights(i, &hull, &tanks).unwrap()
 }
 
@@ -178,4 +178,47 @@ fn an_unset_non_tank_length_raises_the_python_type_error() {
         calculate_weights(&bad, &hull, &tanks).unwrap_err().kind,
         "TypeError"
     );
+}
+
+#[test]
+fn the_shield_height_adds_the_double_bottom_to_the_support_height() {
+    // Python: 63.66028863761752. A product in place of the sum moves it by 6e-9 relative.
+    let mut i = quickstart();
+    i.double_bottom_height = Some(1e9);
+    assert_eq!(weigh(&i).weather_shield, 63.66028863761752);
+}
+
+#[test]
+fn a_zero_shield_thickness_skips_the_shield_even_when_its_area_is_not_finite() {
+    // Python: weather_shield 0.0 and steel_bottom_up inf. With `>=` the shield runs, inf * 0.0 is
+    // NaN, and the shield and both steel totals turn NaN.
+    let mut i = quickstart();
+    i.beam = 1e120;
+    i.n_tanks_wide = 1_000_000_000_000_000_000;
+    i.tank_gap_transverse = 0.0;
+    i.loa = 1e200;
+    i.bow_non_tank_length = None;
+    i.stern_non_tank_length = None;
+    i.post_init().unwrap();
+    i.weather_shield_thickness = 0.0;
+    let w = weigh(&i);
+    assert_eq!(w.weather_shield, 0.0);
+    assert_eq!(w.steel_bottom_up, f64::INFINITY);
+    assert!(w.steel_delta.is_nan());
+}
+
+#[test]
+fn a_count_product_beyond_64_bits_does_not_stop_the_weights() {
+    // Python answers: the weights carry no integer. 3037000500 ** 2 is just above i64::MAX.
+    let mut i = quickstart();
+    i.n_tanks_wide = 3_037_000_500;
+    i.n_tanks_long = 3_037_000_500;
+    i.beam = 1e12;
+    i.loa = 1e12;
+    i.bow_non_tank_length = Some(0.0);
+    i.stern_non_tank_length = Some(0.0);
+    i.tank_gap_transverse = 0.0;
+    i.tank_gap_longitudinal = 0.0;
+    let w = weigh(&i);
+    assert!(w.lightship.is_finite());
 }

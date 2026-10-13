@@ -2,9 +2,12 @@
 //!
 //! Behaviour is copied exactly, including the errors and their message text. Every `**` is
 //! `libm::pow`, every float in a message prints as Python prints it, and every expression keeps
-//! Python's evaluation order so the rounding is the same. Tank counts are `i64`: arithmetic on
-//! them is checked, and a result that no 64-bit field can hold is an `OverflowError` with one
-//! fixed message (the integer range rule in `parity/README.md`).
+//! Python's evaluation order so the rounding is the same. Tank counts are `i64`. A count that
+//! only feeds a float product (`n_wide - 1`, `n_long - 1`, `n_wide * n_long`) is held in `i128`
+//! and rounded once to a float, as Python's int-to-float conversion does. Only a count that a
+//! 64-bit result field must carry can overflow: that is an `OverflowError` with one fixed message,
+//! raised after the rest of the calculation succeeds (the integer range rule in
+//! `parity/README.md`).
 
 use alloc::format;
 use alloc::string::{String, ToString};
@@ -70,17 +73,31 @@ fn opt_str(x: Option<f64>) -> String {
 /// 6. Length per tank = total_length / n_long
 /// 7. Cylinder length = tank_length - 2 * head_length
 pub fn calculate_tank_arrangement(inputs: &BargeInputs) -> Result<TankResult, PyError> {
+    let (mut result, n_total) = calculate_tank_arrangement_wide(inputs)?;
+    result.n_tanks_total = i64::try_from(n_total).map_err(|_| overflow())?;
+    Ok(result)
+}
+
+/// [`calculate_tank_arrangement`] without the 64-bit limit on the tank count product.
+///
+/// Returns the exact `n_wide * n_long` beside the result. `TankResult::n_tanks_total` holds that
+/// product clamped to the `i64` range, so read the second value when it can matter. Callers that
+/// only need the geometry and weights (the weights chain) use this, because Python answers there
+/// without ever carrying the product.
+pub fn calculate_tank_arrangement_wide(
+    inputs: &BargeInputs,
+) -> Result<(TankResult, i128), PyError> {
     // Guard None values (auto-optimization may not have run yet).
     let side_clearance = inputs.side_clearance.unwrap_or(0.0);
     let double_bottom_height = inputs.double_bottom_height.unwrap_or(0.0);
 
     let n_wide = inputs.n_tanks_wide;
     let n_long = inputs.n_tanks_long;
-    let n_total = n_wide.checked_mul(n_long).ok_or_else(overflow)?;
+    let n_total = i128::from(n_wide) * i128::from(n_long);
 
     // --- Transverse (beam) sizing ---
     let available_beam = inputs.beam - 2.0 * side_clearance;
-    let wide_less_one = n_wide.checked_sub(1).ok_or_else(overflow)?;
+    let wide_less_one = i128::from(n_wide) - 1;
     let tank_width_total = available_beam - (wide_less_one as f64) * inputs.tank_gap_transverse;
     let outer_diameter = div_count(tank_width_total, n_wide)?;
 
@@ -159,7 +176,7 @@ pub fn calculate_tank_arrangement(inputs: &BargeInputs) -> Result<TankResult, Py
         .stern_non_tank_length
         .ok_or_else(none_operand_error)?;
     let available_length = inputs.loa - bow - stern;
-    let long_less_one = n_long.checked_sub(1).ok_or_else(overflow)?;
+    let long_less_one = i128::from(n_long) - 1;
     let tank_length_total =
         available_length - (long_less_one as f64) * inputs.tank_gap_longitudinal;
     let overall_tank_length = div_count(tank_length_total, n_long)?;
@@ -211,10 +228,10 @@ pub fn calculate_tank_arrangement(inputs: &BargeInputs) -> Result<TankResult, Py
     // --- Tank top height above keel ---
     let tank_top_above_keel = double_bottom_height + inputs.tank_support_height + outer_diameter;
 
-    Ok(TankResult {
+    let result = TankResult {
         n_tanks_wide: n_wide,
         n_tanks_long: n_long,
-        n_tanks_total: n_total,
+        n_tanks_total: n_total.clamp(i128::from(i64::MIN), i128::from(i64::MAX)) as i64,
         outer_diameter,
         inner_diameter,
         overall_tank_length,
@@ -236,7 +253,8 @@ pub fn calculate_tank_arrangement(inputs: &BargeInputs) -> Result<TankResult, Py
         } else {
             String::new()
         },
-    })
+    };
+    Ok((result, n_total))
 }
 
 /// Transverse free surface moment for a horizontal cylindrical tank: `cargo_density * I_fs`.

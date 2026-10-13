@@ -1265,8 +1265,9 @@ fn weights(function: &str, args: &Value) -> Result<Value, EvalError> {
                 inputs.stern_rake_length,
                 rake(inputs.stern_rake_rise, "stern_rake_rise")?,
             );
-            let tanks = match ovcd_core::tanks::calculate_tank_arrangement(&inputs) {
-                Ok(t) => t,
+            // The weights output has no integer field, so the count product is not carried.
+            let tanks = match ovcd_core::tanks::calculate_tank_arrangement_wide(&inputs) {
+                Ok((t, _)) => t,
                 Err(e) => return raised_py(&e),
             };
             match ovcd_core::weights::calculate_weights(&inputs, &hull, &tanks) {

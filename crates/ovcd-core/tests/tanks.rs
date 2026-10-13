@@ -3,7 +3,8 @@
 
 use ovcd_core::models::BargeInputs;
 use ovcd_core::tanks::{
-    INT_OVERFLOW_MESSAGE, calculate_tank_arrangement, free_surface_moment_cylindrical,
+    INT_OVERFLOW_MESSAGE, calculate_tank_arrangement, calculate_tank_arrangement_wide,
+    free_surface_moment_cylindrical,
 };
 
 /// The quickstart barge: 90 x 14.8 m, two tanks abreast, two rows, fixed 25 mm walls.
@@ -151,28 +152,66 @@ fn a_negative_tank_count_follows_python() {
 }
 
 #[test]
-fn a_count_product_beyond_64_bits_fails_loudly() {
+fn a_count_product_beyond_64_bits_fails_loudly_only_when_python_succeeds() {
+    // Python answers (n_tanks_total = 2**64), but no 64-bit field can carry that count.
     let mut i = quickstart();
-    i.n_tanks_wide = i64::MAX;
-    i.n_tanks_long = 2;
+    i.n_tanks_wide = 1 << 32;
+    i.n_tanks_long = 1 << 32;
+    i.beam = 1e12;
+    i.loa = 1e12;
+    i.bow_non_tank_length = Some(0.0);
+    i.stern_non_tank_length = Some(0.0);
+    i.tank_gap_transverse = 0.0;
+    i.tank_gap_longitudinal = 0.0;
     let e = calculate_tank_arrangement(&i).unwrap_err();
     assert_eq!(
         (e.kind, e.message.as_str()),
         ("OverflowError", INT_OVERFLOW_MESSAGE)
     );
+    // The wide entry point carries the exact product, so the weights chain can go on.
+    let (t, n_total) = calculate_tank_arrangement_wide(&i).unwrap();
+    assert_eq!(n_total, 1i128 << 64);
+    assert_eq!(t.n_tanks_total, i64::MAX);
+}
+
+#[test]
+fn a_huge_count_that_python_rejects_gets_pythons_error_not_overflow() {
+    // Python: ValueError, as no integer here is carried. n_wide * n_long = 2**64 never matters.
+    let mut i = quickstart();
+    i.n_tanks_wide = 1 << 32;
+    i.n_tanks_long = 1 << 32;
+    i.tank_gap_transverse = 0.5;
+    let e = calculate_tank_arrangement(&i).unwrap_err();
+    assert_eq!(
+        (e.kind, e.message.as_str()),
+        (
+            "ValueError",
+            "Tank outer diameter is -0.50m - not enough beam. Beam=14.8m, side_clearance=1.0m, \
+             n_wide=4294967296, gap_transverse=0.5m"
+        )
+    );
+    // i64::MIN counts: `n - 1` is held in i128, as it only feeds a float product.
     let mut i = quickstart();
     i.n_tanks_wide = i64::MIN;
-    i.n_tanks_long = 1;
+    let e = calculate_tank_arrangement(&i).unwrap_err();
     assert_eq!(
-        calculate_tank_arrangement(&i).unwrap_err().kind,
-        "OverflowError"
+        (e.kind, e.message.as_str()),
+        (
+            "ValueError",
+            "Tank outer diameter is -1.00m - not enough beam. Beam=14.8m, side_clearance=1.0m, \
+             n_wide=-9223372036854775808, gap_transverse=1.0m"
+        )
     );
     let mut i = quickstart();
-    i.n_tanks_wide = 1;
     i.n_tanks_long = i64::MIN;
+    let e = calculate_tank_arrangement(&i).unwrap_err();
     assert_eq!(
-        calculate_tank_arrangement(&i).unwrap_err().kind,
-        "OverflowError"
+        (e.kind, e.message.as_str()),
+        (
+            "ValueError",
+            "Cylinder length is -7.90m - tank heads don't fit. Available length per tank=-2.00m, \
+             head length=2.95m each"
+        )
     );
 }
 
