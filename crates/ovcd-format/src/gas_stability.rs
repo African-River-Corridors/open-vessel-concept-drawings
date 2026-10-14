@@ -2,19 +2,15 @@
 //! `criteria_set_for` and `assess`. It copies the frozen Python driver's output shapes
 //! (`parity/driver.py`, `to_json`), including which numbers are ints.
 //!
-//! `eval("gas_stability", ..)` routes here, and `gas_stability` is in `parity/ported.json`. Three
-//! functions are fully green on the seam. `assess` is not: the parity cases describe the
-//! arrangement to assess by `fit` (`gas_arrangement.fit`) or `capacity`
-//! (`barge_capacity.compute`), and neither is ported. A case with `fit` or `capacity` returns
-//! `NotPorted`, and `parity/pending.json` records that gap. `assess` also takes the numbers it
-//! reads as `args.result` (see `parity/gas_basis_fixtures.py` and `tests/gas_stability.rs`), which
-//! checks the maths against the Reference Results meanwhile. When `fit` and `capacity` land: build
-//! `args.result` from them, and empty `parity/pending.json`.
+//! `eval("gas_stability", ..)` routes here, and `gas_stability` is in `parity/ported.json`.
+//!
+//! `assess` takes the arrangement it assesses the way the frozen driver does: `fit` runs
+//! `gas_arrangement.fit` and uses its engine result (and, unless `payload_t` is given, its
+//! payload); `capacity` runs `barge_capacity.compute`.
 
 use crate::EvalError;
-use ovcd_core::gas_stability::{
-    self as gs, Condition, Criterion, GasBasis, GasCapacityResult, PyError, PyNum,
-};
+use crate::eval::{capacity_inputs, raised_py};
+use ovcd_core::gas_stability::{self as gs, Condition, Criterion, PyError, PyNum};
 use serde_json::{Map, Value, json};
 
 /// A float as the Reference Results write it: NaN and infinity are tagged text.
@@ -210,50 +206,6 @@ fn condition_json(c: &Condition) -> Value {
     Value::Object(m)
 }
 
-fn gas_basis(v: &Value) -> Result<GasBasis, EvalError> {
-    let n = u32::try_from(
-        v.get("n_tanks_total")
-            .and_then(Value::as_u64)
-            .ok_or_else(|| EvalError::BadInput("`n_tanks_total` must be a whole number".into()))?,
-    )
-    .map_err(|_| EvalError::BadInput("`n_tanks_total` is too large".into()))?;
-    Ok(GasBasis {
-        loa: num_arg(v, "loa")?,
-        beam: num_arg(v, "beam")?,
-        depth: num_arg(v, "depth")?,
-        double_bottom_height: num_arg(v, "double_bottom_height")?,
-        tank_support_height: num_arg(v, "tank_support_height")?,
-        outer_diameter: num_arg(v, "outer_diameter")?,
-        inner_diameter: num_arg(v, "inner_diameter")?,
-        total_tank_volume: num_arg(v, "total_tank_volume")?,
-        n_tanks_total: n,
-        cylinder_length: num_arg(v, "cylinder_length")?,
-        steel_top_down: num_arg(v, "steel_top_down")?,
-        tank_total: num_arg(v, "tank_total")?,
-        insulation: num_arg(v, "insulation")?,
-        piping_machinery: num_arg(v, "piping_machinery")?,
-        outfitting: num_arg(v, "outfitting")?,
-    })
-}
-
-fn capacity_result(v: &Value) -> Result<GasCapacityResult, EvalError> {
-    let basis = match v.get("gas_basis") {
-        None | Some(Value::Null) => None,
-        Some(b) => Some(gas_basis(b)?),
-    };
-    Ok(GasCapacityResult {
-        gas_basis: basis,
-        cargo_density_t_per_m3: num_arg(v, "cargo_density_t_per_m3")?,
-        lightship_t: num_arg(v, "lightship_t")?,
-        has_aft_arrangement: v
-            .get("has_aft_arrangement")
-            .and_then(Value::as_bool)
-            .ok_or_else(|| {
-                EvalError::BadInput("`has_aft_arrangement` must be true or false".into())
-            })?,
-    })
-}
-
 /// Run one `gas_stability` function on case-shaped arguments and return `{"ok": ..}` or
 /// `{"error": ..}`.
 pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
@@ -284,14 +236,28 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
             py_result(Ok(json!(gs::criteria_set_for(ruleset))))
         }
         "assess" => {
-            if args.get("fit").is_some() || args.get("capacity").is_some() {
-                return Err(EvalError::NotPorted("gas_stability".into()));
-            }
-            let result = capacity_result(
-                args.get("result")
-                    .ok_or_else(|| EvalError::BadInput("`args.result` is required".into()))?,
-            )?;
-            let payload = py_num_arg(args, "payload_t")?;
+            // The result to assess comes from a gas fit (`fit`) or a capacity run (`capacity`).
+            let (result, default_payload) = if let Some(fit_args) = args.get("fit") {
+                match crate::gas_arrangement::run_fit(fit_args)? {
+                    Ok(f) => (f.engine_result, Some(f.payload_t)),
+                    Err(e) => return raised_py(&e),
+                }
+            } else {
+                let cap = args.get("capacity").ok_or_else(|| {
+                    EvalError::BadInput("`args.fit` or `args.capacity` is required".into())
+                })?;
+                let inputs = capacity_inputs(&json!({ "inputs": cap }))?;
+                match ovcd_core::barge_capacity::compute(&inputs) {
+                    Ok(r) => (r, None),
+                    Err(e) => return raised_py(&e),
+                }
+            };
+            let result = gs::GasCapacityResult::try_from(&result)
+                .map_err(|m| EvalError::BadInput(m.into()))?;
+            let payload = match (args.get("payload_t"), default_payload) {
+                (None, Some(p)) => PyNum::Float(p),
+                _ => py_num_arg(args, "payload_t")?,
+            };
             let cb = opt_num_arg(args, "block_coefficient", gs::DEFAULT_BLOCK_COEFFICIENT)?;
             let rho = opt_num_arg(args, "water_density", gs::DEFAULT_WATER_DENSITY)?;
             let cset = match args.get("criteria_set") {

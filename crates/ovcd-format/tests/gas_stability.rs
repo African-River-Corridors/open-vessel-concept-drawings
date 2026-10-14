@@ -1,12 +1,9 @@
-//! `gas_stability` against its Reference Results (issue #18), through `ovcd_format::eval`.
+//! `gas_stability` against its Reference Results (issues #18 and #17), through
+//! `ovcd_format::eval`.
 //!
-//! `parity.rs` runs `box_gz`, `segment_fill` and `criteria_set_for` on the seam. `assess` cases
-//! describe the arrangement by `fit` or `capacity`, which need `gas_arrangement` and
-//! `barge_capacity` (not ported yet), so `parity.rs` skips them (`parity/pending.json`). Here the
-//! numbers `assess` reads come from `tests/fixtures/gas_stability_results.json`, made by
-//! `parity/gas_basis_fixtures.py` from the frozen Python, and go to `eval` as `args.result`. The
-//! Reference Results are the same files `parity.rs` uses. The fixture also holds int-`payload_t`
-//! rows with the frozen Python's own output. When `fit` lands, `assess` joins the seam proper.
+//! `parity.rs` runs every case of every ported entry point. This file counts the cases per
+//! function, so a function cannot go green by losing its cases, and holds the checks that need an
+//! input the parity format cannot write (very large integers).
 
 use ovcd_format::parity::{Tolerance, compare};
 use serde_json::{Value, json};
@@ -26,14 +23,11 @@ fn tolerance() -> Tolerance {
     Tolerance::from_json(&text).expect("tolerance parses")
 }
 
-/// Run every `gas_stability` case; `assess` cases get their derived `result` from the fixture.
+/// Run every `gas_stability` case of one function.
 fn failures(only: &str) -> (usize, Vec<String>) {
     let cases = read_json(&dir("../../parity/cases/gas_stability.json"));
     let reference = read_json(&dir("../../parity/reference/gas_stability.json"));
-    let fixtures = read_json(&dir("tests/fixtures/gas_stability_results.json"));
-    let fixtures = fixtures["rows"].as_array().expect("fixture rows");
     let tol = tolerance();
-    let mut next_assess = 0;
     let (mut count, mut bad) = (0, Vec::new());
     for (case, result) in cases["cases"]
         .as_array()
@@ -44,26 +38,11 @@ fn failures(only: &str) -> (usize, Vec<String>) {
         let id = case["id"].as_str().expect("id");
         assert_eq!(case["id"], result["id"], "run `cargo xtask regen`");
         let function = case["input"]["fn"].as_str().expect("fn");
-        let mut args = case["input"]["args"].clone();
-        if function == "assess" {
-            let row = &fixtures[next_assess];
-            next_assess += 1;
-            assert_eq!(
-                row["id"], case["id"],
-                "fixture is stale: rerun parity/gas_basis_fixtures.py"
-            );
-            let derived = &row["result"];
-            let obj = args.as_object_mut().expect("args object");
-            obj.remove("fit");
-            obj.remove("capacity");
-            obj.insert("payload_t".into(), derived["payload_t"].clone());
-            obj.insert("result".into(), derived.clone());
-        }
         if only != function {
             continue;
         }
         count += 1;
-        match ovcd_format::eval("gas_stability", &json!({ "fn": function, "args": args })) {
+        match ovcd_format::eval("gas_stability", &case["input"]) {
             Ok(actual) => {
                 if let Err(diffs) = compare(&result["output"], &actual, tol) {
                     bad.push(format!("{id}:\n    {}", diffs.join("\n    ")));
@@ -72,7 +51,6 @@ fn failures(only: &str) -> (usize, Vec<String>) {
             Err(e) => bad.push(format!("{id}: {e}")),
         }
     }
-    assert_eq!(next_assess, fixtures.len(), "fixture has rows for no case");
     (count, bad)
 }
 
@@ -99,7 +77,7 @@ fn criteria_set_for_matches_every_reference_result() {
 
 #[test]
 fn assess_matches_every_reference_result() {
-    green("assess", 13);
+    green("assess", 19);
 }
 
 fn eval(function: &str, args: Value) -> Result<Value, ovcd_format::EvalError> {
@@ -109,16 +87,6 @@ fn eval(function: &str, args: Value) -> Result<Value, ovcd_format::EvalError> {
 #[test]
 fn unknown_function_is_a_bad_input() {
     assert!(eval("nope", json!({})).is_err());
-}
-
-#[test]
-fn assess_by_fit_or_capacity_is_not_ported() {
-    for key in ["fit", "capacity"] {
-        assert_eq!(
-            eval("assess", json!({ key: {}, "payload_t": 1.0 })),
-            Err(ovcd_format::EvalError::NotPorted("gas_stability".into()))
-        );
-    }
 }
 
 /// Python returns `(2 * radius, radius)` for a full tank, in the type of `radius`.
@@ -239,43 +207,4 @@ fn segment_fill_keeps_an_int_radius_exact_at_any_size() {
         eval("segment_fill", args).unwrap(),
         json!({"ok": [2e20, 1e20]})
     );
-}
-
-/// Python keeps an int `payload_t` as an int in the Laden `cargo_t`, and its `sum()` (3.12) adds
-/// the int without compensation. The rows hold the frozen Python's `cargo_t`, `displacement_t`,
-/// `draught_m` and `kg_m` per condition. They must match exactly, to the last bit and in type. The
-/// rest of the result is covered by the Reference Results.
-#[test]
-fn assess_with_an_int_payload_matches_python_exactly() {
-    let fixtures = read_json(&dir("tests/fixtures/gas_stability_results.json"));
-    let rows = fixtures["int_payload_rows"].as_array().expect("int rows");
-    assert!(
-        rows.len() >= 12,
-        "fixture is stale: rerun parity/gas_basis_fixtures.py"
-    );
-    let mut bad = Vec::new();
-    for row in rows {
-        let mut args = row["options"].as_object().expect("options").clone();
-        args.insert("result".into(), row["result"].clone());
-        args.insert("payload_t".into(), row["payload_t"].clone());
-        let actual = eval("assess", Value::Object(args)).unwrap();
-        let id = format!("{} payload {}", row["id"], row["payload_t"]);
-        let Some(want) = row["output"]["ok"].as_array() else {
-            assert_eq!(actual, row["output"], "{id}");
-            continue;
-        };
-        let got = actual["ok"]["conditions"].as_array().expect("conditions");
-        assert_eq!(want.len(), got.len(), "{id}");
-        for (w, g) in want.iter().zip(got) {
-            for key in ["name", "cargo_t", "displacement_t", "draught_m", "kg_m"] {
-                if w[key] != g[key] {
-                    bad.push(format!(
-                        "{id} {}.{key}: python {} rust {}",
-                        w["name"], w[key], g[key]
-                    ));
-                }
-            }
-        }
-    }
-    assert!(bad.is_empty(), "{} differ:\n{}", bad.len(), bad.join("\n"));
 }
