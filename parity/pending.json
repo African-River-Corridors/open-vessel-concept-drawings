@@ -1,8 +1,4 @@
 {
   "note": "Functions of a ported entry point that eval still answers with NotPorted. Their parity cases are skipped by tests/parity.rs, which also fails if a listed function is answered. Each port ticket empties its own lines.",
-  "pending": {
-    "gas_stability": {
-      "assess": "every case describes the arrangement by `fit` or `capacity`; gas_arrangement.fit and barge_capacity.compute are not ported"
-    }
-  }
+  "pending": {}
 }

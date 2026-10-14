@@ -84,6 +84,8 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
         "weights" => weights(function, args),
         "hydrostatics" => hydrostatics(function, args),
         "barge_capacity" => barge_capacity(function, args),
+        "journey_derating" => crate::gas_arrangement::run_journey(function, args),
+        "gas_arrangement" => crate::gas_arrangement::run(function, args),
         "squat" => squat(function, args),
         "waves" => waves(function, args),
         "resistance" => resistance(function, args),
@@ -101,7 +103,7 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
 
 /// A float result, tagged the way the frozen driver tags it: JSON has no `inf` or `nan`, so they
 /// become the strings `"float:inf"`, `"float:-inf"` and `"float:nan"`.
-fn num(x: f64) -> Value {
+pub(crate) fn num(x: f64) -> Value {
     if x.is_nan() {
         json!("float:nan")
     } else if x.is_infinite() {
@@ -111,12 +113,12 @@ fn num(x: f64) -> Value {
     }
 }
 
-fn ok(value: Value) -> Result<Value, EvalError> {
+pub(crate) fn ok(value: Value) -> Result<Value, EvalError> {
     Ok(json!({ "ok": value }))
 }
 
 /// A raised Python exception of any class, as the frozen Python driver records it.
-fn raised(type_name: &str, message: &str) -> Result<Value, EvalError> {
+pub(crate) fn raised(type_name: &str, message: &str) -> Result<Value, EvalError> {
     Ok(json!({ "error": { "type": type_name, "message": message } }))
 }
 
@@ -146,7 +148,7 @@ fn py_error(kind: &str, message: String) -> Result<Value, EvalError> {
 
 /// A float argument. A JSON integer is refused: Python would keep an `int` and may echo it back
 /// as an `int`, which the Rust port does not model, so a case must write `18.0`, not `18`.
-fn f64_arg(args: &Value, name: &str) -> Result<f64, EvalError> {
+pub(crate) fn f64_arg(args: &Value, name: &str) -> Result<f64, EvalError> {
     match args.get(name) {
         Some(Value::Number(n)) if n.is_f64() => Ok(n.as_f64().unwrap_or(f64::NAN)),
         _ => Err(EvalError::BadInput(format!(
@@ -175,7 +177,7 @@ fn opt_str_arg<'a>(args: &'a Value, name: &str) -> Result<Option<&'a str>, EvalE
     }
 }
 
-fn str_arg<'a>(args: &'a Value, name: &str) -> Result<&'a str, EvalError> {
+pub(crate) fn str_arg<'a>(args: &'a Value, name: &str) -> Result<&'a str, EvalError> {
     args.get(name)
         .and_then(Value::as_str)
         .ok_or_else(|| EvalError::BadInput(format!("`args.{name}` must be a string")))
@@ -253,7 +255,7 @@ fn i64_field(
     }
 }
 
-fn checks_json(checks: &[Check]) -> Value {
+pub(crate) fn checks_json(checks: &[Check]) -> Value {
     Value::Array(
         checks
             .iter()
@@ -1177,7 +1179,7 @@ fn barge_inputs(args: &Value) -> Result<BargeInputs, EvalError> {
     Ok(i)
 }
 
-fn raised_py(e: &PyError) -> Result<Value, EvalError> {
+pub(crate) fn raised_py(e: &PyError) -> Result<Value, EvalError> {
     raised(e.kind, &e.message)
 }
 
@@ -1463,7 +1465,7 @@ fn barge_inputs_json(i: &BargeInputs) -> Value {
 }
 
 /// An `Optional[float]` result: `None` is JSON null.
-fn opt_num(x: Option<f64>) -> Value {
+pub(crate) fn opt_num(x: Option<f64>) -> Value {
     x.map_or(Value::Null, num)
 }
 
@@ -1537,7 +1539,7 @@ fn nested_inputs<T>(
     }
 }
 
-fn capacity_inputs(args: &Value) -> Result<BargeCapacityInputs, EvalError> {
+pub(crate) fn capacity_inputs(args: &Value) -> Result<BargeCapacityInputs, EvalError> {
     let o = inputs_object(args, CAPACITY_FIELDS)?;
     let need = |name: &str| {
         f64_field(o, name)?
@@ -1608,7 +1610,7 @@ fn capacity_inputs(args: &Value) -> Result<BargeCapacityInputs, EvalError> {
     Ok(i)
 }
 
-fn capacity_json(r: &BargeCapacityResult) -> Value {
+pub(crate) fn capacity_json(r: &BargeCapacityResult) -> Value {
     wide_object!({
         "cargo_type": r.cargo_type,
         "phase": r.phase,

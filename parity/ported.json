@@ -15,5 +15,7 @@
   "electric_energy",
   "hydrostatics",
   "gas_stability",
-  "barge_capacity"
+  "barge_capacity",
+  "journey_derating",
+  "gas_arrangement"
 ]

@@ -264,6 +264,150 @@
       }
     },
     {
+      "id": "assess/int_payload/CN_II_IS_CODE_2008/2058",
+      "tier": 1,
+      "reason": "tier 1: Python keeps an int payload_t an int in the Laden cargo_t and sums it without compensation; same arrangement as assess/CN_II_IS_CODE_2008, payload_t written as the integer 2058 (issue #17: replaces the int-payload rows of the deleted derived-input fixture, issue #18)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "cargo": "LPG_propane",
+            "t_max": 4.4,
+            "depths": [
+              6.5
+            ],
+            "ruleset": "IGC_2G",
+            "fill_ratio": 0.95
+          },
+          "criteria_set": "IS_CODE_2008",
+          "payload_t": 2058
+        }
+      }
+    },
+    {
+      "id": "assess/int_payload/CN_II_IS_CODE_2008/1000",
+      "tier": 1,
+      "reason": "tier 1: Python keeps an int payload_t an int in the Laden cargo_t and sums it without compensation; same arrangement as assess/CN_II_IS_CODE_2008, payload_t written as the integer 1000 (issue #17: replaces the int-payload rows of the deleted derived-input fixture, issue #18)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "cargo": "LPG_propane",
+            "t_max": 4.4,
+            "depths": [
+              6.5
+            ],
+            "ruleset": "IGC_2G",
+            "fill_ratio": 0.95
+          },
+          "criteria_set": "IS_CODE_2008",
+          "payload_t": 1000
+        }
+      }
+    },
+    {
+      "id": "assess/int_payload/narrow_deep_60x7_IS_CODE_2008/484",
+      "tier": 1,
+      "reason": "tier 1: Python keeps an int payload_t an int in the Laden cargo_t and sums it without compensation; same arrangement as assess/narrow_deep_60x7_IS_CODE_2008, payload_t written as the integer 484 (issue #17: replaces the int-payload rows of the deleted derived-input fixture, issue #18)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 60.0,
+            "beam": 7.0,
+            "cargo": "LPG_propane",
+            "t_max": 10.0,
+            "depths": [
+              6.0
+            ],
+            "ruleset": "IGC_2G_EXACT",
+            "fill_ratio": 0.98,
+            "self_propelled": false
+          },
+          "criteria_set": "IS_CODE_2008",
+          "payload_t": 484
+        }
+      }
+    },
+    {
+      "id": "assess/int_payload/narrow_deep_60x7_IS_CODE_2008/1000",
+      "tier": 1,
+      "reason": "tier 1: Python keeps an int payload_t an int in the Laden cargo_t and sums it without compensation; same arrangement as assess/narrow_deep_60x7_IS_CODE_2008, payload_t written as the integer 1000 (issue #17: replaces the int-payload rows of the deleted derived-input fixture, issue #18)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 60.0,
+            "beam": 7.0,
+            "cargo": "LPG_propane",
+            "t_max": 10.0,
+            "depths": [
+              6.0
+            ],
+            "ruleset": "IGC_2G_EXACT",
+            "fill_ratio": 0.98,
+            "self_propelled": false
+          },
+          "criteria_set": "IS_CODE_2008",
+          "payload_t": 1000
+        }
+      }
+    },
+    {
+      "id": "assess/int_payload/ADN_G_110x11.4_ADN_criteria/1239",
+      "tier": 1,
+      "reason": "tier 1: Python keeps an int payload_t an int in the Laden cargo_t and sums it without compensation; same arrangement as assess/ADN_G_110x11.4_ADN_criteria, payload_t written as the integer 1239 (issue #17: replaces the int-payload rows of the deleted derived-input fixture, issue #18)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 110.0,
+            "beam": 11.4,
+            "cargo": "LNG",
+            "t_max": 3.0,
+            "depths": [
+              4.5
+            ],
+            "ruleset": "ADN_G",
+            "fill_ratio": 0.95,
+            "adn_tank_cap_m3": 380.0,
+            "self_propelled": false
+          },
+          "criteria_set": "ADN_9_3_1_14_2",
+          "payload_t": 1239
+        }
+      }
+    },
+    {
+      "id": "assess/int_payload/ADN_G_110x11.4_ADN_criteria/1000",
+      "tier": 1,
+      "reason": "tier 1: Python keeps an int payload_t an int in the Laden cargo_t and sums it without compensation; same arrangement as assess/ADN_G_110x11.4_ADN_criteria, payload_t written as the integer 1000 (issue #17: replaces the int-payload rows of the deleted derived-input fixture, issue #18)",
+      "input": {
+        "fn": "assess",
+        "args": {
+          "fit": {
+            "loa": 110.0,
+            "beam": 11.4,
+            "cargo": "LNG",
+            "t_max": 3.0,
+            "depths": [
+              4.5
+            ],
+            "ruleset": "ADN_G",
+            "fill_ratio": 0.95,
+            "adn_tank_cap_m3": 380.0,
+            "self_propelled": false
+          },
+          "criteria_set": "ADN_9_3_1_14_2",
+          "payload_t": 1000
+        }
+      }
+    },
+    {
       "id": "box_gz/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",

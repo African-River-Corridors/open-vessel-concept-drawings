@@ -17,6 +17,7 @@
 //!
 //! - A float `**` that overflows is Python's `OverflowError(34, 'Numerical result out of range')` (`py_pow`).
 
+use crate::barge_capacity::BargeCapacityResult;
 use crate::pyfmt;
 use alloc::format;
 use alloc::string::{String, ToString};
@@ -546,7 +547,8 @@ pub struct GasBasis {
     pub outer_diameter: f64,
     pub inner_diameter: f64,
     pub total_tank_volume: f64,
-    pub n_tanks_total: u32,
+    /// Python `int`: a count any 64-bit field holds.
+    pub n_tanks_total: i64,
     pub cylinder_length: f64,
     pub steel_top_down: f64,
     pub tank_total: f64,
@@ -564,6 +566,45 @@ pub struct GasCapacityResult {
     pub lightship_t: f64,
     /// `aft_arrangement is not None`.
     pub has_aft_arrangement: bool,
+}
+
+impl TryFrom<&BargeCapacityResult> for GasCapacityResult {
+    /// `Err` when the result's gas basis has no double bottom height. `barge_capacity::compute`
+    /// always sets one, so this only guards a hand-built result (Python would raise `TypeError`).
+    type Error = &'static str;
+
+    /// Read the numbers `assess` needs out of a capacity result, as Python passes the whole result.
+    fn try_from(r: &BargeCapacityResult) -> Result<Self, Self::Error> {
+        let gas_basis = match &r.gas_basis {
+            None => None,
+            Some(b) => Some(GasBasis {
+                loa: b.inputs.loa,
+                beam: b.inputs.beam,
+                depth: b.inputs.depth,
+                double_bottom_height: b
+                    .inputs
+                    .double_bottom_height
+                    .ok_or("gas basis has no double bottom height")?,
+                tank_support_height: b.inputs.tank_support_height,
+                outer_diameter: b.tanks.outer_diameter,
+                inner_diameter: b.tanks.inner_diameter,
+                total_tank_volume: b.tanks.total_tank_volume,
+                n_tanks_total: b.tanks.n_tanks_total,
+                cylinder_length: b.tanks.cylinder_length,
+                steel_top_down: b.weights.steel_top_down,
+                tank_total: b.weights.tank_total,
+                insulation: b.weights.insulation,
+                piping_machinery: b.weights.piping_machinery,
+                outfitting: b.weights.outfitting,
+            }),
+        };
+        Ok(Self {
+            gas_basis,
+            cargo_density_t_per_m3: r.cargo_density_t_per_m3,
+            lightship_t: r.lightship_t,
+            has_aft_arrangement: r.aft_arrangement.is_some(),
+        })
+    }
 }
 
 /// Python's defaults: block coefficient 0.85, water density 1.0, criteria set `IS_CODE_2008`.
@@ -680,7 +721,7 @@ pub fn assess_num(
         // Free surface: chord at the liquid level, along the cylindrical length, every tank.
         let i_fs = if 0.0 < frac && frac < 1.0 {
             let chord = 2.0 * libm::sqrt(py_max2(sq(r_in)? - sq(r_in - h)?, 0.0));
-            f64::from(basis.n_tanks_total) * basis.cylinder_length * py_pow(chord, 3.0)? / 12.0
+            basis.n_tanks_total as f64 * basis.cylinder_length * py_pow(chord, 3.0)? / 12.0
         } else {
             0.0
         };

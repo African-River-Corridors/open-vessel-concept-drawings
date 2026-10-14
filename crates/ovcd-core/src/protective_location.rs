@@ -88,6 +88,13 @@ pub const ADN_G_SIDE_M: f64 = 0.80 + 0.45;
 /// ADN type G bottom clearance: double bottom 0.60 + saddle 0.50.
 pub const ADN_G_BOTTOM_M: f64 = 0.60 + 0.50;
 
+/// ADN type G: tank volume cap under 9.3.4 (m^3).
+pub const ADN_G_TANK_CAP_9_3_4_M3: f64 = 1000.0;
+/// ADN type G: largest tank length over diameter.
+pub const ADN_G_MAX_L_OVER_D: f64 = 7.0;
+/// ADN type G: a tank wider than this fraction of the beam needs extra stability checks.
+pub const ADN_G_WIDE_TANK_FRACTION: f64 = 0.70;
+
 /// Result of protective location clearance checks.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
