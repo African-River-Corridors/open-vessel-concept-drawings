@@ -110,3 +110,101 @@ fn an_empty_sweep_fails_the_energy_check_and_ok_is_false() {
     assert_eq!(r.environments[0].energy_kwh_per_km, 0.0);
     assert!(!r.ok());
 }
+
+// --- Inputs the parity cases never vary. Expected values are the frozen Python's. ---
+
+#[test]
+fn a_higher_speed_floor_shortens_the_curve() {
+    let inp = EnergyInputs {
+        speed_min_knots: 3.0,
+        ..EnergyInputs::default()
+    };
+    let r = compute(&inp).unwrap();
+    assert_eq!(r.environments[0].curve.len(), 24);
+    assert_eq!(r.environments[1].curve.len(), 29);
+    assert_eq!(r.environments[0].curve[0].speed_knots, 3.0);
+    // Python: the first point is at 3.0 kn.
+    close(
+        r.environments[0].curve[0].energy_kwh_per_km,
+        4.3140884885663775,
+    );
+}
+
+#[test]
+fn a_better_propulsive_coefficient_cuts_the_installed_power() {
+    let inp = EnergyInputs {
+        propulsive_coefficient: 0.6,
+        ..EnergyInputs::default()
+    };
+    let r = compute(&inp).unwrap();
+    close(r.installed_power_kw, 153.457356305937);
+    let [channel, sea] = &r.environments[..] else {
+        panic!("two environments")
+    };
+    close(channel.battery_power_kw, 127.88113025494751);
+    close(channel.energy_kwh_per_km, 11.508381052461079);
+    close(sea.battery_power_kw, 81.33028965344562);
+    close(sea.energy_kwh_per_km, 7.3191405375671);
+    assert_eq!(channel.curve.len(), 28);
+    close(channel.curve[0].energy_kwh_per_km, 1.7935078737878523);
+}
+
+#[test]
+fn a_zero_speed_floor_gives_zero_energy_at_the_first_point() {
+    let inp = EnergyInputs {
+        speed_min_knots: 0.0,
+        ..EnergyInputs::default()
+    };
+    let r = compute(&inp).unwrap();
+    assert_eq!(r.environments[0].curve.len(), 36);
+    assert_eq!(r.environments[0].curve[0].speed_knots, 0.0);
+    assert_eq!(r.environments[0].curve[0].energy_kwh_per_km, 0.0);
+    assert_eq!(r.environments[1].curve.len(), 41);
+    close(r.installed_power_kw, 204.609808407916);
+}
+
+#[test]
+fn a_zero_schijf_limit_fails_the_check_and_sizes_the_power_from_the_floor() {
+    // Bottom width 5 m = top width 5 m: the confined limit is 0.0 kn.
+    let inp = EnergyInputs {
+        channel_bottom_width_m: 5.0,
+        channel_top_width_m: 5.0,
+        ..EnergyInputs::default()
+    };
+    let r = compute(&inp).unwrap();
+    let channel = &r.environments[0];
+    assert_eq!(channel.limiting_speed_knots, Some(0.0));
+    assert_eq!(channel.service_speed_knots, 6.0);
+    assert_eq!(r.checks[0].name, "service_below_schijf");
+    assert!(!r.checks[0].ok);
+    assert_eq!(r.checks[0].message, "no confined limit (open water)");
+    assert!(!r.ok());
+    close(r.installed_power_kw, 328.4312595149517);
+    close(channel.energy_kwh_per_km, 24.630374033698683);
+}
+
+#[test]
+fn a_service_speed_exactly_on_the_schijf_limit_leaves_an_empty_curve() {
+    // Knife edge: the limit is exactly 9.0 kn, and the sweep starts above it at 9.9 kn.
+    let inp = EnergyInputs {
+        channel_bottom_width_m: 17.606060903446444,
+        channel_top_width_m: 41.60606090344645,
+        speed_min_knots: 9.9,
+        target_service_speed_knots: 9.5,
+        service_speed_safety_fraction: 1.0,
+        ..EnergyInputs::default()
+    };
+    let r = compute(&inp).unwrap();
+    let channel = &r.environments[0];
+    assert_eq!(channel.limiting_speed_knots, Some(9.0));
+    assert_eq!(channel.service_speed_knots, 9.0);
+    assert!(channel.curve.is_empty());
+    assert!(r.checks[0].ok);
+    assert_eq!(
+        r.checks[0].message,
+        "service 9.0 kn stays below the Schijf limit 9.0 kn"
+    );
+    assert!(!r.checks[1].ok);
+    assert_eq!(r.environments[1].service_speed_knots, 9.5);
+    assert_eq!(r.installed_power_kw, 0.0);
+}
