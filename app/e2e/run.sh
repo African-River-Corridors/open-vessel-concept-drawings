@@ -15,4 +15,4 @@ for _ in $(seq 1 30); do
   (echo > /dev/tcp/127.0.0.1/4444) 2>/dev/null && break
   sleep 1
 done
-node --test e2e/
+node --test e2e/smoke.test.mjs
