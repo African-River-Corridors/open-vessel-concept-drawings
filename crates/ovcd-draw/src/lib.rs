@@ -14,6 +14,7 @@ pub mod json;
 pub mod numbers;
 pub mod pipeline;
 pub(crate) mod read;
+pub mod render;
 pub mod rules;
 pub mod schema;
 pub mod symbols;

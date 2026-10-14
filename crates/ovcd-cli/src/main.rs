@@ -42,6 +42,8 @@ Usage:
       The conformance runner of the Drawing Format Standard (clause 17.3): read one drawing
       document and print the result as JSON, either the normalised content or the list of
       error clauses. It reads only the document and the files the document names.
+  ovcd draw build <document.json> --out <dir>
+      Build the outputs of one drawing document: the normalised content, an SVG and a PDF.
   ovcd --help | --version
 
 All files and output are SI.
