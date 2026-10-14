@@ -12,5 +12,6 @@
   "tanks",
   "weights",
   "resistance",
-  "electric_energy"
+  "electric_energy",
+  "hydrostatics"
 ]
