@@ -10,3 +10,4 @@ repository.workspace = true
 [dependencies]
 ovcd-core.workspace = true
 serde_json.workspace = true
+sha2 = "0.11.1"
