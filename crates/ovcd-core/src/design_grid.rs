@@ -151,6 +151,11 @@ fn cell(
     inputs.side_clearance_override_m = Some(SIDE_CLEARANCE_M);
     let r = match capacity(&inputs) {
         Ok(r) => r,
+        // The fixed range-rule error has no Python twin: Python holds the big integer and
+        // answers. Fail loudly, as the parity README requires, not as an infeasible cell.
+        Err(e) if e.kind == "OverflowError" && e.message == INT_OVERFLOW_MESSAGE => {
+            return Err(e);
+        }
         Err(e) => {
             return Ok(GridCell::infeasible(
                 barge_length_m,

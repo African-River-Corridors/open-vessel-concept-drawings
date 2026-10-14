@@ -568,6 +568,38 @@
       }
     },
     {
+      "id": "sweep/shallow_gas_cell",
+      "output": {
+        "ok": {
+          "barge_lengths_m": [
+            90
+          ],
+          "beams_m": [
+            12.0
+          ],
+          "depth_m": 2.0,
+          "cargo_type": "LPG_propane",
+          "clearance_basis": "1.0 m standard side clearance per side (IGC-2G protective location)",
+          "max_tank_length_m": 28.0,
+          "cells": [
+            {
+              "barge_length_m": 90.0,
+              "beam_m": 12.0,
+              "n_tanks_long": 3,
+              "feasible": false,
+              "cargo_t": null,
+              "tank_outer_diameter_m": null,
+              "tank_length_m": null,
+              "slenderness": null,
+              "full_load_draft_m": null,
+              "air_draft_m": null,
+              "reason": "volume-bound load must float within the moulded depth"
+            }
+          ]
+        }
+      }
+    },
+    {
       "id": "sweep/sweep/000",
       "output": {
         "ok": {

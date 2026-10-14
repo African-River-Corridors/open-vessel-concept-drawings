@@ -272,6 +272,23 @@
       }
     },
     {
+      "id": "sweep/shallow_gas_cell",
+      "tier": 1,
+      "reason": "tier 1: issue #22 fix round 1: a 2 m depth gives cargo above zero but failed not_overloaded, freeboard_ok and wheelhouse checks, so the cell is infeasible by a non-geometry check; kills the `||` to `&&` mutant in the feasibility gate",
+      "input": {
+        "fn": "sweep",
+        "args": {
+          "barge_lengths_m": [
+            90
+          ],
+          "beams_m": [
+            12.0
+          ],
+          "depth_m": 2.0
+        }
+      }
+    },
+    {
       "id": "sweep/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",

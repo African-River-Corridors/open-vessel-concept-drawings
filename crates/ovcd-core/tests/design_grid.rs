@@ -83,3 +83,12 @@ fn a_pushed_barge_with_a_channel_limited_draft_keeps_both() {
     assert_eq!(gi.inputs.tug_length, 25.0);
     assert_eq!(gr.tanks.unwrap().n_tanks_total, 4);
 }
+
+#[test]
+fn a_range_rule_overflow_in_capacity_ends_the_sweep_loudly() {
+    // Python holds the huge integer and returns a feasible cell; Rust cannot, so it must
+    // fail with the fixed error, never turn it into an infeasible cell.
+    let e = sweep(&[100.0], &[1e300], 6.0, "LPG_propane").unwrap_err();
+    assert_eq!(e.kind, "OverflowError");
+    assert_eq!(e.message, "integer does not fit in 64 bits");
+}
