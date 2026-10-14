@@ -52,21 +52,22 @@ def test_box_barge_unchanged():
     assert 2200 < o["results"]["cargo_t"] < 2300
 
 
-def test_gas_infeasible_fit_is_shown_as_a_failed_check(monkeypatch):
+def test_gas_infeasible_fit_is_shown_as_a_failed_check():
     """Issue #6: when fit() finds no passing arrangement, the page says so, not just the tonnage.
 
+    A 60 x 7 m tender hull carries cargo but no arrangement passes its checks (the Rust core runs
+    the search, so the test uses this hull instead of patching the search).
+
     Label: property
-    Parity: simulate:simulate/gas_CN_II
+    Parity: simulate:simulate/gas_tender_60x7, simulate:simulate/gas_CN_II
     """
-    from dataclasses import replace
-    import vessel_designer.simulate as sim
-    real = sim.gas_fit
-    monkeypatch.setattr(sim, "gas_fit", lambda *a, **k: replace(real(*a, **k), feasible=False))
-    o = simulate(CN_II)
+    tender = dict(vessel="gas_barge", cargo="LPG_propane", loa_m=60, beam_m=7.0, depth_m=6.0,
+                  cb=0.85, freeboard_min_m=0.3, self_propelled=False, ruleset="IGC_2G_EXACT",
+                  fill_ratio=0.98)
+    o = simulate(tender)
+    assert o["results"]["cargo_t"] > 0
     assert o["arrangement"]["feasible"] is False
     assert any(c["name"] == "Feasible arrangement" and not c["ok"] for c in o["checks"])
-    assert simulate(CN_II)["arrangement"]["feasible"] is False
-    monkeypatch.undo()
     o = simulate(CN_II)
     assert o["arrangement"]["feasible"] is True
     assert not any(c["name"] == "Feasible arrangement" for c in o["checks"])

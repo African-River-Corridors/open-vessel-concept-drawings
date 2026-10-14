@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
+from .._bridge import call as _call
 
 
 class VesselType(Enum):
@@ -65,12 +66,7 @@ def distance_d_vc(vc: float) -> float:
     Returns:
         Minimum distance in metres.
     """
-    if vc <= 1000.0:
-        return 0.8
-    elif vc <= 5000.0:
-        return 1.0
-    else:
-        return 2.0
+    return _call("protective_location", "distance_d_vc", {"vc": vc}, float)
 
 
 def d_vc_exact(vc_individual_m3: float) -> float:
@@ -78,14 +74,7 @@ def d_vc_exact(vc_individual_m3: float) -> float:
 
     Distance to the tank steel, excluding insulation (IGC 2.4.2).
     """
-    v = float(vc_individual_m3)
-    if v <= 1000.0:
-        return 0.8
-    if v < 5000.0:
-        return 0.75 + v * 0.2 / 4000.0
-    if v < 30000.0:
-        return 0.8 + v / 25000.0
-    return 2.0
+    return _call("protective_location", "d_vc_exact", {"vc_individual_m3": vc_individual_m3}, float)
 
 
 def required_side_protection(vessel_type: VesselType, beam: float, d_vc: float) -> float:
@@ -99,18 +88,7 @@ def required_side_protection(vessel_type: VesselType, beam: float, d_vc: float) 
     Returns:
         Required Cs in metres.
     """
-    if vessel_type in (VesselType.IGF, VesselType.IGC_1G):
-        return max(min(beam / 5.0, 11.5), d_vc)
-    elif vessel_type == VesselType.IGC_2G:
-        return d_vc
-    elif vessel_type == VesselType.IGC_3G:
-        return 0.8
-    elif vessel_type == VesselType.ADN_G:
-        return ADN_G_SIDE_M
-    elif vessel_type == VesselType.IGC_2G_EXACT:
-        return d_vc                     # caller passes d_vc_exact(per-tank Vc), steel datum
-    else:
-        raise ValueError(f"Unknown vessel type: {vessel_type}")
+    return _call("protective_location", "required_side_protection", {"vessel_type": vessel_type, "beam": beam, "d_vc": d_vc}, float)
 
 
 def required_bottom_protection(beam: float, d_vc: float, vessel_type: VesselType = None) -> float:
@@ -125,9 +103,7 @@ def required_bottom_protection(beam: float, d_vc: float, vessel_type: VesselType
     Returns:
         Required Cb in metres.
     """
-    if vessel_type == VesselType.ADN_G:
-        return ADN_G_BOTTOM_M
-    return max(min(beam / 15.0, 2.0), d_vc)
+    return _call("protective_location", "required_bottom_protection", {"beam": beam, "d_vc": d_vc, "vessel_type": vessel_type}, float)
 
 
 @dataclass
@@ -149,10 +125,7 @@ def compute_required_clearances(vessel_type_str: str, beam: float, d_vc: float) 
     Returns:
         RequiredClearances with cs_required, cb_required, and d_vc.
     """
-    vessel_type = VesselType(vessel_type_str)
-    cs_req = required_side_protection(vessel_type, beam, d_vc)
-    cb_req = required_bottom_protection(beam, d_vc, vessel_type)
-    return RequiredClearances(cs_required=cs_req, cb_required=cb_req, d_vc=d_vc)
+    return _call("protective_location", "compute_required_clearances", {"vessel_type_str": vessel_type_str, "beam": beam, "d_vc": d_vc}, RequiredClearances)
 
 
 def check_protective_location(
@@ -176,20 +149,7 @@ def check_protective_location(
     Returns:
         ProtectiveLocationResult with required vs actual clearances and pass/fail.
     """
-    vessel_type = VesselType(vessel_type_str)
-    d_vc = distance_d_vc(total_tank_volume)
-    cs_req = required_side_protection(vessel_type, beam, d_vc)
-    cb_req = required_bottom_protection(beam, d_vc, vessel_type)
-    cb_actual = double_bottom_height + tank_support_height
-
-    return ProtectiveLocationResult(
-        vessel_type=vessel_type_str,
-        d_vc=d_vc,
-        total_tank_volume=total_tank_volume,
-        cs_required=cs_req,
-        cs_actual=side_clearance,
-        cs_ok=side_clearance >= cs_req,
-        cb_required=cb_req,
-        cb_actual=cb_actual,
-        cb_ok=cb_actual >= cb_req,
-    )
+    return _call("protective_location", "check_protective_location", dict(
+        vessel_type_str=vessel_type_str, beam=beam, total_tank_volume=total_tank_volume,
+        side_clearance=side_clearance, double_bottom_height=double_bottom_height,
+        tank_support_height=tank_support_height), ProtectiveLocationResult)

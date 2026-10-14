@@ -46,11 +46,11 @@ Pure functions, math only — Pyodide-safe.
 """
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, field
 from typing import List, Optional
 
 from .checks import Check, all_ok
+from .._bridge import call as _call
 
 GRAVITY = 9.80665
 
@@ -107,77 +107,9 @@ class SquatResult:
         return all_ok(self.checks)
 
 
-def _barrass(cb: float, blockage: float, v_kn: float) -> float:
-    # Zero blockage is OPEN WATER, where the Barrass confined-channel form does not apply and
-    # the answer is zero, not an epsilon. Flooring the blockage at 1e-9 returned 1.6e-07 m,
-    # which is a number pretending to be a measurement.
-    if v_kn <= 0 or blockage <= 0:
-        return 0.0
-    return cb * (blockage ** 0.81) * (v_kn ** 2.08) / 20.0
-
-
-def _icorels(vol_m3: float, lpp: float, fnh: float) -> Optional[float]:
-    """None above the validity limit rather than a number that means nothing."""
-    if fnh <= 0:
-        return 0.0
-    if fnh >= 0.99:
-        return None
-    return 2.4 * (vol_m3 / (lpp ** 2)) * (fnh ** 2) / math.sqrt(1.0 - fnh ** 2)
-
-
 def compute(inp: SquatInputs) -> SquatResult:
     """Maximum squat by two methods; the LARGER is adopted."""
-    v_ms = inp.speed_through_water_kn * 0.514444
-    vol = inp.displacement_m3 or (inp.block_coefficient * inp.lpp_m * inp.beam_m * inp.draft_m)
-    midship = inp.beam_m * inp.draft_m
-    blockage = (midship / inp.channel_area_m2) if inp.channel_area_m2 > 0 else 0.0
-    fnh = (v_ms / math.sqrt(GRAVITY * inp.water_depth_m)) if inp.water_depth_m > 0 else 0.0
-
-    s_b = _barrass(inp.block_coefficient, blockage, inp.speed_through_water_kn)
-    s_i = _icorels(vol, inp.lpp_m, fnh) if inp.water_depth_m > 0 else None
-
-    cands = [("Barrass II", s_b)] + ([("ICORELS", s_i)] if s_i is not None else [])
-    method, squat = max(cands, key=lambda t: t[1])
-
-    static = inp.water_depth_m - inp.draft_m if inp.water_depth_m > 0 else float("inf")
-    dynamic = static - squat
-
-    checks: List[Check] = []
-    warns: List[str] = []
-
-    checks.append(Check(
-        "keel_clears_bed", dynamic > 0,
-        f"dynamic UKC {dynamic:.2f} m = static {static:.2f} m - squat {squat:.2f} m "
-        f"({method}) at {inp.speed_through_water_kn:.2f} kn"))
-    checks.append(Check(
-        "keel_clears_bed_with_margin", dynamic >= inp.safety_margin_m,
-        f"dynamic UKC {dynamic:.2f} m against a {inp.safety_margin_m:.2f} m working margin",
-        severity="warning"))
-    checks.append(Check(
-        "froude_depth_subcritical", fnh < FNH_VALID_MAX,
-        f"depth Froude {fnh:.2f}; above {FNH_VALID_MAX} the flow approaches critical and "
-        f"both squat forms lose validity", severity="warning"))
-    if blockage > 0:
-        checks.append(Check(
-            "blockage_within_barrass_range", blockage <= 0.35,
-            f"blockage {blockage:.3f}; Barrass is fitted below about 0.35 and extrapolates "
-            f"above it", severity="warning"))
-    if s_i is not None and s_b > 0:
-        spread = abs(s_i - s_b) / max(s_b, 1e-9)
-        checks.append(Check(
-            "methods_agree_within_50pct", spread <= 0.5,
-            f"Barrass {s_b:.2f} m vs ICORELS {s_i:.2f} m, {spread*100:.0f}% apart",
-            severity="warning"))
-    if s_i is None and fnh > 0:
-        warns.append(f"ICORELS not evaluated: depth Froude {fnh:.2f} at or above 0.99")
-    if inp.channel_area_m2 <= 0:
-        warns.append("no channel area given, so blockage is 0 and Barrass returns 0 — this is "
-                     "the OPEN-WATER case and squat is then ICORELS only")
-
-    return SquatResult(method=method, squat_m=squat, squat_barrass_m=s_b, squat_icorels_m=s_i,
-                       blockage_ratio=blockage, froude_depth=fnh, static_ukc_m=static,
-                       dynamic_ukc_m=dynamic, grounds=dynamic <= 0,
-                       checks=checks, warnings=warns)
+    return _call("squat", "compute", {"inputs": inp}, SquatResult)
 
 
 def max_speed_for_ukc(draft_m: float, beam_m: float, lpp_m: float, water_depth_m: float,
@@ -189,23 +121,7 @@ def max_speed_for_ukc(draft_m: float, beam_m: float, lpp_m: float, water_depth_m
     Bisection on :func:`compute`, so it uses whichever method is governing rather than
     inverting one formula analytically. Returns 0.0 if the vessel cannot float clear at rest.
     """
-    static = water_depth_m - draft_m
-    if static <= safety_margin_m:
-        return 0.0
-
-    def ukc(v):
-        return compute(SquatInputs(speed_through_water_kn=v, draft_m=draft_m, beam_m=beam_m,
-                                   lpp_m=lpp_m, block_coefficient=block_coefficient,
-                                   water_depth_m=water_depth_m,
-                                   channel_area_m2=channel_area_m2)).dynamic_ukc_m
-
-    lo, hi = 0.0, v_hi_kn
-    if ukc(hi) >= safety_margin_m:
-        return hi
-    while hi - lo > tol_kn:
-        mid = 0.5 * (lo + hi)
-        if ukc(mid) >= safety_margin_m:
-            lo = mid
-        else:
-            hi = mid
-    return lo
+    return _call("squat", "max_speed_for_ukc", dict(
+        draft_m=draft_m, beam_m=beam_m, lpp_m=lpp_m, water_depth_m=water_depth_m,
+        channel_area_m2=channel_area_m2, block_coefficient=block_coefficient,
+        safety_margin_m=safety_margin_m, v_hi_kn=v_hi_kn, tol_kn=tol_kn), float)

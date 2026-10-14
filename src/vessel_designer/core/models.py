@@ -1,7 +1,7 @@
 """Data models for barge design inputs and outputs."""
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import List, Optional
 
 from .aft_arrangement import AftArrangementResult
 from .gas_separation import GasSeparationResult
@@ -249,7 +249,7 @@ class BargeResults:
     protective_location: Optional[ProtectiveLocationResult] = None
 
     # Binding constraints (which constraints limit cargo capacity)
-    binding_constraints: list = field(default_factory=list)
+    binding_constraints: List[str] = field(default_factory=list)
 
     # Warnings
-    warnings: list = field(default_factory=list)
+    warnings: List[str] = field(default_factory=list)

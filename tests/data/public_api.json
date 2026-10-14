@@ -1,0 +1,2333 @@
+{
+ "vessel_designer.calibration": {
+  "BargeRow": {
+   "fields": [
+    "case",
+    "ls_ported",
+    "ls_cal",
+    "ls_padovezi",
+    "ls_cn",
+    "dwt_ported",
+    "dwt_cal",
+    "ls_from_light_draught_cb1"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "CAL": {
+   "kind": "constant"
+  },
+  "KMH_PER_KN": {
+   "kind": "constant"
+  },
+  "MotorRow": {
+   "fields": [
+    "cargo",
+    "loa",
+    "boa",
+    "T",
+    "disp",
+    "cargo_t",
+    "power_kw",
+    "speed_kmh",
+    "cb_implied",
+    "ls_plus_consumables",
+    "delivered_kw"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "RHO_FRESH": {
+   "kind": "constant"
+  },
+  "ROOT": {
+   "kind": "constant"
+  },
+  "factors_yaml": {
+   "kind": "function",
+   "params": [
+    [
+     "f",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "fit_factors": {
+   "kind": "function",
+   "params": [
+    [
+     "cases",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "fmt": {
+   "kind": "function",
+   "params": [
+    [
+     "x",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "nd",
+     "POSITIONAL_OR_KEYWORD",
+     "0"
+    ]
+   ]
+  },
+  "lbd": {
+   "kind": "function",
+   "params": [
+    [
+     "c",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "ls_cn_draft": {
+   "kind": "function",
+   "params": [
+    [
+     "L",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "B",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "D",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "C",
+     "POSITIONAL_OR_KEYWORD",
+     "0.128"
+    ]
+   ]
+  },
+  "ls_padovezi": {
+   "kind": "function",
+   "params": [
+    [
+     "L",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "B",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "D",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "main": {
+   "kind": "function",
+   "params": [
+    [
+     "out_dir",
+     "POSITIONAL_OR_KEYWORD",
+     "<path>"
+    ]
+   ]
+  },
+  "pct": {
+   "kind": "function",
+   "params": [
+    [
+     "model",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "obs",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "report": {
+   "kind": "function",
+   "params": []
+  },
+  "run_barge": {
+   "kind": "function",
+   "params": [
+    [
+     "c",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "f",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "run_motor": {
+   "kind": "function",
+   "params": [
+    [
+     "cargo",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "r",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "speed_kmh",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core": {},
+ "vessel_designer.core.aft_arrangement": {
+  "AftArrangementInputs": {
+   "fields": [
+    "beam",
+    "depth",
+    "n_thrusters",
+    "thruster_envelope_m",
+    "thruster_clear_m",
+    "thruster_room_length_m",
+    "n_battery_units",
+    "n_accom_units",
+    "container_length_m",
+    "container_width_m",
+    "container_height_m",
+    "container_side_gap_m",
+    "container_gap_m",
+    "container_foundation_m",
+    "wheelhouse_length_m",
+    "wheelhouse_width_m",
+    "wheelhouse_height_m",
+    "wheelhouse_gap_m",
+    "wheelhouse_eye_above_floor_m",
+    "sightline_obstruction_m",
+    "sightline_margin_m",
+    "wheelhouse_max_lift_m"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "AftArrangementResult": {
+   "fields": [
+    "length_m",
+    "zones",
+    "thruster_offsets_m",
+    "thruster_room_length_m",
+    "container_x0_m",
+    "container_x1_m",
+    "container_total_width_m",
+    "container_top_above_keel_m",
+    "container_labels",
+    "container_unit_width_m",
+    "container_side_gap_m",
+    "container_rows",
+    "container_per_row",
+    "container_row_length_m",
+    "container_row_gap_m",
+    "wheelhouse_x0_m",
+    "wheelhouse_x1_m",
+    "wheelhouse_floor_lowered_m",
+    "wheelhouse_top_lowered_m",
+    "wheelhouse_floor_raised_m",
+    "wheelhouse_top_raised_m",
+    "wheelhouse_lift_m",
+    "wheelhouse_width_m",
+    "wheelhouse_height_m",
+    "block_top_lowered_m",
+    "checks",
+    "warnings"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": [
+    "ok"
+   ]
+  },
+  "ISO40_HEIGHT_HC_M": {
+   "kind": "constant"
+  },
+  "ISO40_HEIGHT_STD_M": {
+   "kind": "constant"
+  },
+  "ISO40_LENGTH_M": {
+   "kind": "constant"
+  },
+  "ISO40_WIDTH_M": {
+   "kind": "constant"
+  },
+  "compute": {
+   "kind": "function",
+   "params": [
+    [
+     "inp",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.barge_capacity": {
+  "BargeCapacityInputs": {
+   "fields": [
+    "loa",
+    "beam",
+    "depth",
+    "cargo_type",
+    "block_coefficient",
+    "water_density",
+    "required_freeboard",
+    "air_draft_limit_m",
+    "ballast_capacity_t",
+    "aft",
+    "separation",
+    "self_propelled",
+    "pushed_stern_void_m",
+    "bow_rake_length_m",
+    "bulk_end_bulkhead_m",
+    "vessel_type",
+    "side_clearance_override_m",
+    "n_tanks_wide",
+    "n_tanks_long",
+    "tank_wall_thickness",
+    "fill_ratio",
+    "dome_height",
+    "tank_support_height",
+    "hold_type",
+    "lightship_k_t_per_m3",
+    "wing_void_width",
+    "double_bottom_height_bulk",
+    "hopper_slope_h_per_v",
+    "coaming_height",
+    "n_holds",
+    "hold_fill_ratio",
+    "bow_void_fraction",
+    "stern_void_fraction",
+    "inner_bottom_t_mm",
+    "hopper_plate_t_mm",
+    "bulkhead_t_mm",
+    "coaming_t_mm",
+    "steel_density",
+    "bulk_structure_factor",
+    "bulk_steel_rate_per_cbm",
+    "bulk_piping_factor",
+    "bulk_outfitting_factor"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "BargeCapacityResult": {
+   "fields": [
+    "cargo_type",
+    "phase",
+    "cargo_density_t_per_m3",
+    "cargo_capacity_t",
+    "full_load_draft_m",
+    "air_draft_m",
+    "cargo_volume_m3",
+    "lightship_t",
+    "displacement_t",
+    "deadweight_t",
+    "freeboard_m",
+    "air_draft_top_above_keel_m",
+    "overloaded",
+    "tank_outer_diameter_m",
+    "n_tanks_wide",
+    "max_tank_od_m",
+    "n_tanks_total",
+    "side_clearance_m",
+    "bottom_clearance_m",
+    "hold_height_m",
+    "hold_top_width_m",
+    "hold_bottom_width_m",
+    "hold_section_area_m2",
+    "gm_m",
+    "bow_void_length_m",
+    "stern_void_length_m",
+    "cargo_zone_length_m",
+    "bow_rake_length_m",
+    "aft_arrangement",
+    "separation",
+    "containment_inner_volume_m3",
+    "fill_ratio_applied",
+    "insulation_thickness_mm",
+    "tank_wall_thickness_mm",
+    "tank_inner_diameter_m",
+    "light_draft_m",
+    "air_draft_light_m",
+    "ballast_draft_m",
+    "air_draft_ballast_m",
+    "air_draft_navigating_light_m",
+    "navigating_top_above_keel_m",
+    "gas_basis",
+    "checks",
+    "warnings"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": [
+    "ok"
+   ]
+  },
+  "MAX_TANK_OD_M": {
+   "kind": "constant"
+  },
+  "compute": {
+   "kind": "function",
+   "params": [
+    [
+     "inp",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "tanks_wide_for_beam": {
+   "kind": "function",
+   "params": [
+    [
+     "beam_m",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "side_clearance_m",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "tank_gap_transverse_m",
+     "POSITIONAL_OR_KEYWORD",
+     "0.0"
+    ],
+    [
+     "max_od_m",
+     "POSITIONAL_OR_KEYWORD",
+     "12.0"
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.barge_cost": {
+  "BargeCostInputs": {
+   "fields": [
+    "hull_steel_t",
+    "wing_plate_t",
+    "weather_shield_t",
+    "tank_shell_t",
+    "tank_supports_t",
+    "insulation_t",
+    "piping_machinery_t",
+    "outfitting_t",
+    "tug_hull_steel_t",
+    "battery_kwh",
+    "propulsion_kw"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "BargeCostRates": {
+   "fields": [
+    "hull_steel_rate",
+    "tank_shell_rate",
+    "tank_supports_rate",
+    "insulation_rate",
+    "piping_rate",
+    "outfitting_rate",
+    "cargo_system_lump",
+    "paint_anodes_misc",
+    "battery_rate_per_kwh",
+    "propulsion_rate_per_kw",
+    "wheelhouse_accom_lump",
+    "tug_outfitting_lump",
+    "yard_margin_fraction",
+    "delivery_lump",
+    "currency"
+   ],
+   "frozen": true,
+   "kind": "class",
+   "methods": [
+    "from_mapping"
+   ]
+  },
+  "BargeCostResult": {
+   "fields": [
+    "barge_breakdown",
+    "tug_breakdown",
+    "barge_subtotal",
+    "tug_subtotal",
+    "yard_margin",
+    "delivery",
+    "unit_total",
+    "checks",
+    "rates"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": [
+    "ok"
+   ]
+  },
+  "EXAMPLE_RATES_FILE": {
+   "kind": "constant"
+  },
+  "RatesLike": {
+   "kind": "constant"
+  },
+  "compute": {
+   "kind": "function",
+   "params": [
+    [
+     "inp",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "rates",
+     "POSITIONAL_OR_KEYWORD",
+     "None"
+    ]
+   ]
+  },
+  "load_rates": {
+   "kind": "function",
+   "params": [
+    [
+     "rates",
+     "POSITIONAL_OR_KEYWORD",
+     "None"
+    ]
+   ]
+  },
+  "parse_flat_yaml": {
+   "kind": "function",
+   "params": [
+    [
+     "text",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.cargo": {
+  "CARGO_DATABASE": {
+   "kind": "constant"
+  },
+  "CargoProperties": {
+   "fields": [
+    "name",
+    "density",
+    "temperature",
+    "pressure",
+    "description",
+    "phase"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "get_cargo": {
+   "kind": "function",
+   "params": [
+    [
+     "cargo_type",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.checks": {
+  "Check": {
+   "fields": [
+    "name",
+    "ok",
+    "message",
+    "severity"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": [
+    "is_error"
+   ]
+  },
+  "all_ok": {
+   "kind": "function",
+   "params": [
+    [
+     "checks",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.design_grid": {
+  "BOW_NON_TANK_PCT": {
+   "kind": "constant"
+  },
+  "DesignGrid": {
+   "fields": [
+    "barge_lengths_m",
+    "beams_m",
+    "depth_m",
+    "cargo_type",
+    "clearance_basis",
+    "max_tank_length_m",
+    "cells"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": [
+    "curve"
+   ]
+  },
+  "GridCell": {
+   "fields": [
+    "barge_length_m",
+    "beam_m",
+    "n_tanks_long",
+    "feasible",
+    "cargo_t",
+    "tank_outer_diameter_m",
+    "tank_length_m",
+    "slenderness",
+    "full_load_draft_m",
+    "air_draft_m",
+    "reason"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "MAX_TANK_LENGTH_M": {
+   "kind": "constant"
+  },
+  "SIDE_CLEARANCE_M": {
+   "kind": "constant"
+  },
+  "STERN_NON_TANK_PCT": {
+   "kind": "constant"
+  },
+  "TUG_LOA_M": {
+   "kind": "constant"
+  },
+  "n_tanks_for_length": {
+   "kind": "function",
+   "params": [
+    [
+     "barge_length_m",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "max_tank_length_m",
+     "POSITIONAL_OR_KEYWORD",
+     "28.0"
+    ]
+   ]
+  },
+  "sweep": {
+   "kind": "function",
+   "params": [
+    [
+     "barge_lengths_m",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "beams_m",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "depth_m",
+     "POSITIONAL_OR_KEYWORD",
+     "6.0"
+    ],
+    [
+     "cargo_type",
+     "POSITIONAL_OR_KEYWORD",
+     "'LPG_propane'"
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.electric_energy": {
+  "EnergyEnvironment": {
+   "fields": [
+    "name",
+    "limiting_speed_knots",
+    "service_speed_knots",
+    "blockage_ratio",
+    "curve",
+    "resistance_kn",
+    "shaft_power_kw",
+    "battery_power_kw",
+    "energy_kwh_per_km",
+    "energy_per_trip_kwh",
+    "energy_per_year_mwh"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "EnergyInputs": {
+   "fields": [
+    "beam",
+    "loa",
+    "lwl",
+    "draft",
+    "block_coefficient",
+    "channel_depth_m",
+    "channel_bottom_width_m",
+    "channel_top_width_m",
+    "current_knots",
+    "fresh_water",
+    "also_open_sea",
+    "propulsive_coefficient",
+    "drivetrain_efficiency",
+    "target_service_speed_knots",
+    "service_speed_safety_fraction",
+    "power_margin",
+    "one_way_km",
+    "trips_per_year",
+    "speed_min_knots",
+    "speed_max_knots",
+    "speed_step_knots"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "EnergyPoint": {
+   "fields": [
+    "speed_knots",
+    "speed_kmh",
+    "froude_depth",
+    "resistance_kn",
+    "shaft_power_kw",
+    "battery_power_kw",
+    "energy_kwh_per_km"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "EnergyResult": {
+   "fields": [
+    "inputs",
+    "installed_power_kw",
+    "environments",
+    "checks"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": [
+    "binding",
+    "ok"
+   ]
+  },
+  "KN_TO_KMH": {
+   "kind": "constant"
+  },
+  "compute": {
+   "kind": "function",
+   "params": [
+    [
+     "inp",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.ga_adapter": {
+  "is_gas": {
+   "kind": "function",
+   "params": [
+    [
+     "res",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "to_ga": {
+   "kind": "function",
+   "params": [
+    [
+     "inp",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "res",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "laden_draft_m",
+     "POSITIONAL_OR_KEYWORD",
+     "None"
+    ],
+    [
+     "motor_vessel",
+     "POSITIONAL_OR_KEYWORD",
+     "True"
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.gas_arrangement": {
+  "ADN_LONGITUDINAL_GAP_M": {
+   "kind": "constant"
+  },
+  "ArrangementFit": {
+   "fields": [
+    "loa_m",
+    "beam_m",
+    "depth_m",
+    "cargo",
+    "ruleset",
+    "fill_ratio",
+    "self_propelled",
+    "t_max_m",
+    "payload_t",
+    "volume_capacity_t",
+    "binding",
+    "draft_at_payload_m",
+    "cargo_zone_m",
+    "stern_void_m",
+    "bow_void_m",
+    "tank_od_m",
+    "n_tanks",
+    "n_tanks_wide",
+    "n_tanks_long",
+    "lightship_t",
+    "air_draft_light_m",
+    "side_clearance_m",
+    "tank_inner_diameter_m",
+    "containment_inner_volume_m3",
+    "per_tank_volume_m3",
+    "cargo_volume_m3",
+    "density_t_m3",
+    "failed_checks",
+    "feasible",
+    "candidates_tried",
+    "engine_inputs",
+    "engine_result"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "DEFAULT_DEPTHS_M": {
+   "kind": "constant"
+  },
+  "DEFAULT_EXTRA_CLEARANCE_M": {
+   "kind": "constant"
+  },
+  "DEFAULT_TANKS_WIDE": {
+   "kind": "constant"
+  },
+  "RULESETS": {
+   "kind": "constant"
+  },
+  "fit": {
+   "kind": "function",
+   "params": [
+    [
+     "loa",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "beam",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "cargo",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "t_max",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "ruleset",
+     "KEYWORD_ONLY",
+     "'IGC_2G'"
+    ],
+    [
+     "fill_ratio",
+     "KEYWORD_ONLY",
+     "0.95"
+    ],
+    [
+     "self_propelled",
+     "KEYWORD_ONLY",
+     "True"
+    ],
+    [
+     "depths",
+     "KEYWORD_ONLY",
+     "(3.5, 3.75, 4.0, 4.25, 4.5, 4.75, 5.0, 5.25, 5.5, 5.75, 6.0, 6.25, 6.5, 6.75, 7.0)"
+    ],
+    [
+     "tanks_wide",
+     "KEYWORD_ONLY",
+     "(1, 2, 3)"
+    ],
+    [
+     "extra_clearance_m",
+     "KEYWORD_ONLY",
+     "(0.5, 1.0, 1.5, 2.0)"
+    ],
+    [
+     "adn_tank_cap_m3",
+     "KEYWORD_ONLY",
+     "1000.0"
+    ],
+    [
+     "block_coefficient",
+     "KEYWORD_ONLY",
+     "0.85"
+    ],
+    [
+     "max_tank_od_m",
+     "KEYWORD_ONLY",
+     "12.0"
+    ]
+   ]
+  },
+  "required_side_clearance": {
+   "kind": "function",
+   "params": [
+    [
+     "ruleset",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "beam",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "total_m3",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "per_tank_m3",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "insulation_mm",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "smallest_viable_loa": {
+   "kind": "function",
+   "params": [
+    [
+     "beam",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "cargo",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "t_max",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "lo",
+     "KEYWORD_ONLY",
+     "20.0"
+    ],
+    [
+     "hi",
+     "KEYWORD_ONLY",
+     "120.0"
+    ],
+    [
+     "kw",
+     "VAR_KEYWORD",
+     null
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.gas_separation": {
+  "COFFERDAM_MIN_M": {
+   "kind": "constant"
+  },
+  "DOUBLE_BOTTOM_MIN_TYPE_G_M": {
+   "kind": "constant"
+  },
+  "END_BULKHEAD_SPACE_M": {
+   "kind": "constant"
+  },
+  "END_BULKHEAD_SPACE_PRESSURE_M": {
+   "kind": "constant"
+  },
+  "GasSeparationInputs": {
+   "fields": [
+    "cofferdam_m",
+    "opening_setback_m",
+    "fwd_end_bulkhead_m",
+    "is_pressure_tank",
+    "side_clearance_m",
+    "double_bottom_m"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "GasSeparationResult": {
+   "fields": [
+    "aft_separation_m",
+    "fwd_separation_m",
+    "cofferdam_m",
+    "service_space_m",
+    "total_length_taken_m",
+    "checks",
+    "warnings"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": [
+    "ok"
+   ]
+  },
+  "OPENING_SETBACK_M": {
+   "kind": "constant"
+  },
+  "SIDE_MIN_TYPE_G_M": {
+   "kind": "constant"
+  },
+  "compute": {
+   "kind": "function",
+   "params": [
+    [
+     "inp",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.gas_stability": {
+  "ANGLES_DEG": {
+   "kind": "constant"
+  },
+  "Condition": {
+   "fields": [
+    "name",
+    "cargo_t",
+    "fill_fraction",
+    "displacement_t",
+    "draught_m",
+    "kg_m",
+    "gm_solid_m",
+    "free_surface_m",
+    "gm_fluid_m",
+    "gz",
+    "max_gz_m",
+    "max_gz_deg",
+    "area_0_27",
+    "area_0_30",
+    "area_0_40",
+    "area_30_40",
+    "deck_edge_deg",
+    "criteria"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": [
+    "ok"
+   ]
+  },
+  "Criterion": {
+   "fields": [
+    "name",
+    "value",
+    "limit",
+    "ok",
+    "source"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "StabilityAssessment": {
+   "fields": [
+    "criteria_set",
+    "conditions",
+    "limitations"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": [
+    "governing",
+    "ok"
+   ]
+  },
+  "assess": {
+   "kind": "function",
+   "params": [
+    [
+     "result",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "payload_t",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "block_coefficient",
+     "KEYWORD_ONLY",
+     "0.85"
+    ],
+    [
+     "water_density",
+     "KEYWORD_ONLY",
+     "1.0"
+    ],
+    [
+     "criteria_set",
+     "KEYWORD_ONLY",
+     "'IS_CODE_2008'"
+    ]
+   ]
+  },
+  "box_gz": {
+   "kind": "function",
+   "params": [
+    [
+     "beam",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "depth",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "draught",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "kg",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "phi_deg",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "criteria_set_for": {
+   "kind": "function",
+   "params": [
+    [
+     "ruleset",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "segment_fill": {
+   "kind": "function",
+   "params": [
+    [
+     "radius",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "volume_fraction",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.hull": {
+  "HullGeometry": {
+   "fields": [
+    "loa",
+    "beam",
+    "depth",
+    "bow_rake_length",
+    "bow_rake_rise",
+    "stern_rake_length",
+    "stern_rake_rise"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": [
+    "BM_longitudinal",
+    "BM_transverse",
+    "KB",
+    "LCB",
+    "bottom_area",
+    "bow_rake_area",
+    "deck_area",
+    "displaced_volume",
+    "parallel_length",
+    "side_area",
+    "stern_rake_area",
+    "total_hull_surface_area",
+    "waterplane_area",
+    "waterplane_inertia_longitudinal",
+    "waterplane_inertia_transverse",
+    "waterplane_length"
+   ]
+  }
+ },
+ "vessel_designer.core.hydrostatics": {
+  "calculate_stability": {
+   "kind": "function",
+   "params": [
+    [
+     "hull",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "inputs",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "tanks",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "weights",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "cargo_mass",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "cargo_density_t",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "draft",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "calculate_trim": {
+   "kind": "function",
+   "params": [
+    [
+     "hull",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "inputs",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "tanks",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "weights",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "cargo_mass",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "draft",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "find_equilibrium_draft": {
+   "kind": "function",
+   "params": [
+    [
+     "hull",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "total_weight",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "water_density",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "max_draft",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "block_coefficient",
+     "POSITIONAL_OR_KEYWORD",
+     "1.0"
+    ],
+    [
+     "tolerance",
+     "POSITIONAL_OR_KEYWORD",
+     "0.001"
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.journey_derating": {
+  "JourneyDeratingInputs": {
+   "fields": [
+    "capacity",
+    "loa",
+    "beam",
+    "depth",
+    "block_coefficient",
+    "water_density",
+    "design_depth_m",
+    "ukc_m",
+    "utilisation_floor"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "JourneyDeratingResult": {
+   "fields": [
+    "cargo_capacity_t",
+    "t_max_m",
+    "full_load_draft_m",
+    "achievable_tonnage_t",
+    "binding_limit",
+    "volume_utilisation",
+    "draft_at_achievable_m",
+    "shed_tonnage_t",
+    "checks",
+    "warnings"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": [
+    "ok"
+   ]
+  },
+  "compute": {
+   "kind": "function",
+   "params": [
+    [
+     "inp",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.models": {
+  "BargeInputs": {
+   "fields": [
+    "loa",
+    "beam",
+    "depth",
+    "max_draft",
+    "vertical_clearance",
+    "vessel_type",
+    "bow_rake_length",
+    "bow_rake_rise",
+    "stern_rake_length",
+    "stern_rake_rise",
+    "bow_non_tank_pct",
+    "stern_non_tank_pct",
+    "bow_non_tank_length",
+    "stern_non_tank_length",
+    "wing_tank_width",
+    "wing_tank_gap",
+    "wing_tank_height_ratio",
+    "weather_shield_thickness",
+    "weather_shield_clearance",
+    "dome_height",
+    "side_clearance",
+    "tank_gap_transverse",
+    "tank_gap_longitudinal",
+    "n_tanks_wide",
+    "n_tanks_long",
+    "tank_wall_thickness",
+    "tank_head_type",
+    "tank_material",
+    "tank_material_density",
+    "design_pressure",
+    "weld_efficiency",
+    "tank_structure_factor",
+    "insulation_thickness",
+    "insulation_density",
+    "cargo_type",
+    "cargo_density_override",
+    "fill_ratio",
+    "bottom_plate_thickness",
+    "side_plate_thickness",
+    "deck_plate_thickness",
+    "structure_factor",
+    "hull_steel_density",
+    "steel_rate_per_cbm",
+    "block_coefficient",
+    "water_density",
+    "underkeel_clearance",
+    "outfitting_factor",
+    "piping_factor",
+    "stores_weight",
+    "tank_support_height",
+    "double_bottom_height",
+    "aft_arrangement",
+    "separation",
+    "tug_length",
+    "tug_beam",
+    "notch_depth"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "BargeResults": {
+   "fields": [
+    "inputs",
+    "tanks",
+    "cargo_type",
+    "cargo_density",
+    "cargo_mass",
+    "weights",
+    "displacement",
+    "deadweight",
+    "draft",
+    "freeboard",
+    "min_freeboard_ok",
+    "air_draft",
+    "air_draft_ok",
+    "stability",
+    "stability_ok",
+    "trim",
+    "total_depth_required",
+    "air_draft_unladen",
+    "light_draft",
+    "air_draft_navigating_unladen",
+    "protective_location",
+    "binding_constraints",
+    "warnings"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "StabilityResult": {
+   "fields": [
+    "KB",
+    "BM_transverse",
+    "KG",
+    "GM_solid",
+    "free_surface_correction",
+    "GM_fluid",
+    "BM_longitudinal"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "TankResult": {
+   "fields": [
+    "n_tanks_wide",
+    "n_tanks_long",
+    "n_tanks_total",
+    "outer_diameter",
+    "inner_diameter",
+    "overall_tank_length",
+    "cylinder_length",
+    "head_length",
+    "volume_per_tank",
+    "volume_cylinder",
+    "volume_heads",
+    "total_tank_volume",
+    "cargo_volume",
+    "tank_shell_weight",
+    "insulation_weight",
+    "tank_top_above_keel",
+    "cylinder_wall_thickness",
+    "head_wall_thickness",
+    "design_pressure",
+    "tank_material"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "TrimResult": {
+   "fields": [
+    "LCG",
+    "LCB",
+    "trim",
+    "draft_aft",
+    "draft_fwd"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "WeightBreakdown": {
+   "fields": [
+    "hull_bottom_plating",
+    "hull_side_plating",
+    "hull_deck_plating",
+    "hull_rake_plating",
+    "hull_internal_structure",
+    "hull_steel_total",
+    "tank_shells",
+    "tank_internals_supports",
+    "tank_total",
+    "insulation",
+    "wing_plate",
+    "weather_shield",
+    "piping_machinery",
+    "outfitting",
+    "stores",
+    "moulded_volume",
+    "moulded_depth",
+    "steel_top_down",
+    "steel_bottom_up",
+    "steel_delta",
+    "lightship"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  }
+ },
+ "vessel_designer.core.pressure_vessel": {
+  "TANK_MATERIAL_DATABASE": {
+   "kind": "constant"
+  },
+  "TankMaterialProperties": {
+   "fields": [
+    "name",
+    "allowable_stress",
+    "density",
+    "min_thickness",
+    "corrosion_allowance",
+    "description"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "calculate_wall_thicknesses": {
+   "kind": "function",
+   "params": [
+    [
+     "outer_diameter_m",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "design_pressure_mpa",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "material_key",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "head_type",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "weld_efficiency",
+     "POSITIONAL_OR_KEYWORD",
+     "0.95"
+    ]
+   ]
+  },
+  "cylinder_wall_thickness": {
+   "kind": "function",
+   "params": [
+    [
+     "design_pressure_mpa",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "inner_radius_mm",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "allowable_stress_mpa",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "weld_efficiency",
+     "POSITIONAL_OR_KEYWORD",
+     "0.95"
+    ]
+   ]
+  },
+  "ellipsoidal_head_thickness": {
+   "kind": "function",
+   "params": [
+    [
+     "design_pressure_mpa",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "inner_diameter_mm",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "allowable_stress_mpa",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "weld_efficiency",
+     "POSITIONAL_OR_KEYWORD",
+     "0.95"
+    ]
+   ]
+  },
+  "get_tank_material": {
+   "kind": "function",
+   "params": [
+    [
+     "material_key",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "hemisphere_head_thickness": {
+   "kind": "function",
+   "params": [
+    [
+     "design_pressure_mpa",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "inner_radius_mm",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "allowable_stress_mpa",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "weld_efficiency",
+     "POSITIONAL_OR_KEYWORD",
+     "0.95"
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.protective_location": {
+  "ADN_G_BOTTOM_M": {
+   "kind": "constant"
+  },
+  "ADN_G_DOUBLE_BOTTOM_M": {
+   "kind": "constant"
+  },
+  "ADN_G_DOUBLE_HULL_M": {
+   "kind": "constant"
+  },
+  "ADN_G_INSPECTION_GAP_M": {
+   "kind": "constant"
+  },
+  "ADN_G_MAX_L_OVER_D": {
+   "kind": "constant"
+  },
+  "ADN_G_SADDLE_M": {
+   "kind": "constant"
+  },
+  "ADN_G_SIDE_M": {
+   "kind": "constant"
+  },
+  "ADN_G_TANK_CAP_9_3_4_M3": {
+   "kind": "constant"
+  },
+  "ADN_G_TANK_CAP_M3": {
+   "kind": "constant"
+  },
+  "ADN_G_WIDE_TANK_FRACTION": {
+   "kind": "constant"
+  },
+  "ProtectiveLocationResult": {
+   "fields": [
+    "vessel_type",
+    "d_vc",
+    "total_tank_volume",
+    "cs_required",
+    "cs_actual",
+    "cs_ok",
+    "cb_required",
+    "cb_actual",
+    "cb_ok"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "RequiredClearances": {
+   "fields": [
+    "cs_required",
+    "cb_required",
+    "d_vc"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "VesselType": {
+   "kind": "class",
+   "members": [
+    "IGF",
+    "IGC_1G",
+    "IGC_2G",
+    "IGC_3G",
+    "ADN_G",
+    "IGC_2G_EXACT"
+   ],
+   "methods": []
+  },
+  "check_protective_location": {
+   "kind": "function",
+   "params": [
+    [
+     "vessel_type_str",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "beam",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "total_tank_volume",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "side_clearance",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "double_bottom_height",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "tank_support_height",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "compute_required_clearances": {
+   "kind": "function",
+   "params": [
+    [
+     "vessel_type_str",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "beam",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "d_vc",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "d_vc_exact": {
+   "kind": "function",
+   "params": [
+    [
+     "vc_individual_m3",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "distance_d_vc": {
+   "kind": "function",
+   "params": [
+    [
+     "vc",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "required_bottom_protection": {
+   "kind": "function",
+   "params": [
+    [
+     "beam",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "d_vc",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "vessel_type",
+     "POSITIONAL_OR_KEYWORD",
+     "None"
+    ]
+   ]
+  },
+  "required_side_protection": {
+   "kind": "function",
+   "params": [
+    [
+     "vessel_type",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "beam",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "d_vc",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.resistance": {
+  "EnvironmentInputs": {
+   "fields": [
+    "name",
+    "water_depth",
+    "channel_width_bottom",
+    "channel_width_surface",
+    "bank_slope",
+    "current_speed_knots",
+    "water_density",
+    "is_deep_water",
+    "significant_wave_height_m",
+    "wave_heading_deg_off_bow",
+    "peak_wave_period_s",
+    "squat_safety_margin_m",
+    "apply_squat_limit"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "EnvironmentResult": {
+   "fields": [
+    "name",
+    "limiting_speed_knots",
+    "service_speed_knots",
+    "blockage_ratio",
+    "speed_curve",
+    "resistance_at_service_kn",
+    "power_at_service_kw",
+    "fuel_at_service_lph",
+    "fuel_at_service_lpnm",
+    "squat_limited_speed_knots",
+    "service_speed_governed_by"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "GRAVITY": {
+   "kind": "constant"
+  },
+  "KNOTS_TO_MS": {
+   "kind": "constant"
+  },
+  "KW_PER_KN_MS": {
+   "kind": "constant"
+  },
+  "ResistanceCalculator": {
+   "kind": "class",
+   "methods": [
+    "calculate"
+   ]
+  },
+  "ResistanceInputs": {
+   "fields": [
+    "loa",
+    "lwl",
+    "beam",
+    "draft",
+    "block_coefficient",
+    "wetted_surface_area",
+    "displacement_tonnes",
+    "tug",
+    "environments",
+    "speed_min_knots",
+    "speed_max_knots",
+    "speed_step_knots"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "ResistanceResults": {
+   "fields": [
+    "inputs",
+    "wetted_surface_area",
+    "environments",
+    "checks",
+    "warnings"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": [
+    "binding_environment",
+    "binding_power_at_service_kw",
+    "ok"
+   ]
+  },
+  "SpeedPoint": {
+   "fields": [
+    "speed_knots",
+    "speed_through_water_knots",
+    "froude_number",
+    "froude_depth",
+    "resistance_frictional_kn",
+    "resistance_residuary_kn",
+    "resistance_shallow_factor",
+    "resistance_total_kn",
+    "effective_power_kw",
+    "delivered_power_kw",
+    "fuel_litres_per_hour",
+    "fuel_litres_per_nm",
+    "power_available",
+    "resistance_waves_kn",
+    "squat_m",
+    "dynamic_ukc_m",
+    "squat_limited"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "TugInputs": {
+   "fields": [
+    "engine_power_kw",
+    "propulsive_efficiency",
+    "sfc_g_per_kwh",
+    "fuel_density_kg_per_litre"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "compute": {
+   "kind": "function",
+   "params": [
+    [
+     "inputs",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "default_environments": {
+   "kind": "function",
+   "params": []
+  }
+ },
+ "vessel_designer.core.squat": {
+  "DEFAULT_SAFETY_MARGIN_M": {
+   "kind": "constant"
+  },
+  "FNH_VALID_MAX": {
+   "kind": "constant"
+  },
+  "GRAVITY": {
+   "kind": "constant"
+  },
+  "SquatInputs": {
+   "fields": [
+    "speed_through_water_kn",
+    "draft_m",
+    "beam_m",
+    "lpp_m",
+    "block_coefficient",
+    "water_depth_m",
+    "channel_area_m2",
+    "displacement_m3",
+    "safety_margin_m"
+   ],
+   "frozen": true,
+   "kind": "class",
+   "methods": []
+  },
+  "SquatResult": {
+   "fields": [
+    "method",
+    "squat_m",
+    "squat_barrass_m",
+    "squat_icorels_m",
+    "blockage_ratio",
+    "froude_depth",
+    "static_ukc_m",
+    "dynamic_ukc_m",
+    "grounds",
+    "checks",
+    "warnings"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": [
+    "ok"
+   ]
+  },
+  "compute": {
+   "kind": "function",
+   "params": [
+    [
+     "inp",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "max_speed_for_ukc": {
+   "kind": "function",
+   "params": [
+    [
+     "draft_m",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "beam_m",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "lpp_m",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "water_depth_m",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "channel_area_m2",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "block_coefficient",
+     "POSITIONAL_OR_KEYWORD",
+     "0.85"
+    ],
+    [
+     "safety_margin_m",
+     "POSITIONAL_OR_KEYWORD",
+     "0.15"
+    ],
+    [
+     "v_hi_kn",
+     "POSITIONAL_OR_KEYWORD",
+     "20.0"
+    ],
+    [
+     "tol_kn",
+     "POSITIONAL_OR_KEYWORD",
+     "0.01"
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.tanks": {
+  "calculate_tank_arrangement": {
+   "kind": "function",
+   "params": [
+    [
+     "inputs",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "free_surface_moment_cylindrical": {
+   "kind": "function",
+   "params": [
+    [
+     "inner_radius",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "cylinder_length",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "fill_ratio",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "cargo_density",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.vessel_standards": {
+  "VESSEL_STANDARDS": {
+   "kind": "constant"
+  },
+  "VesselStandard": {
+   "fields": [
+    "standard_id",
+    "family",
+    "class_name",
+    "formation",
+    "loa_m",
+    "beam_m",
+    "draught_m",
+    "dwt_t",
+    "n_abreast",
+    "n_in_line",
+    "unit_beam_m",
+    "min_bridge_clearance_m",
+    "moulded_depth_m",
+    "source",
+    "cargo_modes",
+    "notes"
+   ],
+   "frozen": true,
+   "kind": "class",
+   "methods": [
+    "draught_nominal_m",
+    "dwt_nominal_t",
+    "loa_nominal_m",
+    "r_min_m"
+   ]
+  },
+  "get_standard": {
+   "kind": "function",
+   "params": [
+    [
+     "standard_id",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "standards_for": {
+   "kind": "function",
+   "params": [
+    [
+     "cargo_mode",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "validate_catalogue": {
+   "kind": "function",
+   "params": [
+    [
+     "catalogue",
+     "POSITIONAL_OR_KEYWORD",
+     "None"
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.waves": {
+  "GRAVITY": {
+   "kind": "constant"
+  },
+  "LAMBDA_OVER_LPP_MAX": {
+   "kind": "constant"
+  },
+  "SEAWATER_DENSITY_T_M3": {
+   "kind": "constant"
+  },
+  "WaveResistanceInputs": {
+   "fields": [
+    "significant_wave_height_m",
+    "beam_waterline_m",
+    "lpp_m",
+    "bow_waterline_length_m",
+    "heading_deg_off_bow",
+    "peak_wave_period_s",
+    "water_density_t_m3",
+    "speed_kn"
+   ],
+   "frozen": true,
+   "kind": "class",
+   "methods": []
+  },
+  "WaveResistanceResult": {
+   "fields": [
+    "added_resistance_kn",
+    "added_resistance_head_seas_kn",
+    "heading_factor",
+    "bow_waterline_length_m",
+    "wavelength_m",
+    "lambda_over_lpp",
+    "added_power_kw",
+    "checks",
+    "warnings"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": [
+    "ok"
+   ]
+  },
+  "compute": {
+   "kind": "function",
+   "params": [
+    [
+     "inp",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  }
+ },
+ "vessel_designer.core.weights": {
+  "calculate_weights": {
+   "kind": "function",
+   "params": [
+    [
+     "inputs",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "hull",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "tanks",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  }
+ },
+ "vessel_designer.simulate": {
+  "FILL_BY_RULESET": {
+   "kind": "constant"
+  },
+  "RHO": {
+   "kind": "constant"
+  },
+  "VESSELS": {
+   "kind": "constant"
+  },
+  "cargo_options": {
+   "kind": "function",
+   "params": []
+  },
+  "simulate": {
+   "kind": "function",
+   "params": [
+    [
+     "p",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  }
+ }
+}

@@ -35,8 +35,10 @@ The Rust core is being ported from the Python core with identical results (spec 
 
 ## Rules for the core
 
-- `src/vessel_designer/core/` is pure calculation: standard library only, no I/O.
-  `tests/test_core_boundary.py` enforces this.
+- The calculation core is Rust (`crates/ovcd-core`). `src/vessel_designer/` is a thin layer: it keeps
+  the public imports, names and result types, and calls the compiled core through
+  `vessel_designer/_bridge.py`. `tests/test_public_api.py` enforces the public API. The core
+  stays pure calculation, no I/O; `no_std` and the WebAssembly build check that.
 - Every new calculation comes with tests: a golden case (a worked number with its source), a property
   (an invariant), and a feasibility check (the checks fire when they should).
 - Cite the source of every number — standard, table and page, or the reference vessel.

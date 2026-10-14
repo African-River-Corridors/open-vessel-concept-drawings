@@ -31,10 +31,11 @@ it by the channel rules, not from this table.
 Pure Python, Pyodide-safe. No I/O.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
 from .checks import Check
+from .._bridge import call as _call
 
 
 @dataclass(frozen=True)
@@ -192,20 +193,12 @@ VESSEL_STANDARDS: Dict[str, VesselStandard] = {
 
 def get_standard(standard_id: str) -> VesselStandard:
     """Look up a standard by id. The single accessor — never hard-code dimensions."""
-    try:
-        return VESSEL_STANDARDS[standard_id]
-    except KeyError:
-        raise KeyError(
-            f"unknown vessel standard {standard_id!r}; "
-            f"known: {', '.join(sorted(VESSEL_STANDARDS))}"
-        )
+    return _call("vessel_standards", "get_standard", {"standard_id": standard_id}, VesselStandard)
 
 
 def standards_for(cargo_mode: str) -> List[VesselStandard]:
     """Every standard that can carry this cargo mode ('dry_bulk' or 'liquid_gas')."""
-    if cargo_mode not in ("dry_bulk", "liquid_gas"):
-        raise ValueError(f"cargo_mode must be dry_bulk or liquid_gas, got {cargo_mode!r}")
-    return [s for s in VESSEL_STANDARDS.values() if cargo_mode in s.cargo_modes]
+    return _call("vessel_standards", "standards_for", {"cargo_mode": cargo_mode}, List[VesselStandard])
 
 
 def validate_catalogue(catalogue: Optional[Dict[str, VesselStandard]] = None) -> List[Check]:
@@ -214,40 +207,12 @@ def validate_catalogue(catalogue: Optional[Dict[str, VesselStandard]] = None) ->
     Same contract as machinery.validate_catalogue: reference data earns a validity
     check, not an Inputs/Result/compute triple.
     """
-    cat = VESSEL_STANDARDS if catalogue is None else catalogue
-    checks: List[Check] = []
-
-    bad = [k for k, v in cat.items() if k != v.standard_id]
-    checks.append(Check("unique_ids", not bad,
-                        "every key matches its standard_id" if not bad
-                        else f"key/standard_id mismatch: {bad}"))
-
-    bad = [k for k, v in cat.items()
-           if v.loa_m[0] > v.loa_m[1] or v.draught_m[0] > v.draught_m[1]
-           or v.dwt_t[0] > v.dwt_t[1]]
-    checks.append(Check("ranges_ordered", not bad,
-                        "every (min, max) range is ordered" if not bad
-                        else f"inverted range: {bad}"))
-
-    bad = [k for k, v in cat.items() if v.beam_m <= 0 or v.loa_m[0] <= 0]
-    checks.append(Check("positive_dimensions", not bad,
-                        "all beams and lengths positive" if not bad
-                        else f"non-positive dimension: {bad}"))
-
-    # A convoy's overall beam should be its unit beam times the number abreast.
-    bad = []
-    for k, v in cat.items():
-        if v.unit_beam_m and v.n_abreast > 1:
-            if abs(v.unit_beam_m * v.n_abreast - v.beam_m) > 0.05:
-                bad.append(k)
-    checks.append(Check("convoy_beam_consistent", not bad,
-                        "convoy beam = unit beam x n_abreast" if not bad
-                        else f"beam does not reconcile with n_abreast: {bad}"))
-
-    bad = [k for k, v in cat.items() if not v.source]
-    checks.append(Check("source_cited", not bad,
-                        "every class cites its table" if not bad
-                        else f"no source: {bad}",
-                        severity="warning"))
-
-    return checks
+    if catalogue is None:
+        return _call("vessel_standards", "validate_catalogue", {"extra": None}, List[Check])
+    missing = sorted(set(VESSEL_STANDARDS) - set(catalogue))
+    if missing:
+        raise NotImplementedError(
+            f"a catalogue must keep the built-in standards (missing {missing}); "
+            "add entries to a copy of VESSEL_STANDARDS instead")
+    extra = {k: v for k, v in catalogue.items() if VESSEL_STANDARDS.get(k) != v}
+    return _call("vessel_standards", "validate_catalogue", {"extra": extra}, List[Check])

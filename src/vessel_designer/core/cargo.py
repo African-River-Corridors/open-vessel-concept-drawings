@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from typing import Dict
+from .._bridge import call as _call
 
 
 @dataclass
@@ -83,7 +84,4 @@ CARGO_DATABASE: Dict[str, CargoProperties] = {
 
 def get_cargo(cargo_type: str) -> CargoProperties:
     """Look up cargo properties by type key."""
-    if cargo_type not in CARGO_DATABASE:
-        valid = ", ".join(CARGO_DATABASE.keys())
-        raise ValueError(f"Unknown cargo type '{cargo_type}'. Valid types: {valid}")
-    return CARGO_DATABASE[cargo_type]
+    return _call("cargo", "get_cargo", {"cargo_type": cargo_type}, CargoProperties)

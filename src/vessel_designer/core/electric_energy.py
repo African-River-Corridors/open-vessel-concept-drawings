@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from .checks import Check, all_ok
-from . import resistance as R
+from .._bridge import call as _call
 
 KN_TO_KMH = 1.852
 
@@ -93,7 +93,7 @@ class EnergyResult:
     inputs: EnergyInputs
     installed_power_kw: float
     environments: List[EnergyEnvironment]
-    checks: list = field(default_factory=list)
+    checks: List[Check] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -105,95 +105,7 @@ class EnergyResult:
         return min(self.environments, key=lambda e: e.service_speed_knots) if self.environments else None
 
 
-def _interp(curve: List[EnergyPoint], v_knots: float, attr: str) -> float:
-    """Linear interpolation of a curve attribute at speed v (knots)."""
-    if not curve:
-        return 0.0
-    if v_knots <= curve[0].speed_knots:
-        return getattr(curve[0], attr)
-    if v_knots >= curve[-1].speed_knots:
-        return getattr(curve[-1], attr)
-    for a, b in zip(curve, curve[1:]):
-        if a.speed_knots <= v_knots <= b.speed_knots:
-            t = (v_knots - a.speed_knots) / (b.speed_knots - a.speed_knots or 1.0)
-            return getattr(a, attr) + t * (getattr(b, attr) - getattr(a, attr))
-    return getattr(curve[-1], attr)
-
-
 def compute(inp: EnergyInputs) -> EnergyResult:
     # Build the environments and run the (validated) resistance model. Installed engine
     # power is set huge so resistance doesn't cap the sweep — we choose service speed here.
-    envs = [R.EnvironmentInputs(
-        name="Design channel", water_depth=inp.channel_depth_m,
-        channel_width_bottom=inp.channel_bottom_width_m,
-        channel_width_surface=inp.channel_top_width_m,
-        current_speed_knots=inp.current_knots,
-        water_density=1.0 if inp.fresh_water else 1.025)]
-    if inp.also_open_sea:
-        envs.append(R.EnvironmentInputs(
-            name="Open sea", water_depth=50.0, channel_width_bottom=1000.0,
-            channel_width_surface=1000.0, is_deep_water=True, water_density=1.025))
-
-    rin = R.ResistanceInputs(
-        loa=inp.loa, lwl=inp.lwl, beam=inp.beam, draft=inp.draft,
-        block_coefficient=inp.block_coefficient, environments=envs,
-        speed_min_knots=inp.speed_min_knots, speed_max_knots=inp.speed_max_knots,
-        speed_step_knots=inp.speed_step_knots,
-        tug=R.TugInputs(engine_power_kw=1e12, propulsive_efficiency=inp.propulsive_coefficient))
-    rres = R.compute(rin)
-
-    energy_envs: List[EnergyEnvironment] = []
-    for e in rres.environments:
-        curve: List[EnergyPoint] = []
-        for p in e.speed_curve:
-            v_kmh = p.speed_knots * KN_TO_KMH
-            p_bat = p.delivered_power_kw / inp.drivetrain_efficiency
-            e_km = p_bat / v_kmh if v_kmh > 0 else 0.0
-            curve.append(EnergyPoint(
-                speed_knots=p.speed_knots, speed_kmh=v_kmh, froude_depth=p.froude_depth,
-                resistance_kn=p.resistance_total_kn, shaft_power_kw=p.delivered_power_kw,
-                battery_power_kw=p_bat, energy_kwh_per_km=e_km))
-
-        # service speed: the target cruise, capped safely below the Schijf limit
-        v_service = inp.target_service_speed_knots
-        if e.limiting_speed_knots and e.limiting_speed_knots > 0:
-            v_service = min(v_service, inp.service_speed_safety_fraction * e.limiting_speed_knots)
-        if curve:
-            v_service = min(v_service, curve[-1].speed_knots)
-
-        e_km = _interp(curve, v_service, "energy_kwh_per_km")
-        trip_kwh = e_km * inp.one_way_km
-        year_mwh = trip_kwh * 2.0 * inp.trips_per_year / 1000.0
-        energy_envs.append(EnergyEnvironment(
-            name=e.name, limiting_speed_knots=e.limiting_speed_knots,
-            service_speed_knots=round(v_service, 2), blockage_ratio=e.blockage_ratio,
-            curve=curve,
-            resistance_kn=_interp(curve, v_service, "resistance_kn"),
-            shaft_power_kw=_interp(curve, v_service, "shaft_power_kw"),
-            battery_power_kw=_interp(curve, v_service, "battery_power_kw"),
-            energy_kwh_per_km=e_km, energy_per_trip_kwh=trip_kwh,
-            energy_per_year_mwh=year_mwh))
-
-    binding = min(energy_envs, key=lambda x: x.service_speed_knots) if energy_envs else None
-    installed = (binding.battery_power_kw * inp.power_margin) if binding else 0.0
-
-    checks: List[Check] = []
-    if binding:
-        checks.append(Check(
-            "service_below_schijf",
-            binding.limiting_speed_knots is None or
-            binding.service_speed_knots <= binding.limiting_speed_knots + 1e-6,
-            f"service {binding.service_speed_knots:.1f} kn stays below the Schijf limit "
-            f"{binding.limiting_speed_knots:.1f} kn" if binding.limiting_speed_knots else
-            "no confined limit (open water)"))
-        checks.append(Check(
-            "energy_positive", binding.energy_kwh_per_km > 0,
-            f"energy {binding.energy_kwh_per_km:.1f} kWh/km at service speed"))
-    checks.append(Check(
-        "resistance_coeffs_first_order", True,
-        "confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate "
-        "(RS1) — ITTC-1957 friction is standard; anchor with a model test/CFD before class use.",
-        severity="warning"))
-
-    return EnergyResult(inputs=inp, installed_power_kw=installed,
-                        environments=energy_envs, checks=checks)
+    return _call("electric_energy", "compute", {"inputs": inp}, EnergyResult)
