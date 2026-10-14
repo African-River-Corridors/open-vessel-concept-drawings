@@ -226,3 +226,18 @@ fn a_count_product_beyond_64_bits_does_not_stop_the_weights() {
     let w = weigh(&i);
     assert!(w.lightship.is_finite());
 }
+
+#[test]
+fn a_wing_plate_at_an_infinite_tank_radius_keeps_the_cutout_chord_at_zero() {
+    // Python (driver.run_case, quickstart with tank_gap_transverse = tank_gap_longitudinal = -1e308,
+    // three tanks each way, wing_tank_height_ratio = -1.0): wing_plate 104.562. The tank diameter
+    // is inf, so |dy| == tank_r == inf; with `<=` the chord is sqrt(inf - inf) = NaN.
+    // Kills mutant crates/ovcd-core/src/weights.rs:94 (`<` to `<=`).
+    let mut i = quickstart();
+    i.tank_gap_transverse = -1e308;
+    i.n_tanks_wide = 3;
+    i.tank_gap_longitudinal = -1e308;
+    i.n_tanks_long = 3;
+    i.wing_tank_height_ratio = -1.0;
+    assert_eq!(weigh(&i).wing_plate, 104.562);
+}
