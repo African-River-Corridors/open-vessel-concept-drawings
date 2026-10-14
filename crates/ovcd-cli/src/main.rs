@@ -2,8 +2,8 @@
 //!
 //! `ovcd new` writes a starter Design, `ovcd fill` writes the left-out inputs of a hand-written
 //! Design in from the Defaults Profile, `ovcd validate` checks one without running it, and
-//! `ovcd profile` prints the built-in Defaults Profile for a user to copy. `run` arrives in a
-//! later ticket. The hidden `ovcd eval <entry-point>` reads one parity case input as JSON on stdin
+//! `ovcd profile` prints the built-in Defaults Profile for a user to copy, and `ovcd run` computes
+//! a saved Design and prints a summary (or the full results as JSON). The hidden `ovcd eval <entry-point>` reads one parity case input as JSON on stdin
 //! and writes the result as JSON on stdout. It exists for parity only and is removed with the
 //! Reference Results.
 
@@ -27,11 +27,17 @@ Usage:
       List hard errors and soft warnings without running. --inputs also lists every input
       as used, typed or default. Exits 1 if there is any hard error. A file must store
       every input as used, so a left-out input is a hard error: run `ovcd fill` first.
+  ovcd run [--profile <profile.json>] [--json] <file.vdesign>
+      Compute every Option of a Design and print a short summary. --json prints the full
+      results instead. Each Option's results hash is compared with the one saved in the file;
+      a difference is a warning that results changed since the file was saved with an engine
+      version. A pushed convoy prints \"convoy results not yet available\" and no numbers.
+      Warnings go to stderr. Exits 1 if the file has a hard error or an Option cannot be computed.
   ovcd profile
       Print the built-in Defaults Profile. Copy it, edit it, and pass it with --profile.
   ovcd --help | --version
 
-All files and output are SI. `ovcd run` is not available yet.
+All files and output are SI.
 ";
 
 fn main() -> ExitCode {
@@ -55,6 +61,11 @@ fn main() -> ExitCode {
                 eprintln!("ovcd eval: {msg}");
                 ExitCode::FAILURE
             }
+        },
+        ["run", rest @ ..] => match run(rest) {
+            Ok(true) => ExitCode::SUCCESS,
+            Ok(false) => ExitCode::FAILURE,
+            Err(msg) => usage_error("run", &msg),
         },
         ["profile"] => {
             print!("{}", Profile::built_in_text());
@@ -98,13 +109,19 @@ fn usage_error(command: &str, msg: &str) -> ExitCode {
 struct Flags<'a> {
     profile: Option<&'a str>,
     inputs: bool,
+    json: bool,
     files: Vec<&'a str>,
 }
 
-fn parse_flags<'a>(args: &[&'a str], allow_inputs: bool) -> Result<Flags<'a>, String> {
+fn parse_flags<'a>(
+    args: &[&'a str],
+    allow_inputs: bool,
+    allow_json: bool,
+) -> Result<Flags<'a>, String> {
     let mut flags = Flags {
         profile: None,
         inputs: false,
+        json: false,
         files: Vec::new(),
     };
     let mut it = args.iter();
@@ -114,6 +131,7 @@ fn parse_flags<'a>(args: &[&'a str], allow_inputs: bool) -> Result<Flags<'a>, St
                 flags.profile = Some(it.next().ok_or("--profile needs a file")?);
             }
             "--inputs" if allow_inputs => flags.inputs = true,
+            "--json" if allow_json => flags.json = true,
             a if a.starts_with('-') => return Err(format!("unknown option `{a}`")),
             a => flags.files.push(a),
         }
@@ -133,7 +151,7 @@ fn load_profile(path: Option<&str>) -> Result<Profile, String> {
 }
 
 fn new(args: &[&str]) -> Result<(), String> {
-    let flags = parse_flags(args, false)?;
+    let flags = parse_flags(args, false, false)?;
     let profile = load_profile(flags.profile)?;
     let text = ovcd_format::new_design(&profile)?.to_text();
     match flags.files.as_slice() {
@@ -165,7 +183,7 @@ fn write_new(path: &str, text: &str) -> Result<(), String> {
 }
 
 fn fill(args: &[&str]) -> Result<(), String> {
-    let flags = parse_flags(args, false)?;
+    let flags = parse_flags(args, false, false)?;
     let (input, output) = match flags.files.as_slice() {
         [input] => (*input, None),
         [input, output] => (*input, Some(*output)),
@@ -202,7 +220,7 @@ fn fill(args: &[&str]) -> Result<(), String> {
 
 /// Returns whether the file has no hard errors.
 fn validate(args: &[&str]) -> Result<bool, String> {
-    let flags = parse_flags(args, true)?;
+    let flags = parse_flags(args, true, false)?;
     let [path] = flags.files.as_slice() else {
         return Err("give exactly one .vdesign file".into());
     };
@@ -242,6 +260,98 @@ fn validate(args: &[&str]) -> Result<bool, String> {
         r.warnings.len()
     );
     Ok(r.is_ok())
+}
+
+/// Run a saved Design. Returns whether every Option was computed and the file had no hard error.
+fn run(args: &[&str]) -> Result<bool, String> {
+    use ovcd_format::{HashStatus, RunOutcome};
+    let flags = parse_flags(args, false, true)?;
+    let [path] = flags.files.as_slice() else {
+        return Err("give exactly one .vdesign file".into());
+    };
+    let profile = load_profile(flags.profile)?;
+    let text = match std::fs::read_to_string(path) {
+        Ok(t) => t,
+        Err(e) => {
+            eprintln!("error: cannot read {path}: {e}");
+            return Ok(false);
+        }
+    };
+    let checked = ovcd_format::check(&text, &profile);
+    for w in &checked.report.warnings {
+        eprintln!("warning: {w}");
+    }
+    let design = match (&checked.design, checked.report.is_ok()) {
+        (Some(design), true) => design,
+        _ => {
+            for e in &checked.report.errors {
+                eprintln!("error: {e}");
+            }
+            eprintln!(
+                "{} error(s); nothing run. Fix the file, or run `ovcd fill` if inputs are left out.",
+                checked.report.errors.len().max(1)
+            );
+            return Ok(false);
+        }
+    };
+    let runs = ovcd_format::run_design(design);
+    for r in &runs {
+        if let HashStatus::Differs { stored, computed } = &r.hash_status {
+            eprintln!(
+                "warning: {}",
+                ovcd_format::hash_warning(&r.name, &design.engine_version, stored, computed)
+            );
+        }
+    }
+    let all_computed = runs
+        .iter()
+        .all(|r| matches!(r.outcome, RunOutcome::Results { .. }));
+    if flags.json {
+        let options: Vec<serde_json::Value> = runs
+            .iter()
+            .map(|r| match &r.outcome {
+                RunOutcome::Results { results, hash } => serde_json::json!({
+                    "name": r.name,
+                    "results_hash": hash,
+                    "hash_status": r.hash_status.as_str(),
+                    "results": results,
+                }),
+                RunOutcome::NotAvailable(m) | RunOutcome::Failed(m) => serde_json::json!({
+                    "name": r.name,
+                    "results": serde_json::Value::Null,
+                    "message": m,
+                }),
+            })
+            .collect();
+        let out = serde_json::json!({
+            "engine_version": env!("CARGO_PKG_VERSION"),
+            "file_engine_version": design.engine_version,
+            "options": options,
+        });
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&out).map_err(|e| e.to_string())?
+        );
+    } else {
+        for r in &runs {
+            match &r.outcome {
+                RunOutcome::Results { results, hash } => {
+                    for line in ovcd_format::summary_lines(&r.name, results) {
+                        println!("{line}");
+                    }
+                    let note = match r.hash_status {
+                        HashStatus::Matches => "matches the file",
+                        HashStatus::Differs { .. } => "DIFFERS from the file",
+                        HashStatus::NotStored => "none saved in the file",
+                    };
+                    println!("  Results hash {} ({note})", &hash[..12]);
+                }
+                RunOutcome::NotAvailable(m) => println!("Option '{}': {m}", r.name),
+                RunOutcome::Failed(m) => println!("Option '{}': cannot be computed: {m}", r.name),
+            }
+        }
+    }
+    Ok(all_computed)
 }
 
 fn eval(entry_point: &str) -> Result<String, String> {

@@ -196,6 +196,8 @@ pub struct DesignOption {
     pub name: String,
     /// Inputs in `INPUTS` order. Inputs that do not apply to the Cargo Containment are left out.
     pub inputs: Vec<(String, StoredInput)>,
+    /// SHA-256 of the canonical JSON of this Option's results, as the file stored it (ADR 0007).
+    pub results_hash: Option<String>,
 }
 
 impl DesignOption {
@@ -230,7 +232,11 @@ impl Design {
                         )
                     })
                     .collect();
-                json!({ "name": o.name, "inputs": inputs })
+                let mut option = json!({ "name": o.name, "inputs": inputs });
+                if let Some(h) = &o.results_hash {
+                    option["results_hash"] = json!(h);
+                }
+                option
             })
             .collect();
         let mut root = json!({
@@ -303,11 +309,13 @@ pub fn new_design(profile: &Profile) -> Result<Design, String> {
             report.errors.join("; ")
         ));
     }
-    Ok(Design {
+    let mut design = Design {
         engine_version: ENGINE_VERSION.into(),
         defaults_profile: Some(profile.name().into()),
         options: vec![option],
-    })
+    };
+    crate::run::stamp(&mut design);
+    Ok(design)
 }
 
 /// What to do with an input the file leaves out.
@@ -335,6 +343,11 @@ pub fn fill(text: &str, profile: &Profile) -> Checked {
         && checked.report.warnings.iter().any(|w| w.contains(FILLED))
     {
         design.defaults_profile = Some(profile.name().into());
+    }
+    if checked.report.is_ok()
+        && let Some(design) = &mut checked.design
+    {
+        crate::run::stamp(design);
     }
     checked
 }
@@ -459,7 +472,15 @@ fn read_design(
                     .push(format!("Option '{name}': unknown key `{key}` is ignored"));
             }
         }
-        options.push(read_option(name, inputs, profile, missing, report));
+        let mut option = read_option(name, inputs, profile, missing, report);
+        match raw.get("results_hash") {
+            None | Some(Value::Null) => {}
+            Some(Value::String(h)) => option.results_hash = Some(h.clone()),
+            Some(_) => report
+                .errors
+                .push(format!("Option '{name}': `results_hash` must be text")),
+        }
+        options.push(option);
     }
     Some(Design {
         engine_version,
@@ -606,6 +627,7 @@ fn read_option(
     DesignOption {
         name: name.into(),
         inputs,
+        results_hash: None,
     }
 }
 

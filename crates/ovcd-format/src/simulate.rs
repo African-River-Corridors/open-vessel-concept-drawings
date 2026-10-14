@@ -712,6 +712,26 @@ fn simulate_condition(c: &ovcd_core::gas_stability::Condition) -> Value {
     })
 }
 
+/// What one `simulate` call came to.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Outcome {
+    /// The result object (which may itself be `{"error": ...}`, as Python returns it).
+    Result(Value),
+    /// A Python exception escaped `simulate`: class name and message.
+    Raised(String, String),
+    /// The params are outside what this port models; Python would raise `KeyError` or `TypeError`.
+    Refused(String),
+}
+
+/// `simulate(params)` as the app calls it: params in, an [`Outcome`] out.
+pub fn simulate_params(params: &Map<String, Value>) -> Outcome {
+    match simulate(params) {
+        Ok(v) => Outcome::Result(v),
+        Err(Stop::Raised(kind, message)) => Outcome::Raised(kind, message),
+        Err(Stop::Eval(e)) => Outcome::Refused(e.to_string()),
+    }
+}
+
 /// Run one `simulate` function on case-shaped arguments.
 pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
     match function {

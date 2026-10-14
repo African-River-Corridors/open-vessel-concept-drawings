@@ -1,0 +1,369 @@
+//! Seam 2: `ovcd run`, end to end through the real binary: the summary, `--json`, the results hash
+//! and its warning, and the convoy message (issue #25).
+
+use ovcd_format::parity::{Tolerance, compare, parse};
+use serde_json::{Value, json};
+use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
+
+fn ovcd(args: &[&str]) -> Output {
+    Command::new(env!("CARGO_BIN_EXE_ovcd"))
+        .args(args)
+        .output()
+        .expect("ovcd runs")
+}
+
+fn stdout(out: &Output) -> String {
+    String::from_utf8_lossy(&out.stdout).into_owned()
+}
+
+fn stderr(out: &Output) -> String {
+    String::from_utf8_lossy(&out.stderr).into_owned()
+}
+
+fn temp_dir(test: &str) -> PathBuf {
+    let dir = std::env::temp_dir().join(format!("ovcd-run-{}-{test}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    dir
+}
+
+fn p(path: &Path) -> &str {
+    path.to_str().unwrap()
+}
+
+fn write_json(path: &Path, value: &Value) {
+    std::fs::write(path, serde_json::to_string_pretty(value).unwrap()).unwrap();
+}
+
+fn read_json(path: &Path) -> Value {
+    serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap()
+}
+
+fn parity_dir() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../parity")
+}
+
+/// A starter Design written by `ovcd new`.
+fn starter(dir: &Path) -> PathBuf {
+    let file = dir.join("starter.vdesign");
+    let out = ovcd(&["new", p(&file)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    file
+}
+
+/// Write a Design with one Option, `ovcd fill` the left-out inputs in, and return the filled file.
+fn filled(dir: &Path, name: &str, inputs: Value) -> PathBuf {
+    let raw = dir.join(format!("{name}-raw.vdesign"));
+    write_json(
+        &raw,
+        &json!({
+            "format": "vdesign",
+            "format_version": 1,
+            "engine_version": "0.1.0",
+            "options": [{ "name": "Option 1", "inputs": inputs }]
+        }),
+    );
+    let out = dir.join(format!("{name}.vdesign"));
+    let r = ovcd(&["fill", p(&raw), p(&out)]);
+    assert!(r.status.success(), "{}", stderr(&r));
+    out
+}
+
+#[test]
+fn the_summary_names_the_option_and_its_main_numbers() {
+    let dir = temp_dir("summary");
+    let out = ovcd(&["run", p(&starter(&dir))]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let text = stdout(&out);
+    for needle in [
+        "Option 'Option 1': Bauxite",
+        "Cargo: ",
+        "Lightship",
+        "Draught",
+        "Checks: all",
+        "Results hash",
+        "(matches the file)",
+    ] {
+        assert!(text.contains(needle), "missing {needle:?} in:\n{text}");
+    }
+    assert!(!text.trim_start().starts_with('{'), "summary is not JSON");
+}
+
+#[test]
+fn running_the_same_file_twice_gives_the_same_hash() {
+    let dir = temp_dir("twice");
+    let file = starter(&dir);
+    let a = ovcd(&["run", "--json", p(&file)]);
+    let b = ovcd(&["run", "--json", p(&file)]);
+    assert!(a.status.success() && b.status.success());
+    assert_eq!(stdout(&a), stdout(&b));
+    let first: Value = serde_json::from_str(&stdout(&a)).unwrap();
+    let hash = first["options"][0]["results_hash"].as_str().unwrap();
+    assert_eq!(hash.len(), 64);
+    assert!(
+        hash.bytes()
+            .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
+    );
+    // The hash `ovcd new` saved is the one run computes.
+    assert_eq!(read_json(&file)["options"][0]["results_hash"], hash);
+    assert_eq!(first["options"][0]["hash_status"], "matches");
+}
+
+#[test]
+fn run_does_not_change_the_file() {
+    let dir = temp_dir("readonly");
+    let file = starter(&dir);
+    let before = std::fs::read_to_string(&file).unwrap();
+    assert!(ovcd(&["run", p(&file)]).status.success());
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), before);
+}
+
+#[test]
+fn a_tampered_stored_hash_warns_that_results_changed_since_the_engine_version() {
+    let dir = temp_dir("tamper");
+    let file = starter(&dir);
+    let mut design = read_json(&file);
+    design["engine_version"] = json!("0.0.7");
+    design["options"][0]["results_hash"] = json!("00".repeat(32));
+    write_json(&file, &design);
+    let out = ovcd(&["run", p(&file)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let err = stderr(&out);
+    assert!(
+        err.contains("results changed since this file was saved with engine version 0.0.7"),
+        "{err}"
+    );
+    assert!(
+        stdout(&out).contains("DIFFERS from the file"),
+        "{}",
+        stdout(&out)
+    );
+    // The results themselves are still printed.
+    assert!(stdout(&out).contains("Cargo: "));
+    let json_out = ovcd(&["run", "--json", p(&file)]);
+    let v: Value = serde_json::from_str(&stdout(&json_out)).unwrap();
+    assert_eq!(v["options"][0]["hash_status"], "differs");
+    assert!(stderr(&json_out).contains("results changed since"));
+}
+
+#[test]
+fn an_edited_input_with_the_old_hash_warns_too() {
+    let dir = temp_dir("edited");
+    let file = starter(&dir);
+    let mut design = read_json(&file);
+    design["options"][0]["inputs"]["beam_m"]["value"] = json!(11.0);
+    write_json(&file, &design);
+    let out = ovcd(&["run", p(&file)]);
+    assert!(
+        stderr(&out).contains("results changed since"),
+        "{}",
+        stderr(&out)
+    );
+}
+
+#[test]
+fn a_file_with_no_stored_hash_runs_and_says_so() {
+    let dir = temp_dir("nohash");
+    let file = starter(&dir);
+    let mut design = read_json(&file);
+    design["options"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("results_hash");
+    write_json(&file, &design);
+    let out = ovcd(&["run", p(&file)]);
+    assert!(out.status.success());
+    assert!(stdout(&out).contains("none saved in the file"));
+    assert!(!stderr(&out).contains("results changed"));
+}
+
+#[test]
+fn a_convoy_gives_the_not_yet_available_message_and_no_numbers() {
+    let dir = temp_dir("convoy");
+    let file = starter(&dir);
+    let mut design = read_json(&file);
+    design["options"][0]["inputs"]["formation"] = json!({ "value": { "kind": "pushed_convoy", "abreast": 2, "in_line": 2 }, "source": "typed" });
+    design["options"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("results_hash");
+    write_json(&file, &design);
+    let out = ovcd(&["run", p(&file)]);
+    assert!(!out.status.success(), "a convoy is not computed: exit 1");
+    let text = stdout(&out);
+    assert!(text.contains("convoy results not yet available"), "{text}");
+    for number_line in ["Cargo:", "Lightship", "Draught", "Results hash"] {
+        assert!(!text.contains(number_line), "{number_line} in:\n{text}");
+    }
+    let j = ovcd(&["run", "--json", p(&file)]);
+    let v: Value = serde_json::from_str(&stdout(&j)).unwrap();
+    assert_eq!(v["options"][0]["results"], Value::Null);
+    assert_eq!(
+        v["options"][0]["message"],
+        "convoy results not yet available"
+    );
+    assert!(v["options"][0].get("results_hash").is_none());
+}
+
+#[test]
+fn a_two_option_design_runs_the_barge_and_reports_the_convoy_beside_it() {
+    let dir = temp_dir("mixed");
+    let file = starter(&dir);
+    let mut design = read_json(&file);
+    let mut convoy = design["options"][0].clone();
+    convoy["name"] = json!("Convoy");
+    convoy["inputs"]["formation"] = json!({ "value": { "kind": "pushed_convoy", "abreast": 2, "in_line": 1 }, "source": "typed" });
+    convoy.as_object_mut().unwrap().remove("results_hash");
+    design["options"].as_array_mut().unwrap().push(convoy);
+    write_json(&file, &design);
+    let out = ovcd(&["run", p(&file)]);
+    let text = stdout(&out);
+    assert!(text.contains("Option 'Option 1': Bauxite"), "{text}");
+    assert!(
+        text.contains("Option 'Convoy': convoy results not yet available"),
+        "{text}"
+    );
+    assert!(!out.status.success());
+}
+
+#[test]
+fn a_file_with_a_hard_error_is_not_run() {
+    let dir = temp_dir("invalid");
+    let file = starter(&dir);
+    let mut design = read_json(&file);
+    design["options"][0]["inputs"]["beam_m"]["value"] = json!(-3.0);
+    write_json(&file, &design);
+    let out = ovcd(&["run", p(&file)]);
+    assert!(!out.status.success());
+    assert!(stdout(&out).is_empty(), "{}", stdout(&out));
+    assert!(stderr(&out).contains("error:"), "{}", stderr(&out));
+}
+
+#[test]
+fn a_missing_file_fails_without_a_panic() {
+    let out = ovcd(&["run", "/no/such/file.vdesign"]);
+    assert!(!out.status.success());
+    assert!(stderr(&out).contains("cannot read"), "{}", stderr(&out));
+}
+
+#[test]
+fn run_needs_exactly_one_file() {
+    assert_eq!(ovcd(&["run"]).status.code(), Some(2));
+    assert_eq!(ovcd(&["run", "a", "b"]).status.code(), Some(2));
+}
+
+/// The Reference Result of one `simulate` parity case, by id.
+fn reference(id: &str) -> Value {
+    let cases = read_json(&parity_dir().join("cases/simulate.json"));
+    let refs = read_json(&parity_dir().join("reference/simulate.json"));
+    let i = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .position(|c| c["id"] == id)
+        .unwrap_or_else(|| panic!("no parity case {id}"));
+    refs["results"][i]["output"].clone()
+}
+
+fn assert_matches_parity(actual: &Value, id: &str) {
+    let tol = Tolerance::from_json(
+        &std::fs::read_to_string(parity_dir().join("tolerance.json")).unwrap(),
+    )
+    .unwrap();
+    let expected = reference(id);
+    let expected = parse(&expected["ok"].to_string()).unwrap();
+    let actual = parse(&actual.to_string()).unwrap();
+    if let Err(diffs) = compare(&json!({"ok": expected}), &json!({"ok": actual}), tol) {
+        panic!("{id}: {}", diffs.join("\n"));
+    }
+}
+
+#[test]
+fn json_results_match_the_simulate_parity_result_for_a_pushed_barge() {
+    let dir = temp_dir("parity-box");
+    // Inputs of parity case simulate/box_bauxite_76.5x11.4x3.5.
+    let file = filled(
+        &dir,
+        "box",
+        json!({
+            "cargo": "bauxite",
+            "hull_form": "raked_box",
+            "formation": { "kind": "pushed_barge" },
+            "length_overall_m": 76.5,
+            "beam_m": 11.4,
+            "moulded_depth_m": 3.5,
+            "cargo_containment": "box_hold",
+            "block_coefficient": 0.928,
+            "lightship_factor_t_per_m3": 0.1093,
+            "min_freeboard_m": 0.3
+        }),
+    );
+    let out = ovcd(&["run", "--json", p(&file)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let v: Value = serde_json::from_str(&stdout(&out)).unwrap();
+    assert_matches_parity(
+        &v["options"][0]["results"],
+        "simulate/box_bauxite_76.5x11.4x3.5",
+    );
+}
+
+#[test]
+fn json_results_match_the_simulate_parity_result_for_a_self_propelled_gas_hull() {
+    let dir = temp_dir("parity-gas");
+    // Inputs of parity case simulate/gas_CN_II.
+    let file = filled(
+        &dir,
+        "gas",
+        json!({
+            "cargo": "LPG_propane",
+            "hull_form": "raked_box",
+            "formation": { "kind": "self_propelled" },
+            "length_overall_m": 90.0,
+            "beam_m": 14.8,
+            "moulded_depth_m": 6.5,
+            "cargo_containment": "type_c_tanks",
+            "block_coefficient": 0.85,
+            "min_freeboard_m": 0.3,
+            "ruleset": "IGC_2G",
+            "fill_ratio": 0.95,
+            "adn_tank_cap_m3": 1000.0,
+            "optimise_depth": false,
+            "propulsive_efficiency": 0.45,
+            "max_speed_kn": 10.0,
+            "draught_limit_m": 4.4
+        }),
+    );
+    let out = ovcd(&["run", "--json", p(&file)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let v: Value = serde_json::from_str(&stdout(&out)).unwrap();
+    assert_matches_parity(&v["options"][0]["results"], "simulate/gas_CN_II");
+    // The summary of a gas Option lists the failed stability checks, if any, by name.
+    let s = ovcd(&["run", p(&file)]);
+    assert!(stdout(&s).contains("Checks: "), "{}", stdout(&s));
+}
+
+#[test]
+fn fill_saves_a_hash_for_a_computable_option() {
+    let dir = temp_dir("fill-hash");
+    let file = filled(
+        &dir,
+        "f",
+        json!({
+            "cargo": "bauxite",
+            "hull_form": "raked_box",
+            "formation": { "kind": "pushed_barge" },
+            "length_overall_m": 76.5,
+            "beam_m": 11.4,
+            "moulded_depth_m": 3.5
+        }),
+    );
+    let design = read_json(&file);
+    assert!(design["options"][0]["results_hash"].is_string());
+    let out = ovcd(&["run", p(&file)]);
+    assert!(
+        stdout(&out).contains("(matches the file)"),
+        "{}",
+        stdout(&out)
+    );
+}
