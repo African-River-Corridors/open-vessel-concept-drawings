@@ -208,3 +208,40 @@ fn a_service_speed_exactly_on_the_schijf_limit_leaves_an_empty_curve() {
     assert_eq!(r.environments[1].service_speed_knots, 9.5);
     assert_eq!(r.installed_power_kw, 0.0);
 }
+
+// --- Knife-edge guards (issue #20). Expected values: frozen Python via parity/driver.run_case. ---
+
+#[test]
+fn py_min_of_equal_items_keeps_the_first_signed_zero() {
+    // min(-0.0, 0.0, 9.4) is the first of the equal items: -0.0, not 0.0.
+    let inp = EnergyInputs {
+        target_service_speed_knots: -0.0,
+        speed_min_knots: 0.0,
+        speed_max_knots: 0.0,
+        ..EnergyInputs::default()
+    };
+    let r = compute(&inp).unwrap();
+    for env in &r.environments {
+        assert_eq!(env.service_speed_knots, 0.0);
+        assert!(env.service_speed_knots.is_sign_negative());
+    }
+    assert_eq!(
+        r.checks[0].message,
+        "service -0.0 kn stays below the Schijf limit 9.4 kn"
+    );
+}
+
+#[test]
+fn py_min_of_equal_items_keeps_a_positive_zero_when_it_comes_first() {
+    let inp = EnergyInputs {
+        target_service_speed_knots: 0.0,
+        service_speed_safety_fraction: -0.0,
+        ..EnergyInputs::default()
+    };
+    let r = compute(&inp).unwrap();
+    assert!(r.environments[0].service_speed_knots.is_sign_positive());
+    assert_eq!(
+        r.checks[0].message,
+        "service 0.0 kn stays below the Schijf limit 9.4 kn"
+    );
+}

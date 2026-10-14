@@ -497,3 +497,61 @@ fn power_exactly_equal_to_the_engine_power_passes() {
     assert!(r.checks[0].ok);
     assert!(r.ok());
 }
+
+// --- Knife-edge guards (issue #20). Expected values: frozen Python via parity/driver.run_case. ---
+
+#[test]
+fn squat_does_not_apply_at_depth_exactly_zero() {
+    let mut e = env("x", 0.0, 20.0, 40.0);
+    e.apply_squat_limit = true;
+    let inp = ResistanceInputs {
+        speed_min_knots: 5.0,
+        speed_max_knots: 4.0,
+        ..with_envs(vec![e])
+    };
+    let r = compute(&inp).unwrap();
+    assert_eq!(r.environments[0].squat_limited_speed_knots, None);
+    assert_eq!(r.environments[0].service_speed_governed_by, "channel");
+}
+
+#[test]
+fn ittc_friction_is_turbulent_at_reynolds_exactly_1e5() {
+    let inp = ResistanceInputs {
+        loa: 0.25,
+        lwl: 0.22161741835147747,
+        beam: 0.1,
+        draft: 0.05,
+        speed_min_knots: 1.0,
+        speed_max_knots: 1.0,
+        ..with_envs(vec![EnvironmentInputs {
+            name: "x".to_string(),
+            water_density: 1.0,
+            is_deep_water: true,
+            ..EnvironmentInputs::default()
+        }])
+    };
+    let r = compute(&inp).unwrap();
+    let p = &r.environments[0].speed_curve[0];
+    assert_eq!(p.resistance_frictional_kn, 4.984536e-05);
+    assert_eq!(p.resistance_total_kn, 6.615974179695845e-05);
+}
+
+#[test]
+fn the_shallow_water_factor_is_one_when_the_draft_is_zero() {
+    let inp = ResistanceInputs {
+        draft: 0.0,
+        speed_min_knots: 4.0,
+        speed_max_knots: 4.0,
+        ..with_envs(vec![EnvironmentInputs {
+            name: "x".to_string(),
+            water_depth: 1.0,
+            current_speed_knots: 3.0,
+            apply_squat_limit: false,
+            ..EnvironmentInputs::default()
+        }])
+    };
+    let r = compute(&inp).unwrap();
+    let p = &r.environments[0].speed_curve[0];
+    assert_eq!(p.resistance_shallow_factor, 1.0);
+    assert_eq!(p.resistance_total_kn, 38.784599026937556);
+}
