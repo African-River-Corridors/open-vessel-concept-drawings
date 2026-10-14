@@ -59,16 +59,27 @@ describe("OVCD app smoke tests", () => {
       await peek("handles", () => browser.getWindowHandles());
       await peek("url", () => browser.getUrl());
       await peek("title", () => browser.getTitle());
-      await peek("script", () =>
+      await peek("state", () =>
+        browser.execute(() => ({
+          ready: document.readyState,
+          tauri: typeof window.__TAURI_INTERNALS__,
+          resources: performance.getEntriesByType("resource").map((r) => `${r.name} ${Math.round(r.duration)}ms ${r.transferSize}b`),
+          app: document.getElementById("app")?.innerHTML.slice(0, 200),
+          errors: window.__e2eErrors ?? null,
+        })),
+      );
+      await peek("fresh import", () =>
         browser.executeAsync((done) => {
           const src = document.querySelector("script[type=module]")?.getAttribute("src");
-          import(src).then(
-            () => done("module ran"),
-            (err) => done(`module failed: ${err} ${(err && err.stack) || ""}`),
+          const seen = [];
+          window.addEventListener("error", (e) => seen.push(String(e.message)));
+          window.addEventListener("unhandledrejection", (e) => seen.push(String(e.reason)));
+          import(`${src}?probe=${Date.now()}`).then(
+            () => setTimeout(() => done({ result: "module ran", seen, app: document.getElementById("app")?.innerHTML.slice(0, 200) }), 1500),
+            (err) => done({ result: `module failed: ${err} ${(err && err.stack) || ""}`, seen }),
           );
         }),
       );
-      await peek("body", () => browser.execute(() => document.body.innerHTML.slice(0, 300)));
       await peek("source", async () => (await browser.getPageSource()).slice(0, 600));
       throw e;
     }
