@@ -1,12 +1,19 @@
 //! Drawing document, checks, normalised content (clauses 4 to 9, 16 and 17.3).
 
 use crate::data::{self, LineGroup, Role};
+use crate::dimensions::{self, ChainInfo, Context as DimContext, DimResult};
 use crate::entities::{self, Entity, num};
+use crate::furniture;
+use crate::hatch;
 use crate::numbers::{FIT_TOL_MM, cos_sin};
-use crate::rules::{self, AlignH, AlignV, Mapper, Rect, Window};
+use crate::read::{
+    arr, entities_of, f, orientation_of, p, points, rect_of, rotation_of, st, window_of,
+};
+use crate::rules::{self, AlignH, AlignV, Mapper, Rect};
 use crate::schema::Schema;
+use crate::symbols::{self, Libraries, SymbolContext};
 use serde_json::{Map, Value};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 /// The furniture layer (clause 16.6.1). It is declared without the document declaring it.
 pub const FURNITURE_LAYER: &str = "TITLEBLOCK";
@@ -164,54 +171,6 @@ pub fn run_value(doc: &Value, files: &dyn Files) -> RunResult {
     RunResult::Ok(Box::new(normalise_document(doc, files)))
 }
 
-// ---------------------------------------------------------------------------------------------
-// small readers: after the schema, the shapes are known; a reader never panics
-
-pub(crate) fn f(v: &Value) -> f64 {
-    v.as_f64().unwrap_or(0.0)
-}
-
-pub(crate) fn p(v: &Value) -> [f64; 2] {
-    [f(&v[0]), f(&v[1])]
-}
-
-pub(crate) fn st(v: &Value) -> &str {
-    v.as_str().unwrap_or("")
-}
-
-fn rect_of(v: &Value) -> Rect {
-    Rect {
-        x: f(&v["x_mm"]),
-        y: f(&v["y_mm"]),
-        w: f(&v["width_mm"]),
-        h: f(&v["height_mm"]),
-    }
-}
-
-fn window_of(v: &Value) -> Window {
-    Window {
-        xmin: f(&v["xmin_m"]),
-        ymin: f(&v["ymin_m"]),
-        xmax: f(&v["xmax_m"]),
-        ymax: f(&v["ymax_m"]),
-    }
-}
-
-fn entities_of(vp: &Value) -> &[Value] {
-    vp["entities"].as_array().map_or(&[], Vec::as_slice)
-}
-
-fn rotation_of(vp: &Value) -> f64 {
-    vp.get("rotation_deg").map_or(0.0, f).rem_euclid(360.0)
-}
-
-fn orientation_of(sheet: &Value) -> &str {
-    sheet
-        .get("orientation")
-        .and_then(Value::as_str)
-        .unwrap_or("landscape")
-}
-
 /// The declared layers: name to role, line type and CAD colour (clause 8.5).
 pub type Layers = BTreeMap<String, (Role, String, i64)>;
 
@@ -336,6 +295,10 @@ fn containment_points(e: &Value, mapper: &Mapper, rotation: f64) -> Vec<[f64; 2]
     }
 }
 
+fn same_point(a: &Value, b: &Value) -> bool {
+    p(a) == p(b)
+}
+
 fn check_entity(
     e: &Value,
     declared: &Layers,
@@ -348,11 +311,11 @@ fn check_entity(
     if !declared.contains_key(st(&e["layer"])) {
         errors.insert("8.5.1".into());
     }
-    if matches!(t, "line" | "centre_line") && e["from_m"] == e["to_m"] {
+    if matches!(t, "line" | "centre_line") && same_point(&e["from_m"], &e["to_m"]) {
         errors.insert("9.3".into());
     }
     if t == "polyline" {
-        let pts = e["points_m"].as_array().map_or(&[][..], Vec::as_slice);
+        let pts = points(&e["points_m"]);
         let n = pts.len();
         if (0..n.saturating_sub(1)).any(|i| pts[i] == pts[i + 1])
             || (e.get("closed").and_then(Value::as_bool) == Some(true)
@@ -365,6 +328,14 @@ fn check_entity(
     if t == "arc" && rules::arc_sweep(f(&e["start_deg"]), f(&e["end_deg"])).is_none() {
         errors.insert("9.5.1".into());
         return;
+    }
+    if t == "hatch" {
+        let holes: Vec<Vec<[f64; 2]>> = e
+            .get("holes_m")
+            .map_or(vec![], |h| arr(h).iter().map(points).collect());
+        if !hatch::hatch_ok(&points(&e["boundary_m"]), &holes) {
+            errors.insert("10.3".into());
+        }
     }
     let Some(mapper) = mapper else { return };
     for [px, py] in containment_points(e, mapper, rotation) {
@@ -422,7 +393,7 @@ fn parse_version(text: &str) -> (u32, u32) {
 }
 
 /// Every error clause of a document that passed the schema (clause 4.6).
-pub fn check_document(doc: &Value, _files: &dyn Files) -> BTreeSet<String> {
+pub fn check_document(doc: &Value, files: &dyn Files) -> BTreeSet<String> {
     let mut errors = BTreeSet::new();
     let (major, minor) = parse_version(st(&doc["standard_version"]));
     if major != SUPPORTED_VERSION.0 || minor > SUPPORTED_VERSION.1 {
@@ -438,11 +409,18 @@ pub fn check_document(doc: &Value, _files: &dyn Files) -> BTreeSet<String> {
     let Some((_, _, ds)) = rules::drawing_space(size, landscape) else {
         return errors;
     };
+    if rules::vertical_zones(size, landscape).is_some_and(|n| n > rules::ZONE_LETTERS.len()) {
+        // Clause 6.5.2 has 16 letters, and an A0 sheet in portrait needs 24 vertical zones: the
+        // standard has no label for the others, so the sheet is refused, not guessed.
+        errors.insert("6.5.2".into());
+    }
     let declared = layer_table(doc, &mut errors);
+    let (libs, lib_errors) = symbols::load_libraries(doc, files);
+    errors.extend(lib_errors.iter().cloned());
 
     let mut ids: Vec<String> = Vec::new();
     let mut frames: Vec<Rect> = Vec::new();
-    for vp in doc["viewports"].as_array().map_or(&[][..], Vec::as_slice) {
+    for vp in arr(&doc["viewports"]) {
         ids.push(st(&vp["id"]).to_string());
         let frame = rect_of(&vp["frame"]);
         frames.push(frame);
@@ -483,16 +461,85 @@ pub fn check_document(doc: &Value, _files: &dyn Files) -> BTreeSet<String> {
             errors.insert("7.10.7".into());
         }
         let mapper = denominator.map(|n| Mapper::new(frame, window, n, rotation));
+        let index: HashMap<String, &Value> = entities_of(vp)
+            .iter()
+            .filter_map(|e| e.get("id").map(|id| (st(id).to_string(), e)))
+            .collect();
+        let mut chains: Vec<ChainInfo> = Vec::new();
         for e in entities_of(vp) {
             if let Some(id) = e.get("id") {
                 ids.push(st(id).to_string());
             }
             check_entity(e, &declared, mapper.as_ref(), rotation, frame, &mut errors);
+            let (Some(mapper), Some(n)) = (mapper.as_ref(), denominator) else {
+                continue;
+            };
+            let layer_declared = declared.contains_key(st(&e["layer"]));
+            match st(&e["type"]) {
+                "symbol" => match libs.symbol(st(&e["library"]), st(&e["symbol"])) {
+                    None => {
+                        if lib_errors.is_empty() {
+                            errors.insert("13.3.2".into());
+                        }
+                    }
+                    Some(symbol) if layer_declared => {
+                        let ctx =
+                            symbol_context(e, &declared, group, mapper, rotation, st(&vp["id"]), n);
+                        let (parts, errs) = symbols::parts(e, symbol, &ctx);
+                        errors.extend(errs);
+                        if parts
+                            .iter()
+                            .flat_map(dimensions::part_points)
+                            .any(|[px, py]| !inside_frame(px, py, frame))
+                        {
+                            errors.insert("7.7.1".into());
+                        }
+                    }
+                    Some(_) => {}
+                },
+                "dimension" | "leader" if layer_declared => {
+                    let res = dimension_result(
+                        e,
+                        &declared,
+                        group,
+                        mapper,
+                        rotation,
+                        st(&vp["id"]),
+                        &index,
+                        &libs,
+                        n,
+                    );
+                    errors.extend(res.errors.iter().cloned());
+                    if res.errors.is_empty() {
+                        if res
+                            .entities
+                            .iter()
+                            .flat_map(dimensions::part_points)
+                            .any(|[px, py]| !inside_frame(px, py, frame))
+                        {
+                            errors.insert("7.7.1".into());
+                        }
+                        chains.extend(res.chain);
+                    }
+                }
+                _ => {}
+            }
+        }
+        if !dimensions::check_chains(&chains) {
+            errors.insert("12.8".into());
         }
     }
     let unique: BTreeSet<&String> = ids.iter().collect();
     if unique.len() != ids.len() {
         errors.insert("9.8".into());
+    }
+    let scales: Vec<Option<u32>> = arr(&doc["viewports"]).iter().map(resolved_scale).collect();
+    let plan = furniture::plan(doc, size, ds, group, &scales, files);
+    errors.extend(plan.errors.iter().cloned());
+    for frame in &frames {
+        if plan.regions.iter().any(|(_, r)| overlap(*frame, *r)) {
+            errors.insert("7.2.4".into());
+        }
     }
     for i in 0..frames.len() {
         for j in (i + 1)..frames.len() {
@@ -502,6 +549,60 @@ pub fn check_document(doc: &Value, _files: &dyn Files) -> BTreeSet<String> {
         }
     }
     errors
+}
+
+fn symbol_context<'a>(
+    e: &Value,
+    declared: &'a Layers,
+    group: &'a LineGroup,
+    mapper: &'a Mapper,
+    rotation: f64,
+    vid: &str,
+    denominator: u32,
+) -> SymbolContext<'a> {
+    let (role, line_type, _) = &declared[st(&e["layer"])];
+    SymbolContext {
+        mapper,
+        rotation,
+        denominator,
+        group,
+        layer_role: *role,
+        layer_line_type: line_type,
+        origin: format!("viewport.{vid}"),
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn dimension_result(
+    e: &Value,
+    declared: &Layers,
+    group: &LineGroup,
+    mapper: &Mapper,
+    rotation: f64,
+    vid: &str,
+    index: &HashMap<String, &Value>,
+    libs: &Libraries,
+    denominator: u32,
+) -> DimResult {
+    let role = e
+        .get("role")
+        .and_then(|r| Role::parse(st(r)))
+        .unwrap_or(declared[st(&e["layer"])].0);
+    let ctx = DimContext {
+        mapper,
+        rotation,
+        unit_mm: hatch::unit_mm(group.thin),
+        width: group.width(role),
+        origin: format!("viewport.{vid}"),
+        index,
+        libs,
+        denominator,
+    };
+    if st(&e["type"]) == "dimension" {
+        dimensions::dimension(e, &ctx)
+    } else {
+        dimensions::leader(e, &ctx)
+    }
 }
 
 /// Two rectangles overlap by more than the tolerance in both directions (clauses 7.2.3, 7.2.5).
@@ -620,7 +721,11 @@ fn sheet_furniture(size: &str, landscape: bool, group: &LineGroup) -> Vec<Entity
             None,
         ));
     }
-    let letters: Vec<char> = rules::ZONE_LETTERS.chars().collect();
+    let letters: Vec<char> = rules::ZONE_LETTERS
+        .chars()
+        .chain(std::iter::repeat('?'))
+        .take(nv)
+        .collect();
     for j in 1..=nv {
         let y = t + (j as f64 - 0.5) * zh;
         let label = letters[j - 1].to_string();
@@ -817,8 +922,8 @@ fn viewport_entities(
     let mut out = Vec::new();
     for e in entities_of(vp) {
         let t = st(&e["type"]);
-        if matches!(t, "dimension" | "leader" | "symbol" | "hatch") {
-            continue; // clauses 10 to 13: ticket #97
+        if matches!(t, "dimension" | "leader" | "symbol") {
+            continue; // their parts are made by `dimensions` and `symbols` (clauses 12.7 and 13.7)
         }
         let (line_type, width) = entity_style(e, declared, group);
         let layer = st(&e["layer"]);
@@ -834,9 +939,10 @@ fn viewport_entities(
                 id,
             )),
             "polyline" => {
-                let pts: Vec<[f64; 2]> = e["points_m"]
-                    .as_array()
-                    .map_or(vec![], |a| a.iter().map(|q| mapper.point(p(q))).collect());
+                let pts: Vec<[f64; 2]> = points(&e["points_m"])
+                    .into_iter()
+                    .map(|q| mapper.point(q))
+                    .collect();
                 out.push(Entity::polyline(
                     &origin,
                     layer,
@@ -870,6 +976,31 @@ fn viewport_entities(
                     id,
                 ));
             }
+            "hatch" => {
+                let boundary: Vec<[f64; 2]> = points(&e["boundary_m"])
+                    .into_iter()
+                    .map(|q| mapper.point(q))
+                    .collect();
+                let holes: Vec<Vec<[f64; 2]>> = e.get("holes_m").map_or(vec![], |h| {
+                    arr(h)
+                        .iter()
+                        .map(|l| points(l).into_iter().map(|q| mapper.point(q)).collect())
+                        .collect()
+                });
+                let item = Entity::hatch(
+                    &origin,
+                    layer,
+                    &boundary,
+                    &holes,
+                    st(&e["pattern"]),
+                    e.get("angle_deg").map_or(0.0, f) + rotation,
+                    width,
+                    id,
+                );
+                let marks = hatch::marks(&item, &format!("{origin}.hatch"), group.thin);
+                out.push(item);
+                out.extend(marks);
+            }
             "text" => out.push(Entity::text(
                 &origin,
                 layer,
@@ -888,7 +1019,7 @@ fn viewport_entities(
 }
 
 /// The normalised content of a document that has no errors (clause 16).
-pub fn normalise_document(doc: &Value, _files: &dyn Files) -> Normalised {
+pub fn normalise_document(doc: &Value, files: &dyn Files) -> Normalised {
     let sheet = &doc["sheet"];
     let size = st(&sheet["size"]);
     let landscape = orientation_of(sheet) == "landscape";
@@ -896,7 +1027,10 @@ pub fn normalise_document(doc: &Value, _files: &dyn Files) -> Normalised {
     let group = line_group_of(size);
     let mut scratch = BTreeSet::new();
     let declared = layer_table(doc, &mut scratch);
+    let (libs, _) = symbols::load_libraries(doc, files);
     let mut entities = sheet_furniture(size, landscape, group);
+    let scales: Vec<Option<u32>> = arr(&doc["viewports"]).iter().map(resolved_scale).collect();
+    entities.extend(furniture::plan(doc, size, ds, group, &scales, files).entities);
     let mut viewports = Vec::new();
     for vp in doc["viewports"].as_array().map_or(&[][..], Vec::as_slice) {
         let frame = rect_of(&vp["frame"]);
@@ -909,6 +1043,43 @@ pub fn normalise_document(doc: &Value, _files: &dyn Files) -> Normalised {
             frame,
         });
         entities.extend(viewport_entities(vp, &declared, group, &mapper, rotation));
+        let index: HashMap<String, &Value> = entities_of(vp)
+            .iter()
+            .filter_map(|e| e.get("id").map(|id| (st(id).to_string(), e)))
+            .collect();
+        for e in entities_of(vp) {
+            match st(&e["type"]) {
+                "dimension" | "leader" => entities.extend(
+                    dimension_result(
+                        e,
+                        &declared,
+                        group,
+                        &mapper,
+                        rotation,
+                        st(&vp["id"]),
+                        &index,
+                        &libs,
+                        denominator,
+                    )
+                    .entities,
+                ),
+                "symbol" => {
+                    if let Some(symbol) = libs.symbol(st(&e["library"]), st(&e["symbol"])) {
+                        let ctx = symbol_context(
+                            e,
+                            &declared,
+                            group,
+                            &mapper,
+                            rotation,
+                            st(&vp["id"]),
+                            denominator,
+                        );
+                        entities.extend(symbols::parts(e, symbol, &ctx).0);
+                    }
+                }
+                _ => {}
+            }
+        }
         if let Some(sb) = vp.get("scale_bar") {
             entities.extend(scale_bar(st(&vp["id"]), frame, denominator, sb, group.thin));
         }

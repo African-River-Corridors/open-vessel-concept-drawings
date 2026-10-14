@@ -59,6 +59,29 @@ pub fn round_to_units(value: f64, places: u32) -> Option<i64> {
     Some(if negative { -q } else { q })
 }
 
+/// The value as text with exactly `places` decimal places, rounded half-even on the exact binary
+/// value (clause 12.1.1). A result of zero has no sign.
+pub fn format_fixed(value: f64, places: u32) -> String {
+    let Some((negative, q)) = round_scaled(value, places) else {
+        return format!("{value}");
+    };
+    let mut digits = q.to_string();
+    let places = places as usize;
+    if digits.len() <= places {
+        digits = format!("{}{}", "0".repeat(places + 1 - digits.len()), digits);
+    }
+    let split = digits.len() - places;
+    let mut text = if places == 0 {
+        digits.clone()
+    } else {
+        format!("{}.{}", &digits[..split], &digits[split..])
+    };
+    if negative && q != 0 {
+        text.insert(0, '-');
+    }
+    text
+}
+
 /// A paper length, 3 places (clause 5.4).
 pub fn mm(value: f64) -> f64 {
     round_half_even(value, 3)
