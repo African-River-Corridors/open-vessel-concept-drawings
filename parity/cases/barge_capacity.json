@@ -1616,7 +1616,7 @@
     {
       "id": "compute/nested/aft_before_separation",
       "tier": 3,
-      "reason": "tier 3: error path: with both nested inputs bad, aft is built first so its message wins (issue #16, fix round 1)",
+      "reason": "tier 3: error path: with both nested inputs bad and aft first in the JSON, aft is built first so its message wins (issue #16, fix round 2)",
       "input": {
         "fn": "compute",
         "args": {
@@ -2537,6 +2537,122 @@
           "side_clearance_m": 0.8986,
           "tank_gap_transverse_m": 1.1484,
           "max_od_m": 8.6706
+        }
+      }
+    },
+    {
+      "id": "compute/nested/separation_before_aft",
+      "tier": 3,
+      "reason": "tier 3: error path: with both nested inputs bad and separation first in the JSON, the frozen driver builds separation first so its message wins (issue #16, fix round 2)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "separation": {
+              "cofferdam_m": -1.0
+            },
+            "aft": {
+              "beam": 16.0,
+              "depth": 6.0,
+              "n_thrusters": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/overload/just_under_rho1025",
+      "tier": 1,
+      "reason": "tier 1: bulk barge just under the overload threshold with water_density 1.025 and block_coefficient 0.85, so the overload test depends on cb*rho and not cb/rho (issue #16, fix round 2)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 3.11,
+            "cargo_type": "bauxite",
+            "water_density": 1.025
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/overload/depth_3p10_rho1025",
+      "tier": 1,
+      "reason": "tier 1: same hull and water density at depth 3.10, a second point near the overload threshold where cb*rho and cb/rho give different flags (issue #16, fix round 2)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 3.1,
+            "cargo_type": "bauxite",
+            "water_density": 1.025
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/overload/exact_tie",
+      "tier": 1,
+      "reason": "tier 1: required volume equals displaced volume exactly (W/0.5 == 9600), so overloaded is false; pins > against >= (issue #16, fix round 2)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.5,
+            "block_coefficient": 0.5,
+            "wing_void_width": 8.0
+          }
+        }
+      },
+      "knife_edge": "required volume W/(cb*rho) equals the displaced volume exactly (4800/0.5 == 9600.0, both exact in binary), so the > test flips with any nudge; Rust divides the same two doubles as Python, so it lands on the same side."
+    },
+    {
+      "id": "bauxite/box/wing_void_just_past_half_beam",
+      "tier": 1,
+      "reason": "tier 1: wing_void_width just past beam/2 so cargo is negative but not zero and bulk_gm takes its zero-width h/2 fallback with a live cargo term (issue #16, fix round 2)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.15,
+            "wing_void_width": 8.05
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/sloped/wing_void_8p6",
+      "tier": 1,
+      "reason": "tier 1: sloped hopper with wing_void_width 8.6, past beam/2, so the h/2 fallback shows in gm_m (issue #16, fix round 2)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "lightship_k_t_per_m3": 0.15,
+            "wing_void_width": 8.6
+          }
         }
       }
     }

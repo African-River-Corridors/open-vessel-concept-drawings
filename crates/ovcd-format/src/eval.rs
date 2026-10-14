@@ -1663,10 +1663,25 @@ fn capacity_json(r: &BargeCapacityResult) -> Value {
 
 fn barge_capacity(function: &str, args: &Value) -> Result<Value, EvalError> {
     match function {
-        "compute" => match ovcd_core::barge_capacity::compute(&capacity_inputs(args)?) {
-            Ok(r) => ok(capacity_json(&r)),
-            Err(e) => raised_py(&e),
-        },
+        "compute" => {
+            let inputs = capacity_inputs(args)?;
+            // The frozen driver builds nested dataclasses in JSON key order, so with both
+            // nested inputs bad the first key's message wins. `compute` checks aft first;
+            // when `separation` comes first in the JSON, check it here before `compute` runs.
+            if let Some(obj) = args.get("inputs").and_then(Value::as_object) {
+                let pos = |name: &str| obj.keys().position(|k| k == name);
+                if let (Some(sep), Some(_)) = (&inputs.separation, &inputs.aft)
+                    && pos("separation") < pos("aft")
+                    && let Err(message) = sep.validate()
+                {
+                    return raised("ValueError", &message);
+                }
+            }
+            match ovcd_core::barge_capacity::compute(&inputs) {
+                Ok(r) => ok(capacity_json(&r)),
+                Err(e) => raised_py(&e),
+            }
+        }
         "tanks_wide_for_beam" => {
             match ovcd_core::barge_capacity::tanks_wide_for_beam(
                 f64_arg(args, "beam_m")?,
