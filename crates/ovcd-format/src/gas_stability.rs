@@ -165,7 +165,7 @@ fn criterion_json(c: &Criterion) -> Value {
 
 /// A `Condition` as `to_json` writes it. When the barge does not float (`gz` is empty), Python
 /// stores the int `-1` or `0` in the fields it does not compute.
-fn condition_json(c: &Condition) -> Value {
+pub(crate) fn condition_json(c: &Condition) -> Value {
     let floats = !c.gz.is_empty();
     let fl_or_int = |x: f64| if floats { float(x) } else { json!(x as i64) };
     let mut m = Map::new();

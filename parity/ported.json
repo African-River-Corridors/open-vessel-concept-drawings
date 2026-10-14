@@ -19,5 +19,6 @@
   "journey_derating",
   "gas_arrangement",
   "design_grid",
-  "ga_adapter"
+  "ga_adapter",
+  "simulate"
 ]

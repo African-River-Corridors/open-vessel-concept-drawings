@@ -174,6 +174,149 @@
       }
     },
     {
+      "id": "simulate/gas_adn_wide_tank_warning",
+      "tier": 1,
+      "reason": "tier 1: ADN_G hull whose tank is wider than 0.70 B, so the ADN wide tank warning and the ADN stability criteria set reach the output; optimise_depth with no waterway limit lets the deepest hull set the cap; whole-number loa_m is read as a float (issue #23)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "loa_m": 85,
+            "beam_m": 10.605010848954997,
+            "depth_m": 3.136953957889147,
+            "cb": 0.9379910292810028,
+            "vessel": "gas_barge",
+            "freeboard_min_m": 0.12385044539583784,
+            "speed_max_kn": 8.0,
+            "cargo": "LPG_propane",
+            "ruleset": "ADN_G",
+            "fill_ratio": null,
+            "optimise_depth": true
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/gas_falsy_flags_are_absent",
+      "tier": 1,
+      "reason": "tier 1: a draught_limit_m of 0, a fill_ratio of 0 and a wide channel: Python reads 0 as not given (draught limit ignored, ruleset default fill used), so the channel sets the cap and the depth search runs; guards the truthiness reading of params (issue #23)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "loa_m": 51.34731217623472,
+            "beam_m": 14.849010745890595,
+            "depth_m": 7.092014440571095,
+            "cb": 0.8659839726450702,
+            "vessel": "gas_barge",
+            "freeboard_min_m": 0.5770495857871326,
+            "self_propelled": true,
+            "cargo": "LPG_butane",
+            "ruleset": "ADN_G",
+            "fill_ratio": 0,
+            "optimise_depth": true,
+            "draught_limit_m": 0,
+            "channel": {
+              "depth_m": 6.765408774620172,
+              "ukc_m": 0.3890664629588738,
+              "bottom_width_m": 27.95081831595889
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/box_channel_draught_bound",
+      "tier": 1,
+      "reason": "tier 1: box barge bound by its draught limit, with a channel, a speed curve for the channel and an air draft limit: the governing text names the limit (issue #23)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "loa_m": 76.43289511064954,
+            "beam_m": 10.397331965211468,
+            "depth_m": 5.764956577767255,
+            "cb": 0.7192699441595083,
+            "vessel": "box_barge",
+            "freeboard_min_m": 0.6234883778038136,
+            "speed_max_kn": 10.0,
+            "cargo": "bauxite",
+            "lightship_k_t_per_m3": 0.1012,
+            "draught_limit_m": 1.8624457166603348,
+            "channel": {
+              "depth_m": 3.631270652759947,
+              "bottom_width_m": 50.44628082844609
+            },
+            "air_draft_limit_m": 11.297521092204036
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/gas_nothing_fits",
+      "tier": 1,
+      "reason": "tier 1: a short wide gas hull that carries nothing: the Cargo > 0 check fails, there is no stability block, and the no cargo area text governs (issue #23)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "loa_m": 35.68128031228261,
+            "beam_m": 19,
+            "depth_m": 3.259437483469986,
+            "cb": 0.8613858622682766,
+            "vessel": "gas_barge",
+            "freeboard_min_m": 0.3,
+            "self_propelled": true,
+            "speed_max_kn": 8.0,
+            "cargo": "LPG_butane",
+            "fill_ratio": null,
+            "optimise_depth": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/error/box_zero_block_coefficient",
+      "tier": 3,
+      "reason": "tier 3: error path: a block coefficient of 0 divides by zero; Python raises ZeroDivisionError (issue #23)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "loa_m": 76.5,
+            "beam_m": 11.4,
+            "depth_m": 3.5,
+            "cb": 0.0,
+            "lightship_k_t_per_m3": 0.1093,
+            "freeboard_min_m": 0.3,
+            "vessel": "box_barge",
+            "cargo": "bauxite"
+          }
+        }
+      }
+    },
+    {
+      "id": "simulate/error/hopper_negative_beam_is_a_result",
+      "tier": 3,
+      "reason": "tier 3: error path: in the dry-bulk path a capacity ValueError comes back as an error result inside ok, not as a raised error (the gas path raises it, see simulate/error/negative_beam) (issue #23)",
+      "input": {
+        "fn": "simulate",
+        "args": {
+          "params": {
+            "loa_m": 62.791168339044326,
+            "beam_m": -1.0,
+            "depth_m": 5.5211095448147764,
+            "cb": 0.9219081826323038,
+            "vessel": "hopper_barge",
+            "self_propelled": 1,
+            "cargo": "bauxite",
+            "draught_limit_m": 1.8051861185415314,
+            "air_draft_limit_m": null
+          }
+        }
+      }
+    },
+    {
       "id": "simulate/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
