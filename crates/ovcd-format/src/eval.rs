@@ -2,6 +2,7 @@
 //! point. Input and output use the case and Reference Result shapes in `parity/README.md`.
 
 use ovcd_core::aft_arrangement::{AftArrangementInputs, AftArrangementResult};
+use ovcd_core::barge_capacity::{BargeCapacityInputs, BargeCapacityResult};
 use ovcd_core::barge_cost::{BargeCostInputs, BargeCostRates, BargeCostResult, MappingValue};
 use ovcd_core::cargo::CargoProperties;
 use ovcd_core::checks::Check;
@@ -82,6 +83,7 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
         "tanks" => tanks(function, args),
         "weights" => weights(function, args),
         "hydrostatics" => hydrostatics(function, args),
+        "barge_capacity" => barge_capacity(function, args),
         "squat" => squat(function, args),
         "waves" => waves(function, args),
         "resistance" => resistance(function, args),
@@ -1388,6 +1390,315 @@ fn hydrostatics(function: &str, args: &Value) -> Result<Value, EvalError> {
 }
 
 /// A float field; absent means Python's default.
+/// A JSON object built key by key, in the order written. `json!` hits the macro recursion limit
+/// on objects this wide.
+macro_rules! wide_object {
+    ({ $($key:literal : $value:expr),* $(,)? }) => {{
+        let mut map = serde_json::Map::new();
+        $( map.insert($key.to_string(), json!($value)); )*
+        Value::Object(map)
+    }};
+}
+
+fn barge_inputs_json(i: &BargeInputs) -> Value {
+    wide_object!({
+        "loa": num(i.loa),
+        "beam": num(i.beam),
+        "depth": num(i.depth),
+        "max_draft": num(i.max_draft),
+        "vertical_clearance": num(i.vertical_clearance),
+        "vessel_type": i.vessel_type,
+        "bow_rake_length": num(i.bow_rake_length),
+        "bow_rake_rise": opt_num(i.bow_rake_rise),
+        "stern_rake_length": num(i.stern_rake_length),
+        "stern_rake_rise": opt_num(i.stern_rake_rise),
+        "bow_non_tank_pct": num(i.bow_non_tank_pct),
+        "stern_non_tank_pct": num(i.stern_non_tank_pct),
+        "bow_non_tank_length": opt_num(i.bow_non_tank_length),
+        "stern_non_tank_length": opt_num(i.stern_non_tank_length),
+        "wing_tank_width": opt_num(i.wing_tank_width),
+        "wing_tank_gap": num(i.wing_tank_gap),
+        "wing_tank_height_ratio": num(i.wing_tank_height_ratio),
+        "weather_shield_thickness": num(i.weather_shield_thickness),
+        "weather_shield_clearance": num(i.weather_shield_clearance),
+        "dome_height": num(i.dome_height),
+        "side_clearance": opt_num(i.side_clearance),
+        "tank_gap_transverse": num(i.tank_gap_transverse),
+        "tank_gap_longitudinal": num(i.tank_gap_longitudinal),
+        "n_tanks_wide": i.n_tanks_wide,
+        "n_tanks_long": i.n_tanks_long,
+        "tank_wall_thickness": opt_num(i.tank_wall_thickness),
+        "tank_head_type": i.tank_head_type,
+        "tank_material": i.tank_material,
+        "tank_material_density": num(i.tank_material_density),
+        "design_pressure": num(i.design_pressure),
+        "weld_efficiency": num(i.weld_efficiency),
+        "tank_structure_factor": num(i.tank_structure_factor),
+        "insulation_thickness": num(i.insulation_thickness),
+        "insulation_density": num(i.insulation_density),
+        "cargo_type": i.cargo_type,
+        "cargo_density_override": opt_num(i.cargo_density_override),
+        "fill_ratio": num(i.fill_ratio),
+        "bottom_plate_thickness": num(i.bottom_plate_thickness),
+        "side_plate_thickness": num(i.side_plate_thickness),
+        "deck_plate_thickness": num(i.deck_plate_thickness),
+        "structure_factor": num(i.structure_factor),
+        "hull_steel_density": num(i.hull_steel_density),
+        "steel_rate_per_cbm": num(i.steel_rate_per_cbm),
+        "block_coefficient": num(i.block_coefficient),
+        "water_density": num(i.water_density),
+        "underkeel_clearance": num(i.underkeel_clearance),
+        "outfitting_factor": num(i.outfitting_factor),
+        "piping_factor": num(i.piping_factor),
+        "stores_weight": num(i.stores_weight),
+        "tank_support_height": num(i.tank_support_height),
+        "double_bottom_height": opt_num(i.double_bottom_height),
+        // The drawing-only pass-throughs: the capacity chain never sets them.
+        "aft_arrangement": i.aft_arrangement.as_ref().map(aft_json),
+        "separation": i.separation.as_ref().map(gas_separation_json),
+        "tug_length": num(i.tug_length),
+        "tug_beam": num(i.tug_beam),
+        "notch_depth": num(i.notch_depth),
+    })
+}
+
+/// An `Optional[float]` result: `None` is JSON null.
+fn opt_num(x: Option<f64>) -> Value {
+    x.map_or(Value::Null, num)
+}
+
+const CAPACITY_FIELDS: &[&str] = &[
+    "loa",
+    "beam",
+    "depth",
+    "cargo_type",
+    "block_coefficient",
+    "water_density",
+    "required_freeboard",
+    "air_draft_limit_m",
+    "ballast_capacity_t",
+    "aft",
+    "separation",
+    "self_propelled",
+    "pushed_stern_void_m",
+    "bow_rake_length_m",
+    "bulk_end_bulkhead_m",
+    "vessel_type",
+    "side_clearance_override_m",
+    "n_tanks_wide",
+    "n_tanks_long",
+    "tank_wall_thickness",
+    "fill_ratio",
+    "dome_height",
+    "tank_support_height",
+    "hold_type",
+    "lightship_k_t_per_m3",
+    "wing_void_width",
+    "double_bottom_height_bulk",
+    "hopper_slope_h_per_v",
+    "coaming_height",
+    "n_holds",
+    "hold_fill_ratio",
+    "bow_void_fraction",
+    "stern_void_fraction",
+    "inner_bottom_t_mm",
+    "hopper_plate_t_mm",
+    "bulkhead_t_mm",
+    "coaming_t_mm",
+    "steel_density",
+    "bulk_structure_factor",
+    "bulk_steel_rate_per_cbm",
+    "bulk_piping_factor",
+    "bulk_outfitting_factor",
+];
+
+/// An `Optional[int]` field: absent keeps the default, an explicit null is `None`.
+fn opt_i64_field(
+    inputs: &serde_json::Map<String, Value>,
+    name: &str,
+    default: Option<i64>,
+) -> Result<Option<i64>, EvalError> {
+    match inputs.get(name) {
+        None => Ok(default),
+        Some(Value::Null) => Ok(None),
+        Some(_) => i64_field(inputs, name),
+    }
+}
+
+/// An optional nested input object (`aft`, `separation`): absent or null is `None`.
+fn nested_inputs<T>(
+    o: &serde_json::Map<String, Value>,
+    name: &str,
+    build: fn(&Value) -> Result<T, EvalError>,
+) -> Result<Option<T>, EvalError> {
+    match o.get(name) {
+        None | Some(Value::Null) => Ok(None),
+        Some(v) => build(&json!({ "inputs": v })).map(Some),
+    }
+}
+
+fn capacity_inputs(args: &Value) -> Result<BargeCapacityInputs, EvalError> {
+    let o = inputs_object(args, CAPACITY_FIELDS)?;
+    let need = |name: &str| {
+        f64_field(o, name)?
+            .ok_or_else(|| EvalError::BadInput(format!("`inputs.{name}` is required")))
+    };
+    let mut i = BargeCapacityInputs::new(need("loa")?, need("beam")?, need("depth")?);
+    macro_rules! set_f64 {
+        ($($field:ident),*) => {$(
+            if let Some(v) = f64_field(o, stringify!($field))? { i.$field = v; }
+        )*};
+    }
+    macro_rules! set_opt_f64 {
+        ($($field:ident),*) => {$(
+            i.$field = opt_f64_field(o, stringify!($field), None)?;
+        )*};
+    }
+    macro_rules! set_string {
+        ($($field:ident),*) => {$(
+            if let Some(v) = string_field(o, stringify!($field))? { i.$field = v; }
+        )*};
+    }
+    set_string!(cargo_type, vessel_type, hold_type);
+    set_f64!(
+        block_coefficient,
+        water_density,
+        required_freeboard,
+        ballast_capacity_t,
+        pushed_stern_void_m,
+        bulk_end_bulkhead_m,
+        fill_ratio,
+        dome_height,
+        tank_support_height,
+        wing_void_width,
+        double_bottom_height_bulk,
+        hopper_slope_h_per_v,
+        coaming_height,
+        hold_fill_ratio,
+        bow_void_fraction,
+        stern_void_fraction,
+        inner_bottom_t_mm,
+        hopper_plate_t_mm,
+        bulkhead_t_mm,
+        coaming_t_mm,
+        steel_density,
+        bulk_structure_factor,
+        bulk_steel_rate_per_cbm,
+        bulk_piping_factor,
+        bulk_outfitting_factor
+    );
+    set_opt_f64!(
+        air_draft_limit_m,
+        bow_rake_length_m,
+        side_clearance_override_m,
+        lightship_k_t_per_m3
+    );
+    // This one defaults to a number, so an absent key and an explicit null differ.
+    i.tank_wall_thickness = opt_f64_field(o, "tank_wall_thickness", i.tank_wall_thickness)?;
+    i.n_tanks_wide = opt_i64_field(o, "n_tanks_wide", None)?;
+    if let Some(v) = i64_field(o, "n_tanks_long")? {
+        i.n_tanks_long = v;
+    }
+    if let Some(v) = i64_field(o, "n_holds")? {
+        i.n_holds = v;
+    }
+    i.self_propelled = bool_or(o, "self_propelled", i.self_propelled)?;
+    i.aft = nested_inputs(o, "aft", aft_inputs)?;
+    i.separation = nested_inputs(o, "separation", gas_separation_inputs)?;
+    Ok(i)
+}
+
+fn capacity_json(r: &BargeCapacityResult) -> Value {
+    wide_object!({
+        "cargo_type": r.cargo_type,
+        "phase": r.phase,
+        "cargo_density_t_per_m3": num(r.cargo_density_t_per_m3),
+        "cargo_capacity_t": num(r.cargo_capacity_t),
+        "full_load_draft_m": num(r.full_load_draft_m),
+        "air_draft_m": num(r.air_draft_m),
+        "cargo_volume_m3": num(r.cargo_volume_m3),
+        "lightship_t": num(r.lightship_t),
+        "displacement_t": num(r.displacement_t),
+        "deadweight_t": num(r.deadweight_t),
+        "freeboard_m": num(r.freeboard_m),
+        "air_draft_top_above_keel_m": num(r.air_draft_top_above_keel_m),
+        "overloaded": r.overloaded,
+        "tank_outer_diameter_m": opt_num(r.tank_outer_diameter_m),
+        "n_tanks_wide": r.n_tanks_wide,
+        "max_tank_od_m": opt_num(r.max_tank_od_m),
+        "n_tanks_total": r.n_tanks_total,
+        "side_clearance_m": opt_num(r.side_clearance_m),
+        "bottom_clearance_m": opt_num(r.bottom_clearance_m),
+        "hold_height_m": opt_num(r.hold_height_m),
+        "hold_top_width_m": opt_num(r.hold_top_width_m),
+        "hold_bottom_width_m": opt_num(r.hold_bottom_width_m),
+        "hold_section_area_m2": opt_num(r.hold_section_area_m2),
+        "gm_m": opt_num(r.gm_m),
+        "bow_void_length_m": opt_num(r.bow_void_length_m),
+        "stern_void_length_m": opt_num(r.stern_void_length_m),
+        "cargo_zone_length_m": opt_num(r.cargo_zone_length_m),
+        "bow_rake_length_m": opt_num(r.bow_rake_length_m),
+        "aft_arrangement": r.aft_arrangement.as_ref().map(aft_json),
+        "separation": r.separation.as_ref().map(gas_separation_json),
+        "containment_inner_volume_m3": opt_num(r.containment_inner_volume_m3),
+        "fill_ratio_applied": opt_num(r.fill_ratio_applied),
+        "insulation_thickness_mm": opt_num(r.insulation_thickness_mm),
+        "tank_wall_thickness_mm": opt_num(r.tank_wall_thickness_mm),
+        "tank_inner_diameter_m": opt_num(r.tank_inner_diameter_m),
+        "light_draft_m": opt_num(r.light_draft_m),
+        "air_draft_light_m": opt_num(r.air_draft_light_m),
+        "ballast_draft_m": opt_num(r.ballast_draft_m),
+        "air_draft_ballast_m": opt_num(r.air_draft_ballast_m),
+        "air_draft_navigating_light_m": opt_num(r.air_draft_navigating_light_m),
+        "navigating_top_above_keel_m": opt_num(r.navigating_top_above_keel_m),
+        "gas_basis": r.gas_basis.as_ref().map(|b| json!({
+            "inputs": barge_inputs_json(&b.inputs),
+            "tanks": tank_json(&b.tanks),
+            "weights": weights_json(&b.weights),
+        })),
+        "checks": checks_json(&r.checks),
+        "warnings": r.warnings,
+    })
+}
+
+fn barge_capacity(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        "compute" => {
+            let inputs = capacity_inputs(args)?;
+            // The frozen driver builds nested dataclasses in JSON key order, so with both
+            // nested inputs bad the first key's message wins. `compute` checks aft first;
+            // when `separation` comes first in the JSON, check it here before `compute` runs.
+            if let Some(obj) = args.get("inputs").and_then(Value::as_object) {
+                let pos = |name: &str| obj.keys().position(|k| k == name);
+                if let (Some(sep), Some(_)) = (&inputs.separation, &inputs.aft)
+                    && pos("separation") < pos("aft")
+                    && let Err(message) = sep.validate()
+                {
+                    return raised("ValueError", &message);
+                }
+            }
+            match ovcd_core::barge_capacity::compute(&inputs) {
+                Ok(r) => ok(capacity_json(&r)),
+                Err(e) => raised_py(&e),
+            }
+        }
+        "tanks_wide_for_beam" => {
+            match ovcd_core::barge_capacity::tanks_wide_for_beam(
+                f64_arg(args, "beam_m")?,
+                f64_arg(args, "side_clearance_m")?,
+                f64_arg_or(args, "tank_gap_transverse_m", 0.0)?,
+                f64_arg_or(args, "max_od_m", ovcd_core::barge_capacity::MAX_TANK_OD_M)?,
+            ) {
+                Ok(n) => ok(json!(n)),
+                Err(e) => raised_py(&e),
+            }
+        }
+        other => Err(EvalError::BadInput(format!(
+            "barge_capacity has no parity function `{other}`"
+        ))),
+    }
+}
+
 fn field_or(obj: &Value, name: &str, default: Option<f64>) -> Result<f64, EvalError> {
     match obj.get(name) {
         Some(v) => v

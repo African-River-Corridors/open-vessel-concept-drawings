@@ -918,6 +918,901 @@
       }
     },
     {
+      "id": "compute/error/zero_tanks_wide",
+      "tier": 3,
+      "reason": "tier 3: error path: zero tanks across: a ZeroDivisionError the gas branch does not catch (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane",
+            "n_tanks_wide": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/zero_block_coefficient",
+      "tier": 3,
+      "reason": "tier 3: error path: zero block coefficient divides the load by zero (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "bauxite",
+            "block_coefficient": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "tanks_wide_for_beam/error/zero_divisor",
+      "tier": 3,
+      "reason": "tier 3: error path: max_od_m + gap is exactly zero (issue #16)",
+      "input": {
+        "fn": "tanks_wide_for_beam",
+        "args": {
+          "beam_m": 20.0,
+          "side_clearance_m": 1.0,
+          "tank_gap_transverse_m": 1.0,
+          "max_od_m": -1.0
+        }
+      }
+    },
+    {
+      "id": "tanks_wide_for_beam/negative_divisor",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a negative divisor gives a negative ceiling, so one tank (issue #16)",
+      "input": {
+        "fn": "tanks_wide_for_beam",
+        "args": {
+          "beam_m": 30.0,
+          "side_clearance_m": 1.0,
+          "tank_gap_transverse_m": 0.0,
+          "max_od_m": -5.0
+        }
+      }
+    },
+    {
+      "id": "tanks_wide_for_beam/exact_ratio",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): usable beam is exactly twice the tank cap, so two tanks, not three (issue #16)",
+      "input": {
+        "fn": "tanks_wide_for_beam",
+        "args": {
+          "beam_m": 26.0,
+          "side_clearance_m": 1.0,
+          "tank_gap_transverse_m": 0.0,
+          "max_od_m": 12.0
+        }
+      },
+      "knife_edge": "(26 - 2) / 12 is exactly 2.0, so the ceiling stays 2; a hair more beam gives 3. Rust divides the same two doubles as Python, so it lands on the same side."
+    },
+    {
+      "id": "compute/gas/unknown_vessel_type",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): an unknown vessel type is a failed feasible_geometry check, not a raise (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane",
+            "vessel_type": "XYZ"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/hull_too_short",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a hull too short for its stern block is a failed check with the tank error as message (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 30.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/hull_too_narrow",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a hull too narrow for its tanks is a failed check (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 3.0,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/auto_wall_thickness",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): tank_wall_thickness null takes the pressure-vessel formula and the material density (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane",
+            "tank_wall_thickness": null
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/pushed_barge",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a pushed gas barge carries no stern block (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane",
+            "self_propelled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/custom_aft_block",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a caller-built aft block with its own unit mix (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane",
+            "aft": {
+              "beam": 14.8,
+              "depth": 6.5,
+              "n_thrusters": 2,
+              "n_battery_units": 2,
+              "n_accom_units": 2
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/side_clearance_override_below_floor",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a side clearance override under the type-G floor fails its separation check (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane",
+            "side_clearance_override_m": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/IGF_vessel_type",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): the IGF rule takes a beam-based side clearance (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane",
+            "vessel_type": "IGF"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/three_by_three_forced",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a forced 3 x 3 arrangement with salt water (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 120.0,
+            "beam": 24.0,
+            "depth": 6.5,
+            "cargo_type": "LPG_propane",
+            "n_tanks_wide": 3,
+            "n_tanks_long": 3,
+            "water_density": 1.025
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/bulk/hopper_bottom_clamped",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): the hopper bottom width clamps at 1.0 m on a narrow deep hold (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 10.0,
+            "depth": 8.0,
+            "cargo_type": "bauxite"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/bulk/zero_holds",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): no transverse bulkheads (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "bauxite",
+            "n_holds": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/bulk/given_bow_rake_and_ballast",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a given bow rake, ballast on the empty leg and an air draft limit on the ballasted case (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "bauxite",
+            "bow_rake_length_m": 5.0,
+            "ballast_capacity_t": 400.0,
+            "air_draft_limit_m": 9.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/bulk/custom_aft_block",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a caller-built aft block on a bulk hull (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "bauxite",
+            "aft": {
+              "beam": 14.8,
+              "depth": 6.5,
+              "n_thrusters": 2
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/vary/hopper_slope",
+      "tier": 1,
+      "reason": "tier 1: hopper_slope_h_per_v moved off its default of 1.0, so the hold's bottom width and the hopper plate area depend on it (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "hopper_slope_h_per_v": 0.6,
+            "hold_fill_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/vary/coaming_height",
+      "tier": 1,
+      "reason": "tier 1: coaming_height moved off its default of 1.0, so hold height, coaming plate and air draft depend on it (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "coaming_height": 1.7,
+            "hold_fill_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/vary/inner_bottom_t_mm",
+      "tier": 1,
+      "reason": "tier 1: inner_bottom_t_mm moved off its default, so inner-bottom plate steel depends on it (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "inner_bottom_t_mm": 14.0,
+            "hold_fill_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/vary/hopper_plate_t_mm",
+      "tier": 1,
+      "reason": "tier 1: hopper_plate_t_mm moved off its default, so hopper plate steel depends on it (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "hopper_plate_t_mm": 11.0,
+            "hold_fill_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/vary/bulkhead_t_mm",
+      "tier": 1,
+      "reason": "tier 1: bulkhead_t_mm moved off its default, so wing and transverse bulkhead steel depend on it (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "bulkhead_t_mm": 9.0,
+            "hold_fill_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/vary/coaming_t_mm",
+      "tier": 1,
+      "reason": "tier 1: coaming_t_mm moved off its default, so coaming plate steel depends on it (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "coaming_t_mm": 8.0,
+            "hold_fill_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/vary/steel_density",
+      "tier": 1,
+      "reason": "tier 1: steel_density moved off its default, so hopper steel mass depends on it (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "steel_density": 7.5,
+            "hold_fill_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/vary/double_bottom_height_bulk",
+      "tier": 1,
+      "reason": "tier 1: double_bottom_height_bulk moved off its default, so hold height and the cargo centroid depend on it (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "double_bottom_height_bulk": 1.2,
+            "hold_fill_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/vary/n_holds_3",
+      "tier": 1,
+      "reason": "tier 1: n_holds is 3, so the transverse bulkhead count (n_holds + 1) is 4 (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "n_holds": 3,
+            "hold_fill_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/vary/hold_fill_ratio",
+      "tier": 1,
+      "reason": "tier 1: hold_fill_ratio moved off its default of 0.95, so cargo volume depends on it (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "hold_fill_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/vary/structure_factors",
+      "tier": 1,
+      "reason": "tier 1: the bulk structure factor, steel rate, piping and outfitting factors moved off their defaults, so lightship steel depends on each (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "bulk_structure_factor": 1.6,
+            "bulk_steel_rate_per_cbm": 0.05,
+            "bulk_piping_factor": 0.1,
+            "bulk_outfitting_factor": 0.2,
+            "hold_fill_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/vary/water_density_and_cb",
+      "tier": 1,
+      "reason": "tier 1: water_density and block_coefficient both moved off their defaults (1.0 and 0.85), so the overload test depends on their product, not their ratio (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "water_density": 1.025,
+            "block_coefficient": 0.9,
+            "hold_fill_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/vary/all_bulk_inputs",
+      "tier": 1,
+      "reason": "tier 1: every bulk plate, fraction and factor input moved off its default at once (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "hopper_slope_h_per_v": 0.7,
+            "coaming_height": 1.4,
+            "inner_bottom_t_mm": 13.0,
+            "hopper_plate_t_mm": 10.0,
+            "bulkhead_t_mm": 8.0,
+            "coaming_t_mm": 7.0,
+            "steel_density": 7.6,
+            "double_bottom_height_bulk": 1.1,
+            "n_holds": 2,
+            "hold_fill_ratio": 0.6,
+            "bulk_structure_factor": 1.5,
+            "bulk_steel_rate_per_cbm": 0.04,
+            "bulk_piping_factor": 0.08,
+            "bulk_outfitting_factor": 0.15,
+            "water_density": 1.02,
+            "block_coefficient": 0.9
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/degenerate/hold_top_width_zero_sloped",
+      "tier": 1,
+      "reason": "tier 1: wing_void_width is half the beam, so the hold top width is 0 and the sloped-hopper bottom width is floored at 1.0 (the cargo centroid still uses the trapezoid) (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "wing_void_width": 8.0,
+            "hold_fill_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/degenerate/hold_widths_both_zero_box",
+      "tier": 1,
+      "reason": "tier 1: wing_void_width is half the beam on a box hold, so top and bottom widths are both 0 and the centroid falls back to half the hold height (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "wing_void_width": 8.0,
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.11
+          }
+        }
+      },
+      "knife_edge": "The top width beam - 2 * wing_void_width is exactly 0.0 (16.0 - 2 * 8.0, exact in binary), so the centroid test (top + bottom) > 0 flips with any nudge; Rust computes the same exact 0.0, so it takes the same branch as Python."
+    },
+    {
+      "id": "bauxite/degenerate/zero_weight",
+      "tier": 1,
+      "reason": "tier 1: a box hold with zero cargo and zero lightship, so the total weight is 0 and the cargo centroid falls back to the lightship KG (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.0,
+            "hold_fill_ratio": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/nested/bulk_separation_negative",
+      "tier": 3,
+      "reason": "tier 3: error path: a nested separation input is checked even on a dry-bulk barge, where the gas code never reads it (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "separation": {
+              "cofferdam_m": -1.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/nested/aft_beam_negative",
+      "tier": 3,
+      "reason": "tier 3: error path: a nested aft input is checked as given, before compute overwrites its beam and depth with the barge's (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "aft": {
+              "beam": -1.0,
+              "depth": 6.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/nested/aft_beats_unknown_cargo",
+      "tier": 3,
+      "reason": "tier 3: error path: a nested aft input with n_thrusters 0 fails before the cargo lookup (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "nope",
+            "aft": {
+              "beam": 16.0,
+              "depth": 6.0,
+              "n_thrusters": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/nested/separation_beats_unknown_cargo",
+      "tier": 3,
+      "reason": "tier 3: error path: a nested separation input fails before the cargo lookup (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "nope",
+            "separation": {
+              "cofferdam_m": -1.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/nested/aft_before_separation",
+      "tier": 3,
+      "reason": "tier 3: error path: with both nested inputs bad and aft first in the JSON, aft is built first so its message wins (issue #16, fix round 2)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "aft": {
+              "beam": 16.0,
+              "depth": 6.0,
+              "n_thrusters": 0
+            },
+            "separation": {
+              "cofferdam_m": -1.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/nested/gas_aft_thrusters_zero",
+      "tier": 3,
+      "reason": "tier 3: error path: a gas barge with a nested aft input of n_thrusters 0 (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "LNG_ethane",
+            "aft": {
+              "beam": 16.0,
+              "depth": 6.0,
+              "n_thrusters": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/nested/gas_opening_setback_negative",
+      "tier": 3,
+      "reason": "tier 3: error path: a gas barge with a negative opening setback in the nested separation input (issue #16, fix round 1)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "LNG_ethane",
+            "separation": {
+              "opening_setback_m": -0.5
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/nested/separation_before_aft",
+      "tier": 3,
+      "reason": "tier 3: error path: with both nested inputs bad and separation first in the JSON, the frozen driver builds separation first so its message wins (issue #16, fix round 2)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "separation": {
+              "cofferdam_m": -1.0
+            },
+            "aft": {
+              "beam": 16.0,
+              "depth": 6.0,
+              "n_thrusters": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/overload/just_under_rho1025",
+      "tier": 1,
+      "reason": "tier 1: bulk barge just under the overload threshold with water_density 1.025 and block_coefficient 0.85, so the overload test depends on cb*rho and not cb/rho (issue #16, fix round 2)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 3.11,
+            "cargo_type": "bauxite",
+            "water_density": 1.025
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/overload/depth_3p10_rho1025",
+      "tier": 1,
+      "reason": "tier 1: same hull and water density at depth 3.10, a second point near the overload threshold where cb*rho and cb/rho give different flags (issue #16, fix round 2)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 3.1,
+            "cargo_type": "bauxite",
+            "water_density": 1.025
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/overload/exact_tie",
+      "tier": 1,
+      "reason": "tier 1: required volume equals displaced volume exactly (W/0.5 == 9600), so overloaded is false; pins > against >= (issue #16, fix round 2)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.5,
+            "block_coefficient": 0.5,
+            "wing_void_width": 8.0
+          }
+        }
+      },
+      "knife_edge": "required volume W/(cb*rho) equals the displaced volume exactly (4800/0.5 == 9600.0, both exact in binary), so the > test flips with any nudge; Rust divides the same two doubles as Python, so it lands on the same side."
+    },
+    {
+      "id": "bauxite/box/wing_void_just_past_half_beam",
+      "tier": 1,
+      "reason": "tier 1: wing_void_width just past beam/2 so cargo is negative but not zero and bulk_gm takes its zero-width h/2 fallback with a live cargo term (issue #16, fix round 2)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "hold_type": "box",
+            "lightship_k_t_per_m3": 0.15,
+            "wing_void_width": 8.05
+          }
+        }
+      }
+    },
+    {
+      "id": "bauxite/sloped/wing_void_8p6",
+      "tier": 1,
+      "reason": "tier 1: sloped hopper with wing_void_width 8.6, past beam/2, so the h/2 fallback shows in gm_m (issue #16, fix round 2)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "bauxite",
+            "lightship_k_t_per_m3": 0.15,
+            "wing_void_width": 8.6
+          }
+        }
+      }
+    },
+    {
+      "id": "gas/igc_2g_exact/early_stop_163x6p8x2p4",
+      "tier": 1,
+      "reason": "pins IGC_2G_EXACT d(Vc) early stop at 1e-9; without the early stop, steel_delta moves about 5x past tolerance",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 163.0,
+            "beam": 6.8,
+            "depth": 2.4,
+            "cargo_type": "LNG_ethane",
+            "vessel_type": "IGC_2G_EXACT",
+            "tank_support_height": 1.0,
+            "n_tanks_long": 2
+          }
+        }
+      }
+    },
+    {
       "id": "compute/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
