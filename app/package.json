@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "svelte-check --tsconfig ./tsconfig.json && vite build",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "e2e": "bash e2e/run.sh"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.3",
@@ -21,6 +22,7 @@
     "svelte": "^5.57.2",
     "svelte-check": "^4.7.6",
     "typescript": "^6.0.3",
-    "vite": "^8.3.4"
+    "vite": "^8.3.4",
+    "webdriverio": "^9.32.0"
   }
 }

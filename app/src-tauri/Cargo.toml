@@ -11,6 +11,10 @@ publish = false
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
+[features]
+# Set by `tauri build`: the app serves its built front end instead of the dev server.
+custom-protocol = ["tauri/custom-protocol"]
+
 [dependencies]
 ovcd-format.workspace = true
 serde_json.workspace = true
