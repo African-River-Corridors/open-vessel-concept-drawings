@@ -103,6 +103,39 @@ pub enum AppliesTo {
     Only(&'static str),
 }
 
+/// The group an input belongs to in a form. The group is part of the input table, so a front end
+/// takes it from the input schema and holds no list of its own.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Group {
+    Required,
+    HullAndContainment,
+    GasTanks,
+    WaterwayLimits,
+    SpeedAndPower,
+}
+
+impl Group {
+    /// Every group, in the order a form shows them.
+    pub const ALL: [Group; 5] = [
+        Group::Required,
+        Group::HullAndContainment,
+        Group::GasTanks,
+        Group::WaterwayLimits,
+        Group::SpeedAndPower,
+    ];
+
+    /// The group's display name.
+    pub fn label(self) -> &'static str {
+        match self {
+            Group::Required => "Required",
+            Group::HullAndContainment => "Hull and containment",
+            Group::GasTanks => "Gas tanks",
+            Group::WaterwayLimits => "Waterway Limits",
+            Group::SpeedAndPower => "Speed and power",
+        }
+    }
+}
+
 /// One input of an Option.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct InputSpec {
@@ -110,23 +143,31 @@ pub struct InputSpec {
     pub kind: InputKind,
     pub required: bool,
     pub applies_to: AppliesTo,
+    pub group: Group,
 }
 
-const fn spec(name: &'static str, kind: InputKind, required: bool) -> InputSpec {
+const fn spec(name: &'static str, kind: InputKind, required: bool, group: Group) -> InputSpec {
     InputSpec {
         name,
         kind,
         required,
         applies_to: AppliesTo::All,
+        group,
     }
 }
 
-const fn only(name: &'static str, kind: InputKind, containment: &'static str) -> InputSpec {
+const fn only(
+    name: &'static str,
+    kind: InputKind,
+    containment: &'static str,
+    group: Group,
+) -> InputSpec {
     InputSpec {
         name,
         kind,
         required: false,
         applies_to: AppliesTo::Only(containment),
+        group,
     }
 }
 
@@ -136,33 +177,69 @@ const NUM_OR_NONE: InputKind = InputKind::Number { nullable: true };
 /// Every input of an Option, in the order defaults are resolved (a default may depend on an
 /// input above it). Names follow `GLOSSARY.md`.
 pub const INPUTS: &[InputSpec] = &[
-    spec("cargo", InputKind::Cargo, true),
-    spec("hull_form", InputKind::Choice(HULL_FORMS), true),
-    spec("formation", InputKind::Formation, true),
-    spec("length_overall_m", NUM, true),
-    spec("beam_m", NUM, true),
-    spec("moulded_depth_m", NUM, true),
+    spec("cargo", InputKind::Cargo, true, Group::Required),
+    spec(
+        "hull_form",
+        InputKind::Choice(HULL_FORMS),
+        true,
+        Group::Required,
+    ),
+    spec("formation", InputKind::Formation, true, Group::Required),
+    spec("length_overall_m", NUM, true, Group::Required),
+    spec("beam_m", NUM, true, Group::Required),
+    spec("moulded_depth_m", NUM, true, Group::Required),
     spec(
         "cargo_containment",
         InputKind::Choice(&["box_hold", "sloped_hopper_hold", "type_c_tanks"]),
         false,
+        Group::HullAndContainment,
     ),
-    spec("block_coefficient", NUM, false),
-    spec("min_freeboard_m", NUM, false),
-    only("lightship_factor_t_per_m3", NUM, "box_hold"),
-    only("ruleset", InputKind::Choice(RULESETS), "type_c_tanks"),
-    only("fill_ratio", NUM, "type_c_tanks"),
-    only("adn_tank_cap_m3", NUM, "type_c_tanks"),
-    only("optimise_depth", InputKind::Bool, "type_c_tanks"),
-    spec("propulsive_efficiency", NUM, false),
-    spec("max_speed_kn", NUM, false),
-    spec("air_draft_limit_m", NUM_OR_NONE, false),
-    spec("draught_limit_m", NUM_OR_NONE, false),
-    spec("channel_depth_m", NUM_OR_NONE, false),
-    spec("channel_under_keel_clearance_m", NUM, false),
-    spec("channel_bottom_width_m", NUM_OR_NONE, false),
-    spec("channel_bank_slope", NUM, false),
-    spec("channel_current_kn", NUM, false),
+    spec("block_coefficient", NUM, false, Group::HullAndContainment),
+    spec("min_freeboard_m", NUM, false, Group::HullAndContainment),
+    only(
+        "lightship_factor_t_per_m3",
+        NUM,
+        "box_hold",
+        Group::HullAndContainment,
+    ),
+    only(
+        "ruleset",
+        InputKind::Choice(RULESETS),
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only("fill_ratio", NUM, "type_c_tanks", Group::GasTanks),
+    only("adn_tank_cap_m3", NUM, "type_c_tanks", Group::GasTanks),
+    only(
+        "optimise_depth",
+        InputKind::Bool,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    spec("propulsive_efficiency", NUM, false, Group::SpeedAndPower),
+    spec("max_speed_kn", NUM, false, Group::SpeedAndPower),
+    spec(
+        "air_draft_limit_m",
+        NUM_OR_NONE,
+        false,
+        Group::WaterwayLimits,
+    ),
+    spec("draught_limit_m", NUM_OR_NONE, false, Group::WaterwayLimits),
+    spec("channel_depth_m", NUM_OR_NONE, false, Group::WaterwayLimits),
+    spec(
+        "channel_under_keel_clearance_m",
+        NUM,
+        false,
+        Group::WaterwayLimits,
+    ),
+    spec(
+        "channel_bottom_width_m",
+        NUM_OR_NONE,
+        false,
+        Group::WaterwayLimits,
+    ),
+    spec("channel_bank_slope", NUM, false, Group::WaterwayLimits),
+    spec("channel_current_kn", NUM, false, Group::WaterwayLimits),
 ];
 
 /// Where a stored input came from.
@@ -490,7 +567,7 @@ fn read_design(
 }
 
 /// Split a stored input into its value and marker. A bare value counts as typed.
-fn unmark(raw: &Value) -> Result<StoredInput, String> {
+pub(crate) fn unmark(raw: &Value) -> Result<StoredInput, String> {
     if let Some(o) = raw.as_object()
         && o.contains_key("source")
     {

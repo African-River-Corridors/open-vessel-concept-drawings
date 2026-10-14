@@ -6,6 +6,7 @@ mod gas_arrangement;
 pub mod gas_stability;
 pub mod profile;
 mod run;
+pub mod session;
 mod simulate;
 pub mod vdesign;
 
@@ -14,6 +15,9 @@ pub use profile::Profile;
 pub use run::{
     CONVOY_NOT_AVAILABLE, HashStatus, RunOption, RunOutcome, canonical_json, hash_warning,
     results_hash, run_design, run_option, simulate_params_of, stamp, summary_lines,
+};
+pub use session::{
+    DesignSession, Evaluation, Message, OpenReport, OptionEvaluation, Scope, Severity, input_schema,
 };
 pub use vdesign::{
     Checked, Design, DesignOption, Report, Source, StoredInput, check, fill, new_design,

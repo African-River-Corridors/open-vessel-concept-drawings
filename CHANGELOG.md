@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add the Design session to `ovcd-format` and the `ovcd schema` command, which prints the input schema (no result changes).
+
 ## Design changes
 
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a

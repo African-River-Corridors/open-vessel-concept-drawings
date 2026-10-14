@@ -2,8 +2,9 @@
 //!
 //! `ovcd new` writes a starter Design, `ovcd fill` writes the left-out inputs of a hand-written
 //! Design in from the Defaults Profile, `ovcd validate` checks one without running it, and
-//! `ovcd profile` prints the built-in Defaults Profile for a user to copy, and `ovcd run` computes
-//! a saved Design and prints a summary (or the full results as JSON).
+//! `ovcd schema` prints the input schema, `ovcd profile` prints the built-in Defaults Profile for a
+//! user to copy, and `ovcd run` computes a saved Design and prints a summary (or the full results
+//! as JSON).
 
 use ovcd_format::Profile;
 use std::process::ExitCode;
@@ -30,6 +31,9 @@ Usage:
       a difference is a warning that results changed since the file was saved with an engine
       version. A pushed convoy prints \"convoy results not yet available\" and no numbers.
       Warnings go to stderr. Exits 1 if the file has a hard error or an Option cannot be computed.
+  ovcd schema [--profile <profile.json>]
+      Print the input schema as JSON: every input with its kind, unit, choices, group, default,
+      hard and soft ranges and basis, from the Defaults Profile. Use it to build valid Designs.
   ovcd profile
       Print the built-in Defaults Profile. Copy it, edit it, and pass it with --profile.
   ovcd --help | --version
@@ -54,6 +58,7 @@ fn main() -> ExitCode {
             Ok(false) => ExitCode::FAILURE,
             Err(msg) => usage_error("run", &msg),
         },
+        ["schema", rest @ ..] => report(schema(rest), "schema"),
         ["profile"] => {
             print!("{}", Profile::built_in_text());
             ExitCode::SUCCESS
@@ -149,6 +154,18 @@ fn new(args: &[&str]) -> Result<(), String> {
         [path] => write_new(path, &text),
         _ => Err("give at most one file".into()),
     }
+}
+
+fn schema(args: &[&str]) -> Result<(), String> {
+    let flags = parse_flags(args, false, false)?;
+    if !flags.files.is_empty() {
+        return Err("takes no file; use --profile <profile.json>".into());
+    }
+    let profile = load_profile(flags.profile)?;
+    let text = serde_json::to_string_pretty(&ovcd_format::input_schema(&profile))
+        .map_err(|e| e.to_string())?;
+    println!("{text}");
+    Ok(())
 }
 
 /// Write `text` to a file that must not exist yet.

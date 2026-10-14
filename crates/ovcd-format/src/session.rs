@@ -1,0 +1,708 @@
+//! The Design session: the one interface between an app and the engine.
+//!
+//! It holds a Design and a Defaults Profile, and takes and returns strings and values. It reads no
+//! file, clock or environment, so it is tested like the command-line tool, and an app shell does
+//! the reading and writing. It adds no logic of its own for defaults, validation or results: it
+//! calls [`fill`], [`check`], [`new_design`] and [`run_option`], so a Design gives here exactly what
+//! `ovcd fill`, `ovcd validate` and `ovcd run` give.
+//!
+//! - [`input_schema`]: every input, for a Defaults Profile, as JSON a front end draws a form from.
+//! - [`DesignSession::new_design`], [`DesignSession::open`]: start from the starter Design, or from
+//!   a `.vdesign` text (left-out inputs are filled in, as `ovcd fill` does).
+//! - Edits: [`set_input`](DesignSession::set_input), [`reset_input`](DesignSession::reset_input),
+//!   [`set_formation`](DesignSession::set_formation), and add, duplicate, rename and delete an
+//!   Option. Each returns the new Design state.
+//! - [`DesignSession::evaluate`]: validate and run every Option.
+//! - [`DesignSession::save`]: the `.vdesign` text, with each computed Option's results hash.
+//! - [`DesignSession::load_profile`]: swap in a Defaults Profile, refusing one that loosens a hard
+//!   range.
+//!
+//! A value the designer types is kept as typed even when it breaks a hard range, so a form shows
+//! what was typed; [`evaluate`](DesignSession::evaluate) then reports the error, and the Option
+//! is not run.
+
+use crate::profile::Profile;
+use crate::run::{HashStatus, RunOutcome, results_hash, run_design, run_option};
+use crate::vdesign::{
+    AppliesTo, CARGO_CONTAINMENTS, Design, DesignOption, ENGINE_VERSION, FORMATION_KINDS, Group,
+    INPUTS, InputKind, KEYED_DEFAULTS, Report, Source, StoredInput, check, fill, new_design,
+};
+use serde_json::{Map, Value, json};
+
+/// The input schema for a Defaults Profile, as JSON. Built from the input table and the profile,
+/// so it holds no fact of its own.
+///
+/// ```text
+/// { "profile": name, "engine_version": v,
+///   "groups": ["Required", ...],
+///   "inputs": [ { "name", "group", "kind", "required", "applies_to": [containments],
+///                 "unit", "nullable", "choices": [{ "value", "label", ... }],
+///                 "default" | "default_by": { "by", "values" },
+///                 "hard": { "gt"|"ge"|"lt"|"le" }, "soft": { "min", "max" }, "basis" } ] }
+/// ```
+///
+/// `kind` is `number`, `bool`, `choice`, `cargo` or `formation`. The `formation` input also holds
+/// `convoy`, the `abreast` and `in_line` ranges of a pushed convoy.
+pub fn input_schema(profile: &Profile) -> Value {
+    let inputs: Vec<Value> = INPUTS.iter().map(|s| input_entry(s, profile)).collect();
+    json!({
+        "profile": profile.name(),
+        "engine_version": ENGINE_VERSION,
+        "groups": Group::ALL.iter().map(|g| g.label()).collect::<Vec<_>>(),
+        "inputs": inputs,
+    })
+}
+
+fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
+    let name = spec.name;
+    let mut e = Map::new();
+    e.insert("name".into(), json!(name));
+    e.insert("group".into(), json!(spec.group.label()));
+    e.insert("required".into(), json!(spec.required));
+    let applies: Vec<&str> = match spec.applies_to {
+        AppliesTo::All => CARGO_CONTAINMENTS.iter().map(|(c, _)| *c).collect(),
+        AppliesTo::Only(c) => vec![c],
+    };
+    e.insert("applies_to".into(), json!(applies));
+    match spec.kind {
+        InputKind::Number { nullable } => {
+            e.insert("kind".into(), json!("number"));
+            e.insert("nullable".into(), json!(nullable));
+            add_ranges(&mut e, name, profile);
+        }
+        InputKind::Bool => {
+            e.insert("kind".into(), json!("bool"));
+        }
+        InputKind::Choice(choices) => {
+            e.insert("kind".into(), json!("choice"));
+            let list: Vec<Value> = choices
+                .iter()
+                .map(|c| json!({ "value": c, "label": label_of(c) }))
+                .collect();
+            e.insert("choices".into(), Value::Array(list));
+        }
+        InputKind::Cargo => {
+            e.insert("kind".into(), json!("cargo"));
+            let list: Vec<Value> = ovcd_core::cargo::CARGO_DATABASE
+                .iter()
+                .map(|(key, p)| {
+                    json!({
+                        "value": key,
+                        "label": p.name,
+                        "phase": p.phase,
+                        "description": p.description,
+                    })
+                })
+                .collect();
+            e.insert("choices".into(), Value::Array(list));
+        }
+        InputKind::Formation => {
+            e.insert("kind".into(), json!("formation"));
+            let kinds: Vec<Value> = FORMATION_KINDS
+                .iter()
+                .map(|k| json!({ "value": k, "label": label_of(k) }))
+                .collect();
+            e.insert("choices".into(), Value::Array(kinds));
+            let mut convoy = Map::new();
+            for (key, profile_name) in [
+                ("abreast", "formation_abreast"),
+                ("in_line", "formation_in_line"),
+            ] {
+                let mut r = Map::new();
+                add_ranges(&mut r, profile_name, profile);
+                convoy.insert(key.into(), Value::Object(r));
+            }
+            e.insert("convoy".into(), Value::Object(convoy));
+        }
+    }
+    if !spec.required {
+        match KEYED_DEFAULTS.iter().find(|(n, _, _)| *n == name) {
+            Some((_, by, keys)) => {
+                let values: Map<String, Value> = keys
+                    .iter()
+                    .filter_map(|k| {
+                        profile
+                            .default_by(name, by, k)
+                            .map(|v| (k.to_string(), v.clone()))
+                    })
+                    .collect();
+                e.insert("default_by".into(), json!({ "by": by, "values": values }));
+            }
+            None => {
+                if let Some(d) = profile.default(name) {
+                    e.insert("default".into(), d.clone());
+                }
+            }
+        }
+    }
+    Value::Object(e)
+}
+
+/// Unit, hard range, soft range and basis of a profile entry.
+fn add_ranges(e: &mut Map<String, Value>, name: &str, profile: &Profile) {
+    e.insert("unit".into(), json!(profile.unit(name)));
+    if let Ok(h) = profile.hard(name) {
+        let mut hard = Map::new();
+        for (k, v) in [("gt", h.gt), ("ge", h.ge), ("lt", h.lt), ("le", h.le)] {
+            if let Some(v) = v {
+                hard.insert(k.into(), json!(v));
+            }
+        }
+        e.insert("hard".into(), Value::Object(hard));
+    }
+    if let Ok(Some(s)) = profile.soft(name) {
+        e.insert("soft".into(), json!({ "min": s.min, "max": s.max }));
+    }
+    e.insert("basis".into(), json!(profile.basis(name)));
+}
+
+/// The display name of a choice.
+fn label_of(value: &str) -> String {
+    match value {
+        "box_hold" => "Box hold".into(),
+        "sloped_hopper_hold" => "Sloped hopper hold".into(),
+        "type_c_tanks" => "Type C tanks".into(),
+        "raked_box" => "Raked box".into(),
+        "self_propelled" => "Self-propelled".into(),
+        "pushed_barge" => "Pushed barge".into(),
+        "pushed_convoy" => "Pushed convoy".into(),
+        other => other.into(),
+    }
+}
+
+/// What [`DesignSession::open`] found in the file.
+#[derive(Debug, Clone, PartialEq)]
+pub struct OpenReport {
+    /// What `ovcd fill` reports for the file: hard errors and warnings, including a warning for
+    /// each input written in from the Defaults Profile.
+    pub report: Report,
+    /// Per Option: the file's stored results hash against this engine's.
+    pub hash_status: Vec<(String, HashStatus)>,
+}
+
+/// What a message is about.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Scope {
+    /// One input: its range, type or choice.
+    Input(String),
+    /// A cross-check: the message names several inputs.
+    CrossCheck(Vec<String>),
+    /// The Option as a whole.
+    Option,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Severity {
+    /// A hard error: the Option is not run.
+    Error,
+    /// A soft warning: accepted.
+    Warning,
+}
+
+/// One validation message, as `ovcd validate` words it (without its `Option '<name>':` lead-in).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Message {
+    pub severity: Severity,
+    pub scope: Scope,
+    pub text: String,
+}
+
+/// One Option, validated and (when it has no hard error) run.
+#[derive(Debug, Clone, PartialEq)]
+pub struct OptionEvaluation {
+    pub name: String,
+    pub messages: Vec<Message>,
+    /// `None` when the Option has a hard error and was not run.
+    pub outcome: Option<RunOutcome>,
+}
+
+/// The evaluation of a whole Design.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Evaluation {
+    pub options: Vec<OptionEvaluation>,
+}
+
+impl Evaluation {
+    /// The evaluation as JSON. An Option's `results` is the object `ovcd run --json` gives.
+    pub fn to_json(&self) -> Value {
+        let options: Vec<Value> = self
+            .options
+            .iter()
+            .map(|o| {
+                let messages: Vec<Value> = o
+                    .messages
+                    .iter()
+                    .map(|m| {
+                        let (scope, inputs) = match &m.scope {
+                            Scope::Input(n) => ("input", vec![n.clone()]),
+                            Scope::CrossCheck(ns) => ("cross_check", ns.clone()),
+                            Scope::Option => ("option", vec![]),
+                        };
+                        json!({
+                            "severity": match m.severity {
+                                Severity::Error => "error",
+                                Severity::Warning => "warning",
+                            },
+                            "scope": scope,
+                            "inputs": inputs,
+                            "text": m.text,
+                        })
+                    })
+                    .collect();
+                let outcome = match &o.outcome {
+                    Some(RunOutcome::Results { results, hash }) => {
+                        json!({ "status": "results", "results": results, "results_hash": hash })
+                    }
+                    Some(RunOutcome::NotAvailable(m)) => {
+                        json!({ "status": "not_available", "message": m })
+                    }
+                    Some(RunOutcome::Failed(m)) => json!({ "status": "failed", "message": m }),
+                    None => json!({ "status": "not_run" }),
+                };
+                json!({ "name": o.name, "messages": messages, "outcome": outcome })
+            })
+            .collect();
+        json!({ "options": options })
+    }
+}
+
+/// An open Design with its Defaults Profile. Every edit returns the new state.
+#[derive(Debug, Clone)]
+pub struct DesignSession {
+    profile: Profile,
+    /// The Design as the session holds it: every applicable input stored as used. A typed value
+    /// that breaks a hard range stays in it, so a form shows what was typed.
+    design: Design,
+}
+
+impl DesignSession {
+    /// A new Design: the starter Design `ovcd new` writes.
+    pub fn new_design(profile: Profile) -> Result<DesignSession, String> {
+        let design = new_design(&profile)?;
+        Ok(DesignSession { profile, design })
+    }
+
+    /// Open a `.vdesign` text. Left-out inputs are written in from the profile, as `ovcd fill`
+    /// does. A file with hard errors still opens, so the errors can be fixed; `Err` only when
+    /// the text cannot be read as a Design (not JSON, no named Option).
+    pub fn open(text: &str, profile: Profile) -> Result<(DesignSession, OpenReport), String> {
+        let filled = fill(text, &profile);
+        let mut design = filled.design.ok_or_else(|| {
+            filled
+                .report
+                .errors
+                .first()
+                .cloned()
+                .unwrap_or_else(|| "the file cannot be read as a Design".into())
+        })?;
+        if design.options.is_empty() {
+            return Err("a Design needs at least one Option".into());
+        }
+        let raw: Value = serde_json::from_str(text).map_err(|e| e.to_string())?;
+        let raw_options = raw["options"].as_array().cloned().unwrap_or_default();
+        if raw_options.len() != design.options.len() {
+            let first = filled.report.errors.first().cloned().unwrap_or_default();
+            return Err(format!("an Option cannot be read: {first}"));
+        }
+        // `fill` leaves out an input that breaks a hard range. Put each back as typed, so a form
+        // shows it and an edit can fix it.
+        for (option, raw_option) in design.options.iter_mut().zip(&raw_options) {
+            let empty = Map::new();
+            let raw_inputs = raw_option["inputs"].as_object().unwrap_or(&empty);
+            for spec in INPUTS {
+                if option.input(spec.name).is_none()
+                    && let Some(raw_input) = raw_inputs.get(spec.name)
+                    && let Ok(stored) = crate::vdesign::unmark(raw_input)
+                {
+                    option.inputs.push((spec.name.into(), stored));
+                }
+            }
+            sort_inputs(option);
+        }
+        // The file's own hashes, before `fill` stamped any left out.
+        let mut stored = design.clone();
+        for (o, raw_option) in stored.options.iter_mut().zip(&raw_options) {
+            o.results_hash = raw_option["results_hash"].as_str().map(String::from);
+        }
+        let hash_status = run_design(&stored)
+            .into_iter()
+            .map(|r| (r.name, r.hash_status))
+            .collect();
+        let mut session = DesignSession { profile, design };
+        session.normalise();
+        Ok((
+            session,
+            OpenReport {
+                report: filled.report,
+                hash_status,
+            },
+        ))
+    }
+
+    /// The Design as it is now.
+    pub fn design(&self) -> &Design {
+        &self.design
+    }
+
+    pub fn profile(&self) -> &Profile {
+        &self.profile
+    }
+
+    /// The input schema for the session's Defaults Profile.
+    pub fn input_schema(&self) -> Value {
+        input_schema(&self.profile)
+    }
+
+    /// Set an input to a typed value. The value is kept even when it breaks a hard range;
+    /// [`evaluate`](Self::evaluate) reports it.
+    pub fn set_input(&mut self, option: &str, name: &str, value: Value) -> Result<&Design, String> {
+        let spec = INPUTS
+            .iter()
+            .find(|s| s.name == name)
+            .ok_or_else(|| format!("unknown input `{name}`"))?;
+        let i = self.index_of(option)?;
+        if let AppliesTo::Only(c) = spec.applies_to
+            && let Some(current) = containment_of(&self.design.options[i])
+            && current != c
+        {
+            return Err(format!(
+                "`{name}` is not used for a {current} Cargo Containment"
+            ));
+        }
+        self.put(i, name, value);
+        self.normalise();
+        Ok(&self.design)
+    }
+
+    /// Set the Formation: its kind and, for a pushed convoy, the barges abreast and in line.
+    pub fn set_formation(
+        &mut self,
+        option: &str,
+        kind: &str,
+        abreast: Option<u64>,
+        in_line: Option<u64>,
+    ) -> Result<&Design, String> {
+        let i = self.index_of(option)?;
+        let mut value = json!({ "kind": kind });
+        if let Some(a) = abreast {
+            value["abreast"] = json!(a);
+        }
+        if let Some(l) = in_line {
+            value["in_line"] = json!(l);
+        }
+        self.put(i, "formation", value);
+        self.normalise();
+        Ok(&self.design)
+    }
+
+    /// Put an input back to its default from the Defaults Profile (marked default). A required
+    /// input has no default.
+    pub fn reset_input(&mut self, option: &str, name: &str) -> Result<&Design, String> {
+        let spec = INPUTS
+            .iter()
+            .find(|s| s.name == name)
+            .ok_or_else(|| format!("unknown input `{name}`"))?;
+        if spec.required {
+            return Err(format!("`{name}` is required and has no default"));
+        }
+        let i = self.index_of(option)?;
+        self.design.options[i].inputs.retain(|(n, _)| n != name);
+        self.design.options[i].results_hash = None;
+        self.drop_dependent_defaults(i, name);
+        self.normalise();
+        Ok(&self.design)
+    }
+
+    /// Add an Option: the starter Option, with the given name or the next free "Option N".
+    /// Returns the new Option's name.
+    pub fn add_option(&mut self, name: Option<&str>) -> Result<String, String> {
+        let name = match name {
+            Some(n) => self.free_name(n)?,
+            None => (self.design.options.len() + 1..)
+                .map(|n| format!("Option {n}"))
+                .find(|n| self.design.options.iter().all(|o| &o.name != n))
+                .expect("an endless range"),
+        };
+        let mut option = new_design(&self.profile)?
+            .options
+            .pop()
+            .expect("a starter Design has an Option");
+        option.name = name.clone();
+        self.design.options.push(option);
+        self.normalise();
+        Ok(name)
+    }
+
+    /// Duplicate an Option under the given name, or "<name> copy". Returns the new name.
+    pub fn duplicate_option(
+        &mut self,
+        option: &str,
+        new_name: Option<&str>,
+    ) -> Result<String, String> {
+        let i = self.index_of(option)?;
+        let name = match new_name {
+            Some(n) => self.free_name(n)?,
+            None => {
+                let base = format!("{option} copy");
+                (1..)
+                    .map(|n| {
+                        if n == 1 {
+                            base.clone()
+                        } else {
+                            format!("{base} {n}")
+                        }
+                    })
+                    .find(|n| self.design.options.iter().all(|o| &o.name != n))
+                    .expect("an endless range")
+            }
+        };
+        let mut copy = self.design.options[i].clone();
+        copy.name = name.clone();
+        self.design.options.insert(i + 1, copy);
+        Ok(name)
+    }
+
+    /// Rename an Option. The new name must be non-empty and differ from every other Option's.
+    pub fn rename_option(&mut self, option: &str, new_name: &str) -> Result<&Design, String> {
+        let i = self.index_of(option)?;
+        let new_name = new_name.trim();
+        if new_name != option {
+            self.free_name(new_name)?;
+        }
+        self.design.options[i].name = new_name.to_string();
+        Ok(&self.design)
+    }
+
+    /// Delete an Option. The last Option of a Design cannot be deleted.
+    pub fn delete_option(&mut self, option: &str) -> Result<&Design, String> {
+        let i = self.index_of(option)?;
+        if self.design.options.len() == 1 {
+            return Err(
+                "a Design needs at least one Option; the last one cannot be deleted".into(),
+            );
+        }
+        self.design.options.remove(i);
+        Ok(&self.design)
+    }
+
+    /// Load a Defaults Profile from its text. A profile that loosens a hard range, or is missing
+    /// an entry, is refused and the session keeps its profile. Stored inputs never change; only
+    /// inputs the Design lacks take the new profile's defaults.
+    pub fn load_profile(&mut self, text: &str) -> Result<(), String> {
+        self.profile = Profile::from_json(text)?;
+        self.normalise();
+        Ok(())
+    }
+
+    /// Validate and run every Option, as `ovcd validate` and `ovcd run` do.
+    pub fn evaluate(&self) -> Evaluation {
+        let checked = check(&self.design.to_text(), &self.profile);
+        let names: Vec<&str> = self
+            .design
+            .options
+            .iter()
+            .map(|o| o.name.as_str())
+            .collect();
+        let mut by_option: Vec<Vec<Message>> = names.iter().map(|_| Vec::new()).collect();
+        let tagged = checked
+            .report
+            .errors
+            .iter()
+            .map(|t| (Severity::Error, t))
+            .chain(
+                checked
+                    .report
+                    .warnings
+                    .iter()
+                    .map(|t| (Severity::Warning, t)),
+            );
+        for (severity, text) in tagged {
+            // The longest name first, so "A" does not claim a message of "A: B".
+            let owner = (0..names.len())
+                .filter(|&i| text.starts_with(&format!("Option '{}': ", names[i])))
+                .max_by_key(|&i| names[i].len());
+            if let Some(i) = owner {
+                let body = &text[format!("Option '{}': ", names[i]).len()..];
+                by_option[i].push(Message {
+                    severity,
+                    scope: scope_of(body),
+                    text: body.to_string(),
+                });
+            }
+        }
+        let options = by_option
+            .into_iter()
+            .enumerate()
+            .map(|(i, messages)| {
+                let has_error = messages.iter().any(|m| m.severity == Severity::Error);
+                let outcome = match (&checked.design, has_error) {
+                    (Some(d), false) => d.options.get(i).map(run_option),
+                    _ => None,
+                };
+                OptionEvaluation {
+                    name: names[i].to_string(),
+                    messages,
+                    outcome,
+                }
+            })
+            .collect();
+        Evaluation { options }
+    }
+
+    /// The `.vdesign` text, with each computed Option's results hash recomputed and the current
+    /// engine version. Refused while the Design has a hard error, so a saved file always passes
+    /// `ovcd validate`.
+    pub fn save(&self) -> Result<String, String> {
+        let checked = check(&self.design.to_text(), &self.profile);
+        if !checked.report.is_ok() {
+            return Err(format!(
+                "the Design has {} hard error(s); fix them before saving: {}",
+                checked.report.errors.len(),
+                checked.report.errors.join("; ")
+            ));
+        }
+        let mut design = checked.design.ok_or("the Design cannot be read")?;
+        design.engine_version = ENGINE_VERSION.into();
+        for o in &mut design.options {
+            o.results_hash = match run_option(o) {
+                RunOutcome::Results { results, .. } => Some(results_hash(&results)),
+                _ => o.results_hash.take(),
+            };
+        }
+        Ok(design.to_text())
+    }
+
+    fn index_of(&self, option: &str) -> Result<usize, String> {
+        self.design
+            .options
+            .iter()
+            .position(|o| o.name == option)
+            .ok_or_else(|| format!("no Option named '{option}'"))
+    }
+
+    /// A trimmed, non-empty name no Option has.
+    fn free_name(&self, name: &str) -> Result<String, String> {
+        let name = name.trim();
+        if name.is_empty() {
+            return Err("an Option needs a name".into());
+        }
+        if self.design.options.iter().any(|o| o.name == name) {
+            return Err(format!(
+                "an Option named '{name}' exists; names must differ"
+            ));
+        }
+        Ok(name.to_string())
+    }
+
+    /// Store a typed input, and drop what its change leaves stale.
+    fn put(&mut self, i: usize, name: &str, value: Value) {
+        let option = &mut self.design.options[i];
+        option.results_hash = None;
+        let stored = StoredInput {
+            value,
+            source: Source::Typed,
+        };
+        match option.inputs.iter_mut().find(|(n, _)| n == name) {
+            Some((_, slot)) => *slot = stored,
+            None => option.inputs.push((name.into(), stored)),
+        }
+        self.drop_dependent_defaults(i, name);
+    }
+
+    /// A default chosen by another input follows that input: when it changes, an input still on
+    /// its default is dropped, so the next fill chooses it again.
+    fn drop_dependent_defaults(&mut self, i: usize, changed: &str) {
+        let mut changed = vec![changed.to_string()];
+        while let Some(by_name) = changed.pop() {
+            let by_name = if by_name == "cargo" {
+                "cargo_phase".to_string()
+            } else {
+                by_name
+            };
+            for (input, by, _) in KEYED_DEFAULTS {
+                if *by == by_name {
+                    let option = &mut self.design.options[i];
+                    let on_default = option
+                        .input(input)
+                        .is_some_and(|s| s.source == Source::Default);
+                    if on_default {
+                        option.inputs.retain(|(n, _)| n != input);
+                        changed.push(input.to_string());
+                    }
+                }
+            }
+        }
+    }
+
+    /// Write in the inputs the Design lacks (with `fill`), and drop those its Cargo Containment
+    /// does not use. A hard-range breach stays as typed.
+    fn normalise(&mut self) {
+        let filled = fill(&self.design.to_text(), &self.profile);
+        let Some(filled_design) = filled.design else {
+            return;
+        };
+        for option in &mut self.design.options {
+            let Some(from_fill) = filled_design.options.iter().find(|o| o.name == option.name)
+            else {
+                continue;
+            };
+            let applicable = containment_of(option)
+                .filter(|c| CARGO_CONTAINMENTS.iter().any(|(known, _)| known == c));
+            let mut inputs: Vec<(String, StoredInput)> = Vec::new();
+            for spec in INPUTS {
+                let applies = match (spec.applies_to, applicable) {
+                    (AppliesTo::Only(c), Some(current)) => c == current,
+                    _ => true,
+                };
+                if !applies {
+                    continue;
+                }
+                let kept = from_fill
+                    .input(spec.name)
+                    .or_else(|| option.input(spec.name));
+                if let Some(stored) = kept {
+                    inputs.push((spec.name.into(), stored.clone()));
+                }
+            }
+            option.inputs = inputs;
+            if option.results_hash.is_none() {
+                option.results_hash = from_fill.results_hash.clone();
+            }
+        }
+        if filled_design.defaults_profile.is_some() {
+            self.design.defaults_profile = filled_design.defaults_profile;
+        }
+    }
+}
+
+fn sort_inputs(option: &mut DesignOption) {
+    option.inputs.sort_by_key(|(n, _)| {
+        INPUTS
+            .iter()
+            .position(|s| s.name == n)
+            .unwrap_or(usize::MAX)
+    });
+}
+
+fn containment_of(option: &DesignOption) -> Option<&str> {
+    option.input("cargo_containment")?.value.as_str()
+}
+
+/// The inputs a message names: the names between back-ticks that are inputs (`formation.abreast`
+/// names `formation`). One input is a per-input message; several make a cross-check.
+fn scope_of(text: &str) -> Scope {
+    let mut named: Vec<String> = Vec::new();
+    for (i, part) in text.split('`').enumerate() {
+        if i % 2 == 1 {
+            let name = part.split('.').next().unwrap_or(part);
+            if INPUTS.iter().any(|s| s.name == name) && !named.iter().any(|n| n == name) {
+                named.push(name.to_string());
+            }
+        }
+    }
+    match named.len() {
+        0 => Scope::Option,
+        1 => Scope::Input(named.remove(0)),
+        _ => Scope::CrossCheck(named),
+    }
+}
