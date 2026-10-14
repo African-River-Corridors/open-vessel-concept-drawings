@@ -402,3 +402,42 @@ fn the_free_surface_chord_is_not_computed_for_an_empty_tank() {
     let a = run(&r, 0.0, DEFAULT_CRITERIA_SET).unwrap();
     assert!(close(a.conditions[2].gm_fluid_m, -2.625e159));
 }
+
+#[test]
+fn a_radius_whose_square_underflows_gives_zero_centroid_height() {
+    // Python 3.12: segment_fill(1e-170, 0.5) == (9.999999999999998e-171, 0.0). sq(r) underflows,
+    // so the segment area is 0 and the centroid height is forced to 0.0.
+    let (h, y) = segment_fill(1e-170, 0.5).unwrap();
+    assert!(close(h, 9.999999999999998e-171));
+    assert_eq!(y, 0.0);
+}
+
+#[test]
+fn a_displaced_area_of_exactly_the_degenerate_threshold_keeps_its_centroid() {
+    // Python 3.12: box_gz(1e-6, 1.0, 1e-6, 0.3, 1.0) == -0.005235721931185053. The displaced area
+    // is 1e-12, the edge of the `< 1e-12` guard: a `<=` guard drops the centroid and shifts GZ by 1e-8.
+    let gz = box_gz(1e-6, 1.0, 1e-6, 0.3, 1.0).unwrap();
+    assert!(close(gz, -0.005235721931185053));
+}
+
+#[test]
+fn zero_cargo_adds_no_item_even_when_the_cargo_height_is_infinite() {
+    // Python 3.12 gives KG 3.2614881301414833 in all three conditions: it skips the (0, -inf) item.
+    // A `>= 0` guard would add it, and 0 * -inf is NaN.
+    let mut r = narrow_deep();
+    r.lightship_t = 284.32505523758725;
+    let g = r.gas_basis.as_mut().unwrap();
+    g.double_bottom_height = -1e308;
+    g.tank_support_height = 0.0;
+    g.outer_diameter = 0.0;
+    g.inner_diameter = 1.79e308;
+    g.tank_total = 0.0;
+    g.insulation = 0.0;
+    let a = run(&r, 0.0, DEFAULT_CRITERIA_SET).unwrap();
+    assert_eq!(a.conditions.len(), 3);
+    for c in &a.conditions {
+        assert!(close(c.kg_m, 3.2614881301414833));
+        assert!(close(c.gm_solid_m, 2.2637805432991254));
+        assert!(close(c.max_gz_m, 0.6694170646957496));
+    }
+}
