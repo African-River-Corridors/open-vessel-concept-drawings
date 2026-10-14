@@ -1,6 +1,6 @@
-//! Branches of `gas_stability` that the parity cases do not reach. Expected values were printed by
-//! the frozen Python (`parity/frozen_python`), with its messages as Python 3.12 words them. The
-//! parity cases themselves run in `crates/ovcd-format/tests/gas_stability.rs`.
+//! Branches of `gas_stability`, with expected values printed by the original Python and its
+//! messages as Python 3.12 words them. The JSON seam is tested in
+//! `crates/ovcd-format/tests/gas_stability.rs`.
 
 use ovcd_core::gas_stability::{
     DEFAULT_BLOCK_COEFFICIENT, DEFAULT_CRITERIA_SET, DEFAULT_WATER_DENSITY, GasBasis,
@@ -182,7 +182,7 @@ fn an_unknown_criteria_set_names_itself_the_way_python_repr_does() {
 }
 
 /// Python 3.12 `repr` escapes what `str.isprintable` rejects: `\xhh` below U+0100, `\uhhhh` below
-/// U+10000, `\Uhhhhhhhh` above. Each expected message below was printed by the frozen Python.
+/// U+10000, `\Uhhhhhhhh` above. Each expected message below was printed by the original Python.
 #[test]
 fn an_unknown_criteria_set_escapes_non_printable_non_ascii_text_like_python() {
     let msg = |s: &str| {
@@ -256,7 +256,7 @@ fn a_radius_whose_square_overflows_is_an_overflow_error() {
 
 #[test]
 fn segment_fill_with_a_radius_whose_square_underflows() {
-    // Frozen Python 3.12: segment_fill(1e-160, 1e-10) == (3.0278250107151905e-167, 0.0). The
+    // Original Python 3.12: segment_fill(1e-160, 1e-10) == (3.0278250107151905e-167, 0.0). The
     // square 1e-320 is subnormal, so `area` is 0.0 and the centroid is 0.0. An exact comparison:
     // a changed `area` (say `* (t - sin t) / 2` as `* (t + sin t) / 2`) gives 1.8e-167 instead.
     assert_eq!(
@@ -267,7 +267,7 @@ fn segment_fill_with_a_radius_whose_square_underflows() {
 
 #[test]
 fn segment_fill_area_that_rounds_to_zero_gives_a_zero_centroid() {
-    // Frozen Python 3.12 (Linux): the area is 0.0 (the product rounds to one subnormal unit and
+    // Original Python 3.12 (Linux): the area is 0.0 (the product rounds to one subnormal unit and
     // halving it ties to even). Doubling instead of halving gives 1e-323 and a centroid of 1e-160.
     assert_eq!(segment_fill(1e-160, 5e-5), Ok((1.90777421476096e-163, 0.0)));
     assert_eq!(
@@ -279,7 +279,7 @@ fn segment_fill_area_that_rounds_to_zero_gives_a_zero_centroid() {
 #[test]
 fn box_gz_where_the_first_bisection_midpoint_hits_the_target_exactly() {
     // phi so small that cos is 1 and the heel moves no coordinate: the first midpoint is z = 2,
-    // the displaced area is exactly 4.0 and the target is 4.0 (`a < target` is false). Frozen
+    // the displaced area is exactly 4.0 and the target is 4.0 (`a < target` is false). Original
     // Python 3.12 (Linux): -1.7453292519943295e-302.
     assert_eq!(
         box_gz(2.0, 4.0, 2.0, 1.0, 1e-300),
@@ -302,7 +302,7 @@ fn segment_fill_int_takes_the_exact_square_as_given() {
     );
 }
 
-// --- boundaries: inputs that sit exactly on a comparison. Expected values: frozen Python. ---
+// --- boundaries: inputs that sit exactly on a comparison. Expected values: original Python. ---
 
 #[test]
 fn a_draught_exactly_equal_to_the_depth_does_not_float() {
@@ -416,7 +416,7 @@ fn segment_fill_keeps_the_centroid_when_r_squared_times_the_angle_term_is_even()
 
 #[test]
 fn an_assessment_where_every_criterion_passes_reports_ok() {
-    // Reference Results assess/CN_II_IS_CODE_2008 and assess/sweep/003: every criterion ok.
+    // The CN II benchmark and a sweep point: every criterion ok.
     let a = run(&narrow_deep(), 0.0, DEFAULT_CRITERIA_SET).unwrap();
     assert!(a.conditions.iter().all(|c| c.criteria.iter().all(|k| k.ok)));
     assert!(a.ok());

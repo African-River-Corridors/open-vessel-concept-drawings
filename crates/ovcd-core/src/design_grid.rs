@@ -6,8 +6,8 @@
 //! same. `except Exception` around the capacity call is a match on the [`PyError`] it returns;
 //! the reason keeps the first 80 characters of the message (`str(exc)[:80]`).
 //!
-//! A tank count above the 64-bit range is the fixed `OverflowError` of the integer range rule
-//! (`parity/README.md`).
+//! A tank count above the 64-bit range is the fixed `OverflowError` of the integer range rule:
+//! Python holds a count of any size, and a 64-bit result field cannot.
 
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
@@ -152,7 +152,7 @@ fn cell(
     let r = match capacity(&inputs) {
         Ok(r) => r,
         // The fixed range-rule error has no Python twin: Python holds the big integer and
-        // answers. Fail loudly, as the parity README requires, not as an infeasible cell.
+        // answers. Fail loudly, not as an infeasible cell.
         Err(e) if e.kind == "OverflowError" && e.message == INT_OVERFLOW_MESSAGE => {
             return Err(e);
         }

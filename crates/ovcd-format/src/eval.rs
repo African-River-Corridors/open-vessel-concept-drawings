@@ -1,5 +1,10 @@
-//! `eval(entry_point, json) -> json`: the parity seam. One dispatch over every parity entry
-//! point. Input and output use the case and Reference Result shapes in `parity/README.md`.
+//! `eval(entry_point, json) -> json`: one dispatch over every entry point of the calculation core.
+//! It is the seam the Python package calls (`ovcd-py`, `vessel_designer/_bridge.py`).
+//!
+//! Input is `{"fn": <function>, "args": {...}}`. The answer is `{"ok": <value>}`, or
+//! `{"error": {"type": <Python exception class>, "message": ...}}` where Python would raise.
+//! Floats are shortest round-trip text; NaN and infinity are the tagged strings "float:nan",
+//! "float:inf" and "float:-inf".
 
 use ovcd_core::aft_arrangement::{AftArrangementInputs, AftArrangementResult};
 use ovcd_core::barge_capacity::{BargeCapacityInputs, BargeCapacityResult};
@@ -23,7 +28,7 @@ use serde_json::{Value, json};
 /// normal result, `{"error": {"type": "ValueError", "message": ...}}`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EvalError {
-    /// No such parity entry point.
+    /// No such entry point.
     UnknownEntryPoint(String),
     /// The entry point exists in the spec but is not ported yet.
     NotPorted(String),
@@ -43,7 +48,7 @@ impl core::fmt::Display for EvalError {
 
 impl std::error::Error for EvalError {}
 
-/// Every parity entry point in spec 0001.
+/// Every entry point.
 pub const ENTRY_POINTS: &[&str] = &[
     "cargo",
     "protective_location",
@@ -69,7 +74,13 @@ pub const ENTRY_POINTS: &[&str] = &[
     "simulate",
 ];
 
-/// Run one parity case through the Rust code.
+/// Parse a case or an answer. `serde_json` keeps every number as written (`arbitrary_precision`),
+/// so a Python `int` of any size stays exact.
+pub fn parse_case(text: &str) -> Result<Value, String> {
+    serde_json::from_str(text).map_err(|e| e.to_string())
+}
+
+/// Run one case (`{"fn": ..., "args": ...}`) through the Rust code.
 pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
     let function = input
         .get("fn")
@@ -104,7 +115,7 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
     }
 }
 
-/// A float result, tagged the way the frozen driver tags it: JSON has no `inf` or `nan`, so they
+/// A float result, tagged: JSON has no `inf` or `nan`, so they
 /// become the strings `"float:inf"`, `"float:-inf"` and `"float:nan"`.
 pub(crate) fn num(x: f64) -> Value {
     if x.is_nan() {
@@ -120,7 +131,7 @@ pub(crate) fn ok(value: Value) -> Result<Value, EvalError> {
     Ok(json!({ "ok": value }))
 }
 
-/// A raised Python exception of any class, as the frozen Python driver records it.
+/// A raised Python exception of any class, recorded as its class name and message.
 pub(crate) fn raised(type_name: &str, message: &str) -> Result<Value, EvalError> {
     Ok(json!({ "error": { "type": type_name, "message": message } }))
 }
@@ -130,7 +141,7 @@ fn int_value(i: &PyInt) -> Value {
     serde_json::from_str(i.as_str()).expect("a PyInt is valid JSON integer text")
 }
 
-/// A Python `ValueError`, as the frozen Python driver records it.
+/// A Python `ValueError`, recorded as its class name and message.
 fn value_error(message: String) -> Result<Value, EvalError> {
     Ok(json!({ "error": { "type": "ValueError", "message": message } }))
 }
@@ -210,7 +221,7 @@ fn cargo(function: &str, args: &Value) -> Result<Value, EvalError> {
                 .collect(),
         )),
         other => Err(EvalError::BadInput(format!(
-            "cargo has no parity function `{other}`"
+            "cargo has no function `{other}`"
         ))),
     }
 }
@@ -385,7 +396,7 @@ fn aft_arrangement(function: &str, args: &Value) -> Result<Value, EvalError> {
             Err(e) => py_exception(&e),
         },
         other => Err(EvalError::BadInput(format!(
-            "aft_arrangement has no parity function `{other}`"
+            "aft_arrangement has no function `{other}`"
         ))),
     }
 }
@@ -441,7 +452,7 @@ fn gas_separation(function: &str, args: &Value) -> Result<Value, EvalError> {
             Err(message) => value_error(message),
         },
         other => Err(EvalError::BadInput(format!(
-            "gas_separation has no parity function `{other}`"
+            "gas_separation has no function `{other}`"
         ))),
     }
 }
@@ -666,7 +677,7 @@ fn barge_cost(function: &str, args: &Value) -> Result<Value, EvalError> {
             Err(message) => value_error(message),
         },
         other => Err(EvalError::BadInput(format!(
-            "barge_cost has no parity function `{other}`"
+            "barge_cost has no function `{other}`"
         ))),
     }
 }
@@ -819,7 +830,7 @@ fn vessel_standards(function: &str, args: &Value) -> Result<Value, EvalError> {
             ))
         }
         other => Err(EvalError::BadInput(format!(
-            "vessel_standards has no parity function `{other}`"
+            "vessel_standards has no function `{other}`"
         ))),
     }
 }
@@ -894,7 +905,7 @@ fn protective_location(function: &str, args: &Value) -> Result<Value, EvalError>
             },
         ),
         other => Err(EvalError::BadInput(format!(
-            "protective_location has no parity function `{other}`"
+            "protective_location has no function `{other}`"
         ))),
     }
 }
@@ -949,7 +960,7 @@ fn pressure_vessel(function: &str, args: &Value) -> Result<Value, EvalError> {
             }
         }
         other => Err(EvalError::BadInput(format!(
-            "pressure_vessel has no parity function `{other}`"
+            "pressure_vessel has no function `{other}`"
         ))),
     }
 }
@@ -973,7 +984,7 @@ fn hull_arg(args: &Value) -> Result<HullGeometry, EvalError> {
 fn hull(function: &str, args: &Value) -> Result<Value, EvalError> {
     match function {
         // One hull, every public quantity at `args.draft`, then the plating areas, in the key
-        // order of the frozen driver.
+        // order of the Python function.
         "quantities" => {
             let h = hull_arg(args)?;
             let d = f64_arg(args, "draft")?;
@@ -997,7 +1008,7 @@ fn hull(function: &str, args: &Value) -> Result<Value, EvalError> {
             }))
         }
         other => Err(EvalError::BadInput(format!(
-            "hull has no parity function `{other}`"
+            "hull has no function `{other}`"
         ))),
     }
 }
@@ -1087,7 +1098,7 @@ fn opt_f64_field(
     }
 }
 
-/// `BargeInputs` from plain data, as the frozen driver's `build` makes it. The caller runs
+/// `BargeInputs` from plain data, as the Python bridge builds it. The caller runs
 /// `post_init`, as Python's `__post_init__` runs after the constructor.
 fn barge_inputs(args: &Value) -> Result<BargeInputs, EvalError> {
     let o = inputs_object(args, BARGE_FIELDS)?;
@@ -1175,7 +1186,7 @@ fn barge_inputs(args: &Value) -> Result<BargeInputs, EvalError> {
     for pass_through in ["aft_arrangement", "separation"] {
         if !matches!(o.get(pass_through), None | Some(Value::Null)) {
             return Err(EvalError::BadInput(format!(
-                "`inputs.{pass_through}` is a drawing-only pass-through; parity cases leave it null"
+                "`inputs.{pass_through}` is a drawing-only pass-through; leave it null"
             )));
         }
     }
@@ -1258,16 +1269,16 @@ fn tanks(function: &str, args: &Value) -> Result<Value, EvalError> {
             )))
         }
         other => Err(EvalError::BadInput(format!(
-            "tanks has no parity function `{other}`"
+            "tanks has no function `{other}`"
         ))),
     }
 }
 
-/// Why the frozen chain (`_barge_chain` in the driver) stopped before the function under test.
+/// Why the chain (inputs, hull, tanks, weights) stopped before the function asked for.
 enum ChainStop {
     /// The case input is not usable.
     Eval(EvalError),
-    /// Python raised: the case's Reference Result is that error.
+    /// Python would have raised: the answer is that error.
     Raised(PyError),
 }
 
@@ -1283,7 +1294,7 @@ impl From<PyError> for ChainStop {
     }
 }
 
-/// The frozen chain: inputs, then the hull with the inputs' own rakes, then the tank
+/// The chain: inputs, then the hull with the inputs' own rakes, then the tank
 /// arrangement, then the weights. The tank count product is not carried (`n_tanks_total` of the
 /// returned tanks is clamped), so a count Python answers for never raises here. A caller that
 /// reads `n_tanks_total` must check the product itself.
@@ -1323,7 +1334,7 @@ fn weights(function: &str, args: &Value) -> Result<Value, EvalError> {
             chain_result(barge_chain(args).map(|(_, _, _, w, _)| json!({ "ok": weights_json(&w) })))
         }
         other => Err(EvalError::BadInput(format!(
-            "weights has no parity function `{other}`"
+            "weights has no function `{other}`"
         ))),
     }
 }
@@ -1389,7 +1400,7 @@ fn hydrostatics(function: &str, args: &Value) -> Result<Value, EvalError> {
             }}))
         })()),
         other => Err(EvalError::BadInput(format!(
-            "hydrostatics has no parity function `{other}`"
+            "hydrostatics has no function `{other}`"
         ))),
     }
 }
@@ -1670,7 +1681,7 @@ fn barge_capacity(function: &str, args: &Value) -> Result<Value, EvalError> {
     match function {
         "compute" => {
             let inputs = capacity_inputs(args)?;
-            // The frozen driver builds nested dataclasses in JSON key order, so with both
+            // Python builds nested dataclasses in JSON key order, so with both
             // nested inputs bad the first key's message wins. `compute` checks aft first;
             // when `separation` comes first in the JSON, check it here before `compute` runs.
             if let Some(obj) = args.get("inputs").and_then(Value::as_object) {
@@ -1699,7 +1710,7 @@ fn barge_capacity(function: &str, args: &Value) -> Result<Value, EvalError> {
             }
         }
         other => Err(EvalError::BadInput(format!(
-            "barge_capacity has no parity function `{other}`"
+            "barge_capacity has no function `{other}`"
         ))),
     }
 }
@@ -1769,7 +1780,7 @@ fn squat(function: &str, args: &Value) -> Result<Value, EvalError> {
             }
         }
         other => Err(EvalError::BadInput(format!(
-            "squat has no parity function `{other}`"
+            "squat has no function `{other}`"
         ))),
     }
 }
@@ -1814,7 +1825,7 @@ fn waves(function: &str, args: &Value) -> Result<Value, EvalError> {
             Err(message) => value_error(message),
         },
         other => Err(EvalError::BadInput(format!(
-            "waves has no parity function `{other}`"
+            "waves has no function `{other}`"
         ))),
     }
 }
@@ -2073,7 +2084,7 @@ fn resistance(function: &str, args: &Value) -> Result<Value, EvalError> {
             Err(e) => py_exception(&e),
         },
         other => Err(EvalError::BadInput(format!(
-            "resistance has no parity function `{other}`"
+            "resistance has no function `{other}`"
         ))),
     }
 }
@@ -2207,7 +2218,7 @@ fn electric_energy(function: &str, args: &Value) -> Result<Value, EvalError> {
             Err(e) => py_exception(&e),
         },
         other => Err(EvalError::BadInput(format!(
-            "electric_energy has no parity function `{other}`"
+            "electric_energy has no function `{other}`"
         ))),
     }
 }
@@ -2290,7 +2301,7 @@ fn design_grid(function: &str, args: &Value) -> Result<Value, EvalError> {
             }
         }
         other => Err(EvalError::BadInput(format!(
-            "design_grid has no parity function `{other}`"
+            "design_grid has no function `{other}`"
         ))),
     }
 }
@@ -2370,11 +2381,11 @@ fn ga_kwargs(args: &Value) -> Result<(Option<f64>, bool), EvalError> {
 fn ga_adapter(function: &str, args: &Value) -> Result<Value, EvalError> {
     if !matches!(function, "to_ga" | "is_gas") {
         return Err(EvalError::BadInput(format!(
-            "ga_adapter has no parity function `{function}`"
+            "ga_adapter has no function `{function}`"
         )));
     }
     let inputs = capacity_inputs(args)?;
-    // The frozen driver runs `compute` first, for both functions.
+    // Python runs `compute` first, for both functions.
     let result = match ovcd_core::barge_capacity::compute(&inputs) {
         Ok(r) => r,
         Err(e) => return raised_py(&e),

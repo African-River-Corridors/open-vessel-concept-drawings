@@ -14,8 +14,6 @@ Repository = "https://github.com/African-River-Corridors/open-vessel-concept-dra
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
-# Only the frozen Python oracle (parity/frozen_python) imports numpy; the shipped package does not.
-parity = ["numpy>=1.26"]
 
 [build-system]
 requires = ["maturin>=1.7,<2"]

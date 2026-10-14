@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate crates/ovcd-core/src/unprintable.rs: the code points Python's str.isprintable() rejects.
 
-Run with the Python that froze the Reference Results (3.12, Unicode 15.0):
+Run with Python 3.12 (Unicode 15.0), the version the Rust core follows:
     python3.12 tools/gen_unprintable.py > crates/ovcd-core/src/unprintable.rs
 """
 import sys

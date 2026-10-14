@@ -1,7 +1,6 @@
 //! Seam 2: `ovcd run`, end to end through the real binary: the summary, `--json`, the results hash
 //! and its warning, and the convoy message (issue #25).
 
-use ovcd_format::parity::{Tolerance, compare, parse};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
@@ -38,10 +37,6 @@ fn write_json(path: &Path, value: &Value) {
 
 fn read_json(path: &Path) -> Value {
     serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap()
-}
-
-fn parity_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../parity")
 }
 
 /// A starter Design written by `ovcd new`.
@@ -253,36 +248,24 @@ fn run_needs_exactly_one_file() {
     assert_eq!(ovcd(&["run", "a", "b"]).status.code(), Some(2));
 }
 
-/// The Reference Result of one `simulate` parity case, by id.
-fn reference(id: &str) -> Value {
-    let cases = read_json(&parity_dir().join("cases/simulate.json"));
-    let refs = read_json(&parity_dir().join("reference/simulate.json"));
-    let i = cases["cases"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .position(|c| c["id"] == id)
-        .unwrap_or_else(|| panic!("no parity case {id}"));
-    refs["results"][i]["output"].clone()
+/// What `simulate` answers for these params, through the library's own entry point.
+fn simulate_answer(params: Value) -> Value {
+    let case = json!({ "fn": "simulate", "args": { "params": params } });
+    ovcd_format::eval("simulate", &case).expect("simulate runs")["ok"].clone()
 }
 
-fn assert_matches_parity(actual: &Value, id: &str) {
-    let tol = Tolerance::from_json(
-        &std::fs::read_to_string(parity_dir().join("tolerance.json")).unwrap(),
-    )
-    .unwrap();
-    let expected = reference(id);
-    let expected = parse(&expected["ok"].to_string()).unwrap();
-    let actual = parse(&actual.to_string()).unwrap();
-    if let Err(diffs) = compare(&json!({"ok": expected}), &json!({"ok": actual}), tol) {
-        panic!("{id}: {}", diffs.join("\n"));
-    }
+/// `a` and `b` are equal, numbers within 1e-9 (relative and absolute).
+fn assert_close(a: f64, b: f64, what: &str) {
+    assert!(
+        (a - b).abs() <= 1e-9_f64.max(1e-9 * b.abs()),
+        "{what}: {a} vs {b}"
+    );
 }
 
 #[test]
-fn json_results_match_the_simulate_parity_result_for_a_pushed_barge() {
-    let dir = temp_dir("parity-box");
-    // Inputs of parity case simulate/box_bauxite_76.5x11.4x3.5.
+fn json_results_are_what_simulate_answers_for_a_pushed_barge() {
+    let dir = temp_dir("simulate-box");
+    // A calibration-style box barge: 76.5 x 11.4 x 3.5 m, Cb 0.928, lightship factor 0.1093.
     let file = filled(
         &dir,
         "box",
@@ -302,16 +285,28 @@ fn json_results_match_the_simulate_parity_result_for_a_pushed_barge() {
     let out = ovcd(&["run", "--json", p(&file)]);
     assert!(out.status.success(), "{}", stderr(&out));
     let v: Value = serde_json::from_str(&stdout(&out)).unwrap();
-    assert_matches_parity(
-        &v["options"][0]["results"],
-        "simulate/box_bauxite_76.5x11.4x3.5",
+    let results = &v["options"][0]["results"];
+    let expected = simulate_answer(json!({
+        "vessel": "box_barge", "cargo": "bauxite", "loa_m": 76.5, "beam_m": 11.4, "depth_m": 3.5,
+        "cb": 0.928, "lightship_k_t_per_m3": 0.1093, "freeboard_min_m": 0.3,
+        "self_propelled": false, "eta_d": 0.45, "speed_max_kn": 10.0
+    }));
+    assert_eq!(results, &expected);
+    // Pinned values from the original Python.
+    let r = &results["results"];
+    assert_close(r["cargo_t"].as_f64().unwrap(), 2256.166305, "cargo_t");
+    assert_close(
+        r["lightship_t"].as_f64().unwrap(),
+        333.62185500000004,
+        "lightship_t",
     );
+    assert_close(r["draught_m"].as_f64().unwrap(), 3.2, "draught_m");
 }
 
 #[test]
-fn json_results_match_the_simulate_parity_result_for_a_self_propelled_gas_hull() {
-    let dir = temp_dir("parity-gas");
-    // Inputs of parity case simulate/gas_CN_II.
+fn json_results_are_what_simulate_answers_for_a_self_propelled_gas_hull() {
+    let dir = temp_dir("simulate-gas");
+    // A 90 x 14.8 x 6.5 m motor gas barge, the CN II benchmark.
     let file = filled(
         &dir,
         "gas",
@@ -337,7 +332,23 @@ fn json_results_match_the_simulate_parity_result_for_a_self_propelled_gas_hull()
     let out = ovcd(&["run", "--json", p(&file)]);
     assert!(out.status.success(), "{}", stderr(&out));
     let v: Value = serde_json::from_str(&stdout(&out)).unwrap();
-    assert_matches_parity(&v["options"][0]["results"], "simulate/gas_CN_II");
+    let results = &v["options"][0]["results"];
+    let expected = simulate_answer(json!({
+        "vessel": "gas_barge", "cargo": "LPG_propane", "loa_m": 90.0, "beam_m": 14.8,
+        "depth_m": 6.5, "cb": 0.85, "freeboard_min_m": 0.3, "draught_limit_m": 4.4,
+        "self_propelled": true, "ruleset": "IGC_2G", "fill_ratio": 0.95, "adn_tank_cap_m3": 1000.0,
+        "optimise_depth": false, "eta_d": 0.45, "speed_max_kn": 10.0
+    }));
+    assert_eq!(results, &expected);
+    // Pinned values from the original Python.
+    let r = &results["results"];
+    assert_close(r["cargo_t"].as_f64().unwrap(), 2058.228164213275, "cargo_t");
+    assert_close(
+        r["lightship_t"].as_f64().unwrap(),
+        1813.9027562650056,
+        "lightship_t",
+    );
+    assert_eq!(r["governs"], "tank volume");
     // The summary of a gas Option lists the failed stability checks, if any, by name.
     let s = ovcd(&["run", p(&file)]);
     assert!(stdout(&s).contains("Checks: "), "{}", stdout(&s));

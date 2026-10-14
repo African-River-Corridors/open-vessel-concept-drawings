@@ -30,8 +30,9 @@ Both must pass. CI runs them on every push and pull request. The gate needs the 
 toolchain (`rust-toolchain.toml`; rustup installs it on first use) and fails if any tool is
 missing. For the Rust loop alone, `cargo test` needs no Python.
 
-The Rust core is being ported from the Python core with identical results (spec 0001). See
-`parity/README.md` for the parity harness, and never edit Reference Results by hand.
+The Rust core was ported from the Python core with identical results (spec 0001, complete). The
+port scaffolding is gone; the spec says where to find it in the history. Every pull request also
+reports whether designs moved (`tools/design_impact.py`, see `CHANGELOG.md`).
 
 ## Rules for the core
 

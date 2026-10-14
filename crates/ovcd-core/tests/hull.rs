@@ -1,5 +1,5 @@
 //! Seam: the public `ovcd_core::hull` API. Behaviour copied from `core/hull.py`, values taken
-//! from the Reference Results of the frozen Python (`parity/reference/hull.json`).
+//! from what the original Python printed.
 
 use ovcd_core::hull::HullGeometry;
 use ovcd_core::hull::hull_form::RakedBox;

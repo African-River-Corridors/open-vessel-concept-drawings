@@ -5,7 +5,7 @@ Every calculation of the package runs in Rust. A public function here builds the
 package's own dataclasses. Import paths, names and result types stay as they were; the arithmetic
 does not live in Python any more.
 
-Conventions (the same ones the parity harness used to feed the frozen Python):
+Conventions:
 
 - a whole number given for a float field is sent as a float, as the dataclass declares;
 - NaN and infinity travel as the strings "float:nan", "float:inf" and "float:-inf";

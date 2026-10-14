@@ -166,7 +166,7 @@ def change(a, b) -> str:
 
 
 def same(a, b) -> bool:
-    """Equal, with numbers compared at the parity tolerance (relative and absolute 1e-9)."""
+    """Equal, with numbers compared at the project tolerance (relative and absolute 1e-9)."""
     if isinstance(a, bool) or isinstance(b, bool):
         return a == b and type(a) is type(b)
     if isinstance(a, (int, float)) and isinstance(b, (int, float)):
@@ -185,7 +185,7 @@ def size(row: dict) -> float:
 
 def compare(before: dict[str, dict], after: dict[str, dict]) -> list[dict]:
     """Rows of what moved, biggest first: case, quantity, before, after, change. A number that
-    moved by no more than the parity tolerance (1e-9) has not moved."""
+    moved by no more than the tolerance (1e-9) has not moved."""
     rows = []
     for name in before:
         a, b = before[name], after.get(name, {"error": "case missing"})

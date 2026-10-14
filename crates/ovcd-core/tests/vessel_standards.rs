@@ -1,5 +1,4 @@
-//! Seam: the nominal-size helpers of `ovcd_core::vessel_standards::VesselStandard`. No parity entry
-//! point reaches them, so these figures (from the frozen Python on the same classes) pin them.
+//! Seam: the nominal-size helpers of `ovcd_core::vessel_standards::VesselStandard`. These figures (from the original Python on the same classes) pin them.
 
 use ovcd_core::vessel_standards::get_standard;
 

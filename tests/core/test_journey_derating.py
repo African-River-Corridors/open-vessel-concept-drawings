@@ -22,7 +22,6 @@ def _derate(cap, design_depth_m, ukc_m=0.5, beam=16.0, depth=6.0):
 
 def test_deep_channel_is_volume_bound():
     """Label: property
-    Parity: journey_derating:bauxite_100x16x6/design_depth_5.5_ukc_0.5
     """
     cap = _bauxite_cap()                       # full-load draft 4.91 m, cap 5083 t
     r = _derate(cap, design_depth_m=5.5, ukc_m=0.5)   # T_max = 5.0 m > 4.91
@@ -35,7 +34,6 @@ def test_deep_channel_is_volume_bound():
 
 def test_shallow_channel_is_draft_bound():
     """Label: property
-    Parity: journey_derating:bauxite_100x16x6/design_depth_2.25_ukc_0.5
     """
     cap = _bauxite_cap()                       # full-load draft 4.91 m
     r = _derate(cap, design_depth_m=2.25, ukc_m=0.5)  # T_max = 1.75 m << 4.91
@@ -49,12 +47,6 @@ def test_shallow_channel_is_draft_bound():
 
 def test_achievable_never_exceeds_capacity():
     """Label: property
-    Parity: journey_derating:bauxite_100x16x6/design_depth_2_ukc_0.5,
-        journey_derating:bauxite_100x16x6/design_depth_3_ukc_0.5,
-        journey_derating:bauxite_100x16x6/design_depth_4_ukc_0.5,
-        journey_derating:bauxite_100x16x6/design_depth_5_ukc_0.5,
-        journey_derating:bauxite_100x16x6/design_depth_6_ukc_0.5,
-        journey_derating:bauxite_100x16x6/design_depth_7_ukc_0.5
     """
     cap = _bauxite_cap()
     for dd in (2.0, 3.0, 4.0, 5.0, 6.0, 7.0):
@@ -65,11 +57,6 @@ def test_achievable_never_exceeds_capacity():
 
 def test_monotone_in_depth():
     """Label: property
-    Parity: journey_derating:bauxite_100x16x6/design_depth_2_ukc_0.5,
-        journey_derating:bauxite_100x16x6/design_depth_3_ukc_0.5,
-        journey_derating:bauxite_100x16x6/design_depth_4_ukc_0.5,
-        journey_derating:bauxite_100x16x6/design_depth_5_ukc_0.5,
-        journey_derating:bauxite_100x16x6/design_depth_6_ukc_0.5
     """
     cap = _bauxite_cap()
     last = -1.0
@@ -82,7 +69,6 @@ def test_monotone_in_depth():
 def test_flip_at_full_load_draft():
     # At T_max exactly == full-load draft, it is volume-bound and carries full capacity.
     """Label: property
-    Parity: journey_derating:bauxite_100x16x6/design_depth_full_load_draft_ukc_0
     """
     cap = _bauxite_cap()
     r = _derate(cap, design_depth_m=cap.full_load_draft_m, ukc_m=0.0)
@@ -94,7 +80,6 @@ def test_flip_at_full_load_draft():
 
 def test_utilisation_warning_fires_when_shallow():
     """Label: property
-    Parity: journey_derating:bauxite_100x16x6/design_depth_2.25_ukc_0.5
     """
     cap = _bauxite_cap()
     r = _derate(cap, design_depth_m=2.25, ukc_m=0.5)
@@ -106,7 +91,6 @@ def test_utilisation_warning_fires_when_shallow():
 
 def test_floats_fails_when_no_depth():
     """Label: property
-    Parity: journey_derating:bauxite_100x16x6/design_depth_0.5_ukc_0.5
     """
     cap = _bauxite_cap()
     r = _derate(cap, design_depth_m=0.5, ukc_m=0.5)   # T_max = 0

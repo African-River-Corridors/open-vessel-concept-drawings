@@ -11,7 +11,7 @@
 //! check, as in Python. Any other exception, and every `ValueError` from anywhere else, comes
 //! back as a [`PyError`]. A tank count that no 64-bit result field can hold is an
 //! `OverflowError` with one fixed message, raised after the rest of the calculation succeeds
-//! (the integer range rule in `parity/README.md`).
+//! (the integer range rule: Python holds a count of any size, a 64-bit field cannot).
 
 use alloc::format;
 use alloc::string::{String, ToString};

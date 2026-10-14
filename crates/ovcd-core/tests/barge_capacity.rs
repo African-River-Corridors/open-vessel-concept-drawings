@@ -1,6 +1,6 @@
-//! Seam: the public `ovcd_core::barge_capacity` API. Expected values are printed by the frozen
+//! Seam: the public `ovcd_core::barge_capacity` API. Expected values are printed by the original
 //! Python (`core/barge_capacity.py`), not worked out by hand. JSON cannot carry a NaN or an
-//! infinity as an input, so the parity cases cannot reach those paths: these tests do.
+//! infinity as an input, so these tests, not the JSON seam, reach those paths.
 
 use ovcd_core::barge_capacity::{BargeCapacityInputs, compute, tanks_wide_for_beam};
 
@@ -45,7 +45,7 @@ fn an_infinite_tank_cap_needs_one_tank() {
 
 #[test]
 fn a_count_no_64_bit_field_holds_is_the_fixed_overflow_error() {
-    // Python answers 83333333333333329126323388416; the parity format stops at 64 bits.
+    // Python answers 83333333333333329126323388416; the JSON seam stops at 64 bits.
     let e = tanks_wide_for_beam(1e30, 1.0, 0.0, 12.0).unwrap_err();
     assert_eq!(e.kind, "OverflowError");
     assert_eq!(e.message, "integer does not fit in 64 bits");

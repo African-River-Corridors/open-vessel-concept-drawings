@@ -16,7 +16,6 @@ def test_base_point_regression_anchor():
     pays the same 21.9 m as a long one.
 
     Label: snapshot
-    Parity: design_grid:sweep/60x12
     """
     g = sweep([60], [12.0])
     c = g.curve(60)[0]
@@ -28,9 +27,6 @@ def test_tank_count_rule_length_only():
     """Count steps by length only (so each fixed-length curve is smooth).
 
     Label: snapshot
-    Parity: design_grid:n_tanks_for_length/60, design_grid:n_tanks_for_length/50,
-        design_grid:n_tanks_for_length/70, design_grid:n_tanks_for_length/80,
-        design_grid:sweep/70_beams_8_12_16
     """
     assert n_tanks_for_length(60) == 2       # base: 2 tanks
     assert n_tanks_for_length(50) == 2
@@ -53,7 +49,6 @@ def test_cargo_monotonic_in_length():
     cargo zone at all.
 
     Label: property
-    Parity: design_grid:sweep/70_80_90_beams_12_14
     """
     lengths = [70, 80, 90]
     beams = [12.0, 14.0]
@@ -79,7 +74,6 @@ def test_short_hulls_are_now_infeasible_for_gas():
     the cargo hull) or the envelope starts nearer 55-60 m. That is a design decision for the user.
 
     Label: snapshot
-    Parity: design_grid:sweep/45_60_90_beams_8_12_16
     """
     g = sweep([45, 60, 90], [8.0, 12.0, 16.0])
     by_loa = {}

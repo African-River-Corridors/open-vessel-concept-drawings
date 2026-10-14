@@ -1,6 +1,5 @@
-//! Seam: the public `ovcd_core::electric_energy` API. Expected values are what the frozen Python
-//! printed for the same inputs (see `parity/reference/electric_energy.json`); the full case set
-//! runs in `ovcd-format/tests/parity.rs`.
+//! Seam: the public `ovcd_core::electric_energy` API. Expected values are what the original Python
+//! printed for the same inputs.
 
 use ovcd_core::aft_arrangement::PyException;
 use ovcd_core::electric_energy::{EnergyInputs, compute};
@@ -81,7 +80,7 @@ fn a_zero_draft_fails_in_the_resistance_model() {
 
 #[test]
 fn a_fast_target_is_capped_at_the_schijf_fraction_and_binds_the_design_channel() {
-    // Frozen Python, target 9.0 kn: Design channel 0.9 x 9.358 = 8.42 kn, Open sea 9.0 kn.
+    // Original Python, target 9.0 kn: Design channel 0.9 x 9.358 = 8.42 kn, Open sea 9.0 kn.
     let inp = EnergyInputs {
         target_service_speed_knots: 9.0,
         ..EnergyInputs::default()
@@ -111,7 +110,7 @@ fn an_empty_sweep_fails_the_energy_check_and_ok_is_false() {
     assert!(!r.ok());
 }
 
-// --- Inputs the parity cases never vary. Expected values are the frozen Python's. ---
+// --- Inputs the earlier case set never varied. Expected values are the original Python's. ---
 
 #[test]
 fn a_higher_speed_floor_shortens_the_curve() {
@@ -209,7 +208,7 @@ fn a_service_speed_exactly_on_the_schijf_limit_leaves_an_empty_curve() {
     assert_eq!(r.installed_power_kw, 0.0);
 }
 
-// --- Knife-edge guards (issue #20). Expected values: frozen Python via parity/driver.run_case. ---
+// --- Knife-edge guards (issue #20). Expected values: the original Python. ---
 
 #[test]
 fn py_min_of_equal_items_keeps_the_first_signed_zero() {

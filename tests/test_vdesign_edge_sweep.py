@@ -1,15 +1,14 @@
 """Validation is the only guard (issues #24, #41): a file `ovcd validate` passes with 0 errors never
-makes the frozen Python `simulate` raise, return an error value, or return a physically impossible
+makes `simulate` raise, return an error value, or return a physically impossible
 result (a negative cargo mass, cargo volume, draught, displacement, or hold width or height).
 
 Label: property
-Parity: none (a sweep over the Defaults Profile's hard-range edges, not a calculation input)
 
 The sweep is seeded, so it is the same every run. It writes one Design whose Options sit at the
 hard-range edges of the built-in Defaults Profile, just inside and just outside them, at the soft
 edges and in between, and at the cross-check boundaries (channel depth equal to its clearance,
 freeboard just below the moulded depth). It runs the real `ovcd validate` on the file and feeds every
-Option with 0 errors to the frozen `simulate` (`parity/frozen_python`). None may raise, return
+Option with 0 errors to `simulate` (the Rust-backed package). None may raise, return
 `{"error": ...}`, or return a negative result.
 
 Risk stopped: an input combination the core refuses with an exception, or turns into a confident
@@ -25,11 +24,13 @@ from pathlib import Path
 
 import pytest
 
+from vessel_designer.simulate import simulate
+
 ROOT = Path(__file__).resolve().parents[1]
 SEED = 24
 OPTIONS = 3000
 
-# Glossary input name -> frozen `simulate` key. A small test helper only; the full mapping belongs
+# Glossary input name -> `simulate` key. A small test helper only; the full mapping belongs
 # to the engine tickets (#23, #25).
 TOP_LEVEL = {
     "cargo": "cargo",
@@ -68,14 +69,14 @@ NULLABLE = {"air_draft_limit_m", "draught_limit_m", "channel_depth_m", "channel_
 # Results that can never be negative on a real barge. Each is checked when present.
 NON_NEGATIVE_RESULTS = ("cargo_t", "cargo_volume_m3", "draught_m", "displacement_t", "lightship_t")
 NON_NEGATIVE_GEOMETRY = ("hold_top_width_m", "hold_bottom_width_m", "hold_height_m")
-# The deepest hull the gas depth search tries (the frozen core's DEFAULT_DEPTHS_M ends at 7.0 m).
+# The deepest hull the gas depth search tries (the core's DEFAULT_DEPTHS_M ends at 7.0 m).
 DEPTH_SEARCH_MAX_M = 7.0
 NUMBERS = [n for n in list(TOP_LEVEL) + list(CHANNEL)
            if n not in ("cargo", "ruleset", "optimise_depth")]
 
 
 def to_simulate(inputs: dict) -> dict:
-    """An Option's inputs (glossary names) as the frozen `simulate` parameters."""
+    """An Option's inputs (glossary names) as the `simulate` parameters."""
     p = {"vessel": VESSEL[inputs["cargo_containment"]],
          "self_propelled": inputs["formation"]["kind"] == "self_propelled"}
     for name, key in TOP_LEVEL.items():
@@ -219,11 +220,6 @@ def impossible(result: dict) -> list:
 def test_the_impossible_result_check_catches_an_error_value_and_a_negative():
     """The sweep's own check can fail: an error value and the 1 m beam's negatives are caught."""
     assert impossible({"error": "Bauxite cannot be carried in a gas barge."})
-    sys.path.insert(0, str(ROOT / "parity" / "frozen_python"))
-    try:
-        from vessel_designer_frozen.simulate import simulate
-    finally:
-        sys.path.pop(0)
     one_metre = simulate(to_simulate({
         "cargo": "bauxite", "hull_form": "raked_box", "formation": {"kind": "pushed_barge"},
         "cargo_containment": "box_hold", "length_overall_m": 76.5, "beam_m": 1.0,
@@ -235,7 +231,7 @@ def test_the_impossible_result_check_catches_an_error_value_and_a_negative():
     assert any(f.startswith("hold_top_width_m = -") for f in found), found
 
 
-def test_every_option_validate_passes_runs_in_the_frozen_simulate(ovcd, tmp_path):
+def test_every_option_validate_passes_runs_in_simulate(ovcd, tmp_path):
     profile = json.loads(subprocess.run([ovcd, "profile"], check=True, capture_output=True,
                                         text=True).stdout)
     options = sweep_options(profile)
@@ -254,11 +250,6 @@ def test_every_option_validate_passes_runs_in_the_frozen_simulate(ovcd, tmp_path
     assert len(passed) >= 200, f"only {len(passed)} Options passed validation"
     assert len(refused) >= 200, f"only {len(refused)} Options were refused"
 
-    sys.path.insert(0, str(ROOT / "parity" / "frozen_python"))
-    try:
-        from vessel_designer_frozen.simulate import simulate
-    finally:
-        sys.path.pop(0)
     raised, wrong = [], []
     for o in passed:
         inputs = {k: v["value"] for k, v in o["inputs"].items()}

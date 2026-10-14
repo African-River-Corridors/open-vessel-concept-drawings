@@ -15,7 +15,6 @@ def test_golden_cemt_via():
     """CEMT VIa: 2 Va abreast (WG 141 Table 2.1).
 
     Label: sourced - PIANC WG 141 Table 2.1, CEMT class VIa (as cited in core/vessel_standards.py)
-    Parity: vessel_standards:get_standard/CEMT_VIa
     """
     s = get_standard("CEMT_VIa")
     assert s.loa_m == (95.0, 110.0), s.loa_m
@@ -31,7 +30,6 @@ def test_golden_chinese_classes():
 
     Label: sourced - PIANC WG 141 Table 2.3, Chinese classes I and II (as cited in
         core/vessel_standards.py)
-    Parity: vessel_standards:get_standard/CN_II_motor, vessel_standards:get_standard/CN_I_motor
     """
     i, ii = get_standard("CN_I_motor"), get_standard("CN_II_motor")
     assert (i.beam_m, i.draught_m[0], i.dwt_t[0]) == (16.2, 3.2, 3000.0)
@@ -48,7 +46,6 @@ def test_golden_beam_over_draught_tradeoff():
 
     Label: sourced - PIANC WG 141 Tables 2.1 and 2.3, CN class II and CEMT Va (as cited in
         core/vessel_standards.py)
-    Parity: vessel_standards:get_standard/CN_II_motor, vessel_standards:get_standard/CEMT_Va
     """
     cn, eu = get_standard("CN_II_motor"), get_standard("CEMT_Va")
     assert cn.beam_m > eu.beam_m                      # 14.8 > 11.4
@@ -59,7 +56,6 @@ def test_golden_beam_over_draught_tradeoff():
 
 def test_property_ranges_and_dimensions():
     """Label: property
-    Parity: vessel_standards:validate_catalogue/built_in
     """
     for s in VESSEL_STANDARDS.values():
         assert s.loa_m[0] <= s.loa_m[1]
@@ -75,8 +71,6 @@ def test_property_r_min_scales_with_length_not_beam():
     pairing ABREAST is not.
 
     Label: property
-    Parity: vessel_standards:get_standard/CEMT_VIa, vessel_standards:get_standard/CEMT_Va,
-        vessel_standards:get_standard/CEMT_Vb
     """
     in_line = get_standard("CEMT_Vb")        # 2 in line, 185 m
     abreast = get_standard("CEMT_VIa")       # 2 abreast, 110 m
@@ -91,7 +85,6 @@ def test_property_r_min_scales_with_length_not_beam():
 
 def test_unknown_standard_id_raises_keyerror():
     """Label: property
-    Parity: vessel_standards:get_standard/error/unknown_id
     """
     try:
         get_standard("no_such_class")
@@ -103,8 +96,6 @@ def test_unknown_standard_id_raises_keyerror():
 
 def test_property_cargo_modes():
     """Label: property
-    Parity: vessel_standards:standards_for/dry_bulk, vessel_standards:standards_for/liquid_gas,
-        vessel_standards:standards_for/error/bananas
     """
     for mode in ("dry_bulk", "liquid_gas"):
         got = standards_for(mode)
@@ -122,7 +113,6 @@ def test_property_cargo_modes():
 
 def test_feasibility_catalogue_is_clean():
     """Label: property
-    Parity: vessel_standards:validate_catalogue/built_in
     """
     for c in validate_catalogue():
         assert c.ok, f"{c.name}: {c.message}"
@@ -132,7 +122,6 @@ def test_feasibility_checks_catch_a_bad_entry():
     """A convoy whose beam does not reconcile with n_abreast must be caught.
 
     Label: property
-    Parity: vessel_standards:validate_catalogue/with_broken_convoy
     """
     bad = dict(VESSEL_STANDARDS)
     bad["BROKEN"] = VesselStandard(
@@ -147,7 +136,6 @@ def test_feasibility_checks_catch_a_bad_entry():
 
 def test_feasibility_inverted_range_is_caught():
     """Label: property
-    Parity: vessel_standards:validate_catalogue/with_inverted_range
     """
     bad = dict(VESSEL_STANDARDS)
     bad["BACKWARDS"] = VesselStandard(
@@ -161,7 +149,6 @@ def test_feasibility_inverted_range_is_caught():
 
 def test_feasibility_missing_source_warns_but_does_not_gate():
     """Label: property
-    Parity: vessel_standards:validate_catalogue/with_missing_source
     """
     bad = dict(VESSEL_STANDARDS)
     bad["UNSOURCED"] = VesselStandard(

@@ -1,11 +1,11 @@
 //! `simulate` and `cargo_options`: the one-call barge simulation, a port of `simulate.py`.
 //!
 //! It lives in `ovcd-format`, not `ovcd-core`: it takes and returns plain JSON (`params` in, a
-//! result object out), the single entry point the future app calls. The frozen Python reads its
+//! result object out), the single entry point the future app calls. The Python `simulate` reads its
 //! `params` mapping loosely (`float(p["loa_m"])` takes an int, `p.get(..) or default` takes any
 //! falsy value as absent). This port reads numbers and booleans the same way, truthiness the same
 //! way, and refuses (as `EvalError::BadInput`) the inputs where Python would raise `KeyError` or
-//! `TypeError`, which the parity driver does not record either.
+//! `TypeError`, which the old Python callers never recorded either.
 //!
 //! A result that Python returns as `{"error": "..."}` (a cargo in the wrong vessel, a capacity
 //! `ValueError` in the dry-bulk path) is an ordinary result here too. An exception that escapes
@@ -748,7 +748,7 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
             }
         }
         other => Err(EvalError::BadInput(format!(
-            "simulate has no parity function `{other}`"
+            "simulate has no function `{other}`"
         ))),
     }
 }

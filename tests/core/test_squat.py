@@ -23,7 +23,6 @@ def test_golden_barrass_reproduces_its_own_formula():
 
     Label: sourced - Barrass II, S_max = Cb * S^0.81 * V^2.08 / 20 (Barrass; as quoted in
         core/squat.py), evaluated by hand in the test
-    Parity: squat:compute/CN_II_4.8m_6kn
     """
     r = compute(SquatInputs(speed_through_water_kn=6.0, **CASE))
     s = (14.8 * 4.40) / 209.5
@@ -33,7 +32,6 @@ def test_golden_barrass_reproduces_its_own_formula():
 
 def test_golden_zero_speed_is_zero_squat():
     """Label: property
-    Parity: squat:compute/CN_II_4.8m_0kn
     """
     r = compute(SquatInputs(speed_through_water_kn=0.0, **CASE))
     assert r.squat_m == 0.0
@@ -47,7 +45,6 @@ def test_golden_the_finding_that_created_this_module():
     set by squat and not by power.
 
     Label: snapshot
-    Parity: squat:compute/CN_II_4.8m_9.2kn
     """
     r = compute(SquatInputs(speed_through_water_kn=9.2, **CASE))
     assert abs(r.static_ukc_m - 0.40) < 1e-9
@@ -60,8 +57,6 @@ def test_golden_the_finding_that_created_this_module():
 
 def test_property_squat_rises_monotonically_with_speed():
     """Label: property
-    Parity: squat:compute/CN_II_4.8m_1kn, squat:compute/CN_II_4.8m_2kn,
-        squat:compute/CN_II_4.8m_4kn, squat:compute/CN_II_4.8m_8kn
     """
     prev = -1.0
     for v in (0.0, 1.0, 2.0, 4.0, 6.0, 8.0):
@@ -74,8 +69,6 @@ def test_property_squat_rises_with_blockage():
     """A narrower channel squats the same ship deeper at the same speed.
 
     Label: property
-    Parity: squat:compute/CN_II_4.8m_5kn, squat:compute/CN_II_4.8m_5kn_area_400,
-        squat:compute/CN_II_4.8m_5kn_area_300, squat:compute/CN_II_4.8m_5kn_area_250
     """
     prev = 0.0
     for area in (400.0, 300.0, 250.0, 209.5):          # decreasing = more blockage
@@ -87,8 +80,6 @@ def test_property_squat_rises_with_blockage():
 
 def test_property_deeper_water_squats_less():
     """Label: property
-    Parity: squat:compute/CN_II_depth_5.28_5kn, squat:compute/CN_II_depth_6_5kn,
-        squat:compute/CN_II_depth_8_5kn
     """
     prev = None
     for h in (4.8, 5.28, 6.0, 8.0):
@@ -101,8 +92,6 @@ def test_property_deeper_water_squats_less():
 
 def test_property_dynamic_ukc_is_static_minus_squat():
     """Label: property
-    Parity: squat:compute/CN_II_4.8m_3kn, squat:compute/CN_II_4.8m_5kn,
-        squat:compute/CN_II_4.8m_7kn
     """
     for v in (0.0, 3.0, 5.0, 7.0):
         r = compute(SquatInputs(speed_through_water_kn=v, **CASE))
@@ -111,9 +100,6 @@ def test_property_dynamic_ukc_is_static_minus_squat():
 
 def test_property_max_speed_solver_lands_on_the_margin():
     """Label: property
-    Parity: squat:max_speed_for_ukc/depth5.28_area235.5_margin0.15,
-        squat:compute/depth5.28_area235.5_at_solver,
-        squat:compute/depth5.28_area235.5_solver_plus_0.1
     """
     v = max_speed_for_ukc(water_depth_m=5.28, channel_area_m2=235.5,
                           draft_m=4.40, beam_m=14.8, lpp_m=87.3, safety_margin_m=0.15)
@@ -129,8 +115,6 @@ def test_property_deeper_channel_buys_speed():
     """The deeper-channel argument, as an invariant: 0.48 m more water is materially more speed.
 
     Label: property
-    Parity: squat:max_speed_for_ukc/depth4.8_area209.5,
-        squat:max_speed_for_ukc/depth5.28_area235.5
     """
     v48 = max_speed_for_ukc(water_depth_m=4.80, channel_area_m2=209.5,
                             draft_m=4.40, beam_m=14.8, lpp_m=87.3)
@@ -143,7 +127,6 @@ def test_property_deeper_channel_buys_speed():
 
 def test_feasibility_grounding_is_reported_not_returned_silently():
     """Label: property
-    Parity: squat:compute/CN_II_4.8m_8kn
     """
     r = compute(SquatInputs(speed_through_water_kn=8.0, **CASE))
     assert r.grounds
@@ -153,7 +136,6 @@ def test_feasibility_grounding_is_reported_not_returned_silently():
 
 def test_feasibility_supercritical_froude_is_flagged():
     """Label: property
-    Parity: squat:compute/CN_II_depth_3_9kn
     """
     a = dict(CASE); a["water_depth_m"] = 3.0
     r = compute(SquatInputs(speed_through_water_kn=9.0, **a))
@@ -165,7 +147,6 @@ def test_feasibility_open_water_says_so():
     """No channel area means blockage 0, Barrass 0, and ICORELS carrying the answer alone.
 
     Label: property
-    Parity: squat:compute/CN_II_open_water_8kn
     """
     a = dict(CASE); a["channel_area_m2"] = 0.0
     r = compute(SquatInputs(speed_through_water_kn=8.0, **a))
@@ -179,7 +160,6 @@ def test_feasibility_method_disagreement_is_surfaced():
     """The two forms differ; the result must say by how much rather than pick one quietly.
 
     Label: property
-    Parity: squat:compute/CN_II_4.8m_6kn
     """
     r = compute(SquatInputs(speed_through_water_kn=6.0, **CASE))
     c = [c for c in r.checks if c.name == "methods_agree_within_50pct"]

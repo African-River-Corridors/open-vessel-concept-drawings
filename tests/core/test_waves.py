@@ -22,7 +22,6 @@ def test_golden_stawave1_reproduces_its_own_formula():
 
     Label: sourced - ITTC STAwave-1, R = (1/16) rho g Hs^2 B sqrt(B/L_BWL) (as quoted in
         core/waves.py), evaluated by hand in the test
-    Parity: waves:compute/hs1.0_head
     """
     r = compute(WaveResistanceInputs(significant_wave_height_m=1.0, **SEA))
     lbwl = 0.2 * 87.3
@@ -32,7 +31,6 @@ def test_golden_stawave1_reproduces_its_own_formula():
 
 def test_golden_calm_water_is_zero():
     """Label: property
-    Parity: waves:compute/hs0.0
     """
     r = compute(WaveResistanceInputs(significant_wave_height_m=0.0, **SEA))
     assert r.added_resistance_kn == 0.0
@@ -44,7 +42,6 @@ def test_golden_one_metre_head_seas_on_the_example_hull():
     it silently: order 10 kN, not 1 and not 100.
 
     Label: snapshot
-    Parity: waves:compute/hs1.0_head
     """
     r = compute(WaveResistanceInputs(significant_wave_height_m=1.0, **SEA))
     assert 5.0 < r.added_resistance_kn < 20.0, r.added_resistance_kn
@@ -55,7 +52,6 @@ def test_golden_one_metre_head_seas_on_the_example_hull():
 
 def test_property_scales_with_the_square_of_wave_height():
     """Label: property
-    Parity: waves:compute/hs1.0_head, waves:compute/hs2.0_head
     """
     a = compute(WaveResistanceInputs(significant_wave_height_m=1.0, **SEA)).added_resistance_kn
     b = compute(WaveResistanceInputs(significant_wave_height_m=2.0, **SEA)).added_resistance_kn
@@ -64,8 +60,6 @@ def test_property_scales_with_the_square_of_wave_height():
 
 def test_property_monotone_in_wave_height():
     """Label: property
-    Parity: waves:compute/hs1.0_head, waves:compute/hs0.0, waves:compute/hs0.5_head,
-        waves:compute/hs1.5_head, waves:compute/hs2.0_head, waves:compute/hs3.0_head
     """
     prev = -1.0
     for hs in (0.0, 0.5, 1.0, 1.5, 2.0, 3.0):
@@ -76,8 +70,6 @@ def test_property_monotone_in_wave_height():
 
 def test_property_heading_reduces_it_to_zero_abeam():
     """Label: property
-    Parity: waves:compute/hs1.0_head, waves:compute/hs1.0_heading90,
-        waves:compute/hs1.0_heading60
     """
     full = compute(WaveResistanceInputs(significant_wave_height_m=1.0,
                                         heading_deg_off_bow=0.0, **SEA)).added_resistance_kn
@@ -94,7 +86,6 @@ def test_property_a_blunter_bow_costs_more():
     conservative end, and a finer bow must come out cheaper.
 
     Label: property
-    Parity: waves:compute/hs1.0_bow_length_0.15_lpp, waves:compute/hs1.0_bow_length_0.3_lpp
     """
     blunt = compute(WaveResistanceInputs(significant_wave_height_m=1.0,
                                          bow_waterline_length_m=0.15 * 87.3,
@@ -107,7 +98,6 @@ def test_property_a_blunter_bow_costs_more():
 
 def test_property_added_power_is_resistance_times_speed():
     """Label: property
-    Parity: waves:compute/hs1.2_head
     """
     r = compute(WaveResistanceInputs(significant_wave_height_m=1.2, **SEA))
     assert abs(r.added_power_kw - r.added_resistance_kn * 8.5 * 0.514444) < 1e-9
@@ -120,7 +110,6 @@ def test_feasibility_long_waves_are_flagged_as_underprediction():
     deep in the region where it under-predicts — the sheet must say so.
 
     Label: property
-    Parity: waves:compute/hs1.0_period10
     """
     r = compute(WaveResistanceInputs(significant_wave_height_m=1.0,
                                      peak_wave_period_s=10.0, **SEA))
@@ -132,7 +121,6 @@ def test_feasibility_long_waves_are_flagged_as_underprediction():
 
 def test_feasibility_short_steep_sea_is_inside_validity():
     """Label: property
-    Parity: waves:compute/hs0.8_period4
     """
     r = compute(WaveResistanceInputs(significant_wave_height_m=0.8,
                                      peak_wave_period_s=4.0, **SEA))
@@ -144,7 +132,6 @@ def test_feasibility_assumed_bow_length_is_declared():
     """If L_BWL was not supplied the result must SAY it assumed one, not quietly use it.
 
     Label: property
-    Parity: waves:compute/hs1.0_head
     """
     r = compute(WaveResistanceInputs(significant_wave_height_m=1.0, **SEA))
     c = [c for c in r.checks if c.name == "bow_length_supplied"][0]
@@ -155,7 +142,6 @@ def test_feasibility_assumed_bow_length_is_declared():
 
 def test_feasibility_beam_seas_are_declared_a_floor():
     """Label: property
-    Parity: waves:compute/hs1.0_heading90
     """
     r = compute(WaveResistanceInputs(significant_wave_height_m=1.0,
                                      heading_deg_off_bow=90.0, **SEA))
@@ -164,7 +150,6 @@ def test_feasibility_beam_seas_are_declared_a_floor():
 
 def test_feasibility_big_seas_leave_the_screening_range():
     """Label: property
-    Parity: waves:compute/hs4.0_head
     """
     r = compute(WaveResistanceInputs(significant_wave_height_m=4.0, **SEA))
     assert not [c for c in r.checks

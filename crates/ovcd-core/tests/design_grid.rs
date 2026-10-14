@@ -1,6 +1,6 @@
 //! Seam: the public `ovcd_core::design_grid` and `ovcd_core::ga_adapter` API. Expected values are
-//! the frozen Python's (the parity Reference Results), not worked out by hand. JSON cannot carry a
-//! NaN or an infinity as an input, so the parity cases cannot reach those paths: these tests do.
+//! the original Python's, not worked out by hand. JSON cannot carry a NaN or an infinity as an
+//! input, so these tests, not the JSON seam, reach those paths.
 
 use ovcd_core::barge_capacity::{BargeCapacityInputs, compute};
 use ovcd_core::design_grid::{MAX_TANK_LENGTH_M, n_tanks_for_length, sweep};

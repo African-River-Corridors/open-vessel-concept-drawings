@@ -5,8 +5,8 @@
     python3.12 tools/gen_pystr_tables.py --check  # exit 1 if the file is out of date
 
 Python's `str.isidentifier`, `str.isprintable` and `float(str)` follow its own Unicode database.
-The Rust core copies them exactly by reading the tables from Python itself. Use the Python the
-frozen oracle runs on (3.12, Unicode 15.0), or the tables drift from the Reference Results.
+The Rust core copies them exactly by reading the tables from Python itself. Use Python 3.12
+(Unicode 15.0), the version the Rust core follows, or the tables drift from Python's answers.
 Surrogates are left out: a Rust `char` cannot hold one.
 """
 import sys

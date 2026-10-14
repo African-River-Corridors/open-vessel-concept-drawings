@@ -1,5 +1,7 @@
 # Test strategy: parity during the port, then the design-impact check, Calibration Bands, a fast PR gate and a release gate
 
+Status: the parity part is done. Removed in ticket 29: the parity harness, the Reference Results, the parity case inputs, the frozen Python copy, the hidden `ovcd eval` command and the `xtask` regenerate task were deleted. The last commit that still has them is `ce96e66cf0016df3bb36bed1cdc0ae998372564e` (`git show ce96e66cf0016df3bb36bed1cdc0ae998372564e:parity/README.md`; the frozen Python runs from a checkout of that commit with Python 3.12 and numpy).
+
 A test is good if it checks behaviour through a public seam and stops a named risk. Ranked risks:
 the port gives different numbers; a later change moves results by accident; the engineering is wrong;
 the app breaks on odd inputs; install or build fails on one system; confidential data leaks.

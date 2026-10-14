@@ -1,6 +1,6 @@
-//! Seam: the public `ovcd_core::journey_derating` API. Expected values are printed by the frozen
+//! Seam: the public `ovcd_core::journey_derating` API. Expected values are printed by the original
 //! Python (`core/journey_derating.py`), not worked out by hand. JSON cannot carry a NaN or an
-//! infinity, so the parity cases cannot reach those paths: these tests do.
+//! infinity, so these tests, not the JSON seam, reach those paths.
 
 use ovcd_core::barge_capacity::{BargeCapacityInputs, compute as capacity};
 use ovcd_core::journey_derating::{JourneyDeratingInputs, compute};
@@ -87,7 +87,7 @@ fn a_nan_dimension_passes_the_positivity_check_as_in_python() {
     assert!(compute(&i).is_ok());
 }
 
-// Pins for the mutation run of #17. Expected values printed by the frozen Python.
+// Pins for the mutation run of #17. Expected values printed by the original Python.
 
 #[test]
 fn each_principal_dimension_alone_is_refused_when_not_positive() {
@@ -131,7 +131,7 @@ fn negative_zero_design_depth_gives_a_positive_zero_cap() {
 
 #[test]
 fn water_density_scales_the_displacement_in_a_draft_bound_run() {
-    // Frozen Python: 889.0246000318816 t at density 1.025 (829.5246000318816 t at 1.0).
+    // Original Python: 889.0246000318816 t at density 1.025 (829.5246000318816 t at 1.0).
     let cap = bauxite();
     let mut i = JourneyDeratingInputs::new(&cap, 100.0, 16.0, 6.0);
     i.design_depth_m = 2.25;

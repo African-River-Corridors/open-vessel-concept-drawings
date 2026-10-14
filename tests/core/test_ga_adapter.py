@@ -14,7 +14,6 @@ def _gas_case():
 
 def test_geometry_passes_through_unchanged():
     """Label: property
-    Parity: ga_adapter:to_ga/gas_100x16x6_LNG_ethane
     """
     inp, res = _gas_case()
     gi, gr = to_ga(inp, res)
@@ -30,7 +29,6 @@ def test_geometry_passes_through_unchanged():
 
 def test_tank_volume_reconciles_with_capacity():
     """Label: property
-    Parity: ga_adapter:to_ga/gas_100x16x6_LNG_ethane
     """
     inp, res = _gas_case()
     _, gr = to_ga(inp, res)
@@ -44,7 +42,6 @@ def test_tank_volume_reconciles_with_capacity():
 
 def test_laden_draft_override_and_tug_flag():
     """Label: snapshot
-    Parity: ga_adapter:to_ga/gas_100x16x6_LNG_ethane, ga_adapter:to_ga/gas_laden_draft_2_pushed
     """
     inp, res = _gas_case()
     gi, gr = to_ga(inp, res, laden_draft_m=2.0, motor_vessel=False)
@@ -56,7 +53,6 @@ def test_laden_draft_override_and_tug_flag():
 
 def test_bulk_has_no_tank_geometry():
     """Label: property
-    Parity: ga_adapter:to_ga/bauxite_100x16x6, ga_adapter:is_gas/bauxite_100x16x6
     """
     inp = BargeCapacityInputs(loa=100.0, beam=16.0, depth=6.0, cargo_type="bauxite")
     res = compute(inp)

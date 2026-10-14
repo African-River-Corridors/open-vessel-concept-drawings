@@ -1,5 +1,5 @@
 //! Seam: the public `ovcd_core::pressure_vessel` API. Expected numbers are what CPython 3.12
-//! printed for the frozen `core/pressure_vessel.py`.
+//! printed for the `core/pressure_vessel.py`.
 
 use ovcd_core::pressure_vessel::*;
 
