@@ -15,7 +15,7 @@
 //! The Python `assess` takes a whole `BargeCapacityResult`. The Rust one takes only the numbers it
 //! reads (`GasCapacityResult`), because `barge_capacity` is ported in its own ticket.
 //!
-//! - A float `**` that overflows is Python's `OverflowError(34, 'Result too large')` (`py_pow`).
+//! - A float `**` that overflows is Python's `OverflowError(34, 'Numerical result out of range')` (`py_pow`).
 
 use crate::pyfmt;
 use alloc::format;
@@ -33,7 +33,7 @@ pub enum PyError {
     Value(String),
     /// `ZeroDivisionError("float division by zero")`.
     ZeroDivision,
-    /// `OverflowError(34, 'Result too large')`, from a float `**` that leaves the finite range.
+    /// `OverflowError(34, 'Numerical result out of range')`, from a float `**` that leaves the finite range.
     Overflow,
 }
 
@@ -52,7 +52,7 @@ impl PyError {
         match self {
             PyError::Value(m) => m,
             PyError::ZeroDivision => "float division by zero",
-            PyError::Overflow => "(34, 'Result too large')",
+            PyError::Overflow => "(34, 'Numerical result out of range')",
         }
     }
 }

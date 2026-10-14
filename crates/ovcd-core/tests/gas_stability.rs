@@ -241,11 +241,11 @@ fn segment_fill_clamps_and_keeps_python_edge_behaviour() {
 
 #[test]
 fn a_radius_whose_square_overflows_is_an_overflow_error() {
-    // Python: segment_fill(1e155, 0.5) raises OverflowError(34, 'Result too large').
+    // Python: segment_fill(1e155, 0.5) raises OverflowError(34, 'Numerical result out of range').
     let e = segment_fill(1e155, 0.5).unwrap_err();
     assert_eq!(e, PyError::Overflow);
     assert_eq!(e.type_name(), "OverflowError");
-    assert_eq!(e.message(), "(34, 'Result too large')");
+    assert_eq!(e.message(), "(34, 'Numerical result out of range')");
     // The clamps return before the square, as in Python.
     assert_eq!(segment_fill(1e155, 1.0), Ok((2e155, 1e155)));
     assert_eq!(segment_fill(1e155, 0.0), Ok((0.0, 0.0)));
@@ -336,4 +336,69 @@ fn criteria_set_follows_the_ruleset() {
     assert_eq!(criteria_set_for("ADN_G"), "ADN_9_3_1_14_2");
     assert_eq!(criteria_set_for("IGC_2G"), "IS_CODE_2008");
     assert_eq!(criteria_set_for(""), "IS_CODE_2008");
+}
+
+#[test]
+fn box_gz_with_no_displaced_area_has_no_centre_of_buoyancy() {
+    // Python's area guard (`abs(a) < 1e-12`) gives a centroid of 0, so GZ = -kg * sin(phi).
+    assert_eq!(box_gz(2.0, 1.0, 0.0, 0.3, 10.0), Ok(-0.0520944533000791));
+    assert_eq!(box_gz(2.0, 1.0, -0.5, 0.3, 10.0), Ok(-0.0520944533000791));
+    // An area below the guard, not only exactly zero.
+    assert_eq!(box_gz(1.0, 1.0, 1e-13, 0.0, 10.0), Ok(0.0));
+    assert_eq!(box_gz(10.0, 3.0, 1e-14, 1.0, 20.0), Ok(-0.3420201433256687));
+}
+
+#[test]
+fn segment_fill_keeps_the_centroid_when_r_squared_times_the_angle_term_is_even() {
+    // r^2 * (t - sin t) is an exact even number here; the area must still divide by two.
+    assert_eq!(
+        segment_fill(0.7978845608028654, 0.5),
+        Ok((0.7978845608028653, 0.45925183582024687))
+    );
+    assert_eq!(
+        segment_fill(1.5957691216057308, 0.5),
+        Ok((1.5957691216057306, 0.9185036716404937))
+    );
+    // The centroid here is ill-conditioned (last digits differ), so compare within tolerance.
+    let (h, y) = segment_fill(2.5231325220201604, 0.1).unwrap();
+    assert!(close(h, 0.7896172845893725));
+    assert!(close(y, 0.4691096033520923));
+}
+
+#[test]
+fn an_assessment_where_every_criterion_passes_reports_ok() {
+    // Reference Results assess/CN_II_IS_CODE_2008 and assess/sweep/003: every criterion ok.
+    let a = run(&narrow_deep(), 0.0, DEFAULT_CRITERIA_SET).unwrap();
+    assert!(a.conditions.iter().all(|c| c.criteria.iter().all(|k| k.ok)));
+    assert!(a.ok());
+}
+
+#[test]
+fn the_free_surface_chord_is_not_computed_for_an_empty_tank() {
+    // Python skips the chord unless 0 < fill < 1. With no cargo the fill is 0, so an inner radius
+    // of 1e160 (whose square overflows) is not squared there. Python returns ok, Light
+    // gm_fluid_m = -2.625e+159.
+    let mut r = narrow_deep();
+    {
+        let b = r.gas_basis.as_mut().unwrap();
+        b.loa = 100.0;
+        b.beam = 12.0;
+        b.depth = 4.0;
+        b.double_bottom_height = 0.5;
+        b.tank_support_height = 0.2;
+        b.outer_diameter = 2e160;
+        b.inner_diameter = 2e160;
+        b.total_tank_volume = 1000.0;
+        b.n_tanks_total = 2;
+        b.cylinder_length = 40.0;
+        b.steel_top_down = 500.0;
+        b.tank_total = 200.0;
+        b.insulation = 10.0;
+        b.piping_machinery = 50.0;
+        b.outfitting = 40.0;
+    }
+    r.cargo_density_t_per_m3 = 0.5;
+    r.lightship_t = 800.0;
+    let a = run(&r, 0.0, DEFAULT_CRITERIA_SET).unwrap();
+    assert!(close(a.conditions[2].gm_fluid_m, -2.625e159));
 }
