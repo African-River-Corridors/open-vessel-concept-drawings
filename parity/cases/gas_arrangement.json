@@ -358,6 +358,25 @@
       }
     },
     {
+      "id": "smallest_viable_loa/default_depth_only_lng_t073",
+      "tier": 1,
+      "reason": "tier 1: kills mutants gas_arrangement.rs:116 and :117 (FitOptions::for_smallest_viable_loa default depths); smallest_viable_loa searches only the first default depth (3.5 m) when depths is not given, which gives 80.0, while all default depths would give 66.5; no sweep case separates the two (issue #17 fix round 1)",
+      "input": {
+        "fn": "smallest_viable_loa",
+        "args": {
+          "beam": 27.5,
+          "cargo": "LNG",
+          "t_max": 0.73,
+          "ruleset": "ADN_G",
+          "tanks_wide": [
+            2,
+            1
+          ],
+          "lo": 11.4
+        }
+      }
+    },
+    {
       "id": "fit/error/unknown_ruleset",
       "tier": 3,
       "reason": "tier 3: error path: ruleset must be one of RULESETS",

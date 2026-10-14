@@ -7902,6 +7902,12 @@
       }
     },
     {
+      "id": "smallest_viable_loa/default_depth_only_lng_t073",
+      "output": {
+        "ok": 80.0
+      }
+    },
+    {
       "id": "fit/error/unknown_ruleset",
       "output": {
         "error": {
