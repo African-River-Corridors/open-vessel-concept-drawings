@@ -80,6 +80,7 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
         "hull" => hull(function, args),
         "tanks" => tanks(function, args),
         "weights" => weights(function, args),
+        "hydrostatics" => hydrostatics(function, args),
         "squat" => squat(function, args),
         "waves" => waves(function, args),
         "resistance" => resistance(function, args),
@@ -945,23 +946,28 @@ fn pressure_vessel(function: &str, args: &Value) -> Result<Value, EvalError> {
     }
 }
 
+/// `args.hull`: the seven floats of one hull.
+fn hull_arg(args: &Value) -> Result<HullGeometry, EvalError> {
+    let spec = args
+        .get("hull")
+        .ok_or_else(|| EvalError::BadInput("`args.hull` is missing".into()))?;
+    Ok(HullGeometry::new(
+        f64_arg(spec, "loa")?,
+        f64_arg(spec, "beam")?,
+        f64_arg(spec, "depth")?,
+        f64_arg(spec, "bow_rake_length")?,
+        f64_arg(spec, "bow_rake_rise")?,
+        f64_arg(spec, "stern_rake_length")?,
+        f64_arg(spec, "stern_rake_rise")?,
+    ))
+}
+
 fn hull(function: &str, args: &Value) -> Result<Value, EvalError> {
     match function {
         // One hull, every public quantity at `args.draft`, then the plating areas, in the key
         // order of the frozen driver.
         "quantities" => {
-            let spec = args
-                .get("hull")
-                .ok_or_else(|| EvalError::BadInput("`args.hull` is missing".into()))?;
-            let h = HullGeometry::new(
-                f64_arg(spec, "loa")?,
-                f64_arg(spec, "beam")?,
-                f64_arg(spec, "depth")?,
-                f64_arg(spec, "bow_rake_length")?,
-                f64_arg(spec, "bow_rake_rise")?,
-                f64_arg(spec, "stern_rake_length")?,
-                f64_arg(spec, "stern_rake_rise")?,
-            );
+            let h = hull_arg(args)?;
             let d = f64_arg(args, "draft")?;
             ok(json!({
                 "parallel_length": num(h.parallel_length()),
@@ -1249,39 +1255,133 @@ fn tanks(function: &str, args: &Value) -> Result<Value, EvalError> {
     }
 }
 
+/// Why the frozen chain (`_barge_chain` in the driver) stopped before the function under test.
+enum ChainStop {
+    /// The case input is not usable.
+    Eval(EvalError),
+    /// Python raised: the case's Reference Result is that error.
+    Raised(PyError),
+}
+
+impl From<EvalError> for ChainStop {
+    fn from(e: EvalError) -> Self {
+        ChainStop::Eval(e)
+    }
+}
+
+impl From<PyError> for ChainStop {
+    fn from(e: PyError) -> Self {
+        ChainStop::Raised(e)
+    }
+}
+
+/// The frozen chain: inputs, then the hull with the inputs' own rakes, then the tank
+/// arrangement, then the weights. The tank count product is not carried (`n_tanks_total` of the
+/// returned tanks is clamped), so a count Python answers for never raises here. A caller that
+/// reads `n_tanks_total` must check the product itself.
+fn barge_chain(
+    args: &Value,
+) -> Result<(BargeInputs, HullGeometry, TankResult, WeightBreakdown, i128), ChainStop> {
+    let mut inputs = barge_inputs(args)?;
+    inputs.post_init()?;
+    let rake = |v: Option<f64>, name: &str| {
+        v.ok_or_else(|| EvalError::BadInput(format!("`inputs.{name}` is unset")))
+    };
+    let hull = HullGeometry::new(
+        inputs.loa,
+        inputs.beam,
+        inputs.depth,
+        inputs.bow_rake_length,
+        rake(inputs.bow_rake_rise, "bow_rake_rise")?,
+        inputs.stern_rake_length,
+        rake(inputs.stern_rake_rise, "stern_rake_rise")?,
+    );
+    let (tanks, n_total) = ovcd_core::tanks::calculate_tank_arrangement_wide(&inputs)?;
+    let weights = ovcd_core::weights::calculate_weights(&inputs, &hull, &tanks)?;
+    Ok((inputs, hull, tanks, weights, n_total))
+}
+
+fn chain_result(r: Result<Value, ChainStop>) -> Result<Value, EvalError> {
+    match r {
+        Ok(v) => Ok(v),
+        Err(ChainStop::Eval(e)) => Err(e),
+        Err(ChainStop::Raised(e)) => raised_py(&e),
+    }
+}
+
 fn weights(function: &str, args: &Value) -> Result<Value, EvalError> {
     match function {
-        // The frozen chain: inputs, then the hull with the inputs' own rakes, then the tank
-        // arrangement, then the weights.
         "calculate_weights" => {
-            let mut inputs = barge_inputs(args)?;
-            if let Err(e) = inputs.post_init() {
-                return raised_py(&e);
-            }
-            let rake = |v: Option<f64>, name: &str| {
-                v.ok_or_else(|| EvalError::BadInput(format!("`inputs.{name}` is unset")))
-            };
-            let hull = HullGeometry::new(
-                inputs.loa,
-                inputs.beam,
-                inputs.depth,
-                inputs.bow_rake_length,
-                rake(inputs.bow_rake_rise, "bow_rake_rise")?,
-                inputs.stern_rake_length,
-                rake(inputs.stern_rake_rise, "stern_rake_rise")?,
-            );
-            // The weights output has no integer field, so the count product is not carried.
-            let tanks = match ovcd_core::tanks::calculate_tank_arrangement_wide(&inputs) {
-                Ok((t, _)) => t,
-                Err(e) => return raised_py(&e),
-            };
-            match ovcd_core::weights::calculate_weights(&inputs, &hull, &tanks) {
-                Ok(w) => ok(weights_json(&w)),
-                Err(e) => raised_py(&e),
-            }
+            chain_result(barge_chain(args).map(|(_, _, _, w, _)| json!({ "ok": weights_json(&w) })))
         }
         other => Err(EvalError::BadInput(format!(
             "weights has no parity function `{other}`"
+        ))),
+    }
+}
+
+fn hydrostatics(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        "find_equilibrium_draft" => {
+            let hull = hull_arg(args)?;
+            match ovcd_core::hydrostatics::find_equilibrium_draft(
+                &hull,
+                f64_arg(args, "total_weight")?,
+                f64_arg(args, "water_density")?,
+                f64_arg(args, "max_draft")?,
+                f64_arg_or(args, "block_coefficient", 1.0)?,
+                f64_arg_or(args, "tolerance", 0.001)?,
+            ) {
+                Ok(d) => ok(num(d)),
+                Err(e) => raised_py(&e),
+            }
+        }
+        "calculate_stability" => chain_result((|| {
+            let (inputs, hull, mut tanks, weights, n_total) = barge_chain(args)?;
+            // Python's chain holds the exact count; `n_tanks_total` is a 64-bit field here.
+            tanks.n_tanks_total = i64::try_from(n_total).map_err(|_| PyError {
+                kind: "OverflowError",
+                message: ovcd_core::tanks::INT_OVERFLOW_MESSAGE.into(),
+            })?;
+            let s = ovcd_core::hydrostatics::calculate_stability(
+                &hull,
+                &inputs,
+                &tanks,
+                &weights,
+                f64_arg(args, "cargo_mass")?,
+                f64_arg(args, "cargo_density_t")?,
+                f64_arg(args, "draft")?,
+            )?;
+            Ok(json!({ "ok": {
+                "KB": num(s.KB),
+                "BM_transverse": num(s.BM_transverse),
+                "KG": num(s.KG),
+                "GM_solid": num(s.GM_solid),
+                "free_surface_correction": num(s.free_surface_correction),
+                "GM_fluid": num(s.GM_fluid),
+                "BM_longitudinal": num(s.BM_longitudinal),
+            }}))
+        })()),
+        "calculate_trim" => chain_result((|| {
+            let (inputs, hull, tanks, weights, _) = barge_chain(args)?;
+            let t = ovcd_core::hydrostatics::calculate_trim(
+                &hull,
+                &inputs,
+                &tanks,
+                &weights,
+                f64_arg(args, "cargo_mass")?,
+                f64_arg(args, "draft")?,
+            )?;
+            Ok(json!({ "ok": {
+                "LCG": num(t.LCG),
+                "LCB": num(t.LCB),
+                "trim": num(t.trim),
+                "draft_aft": num(t.draft_aft),
+                "draft_fwd": num(t.draft_fwd),
+            }}))
+        })()),
+        other => Err(EvalError::BadInput(format!(
+            "hydrostatics has no parity function `{other}`"
         ))),
     }
 }

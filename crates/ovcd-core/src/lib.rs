@@ -18,6 +18,7 @@ pub mod checks;
 pub mod electric_energy;
 pub mod gas_separation;
 pub mod hull;
+pub mod hydrostatics;
 pub mod models;
 pub mod pressure_vessel;
 pub mod protective_location;
