@@ -5,6 +5,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 command -v tauri-driver >/dev/null || { echo "e2e: tauri-driver is not on PATH (cargo install tauri-driver --locked)" >&2; exit 1; }
 export OVCD_TEST_DIALOG_DIR="$(mktemp -d)"
+# A debug build keeps its first-run marker here, not in the real config folder.
+export OVCD_TEST_CONFIG_DIR="$(mktemp -d)"
 export OVCD_APP_BINARY="${OVCD_APP_BINARY:-../../target/debug/ovcd-app}"
 [ -x "$(cd e2e && realpath "$OVCD_APP_BINARY")" ] || { echo "e2e: no built app at $OVCD_APP_BINARY" >&2; exit 1; }
 # Software rendering under a virtual display (a missing GPU can stall WebKitGTK for a long time).

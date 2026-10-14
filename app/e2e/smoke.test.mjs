@@ -14,6 +14,8 @@ const FIXTURES = path.resolve(here, "../../crates/ovcd-format/tests/fixtures");
 const APP = path.resolve(here, process.env.OVCD_APP_BINARY ?? "../../target/debug/ovcd-app");
 const DIALOGS = process.env.OVCD_TEST_DIALOG_DIR;
 assert.ok(DIALOGS, "OVCD_TEST_DIALOG_DIR must be set (run e2e/run.sh)");
+const CONFIG = process.env.OVCD_TEST_CONFIG_DIR;
+assert.ok(CONFIG, "OVCD_TEST_CONFIG_DIR must be set (run e2e/run.sh)");
 const WORK = fs.mkdtempSync(path.join(os.tmpdir(), "ovcd-e2e-work-"));
 
 const answer = (file, text) => fs.writeFileSync(path.join(DIALOGS, file), text);
@@ -93,11 +95,29 @@ describe("OVCD app smoke tests", () => {
     for (const f of ["open.txt", "save.txt", "profile.txt", "discard.txt"]) forget(f);
   });
 
+  it("shows the first-run notice on first start only, and again from About", async () => {
+    const notice = await browser.$("[data-testid=notice]");
+    await until("the notice", async () => notice.isExisting());
+    const text = await notice.getText();
+    assert.match(text, /concept design tool/);
+    assert.match(text, /not verified/);
+    assert.match(text, /no warranty/i);
+    assert.equal(fs.readdirSync(CONFIG).length, 0, "nothing is remembered before the click");
+    await (await browser.$("button=I understand")).click();
+    await until("the notice to close", async () => !(await browser.$("[data-testid=notice]").isExisting()));
+    assert.equal(fs.readdirSync(CONFIG).length, 1, "the click is remembered in the config folder");
+    // Help: the notice is reachable again.
+    await (await browser.$("button=About")).click();
+    await until("the notice from About", async () => (await browser.$("[data-testid=notice]")).isExisting());
+    await (await browser.$("button=I understand")).click();
+    await until("the notice to close", async () => !(await browser.$("[data-testid=notice]").isExisting()));
+  });
+
   it("opens an example file and shows its outputs", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
     assert.match(await cargoOutput(), /^2,038\.5/);
     assert.match(await outputsText(), /Displacement\s*2,372\.1/);
-    assert.equal(await (await browser.$("[data-testid=engine-version]")).getText(), "Engine 0.2.0");
+    assert.equal(await (await browser.$("[data-testid=engine-version]")).getText(), "Engine 0.2.1");
   });
 
   /** The text of the SVG drawn in each hull view slot. */

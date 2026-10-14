@@ -35,6 +35,36 @@ Python 3.12 or later.
 pip install git+https://github.com/African-River-Corridors/open-vessel-concept-drawings
 ```
 
+## Run the desktop app
+
+The desktop app is a concept design tool with live results and drawings. It needs no Python.
+The first start shows a short notice: results are not verified and there is no warranty.
+
+**Download an installer.** Open the [latest pre-release](https://github.com/African-River-Corridors/open-vessel-concept-drawings/releases)
+and take the file for your computer:
+
+- Windows: `OVCD_<version>_x64-setup.exe`
+- macOS, Apple silicon: `OVCD_<version>_aarch64.dmg`
+- macOS, Intel: `OVCD_<version>_x64.dmg`
+
+`SHA256SUMS.txt` on the same page lets you check the download. The installers are not signed, so
+your system warns you once:
+
+- Windows SmartScreen says "Windows protected your PC". Click **More info**, then **Run anyway**.
+- macOS says the app cannot be checked. Open the `.dmg`, drag OVCD to Applications, then
+  **right-click the app and choose Open**, and confirm.
+
+**Build from source.** You need Git, Node 24 and Rust (install with [rustup](https://rustup.rs)).
+On Windows, rustup also asks for the Microsoft C++ build tools (MSVC); accept that. Then:
+
+```
+git clone https://github.com/African-River-Corridors/open-vessel-concept-drawings
+cd open-vessel-concept-drawings/app
+npm ci
+npx tauri dev       # run the app
+npx tauri build     # make the installer (target/release/bundle)
+```
+
 ## Worked example
 
 Size a liquefied-propane barge on a standard Chinese Class II hull (`examples/quickstart.py`):
