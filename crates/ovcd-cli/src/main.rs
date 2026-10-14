@@ -6,6 +6,8 @@
 //! user to copy, and `ovcd run` computes a saved Design and prints a summary (or the full results
 //! as JSON).
 
+mod draw;
+
 use ovcd_format::Profile;
 use std::process::ExitCode;
 
@@ -36,6 +38,10 @@ Usage:
       hard and soft ranges and basis, from the Defaults Profile. Use it to build valid Designs.
   ovcd profile
       Print the built-in Defaults Profile. Copy it, edit it, and pass it with --profile.
+  ovcd draw run <document.json>
+      The conformance runner of the Drawing Format Standard (clause 17.3): read one drawing
+      document and print the result as JSON, either the normalised content or the list of
+      error clauses. It reads only the document and the files the document names.
   ovcd --help | --version
 
 All files and output are SI.
@@ -58,6 +64,7 @@ fn main() -> ExitCode {
             Ok(false) => ExitCode::FAILURE,
             Err(msg) => usage_error("run", &msg),
         },
+        ["draw", rest @ ..] => report(draw::draw(rest), "draw"),
         ["schema", rest @ ..] => report(schema(rest), "schema"),
         ["profile"] => {
             print!("{}", Profile::built_in_text());
