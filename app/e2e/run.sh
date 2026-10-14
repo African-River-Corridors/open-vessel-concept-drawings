@@ -8,6 +8,9 @@ export OVCD_TEST_DIALOG_DIR="$(mktemp -d)"
 export OVCD_APP_BINARY="${OVCD_APP_BINARY:-../../target/debug/ovcd-app}"
 [ -x "$(cd e2e && realpath "$OVCD_APP_BINARY")" ] || { echo "e2e: no built app at $OVCD_APP_BINARY" >&2; exit 1; }
 # Software rendering under a virtual display (a missing GPU can stall WebKitGTK for a long time).
+# A "C" locale makes the web view report the language tag "C", which uPlot (it builds an
+# Intl.NumberFormat from it when the page loads) refuses. Give it a real language.
+export LANG=en_US.UTF-8 LANGUAGE=en_US LC_ALL=en_US.UTF-8
 export WEBKIT_DISABLE_DMABUF_RENDERER=1 WEBKIT_DISABLE_COMPOSITING_MODE=1 LIBGL_ALWAYS_SOFTWARE=1 GDK_BACKEND=x11
 tauri-driver --port 4444 &
 driver=$!
