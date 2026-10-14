@@ -59,6 +59,16 @@ describe("OVCD app smoke tests", () => {
       await peek("handles", () => browser.getWindowHandles());
       await peek("url", () => browser.getUrl());
       await peek("title", () => browser.getTitle());
+      await peek("script", () =>
+        browser.executeAsync((done) => {
+          const src = document.querySelector("script[type=module]")?.getAttribute("src");
+          import(src).then(
+            () => done("module ran"),
+            (err) => done(`module failed: ${err} ${(err && err.stack) || ""}`),
+          );
+        }),
+      );
+      await peek("body", () => browser.execute(() => document.body.innerHTML.slice(0, 300)));
       await peek("source", async () => (await browser.getPageSource()).slice(0, 600));
       throw e;
     }
