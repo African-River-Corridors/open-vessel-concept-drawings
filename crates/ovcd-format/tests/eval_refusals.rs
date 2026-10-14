@@ -151,3 +151,64 @@ fn a_whole_number_where_a_gas_arrangement_float_is_expected_is_refused() {
     let ok = r#"{"fn":"fit","args":{"loa":90.0,"beam":14.8,"cargo":"LNG","t_max":4.4,"max_tank_od_m":8.0}}"#;
     assert!(eval("gas_arrangement", &ovcd_format::parity::parse(ok).unwrap()).is_ok());
 }
+
+fn simulate_refusal(params: &str) -> String {
+    let text = format!(r#"{{"fn":"simulate","args":{{"params":{params}}}}}"#);
+    let err = eval("simulate", &ovcd_format::parity::parse(&text).unwrap());
+    format!("{err:?}")
+}
+
+#[test]
+fn simulate_refuses_params_where_python_would_raise_key_or_type_error() {
+    let good =
+        r#""vessel":"hopper_barge","cargo":"bauxite","loa_m":70,"beam_m":11,"depth_m":4,"cb":0.9"#;
+    // Control: the same params without a defect are accepted.
+    let ok = ovcd_format::parity::parse(&format!(
+        r#"{{"fn":"simulate","args":{{"params":{{{good}}}}}}}"#
+    ))
+    .unwrap();
+    assert!(eval("simulate", &ok).is_ok());
+    for (what, params) in [
+        (
+            "unknown vessel",
+            r#"{"vessel":"tug","cargo":"bauxite","loa_m":70,"beam_m":11,"depth_m":4,"cb":0.9}"#,
+        ),
+        (
+            "unknown cargo",
+            r#"{"vessel":"hopper_barge","cargo":"coal","loa_m":70,"beam_m":11,"depth_m":4,"cb":0.9}"#,
+        ),
+        (
+            "missing dimension",
+            r#"{"vessel":"hopper_barge","cargo":"bauxite","beam_m":11,"depth_m":4,"cb":0.9}"#,
+        ),
+        (
+            "text for a number",
+            r#"{"vessel":"hopper_barge","cargo":"bauxite","loa_m":"70","beam_m":11,"depth_m":4,"cb":0.9}"#,
+        ),
+        (
+            "null for a number",
+            r#"{"vessel":"hopper_barge","cargo":"bauxite","loa_m":70,"beam_m":11,"depth_m":4,"cb":0.9,"freeboard_min_m":null}"#,
+        ),
+        (
+            "box without lightship_k",
+            r#"{"vessel":"box_barge","cargo":"bauxite","loa_m":70,"beam_m":11,"depth_m":4,"cb":0.9}"#,
+        ),
+    ] {
+        let msg = simulate_refusal(params);
+        assert!(msg.starts_with("Err(BadInput"), "{what}: {msg}");
+    }
+}
+
+#[test]
+fn simulate_needs_a_params_object_and_a_known_function() {
+    let err = eval(
+        "simulate",
+        &ovcd_format::parity::parse(r#"{"fn":"simulate","args":{}}"#).unwrap(),
+    );
+    assert!(format!("{err:?}").contains("params"), "{err:?}");
+    let err = eval(
+        "simulate",
+        &ovcd_format::parity::parse(r#"{"fn":"nope","args":{}}"#).unwrap(),
+    );
+    assert!(format!("{err:?}").contains("no parity function"), "{err:?}");
+}

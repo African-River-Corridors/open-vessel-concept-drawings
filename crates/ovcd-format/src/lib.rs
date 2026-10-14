@@ -6,6 +6,7 @@ mod gas_arrangement;
 pub mod gas_stability;
 pub mod parity;
 pub mod profile;
+mod simulate;
 pub mod vdesign;
 
 pub use eval::{ENTRY_POINTS, EvalError, eval};

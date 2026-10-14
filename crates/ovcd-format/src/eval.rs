@@ -88,6 +88,7 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
         "gas_arrangement" => crate::gas_arrangement::run(function, args),
         "design_grid" => design_grid(function, args),
         "ga_adapter" => ga_adapter(function, args),
+        "simulate" => crate::simulate::run(function, args),
         "squat" => squat(function, args),
         "waves" => waves(function, args),
         "resistance" => resistance(function, args),
