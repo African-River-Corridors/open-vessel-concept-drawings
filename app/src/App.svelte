@@ -187,7 +187,7 @@
       onOption={optionAction}
       onProfile={(a) => command(a === "load" ? api.loadProfile : api.useBuiltInProfile, true)} /></section>
     <div class="handle v" role="separator" aria-orientation="vertical" onpointerdown={drag("x")}></div>
-    <section class="main"><MainPanel /></section>
+    <section class="main"><MainPanel {evaluation} {active} {lastGood} /></section>
     <div class="handle h" role="separator" aria-orientation="horizontal" onpointerdown={drag("y")}></div>
     <section class="bottom"><BottomPanel {evaluation} {active} {lastGood} onActivate={(name) => command(() => api.setActiveOption(name))} /></section>
   </div>
@@ -206,6 +206,7 @@
   .left { grid-column: 1; grid-row: 1 / 4; }
   .handle.v { grid-column: 2; grid-row: 1 / 4; cursor: col-resize; background: var(--line); }
   .main { grid-column: 3; grid-row: 1; }
+  .body > .main { overflow: hidden; }
   .handle.h { grid-column: 3; grid-row: 2; cursor: row-resize; background: var(--line); }
   .bottom { grid-column: 3; grid-row: 3; }
   .handle:hover { background: var(--gold); }
