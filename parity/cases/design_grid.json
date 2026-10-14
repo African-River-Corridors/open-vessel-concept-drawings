@@ -160,6 +160,118 @@
       }
     },
     {
+      "id": "n_tanks_for_length/112",
+      "tier": 1,
+      "reason": "tier 1: issue #22 port: the length where the tank count lands exactly on a whole number (0.75 x 112 / 28 = 3), pins the ceiling",
+      "knife_edge": "0.75 x 112 = 84 and 84 / 28 = 3 are exact in binary, so the ceiling is 3; a hair more length gives 4. Rust does the same two exact operations and lands on the same side",
+      "input": {
+        "fn": "n_tanks_for_length",
+        "args": {
+          "barge_length_m": 112
+        }
+      }
+    },
+    {
+      "id": "n_tanks_for_length/100_max_20",
+      "tier": 1,
+      "reason": "tier 1: issue #22 port: the optional maximum tank length argument moves off its 28 m default",
+      "input": {
+        "fn": "n_tanks_for_length",
+        "args": {
+          "barge_length_m": 100.0,
+          "max_tank_length_m": 20.0
+        }
+      }
+    },
+    {
+      "id": "sweep/bauxite_60_90",
+      "tier": 1,
+      "reason": "tier 1: issue #22 port: a dry-bulk cargo has no tank geometry, so the outer diameter reads 0.0 and the slenderness is null",
+      "input": {
+        "fn": "sweep",
+        "args": {
+          "barge_lengths_m": [
+            60.0,
+            90
+          ],
+          "beams_m": [
+            12.0
+          ],
+          "cargo_type": "bauxite"
+        }
+      }
+    },
+    {
+      "id": "sweep/depth_5_LNG",
+      "tier": 1,
+      "reason": "tier 1: issue #22 port: depth and cargo type move off their defaults, and an integer depth is echoed as an integer",
+      "input": {
+        "fn": "sweep",
+        "args": {
+          "barge_lengths_m": [
+            60.0
+          ],
+          "beams_m": [
+            12.0
+          ],
+          "depth_m": 5,
+          "cargo_type": "LNG"
+        }
+      }
+    },
+    {
+      "id": "n_tanks_for_length/zero_max",
+      "tier": 3,
+      "reason": "tier 3: error path: a zero maximum tank length is a ZeroDivisionError",
+      "input": {
+        "fn": "n_tanks_for_length",
+        "args": {
+          "barge_length_m": 100.0,
+          "max_tank_length_m": 0.0
+        }
+      }
+    },
+    {
+      "id": "n_tanks_for_length/negative_length",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a negative barge length still needs one tank",
+      "input": {
+        "fn": "n_tanks_for_length",
+        "args": {
+          "barge_length_m": -50.0
+        }
+      }
+    },
+    {
+      "id": "n_tanks_for_length/negative_max",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a negative maximum tank length still needs one tank",
+      "input": {
+        "fn": "n_tanks_for_length",
+        "args": {
+          "barge_length_m": 100.0,
+          "max_tank_length_m": -10.0
+        }
+      }
+    },
+    {
+      "id": "sweep/zero_and_negative_beam",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a zero and a negative beam",
+      "input": {
+        "fn": "sweep",
+        "args": {
+          "barge_lengths_m": [
+            60.0
+          ],
+          "beams_m": [
+            0.0,
+            -3.0
+          ]
+        }
+      }
+    },
+    {
       "id": "sweep/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
