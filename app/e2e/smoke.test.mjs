@@ -51,7 +51,17 @@ describe("OVCD app smoke tests", () => {
       logLevel: "warn",
       capabilities: { "wdio:enforceWebDriverClassic": true, "tauri:options": { application: APP } },
     });
-    await until("the app to draw", async () => (await browser.$("header")).isExisting(), 60000);
+    try {
+      await until("the app to draw", async () => (await browser.$("header")).isExisting(), 60000);
+    } catch (e) {
+      // Say what the webview shows, so a CI failure is readable.
+      const peek = async (what, f) => console.error(`e2e diagnostics: ${what}:`, await f().catch((x) => `(failed: ${x.message})`));
+      await peek("handles", () => browser.getWindowHandles());
+      await peek("url", () => browser.getUrl());
+      await peek("title", () => browser.getTitle());
+      await peek("source", async () => (await browser.getPageSource()).slice(0, 600));
+      throw e;
+    }
   });
 
   after(async () => {
