@@ -101,3 +101,41 @@ jobs:
           npm run build
       - name: Compile the app crate
         run: cargo build -p ovcd-app
+
+  # End-to-end smoke tests (spec 0002): the built debug app, driven by Tauri's WebDriver on Linux.
+  # Its own job, so the fast gate keeps its time budget.
+  app-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: Tauri system libraries, WebDriver and a virtual display
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential libxdo-dev libssl-dev \
+            libayatana-appindicator3-dev librsvg2-dev webkit2gtk-driver xvfb
+      - name: tauri-driver (cached)
+        id: driver
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/tauri-driver
+          key: tauri-driver-2.1.0-${{ runner.os }}
+      - name: Install tauri-driver
+        if: steps.driver.outputs.cache-hit != 'true'
+        run: cargo install tauri-driver --version 2.1.0 --locked
+      - name: Build the debug app
+        working-directory: app
+        run: |
+          npm ci
+          npx tauri build --debug --no-bundle
+      - name: Smoke tests
+        working-directory: app
+        run: xvfb-run -a bash e2e/run.sh
