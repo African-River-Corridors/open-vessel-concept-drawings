@@ -49,6 +49,103 @@ fn opt_num_arg(args: &Value, name: &str, default: f64) -> Result<f64, EvalError>
     }
 }
 
+/// The sign and decimal digits of a JSON integer literal of any size. Python keeps such a number
+/// as an exact `int`; a float literal (`2.0`, `1e3`) gives `None`.
+fn int_literal(value: &Value) -> Option<(bool, String)> {
+    let Value::Number(n) = value else { return None };
+    let text = n.to_string();
+    let (negative, digits) = match text.strip_prefix('-') {
+        Some(rest) => (true, rest),
+        None => (false, text.as_str()),
+    };
+    let all_digits = !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit());
+    let zero = digits.bytes().all(|b| b == b'0');
+    all_digits.then(|| (negative && !zero, digits.to_string()))
+}
+
+/// Decimal digits of `2 * magnitude`.
+fn double_digits(magnitude: &str) -> String {
+    let mut out = Vec::with_capacity(magnitude.len() + 1);
+    let mut carry = 0u8;
+    for b in magnitude.bytes().rev() {
+        let d = (b - b'0') * 2 + carry;
+        out.push(b'0' + d % 10);
+        carry = d / 10;
+    }
+    if carry > 0 {
+        out.push(b'0' + carry);
+    }
+    out.reverse();
+    String::from_utf8(out).expect("ascii digits")
+}
+
+/// Decimal digits of `magnitude * magnitude` (schoolbook, base 10).
+fn square_digits(magnitude: &str) -> String {
+    let d: Vec<u32> = magnitude
+        .bytes()
+        .rev()
+        .map(|b| u32::from(b - b'0'))
+        .collect();
+    let mut acc = vec![0u32; d.len() * 2 + 1];
+    for (i, &x) in d.iter().enumerate() {
+        for (j, &y) in d.iter().enumerate() {
+            acc[i + j] += x * y;
+        }
+    }
+    let mut carry = 0u32;
+    for cell in &mut acc {
+        let v = *cell + carry;
+        *cell = v % 10;
+        carry = v / 10;
+    }
+    while acc.len() > 1 && acc.last() == Some(&0) {
+        acc.pop();
+    }
+    acc.iter()
+        .rev()
+        .map(|&c| char::from(b'0' + c as u8))
+        .collect()
+}
+
+/// An exact integer's decimal digits as a float, rounded to nearest even as Python's
+/// `float(int)` does. `None` where Python raises `OverflowError`.
+fn digits_to_float(digits: &str) -> Option<f64> {
+    digits.parse::<f64>().ok().filter(|x| x.is_finite())
+}
+
+/// `segment_fill` with an int `radius`, as Python runs it. A full tank returns the exact ints
+/// `(2 * radius, radius)`. Otherwise Python turns `radius` and `radius ** 2` (an exact int) into
+/// floats, and raises `OverflowError("int too large to convert to float")` when either is out of
+/// range.
+fn segment_fill_int_radius(
+    negative: bool,
+    magnitude: &str,
+    fraction: f64,
+) -> Result<Value, EvalError> {
+    let sign = if negative { "-" } else { "" };
+    if fraction >= 1.0 {
+        let int = |digits: &str| -> Value {
+            serde_json::from_str(&format!("{sign}{digits}")).expect("integer literal")
+        };
+        return Ok(json!({ "ok": [int(&double_digits(magnitude)), int(magnitude)] }));
+    }
+    // A fraction of zero or less returns before Python touches the radius.
+    let (radius, radius_sq) = if fraction <= 0.0 {
+        (0.0, 0.0)
+    } else {
+        match (
+            digits_to_float(magnitude),
+            digits_to_float(&square_digits(magnitude)),
+        ) {
+            (Some(r), Some(r2)) => (if negative { -r } else { r }, r2),
+            _ => return py_result(Err(PyError::IntToFloat)),
+        }
+    };
+    py_result(
+        gs::segment_fill_int(radius, radius_sq, fraction).map(|(h, y)| json!([float(h), float(y)])),
+    )
+}
+
 fn py_result(r: Result<Value, PyError>) -> Result<Value, EvalError> {
     Ok(match r {
         Ok(v) => json!({ "ok": v }),
@@ -172,16 +269,11 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
             .map(float),
         ),
         "segment_fill" => {
-            let radius = num_arg(args, "radius")?;
             let fraction = num_arg(args, "volume_fraction")?;
-            // A full tank returns `(2 * radius, radius)` in the type of `radius`: ints for an int.
-            let int_radius = args
-                .get("radius")
-                .and_then(Value::as_i64)
-                .filter(|r| fraction >= 1.0 && r.checked_mul(2).is_some());
-            if let Some(r) = int_radius {
-                return py_result(Ok(json!([r * 2, r])));
+            if let Some((negative, magnitude)) = args.get("radius").and_then(int_literal) {
+                return segment_fill_int_radius(negative, &magnitude, fraction);
             }
+            let radius = num_arg(args, "radius")?;
             py_result(gs::segment_fill(radius, fraction).map(|(h, y)| json!([float(h), float(y)])))
         }
         "criteria_set_for" => {
@@ -219,5 +311,51 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
         other => Err(EvalError::BadInput(format!(
             "gas_stability has no parity function `{other}`"
         ))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn digit_helpers_match_python_ints() {
+        // Values from Python: 2*n and n*n.
+        for (n, double, square) in [
+            ("0", "0", "0"),
+            ("5", "10", "25"),
+            ("9", "18", "81"),
+            ("99", "198", "9801"),
+            (
+                "12345678901234567890",
+                "24691357802469135780",
+                "152415787532388367501905199875019052100",
+            ),
+            (
+                "999999999999999999999",
+                "1999999999999999999998",
+                "999999999999999999998000000000000000000001",
+            ),
+        ] {
+            assert_eq!(double_digits(n), double, "2*{n}");
+            assert_eq!(square_digits(n), square, "{n}**2");
+        }
+    }
+
+    #[test]
+    fn int_literal_reads_integers_only() {
+        let lit = |s: &str| int_literal(&serde_json::from_str::<Value>(s).unwrap());
+        assert_eq!(lit("7"), Some((false, "7".into())));
+        assert_eq!(lit("-7"), Some((true, "7".into())));
+        assert_eq!(lit("-0"), Some((false, "0".into())));
+        assert_eq!(
+            lit("100000000000000000000"),
+            Some((false, "100000000000000000000".into()))
+        );
+        assert_eq!(lit("2.0"), None);
+        assert_eq!(lit("1e3"), None);
+        assert_eq!(lit("\"7\""), None);
+        assert_eq!(digits_to_float("123"), Some(123.0));
+        assert_eq!(digits_to_float(&"9".repeat(400)), None);
     }
 }

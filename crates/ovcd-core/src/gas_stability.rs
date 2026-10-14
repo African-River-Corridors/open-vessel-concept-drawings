@@ -35,6 +35,9 @@ pub enum PyError {
     ZeroDivision,
     /// `OverflowError(34, 'Numerical result out of range')`, from a float `**` that leaves the finite range.
     Overflow,
+    /// `OverflowError("int too large to convert to float")`, from an int that Python must turn
+    /// into a float and cannot.
+    IntToFloat,
 }
 
 impl PyError {
@@ -43,7 +46,7 @@ impl PyError {
         match self {
             PyError::Value(_) => "ValueError",
             PyError::ZeroDivision => "ZeroDivisionError",
-            PyError::Overflow => "OverflowError",
+            PyError::Overflow | PyError::IntToFloat => "OverflowError",
         }
     }
 
@@ -53,6 +56,7 @@ impl PyError {
             PyError::Value(m) => m,
             PyError::ZeroDivision => "float division by zero",
             PyError::Overflow => "(34, 'Numerical result out of range')",
+            PyError::IntToFloat => "int too large to convert to float",
         }
     }
 }
@@ -267,6 +271,25 @@ pub fn box_gz(beam: f64, depth: f64, draught: f64, kg: f64, phi_deg: f64) -> Res
 /// Liquid height h (from tank bottom) and centroid height for a horizontal cylinder filled to
 /// `volume_fraction` of its cross-section area.
 pub fn segment_fill(radius: f64, volume_fraction: f64) -> Result<(f64, f64), PyError> {
+    segment_fill_by(radius, volume_fraction, || sq(radius))
+}
+
+/// `segment_fill` for an int `radius` that Python squares exactly before it makes a float.
+/// `radius_sq` is that exact square rounded to a float (`float(radius ** 2)`), which can differ
+/// from `radius * radius` in `f64`.
+pub fn segment_fill_int(
+    radius: f64,
+    radius_sq: f64,
+    volume_fraction: f64,
+) -> Result<(f64, f64), PyError> {
+    segment_fill_by(radius, volume_fraction, || Ok(radius_sq))
+}
+
+fn segment_fill_by(
+    radius: f64,
+    volume_fraction: f64,
+    square: impl FnOnce() -> Result<f64, PyError>,
+) -> Result<(f64, f64), PyError> {
     let f = py_min2(py_max2(volume_fraction, 0.0), 1.0);
     if f <= 0.0 {
         return Ok((0.0, 0.0));
@@ -287,7 +310,7 @@ pub fn segment_fill(radius: f64, volume_fraction: f64) -> Result<(f64, f64), PyE
     }
     let t = 0.5 * (lo + hi);
     let h = radius * (1.0 - libm::cos(t / 2.0));
-    let area = sq(radius)? * (t - libm::sin(t)) / 2.0;
+    let area = square()? * (t - libm::sin(t)) / 2.0;
     let ybar_from_centre = div(
         (4.0 * radius) * libm::pow(libm::sin(t / 2.0), 3.0),
         3.0 * (t - libm::sin(t)),
@@ -838,6 +861,17 @@ mod tests {
         assert!(py_max([-0.0, 0.0]).is_sign_negative());
         assert!(py_min([0.0, -0.0]).is_sign_positive());
         assert!(py_min([-0.0, 0.0]).is_sign_negative());
+    }
+
+    /// The third value is not read by `box_gz`, but it is a public-shaped result of the helper.
+    /// Frozen Python: `_area_centroid` of the rectangle y 0..3, z 1..3 is `(6.0, 1.5, 2.0)`, in
+    /// either winding order.
+    #[test]
+    fn area_centroid_of_a_rectangle() {
+        let rect = [(0.0, 1.0), (3.0, 1.0), (3.0, 3.0), (0.0, 3.0)];
+        assert_eq!(area_centroid(&rect), (6.0, 1.5, 2.0));
+        let reversed = [(0.0, 1.0), (0.0, 3.0), (3.0, 3.0), (3.0, 1.0)];
+        assert_eq!(area_centroid(&reversed), (6.0, 1.5, 2.0));
     }
 
     #[test]

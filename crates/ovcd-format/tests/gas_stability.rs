@@ -150,6 +150,86 @@ fn segment_fill_of_a_full_tank_keeps_an_int_radius_an_int() {
     }
 }
 
+/// An int radius of any size stays an exact Python int. Expected values: the frozen Python
+/// (3.12, Linux glibc) through `driver.run_case`.
+#[test]
+fn segment_fill_keeps_an_int_radius_exact_at_any_size() {
+    let int = |text: &str| serde_json::from_str::<Value>(text).expect("integer literal");
+    let overflow = json!({"error": {"type": "OverflowError",
+        "message": "int too large to convert to float"}});
+    for (radius, fraction, expected) in [
+        // The full tank returns exact ints, even where 2 * radius leaves i64 or the radius u64.
+        (
+            "4611686018427387904",
+            "1",
+            json!({"ok": [int("9223372036854775808"), int("4611686018427387904")]}),
+        ),
+        (
+            "-9223372036854775808",
+            "1",
+            json!({"ok": [int("-18446744073709551616"), int("-9223372036854775808")]}),
+        ),
+        (
+            "100000000000000000000",
+            "1",
+            json!({"ok": [int("200000000000000000000"), int("100000000000000000000")]}),
+        ),
+        (
+            "-100000000000000000000",
+            "2",
+            json!({"ok": [int("-200000000000000000000"), int("-100000000000000000000")]}),
+        ),
+        ("0", "1", json!({"ok": [0, 0]})),
+        ("-0", "1", json!({"ok": [0, 0]})),
+        // Below a full tank Python makes floats from the radius and its exact square.
+        (
+            "13407807929942596727432598158855113001725820008116749133157341386316719597868925090818930617285026583319956944557042494632332259080864313586268726512374783",
+            "0.5",
+            json!({"ok": [1.3407807929942596e+154, 7.717357508403725e+153]}),
+        ),
+        (
+            "13407807929942596727432598158855113001725820008116749133157341386316719597868925090818930617285026583319956944557042494632332259080864313586268726512374784",
+            "0.5",
+            overflow.clone(),
+        ),
+        (
+            "-13407807929942596727432598158855113001725820008116749133157341386316719597868925090818930617285026583319956944557042494632332259080864313586268726512374784",
+            "0.5",
+            overflow.clone(),
+        ),
+    ] {
+        let args: Value = serde_json::from_str(&format!(
+            "{{\"radius\": {radius}, \"volume_fraction\": {fraction}}}"
+        ))
+        .unwrap();
+        let actual = eval("segment_fill", args.clone()).unwrap();
+        assert_eq!(actual, expected, "{args}");
+        assert_eq!(compare(&expected, &actual, tolerance()), Ok(()), "{args}");
+    }
+    // 2 ** 512 and 10 ** 400: Python 3.12 says "int too large to convert to float" for both.
+    let big = format!("1{}", "0".repeat(400));
+    let args: Value =
+        serde_json::from_str(&format!("{{\"radius\": {big}, \"volume_fraction\": 0.5}}")).unwrap();
+    assert_eq!(eval("segment_fill", args).unwrap(), overflow);
+    // A fraction of zero or less returns before Python touches the radius, so it cannot overflow.
+    for fraction in ["0", "-1"] {
+        let args: Value = serde_json::from_str(&format!(
+            "{{\"radius\": {big}, \"volume_fraction\": {fraction}}}"
+        ))
+        .unwrap();
+        assert_eq!(
+            eval("segment_fill", args).unwrap(),
+            json!({"ok": [0.0, 0.0]})
+        );
+    }
+    // A float radius stays a float.
+    let args = json!({"radius": 1e20, "volume_fraction": 1});
+    assert_eq!(
+        eval("segment_fill", args).unwrap(),
+        json!({"ok": [2e20, 1e20]})
+    );
+}
+
 /// Python keeps an int `payload_t` as an int in the Laden `cargo_t`, and its `sum()` (3.12) adds
 /// the int without compensation. The rows hold the frozen Python's `cargo_t`, `displacement_t`,
 /// `draught_m` and `kg_m` per condition. They must match exactly, to the last bit and in type. The

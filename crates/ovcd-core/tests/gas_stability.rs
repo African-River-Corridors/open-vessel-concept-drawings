@@ -5,6 +5,7 @@
 use ovcd_core::gas_stability::{
     DEFAULT_BLOCK_COEFFICIENT, DEFAULT_CRITERIA_SET, DEFAULT_WATER_DENSITY, GasBasis,
     GasCapacityResult, PyError, PyNum, assess, box_gz, criteria_set_for, segment_fill,
+    segment_fill_int,
 };
 
 fn close(a: f64, b: f64) -> bool {
@@ -251,6 +252,54 @@ fn a_radius_whose_square_overflows_is_an_overflow_error() {
     assert_eq!(segment_fill(1e155, 0.0), Ok((0.0, 0.0)));
     // Just below the limit the square is finite.
     assert!(segment_fill(1e154, 0.5).is_ok());
+}
+
+#[test]
+fn segment_fill_with_a_radius_whose_square_underflows() {
+    // Frozen Python 3.12: segment_fill(1e-160, 1e-10) == (3.0278250107151905e-167, 0.0). The
+    // square 1e-320 is subnormal, so `area` is 0.0 and the centroid is 0.0. An exact comparison:
+    // a changed `area` (say `* (t - sin t) / 2` as `* (t + sin t) / 2`) gives 1.8e-167 instead.
+    assert_eq!(
+        segment_fill(1e-160, 1e-10),
+        Ok((3.0278250107151905e-167, 0.0))
+    );
+}
+
+#[test]
+fn segment_fill_area_that_rounds_to_zero_gives_a_zero_centroid() {
+    // Frozen Python 3.12 (Linux): the area is 0.0 (the product rounds to one subnormal unit and
+    // halving it ties to even). Doubling instead of halving gives 1e-323 and a centroid of 1e-160.
+    assert_eq!(segment_fill(1e-160, 5e-5), Ok((1.90777421476096e-163, 0.0)));
+    assert_eq!(
+        segment_fill(1e-160, 1e-4),
+        Ok((3.028742564411435e-163, 0.0))
+    );
+}
+
+#[test]
+fn box_gz_where_the_first_bisection_midpoint_hits_the_target_exactly() {
+    // phi so small that cos is 1 and the heel moves no coordinate: the first midpoint is z = 2,
+    // the displaced area is exactly 4.0 and the target is 4.0 (`a < target` is false). Frozen
+    // Python 3.12 (Linux): -1.7453292519943295e-302.
+    assert_eq!(
+        box_gz(2.0, 4.0, 2.0, 1.0, 1e-300),
+        Ok(-1.7453292519943295e-302)
+    );
+}
+
+#[test]
+fn segment_fill_int_takes_the_exact_square_as_given() {
+    // The exact square of 3 is 9; a float square of the radius would give the same here.
+    let (h, y) = segment_fill_int(3.0, 9.0, 0.5).unwrap();
+    assert_eq!((h, y), segment_fill(3.0, 0.5).unwrap());
+    // A square that rounds differently from `radius * radius` is used as given: 0.0 gives area 0.
+    let (_, y) = segment_fill_int(3.0, 0.0, 0.5).unwrap();
+    assert_eq!(y, 0.0);
+    assert_eq!(PyError::IntToFloat.type_name(), "OverflowError");
+    assert_eq!(
+        PyError::IntToFloat.message(),
+        "int too large to convert to float"
+    );
 }
 
 // --- boundaries: inputs that sit exactly on a comparison. Expected values: frozen Python. ---
