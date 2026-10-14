@@ -1,0 +1,105 @@
+{
+  "format": "vdesign",
+  "format_version": 1,
+  "engine_version": "0.2.0",
+  "units": "SI",
+  "options": [
+    {
+      "name": "Option 1",
+      "inputs": {
+        "cargo": {
+          "value": "LPG_propane",
+          "source": "typed"
+        },
+        "hull_form": {
+          "value": "raked_box",
+          "source": "typed"
+        },
+        "formation": {
+          "value": {
+            "kind": "self_propelled"
+          },
+          "source": "typed"
+        },
+        "length_overall_m": {
+          "value": 110.0,
+          "source": "typed"
+        },
+        "beam_m": {
+          "value": 11.4,
+          "source": "typed"
+        },
+        "moulded_depth_m": {
+          "value": 4.5,
+          "source": "typed"
+        },
+        "cargo_containment": {
+          "value": "type_c_tanks",
+          "source": "typed"
+        },
+        "block_coefficient": {
+          "value": 0.85,
+          "source": "default"
+        },
+        "min_freeboard_m": {
+          "value": 0.3,
+          "source": "default"
+        },
+        "ruleset": {
+          "value": "ADN_G",
+          "source": "typed"
+        },
+        "fill_ratio": {
+          "value": 0.95,
+          "source": "default"
+        },
+        "adn_tank_cap_m3": {
+          "value": 1000.0,
+          "source": "default"
+        },
+        "optimise_depth": {
+          "value": false,
+          "source": "default"
+        },
+        "propulsive_efficiency": {
+          "value": 0.45,
+          "source": "default"
+        },
+        "max_speed_kn": {
+          "value": 10.0,
+          "source": "default"
+        },
+        "air_draft_limit_m": {
+          "value": null,
+          "source": "default"
+        },
+        "draught_limit_m": {
+          "value": null,
+          "source": "default"
+        },
+        "channel_depth_m": {
+          "value": null,
+          "source": "default"
+        },
+        "channel_under_keel_clearance_m": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "channel_bottom_width_m": {
+          "value": null,
+          "source": "default"
+        },
+        "channel_bank_slope": {
+          "value": 3.0,
+          "source": "default"
+        },
+        "channel_current_kn": {
+          "value": 0.0,
+          "source": "default"
+        }
+      },
+      "results_hash": "14775a3f0f3ba770e7ed4e6a12dcaeea0658bf6eb208abc2ba4aa3c5f9f04fa4"
+    }
+  ],
+  "defaults_profile": "built-in"
+}
