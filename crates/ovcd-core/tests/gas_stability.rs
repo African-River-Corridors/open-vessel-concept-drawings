@@ -441,3 +441,51 @@ fn zero_cargo_adds_no_item_even_when_the_cargo_height_is_infinite() {
         assert!(close(c.max_gz_m, 0.6694170646957496));
     }
 }
+
+#[test]
+fn a_tank_filled_to_exactly_one_has_no_free_surface_even_with_an_infinite_length() {
+    // Python 3.12, narrow_deep with cylinder_length inf and payload 0.581 * 850.4955629214109
+    // (494.13792205733967), so the Laden fill is exactly 1.0: free surface 0.0, gm_fluid
+    // -0.6051313828649265. A `frac <= 1` guard computes 0 * inf = NaN.
+    let mut r = narrow_deep();
+    r.gas_basis.as_mut().unwrap().cylinder_length = f64::INFINITY;
+    let payload = 0.581 * 850.4955629214109;
+    let a = run(&r, payload, DEFAULT_CRITERIA_SET).unwrap();
+    let laden = &a.conditions[0];
+    assert_eq!(laden.fill_fraction, 1.0);
+    assert_eq!(laden.free_surface_m, 0.0);
+    assert!(close(laden.gm_fluid_m, -0.6051313828649265));
+}
+
+#[test]
+fn a_half_laden_fill_of_exactly_one_skips_the_chord_that_would_overflow() {
+    // Python 3.12: rho 1, volume 100, payload 200, diameters 2e155. Laden fill is 2 and Half laden
+    // fill is exactly 1, so neither squares the radius for a chord. Python returns ok. A
+    // `frac <= 1` guard squares 1e155 and raises OverflowError on Half laden.
+    let mut r = narrow_deep();
+    {
+        let b = r.gas_basis.as_mut().unwrap();
+        b.loa = 100.0;
+        b.beam = 12.0;
+        b.depth = 4.0;
+        b.double_bottom_height = 0.5;
+        b.tank_support_height = 0.2;
+        b.outer_diameter = 2e155;
+        b.inner_diameter = 2e155;
+        b.total_tank_volume = 100.0;
+        b.cylinder_length = 40.0;
+        b.steel_top_down = 500.0;
+        b.tank_total = 200.0;
+        b.insulation = 10.0;
+        b.piping_machinery = 50.0;
+        b.outfitting = 40.0;
+    }
+    r.cargo_density_t_per_m3 = 1.0;
+    r.lightship_t = 800.0;
+    let a = run(&r, 200.0, DEFAULT_CRITERIA_SET).unwrap();
+    assert_eq!(a.conditions[0].fill_fraction, 2.0);
+    assert_eq!(a.conditions[1].fill_fraction, 1.0);
+    assert!(close(a.conditions[0].gm_fluid_m, -4.0999999999999994e154));
+    assert!(close(a.conditions[1].gm_fluid_m, -3.444444444444444e154));
+    assert_eq!(a.conditions[1].free_surface_m, 0.0);
+}

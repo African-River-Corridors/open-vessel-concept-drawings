@@ -846,4 +846,100 @@ mod tests {
         assert_eq!(sq(f64::INFINITY), Ok(f64::INFINITY));
         assert_eq!(py_pow(3.0, 3.0), Ok(27.0));
     }
+
+    fn cond(gz: Vec<(i32, f64)>) -> Condition {
+        Condition {
+            name: "t".to_string(),
+            cargo_t: 0.0,
+            cargo_is_int: false,
+            fill_fraction: 0.0,
+            displacement_t: 0.0,
+            draught_m: 0.0,
+            kg_m: 0.0,
+            gm_solid_m: 0.0,
+            free_surface_m: 0.0,
+            gm_fluid_m: 1.0,
+            gz,
+            max_gz_m: 0.0,
+            max_gz_deg: 30,
+            area_0_27: 1.0,
+            area_0_30: 1.0,
+            area_0_40: 1.0,
+            area_30_40: 1.0,
+            deck_edge_deg: None,
+            criteria: Vec::new(),
+        }
+    }
+
+    fn oks(set: &str, c: &Condition, wide: bool) -> Vec<bool> {
+        criteria(set, c, wide)
+            .unwrap()
+            .iter()
+            .map(|k| k.ok)
+            .collect()
+    }
+
+    // Python writes every limit as `>=` (and `> 0` for the narrow-tank ADN case), so a value that
+    // equals its limit passes, and one ulp below fails. Each case sets one value to the limit.
+    #[test]
+    fn every_is_code_criterion_passes_at_exactly_its_limit() {
+        let gz = vec![(0, 0.0), (30, 0.20)];
+        let base = cond(gz);
+        assert_eq!(oks("IS_CODE_2008", &base, false), [true; 6]);
+        let mut c = cond(vec![(30, 0.20)]);
+        c.area_0_30 = 0.055;
+        c.area_0_40 = 0.090;
+        c.area_30_40 = 0.030;
+        c.max_gz_deg = 25;
+        c.gm_fluid_m = 0.15;
+        assert_eq!(oks("IS_CODE_2008", &c, false), [true; 6]);
+        let below = |x: f64| f64::from_bits(x.to_bits() - 1);
+        let mut c = cond(vec![(30, below(0.20))]);
+        c.area_0_30 = below(0.055);
+        c.area_0_40 = below(0.090);
+        c.area_30_40 = below(0.030);
+        c.max_gz_deg = 24;
+        c.gm_fluid_m = below(0.15);
+        assert_eq!(oks("IS_CODE_2008", &c, false), [false; 6]);
+    }
+
+    #[test]
+    fn every_adn_criterion_passes_at_exactly_its_limit() {
+        let mut c = cond(vec![(27, 0.10)]);
+        c.gm_fluid_m = 0.10;
+        c.area_0_27 = 0.024;
+        assert_eq!(oks("ADN_9_3_1_14_2", &c, true), [true; 3]);
+        let below = |x: f64| f64::from_bits(x.to_bits() - 1);
+        let mut c = cond(vec![(27, below(0.10))]);
+        c.gm_fluid_m = below(0.10);
+        c.area_0_27 = below(0.024);
+        assert_eq!(oks("ADN_9_3_1_14_2", &c, true), [false; 3]);
+        // Narrow tank: the GM must be above zero, so exactly zero fails.
+        let mut c = cond(vec![(0, 0.0)]);
+        c.gm_fluid_m = 0.0;
+        assert_eq!(oks("ADN_9_3_1_14_2", &c, false), [false]);
+        c.gm_fluid_m = f64::MIN_POSITIVE;
+        assert_eq!(oks("ADN_9_3_1_14_2", &c, false), [true]);
+    }
+
+    // Hand-run boundary checks for the guards whose mutants are equivalent. With |sum| == |x| the
+    // two compensation branches give the same value (`sum + x` commutes; for opposite signs the
+    // total is 0). With a vertex exactly at the clip height, `<` instead of `<=` adds the same
+    // point through the crossing branch.
+    #[test]
+    fn a_tie_in_magnitude_gives_the_same_sum_either_way() {
+        assert_eq!(py_sum([1.0, 1.0]), 2.0);
+        assert_eq!(py_sum([1.0, -1.0]), 0.0);
+        assert_eq!(py_sum([1e308, 1e308]), f64::INFINITY);
+        assert_eq!(py_sum_mixed([(1.0, false), (-1.0, false)]), 0.0);
+    }
+
+    #[test]
+    fn a_vertex_exactly_at_the_clip_height_is_kept() {
+        let square = [(0.0, 0.0), (2.0, 0.0), (2.0, 1.0), (0.0, 1.0)];
+        let out = clip_below(&square, 1.0);
+        let (a, cy, _) = area_centroid(&out);
+        assert_eq!(a, 2.0);
+        assert_eq!(cy, 1.0);
+    }
 }
