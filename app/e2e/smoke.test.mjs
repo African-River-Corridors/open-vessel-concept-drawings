@@ -96,7 +96,7 @@ describe("OVCD app smoke tests", () => {
   it("opens an example file and shows its outputs", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
     assert.match(await cargoOutput(), /^2,038\.5/);
-    assert.match(await outputsText(), /Displacement\s+2,372\.1/);
+    assert.match(await outputsText(), /Displacement\s*2,372\.1/);
     assert.equal(await (await browser.$("[data-testid=engine-version]")).getText(), "Engine 0.2.0");
   });
 
