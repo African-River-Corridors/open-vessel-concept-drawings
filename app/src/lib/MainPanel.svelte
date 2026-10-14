@@ -1,12 +1,13 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
-  import type { Evaluation, OptionEvaluation } from "./api";
+  import type { Evaluation, HullViews, OptionEvaluation } from "./api";
+  import HullView from "./HullView.svelte";
   import SpeedPower from "./views/SpeedPower.svelte";
   import Stability from "./views/Stability.svelte";
 
   // The views, stacked in one scrolling panel. A dropdown at the top right jumps to a view and
-  // follows the scroll. The hull views wait for the Drawing Format Standard (ADR 0009): their slots
-  // draw nothing and say why.
+  // follows the scroll. The hull views are SVG drawn in Rust to the Drawing Format Standard
+  // (ADR 0009, spec 0003); the panel only places and zooms them.
   let { evaluation, active, lastGood }: {
     evaluation: Evaluation | null;
     active: string;
@@ -21,6 +22,7 @@
     { id: "stability", label: "Stability" },
   ];
   const HULL = ["side", "plan", "midship"];
+  type HullKey = "side" | "plan" | "midship";
 
   let scroller: HTMLDivElement;
   let current = $state(VIEWS[0].id);
@@ -32,6 +34,13 @@
     return outcome?.status === "not_run" && prior?.status === "results" ? prior.results : null;
   });
   let stale = $derived(outcome?.status === "not_run");
+  /** The views of the Option: its own, or the last good ones while the Design has a hard error. */
+  let views = $derived.by((): HullViews | null => {
+    if (outcome?.status === "results") return outcome.views ?? null;
+    const prior = lastGood[active]?.outcome;
+    return outcome?.status === "not_run" && prior?.status === "results" ? (prior.views ?? null) : null;
+  });
+  const drawing = (key: HullKey): string | null => (views && key in views ? (views as Record<HullKey, string>)[key] : null);
   let message = $derived(outcome && (outcome.status === "not_available" || outcome.status === "failed") ? outcome.message : null);
 
   interface Curve {
@@ -82,7 +91,16 @@
       <h3>{v.label}</h3>
       {#if HULL.includes(v.id)}
         <div class="slot" data-testid="slot-{v.id}">
-          Waits for the Drawing Format Standard. This view is drawn to that standard once it exists.
+          {#if stale && drawing(v.id as HullKey)}<span class="stale">out of date</span>{/if}
+          {#if drawing(v.id as HullKey)}
+            <HullView svg={drawing(v.id as HullKey) ?? ""} label={v.label} />
+          {:else if message}
+            <p class="note">{message}</p>
+          {:else if views && "message" in views}
+            <p class="note">{views.message}</p>
+          {:else}
+            <p class="note">No results to draw.</p>
+          {/if}
         </div>
       {:else if v.id === "speed-power"}
         {#if stale}<span class="stale">out of date</span>{/if}
@@ -116,7 +134,7 @@
   h3 { font-family: var(--serif); color: var(--navy); font-size: 15px; margin: 0 0 6px; }
   select { padding: 3px 6px; font: inherit; }
   section { padding: 14px; border-bottom: 1px solid var(--line); min-height: 180px; }
-  .slot { border: 1px dashed var(--line); color: var(--dim); padding: 40px 12px; text-align: center; font-size: 13px; }
+  .slot { min-height: 60px; }
   .note { color: var(--dim); }
   .stale { background: #fdf1d3; color: #6b4a00; font: 11px var(--sans); padding: 1px 6px; border-radius: 3px; }
 </style>

@@ -100,6 +100,43 @@ describe("OVCD app smoke tests", () => {
     assert.equal(await (await browser.$("[data-testid=engine-version]")).getText(), "Engine 0.2.0");
   });
 
+  /** The text of the SVG drawn in each hull view slot. */
+  const hullTexts = () =>
+    browser.execute(() =>
+      Object.fromEntries(
+        ["side", "plan", "midship"].map((k) => [k, document.querySelector(`[data-testid=slot-${k}] svg`)?.textContent ?? null]),
+      ),
+    );
+  const viewsDrawn = async () => (await hullTexts()).midship !== null && (await hullTexts()).plan !== null && (await hullTexts()).side !== null;
+
+  it("draws the side elevation, plan and midship section, dimensioned from the results", async () => {
+    await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    await until("the three views to be drawn", viewsDrawn);
+    const t = await hullTexts();
+    // LOA 76.5 m, beam 11.4 m, depth 3.5 m: the dimension texts are computed from the geometry in Rust.
+    assert.match(t.side, /76\.50/);
+    assert.match(t.plan, /76\.50/);
+    assert.match(t.plan, /11\.40/);
+    assert.match(t.midship, /11\.40/);
+    assert.match(t.midship, /3\.50/);
+    assert.match(t.side, /SIDE ELEVATION/);
+    // The front end only places the drawing: one SVG in each slot, and the zoom buttons.
+    for (const slot of ["side", "plan", "midship"]) {
+      assert.equal((await browser.$$(`[data-testid=slot-${slot}] svg`)).length, 1);
+    }
+  });
+
+  it("redraws the views when an input changes, and draws tanks for a gas Cargo", async () => {
+    await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    await until("the three views to be drawn", viewsDrawn);
+    await type("Beam", "12");
+    await until("the plan to show the new beam", async () => /12\.00/.test((await hullTexts()).plan ?? ""));
+    await open(path.join(FIXTURES, "gas_adn_g_self_propelled.vdesign"), "gas_adn_g_self_propelled.vdesign");
+    await until("the gas views", async () => /LPG|Gas barge/.test((await hullTexts()).midship ?? ""));
+    const circles = await browser.execute(() => document.querySelectorAll("[data-testid=slot-midship] svg circle[data-layer=OUTLINE]").length);
+    assert.equal(circles, 1, "one tank across");
+  });
+
   it("changes an output when an input is edited", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
     const before = await cargoOutput();
