@@ -182,8 +182,12 @@ fn an_unset_non_tank_length_raises_the_python_type_error() {
 
 #[test]
 fn the_shield_height_adds_the_double_bottom_to_the_support_height() {
-    // Python: 63.66028863761752. A product in place of the sum moves it by 6e-9 relative.
+    // Python (driver.run_case, quickstart with a double bottom of 2**52): 67.01116704.
+    // A difference in place of the sum gives 60.228013439999984, a product 6e-9 off at 1e9.
     let mut i = quickstart();
+    i.double_bottom_height = Some(4503599627370496.0);
+    assert_eq!(weigh(&i).weather_shield, 67.01116704);
+    // Python at 1e9: 63.66028863761752.
     i.double_bottom_height = Some(1e9);
     assert_eq!(weigh(&i).weather_shield, 63.66028863761752);
 }
