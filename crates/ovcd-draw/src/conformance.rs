@@ -2,8 +2,11 @@
 //!
 //! Nothing here reads a file. The test and the CLI read the suite and pass its values in.
 
-use crate::numbers::{mm, round_half_even};
+use crate::dimensions::{self, ChainInfo};
+use crate::furniture;
+use crate::numbers::{cos_sin, mm, round_half_even};
 use crate::rules::{self, AlignH, AlignV, Rect, Window};
+use crate::symbols;
 use serde_json::{Map, Value};
 
 /// Clause 16.9: two parsed values are equal. A whole number equals the same number with a point.
@@ -218,6 +221,70 @@ pub fn run_unit(function: &str, input: &Value) -> Option<Value> {
                     .map(|c| Value::Array(vec![num(mm(c[0])), num(mm(c[1]))]))
                     .collect(),
             )
+        }
+        "dimension_text" => {
+            let factor = if input["unit"].as_str() == Some("mm") {
+                1000.0
+            } else {
+                1.0
+            };
+            Value::String(dimensions::format_value(
+                nm(input, "value_m") * factor,
+                nm(input, "decimals") as u32,
+            ))
+        }
+        "reading_rotation" => {
+            let (c, s) = cos_sin(nm(input, "theta_deg"));
+            num(round_half_even(dimensions::reading_rotation([c, -s]), 3))
+        }
+        "chain_ok" => {
+            let info = |role: &str, text: &str| ChainInfo {
+                id: "c".into(),
+                role: role.into(),
+                text: text.into(),
+                unit: "m".into(),
+                decimals: 2,
+            };
+            let mut infos: Vec<ChainInfo> = input["parts"]
+                .as_array()?
+                .iter()
+                .filter_map(|t| t.as_str())
+                .map(|t| info("part", t))
+                .collect();
+            infos.push(info("overall", input["overall"].as_str()?));
+            Value::Bool(dimensions::check_chains(&infos))
+        }
+        "symbol_point" => {
+            let pt = |v: &Value| Some([v[0].as_f64()?, v[1].as_f64()?]);
+            let placement = symbols::Placement::new(
+                pt(&input["position_m"])?,
+                nm(input, "rotation_deg"),
+                nm(input, "scale"),
+                pt(&input["insertion"])?,
+                input["units"].as_str() == Some("paper_mm"),
+                nm(input, "denominator") as u32,
+            );
+            let q = placement.model(pt(&input["q"])?);
+            Value::Array(vec![
+                num(round_half_even(q[0], 6)),
+                num(round_half_even(q[1], 6)),
+            ])
+        }
+        "revision_seals" => Value::Array(
+            furniture::seals(input["entries"].as_array()?)
+                .into_iter()
+                .map(Value::String)
+                .collect(),
+        ),
+        "register_layout" => {
+            let (rows, omitted) = furniture::register_layout(
+                nm(input, "entries") as usize,
+                nm(input, "max_rows") as usize,
+            );
+            let mut m = Map::new();
+            m.insert("rows".into(), Value::from(rows));
+            m.insert("omitted".into(), Value::from(omitted));
+            Value::Object(m)
         }
         _ => return None,
     })

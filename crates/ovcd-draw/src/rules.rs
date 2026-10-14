@@ -35,6 +35,12 @@ pub fn zones(size: &str) -> Option<(usize, usize)> {
     }
 }
 
+/// The number of zones along the vertical sides (clause 6.5.1).
+pub fn vertical_zones(size: &str, landscape: bool) -> Option<usize> {
+    let (long, short) = zones(size)?;
+    Some(if landscape { short } else { long })
+}
+
 /// The letters of the vertical zones (clause 6.5.2).
 pub const ZONE_LETTERS: &str = "ABCDEFGHJKLMNPQR";
 

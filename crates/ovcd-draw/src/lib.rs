@@ -6,11 +6,16 @@
 
 pub mod conformance;
 pub mod data;
+pub mod dimensions;
 pub mod entities;
+pub mod furniture;
+pub mod hatch;
 pub mod json;
 pub mod numbers;
 pub mod pipeline;
+pub(crate) mod read;
 pub mod rules;
 pub mod schema;
+pub mod symbols;
 
 pub use pipeline::{Files, NoFiles, Normalised, RunResult, run_text, run_value};
