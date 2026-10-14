@@ -17,6 +17,7 @@ pub mod cargo;
 pub mod checks;
 pub mod electric_energy;
 pub mod gas_separation;
+pub mod gas_stability;
 pub mod hull;
 pub mod hydrostatics;
 pub mod models;

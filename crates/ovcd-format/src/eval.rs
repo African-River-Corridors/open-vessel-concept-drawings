@@ -77,6 +77,7 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
     let args = input.get("args").unwrap_or(&Value::Null);
     match entry_point {
         "cargo" => cargo(function, args),
+        "gas_stability" => crate::gas_stability::run(function, args),
         "hull" => hull(function, args),
         "tanks" => tanks(function, args),
         "weights" => weights(function, args),

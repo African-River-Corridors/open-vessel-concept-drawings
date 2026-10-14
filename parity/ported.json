@@ -13,5 +13,6 @@
   "weights",
   "resistance",
   "electric_energy",
-  "hydrostatics"
+  "hydrostatics",
+  "gas_stability"
 ]

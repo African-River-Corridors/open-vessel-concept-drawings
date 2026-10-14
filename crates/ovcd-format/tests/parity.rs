@@ -29,6 +29,27 @@ fn ported() -> Vec<String> {
         .collect()
 }
 
+/// `parity/pending.json`: entry point -> functions that `eval` still answers with `NotPorted`.
+fn pending() -> Vec<(String, String)> {
+    let v = read_json(&parity_dir().join("pending.json"));
+    let mut out = Vec::new();
+    for (ep, functions) in v["pending"].as_object().expect("pending is an object") {
+        for function in functions
+            .as_object()
+            .expect("pending lists functions")
+            .keys()
+        {
+            out.push((ep.clone(), function.clone()));
+        }
+    }
+    out
+}
+
+fn is_pending(pending: &[(String, String)], ep: &str, input: &Value) -> bool {
+    let function = input["fn"].as_str().unwrap_or("");
+    pending.iter().any(|(e, f)| e == ep && f == function)
+}
+
 fn tolerance() -> Tolerance {
     let text =
         std::fs::read_to_string(parity_dir().join("tolerance.json")).expect("tolerance.json");
@@ -82,10 +103,14 @@ fn all_entry_points() -> Vec<String> {
 #[test]
 fn every_case_of_every_ported_entry_point_matches_its_reference_result() {
     let tol = tolerance();
+    let pending = pending();
     let mut failures = Vec::new();
     let mut checked = 0;
     for ep in ported() {
         for (id, input, expected) in cases(&ep) {
+            if is_pending(&pending, &ep, &input) {
+                continue;
+            }
             checked += 1;
             match ovcd_format::eval(&ep, &input) {
                 Ok(actual) => {
@@ -118,6 +143,29 @@ fn every_ported_entry_point_has_cases() {
             !cases(&ep).is_empty(),
             "{ep} is ported but has no parity cases"
         );
+    }
+}
+
+/// A pending function must be honest: it belongs to a ported entry point, it has cases, and
+/// `eval` refuses every one of them. A function that `eval` answers cannot hide in the list.
+#[test]
+fn pending_functions_are_refused_by_eval_and_nothing_else_is() {
+    let ported = ported();
+    let pending = pending();
+    for (ep, function) in &pending {
+        assert!(ported.contains(ep), "{ep} is pending but not ported");
+        let mut n = 0;
+        for (id, input, _) in cases(ep) {
+            if input["fn"].as_str() == Some(function) {
+                n += 1;
+                assert_eq!(
+                    ovcd_format::eval(ep, &input),
+                    Err(ovcd_format::EvalError::NotPorted(ep.clone())),
+                    "{ep} {id}: eval answers it, so remove `{function}` from parity/pending.json"
+                );
+            }
+        }
+        assert!(n > 0, "{ep}.{function} is pending but has no cases");
     }
 }
 
