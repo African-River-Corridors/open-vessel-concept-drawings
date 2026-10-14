@@ -81,7 +81,7 @@
                 {#if !(m.path[0] === "arrangement" && !hasTanks(current.results))}
                   <tr>
                     <th>{m.label}</th>
-                    <td class="num" title={exact(m, v)}>{show(m, v)}{#if v !== null && v !== undefined && m.unit}<span class="unit"> {m.unit}</span>{/if}</td>
+                    <td class="num" class:text={m.quantity === "text"} title={exact(m, v)}>{show(m, v)}{#if v !== null && v !== undefined && m.unit}<span class="unit">&nbsp;{m.unit}</span>{/if}</td>
                   </tr>
                 {/if}
               {/each}
@@ -130,10 +130,10 @@
           <tbody>
             {#each rows as m (m.label)}
               <tr>
-                <th>{m.label}{#if m.unit}<span class="unit"> ({m.unit})</span>{/if}</th>
+                <th>{m.label}{#if m.unit}<span class="unit">&nbsp;({m.unit})</span>{/if}</th>
                 {#each columns as c (c.name)}
                   {@const v = valueAt(c.results, m.path)}
-                  <td class="num" class:differs={differs(m, c)} class:active={c.name === active} title={c.results ? exact(m, v) : (c.message ?? "")}>
+                  <td class="num" class:text={m.quantity === "text"} class:differs={differs(m, c)} class:active={c.name === active} title={c.results ? exact(m, v) : (c.message ?? "")}>
                     {c.results ? show(m, v) : c.message ? "" : "–"}
                   </td>
                 {/each}
@@ -161,6 +161,7 @@
   th { text-align: left; font-weight: normal; color: var(--dim); padding: 2px 10px 2px 0; white-space: nowrap; }
   td { padding: 2px 8px; }
   td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.text { text-align: left; white-space: normal; max-width: 170px; font-size: 11px; }
   .unit { color: var(--dim); }
   thead th { color: var(--ink); text-align: right; }
   thead th.active { border-bottom: 2px solid var(--gold); }
