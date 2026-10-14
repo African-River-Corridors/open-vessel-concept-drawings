@@ -12,6 +12,6 @@ languages are English, Simplified Chinese and Latin American Spanish.
 
 ## Consequences
 
-- The core's check messages and warnings are English text that the parity harness compares exactly.
+- The core's check messages and warnings are English text that the tests compare exactly (the port's parity harness did too, until it was removed).
   A translation layer sits above the core and maps them. It is a later spec.
 - A report crate (PDF with translations) is later work, not part of spec 0001.

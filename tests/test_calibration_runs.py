@@ -14,7 +14,6 @@ def _snapshot(folder):
 
 def test_report_covers_every_case():
     """Label: property
-    Parity: barge_capacity:bauxite/calibration/*, resistance:compute/calibration/*
     """
     text = report()
     for c in yaml.safe_load((CAL / "cases.yaml").read_text())["dry_barge"]:
@@ -24,7 +23,6 @@ def test_report_covers_every_case():
 
 def test_report_writes_nothing_into_the_repo():
     """Label: property
-    Parity: none (file-system behaviour, no calculation input)
     """
     before = _snapshot(CAL)
     report()
@@ -33,7 +31,6 @@ def test_report_writes_nothing_into_the_repo():
 
 def test_main_writes_results_and_factors_to_the_folder_it_is_given(tmp_path):
     """Label: property
-    Parity: none (file-system behaviour, no calculation input)
     """
     before = _snapshot(CAL)
     calibration.main(tmp_path)

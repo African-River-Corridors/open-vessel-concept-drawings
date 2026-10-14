@@ -1,19 +1,19 @@
-//! JSON adapter for the `gas_stability` parity entry point: `box_gz`, `segment_fill`,
-//! `criteria_set_for` and `assess`. It copies the frozen Python driver's output shapes
-//! (`parity/driver.py`, `to_json`), including which numbers are ints.
+//! JSON adapter for the `gas_stability` entry point: `box_gz`, `segment_fill`,
+//! `criteria_set_for` and `assess`. It copies the output shapes of the Python functions,
+//! including which numbers are ints.
 //!
-//! `eval("gas_stability", ..)` routes here, and `gas_stability` is in `parity/ported.json`.
+//! `eval("gas_stability", ..)` routes here.
 //!
-//! `assess` takes the arrangement it assesses the way the frozen driver does: `fit` runs
-//! `gas_arrangement.fit` and uses its engine result (and, unless `payload_t` is given, its
-//! payload); `capacity` runs `barge_capacity.compute`.
+//! `assess` takes the arrangement it assesses either as `fit` (runs `gas_arrangement.fit` and
+//! uses its engine result and, unless `payload_t` is given, its payload) or as `capacity` (runs
+//! `barge_capacity.compute`).
 
 use crate::EvalError;
 use crate::eval::{capacity_inputs, raised_py};
 use ovcd_core::gas_stability::{self as gs, Condition, Criterion, PyError, PyNum};
 use serde_json::{Map, Value, json};
 
-/// A float as the Reference Results write it: NaN and infinity are tagged text.
+/// A float as the answers write it: NaN and infinity are tagged text.
 fn float(x: f64) -> Value {
     if x.is_nan() {
         json!("float:nan")
@@ -275,7 +275,7 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
             }))
         }
         other => Err(EvalError::BadInput(format!(
-            "gas_stability has no parity function `{other}`"
+            "gas_stability has no function `{other}`"
         ))),
     }
 }

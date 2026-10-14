@@ -12,6 +12,6 @@ Filled in by CI (the `Design impact` section): "no design change", or a before/a
 
 ## How it was checked
 
-- [ ] `bash tools/gates.sh` passes (fast gate: Rust, parity, oracle guard, pytest)
+- [ ] `bash tools/gates.sh` passes (fast gate: Rust, design impact, pytest)
 - [ ] `python tools/release_guard.py` passes
 - [ ] New calculations have golden, property and feasibility tests, with sources cited

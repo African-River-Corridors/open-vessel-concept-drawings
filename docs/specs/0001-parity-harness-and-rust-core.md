@@ -1,6 +1,6 @@
 # Spec 0001: Parity harness and Rust core port
 
-Status: **approved by the maintainer, 2026-10-13**.
+Status: **approved by the maintainer, 2026-10-13. Complete.** Removed in ticket 29: the parity harness, the Reference Results, the parity case inputs, the frozen Python copy, the hidden `ovcd eval` command and the `xtask` regenerate task were deleted. The last commit that still has them is `ce96e66cf0016df3bb36bed1cdc0ae998372564e` (`git show ce96e66cf0016df3bb36bed1cdc0ae998372564e:parity/README.md`; the frozen Python runs from a checkout of that commit with Python 3.12 and numpy).
 
 ## Problem Statement
 

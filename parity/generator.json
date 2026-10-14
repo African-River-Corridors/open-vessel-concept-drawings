@@ -1,3 +1,0 @@
-{
-  "reason": "issue #21 fix round 1: the driver records OverflowError (round(inf)) as an error result, and the barge_cost adapter reads JSON ints as floats, as the dataclass declares, so explicit int rates no longer echo back as ints; issue #13: driver.py now casts a JSON integer to float for float-hinted fields and rejects a non-bool for bool fields, so Python and Rust agree on integer-written inputs; two barge_capacity results echo an input as 90.0 and 4.0 instead of 90 and 4; issue #13 round 2: driver.py now also records ZeroDivisionError and OverflowError raised by the frozen Python, so error cases the port must copy can be written; no existing result changes"
-}

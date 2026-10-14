@@ -7,7 +7,7 @@
 //!
 //! Known difference: Python raises `OverflowError` or `ZeroDivisionError` where a float power
 //! overflows or underflows (a speed of 1e200, an Lpp of 1e-200); this port returns infinity or
-//! NaN. Such inputs are far outside the valid range and no parity case covers them. The evaluation
+//! NaN. Such inputs are far outside the valid range. The evaluation
 //! format can carry these errors now, so a later change may port them.
 
 use crate::checks::{Check, all_ok};

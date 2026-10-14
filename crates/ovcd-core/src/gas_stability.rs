@@ -803,7 +803,7 @@ mod tests {
         assert_eq!(py_sum([1.5, 2.5]), 4.0);
     }
 
-    // Python 3.12 `sum()` (the version the frozen Python runs on) adds an int item to the running
+    // Python 3.12 `sum()` (the version the original Python runs on) adds an int item to the running
     // total with no compensation, so a trailing int gives a different last bit. Values are what
     // Python 3.12 prints. (3.14 compensates ints too; the port follows 3.12.)
     #[test]
@@ -905,7 +905,7 @@ mod tests {
     }
 
     /// The third value is not read by `box_gz`, but it is a public-shaped result of the helper.
-    /// Frozen Python: `_area_centroid` of the rectangle y 0..3, z 1..3 is `(6.0, 1.5, 2.0)`, in
+    /// Original Python: `_area_centroid` of the rectangle y 0..3, z 1..3 is `(6.0, 1.5, 2.0)`, in
     /// either winding order.
     #[test]
     fn area_centroid_of_a_rectangle() {

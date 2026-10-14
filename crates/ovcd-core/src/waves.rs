@@ -3,8 +3,8 @@
 //! STAwave-1, ITTC's simple estimate for head waves. The Python file holds the engineering notes.
 //!
 //! Known difference: Python raises `OverflowError` where a float power overflows (for example a
-//! wave height of 1e200); this port returns infinity. Such inputs are far outside the valid range
-//! and no parity case covers them. The evaluation format can carry an `OverflowError` now, so a later
+//! wave height of 1e200); this port returns infinity. Such inputs are far outside the valid range.
+//! The evaluation format can carry an `OverflowError` now, so a later
 //! change may port it. See the PR for issue #19.
 
 use crate::checks::{Check, all_ok};
@@ -109,8 +109,7 @@ pub fn compute(inp: &WaveResistanceInputs) -> Result<WaveResistanceResult, Strin
     let rho = inp.water_density_t_m3 * 1000.0; // t/m3 -> kg/m3
 
     // `math.sqrt` raises on a negative argument; `libm::sqrt` gives NaN. A negative bow length is
-    // the only way in (the beam is validated > 0). The text is Python 3.12's, the version of the
-    // Reference Results; 3.14 words it "expected a nonnegative input, got <x>".
+    // the only way in (the beam is validated > 0). The text is Python 3.12's; 3.14 words it "expected a nonnegative input, got <x>".
     let ratio = b / lbwl;
     if ratio < 0.0 {
         return Err("math domain error".to_string());

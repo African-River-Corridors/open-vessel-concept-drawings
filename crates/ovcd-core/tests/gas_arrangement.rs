@@ -1,4 +1,4 @@
-//! Seam: the public `ovcd_core::gas_arrangement` API. Expected values are printed by the frozen
+//! Seam: the public `ovcd_core::gas_arrangement` API. Expected values are printed by the original
 //! Python (`core/gas_arrangement.py`), not worked out by hand.
 
 use ovcd_core::gas_arrangement::{

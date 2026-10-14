@@ -130,9 +130,8 @@ impl AftArrangementResult {
     }
 }
 
-/// An exception the frozen Python raises out of `compute`. The type name and message match
-/// CPython 3.12 (the version CI regenerates the Reference Results with), because the parity seam
-/// compares both. CPython 3.14 words the zero-divisor message "division by zero"; 3.12 and 3.13
+/// An exception the original Python raises out of `compute`. The type name and message match
+/// CPython 3.12 (the version CI runs), because both are compared. CPython 3.14 words the zero-divisor message "division by zero"; 3.12 and 3.13
 /// say "float floor division by zero".
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PyException {
@@ -142,7 +141,7 @@ pub enum PyException {
 }
 
 impl PyException {
-    /// The Python class name, as the Reference Results record it.
+    /// The Python class name.
     pub fn type_name(&self) -> &'static str {
         match self {
             PyException::ValueError(_) => "ValueError",
@@ -239,8 +238,8 @@ fn whole_float_digits(x: f64) -> String {
     out
 }
 
-/// The one message for an integer that no 64-bit field can hold (the integer range rule in
-/// `parity/README.md`).
+/// The one message for an integer that no 64-bit field can hold (the integer range rule:
+/// Python holds a count of any size, a 64-bit field cannot).
 pub const INT_OVERFLOW_MESSAGE: &str = "integer does not fit in 64 bits";
 
 fn int_overflow() -> PyException {

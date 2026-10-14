@@ -1,9 +1,9 @@
 //! Python bindings for the `vessel-designer` wheel (`vessel_designer._native`).
 //!
-//! One function does the work: `eval(entry_point, case_json) -> result_json`, the same seam the
-//! parity harness proves against the frozen Python. The Python package turns its public calls into
-//! that JSON and the result back into its dataclasses (`vessel_designer/_bridge.py`), so the maths
-//! lives only in the Rust core. This crate is a workspace member but not a default member, so
+//! One function does the work: `eval(entry_point, case_json) -> result_json`, the Rust core's seam
+//! for every entry point. The Python package turns its public calls into that JSON and the result
+//! back into its dataclasses (`vessel_designer/_bridge.py`), so the maths lives only in the Rust
+//! core. This crate is a workspace member but not a default member, so
 //! `cargo build` and `cargo test` never need Python. The core never depends on PyO3: only this
 //! crate does.
 
@@ -18,11 +18,11 @@ fn version() -> &'static str {
 }
 
 /// Run one case through the Rust core. `case_json` is `{"fn": ..., "args": {...}}`; the result is
-/// `{"ok": ...}` or `{"error": {"type": ..., "message": ...}}`, as in the Reference Results. Input
+/// `{"ok": ...}` or `{"error": {"type": ..., "message": ...}}`, as `ovcd_format::eval` writes them. Input
 /// the core does not accept raises `TypeError`; an unknown entry point raises `RuntimeError`.
 #[pyfunction]
 fn eval(entry_point: &str, case_json: &str) -> PyResult<String> {
-    let input = ovcd_format::parity::parse(case_json)
+    let input = ovcd_format::parse_case(case_json)
         .map_err(|e| PyValueError::new_err(format!("case is not JSON: {e}")))?;
     match ovcd_format::eval(entry_point, &input) {
         Ok(v) => Ok(v.to_string()),

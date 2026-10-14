@@ -219,7 +219,7 @@ fn an_infinite_or_nan_figure_fails_as_python_round_does() {
 
 #[test]
 fn a_result_past_the_i64_range_is_the_exact_python_int() {
-    // Digits printed by the frozen Python 3.12 for the same inputs.
+    // Digits printed by the original Python 3.12 for the same inputs.
     let big = rates_with("hull_steel_rate", "1e30");
     let r = compute(&BargeCostInputs::default(), &big).unwrap();
     assert_eq!(r.unit_total.as_str(), "504460000000000010464469310242816");

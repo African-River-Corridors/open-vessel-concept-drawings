@@ -1,4 +1,4 @@
-//! Seam: the public `ovcd_core::weights` API. Expected values are printed by the frozen Python
+//! Seam: the public `ovcd_core::weights` API. Expected values are printed by the original Python
 //! (`core/weights.py`), not worked out by hand.
 
 use ovcd_core::hull::HullGeometry;
@@ -19,7 +19,7 @@ fn quickstart() -> BargeInputs {
     i
 }
 
-/// The frozen chain: the hull carries the inputs' own rakes, then tanks, then weights.
+/// The chain: the hull carries the inputs' own rakes, then tanks, then weights.
 fn weigh(i: &BargeInputs) -> WeightBreakdown {
     let hull = HullGeometry::new(
         i.loa,
@@ -182,7 +182,7 @@ fn an_unset_non_tank_length_raises_the_python_type_error() {
 
 #[test]
 fn the_shield_height_adds_the_double_bottom_to_the_support_height() {
-    // Python (driver.run_case, quickstart with a double bottom of 2**52): 67.01116704.
+    // Python (quickstart with a double bottom of 2**52): 67.01116704.
     // A difference in place of the sum gives 60.228013439999984, a product 6e-9 off at 1e9.
     let mut i = quickstart();
     i.double_bottom_height = Some(4503599627370496.0);
@@ -229,7 +229,7 @@ fn a_count_product_beyond_64_bits_does_not_stop_the_weights() {
 
 #[test]
 fn a_wing_plate_at_an_infinite_tank_radius_keeps_the_cutout_chord_at_zero() {
-    // Python (driver.run_case, quickstart with tank_gap_transverse = tank_gap_longitudinal = -1e308,
+    // Python (quickstart with tank_gap_transverse = tank_gap_longitudinal = -1e308,
     // three tanks each way, wing_tank_height_ratio = -1.0): wing_plate 104.562. The tank diameter
     // is inf, so |dy| == tank_r == inf; with `<=` the chord is sqrt(inf - inf) = NaN.
     // Kills mutant crates/ovcd-core/src/weights.rs:94 (`<` to `<=`).

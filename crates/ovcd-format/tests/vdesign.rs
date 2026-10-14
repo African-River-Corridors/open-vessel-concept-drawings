@@ -714,10 +714,10 @@ fn a_profile_whose_defaults_break_a_cross_check_cannot_make_a_new_design() {
     );
 }
 
-// Physically impossible results. The frozen Python copies them faithfully (the core adds no
+// Physically impossible results. The original Python copies them faithfully (the core adds no
 // checks), so validation refuses the inputs that lead there. Rule: the dry-bulk hold section
 // must not be negative. Its width is the beam less the two fixed 1 m wing voids; its height is
-// the moulded depth less the 1.2 m double bottom plus the 1 m coaming (frozen
+// the moulded depth less the 1.2 m double bottom plus the 1 m coaming (
 // `barge_capacity._bulk_volumetric`). A negative width or height gives a negative cargo mass
 // and draught. A zero section gives zero cargo, which the engine reports as a failed check.
 

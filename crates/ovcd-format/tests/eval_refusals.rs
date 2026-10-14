@@ -1,4 +1,4 @@
-//! `ovcd eval` refuses an input the core cannot hold exactly, instead of returning a different
+//! `ovcd_format::eval` refuses an input the core cannot hold exactly, instead of returning a different
 //! answer from Python's.
 
 use ovcd_format::eval;
@@ -8,7 +8,7 @@ fn vs_input(loa: &str) -> Value {
     let text = format!(
         r#"{{"fn":"validate_catalogue","args":{{"extra":{{"X":{{"standard_id":"X","family":"CN","class_name":"I","formation":"motor_vessel","loa_m":{loa},"beam_m":5.0,"draught_m":[1.0,2.0],"dwt_t":[1.0,2.0],"source":"s"}}}}}}}}"#
     );
-    ovcd_format::parity::parse(&text).unwrap()
+    ovcd_format::parse_case(&text).unwrap()
 }
 
 #[test]
@@ -45,7 +45,7 @@ fn convoy_input(unit: &str, n: &str, beam: &str) -> Value {
     let text = format!(
         r#"{{"fn":"validate_catalogue","args":{{"extra":{{"X":{{"standard_id":"X","family":"CN","class_name":"I","formation":"pushed_convoy","loa_m":[1.0,2.0],"beam_m":{beam},"draught_m":[1.0,2.0],"dwt_t":[1.0,2.0],"source":"s","unit_beam_m":{unit},"n_abreast":{n}}}}}}}}}"#
     );
-    ovcd_format::parity::parse(&text).unwrap()
+    ovcd_format::parse_case(&text).unwrap()
 }
 
 #[test]
@@ -89,7 +89,7 @@ fn convoy_product_within_two_pow_53_and_float_unit_are_accepted() {
 
 fn cost(inputs: &str, rates: &str) -> Value {
     let text = format!(r#"{{"fn":"compute","args":{{"inputs":{inputs},"rates":{rates}}}}}"#);
-    ovcd_format::parity::parse(&text).unwrap()
+    ovcd_format::parse_case(&text).unwrap()
 }
 
 const RATES: &str = r#"{"hull_steel_rate":1,"tank_shell_rate":1.0,"tank_supports_rate":1.0,"insulation_rate":1.0,"piping_rate":1.0,"outfitting_rate":1.0,"cargo_system_lump":1.0,"paint_anodes_misc":1.0,"battery_rate_per_kwh":1.0,"propulsion_rate_per_kw":1.0,"wheelhouse_accom_lump":1.0,"tug_outfitting_lump":1.0,"yard_margin_fraction":0.1,"delivery_lump":50000}"#;
@@ -127,7 +127,7 @@ fn ukc_input(v_hi: &str) -> Value {
     let text = format!(
         r#"{{"fn":"max_speed_for_ukc","args":{{"draft_m":2.0,"beam_m":10.0,"lpp_m":50.0,"water_depth_m":10.0,"channel_area_m2":1000.0,"v_hi_kn":{v_hi}}}}}"#
     );
-    ovcd_format::parity::parse(&text).unwrap()
+    ovcd_format::parse_case(&text).unwrap()
 }
 
 #[test]
@@ -142,19 +142,16 @@ fn max_speed_for_ukc_refuses_a_json_integer() {
 fn a_whole_number_where_a_gas_arrangement_float_is_expected_is_refused() {
     // The adapter reads floats strictly: `18` is an integer, `18.0` a float.
     let text = r#"{"fn":"fit","args":{"loa":90.0,"beam":14.8,"cargo":"LNG","t_max":4.4,"max_tank_od_m":8}}"#;
-    let err = eval(
-        "gas_arrangement",
-        &ovcd_format::parity::parse(text).unwrap(),
-    );
+    let err = eval("gas_arrangement", &ovcd_format::parse_case(text).unwrap());
     let msg = format!("{err:?}");
     assert!(err.is_err() && msg.contains("must be a float"), "{msg}");
     let ok = r#"{"fn":"fit","args":{"loa":90.0,"beam":14.8,"cargo":"LNG","t_max":4.4,"max_tank_od_m":8.0}}"#;
-    assert!(eval("gas_arrangement", &ovcd_format::parity::parse(ok).unwrap()).is_ok());
+    assert!(eval("gas_arrangement", &ovcd_format::parse_case(ok).unwrap()).is_ok());
 }
 
 fn simulate_refusal(params: &str) -> String {
     let text = format!(r#"{{"fn":"simulate","args":{{"params":{params}}}}}"#);
-    let err = eval("simulate", &ovcd_format::parity::parse(&text).unwrap());
+    let err = eval("simulate", &ovcd_format::parse_case(&text).unwrap());
     format!("{err:?}")
 }
 
@@ -163,7 +160,7 @@ fn simulate_refuses_params_where_python_would_raise_key_or_type_error() {
     let good =
         r#""vessel":"hopper_barge","cargo":"bauxite","loa_m":70,"beam_m":11,"depth_m":4,"cb":0.9"#;
     // Control: the same params without a defect are accepted.
-    let ok = ovcd_format::parity::parse(&format!(
+    let ok = ovcd_format::parse_case(&format!(
         r#"{{"fn":"simulate","args":{{"params":{{{good}}}}}}}"#
     ))
     .unwrap();
@@ -203,12 +200,12 @@ fn simulate_refuses_params_where_python_would_raise_key_or_type_error() {
 fn simulate_needs_a_params_object_and_a_known_function() {
     let err = eval(
         "simulate",
-        &ovcd_format::parity::parse(r#"{"fn":"simulate","args":{}}"#).unwrap(),
+        &ovcd_format::parse_case(r#"{"fn":"simulate","args":{}}"#).unwrap(),
     );
     assert!(format!("{err:?}").contains("params"), "{err:?}");
     let err = eval(
         "simulate",
-        &ovcd_format::parity::parse(r#"{"fn":"nope","args":{}}"#).unwrap(),
+        &ovcd_format::parse_case(r#"{"fn":"nope","args":{}}"#).unwrap(),
     );
-    assert!(format!("{err:?}").contains("no parity function"), "{err:?}");
+    assert!(format!("{err:?}").contains("no function"), "{err:?}");
 }

@@ -12,7 +12,6 @@ def test_cn_ii_benchmark_is_reproduced():
     """Example CN II gas figure: 90 x 14.8 x 6.5 m, propane, T 4.4 m, IGC 2G, fill 0.95.
 
     Label: snapshot
-    Parity: gas_arrangement:fit/CN_II_90x14.8_LPG_propane_depth6.5
     """
     f = fit(90.0, 14.8, "LPG_propane", 4.4, depths=[6.5], ruleset="IGC_2G", fill_ratio=0.95)
     assert abs(f.payload_t - 2058) < 1.0
@@ -23,8 +22,6 @@ def test_search_beats_the_auto_seed_on_cn_ii():
     """Defect 1: the engine's AUTO arrangement lands on the worse fixed point at 14.8 m beam.
 
     Label: property
-    Parity: barge_capacity:gas/90x14.8x6.5_LPG_propane_auto,
-        gas_arrangement:fit/CN_II_90x14.8_LPG_propane_depth6.5
     """
     auto = capacity(BargeCapacityInputs(loa=90, beam=14.8, depth=6.5, cargo_type="LPG_propane"))
     best = fit(90.0, 14.8, "LPG_propane", 4.4, depths=[6.5])
@@ -36,12 +33,6 @@ def test_capped_tank_respects_side_clearance(L, B):
     """A tank put on the 12 m cap keeps at least the code's side clearance for its volume.
 
     Label: property
-    Parity: gas_arrangement:fit/60x14.8_LNG_default_ruleset,
-        gas_arrangement:required_side_clearance/IGC_2G_beam14.8_from_fit_60x14.8,
-        gas_arrangement:fit/90x18_LNG_default_ruleset,
-        gas_arrangement:required_side_clearance/IGC_2G_beam18_from_fit_90x18,
-        gas_arrangement:fit/100x20_LNG_default_ruleset,
-        gas_arrangement:required_side_clearance/IGC_2G_beam20_from_fit_100x20
     """
     f = fit(float(L), B, "LNG", 3.0)
     need = required_side_clearance("IGC_2G", B, f.containment_inner_volume_m3,
@@ -52,9 +43,6 @@ def test_capped_tank_respects_side_clearance(L, B):
 
 def test_gas_barge_needs_a_hull_longer_than_its_stern_block():
     """Label: property
-    Parity: gas_arrangement:fit/22x12_LNG_too_short,
-        gas_arrangement:smallest_viable_loa/beam12_LNG,
-        gas_arrangement:fit/viable_plus_5_x12_LNG
     """
     short = fit(22.0, 12.0, "LNG", 3.0)
     assert short.payload_t == 0 and short.binding == "no cargo area"
@@ -65,7 +53,6 @@ def test_gas_barge_needs_a_hull_longer_than_its_stern_block():
 
 def test_payload_never_exceeds_the_draught_cap():
     """Label: property
-    Parity: gas_arrangement:fit/90x12.9_LNG_draught_cap
     """
     f = fit(90.0, 12.9, "LNG", 3.0)
     assert f.draft_at_payload_m <= 3.0 + 1e-6
@@ -81,10 +68,6 @@ SNAPSHOT = [((90, 12.9), 1505), ((90, 14.8), 1738), ((90, 18.0), 2033), ((120, 1
 @pytest.mark.parametrize("dims,expected", SNAPSHOT)
 def test_regression_snapshot(dims, expected):
     """Label: snapshot
-    Parity: gas_arrangement:fit/IGC_2G_EXACT_90x12.9_LNG_snapshot,
-        gas_arrangement:fit/IGC_2G_EXACT_90x14.8_LNG_snapshot,
-        gas_arrangement:fit/IGC_2G_EXACT_90x18_LNG_snapshot,
-        gas_arrangement:fit/IGC_2G_EXACT_120x18_LNG_snapshot
     """
     L, B = dims
     f = fit(float(L), B, "LNG", 3.0, ruleset="IGC_2G_EXACT", fill_ratio=0.98)
@@ -95,8 +78,6 @@ def test_snapshot_120x18_is_one_11m_tank():
     """Was 2 x 8 m abreast, which breaks the type-G side-clearance floor (issue #6).
 
     Label: snapshot
-    Parity: gas_arrangement:fit/IGC_2G_EXACT_90x14.8_LNG_snapshot,
-        gas_arrangement:fit/IGC_2G_EXACT_120x18_LNG_snapshot
     """
     f = fit(120.0, 18.0, "LNG", 3.0, ruleset="IGC_2G_EXACT", fill_ratio=0.98)
     assert f.feasible
@@ -108,7 +89,6 @@ def test_cn_ii_free_depth_picks_a_passing_hull():
     3.5 m-deep hull at 3.50 m draught -- zero freeboard, overloaded. It must not win.
 
     Label: property
-    Parity: gas_arrangement:fit/90x14.8_LPG_propane_free_depth
     """
     f = fit(90.0, 14.8, "LPG_propane", 4.4, ruleset="IGC_2G", fill_ratio=0.95)
     assert f.feasible
@@ -122,7 +102,6 @@ def test_no_passing_candidate_is_flagged_infeasible():
     """Only the 0.48 m-clearance 2-abreast design is on offer: returned, but flagged.
 
     Label: property
-    Parity: gas_arrangement:fit/120x18_LNG_only_two_abreast
     """
     f = fit(120.0, 18.0, "LNG", 3.0, ruleset="IGC_2G_EXACT", fill_ratio=0.98,
             depths=[5.75], tanks_wide=(2,), extra_clearance_m=())
@@ -132,14 +111,12 @@ def test_no_passing_candidate_is_flagged_infeasible():
 
 def test_nothing_fits_is_infeasible():
     """Label: property
-    Parity: gas_arrangement:fit/22x12_LNG_too_short
     """
     assert not fit(22.0, 12.0, "LNG", 3.0).feasible
 
 
 def test_adn_tanks_respect_the_per_tank_cap():
     """Label: property
-    Parity: gas_arrangement:fit/ADN_G_110x11.4_LNG_cap380
     """
     f = fit(110.0, 11.4, "LNG", 3.0, ruleset="ADN_G", fill_ratio=0.95, adn_tank_cap_m3=380.0)
     assert f.payload_t > 0
@@ -149,8 +126,6 @@ def test_adn_tanks_respect_the_per_tank_cap():
 
 def test_settings_are_arguments_not_globals():
     """Label: property
-    Parity: gas_arrangement:fit/IGC_2G_EXACT_90x14.8_LNG_snapshot,
-        gas_arrangement:fit/IGC_2G_90x14.8_LNG_fill_0.95
     """
     a = fit(90.0, 14.8, "LNG", 3.0, ruleset="IGC_2G_EXACT", fill_ratio=0.98)
     b = fit(90.0, 14.8, "LNG", 3.0, ruleset="IGC_2G", fill_ratio=0.95)

@@ -79,7 +79,7 @@ def test_a_moved_coefficient_gives_a_before_after_table(tmp_path):
     assert "| Case | Quantity | Before | After | Change |" in tbl
 
 
-def test_noise_below_the_parity_tolerance_is_not_a_change():
+def test_noise_below_the_tolerance_is_not_a_change():
     assert di.same(1.0, 1.0 + 1e-12) and not di.same(1.0, 1.0 + 1e-6)
     assert not di.same(True, 1) and not di.same(1, True)
     before = {"a": {"results": {"x": 100.0, "y": 5.0, "name": "k"}}}

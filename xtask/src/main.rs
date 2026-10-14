@@ -1,16 +1,8 @@
 //! Developer tasks. Run with `cargo xtask <task>`.
 //!
-//! - `regen`: rewrite the tier-2 parity cases from the seeded sweep (`parity/sweep.py`), then run
-//!   every case through the frozen Python and rewrite `parity/reference/`. The only way tier-2
-//!   cases and Reference Results may change. Needs Python, never a maturin build.
-//! - `oracle-guard [--base <ref>]`: fail if the parity oracle changed without `regen` and a
-//!   recorded reason per changed case, or the generator (driver, sweep, frozen Python) changed
-//!   without a recorded reason (see `oracle.rs`).
 //! - `mutants [--base <ref>] [--out <file>]`: run cargo-mutants on the `ovcd-core` code this branch
 //!   changed and write a short killed / survived / timeout report.
 //! - `gates`: run the fail-closed fast gate, `tools/gates.sh`.
-
-mod oracle;
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
@@ -18,11 +10,9 @@ use std::process::{Command, ExitCode};
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let result = match args.first().map(String::as_str) {
-        Some("regen") => regen(),
-        Some("oracle-guard") => oracle_guard(&args[1..]),
         Some("mutants") => mutants(&args[1..]),
         Some("gates") => gates(),
-        _ => Err("usage: cargo xtask <regen | oracle-guard [--base <ref>] | mutants [--base <ref>] [--out <file>] | gates>".into()),
+        _ => Err("usage: cargo xtask <mutants [--base <ref>] [--out <file>] | gates>".into()),
     };
     match result {
         Ok(()) => ExitCode::SUCCESS,
@@ -80,169 +70,6 @@ fn merge_base(args: &[String]) -> Result<(String, String)> {
         .unwrap_or_else(|| "origin/main".into());
     let sha = git(&["merge-base", "HEAD", &base])?.trim().to_string();
     Ok((base, sha))
-}
-
-fn python() -> String {
-    std::env::var("OVCD_PYTHON").unwrap_or_else(|_| "python3".into())
-}
-
-fn run_driver(out_dir: &Path) -> Result {
-    run(Command::new(python())
-        .current_dir(root())
-        .arg("parity/driver.py")
-        .arg(out_dir))
-    .map(|_| ())
-}
-
-fn run_sweep() -> Result {
-    run(Command::new(python())
-        .current_dir(root())
-        .arg("parity/sweep.py"))
-    .map(|_| ())
-}
-
-fn regen() -> Result {
-    run_sweep()?;
-    println!("Tier-2 cases rewritten in parity/cases/ from the seeded sweep.");
-    let out = root().join("parity/reference");
-    run_driver(&out)?;
-    println!("Reference Results rewritten in parity/reference/ from the frozen Python.");
-    Ok(())
-}
-
-fn json_files(dir: &Path) -> Vec<PathBuf> {
-    let mut files: Vec<PathBuf> = std::fs::read_dir(dir)
-        .into_iter()
-        .flatten()
-        .flatten()
-        .map(|e| e.path())
-        .filter(|p| p.extension().is_some_and(|x| x == "json"))
-        .collect();
-    files.sort();
-    files
-}
-
-/// File bytes as tree text: UTF-8 as is, anything else as `bytes:` plus hex, so no two different
-/// files compare equal.
-fn tree_text(bytes: Vec<u8>) -> String {
-    match String::from_utf8(bytes) {
-        Ok(text) => text,
-        Err(e) => {
-            let hex: String = e.into_bytes().iter().map(|b| format!("{b:02x}")).collect();
-            format!("bytes:{hex}")
-        }
-    }
-}
-
-fn git_bytes(args: &[&str]) -> Result<Vec<u8>> {
-    let mut cmd = Command::new("git");
-    cmd.current_dir(root()).args(args);
-    let out = cmd
-        .output()
-        .map_err(|e| format!("cannot run {cmd:?}: {e}"))?;
-    if !out.status.success() {
-        return Err(format!(
-            "{cmd:?} failed ({}):\n{}",
-            out.status,
-            String::from_utf8_lossy(&out.stderr)
-        ));
-    }
-    Ok(out.stdout)
-}
-
-/// Every guarded file in the working tree, at any depth: tracked files plus untracked files that
-/// git does not ignore, so a new nested case file or a new frozen-source file is seen.
-fn head_tree() -> Result<oracle::Tree> {
-    let root = root();
-    let listing = git(&[
-        "ls-files",
-        "-z",
-        "--cached",
-        "--others",
-        "--exclude-standard",
-        "--",
-        "parity",
-    ])?;
-    let mut tree = oracle::Tree::new();
-    for path in listing.split('\0').filter(|p| oracle::is_guarded(p)) {
-        match std::fs::read(root.join(path)) {
-            Ok(bytes) => {
-                tree.insert(path.to_string(), tree_text(bytes));
-            }
-            // Listed by the index but deleted in the working tree: absent at head.
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
-            Err(e) => return Err(format!("{path}: {e}")),
-        }
-    }
-    Ok(tree)
-}
-
-fn base_tree(sha: &str) -> Result<oracle::Tree> {
-    let mut tree = oracle::Tree::new();
-    let listing = git(&["ls-tree", "-r", "-z", "--name-only", sha, "--", "parity"])?;
-    for path in listing.split('\0').filter(|p| oracle::is_guarded(p)) {
-        let bytes = git_bytes(&["show", &format!("{sha}:{path}")])?;
-        tree.insert(path.to_string(), tree_text(bytes));
-    }
-    Ok(tree)
-}
-
-/// Re-run the frozen Python into a scratch folder; the committed Reference Results must match
-/// byte for byte. This proves they came from `cargo xtask regen` and not from a hand edit.
-fn reproduces() -> Result<Vec<String>> {
-    let root = root();
-    let scratch = root.join("target/oracle-guard/reference");
-    let _ = std::fs::remove_dir_all(&scratch);
-    run_driver(&scratch)?;
-    let names = |dir: &Path| -> Vec<String> {
-        json_files(dir)
-            .iter()
-            .map(|p| {
-                p.file_name()
-                    .unwrap_or_default()
-                    .to_string_lossy()
-                    .into_owned()
-            })
-            .collect()
-    };
-    let committed_dir = root.join(oracle::REFERENCE_DIR);
-    let mut all = names(&committed_dir);
-    all.extend(names(&scratch));
-    all.sort();
-    all.dedup();
-    let mut bad = Vec::new();
-    for name in all {
-        let committed = std::fs::read(committed_dir.join(&name)).ok();
-        let fresh = std::fs::read(scratch.join(&name)).ok();
-        if committed != fresh {
-            bad.push(format!(
-                "{}{name}: does not match a fresh `cargo xtask regen`; never edit Reference Results by hand",
-                oracle::REFERENCE_DIR
-            ));
-        }
-    }
-    Ok(bad)
-}
-
-fn oracle_guard(args: &[String]) -> Result {
-    let (base, sha) = merge_base(args)?;
-    let report = oracle::check(&base_tree(&sha)?, &head_tree()?);
-    if !report.changed {
-        println!("oracle guard: parity oracle unchanged against {base} ({sha:.12}).");
-        return Ok(());
-    }
-    let mut violations = report.violations;
-    violations.extend(reproduces()?);
-    if violations.is_empty() {
-        println!(
-            "oracle guard: parity oracle or generator changed against {base} ({sha:.12}); every change came from `cargo xtask regen` and carries a recorded reason."
-        );
-        return Ok(());
-    }
-    for v in &violations {
-        eprintln!("oracle guard: {v}");
-    }
-    Err(format!("{} oracle violation(s)", violations.len()))
 }
 
 fn count(text: &str) -> usize {
@@ -318,8 +145,7 @@ fn mutants(args: &[String]) -> Result {
             }
         }
         report.push_str(
-            "\nA surviving mutant that changes a public output is closed by a new parity case \
-             (regenerated, with reason \"kills mutant ...\").\n",
+            "\nA surviving mutant that changes a public output is closed by a new test that fails on it.\n",
         );
     }
     std::fs::write(&out_file, &report).map_err(|e| format!("{out_file:?}: {e}"))?;

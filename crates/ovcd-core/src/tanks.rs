@@ -6,8 +6,8 @@
 //! only feeds a float product (`n_wide - 1`, `n_long - 1`, `n_wide * n_long`) is held in `i128`
 //! and rounded once to a float, as Python's int-to-float conversion does. Only a count that a
 //! 64-bit result field must carry can overflow: that is an `OverflowError` with one fixed message,
-//! raised after the rest of the calculation succeeds (the integer range rule in
-//! `parity/README.md`).
+//! raised after the rest of the calculation succeeds (the integer range rule:
+//! Python holds a count of any size, a 64-bit field cannot).
 
 use alloc::format;
 use alloc::string::{String, ToString};

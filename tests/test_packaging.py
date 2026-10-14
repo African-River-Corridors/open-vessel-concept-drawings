@@ -42,13 +42,11 @@ def test_maturin_builds_ovcd_py_as_a_submodule_of_the_package():
 
 
 def test_numpy_is_not_a_dependency():
-    # The shipped package never needs numpy. Only the frozen Python oracle does, so it may sit in the
-    # `parity` extra (which CI installs for `cargo xtask regen` and the oracle guard) and nowhere else.
+    # Neither the package nor any extra needs numpy (it was only for the old parity oracle).
     proj = pyproject()["project"]
     extras = proj.get("optional-dependencies", {})
-    runtime = proj["dependencies"] + [d for k, ds in extras.items() if k != "parity" for d in ds]
-    assert not [d for d in runtime if re.match(r"numpy\b", d, re.I)]
-    assert [d for d in extras.get("parity", []) if re.match(r"numpy\b", d, re.I)]
+    everything = proj["dependencies"] + [d for ds in extras.values() for d in ds]
+    assert not [d for d in everything if re.match(r"numpy\b", d, re.I)]
 
 
 def test_no_package_module_imports_numpy():
@@ -137,10 +135,9 @@ def test_nothing_publishes_to_pypi():
 
 def test_wheel_job_skips_the_tests_that_scan_files_it_does_not_copy():
     """The wheel job copies tests/, examples/, calibration/ and catalogue/ only. A test that
-    scans src/ or parity/ would scan zero files there, so the job must skip it."""
+    scans src/ or tools/ would scan zero files there, so the job must skip it."""
     text = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
-    for name in ("test_parity_through_python.py", "test_test_audit.py", "test_pystr_tables.py",
-                 "test_vdesign_edge_sweep.py", "test_design_impact.py"):
+    for name in ("test_pystr_tables.py", "test_vdesign_edge_sweep.py", "test_design_impact.py"):
         assert f"--ignore=tests/{name}" in text, name
 
 

@@ -11,12 +11,11 @@
 #   2. clippy, warnings as errors (includes the banned-maths rule in crates/ovcd-core/clippy.toml)
 #   3. cargo test, with Python made unusable, to prove the Rust loop needs no Python
 #   4. the WebAssembly build of ovcd-core
-#   5. the oracle guard (parity oracle changes only via `cargo xtask regen`, with reasons)
-#   6. the design-impact check (before/after on main; fails only if a change is missing from
+#   5. the design-impact check (before/after on main; fails only if a change is missing from
 #      CHANGELOG.md)
-#   7. pytest against the shipped package
+#   6. pytest against the shipped package
 #
-# OVCD_PYTHON picks the Python for steps 5, 6 and 7 (default python3).
+# OVCD_PYTHON picks the Python for steps 5 and 6 (default python3).
 set -euo pipefail
 
 fail() { echo "gates: FAIL: $*" >&2; exit 1; }
@@ -33,7 +32,7 @@ need dirname
 cd "$(dirname "$0")/.."
 PY="${OVCD_PYTHON:-python3}"
 WASM_TARGET="wasm32-unknown-unknown"
-EXPECTED_STEPS=7
+EXPECTED_STEPS=6
 steps_run=0
 
 need git
@@ -86,7 +85,6 @@ step "cargo fmt --check" cargo fmt --all --check
 step "clippy -D warnings" cargo clippy --all-targets --all-features -- -D warnings
 step "cargo test (no Python)" cargo_test_without_python
 step "WebAssembly build of ovcd-core" cargo build -p ovcd-core --all-features --target "$WASM_TARGET"
-step "oracle guard" env OVCD_PYTHON="$PY" cargo xtask oracle-guard
 step "design impact" "$PY" tools/design_impact.py gate
 step "pytest" "$PY" -m pytest -q
 

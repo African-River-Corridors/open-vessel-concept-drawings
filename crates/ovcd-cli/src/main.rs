@@ -3,12 +3,9 @@
 //! `ovcd new` writes a starter Design, `ovcd fill` writes the left-out inputs of a hand-written
 //! Design in from the Defaults Profile, `ovcd validate` checks one without running it, and
 //! `ovcd profile` prints the built-in Defaults Profile for a user to copy, and `ovcd run` computes
-//! a saved Design and prints a summary (or the full results as JSON). The hidden `ovcd eval <entry-point>` reads one parity case input as JSON on stdin
-//! and writes the result as JSON on stdout. It exists for parity only and is removed with the
-//! Reference Results.
+//! a saved Design and prints a summary (or the full results as JSON).
 
 use ovcd_format::Profile;
-use std::io::Read;
 use std::process::ExitCode;
 
 const HELP: &str = "\
@@ -52,16 +49,6 @@ fn main() -> ExitCode {
             println!("ovcd {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS
         }
-        ["eval", entry_point] => match eval(entry_point) {
-            Ok(json) => {
-                println!("{json}");
-                ExitCode::SUCCESS
-            }
-            Err(msg) => {
-                eprintln!("ovcd eval: {msg}");
-                ExitCode::FAILURE
-            }
-        },
         ["run", rest @ ..] => match run(rest) {
             Ok(true) => ExitCode::SUCCESS,
             Ok(false) => ExitCode::FAILURE,
@@ -352,15 +339,4 @@ fn run(args: &[&str]) -> Result<bool, String> {
         }
     }
     Ok(all_computed)
-}
-
-fn eval(entry_point: &str) -> Result<String, String> {
-    let mut text = String::new();
-    std::io::stdin()
-        .read_to_string(&mut text)
-        .map_err(|e| format!("cannot read stdin: {e}"))?;
-    let input: serde_json::Value =
-        serde_json::from_str(&text).map_err(|e| format!("stdin is not JSON: {e}"))?;
-    let output = ovcd_format::eval(entry_point, &input).map_err(|e| e.to_string())?;
-    Ok(output.to_string())
 }

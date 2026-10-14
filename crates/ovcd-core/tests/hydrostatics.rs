@@ -1,5 +1,5 @@
-//! Seam: the public `ovcd_core::hydrostatics` API. Expected values are printed by the frozen
-//! Python (`core/hydrostatics.py`, run through `parity/driver.py`), not worked out by hand.
+//! Seam: the public `ovcd_core::hydrostatics` API. Expected values are printed by the original
+//! Python (`core/hydrostatics.py`), not worked out by hand.
 
 use ovcd_core::hull::HullGeometry;
 use ovcd_core::hydrostatics::{calculate_stability, calculate_trim, find_equilibrium_draft};
@@ -20,7 +20,7 @@ fn quickstart() -> BargeInputs {
     i
 }
 
-/// The frozen chain: the hull carries the inputs' own rakes, then tanks, then weights.
+/// The chain: the hull carries the inputs' own rakes, then tanks, then weights.
 fn chain(i: &BargeInputs) -> (HullGeometry, TankResult, WeightBreakdown) {
     let hull = HullGeometry::new(
         i.loa,

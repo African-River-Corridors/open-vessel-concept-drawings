@@ -1,6 +1,5 @@
-//! Seam: the public `ovcd_core::squat` API. Expected values are what the frozen Python printed
-//! for the same inputs (see `parity/reference/squat.json`); the full case set runs in
-//! `ovcd-format/tests/parity.rs`.
+//! Seam: the public `ovcd_core::squat` API. Expected values are what the original Python printed
+//! for the same inputs.
 
 use ovcd_core::squat::{DEFAULT_SAFETY_MARGIN_M, SquatInputs, compute, max_speed_for_ukc};
 

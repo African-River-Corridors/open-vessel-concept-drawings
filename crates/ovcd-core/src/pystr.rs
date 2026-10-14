@@ -3,7 +3,7 @@
 //! messages embed `repr` of user text, and because the rates-file reader splits and strips as Python does.
 //!
 //! Outside ASCII, the answers come from `pystr_tables.rs`, generated from Python 3.12's own Unicode
-//! database (`tools/gen_pystr_tables.py`). That is the Python the frozen oracle runs on.
+//! database (`tools/gen_pystr_tables.py`). That is the Python the original code was tested on.
 
 use crate::pystr_tables::{DECIMAL_ZEROS, IDENTIFIER_CONTINUE, IDENTIFIER_START, NOT_PRINTABLE};
 use alloc::format;

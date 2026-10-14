@@ -1,10 +1,10 @@
-//! JSON adapters for the `journey_derating` and `gas_arrangement` parity entry points. They copy
-//! the frozen Python driver's input and output shapes (`parity/driver.py`, `to_json`), including
+//! JSON adapters for the `journey_derating` and `gas_arrangement` entry points. They copy the
+//! input and output shapes of the Python functions (dataclasses as objects), including
 //! which numbers are ints.
 //!
-//! The driver passes `gas_arrangement` arguments to the Python function as they are (no type
-//! coercion), so a JSON integer where Python takes a float would reach the result as an int.
-//! Every scalar that is echoed into a result is therefore read strictly (`write 18.0, not 18`).
+//! The arguments reach the Python function as they are (no type coercion), so a JSON integer
+//! where Python takes a float would reach the result as an int. Every scalar that is echoed into a
+//! result is therefore read strictly (`write 18.0, not 18`); the Python package sends floats.
 //! The `depths` and `extra_clearance_m` items only feed float arithmetic, so a whole number is
 //! accepted there.
 
@@ -270,7 +270,7 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
             }
         }
         other => Err(EvalError::BadInput(format!(
-            "gas_arrangement has no parity function `{other}`"
+            "gas_arrangement has no function `{other}`"
         ))),
     }
 }
@@ -290,10 +290,10 @@ const JOURNEY_INPUT_KEYS: &[&str] = &[
 pub fn run_journey(function: &str, args: &Value) -> Result<Value, EvalError> {
     if function != "compute" {
         return Err(EvalError::BadInput(format!(
-            "journey_derating has no parity function `{function}`"
+            "journey_derating has no function `{function}`"
         )));
     }
-    // The driver builds the capacity result first, so its errors come first.
+    // Python builds the capacity result first, so its errors come first.
     let cap_inputs = capacity_inputs(&json!({ "inputs": args.get("capacity_inputs") }))?;
     let capacity = match ovcd_core::barge_capacity::compute(&cap_inputs) {
         Ok(r) => r,

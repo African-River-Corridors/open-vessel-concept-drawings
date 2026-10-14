@@ -1,4 +1,4 @@
-//! Seam: the public `ovcd_core::aft_arrangement` API. Expected values are printed by the frozen
+//! Seam: the public `ovcd_core::aft_arrangement` API. Expected values are printed by the original
 //! Python (`core/aft_arrangement.py`), not worked out by hand.
 
 use ovcd_core::aft_arrangement::{AftArrangementInputs, PyException, compute};
@@ -277,8 +277,8 @@ fn the_feet_label_is_an_unbounded_integer() {
     );
 }
 
-/// Integer range rule (`parity/README.md`, "What identical means"). Expected values are printed
-/// by the frozen Python 3.12: `n_battery_units = -2**63, n_accom_units = 0` returns normally.
+/// Integer range rule: a unit count is a 64-bit integer. Expected values are printed by the
+/// original Python 3.12: `n_battery_units = -2**63, n_accom_units = 0` returns normally.
 #[test]
 fn the_smallest_i64_unit_count_gives_pythons_answer() {
     let mut i = gas(14.8, 5.4);

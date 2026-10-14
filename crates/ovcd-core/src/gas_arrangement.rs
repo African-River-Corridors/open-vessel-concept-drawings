@@ -8,7 +8,7 @@
 //! [`FitOptions`].
 //!
 //! Python's `ArrangementFit` also carries the engine's own input and result; so does
-//! [`ArrangementFit`], because the parity output holds them and `gas_stability` reads the result.
+//! [`ArrangementFit`], because the Python bridge returns them and `gas_stability` reads the result.
 
 use alloc::format;
 use alloc::string::{String, ToString};

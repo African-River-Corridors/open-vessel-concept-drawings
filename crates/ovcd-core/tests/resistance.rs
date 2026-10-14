@@ -1,6 +1,5 @@
-//! Seam: the public `ovcd_core::resistance` API. Expected values are what the frozen Python
-//! printed for the same inputs (see `parity/reference/resistance.json`); the full case set runs
-//! in `ovcd-format/tests/parity.rs`.
+//! Seam: the public `ovcd_core::resistance` API. Expected values are what the original Python
+//! printed for the same inputs.
 
 use ovcd_core::aft_arrangement::PyException;
 use ovcd_core::pyfmt::round_to;
@@ -172,7 +171,7 @@ fn the_speed_grid_is_repeated_addition_then_rounding() {
     assert_eq!(speeds, [2.0, 2.2, 2.5, 2.8, 3.0, 3.2, 3.5]);
 }
 
-// --- Inputs the parity cases never vary. Expected values are the frozen Python's. ---
+// --- Inputs the earlier case set never varied. Expected values are the original Python's. ---
 
 use ovcd_core::resistance::EnvironmentInputs;
 
@@ -498,7 +497,7 @@ fn power_exactly_equal_to_the_engine_power_passes() {
     assert!(r.ok());
 }
 
-// --- Knife-edge guards (issue #20). Expected values: frozen Python via parity/driver.run_case. ---
+// --- Knife-edge guards (issue #20). Expected values: the original Python. ---
 
 #[test]
 fn squat_does_not_apply_at_depth_exactly_zero() {

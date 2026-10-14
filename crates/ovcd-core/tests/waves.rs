@@ -1,5 +1,4 @@
-//! Seam: the public `ovcd_core::waves` API. Expected values are what the frozen Python printed
-//! (see `parity/reference/waves.json`); the full case set runs in `ovcd-format/tests/parity.rs`.
+//! Seam: the public `ovcd_core::waves` API. Expected values are what the original Python printed.
 
 use ovcd_core::waves::{WaveResistanceInputs, compute};
 

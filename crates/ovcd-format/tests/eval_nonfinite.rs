@@ -1,6 +1,5 @@
-//! Seam: `ovcd_format::eval` result tagging. A non-finite float result is a tagged string, as the
-//! frozen driver writes it (`parity/driver.py` `tag_float`). Expected values are what
-//! `driver.run_case` printed under CPython 3.12.
+//! Seam: `ovcd_format::eval` result tagging. A non-finite float result is a tagged string (JSON
+//! has no `inf` or `nan`). Expected values are what the original Python printed under CPython 3.12.
 
 use ovcd_format::eval;
 use serde_json::json;

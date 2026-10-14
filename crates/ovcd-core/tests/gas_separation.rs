@@ -1,4 +1,4 @@
-//! Seam: the public `ovcd_core::gas_separation` API. Expected values are printed by the frozen
+//! Seam: the public `ovcd_core::gas_separation` API. Expected values are printed by the original
 //! Python (`core/gas_separation.py`), not worked out by hand.
 
 use ovcd_core::gas_separation::{

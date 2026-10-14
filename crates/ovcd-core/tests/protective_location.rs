@@ -1,6 +1,6 @@
 //! Seam: the public `ovcd_core::protective_location` API. Every expected number is what CPython
-//! 3.12 printed for the frozen `core/protective_location.py`. The parity cases cover the wide
-//! sweep; these pin the branch edges and the Python behaviours the port must copy.
+//! 3.12 printed for the `core/protective_location.py`. These pin the branch edges and the
+//! Python behaviours the port must copy.
 
 use ovcd_core::protective_location::*;
 

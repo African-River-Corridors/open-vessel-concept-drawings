@@ -17,7 +17,7 @@
 //! inputs in, as used and marked `default`, so a designer can still write only the required six.
 //!
 //! Validation lives here only. The core copies Python exactly and adds no checks. Besides the
-//! range table, validation refuses inputs the frozen Python turns into a physically impossible
+//! range table, validation refuses inputs the original Python turns into a physically impossible
 //! result (see [`DRY_BULK_WING_VOID_M`]).
 
 use crate::profile::Profile;
@@ -58,20 +58,20 @@ pub const HULL_FORMS: &[&str] = &["raked_box"];
 /// (`DEFAULT_DEPTHS_M`, 3.5 to 7.0 m).
 pub const DEPTH_SEARCH_MAX_M: f64 = 7.0;
 
-/// The dry-bulk hold section, copied from the frozen `barge_capacity` defaults (fixed in the
+/// The dry-bulk hold section, copied from the `barge_capacity` defaults (fixed in the
 /// core, not inputs): each side has a wing void of this width, in m. The hold width is
 /// `beam - 2 * wing void`.
 ///
-/// The rule (issue #41): the frozen Python returns a negative cargo mass and draught when the
+/// The rule (issue #41): the original Python returns a negative cargo mass and draught when the
 /// hold width or hold height is negative, so validation refuses those inputs. It does not set a
 /// minimum beam or depth; it refuses the impossible result. A hold of exactly zero gives zero
 /// cargo, which the engine reports itself as a failed check, so it passes.
 pub const DRY_BULK_WING_VOID_M: f64 = 1.0;
 
-/// The dry-bulk double bottom height, in m (frozen `barge_capacity` default).
+/// The dry-bulk double bottom height, in m (`barge_capacity` default).
 pub const DRY_BULK_DOUBLE_BOTTOM_M: f64 = 1.2;
 
-/// The dry-bulk hatch coaming height, in m (frozen `barge_capacity` default). The hold height is
+/// The dry-bulk hatch coaming height, in m (`barge_capacity` default). The hold height is
 /// `(depth - double bottom) + coaming`, in that order, as the Python computes it.
 pub const DRY_BULK_COAMING_M: f64 = 1.0;
 
@@ -885,7 +885,7 @@ fn show_m(x: f64) -> String {
     format!("{}", if r == 0.0 { 0.0 } else { r })
 }
 
-/// Refuse inputs the frozen Python turns into a physically impossible result. See
+/// Refuse inputs the original Python turns into a physically impossible result. See
 /// [`DRY_BULK_WING_VOID_M`] for the rule.
 fn impossible_results(
     inputs: &[(String, StoredInput)],

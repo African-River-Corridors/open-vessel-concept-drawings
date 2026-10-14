@@ -1,6 +1,6 @@
 [package]
 name = "ovcd-format"
-description = "The .vdesign format, defaults, validation, and the parity eval dispatch."
+description = "The .vdesign format, defaults, validation, and the eval dispatch for the Python package."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

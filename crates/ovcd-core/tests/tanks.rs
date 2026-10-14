@@ -1,4 +1,4 @@
-//! Seam: the public `ovcd_core::tanks` API. Expected values are printed by the frozen Python
+//! Seam: the public `ovcd_core::tanks` API. Expected values are printed by the original Python
 //! (`core/tanks.py`), not worked out by hand.
 
 use ovcd_core::models::BargeInputs;

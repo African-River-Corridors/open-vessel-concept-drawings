@@ -6,16 +6,16 @@
 //! ([`crate::waves`]) and the squat limit ([`crate::squat`]). The Python file holds the
 //! engineering notes. Nothing is fixed in the port.
 //!
-//! Parity traps copied from Python:
+//! Python behaviours copied exactly:
 //! - the speed grid is built by repeated addition, then `round(s, 1)` (half to even, on the exact
 //!   binary value): a step of 0.25 gives 2.0, 2.2, 2.5, 2.8, not 2.25 or 2.75;
 //! - `min` over environments returns the first of equal items;
 //! - `math.sqrt` of a negative raises `ValueError("math domain error")` and a float `/` by zero
-//!   raises `ZeroDivisionError("float division by zero")` (Python 3.12 wording, the version of the
-//!   Reference Results; 3.14 says "division by zero");
+//!   raises `ZeroDivisionError("float division by zero")` (Python 3.12 wording; 3.14 says
+//!   "division by zero");
 //! - a squat or wave `ValueError` from a speed point comes out unchanged.
 //!
-//! Known differences from Python, on inputs far outside any valid range with no parity case:
+//! Known differences from Python, on inputs far outside any valid range:
 //! Python raises `OverflowError` where a float `**` overflows, and this port returns infinity; a
 //! speed range with an infinite top or a step of zero or less never ends in Python (it runs out of
 //! memory) and never ends here either.

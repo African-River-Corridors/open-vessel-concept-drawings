@@ -30,7 +30,6 @@ def test_resistance_golden_confined_shallow():
     below — so treat these numbers as a regression anchor, not as a design answer.
 
     Label: snapshot
-    Parity: resistance:compute/default
     """
     r = compute(ResistanceInputs())
     assert abs(r.wetted_surface_area - 4590.0) < 1.0
@@ -51,7 +50,6 @@ def test_feasibility_the_default_case_is_outside_barrass_validity():
     say the combination is not physical.
 
     Label: property
-    Parity: squat:compute/resistance_default_barge_6.5m_channel_4kn
     """
     from vessel_designer.core.squat import SquatInputs, compute as squat
     i = ResistanceInputs()
@@ -66,7 +64,6 @@ def test_feasibility_the_default_case_is_outside_barrass_validity():
 def test_binding_environment_is_confined_shallow_and_feeds_battery():
     # The single number that leaves the module for battery sizing.
     """Label: snapshot
-    Parity: resistance:compute/default
     """
     r = compute(ResistanceInputs())
     assert r.binding_environment.name == "Confined shallow river"   # lowest service speed
@@ -76,7 +73,6 @@ def test_binding_environment_is_confined_shallow_and_feeds_battery():
 
 def test_checks_pass_on_default_design():
     """Label: property
-    Parity: resistance:compute/default
     """
     r = compute(ResistanceInputs())
     assert r.ok                                            # no error-severity failures
@@ -92,7 +88,6 @@ def test_checks_pass_on_default_design():
 
 def test_resistance_monotone_in_speed():
     """Label: property
-    Parity: resistance:compute/default
     """
     r = compute(ResistanceInputs())
     a = _shallow(r)
@@ -110,7 +105,6 @@ def _shallow_factor(env, knots=8.0):
 def test_shallow_factor_at_least_one_and_grows_as_depth_falls():
     # Compare the shallow factor at a fixed speed for two depths.
     """Label: property
-    Parity: resistance:compute/wide_channel_depth_20, resistance:compute/wide_channel_depth_8
     """
     deep = EnvironmentInputs(name="d", water_depth=20.0, channel_width_bottom=200.0,
                              channel_width_surface=200.0, water_density=1.0)
@@ -123,7 +117,6 @@ def test_shallow_factor_at_least_one_and_grows_as_depth_falls():
 
 def test_deep_water_factor_is_one():
     """Label: property
-    Parity: resistance:compute/wide_channel_depth_20
     """
     env = EnvironmentInputs(name="open", is_deep_water=True)
     assert _shallow_factor(env, knots=10.0) == 1.0
@@ -131,8 +124,6 @@ def test_deep_water_factor_is_one():
 
 def test_service_speed_falls_as_channel_gets_shallower():
     """Label: property
-    Parity: resistance:compute/channel_depth_10, resistance:compute/channel_depth_7,
-        resistance:compute/channel_depth_5
     """
     def svc(depth):
         env = EnvironmentInputs(name="x", water_depth=depth, channel_width_bottom=40.0,
@@ -148,7 +139,6 @@ def test_service_speed_falls_as_channel_gets_shallower():
 def test_service_speed_check_passes_within_schijf():
     # Default river env: sweep capped at 95% of Schijf, so the check holds.
     """Label: property
-    Parity: resistance:compute/default
     """
     r = compute(ResistanceInputs())
     svc_checks = [c for c in r.checks if c.name.startswith("service_speed_below_limiting")]
@@ -159,7 +149,6 @@ def test_blockage_in_range_fires_for_overtight_channel():
     # A channel barely wider than the barge -> n -> 1 (or am >= ac) -> check fails.
     # midship area = 24*6*0.85 = 122.4 m^2; this channel gives ac ~ 110 m^2 -> n > 1.
     """Label: property
-    Parity: resistance:compute/tight_channel_beam24
     """
     tight = EnvironmentInputs(name="tight", water_depth=6.5, channel_width_bottom=16.0,
                               channel_width_surface=18.0, current_speed_knots=0.0,
@@ -177,7 +166,6 @@ def test_power_within_installed_fires_when_underpowered():
     # exceeds the engine -> power_within_installed fires. ~5 kW installed forces this
     # (slowest-speed delivered power is ~40 kW).
     """Label: property
-    Parity: resistance:compute/tug_5kw
     """
     weak = TugInputs(engine_power_kw=5.0)
     r = compute(ResistanceInputs(tug=weak))
@@ -190,7 +178,6 @@ def test_power_within_installed_fires_when_underpowered():
 def test_power_within_installed_passes_when_low_speed_feasible():
     # A modest engine still finds a feasible slow service speed -> check passes.
     """Label: property
-    Parity: resistance:compute/tug_50kw
     """
     r = compute(ResistanceInputs(tug=TugInputs(engine_power_kw=50.0)))
     pwr_checks = [c for c in r.checks if c.name.startswith("power_within_installed")]
