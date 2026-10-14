@@ -8,3 +8,8 @@ mutants.out.old/
 dist/
 *.so
 *.pyd
+
+# app front end and Tauri build output
+app/node_modules/
+app/dist/
+app/src-tauri/gen/
