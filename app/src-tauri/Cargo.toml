@@ -17,6 +17,7 @@ custom-protocol = ["tauri/custom-protocol"]
 
 [dependencies]
 ovcd-format.workspace = true
+ovcd-draw.workspace = true
 serde_json.workspace = true
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"

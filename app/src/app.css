@@ -1,3 +1,9 @@
+/* The font of the Drawing Format Standard (SIL Open Font License 1.1, licence in licenses/). The hull
+   views are SVG text set in this font; the file is the copy that the drawing crate vendors. */
+@font-face {
+  font-family: "Barlow Semi Condensed";
+  src: url("../../crates/ovcd-draw/standard/fonts/BarlowSemiCondensed-Regular.ttf") format("truetype");
+}
 :root {
   --navy: #14325a;
   --gold: #b8932f;

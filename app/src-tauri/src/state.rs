@@ -4,7 +4,8 @@
 //! This module has no Tauri types, so it is tested like any other Rust. It holds no calculation,
 //! validation or default logic: every answer comes from [`DesignSession`].
 
-use ovcd_format::{DesignSession, HashStatus, Profile};
+use crate::views;
+use ovcd_format::{DesignSession, HashStatus, Profile, RunOutcome};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 
@@ -69,6 +70,19 @@ impl AppState {
 
     pub fn session(&self) -> &DesignSession {
         &self.session
+    }
+
+    /// The evaluation as JSON for the front end: the session's own, with the hull views (SVG) added
+    /// to the outcome of each Option that was computed.
+    pub fn evaluate_json(&self) -> Value {
+        let evaluation = self.session.evaluate();
+        let mut json = evaluation.to_json();
+        for (i, option) in evaluation.options.iter().enumerate() {
+            if let Some(outcome @ RunOutcome::Results { .. }) = &option.outcome {
+                json["options"][i]["outcome"]["views"] = views::hull_views(outcome);
+            }
+        }
+        json
     }
 
     pub fn set_input(&mut self, option: &str, name: &str, value: Value) -> Result<(), String> {
@@ -334,6 +348,32 @@ mod tests {
         assert!(err.contains("loosens the hard range of `beam_m`"), "{err}");
         assert!(state.load_profile("not json").is_err());
         assert_eq!(state.snapshot()["profile"], "built-in");
+    }
+
+    #[test]
+    fn the_evaluation_carries_the_three_hull_views_of_a_computed_option() {
+        let state = AppState::new_design().unwrap();
+        let eval = state.evaluate_json();
+        let outcome = &eval["options"][0]["outcome"];
+        assert_eq!(outcome["status"], "results");
+        for key in ["side", "plan", "midship"] {
+            assert!(
+                outcome["views"][key].as_str().unwrap().contains("<svg"),
+                "{key}"
+            );
+        }
+        // the rest of the evaluation is the session's own
+        assert_eq!(eval["options"][0]["name"], "Option 1");
+        assert!(outcome["results"]["dims"].is_object());
+    }
+
+    #[test]
+    fn an_option_with_a_hard_error_gets_no_views() {
+        let mut state = AppState::new_design().unwrap();
+        state.set_input("Option 1", "beam_m", json!(-1.0)).unwrap();
+        let eval = state.evaluate_json();
+        assert_eq!(eval["options"][0]["outcome"]["status"], "not_run");
+        assert!(eval["options"][0]["outcome"].get("views").is_none());
     }
 
     #[test]

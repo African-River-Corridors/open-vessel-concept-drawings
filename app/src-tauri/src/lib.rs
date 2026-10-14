@@ -5,6 +5,7 @@
 //! and nothing else. It holds no calculation, validation or default logic.
 
 mod state;
+mod views;
 
 use state::AppState;
 use std::path::{Path, PathBuf};
@@ -136,7 +137,7 @@ fn input_schema(state: State<Shared>) -> Reply {
 
 #[tauri::command]
 fn evaluate(state: State<Shared>) -> Reply {
-    Ok(lock(&state)?.session().evaluate().to_json())
+    Ok(lock(&state)?.evaluate_json())
 }
 
 /// `null` when the user cancels.
