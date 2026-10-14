@@ -1,0 +1,37 @@
+name: Design impact
+
+# Tells every pull request whether designs moved (spec 0001, ticket 28). The fast gate (tools/gates.sh,
+# step "design impact") runs the same check and fails only when a change is missing from CHANGELOG.md.
+# This workflow publishes the result: it puts the report in the pull request body between two markers,
+# and adds or removes the `design-change` label. A design change needs no sign-off.
+# It only runs for pull requests from this repository: a fork's token cannot write.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  report:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - run: python -m pip install pyyaml
+      - name: Run the fixed designs on main and on this branch, then publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python tools/design_impact.py report --publish --pr ${{ github.event.pull_request.number }}

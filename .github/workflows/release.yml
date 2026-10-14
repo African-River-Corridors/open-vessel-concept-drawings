@@ -79,7 +79,8 @@ jobs:
             --ignore=tests/test_parity_cases.py \
             --ignore=tests/test_calibration_runs.py \
             --ignore=tests/test_parity_through_python.py --ignore=tests/test_test_audit.py \
-            --ignore=tests/test_pystr_tables.py --ignore=tests/test_vdesign_edge_sweep.py
+            --ignore=tests/test_pystr_tables.py --ignore=tests/test_vdesign_edge_sweep.py \
+            --ignore=tests/test_design_impact.py
       - uses: actions/upload-artifact@v4
         with:
           name: wheel-${{ matrix.os }}
