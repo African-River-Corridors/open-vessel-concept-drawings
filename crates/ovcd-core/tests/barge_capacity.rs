@@ -57,3 +57,13 @@ fn a_narrow_hull_needs_one_tank_and_the_cap_sets_the_rest() {
     assert_eq!(tanks_wide_for_beam(14.8, 1.0, 1.0, 12.0).unwrap(), 2);
     assert_eq!(tanks_wide_for_beam(32.4, 1.0, 0.0, 12.0).unwrap(), 3);
 }
+
+#[test]
+fn a_hull_too_short_for_its_stern_block_is_not_ok() {
+    // Python's `.ok` is False: the geometry check fails, and compute returns it, not an error.
+    let mut i = BargeCapacityInputs::new(30.0, 14.8, 6.5);
+    i.cargo_type = "LNG_ethane".to_string();
+    let r = compute(&i).unwrap();
+    assert!(!r.ok());
+    assert!(r.checks.iter().any(|c| !c.ok));
+}

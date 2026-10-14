@@ -655,6 +655,14 @@ cargo-shift/angle-of-repose not modelled \u{2014} confirm with a full intact-sta
 
 /// Run the unified barge capacity chain (volume-bound).
 pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError> {
+    // Python builds the nested inputs, and so runs their `__post_init__` checks, before
+    // `compute` starts: aft first, then separation, and before the cargo lookup.
+    if let Some(a) = &inp.aft {
+        a.validate().map_err(value_error)?;
+    }
+    if let Some(sep) = &inp.separation {
+        sep.validate().map_err(value_error)?;
+    }
     let props = get_cargo(&inp.cargo_type).map_err(value_error)?;
     let density_t = props.density / 1000.0;
     let is_gas = props.phase != "dry_bulk";
