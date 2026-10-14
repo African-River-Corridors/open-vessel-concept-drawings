@@ -141,6 +141,76 @@
       }
     },
     {
+      "id": "find_equilibrium_draft/weight_equals_full_volume",
+      "output": {
+        "ok": 10.0
+      }
+    },
+    {
+      "id": "calculate_trim/zero_block_coefficient",
+      "output": {
+        "ok": {
+          "LCG": 48.30545666709862,
+          "LCB": 45.0,
+          "trim": 0.0,
+          "draft_aft": 2.3053150177001953,
+          "draft_fwd": 2.3053150177001953
+        }
+      }
+    },
+    {
+      "id": "calculate_stability/huge_double_bottom_height",
+      "output": {
+        "ok": {
+          "KB": 1.1526575088500974,
+          "BM_transverse": 7.917934509246827,
+          "KG": "float:inf",
+          "GM_solid": "float:-inf",
+          "free_surface_correction": 0.01821769039107572,
+          "GM_fluid": "float:-inf",
+          "BM_longitudinal": 292.8016322356615
+        }
+      }
+    },
+    {
+      "id": "calculate_stability/huge_depth_no_double_bottom",
+      "output": {
+        "ok": {
+          "KB": 1.1526575088500979,
+          "BM_transverse": 7.917934509246827,
+          "KG": "float:inf",
+          "GM_solid": "float:-inf",
+          "free_surface_correction": 2.8782003479081585e+170,
+          "GM_fluid": "float:-inf",
+          "BM_longitudinal": 0.0
+        }
+      }
+    },
+    {
+      "id": "calculate_trim/huge_stern_non_tank_length",
+      "output": {
+        "ok": {
+          "LCG": "float:inf",
+          "LCB": 0.0,
+          "trim": 0.0,
+          "draft_aft": 2.3053150177001953,
+          "draft_fwd": 2.3053150177001953
+        }
+      }
+    },
+    {
+      "id": "calculate_trim/underflowing_bm_l",
+      "output": {
+        "ok": {
+          "LCG": -0.30908428485427075,
+          "LCB": 0.0,
+          "trim": 0.0,
+          "draft_aft": 2.3053150177001953,
+          "draft_fwd": 2.3053150177001953
+        }
+      }
+    },
+    {
       "id": "find_equilibrium_draft/sweep/000",
       "output": {
         "ok": 1.146782831954956
