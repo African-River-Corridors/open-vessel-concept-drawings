@@ -182,6 +182,17 @@ fn segment_fill_keeps_an_int_radius_exact_at_any_size() {
         ("0", "1", json!({"ok": [0, 0]})),
         ("-0", "1", json!({"ok": [0, 0]})),
         // Below a full tank Python makes floats from the radius and its exact square.
+        // A negative int radius below a full tank keeps its sign (kills the `delete -` mutant).
+        (
+            "-3",
+            "0.5",
+            json!({"ok": [-2.9999999999999996, -1.7267604552648372]}),
+        ),
+        (
+            "-2",
+            "0.25",
+            json!({"ok": [-1.1920544934009658, -0.7004707927710812]}),
+        ),
         (
             "13407807929942596727432598158855113001725820008116749133157341386316719597868925090818930617285026583319956944557042494632332259080864313586268726512374783",
             "0.5",

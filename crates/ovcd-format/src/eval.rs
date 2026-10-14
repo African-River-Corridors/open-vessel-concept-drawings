@@ -7,10 +7,15 @@ use ovcd_core::cargo::CargoProperties;
 use ovcd_core::checks::Check;
 use ovcd_core::gas_separation::{GasSeparationInputs, GasSeparationResult};
 use ovcd_core::hull::HullGeometry;
+use ovcd_core::models::{BargeInputs, TankResult, WeightBreakdown};
+use ovcd_core::pressure_vessel::PyError;
 use ovcd_core::pyint::PyInt;
 use ovcd_core::pystr::repr_str;
 use ovcd_core::vessel_standards::{Catalogue, VesselStandard};
-use ovcd_core::{squat as core_squat, waves as core_waves};
+use ovcd_core::{
+    electric_energy as core_energy, resistance as core_resistance, squat as core_squat,
+    waves as core_waves,
+};
 use serde_json::{Value, json};
 
 /// Why `eval` could not produce a result. A Python `ValueError` is not an `EvalError`: it is a
@@ -74,8 +79,13 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
         "cargo" => cargo(function, args),
         "gas_stability" => crate::gas_stability::run(function, args),
         "hull" => hull(function, args),
+        "tanks" => tanks(function, args),
+        "weights" => weights(function, args),
+        "hydrostatics" => hydrostatics(function, args),
         "squat" => squat(function, args),
         "waves" => waves(function, args),
+        "resistance" => resistance(function, args),
+        "electric_energy" => electric_energy(function, args),
         "aft_arrangement" => aft_arrangement(function, args),
         "gas_separation" => gas_separation(function, args),
         "barge_cost" => barge_cost(function, args),
@@ -937,23 +947,28 @@ fn pressure_vessel(function: &str, args: &Value) -> Result<Value, EvalError> {
     }
 }
 
+/// `args.hull`: the seven floats of one hull.
+fn hull_arg(args: &Value) -> Result<HullGeometry, EvalError> {
+    let spec = args
+        .get("hull")
+        .ok_or_else(|| EvalError::BadInput("`args.hull` is missing".into()))?;
+    Ok(HullGeometry::new(
+        f64_arg(spec, "loa")?,
+        f64_arg(spec, "beam")?,
+        f64_arg(spec, "depth")?,
+        f64_arg(spec, "bow_rake_length")?,
+        f64_arg(spec, "bow_rake_rise")?,
+        f64_arg(spec, "stern_rake_length")?,
+        f64_arg(spec, "stern_rake_rise")?,
+    ))
+}
+
 fn hull(function: &str, args: &Value) -> Result<Value, EvalError> {
     match function {
         // One hull, every public quantity at `args.draft`, then the plating areas, in the key
         // order of the frozen driver.
         "quantities" => {
-            let spec = args
-                .get("hull")
-                .ok_or_else(|| EvalError::BadInput("`args.hull` is missing".into()))?;
-            let h = HullGeometry::new(
-                f64_arg(spec, "loa")?,
-                f64_arg(spec, "beam")?,
-                f64_arg(spec, "depth")?,
-                f64_arg(spec, "bow_rake_length")?,
-                f64_arg(spec, "bow_rake_rise")?,
-                f64_arg(spec, "stern_rake_length")?,
-                f64_arg(spec, "stern_rake_rise")?,
-            );
+            let h = hull_arg(args)?;
             let d = f64_arg(args, "draft")?;
             ok(json!({
                 "parallel_length": num(h.parallel_length()),
@@ -976,6 +991,398 @@ fn hull(function: &str, args: &Value) -> Result<Value, EvalError> {
         }
         other => Err(EvalError::BadInput(format!(
             "hull has no parity function `{other}`"
+        ))),
+    }
+}
+
+const BARGE_FIELDS: &[&str] = &[
+    "loa",
+    "beam",
+    "depth",
+    "max_draft",
+    "vertical_clearance",
+    "vessel_type",
+    "bow_rake_length",
+    "bow_rake_rise",
+    "stern_rake_length",
+    "stern_rake_rise",
+    "bow_non_tank_pct",
+    "stern_non_tank_pct",
+    "bow_non_tank_length",
+    "stern_non_tank_length",
+    "wing_tank_width",
+    "wing_tank_gap",
+    "wing_tank_height_ratio",
+    "weather_shield_thickness",
+    "weather_shield_clearance",
+    "dome_height",
+    "side_clearance",
+    "tank_gap_transverse",
+    "tank_gap_longitudinal",
+    "n_tanks_wide",
+    "n_tanks_long",
+    "tank_wall_thickness",
+    "tank_head_type",
+    "tank_material",
+    "tank_material_density",
+    "design_pressure",
+    "weld_efficiency",
+    "tank_structure_factor",
+    "insulation_thickness",
+    "insulation_density",
+    "cargo_type",
+    "cargo_density_override",
+    "fill_ratio",
+    "bottom_plate_thickness",
+    "side_plate_thickness",
+    "deck_plate_thickness",
+    "structure_factor",
+    "hull_steel_density",
+    "steel_rate_per_cbm",
+    "block_coefficient",
+    "water_density",
+    "underkeel_clearance",
+    "outfitting_factor",
+    "piping_factor",
+    "stores_weight",
+    "tank_support_height",
+    "double_bottom_height",
+    "aft_arrangement",
+    "separation",
+    "tug_length",
+    "tug_beam",
+    "notch_depth",
+];
+
+fn string_field(
+    inputs: &serde_json::Map<String, Value>,
+    name: &str,
+) -> Result<Option<String>, EvalError> {
+    match inputs.get(name) {
+        None => Ok(None),
+        Some(Value::String(s)) => Ok(Some(s.clone())),
+        Some(_) => Err(EvalError::BadInput(format!(
+            "`inputs.{name}` must be a string"
+        ))),
+    }
+}
+
+/// An `Optional[float]` field: absent keeps the dataclass default, an explicit null is `None`.
+fn opt_f64_field(
+    inputs: &serde_json::Map<String, Value>,
+    name: &str,
+    default: Option<f64>,
+) -> Result<Option<f64>, EvalError> {
+    match inputs.get(name) {
+        None => Ok(default),
+        Some(Value::Null) => Ok(None),
+        Some(_) => f64_field(inputs, name),
+    }
+}
+
+/// `BargeInputs` from plain data, as the frozen driver's `build` makes it. The caller runs
+/// `post_init`, as Python's `__post_init__` runs after the constructor.
+fn barge_inputs(args: &Value) -> Result<BargeInputs, EvalError> {
+    let o = inputs_object(args, BARGE_FIELDS)?;
+    let need = |name: &str| {
+        f64_field(o, name)?
+            .ok_or_else(|| EvalError::BadInput(format!("`inputs.{name}` is required")))
+    };
+    let mut i = BargeInputs::new(
+        need("loa")?,
+        need("beam")?,
+        need("depth")?,
+        need("max_draft")?,
+        need("vertical_clearance")?,
+    );
+    macro_rules! set_f64 {
+        ($($field:ident),*) => {$(
+            if let Some(v) = f64_field(o, stringify!($field))? { i.$field = v; }
+        )*};
+    }
+    macro_rules! set_opt_f64 {
+        ($($field:ident),*) => {$(
+            i.$field = opt_f64_field(o, stringify!($field), None)?;
+        )*};
+    }
+    macro_rules! set_string {
+        ($($field:ident),*) => {$(
+            if let Some(v) = string_field(o, stringify!($field))? { i.$field = v; }
+        )*};
+    }
+    set_string!(vessel_type, tank_head_type, tank_material, cargo_type);
+    set_f64!(
+        bow_rake_length,
+        stern_rake_length,
+        bow_non_tank_pct,
+        stern_non_tank_pct,
+        wing_tank_gap,
+        wing_tank_height_ratio,
+        weather_shield_thickness,
+        weather_shield_clearance,
+        dome_height,
+        tank_gap_transverse,
+        tank_gap_longitudinal,
+        tank_material_density,
+        design_pressure,
+        weld_efficiency,
+        tank_structure_factor,
+        insulation_thickness,
+        insulation_density,
+        fill_ratio,
+        bottom_plate_thickness,
+        side_plate_thickness,
+        deck_plate_thickness,
+        structure_factor,
+        hull_steel_density,
+        steel_rate_per_cbm,
+        block_coefficient,
+        water_density,
+        underkeel_clearance,
+        outfitting_factor,
+        piping_factor,
+        stores_weight,
+        tank_support_height,
+        tug_length,
+        tug_beam,
+        notch_depth
+    );
+    set_opt_f64!(
+        bow_rake_rise,
+        stern_rake_rise,
+        bow_non_tank_length,
+        stern_non_tank_length,
+        wing_tank_width,
+        side_clearance,
+        cargo_density_override
+    );
+    // These two default to a number, so an absent key and an explicit null differ.
+    i.tank_wall_thickness = opt_f64_field(o, "tank_wall_thickness", i.tank_wall_thickness)?;
+    i.double_bottom_height = opt_f64_field(o, "double_bottom_height", i.double_bottom_height)?;
+    if let Some(v) = i64_field(o, "n_tanks_wide")? {
+        i.n_tanks_wide = v;
+    }
+    if let Some(v) = i64_field(o, "n_tanks_long")? {
+        i.n_tanks_long = v;
+    }
+    for pass_through in ["aft_arrangement", "separation"] {
+        if !matches!(o.get(pass_through), None | Some(Value::Null)) {
+            return Err(EvalError::BadInput(format!(
+                "`inputs.{pass_through}` is a drawing-only pass-through; parity cases leave it null"
+            )));
+        }
+    }
+    Ok(i)
+}
+
+fn raised_py(e: &PyError) -> Result<Value, EvalError> {
+    raised(e.kind, &e.message)
+}
+
+fn tank_json(t: &TankResult) -> Value {
+    json!({
+        "n_tanks_wide": t.n_tanks_wide,
+        "n_tanks_long": t.n_tanks_long,
+        "n_tanks_total": t.n_tanks_total,
+        "outer_diameter": num(t.outer_diameter),
+        "inner_diameter": num(t.inner_diameter),
+        "overall_tank_length": num(t.overall_tank_length),
+        "cylinder_length": num(t.cylinder_length),
+        "head_length": num(t.head_length),
+        "volume_per_tank": num(t.volume_per_tank),
+        "volume_cylinder": num(t.volume_cylinder),
+        "volume_heads": num(t.volume_heads),
+        "total_tank_volume": num(t.total_tank_volume),
+        "cargo_volume": num(t.cargo_volume),
+        "tank_shell_weight": num(t.tank_shell_weight),
+        "insulation_weight": num(t.insulation_weight),
+        "tank_top_above_keel": num(t.tank_top_above_keel),
+        "cylinder_wall_thickness": num(t.cylinder_wall_thickness),
+        "head_wall_thickness": num(t.head_wall_thickness),
+        "design_pressure": num(t.design_pressure),
+        "tank_material": t.tank_material,
+    })
+}
+
+fn weights_json(w: &WeightBreakdown) -> Value {
+    json!({
+        "hull_bottom_plating": num(w.hull_bottom_plating),
+        "hull_side_plating": num(w.hull_side_plating),
+        "hull_deck_plating": num(w.hull_deck_plating),
+        "hull_rake_plating": num(w.hull_rake_plating),
+        "hull_internal_structure": num(w.hull_internal_structure),
+        "hull_steel_total": num(w.hull_steel_total),
+        "tank_shells": num(w.tank_shells),
+        "tank_internals_supports": num(w.tank_internals_supports),
+        "tank_total": num(w.tank_total),
+        "insulation": num(w.insulation),
+        "wing_plate": num(w.wing_plate),
+        "weather_shield": num(w.weather_shield),
+        "piping_machinery": num(w.piping_machinery),
+        "outfitting": num(w.outfitting),
+        "stores": num(w.stores),
+        "moulded_volume": num(w.moulded_volume),
+        "moulded_depth": num(w.moulded_depth),
+        "steel_top_down": num(w.steel_top_down),
+        "steel_bottom_up": num(w.steel_bottom_up),
+        "steel_delta": num(w.steel_delta),
+        "lightship": num(w.lightship),
+    })
+}
+
+fn tanks(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        "calculate_tank_arrangement" => {
+            let mut inputs = barge_inputs(args)?;
+            if let Err(e) = inputs.post_init() {
+                return raised_py(&e);
+            }
+            match ovcd_core::tanks::calculate_tank_arrangement(&inputs) {
+                Ok(t) => ok(tank_json(&t)),
+                Err(e) => raised_py(&e),
+            }
+        }
+        "free_surface_moment_cylindrical" => {
+            ok(num(ovcd_core::tanks::free_surface_moment_cylindrical(
+                f64_arg(args, "inner_radius")?,
+                f64_arg(args, "cylinder_length")?,
+                f64_arg(args, "fill_ratio")?,
+                f64_arg(args, "cargo_density")?,
+            )))
+        }
+        other => Err(EvalError::BadInput(format!(
+            "tanks has no parity function `{other}`"
+        ))),
+    }
+}
+
+/// Why the frozen chain (`_barge_chain` in the driver) stopped before the function under test.
+enum ChainStop {
+    /// The case input is not usable.
+    Eval(EvalError),
+    /// Python raised: the case's Reference Result is that error.
+    Raised(PyError),
+}
+
+impl From<EvalError> for ChainStop {
+    fn from(e: EvalError) -> Self {
+        ChainStop::Eval(e)
+    }
+}
+
+impl From<PyError> for ChainStop {
+    fn from(e: PyError) -> Self {
+        ChainStop::Raised(e)
+    }
+}
+
+/// The frozen chain: inputs, then the hull with the inputs' own rakes, then the tank
+/// arrangement, then the weights. The tank count product is not carried (`n_tanks_total` of the
+/// returned tanks is clamped), so a count Python answers for never raises here. A caller that
+/// reads `n_tanks_total` must check the product itself.
+fn barge_chain(
+    args: &Value,
+) -> Result<(BargeInputs, HullGeometry, TankResult, WeightBreakdown, i128), ChainStop> {
+    let mut inputs = barge_inputs(args)?;
+    inputs.post_init()?;
+    let rake = |v: Option<f64>, name: &str| {
+        v.ok_or_else(|| EvalError::BadInput(format!("`inputs.{name}` is unset")))
+    };
+    let hull = HullGeometry::new(
+        inputs.loa,
+        inputs.beam,
+        inputs.depth,
+        inputs.bow_rake_length,
+        rake(inputs.bow_rake_rise, "bow_rake_rise")?,
+        inputs.stern_rake_length,
+        rake(inputs.stern_rake_rise, "stern_rake_rise")?,
+    );
+    let (tanks, n_total) = ovcd_core::tanks::calculate_tank_arrangement_wide(&inputs)?;
+    let weights = ovcd_core::weights::calculate_weights(&inputs, &hull, &tanks)?;
+    Ok((inputs, hull, tanks, weights, n_total))
+}
+
+fn chain_result(r: Result<Value, ChainStop>) -> Result<Value, EvalError> {
+    match r {
+        Ok(v) => Ok(v),
+        Err(ChainStop::Eval(e)) => Err(e),
+        Err(ChainStop::Raised(e)) => raised_py(&e),
+    }
+}
+
+fn weights(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        "calculate_weights" => {
+            chain_result(barge_chain(args).map(|(_, _, _, w, _)| json!({ "ok": weights_json(&w) })))
+        }
+        other => Err(EvalError::BadInput(format!(
+            "weights has no parity function `{other}`"
+        ))),
+    }
+}
+
+fn hydrostatics(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        "find_equilibrium_draft" => {
+            let hull = hull_arg(args)?;
+            match ovcd_core::hydrostatics::find_equilibrium_draft(
+                &hull,
+                f64_arg(args, "total_weight")?,
+                f64_arg(args, "water_density")?,
+                f64_arg(args, "max_draft")?,
+                f64_arg_or(args, "block_coefficient", 1.0)?,
+                f64_arg_or(args, "tolerance", 0.001)?,
+            ) {
+                Ok(d) => ok(num(d)),
+                Err(e) => raised_py(&e),
+            }
+        }
+        "calculate_stability" => chain_result((|| {
+            let (inputs, hull, mut tanks, weights, n_total) = barge_chain(args)?;
+            // Python's chain holds the exact count; `n_tanks_total` is a 64-bit field here.
+            tanks.n_tanks_total = i64::try_from(n_total).map_err(|_| PyError {
+                kind: "OverflowError",
+                message: ovcd_core::tanks::INT_OVERFLOW_MESSAGE.into(),
+            })?;
+            let s = ovcd_core::hydrostatics::calculate_stability(
+                &hull,
+                &inputs,
+                &tanks,
+                &weights,
+                f64_arg(args, "cargo_mass")?,
+                f64_arg(args, "cargo_density_t")?,
+                f64_arg(args, "draft")?,
+            )?;
+            Ok(json!({ "ok": {
+                "KB": num(s.KB),
+                "BM_transverse": num(s.BM_transverse),
+                "KG": num(s.KG),
+                "GM_solid": num(s.GM_solid),
+                "free_surface_correction": num(s.free_surface_correction),
+                "GM_fluid": num(s.GM_fluid),
+                "BM_longitudinal": num(s.BM_longitudinal),
+            }}))
+        })()),
+        "calculate_trim" => chain_result((|| {
+            let (inputs, hull, tanks, weights, _) = barge_chain(args)?;
+            let t = ovcd_core::hydrostatics::calculate_trim(
+                &hull,
+                &inputs,
+                &tanks,
+                &weights,
+                f64_arg(args, "cargo_mass")?,
+                f64_arg(args, "draft")?,
+            )?;
+            Ok(json!({ "ok": {
+                "LCG": num(t.LCG),
+                "LCB": num(t.LCB),
+                "trim": num(t.trim),
+                "draft_aft": num(t.draft_aft),
+                "draft_fwd": num(t.draft_fwd),
+            }}))
+        })()),
+        other => Err(EvalError::BadInput(format!(
+            "hydrostatics has no parity function `{other}`"
         ))),
     }
 }
@@ -1092,6 +1499,399 @@ fn waves(function: &str, args: &Value) -> Result<Value, EvalError> {
         },
         other => Err(EvalError::BadInput(format!(
             "waves has no parity function `{other}`"
+        ))),
+    }
+}
+
+/// Reject any key of an input object that is not a field, as Python's `build` does.
+fn fields_object<'a>(
+    value: &'a Value,
+    fields: &[&str],
+    what: &str,
+) -> Result<&'a serde_json::Map<String, Value>, EvalError> {
+    let object = value
+        .as_object()
+        .ok_or_else(|| EvalError::BadInput(format!("`{what}` must be an object")))?;
+    for key in object.keys() {
+        if !fields.contains(&key.as_str()) {
+            return Err(EvalError::BadInput(format!(
+                "unknown field `{key}` in `{what}`"
+            )));
+        }
+    }
+    Ok(object)
+}
+
+fn f64_or(
+    object: &serde_json::Map<String, Value>,
+    name: &str,
+    default: f64,
+) -> Result<f64, EvalError> {
+    Ok(f64_field(object, name)?.unwrap_or(default))
+}
+
+fn bool_or(
+    object: &serde_json::Map<String, Value>,
+    name: &str,
+    default: bool,
+) -> Result<bool, EvalError> {
+    match object.get(name) {
+        None => Ok(default),
+        Some(v) => v
+            .as_bool()
+            .ok_or_else(|| EvalError::BadInput(format!("`{name}` must be true or false"))),
+    }
+}
+
+const TUG_FIELDS: &[&str] = &[
+    "engine_power_kw",
+    "propulsive_efficiency",
+    "sfc_g_per_kwh",
+    "fuel_density_kg_per_litre",
+];
+
+const ENVIRONMENT_FIELDS: &[&str] = &[
+    "name",
+    "water_depth",
+    "channel_width_bottom",
+    "channel_width_surface",
+    "bank_slope",
+    "current_speed_knots",
+    "water_density",
+    "is_deep_water",
+    "significant_wave_height_m",
+    "wave_heading_deg_off_bow",
+    "peak_wave_period_s",
+    "squat_safety_margin_m",
+    "apply_squat_limit",
+];
+
+const RESISTANCE_FIELDS: &[&str] = &[
+    "loa",
+    "lwl",
+    "beam",
+    "draft",
+    "block_coefficient",
+    "wetted_surface_area",
+    "displacement_tonnes",
+    "tug",
+    "environments",
+    "speed_min_knots",
+    "speed_max_knots",
+    "speed_step_knots",
+];
+
+fn tug_inputs(value: &Value) -> Result<core_resistance::TugInputs, EvalError> {
+    let o = fields_object(value, TUG_FIELDS, "tug")?;
+    let d = core_resistance::TugInputs::default();
+    Ok(core_resistance::TugInputs {
+        engine_power_kw: f64_or(o, "engine_power_kw", d.engine_power_kw)?,
+        propulsive_efficiency: f64_or(o, "propulsive_efficiency", d.propulsive_efficiency)?,
+        sfc_g_per_kwh: f64_or(o, "sfc_g_per_kwh", d.sfc_g_per_kwh)?,
+        fuel_density_kg_per_litre: f64_or(
+            o,
+            "fuel_density_kg_per_litre",
+            d.fuel_density_kg_per_litre,
+        )?,
+    })
+}
+
+fn environment_inputs(value: &Value) -> Result<core_resistance::EnvironmentInputs, EvalError> {
+    let o = fields_object(value, ENVIRONMENT_FIELDS, "environments[]")?;
+    let d = core_resistance::EnvironmentInputs::default();
+    let name = match o.get("name") {
+        None => d.name.clone(),
+        Some(v) => v
+            .as_str()
+            .ok_or_else(|| EvalError::BadInput("`name` must be text".into()))?
+            .to_string(),
+    };
+    Ok(core_resistance::EnvironmentInputs {
+        name,
+        water_depth: f64_or(o, "water_depth", d.water_depth)?,
+        channel_width_bottom: f64_or(o, "channel_width_bottom", d.channel_width_bottom)?,
+        channel_width_surface: f64_or(o, "channel_width_surface", d.channel_width_surface)?,
+        bank_slope: f64_or(o, "bank_slope", d.bank_slope)?,
+        current_speed_knots: f64_or(o, "current_speed_knots", d.current_speed_knots)?,
+        water_density: f64_or(o, "water_density", d.water_density)?,
+        is_deep_water: bool_or(o, "is_deep_water", d.is_deep_water)?,
+        significant_wave_height_m: f64_or(
+            o,
+            "significant_wave_height_m",
+            d.significant_wave_height_m,
+        )?,
+        wave_heading_deg_off_bow: f64_or(
+            o,
+            "wave_heading_deg_off_bow",
+            d.wave_heading_deg_off_bow,
+        )?,
+        peak_wave_period_s: f64_or(o, "peak_wave_period_s", d.peak_wave_period_s)?,
+        squat_safety_margin_m: f64_or(o, "squat_safety_margin_m", d.squat_safety_margin_m)?,
+        apply_squat_limit: bool_or(o, "apply_squat_limit", d.apply_squat_limit)?,
+    })
+}
+
+fn resistance_inputs(args: &Value) -> Result<core_resistance::ResistanceInputs, EvalError> {
+    let inputs = args
+        .get("inputs")
+        .ok_or_else(|| EvalError::BadInput("`args.inputs` is required".into()))?;
+    let o = fields_object(inputs, RESISTANCE_FIELDS, "inputs")?;
+    let d = core_resistance::ResistanceInputs::default();
+    let tug = match o.get("tug") {
+        None => d.tug.clone(),
+        Some(v) => tug_inputs(v)?,
+    };
+    let environments = match o.get("environments") {
+        None => d.environments.clone(),
+        Some(v) => v
+            .as_array()
+            .ok_or_else(|| EvalError::BadInput("`environments` must be a list".into()))?
+            .iter()
+            .map(environment_inputs)
+            .collect::<Result<_, _>>()?,
+    };
+    Ok(core_resistance::ResistanceInputs {
+        loa: f64_or(o, "loa", d.loa)?,
+        lwl: f64_or(o, "lwl", d.lwl)?,
+        beam: f64_or(o, "beam", d.beam)?,
+        draft: f64_or(o, "draft", d.draft)?,
+        block_coefficient: f64_or(o, "block_coefficient", d.block_coefficient)?,
+        wetted_surface_area: f64_or(o, "wetted_surface_area", d.wetted_surface_area)?,
+        displacement_tonnes: f64_or(o, "displacement_tonnes", d.displacement_tonnes)?,
+        tug,
+        environments,
+        speed_min_knots: f64_or(o, "speed_min_knots", d.speed_min_knots)?,
+        speed_max_knots: f64_or(o, "speed_max_knots", d.speed_max_knots)?,
+        speed_step_knots: f64_or(o, "speed_step_knots", d.speed_step_knots)?,
+    })
+}
+
+fn environment_inputs_json(e: &core_resistance::EnvironmentInputs) -> Value {
+    json!({
+        "name": e.name,
+        "water_depth": num(e.water_depth),
+        "channel_width_bottom": num(e.channel_width_bottom),
+        "channel_width_surface": num(e.channel_width_surface),
+        "bank_slope": num(e.bank_slope),
+        "current_speed_knots": num(e.current_speed_knots),
+        "water_density": num(e.water_density),
+        "is_deep_water": e.is_deep_water,
+        "significant_wave_height_m": num(e.significant_wave_height_m),
+        "wave_heading_deg_off_bow": num(e.wave_heading_deg_off_bow),
+        "peak_wave_period_s": num(e.peak_wave_period_s),
+        "squat_safety_margin_m": num(e.squat_safety_margin_m),
+        "apply_squat_limit": e.apply_squat_limit,
+    })
+}
+
+fn resistance_inputs_json(i: &core_resistance::ResistanceInputs) -> Value {
+    json!({
+        "loa": num(i.loa),
+        "lwl": num(i.lwl),
+        "beam": num(i.beam),
+        "draft": num(i.draft),
+        "block_coefficient": num(i.block_coefficient),
+        "wetted_surface_area": num(i.wetted_surface_area),
+        "displacement_tonnes": num(i.displacement_tonnes),
+        "tug": {
+            "engine_power_kw": num(i.tug.engine_power_kw),
+            "propulsive_efficiency": num(i.tug.propulsive_efficiency),
+            "sfc_g_per_kwh": num(i.tug.sfc_g_per_kwh),
+            "fuel_density_kg_per_litre": num(i.tug.fuel_density_kg_per_litre),
+        },
+        "environments": i.environments.iter().map(environment_inputs_json).collect::<Vec<_>>(),
+        "speed_min_knots": num(i.speed_min_knots),
+        "speed_max_knots": num(i.speed_max_knots),
+        "speed_step_knots": num(i.speed_step_knots),
+    })
+}
+
+fn speed_point_json(p: &core_resistance::SpeedPoint) -> Value {
+    json!({
+        "speed_knots": num(p.speed_knots),
+        "speed_through_water_knots": num(p.speed_through_water_knots),
+        "froude_number": num(p.froude_number),
+        "froude_depth": num(p.froude_depth),
+        "resistance_frictional_kn": num(p.resistance_frictional_kn),
+        "resistance_residuary_kn": num(p.resistance_residuary_kn),
+        "resistance_shallow_factor": num(p.resistance_shallow_factor),
+        "resistance_total_kn": num(p.resistance_total_kn),
+        "effective_power_kw": num(p.effective_power_kw),
+        "delivered_power_kw": num(p.delivered_power_kw),
+        "fuel_litres_per_hour": num(p.fuel_litres_per_hour),
+        "fuel_litres_per_nm": num(p.fuel_litres_per_nm),
+        "power_available": p.power_available,
+        "resistance_waves_kn": num(p.resistance_waves_kn),
+        "squat_m": num(p.squat_m),
+        "dynamic_ukc_m": num(p.dynamic_ukc_m),
+        "squat_limited": p.squat_limited,
+    })
+}
+
+fn environment_result_json(e: &core_resistance::EnvironmentResult) -> Value {
+    json!({
+        "name": e.name,
+        "limiting_speed_knots": e.limiting_speed_knots.map_or(Value::Null, num),
+        "service_speed_knots": num(e.service_speed_knots),
+        "blockage_ratio": num(e.blockage_ratio),
+        "speed_curve": e.speed_curve.iter().map(speed_point_json).collect::<Vec<_>>(),
+        "resistance_at_service_kn": num(e.resistance_at_service_kn),
+        "power_at_service_kw": num(e.power_at_service_kw),
+        "fuel_at_service_lph": num(e.fuel_at_service_lph),
+        "fuel_at_service_lpnm": num(e.fuel_at_service_lpnm),
+        "squat_limited_speed_knots": e.squat_limited_speed_knots.map_or(Value::Null, num),
+        "service_speed_governed_by": e.service_speed_governed_by,
+    })
+}
+
+fn resistance(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        "compute" => match core_resistance::compute(&resistance_inputs(args)?) {
+            Ok(r) => ok(json!({
+                "inputs": resistance_inputs_json(&r.inputs),
+                "wetted_surface_area": num(r.wetted_surface_area),
+                "environments": r.environments.iter().map(environment_result_json).collect::<Vec<_>>(),
+                "checks": checks_json(&r.checks),
+                "warnings": r.warnings,
+            })),
+            Err(e) => py_exception(&e),
+        },
+        other => Err(EvalError::BadInput(format!(
+            "resistance has no parity function `{other}`"
+        ))),
+    }
+}
+
+const ENERGY_FIELDS: &[&str] = &[
+    "beam",
+    "loa",
+    "lwl",
+    "draft",
+    "block_coefficient",
+    "channel_depth_m",
+    "channel_bottom_width_m",
+    "channel_top_width_m",
+    "current_knots",
+    "fresh_water",
+    "also_open_sea",
+    "propulsive_coefficient",
+    "drivetrain_efficiency",
+    "target_service_speed_knots",
+    "service_speed_safety_fraction",
+    "power_margin",
+    "one_way_km",
+    "trips_per_year",
+    "speed_min_knots",
+    "speed_max_knots",
+    "speed_step_knots",
+];
+
+fn energy_inputs(args: &Value) -> Result<core_energy::EnergyInputs, EvalError> {
+    let inputs = args
+        .get("inputs")
+        .ok_or_else(|| EvalError::BadInput("`args.inputs` is required".into()))?;
+    let o = fields_object(inputs, ENERGY_FIELDS, "inputs")?;
+    let d = core_energy::EnergyInputs::default();
+    Ok(core_energy::EnergyInputs {
+        beam: f64_or(o, "beam", d.beam)?,
+        loa: f64_or(o, "loa", d.loa)?,
+        lwl: f64_or(o, "lwl", d.lwl)?,
+        draft: f64_or(o, "draft", d.draft)?,
+        block_coefficient: f64_or(o, "block_coefficient", d.block_coefficient)?,
+        channel_depth_m: f64_or(o, "channel_depth_m", d.channel_depth_m)?,
+        channel_bottom_width_m: f64_or(o, "channel_bottom_width_m", d.channel_bottom_width_m)?,
+        channel_top_width_m: f64_or(o, "channel_top_width_m", d.channel_top_width_m)?,
+        current_knots: f64_or(o, "current_knots", d.current_knots)?,
+        fresh_water: bool_or(o, "fresh_water", d.fresh_water)?,
+        also_open_sea: bool_or(o, "also_open_sea", d.also_open_sea)?,
+        propulsive_coefficient: f64_or(o, "propulsive_coefficient", d.propulsive_coefficient)?,
+        drivetrain_efficiency: f64_or(o, "drivetrain_efficiency", d.drivetrain_efficiency)?,
+        target_service_speed_knots: f64_or(
+            o,
+            "target_service_speed_knots",
+            d.target_service_speed_knots,
+        )?,
+        service_speed_safety_fraction: f64_or(
+            o,
+            "service_speed_safety_fraction",
+            d.service_speed_safety_fraction,
+        )?,
+        power_margin: f64_or(o, "power_margin", d.power_margin)?,
+        one_way_km: f64_or(o, "one_way_km", d.one_way_km)?,
+        trips_per_year: f64_or(o, "trips_per_year", d.trips_per_year)?,
+        speed_min_knots: f64_or(o, "speed_min_knots", d.speed_min_knots)?,
+        speed_max_knots: f64_or(o, "speed_max_knots", d.speed_max_knots)?,
+        speed_step_knots: f64_or(o, "speed_step_knots", d.speed_step_knots)?,
+    })
+}
+
+fn energy_inputs_json(i: &core_energy::EnergyInputs) -> Value {
+    json!({
+        "beam": num(i.beam),
+        "loa": num(i.loa),
+        "lwl": num(i.lwl),
+        "draft": num(i.draft),
+        "block_coefficient": num(i.block_coefficient),
+        "channel_depth_m": num(i.channel_depth_m),
+        "channel_bottom_width_m": num(i.channel_bottom_width_m),
+        "channel_top_width_m": num(i.channel_top_width_m),
+        "current_knots": num(i.current_knots),
+        "fresh_water": i.fresh_water,
+        "also_open_sea": i.also_open_sea,
+        "propulsive_coefficient": num(i.propulsive_coefficient),
+        "drivetrain_efficiency": num(i.drivetrain_efficiency),
+        "target_service_speed_knots": num(i.target_service_speed_knots),
+        "service_speed_safety_fraction": num(i.service_speed_safety_fraction),
+        "power_margin": num(i.power_margin),
+        "one_way_km": num(i.one_way_km),
+        "trips_per_year": num(i.trips_per_year),
+        "speed_min_knots": num(i.speed_min_knots),
+        "speed_max_knots": num(i.speed_max_knots),
+        "speed_step_knots": num(i.speed_step_knots),
+    })
+}
+
+fn energy_point_json(p: &core_energy::EnergyPoint) -> Value {
+    json!({
+        "speed_knots": num(p.speed_knots),
+        "speed_kmh": num(p.speed_kmh),
+        "froude_depth": num(p.froude_depth),
+        "resistance_kn": num(p.resistance_kn),
+        "shaft_power_kw": num(p.shaft_power_kw),
+        "battery_power_kw": num(p.battery_power_kw),
+        "energy_kwh_per_km": num(p.energy_kwh_per_km),
+    })
+}
+
+fn energy_environment_json(e: &core_energy::EnergyEnvironment) -> Value {
+    json!({
+        "name": e.name,
+        "limiting_speed_knots": e.limiting_speed_knots.map_or(Value::Null, num),
+        "service_speed_knots": num(e.service_speed_knots),
+        "blockage_ratio": num(e.blockage_ratio),
+        "curve": e.curve.iter().map(energy_point_json).collect::<Vec<_>>(),
+        "resistance_kn": num(e.resistance_kn),
+        "shaft_power_kw": num(e.shaft_power_kw),
+        "battery_power_kw": num(e.battery_power_kw),
+        "energy_kwh_per_km": num(e.energy_kwh_per_km),
+        "energy_per_trip_kwh": num(e.energy_per_trip_kwh),
+        "energy_per_year_mwh": num(e.energy_per_year_mwh),
+    })
+}
+
+fn electric_energy(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        "compute" => match core_energy::compute(&energy_inputs(args)?) {
+            Ok(r) => ok(json!({
+                "inputs": energy_inputs_json(&r.inputs),
+                "installed_power_kw": num(r.installed_power_kw),
+                "environments": r.environments.iter().map(energy_environment_json).collect::<Vec<_>>(),
+                "checks": checks_json(&r.checks),
+            })),
+            Err(e) => py_exception(&e),
+        },
+        other => Err(EvalError::BadInput(format!(
+            "electric_energy has no parity function `{other}`"
         ))),
     }
 }
