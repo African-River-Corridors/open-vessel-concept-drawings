@@ -6,6 +6,7 @@ mod gas_arrangement;
 pub mod gas_stability;
 pub mod profile;
 mod run;
+pub mod session;
 mod simulate;
 pub mod vdesign;
 
@@ -16,5 +17,6 @@ pub use run::{
     results_hash, run_design, run_option, simulate_params_of, stamp, summary_lines,
 };
 pub use vdesign::{
-    Checked, Design, DesignOption, Report, Source, StoredInput, check, fill, new_design,
+    Checked, Design, DesignOption, Group, Note, Report, Source, StoredInput, check, fill,
+    new_design,
 };

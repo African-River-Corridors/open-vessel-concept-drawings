@@ -224,6 +224,15 @@ impl Profile {
             .unwrap_or("")
     }
 
+    /// Why the profile gives these ranges and default ("from the original code"), or "" when
+    /// the entry holds none.
+    pub fn basis(&self, name: &str) -> &str {
+        self.entry(name)
+            .and_then(|e| e.get("basis"))
+            .and_then(Value::as_str)
+            .unwrap_or("")
+    }
+
     pub fn hard(&self, name: &str) -> Result<HardRange, String> {
         let Some(h) = self.entry(name).and_then(|e| e.get("hard")) else {
             return Ok(HardRange::default());

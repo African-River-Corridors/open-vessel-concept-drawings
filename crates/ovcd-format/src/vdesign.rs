@@ -96,6 +96,31 @@ pub enum InputKind {
     Formation,
 }
 
+/// Which group an input belongs to in the app's input panel (spec 0002). The group of each
+/// input comes from this table, not from the front end.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Group {
+    /// The six inputs a designer always gives.
+    Required,
+    HullAndContainment,
+    GasTanks,
+    WaterwayLimits,
+    SpeedAndPower,
+}
+
+impl Group {
+    /// The name as the app shows it.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Group::Required => "Required",
+            Group::HullAndContainment => "Hull and containment",
+            Group::GasTanks => "Gas tanks",
+            Group::WaterwayLimits => "Waterway Limits",
+            Group::SpeedAndPower => "Speed and power",
+        }
+    }
+}
+
 /// Which Cargo Containments an input is used for.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AppliesTo {
@@ -110,23 +135,31 @@ pub struct InputSpec {
     pub kind: InputKind,
     pub required: bool,
     pub applies_to: AppliesTo,
+    pub group: Group,
 }
 
-const fn spec(name: &'static str, kind: InputKind, required: bool) -> InputSpec {
+const fn spec(name: &'static str, kind: InputKind, required: bool, group: Group) -> InputSpec {
     InputSpec {
         name,
         kind,
         required,
         applies_to: AppliesTo::All,
+        group,
     }
 }
 
-const fn only(name: &'static str, kind: InputKind, containment: &'static str) -> InputSpec {
+const fn only(
+    name: &'static str,
+    kind: InputKind,
+    containment: &'static str,
+    group: Group,
+) -> InputSpec {
     InputSpec {
         name,
         kind,
         required: false,
         applies_to: AppliesTo::Only(containment),
+        group,
     }
 }
 
@@ -136,33 +169,69 @@ const NUM_OR_NONE: InputKind = InputKind::Number { nullable: true };
 /// Every input of an Option, in the order defaults are resolved (a default may depend on an
 /// input above it). Names follow `GLOSSARY.md`.
 pub const INPUTS: &[InputSpec] = &[
-    spec("cargo", InputKind::Cargo, true),
-    spec("hull_form", InputKind::Choice(HULL_FORMS), true),
-    spec("formation", InputKind::Formation, true),
-    spec("length_overall_m", NUM, true),
-    spec("beam_m", NUM, true),
-    spec("moulded_depth_m", NUM, true),
+    spec("cargo", InputKind::Cargo, true, Group::Required),
+    spec(
+        "hull_form",
+        InputKind::Choice(HULL_FORMS),
+        true,
+        Group::Required,
+    ),
+    spec("formation", InputKind::Formation, true, Group::Required),
+    spec("length_overall_m", NUM, true, Group::Required),
+    spec("beam_m", NUM, true, Group::Required),
+    spec("moulded_depth_m", NUM, true, Group::Required),
     spec(
         "cargo_containment",
         InputKind::Choice(&["box_hold", "sloped_hopper_hold", "type_c_tanks"]),
         false,
+        Group::HullAndContainment,
     ),
-    spec("block_coefficient", NUM, false),
-    spec("min_freeboard_m", NUM, false),
-    only("lightship_factor_t_per_m3", NUM, "box_hold"),
-    only("ruleset", InputKind::Choice(RULESETS), "type_c_tanks"),
-    only("fill_ratio", NUM, "type_c_tanks"),
-    only("adn_tank_cap_m3", NUM, "type_c_tanks"),
-    only("optimise_depth", InputKind::Bool, "type_c_tanks"),
-    spec("propulsive_efficiency", NUM, false),
-    spec("max_speed_kn", NUM, false),
-    spec("air_draft_limit_m", NUM_OR_NONE, false),
-    spec("draught_limit_m", NUM_OR_NONE, false),
-    spec("channel_depth_m", NUM_OR_NONE, false),
-    spec("channel_under_keel_clearance_m", NUM, false),
-    spec("channel_bottom_width_m", NUM_OR_NONE, false),
-    spec("channel_bank_slope", NUM, false),
-    spec("channel_current_kn", NUM, false),
+    spec("block_coefficient", NUM, false, Group::HullAndContainment),
+    spec("min_freeboard_m", NUM, false, Group::HullAndContainment),
+    only(
+        "lightship_factor_t_per_m3",
+        NUM,
+        "box_hold",
+        Group::HullAndContainment,
+    ),
+    only(
+        "ruleset",
+        InputKind::Choice(RULESETS),
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only("fill_ratio", NUM, "type_c_tanks", Group::GasTanks),
+    only("adn_tank_cap_m3", NUM, "type_c_tanks", Group::GasTanks),
+    only(
+        "optimise_depth",
+        InputKind::Bool,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    spec("propulsive_efficiency", NUM, false, Group::SpeedAndPower),
+    spec("max_speed_kn", NUM, false, Group::SpeedAndPower),
+    spec(
+        "air_draft_limit_m",
+        NUM_OR_NONE,
+        false,
+        Group::WaterwayLimits,
+    ),
+    spec("draught_limit_m", NUM_OR_NONE, false, Group::WaterwayLimits),
+    spec("channel_depth_m", NUM_OR_NONE, false, Group::WaterwayLimits),
+    spec(
+        "channel_under_keel_clearance_m",
+        NUM,
+        false,
+        Group::WaterwayLimits,
+    ),
+    spec(
+        "channel_bottom_width_m",
+        NUM_OR_NONE,
+        false,
+        Group::WaterwayLimits,
+    ),
+    spec("channel_bank_slope", NUM, false, Group::WaterwayLimits),
+    spec("channel_current_kn", NUM, false, Group::WaterwayLimits),
 ];
 
 /// Where a stored input came from.
@@ -273,12 +342,85 @@ impl Report {
     }
 }
 
+/// One validation message with the Option and inputs it is about. [`Report`] holds the same
+/// message as a sentence; the session attaches it to the inputs it involves (spec 0002).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Note {
+    /// The sentence as [`Report`] holds it, including its "Option '…': " prefix where one.
+    pub message: String,
+    /// The Option the message is about, if any.
+    pub option: Option<String>,
+    /// The inputs the message is about; empty for a file-level message.
+    pub inputs: Vec<String>,
+    /// True for a hard error; false for a soft warning.
+    pub error: bool,
+    /// True for a check across inputs.
+    pub cross_check: bool,
+}
+
+/// Collects notes and builds a [`Report`] from them, so a message has one source.
+#[derive(Debug, Default)]
+struct Notes {
+    notes: Vec<Note>,
+}
+
+impl Notes {
+    fn push(
+        &mut self,
+        option: Option<&str>,
+        inputs: &[&str],
+        message: String,
+        error: bool,
+        cross_check: bool,
+    ) {
+        self.notes.push(Note {
+            message,
+            option: option.map(String::from),
+            inputs: inputs.iter().map(|s| (*s).to_string()).collect(),
+            error,
+            cross_check,
+        });
+    }
+
+    fn error(&mut self, option: Option<&str>, inputs: &[&str], message: String) {
+        self.push(option, inputs, message, true, false);
+    }
+
+    fn cross(&mut self, option: Option<&str>, inputs: &[&str], message: String) {
+        self.push(option, inputs, message, true, true);
+    }
+
+    fn warn(&mut self, option: Option<&str>, inputs: &[&str], message: String) {
+        self.push(option, inputs, message, false, false);
+    }
+
+    fn report(&self) -> Report {
+        Report {
+            errors: self
+                .notes
+                .iter()
+                .filter(|n| n.error)
+                .map(|n| n.message.clone())
+                .collect(),
+            warnings: self
+                .notes
+                .iter()
+                .filter(|n| !n.error)
+                .map(|n| n.message.clone())
+                .collect(),
+        }
+    }
+}
+
 /// The result of reading a `.vdesign` file: the Design as used (when it could be read) and
-/// what validation found.
+/// what validation found. A typed value that fails a check is kept as typed, so the field
+/// shows what was typed (spec 0002).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Checked {
     pub design: Option<Design>,
     pub report: Report,
+    /// The same messages as `report`, each with the Option and inputs it is about.
+    pub notes: Vec<Note>,
 }
 
 /// A starter Design: one Option with example required inputs (typed, for the designer to edit)
@@ -294,14 +436,15 @@ pub fn new_design(profile: &Profile) -> Result<Design, String> {
         "beam_m": 11.4,
         "moulded_depth_m": 3.5,
     });
-    let mut report = Report::default();
+    let mut notes = Notes::default();
     let option = read_option(
         "Option 1",
         typed.as_object().expect("an object"),
         profile,
         Missing::Fill,
-        &mut report,
+        &mut notes,
     );
+    let report = notes.report();
     if !report.is_ok() {
         return Err(format!(
             "the Defaults Profile '{}' does not make a valid starter Design: {}",
@@ -355,62 +498,67 @@ pub fn fill(text: &str, profile: &Profile) -> Checked {
 const FILLED: &str = "was not stored in the file; wrote in the Defaults Profile value";
 
 fn read_text(text: &str, profile: &Profile, missing: Missing) -> Checked {
-    let mut report = Report::default();
+    let mut notes = Notes::default();
     let root: Value = match serde_json::from_str(text) {
         Ok(v) => v,
         Err(e) => {
-            report.errors.push(format!("the file is not JSON: {e}"));
+            notes.error(None, &[], format!("the file is not JSON: {e}"));
+            let report = notes.report();
             return Checked {
                 design: None,
                 report,
+                notes: notes.notes,
             };
         }
     };
-    let design = read_design(&root, profile, missing, &mut report);
-    Checked { design, report }
+    let design = read_design(&root, profile, missing, &mut notes);
+    let report = notes.report();
+    Checked {
+        design,
+        report,
+        notes: notes.notes,
+    }
 }
 
 fn read_design(
     root: &Value,
     profile: &Profile,
     missing: Missing,
-    report: &mut Report,
+    notes: &mut Notes,
 ) -> Option<Design> {
     let Some(root) = root.as_object() else {
-        report
-            .errors
-            .push("the file must hold a JSON object".into());
+        notes.error(None, &[], "the file must hold a JSON object".into());
         return None;
     };
     if root.get("format").and_then(Value::as_str) != Some("vdesign") {
-        report
-            .errors
-            .push("the file needs `\"format\": \"vdesign\"`".into());
+        notes.error(None, &[], "the file needs `\"format\": \"vdesign\"`".into());
     }
     match root.get("format_version").and_then(Value::as_u64) {
         Some(FORMAT_VERSION) => {}
-        Some(v) => report.errors.push(format!(
-            "format_version {v} is not supported; this tool reads version {FORMAT_VERSION}"
-        )),
-        None => report
-            .errors
-            .push("the file needs an integer `format_version`".into()),
+        Some(v) => notes.error(
+            None,
+            &[],
+            format!(
+                "format_version {v} is not supported; this tool reads version {FORMAT_VERSION}"
+            ),
+        ),
+        None => notes.error(
+            None,
+            &[],
+            "the file needs an integer `format_version`".into(),
+        ),
     }
     let engine_version = match root.get("engine_version").and_then(Value::as_str) {
         Some(v) => v.to_string(),
         None => {
-            report
-                .errors
-                .push("the file needs a string `engine_version`".into());
+            notes.error(None, &[], "the file needs a string `engine_version`".into());
             String::new()
         }
     };
     if let Some(units) = root.get("units")
         && units != "SI"
     {
-        report
-            .errors
-            .push(format!("`units` must be \"SI\", not {units}"));
+        notes.error(None, &[], format!("`units` must be \"SI\", not {units}"));
     }
     let defaults_profile = root
         .get("defaults_profile")
@@ -426,21 +574,19 @@ fn read_design(
             "options",
         ];
         if !known.contains(&key.as_str()) {
-            report
-                .warnings
-                .push(format!("unknown top-level key `{key}` is ignored"));
+            notes.warn(
+                None,
+                &[],
+                format!("unknown top-level key `{key}` is ignored"),
+            );
         }
     }
     let Some(raw_options) = root.get("options").and_then(Value::as_array) else {
-        report
-            .errors
-            .push("the file needs an `options` list".into());
+        notes.error(None, &[], "the file needs an `options` list".into());
         return None;
     };
     if raw_options.is_empty() {
-        report
-            .errors
-            .push("a Design needs at least one Option".into());
+        notes.error(None, &[], "a Design needs at least one Option".into());
     }
     let mut options = Vec::new();
     for (i, raw) in raw_options.iter().enumerate() {
@@ -449,36 +595,46 @@ fn read_design(
             .and_then(Value::as_str)
             .filter(|n| !n.trim().is_empty());
         let Some(name) = name else {
-            report
-                .errors
-                .push(format!("Option {} needs a non-empty string `name`", i + 1));
+            notes.error(
+                None,
+                &[],
+                format!("Option {} needs a non-empty string `name`", i + 1),
+            );
             continue;
         };
         if options.iter().any(|o: &DesignOption| o.name == name) {
-            report
-                .errors
-                .push(format!("two Options are named '{name}'; names must differ"));
+            notes.error(
+                Some(name),
+                &[],
+                format!("two Options are named '{name}'; names must differ"),
+            );
         }
         let Some(inputs) = raw.get("inputs").and_then(Value::as_object) else {
-            report
-                .errors
-                .push(format!("Option '{name}': needs an `inputs` object"));
+            notes.error(
+                Some(name),
+                &[],
+                format!("Option '{name}': needs an `inputs` object"),
+            );
             continue;
         };
         for key in raw.as_object().into_iter().flat_map(|o| o.keys()) {
             if !["name", "inputs", "results_hash"].contains(&key.as_str()) {
-                report
-                    .warnings
-                    .push(format!("Option '{name}': unknown key `{key}` is ignored"));
+                notes.warn(
+                    Some(name),
+                    &[],
+                    format!("Option '{name}': unknown key `{key}` is ignored"),
+                );
             }
         }
-        let mut option = read_option(name, inputs, profile, missing, report);
+        let mut option = read_option(name, inputs, profile, missing, notes);
         match raw.get("results_hash") {
             None | Some(Value::Null) => {}
             Some(Value::String(h)) => option.results_hash = Some(h.clone()),
-            Some(_) => report
-                .errors
-                .push(format!("Option '{name}': `results_hash` must be text")),
+            Some(_) => notes.error(
+                Some(name),
+                &[],
+                format!("Option '{name}': `results_hash` must be text"),
+            ),
         }
         options.push(option);
     }
@@ -519,13 +675,13 @@ fn read_option(
     raw: &Map<String, Value>,
     profile: &Profile,
     missing: Missing,
-    report: &mut Report,
+    notes: &mut Notes,
 ) -> DesignOption {
     let at = |msg: String| format!("Option '{name}': {msg}");
     let mut left_out: Vec<&str> = Vec::new();
     for key in raw.keys() {
         if !INPUTS.iter().any(|s| s.name == key) {
-            report.errors.push(at(format!("unknown input `{key}`")));
+            notes.error(Some(name), &[], at(format!("unknown input `{key}`")));
         }
     }
     let mut inputs: Vec<(String, StoredInput)> = Vec::new();
@@ -545,7 +701,11 @@ fn read_option(
             let stored = match unmark(raw_input) {
                 Ok(s) => s,
                 Err(e) => {
-                    report.errors.push(at(format!("`{}`: {e}", spec.name)));
+                    notes.error(
+                        Some(name),
+                        &[spec.name],
+                        at(format!("`{}`: {e}", spec.name)),
+                    );
                     continue;
                 }
             };
@@ -554,15 +714,21 @@ fn read_option(
                     .as_ref()
                     .and_then(Value::as_str)
                     .unwrap_or("unknown");
-                report.warnings.push(at(format!(
-                    "`{}` is not used for a {c} Cargo Containment; ignored",
-                    spec.name
-                )));
+                notes.warn(
+                    Some(name),
+                    &[spec.name],
+                    at(format!(
+                        "`{}` is not used for a {c} Cargo Containment; ignored",
+                        spec.name
+                    )),
+                );
                 continue;
             }
             match check_value(spec, &stored.value, profile) {
                 Ok((value, warnings)) => {
-                    report.warnings.extend(warnings.into_iter().map(&at));
+                    for w in warnings {
+                        notes.warn(Some(name), &[spec.name], at(w));
+                    }
                     inputs.push((
                         spec.name.into(),
                         StoredInput {
@@ -571,7 +737,17 @@ fn read_option(
                         },
                     ));
                 }
-                Err(e) => report.errors.push(at(e)),
+                Err(e) => {
+                    notes.error(Some(name), &[spec.name], at(e));
+                    // The edit is kept, so the field shows what was typed (spec 0002).
+                    inputs.push((
+                        spec.name.into(),
+                        StoredInput {
+                            value: normalise(stored.value),
+                            source: stored.source,
+                        },
+                    ));
+                }
             }
             continue;
         }
@@ -583,7 +759,7 @@ fn read_option(
             } else {
                 format!("missing required input `{}`", spec.name)
             };
-            report.errors.push(at(msg));
+            notes.error(Some(name), &[spec.name], at(msg));
             continue;
         }
         if !applies {
@@ -594,17 +770,21 @@ fn read_option(
             // The input it depends on is missing or wrong; that error is already reported.
             Ok(None) => continue,
             Err(e) => {
-                report.errors.push(at(e));
+                notes.error(Some(name), &[spec.name], at(e));
                 continue;
             }
         };
         match missing {
             Missing::Refuse => left_out.push(spec.name),
-            Missing::Fill => report.warnings.push(at(format!(
-                "`{}` {FILLED} {}, marked default",
-                spec.name,
-                show(&default)
-            ))),
+            Missing::Fill => notes.warn(
+                Some(name),
+                &[spec.name],
+                at(format!(
+                    "`{}` {FILLED} {}, marked default",
+                    spec.name,
+                    show(&default)
+                )),
+            ),
         }
         inputs.push((
             spec.name.into(),
@@ -615,15 +795,19 @@ fn read_option(
         ));
     }
     if !left_out.is_empty() {
-        report.errors.push(at(format!(
-            "inputs not stored in the file: {}. A saved Design holds every input as used, so a \
-             Defaults Profile edit cannot change it; run `ovcd fill` to write them in from the \
-             Defaults Profile, marked default",
-            left_out.join(", ")
-        )));
+        notes.error(
+            Some(name),
+            &left_out,
+            at(format!(
+                "inputs not stored in the file: {}. A saved Design holds every input as used, so a \
+                 Defaults Profile edit cannot change it; run `ovcd fill` to write them in from the \
+                 Defaults Profile, marked default",
+                left_out.join(", ")
+            )),
+        );
     }
-    cross_checks(&inputs, report, &at);
-    impossible_results(&inputs, report, &at);
+    cross_checks(&inputs, name, notes, &at);
+    impossible_results(&inputs, name, notes, &at);
     DesignOption {
         name: name.into(),
         inputs,
@@ -679,7 +863,7 @@ fn default_for(
 }
 
 /// Store every number as a float, so `10` and `10.0` are the same input.
-fn normalise(v: Value) -> Value {
+pub(crate) fn normalise(v: Value) -> Value {
     match v.as_f64() {
         Some(x) => json!(x),
         _ => v,
@@ -820,7 +1004,8 @@ fn number_ranges(
 /// Checks across inputs.
 fn cross_checks(
     inputs: &[(String, StoredInput)],
-    report: &mut Report,
+    option: &str,
+    notes: &mut Notes,
     at: &dyn Fn(String) -> String,
 ) {
     let get = |n: &str| inputs.iter().find(|(k, _)| k == n).map(|(_, i)| &i.value);
@@ -838,11 +1023,15 @@ fn cross_checks(
                 .filter(|(_, phase)| *phase == props.phase)
                 .map(|(c, _)| *c)
                 .collect();
-            report.errors.push(at(format!(
-                "`cargo_containment` = {containment} cannot carry {cargo} ({}); use {}",
-                props.phase,
-                fits.join(" or ")
-            )));
+            notes.cross(
+                Some(option),
+                &["cargo_containment", "cargo"],
+                at(format!(
+                    "`cargo_containment` = {containment} cannot carry {cargo} ({}); use {}",
+                    props.phase,
+                    fits.join(" or ")
+                )),
+            );
         }
     }
     if let (Some(fb), Some(d)) = (
@@ -850,9 +1039,13 @@ fn cross_checks(
         get("moulded_depth_m").and_then(Value::as_f64),
     ) && fb >= d
     {
-        report.errors.push(at(format!(
-            "`min_freeboard_m` = {fb} must be less than `moulded_depth_m` = {d} (hard limit)"
-        )));
+        notes.cross(
+            Some(option),
+            &["min_freeboard_m", "moulded_depth_m"],
+            at(format!(
+                "`min_freeboard_m` = {fb} must be less than `moulded_depth_m` = {d} (hard limit)"
+            )),
+        );
     }
     // The depth search tries hulls up to a fixed depth; above it no searched hull keeps the
     // freeboard, and the core raises when no waterway limit caps the draught.
@@ -860,10 +1053,14 @@ fn cross_checks(
         && let Some(fb) = get("min_freeboard_m").and_then(Value::as_f64)
         && fb > DEPTH_SEARCH_MAX_M
     {
-        report.errors.push(at(format!(
-            "`min_freeboard_m` = {fb} must be at most {DEPTH_SEARCH_MAX_M}, the deepest hull \
-             `optimise_depth` searches (hard limit)"
-        )));
+        notes.cross(
+            Some(option),
+            &["min_freeboard_m", "optimise_depth"],
+            at(format!(
+                "`min_freeboard_m` = {fb} must be at most {DEPTH_SEARCH_MAX_M}, the deepest hull \
+                 `optimise_depth` searches (hard limit)"
+            )),
+        );
     }
     // A channel shallower than its own clearance leaves no water to float in.
     if let (Some(depth), Some(ukc)) = (
@@ -871,10 +1068,14 @@ fn cross_checks(
         get("channel_under_keel_clearance_m").and_then(Value::as_f64),
     ) && depth < ukc
     {
-        report.errors.push(at(format!(
-            "`channel_depth_m` = {depth} must be at least `channel_under_keel_clearance_m` = \
-             {ukc} (hard limit)"
-        )));
+        notes.cross(
+            Some(option),
+            &["channel_depth_m", "channel_under_keel_clearance_m"],
+            at(format!(
+                "`channel_depth_m` = {depth} must be at least `channel_under_keel_clearance_m` = \
+                 {ukc} (hard limit)"
+            )),
+        );
     }
 }
 
@@ -889,7 +1090,8 @@ fn show_m(x: f64) -> String {
 /// [`DRY_BULK_WING_VOID_M`] for the rule.
 fn impossible_results(
     inputs: &[(String, StoredInput)],
-    report: &mut Report,
+    option: &str,
+    notes: &mut Notes,
     at: &dyn Fn(String) -> String,
 ) {
     let get = |n: &str| inputs.iter().find(|(k, _)| k == n).map(|(_, i)| &i.value);
@@ -901,22 +1103,30 @@ fn impossible_results(
     if let Some(beam) = get("beam_m").and_then(Value::as_f64) {
         let width = beam - 2.0 * DRY_BULK_WING_VOID_M;
         if width < 0.0 {
-            report.errors.push(at(format!(
-                "`beam_m` = {beam} leaves a hold width of {} m after the two \
-                 {DRY_BULK_WING_VOID_M} m wing voids; {NEGATIVE}",
-                show_m(width)
-            )));
+            notes.error(
+                Some(option),
+                &["beam_m"],
+                at(format!(
+                    "`beam_m` = {beam} leaves a hold width of {} m after the two \
+                     {DRY_BULK_WING_VOID_M} m wing voids; {NEGATIVE}",
+                    show_m(width)
+                )),
+            );
         }
     }
     if let Some(depth) = get("moulded_depth_m").and_then(Value::as_f64) {
         let height = (depth - DRY_BULK_DOUBLE_BOTTOM_M) + DRY_BULK_COAMING_M;
         if height < 0.0 {
-            report.errors.push(at(format!(
-                "`moulded_depth_m` = {depth} leaves a hold height of {} m (depth less the \
-                 {DRY_BULK_DOUBLE_BOTTOM_M} m double bottom, plus the {DRY_BULK_COAMING_M} m \
-                 coaming); {NEGATIVE}",
-                show_m(height)
-            )));
+            notes.error(
+                Some(option),
+                &["moulded_depth_m"],
+                at(format!(
+                    "`moulded_depth_m` = {depth} leaves a hold height of {} m (depth less the \
+                     {DRY_BULK_DOUBLE_BOTTOM_M} m double bottom, plus the {DRY_BULK_COAMING_M} m \
+                     coaming); {NEGATIVE}",
+                    show_m(height)
+                )),
+            );
         }
     }
 }

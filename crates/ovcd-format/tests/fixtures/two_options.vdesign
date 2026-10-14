@@ -1,0 +1,173 @@
+{
+  "format": "vdesign",
+  "format_version": 1,
+  "engine_version": "0.2.0",
+  "units": "SI",
+  "options": [
+    {
+      "name": "Box hold",
+      "inputs": {
+        "cargo": {
+          "value": "bauxite",
+          "source": "typed"
+        },
+        "hull_form": {
+          "value": "raked_box",
+          "source": "typed"
+        },
+        "formation": {
+          "value": {
+            "kind": "pushed_barge"
+          },
+          "source": "typed"
+        },
+        "length_overall_m": {
+          "value": 76.5,
+          "source": "typed"
+        },
+        "beam_m": {
+          "value": 11.4,
+          "source": "typed"
+        },
+        "moulded_depth_m": {
+          "value": 3.5,
+          "source": "typed"
+        },
+        "cargo_containment": {
+          "value": "box_hold",
+          "source": "typed"
+        },
+        "block_coefficient": {
+          "value": 0.85,
+          "source": "default"
+        },
+        "min_freeboard_m": {
+          "value": 0.3,
+          "source": "default"
+        },
+        "lightship_factor_t_per_m3": {
+          "value": 0.1093,
+          "source": "default"
+        },
+        "propulsive_efficiency": {
+          "value": 0.45,
+          "source": "default"
+        },
+        "max_speed_kn": {
+          "value": 10.0,
+          "source": "default"
+        },
+        "air_draft_limit_m": {
+          "value": null,
+          "source": "default"
+        },
+        "draught_limit_m": {
+          "value": null,
+          "source": "default"
+        },
+        "channel_depth_m": {
+          "value": null,
+          "source": "default"
+        },
+        "channel_under_keel_clearance_m": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "channel_bottom_width_m": {
+          "value": null,
+          "source": "default"
+        },
+        "channel_bank_slope": {
+          "value": 3.0,
+          "source": "default"
+        },
+        "channel_current_kn": {
+          "value": 0.0,
+          "source": "default"
+        }
+      },
+      "results_hash": "07539d06ceaa798b28ed7686f390cea612fa25d569ef36f8a18a11e06d532257"
+    },
+    {
+      "name": "Sloped hopper",
+      "inputs": {
+        "cargo": {
+          "value": "bauxite",
+          "source": "typed"
+        },
+        "hull_form": {
+          "value": "raked_box",
+          "source": "typed"
+        },
+        "formation": {
+          "value": {
+            "kind": "pushed_barge"
+          },
+          "source": "typed"
+        },
+        "length_overall_m": {
+          "value": 85.0,
+          "source": "typed"
+        },
+        "beam_m": {
+          "value": 12.5,
+          "source": "typed"
+        },
+        "moulded_depth_m": {
+          "value": 4.5,
+          "source": "typed"
+        },
+        "cargo_containment": {
+          "value": "sloped_hopper_hold",
+          "source": "typed"
+        },
+        "block_coefficient": {
+          "value": 0.85,
+          "source": "default"
+        },
+        "min_freeboard_m": {
+          "value": 0.3,
+          "source": "default"
+        },
+        "propulsive_efficiency": {
+          "value": 0.45,
+          "source": "default"
+        },
+        "max_speed_kn": {
+          "value": 10.0,
+          "source": "default"
+        },
+        "air_draft_limit_m": {
+          "value": null,
+          "source": "default"
+        },
+        "draught_limit_m": {
+          "value": null,
+          "source": "default"
+        },
+        "channel_depth_m": {
+          "value": null,
+          "source": "default"
+        },
+        "channel_under_keel_clearance_m": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "channel_bottom_width_m": {
+          "value": null,
+          "source": "default"
+        },
+        "channel_bank_slope": {
+          "value": 3.0,
+          "source": "default"
+        },
+        "channel_current_kn": {
+          "value": 0.0,
+          "source": "default"
+        }
+      },
+      "results_hash": "fbb1e82d0da0f15a7178f4be41bb7172189ae48073ad7564ed1544c4c8a3ef20"
+    }
+  ],
+  "defaults_profile": "built-in"
+}
