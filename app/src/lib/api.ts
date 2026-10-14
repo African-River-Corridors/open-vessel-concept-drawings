@@ -108,3 +108,6 @@ export const deleteOption = (option: string) => invoke<Snapshot>("delete_option"
 /** null when the user cancels the file dialog; rejects with the reason when the profile is refused. */
 export const loadProfile = () => invoke<Snapshot | null>("load_profile");
 export const useBuiltInProfile = () => invoke<Snapshot>("use_built_in_profile");
+/** The first-run notice: has it been accepted, and remember that it was. */
+export const noticeSeen = () => invoke<boolean>("notice_seen");
+export const acceptNotice = () => invoke<void>("accept_notice");

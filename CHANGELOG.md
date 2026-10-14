@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.2.1 (2026-10-14)
+
+- Windows and macOS installers: the `app-build` workflow builds an NSIS `-setup.exe` and `.dmg` files, and a pushed `v*` tag publishes them as a GitHub pre-release (unsigned) with a SHA-256 checksum file. The README says how to run the app.
+- A first-run notice in the app (concept design tool, unverified results, no warranty), shown once and reachable from About.
+- The desktop app: a Design with one Option at a time, live results, a compare table, and the side elevation, plan and midship section of the active Option.
+- Messages in the app use the plain input labels. When an input has a hard error, the app says why the results are out of date and links to the input.
+- Fix: switching Formation back from a pushed convoy no longer leaves a hard error; the convoy counts come back when the convoy does.
+- The drawing crate follows the Drawing Format Standard at commit 4936998: the status is a small line of text, not a diagonal watermark. DXF files are written with every drawing.
+- No calculation result changes.
 - Add the Design session to `ovcd-format` and the `ovcd schema` command, which prints the input schema (no result changes).
 - Add the `ovcd-draw` crate (the Drawing Format Standard in Rust, first part) with the standard's conformance suite vendored at a pinned commit, and `ovcd draw run` (no result changes).
 - Finish the standard in `ovcd-draw`: hatches, dimensions and leaders, symbols, title block, register and strips. All 194 conformance cases pass (no result changes).

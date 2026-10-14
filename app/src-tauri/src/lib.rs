@@ -4,6 +4,7 @@
 //! shell owns the native open and save dialogs, the unsaved-changes guard and the window title,
 //! and nothing else. It holds no calculation, validation or default logic.
 
+mod notice;
 mod state;
 mod views;
 
@@ -291,6 +292,26 @@ fn set_active_option(window: Window, state: State<Shared>, option: String) -> Re
     finish(&window, &guard)
 }
 
+/// The folder that holds the first-run marker: the app's config folder.
+fn notice_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    match notice::test_config_dir() {
+        Some(dir) => Ok(dir),
+        None => app.path().app_config_dir().map_err(|e| e.to_string()),
+    }
+}
+
+/// Has the user accepted the first-run notice?
+#[tauri::command]
+fn notice_seen(app: AppHandle) -> Result<bool, String> {
+    Ok(notice::seen(&notice_dir(&app)?))
+}
+
+/// Remember that the user accepted the first-run notice.
+#[tauri::command]
+fn accept_notice(app: AppHandle) -> Result<(), String> {
+    notice::accept(&notice_dir(&app)?, env!("CARGO_PKG_VERSION"))
+}
+
 pub fn run() {
     let initial = AppState::new_design().expect("the starter Design is valid");
     tauri::Builder::default()
@@ -314,6 +335,8 @@ pub fn run() {
             delete_option,
             load_profile,
             use_built_in_profile,
+            notice_seen,
+            accept_notice,
         ])
         .on_window_event(|window, event| {
             // The unsaved-changes guard on close: ask first, then close for real.

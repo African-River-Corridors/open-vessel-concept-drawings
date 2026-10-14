@@ -1,5 +1,6 @@
 """Packaging contract (ticket 26): maturin build, ovcd-py skeleton, release gate, no publish."""
 import re
+import json
 import tomllib
 from pathlib import Path
 
@@ -141,15 +142,21 @@ def test_wheel_job_skips_the_tests_that_scan_files_it_does_not_copy():
         assert f"--ignore=tests/{name}" in text, name
 
 
-def test_version_is_0_2_0_everywhere():
-    """Ticket 27: one version for the package and every `ovcd-*` crate."""
-    assert pyproject()["project"]["version"] == "0.2.0"
+def test_version_is_0_2_1_everywhere():
+    """Ticket 27, and 111: one version for the package, every `ovcd-*` crate and the app."""
+    assert pyproject()["project"]["version"] == "0.2.1"
     cargo = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))
-    assert cargo["workspace"]["package"]["version"] == "0.2.0"
+    assert cargo["workspace"]["package"]["version"] == "0.2.1"
     lock = tomllib.loads((ROOT / "Cargo.lock").read_text(encoding="utf-8"))
     ours = {p["name"]: p["version"] for p in lock["package"]
             if p["name"] in ("ovcd-core", "ovcd-format", "ovcd-draw", "ovcd-cli", "ovcd-py", "xtask")}
-    assert ours == dict.fromkeys(("ovcd-core", "ovcd-format", "ovcd-draw", "ovcd-cli", "ovcd-py", "xtask"), "0.2.0")
+    assert ours == dict.fromkeys(("ovcd-core", "ovcd-format", "ovcd-draw", "ovcd-cli", "ovcd-py", "xtask"), "0.2.1")
     for crate in ("ovcd-core", "ovcd-format", "ovcd-draw", "ovcd-cli", "ovcd-py"):
         manifest = tomllib.loads((ROOT / "crates" / crate / "Cargo.toml").read_text(encoding="utf-8"))
         assert manifest["package"]["version"] == {"workspace": True}, crate
+    # the app: its front end, its Tauri config (the installer name) and its crate
+    app = ROOT / "app"
+    assert json.loads((app / "package.json").read_text(encoding="utf-8"))["version"] == "0.2.1"
+    assert json.loads((app / "package-lock.json").read_text(encoding="utf-8"))["version"] == "0.2.1"
+    assert json.loads((app / "src-tauri" / "tauri.conf.json").read_text(encoding="utf-8"))["version"] == "0.2.1"
+    assert {p["name"]: p["version"] for p in lock["package"]}["ovcd-app"] == "0.2.1"

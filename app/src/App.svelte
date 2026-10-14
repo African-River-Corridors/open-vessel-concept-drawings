@@ -5,6 +5,7 @@
   import LeftPanel from "./lib/LeftPanel.svelte";
   import MainPanel from "./lib/MainPanel.svelte";
   import BottomPanel from "./lib/BottomPanel.svelte";
+  import Notice from "./lib/Notice.svelte";
 
   // Display state only: the Design, its checks and its results all come from Rust.
   let snap = $state<Snapshot | null>(null);
@@ -15,6 +16,9 @@
   let error = $state<string | null>(null);
   let bannerDismissed = $state(false);
   let generation = $state(0);
+  /** The first-run notice: open on first start, and again from About. */
+  let noticeOpen = $state(false);
+  let noticeIsFirstRun = $state(false);
 
   let leftWidth = $state(340);
   let bottomHeight = $state(260);
@@ -114,8 +118,20 @@
     }
   }
 
+  async function closeNotice() {
+    noticeOpen = false;
+    if (noticeIsFirstRun) {
+      noticeIsFirstRun = false;
+      await guard(api.acceptNotice);
+    }
+  }
+
   onMount(() => {
     guard(async () => {
+      if (!(await api.noticeSeen())) {
+        noticeIsFirstRun = true;
+        noticeOpen = true;
+      }
       schema = await api.inputSchema();
       await adopt(await api.snapshot(), true);
     });
@@ -150,12 +166,15 @@
 
 <svelte:window onkeydown={onKey} />
 
+{#if noticeOpen}<Notice onClose={closeNotice} />{/if}
+
 <div class="shell">
   <header>
     <button onclick={() => fileAction(api.newFile, true)}>New</button>
     <button onclick={() => fileAction(api.openFile, true)}>Open</button>
     <button onclick={() => fileAction(api.save, false)}>Save</button>
     <button onclick={() => fileAction(api.saveAs, false)}>Save as</button>
+    <button onclick={() => (noticeOpen = true)}>About</button>
     <span class="grow"></span>
     {#if snap}
       <span class="meta">{snap.file_name}{snap.dirty ? " (unsaved)" : ""}</span>
