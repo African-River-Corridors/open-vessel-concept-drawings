@@ -44,6 +44,13 @@ Usage:
       error clauses. It reads only the document and the files the document names.
   ovcd draw build <document.json> --out <dir>
       Build the outputs of one drawing document: the normalised content, an SVG and a PDF.
+  ovcd draw [--profile <profile.json>] [--option <name>] --out <dir> <file.vdesign>
+      Draw the side elevation, plan and midship section of each Option of a Design (or of the
+      one Option named). Writes, for each view, the drawing document, its normalised content,
+      an SVG and a PDF. A convoy, or an Option that cannot be computed, gets no drawings.
+  ovcd draw [--profile <profile.json>] [--option <name>] --document <file.vdesign>
+      Print the drawing documents only, as JSON, so that they can be built with another
+      implementation of the standard.
   ovcd --help | --version
 
 All files and output are SI.

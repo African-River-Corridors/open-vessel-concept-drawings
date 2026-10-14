@@ -11,3 +11,7 @@ repository.workspace = true
 ovcd-core.workspace = true
 serde_json.workspace = true
 sha2 = "0.11.1"
+
+[dev-dependencies]
+# The tests check the views against the standard itself (spec 0003). The library does not use it.
+ovcd-draw.workspace = true
