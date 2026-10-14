@@ -140,6 +140,12 @@
 
   let active = $derived(snap?.active_option ?? "");
   let activeEval = $derived(evaluation?.options.find((o) => o.name === active));
+  /** The inputs of the active Option that have a hard error, with their schema labels. */
+  let blockers = $derived.by(() => {
+    const names = new Set<string>();
+    for (const m of activeEval?.messages ?? []) if (m.severity === "error") m.inputs.forEach((n) => names.add(n));
+    return [...names].map((name) => ({ name, label: schema?.inputs.find((i) => i.name === name)?.label ?? name }));
+  });
 </script>
 
 <svelte:window onkeydown={onKey} />
@@ -190,9 +196,9 @@
       onOption={optionAction}
       onProfile={(a) => command(a === "load" ? api.loadProfile : api.useBuiltInProfile, true)} /></section>
     <div class="handle v" role="separator" aria-orientation="vertical" onpointerdown={drag("x")}></div>
-    <section class="main"><MainPanel {evaluation} {active} {lastGood} /></section>
+    <section class="main"><MainPanel {evaluation} {active} {lastGood} {blockers} /></section>
     <div class="handle h" role="separator" aria-orientation="horizontal" onpointerdown={drag("y")}></div>
-    <section class="bottom"><BottomPanel {evaluation} {active} {lastGood} onActivate={(name) => command(() => api.setActiveOption(name))} /></section>
+    <section class="bottom"><BottomPanel {evaluation} {active} {lastGood} {blockers} onActivate={(name) => command(() => api.setActiveOption(name))} /></section>
   </div>
 </div>
 

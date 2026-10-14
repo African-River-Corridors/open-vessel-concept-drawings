@@ -225,8 +225,40 @@ fn message_json(m: &Message) -> Value {
         },
         "scope": scope,
         "inputs": inputs,
-        "text": m.text,
+        "text": plain_text(&m.text),
     })
+}
+
+/// A message as the app shows it: each back-ticked input key is replaced by the input's label
+/// (`formation` by Formation, `in_line` by In line). Other back-ticked names lose their ticks.
+/// `ovcd validate` keeps the raw text; only the app's JSON is reworded.
+fn plain_text(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(start) = rest.find('`') {
+        let Some(len) = rest[start + 1..].find('`') else {
+            break;
+        };
+        out.push_str(&rest[..start]);
+        let key = &rest[start + 1..start + 1 + len];
+        out.push_str(&plain_label(key));
+        rest = &rest[start + len + 2..];
+    }
+    out.push_str(rest);
+    out
+}
+
+fn plain_label(key: &str) -> String {
+    match key {
+        "abreast" | "formation.abreast" => return "Abreast".into(),
+        "in_line" | "formation.in_line" => return "In line".into(),
+        "kind" => return "Kind".into(),
+        _ => {}
+    }
+    match INPUTS.iter().find(|s| s.name == key) {
+        Some(s) => s.label.to_string(),
+        None => key.to_string(),
+    }
 }
 
 impl Evaluation {

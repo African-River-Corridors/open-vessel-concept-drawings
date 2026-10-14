@@ -804,3 +804,34 @@ fn the_evaluation_carries_file_level_messages() {
     let j = starter().evaluate().to_json();
     assert_eq!(j["file_messages"], json!([]));
 }
+
+// ---- messages in the app use plain labels ------------------------------------------------------
+
+#[test]
+fn app_messages_use_input_labels_and_the_raw_text_is_unchanged() {
+    let mut s = starter();
+    s.set_input("Option 1", "beam_m", json!(-1)).unwrap();
+    s.set_formation("Option 1", "pushed_convoy", Some(0), Some(3))
+        .unwrap();
+    let e = s.evaluate();
+    let raw: Vec<&str> = e.options[0]
+        .messages
+        .iter()
+        .map(|m| m.text.as_str())
+        .collect();
+    assert!(raw.iter().any(|t| t.contains("`beam_m`")), "{raw:?}");
+    assert!(
+        raw.iter().any(|t| t.contains("`formation.abreast`")),
+        "{raw:?}"
+    );
+    let j = e.to_json();
+    let shown: Vec<String> = j["options"][0]["messages"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|m| m["text"].as_str().unwrap().to_string())
+        .collect();
+    assert!(shown.iter().all(|t| !t.contains('`')), "{shown:?}");
+    assert!(shown.iter().any(|t| t.starts_with("Beam")), "{shown:?}");
+    assert!(shown.iter().any(|t| t.starts_with("Abreast")), "{shown:?}");
+}
