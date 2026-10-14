@@ -1,0 +1,254 @@
+//! What the shell holds besides the Design session: the file path, the unsaved flag, the active
+//! Option (for the window title) and the hash warnings from the last open.
+//!
+//! This module has no Tauri types, so it is tested like any other Rust. It holds no calculation,
+//! validation or default logic: every answer comes from [`DesignSession`].
+
+use ovcd_format::{DesignSession, HashStatus, Profile};
+use serde_json::{Value, json};
+use std::path::{Path, PathBuf};
+
+pub struct AppState {
+    session: DesignSession,
+    path: Option<PathBuf>,
+    dirty: bool,
+    active_option: String,
+    /// Names of the Options whose stored results hash differs from this engine's, at open.
+    hash_changed: Vec<String>,
+}
+
+fn first_option(session: &DesignSession) -> String {
+    session
+        .design()
+        .options
+        .first()
+        .map(|o| o.name.clone())
+        .unwrap_or_default()
+}
+
+impl AppState {
+    /// A new Design: the starter Design `ovcd new` writes.
+    pub fn new_design() -> Result<AppState, String> {
+        let session = DesignSession::new_design(Profile::built_in())?;
+        let active_option = first_option(&session);
+        Ok(AppState {
+            session,
+            path: None,
+            dirty: false,
+            active_option,
+            hash_changed: Vec::new(),
+        })
+    }
+
+    /// Open a `.vdesign` text that was read from `path`.
+    pub fn open(path: &Path, text: &str) -> Result<AppState, String> {
+        let (session, report) = DesignSession::open(text, Profile::built_in())?;
+        let active_option = first_option(&session);
+        let hash_changed = report
+            .hash_status
+            .into_iter()
+            .filter(|(_, status)| matches!(status, HashStatus::Differs { .. }))
+            .map(|(name, _)| name)
+            .collect();
+        Ok(AppState {
+            session,
+            path: Some(path.to_path_buf()),
+            dirty: false,
+            active_option,
+            hash_changed,
+        })
+    }
+
+    pub fn path(&self) -> Option<&Path> {
+        self.path.as_deref()
+    }
+
+    pub fn is_dirty(&self) -> bool {
+        self.dirty
+    }
+
+    pub fn session(&self) -> &DesignSession {
+        &self.session
+    }
+
+    pub fn set_input(&mut self, option: &str, name: &str, value: Value) -> Result<(), String> {
+        self.session.set_input(option, name, value)?;
+        self.dirty = true;
+        Ok(())
+    }
+
+    pub fn reset_input(&mut self, option: &str, name: &str) -> Result<(), String> {
+        self.session.reset_input(option, name)?;
+        self.dirty = true;
+        Ok(())
+    }
+
+    pub fn set_active_option(&mut self, option: &str) -> Result<(), String> {
+        if self
+            .session
+            .design()
+            .options
+            .iter()
+            .any(|o| o.name == option)
+        {
+            self.active_option = option.to_string();
+            Ok(())
+        } else {
+            Err(format!("no Option named '{option}'"))
+        }
+    }
+
+    /// The `.vdesign` text to write. Refused while the Design has a hard error.
+    pub fn save_text(&self) -> Result<String, String> {
+        self.session.save()
+    }
+
+    /// Record that the Design was written to `path`.
+    pub fn saved(&mut self, path: &Path) {
+        self.path = Some(path.to_path_buf());
+        self.dirty = false;
+        // A saved file carries fresh hashes, so the open-time warning is over.
+        self.hash_changed.clear();
+    }
+
+    pub fn file_name(&self) -> String {
+        self.path
+            .as_deref()
+            .and_then(|p| p.file_name())
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_else(|| "Untitled".into())
+    }
+
+    /// The window title: unsaved marker, file name, active Option.
+    pub fn title(&self) -> String {
+        let marker = if self.dirty { "\u{25cf} " } else { "" };
+        format!(
+            "{marker}{} \u{2014} {} \u{2014} OVCD",
+            self.file_name(),
+            self.active_option
+        )
+    }
+
+    /// What the front end shows. The Design is the session's own `.vdesign` text, parsed.
+    pub fn snapshot(&self) -> Value {
+        let design: Value =
+            serde_json::from_str(&self.session.design().to_text()).unwrap_or(Value::Null);
+        json!({
+            "engine_version": ovcd_format::vdesign::ENGINE_VERSION,
+            "profile": self.session.profile().name(),
+            "design": design,
+            "file_name": self.file_name(),
+            "path": self.path.as_ref().map(|p| p.to_string_lossy().into_owned()),
+            "dirty": self.dirty,
+            "title": self.title(),
+            "active_option": self.active_option,
+            "hash_changed": self.hash_changed,
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ovcd_format::{RunOutcome, check, new_design};
+
+    fn starter_text() -> String {
+        new_design(&Profile::built_in()).unwrap().to_text()
+    }
+
+    #[test]
+    fn new_is_the_starter_design_ovcd_new_writes() {
+        let state = AppState::new_design().unwrap();
+        let expected: Value = serde_json::from_str(&starter_text()).unwrap();
+        assert_eq!(state.snapshot()["design"], expected);
+        assert_eq!(state.file_name(), "Untitled");
+        assert!(!state.is_dirty());
+    }
+
+    #[test]
+    fn title_shows_file_option_and_the_unsaved_marker() {
+        let mut state = AppState::open(Path::new("/x/barge.vdesign"), &starter_text()).unwrap();
+        assert_eq!(
+            state.title(),
+            "barge.vdesign \u{2014} Option 1 \u{2014} OVCD"
+        );
+        state.set_input("Option 1", "beam_m", json!(12.0)).unwrap();
+        assert_eq!(
+            state.title(),
+            "\u{25cf} barge.vdesign \u{2014} Option 1 \u{2014} OVCD"
+        );
+        state.saved(Path::new("/x/other.vdesign"));
+        assert_eq!(
+            state.title(),
+            "other.vdesign \u{2014} Option 1 \u{2014} OVCD"
+        );
+    }
+
+    #[test]
+    fn an_edit_marks_the_design_unsaved_and_a_refused_edit_does_not() {
+        let mut state = AppState::new_design().unwrap();
+        assert!(
+            state
+                .set_input("Option 1", "no_such_input", json!(1))
+                .is_err()
+        );
+        assert!(state.set_input("No such", "beam_m", json!(1)).is_err());
+        assert!(!state.is_dirty());
+        state.reset_input("Option 1", "max_speed_kn").unwrap();
+        assert!(state.is_dirty());
+    }
+
+    #[test]
+    fn active_option_must_exist() {
+        let mut state = AppState::new_design().unwrap();
+        assert!(state.set_active_option("Option 9").is_err());
+        assert_eq!(state.snapshot()["active_option"], "Option 1");
+    }
+
+    #[test]
+    fn a_saved_file_passes_validate_and_reopens_unchanged() {
+        let mut state = AppState::new_design().unwrap();
+        state.set_input("Option 1", "beam_m", json!(12.5)).unwrap();
+        let text = state.save_text().unwrap();
+        let checked = check(&text, &Profile::built_in());
+        assert!(checked.report.is_ok(), "{:?}", checked.report.errors);
+        let reopened = AppState::open(Path::new("a.vdesign"), &text).unwrap();
+        assert_eq!(reopened.save_text().unwrap(), text);
+        assert!(
+            reopened.snapshot()["hash_changed"]
+                .as_array()
+                .unwrap()
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn a_saved_file_carries_each_options_results_hash() {
+        let state = AppState::new_design().unwrap();
+        let text = state.save_text().unwrap();
+        let v: Value = serde_json::from_str(&text).unwrap();
+        let hash = v["options"][0]["results_hash"].as_str().unwrap();
+        let eval = state.session().evaluate();
+        let Some(RunOutcome::Results { hash: computed, .. }) = &eval.options[0].outcome else {
+            panic!("the starter Design should compute");
+        };
+        assert_eq!(hash, computed);
+    }
+
+    #[test]
+    fn opening_a_file_whose_results_hash_changed_names_the_options_affected() {
+        let mut v: Value = serde_json::from_str(&starter_text()).unwrap();
+        v["options"][0]["results_hash"] = json!("0000000000000000deadbeef");
+        let state = AppState::open(Path::new("old.vdesign"), &v.to_string()).unwrap();
+        assert_eq!(state.snapshot()["hash_changed"], json!(["Option 1"]));
+        // Saving writes fresh hashes, which ends the warning.
+        let mut state = state;
+        state.saved(Path::new("old.vdesign"));
+        assert_eq!(state.snapshot()["hash_changed"], json!([]));
+    }
+
+    #[test]
+    fn a_file_that_is_not_a_design_is_refused() {
+        assert!(AppState::open(Path::new("x.vdesign"), "not json").is_err());
+    }
+}

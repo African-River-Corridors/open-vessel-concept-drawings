@@ -1,7 +1,7 @@
 [workspace]
 resolver = "3"
-members = ["crates/ovcd-core", "crates/ovcd-format", "crates/ovcd-cli", "crates/ovcd-py", "xtask"]
-# ovcd-py (PyO3 bindings) is left out so `cargo build` and `cargo test` need no Python.
+members = ["crates/ovcd-core", "crates/ovcd-format", "crates/ovcd-cli", "crates/ovcd-py", "app/src-tauri", "xtask"]
+# ovcd-py (PyO3 bindings) and the app (Tauri, needs Node for the front end) are left out so `cargo build` and `cargo test` need no Python.
 default-members = ["crates/ovcd-core", "crates/ovcd-format", "crates/ovcd-cli", "xtask"]
 
 [workspace.package]
