@@ -10,5 +10,7 @@
   "waves",
   "hull",
   "tanks",
-  "weights"
+  "weights",
+  "resistance",
+  "electric_energy"
 ]

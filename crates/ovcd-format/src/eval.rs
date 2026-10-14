@@ -12,7 +12,10 @@ use ovcd_core::pressure_vessel::PyError;
 use ovcd_core::pyint::PyInt;
 use ovcd_core::pystr::repr_str;
 use ovcd_core::vessel_standards::{Catalogue, VesselStandard};
-use ovcd_core::{squat as core_squat, waves as core_waves};
+use ovcd_core::{
+    electric_energy as core_energy, resistance as core_resistance, squat as core_squat,
+    waves as core_waves,
+};
 use serde_json::{Value, json};
 
 /// Why `eval` could not produce a result. A Python `ValueError` is not an `EvalError`: it is a
@@ -79,6 +82,8 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
         "weights" => weights(function, args),
         "squat" => squat(function, args),
         "waves" => waves(function, args),
+        "resistance" => resistance(function, args),
+        "electric_energy" => electric_energy(function, args),
         "aft_arrangement" => aft_arrangement(function, args),
         "gas_separation" => gas_separation(function, args),
         "barge_cost" => barge_cost(function, args),
@@ -1393,6 +1398,399 @@ fn waves(function: &str, args: &Value) -> Result<Value, EvalError> {
         },
         other => Err(EvalError::BadInput(format!(
             "waves has no parity function `{other}`"
+        ))),
+    }
+}
+
+/// Reject any key of an input object that is not a field, as Python's `build` does.
+fn fields_object<'a>(
+    value: &'a Value,
+    fields: &[&str],
+    what: &str,
+) -> Result<&'a serde_json::Map<String, Value>, EvalError> {
+    let object = value
+        .as_object()
+        .ok_or_else(|| EvalError::BadInput(format!("`{what}` must be an object")))?;
+    for key in object.keys() {
+        if !fields.contains(&key.as_str()) {
+            return Err(EvalError::BadInput(format!(
+                "unknown field `{key}` in `{what}`"
+            )));
+        }
+    }
+    Ok(object)
+}
+
+fn f64_or(
+    object: &serde_json::Map<String, Value>,
+    name: &str,
+    default: f64,
+) -> Result<f64, EvalError> {
+    Ok(f64_field(object, name)?.unwrap_or(default))
+}
+
+fn bool_or(
+    object: &serde_json::Map<String, Value>,
+    name: &str,
+    default: bool,
+) -> Result<bool, EvalError> {
+    match object.get(name) {
+        None => Ok(default),
+        Some(v) => v
+            .as_bool()
+            .ok_or_else(|| EvalError::BadInput(format!("`{name}` must be true or false"))),
+    }
+}
+
+const TUG_FIELDS: &[&str] = &[
+    "engine_power_kw",
+    "propulsive_efficiency",
+    "sfc_g_per_kwh",
+    "fuel_density_kg_per_litre",
+];
+
+const ENVIRONMENT_FIELDS: &[&str] = &[
+    "name",
+    "water_depth",
+    "channel_width_bottom",
+    "channel_width_surface",
+    "bank_slope",
+    "current_speed_knots",
+    "water_density",
+    "is_deep_water",
+    "significant_wave_height_m",
+    "wave_heading_deg_off_bow",
+    "peak_wave_period_s",
+    "squat_safety_margin_m",
+    "apply_squat_limit",
+];
+
+const RESISTANCE_FIELDS: &[&str] = &[
+    "loa",
+    "lwl",
+    "beam",
+    "draft",
+    "block_coefficient",
+    "wetted_surface_area",
+    "displacement_tonnes",
+    "tug",
+    "environments",
+    "speed_min_knots",
+    "speed_max_knots",
+    "speed_step_knots",
+];
+
+fn tug_inputs(value: &Value) -> Result<core_resistance::TugInputs, EvalError> {
+    let o = fields_object(value, TUG_FIELDS, "tug")?;
+    let d = core_resistance::TugInputs::default();
+    Ok(core_resistance::TugInputs {
+        engine_power_kw: f64_or(o, "engine_power_kw", d.engine_power_kw)?,
+        propulsive_efficiency: f64_or(o, "propulsive_efficiency", d.propulsive_efficiency)?,
+        sfc_g_per_kwh: f64_or(o, "sfc_g_per_kwh", d.sfc_g_per_kwh)?,
+        fuel_density_kg_per_litre: f64_or(
+            o,
+            "fuel_density_kg_per_litre",
+            d.fuel_density_kg_per_litre,
+        )?,
+    })
+}
+
+fn environment_inputs(value: &Value) -> Result<core_resistance::EnvironmentInputs, EvalError> {
+    let o = fields_object(value, ENVIRONMENT_FIELDS, "environments[]")?;
+    let d = core_resistance::EnvironmentInputs::default();
+    let name = match o.get("name") {
+        None => d.name.clone(),
+        Some(v) => v
+            .as_str()
+            .ok_or_else(|| EvalError::BadInput("`name` must be text".into()))?
+            .to_string(),
+    };
+    Ok(core_resistance::EnvironmentInputs {
+        name,
+        water_depth: f64_or(o, "water_depth", d.water_depth)?,
+        channel_width_bottom: f64_or(o, "channel_width_bottom", d.channel_width_bottom)?,
+        channel_width_surface: f64_or(o, "channel_width_surface", d.channel_width_surface)?,
+        bank_slope: f64_or(o, "bank_slope", d.bank_slope)?,
+        current_speed_knots: f64_or(o, "current_speed_knots", d.current_speed_knots)?,
+        water_density: f64_or(o, "water_density", d.water_density)?,
+        is_deep_water: bool_or(o, "is_deep_water", d.is_deep_water)?,
+        significant_wave_height_m: f64_or(
+            o,
+            "significant_wave_height_m",
+            d.significant_wave_height_m,
+        )?,
+        wave_heading_deg_off_bow: f64_or(
+            o,
+            "wave_heading_deg_off_bow",
+            d.wave_heading_deg_off_bow,
+        )?,
+        peak_wave_period_s: f64_or(o, "peak_wave_period_s", d.peak_wave_period_s)?,
+        squat_safety_margin_m: f64_or(o, "squat_safety_margin_m", d.squat_safety_margin_m)?,
+        apply_squat_limit: bool_or(o, "apply_squat_limit", d.apply_squat_limit)?,
+    })
+}
+
+fn resistance_inputs(args: &Value) -> Result<core_resistance::ResistanceInputs, EvalError> {
+    let inputs = args
+        .get("inputs")
+        .ok_or_else(|| EvalError::BadInput("`args.inputs` is required".into()))?;
+    let o = fields_object(inputs, RESISTANCE_FIELDS, "inputs")?;
+    let d = core_resistance::ResistanceInputs::default();
+    let tug = match o.get("tug") {
+        None => d.tug.clone(),
+        Some(v) => tug_inputs(v)?,
+    };
+    let environments = match o.get("environments") {
+        None => d.environments.clone(),
+        Some(v) => v
+            .as_array()
+            .ok_or_else(|| EvalError::BadInput("`environments` must be a list".into()))?
+            .iter()
+            .map(environment_inputs)
+            .collect::<Result<_, _>>()?,
+    };
+    Ok(core_resistance::ResistanceInputs {
+        loa: f64_or(o, "loa", d.loa)?,
+        lwl: f64_or(o, "lwl", d.lwl)?,
+        beam: f64_or(o, "beam", d.beam)?,
+        draft: f64_or(o, "draft", d.draft)?,
+        block_coefficient: f64_or(o, "block_coefficient", d.block_coefficient)?,
+        wetted_surface_area: f64_or(o, "wetted_surface_area", d.wetted_surface_area)?,
+        displacement_tonnes: f64_or(o, "displacement_tonnes", d.displacement_tonnes)?,
+        tug,
+        environments,
+        speed_min_knots: f64_or(o, "speed_min_knots", d.speed_min_knots)?,
+        speed_max_knots: f64_or(o, "speed_max_knots", d.speed_max_knots)?,
+        speed_step_knots: f64_or(o, "speed_step_knots", d.speed_step_knots)?,
+    })
+}
+
+fn environment_inputs_json(e: &core_resistance::EnvironmentInputs) -> Value {
+    json!({
+        "name": e.name,
+        "water_depth": num(e.water_depth),
+        "channel_width_bottom": num(e.channel_width_bottom),
+        "channel_width_surface": num(e.channel_width_surface),
+        "bank_slope": num(e.bank_slope),
+        "current_speed_knots": num(e.current_speed_knots),
+        "water_density": num(e.water_density),
+        "is_deep_water": e.is_deep_water,
+        "significant_wave_height_m": num(e.significant_wave_height_m),
+        "wave_heading_deg_off_bow": num(e.wave_heading_deg_off_bow),
+        "peak_wave_period_s": num(e.peak_wave_period_s),
+        "squat_safety_margin_m": num(e.squat_safety_margin_m),
+        "apply_squat_limit": e.apply_squat_limit,
+    })
+}
+
+fn resistance_inputs_json(i: &core_resistance::ResistanceInputs) -> Value {
+    json!({
+        "loa": num(i.loa),
+        "lwl": num(i.lwl),
+        "beam": num(i.beam),
+        "draft": num(i.draft),
+        "block_coefficient": num(i.block_coefficient),
+        "wetted_surface_area": num(i.wetted_surface_area),
+        "displacement_tonnes": num(i.displacement_tonnes),
+        "tug": {
+            "engine_power_kw": num(i.tug.engine_power_kw),
+            "propulsive_efficiency": num(i.tug.propulsive_efficiency),
+            "sfc_g_per_kwh": num(i.tug.sfc_g_per_kwh),
+            "fuel_density_kg_per_litre": num(i.tug.fuel_density_kg_per_litre),
+        },
+        "environments": i.environments.iter().map(environment_inputs_json).collect::<Vec<_>>(),
+        "speed_min_knots": num(i.speed_min_knots),
+        "speed_max_knots": num(i.speed_max_knots),
+        "speed_step_knots": num(i.speed_step_knots),
+    })
+}
+
+fn speed_point_json(p: &core_resistance::SpeedPoint) -> Value {
+    json!({
+        "speed_knots": num(p.speed_knots),
+        "speed_through_water_knots": num(p.speed_through_water_knots),
+        "froude_number": num(p.froude_number),
+        "froude_depth": num(p.froude_depth),
+        "resistance_frictional_kn": num(p.resistance_frictional_kn),
+        "resistance_residuary_kn": num(p.resistance_residuary_kn),
+        "resistance_shallow_factor": num(p.resistance_shallow_factor),
+        "resistance_total_kn": num(p.resistance_total_kn),
+        "effective_power_kw": num(p.effective_power_kw),
+        "delivered_power_kw": num(p.delivered_power_kw),
+        "fuel_litres_per_hour": num(p.fuel_litres_per_hour),
+        "fuel_litres_per_nm": num(p.fuel_litres_per_nm),
+        "power_available": p.power_available,
+        "resistance_waves_kn": num(p.resistance_waves_kn),
+        "squat_m": num(p.squat_m),
+        "dynamic_ukc_m": num(p.dynamic_ukc_m),
+        "squat_limited": p.squat_limited,
+    })
+}
+
+fn environment_result_json(e: &core_resistance::EnvironmentResult) -> Value {
+    json!({
+        "name": e.name,
+        "limiting_speed_knots": e.limiting_speed_knots.map_or(Value::Null, num),
+        "service_speed_knots": num(e.service_speed_knots),
+        "blockage_ratio": num(e.blockage_ratio),
+        "speed_curve": e.speed_curve.iter().map(speed_point_json).collect::<Vec<_>>(),
+        "resistance_at_service_kn": num(e.resistance_at_service_kn),
+        "power_at_service_kw": num(e.power_at_service_kw),
+        "fuel_at_service_lph": num(e.fuel_at_service_lph),
+        "fuel_at_service_lpnm": num(e.fuel_at_service_lpnm),
+        "squat_limited_speed_knots": e.squat_limited_speed_knots.map_or(Value::Null, num),
+        "service_speed_governed_by": e.service_speed_governed_by,
+    })
+}
+
+fn resistance(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        "compute" => match core_resistance::compute(&resistance_inputs(args)?) {
+            Ok(r) => ok(json!({
+                "inputs": resistance_inputs_json(&r.inputs),
+                "wetted_surface_area": num(r.wetted_surface_area),
+                "environments": r.environments.iter().map(environment_result_json).collect::<Vec<_>>(),
+                "checks": checks_json(&r.checks),
+                "warnings": r.warnings,
+            })),
+            Err(e) => py_exception(&e),
+        },
+        other => Err(EvalError::BadInput(format!(
+            "resistance has no parity function `{other}`"
+        ))),
+    }
+}
+
+const ENERGY_FIELDS: &[&str] = &[
+    "beam",
+    "loa",
+    "lwl",
+    "draft",
+    "block_coefficient",
+    "channel_depth_m",
+    "channel_bottom_width_m",
+    "channel_top_width_m",
+    "current_knots",
+    "fresh_water",
+    "also_open_sea",
+    "propulsive_coefficient",
+    "drivetrain_efficiency",
+    "target_service_speed_knots",
+    "service_speed_safety_fraction",
+    "power_margin",
+    "one_way_km",
+    "trips_per_year",
+    "speed_min_knots",
+    "speed_max_knots",
+    "speed_step_knots",
+];
+
+fn energy_inputs(args: &Value) -> Result<core_energy::EnergyInputs, EvalError> {
+    let inputs = args
+        .get("inputs")
+        .ok_or_else(|| EvalError::BadInput("`args.inputs` is required".into()))?;
+    let o = fields_object(inputs, ENERGY_FIELDS, "inputs")?;
+    let d = core_energy::EnergyInputs::default();
+    Ok(core_energy::EnergyInputs {
+        beam: f64_or(o, "beam", d.beam)?,
+        loa: f64_or(o, "loa", d.loa)?,
+        lwl: f64_or(o, "lwl", d.lwl)?,
+        draft: f64_or(o, "draft", d.draft)?,
+        block_coefficient: f64_or(o, "block_coefficient", d.block_coefficient)?,
+        channel_depth_m: f64_or(o, "channel_depth_m", d.channel_depth_m)?,
+        channel_bottom_width_m: f64_or(o, "channel_bottom_width_m", d.channel_bottom_width_m)?,
+        channel_top_width_m: f64_or(o, "channel_top_width_m", d.channel_top_width_m)?,
+        current_knots: f64_or(o, "current_knots", d.current_knots)?,
+        fresh_water: bool_or(o, "fresh_water", d.fresh_water)?,
+        also_open_sea: bool_or(o, "also_open_sea", d.also_open_sea)?,
+        propulsive_coefficient: f64_or(o, "propulsive_coefficient", d.propulsive_coefficient)?,
+        drivetrain_efficiency: f64_or(o, "drivetrain_efficiency", d.drivetrain_efficiency)?,
+        target_service_speed_knots: f64_or(
+            o,
+            "target_service_speed_knots",
+            d.target_service_speed_knots,
+        )?,
+        service_speed_safety_fraction: f64_or(
+            o,
+            "service_speed_safety_fraction",
+            d.service_speed_safety_fraction,
+        )?,
+        power_margin: f64_or(o, "power_margin", d.power_margin)?,
+        one_way_km: f64_or(o, "one_way_km", d.one_way_km)?,
+        trips_per_year: f64_or(o, "trips_per_year", d.trips_per_year)?,
+        speed_min_knots: f64_or(o, "speed_min_knots", d.speed_min_knots)?,
+        speed_max_knots: f64_or(o, "speed_max_knots", d.speed_max_knots)?,
+        speed_step_knots: f64_or(o, "speed_step_knots", d.speed_step_knots)?,
+    })
+}
+
+fn energy_inputs_json(i: &core_energy::EnergyInputs) -> Value {
+    json!({
+        "beam": num(i.beam),
+        "loa": num(i.loa),
+        "lwl": num(i.lwl),
+        "draft": num(i.draft),
+        "block_coefficient": num(i.block_coefficient),
+        "channel_depth_m": num(i.channel_depth_m),
+        "channel_bottom_width_m": num(i.channel_bottom_width_m),
+        "channel_top_width_m": num(i.channel_top_width_m),
+        "current_knots": num(i.current_knots),
+        "fresh_water": i.fresh_water,
+        "also_open_sea": i.also_open_sea,
+        "propulsive_coefficient": num(i.propulsive_coefficient),
+        "drivetrain_efficiency": num(i.drivetrain_efficiency),
+        "target_service_speed_knots": num(i.target_service_speed_knots),
+        "service_speed_safety_fraction": num(i.service_speed_safety_fraction),
+        "power_margin": num(i.power_margin),
+        "one_way_km": num(i.one_way_km),
+        "trips_per_year": num(i.trips_per_year),
+        "speed_min_knots": num(i.speed_min_knots),
+        "speed_max_knots": num(i.speed_max_knots),
+        "speed_step_knots": num(i.speed_step_knots),
+    })
+}
+
+fn energy_point_json(p: &core_energy::EnergyPoint) -> Value {
+    json!({
+        "speed_knots": num(p.speed_knots),
+        "speed_kmh": num(p.speed_kmh),
+        "froude_depth": num(p.froude_depth),
+        "resistance_kn": num(p.resistance_kn),
+        "shaft_power_kw": num(p.shaft_power_kw),
+        "battery_power_kw": num(p.battery_power_kw),
+        "energy_kwh_per_km": num(p.energy_kwh_per_km),
+    })
+}
+
+fn energy_environment_json(e: &core_energy::EnergyEnvironment) -> Value {
+    json!({
+        "name": e.name,
+        "limiting_speed_knots": e.limiting_speed_knots.map_or(Value::Null, num),
+        "service_speed_knots": num(e.service_speed_knots),
+        "blockage_ratio": num(e.blockage_ratio),
+        "curve": e.curve.iter().map(energy_point_json).collect::<Vec<_>>(),
+        "resistance_kn": num(e.resistance_kn),
+        "shaft_power_kw": num(e.shaft_power_kw),
+        "battery_power_kw": num(e.battery_power_kw),
+        "energy_kwh_per_km": num(e.energy_kwh_per_km),
+        "energy_per_trip_kwh": num(e.energy_per_trip_kwh),
+        "energy_per_year_mwh": num(e.energy_per_year_mwh),
+    })
+}
+
+fn electric_energy(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        "compute" => match core_energy::compute(&energy_inputs(args)?) {
+            Ok(r) => ok(json!({
+                "inputs": energy_inputs_json(&r.inputs),
+                "installed_power_kw": num(r.installed_power_kw),
+                "environments": r.environments.iter().map(energy_environment_json).collect::<Vec<_>>(),
+                "checks": checks_json(&r.checks),
+            })),
+            Err(e) => py_exception(&e),
+        },
+        other => Err(EvalError::BadInput(format!(
+            "electric_energy has no parity function `{other}`"
         ))),
     }
 }
