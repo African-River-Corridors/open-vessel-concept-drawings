@@ -2,6 +2,7 @@
 //! dispatch over every entry point of the calculation core (the Python package's seam).
 
 mod eval;
+pub mod ga;
 mod gas_arrangement;
 pub mod gas_stability;
 pub mod profile;
@@ -11,6 +12,7 @@ mod simulate;
 pub mod vdesign;
 
 pub use eval::{ENTRY_POINTS, EvalError, eval, parse_case};
+pub use ga::{GaViews, ga_views, ga_views_of};
 pub use profile::Profile;
 pub use run::{
     CONVOY_NOT_AVAILABLE, HashStatus, RunOption, RunOutcome, canonical_json, hash_warning,

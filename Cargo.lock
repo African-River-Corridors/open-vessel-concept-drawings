@@ -2371,6 +2371,7 @@ name = "ovcd-format"
 version = "0.2.0"
 dependencies = [
  "ovcd-core",
+ "ovcd-draw",
  "serde_json",
  "sha2 0.11.1",
 ]
