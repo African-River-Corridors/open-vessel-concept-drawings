@@ -5,7 +5,7 @@
   edits sweep points by hand;
 - the sweep drops knife-edge points, where a last-digit difference would flip a discrete result;
 - a tier-3 case is an error path, or a named degenerate input where Python has no error path;
-- the committed parity files stay under about 5 MB.
+- the committed parity files stay under about 10 MB.
 
 Risk stopped: a port ticket chooses its own cases, a function reaches the switch untested, or
 the oracle grows too big to keep in git. This file is deleted with the parity folder.
@@ -133,11 +133,11 @@ def test_tier_3_is_an_error_path_or_a_named_degenerate_input(ep):
             assert is_error, f"{ep} {c['id']}: tier 3 error case did not error"
 
 
-def test_committed_parity_files_stay_under_5_mb():
+def test_committed_parity_files_stay_under_10_mb():
     files = [p for d in ("cases", "reference") for p in (PARITY / d).glob("*.json")]
     assert files, "no parity files found: scanning nothing"
     total = sum(p.stat().st_size for p in files)
-    assert total < 5_000_000, f"parity files are {total / 1e6:.2f} MB"
+    assert total < 10_000_000, f"parity files are {total / 1e6:.2f} MB"
 
 
 # Inputs a port could hardcode at their defaults and still pass, unless the sweep moves them

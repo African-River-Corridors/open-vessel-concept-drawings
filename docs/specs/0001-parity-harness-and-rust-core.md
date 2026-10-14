@@ -231,7 +231,7 @@ review, and nobody has agreed yet that they need fixing. General improvements co
   2. a seeded sweep across the valid input space of each entry point, committed as data (no random
      generator in Rust);
   3. error cases.
-- Keep all committed parity files under about 5 MB.
+- Keep all committed parity files under about 10 MB (raised from 5 MB on 2026-10-14: the folder reached 4.98 MB and a gas case had to be dropped).
 - Floats are stored as shortest round-trip text. NaN and infinity are stored as tagged strings.
 - `xtask` regenerates the Reference Results by running the frozen Python. It needs no maturin build.
   The frozen Python cannot change during the port, so CI does not re-run it.

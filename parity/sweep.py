@@ -17,7 +17,7 @@ Rules:
   thousand ulps), and every discrete output (integers, booleans, text, list lengths) must stay
   the same and every float output must stay within the parity tolerance. A knife-edge point is dropped and another one drawn, so a last-digit difference between
   Python and Rust cannot flip a branch;
-- the number of points per function keeps all parity files under about 5 MB.
+- the number of points per function keeps all parity files under about 10 MB.
 Standard library only (plus the frozen package, through the driver).
 """
 from __future__ import annotations
@@ -546,7 +546,7 @@ def s_simulate(rng):
 
 
 # (entry point, function, number of points, sampler). The count is set by the output size of
-# one point: the whole parity folder must stay under about 5 MB.
+# one point: the whole parity folder must stay under about 10 MB.
 SPACES = [
     ("cargo", "get_cargo", 6, s_get_cargo),
     ("protective_location", "distance_d_vc", 25, s_distance_d_vc),
