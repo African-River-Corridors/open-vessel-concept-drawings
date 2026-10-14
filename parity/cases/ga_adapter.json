@@ -105,6 +105,96 @@
       }
     },
     {
+      "id": "to_ga/tank_wall_null_laden_null",
+      "tier": 1,
+      "reason": "tier 1: issue #22 port: an automatic tank wall (null) reads as 25.0 in the drawing, and a null laden draft keeps the full-load draft",
+      "input": {
+        "fn": "to_ga",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "LNG_ethane",
+            "tank_wall_thickness": null
+          },
+          "kwargs": {
+            "laden_draft_m": null
+          }
+        }
+      }
+    },
+    {
+      "id": "to_ga/tank_wall_zero",
+      "tier": 1,
+      "reason": "tier 1: issue #22 port: a zero tank wall is falsy in Python, so the drawing reads 25.0",
+      "input": {
+        "fn": "to_ga",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "LNG_ethane",
+            "tank_wall_thickness": 0.0
+          },
+          "kwargs": {}
+        }
+      }
+    },
+    {
+      "id": "to_ga/pushed_zero_bow_rake",
+      "tier": 1,
+      "reason": "tier 1: issue #22 port: a pushed barge with a zero bow rake length, which the drawing reads as 0.0",
+      "input": {
+        "fn": "to_ga",
+        "args": {
+          "inputs": {
+            "loa": 100.0,
+            "beam": 16.0,
+            "depth": 6.0,
+            "cargo_type": "LNG_ethane",
+            "self_propelled": false,
+            "bow_rake_length_m": 0.0
+          },
+          "kwargs": {}
+        }
+      }
+    },
+    {
+      "id": "is_gas/infeasible_gas_hull",
+      "tier": 1,
+      "reason": "tier 1: issue #22 port: a gas hull too short for its stern block is still a gas result",
+      "input": {
+        "fn": "is_gas",
+        "args": {
+          "inputs": {
+            "loa": 30.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane"
+          }
+        }
+      }
+    },
+    {
+      "id": "to_ga/error/infeasible_gas_hull",
+      "tier": 3,
+      "reason": "tier 3: error path: a gas hull too short for its stern block has no tank geometry",
+      "input": {
+        "fn": "to_ga",
+        "args": {
+          "inputs": {
+            "loa": 30.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane"
+          },
+          "kwargs": {}
+        }
+      }
+    },
+    {
       "id": "to_ga/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",

@@ -411,6 +411,195 @@
       }
     },
     {
+      "id": "n_tanks_for_length/112",
+      "output": {
+        "ok": 3
+      }
+    },
+    {
+      "id": "n_tanks_for_length/100_max_20",
+      "output": {
+        "ok": 4
+      }
+    },
+    {
+      "id": "sweep/bauxite_60_90",
+      "output": {
+        "ok": {
+          "barge_lengths_m": [
+            60.0,
+            90
+          ],
+          "beams_m": [
+            12.0
+          ],
+          "depth_m": 6.0,
+          "cargo_type": "bauxite",
+          "clearance_basis": "1.0 m standard side clearance per side (IGC-2G protective location)",
+          "max_tank_length_m": 28.0,
+          "cells": [
+            {
+              "barge_length_m": 60.0,
+              "beam_m": 12.0,
+              "n_tanks_long": 2,
+              "feasible": true,
+              "cargo_t": 1341.3599099999997,
+              "tank_outer_diameter_m": 0.0,
+              "tank_length_m": 21.5,
+              "slenderness": null,
+              "full_load_draft_m": 3.2882766723632812,
+              "air_draft_m": 6.111723327636719,
+              "reason": ""
+            },
+            {
+              "barge_length_m": 90.0,
+              "beam_m": 12.0,
+              "n_tanks_long": 3,
+              "feasible": true,
+              "cargo_t": 2705.08491,
+              "tank_outer_diameter_m": 0.0,
+              "tank_length_m": 21.166666666666668,
+              "slenderness": null,
+              "full_load_draft_m": 4.141193389892578,
+              "air_draft_m": 5.258806610107422,
+              "reason": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "sweep/depth_5_LNG",
+      "output": {
+        "ok": {
+          "barge_lengths_m": [
+            60.0
+          ],
+          "beams_m": [
+            12.0
+          ],
+          "depth_m": 5,
+          "cargo_type": "LNG",
+          "clearance_basis": "1.0 m standard side clearance per side (IGC-2G protective location)",
+          "max_tank_length_m": 28.0,
+          "cells": [
+            {
+              "barge_length_m": 60.0,
+              "beam_m": 12.0,
+              "n_tanks_long": 2,
+              "feasible": true,
+              "cargo_t": 572.8799977318643,
+              "tank_outer_diameter_m": 10.0,
+              "tank_length_m": 21.5,
+              "slenderness": 2.15,
+              "full_load_draft_m": 2.269878387451172,
+              "air_draft_m": 10.730121612548828,
+              "reason": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n_tanks_for_length/zero_max",
+      "output": {
+        "error": {
+          "type": "ZeroDivisionError",
+          "message": "float division by zero"
+        }
+      }
+    },
+    {
+      "id": "n_tanks_for_length/negative_length",
+      "output": {
+        "ok": 1
+      }
+    },
+    {
+      "id": "n_tanks_for_length/negative_max",
+      "output": {
+        "ok": 1
+      }
+    },
+    {
+      "id": "sweep/zero_and_negative_beam",
+      "output": {
+        "ok": {
+          "barge_lengths_m": [
+            60.0
+          ],
+          "beams_m": [
+            0.0,
+            -3.0
+          ],
+          "depth_m": 6.0,
+          "cargo_type": "LPG_propane",
+          "clearance_basis": "1.0 m standard side clearance per side (IGC-2G protective location)",
+          "max_tank_length_m": 28.0,
+          "cells": [
+            {
+              "barge_length_m": 60.0,
+              "beam_m": 0.0,
+              "n_tanks_long": 2,
+              "feasible": false,
+              "cargo_t": null,
+              "tank_outer_diameter_m": null,
+              "tank_length_m": null,
+              "slenderness": null,
+              "full_load_draft_m": null,
+              "air_draft_m": null,
+              "reason": "beam and depth must be positive"
+            },
+            {
+              "barge_length_m": 60.0,
+              "beam_m": -3.0,
+              "n_tanks_long": 2,
+              "feasible": false,
+              "cargo_t": null,
+              "tank_outer_diameter_m": null,
+              "tank_length_m": null,
+              "slenderness": null,
+              "full_load_draft_m": null,
+              "air_draft_m": null,
+              "reason": "beam and depth must be positive"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "sweep/shallow_gas_cell",
+      "output": {
+        "ok": {
+          "barge_lengths_m": [
+            90
+          ],
+          "beams_m": [
+            12.0
+          ],
+          "depth_m": 2.0,
+          "cargo_type": "LPG_propane",
+          "clearance_basis": "1.0 m standard side clearance per side (IGC-2G protective location)",
+          "max_tank_length_m": 28.0,
+          "cells": [
+            {
+              "barge_length_m": 90.0,
+              "beam_m": 12.0,
+              "n_tanks_long": 3,
+              "feasible": false,
+              "cargo_t": null,
+              "tank_outer_diameter_m": null,
+              "tank_length_m": null,
+              "slenderness": null,
+              "full_load_draft_m": null,
+              "air_draft_m": null,
+              "reason": "volume-bound load must float within the moulded depth"
+            }
+          ]
+        }
+      }
+    },
+    {
       "id": "sweep/sweep/000",
       "output": {
         "ok": {

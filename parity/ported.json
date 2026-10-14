@@ -15,5 +15,7 @@
   "electric_energy",
   "hydrostatics",
   "gas_stability",
-  "barge_capacity"
+  "barge_capacity",
+  "design_grid",
+  "ga_adapter"
 ]
