@@ -25,7 +25,8 @@ use crate::profile::Profile;
 use crate::run::{HashStatus, RunOutcome, results_hash, run_design, run_option};
 use crate::vdesign::{
     AppliesTo, CARGO_CONTAINMENTS, Design, DesignOption, ENGINE_VERSION, FORMATION_KINDS, Group,
-    INPUTS, InputKind, KEYED_DEFAULTS, Report, Source, StoredInput, check, fill, new_design,
+    INPUTS, InputKind, KEYED_DEFAULTS, Report, Source, StoredInput, check, choice_label, fill,
+    new_design,
 };
 use serde_json::{Map, Value, json};
 
@@ -57,7 +58,7 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
     let name = spec.name;
     let mut e = Map::new();
     e.insert("name".into(), json!(name));
-    e.insert("label".into(), json!(input_label(name)));
+    e.insert("label".into(), json!(spec.label));
     e.insert("group".into(), json!(spec.group.label()));
     e.insert("required".into(), json!(spec.required));
     let applies: Vec<&str> = match spec.applies_to {
@@ -78,7 +79,7 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
             e.insert("kind".into(), json!("choice"));
             let list: Vec<Value> = choices
                 .iter()
-                .map(|c| json!({ "value": c, "label": label_of(c) }))
+                .map(|c| json!({ "value": c, "label": choice_label(c) }))
                 .collect();
             e.insert("choices".into(), Value::Array(list));
         }
@@ -101,7 +102,7 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
             e.insert("kind".into(), json!("formation"));
             let kinds: Vec<Value> = FORMATION_KINDS
                 .iter()
-                .map(|k| json!({ "value": k, "label": label_of(k) }))
+                .map(|k| json!({ "value": k, "label": choice_label(k) }))
                 .collect();
             e.insert("choices".into(), Value::Array(kinds));
             let mut convoy = Map::new();
@@ -157,50 +158,6 @@ fn add_ranges(e: &mut Map<String, Value>, name: &str, profile: &Profile) {
     e.insert("basis".into(), json!(profile.basis(name)));
 }
 
-/// The plain-words name of an input, for a form.
-fn input_label(name: &str) -> &str {
-    match name {
-        "cargo" => "Cargo",
-        "hull_form" => "Hull Form",
-        "formation" => "Formation",
-        "length_overall_m" => "Length overall",
-        "beam_m" => "Beam",
-        "moulded_depth_m" => "Moulded depth",
-        "cargo_containment" => "Cargo Containment",
-        "block_coefficient" => "Block coefficient",
-        "min_freeboard_m" => "Minimum freeboard",
-        "lightship_factor_t_per_m3" => "Lightship factor",
-        "ruleset" => "Ruleset",
-        "fill_ratio" => "Fill ratio",
-        "adn_tank_cap_m3" => "Tank capacity limit (ADN)",
-        "optimise_depth" => "Optimise depth",
-        "propulsive_efficiency" => "Propulsive efficiency",
-        "max_speed_kn" => "Maximum speed",
-        "air_draft_limit_m" => "Air-draft limit",
-        "draught_limit_m" => "Draught limit",
-        "channel_depth_m" => "Channel depth",
-        "channel_under_keel_clearance_m" => "Under-keel clearance",
-        "channel_bottom_width_m" => "Channel bottom width",
-        "channel_bank_slope" => "Bank slope",
-        "channel_current_kn" => "Current",
-        other => other,
-    }
-}
-
-/// The display name of a choice.
-fn label_of(value: &str) -> String {
-    match value {
-        "box_hold" => "Box hold".into(),
-        "sloped_hopper_hold" => "Sloped hopper hold".into(),
-        "type_c_tanks" => "Type C tanks".into(),
-        "raked_box" => "Raked box".into(),
-        "self_propelled" => "Self-propelled".into(),
-        "pushed_barge" => "Pushed barge".into(),
-        "pushed_convoy" => "Pushed convoy".into(),
-        other => other.into(),
-    }
-}
-
 /// What [`DesignSession::open`] found in the file.
 #[derive(Debug, Clone, PartialEq)]
 pub struct OpenReport {
@@ -251,6 +208,25 @@ pub struct OptionEvaluation {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Evaluation {
     pub options: Vec<OptionEvaluation>,
+    /// Messages about the file as a whole, which no Option owns (an unknown top-level key, say).
+    pub file_messages: Vec<Message>,
+}
+
+fn message_json(m: &Message) -> Value {
+    let (scope, inputs) = match &m.scope {
+        Scope::Input(n) => ("input", vec![n.clone()]),
+        Scope::CrossCheck(ns) => ("cross_check", ns.clone()),
+        Scope::Option => ("option", vec![]),
+    };
+    json!({
+        "severity": match m.severity {
+            Severity::Error => "error",
+            Severity::Warning => "warning",
+        },
+        "scope": scope,
+        "inputs": inputs,
+        "text": m.text,
+    })
 }
 
 impl Evaluation {
@@ -260,26 +236,7 @@ impl Evaluation {
             .options
             .iter()
             .map(|o| {
-                let messages: Vec<Value> = o
-                    .messages
-                    .iter()
-                    .map(|m| {
-                        let (scope, inputs) = match &m.scope {
-                            Scope::Input(n) => ("input", vec![n.clone()]),
-                            Scope::CrossCheck(ns) => ("cross_check", ns.clone()),
-                            Scope::Option => ("option", vec![]),
-                        };
-                        json!({
-                            "severity": match m.severity {
-                                Severity::Error => "error",
-                                Severity::Warning => "warning",
-                            },
-                            "scope": scope,
-                            "inputs": inputs,
-                            "text": m.text,
-                        })
-                    })
-                    .collect();
+                let messages: Vec<Value> = o.messages.iter().map(message_json).collect();
                 let outcome = match &o.outcome {
                     Some(RunOutcome::Results { results, hash }) => {
                         json!({ "status": "results", "results": results, "results_hash": hash })
@@ -293,7 +250,8 @@ impl Evaluation {
                 json!({ "name": o.name, "messages": messages, "outcome": outcome })
             })
             .collect();
-        json!({ "options": options })
+        let file_messages: Vec<Value> = self.file_messages.iter().map(message_json).collect();
+        json!({ "options": options, "file_messages": file_messages })
     }
 }
 
@@ -559,7 +517,7 @@ impl DesignSession {
             .iter()
             .map(|o| o.name.as_str())
             .collect();
-        let by_option = attach(&checked.report, &names);
+        let (by_option, file_messages) = attach(&checked.report, &names);
         let options = by_option
             .into_iter()
             .enumerate()
@@ -576,7 +534,10 @@ impl DesignSession {
                 }
             })
             .collect();
-        Evaluation { options }
+        Evaluation {
+            options,
+            file_messages,
+        }
     }
 
     /// The `.vdesign` text, with each computed Option's results hash recomputed and the current
@@ -743,7 +704,8 @@ fn containment_of(option: &DesignOption) -> Option<&str> {
 
 /// Sort a report's messages into the Options they belong to. The inputs a message is about come
 /// from the report as data, never from the wording of the text.
-fn attach(report: &Report, names: &[&str]) -> Vec<Vec<Message>> {
+fn attach(report: &Report, names: &[&str]) -> (Vec<Vec<Message>>, Vec<Message>) {
+    let mut file_level: Vec<Message> = Vec::new();
     let mut by_option: Vec<Vec<Message>> = names.iter().map(|_| Vec::new()).collect();
     let tagged = report
         .errors
@@ -762,21 +724,29 @@ fn attach(report: &Report, names: &[&str]) -> Vec<Vec<Message>> {
         let owner = (0..names.len())
             .filter(|&i| text.starts_with(&format!("Option '{}': ", names[i])))
             .max_by_key(|&i| names[i].len());
-        if let Some(i) = owner {
-            let body = &text[format!("Option '{}': ", names[i]).len()..];
-            let scope = match inputs.as_slice() {
-                [] => Scope::Option,
-                [one] => Scope::Input(one.clone()),
-                many => Scope::CrossCheck(many.to_vec()),
-            };
-            by_option[i].push(Message {
+        let scope = match inputs.as_slice() {
+            [] => Scope::Option,
+            [one] => Scope::Input(one.clone()),
+            many => Scope::CrossCheck(many.to_vec()),
+        };
+        match owner {
+            Some(i) => {
+                let body = &text[format!("Option '{}': ", names[i]).len()..];
+                by_option[i].push(Message {
+                    severity,
+                    scope,
+                    text: body.to_string(),
+                });
+            }
+            // No Option owns it: it is about the file.
+            None => file_level.push(Message {
                 severity,
                 scope,
-                text: body.to_string(),
-            });
+                text: text.clone(),
+            }),
         }
     }
-    by_option
+    (by_option, file_level)
 }
 
 #[cfg(test)]
@@ -793,12 +763,25 @@ mod tests {
         );
         report.error("Option 'A': another".into(), &["beam_m", "moulded_depth_m"]);
         report.warning("Option 'A': about the whole Option".into(), &[]);
-        let got = attach(&report, &["A"]);
+        let (got, file) = attach(&report, &["A"]);
         assert_eq!(got[0][0].scope, Scope::Input("length_overall_m".into()));
         assert_eq!(
             got[0][1].scope,
             Scope::CrossCheck(vec!["beam_m".into(), "moulded_depth_m".into()])
         );
         assert_eq!(got[0][2].scope, Scope::Option);
+        assert!(file.is_empty());
+    }
+
+    #[test]
+    fn a_message_no_option_owns_is_a_file_message() {
+        let mut report = Report::default();
+        report.warning("unknown top-level key `extra` is ignored".into(), &[]);
+        report.error("Option 'A': about A".into(), &["beam_m"]);
+        let (by_option, file) = attach(&report, &["A"]);
+        assert_eq!(by_option[0].len(), 1);
+        assert_eq!(file.len(), 1);
+        assert_eq!(file[0].severity, Severity::Warning);
+        assert_eq!(file[0].text, "unknown top-level key `extra` is ignored");
     }
 }
