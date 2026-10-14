@@ -1,4 +1,4 @@
-//! Title block, revision register, status watermark, notes and references (clause 14).
+//! Title block, revision register, status line, notes and references (clause 14).
 
 use crate::data::{self, LineGroup, Role};
 use crate::entities::Entity;
@@ -11,8 +11,9 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;
 
-pub const WATERMARK_LAYER: &str = "WATERMARK";
-const WATERMARK_HEIGHT: f64 = 20.0;
+const STATUS_HEIGHT: f64 = 2.5;
+const STATUS_PAD: f64 = 2.0;
+const STATUS_REGION_HEIGHT: f64 = 6.5;
 const STRIP_PAD: f64 = 2.0;
 const STRIP_HEADING: f64 = 3.5;
 const STRIP_ITEM: f64 = 2.5;
@@ -35,11 +36,12 @@ pub struct Plan {
     pub regions: Vec<(String, Rect)>,
 }
 
-fn status_text(status: &str) -> &'static str {
+/// Clause 14.9: the text of the status line. `issued` has none.
+fn status_text(status: &str) -> Option<&'static str> {
     match status {
-        "draft" => "DRAFT",
-        "concept" => "CONCEPT - NOT FOR CONSTRUCTION",
-        _ => "ISSUED FOR CONSTRUCTION",
+        "draft" => Some("DRAFT \u{2013} NOT FOR CONSTRUCTION"),
+        "concept" => Some("CONCEPT \u{2013} NOT FOR CONSTRUCTION"),
+        _ => None,
     }
 }
 
@@ -395,19 +397,8 @@ pub fn plan(
             out.errors.insert("14.9".to_string());
         }
     }
-    if let Some(status) = status {
-        let angle = libm::atan2(ds.h, ds.w).to_degrees();
-        out.entities.push(Entity::text(
-            "sheet.status_watermark",
-            WATERMARK_LAYER,
-            [ds.x + ds.w / 2.0, ds.y + ds.h / 2.0],
-            status_text(status),
-            WATERMARK_HEIGHT,
-            angle,
-            AlignH::Centre,
-            AlignV::Middle,
-            None,
-        ));
+    if let Some(text) = status.and_then(status_text) {
+        status_line(doc, text, ds, &mut out);
     }
     let regions = &out.regions;
     let mut bad = false;
@@ -425,6 +416,48 @@ pub fn plan(
         out.errors.insert("14.5".to_string());
     }
     out
+}
+
+/// Clause 14.9: the status line, in the notes strip when there is one, else in a region of its own.
+fn status_line(doc: &Value, text: &str, ds: Rect, out: &mut Plan) {
+    let notes = doc
+        .get("strips")
+        .map_or(&[][..], |s| arr(s))
+        .iter()
+        .find(|s| st(&s["content"]) == "notes")
+        .map(|s| st(&s["id"]).to_string());
+    let anchor = if let Some(id) = notes {
+        let Some(r) = out.regions.iter().find(|(n, _)| *n == id).map(|(_, r)| *r) else {
+            return; // the strip has an error of its own
+        };
+        if !fits(text, STATUS_HEIGHT, r.w - 2.0 * STATUS_PAD) {
+            out.errors.insert("14.6".to_string());
+        }
+        [r.x + STATUS_PAD, r.y + r.h - STATUS_PAD]
+    } else {
+        let width = rules::text_width(text, STATUS_HEIGHT).unwrap_or(0.0);
+        out.regions.push((
+            "status".to_string(),
+            Rect {
+                x: ds.x,
+                y: ds.y + ds.h - STATUS_REGION_HEIGHT,
+                w: width + 2.0 * STATUS_PAD,
+                h: STATUS_REGION_HEIGHT,
+            },
+        ));
+        [ds.x + STATUS_PAD, ds.y + ds.h - STATUS_PAD]
+    };
+    out.entities.push(Entity::text(
+        "sheet.status_line",
+        FURNITURE_LAYER,
+        anchor,
+        text,
+        STATUS_HEIGHT,
+        0.0,
+        AlignH::Left,
+        AlignV::Baseline,
+        None,
+    ));
 }
 
 /// The values of the derived fields (clause 14.4.2) and the given fields (clause 14.4.1).
@@ -799,6 +832,18 @@ fn strip_entities(doc: &Value, strip: &Value, r: Rect, group: &LineGroup, out: &
         AlignV::Baseline,
         None,
     ));
+    // Clause 14.10.1: the status line stands on the last line of a notes strip.
+    let reserve = if kind == "notes" && doc.get("status").and_then(|s| status_text(st(s))).is_some()
+    {
+        STRIP_PITCH
+    } else {
+        0.0
+    };
+    if reserve > 0.0
+        && r.y + STRIP_PAD + STRIP_HEADING > r.y + r.h - STRIP_PAD - reserve + FIT_TOL_MM
+    {
+        out.errors.insert("14.6".to_string());
+    }
     let items: Vec<String> = if kind == "notes" {
         doc.get("notes")
             .map_or(&[][..], |n| arr(n))
@@ -822,7 +867,7 @@ fn strip_entities(doc: &Value, strip: &Value, r: Rect, group: &LineGroup, out: &
     };
     for (i, text) in items.iter().enumerate() {
         let baseline = r.y + STRIP_PAD + STRIP_HEADING + STRIP_PITCH * (i + 1) as f64;
-        if baseline > r.y + r.h - STRIP_PAD + FIT_TOL_MM
+        if baseline > r.y + r.h - STRIP_PAD - reserve + FIT_TOL_MM
             || !fits(text, STRIP_ITEM, r.w - 2.0 * STRIP_PAD)
         {
             out.errors.insert("14.6".to_string());
