@@ -74,6 +74,8 @@ export interface OptionEvaluation {
 }
 export interface Evaluation {
   options: OptionEvaluation[];
+  /** Messages about the file as a whole, which no Option owns. */
+  file_messages: Message[];
 }
 
 export const snapshot = () => invoke<Snapshot>("snapshot");

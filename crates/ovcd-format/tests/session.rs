@@ -730,3 +730,37 @@ fn every_input_has_a_plain_label_in_the_schema() {
         assert!(!label.contains('_'), "{label} is a key, not a label");
     }
 }
+
+#[test]
+fn a_typed_lightship_factor_survives_box_hold_to_hopper_and_back() {
+    let mut s = starter();
+    s.set_input("Option 1", "lightship_factor_t_per_m3", json!(0.12))
+        .unwrap();
+    s.set_input("Option 1", "cargo_containment", json!("sloped_hopper_hold"))
+        .unwrap();
+    assert!(!has_input(&s, "Option 1", "lightship_factor_t_per_m3"));
+    s.set_input("Option 1", "cargo_containment", json!("box_hold"))
+        .unwrap();
+    let back = input(&s, "Option 1", "lightship_factor_t_per_m3");
+    assert_eq!(back.value, json!(0.12));
+    assert_eq!(back.source, Source::Typed);
+}
+
+#[test]
+fn choice_inputs_show_plain_labels_from_the_input_table() {
+    let schema = input_schema(&Profile::built_in());
+    for entry in schema["inputs"].as_array().unwrap() {
+        if entry["kind"] != "choice" || entry["name"] == "ruleset" {
+            continue;
+        }
+        for c in entry["choices"].as_array().unwrap() {
+            assert_ne!(c["label"], c["value"], "{} has no display name", c["value"]);
+        }
+    }
+}
+
+#[test]
+fn the_evaluation_carries_file_level_messages() {
+    let j = starter().evaluate().to_json();
+    assert_eq!(j["file_messages"], json!([]));
+}

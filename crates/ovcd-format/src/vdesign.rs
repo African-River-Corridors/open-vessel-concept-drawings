@@ -136,19 +136,47 @@ impl Group {
     }
 }
 
+/// Display names of the choices of the choice inputs (a value not listed shows as itself).
+pub const CHOICE_LABELS: &[(&str, &str)] = &[
+    ("box_hold", "Box hold"),
+    ("sloped_hopper_hold", "Sloped hopper hold"),
+    ("type_c_tanks", "Type C tanks"),
+    ("raked_box", "Raked box"),
+    ("self_propelled", "Self-propelled"),
+    ("pushed_barge", "Pushed barge"),
+    ("pushed_convoy", "Pushed convoy"),
+];
+
+/// The display name of a choice value.
+pub fn choice_label(value: &str) -> &str {
+    CHOICE_LABELS
+        .iter()
+        .find(|(v, _)| *v == value)
+        .map_or(value, |(_, l)| l)
+}
+
 /// One input of an Option.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct InputSpec {
     pub name: &'static str,
+    /// The name in plain words, for a form.
+    pub label: &'static str,
     pub kind: InputKind,
     pub required: bool,
     pub applies_to: AppliesTo,
     pub group: Group,
 }
 
-const fn spec(name: &'static str, kind: InputKind, required: bool, group: Group) -> InputSpec {
+const fn spec(
+    name: &'static str,
+    label: &'static str,
+    kind: InputKind,
+    required: bool,
+    group: Group,
+) -> InputSpec {
     InputSpec {
         name,
+        label,
         kind,
         required,
         applies_to: AppliesTo::All,
@@ -158,12 +186,14 @@ const fn spec(name: &'static str, kind: InputKind, required: bool, group: Group)
 
 const fn only(
     name: &'static str,
+    label: &'static str,
     kind: InputKind,
     containment: &'static str,
     group: Group,
 ) -> InputSpec {
     InputSpec {
         name,
+        label,
         kind,
         required: false,
         applies_to: AppliesTo::Only(containment),
@@ -177,69 +207,155 @@ const NUM_OR_NONE: InputKind = InputKind::Number { nullable: true };
 /// Every input of an Option, in the order defaults are resolved (a default may depend on an
 /// input above it). Names follow `GLOSSARY.md`.
 pub const INPUTS: &[InputSpec] = &[
-    spec("cargo", InputKind::Cargo, true, Group::Required),
+    spec("cargo", "Cargo", InputKind::Cargo, true, Group::Required),
     spec(
         "hull_form",
+        "Hull Form",
         InputKind::Choice(HULL_FORMS),
         true,
         Group::Required,
     ),
-    spec("formation", InputKind::Formation, true, Group::Required),
-    spec("length_overall_m", NUM, true, Group::Required),
-    spec("beam_m", NUM, true, Group::Required),
-    spec("moulded_depth_m", NUM, true, Group::Required),
+    spec(
+        "formation",
+        "Formation",
+        InputKind::Formation,
+        true,
+        Group::Required,
+    ),
+    spec(
+        "length_overall_m",
+        "Length overall",
+        NUM,
+        true,
+        Group::Required,
+    ),
+    spec("beam_m", "Beam", NUM, true, Group::Required),
+    spec(
+        "moulded_depth_m",
+        "Moulded depth",
+        NUM,
+        true,
+        Group::Required,
+    ),
     spec(
         "cargo_containment",
+        "Cargo Containment",
         InputKind::Choice(&["box_hold", "sloped_hopper_hold", "type_c_tanks"]),
         false,
         Group::HullAndContainment,
     ),
-    spec("block_coefficient", NUM, false, Group::HullAndContainment),
-    spec("min_freeboard_m", NUM, false, Group::HullAndContainment),
+    spec(
+        "block_coefficient",
+        "Block coefficient",
+        NUM,
+        false,
+        Group::HullAndContainment,
+    ),
+    spec(
+        "min_freeboard_m",
+        "Minimum freeboard",
+        NUM,
+        false,
+        Group::HullAndContainment,
+    ),
     only(
         "lightship_factor_t_per_m3",
+        "Lightship factor",
         NUM,
         "box_hold",
         Group::HullAndContainment,
     ),
     only(
         "ruleset",
+        "Ruleset",
         InputKind::Choice(RULESETS),
         "type_c_tanks",
         Group::GasTanks,
     ),
-    only("fill_ratio", NUM, "type_c_tanks", Group::GasTanks),
-    only("adn_tank_cap_m3", NUM, "type_c_tanks", Group::GasTanks),
+    only(
+        "fill_ratio",
+        "Fill ratio",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "adn_tank_cap_m3",
+        "Tank capacity limit (ADN)",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
     only(
         "optimise_depth",
+        "Optimise depth",
         InputKind::Bool,
         "type_c_tanks",
         Group::GasTanks,
     ),
-    spec("propulsive_efficiency", NUM, false, Group::SpeedAndPower),
-    spec("max_speed_kn", NUM, false, Group::SpeedAndPower),
+    spec(
+        "propulsive_efficiency",
+        "Propulsive efficiency",
+        NUM,
+        false,
+        Group::SpeedAndPower,
+    ),
+    spec(
+        "max_speed_kn",
+        "Maximum speed",
+        NUM,
+        false,
+        Group::SpeedAndPower,
+    ),
     spec(
         "air_draft_limit_m",
+        "Air-draft limit",
         NUM_OR_NONE,
         false,
         Group::WaterwayLimits,
     ),
-    spec("draught_limit_m", NUM_OR_NONE, false, Group::WaterwayLimits),
-    spec("channel_depth_m", NUM_OR_NONE, false, Group::WaterwayLimits),
+    spec(
+        "draught_limit_m",
+        "Draught limit",
+        NUM_OR_NONE,
+        false,
+        Group::WaterwayLimits,
+    ),
+    spec(
+        "channel_depth_m",
+        "Channel depth",
+        NUM_OR_NONE,
+        false,
+        Group::WaterwayLimits,
+    ),
     spec(
         "channel_under_keel_clearance_m",
+        "Under-keel clearance",
         NUM,
         false,
         Group::WaterwayLimits,
     ),
     spec(
         "channel_bottom_width_m",
+        "Channel bottom width",
         NUM_OR_NONE,
         false,
         Group::WaterwayLimits,
     ),
-    spec("channel_bank_slope", NUM, false, Group::WaterwayLimits),
-    spec("channel_current_kn", NUM, false, Group::WaterwayLimits),
+    spec(
+        "channel_bank_slope",
+        "Bank slope",
+        NUM,
+        false,
+        Group::WaterwayLimits,
+    ),
+    spec(
+        "channel_current_kn",
+        "Current",
+        NUM,
+        false,
+        Group::WaterwayLimits,
+    ),
 ];
 
 /// Where a stored input came from.
