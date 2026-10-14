@@ -12,6 +12,7 @@ extern crate alloc;
 extern crate std;
 
 pub mod aft_arrangement;
+pub mod barge_capacity;
 pub mod barge_cost;
 pub mod cargo;
 pub mod checks;

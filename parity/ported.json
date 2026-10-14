@@ -14,5 +14,6 @@
   "resistance",
   "electric_energy",
   "hydrostatics",
-  "gas_stability"
+  "gas_stability",
+  "barge_capacity"
 ]

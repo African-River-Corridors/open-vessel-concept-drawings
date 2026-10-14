@@ -918,6 +918,315 @@
       }
     },
     {
+      "id": "compute/error/zero_tanks_wide",
+      "tier": 3,
+      "reason": "tier 3: error path: zero tanks across: a ZeroDivisionError the gas branch does not catch (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane",
+            "n_tanks_wide": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/error/zero_block_coefficient",
+      "tier": 3,
+      "reason": "tier 3: error path: zero block coefficient divides the load by zero (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "bauxite",
+            "block_coefficient": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "tanks_wide_for_beam/error/zero_divisor",
+      "tier": 3,
+      "reason": "tier 3: error path: max_od_m + gap is exactly zero (issue #16)",
+      "input": {
+        "fn": "tanks_wide_for_beam",
+        "args": {
+          "beam_m": 20.0,
+          "side_clearance_m": 1.0,
+          "tank_gap_transverse_m": 1.0,
+          "max_od_m": -1.0
+        }
+      }
+    },
+    {
+      "id": "tanks_wide_for_beam/negative_divisor",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a negative divisor gives a negative ceiling, so one tank (issue #16)",
+      "input": {
+        "fn": "tanks_wide_for_beam",
+        "args": {
+          "beam_m": 30.0,
+          "side_clearance_m": 1.0,
+          "tank_gap_transverse_m": 0.0,
+          "max_od_m": -5.0
+        }
+      }
+    },
+    {
+      "id": "tanks_wide_for_beam/exact_ratio",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): usable beam is exactly twice the tank cap, so two tanks, not three (issue #16)",
+      "input": {
+        "fn": "tanks_wide_for_beam",
+        "args": {
+          "beam_m": 26.0,
+          "side_clearance_m": 1.0,
+          "tank_gap_transverse_m": 0.0,
+          "max_od_m": 12.0
+        }
+      },
+      "knife_edge": "(26 - 2) / 12 is exactly 2.0, so the ceiling stays 2; a hair more beam gives 3. Rust divides the same two doubles as Python, so it lands on the same side."
+    },
+    {
+      "id": "compute/gas/unknown_vessel_type",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): an unknown vessel type is a failed feasible_geometry check, not a raise (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane",
+            "vessel_type": "XYZ"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/hull_too_short",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a hull too short for its stern block is a failed check with the tank error as message (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 30.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/hull_too_narrow",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a hull too narrow for its tanks is a failed check (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 3.0,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/auto_wall_thickness",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): tank_wall_thickness null takes the pressure-vessel formula and the material density (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane",
+            "tank_wall_thickness": null
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/pushed_barge",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a pushed gas barge carries no stern block (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane",
+            "self_propelled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/custom_aft_block",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a caller-built aft block with its own unit mix (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane",
+            "aft": {
+              "beam": 14.8,
+              "depth": 6.5,
+              "n_thrusters": 2,
+              "n_battery_units": 2,
+              "n_accom_units": 2
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/side_clearance_override_below_floor",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a side clearance override under the type-G floor fails its separation check (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane",
+            "side_clearance_override_m": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/IGF_vessel_type",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): the IGF rule takes a beam-based side clearance (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "LNG_ethane",
+            "vessel_type": "IGF"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/gas/three_by_three_forced",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a forced 3 x 3 arrangement with salt water (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 120.0,
+            "beam": 24.0,
+            "depth": 6.5,
+            "cargo_type": "LPG_propane",
+            "n_tanks_wide": 3,
+            "n_tanks_long": 3,
+            "water_density": 1.025
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/bulk/hopper_bottom_clamped",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): the hopper bottom width clamps at 1.0 m on a narrow deep hold (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 10.0,
+            "depth": 8.0,
+            "cargo_type": "bauxite"
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/bulk/zero_holds",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): no transverse bulkheads (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "bauxite",
+            "n_holds": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/bulk/given_bow_rake_and_ballast",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a given bow rake, ballast on the empty leg and an air draft limit on the ballasted case (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "bauxite",
+            "bow_rake_length_m": 5.0,
+            "ballast_capacity_t": 400.0,
+            "air_draft_limit_m": 9.0
+          }
+        }
+      }
+    },
+    {
+      "id": "compute/bulk/custom_aft_block",
+      "tier": 3,
+      "reason": "tier 3: degenerate input (Python has no error path here): a caller-built aft block on a bulk hull (issue #16)",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 90.0,
+            "beam": 14.8,
+            "depth": 6.5,
+            "cargo_type": "bauxite",
+            "aft": {
+              "beam": 14.8,
+              "depth": 6.5,
+              "n_thrusters": 2
+            }
+          }
+        }
+      }
+    },
+    {
       "id": "compute/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",
