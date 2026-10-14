@@ -1,6 +1,9 @@
 //! Seam 5: the GA view builder (spec 0003, issue #100). Every view of every fixture Design is checked
 //! against the Drawing Format Standard itself, through `ovcd-draw`.
 
+#[path = "../../ovcd-draw/tests/support/dxf_reader.rs"]
+mod dxf_reader;
+
 use ovcd_core::pyfmt::fixed;
 use ovcd_draw::entities::Shape;
 use ovcd_draw::{NoFiles, Normalised, RunResult, run_value};
@@ -397,4 +400,29 @@ fn a_sweep_of_hull_sizes_always_draws_a_valid_sheet() {
         }
     }
     assert!(drawn >= 40, "only {drawn} combinations could be drawn");
+}
+
+#[test]
+fn the_dxf_of_every_view_reads_back_to_the_same_entities_at_the_stated_scale() {
+    for (file, option, r) in all_fixtures() {
+        for (view, document) in views(&r).all() {
+            let norm = normalise(document);
+            let dxf = ovcd_draw::render::dxf::to_dxf(document, &norm, &NoFiles);
+            assert!(
+                dxf.warnings.is_empty(),
+                "{file} {option} {view}: {:?}",
+                dxf.warnings
+            );
+            let back = dxf_reader::read_normalised(&dxf.text);
+            let mut want = norm.entities.clone();
+            let mut got = back.entities;
+            want.sort_by(ovcd_draw::entities::compare);
+            got.sort_by(ovcd_draw::entities::compare);
+            assert_eq!(got, want, "{file} {option} {view}");
+            assert_eq!(
+                back.viewports["main"].n, norm.viewports[0].scale,
+                "{file} {option} {view}: the viewport holds the stated scale"
+            );
+        }
+    }
 }
