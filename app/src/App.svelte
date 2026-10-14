@@ -189,7 +189,7 @@
     <div class="handle v" role="separator" aria-orientation="vertical" onpointerdown={drag("x")}></div>
     <section class="main"><MainPanel /></section>
     <div class="handle h" role="separator" aria-orientation="horizontal" onpointerdown={drag("y")}></div>
-    <section class="bottom"><BottomPanel evaluation={activeEval} stale={activeEval?.outcome.status === "not_run"} lastGood={lastGood[active]} /></section>
+    <section class="bottom"><BottomPanel {evaluation} {active} {lastGood} onActivate={(name) => command(() => api.setActiveOption(name))} /></section>
   </div>
 </div>
 
