@@ -783,3 +783,52 @@ fn a_one_metre_beam_gas_barge_is_not_refused_by_the_hold_rule() {
     inputs["beam_m"] = json!(1.0);
     assert!(!has(&errors(inputs), "hold"));
 }
+
+// ---- the report names the inputs each message is about, as data ----------------------------
+
+#[test]
+fn every_message_names_its_inputs_as_data() {
+    let report = fill(
+        &design_with(with(
+            with(
+                with(required("LNG"), "beam_m", json!(-1.0)),
+                "min_freeboard_m",
+                json!(9.0),
+            ),
+            "not_an_input",
+            json!(1),
+        )),
+        &Profile::built_in(),
+    )
+    .report;
+    assert!(!report.errors.is_empty() && !report.warnings.is_empty());
+    assert_eq!(report.errors.len(), report.error_inputs.len());
+    assert_eq!(report.warnings.len(), report.warning_inputs.len());
+    let at = |text: &str| {
+        let i = report
+            .errors
+            .iter()
+            .position(|e| e.contains(text))
+            .unwrap_or_else(|| panic!("no error with {text}: {:?}", report.errors));
+        report.error_inputs[i].clone()
+    };
+    assert_eq!(at("`beam_m` = -1"), ["beam_m"]);
+    assert_eq!(at("unknown input"), Vec::<String>::new());
+    assert_eq!(
+        at("`min_freeboard_m` = 9"),
+        ["min_freeboard_m", "moulded_depth_m"]
+    );
+    // A warning about one input names that input.
+    let soft = fill(
+        &design_with(with(required("bauxite"), "length_overall_m", json!(500.0))),
+        &Profile::built_in(),
+    )
+    .report;
+    assert_eq!(soft.warning_inputs.len(), soft.warnings.len());
+    let i = soft
+        .warnings
+        .iter()
+        .position(|w| w.contains("`length_overall_m`") && w.contains("soft limit"))
+        .expect("a soft-range warning");
+    assert_eq!(soft.warning_inputs[i], ["length_overall_m"]);
+}

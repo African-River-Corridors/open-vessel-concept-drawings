@@ -559,33 +559,7 @@ impl DesignSession {
             .iter()
             .map(|o| o.name.as_str())
             .collect();
-        let mut by_option: Vec<Vec<Message>> = names.iter().map(|_| Vec::new()).collect();
-        let tagged = checked
-            .report
-            .errors
-            .iter()
-            .map(|t| (Severity::Error, t))
-            .chain(
-                checked
-                    .report
-                    .warnings
-                    .iter()
-                    .map(|t| (Severity::Warning, t)),
-            );
-        for (severity, text) in tagged {
-            // The longest name first, so "A" does not claim a message of "A: B".
-            let owner = (0..names.len())
-                .filter(|&i| text.starts_with(&format!("Option '{}': ", names[i])))
-                .max_by_key(|&i| names[i].len());
-            if let Some(i) = owner {
-                let body = &text[format!("Option '{}': ", names[i]).len()..];
-                by_option[i].push(Message {
-                    severity,
-                    scope: scope_of(body),
-                    text: body.to_string(),
-                });
-            }
-        }
+        let by_option = attach(&checked.report, &names);
         let options = by_option
             .into_iter()
             .enumerate()
@@ -767,21 +741,64 @@ fn containment_of(option: &DesignOption) -> Option<&str> {
     option.input("cargo_containment")?.value.as_str()
 }
 
-/// The inputs a message names: the names between back-ticks that are inputs (`formation.abreast`
-/// names `formation`). One input is a per-input message; several make a cross-check.
-fn scope_of(text: &str) -> Scope {
-    let mut named: Vec<String> = Vec::new();
-    for (i, part) in text.split('`').enumerate() {
-        if i % 2 == 1 {
-            let name = part.split('.').next().unwrap_or(part);
-            if INPUTS.iter().any(|s| s.name == name) && !named.iter().any(|n| n == name) {
-                named.push(name.to_string());
-            }
+/// Sort a report's messages into the Options they belong to. The inputs a message is about come
+/// from the report as data, never from the wording of the text.
+fn attach(report: &Report, names: &[&str]) -> Vec<Vec<Message>> {
+    let mut by_option: Vec<Vec<Message>> = names.iter().map(|_| Vec::new()).collect();
+    let tagged = report
+        .errors
+        .iter()
+        .zip(&report.error_inputs)
+        .map(|(t, n)| (Severity::Error, t, n))
+        .chain(
+            report
+                .warnings
+                .iter()
+                .zip(&report.warning_inputs)
+                .map(|(t, n)| (Severity::Warning, t, n)),
+        );
+    for (severity, text, inputs) in tagged {
+        // The longest name first, so "A" does not claim a message of "A: B".
+        let owner = (0..names.len())
+            .filter(|&i| text.starts_with(&format!("Option '{}': ", names[i])))
+            .max_by_key(|&i| names[i].len());
+        if let Some(i) = owner {
+            let body = &text[format!("Option '{}': ", names[i]).len()..];
+            let scope = match inputs.as_slice() {
+                [] => Scope::Option,
+                [one] => Scope::Input(one.clone()),
+                many => Scope::CrossCheck(many.to_vec()),
+            };
+            by_option[i].push(Message {
+                severity,
+                scope,
+                text: body.to_string(),
+            });
         }
     }
-    match named.len() {
-        0 => Scope::Option,
-        1 => Scope::Input(named.remove(0)),
-        _ => Scope::CrossCheck(named),
+    by_option
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_message_attaches_to_the_inputs_the_report_names_not_to_its_wording() {
+        let mut report = Report::default();
+        // The wording names `beam_m` and `cargo`, but the data says the message is about length.
+        report.error(
+            "Option 'A': reworded text about `beam_m` and `cargo`".into(),
+            &["length_overall_m"],
+        );
+        report.error("Option 'A': another".into(), &["beam_m", "moulded_depth_m"]);
+        report.warning("Option 'A': about the whole Option".into(), &[]);
+        let got = attach(&report, &["A"]);
+        assert_eq!(got[0][0].scope, Scope::Input("length_overall_m".into()));
+        assert_eq!(
+            got[0][1].scope,
+            Scope::CrossCheck(vec!["beam_m".into(), "moulded_depth_m".into()])
+        );
+        assert_eq!(got[0][2].scope, Scope::Option);
     }
 }

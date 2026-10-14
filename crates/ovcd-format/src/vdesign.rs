@@ -342,9 +342,28 @@ impl Design {
 pub struct Report {
     pub errors: Vec<String>,
     pub warnings: Vec<String>,
+    /// The inputs each error is about, one list per entry of `errors`. One name is a message
+    /// about that input, several a cross-check, none a message about the Option or the file.
+    pub error_inputs: Vec<Vec<String>>,
+    /// The same for `warnings`.
+    pub warning_inputs: Vec<Vec<String>>,
 }
 
 impl Report {
+    /// Add a hard error and the inputs it is about.
+    pub fn error(&mut self, text: String, inputs: &[&str]) {
+        self.errors.push(text);
+        self.error_inputs
+            .push(inputs.iter().map(|n| n.to_string()).collect());
+    }
+
+    /// Add a soft warning and the inputs it is about.
+    pub fn warning(&mut self, text: String, inputs: &[&str]) {
+        self.warnings.push(text);
+        self.warning_inputs
+            .push(inputs.iter().map(|n| n.to_string()).collect());
+    }
+
     pub fn is_ok(&self) -> bool {
         self.errors.is_empty()
     }
@@ -436,7 +455,7 @@ fn read_text(text: &str, profile: &Profile, missing: Missing) -> Checked {
     let root: Value = match serde_json::from_str(text) {
         Ok(v) => v,
         Err(e) => {
-            report.errors.push(format!("the file is not JSON: {e}"));
+            report.error(format!("the file is not JSON: {e}"), &[]);
             return Checked {
                 design: None,
                 report,
@@ -454,40 +473,33 @@ fn read_design(
     report: &mut Report,
 ) -> Option<Design> {
     let Some(root) = root.as_object() else {
-        report
-            .errors
-            .push("the file must hold a JSON object".into());
+        report.error("the file must hold a JSON object".into(), &[]);
         return None;
     };
     if root.get("format").and_then(Value::as_str) != Some("vdesign") {
-        report
-            .errors
-            .push("the file needs `\"format\": \"vdesign\"`".into());
+        report.error("the file needs `\"format\": \"vdesign\"`".into(), &[]);
     }
     match root.get("format_version").and_then(Value::as_u64) {
         Some(FORMAT_VERSION) => {}
-        Some(v) => report.errors.push(format!(
-            "format_version {v} is not supported; this tool reads version {FORMAT_VERSION}"
-        )),
-        None => report
-            .errors
-            .push("the file needs an integer `format_version`".into()),
+        Some(v) => report.error(
+            format!(
+                "format_version {v} is not supported; this tool reads version {FORMAT_VERSION}"
+            ),
+            &[],
+        ),
+        None => report.error("the file needs an integer `format_version`".into(), &[]),
     }
     let engine_version = match root.get("engine_version").and_then(Value::as_str) {
         Some(v) => v.to_string(),
         None => {
-            report
-                .errors
-                .push("the file needs a string `engine_version`".into());
+            report.error("the file needs a string `engine_version`".into(), &[]);
             String::new()
         }
     };
     if let Some(units) = root.get("units")
         && units != "SI"
     {
-        report
-            .errors
-            .push(format!("`units` must be \"SI\", not {units}"));
+        report.error(format!("`units` must be \"SI\", not {units}"), &[]);
     }
     let defaults_profile = root
         .get("defaults_profile")
@@ -503,21 +515,15 @@ fn read_design(
             "options",
         ];
         if !known.contains(&key.as_str()) {
-            report
-                .warnings
-                .push(format!("unknown top-level key `{key}` is ignored"));
+            report.warning(format!("unknown top-level key `{key}` is ignored"), &[]);
         }
     }
     let Some(raw_options) = root.get("options").and_then(Value::as_array) else {
-        report
-            .errors
-            .push("the file needs an `options` list".into());
+        report.error("the file needs an `options` list".into(), &[]);
         return None;
     };
     if raw_options.is_empty() {
-        report
-            .errors
-            .push("a Design needs at least one Option".into());
+        report.error("a Design needs at least one Option".into(), &[]);
     }
     let mut options = Vec::new();
     for (i, raw) in raw_options.iter().enumerate() {
@@ -526,36 +532,35 @@ fn read_design(
             .and_then(Value::as_str)
             .filter(|n| !n.trim().is_empty());
         let Some(name) = name else {
-            report
-                .errors
-                .push(format!("Option {} needs a non-empty string `name`", i + 1));
+            report.error(
+                format!("Option {} needs a non-empty string `name`", i + 1),
+                &[],
+            );
             continue;
         };
         if options.iter().any(|o: &DesignOption| o.name == name) {
-            report
-                .errors
-                .push(format!("two Options are named '{name}'; names must differ"));
+            report.error(
+                format!("two Options are named '{name}'; names must differ"),
+                &[],
+            );
         }
         let Some(inputs) = raw.get("inputs").and_then(Value::as_object) else {
-            report
-                .errors
-                .push(format!("Option '{name}': needs an `inputs` object"));
+            report.error(format!("Option '{name}': needs an `inputs` object"), &[]);
             continue;
         };
         for key in raw.as_object().into_iter().flat_map(|o| o.keys()) {
             if !["name", "inputs", "results_hash"].contains(&key.as_str()) {
-                report
-                    .warnings
-                    .push(format!("Option '{name}': unknown key `{key}` is ignored"));
+                report.warning(
+                    format!("Option '{name}': unknown key `{key}` is ignored"),
+                    &[],
+                );
             }
         }
         let mut option = read_option(name, inputs, profile, missing, report);
         match raw.get("results_hash") {
             None | Some(Value::Null) => {}
             Some(Value::String(h)) => option.results_hash = Some(h.clone()),
-            Some(_) => report
-                .errors
-                .push(format!("Option '{name}': `results_hash` must be text")),
+            Some(_) => report.error(format!("Option '{name}': `results_hash` must be text"), &[]),
         }
         options.push(option);
     }
@@ -602,7 +607,7 @@ fn read_option(
     let mut left_out: Vec<&str> = Vec::new();
     for key in raw.keys() {
         if !INPUTS.iter().any(|s| s.name == key) {
-            report.errors.push(at(format!("unknown input `{key}`")));
+            report.error(at(format!("unknown input `{key}`")), &[]);
         }
     }
     let mut inputs: Vec<(String, StoredInput)> = Vec::new();
@@ -622,7 +627,7 @@ fn read_option(
             let stored = match unmark(raw_input) {
                 Ok(s) => s,
                 Err(e) => {
-                    report.errors.push(at(format!("`{}`: {e}", spec.name)));
+                    report.error(at(format!("`{}`: {e}", spec.name)), &[spec.name]);
                     continue;
                 }
             };
@@ -631,15 +636,20 @@ fn read_option(
                     .as_ref()
                     .and_then(Value::as_str)
                     .unwrap_or("unknown");
-                report.warnings.push(at(format!(
-                    "`{}` is not used for a {c} Cargo Containment; ignored",
-                    spec.name
-                )));
+                report.warning(
+                    at(format!(
+                        "`{}` is not used for a {c} Cargo Containment; ignored",
+                        spec.name
+                    )),
+                    &[spec.name],
+                );
                 continue;
             }
             match check_value(spec, &stored.value, profile) {
                 Ok((value, warnings)) => {
-                    report.warnings.extend(warnings.into_iter().map(&at));
+                    for w in warnings.into_iter().map(&at) {
+                        report.warning(w, &[spec.name]);
+                    }
                     inputs.push((
                         spec.name.into(),
                         StoredInput {
@@ -648,7 +658,7 @@ fn read_option(
                         },
                     ));
                 }
-                Err(e) => report.errors.push(at(e)),
+                Err(e) => report.error(at(e), &[spec.name]),
             }
             continue;
         }
@@ -660,7 +670,7 @@ fn read_option(
             } else {
                 format!("missing required input `{}`", spec.name)
             };
-            report.errors.push(at(msg));
+            report.error(at(msg), &[spec.name]);
             continue;
         }
         if !applies {
@@ -671,17 +681,20 @@ fn read_option(
             // The input it depends on is missing or wrong; that error is already reported.
             Ok(None) => continue,
             Err(e) => {
-                report.errors.push(at(e));
+                report.error(at(e), &[spec.name]);
                 continue;
             }
         };
         match missing {
             Missing::Refuse => left_out.push(spec.name),
-            Missing::Fill => report.warnings.push(at(format!(
-                "`{}` {FILLED} {}, marked default",
-                spec.name,
-                show(&default)
-            ))),
+            Missing::Fill => report.warning(
+                at(format!(
+                    "`{}` {FILLED} {}, marked default",
+                    spec.name,
+                    show(&default)
+                )),
+                &[spec.name],
+            ),
         }
         inputs.push((
             spec.name.into(),
@@ -692,12 +705,15 @@ fn read_option(
         ));
     }
     if !left_out.is_empty() {
-        report.errors.push(at(format!(
-            "inputs not stored in the file: {}. A saved Design holds every input as used, so a \
+        report.error(
+            at(format!(
+                "inputs not stored in the file: {}. A saved Design holds every input as used, so a \
              Defaults Profile edit cannot change it; run `ovcd fill` to write them in from the \
              Defaults Profile, marked default",
-            left_out.join(", ")
-        )));
+                left_out.join(", ")
+            )),
+            &left_out,
+        );
     }
     cross_checks(&inputs, report, &at);
     impossible_results(&inputs, report, &at);
@@ -915,11 +931,14 @@ fn cross_checks(
                 .filter(|(_, phase)| *phase == props.phase)
                 .map(|(c, _)| *c)
                 .collect();
-            report.errors.push(at(format!(
-                "`cargo_containment` = {containment} cannot carry {cargo} ({}); use {}",
-                props.phase,
-                fits.join(" or ")
-            )));
+            report.error(
+                at(format!(
+                    "`cargo_containment` = {containment} cannot carry {cargo} ({}); use {}",
+                    props.phase,
+                    fits.join(" or ")
+                )),
+                &["cargo_containment", "cargo"],
+            );
         }
     }
     if let (Some(fb), Some(d)) = (
@@ -927,9 +946,12 @@ fn cross_checks(
         get("moulded_depth_m").and_then(Value::as_f64),
     ) && fb >= d
     {
-        report.errors.push(at(format!(
-            "`min_freeboard_m` = {fb} must be less than `moulded_depth_m` = {d} (hard limit)"
-        )));
+        report.error(
+            at(format!(
+                "`min_freeboard_m` = {fb} must be less than `moulded_depth_m` = {d} (hard limit)"
+            )),
+            &["min_freeboard_m", "moulded_depth_m"],
+        );
     }
     // The depth search tries hulls up to a fixed depth; above it no searched hull keeps the
     // freeboard, and the core raises when no waterway limit caps the draught.
@@ -937,10 +959,13 @@ fn cross_checks(
         && let Some(fb) = get("min_freeboard_m").and_then(Value::as_f64)
         && fb > DEPTH_SEARCH_MAX_M
     {
-        report.errors.push(at(format!(
-            "`min_freeboard_m` = {fb} must be at most {DEPTH_SEARCH_MAX_M}, the deepest hull \
+        report.error(
+            at(format!(
+                "`min_freeboard_m` = {fb} must be at most {DEPTH_SEARCH_MAX_M}, the deepest hull \
              `optimise_depth` searches (hard limit)"
-        )));
+            )),
+            &["min_freeboard_m", "optimise_depth"],
+        );
     }
     // A channel shallower than its own clearance leaves no water to float in.
     if let (Some(depth), Some(ukc)) = (
@@ -948,10 +973,13 @@ fn cross_checks(
         get("channel_under_keel_clearance_m").and_then(Value::as_f64),
     ) && depth < ukc
     {
-        report.errors.push(at(format!(
-            "`channel_depth_m` = {depth} must be at least `channel_under_keel_clearance_m` = \
+        report.error(
+            at(format!(
+                "`channel_depth_m` = {depth} must be at least `channel_under_keel_clearance_m` = \
              {ukc} (hard limit)"
-        )));
+            )),
+            &["channel_depth_m", "channel_under_keel_clearance_m"],
+        );
     }
 }
 
@@ -978,22 +1006,28 @@ fn impossible_results(
     if let Some(beam) = get("beam_m").and_then(Value::as_f64) {
         let width = beam - 2.0 * DRY_BULK_WING_VOID_M;
         if width < 0.0 {
-            report.errors.push(at(format!(
-                "`beam_m` = {beam} leaves a hold width of {} m after the two \
+            report.error(
+                at(format!(
+                    "`beam_m` = {beam} leaves a hold width of {} m after the two \
                  {DRY_BULK_WING_VOID_M} m wing voids; {NEGATIVE}",
-                show_m(width)
-            )));
+                    show_m(width)
+                )),
+                &["beam_m"],
+            );
         }
     }
     if let Some(depth) = get("moulded_depth_m").and_then(Value::as_f64) {
         let height = (depth - DRY_BULK_DOUBLE_BOTTOM_M) + DRY_BULK_COAMING_M;
         if height < 0.0 {
-            report.errors.push(at(format!(
-                "`moulded_depth_m` = {depth} leaves a hold height of {} m (depth less the \
+            report.error(
+                at(format!(
+                    "`moulded_depth_m` = {depth} leaves a hold height of {} m (depth less the \
                  {DRY_BULK_DOUBLE_BOTTOM_M} m double bottom, plus the {DRY_BULK_COAMING_M} m \
                  coaming); {NEGATIVE}",
-                show_m(height)
-            )));
+                    show_m(height)
+                )),
+                &["moulded_depth_m"],
+            );
         }
     }
 }
