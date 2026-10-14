@@ -63,7 +63,7 @@
   let inLine = $state<number | null>(formation.in_line ?? null);
 </script>
 
-<div class="field" title={help}>
+<div class="field" data-input={spec.name} title={help}>
   <div class="head">
     <span class="label">{spec.label}</span>
     <span class="badge {stored.source}">{stored.source}</span>

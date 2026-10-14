@@ -149,9 +149,12 @@ describe("OVCD app smoke tests", () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
     await type("Beam", "-1");
     await until("the error under the field", async () => (await browser.$$(".field .msg.error")).length > 0);
-    assert.match(await browser.$(".field .msg.error").getText(), /beam_m/);
+    assert.match(await browser.$(".field .msg.error").getText(), /^Beam/);
+    assert.doesNotMatch(await browser.$(".field .msg.error").getText(), /`/);
     await until("the out-of-date mark", async () => (await browser.$$(".stale")).length > 0);
     assert.match(await browser.$(".stale").getText(), /out of date/);
+    // The outputs header says why and where to look.
+    assert.match(await browser.$('[data-testid="stale-why"]').getText(), /Not recalculated: fix the error under Beam/);
     // The last good numbers stay on screen.
     assert.match(await cargoOutput(), /^2,038\.5/);
   });

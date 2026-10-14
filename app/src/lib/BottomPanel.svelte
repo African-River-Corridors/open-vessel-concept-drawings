@@ -1,14 +1,16 @@
 <script lang="ts">
   import type { Evaluation, OptionEvaluation } from "./api";
+  import StaleWhy from "./StaleWhy.svelte";
   import { MAIN, TANKS, exact, hasTanks, show, valueAt, type Metric } from "./metrics";
 
   // Outputs of the active Option, its checks and warnings, and a compare table of every Option.
   // The numbers are read from the engine's results object. While the active Option has a hard
   // error its last good results stay on screen, marked "out of date".
-  let { evaluation, active, lastGood, onActivate }: {
+  let { evaluation, active, lastGood, blockers, onActivate }: {
     evaluation: Evaluation | null;
     active: string;
     lastGood: Record<string, OptionEvaluation>;
+    blockers: { name: string; label: string }[];
     onActivate: (name: string) => void;
   } = $props();
 
@@ -68,6 +70,7 @@
           Outputs
           {#if current?.stale}<span class="stale">out of date</span>{/if}
         </h2>
+        {#if current?.stale}<StaleWhy {blockers} />{/if}
         {#each current?.errors ?? [] as e}
           <div class="err">{e}</div>
         {/each}

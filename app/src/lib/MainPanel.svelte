@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import type { Evaluation, HullViews, OptionEvaluation } from "./api";
+  import StaleWhy from "./StaleWhy.svelte";
   import HullView from "./HullView.svelte";
   import SpeedPower from "./views/SpeedPower.svelte";
   import Stability from "./views/Stability.svelte";
@@ -8,10 +9,11 @@
   // The views, stacked in one scrolling panel. A dropdown at the top right jumps to a view and
   // follows the scroll. The hull views are SVG drawn in Rust to the Drawing Format Standard
   // (ADR 0009, spec 0003); the panel only places and zooms them.
-  let { evaluation, active, lastGood }: {
+  let { evaluation, active, lastGood, blockers }: {
     evaluation: Evaluation | null;
     active: string;
     lastGood: Record<string, OptionEvaluation>;
+    blockers: { name: string; label: string }[];
   } = $props();
 
   const VIEWS = [
@@ -85,6 +87,7 @@
       {/each}
     </select>
   </header>
+  {#if stale}<div class="whyrow"><StaleWhy {blockers} /></div>{/if}
 
   {#each VIEWS as v (v.id)}
     <section data-view={v.id} class:hull={HULL.includes(v.id)}>
@@ -134,6 +137,7 @@
   h3 { font-family: var(--serif); color: var(--navy); font-size: 15px; margin: 0 0 6px; }
   select { padding: 3px 6px; font: inherit; }
   section { padding: 14px; border-bottom: 1px solid var(--line); min-height: 180px; }
+  .whyrow { padding: 0 14px; background: #fdf1d3; border-bottom: 1px solid var(--line); }
   .slot { min-height: 60px; }
   .note { color: var(--dim); }
   .stale { background: #fdf1d3; color: #6b4a00; font: 11px var(--sans); padding: 1px 6px; border-radius: 3px; }
