@@ -7,6 +7,8 @@ use ovcd_core::cargo::CargoProperties;
 use ovcd_core::checks::Check;
 use ovcd_core::gas_separation::{GasSeparationInputs, GasSeparationResult};
 use ovcd_core::hull::HullGeometry;
+use ovcd_core::models::{BargeInputs, TankResult, WeightBreakdown};
+use ovcd_core::pressure_vessel::PyError;
 use ovcd_core::pyint::PyInt;
 use ovcd_core::pystr::repr_str;
 use ovcd_core::vessel_standards::{Catalogue, VesselStandard};
@@ -76,6 +78,8 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
     match entry_point {
         "cargo" => cargo(function, args),
         "hull" => hull(function, args),
+        "tanks" => tanks(function, args),
+        "weights" => weights(function, args),
         "squat" => squat(function, args),
         "waves" => waves(function, args),
         "resistance" => resistance(function, args),
@@ -980,6 +984,304 @@ fn hull(function: &str, args: &Value) -> Result<Value, EvalError> {
         }
         other => Err(EvalError::BadInput(format!(
             "hull has no parity function `{other}`"
+        ))),
+    }
+}
+
+const BARGE_FIELDS: &[&str] = &[
+    "loa",
+    "beam",
+    "depth",
+    "max_draft",
+    "vertical_clearance",
+    "vessel_type",
+    "bow_rake_length",
+    "bow_rake_rise",
+    "stern_rake_length",
+    "stern_rake_rise",
+    "bow_non_tank_pct",
+    "stern_non_tank_pct",
+    "bow_non_tank_length",
+    "stern_non_tank_length",
+    "wing_tank_width",
+    "wing_tank_gap",
+    "wing_tank_height_ratio",
+    "weather_shield_thickness",
+    "weather_shield_clearance",
+    "dome_height",
+    "side_clearance",
+    "tank_gap_transverse",
+    "tank_gap_longitudinal",
+    "n_tanks_wide",
+    "n_tanks_long",
+    "tank_wall_thickness",
+    "tank_head_type",
+    "tank_material",
+    "tank_material_density",
+    "design_pressure",
+    "weld_efficiency",
+    "tank_structure_factor",
+    "insulation_thickness",
+    "insulation_density",
+    "cargo_type",
+    "cargo_density_override",
+    "fill_ratio",
+    "bottom_plate_thickness",
+    "side_plate_thickness",
+    "deck_plate_thickness",
+    "structure_factor",
+    "hull_steel_density",
+    "steel_rate_per_cbm",
+    "block_coefficient",
+    "water_density",
+    "underkeel_clearance",
+    "outfitting_factor",
+    "piping_factor",
+    "stores_weight",
+    "tank_support_height",
+    "double_bottom_height",
+    "aft_arrangement",
+    "separation",
+    "tug_length",
+    "tug_beam",
+    "notch_depth",
+];
+
+fn string_field(
+    inputs: &serde_json::Map<String, Value>,
+    name: &str,
+) -> Result<Option<String>, EvalError> {
+    match inputs.get(name) {
+        None => Ok(None),
+        Some(Value::String(s)) => Ok(Some(s.clone())),
+        Some(_) => Err(EvalError::BadInput(format!(
+            "`inputs.{name}` must be a string"
+        ))),
+    }
+}
+
+/// An `Optional[float]` field: absent keeps the dataclass default, an explicit null is `None`.
+fn opt_f64_field(
+    inputs: &serde_json::Map<String, Value>,
+    name: &str,
+    default: Option<f64>,
+) -> Result<Option<f64>, EvalError> {
+    match inputs.get(name) {
+        None => Ok(default),
+        Some(Value::Null) => Ok(None),
+        Some(_) => f64_field(inputs, name),
+    }
+}
+
+/// `BargeInputs` from plain data, as the frozen driver's `build` makes it. The caller runs
+/// `post_init`, as Python's `__post_init__` runs after the constructor.
+fn barge_inputs(args: &Value) -> Result<BargeInputs, EvalError> {
+    let o = inputs_object(args, BARGE_FIELDS)?;
+    let need = |name: &str| {
+        f64_field(o, name)?
+            .ok_or_else(|| EvalError::BadInput(format!("`inputs.{name}` is required")))
+    };
+    let mut i = BargeInputs::new(
+        need("loa")?,
+        need("beam")?,
+        need("depth")?,
+        need("max_draft")?,
+        need("vertical_clearance")?,
+    );
+    macro_rules! set_f64 {
+        ($($field:ident),*) => {$(
+            if let Some(v) = f64_field(o, stringify!($field))? { i.$field = v; }
+        )*};
+    }
+    macro_rules! set_opt_f64 {
+        ($($field:ident),*) => {$(
+            i.$field = opt_f64_field(o, stringify!($field), None)?;
+        )*};
+    }
+    macro_rules! set_string {
+        ($($field:ident),*) => {$(
+            if let Some(v) = string_field(o, stringify!($field))? { i.$field = v; }
+        )*};
+    }
+    set_string!(vessel_type, tank_head_type, tank_material, cargo_type);
+    set_f64!(
+        bow_rake_length,
+        stern_rake_length,
+        bow_non_tank_pct,
+        stern_non_tank_pct,
+        wing_tank_gap,
+        wing_tank_height_ratio,
+        weather_shield_thickness,
+        weather_shield_clearance,
+        dome_height,
+        tank_gap_transverse,
+        tank_gap_longitudinal,
+        tank_material_density,
+        design_pressure,
+        weld_efficiency,
+        tank_structure_factor,
+        insulation_thickness,
+        insulation_density,
+        fill_ratio,
+        bottom_plate_thickness,
+        side_plate_thickness,
+        deck_plate_thickness,
+        structure_factor,
+        hull_steel_density,
+        steel_rate_per_cbm,
+        block_coefficient,
+        water_density,
+        underkeel_clearance,
+        outfitting_factor,
+        piping_factor,
+        stores_weight,
+        tank_support_height,
+        tug_length,
+        tug_beam,
+        notch_depth
+    );
+    set_opt_f64!(
+        bow_rake_rise,
+        stern_rake_rise,
+        bow_non_tank_length,
+        stern_non_tank_length,
+        wing_tank_width,
+        side_clearance,
+        cargo_density_override
+    );
+    // These two default to a number, so an absent key and an explicit null differ.
+    i.tank_wall_thickness = opt_f64_field(o, "tank_wall_thickness", i.tank_wall_thickness)?;
+    i.double_bottom_height = opt_f64_field(o, "double_bottom_height", i.double_bottom_height)?;
+    if let Some(v) = i64_field(o, "n_tanks_wide")? {
+        i.n_tanks_wide = v;
+    }
+    if let Some(v) = i64_field(o, "n_tanks_long")? {
+        i.n_tanks_long = v;
+    }
+    for pass_through in ["aft_arrangement", "separation"] {
+        if !matches!(o.get(pass_through), None | Some(Value::Null)) {
+            return Err(EvalError::BadInput(format!(
+                "`inputs.{pass_through}` is a drawing-only pass-through; parity cases leave it null"
+            )));
+        }
+    }
+    Ok(i)
+}
+
+fn raised_py(e: &PyError) -> Result<Value, EvalError> {
+    raised(e.kind, &e.message)
+}
+
+fn tank_json(t: &TankResult) -> Value {
+    json!({
+        "n_tanks_wide": t.n_tanks_wide,
+        "n_tanks_long": t.n_tanks_long,
+        "n_tanks_total": t.n_tanks_total,
+        "outer_diameter": num(t.outer_diameter),
+        "inner_diameter": num(t.inner_diameter),
+        "overall_tank_length": num(t.overall_tank_length),
+        "cylinder_length": num(t.cylinder_length),
+        "head_length": num(t.head_length),
+        "volume_per_tank": num(t.volume_per_tank),
+        "volume_cylinder": num(t.volume_cylinder),
+        "volume_heads": num(t.volume_heads),
+        "total_tank_volume": num(t.total_tank_volume),
+        "cargo_volume": num(t.cargo_volume),
+        "tank_shell_weight": num(t.tank_shell_weight),
+        "insulation_weight": num(t.insulation_weight),
+        "tank_top_above_keel": num(t.tank_top_above_keel),
+        "cylinder_wall_thickness": num(t.cylinder_wall_thickness),
+        "head_wall_thickness": num(t.head_wall_thickness),
+        "design_pressure": num(t.design_pressure),
+        "tank_material": t.tank_material,
+    })
+}
+
+fn weights_json(w: &WeightBreakdown) -> Value {
+    json!({
+        "hull_bottom_plating": num(w.hull_bottom_plating),
+        "hull_side_plating": num(w.hull_side_plating),
+        "hull_deck_plating": num(w.hull_deck_plating),
+        "hull_rake_plating": num(w.hull_rake_plating),
+        "hull_internal_structure": num(w.hull_internal_structure),
+        "hull_steel_total": num(w.hull_steel_total),
+        "tank_shells": num(w.tank_shells),
+        "tank_internals_supports": num(w.tank_internals_supports),
+        "tank_total": num(w.tank_total),
+        "insulation": num(w.insulation),
+        "wing_plate": num(w.wing_plate),
+        "weather_shield": num(w.weather_shield),
+        "piping_machinery": num(w.piping_machinery),
+        "outfitting": num(w.outfitting),
+        "stores": num(w.stores),
+        "moulded_volume": num(w.moulded_volume),
+        "moulded_depth": num(w.moulded_depth),
+        "steel_top_down": num(w.steel_top_down),
+        "steel_bottom_up": num(w.steel_bottom_up),
+        "steel_delta": num(w.steel_delta),
+        "lightship": num(w.lightship),
+    })
+}
+
+fn tanks(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        "calculate_tank_arrangement" => {
+            let mut inputs = barge_inputs(args)?;
+            if let Err(e) = inputs.post_init() {
+                return raised_py(&e);
+            }
+            match ovcd_core::tanks::calculate_tank_arrangement(&inputs) {
+                Ok(t) => ok(tank_json(&t)),
+                Err(e) => raised_py(&e),
+            }
+        }
+        "free_surface_moment_cylindrical" => {
+            ok(num(ovcd_core::tanks::free_surface_moment_cylindrical(
+                f64_arg(args, "inner_radius")?,
+                f64_arg(args, "cylinder_length")?,
+                f64_arg(args, "fill_ratio")?,
+                f64_arg(args, "cargo_density")?,
+            )))
+        }
+        other => Err(EvalError::BadInput(format!(
+            "tanks has no parity function `{other}`"
+        ))),
+    }
+}
+
+fn weights(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        // The frozen chain: inputs, then the hull with the inputs' own rakes, then the tank
+        // arrangement, then the weights.
+        "calculate_weights" => {
+            let mut inputs = barge_inputs(args)?;
+            if let Err(e) = inputs.post_init() {
+                return raised_py(&e);
+            }
+            let rake = |v: Option<f64>, name: &str| {
+                v.ok_or_else(|| EvalError::BadInput(format!("`inputs.{name}` is unset")))
+            };
+            let hull = HullGeometry::new(
+                inputs.loa,
+                inputs.beam,
+                inputs.depth,
+                inputs.bow_rake_length,
+                rake(inputs.bow_rake_rise, "bow_rake_rise")?,
+                inputs.stern_rake_length,
+                rake(inputs.stern_rake_rise, "stern_rake_rise")?,
+            );
+            // The weights output has no integer field, so the count product is not carried.
+            let tanks = match ovcd_core::tanks::calculate_tank_arrangement_wide(&inputs) {
+                Ok((t, _)) => t,
+                Err(e) => return raised_py(&e),
+            };
+            match ovcd_core::weights::calculate_weights(&inputs, &hull, &tanks) {
+                Ok(w) => ok(weights_json(&w)),
+                Err(e) => raised_py(&e),
+            }
+        }
+        other => Err(EvalError::BadInput(format!(
+            "weights has no parity function `{other}`"
         ))),
     }
 }
