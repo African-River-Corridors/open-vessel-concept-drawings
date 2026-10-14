@@ -86,3 +86,57 @@ fn a_nan_dimension_passes_the_positivity_check_as_in_python() {
     i.design_depth_m = 2.25;
     assert!(compute(&i).is_ok());
 }
+
+// Pins for the mutation run of #17. Expected values printed by the frozen Python.
+
+#[test]
+fn each_principal_dimension_alone_is_refused_when_not_positive() {
+    // The check is `loa <= 0 or beam <= 0 or depth <= 0`: any one is enough.
+    let cap = bauxite();
+    for (loa, beam, depth) in [(100.0, 0.0, 6.0), (100.0, 16.0, -1.0), (-1.0, 16.0, 6.0)] {
+        let mut i = JourneyDeratingInputs::new(&cap, loa, beam, depth);
+        i.design_depth_m = 2.25;
+        assert_eq!(
+            compute(&i).unwrap_err(),
+            "loa, beam, depth must be positive"
+        );
+    }
+}
+
+#[test]
+fn a_negative_design_depth_is_a_value_error_and_zero_is_not() {
+    let cap = bauxite();
+    let mut i = JourneyDeratingInputs::new(&cap, 100.0, 16.0, 6.0);
+    i.design_depth_m = -0.5;
+    assert_eq!(
+        compute(&i).unwrap_err(),
+        "design_depth_m and ukc_m must be non-negative"
+    );
+    // Zero design depth and zero UKC (the dataclass defaults) are allowed: nothing floats.
+    i.design_depth_m = 0.0;
+    let r = compute(&i).unwrap();
+    assert_eq!(r.t_max_m, 0.0);
+    assert_eq!(r.binding_limit, "draft");
+}
+
+#[test]
+fn negative_zero_design_depth_gives_a_positive_zero_cap() {
+    // Python `max(0.0, -0.0)` is the first item, `0.0`; a `>=` swap would return `-0.0`.
+    let cap = bauxite();
+    let mut i = JourneyDeratingInputs::new(&cap, 100.0, 16.0, 6.0);
+    i.design_depth_m = -0.0;
+    let r = compute(&i).unwrap();
+    assert!(r.t_max_m.is_sign_positive(), "t_max_m = {}", r.t_max_m);
+}
+
+#[test]
+fn water_density_scales_the_displacement_in_a_draft_bound_run() {
+    // Frozen Python: 889.0246000318816 t at density 1.025 (829.5246000318816 t at 1.0).
+    let cap = bauxite();
+    let mut i = JourneyDeratingInputs::new(&cap, 100.0, 16.0, 6.0);
+    i.design_depth_m = 2.25;
+    i.ukc_m = 0.5;
+    i.water_density = 1.025;
+    let r = compute(&i).unwrap();
+    assert_eq!(r.achievable_tonnage_t, 889.0246000318816);
+}

@@ -137,3 +137,17 @@ fn max_speed_for_ukc_refuses_a_json_integer() {
     assert!(err.is_err(), "{err:?}");
     assert!(eval("squat", &ukc_input("1.0")).is_ok());
 }
+
+#[test]
+fn a_whole_number_where_a_gas_arrangement_float_is_expected_is_refused() {
+    // The adapter reads floats strictly: `18` is an integer, `18.0` a float.
+    let text = r#"{"fn":"fit","args":{"loa":90.0,"beam":14.8,"cargo":"LNG","t_max":4.4,"max_tank_od_m":8}}"#;
+    let err = eval(
+        "gas_arrangement",
+        &ovcd_format::parity::parse(text).unwrap(),
+    );
+    let msg = format!("{err:?}");
+    assert!(err.is_err() && msg.contains("must be a float"), "{msg}");
+    let ok = r#"{"fn":"fit","args":{"loa":90.0,"beam":14.8,"cargo":"LNG","t_max":4.4,"max_tank_od_m":8.0}}"#;
+    assert!(eval("gas_arrangement", &ovcd_format::parity::parse(ok).unwrap()).is_ok());
+}

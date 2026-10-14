@@ -377,6 +377,89 @@
       }
     },
     {
+      "id": "fit/equal_tonnage_first_candidate_wins_igc_exact",
+      "tier": 1,
+      "reason": "tier 1: kills mutant gas_arrangement.rs:355 (candidate-beats-best margin +1e-6 flipped to -1e-6) in fit; extra_clearance_m [0.0, 1.0] repeats the base candidate, so two candidates tie on tonnage and the first one must keep the win (Python takes a later candidate only if it is better by more than 1e-6); no sweep case has a tie (issue #17 mutation run)",
+      "knife_edge": "the repeated base candidate ties on tonnage by construction, so a 1e-12 nudge can break the tie; the case stays because the tie is what it tests, and Rust reaches the same side by using the same strict comparison with the same +1e-6 margin, in the same order",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "beam": 7.0,
+          "cargo": "LNG",
+          "t_max": 1.43,
+          "ruleset": "IGC_2G_EXACT",
+          "extra_clearance_m": [
+            0.0,
+            1.0
+          ],
+          "loa": 76.7
+        }
+      }
+    },
+    {
+      "id": "fit/equal_tonnage_first_candidate_wins_adn",
+      "tier": 1,
+      "reason": "tier 1: kills mutant gas_arrangement.rs:356 (passing-candidate margin +1e-6 flipped to -1e-6) in fit; extra_clearance_m [0.0, 1.0] repeats the base candidate on an ADN_G hull, so the first of two tied candidates must win; no sweep case has a tie (issue #17 mutation run)",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "beam": 7.87,
+          "cargo": "LPG_mix",
+          "t_max": 2.24,
+          "ruleset": "ADN_G",
+          "extra_clearance_m": [
+            0.0,
+            1.0
+          ],
+          "loa": 60.1
+        }
+      }
+    },
+    {
+      "id": "fit/adn_tank_length_at_l_over_d_limit",
+      "tier": 1,
+      "reason": "tier 1: kills mutant gas_arrangement.rs:277 (ADN_G tank length against 7 x outer diameter: > flipped to >=) in Search::build; a candidate tank is exactly at the L/D limit, and Python accepts it (issue #17 mutation run)",
+      "knife_edge": "the tank length sits on the 7 x outer diameter bound, so a 1e-12 nudge flips the ADN_G accept; the case stays because the bound is what it tests, and Rust computes the same two floats in the same order with the same strict comparison",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "beam": 13.3,
+          "cargo": "LPG_mix",
+          "t_max": 3.31,
+          "ruleset": "ADN_G",
+          "self_propelled": false,
+          "block_coefficient": 0.89,
+          "loa": 119.2
+        }
+      }
+    },
+    {
+      "id": "fit/clearance_below_exact_minimum_rejected",
+      "tier": 1,
+      "reason": "tier 1: kills mutant gas_arrangement.rs:266 (clearance against the code minimum: < flipped to ==) in Search::build; the candidate with the tank on the cap has a side clearance below the code minimum and must be rejected (issue #17 mutation run)",
+      "input": {
+        "fn": "fit",
+        "args": {
+          "beam": 8.14,
+          "cargo": "LPG_propane",
+          "t_max": 3.77,
+          "ruleset": "IGC_2G",
+          "self_propelled": false,
+          "depths": [
+            5.34,
+            5.87,
+            4.28
+          ],
+          "extra_clearance_m": [
+            0.5
+          ],
+          "adn_tank_cap_m3": 792.0,
+          "max_tank_od_m": 6.4,
+          "loa": 64.9
+        }
+      }
+    },
+    {
       "id": "fit/error/unknown_ruleset",
       "tier": 3,
       "reason": "tier 3: error path: ruleset must be one of RULESETS",
