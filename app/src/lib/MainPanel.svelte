@@ -2,6 +2,7 @@
   import { onMount, tick } from "svelte";
   import type { Evaluation, OptionEvaluation } from "./api";
   import SpeedPower from "./views/SpeedPower.svelte";
+  import Stability from "./views/Stability.svelte";
 
   // The views, stacked in one scrolling panel. A dropdown at the top right jumps to a view and
   // follows the scroll. The hull views wait for the Drawing Format Standard (ADR 0009): their slots
@@ -17,6 +18,7 @@
     { id: "plan", label: "Plan" },
     { id: "midship", label: "Midship section" },
     { id: "speed-power", label: "Speed and power" },
+    { id: "stability", label: "Stability" },
   ];
   const HULL = ["side", "plan", "midship"];
 
@@ -92,6 +94,15 @@
           {#each curves as c (c.name)}
             <SpeedPower name={c.name} limitingSpeed={c.limiting_speed_kn} blockage={c.blockage} points={c.points} />
           {/each}
+        {/if}
+      {:else if v.id === "stability"}
+        {#if stale}<span class="stale">out of date</span>{/if}
+        {#if message}
+          <p class="note">{message}</p>
+        {:else if !results}
+          <p class="note">No results to show.</p>
+        {:else}
+          <Stability stability={(results as { stability?: never }).stability} />
         {/if}
       {/if}
     </section>
