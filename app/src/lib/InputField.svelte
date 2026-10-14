@@ -113,7 +113,7 @@
     <select
       aria-label={spec.label}
       value={formation.kind}
-      onchange={(e) => onFormation(e.currentTarget.value, abreast, inLine)}
+      onchange={(e) => onFormation(e.currentTarget.value, e.currentTarget.value === "pushed_convoy" ? abreast : null, e.currentTarget.value === "pushed_convoy" ? inLine : null)}
     >
       {#each spec.choices ?? [] as c (c.value)}
         <option value={c.value}>{c.label}</option>

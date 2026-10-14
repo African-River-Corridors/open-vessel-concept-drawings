@@ -238,6 +238,46 @@ fn set_formation_sets_the_kind_and_the_convoy_counts() {
     );
 }
 
+fn convoy_round_trip(other: &str) {
+    let mut s = starter();
+    s.set_formation("Option 1", "pushed_convoy", Some(2), Some(3))
+        .unwrap();
+    // The front end sends the counts it holds with the new kind; the session keeps only the kind.
+    s.set_formation("Option 1", other, Some(2), Some(3))
+        .unwrap();
+    assert_eq!(
+        input(&s, "Option 1", "formation").value,
+        json!({ "kind": other })
+    );
+    let saved: Value = serde_json::from_str(&s.save().unwrap()).unwrap();
+    assert_eq!(
+        saved["options"][0]["inputs"]["formation"]["value"],
+        json!({ "kind": other })
+    );
+    let ev = s.evaluate();
+    assert!(
+        ev.options[0].outcome.is_some(),
+        "not run: {:?}",
+        ev.options[0].messages
+    );
+    s.set_formation("Option 1", "pushed_convoy", None, None)
+        .unwrap();
+    assert_eq!(
+        input(&s, "Option 1", "formation").value,
+        json!({ "kind": "pushed_convoy", "abreast": 2, "in_line": 3 })
+    );
+}
+
+#[test]
+fn convoy_to_pushed_barge_and_back_restores_the_counts() {
+    convoy_round_trip("pushed_barge");
+}
+
+#[test]
+fn convoy_to_self_propelled_and_back_restores_the_counts() {
+    convoy_round_trip("self_propelled");
+}
+
 #[test]
 fn a_default_that_follows_another_input_follows_it_when_that_input_changes() {
     let mut s = open("gas_igc_2g_exact");
