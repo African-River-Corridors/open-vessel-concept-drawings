@@ -755,6 +755,7 @@
       "id": "find_equilibrium_draft/weight_equals_full_volume",
       "tier": 3,
       "reason": "tier 3: degenerate input, tolerance 0 with total weight equal to the full moulded volume (box hull): displaced volume is flat above depth, so the bisection `<` versus `<=` test decides the draft (10.0 versus 30.0); kills the find_equilibrium_draft comparison mutant (issue #15 review round 2)",
+      "knife_edge": "The required volume equals the full moulded volume exactly, and the volume curve is flat above the depth, so the strict `<` test decides between draft 10.0 and 30.0. Rust uses the same strict `<` on the same exact binary floats. A nudge moves the answer, which is why the case checks it.",
       "input": {
         "fn": "find_equilibrium_draft",
         "args": {
