@@ -60,7 +60,7 @@ fn a_missing_file_is_an_error() {
 }
 
 #[test]
-fn build_writes_the_normalised_content_the_svg_and_the_pdf() {
+fn build_writes_the_normalised_content_the_dxf_the_svg_and_the_pdf() {
     let path = document("tb-register-two");
     let out = std::env::temp_dir().join(format!("ovcd-draw-build-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&out);
@@ -72,8 +72,13 @@ fn build_writes_the_normalised_content_the_svg_and_the_pdf() {
         out.to_str().unwrap(),
     ]);
     assert!(ok, "{stderr}");
-    assert_eq!(stdout.lines().count(), 3);
-    for name in ["input.normalised.json", "input.svg", "input.pdf"] {
+    assert_eq!(stdout.lines().count(), 4);
+    for name in [
+        "input.normalised.json",
+        "input.dxf",
+        "input.svg",
+        "input.pdf",
+    ] {
         assert!(out.join(name).is_file(), "{name}");
     }
     assert!(

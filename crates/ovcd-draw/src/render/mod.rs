@@ -4,6 +4,7 @@
 //! by the standard (clause 16), not by the writer. Output is the same on every run: nothing reads a
 //! clock, a random source or a file.
 
+pub mod dxf;
 pub mod pdf;
 pub mod svg;
 

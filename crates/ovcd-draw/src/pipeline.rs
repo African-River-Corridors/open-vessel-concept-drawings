@@ -891,7 +891,7 @@ fn north_arrow(vid: &str, frame: Rect, rotation: f64, nb: &Value, thin: f64) -> 
 }
 
 /// The line type and width of an entity of a viewport (clauses 8.7 and 9.7).
-fn entity_style(e: &Value, declared: &Layers, group: &LineGroup) -> (String, f64) {
+pub(crate) fn entity_style(e: &Value, declared: &Layers, group: &LineGroup) -> (String, f64) {
     let (layer_role, layer_lt, _) = &declared[st(&e["layer"])];
     let is_centre = st(&e["type"]) == "centre_line";
     let role = e
@@ -1016,6 +1016,11 @@ fn viewport_entities(
         }
     }
     out
+}
+
+/// The declared layers of a document (clause 8.5).
+pub(crate) fn declared_layers(doc: &Value) -> Layers {
+    layer_table(doc, &mut BTreeSet::new())
 }
 
 /// The normalised content of a document that has no errors (clause 16).

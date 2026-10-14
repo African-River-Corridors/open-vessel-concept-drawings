@@ -32,7 +32,7 @@ fn temp(test: &str) -> PathBuf {
 }
 
 #[test]
-fn out_writes_document_normalised_content_svg_and_pdf_for_each_view() {
+fn out_writes_document_normalised_content_dxf_svg_and_pdf_for_each_view() {
     let dir = temp("out");
     let (ok, stdout, stderr) = run(&[
         "draw",
@@ -41,9 +41,9 @@ fn out_writes_document_normalised_content_svg_and_pdf_for_each_view() {
         &fixture("dry_bulk_box_hold.vdesign"),
     ]);
     assert!(ok, "{stderr}");
-    assert_eq!(stdout.lines().count(), 12);
+    assert_eq!(stdout.lines().count(), 15);
     for view in ["side-elevation", "plan", "midship-section"] {
-        for ext in ["drawing.json", "normalised.json", "svg", "pdf"] {
+        for ext in ["drawing.json", "normalised.json", "dxf", "svg", "pdf"] {
             assert!(
                 dir.join(format!("option-1-{view}.{ext}")).is_file(),
                 "{view} {ext}"

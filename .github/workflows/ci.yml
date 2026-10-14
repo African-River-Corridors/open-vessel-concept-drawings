@@ -54,6 +54,15 @@ jobs:
           python -m pip install "git+https://github.com/${pin}"
       - name: Rust and Python give equal normalised content for every fixture view
         run: python tools/draw_crosscheck.py
+      # The DXF files are read by readers that are not the crate: the standard's own test reader (group
+      # codes, no ezdxf) and ezdxf with its audit. The reader lives in the standard's repository.
+      - name: Read the DXF files back with the standard's reader and ezdxf
+        run: |
+          read -r repo commit < <(python -c "import json; p = json.load(open('crates/ovcd-draw/standard/PIN.json')); print(p['repository'], p['commit'])")
+          git init -q "$RUNNER_TEMP/tdfa"
+          git -C "$RUNNER_TEMP/tdfa" fetch -q --depth 1 "https://github.com/${repo}" "${commit}"
+          git -C "$RUNNER_TEMP/tdfa" checkout -q FETCH_HEAD
+          python tools/dxf_crosscheck.py --tdfa-src "$RUNNER_TEMP/tdfa"
 
   release-guard:
     runs-on: ubuntu-latest

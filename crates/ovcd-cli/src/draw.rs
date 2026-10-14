@@ -43,13 +43,14 @@ fn run_document(path: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Build the outputs of one drawing document: normalised content, SVG and PDF.
+/// Build the outputs of one drawing document: normalised content, DXF, SVG and PDF.
 fn build_document(path: &str, out: &str) -> Result<(), String> {
     let text = std::fs::read_to_string(path).map_err(|e| format!("cannot read {path}: {e}"))?;
     let folder = Path::new(path)
         .parent()
         .map_or_else(|| PathBuf::from("."), Path::to_path_buf);
-    let norm = match ovcd_draw::run_text(&text, &DirFiles(folder)) {
+    let files_in = DirFiles(folder);
+    let norm = match ovcd_draw::run_text(&text, &files_in) {
         ovcd_draw::RunResult::Ok(n) => n,
         ovcd_draw::RunResult::Errors(set) => {
             return Err(format!(
@@ -58,6 +59,13 @@ fn build_document(path: &str, out: &str) -> Result<(), String> {
             ));
         }
     };
+    // The document was read once by `run_text`; the DXF needs its model coordinates too.
+    let document =
+        ovcd_draw::json::parse(&text).map_err(|_| "the document is not JSON".to_string())?;
+    let dxf = ovcd_draw::render::dxf::to_dxf(&document, &norm, &files_in);
+    for warning in &dxf.warnings {
+        eprintln!("warning: {warning}");
+    }
     let name = Path::new(path)
         .file_name()
         .and_then(|n| n.to_str())
@@ -68,8 +76,9 @@ fn build_document(path: &str, out: &str) -> Result<(), String> {
         .unwrap_or(name);
     std::fs::create_dir_all(out).map_err(|e| format!("cannot create {out}: {e}"))?;
     let json = serde_json::to_string_pretty(&norm.to_value()).map_err(|e| e.to_string())? + "\n";
-    let files: [(String, Vec<u8>); 3] = [
+    let files: [(String, Vec<u8>); 4] = [
         (format!("{stem}.normalised.json"), json.into_bytes()),
+        (format!("{stem}.dxf"), dxf.text.into_bytes()),
         (
             format!("{stem}.svg"),
             ovcd_draw::render::svg::to_svg(&norm, &ovcd_draw::render::svg::SvgOptions::default())
@@ -224,7 +233,7 @@ fn draw_design(args: &[&str]) -> Result<(), String> {
     }
 }
 
-/// Write the drawing document, its normalised content, SVG and PDF.
+/// Write the drawing document, its normalised content, DXF, SVG and PDF.
 fn write_outputs(document: &serde_json::Value, stem: &str, out: &str) -> Result<(), String> {
     let norm = match ovcd_draw::run_value(document, &ovcd_draw::NoFiles) {
         ovcd_draw::RunResult::Ok(n) => n,
@@ -235,14 +244,19 @@ fn write_outputs(document: &serde_json::Value, stem: &str, out: &str) -> Result<
             ));
         }
     };
+    let dxf = ovcd_draw::render::dxf::to_dxf(document, &norm, &ovcd_draw::NoFiles);
+    for warning in &dxf.warnings {
+        eprintln!("warning: {stem}: {warning}");
+    }
     std::fs::create_dir_all(out).map_err(|e| format!("cannot create {out}: {e}"))?;
     let json = |v: &serde_json::Value| {
         serde_json::to_string_pretty(v)
             .map(|t| t + "\n")
             .map_err(|e| e.to_string())
     };
-    let files: [(String, Vec<u8>); 4] = [
+    let files: [(String, Vec<u8>); 5] = [
         (format!("{stem}.drawing.json"), json(document)?.into_bytes()),
+        (format!("{stem}.dxf"), dxf.text.into_bytes()),
         (
             format!("{stem}.normalised.json"),
             json(&norm.to_value())?.into_bytes(),
