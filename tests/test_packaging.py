@@ -139,7 +139,8 @@ def test_wheel_job_skips_the_tests_that_scan_files_it_does_not_copy():
     """The wheel job copies tests/, examples/, calibration/ and catalogue/ only. A test that
     scans src/ or parity/ would scan zero files there, so the job must skip it."""
     text = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
-    for name in ("test_parity_through_python.py", "test_test_audit.py"):
+    for name in ("test_parity_through_python.py", "test_test_audit.py", "test_pystr_tables.py",
+                 "test_vdesign_edge_sweep.py"):
         assert f"--ignore=tests/{name}" in text, name
 
 

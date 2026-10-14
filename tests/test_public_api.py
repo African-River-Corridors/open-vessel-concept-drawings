@@ -51,8 +51,6 @@ def describe(mod):
         elif inspect.isfunction(v):
             if v.__module__ != mod.__name__: continue
             names[n] = {"kind": "function", "params": sig(v)}
-        elif callable(v):
-            continue
         elif n in mine:
             names[n] = {"kind": "constant"}
     return names
