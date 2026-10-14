@@ -14,8 +14,8 @@ use ovcd_core::pyint::PyInt;
 use ovcd_core::pystr::repr_str;
 use ovcd_core::vessel_standards::{Catalogue, VesselStandard};
 use ovcd_core::{
-    electric_energy as core_energy, resistance as core_resistance, squat as core_squat,
-    waves as core_waves,
+    design_grid as core_grid, electric_energy as core_energy, ga_adapter as core_ga,
+    resistance as core_resistance, squat as core_squat, waves as core_waves,
 };
 use serde_json::{Value, json};
 
@@ -86,6 +86,8 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
         "barge_capacity" => barge_capacity(function, args),
         "journey_derating" => crate::gas_arrangement::run_journey(function, args),
         "gas_arrangement" => crate::gas_arrangement::run(function, args),
+        "design_grid" => design_grid(function, args),
+        "ga_adapter" => ga_adapter(function, args),
         "squat" => squat(function, args),
         "waves" => waves(function, args),
         "resistance" => resistance(function, args),
@@ -2206,5 +2208,182 @@ fn electric_energy(function: &str, args: &Value) -> Result<Value, EvalError> {
         other => Err(EvalError::BadInput(format!(
             "electric_energy has no parity function `{other}`"
         ))),
+    }
+}
+
+/// A list of numbers, as given: the sweep echoes them back as Python keeps them (`60` stays an
+/// integer, `12.0` stays a float). Each must be exact as a double.
+fn number_list(args: &Value, name: &str) -> Result<(Vec<Value>, Vec<f64>), EvalError> {
+    let items = args
+        .get(name)
+        .and_then(Value::as_array)
+        .ok_or_else(|| EvalError::BadInput(format!("`args.{name}` must be a list of numbers")))?;
+    let mut values = Vec::with_capacity(items.len());
+    let mut floats = Vec::with_capacity(items.len());
+    for item in items {
+        floats.push(exact_number(item, &format!("args.{name}[]"))?);
+        values.push(item.clone());
+    }
+    Ok((values, floats))
+}
+
+fn grid_cell_json(c: &core_grid::GridCell) -> Value {
+    json!({
+        "barge_length_m": num(c.barge_length_m),
+        "beam_m": num(c.beam_m),
+        "n_tanks_long": c.n_tanks_long,
+        "feasible": c.feasible,
+        "cargo_t": opt_num(c.cargo_t),
+        "tank_outer_diameter_m": opt_num(c.tank_outer_diameter_m),
+        "tank_length_m": opt_num(c.tank_length_m),
+        "slenderness": opt_num(c.slenderness),
+        "full_load_draft_m": opt_num(c.full_load_draft_m),
+        "air_draft_m": opt_num(c.air_draft_m),
+        "reason": c.reason,
+    })
+}
+
+fn design_grid(function: &str, args: &Value) -> Result<Value, EvalError> {
+    match function {
+        "n_tanks_for_length" => {
+            let length = exact_number(
+                args.get("barge_length_m").unwrap_or(&Value::Null),
+                "args.barge_length_m",
+            )?;
+            let max_len = match args.get("max_tank_length_m") {
+                None => core_grid::MAX_TANK_LENGTH_M,
+                Some(v) => exact_number(v, "args.max_tank_length_m")?,
+            };
+            match core_grid::n_tanks_for_length(length, max_len) {
+                Ok(n) => ok(json!(n)),
+                Err(e) => raised_py(&e),
+            }
+        }
+        "sweep" => {
+            let (length_values, lengths) = number_list(args, "barge_lengths_m")?;
+            let (beam_values, beams) = number_list(args, "beams_m")?;
+            let (depth_value, depth) = match args.get("depth_m") {
+                None => (json!(6.0), 6.0),
+                Some(v) => (v.clone(), exact_number(v, "args.depth_m")?),
+            };
+            let cargo_type = match args.get("cargo_type") {
+                None => "LPG_propane",
+                Some(Value::String(s)) => s.as_str(),
+                Some(_) => {
+                    return Err(EvalError::BadInput(
+                        "`args.cargo_type` must be a string".into(),
+                    ));
+                }
+            };
+            match core_grid::sweep(&lengths, &beams, depth, cargo_type) {
+                Ok(g) => ok(wide_object!({
+                    "barge_lengths_m": length_values,
+                    "beams_m": beam_values,
+                    "depth_m": depth_value,
+                    "cargo_type": g.cargo_type,
+                    "clearance_basis": g.clearance_basis,
+                    "max_tank_length_m": num(g.max_tank_length_m),
+                    "cells": g.cells.iter().map(grid_cell_json).collect::<Vec<_>>(),
+                })),
+                Err(e) => raised_py(&e),
+            }
+        }
+        other => Err(EvalError::BadInput(format!(
+            "design_grid has no parity function `{other}`"
+        ))),
+    }
+}
+
+fn ga_inputs_json(i: &core_ga::GaInputs) -> Value {
+    let mut value = barge_inputs_json(&i.inputs);
+    // The drawing carries the capacity result's `Optional[int]` as it is.
+    value["n_tanks_wide"] = i.n_tanks_wide.map_or(Value::Null, |n| json!(n));
+    value
+}
+
+fn ga_results_json(r: &core_ga::GaResults) -> Value {
+    wide_object!({
+        "inputs": ga_inputs_json(&r.inputs),
+        "tanks": r.tanks.as_ref().map(tank_json),
+        "cargo_type": r.cargo_type,
+        "cargo_density": num(r.cargo_density),
+        "cargo_mass": num(r.cargo_mass),
+        // The drawing never carries these three (Python passes `None`).
+        "weights": r.weights.as_ref().map(weights_json),
+        "displacement": num(r.displacement),
+        "deadweight": num(r.deadweight),
+        "draft": num(r.draft),
+        "freeboard": num(r.freeboard),
+        "min_freeboard_ok": r.min_freeboard_ok,
+        "air_draft": num(r.air_draft),
+        "air_draft_ok": r.air_draft_ok,
+        "stability": Value::Null,
+        "stability_ok": r.stability_ok,
+        "trim": num(r.trim),
+        "total_depth_required": num(r.total_depth_required),
+        "air_draft_unladen": num(r.air_draft_unladen),
+        "light_draft": num(r.light_draft),
+        "air_draft_navigating_unladen": num(r.air_draft_navigating_unladen),
+        "protective_location": Value::Null,
+        "binding_constraints": r.binding_constraints,
+        "warnings": r.warnings,
+    })
+}
+
+/// `to_ga`'s keyword arguments: `laden_draft_m` (a number or null) and `motor_vessel` (a bool).
+fn ga_kwargs(args: &Value) -> Result<(Option<f64>, bool), EvalError> {
+    let mut laden = None;
+    let mut motor_vessel = true;
+    match args.get("kwargs") {
+        None => {}
+        Some(Value::Object(kwargs)) => {
+            for (key, value) in kwargs {
+                match (key.as_str(), value) {
+                    ("laden_draft_m", Value::Null) => laden = None,
+                    ("laden_draft_m", v) => {
+                        laden = Some(exact_number(v, "args.kwargs.laden_draft_m")?);
+                    }
+                    ("motor_vessel", Value::Bool(b)) => motor_vessel = *b,
+                    ("motor_vessel", _) => {
+                        return Err(EvalError::BadInput(
+                            "`args.kwargs.motor_vessel` must be a bool".into(),
+                        ));
+                    }
+                    (other, _) => {
+                        return Err(EvalError::BadInput(format!(
+                            "to_ga has no keyword argument `{other}`"
+                        )));
+                    }
+                }
+            }
+        }
+        Some(_) => {
+            return Err(EvalError::BadInput(
+                "`args.kwargs` must be an object".into(),
+            ));
+        }
+    }
+    Ok((laden, motor_vessel))
+}
+
+fn ga_adapter(function: &str, args: &Value) -> Result<Value, EvalError> {
+    if !matches!(function, "to_ga" | "is_gas") {
+        return Err(EvalError::BadInput(format!(
+            "ga_adapter has no parity function `{function}`"
+        )));
+    }
+    let inputs = capacity_inputs(args)?;
+    // The frozen driver runs `compute` first, for both functions.
+    let result = match ovcd_core::barge_capacity::compute(&inputs) {
+        Ok(r) => r,
+        Err(e) => return raised_py(&e),
+    };
+    if function == "is_gas" {
+        return ok(json!(core_ga::is_gas(&result)));
+    }
+    let (laden, motor_vessel) = ga_kwargs(args)?;
+    match core_ga::to_ga(&inputs, &result, laden, motor_vessel) {
+        Ok((gi, gr)) => ok(json!([ga_inputs_json(&gi), ga_results_json(&gr)])),
+        Err(e) => raised_py(&e),
     }
 }

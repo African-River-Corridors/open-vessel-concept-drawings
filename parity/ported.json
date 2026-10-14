@@ -17,5 +17,7 @@
   "gas_stability",
   "barge_capacity",
   "journey_derating",
-  "gas_arrangement"
+  "gas_arrangement",
+  "design_grid",
+  "ga_adapter"
 ]
