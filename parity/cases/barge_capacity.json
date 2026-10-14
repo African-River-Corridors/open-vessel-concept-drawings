@@ -1794,6 +1794,25 @@
       }
     },
     {
+      "id": "gas/igc_2g_exact/early_stop_163x6p8x2p4",
+      "tier": 1,
+      "reason": "pins IGC_2G_EXACT d(Vc) early stop at 1e-9; without the early stop, steel_delta moves about 5x past tolerance",
+      "input": {
+        "fn": "compute",
+        "args": {
+          "inputs": {
+            "loa": 163.0,
+            "beam": 6.8,
+            "depth": 2.4,
+            "cargo_type": "LNG_ethane",
+            "vessel_type": "IGC_2G_EXACT",
+            "tank_support_height": 1.0,
+            "n_tanks_long": 2
+          }
+        }
+      }
+    },
+    {
       "id": "compute/sweep/000",
       "tier": 2,
       "reason": "tier 2: seeded sweep (parity/sweep.py, seed 20261013)",

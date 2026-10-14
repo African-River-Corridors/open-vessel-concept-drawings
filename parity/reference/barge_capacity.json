@@ -17698,6 +17698,382 @@
       }
     },
     {
+      "id": "gas/igc_2g_exact/early_stop_163x6p8x2p4",
+      "output": {
+        "ok": {
+          "cargo_type": "LNG / Ethane",
+          "phase": "liquid_gas",
+          "cargo_density_t_per_m3": 0.5,
+          "cargo_capacity_t": 1024.485264017933,
+          "full_load_draft_m": 2.258260345458984,
+          "air_draft_m": 6.633899099457977,
+          "cargo_volume_m3": 2048.970528035866,
+          "lightship_t": 1103.1114927774604,
+          "displacement_t": 2127.597401870727,
+          "deadweight_t": 1024.4859090932666,
+          "freeboard_m": 0.1417396545410159,
+          "air_draft_top_above_keel_m": 8.892159444916961,
+          "overloaded": false,
+          "tank_outer_diameter_m": 5.892159444916961,
+          "n_tanks_wide": 1,
+          "max_tank_od_m": 12.0,
+          "n_tanks_total": 2,
+          "side_clearance_m": 0.4539202775415192,
+          "bottom_clearance_m": 0.4539202775415192,
+          "hold_height_m": null,
+          "hold_top_width_m": null,
+          "hold_bottom_width_m": null,
+          "hold_section_area_m2": null,
+          "gm_m": null,
+          "bow_void_length_m": 4.34,
+          "stern_void_length_m": 47.876,
+          "cargo_zone_length_m": 110.78399999999999,
+          "bow_rake_length_m": 3.84,
+          "aft_arrangement": {
+            "length_m": 45.876,
+            "zones": [
+              [
+                "THRUSTER ROOM",
+                0.0,
+                3.5
+              ],
+              [
+                "40 FT UNITS (1 ABREAST x 3)",
+                3.8,
+                41.976
+              ],
+              [
+                "WHEELHOUSE (LIFTING)",
+                42.275999999999996,
+                45.876
+              ]
+            ],
+            "thruster_offsets_m": [
+              0.0
+            ],
+            "thruster_room_length_m": 3.5,
+            "container_x0_m": 3.8,
+            "container_x1_m": 41.976,
+            "container_total_width_m": 4.238,
+            "container_top_above_keel_m": 5.596,
+            "container_labels": [
+              "BATTERY 40 FT",
+              "ACCOM 40 FT",
+              "ACCOM 40 FT"
+            ],
+            "container_unit_width_m": 2.438,
+            "container_side_gap_m": 0.9,
+            "container_rows": 3,
+            "container_per_row": 1,
+            "container_row_length_m": 12.192,
+            "container_row_gap_m": 0.8,
+            "wheelhouse_x0_m": 42.275999999999996,
+            "wheelhouse_x1_m": 45.876,
+            "wheelhouse_floor_lowered_m": 2.4,
+            "wheelhouse_top_lowered_m": 5.8,
+            "wheelhouse_floor_raised_m": 7.892159444916961,
+            "wheelhouse_top_raised_m": 11.292159444916962,
+            "wheelhouse_lift_m": 5.492159444916961,
+            "wheelhouse_width_m": 6.4,
+            "wheelhouse_height_m": 3.4,
+            "block_top_lowered_m": 5.8,
+            "checks": [
+              {
+                "name": "thrusters_fit_beam",
+                "ok": true,
+                "message": "1 x 2.60 m thrusters need 3.80 m across a 6.80 m beam",
+                "severity": "error"
+              },
+              {
+                "name": "requested_thruster_count_fits",
+                "ok": false,
+                "message": "1 of 3 requested thrusters fit; 3 would need 10.20 m of 6.80 m beam",
+                "severity": "warning"
+              },
+              {
+                "name": "containers_fit_beam",
+                "ok": true,
+                "message": "1 x 40 ft units abreast need 4.24 m across a 6.80 m beam",
+                "severity": "error"
+              },
+              {
+                "name": "units_fit_in_one_row",
+                "ok": false,
+                "message": "3 units in 3 row(s) of 1; a second row adds 12.99 m to the stern block and comes straight off the cargo zone",
+                "severity": "warning"
+              },
+              {
+                "name": "wheelhouse_fits_beam",
+                "ok": true,
+                "message": "wheelhouse 6.40 m wide on a 6.80 m beam",
+                "severity": "error"
+              },
+              {
+                "name": "wheelhouse_sees_over_cargo",
+                "ok": true,
+                "message": "raised eye 9.39 m >= obstruction 8.89 m + 0.50 m margin (lift used 5.49 m of 6.00 m)",
+                "severity": "warning"
+              }
+            ],
+            "warnings": []
+          },
+          "separation": {
+            "aft_separation_m": 2.0,
+            "fwd_separation_m": 0.5,
+            "cofferdam_m": 0.6,
+            "service_space_m": 1.4,
+            "total_length_taken_m": 2.5,
+            "checks": [
+              {
+                "name": "cofferdam_min_width",
+                "ok": true,
+                "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+                "severity": "error"
+              },
+              {
+                "name": "opening_setback",
+                "ok": true,
+                "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+                "severity": "error"
+              },
+              {
+                "name": "fwd_end_bulkhead_space",
+                "ok": true,
+                "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+                "severity": "error"
+              },
+              {
+                "name": "side_clearance_type_g_floor",
+                "ok": false,
+                "message": "side clearance 0.45 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+                "severity": "error"
+              },
+              {
+                "name": "double_bottom_type_g_floor",
+                "ok": false,
+                "message": "double bottom 0.45 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+                "severity": "error"
+              }
+            ],
+            "warnings": [
+              "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+            ]
+          },
+          "containment_inner_volume_m3": 2156.8110821430173,
+          "fill_ratio_applied": 0.95,
+          "insulation_thickness_mm": 350.0,
+          "tank_wall_thickness_mm": 25.0,
+          "tank_inner_diameter_m": 5.142159444916961,
+          "light_draft_m": 1.1708541870117184,
+          "air_draft_light_m": 7.721305257905243,
+          "ballast_draft_m": 1.1708541870117184,
+          "air_draft_ballast_m": 7.721305257905243,
+          "air_draft_navigating_light_m": 10.121305257905243,
+          "navigating_top_above_keel_m": 11.292159444916962,
+          "gas_basis": {
+            "inputs": {
+              "loa": 163.0,
+              "beam": 6.8,
+              "depth": 2.4,
+              "max_draft": 2.4,
+              "vertical_clearance": 24.0,
+              "vessel_type": "IGC_2G_EXACT",
+              "bow_rake_length": 0.0,
+              "bow_rake_rise": 2.4,
+              "stern_rake_length": 0.0,
+              "stern_rake_rise": 2.4,
+              "bow_non_tank_pct": 0.1,
+              "stern_non_tank_pct": 0.15,
+              "bow_non_tank_length": 4.34,
+              "stern_non_tank_length": 47.876,
+              "wing_tank_width": 0.4,
+              "wing_tank_gap": 0.6,
+              "wing_tank_height_ratio": 0.66,
+              "weather_shield_thickness": 6.0,
+              "weather_shield_clearance": 1.5,
+              "dome_height": 2.0,
+              "side_clearance": 0.4539202775415192,
+              "tank_gap_transverse": 1.0,
+              "tank_gap_longitudinal": 2.0,
+              "n_tanks_wide": 1,
+              "n_tanks_long": 2,
+              "tank_wall_thickness": 25.0,
+              "tank_head_type": "hemisphere",
+              "tank_material": "9Ni",
+              "tank_material_density": 7.85,
+              "design_pressure": 0.5,
+              "weld_efficiency": 0.95,
+              "tank_structure_factor": 1.3,
+              "insulation_thickness": 350.0,
+              "insulation_density": 60.0,
+              "cargo_type": "LNG_ethane",
+              "cargo_density_override": null,
+              "fill_ratio": 0.95,
+              "bottom_plate_thickness": 12.0,
+              "side_plate_thickness": 10.0,
+              "deck_plate_thickness": 10.0,
+              "structure_factor": 1.4,
+              "hull_steel_density": 7.85,
+              "steel_rate_per_cbm": 0.1,
+              "block_coefficient": 0.85,
+              "water_density": 1.0,
+              "underkeel_clearance": 0.5,
+              "outfitting_factor": 0.035,
+              "piping_factor": 0.04,
+              "stores_weight": 200.0,
+              "tank_support_height": 1.0,
+              "double_bottom_height": 0.0,
+              "aft_arrangement": null,
+              "separation": null,
+              "tug_length": 25.0,
+              "tug_beam": 9.1,
+              "notch_depth": 3.0
+            },
+            "tanks": {
+              "n_tanks_wide": 1,
+              "n_tanks_long": 2,
+              "n_tanks_total": 2,
+              "outer_diameter": 5.892159444916961,
+              "inner_diameter": 5.142159444916961,
+              "overall_tank_length": 54.391999999999996,
+              "cylinder_length": 48.49984055508303,
+              "head_length": 2.9460797224584807,
+              "volume_per_tank": 1078.4055410715087,
+              "volume_cylinder": 1007.2128779722716,
+              "volume_heads": 71.19266309923705,
+              "total_tank_volume": 2156.8110821430173,
+              "cargo_volume": 2048.970528035866,
+              "tank_shell_weight": 342.2584070523286,
+              "insulation_weight": 42.287175857305265,
+              "tank_top_above_keel": 6.892159444916961,
+              "cylinder_wall_thickness": 25.0,
+              "head_wall_thickness": 25.0,
+              "design_pressure": 0.5,
+              "tank_material": ""
+            },
+            "weights": {
+              "hull_bottom_plating": 104.41127999999999,
+              "hull_side_plating": 61.4184,
+              "hull_deck_plating": 87.0094,
+              "hull_rake_plating": 0.0,
+              "hull_internal_structure": 101.13563199999997,
+              "hull_steel_total": 353.97471199999995,
+              "tank_shells": 342.2584070523286,
+              "tank_internals_supports": 102.6775221156986,
+              "tank_total": 444.9359291680272,
+              "insulation": 42.287175857305265,
+              "wing_plate": 102.15390267482795,
+              "weather_shield": 74.2862754204085,
+              "piping_machinery": 39.472532722610424,
+              "outfitting": 34.53846613228412,
+              "stores": 0.0,
+              "moulded_volume": 5418.773888972333,
+              "moulded_depth": 4.8888252336451945,
+              "steel_top_down": 541.8773888972333,
+              "steel_bottom_up": 530.4148900952364,
+              "steel_delta": 11.462498801996958,
+              "lightship": 1103.1114927774604
+            }
+          },
+          "checks": [
+            {
+              "name": "feasible_geometry",
+              "ok": true,
+              "message": "cargo volume must be positive (tank/hold fits)",
+              "severity": "error"
+            },
+            {
+              "name": "not_overloaded",
+              "ok": true,
+              "message": "volume-bound load must float within the moulded depth",
+              "severity": "error"
+            },
+            {
+              "name": "freeboard_ok",
+              "ok": false,
+              "message": "freeboard 0.14 m >= required 0.3 m",
+              "severity": "error"
+            },
+            {
+              "name": "cargo_zone_positive",
+              "ok": true,
+              "message": "cargo zone 110.78 m = LOA 163.0 - bow void 4.34 m - stern void 47.88 m",
+              "severity": "error"
+            },
+            {
+              "name": "thrusters_fit_beam",
+              "ok": true,
+              "message": "1 x 2.60 m thrusters need 3.80 m across a 6.80 m beam",
+              "severity": "error"
+            },
+            {
+              "name": "requested_thruster_count_fits",
+              "ok": false,
+              "message": "1 of 3 requested thrusters fit; 3 would need 10.20 m of 6.80 m beam",
+              "severity": "warning"
+            },
+            {
+              "name": "containers_fit_beam",
+              "ok": true,
+              "message": "1 x 40 ft units abreast need 4.24 m across a 6.80 m beam",
+              "severity": "error"
+            },
+            {
+              "name": "units_fit_in_one_row",
+              "ok": false,
+              "message": "3 units in 3 row(s) of 1; a second row adds 12.99 m to the stern block and comes straight off the cargo zone",
+              "severity": "warning"
+            },
+            {
+              "name": "wheelhouse_fits_beam",
+              "ok": true,
+              "message": "wheelhouse 6.40 m wide on a 6.80 m beam",
+              "severity": "error"
+            },
+            {
+              "name": "wheelhouse_sees_over_cargo",
+              "ok": true,
+              "message": "raised eye 9.39 m >= obstruction 8.89 m + 0.50 m margin (lift used 5.49 m of 6.00 m)",
+              "severity": "warning"
+            },
+            {
+              "name": "cofferdam_min_width",
+              "ok": true,
+              "message": "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)",
+              "severity": "error"
+            },
+            {
+              "name": "opening_setback",
+              "ok": true,
+              "message": "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)",
+              "severity": "error"
+            },
+            {
+              "name": "fwd_end_bulkhead_space",
+              "ok": true,
+              "message": "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)",
+              "severity": "error"
+            },
+            {
+              "name": "side_clearance_type_g_floor",
+              "ok": false,
+              "message": "side clearance 0.45 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more",
+              "severity": "error"
+            },
+            {
+              "name": "double_bottom_type_g_floor",
+              "ok": false,
+              "message": "double bottom 0.45 m >= 0.60 m inland type-G floor (cl. 3.5.2)",
+              "severity": "error"
+            }
+          ],
+          "warnings": [
+            "Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
+          ]
+        }
+      }
+    },
+    {
       "id": "compute/sweep/000",
       "output": {
         "ok": {
