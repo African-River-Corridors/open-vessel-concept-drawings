@@ -13,6 +13,7 @@ name: App build
 on:
   push:
     tags: ["v*"]
+    branches: ["ticket/111-installers"]  # TEMPORARY: proves the build before the workflow is on main
   workflow_dispatch:
 
 permissions:
