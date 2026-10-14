@@ -42,8 +42,10 @@ Pure functions + typed dataclasses; no I/O. Runs in Pyodide.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import List
 
 from .checks import Check, all_ok
+from .._bridge import call as _call
 
 # --- Rule constants, each with its clause. Do not retype these anywhere else. ---
 COFFERDAM_MIN_M = 0.60          # 3.6.13 / 3.7.4 (type C/N convention; IGC 3.1.2 either/or)
@@ -84,8 +86,8 @@ class GasSeparationResult:
     service_space_m: float          # the remainder of the aft separation, aft of the cofferdam
     total_length_taken_m: float
 
-    checks: list = field(default_factory=list)
-    warnings: list = field(default_factory=list)
+    checks: List[Check] = field(default_factory=list)
+    warnings: List[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -94,42 +96,4 @@ class GasSeparationResult:
 
 def compute(inp: GasSeparationInputs) -> GasSeparationResult:
     """Resolve the aft and forward separations, with the rules as checks."""
-    aft = max(inp.cofferdam_m, inp.opening_setback_m)
-    fwd = inp.fwd_end_bulkhead_m
-    service = max(0.0, aft - inp.cofferdam_m)
-
-    floor = (END_BULKHEAD_SPACE_PRESSURE_M if inp.is_pressure_tank
-             else END_BULKHEAD_SPACE_M)
-
-    checks = [
-        Check("cofferdam_min_width", inp.cofferdam_m >= COFFERDAM_MIN_M - 1e-9,
-              f"cofferdam {inp.cofferdam_m:.2f} m >= {COFFERDAM_MIN_M:.2f} m (cl. 3.6.13)"),
-        Check("opening_setback", aft >= OPENING_SETBACK_M - 1e-9,
-              f"aft separation {aft:.2f} m >= {OPENING_SETBACK_M:.2f} m from the cargo area "
-              f"to any entrance or openable window (cl. 3.3.7 / 3.3.11)"),
-        Check("fwd_end_bulkhead_space", fwd >= floor - 1e-9,
-              f"forward end-bulkhead space {fwd:.2f} m >= {floor:.2f} m "
-              f"({'pressure tank' if inp.is_pressure_tank else 'standard'}, cl. 3.5.3 / 3.6.3)"),
-    ]
-    if inp.side_clearance_m > 0:
-        checks.append(Check(
-            "side_clearance_type_g_floor", inp.side_clearance_m >= SIDE_MIN_TYPE_G_M - 1e-9,
-            f"side clearance {inp.side_clearance_m:.2f} m >= {SIDE_MIN_TYPE_G_M:.2f} m "
-            f"inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more"))
-    if inp.double_bottom_m > 0:
-        checks.append(Check(
-            "double_bottom_type_g_floor",
-            inp.double_bottom_m >= DOUBLE_BOTTOM_MIN_TYPE_G_M - 1e-9,
-            f"double bottom {inp.double_bottom_m:.2f} m >= "
-            f"{DOUBLE_BOTTOM_MIN_TYPE_G_M:.2f} m inland type-G floor (cl. 3.5.2)"))
-
-    warnings = [
-        "Separation clauses are cited from the classification rules for inland-waterways "
-        "ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release."
-    ]
-    return GasSeparationResult(
-        aft_separation_m=aft, fwd_separation_m=fwd,
-        cofferdam_m=inp.cofferdam_m, service_space_m=service,
-        total_length_taken_m=aft + fwd,
-        checks=checks, warnings=warnings,
-    )
+    return _call("gas_separation", "compute", {"inputs": inp}, GasSeparationResult)

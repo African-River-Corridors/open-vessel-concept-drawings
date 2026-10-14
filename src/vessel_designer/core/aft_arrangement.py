@@ -42,9 +42,10 @@ Pure functions + typed dataclasses; no I/O. Runs in Pyodide.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import List, Optional, Tuple
 
 from .checks import Check, all_ok
+from .._bridge import call as _call
 
 # --- ISO 40 ft container envelope (ISO 668 series 1, 1AAA high-cube) ---
 ISO40_LENGTH_M = 12.192
@@ -108,10 +109,10 @@ class AftArrangementResult:
     length_m: float                          # total block length the hull must give it
 
     # Longitudinal zones, (label, x_aft, x_fwd)
-    zones: list = field(default_factory=list)
+    zones: List[Tuple[str, float, float]] = field(default_factory=list)
 
     # Transverse thruster centres, metres from the centreline (+ = port)
-    thruster_offsets_m: list = field(default_factory=list)
+    thruster_offsets_m: List[float] = field(default_factory=list)
     thruster_room_length_m: float = 0.0
 
     # Container block
@@ -121,7 +122,7 @@ class AftArrangementResult:
     container_top_above_keel_m: float = 0.0
     # One label per unit, port to starboard, so the plan draws what the model counted
     # rather than assuming a fixed pair.
-    container_labels: list = field(default_factory=list)
+    container_labels: List[str] = field(default_factory=list)
     container_unit_width_m: float = 0.0
     container_side_gap_m: float = 0.0
     container_rows: int = 1
@@ -143,8 +144,8 @@ class AftArrangementResult:
     # The tallest fixed point of the block in the transit (lowered) condition
     block_top_lowered_m: float = 0.0
 
-    checks: list = field(default_factory=list)
-    warnings: list = field(default_factory=list)
+    checks: List[Check] = field(default_factory=list)
+    warnings: List[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -153,124 +154,4 @@ class AftArrangementResult:
 
 def compute(inp: AftArrangementInputs) -> AftArrangementResult:
     """Build the stern block from its equipment. Pure."""
-    n_units = inp.n_battery_units + inp.n_accom_units
-
-    # --- How many units go ABREAST, and how many rows that needs ---------------------
-    # Abreast is the default arrangement. A hull too narrow for the full row overflows
-    # into a second row fore-and-aft, which lengthens the block rather than failing.
-    per_row_fit = int((inp.beam - inp.container_side_gap_m)
-                      // (inp.container_width_m + inp.container_side_gap_m))
-    n_per_row = max(1, min(n_units, per_row_fit))
-    n_rows = -(-n_units // n_per_row)          # ceil
-
-    # --- Longitudinal build-up, stern (x=0) forward ---
-    x = 0.0
-    zones = []
-    thr_x0, thr_x1 = x, x + inp.thruster_room_length_m
-    zones.append(("THRUSTER ROOM", thr_x0, thr_x1))
-    x = thr_x1
-
-    cont_x0 = x + inp.container_foundation_m
-    cont_x1 = cont_x0 + n_rows * inp.container_length_m + (n_rows - 1) * inp.container_gap_m
-    zones.append((f"{int(round(inp.container_length_m / 0.3048))} FT UNITS "
-                  f"({n_per_row} ABREAST x {n_rows})", cont_x0, cont_x1))
-
-    wh_x0 = cont_x1 + inp.wheelhouse_gap_m
-    wh_x1 = wh_x0 + inp.wheelhouse_length_m
-    zones.append(("WHEELHOUSE (LIFTING)", wh_x0, wh_x1))
-    length = wh_x1
-
-    # --- Transverse: thrusters equally spaced, containers side by side ---
-    pitch = inp.thruster_envelope_m + inp.thruster_clear_m
-    usable = inp.beam - 2.0 * inp.thruster_clear_m
-    n_fit = int((usable + inp.thruster_clear_m) // pitch) if pitch > 0 else 0
-    n_thr = max(1, min(inp.n_thrusters, n_fit))
-    span = (n_thr - 1) * pitch
-    offsets = [(-span / 2.0 + i * pitch) for i in range(n_thr)]
-    thruster_beam_needed = span + inp.thruster_envelope_m + 2.0 * inp.thruster_clear_m
-    requested_beam_needed = ((inp.n_thrusters - 1) * pitch + inp.thruster_envelope_m
-                             + 2.0 * inp.thruster_clear_m)
-
-    cont_w = (n_per_row * inp.container_width_m
-              + (n_per_row + 1) * inp.container_side_gap_m)
-    labels = (["BATTERY 40 FT"] * inp.n_battery_units
-              + ["ACCOM 40 FT"] * inp.n_accom_units)
-
-    # --- Vertical: containers on deck; the wheelhouse STOWS at deck level ---
-    deck = inp.depth
-    cont_top = deck + inp.container_foundation_m + inp.container_height_m
-
-    wh_floor_lo = deck
-    wh_top_lo = wh_floor_lo + inp.wheelhouse_height_m
-
-    lift = 0.0
-    if inp.sightline_obstruction_m is not None:
-        # The eye must sit `margin` above the tallest thing forward of it.
-        eye_lo = wh_floor_lo + inp.wheelhouse_eye_above_floor_m
-        needed = inp.sightline_obstruction_m + inp.sightline_margin_m
-        lift = max(0.0, needed - eye_lo)
-    lift_used = min(lift, inp.wheelhouse_max_lift_m)
-    wh_floor_hi = wh_floor_lo + lift_used
-    wh_top_hi = wh_floor_hi + inp.wheelhouse_height_m
-
-    checks = [
-        Check("thrusters_fit_beam", thruster_beam_needed <= inp.beam,
-              f"{n_thr} x {inp.thruster_envelope_m:.2f} m thrusters need "
-              f"{thruster_beam_needed:.2f} m across a {inp.beam:.2f} m beam"),
-        Check("requested_thruster_count_fits", n_thr >= inp.n_thrusters,
-              f"{n_thr} of {inp.n_thrusters} requested thrusters fit; "
-              f"{inp.n_thrusters} would need {requested_beam_needed:.2f} m of "
-              f"{inp.beam:.2f} m beam", severity="warning"),
-        Check("containers_fit_beam", cont_w <= inp.beam,
-              f"{n_per_row} x 40 ft units abreast need {cont_w:.2f} m across a "
-              f"{inp.beam:.2f} m beam"),
-        Check("units_fit_in_one_row", n_rows == 1,
-              f"{n_units} units in {n_rows} row(s) of {n_per_row}; a second row adds "
-              f"{inp.container_length_m + inp.container_gap_m:.2f} m to the stern block "
-              f"and comes straight off the cargo zone", severity="warning"),
-        Check("wheelhouse_fits_beam", inp.wheelhouse_width_m <= inp.beam,
-              f"wheelhouse {inp.wheelhouse_width_m:.2f} m wide on a "
-              f"{inp.beam:.2f} m beam"),
-    ]
-    warnings = []
-    if inp.sightline_obstruction_m is not None:
-        cleared = (wh_floor_hi + inp.wheelhouse_eye_above_floor_m) >= (
-            inp.sightline_obstruction_m + inp.sightline_margin_m - 1e-9)
-        # WARNING, not a gate. The stroke of the lifting column is an assumption; a cargo
-        # top the wheelhouse cannot see over is a real design problem, but it is solved by
-        # a taller column or a lower tank, not by declaring the vessel impossible.
-        checks.append(Check(
-            "wheelhouse_sees_over_cargo", cleared, severity="warning", message=
-            f"raised eye {wh_floor_hi + inp.wheelhouse_eye_above_floor_m:.2f} m >= "
-            f"obstruction {inp.sightline_obstruction_m:.2f} m + "
-            f"{inp.sightline_margin_m:.2f} m margin "
-            f"(lift used {lift_used:.2f} m of {inp.wheelhouse_max_lift_m:.2f} m)"))
-        if lift > inp.wheelhouse_max_lift_m + 1e-9:
-            warnings.append(
-                f"Sightline needs {lift:.2f} m of lift; the column gives "
-                f"{inp.wheelhouse_max_lift_m:.2f} m. Raise the column or lower the cargo top.")
-
-    return AftArrangementResult(
-        length_m=length,
-        zones=zones,
-        thruster_offsets_m=offsets,
-        thruster_room_length_m=inp.thruster_room_length_m,
-        container_x0_m=cont_x0, container_x1_m=cont_x1,
-        container_total_width_m=cont_w,
-        container_top_above_keel_m=cont_top,
-        container_labels=labels,
-        container_unit_width_m=inp.container_width_m,
-        container_side_gap_m=inp.container_side_gap_m,
-        container_rows=n_rows,
-        container_per_row=n_per_row,
-        container_row_length_m=inp.container_length_m,
-        container_row_gap_m=inp.container_gap_m,
-        wheelhouse_x0_m=wh_x0, wheelhouse_x1_m=wh_x1,
-        wheelhouse_floor_lowered_m=wh_floor_lo, wheelhouse_top_lowered_m=wh_top_lo,
-        wheelhouse_floor_raised_m=wh_floor_hi, wheelhouse_top_raised_m=wh_top_hi,
-        wheelhouse_lift_m=lift_used,
-        wheelhouse_width_m=inp.wheelhouse_width_m,
-        wheelhouse_height_m=inp.wheelhouse_height_m,
-        block_top_lowered_m=max(cont_top, wh_top_lo),
-        checks=checks, warnings=warnings,
-    )
+    return _call("aft_arrangement", "compute", {"inputs": inp}, AftArrangementResult)

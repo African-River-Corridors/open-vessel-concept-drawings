@@ -100,30 +100,33 @@ def test_resistance_monotone_in_speed():
     assert all(b >= x - 1e-9 for x, b in zip(totals, totals[1:]))
 
 
+def _shallow_factor(env, knots=8.0):
+    """The shallow-water resistance factor of the first speed point of one environment."""
+    r = compute(ResistanceInputs(environments=[env], speed_min_knots=knots,
+                                 speed_max_knots=knots, speed_step_knots=0.5))
+    return r.environments[0].speed_curve[0].resistance_shallow_factor
+
+
 def test_shallow_factor_at_least_one_and_grows_as_depth_falls():
     # Compare the shallow factor at a fixed speed for two depths.
     """Label: property
     Parity: resistance:compute/wide_channel_depth_20, resistance:compute/wide_channel_depth_8
     """
-    calc = ResistanceCalculator(ResistanceInputs())
     deep = EnvironmentInputs(name="d", water_depth=20.0, channel_width_bottom=200.0,
                              channel_width_surface=200.0, water_density=1.0)
     shallow = EnvironmentInputs(name="s", water_depth=8.0, channel_width_bottom=200.0,
                                 channel_width_surface=200.0, water_density=1.0)
-    v = 4.0  # m/s
-    f_deep = calc._shallow_water_factor(v, deep)
-    f_shallow = calc._shallow_water_factor(v, shallow)
+    f_deep, f_shallow = _shallow_factor(deep), _shallow_factor(shallow)
     assert f_deep >= 1.0 and f_shallow >= 1.0
     assert f_shallow > f_deep
 
 
 def test_deep_water_factor_is_one():
     """Label: property
-    Parity: none (private helper _shallow_water_factor has no Reference Results)
+    Parity: resistance:compute/wide_channel_depth_20
     """
-    calc = ResistanceCalculator(ResistanceInputs())
     env = EnvironmentInputs(name="open", is_deep_water=True)
-    assert calc._shallow_water_factor(5.0, env) == 1.0
+    assert _shallow_factor(env, knots=10.0) == 1.0
 
 
 def test_service_speed_falls_as_channel_gets_shallower():

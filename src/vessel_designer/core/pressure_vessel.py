@@ -7,9 +7,9 @@ Formulas from ASME Boiler and Pressure Vessel Code, Section VIII, Division 1,
 paragraph UG-27, as referenced by the IGC Code Chapter 4 for Type C tanks.
 """
 
-import math
 from dataclasses import dataclass
 from typing import Dict, Tuple
+from .._bridge import call as _call
 
 
 @dataclass
@@ -54,10 +54,7 @@ TANK_MATERIAL_DATABASE: Dict[str, TankMaterialProperties] = {
 
 def get_tank_material(material_key: str) -> TankMaterialProperties:
     """Look up tank material properties by key."""
-    if material_key not in TANK_MATERIAL_DATABASE:
-        valid = ", ".join(TANK_MATERIAL_DATABASE.keys())
-        raise ValueError(f"Unknown tank material '{material_key}'. Valid: {valid}")
-    return TANK_MATERIAL_DATABASE[material_key]
+    return _call("pressure_vessel", "get_tank_material", {"material_key": material_key}, TankMaterialProperties)
 
 
 def cylinder_wall_thickness(
@@ -79,11 +76,9 @@ def cylinder_wall_thickness(
     Returns:
         Required wall thickness (mm).
     """
-    P = design_pressure_mpa
-    R = inner_radius_mm
-    f = allowable_stress_mpa
-    E = weld_efficiency
-    return P * R / (f * E - 0.6 * P)
+    return _call("pressure_vessel", "cylinder_wall_thickness", dict(
+        design_pressure_mpa=design_pressure_mpa, inner_radius_mm=inner_radius_mm,
+        allowable_stress_mpa=allowable_stress_mpa, weld_efficiency=weld_efficiency), float)
 
 
 def hemisphere_head_thickness(
@@ -105,11 +100,9 @@ def hemisphere_head_thickness(
     Returns:
         Required wall thickness (mm).
     """
-    P = design_pressure_mpa
-    R = inner_radius_mm
-    f = allowable_stress_mpa
-    E = weld_efficiency
-    return P * R / (2.0 * f * E - 0.2 * P)
+    return _call("pressure_vessel", "hemisphere_head_thickness", dict(
+        design_pressure_mpa=design_pressure_mpa, inner_radius_mm=inner_radius_mm,
+        allowable_stress_mpa=allowable_stress_mpa, weld_efficiency=weld_efficiency), float)
 
 
 def ellipsoidal_head_thickness(
@@ -131,11 +124,9 @@ def ellipsoidal_head_thickness(
     Returns:
         Required wall thickness (mm).
     """
-    P = design_pressure_mpa
-    D = inner_diameter_mm
-    f = allowable_stress_mpa
-    E = weld_efficiency
-    return P * D / (2.0 * f * E - 0.2 * P)
+    return _call("pressure_vessel", "ellipsoidal_head_thickness", dict(
+        design_pressure_mpa=design_pressure_mpa, inner_diameter_mm=inner_diameter_mm,
+        allowable_stress_mpa=allowable_stress_mpa, weld_efficiency=weld_efficiency), float)
 
 
 def calculate_wall_thicknesses(
@@ -163,38 +154,7 @@ def calculate_wall_thicknesses(
     Returns:
         (cylinder_thickness_mm, head_thickness_mm)
     """
-    mat = get_tank_material(material_key)
-    outer_radius_mm = outer_diameter_m * 1000.0 / 2.0
-    f = mat.allowable_stress
-    P = design_pressure_mpa
-    E = weld_efficiency
-
-    # First pass: approximate with inner_radius ~ outer_radius
-    t_cyl = cylinder_wall_thickness(P, outer_radius_mm, f, E)
-
-    # Second pass: refine with corrected inner radius
-    inner_radius_mm = outer_radius_mm - t_cyl
-    t_cyl = cylinder_wall_thickness(P, inner_radius_mm, f, E)
-
-    # Head thickness using corrected inner geometry
-    inner_diameter_mm = 2.0 * inner_radius_mm
-    if head_type == "hemisphere":
-        t_head = hemisphere_head_thickness(P, inner_radius_mm, f, E)
-    elif head_type == "ellipsoidal_2to1":
-        t_head = ellipsoidal_head_thickness(P, inner_diameter_mm, f, E)
-    else:
-        raise ValueError(f"Unknown head type: {head_type}")
-
-    # Add corrosion allowance
-    t_cyl += mat.corrosion_allowance
-    t_head += mat.corrosion_allowance
-
-    # Round up to nearest 0.5mm (standard plate sizing)
-    t_cyl = math.ceil(t_cyl * 2.0) / 2.0
-    t_head = math.ceil(t_head * 2.0) / 2.0
-
-    # Enforce IGC Code minimums
-    t_cyl = max(t_cyl, mat.min_thickness)
-    t_head = max(t_head, mat.min_thickness)
-
-    return t_cyl, t_head
+    return _call("pressure_vessel", "calculate_wall_thicknesses", dict(
+        outer_diameter_m=outer_diameter_m, design_pressure_mpa=design_pressure_mpa,
+        material_key=material_key, head_type=head_type, weld_efficiency=weld_efficiency),
+        Tuple[float, float])

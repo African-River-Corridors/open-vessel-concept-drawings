@@ -51,11 +51,11 @@ Pure functions, math only — Pyodide-safe.
 """
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, field
 from typing import List
 
 from .checks import Check, all_ok
+from .._bridge import call as _call
 
 GRAVITY = 9.80665
 SEAWATER_DENSITY_T_M3 = 1.025
@@ -105,63 +105,5 @@ class WaveResistanceResult:
         return all_ok(self.checks)
 
 
-def _peak_period(hs: float) -> float:
-    """A fetch-limited-sea estimate, T_p ~ 4.0*sqrt(H_s), used only to report lambda/Lpp
-    when no period is supplied. It is an ESTIMATE and the validity check says so."""
-    return 4.0 * math.sqrt(hs) if hs > 0 else 0.0
-
-
 def compute(inp: WaveResistanceInputs) -> WaveResistanceResult:
-    hs = inp.significant_wave_height_m
-    b = inp.beam_waterline_m
-    lbwl = inp.bow_waterline_length_m or (0.2 * inp.lpp_m)
-    rho = inp.water_density_t_m3 * 1000.0        # t/m3 -> kg/m3
-
-    # STAwave-1, head seas. rho*g*Hs^2*B in N; /1000 -> kN
-    r_head = (1.0 / 16.0) * rho * GRAVITY * (hs ** 2) * b * math.sqrt(b / lbwl) / 1000.0
-
-    mu = math.radians(inp.heading_deg_off_bow)
-    # cos(90 deg) is 6.1e-17 in floating point, not 0, which returned 3e-32 kN of added
-    # resistance in beam seas. Snap it: abeam and abaft the beam this term is ZERO, and a
-    # residue of 1e-32 is a number pretending to be a measurement. (Second time today; the
-    # Barrass blockage floor did the same thing.)
-    _c = math.cos(mu)
-    hf = 0.0 if _c <= 1e-12 else _c ** 2
-    r = r_head * hf
-
-    tp = inp.peak_wave_period_s or _peak_period(hs)
-    lam = (GRAVITY * tp ** 2) / (2.0 * math.pi) if tp > 0 else 0.0
-    lol = lam / inp.lpp_m if inp.lpp_m > 0 else 0.0
-
-    v_ms = inp.speed_kn * 0.514444
-    added_kw = r * v_ms      # kN * m/s = kW, effective (thrust) power
-
-    checks: List[Check] = []
-    warns: List[str] = []
-
-    checks.append(Check(
-        "stawave1_short_wave_validity", 0.0 < lol < LAMBDA_OVER_LPP_MAX,
-        f"lambda/Lpp = {lol:.2f} (lambda {lam:.0f} m on Lpp {inp.lpp_m:.0f} m). STAwave-1 "
-        f"assumes short waves, lambda/Lpp < {LAMBDA_OVER_LPP_MAX}; outside that it "
-        f"UNDER-predicts, and near lambda/Lpp = 1 it can do so by more than 2x",
-        severity="warning"))
-    checks.append(Check(
-        "wave_height_within_screening_range", hs <= 3.0,
-        f"H_s {hs:.2f} m; above about 3 m a screening formula is not the right tool and "
-        f"voluntary speed reduction usually governs anyway", severity="warning"))
-    checks.append(Check(
-        "bow_length_supplied", inp.bow_waterline_length_m > 0,
-        f"L_BWL not given, assumed {lbwl:.1f} m = 0.2 x Lpp (a blunt barge bow). A finer bow "
-        f"reduces added resistance, so this is the conservative assumption",
-        severity="warning"))
-    if inp.peak_wave_period_s <= 0 and hs > 0:
-        warns.append(f"no wave period given; T_p estimated at {tp:.1f} s from H_s, which sets "
-                     f"only the validity check, not the resistance")
-    if inp.heading_deg_off_bow > 60.0:
-        warns.append("beam-ish seas: this module returns a FLOOR, because drift, rudder and "
-                     "course-keeping loss is not modelled and it dominates off the bow")
-
-    return WaveResistanceResult(
-        added_resistance_kn=r, added_resistance_head_seas_kn=r_head, heading_factor=hf,
-        bow_waterline_length_m=lbwl, wavelength_m=lam, lambda_over_lpp=lol,
-        added_power_kw=added_kw, checks=checks, warnings=warns)
+    return _call("waves", "compute", {"inputs": inp}, WaveResistanceResult)

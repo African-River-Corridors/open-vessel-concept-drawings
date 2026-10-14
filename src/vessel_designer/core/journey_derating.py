@@ -14,11 +14,12 @@ Pure Python.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
+from typing import List
 
 from .barge_capacity import BargeCapacityResult
 from .checks import Check, all_ok
-from .hull import HullGeometry
+from .._bridge import call as _call
 
 
 @dataclass
@@ -59,8 +60,8 @@ class JourneyDeratingResult:
     volume_utilisation: float          # achievable / capacity (<= 1.0)
     draft_at_achievable_m: float       # draft actually floated
     shed_tonnage_t: float              # capacity - achievable (0 if volume-bound)
-    checks: list = field(default_factory=list)
-    warnings: list = field(default_factory=list)
+    checks: List[Check] = field(default_factory=list)
+    warnings: List[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -69,58 +70,10 @@ class JourneyDeratingResult:
 
 def compute(inp: JourneyDeratingInputs) -> JourneyDeratingResult:
     """Apply the channel draft cap to a volume-bound barge design."""
-    cap = inp.capacity
-    cargo_capacity = cap.cargo_capacity_t
-    full_load_draft = cap.full_load_draft_m
-    lightship = cap.lightship_t
-
-    t_max = max(0.0, inp.design_depth_m - inp.ukc_m)
-    hull = HullGeometry(inp.loa, inp.beam, inp.depth, 0, 0, 0, 0)
-    cb, rho = inp.block_coefficient, inp.water_density
-
-    if t_max >= full_load_draft:
-        # floats fully laden -> volume-bound
-        achievable = cargo_capacity
-        binding = "volume"
-        draft_at = full_load_draft
-    else:
-        # too deep -> shed cargo until draft = T_max (weight/draft-bound)
-        float_draft = min(t_max, inp.depth)          # can't float deeper than the hull
-        displacement_at_tmax = cb * hull.displaced_volume(float_draft) * rho
-        achievable = max(0.0, min(cargo_capacity, displacement_at_tmax - lightship))
-        binding = "draft"
-        draft_at = t_max
-
-    utilisation = achievable / cargo_capacity if cargo_capacity > 0 else 0.0
-    shed = max(0.0, cargo_capacity - achievable)
-
-    checks = [
-        Check("capacity_is_volume_bound", not cap.overloaded,
-              "input capacity must be a feasible volume-bound design (not overloaded)"),
-        Check("floats", achievable > 0,
-              f"channel must float some cargo (T_max {t_max:.2f} m vs lightship draft)"),
-        Check("ukc_consistent", inp.design_depth_m >= inp.ukc_m,
-              "design depth must be >= UKC (pass depth + UKC, never a pre-reduced T_max)"),
-        Check("utilisation_reasonable", utilisation >= inp.utilisation_floor,
-              f"volume utilisation {utilisation:.0%} >= floor {inp.utilisation_floor:.0%}",
-              severity="warning"),
-    ]
-    warnings = []
-    if binding == "draft":
-        warnings.append(
-            f"Draft-bound: shed {shed:.0f} t of {cargo_capacity:.0f} t volume capacity "
-            f"to float at T_max = {t_max:.2f} m (full-load draft {full_load_draft:.2f} m)."
-        )
-
-    return JourneyDeratingResult(
-        cargo_capacity_t=cargo_capacity,
-        t_max_m=t_max,
-        full_load_draft_m=full_load_draft,
-        achievable_tonnage_t=achievable,
-        binding_limit=binding,
-        volume_utilisation=utilisation,
-        draft_at_achievable_m=draft_at,
-        shed_tonnage_t=shed,
-        checks=checks,
-        warnings=warnings,
-    )
+    cap = getattr(inp.capacity, "_inputs", None)
+    if cap is None:
+        raise TypeError("journey_derating needs a capacity result returned by barge_capacity.compute "
+                        "or gas_arrangement.fit: the Rust core recomputes it from its inputs")
+    args = {f.name: getattr(inp, f.name) for f in fields(inp) if f.name != "capacity"}
+    return _call("journey_derating", "compute", {"capacity_inputs": cap, "inputs": args},
+                 JourneyDeratingResult)

@@ -139,5 +139,19 @@ def test_wheel_job_skips_the_tests_that_scan_files_it_does_not_copy():
     """The wheel job copies tests/, examples/, calibration/ and catalogue/ only. A test that
     scans src/ or parity/ would scan zero files there, so the job must skip it."""
     text = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
-    for name in ("test_core_boundary.py", "test_test_audit.py"):
+    for name in ("test_parity_through_python.py", "test_test_audit.py"):
         assert f"--ignore=tests/{name}" in text, name
+
+
+def test_version_is_0_2_0_everywhere():
+    """Ticket 27: one version for the package and every `ovcd-*` crate."""
+    assert pyproject()["project"]["version"] == "0.2.0"
+    cargo = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))
+    assert cargo["workspace"]["package"]["version"] == "0.2.0"
+    lock = tomllib.loads((ROOT / "Cargo.lock").read_text(encoding="utf-8"))
+    ours = {p["name"]: p["version"] for p in lock["package"]
+            if p["name"] in ("ovcd-core", "ovcd-format", "ovcd-cli", "ovcd-py", "xtask")}
+    assert ours == dict.fromkeys(("ovcd-core", "ovcd-format", "ovcd-cli", "ovcd-py", "xtask"), "0.2.0")
+    for crate in ("ovcd-core", "ovcd-format", "ovcd-cli", "ovcd-py"):
+        manifest = tomllib.loads((ROOT / "crates" / crate / "Cargo.toml").read_text(encoding="utf-8"))
+        assert manifest["package"]["version"] == {"workspace": True}, crate

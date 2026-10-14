@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Dict, List, Mapping, Optional, Union
 
 from .checks import Check, all_ok
+from .._bridge import call as _call
 
 EXAMPLE_RATES_FILE = "barge_cost_rates.example.yaml"
 
@@ -95,19 +96,7 @@ def _example_rates_text() -> str:
 
 def parse_flat_yaml(text: str) -> Dict[str, str]:
     """``key: value`` lines, ``#`` comments and blank lines; anything else is an error."""
-    out: Dict[str, str] = {}
-    for n, raw in enumerate(text.splitlines(), 1):
-        line = raw.split("#", 1)[0].rstrip()
-        if not line.strip():
-            continue
-        key, sep, value = line.partition(":")
-        key, value = key.strip(), value.strip().strip("'\"")
-        if not sep or not key or not value or raw[:1].isspace() or not key.isidentifier():
-            raise ValueError(f"rates file line {n}: expected flat 'key: value', got {raw!r}")
-        if key in out:
-            raise ValueError(f"rates file line {n}: duplicate key {key!r}")
-        out[key] = value
-    return out
+    return _call("barge_cost", "parse_flat_yaml", {"text": text}, Dict[str, str])
 
 
 def load_rates(rates: RatesLike = None) -> BargeCostRates:
@@ -139,44 +128,13 @@ class BargeCostResult:
 
 def compute(inp: BargeCostInputs, rates: RatesLike = None) -> BargeCostResult:
     """Unit cost from the masses in ``inp`` and the ``rates`` you supply (see ``load_rates``)."""
-    rt = load_rates(rates)
-    barge = {
-        "hull_steel": (inp.hull_steel_t + inp.wing_plate_t + inp.weather_shield_t) * rt.hull_steel_rate,
-        "type_c_tanks": inp.tank_shell_t * rt.tank_shell_rate,
-        "tank_supports": inp.tank_supports_t * rt.tank_supports_rate,
-        "insulation": inp.insulation_t * rt.insulation_rate,
-        "cargo_system": rt.cargo_system_lump,
-        "piping_machinery": inp.piping_machinery_t * rt.piping_rate,
-        "outfitting": inp.outfitting_t * rt.outfitting_rate,
-        "paint_anodes_misc": rt.paint_anodes_misc,
-    }
-    tug = {
-        "hull_steel": inp.tug_hull_steel_t * rt.hull_steel_rate,
-        "battery": inp.battery_kwh * rt.battery_rate_per_kwh,
-        "propulsion": inp.propulsion_kw * rt.propulsion_rate_per_kw,
-        "wheelhouse_accommodation": rt.wheelhouse_accom_lump,
-        "outfitting": rt.tug_outfitting_lump,
-    }
-    b_sub, t_sub = sum(barge.values()), sum(tug.values())
-    margin = rt.yard_margin_fraction * (b_sub + t_sub)
-    total = b_sub + t_sub + margin + rt.delivery_lump
-
-    checks = [
-        Check("masses_positive", min(inp.hull_steel_t, inp.tank_shell_t) > 0,
-              "mass-model inputs present"),
-        Check("no_reliquefaction_in_scope", True,
-              "cargo system excludes reliquefaction and nitrogen plant per the "
-              "pressure-accumulation operating concept",
-              severity="warning"),
-        Check("fabrication_rates_are_estimates", False,
-              "fabrication/supply rates are user-supplied estimates; replace them with "
-              "yard quotes before relying on the total",
-              severity="warning"),
-    ]
-    return BargeCostResult(
-        barge_breakdown={k: round(v) for k, v in barge.items()},
-        tug_breakdown={k: round(v) for k, v in tug.items()},
-        barge_subtotal=round(b_sub), tug_subtotal=round(t_sub),
-        yard_margin=round(margin), delivery=rt.delivery_lump, rates=rt,
-        unit_total=round(total), checks=checks,
-    )
+    args = {"inputs": inp}
+    if rates is None:
+        pass                                  # the core's built-in example rates
+    elif isinstance(rates, BargeCostRates):
+        args["rates"] = rates
+    elif isinstance(rates, Mapping):
+        args["rates_mapping"] = dict(rates)
+    else:
+        args["rates_mapping"] = parse_flat_yaml(Path(rates).read_text(encoding="utf-8"))
+    return _call("barge_cost", "compute", args, BargeCostResult)
