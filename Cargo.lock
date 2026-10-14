@@ -2165,6 +2165,7 @@ dependencies = [
 name = "ovcd-cli"
 version = "0.2.0"
 dependencies = [
+ "ovcd-draw",
  "ovcd-format",
  "serde_json",
 ]
@@ -2175,6 +2176,16 @@ version = "0.2.0"
 dependencies = [
  "libm",
  "serde",
+]
+
+[[package]]
+name = "ovcd-draw"
+version = "0.2.0"
+dependencies = [
+ "libm",
+ "regex-lite",
+ "serde_json",
+ "sha2 0.11.1",
 ]
 
 [[package]]
@@ -2605,6 +2616,12 @@ dependencies = [
  "memchr",
  "regex-syntax",
 ]
+
+[[package]]
+name = "regex-lite"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cab834c73d247e67f4fae452806d17d3c7501756d98c8808d7c9c7aa7d18f973"
 
 [[package]]
 name = "regex-syntax"

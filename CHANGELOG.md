@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add the Design session to `ovcd-format` and the `ovcd schema` command, which prints the input schema (no result changes).
+- Add the `ovcd-draw` crate (the Drawing Format Standard in Rust, first part) with the standard's conformance suite vendored at a pinned commit, and `ovcd draw run` (no result changes).
 
 ## Design changes
 

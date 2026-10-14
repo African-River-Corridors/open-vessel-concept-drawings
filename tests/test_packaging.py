@@ -72,7 +72,7 @@ def test_example_rates_ship_in_the_package_and_match_the_reader_copy():
 # ---------- ovcd-py skeleton ----------
 
 def test_core_crates_never_depend_on_pyo3():
-    for crate in ("ovcd-core", "ovcd-format", "ovcd-cli"):
+    for crate in ("ovcd-core", "ovcd-format", "ovcd-draw", "ovcd-cli"):
         assert "pyo3" not in (ROOT / "crates" / crate / "Cargo.toml").read_text(encoding="utf-8"), crate
 
 
@@ -148,8 +148,8 @@ def test_version_is_0_2_0_everywhere():
     assert cargo["workspace"]["package"]["version"] == "0.2.0"
     lock = tomllib.loads((ROOT / "Cargo.lock").read_text(encoding="utf-8"))
     ours = {p["name"]: p["version"] for p in lock["package"]
-            if p["name"] in ("ovcd-core", "ovcd-format", "ovcd-cli", "ovcd-py", "xtask")}
-    assert ours == dict.fromkeys(("ovcd-core", "ovcd-format", "ovcd-cli", "ovcd-py", "xtask"), "0.2.0")
-    for crate in ("ovcd-core", "ovcd-format", "ovcd-cli", "ovcd-py"):
+            if p["name"] in ("ovcd-core", "ovcd-format", "ovcd-draw", "ovcd-cli", "ovcd-py", "xtask")}
+    assert ours == dict.fromkeys(("ovcd-core", "ovcd-format", "ovcd-draw", "ovcd-cli", "ovcd-py", "xtask"), "0.2.0")
+    for crate in ("ovcd-core", "ovcd-format", "ovcd-draw", "ovcd-cli", "ovcd-py"):
         manifest = tomllib.loads((ROOT / "crates" / crate / "Cargo.toml").read_text(encoding="utf-8"))
         assert manifest["package"]["version"] == {"workspace": True}, crate

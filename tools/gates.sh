@@ -10,7 +10,7 @@
 #   1. cargo fmt --check
 #   2. clippy, warnings as errors (includes the banned-maths rule in crates/ovcd-core/clippy.toml)
 #   3. cargo test, with Python made unusable, to prove the Rust loop needs no Python
-#   4. the WebAssembly build of ovcd-core
+#   4. the WebAssembly build of ovcd-core and ovcd-draw
 #   5. the design-impact check (before/after on main; fails only if a change is missing from
 #      CHANGELOG.md)
 #   6. pytest against the shipped package
@@ -84,7 +84,7 @@ cargo_test_without_python() {
 step "cargo fmt --check" cargo fmt --all --check
 step "clippy -D warnings" cargo clippy --all-targets --all-features -- -D warnings
 step "cargo test (no Python)" cargo_test_without_python
-step "WebAssembly build of ovcd-core" cargo build -p ovcd-core --all-features --target "$WASM_TARGET"
+step "WebAssembly build of ovcd-core and ovcd-draw" cargo build -p ovcd-core -p ovcd-draw --all-features --target "$WASM_TARGET"
 step "design impact" "$PY" tools/design_impact.py gate
 step "pytest" "$PY" -m pytest -q
 
