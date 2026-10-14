@@ -255,6 +255,9 @@ impl Evaluation {
     }
 }
 
+/// Name of the hidden-input memory entry that holds the last pushed-convoy counts of an Option.
+const CONVOY_MEMORY: &str = "formation.convoy";
+
 /// An open Design with its Defaults Profile. Every edit returns the new state.
 #[derive(Debug, Clone)]
 pub struct DesignSession {
@@ -376,6 +379,8 @@ impl DesignSession {
     }
 
     /// Set the Formation: its kind and, for a pushed convoy, the barges abreast and in line.
+    /// Any other kind stores only the kind. The last convoy counts wait in the hidden-input
+    /// memory and come back when the kind returns to a pushed convoy and no counts are given.
     pub fn set_formation(
         &mut self,
         option: &str,
@@ -384,12 +389,53 @@ impl DesignSession {
         in_line: Option<u64>,
     ) -> Result<&Design, String> {
         let i = self.index_of(option)?;
+        let current = self.design.options[i]
+            .input("formation")
+            .map(|s| s.value.clone());
         let mut value = json!({ "kind": kind });
-        if let Some(a) = abreast {
-            value["abreast"] = json!(a);
-        }
-        if let Some(l) = in_line {
-            value["in_line"] = json!(l);
+        if kind == "pushed_convoy" {
+            let remembered = self
+                .hidden
+                .iter()
+                .position(|(o, n, _)| o == option && n == CONVOY_MEMORY);
+            let back = remembered.map(|h| self.hidden.remove(h).2.value);
+            let count = |key: &str, given: Option<u64>| {
+                given.or_else(|| back.as_ref().and_then(|b| b[key].as_u64()))
+            };
+            if let Some(a) = count("abreast", abreast) {
+                value["abreast"] = json!(a);
+            }
+            if let Some(l) = count("in_line", in_line) {
+                value["in_line"] = json!(l);
+            }
+        } else {
+            // Remember the counts of the convoy being left (or the ones just sent).
+            let mut memory = json!({});
+            let was_convoy = current.as_ref().filter(|v| v["kind"] == "pushed_convoy");
+            for (key, given) in [("abreast", abreast), ("in_line", in_line)] {
+                let n = given.or_else(|| was_convoy.and_then(|v| v[key].as_u64()));
+                if let Some(n) = n {
+                    memory[key] = json!(n);
+                }
+            }
+            if memory.as_object().is_some_and(|m| !m.is_empty()) {
+                let entry = (
+                    option.to_string(),
+                    CONVOY_MEMORY.to_string(),
+                    StoredInput {
+                        value: memory,
+                        source: Source::Typed,
+                    },
+                );
+                match self
+                    .hidden
+                    .iter()
+                    .position(|(o, n, _)| o == option && n == CONVOY_MEMORY)
+                {
+                    Some(h) => self.hidden[h] = entry,
+                    None => self.hidden.push(entry),
+                }
+            }
         }
         self.put(i, "formation", value);
         self.normalise();
