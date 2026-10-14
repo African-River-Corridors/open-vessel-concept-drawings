@@ -21,7 +21,7 @@
 
   const EVALUATE_PAUSE_MS = 150;
   let pending: ReturnType<typeof setTimeout> | undefined;
-  let queue: Array<() => Promise<unknown>> = [];
+  let queue: Array<{ send: () => Promise<Snapshot>; redraw: boolean }> = [];
 
   async function guard<T>(work: () => Promise<T>): Promise<T | undefined> {
     try {
@@ -42,13 +42,13 @@
   }
 
   /** Take a new Design state: forget the last good results of a different Design. */
-  async function adopt(next: Snapshot | null | undefined, newDesign = false) {
+  async function adopt(next: Snapshot | null | undefined, newDesign = false, redraw = newDesign) {
     if (!next) return;
     if (newDesign) {
       lastGood = {};
       bannerDismissed = false;
-      generation += 1;
     }
+    if (redraw) generation += 1;
     snap = next;
     await runEvaluation();
   }
@@ -69,15 +69,34 @@
     queue = [];
     if (work.length === 0) return;
     let last: Snapshot | undefined;
-    for (const w of work) last = (await w()) as Snapshot;
-    await adopt(last);
+    for (const w of work) last = await w.send();
+    await adopt(last, false, work.some((w) => w.redraw));
   }
 
   /** An edit: send it after a pause in typing (about 150 ms), then evaluate the whole Design. */
-  function edit(send: () => Promise<Snapshot>) {
-    queue.push(send);
+  function edit(send: () => Promise<Snapshot>, redraw = false) {
+    queue.push({ send, redraw });
     clearTimeout(pending);
     pending = setTimeout(() => guard(flush), EVALUATE_PAUSE_MS);
+  }
+
+  /** Option and profile commands: send what is queued, run the command, evaluate. */
+  async function command(run: () => Promise<Snapshot | null>, refetchSchema = false) {
+    await guard(async () => {
+      await flush();
+      const next = await run();
+      if (!next) return;
+      if (refetchSchema) schema = await api.inputSchema();
+      await adopt(next, false, true);
+    });
+  }
+
+  function optionAction(action: "add" | "duplicate" | "rename" | "delete", newName?: string) {
+    const name = snap?.active_option ?? "";
+    if (action === "add") command(api.addOption);
+    else if (action === "duplicate") command(() => api.duplicateOption(name));
+    else if (action === "rename") command(() => api.renameOption(name, newName ?? ""));
+    else command(() => api.deleteOption(name));
   }
 
   function onKey(e: KeyboardEvent) {
@@ -154,8 +173,19 @@
 
   <div class="body" style:grid-template-columns="{leftWidth}px 6px 1fr" style:grid-template-rows="1fr 6px {bottomHeight}px">
     <section class="left"><LeftPanel {snap} {schema} {generation} evaluation={activeEval}
-      onPick={(name) => guard(async () => { await flush(); await adopt(await api.setActiveOption(name)); })}
-      onEdit={(name, value) => edit(() => api.setInput(active, name, value))} /></section>
+      onPick={(name) => command(() => api.setActiveOption(name))}
+      onEdit={(name, value) => {
+        const option = active;
+        // A number being typed stays in its box; a choice, switch or "none" redraws the form.
+        edit(() => api.setInput(option, name, value), typeof value !== "number");
+      }}
+      onReset={(name) => { const option = active; edit(() => api.resetInput(option, name), true); }}
+      onFormation={(kind, abreast, inLine) => {
+        const option = active;
+        edit(() => api.setFormation(option, kind, abreast, inLine), false);
+      }}
+      onOption={optionAction}
+      onProfile={(a) => command(a === "load" ? api.loadProfile : api.useBuiltInProfile, true)} /></section>
     <div class="handle v" role="separator" aria-orientation="vertical" onpointerdown={drag("x")}></div>
     <section class="main"><MainPanel /></section>
     <div class="handle h" role="separator" aria-orientation="horizontal" onpointerdown={drag("y")}></div>

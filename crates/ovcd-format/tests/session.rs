@@ -650,3 +650,83 @@ fn the_schema_names_cargo_and_gives_keyed_defaults_and_containments() {
     assert_eq!(get("beam_m")["required"], json!(true));
     assert!(get("beam_m").get("default").is_none());
 }
+
+// ---- inputs that stop applying are hidden, not lost ----------------------------------------
+
+#[test]
+fn switching_the_cargo_containment_back_restores_what_was_typed() {
+    let mut s = starter();
+    s.set_input("Option 1", "lightship_factor_t_per_m3", json!(0.12))
+        .unwrap();
+    s.set_input("Option 1", "cargo", json!("LNG")).unwrap();
+    assert!(!has_input(&s, "Option 1", "lightship_factor_t_per_m3"));
+    // The saved file keeps only what applies, as `ovcd fill` would.
+    s.set_input("Option 1", "fill_ratio", json!(0.8)).unwrap();
+    let saved: Value = serde_json::from_str(&s.save().unwrap()).unwrap();
+    assert!(saved["options"][0]["inputs"]["lightship_factor_t_per_m3"].is_null());
+
+    s.set_input("Option 1", "cargo", json!("bauxite")).unwrap();
+    let back = input(&s, "Option 1", "lightship_factor_t_per_m3");
+    assert_eq!(back.value, json!(0.12));
+    assert_eq!(back.source, Source::Typed);
+    assert!(!has_input(&s, "Option 1", "fill_ratio"));
+
+    s.set_input("Option 1", "cargo", json!("LNG")).unwrap();
+    assert_eq!(input(&s, "Option 1", "fill_ratio").value, json!(0.8));
+}
+
+#[test]
+fn a_default_that_stopped_applying_comes_back_as_the_default_not_a_stale_copy() {
+    let mut s = starter();
+    s.set_input("Option 1", "cargo", json!("LNG")).unwrap();
+    s.set_input("Option 1", "cargo", json!("bauxite")).unwrap();
+    let back = input(&s, "Option 1", "lightship_factor_t_per_m3");
+    assert_eq!(back.source, Source::Default);
+}
+
+#[test]
+fn hidden_inputs_follow_an_option_that_is_renamed_or_duplicated() {
+    let mut s = starter();
+    s.set_input("Option 1", "lightship_factor_t_per_m3", json!(0.12))
+        .unwrap();
+    s.set_input("Option 1", "cargo", json!("LNG")).unwrap();
+    s.rename_option("Option 1", "Gas").unwrap();
+    let copy = s.duplicate_option("Gas", Some("Gas 2")).unwrap();
+    s.set_input("Gas", "cargo", json!("bauxite")).unwrap();
+    s.set_input(&copy, "cargo", json!("bauxite")).unwrap();
+    assert_eq!(
+        input(&s, "Gas", "lightship_factor_t_per_m3").value,
+        json!(0.12)
+    );
+    assert_eq!(
+        input(&s, &copy, "lightship_factor_t_per_m3").value,
+        json!(0.12)
+    );
+}
+
+#[test]
+fn a_deleted_option_leaves_no_hidden_inputs_for_a_new_option_of_that_name() {
+    let mut s = starter();
+    s.add_option(Some("Two")).unwrap();
+    s.set_input("Two", "lightship_factor_t_per_m3", json!(0.12))
+        .unwrap();
+    s.set_input("Two", "cargo", json!("LNG")).unwrap();
+    s.delete_option("Two").unwrap();
+    s.add_option(Some("Two")).unwrap();
+    s.set_input("Two", "cargo", json!("LNG")).unwrap();
+    s.set_input("Two", "cargo", json!("bauxite")).unwrap();
+    assert_eq!(
+        input(&s, "Two", "lightship_factor_t_per_m3").source,
+        Source::Default
+    );
+}
+
+#[test]
+fn every_input_has_a_plain_label_in_the_schema() {
+    let schema = input_schema(&Profile::built_in());
+    for entry in schema["inputs"].as_array().unwrap() {
+        let label = entry["label"].as_str().unwrap_or("");
+        assert!(!label.is_empty(), "{} has no label", entry["name"]);
+        assert!(!label.contains('_'), "{label} is a key, not a label");
+    }
+}
