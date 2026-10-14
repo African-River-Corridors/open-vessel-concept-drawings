@@ -51,7 +51,7 @@
       "basis": "must also be less than the moulded depth (hard)"
     },
     "lightship_factor_t_per_m3": {
-      "default_by_cargo_containment": { "box_hold": 0.1093 },
+      "default_by_cargo_containment": { "box_hold": 0.11 },
       "unit": "t/m3",
       "hard": { "gt": 0, "le": 1 },
       "soft": { "min": 0.08, "max": 0.15 },
