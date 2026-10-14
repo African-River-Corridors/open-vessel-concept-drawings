@@ -57,6 +57,7 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
     let name = spec.name;
     let mut e = Map::new();
     e.insert("name".into(), json!(name));
+    e.insert("label".into(), json!(input_label(name)));
     e.insert("group".into(), json!(spec.group.label()));
     e.insert("required".into(), json!(spec.required));
     let applies: Vec<&str> = match spec.applies_to {
@@ -154,6 +155,36 @@ fn add_ranges(e: &mut Map<String, Value>, name: &str, profile: &Profile) {
         e.insert("soft".into(), json!({ "min": s.min, "max": s.max }));
     }
     e.insert("basis".into(), json!(profile.basis(name)));
+}
+
+/// The plain-words name of an input, for a form.
+fn input_label(name: &str) -> &str {
+    match name {
+        "cargo" => "Cargo",
+        "hull_form" => "Hull Form",
+        "formation" => "Formation",
+        "length_overall_m" => "Length overall",
+        "beam_m" => "Beam",
+        "moulded_depth_m" => "Moulded depth",
+        "cargo_containment" => "Cargo Containment",
+        "block_coefficient" => "Block coefficient",
+        "min_freeboard_m" => "Minimum freeboard",
+        "lightship_factor_t_per_m3" => "Lightship factor",
+        "ruleset" => "Ruleset",
+        "fill_ratio" => "Fill ratio",
+        "adn_tank_cap_m3" => "Tank capacity limit (ADN)",
+        "optimise_depth" => "Optimise depth",
+        "propulsive_efficiency" => "Propulsive efficiency",
+        "max_speed_kn" => "Maximum speed",
+        "air_draft_limit_m" => "Air-draft limit",
+        "draught_limit_m" => "Draught limit",
+        "channel_depth_m" => "Channel depth",
+        "channel_under_keel_clearance_m" => "Under-keel clearance",
+        "channel_bottom_width_m" => "Channel bottom width",
+        "channel_bank_slope" => "Bank slope",
+        "channel_current_kn" => "Current",
+        other => other,
+    }
 }
 
 /// The display name of a choice.
@@ -273,13 +304,21 @@ pub struct DesignSession {
     /// The Design as the session holds it: every applicable input stored as used. A typed value
     /// that breaks a hard range stays in it, so a form shows what was typed.
     design: Design,
+    /// Typed inputs an Option holds while its Cargo Containment does not use them: (Option, input,
+    /// value). They stay out of the Design (and so out of a saved file, as `ovcd fill` leaves them
+    /// out) and come back when the input applies again.
+    hidden: Vec<(String, String, StoredInput)>,
 }
 
 impl DesignSession {
     /// A new Design: the starter Design `ovcd new` writes.
     pub fn new_design(profile: Profile) -> Result<DesignSession, String> {
         let design = new_design(&profile)?;
-        Ok(DesignSession { profile, design })
+        Ok(DesignSession {
+            profile,
+            design,
+            hidden: Vec::new(),
+        })
     }
 
     /// Open a `.vdesign` text. Left-out inputs are written in from the profile, as `ovcd fill`
@@ -328,7 +367,11 @@ impl DesignSession {
             .into_iter()
             .map(|r| (r.name, r.hash_status))
             .collect();
-        let mut session = DesignSession { profile, design };
+        let mut session = DesignSession {
+            profile,
+            design,
+            hidden: Vec::new(),
+        };
         session.normalise();
         Ok((
             session,
@@ -456,6 +499,13 @@ impl DesignSession {
                     .expect("an endless range")
             }
         };
+        let copied: Vec<(String, String, StoredInput)> = self
+            .hidden
+            .iter()
+            .filter(|(owner, _, _)| owner == option)
+            .map(|(_, input, v)| (name.clone(), input.clone(), v.clone()))
+            .collect();
+        self.hidden.extend(copied);
         let mut copy = self.design.options[i].clone();
         copy.name = name.clone();
         self.design.options.insert(i + 1, copy);
@@ -470,6 +520,11 @@ impl DesignSession {
             self.free_name(new_name)?;
         }
         self.design.options[i].name = new_name.to_string();
+        for (owner, _, _) in &mut self.hidden {
+            if owner == option {
+                *owner = new_name.to_string();
+            }
+        }
         Ok(&self.design)
     }
 
@@ -482,6 +537,7 @@ impl DesignSession {
             );
         }
         self.design.options.remove(i);
+        self.hidden.retain(|(owner, _, _)| owner != option);
         Ok(&self.design)
     }
 
@@ -646,7 +702,8 @@ impl DesignSession {
             else {
                 continue;
             };
-            let applicable = containment_of(option)
+            // The filled Option knows the containment, even when it was a default left out.
+            let applicable = containment_of(from_fill)
                 .filter(|c| CARGO_CONTAINMENTS.iter().any(|(known, _)| known == c));
             let mut inputs: Vec<(String, StoredInput)> = Vec::new();
             for spec in INPUTS {
@@ -654,14 +711,36 @@ impl DesignSession {
                     (AppliesTo::Only(c), Some(current)) => c == current,
                     _ => true,
                 };
+                let held = self
+                    .hidden
+                    .iter()
+                    .position(|(o, n, _)| *o == option.name && n == spec.name);
                 if !applies {
+                    // Hide a typed value rather than lose it.
+                    if let Some(stored) = option.input(spec.name)
+                        && stored.source == Source::Typed
+                    {
+                        let entry = (option.name.clone(), spec.name.to_string(), stored.clone());
+                        match held {
+                            Some(h) => self.hidden[h] = entry,
+                            None => self.hidden.push(entry),
+                        }
+                    }
                     continue;
                 }
-                let kept = from_fill
+                let mut kept = from_fill
                     .input(spec.name)
-                    .or_else(|| option.input(spec.name));
+                    .or_else(|| option.input(spec.name))
+                    .cloned();
+                if let Some(h) = held {
+                    let (_, _, back) = self.hidden.remove(h);
+                    // A value typed since then wins; a default gives way to what was typed.
+                    if kept.as_ref().is_none_or(|k| k.source == Source::Default) {
+                        kept = Some(back);
+                    }
+                }
                 if let Some(stored) = kept {
-                    inputs.push((spec.name.into(), stored.clone()));
+                    inputs.push((spec.name.into(), stored));
                 }
             }
             option.inputs = inputs;

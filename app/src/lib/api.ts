@@ -23,13 +23,33 @@ export interface Snapshot {
   /** Options whose stored results hash differs from this engine's, at open. */
   hash_changed: string[];
 }
-export interface InputSpec {
+export interface Choice {
+  value: string;
+  label: string;
+}
+export interface HardRange {
+  gt?: number;
+  ge?: number;
+  lt?: number;
+  le?: number;
+}
+export interface Ranges {
+  unit?: string;
+  hard?: HardRange;
+  soft?: { min: number; max: number };
+  basis?: string;
+}
+export interface InputSpec extends Ranges {
   name: string;
+  label: string;
   group: string;
   required: boolean;
-  kind: string;
-  unit?: string;
-  basis?: string;
+  kind: "number" | "bool" | "choice" | "cargo" | "formation";
+  nullable?: boolean;
+  choices?: Choice[];
+  default?: unknown;
+  default_by?: { by: string; values: Record<string, unknown> };
+  convoy?: { abreast: Ranges; in_line: Ranges };
 }
 export interface Schema {
   profile: string;
@@ -70,3 +90,17 @@ export const resetInput = (option: string, name: string) =>
   invoke<Snapshot>("reset_input", { option, name });
 export const setActiveOption = (option: string) =>
   invoke<Snapshot>("set_active_option", { option });
+export const setFormation = (
+  option: string,
+  kind: string,
+  abreast: number | null,
+  inLine: number | null,
+) => invoke<Snapshot>("set_formation", { option, kind, abreast, inLine });
+export const addOption = () => invoke<Snapshot>("add_option");
+export const duplicateOption = (option: string) => invoke<Snapshot>("duplicate_option", { option });
+export const renameOption = (option: string, newName: string) =>
+  invoke<Snapshot>("rename_option", { option, newName });
+export const deleteOption = (option: string) => invoke<Snapshot>("delete_option", { option });
+/** null when the user cancels the file dialog; rejects with the reason when the profile is refused. */
+export const loadProfile = () => invoke<Snapshot | null>("load_profile");
+export const useBuiltInProfile = () => invoke<Snapshot>("use_built_in_profile");

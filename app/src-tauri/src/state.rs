@@ -83,6 +83,62 @@ impl AppState {
         Ok(())
     }
 
+    pub fn set_formation(
+        &mut self,
+        option: &str,
+        kind: &str,
+        abreast: Option<u64>,
+        in_line: Option<u64>,
+    ) -> Result<(), String> {
+        self.session.set_formation(option, kind, abreast, in_line)?;
+        self.dirty = true;
+        Ok(())
+    }
+
+    /// Add an Option and make it the active one.
+    pub fn add_option(&mut self) -> Result<(), String> {
+        self.active_option = self.session.add_option(None)?;
+        self.dirty = true;
+        Ok(())
+    }
+
+    /// Copy an Option and make the copy the active one.
+    pub fn duplicate_option(&mut self, option: &str) -> Result<(), String> {
+        self.active_option = self.session.duplicate_option(option, None)?;
+        self.dirty = true;
+        Ok(())
+    }
+
+    pub fn rename_option(&mut self, option: &str, new_name: &str) -> Result<(), String> {
+        self.session.rename_option(option, new_name)?;
+        if self.active_option == option {
+            self.active_option = new_name.trim().to_string();
+        }
+        self.dirty = true;
+        Ok(())
+    }
+
+    /// Delete an Option. The session refuses to delete the last one.
+    pub fn delete_option(&mut self, option: &str) -> Result<(), String> {
+        self.session.delete_option(option)?;
+        if self.active_option == option {
+            self.active_option = first_option(&self.session);
+        }
+        self.dirty = true;
+        Ok(())
+    }
+
+    /// Swap in a Defaults Profile from its text. The session refuses one that loosens a hard range.
+    pub fn load_profile(&mut self, text: &str) -> Result<(), String> {
+        self.session.load_profile(text)?;
+        self.dirty = true;
+        Ok(())
+    }
+
+    pub fn use_built_in_profile(&mut self) -> Result<(), String> {
+        self.load_profile(Profile::built_in_text())
+    }
+
     pub fn set_active_option(&mut self, option: &str) -> Result<(), String> {
         if self
             .session
@@ -245,6 +301,39 @@ mod tests {
         let mut state = state;
         state.saved(Path::new("old.vdesign"));
         assert_eq!(state.snapshot()["hash_changed"], json!([]));
+    }
+
+    #[test]
+    fn option_commands_keep_the_active_option_in_step() {
+        let mut state = AppState::new_design().unwrap();
+        state.add_option().unwrap();
+        assert_eq!(state.snapshot()["active_option"], "Option 2");
+        state.rename_option("Option 2", "  Wide ").unwrap();
+        assert_eq!(state.snapshot()["active_option"], "Wide");
+        state.duplicate_option("Wide").unwrap();
+        assert_eq!(state.snapshot()["active_option"], "Wide copy");
+        state.delete_option("Wide copy").unwrap();
+        assert_eq!(state.snapshot()["active_option"], "Option 1");
+        state.delete_option("Wide").unwrap();
+        assert!(state.delete_option("Option 1").is_err());
+        assert!(state.rename_option("Option 1", "").is_err());
+    }
+
+    #[test]
+    fn a_profile_that_loosens_a_hard_range_is_refused_and_the_old_one_stays() {
+        let mut v: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
+        v["name"] = json!("loose");
+        let text = serde_json::to_string(&v).unwrap();
+        let mut state = AppState::new_design().unwrap();
+        state.load_profile(&text).unwrap();
+        assert_eq!(state.snapshot()["profile"], "loose");
+        state.use_built_in_profile().unwrap();
+        assert_eq!(state.snapshot()["profile"], "built-in");
+        v["inputs"]["beam_m"]["hard"]["le"] = json!(5000);
+        let err = state.load_profile(&v.to_string()).unwrap_err();
+        assert!(err.contains("loosens the hard range of `beam_m`"), "{err}");
+        assert!(state.load_profile("not json").is_err());
+        assert_eq!(state.snapshot()["profile"], "built-in");
     }
 
     #[test]

@@ -164,6 +164,77 @@ fn reset_input(window: Window, state: State<Shared>, option: String, name: Strin
 }
 
 #[tauri::command]
+fn set_formation(
+    window: Window,
+    state: State<Shared>,
+    option: String,
+    kind: String,
+    abreast: Option<u64>,
+    in_line: Option<u64>,
+) -> Reply {
+    let mut guard = lock(&state)?;
+    guard.set_formation(&option, &kind, abreast, in_line)?;
+    finish(&window, &guard)
+}
+
+#[tauri::command]
+fn add_option(window: Window, state: State<Shared>) -> Reply {
+    let mut guard = lock(&state)?;
+    guard.add_option()?;
+    finish(&window, &guard)
+}
+
+#[tauri::command]
+fn duplicate_option(window: Window, state: State<Shared>, option: String) -> Reply {
+    let mut guard = lock(&state)?;
+    guard.duplicate_option(&option)?;
+    finish(&window, &guard)
+}
+
+#[tauri::command]
+fn rename_option(window: Window, state: State<Shared>, option: String, new_name: String) -> Reply {
+    let mut guard = lock(&state)?;
+    guard.rename_option(&option, &new_name)?;
+    finish(&window, &guard)
+}
+
+#[tauri::command]
+fn delete_option(window: Window, state: State<Shared>, option: String) -> Reply {
+    let mut guard = lock(&state)?;
+    guard.delete_option(&option)?;
+    finish(&window, &guard)
+}
+
+/// `null` when the user cancels the file dialog. An `Err` carries the session's reason, for
+/// example that the profile loosens a hard range.
+#[tauri::command]
+async fn load_profile(app: AppHandle, window: Window, state: State<'_, Shared>) -> Reply {
+    let Some(picked) = app
+        .dialog()
+        .file()
+        .add_filter("Defaults Profile", &["json"])
+        .blocking_pick_file()
+    else {
+        return Ok(serde_json::Value::Null);
+    };
+    let path = picked.into_path().map_err(|e| e.to_string())?;
+    let text = std::fs::read_to_string(&path)
+        .map_err(|e| format!("cannot read {}: {e}", path.display()))?;
+    let mut guard = lock(&state)?;
+    guard
+        .load_profile(&text)
+        .map_err(|e| format!("{}: {e}", path.display()))?;
+    finish(&window, &guard)
+}
+
+#[tauri::command]
+fn use_built_in_profile(window: Window, state: State<Shared>) -> Reply {
+    let mut guard = lock(&state)?;
+    guard.use_built_in_profile()?;
+    finish(&window, &guard)
+}
+
+#[tauri::command]
 fn set_active_option(window: Window, state: State<Shared>, option: String) -> Reply {
     let mut guard = lock(&state)?;
     guard.set_active_option(&option)?;
@@ -186,6 +257,13 @@ pub fn run() {
             set_input,
             reset_input,
             set_active_option,
+            set_formation,
+            add_option,
+            duplicate_option,
+            rename_option,
+            delete_option,
+            load_profile,
+            use_built_in_profile,
         ])
         .on_window_event(|window, event| {
             // The unsaved-changes guard on close: ask first, then close for real.
