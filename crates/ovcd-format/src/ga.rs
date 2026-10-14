@@ -57,8 +57,9 @@ pub fn ga_views_of(outcome: &RunOutcome) -> Result<GaViews, String> {
 
 /// The drawing space of A3 landscape (clause 6.3), in millimetres.
 const SHEET: (f64, f64, f64, f64) = (20.0, 10.0, 390.0, 277.0);
-/// The height of the notes strip at the bottom of the sheet.
-const STRIP_MM: f64 = 18.0;
+/// The height of the notes strip at the bottom of the sheet: the heading, two notes and the status
+/// line on its last line (clauses 14.9 and 14.10.1).
+const STRIP_MM: f64 = 21.0;
 /// The ratios of the standard (clauses 7.3.1 and 7.3.4), smallest denominator first.
 const RATIOS: [u32; 20] = [
     1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 1250, 2000, 2500, 5000, 10000, 20000, 50000,

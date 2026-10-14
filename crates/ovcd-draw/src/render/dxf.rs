@@ -361,10 +361,9 @@ pub fn to_dxf(document: &Value, norm: &Normalised, files: &dyn Files) -> DxfOutp
     let declared = declared_layers(document);
     let (libs, _) = symbols::load_libraries(document, files);
 
-    // Layers: those of the document, the furniture layer, the watermark layer when there is a status.
+    // Layers: those of the document and the furniture layer.
     let mut layers: Layers = declared.clone();
-    for name in std::iter::once(FURNITURE_LAYER).chain(document.get("status").map(|_| "WATERMARK"))
-    {
+    for name in std::iter::once(FURNITURE_LAYER) {
         if let Some(s) = styles.layer(name) {
             layers
                 .entry(name.to_string())
