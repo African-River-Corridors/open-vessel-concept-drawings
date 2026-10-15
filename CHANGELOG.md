@@ -78,6 +78,15 @@ Each entry is a before/after table written by `python3 tools/design_impact.py ch
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
 
+### Default moulded depth (#120) (2026-10-15)
+
+Between `main 222d307` and `this branch d5ca0f9`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep default depth dry bulk 90x14 | `result` | fill: warning: Option 'sweep default depth dry bulk 90x14': `channel_bank_slope` was not stored in the file; wrote in the Defaults Profile value 3, marked default \| warning: Option 'sweep default depth dry bulk 90x14': `channel_current_kn` was not stored in the file; wrote in the Defaults Profile value 0, marked default \| ovcd fill: 1 error(s); nothing written | computed | changed |
+| sweep default depth gas 90x14 | `result` | fill: warning: Option 'sweep default depth gas 90x14': `channel_bank_slope` was not stored in the file; wrote in the Defaults Profile value 3, marked default \| warning: Option 'sweep default depth gas 90x14': `channel_current_kn` was not stored in the file; wrote in the Defaults Profile value 0, marked default \| ovcd fill: 1 error(s); nothing written | computed | changed |
+
 ### Vessel Class (#94) (2026-10-15)
 
 Between `main 882b30b` and `this branch c78f2d5`.
