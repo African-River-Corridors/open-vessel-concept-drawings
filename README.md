@@ -40,10 +40,10 @@ pip install git+https://github.com/African-River-Corridors/open-vessel-concept-d
 The desktop app is a concept design tool with live results and drawings. It needs no Python.
 The first start shows a short notice: results are not verified and there is no warranty.
 
-**Download an installer.** Open the [latest build](https://github.com/African-River-Corridors/open-vessel-concept-drawings/releases/tag/latest)
-(rebuilt after every change to the code) or a numbered release from the
-[releases page](https://github.com/African-River-Corridors/open-vessel-concept-drawings/releases),
-and take the file for your computer:
+**Download an installer.** Open the newest release on the
+[releases page](https://github.com/African-River-Corridors/open-vessel-concept-drawings/releases)
+and take the file for your computer. A release named `v<version>` is a numbered release; one named
+`test-...` is a test build of work in progress.
 
 - Windows: `OVCD_<version>_x64-setup.exe`
 - macOS, Apple silicon: `OVCD_<version>_aarch64.dmg`

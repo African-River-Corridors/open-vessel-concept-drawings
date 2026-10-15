@@ -31,8 +31,9 @@ def test_the_publishing_job_waits_for_verify_and_the_release_gate():
         assert "always()" not in str(jobs[name].get("if", "")), f"{name} can run past a failed gate"
 
 
-# A pushed tag or a push to main publishes; a manual start only builds.
+# A push (a tag, or main with a version bump) may publish; `tools/release_plan.py` decides.
 PUBLISHING = "github.event_name == 'push'"
+PLANNED = "needs.verify.outputs.publish == 'true'"
 
 
 def test_every_job_that_builds_waits_for_verify():
@@ -59,15 +60,16 @@ def test_verify_fails_closed_on_a_failed_or_missing_check():
     run = next(s["run"] for s in steps if "check-runs" in s.get("run", ""))
     assert "exit 1" in run
     assert "did not succeed" in run and "timed out" in run
-    for s in steps:  # neither a tag nor a push to main may skip the checks
-        assert s.get("if") == PUBLISHING, s
+    for s in steps:  # nothing that publishes may skip the checks
+        if "check-runs" in s.get("run", ""):
+            assert s.get("if") == "steps.plan.outputs.publish == 'true'", s
 
 
 def test_release_tag_check_works_when_called_from_another_workflow():
     """In a called workflow `github.event_name` is the caller's event, so the tag check must key on the ref."""
     text = RELEASE.read_text(encoding="utf-8")
     assert "github.event_name == 'release'" not in text
-    assert "startsWith(github.ref, 'refs/tags/')" in text
+    assert "startsWith(github.ref, 'refs/tags/v')" in text
 
 
 def test_release_gate_skips_this_file_in_the_wheel_job():
@@ -80,43 +82,60 @@ def test_app_build_publishes_nothing_to_pypi():
         assert banned not in text, banned
 
 
-# ---------- the rolling `latest` pre-release (issue #169) ----------
+# ---------- when a release is made (issue #173) ----------
 
-def test_a_push_to_main_or_a_version_tag_starts_the_build():
+def test_releases_start_from_a_version_tag_a_test_tag_or_a_version_bump_on_main():
     push = workflow(APP_BUILD)["on"]["push"]
-    assert push == {"branches": ["main"], "tags": ["v*"]}
+    assert push == {"branches": ["main"], "paths": ["pyproject.toml"], "tags": ["v*", "test-*"]}
 
 
-def test_the_release_gate_runs_for_main_and_for_tags():
-    gate = workflow(APP_BUILD)["jobs"]["gate"]
-    assert gate["if"] == PUBLISHING and gate["uses"].endswith("release.yml")
+def test_verify_plans_first_and_exposes_the_plan():
+    verify = workflow(APP_BUILD)["jobs"]["verify"]
+    plan = verify["steps"][1]
+    assert plan["id"] == "plan" and "tools/release_plan.py" in plan["run"]
+    assert plan["env"]["BEFORE_SHA"] == "${{ github.event.before }}"
+    assert set(verify["outputs"]) == {"build", "publish", "tag", "kind"}
 
 
-def test_a_numbered_release_is_made_only_for_a_tag():
+def test_the_on_main_check_applies_to_numbered_releases_only():
+    steps = workflow(APP_BUILD)["jobs"]["verify"]["steps"]
+    on_main = next(s for s in steps if "merge-base --is-ancestor" in s.get("run", ""))
+    assert on_main["if"] == "steps.plan.outputs.on_main == 'true'"
+
+
+def test_nothing_builds_or_publishes_unless_the_plan_says_so():
+    jobs = workflow(APP_BUILD)["jobs"]
+    assert jobs["build"]["if"] == "needs.verify.outputs.build == 'true'"
+    assert jobs["gate"]["if"] == PLANNED
+    assert jobs["release"]["if"] == PLANNED
+    assert "latest" not in jobs, "the rolling latest build was reversed (issue #173)"
+
+
+def test_the_release_takes_its_tag_and_kind_from_the_plan_through_env():
     job = workflow(APP_BUILD)["jobs"]["release"]
-    assert job["if"] == "startsWith(github.ref, 'refs/tags/')"
-    assert 'gh release create "$GITHUB_REF_NAME"' in str(job)
-
-
-def test_main_replaces_the_one_latest_pre_release_at_its_own_commit():
-    job = workflow(APP_BUILD)["jobs"]["latest"]
-    assert job["if"] == "github.ref == 'refs/heads/main'"
-    assert {"build", "verify", "gate"} <= needs(job)
-    assert job["permissions"] == {"contents": "write"}
+    env = {k: v for s in job["steps"] for k, v in (s.get("env") or {}).items()}
+    assert env["TAG"] == "${{ needs.verify.outputs.tag }}"
+    assert env["KIND"] == "${{ needs.verify.outputs.kind }}"
     run = "\n".join(s.get("run", "") for s in job["steps"])
-    assert "gh release delete latest --cleanup-tag --yes" in run
-    assert "gh release create latest" in run
-    assert '--target "$GITHUB_SHA"' in run and "--prerelease" in run
-    assert "--latest=false" in run          # never shown as the repository's latest numbered release
-    assert "SHA256SUMS.txt" in run and "## Unreleased" in run
+    assert "${{" not in run, "plan values reach the shell through env only"
+    assert 'gh release create "$TAG"' in run and "--prerelease" in run
+    assert '--target "$GITHUB_SHA"' in run and "--verify-tag" in run
+    assert "## Unreleased" in run                       # a test release's notes
 
 
-def test_a_newer_push_to_main_cancels_an_older_build_but_a_tag_is_never_cancelled():
-    c = workflow(APP_BUILD)["concurrency"]
-    assert "github.ref" in c["group"]
-    assert c["cancel-in-progress"] == "${{ github.ref == 'refs/heads/main' }}"
+def test_only_a_version_tag_must_match_the_package_version():
+    build = workflow(APP_BUILD)["jobs"]["build"]
+    check = next(s for s in build["steps"] if "tomllib" in s.get("run", ""))
+    assert check["if"] == "startsWith(github.ref, 'refs/tags/v')"
+    assert "startsWith(github.ref, 'refs/tags/v')" in RELEASE.read_text(encoding="utf-8")
 
 
-def test_the_readme_says_where_the_latest_build_is():
+def test_a_release_build_is_never_cancelled():
+    assert "concurrency" not in workflow(APP_BUILD) or \
+        workflow(APP_BUILD)["concurrency"].get("cancel-in-progress") in (False, None)
+
+
+def test_the_readme_says_how_releases_are_made():
     text = (ROOT / "README.md").read_text(encoding="utf-8")
-    assert "releases/tag/latest" in text
+    assert "releases/tag/latest" not in text
+    assert "/releases)" in text

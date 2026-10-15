@@ -3,58 +3,62 @@ name: App build
 # Builds the desktop app installers: a Windows NSIS `-setup.exe` and macOS `.dmg` files (Apple
 # silicon and Intel). The installers are NOT signed (no signing secrets are used).
 #
-#   - A manual start (Actions tab, "Run workflow") builds the installers and keeps them as workflow
-#     artifacts. It publishes nothing.
-#   - A pushed tag `v*` builds them and then publishes a GitHub PRE-RELEASE named after the tag, with
-#     the installers, a SHA-256 checksum file and the notes of that version from CHANGELOG.md.
-#   - A push to `main` (every merge) builds them and replaces the one rolling pre-release `latest`,
-#     pointed at that commit, with the notes of the `Unreleased` section (issue #169). A newer push
-#     cancels an older build still running, so `latest` is always the newest `main`. A tag is never
-#     cancelled.
+# A release is made only on purpose (issue #173). `tools/release_plan.py` decides, in `verify`:
+#   - The version number is bumped: a merge to `main` that changes `version` in pyproject.toml
+#     publishes a numbered PRE-RELEASE `v<version>`, tagged at that commit, with the notes of that
+#     version from CHANGELOG.md. A `v*` tag pushed by hand does the same.
+#   - A test-release tag is pushed: `test-<anything>` publishes a PRE-RELEASE named after the tag,
+#     with the notes of the `Unreleased` section. Use it to try a build without a version bump; the
+#     commit need not be on `main`.
+#   - Any other merge to `main` builds and publishes nothing. A manual start (Actions tab, "Run
+#     workflow") builds the installers as workflow artifacts and publishes nothing.
 #
-# Nothing is built or published for a tag or a push to main until `verify` passes: the commit is on
-# `main`, and the CI jobs `test` and `release-guard` succeeded on it. Publishing also waits for `gate`, which runs
-# the whole release gate (release.yml: wheels, binaries and pytest on each system). A release made with
-# GITHUB_TOKEN does not start other workflows, so the gate is called from here, not left to the
-# `release: published` trigger.
+# Nothing is published until `verify` passes: `test` and `release-guard` succeeded on the commit,
+# and, for a numbered release, the commit is on `main`. Publishing also waits for `gate`, the whole
+# release gate (release.yml: wheels, binaries and pytest on each system). A release made with
+# GITHUB_TOKEN does not start other workflows, so the gate is called from here.
 #
 # The ordinary CI jobs only compile the app (fast). Bundling happens only here.
 
 on:
   push:
     branches: ["main"]
-    tags: ["v*"]
+    paths: ["pyproject.toml"] # only a merge that may bump the version; the plan checks that it did
+    tags: ["v*", "test-*"]
   workflow_dispatch:
-
-concurrency:
-  group: app-build-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
 
 permissions:
   contents: read
 
 jobs:
   verify:
-    # Runs for a manual start too, and passes there (its steps are for pushes only), so `build` can
-    # always list it in `needs` without `always()`.
     runs-on: ubuntu-latest
     timeout-minutes: 40
     permissions:
       contents: read
       checks: read
+    outputs:
+      build: ${{ steps.plan.outputs.build }}
+      publish: ${{ steps.plan.outputs.publish }}
+      tag: ${{ steps.plan.outputs.tag }}
+      kind: ${{ steps.plan.outputs.kind }}
     steps:
       - uses: actions/checkout@v4
-        if: github.event_name == 'push'
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # the plan reads pyproject.toml before and after the push, and the tags
+      - name: Plan the release
+        id: plan
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: python3 tools/release_plan.py
       - name: The commit is on main
-        if: github.event_name == 'push'
+        if: steps.plan.outputs.on_main == 'true'
         run: |
           git fetch --no-tags origin main
           git merge-base --is-ancestor "$GITHUB_SHA" origin/main \
-            || { echo "the tagged commit $GITHUB_SHA is not on origin/main"; exit 1; }
+            || { echo "the commit $GITHUB_SHA is not on origin/main"; exit 1; }
       - name: test and release-guard succeeded on the commit
-        if: github.event_name == 'push'
+        if: steps.plan.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -80,12 +84,13 @@ jobs:
 
   gate:
     # The release gate (wheels, binaries, pytest on each system), before anything is published.
-    if: github.event_name == 'push'
+    if: needs.verify.outputs.publish == 'true'
     needs: verify
     uses: ./.github/workflows/release.yml
 
   build:
     needs: verify
+    if: needs.verify.outputs.build == 'true'
     name: installer (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -107,8 +112,8 @@ jobs:
             glob: target/release/bundle/dmg/*.dmg
     steps:
       - uses: actions/checkout@v4
-      - name: A release tag must match the package version
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: A version tag must match the package version
+        if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
         run: |
           v=$(python3 -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
@@ -152,9 +157,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    # Only for a pushed tag. A push to main publishes `latest` instead (below); a manual start stops
-    # after `build`.
-    if: startsWith(github.ref, 'refs/tags/')
+    if: needs.verify.outputs.publish == 'true'
     needs: [build, verify, gate]
     runs-on: ubuntu-latest
     permissions:
@@ -173,13 +176,26 @@ jobs:
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
       - name: Release notes from CHANGELOG.md
+        env:
+          TAG: ${{ needs.verify.outputs.tag }}
+          KIND: ${{ needs.verify.outputs.kind }}
         run: |
-          v="${GITHUB_REF_NAME#v}"
-          awk -v v="$v" '
-            /^## /{ if (on) exit; if (index($0, "## " v) == 1) { on = 1; next } }
-            on { print }
-          ' CHANGELOG.md > notes.md
-          test -s notes.md || { echo "CHANGELOG.md has no section for $v"; exit 1; }
+          if [ "$KIND" = numbered ]; then
+            # the section of this version; a version bump must add one
+            awk -v v="${TAG#v}" '
+              /^## /{ if (on) exit; if (index($0, "## " v) == 1) { on = 1; next } }
+              on { print }
+            ' CHANGELOG.md > notes.md
+            test -s notes.md || { echo "CHANGELOG.md has no section for ${TAG#v}"; exit 1; }
+          else
+            # a test release: what is not yet in a numbered release
+            {
+              echo "A test build from commit ${GITHUB_SHA:0:7}. It is not a numbered release. The installer file names carry the last numbered version."
+              echo
+              echo "## Unreleased changes"
+              awk '/^## /{ if (on) exit; if ($0 == "## Unreleased") { on = 1; next } } on { print }' CHANGELOG.md
+            } > notes.md
+          fi
           {
             echo
             echo "These installers are not signed. Windows SmartScreen and macOS show a warning on first start; the README says what to click."
@@ -189,58 +205,14 @@ jobs:
       - name: Publish the pre-release
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.verify.outputs.tag }}
+          KIND: ${{ needs.verify.outputs.kind }}
         run: |
-          gh release create "$GITHUB_REF_NAME" installers/* \
+          if [ "$KIND" = test ]; then title="Test build $TAG (${GITHUB_SHA:0:7})"; else title="$TAG"; fi
+          # A pushed tag exists already; a version bump on main creates its tag at this commit.
+          if [ "$GITHUB_REF_TYPE" = tag ]; then where=(--verify-tag); else where=(--target "$GITHUB_SHA"); fi
+          gh release create "$TAG" installers/* \
+            "${where[@]}" \
             --prerelease \
-            --title "$GITHUB_REF_NAME" \
-            --notes-file notes.md \
-            --verify-tag
-
-  latest:
-    # Only for a push to main: replace the one rolling pre-release `latest` with this commit's build.
-    if: github.ref == 'refs/heads/main'
-    needs: [build, verify, gate]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          path: installers
-          pattern: ovcd-*
-          merge-multiple: true
-      - name: Checksums
-        working-directory: installers
-        run: |
-          ls -l
-          sha256sum * > SHA256SUMS.txt
-          cat SHA256SUMS.txt
-      - name: Notes from the Unreleased section of CHANGELOG.md
-        run: |
-          short="${GITHUB_SHA:0:7}"
-          awk '
-            /^## /{ if (on) exit; if ($0 == "## Unreleased") { on = 1; next } }
-            on { print }
-          ' CHANGELOG.md > unreleased.md
-          {
-            echo "The newest build of \`main\`, from commit ${short}. It is rebuilt after every merge and is not a numbered release. The installer file names carry the last numbered version."
-            echo
-            echo "## Changes since the last numbered release"
-            if grep -q '[^[:space:]]' unreleased.md; then cat unreleased.md; else echo; echo "None listed."; fi
-            echo
-            echo "These installers are not signed. Windows SmartScreen and macOS show a warning on first start; the README says what to click."
-            echo "OVCD is a concept design tool. Its results are not verified. There is no warranty."
-          } > notes.md
-          cat notes.md
-      - name: Replace the latest pre-release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release delete latest --cleanup-tag --yes || true
-          gh release create latest installers/* \
-            --target "$GITHUB_SHA" \
-            --prerelease \
-            --latest=false \
-            --title "Latest build (main, ${GITHUB_SHA:0:7})" \
+            --title "$title" \
             --notes-file notes.md

@@ -55,6 +55,21 @@ Separate review sessions read what was merged:
    issue (a sub-issue of the spec's issue, labelled `ready-for-agent`). A builder fixes it under the
    same gates.
 
+## Releases
+
+Installers are built and published only on purpose (issue #173; `tools/release_plan.py` decides):
+
+- **A version bump.** A merge to `main` that changes `version` in `pyproject.toml` publishes the
+  pre-release `v<version>`, tagged at that commit. Bump the version in every place the version test
+  names, and add a `## <version>` section to `CHANGELOG.md` (its text is the release notes; the release
+  fails without it). A `v*` tag pushed by hand does the same.
+- **A test-release tag.** `git tag test-<name> <commit> && git push origin test-<name>` publishes a
+  pre-release named after the tag, with the `Unreleased` notes. It is for trying a build; the commit need
+  not be on `main`. Delete old test releases by hand when they are no longer needed.
+- Any other merge builds and publishes nothing. Both kinds need `test` and `release-guard` green on the
+  commit, and the release gate (wheels, binaries, pytest on each system) runs before anything is
+  published.
+
 ## Stuck tickets
 
 If one problem is still open after two honest attempts, the builder labels the ticket `ready-for-human`,
