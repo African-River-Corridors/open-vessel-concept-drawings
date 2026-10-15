@@ -10,6 +10,8 @@ import path from "node:path";
 import { remote } from "webdriverio";
 
 const here = import.meta.dirname;
+// The engine version the app shows: read from the Tauri config, so a version bump needs no test edit.
+const appVersion = JSON.parse(fs.readFileSync(path.join(here, "..", "src-tauri", "tauri.conf.json"), "utf8")).version;
 const FIXTURES = path.resolve(here, "../../crates/ovcd-format/tests/fixtures");
 const APP = path.resolve(here, process.env.OVCD_APP_BINARY ?? "../../target/debug/ovcd-app");
 const DIALOGS = process.env.OVCD_TEST_DIALOG_DIR;
@@ -117,7 +119,7 @@ describe("OVCD app smoke tests", () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
     assert.match(await cargoOutput(), /^2,038\.5/);
     assert.match(await outputsText(), /Displacement\s*2,372\.1/);
-    assert.equal(await (await browser.$("[data-testid=engine-version]")).getText(), "Engine 0.2.1");
+    assert.equal(await (await browser.$("[data-testid=engine-version]")).getText(), `Engine ${appVersion}`);
   });
 
   /** The text of the SVG drawn in each hull view slot. */
