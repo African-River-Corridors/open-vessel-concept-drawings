@@ -12,6 +12,7 @@ use crate::eval::{
     EvalError, capacity_inputs, capacity_json, checks_json, f64_arg, num, ok, opt_num, raised,
     raised_py, str_arg,
 };
+use crate::objects::capacity_result_from_json;
 use ovcd_core::barge_capacity::BargeCapacityInputs;
 use ovcd_core::gas_arrangement::{self as ga, ArrangementFit, FitOptions};
 use ovcd_core::journey_derating::{JourneyDeratingInputs, compute as derate};
@@ -293,11 +294,17 @@ pub fn run_journey(function: &str, args: &Value) -> Result<Value, EvalError> {
             "journey_derating has no function `{function}`"
         )));
     }
+    // A capacity result the caller passes is used as it is. Without one (the parity cases),
     // Python builds the capacity result first, so its errors come first.
-    let cap_inputs = capacity_inputs(&json!({ "inputs": args.get("capacity_inputs") }))?;
-    let capacity = match ovcd_core::barge_capacity::compute(&cap_inputs) {
-        Ok(r) => r,
-        Err(e) => return raised_py(&e),
+    let capacity = match args.get("capacity") {
+        Some(c) => capacity_result_from_json(c, "capacity")?,
+        None => {
+            let cap_inputs = capacity_inputs(&json!({ "inputs": args.get("capacity_inputs") }))?;
+            match ovcd_core::barge_capacity::compute(&cap_inputs) {
+                Ok(r) => r,
+                Err(e) => return raised_py(&e),
+            }
+        }
     };
     // `JourneyDeratingInputs(capacity=..., **args["inputs"])`: no coercion, so floats only.
     let inputs = args

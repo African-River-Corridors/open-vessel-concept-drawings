@@ -113,11 +113,7 @@ def criteria_set_for(ruleset: str) -> str:
 def assess(result, payload_t: float, *, block_coefficient: float = 0.85,
            water_density: float = 1.0, criteria_set: str = "IS_CODE_2008") -> StabilityAssessment:
     """Assess a converged gas arrangement (a ``BargeCapacityResult`` with ``gas_basis``)."""
-    cap = getattr(result, "_inputs", None)
-    if cap is None:
-        raise TypeError("assess needs a result returned by barge_capacity.compute or "
-                        "gas_arrangement.fit: the Rust core recomputes it from its inputs")
     return _call("gas_stability", "assess", dict(
-        capacity=cap, payload_t=payload_t, block_coefficient=block_coefficient,
+        result=result, payload_t=payload_t, block_coefficient=block_coefficient,
         water_density=water_density, criteria_set=criteria_set), StabilityAssessment,
     int_ok=("payload_t",))
