@@ -5,6 +5,7 @@
 - Fix: whole numbers (`90` for `90.0`) and numpy numbers are accepted again wherever a float is taken, on every public path (`HullGeometry` methods, `JourneyDeratingInputs` and the dataclass inputs). A whole float, a numpy integer or a `bool` is accepted for an int field such as `n_holds` (issue #127). No calculation result changes.
 - Fix: a capacity result now keeps a copy of its inputs, so editing or reusing the inputs object after `barge_capacity.compute` no longer changes `journey_derating`, `gas_stability.assess` or `ga_adapter.is_gas` (issue #125). No calculation result changes.
 - Fix: publishing the app installers now needs `test` and `release-guard` to pass on a tagged commit that is on `main`, and runs the release gate (wheels, binaries, pytest on each system) first. No calculation result changes.
+- Fix: `ovcd fill` sets `engine_version` to this engine when it writes a results hash (and writes none beside a hash from another version). The hash warning now says "results differ from the hash saved in the file". A stored hash must be 64 hex digits, compared without regard to case; an empty `engine_version` is an error. No calculation result changes (#137).
 
 ## 0.2.2 (2026-10-15)
 
