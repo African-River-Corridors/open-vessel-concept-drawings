@@ -62,7 +62,7 @@ jobs:
           PY="$RUNNER_TEMP/wheel-venv/bin/python"; [ -x "$PY" ] || PY="$RUNNER_TEMP/wheel-venv/Scripts/python.exe"
           # Dependencies come from PyPI as binaries. The wheel itself comes from dist/ only.
           # --only-binary :all: forbids any source build, so this step cannot need Rust.
-          "$PY" -m pip install --only-binary :all: pyyaml pytest
+          "$PY" -m pip install --only-binary :all: pyyaml pytest numpy
           "$PY" -m pip install --only-binary :all: --no-index --no-deps --find-links dist vessel-designer
           "$PY" -m pip check
           # Test from a scratch copy so the checkout's src/ cannot shadow the installed wheel.
