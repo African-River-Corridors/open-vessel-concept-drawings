@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.2.2
+
+- Fix: the macOS app is now signed as a whole bundle (ad-hoc), so macOS no longer reports it as damaged. No calculation result changes.
+
 ## 0.2.1 (2026-10-14)
 
 - Windows and macOS installers: the `app-build` workflow builds an NSIS `-setup.exe` and `.dmg` files, and a pushed `v*` tag publishes them as a GitHub pre-release (unsigned) with a SHA-256 checksum file. The README says how to run the app.

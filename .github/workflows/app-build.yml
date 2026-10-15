@@ -65,6 +65,19 @@ jobs:
         with:
           projectPath: app
           args: --bundles ${{ matrix.bundles }}
+      - name: Verify the app signature in the DMG
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          dmg=$(ls target/release/bundle/dmg/*.dmg)
+          mount=$(hdiutil attach -nobrowse -readonly "$dmg" | awk 'END { print $NF }')
+          app=$(find "$mount" -maxdepth 1 -name '*.app' | head -n 1)
+          codesign -dv --verbose=2 "$app"
+          if ! codesign --verify --deep --strict --verbose=2 "$app"; then
+            hdiutil detach "$mount"
+            exit 1
+          fi
+          hdiutil detach "$mount"
       - name: Keep the installer
         uses: actions/upload-artifact@v4
         with:
