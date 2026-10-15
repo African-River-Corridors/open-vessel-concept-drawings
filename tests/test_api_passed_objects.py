@@ -43,27 +43,32 @@ def gm_fluid(result, payload=1500.0):
 
 
 def test_stability_uses_the_hull_it_is_given():
+    """Label: snapshot"""
     s = HY.calculate_stability(RAKED, BI, TANKS, WEIGHTS, 2000.0, 0.58, 3.5)
     assert s.GM_fluid == close(0.05969187822861491)                        # ce96e66
 
 
 def test_trim_uses_the_hull_it_is_given():
+    """Label: snapshot"""
     t = HY.calculate_trim(RAKED, BI, TANKS, WEIGHTS, 2000.0, 3.5)
     assert t.trim == close(1.3653183822264685)                             # ce96e66
 
 
 def test_stability_uses_the_weights_it_is_given():
+    """Label: snapshot"""
     heavier = dataclasses.replace(WEIGHTS, hull_steel_total=WEIGHTS.hull_steel_total + 500,
                                   lightship=WEIGHTS.lightship + 500)
     assert HY.calculate_stability(HULL, BI, TANKS, heavier, 2000.0, 0.58, 3.5).KG == close(6.59527868136034)   # ce96e66
 
 
 def test_weights_use_the_tanks_they_are_given():
+    """Label: snapshot"""
     doubled = dataclasses.replace(TANKS, tank_shell_weight=TANKS.tank_shell_weight * 2)
     assert W.calculate_weights(BI, HULL, doubled).lightship == close(2814.5959265880624)   # ce96e66
 
 
 def test_to_ga_uses_the_result_it_is_given():
+    """Label: property"""
     res = B.compute(GAS)
     res.full_load_draft_m = 3.0
     gi, gr = ga_adapter.to_ga(GAS, res)
@@ -71,6 +76,7 @@ def test_to_ga_uses_the_result_it_is_given():
 
 
 def test_journey_derating_uses_the_capacity_it_is_given():
+    """Label: snapshot"""
     cap = B.compute(BULK)
     cap.cargo_capacity_t = 3000.0
     d = derate(cap)
@@ -80,6 +86,7 @@ def test_journey_derating_uses_the_capacity_it_is_given():
 
 def test_a_result_rebuilt_with_replace_still_works():
     # ce96e66: a rebuilt result carries all its fields, so every function accepts it
+    """Label: snapshot"""
     d = derate(dataclasses.replace(B.compute(BULK)))
     assert (d.cargo_capacity_t, d.achievable_tonnage_t) == close((4710.765684, 4710.765684))
     gas = dataclasses.replace(B.compute(GAS))
@@ -88,6 +95,7 @@ def test_a_result_rebuilt_with_replace_still_works():
 
 
 def test_assess_uses_the_gas_basis_and_density_it_is_given():
+    """Label: snapshot"""
     res = B.compute(GAS)
     res.gas_basis["weights"].steel_top_down += 100.0
     assert gm_fluid(res) == close((4.329311723992825, 6.3607094944568106, 10.35664347102438))   # ce96e66

@@ -11,7 +11,7 @@ knows what a failure means and what a change needs:
     Label: property               no fixed number: a relation, a bound or an error path.
 
 Python. The label is a line in the test's docstring. The rule covers every test function in
-`tests/`, except the files in `INFRASTRUCTURE`: tests of the tooling (packaging, the gate, the
+`tests/`, except the files in `INFRASTRUCTURE` (file names or globs): tests of the tooling (packaging, the gate, the
 release guard, housekeeping, the design-impact tool), which pin no engineering number. A new test
 file is checked until someone adds it to that list, on purpose, in a reviewed change.
 
@@ -24,6 +24,7 @@ Risk stopped: a snapshot passes as engineering evidence, or a new fixed number g
 on where it came from.
 """
 import ast
+import fnmatch
 import re
 from pathlib import Path
 
@@ -34,7 +35,8 @@ TESTS = ROOT / "tests"
 
 # Tests of the tooling. They pin no engineering number.
 INFRASTRUCTURE = {
-    "test_design_impact.py",
+    "test_design_impact*.py",
+    "test_workflows*.py",
     "test_gates_fail_closed.py",
     "test_housekeeping.py",
     "test_native.py",
@@ -96,11 +98,15 @@ def docstring_label(doc):
     return None
 
 
+def is_infrastructure(name):
+    return any(fnmatch.fnmatch(name, pattern) for pattern in INFRASTRUCTURE)
+
+
 def python_tests():
     files = sorted(TESTS.rglob("test_*.py"))
     assert files, "no test files found: scanning nothing"
     for path in files:
-        if path.name in INFRASTRUCTURE:
+        if is_infrastructure(path.name):
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
@@ -145,7 +151,8 @@ def test_every_python_fixed_number_test_is_labelled(path, node):
 def test_the_infrastructure_list_names_files_that_exist():
     """Label: property"""
     have = {p.name for p in TESTS.rglob("test_*.py")}
-    assert INFRASTRUCTURE <= have, sorted(INFRASTRUCTURE - have)
+    dead = [pat for pat in INFRASTRUCTURE if not fnmatch.filter(have, pat)]
+    assert not dead, f"patterns that match no test file: {dead}"
 
 
 RUST = list(rust_files_needing_a_label())
