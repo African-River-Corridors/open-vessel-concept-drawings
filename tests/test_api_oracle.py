@@ -31,6 +31,12 @@ KNOWN_DIFFERENCES: dict = {
     # and `DesignGrid.max_tank_length_m` are gone. The 12 m diameter cap of 0.1.0 is now 16 m.
     "design_grid": "issue #175: no tank-length cap; the grid has two tanks along and a 16 m "
                    "tank diameter cap",
+    # Issue #94: the class list is `catalogue/vessel_classes.yaml`, the one source. The ids are the
+    # catalogue's (the 12 old ids still work for `get_standard`), `standards_for` returns every class
+    # (Cargo is not a class property), the figures are the catalogue's (CEMT Va draught 2.5-2.8 m,
+    # the NL2011 class is RWS-M12 with 135 m and 5601 t and no bridge clearance), CN_II_motor has no
+    # moulded depth, and `VesselStandard` has four more fields and four Optional ones.
+    "vessel_standards": "issue #94: the class list is the Vessel Class catalogue",
 }
 
 

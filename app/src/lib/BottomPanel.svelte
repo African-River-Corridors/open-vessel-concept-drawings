@@ -88,6 +88,13 @@
                   </tr>
                 {/if}
               {/each}
+              {#if activeEval?.vessel_class?.reference_dwt_t}
+                {@const r = activeEval.vessel_class.reference_dwt_t}
+                <tr data-testid="class-reference-dwt">
+                  <th title="The class's published figure, for comparison. It is never an input.">Class reference deadweight ({activeEval.vessel_class.id})</th>
+                  <td class="num text">{r[0] === r[1] ? r[0] : `${r[0]} to ${r[1]}`}<span class="unit">&nbsp;t</span></td>
+                </tr>
+              {/if}
             </tbody>
           </table>
         {/if}

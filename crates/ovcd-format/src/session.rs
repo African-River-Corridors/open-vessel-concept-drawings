@@ -42,8 +42,12 @@ use serde_json::{Map, Value, json};
 ///                 "hard": { "gt"|"ge"|"lt"|"le" }, "soft": { "min", "max" }, "basis" } ] }
 /// ```
 ///
-/// `kind` is `number`, `bool`, `choice`, `cargo` or `formation`. The `formation` input also holds
-/// `convoy`, the `abreast` and `in_line` ranges of a pushed convoy.
+/// `kind` is `number`, `bool`, `choice`, `cargo`, `formation`, `vessel_scheme` or `vessel_class`. The
+/// `formation` input also holds `convoy`, the `abreast` and `in_line` ranges of a pushed convoy.
+/// `vessel_scheme` and `vessel_class` are held only by an Option defined by a standard class; their
+/// choices are the schemes, and the classes with the figures they set (`formation` is the Formation
+/// kind the class gives, `length_max_m` and `beam_max_m` what picking it sets, `draught_limit_m` and
+/// `air_draft_limit_m` the limits it fills, `reference_dwt_t` the deadweight shown beside the cargo).
 pub fn input_schema(profile: &Profile) -> Value {
     let inputs: Vec<Value> = INPUTS.iter().map(|s| input_entry(s, profile)).collect();
     json!({
@@ -98,6 +102,41 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
                 .collect();
             e.insert("choices".into(), Value::Array(list));
         }
+        InputKind::VesselScheme => {
+            e.insert("kind".into(), json!("vessel_scheme"));
+            e.insert("nullable".into(), json!(true));
+            let list: Vec<Value> = ovcd_core::vessel_classes::schemes()
+                .iter()
+                .map(|s| json!({ "value": s, "label": s }))
+                .collect();
+            e.insert("choices".into(), Value::Array(list));
+        }
+        InputKind::VesselClass => {
+            e.insert("kind".into(), json!("vessel_class"));
+            e.insert("nullable".into(), json!(true));
+            let list: Vec<Value> = ovcd_core::vessel_classes::CLASSES
+                .iter()
+                .filter(|c| c.pickable())
+                .map(|c| {
+                    let (abreast, in_line) = c.counts();
+                    json!({
+                        "value": c.id,
+                        "label": c.id,
+                        "scheme": c.family,
+                        "formation": c.kind(),
+                        "length_max_m": c.loa_max_m(),
+                        "beam_max_m": c.beam_max_m(),
+                        "draught_limit_m": c.draught_limit_m(),
+                        "air_draft_limit_m": c.air_draft_limit_m(),
+                        "reference_dwt_t": c.dwt_t.map(|(lo, hi)| [lo, hi]),
+                        "abreast": abreast,
+                        "in_line": in_line,
+                        "confidence": c.confidence,
+                    })
+                })
+                .collect();
+            e.insert("choices".into(), Value::Array(list));
+        }
         InputKind::Formation => {
             e.insert("kind".into(), json!("formation"));
             let kinds: Vec<Value> = FORMATION_KINDS
@@ -117,7 +156,7 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
             e.insert("convoy".into(), Value::Object(convoy));
         }
     }
-    if !spec.required {
+    if !spec.required && !crate::class_input::UNSET_WHEN_ABSENT.contains(&name) {
         match KEYED_DEFAULTS.iter().find(|(n, _, _)| *n == name) {
             Some((_, by, keys)) => {
                 let values: Map<String, Value> = keys
@@ -202,6 +241,9 @@ pub struct OptionEvaluation {
     pub messages: Vec<Message>,
     /// `None` when the Option has a hard error and was not run.
     pub outcome: Option<RunOutcome>,
+    /// The Vessel Class the Option sits in, with its reference deadweight; `None` for typed
+    /// dimensions. See [`crate::class_input::summary`].
+    pub vessel_class: Option<Value>,
 }
 
 /// The evaluation of a whole Design.
@@ -279,7 +321,8 @@ impl Evaluation {
                     Some(RunOutcome::Failed(m)) => json!({ "status": "failed", "message": m }),
                     None => json!({ "status": "not_run" }),
                 };
-                json!({ "name": o.name, "messages": messages, "outcome": outcome })
+                json!({ "name": o.name, "messages": messages, "outcome": outcome,
+                        "vessel_class": o.vessel_class })
             })
             .collect();
         let file_messages: Vec<Value> = self.file_messages.iter().map(message_json).collect();
@@ -405,9 +448,78 @@ impl DesignSession {
                 "`{name}` is not used for a {current} Cargo Containment"
             ));
         }
-        self.put(i, name, value);
+        match name {
+            "vessel_class" => self.pick_class(i, &value)?,
+            "vessel_scheme" => self.pick_scheme(i, value),
+            _ => self.put(i, name, value),
+        }
         self.normalise();
         Ok(&self.design)
+    }
+
+    /// Define the Option by this class (an id, or null for typed dimensions): length, beam and
+    /// Formation come from the class, marked `class`; the scheme is the class's. Depth stays typed.
+    /// The limits the class fills follow when the Design is normalised.
+    fn pick_class(&mut self, i: usize, value: &Value) -> Result<(), String> {
+        let Some(id) = value.as_str() else {
+            self.pick_scheme(i, Value::Null);
+            return Ok(());
+        };
+        let class = ovcd_core::vessel_classes::find(id)
+            .ok_or_else(|| format!("`{id}` is not a Vessel Class"))?;
+        if !class.pickable() {
+            return Err(format!(
+                "`{}` cannot define a vessel: it gives no length or beam, or its Formation ({}) \
+                 is not one a Design has",
+                class.id, class.formation
+            ));
+        }
+        let option = &mut self.design.options[i];
+        option.results_hash = None;
+        let mut write = |name: &str, value: Value, source: Source| {
+            let stored = StoredInput { value, source };
+            match option.inputs.iter_mut().find(|(n, _)| n == name) {
+                Some((_, slot)) => *slot = stored,
+                None => option.inputs.push((name.into(), stored)),
+            }
+        };
+        write("vessel_scheme", json!(class.family), Source::Typed);
+        write("vessel_class", json!(class.id), Source::Class);
+        for (name, v) in crate::class_input::class_values(class) {
+            write(name, v, Source::Class);
+        }
+        // A limit the class fills is refilled; one the designer typed stays.
+        for (name, _) in crate::class_input::class_limits(class) {
+            if option
+                .input(name)
+                .is_some_and(|s| s.source != Source::Typed)
+            {
+                option.inputs.retain(|(n, _)| n != name);
+            }
+        }
+        // The convoy counts of the class replace those that were waiting for a return.
+        self.hidden
+            .retain(|(o, n, _)| !(o == &self.design.options[i].name && n == CONVOY_MEMORY));
+        Ok(())
+    }
+
+    /// Pick the scheme, or null to go back to typed dimensions: what came from a class is then
+    /// typed, and the Option holds no class. A new scheme drops the old class, and the vessel is
+    /// placed again.
+    fn pick_scheme(&mut self, i: usize, value: Value) {
+        let option = &mut self.design.options[i];
+        option.results_hash = None;
+        option.inputs.retain(|(n, _)| n != "vessel_class");
+        if value.is_null() {
+            option.inputs.retain(|(n, _)| n != "vessel_scheme");
+            for (_, s) in option.inputs.iter_mut() {
+                if s.source == Source::Class {
+                    s.source = Source::Typed;
+                }
+            }
+        } else {
+            self.put(i, "vessel_scheme", value);
+        }
     }
 
     /// Set the Formation: its kind and, for a pushed convoy, the barges abreast and in line.
@@ -609,6 +721,11 @@ impl DesignSession {
                     name: names[i].to_string(),
                     messages,
                     outcome,
+                    vessel_class: checked
+                        .design
+                        .as_ref()
+                        .and_then(|d| d.options.get(i))
+                        .and_then(crate::class_input::summary),
                 }
             })
             .collect();
