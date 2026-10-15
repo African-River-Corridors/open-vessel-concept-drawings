@@ -24,7 +24,10 @@
 //! result (see [`DRY_BULK_WING_VOID_M`]).
 
 use crate::profile::Profile;
+use serde::de::{DeserializeSeed, Deserializer, MapAccess, SeqAccess, Visitor};
 use serde_json::{Map, Value, json};
+use std::collections::HashSet;
+use std::fmt;
 
 /// The only `.vdesign` format version so far.
 pub const FORMAT_VERSION: u64 = 1;
@@ -533,6 +536,10 @@ pub fn new_design(profile: &Profile) -> Result<Design, String> {
     Ok(design)
 }
 
+/// Why a missing or null moulded depth is refused.
+const DEPTH_REQUIRED: &str =
+    "moulded depth is required for now; a default rule by Cargo is planned";
+
 /// What to do with an input the file leaves out.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Missing {
@@ -581,8 +588,101 @@ fn read_text(text: &str, profile: &Profile, missing: Missing) -> Checked {
             };
         }
     };
+    for (path, key) in duplicate_keys(text) {
+        let place = if path.is_empty() {
+            "the file".to_string()
+        } else {
+            path
+        };
+        report.error(
+            format!("`{key}` appears twice in {place}; a key may appear once"),
+            &[],
+        );
+    }
     let design = read_design(&root, profile, missing, &mut report);
     Checked { design, report }
+}
+
+/// Every key that appears twice in one JSON object of `text`, with the path of that object
+/// (`options[0].inputs`; empty for the top level). A plain JSON read keeps the last value and says
+/// nothing, so a file with an ambiguous key would give a confident result.
+fn duplicate_keys(text: &str) -> Vec<(String, String)> {
+    struct Walk<'a> {
+        path: String,
+        found: &'a mut Vec<(String, String)>,
+    }
+    impl<'de> DeserializeSeed<'de> for Walk<'_> {
+        type Value = ();
+        fn deserialize<D: Deserializer<'de>>(self, d: D) -> Result<(), D::Error> {
+            d.deserialize_any(self)
+        }
+    }
+    impl<'de> Visitor<'de> for Walk<'_> {
+        type Value = ();
+        fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            f.write_str("any JSON value")
+        }
+        fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<(), A::Error> {
+            let mut seen = HashSet::new();
+            while let Some(key) = map.next_key::<String>()? {
+                if !seen.insert(key.clone()) {
+                    self.found.push((self.path.clone(), key.clone()));
+                }
+                let path = if self.path.is_empty() {
+                    key
+                } else {
+                    format!("{}.{key}", self.path)
+                };
+                map.next_value_seed(Walk {
+                    path,
+                    found: &mut *self.found,
+                })?;
+            }
+            Ok(())
+        }
+        fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<(), A::Error> {
+            let mut i = 0;
+            while seq
+                .next_element_seed(Walk {
+                    path: format!("{}[{i}]", self.path),
+                    found: &mut *self.found,
+                })?
+                .is_some()
+            {
+                i += 1;
+            }
+            Ok(())
+        }
+        // Scalars carry no keys. (With `arbitrary_precision` a number arrives as a one-key map,
+        // which this treats as an object with no duplicate.)
+        fn visit_bool<E>(self, _: bool) -> Result<(), E> {
+            Ok(())
+        }
+        fn visit_str<E>(self, _: &str) -> Result<(), E> {
+            Ok(())
+        }
+        fn visit_unit<E>(self) -> Result<(), E> {
+            Ok(())
+        }
+        fn visit_i64<E>(self, _: i64) -> Result<(), E> {
+            Ok(())
+        }
+        fn visit_u64<E>(self, _: u64) -> Result<(), E> {
+            Ok(())
+        }
+        fn visit_f64<E>(self, _: f64) -> Result<(), E> {
+            Ok(())
+        }
+    }
+    let mut found = Vec::new();
+    let mut de = serde_json::Deserializer::from_str(text);
+    // A text that does not read is reported by the caller's own parse.
+    let _ = Walk {
+        path: String::new(),
+        found: &mut found,
+    }
+    .deserialize(&mut de);
+    found
 }
 
 fn read_design(
@@ -609,9 +709,12 @@ fn read_design(
         None => report.error("the file needs an integer `format_version`".into(), &[]),
     }
     let engine_version = match root.get("engine_version").and_then(Value::as_str) {
-        Some(v) => v.to_string(),
-        None => {
-            report.error("the file needs a string `engine_version`".into(), &[]);
+        Some(v) if !v.trim().is_empty() => v.to_string(),
+        _ => {
+            report.error(
+                "the file needs a non-empty string `engine_version`".into(),
+                &[],
+            );
             String::new()
         }
     };
@@ -678,7 +781,13 @@ fn read_design(
         let mut option = read_option(name, inputs, profile, missing, report);
         match raw.get("results_hash") {
             None | Some(Value::Null) => {}
-            Some(Value::String(h)) => option.results_hash = Some(h.clone()),
+            Some(Value::String(h)) if crate::run::is_hash_shape(h) => {
+                option.results_hash = Some(h.clone());
+            }
+            Some(Value::String(_)) => report.error(
+                format!("Option '{name}': `results_hash` must be 64 hex digits"),
+                &[],
+            ),
             Some(_) => report.error(format!("Option '{name}': `results_hash` must be text"), &[]),
         }
         options.push(option);
@@ -783,9 +892,7 @@ fn read_option(
         }
         if spec.required {
             let msg = if spec.name == "moulded_depth_m" {
-                "missing required input `moulded_depth_m`: moulded depth is required for now; \
-                 a default rule by Cargo is planned"
-                    .to_string()
+                format!("missing required input `moulded_depth_m`: {DEPTH_REQUIRED}")
             } else {
                 format!("missing required input `{}`", spec.name)
             };
@@ -911,6 +1018,8 @@ fn check_value(
             if v.is_null() {
                 return if nullable {
                     Ok((Value::Null, vec![]))
+                } else if name == "moulded_depth_m" {
+                    Err(format!("`{name}` is null: {DEPTH_REQUIRED}"))
                 } else {
                     Err(format!("`{name}` must be a number"))
                 };

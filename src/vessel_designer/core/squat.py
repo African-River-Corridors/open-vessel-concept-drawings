@@ -42,7 +42,7 @@ WHAT THIS DOES NOT DO
   module should not be used for the sea leg.
 * No dynamic heel from turning, which in a bend adds draught on the outboard bilge.
 
-Pure functions, math only — Pyodide-safe.
+Typed dataclasses and functions; the maths runs in the Rust core (`vessel_designer._native`). No I/O.
 """
 from __future__ import annotations
 
