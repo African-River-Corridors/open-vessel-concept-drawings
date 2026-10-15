@@ -8,6 +8,12 @@ name: App build
 #   - A pushed tag `v*` builds them and then publishes a GitHub PRE-RELEASE named after the tag, with
 #     the installers, a SHA-256 checksum file and the notes of that version from CHANGELOG.md.
 #
+# Nothing is built or published for a tag until `verify` passes: the tagged commit is on `main`, and
+# the CI jobs `test` and `release-guard` succeeded on it. Publishing also waits for `gate`, which runs
+# the whole release gate (release.yml: wheels, binaries and pytest on each system). A release made with
+# GITHUB_TOKEN does not start other workflows, so the gate is called from here, not left to the
+# `release: published` trigger.
+#
 # The ordinary CI jobs only compile the app (fast). Bundling happens only here.
 
 on:
@@ -19,7 +25,58 @@ permissions:
   contents: read
 
 jobs:
+  verify:
+    # Runs for a manual start too, and passes there (its steps are for tags only), so `build` can
+    # always list it in `needs` without `always()`.
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      checks: read
+    steps:
+      - uses: actions/checkout@v4
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          fetch-depth: 0
+      - name: The tagged commit is on main
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main \
+            || { echo "the tagged commit $GITHUB_SHA is not on origin/main"; exit 1; }
+      - name: test and release-guard succeeded on the tagged commit
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # A check run can appear more than once (branch, pull request, tag). One success is enough.
+          # Wait while a check is still running or has not appeared; fail if every run of it failed.
+          deadline=$((SECONDS + 1800))
+          while :; do
+            runs=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/check-runs?per_page=100" \
+              --jq '.check_runs[] | {name, status, conclusion}' | jq -s '.')
+            pending=0
+            for name in test release-guard; do
+              ok=$(jq --arg n "$name" '[.[] | select(.name == $n and .conclusion == "success")] | length' <<<"$runs")
+              open=$(jq --arg n "$name" '[.[] | select(.name == $n and .status != "completed")] | length' <<<"$runs")
+              seen=$(jq --arg n "$name" '[.[] | select(.name == $n)] | length' <<<"$runs")
+              if [ "$ok" -gt 0 ]; then echo "$name: success"; continue; fi
+              if [ "$open" -gt 0 ] || [ "$seen" -eq 0 ]; then echo "$name: waiting"; pending=1; continue; fi
+              echo "$name did not succeed on $GITHUB_SHA"; exit 1
+            done
+            [ "$pending" -eq 0 ] && exit 0
+            [ "$SECONDS" -lt "$deadline" ] || { echo "timed out waiting for test and release-guard"; exit 1; }
+            sleep 30
+          done
+
+  gate:
+    # The release gate (wheels, binaries, pytest on each system), before anything is published.
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: verify
+    uses: ./.github/workflows/release.yml
+
   build:
+    needs: verify
     name: installer (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -88,7 +145,7 @@ jobs:
   release:
     # Only for a pushed tag. A manual start stops after `build`.
     if: startsWith(github.ref, 'refs/tags/')
-    needs: build
+    needs: [build, verify, gate]
     runs-on: ubuntu-latest
     permissions:
       contents: write
