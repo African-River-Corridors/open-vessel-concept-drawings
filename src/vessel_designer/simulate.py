@@ -1,4 +1,4 @@
-"""One-call barge simulation for the web simulator (runs in the browser via Pyodide).
+"""One-call barge simulation for the simulator.
 
     simulate(params: dict) -> dict      # JSON in, JSON out
 
@@ -11,6 +11,15 @@ parameters through. Pure calculation, no I/O.
 from __future__ import annotations
 
 from ._bridge import call as _call
+
+# 0.1.0 `simulate` exposed these names (it imported them), and user scripts import them from here.
+# Nothing in this module uses them: the calculation runs in the Rust core.
+from .core.barge_capacity import BargeCapacityInputs, compute as capacity  # noqa: F401
+from .core.cargo import CARGO_DATABASE  # noqa: F401
+from .core.gas_arrangement import DEFAULT_DEPTHS_M, RULESETS, fit as gas_fit  # noqa: F401
+from .core.gas_stability import assess as assess_stability, criteria_set_for  # noqa: F401
+from .core.resistance import (  # noqa: F401
+    EnvironmentInputs, ResistanceInputs, TugInputs, compute as resistance)
 
 RHO = 1.0  # fresh water, t/m3
 # Tank filling limit by ruleset (defect 7): IGC 15.3 default 98 %, ADN 95 %.

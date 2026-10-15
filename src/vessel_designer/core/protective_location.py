@@ -88,6 +88,9 @@ def required_side_protection(vessel_type: VesselType, beam: float, d_vc: float) 
     Returns:
         Required Cs in metres.
     """
+    if not isinstance(vessel_type, VesselType):
+        # 0.1.0 compared against the enum members, so plain text (even "IGC_2G") was unknown.
+        raise ValueError(f"Unknown vessel type: {vessel_type}")
     return _call("protective_location", "required_side_protection", {"vessel_type": vessel_type, "beam": beam, "d_vc": d_vc}, float)
 
 
@@ -103,6 +106,8 @@ def required_bottom_protection(beam: float, d_vc: float, vessel_type: VesselType
     Returns:
         Required Cb in metres.
     """
+    if not isinstance(vessel_type, VesselType):
+        vessel_type = None      # 0.1.0 compared with `== VesselType.ADN_G`: only the enum member counts
     return _call("protective_location", "required_bottom_protection", {"beam": beam, "d_vc": d_vc, "vessel_type": vessel_type}, float)
 
 

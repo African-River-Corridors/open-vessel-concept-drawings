@@ -5,6 +5,7 @@ mod eval;
 pub mod ga;
 mod gas_arrangement;
 pub mod gas_stability;
+mod objects;
 pub mod profile;
 mod run;
 pub mod session;

@@ -30,11 +30,30 @@ pub enum RunOutcome {
     Failed(String),
 }
 
+impl RunOutcome {
+    /// The word `ovcd run --json` gives the Option: `results`, `not_yet_supported` (a convoy: the
+    /// file is valid, the engine cannot compute it yet) or `failed`.
+    pub fn status(&self) -> &'static str {
+        match self {
+            RunOutcome::Results { .. } => "results",
+            RunOutcome::NotAvailable(_) => "not_yet_supported",
+            RunOutcome::Failed(_) => "failed",
+        }
+    }
+
+    /// Does this outcome make `ovcd run` exit 1? An Option that is not yet supported does not.
+    pub fn is_failure(&self) -> bool {
+        matches!(self, RunOutcome::Failed(_))
+    }
+}
+
 /// Is the stored hash of an Option the same as the one this engine computes?
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HashStatus {
     /// No hash in the file, or nothing to compare it with.
     NotStored,
+    /// A hash is in the file, but the Option has no results yet (a convoy), so it is not checked.
+    NotChecked,
     Matches,
     /// The file's hash differs from this engine's.
     Differs {
@@ -47,6 +66,7 @@ impl HashStatus {
     pub fn as_str(&self) -> &'static str {
         match self {
             HashStatus::NotStored => "not_stored",
+            HashStatus::NotChecked => "not_checked",
             HashStatus::Matches => "matches",
             HashStatus::Differs { .. } => "differs",
         }
@@ -194,13 +214,16 @@ pub fn run_design(design: &Design) -> Vec<RunOption> {
         .map(|o| {
             let outcome = run_option(o);
             let hash_status = match (&outcome, &o.results_hash) {
-                (RunOutcome::Results { hash, .. }, Some(stored)) if hash == stored => {
+                (RunOutcome::Results { hash, .. }, Some(stored))
+                    if hash.eq_ignore_ascii_case(stored) =>
+                {
                     HashStatus::Matches
                 }
                 (RunOutcome::Results { hash, .. }, Some(stored)) => HashStatus::Differs {
                     stored: stored.clone(),
                     computed: hash.clone(),
                 },
+                (RunOutcome::NotAvailable(_), Some(_)) => HashStatus::NotChecked,
                 _ => HashStatus::NotStored,
             };
             RunOption {
@@ -212,23 +235,43 @@ pub fn run_design(design: &Design) -> Vec<RunOption> {
         .collect()
 }
 
+/// Is this text a results hash: 64 hexadecimal digits, in either case?
+pub fn is_hash_shape(text: &str) -> bool {
+    text.len() == 64 && text.bytes().all(|b| b.is_ascii_hexdigit())
+}
+
 /// Write a results hash into every Option that can be computed and has none stored. A stored hash
 /// is never replaced: that would hide a change.
+///
+/// A file names one engine version, so every hash in it must come from that engine. When a hash is
+/// written, `engine_version` becomes this engine's. If another Option already holds a hash saved
+/// under a different version, no hash is written: the file would claim hashes from an engine that
+/// never computed them.
 pub fn stamp(design: &mut Design) {
+    let this = crate::vdesign::ENGINE_VERSION;
+    if design.engine_version != this && design.options.iter().any(|o| o.results_hash.is_some()) {
+        return;
+    }
+    let mut wrote = false;
     for o in &mut design.options {
         if o.results_hash.is_none()
             && let RunOutcome::Results { hash, .. } = run_option(o)
         {
             o.results_hash = Some(hash);
+            wrote = true;
         }
+    }
+    if wrote {
+        design.engine_version = this.to_string();
     }
 }
 
-/// The warning for an Option whose stored hash differs from this engine's.
+/// The warning for an Option whose stored hash differs from this engine's. It does not say why:
+/// an engine change and a hand edit of an input look the same to the file.
 pub fn hash_warning(name: &str, engine_version: &str, stored: &str, computed: &str) -> String {
     format!(
-        "Option '{name}': results changed since this file was saved with engine version \
-         {engine_version} (stored hash {}, now {})",
+        "Option '{name}': results differ from the hash saved in the file (saved with engine \
+         version {engine_version}; stored hash {}, now {})",
         short(stored),
         short(computed)
     )

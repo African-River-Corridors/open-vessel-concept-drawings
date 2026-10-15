@@ -10,8 +10,9 @@
 
 use crate::eval::{
     EvalError, capacity_inputs, capacity_json, checks_json, f64_arg, num, ok, opt_num, raised,
-    raised_py, str_arg,
+    raised_py, str_arg, tagged_f64,
 };
+use crate::objects::capacity_result_from_json;
 use ovcd_core::barge_capacity::BargeCapacityInputs;
 use ovcd_core::gas_arrangement::{self as ga, ArrangementFit, FitOptions};
 use ovcd_core::journey_derating::{JourneyDeratingInputs, compute as derate};
@@ -44,6 +45,9 @@ fn float_or(o: &Map<String, Value>, name: &str, default: f64) -> Result<f64, Eva
     match o.get(name) {
         None => Ok(default),
         Some(Value::Number(n)) if n.is_f64() => Ok(n.as_f64().unwrap_or(f64::NAN)),
+        Some(v @ Value::String(_)) if tagged_f64(v).is_some() => {
+            Ok(tagged_f64(v).unwrap_or(f64::NAN))
+        }
         Some(_) => Err(EvalError::BadInput(format!(
             "`args.{name}` must be a float (write 18.0, not 18)"
         ))),
@@ -293,11 +297,17 @@ pub fn run_journey(function: &str, args: &Value) -> Result<Value, EvalError> {
             "journey_derating has no function `{function}`"
         )));
     }
+    // A capacity result the caller passes is used as it is. Without one (the parity cases),
     // Python builds the capacity result first, so its errors come first.
-    let cap_inputs = capacity_inputs(&json!({ "inputs": args.get("capacity_inputs") }))?;
-    let capacity = match ovcd_core::barge_capacity::compute(&cap_inputs) {
-        Ok(r) => r,
-        Err(e) => return raised_py(&e),
+    let capacity = match args.get("capacity") {
+        Some(c) => capacity_result_from_json(c, "capacity")?,
+        None => {
+            let cap_inputs = capacity_inputs(&json!({ "inputs": args.get("capacity_inputs") }))?;
+            match ovcd_core::barge_capacity::compute(&cap_inputs) {
+                Ok(r) => r,
+                Err(e) => return raised_py(&e),
+            }
+        }
     };
     // `JourneyDeratingInputs(capacity=..., **args["inputs"])`: no coercion, so floats only.
     let inputs = args

@@ -30,9 +30,13 @@ Usage:
   ovcd run [--profile <profile.json>] [--json] <file.vdesign>
       Compute every Option of a Design and print a short summary. --json prints the full
       results instead. Each Option's results hash is compared with the one saved in the file;
-      a difference is a warning that results changed since the file was saved with an engine
-      version. A pushed convoy prints \"convoy results not yet available\" and no numbers.
-      Warnings go to stderr. Exits 1 if the file has a hard error or an Option cannot be computed.
+      a difference is a warning that the results differ from the hash saved in the file (an
+      engine change, or an input edited by hand, can cause it). A pushed convoy is valid but has
+      no results yet: it prints \"convoy results not yet available\" and no numbers, and the same
+      message goes to stderr as a warning. In --json each Option has a \"status\": \"results\",
+      \"not_yet_supported\" (a convoy) or \"failed\".
+      Warnings go to stderr. Exits 0 for a valid file, even if some Options are not yet
+      supported. Exits 1 if the file has a hard error or an Option fails to compute.
   ovcd schema [--profile <profile.json>]
       Print the input schema as JSON: every input with its kind, unit, choices, group, default,
       hard and soft ranges and basis, from the Defaults Profile. Use it to build valid Designs.
@@ -282,7 +286,8 @@ fn validate(args: &[&str]) -> Result<bool, String> {
     Ok(r.is_ok())
 }
 
-/// Run a saved Design. Returns whether every Option was computed and the file had no hard error.
+/// Run a saved Design. Returns whether the file had no hard error and no Option failed. An Option
+/// that is not yet supported (a convoy) is not a failure.
 fn run(args: &[&str]) -> Result<bool, String> {
     use ovcd_format::{HashStatus, RunOutcome};
     let flags = parse_flags(args, false, true)?;
@@ -323,21 +328,34 @@ fn run(args: &[&str]) -> Result<bool, String> {
             );
         }
     }
-    let all_computed = runs
-        .iter()
-        .all(|r| matches!(r.outcome, RunOutcome::Results { .. }));
+    // A convoy is valid but not computable yet: a warning, not a failure.
+    for r in &runs {
+        if let RunOutcome::NotAvailable(m) = &r.outcome {
+            eprintln!("warning: Option '{}': {m}", r.name);
+            if r.hash_status == HashStatus::NotChecked {
+                eprintln!(
+                    "warning: Option '{}': the stored results hash is not checked ({m})",
+                    r.name
+                );
+            }
+        }
+    }
+    let no_failure = !runs.iter().any(|r| r.outcome.is_failure());
     if flags.json {
         let options: Vec<serde_json::Value> = runs
             .iter()
             .map(|r| match &r.outcome {
                 RunOutcome::Results { results, hash } => serde_json::json!({
                     "name": r.name,
+                    "status": r.outcome.status(),
                     "results_hash": hash,
                     "hash_status": r.hash_status.as_str(),
                     "results": results,
                 }),
                 RunOutcome::NotAvailable(m) | RunOutcome::Failed(m) => serde_json::json!({
                     "name": r.name,
+                    "status": r.outcome.status(),
+                    "hash_status": r.hash_status.as_str(),
                     "results": serde_json::Value::Null,
                     "message": m,
                 }),
@@ -362,7 +380,7 @@ fn run(args: &[&str]) -> Result<bool, String> {
                     let note = match r.hash_status {
                         HashStatus::Matches => "matches the file",
                         HashStatus::Differs { .. } => "DIFFERS from the file",
-                        HashStatus::NotStored => "none saved in the file",
+                        HashStatus::NotStored | HashStatus::NotChecked => "none saved in the file",
                     };
                     println!("  Results hash {} ({note})", &hash[..12]);
                 }
@@ -371,5 +389,5 @@ fn run(args: &[&str]) -> Result<bool, String> {
             }
         }
     }
-    Ok(all_computed)
+    Ok(no_failure)
 }
