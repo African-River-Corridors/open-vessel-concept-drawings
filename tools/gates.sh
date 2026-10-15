@@ -8,14 +8,17 @@
 #
 # Steps:
 #   1. cargo fmt --check
-#   2. clippy, warnings as errors (includes the banned-maths rule in crates/ovcd-core/clippy.toml)
-#   3. cargo test, with Python made unusable, to prove the Rust loop needs no Python
-#   4. the WebAssembly build of ovcd-core and ovcd-draw
-#   5. the design-impact check (before/after on main; fails only if a change is missing from
+#   2. clippy, warnings as errors (includes the banned-maths rule: crates/ovcd-core/clippy.toml and
+#      crates/ovcd-format/clippy.toml, which hold the same list)
+#   3. clippy on ovcd-py, warnings as errors (not a default member, so step 2 skips it; it needs
+#      Python only to configure PyO3, and clippy does not link, so the step needs no libpython)
+#   4. cargo test, with Python made unusable, to prove the Rust loop needs no Python
+#   5. the WebAssembly build of ovcd-core and ovcd-draw
+#   6. the design-impact check (before/after on main; fails only if a change is missing from
 #      CHANGELOG.md)
-#   6. pytest against the shipped package
+#   7. pytest against the shipped package
 #
-# OVCD_PYTHON picks the Python for steps 5 and 6 (default python3).
+# OVCD_PYTHON picks the Python for steps 3, 6 and 7 (default python3).
 set -euo pipefail
 
 fail() { echo "gates: FAIL: $*" >&2; exit 1; }
@@ -32,7 +35,7 @@ need dirname
 cd "$(dirname "$0")/.."
 PY="${OVCD_PYTHON:-python3}"
 WASM_TARGET="wasm32-unknown-unknown"
-EXPECTED_STEPS=6
+EXPECTED_STEPS=7
 steps_run=0
 
 need git
@@ -83,6 +86,7 @@ cargo_test_without_python() {
 
 step "cargo fmt --check" cargo fmt --all --check
 step "clippy -D warnings" cargo clippy --all-targets --all-features -- -D warnings
+step "clippy ovcd-py -D warnings" env PYO3_PYTHON="$PY" cargo clippy -p ovcd-py --all-targets --all-features -- -D warnings
 step "cargo test (no Python)" cargo_test_without_python
 step "WebAssembly build of ovcd-core and ovcd-draw" cargo build -p ovcd-core -p ovcd-draw --all-features --target "$WASM_TARGET"
 step "design impact" "$PY" tools/design_impact.py gate

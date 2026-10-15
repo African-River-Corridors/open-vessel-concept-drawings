@@ -37,7 +37,7 @@ The gas-code separation between this block and the cargo area is NOT here — it
 cargo-code rule and lives in ``gas_separation.py``. Keeping them apart is deliberate: the
 equipment does not change when the cargo does, and the separation does.
 
-Pure functions + typed dataclasses; no I/O. Runs in Pyodide.
+Typed dataclasses and one function; the calculation runs in the Rust core (`vessel_designer._native`). No I/O.
 """
 from __future__ import annotations
 

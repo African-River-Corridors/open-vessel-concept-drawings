@@ -97,3 +97,77 @@ def test_gates_fail_when_any_tool_they_call_is_missing(tmp_path, missing):
     assert result.returncode != 0
     assert f"required tool '{missing}' is not on PATH" in result.stderr
     assert "gates: ok:" not in result.stdout
+
+
+# ---------- the lint steps fail on real code (ticket 135) ----------
+# These run the real gates.sh on a copy of the repository with one bad line added. They stop at the
+# lint step, so they need only the compile time of clippy. They need a real cargo, so they do not use
+# the stub PATH of the tests above.
+
+BANNED_CALL = """
+#[allow(dead_code)]
+fn banned_probe(x: f64) -> f64 {
+    x.powi(2) + x.mul_add(2.0, 1.0) + x.exp()
+}
+"""
+CLIPPY_WARNING = """
+#[allow(dead_code)]
+fn clippy_probe() -> i32 {
+    let x = 1;
+    x + 0
+}
+"""
+
+
+@pytest.fixture(scope="module")
+def repo_copy(tmp_path_factory):
+    """The tracked and new files of this checkout, copied. The bad line goes into the copy only."""
+    out = subprocess.run(["git", "ls-files", "-co", "--exclude-standard", "-z"], cwd=ROOT,
+                         capture_output=True, text=True, check=True).stdout
+    dest = tmp_path_factory.mktemp("gates-copy")
+    for name in filter(None, out.split("\0")):
+        src = ROOT / name
+        if src.is_file():
+            (dest / name).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dest / name)
+    return dest
+
+
+def _gates_on_copy(copy: Path, rel: str, addition: str) -> subprocess.CompletedProcess:
+    assert shutil.which("cargo"), "this test needs a real cargo"
+    target = copy / rel
+    original = target.read_text(encoding="utf-8")
+    target.write_text(original + addition, encoding="utf-8")
+    try:
+        env = {**os.environ, "OVCD_PYTHON": sys.executable,
+               "CARGO_TARGET_DIR": os.environ.get("CARGO_TARGET_DIR", str(ROOT / "target"))}
+        return subprocess.run([shutil.which("bash"), str(copy / "tools" / "gates.sh")], cwd=copy, env=env,
+                              capture_output=True, text=True, timeout=1500)
+    finally:
+        target.write_text(original, encoding="utf-8")
+
+
+def test_a_banned_maths_call_in_simulate_fails_the_gate(repo_copy):
+    r = _gates_on_copy(repo_copy, "crates/ovcd-format/src/simulate.rs", BANNED_CALL)
+    assert r.returncode != 0
+    assert "gates: ok: cargo fmt --check" in r.stdout            # the line is well formatted ...
+    assert "gates: FAIL: clippy -D warnings" in r.stderr         # ... and stopped by the lint
+    out = r.stdout + r.stderr
+    for banned in ("f64::powi", "f64::mul_add", "f64::exp"):
+        assert f"use of a disallowed method `{banned}`" in out, banned
+    assert "gates: ok: cargo test" not in r.stdout
+
+
+def test_a_clippy_warning_in_ovcd_py_fails_the_gate(repo_copy):
+    r = _gates_on_copy(repo_copy, "crates/ovcd-py/src/lib.rs", CLIPPY_WARNING)
+    assert r.returncode != 0
+    assert "gates: ok: clippy -D warnings" in r.stdout           # the default members are clean ...
+    assert "gates: FAIL: clippy ovcd-py -D warnings" in r.stderr  # ... the bindings are not
+    assert "gates: ok: cargo test" not in r.stdout
+
+
+def test_the_gate_lints_ovcd_py_and_counts_the_step():
+    text = GATES.read_text(encoding="utf-8")
+    assert 'step "clippy ovcd-py -D warnings"' in text and "-p ovcd-py" in text
+    steps = [line for line in text.splitlines() if line.startswith("step ")]
+    assert f"EXPECTED_STEPS={len(steps)}" in text

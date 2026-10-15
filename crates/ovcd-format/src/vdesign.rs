@@ -702,9 +702,12 @@ fn read_design(
         None => report.error("the file needs an integer `format_version`".into(), &[]),
     }
     let engine_version = match root.get("engine_version").and_then(Value::as_str) {
-        Some(v) => v.to_string(),
-        None => {
-            report.error("the file needs a string `engine_version`".into(), &[]);
+        Some(v) if !v.trim().is_empty() => v.to_string(),
+        _ => {
+            report.error(
+                "the file needs a non-empty string `engine_version`".into(),
+                &[],
+            );
             String::new()
         }
     };
@@ -771,7 +774,13 @@ fn read_design(
         let mut option = read_option(name, inputs, profile, missing, report);
         match raw.get("results_hash") {
             None | Some(Value::Null) => {}
-            Some(Value::String(h)) => option.results_hash = Some(h.clone()),
+            Some(Value::String(h)) if crate::run::is_hash_shape(h) => {
+                option.results_hash = Some(h.clone());
+            }
+            Some(Value::String(_)) => report.error(
+                format!("Option '{name}': `results_hash` must be 64 hex digits"),
+                &[],
+            ),
             Some(_) => report.error(format!("Option '{name}': `results_hash` must be text"), &[]),
         }
         options.push(option);
