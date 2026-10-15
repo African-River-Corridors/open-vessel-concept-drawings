@@ -39,11 +39,13 @@ def test_gas_golden_example():
     The earlier figure was not wrong under its own assumption; it assumed the aft tank
     head could sit against the accommodation with no gas-code separation at all.
 
-    The MAX_TANK_OD_M = 12 m rule still holds and still sets 2 tanks abreast.
+    The 12 m tank diameter cap still holds and still sets 2 tanks abreast. The cap is the input
+    `max_tank_od_m` since issue #175 and is 16 m by default; this snapshot is of the 12 m case, so
+    it sets it.
 
     Label: snapshot
     """
-    r = _gas()
+    r = _gas(max_tank_od_m=12.0)
     assert r.phase == "liquid_gas"
     assert r.n_tanks_wide == 2
     assert abs(r.tank_outer_diameter_m - 6.50) < 0.05
@@ -305,3 +307,20 @@ def test_ballast_can_rescue_a_failing_design():
     assert not _gas(air_draft_limit_m=limit).ok                       # light fails it
     rescued = _gas(air_draft_limit_m=limit, ballast_capacity_t=3000.0)
     assert rescued.air_draft_ballast_m < rescued.air_draft_light_m
+
+
+# ---------- issue #175: the tank diameter cap is an input ----------
+
+def test_the_tank_diameter_cap_is_an_input_16_m_by_default():
+    """The automatic count across the beam follows `max_tank_od_m`.
+
+    Label: property
+    """
+    assert BargeCapacityInputs(loa=100.0, beam=16.0, depth=6.0).max_tank_od_m == 16.0
+    narrow_cap = _gas(beam=60.0, max_tank_od_m=12.0)
+    default_cap = _gas(beam=60.0)
+    wide_cap = _gas(beam=60.0, max_tank_od_m=20.0)
+    assert narrow_cap.max_tank_od_m == 12.0 and default_cap.max_tank_od_m == 16.0
+    assert narrow_cap.n_tanks_wide > default_cap.n_tanks_wide > wide_cap.n_tanks_wide
+    for r in (narrow_cap, default_cap, wide_cap):
+        assert r.tank_outer_diameter_m <= r.max_tank_od_m + 1e-6

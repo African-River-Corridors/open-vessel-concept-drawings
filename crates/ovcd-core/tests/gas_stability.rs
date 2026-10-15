@@ -319,29 +319,6 @@ fn a_draught_exactly_equal_to_the_depth_does_not_float() {
 }
 
 #[test]
-fn a_tank_exactly_seven_tenths_of_the_beam_is_not_wide() {
-    // 0.70 * 10.0 == 7.0 in floating point, so `od > 0.70 * B` is false: one ADN criterion.
-    let mut r = narrow_deep();
-    {
-        let b = r.gas_basis.as_mut().unwrap();
-        b.beam = 10.0;
-        b.outer_diameter = 7.0;
-        b.inner_diameter = 6.25;
-    }
-    let a = run(&r, PAYLOAD, "ADN_9_3_1_14_2").unwrap();
-    for c in &a.conditions {
-        assert_eq!(c.criteria.len(), 1);
-        assert_eq!(c.criteria[0].name, "Initial GM (fluid) > 0");
-    }
-    // Just wider than 0.70 B: the three-criterion set.
-    r.gas_basis.as_mut().unwrap().outer_diameter = 7.0000001;
-    let a = run(&r, PAYLOAD, "ADN_9_3_1_14_2").unwrap();
-    for c in &a.conditions {
-        assert_eq!(c.criteria.len(), 3);
-    }
-}
-
-#[test]
 fn a_weight_split_difference_of_exactly_one_tonne_adds_no_note() {
     let mut r = narrow_deep();
     {
@@ -382,8 +359,9 @@ fn block_coefficient_and_water_density_both_scale_the_draught() {
 
 #[test]
 fn criteria_set_follows_the_ruleset() {
-    assert_eq!(criteria_set_for("ADN_G"), "ADN_9_3_1_14_2");
+    // Issue #175: the ADN set went with the `ADN_G` ruleset; both IGC rulesets use the IS Code.
     assert_eq!(criteria_set_for("IGC_2G"), "IS_CODE_2008");
+    assert_eq!(criteria_set_for("IGC_2G_EXACT"), "IS_CODE_2008");
     assert_eq!(criteria_set_for(""), "IS_CODE_2008");
 }
 
@@ -537,4 +515,10 @@ fn a_half_laden_fill_of_exactly_one_skips_the_chord_that_would_overflow() {
     assert!(close(a.conditions[0].gm_fluid_m, -4.0999999999999994e154));
     assert!(close(a.conditions[1].gm_fluid_m, -3.444444444444444e154));
     assert_eq!(a.conditions[1].free_surface_m, 0.0);
+}
+
+#[test]
+fn the_adn_criteria_set_is_gone() {
+    let e = run(&narrow_deep(), PAYLOAD, "ADN_9_3_1_14_2").unwrap_err();
+    assert_eq!(e.message(), "unknown criteria set 'ADN_9_3_1_14_2'");
 }

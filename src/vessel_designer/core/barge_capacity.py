@@ -48,6 +48,12 @@ from .protective_location import compute_required_clearances, d_vc_exact, distan
 from .tanks import calculate_tank_arrangement  # noqa: F401
 from .weights import calculate_weights  # noqa: F401
 
+# Default cap on a gas tank's outer diameter (m). A design limit of this tool, not a rule of the
+# IGC Code: above it the engine goes to two (or more) tanks across the beam, rather than letting a
+# single tank grow with the beam. It was a fixed 12 m (MAX_TANK_OD_M) until issue #175 made it
+# the input `max_tank_od_m`, 16 m by default. Length over diameter is limited to 7 for every tank.
+DEFAULT_MAX_TANK_OD_M = 16.0
+
 
 @dataclass
 class BargeCapacityInputs:
@@ -101,7 +107,7 @@ class BargeCapacityInputs:
     # pass 0.12*beam here; the code formula gives ~1.0 m and ~20% more cargo.
     side_clearance_override_m: Optional[float] = None
     # None = AUTO: the fewest tanks across that keeps each tank's OD within
-    # MAX_TANK_OD_M. Pass an int to force an arrangement.
+    # `max_tank_od_m`. Pass an int to force an arrangement.
     n_tanks_wide: Optional[int] = None
     n_tanks_long: int = 2
     tank_wall_thickness: Optional[float] = 25.0  # mm; None = auto pressure-vessel formula
@@ -134,6 +140,9 @@ class BargeCapacityInputs:
     bulk_steel_rate_per_cbm: float = 0.10
     bulk_piping_factor: float = 0.04
     bulk_outfitting_factor: float = 0.035
+
+    # Cap on a gas tank's outer diameter (m): sets the automatic tank count across the beam.
+    max_tank_od_m: float = DEFAULT_MAX_TANK_OD_M
 
 
 @dataclass
@@ -216,17 +225,11 @@ class BargeCapacityResult:
         return all_ok(self.checks)
 
 
-# Maximum gas tank outer diameter (m). DESIGN RULE: cap tank OD at
-# 12 m and go to two (or more) tanks across above that, rather than letting a single tank
-# grow with the beam. This closes an old `n_tanks_wide` TODO — a
-# single tank abreast reached ~16 m OD at 20 m beam and ~30 m at 32.4 m, which is outside
-# any built cryogenic barge tank and made every wide-beam gas number meaningless.
-MAX_TANK_OD_M = 12.0
 
 
 def tanks_wide_for_beam(beam_m: float, side_clearance_m: float,
                         tank_gap_transverse_m: float = 0.0,
-                        max_od_m: float = MAX_TANK_OD_M) -> int:
+                        max_od_m: float = DEFAULT_MAX_TANK_OD_M) -> int:
     """Fewest tanks across the beam that keeps each tank's OD within ``max_od_m``.
 
     Inverts the arrangement geometry in ``tanks.calculate_tank_arrangement``:

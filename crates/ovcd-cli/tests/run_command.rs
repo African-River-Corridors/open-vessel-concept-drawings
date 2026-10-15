@@ -54,7 +54,7 @@ fn filled(dir: &Path, name: &str, inputs: Value) -> PathBuf {
         &raw,
         &json!({
             "format": "vdesign",
-            "format_version": 1,
+            "format_version": 2,
             "engine_version": "0.1.0",
             "options": [{ "name": "Option 1", "inputs": inputs }]
         }),
@@ -399,7 +399,7 @@ fn json_results_are_what_simulate_answers_for_a_self_propelled_gas_hull() {
             "min_freeboard_m": 0.3,
             "ruleset": "IGC_2G",
             "fill_ratio": 0.95,
-            "adn_tank_cap_m3": 1000.0,
+            "max_tank_od_m": 16.0,
             "optimise_depth": false,
             "propulsive_efficiency": 0.45,
             "max_speed_kn": 10.0,
@@ -413,7 +413,7 @@ fn json_results_are_what_simulate_answers_for_a_self_propelled_gas_hull() {
     let expected = simulate_answer(json!({
         "vessel": "gas_barge", "cargo": "LPG_propane", "loa_m": 90.0, "beam_m": 14.8,
         "depth_m": 6.5, "cb": 0.85, "freeboard_min_m": 0.3, "draught_limit_m": 4.4,
-        "self_propelled": true, "ruleset": "IGC_2G", "fill_ratio": 0.95, "adn_tank_cap_m3": 1000.0,
+        "self_propelled": true, "ruleset": "IGC_2G", "fill_ratio": 0.95, "max_tank_od_m": 16.0,
         "optimise_depth": false, "eta_d": 0.45, "speed_max_kn": 10.0
     }));
     assert_eq!(results, &expected);

@@ -15,8 +15,10 @@ is planned; see the [roadmap](ROADMAP.md).
   `vessel_designer.core.vessel_standards`.
 - **Capacity.** Volume-bound cargo for dry-bulk holds (sloped hopper, box, container) and for
   liquefied-gas barges with IMO Type C tanks (`core.barge_capacity`).
-- **Gas tank arrangement.** Protective-location clearances under IGC type 2G and ADN type G, and a
-  search over depth and tanks abreast for the most cargo at a draught limit (`core.gas_arrangement`).
+- **Gas tank arrangement.** Protective-location clearances under IGC type 2G (stepped, or exactly as
+  written), a tank outer diameter cap (an input, 16 m by default) and tank length at most 7
+  diameters, and a search over depth and tanks abreast for the most cargo at a draught limit
+  (`core.gas_arrangement`). Only IGC rules apply to gas tanks.
 - **Hydrostatics and stability.** Equilibrium draught, freeboard, air draught, and intact stability
   for gas barges (`core.hydrostatics`, `core.gas_stability`).
 - **Journey de-rating.** Cargo per trip when the channel, not the hull, limits the draught

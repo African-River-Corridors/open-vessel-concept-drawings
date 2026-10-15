@@ -481,9 +481,9 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
     }))
 }
 
-/// Tank filling limit by ruleset: IGC 15.3 default 98 %, ADN 95 %.
-fn fill_by_ruleset(ruleset: &str) -> f64 {
-    if ruleset == "ADN_G" { 0.95 } else { 0.98 }
+/// Tank filling limit by ruleset: IGC 15.3 default 98 %, for both IGC rulesets.
+fn fill_by_ruleset(_ruleset: &str) -> f64 {
+    0.98
 }
 
 fn simulate_gas(
@@ -562,7 +562,11 @@ fn simulate_gas(
         self_propelled,
         depths: depths.clone(),
         block_coefficient: cb,
-        adn_tank_cap_m3: get_or(p, "adn_tank_cap_m3", 1000.0)?,
+        max_tank_od_m: get_or(
+            p,
+            "max_tank_od_m",
+            ovcd_core::barge_capacity::DEFAULT_MAX_TANK_OD_M,
+        )?,
         ..FitOptions::default()
     };
     let f = ga::fit(l, b, cargo_key, t_max, &options)
@@ -597,14 +601,13 @@ fn simulate_gas(
         }));
     }
     capacity_checks(r, &mut checks);
+    // A tank longer than 7 outer diameters is listed when it fails, as the search names it.
     for msg in &f.failed_checks {
-        if msg.starts_with("adn_wide_tank") {
-            let rest = msg.split_once(": ").map_or("", |(_, tail)| tail);
+        if let Some(rest) = msg.strip_prefix("tank_length_over_diameter: ") {
             checks.push(json!({
-                "name": "ADN wide tank",
+                "name": "tank length over diameter",
                 "ok": false,
                 "message": rest,
-                "severity": "warning",
             }));
         }
     }
@@ -653,7 +656,6 @@ fn simulate_gas(
         }
         let set_label = match a.criteria_set.as_str() {
             "IS_CODE_2008" => "IMO IS Code 2008, Part A 2.2",
-            "ADN_9_3_1_14_2" => "ADN 2025 9.3.1.14",
             other => return bad(format!("unknown criteria set `{other}`")),
         };
         stability = json!({

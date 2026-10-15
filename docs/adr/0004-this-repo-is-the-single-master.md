@@ -16,7 +16,7 @@ the only work was to bring over the vessel modules that had been left behind.
 | `journey_derating` | none | keep |
 | `models`, `checks`, `tanks`, `weights` | none | keep |
 | `barge_capacity` | here only: `hold_type` + `lightship_k_t_per_m3` (calibration pass 1, box/container holds); `IGC_2G_EXACT` clearance loop (`d_vc_exact`); `gas_basis` on the result (feeds `gas_stability`) | keep — intentional improvements. All new fields default to the old behaviour, so existing callers get the same numbers. |
-| `protective_location` | here only: `ADN_G` and `IGC_2G_EXACT` rulesets, `d_vc_exact`; `required_bottom_protection` folded into the clearance functions | keep — the "IGC_2G" reading is unchanged. No caller outside the module used `required_bottom_protection`. |
+| `protective_location` | here only: the `IGC_2G_EXACT` ruleset, `d_vc_exact` (the `ADN_G` ruleset it also had was removed in issue #175: the engine applies IGC rules only to gas tanks); `required_bottom_protection` folded into the clearance functions | keep — the "IGC_2G" reading is unchanged. No caller outside the module used `required_bottom_protection`. |
 
 ## Modules brought over in the reconciliation
 

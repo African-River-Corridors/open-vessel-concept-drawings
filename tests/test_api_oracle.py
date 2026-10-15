@@ -23,8 +23,15 @@ EXPECTED = json.loads((DATA / "api_ce96e66.json").read_text(encoding="utf-8"))["
 API = json.loads((DATA / "public_api.json").read_text(encoding="utf-8"))
 
 # Scenarios whose answer is allowed to differ from 0.1.0, with the reason. Each is listed as a
-# known change in CHANGELOG.md. (None yet: every scenario matches.)
-KNOWN_DIFFERENCES: dict = {}
+# known change in CHANGELOG.md.
+KNOWN_DIFFERENCES: dict = {
+    # Issue #175: no 28 m tank-length cap, so every cell has two tanks along (the old count stepped
+    # up with the hull length), and a cell is infeasible when its tank is longer than 7 diameters.
+    # The cells' tank length and slenderness are now the engine's own figures. `n_tanks_for_length`
+    # and `DesignGrid.max_tank_length_m` are gone. The 12 m diameter cap of 0.1.0 is now 16 m.
+    "design_grid": "issue #175: no tank-length cap; the grid has two tanks along and a 16 m "
+                   "tank diameter cap",
+}
 
 
 def same(actual, expected, path="result"):

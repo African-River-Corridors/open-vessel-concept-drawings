@@ -2,7 +2,7 @@
 //! Python (`core/gas_arrangement.py`), not worked out by hand.
 
 use ovcd_core::gas_arrangement::{
-    DEFAULT_DEPTHS_M, FitOptions, fit, required_side_clearance, smallest_viable_loa,
+    DEFAULT_DEPTHS_M, FitOptions, RULESETS, fit, required_side_clearance, smallest_viable_loa,
 };
 
 #[test]
@@ -40,24 +40,6 @@ fn a_hull_too_short_for_a_tank_is_reported_infeasible_not_raised() {
 }
 
 #[test]
-fn adn_g_adds_tanks_along_the_hull_and_flags_a_wide_tank() {
-    let o = FitOptions {
-        depths: vec![4.5],
-        ruleset: "ADN_G".to_string(),
-        adn_tank_cap_m3: 380.0,
-        ..FitOptions::default()
-    };
-    let f = fit(110.0, 11.4, "LNG", 3.0, &o).unwrap();
-    assert_eq!((f.n_tanks, f.n_tanks_long), (7, 7));
-    assert!(
-        f.failed_checks
-            .last()
-            .unwrap()
-            .starts_with("adn_wide_tank: tank 8.9 m > 0.70 B")
-    );
-}
-
-#[test]
 fn an_unknown_ruleset_is_a_value_error() {
     let o = FitOptions {
         ruleset: "IGF".to_string(),
@@ -67,8 +49,24 @@ fn an_unknown_ruleset_is_a_value_error() {
     assert_eq!(e.kind, "ValueError");
     assert_eq!(
         e.message,
-        "ruleset must be one of ('IGC_2G', 'IGC_2G_EXACT', 'ADN_G')"
+        "ruleset must be one of ('IGC_2G', 'IGC_2G_EXACT')"
     );
+}
+
+#[test]
+fn adn_g_is_no_longer_a_ruleset() {
+    // Issue #175: only the two IGC rulesets are left.
+    let o = FitOptions {
+        ruleset: "ADN_G".to_string(),
+        ..FitOptions::default()
+    };
+    let e = fit(90.0, 14.8, "LNG", 3.0, &o).unwrap_err();
+    assert_eq!(e.kind, "ValueError");
+    assert_eq!(
+        e.message,
+        "ruleset must be one of ('IGC_2G', 'IGC_2G_EXACT')"
+    );
+    assert_eq!(RULESETS, ["IGC_2G", "IGC_2G_EXACT"]);
 }
 
 #[test]
@@ -118,35 +116,6 @@ fn an_unknown_ruleset_has_no_side_clearance() {
 // (`core/gas_arrangement.py` `fit`), the same inputs.
 
 #[test]
-fn a_tank_exactly_at_seventy_percent_of_beam_is_not_flagged_wide() {
-    // `fit` flags a tank wider than 0.70 B, not one equal to it (survivor: `>` to `>=`). The tank
-    // sits on the cap, 7.0 m, which is 0.70 x 10.0 m exactly.
-    let o = FitOptions {
-        depths: vec![4.5],
-        ruleset: "ADN_G".to_string(),
-        tanks_wide: vec![1],
-        adn_tank_cap_m3: 380.0,
-        max_tank_od_m: 7.0,
-        ..FitOptions::default()
-    };
-    let f = fit(60.0, 10.0, "LNG", 3.0, &o).unwrap();
-    assert_eq!(0.7_f64 * 10.0, 7.0);
-    assert_eq!(f.tank_od_m, 7.0);
-    assert_eq!(f.payload_t, 127.86772973962577); // ce96e66
-    assert_eq!((f.n_tanks, f.n_tanks_wide, f.n_tanks_long), (2, 1, 2));
-    assert_eq!(f.candidates_tried, 27);
-    assert!(f.feasible);
-    // ce96e66: these two, and no `adn_wide_tank: ...` line.
-    assert_eq!(
-        f.failed_checks,
-        vec![
-            "requested_thruster_count_fits: 2 of 3 requested thrusters fit; 3 would need 10.20 m of 10.00 m beam",
-            "units_fit_in_one_row: 3 units in 2 row(s) of 2; a second row adds 12.99 m to the stern block and comes straight off the cargo zone",
-        ]
-    );
-}
-
-#[test]
 fn a_cap_clearance_a_hair_under_the_rule_is_accepted_not_refused() {
     // The clearance of the tank on the cap is checked as `cs + 1e-9 < need` (survivor: `+` to
     // `-`, a 2e-9 window). IGC_2G steps d(Vc) from 0.8 to 1.0 m above 1000 m3. Here the hull is
@@ -173,4 +142,122 @@ fn a_cap_clearance_a_hair_under_the_rule_is_accepted_not_refused() {
     assert_eq!((f.n_tanks, f.candidates_tried), (2, 1));
     assert_eq!(f.binding, "volume");
     assert!(f.feasible && f.failed_checks.is_empty());
+}
+
+// --- Issue #175: tank outer diameter cap and length over diameter, under both IGC rulesets ---
+//
+// Label: property. These tests state a rule (OD <= cap, L/D <= 7), not a printed number.
+
+const IGC_RULESETS: [&str; 2] = ["IGC_2G", "IGC_2G_EXACT"];
+
+/// Overall length of one tank over its outer diameter, from the engine's own tank result.
+fn slenderness(f: &ovcd_core::gas_arrangement::ArrangementFit) -> f64 {
+    let t = &f.engine_result.gas_basis.as_ref().unwrap().tanks;
+    t.overall_tank_length / t.outer_diameter
+}
+
+#[test]
+fn the_tank_diameter_cap_is_an_option_and_defaults_to_16_m() {
+    assert_eq!(FitOptions::default().max_tank_od_m, 16.0);
+}
+
+#[test]
+fn a_wide_hull_gets_tanks_up_to_the_cap_under_both_rulesets() {
+    for ruleset in IGC_RULESETS {
+        for cap in [8.0, 12.0, 16.0, 20.0] {
+            let o = FitOptions {
+                depths: vec![5.0],
+                tanks_wide: vec![1],
+                ruleset: ruleset.to_string(),
+                max_tank_od_m: cap,
+                ..FitOptions::default()
+            };
+            let f = fit(110.0, 26.0, "LNG", 4.0, &o).unwrap();
+            assert!(
+                f.tank_od_m <= cap + 1e-6,
+                "{ruleset} cap {cap}: OD {}",
+                f.tank_od_m
+            );
+            assert_eq!(f.engine_inputs.max_tank_od_m, cap, "{ruleset} cap {cap}");
+            assert_eq!(f.engine_result.max_tank_od_m, Some(cap));
+        }
+    }
+}
+
+#[test]
+fn the_default_cap_lets_a_tank_pass_the_old_12_m() {
+    // IGC_2G: the full-beam tank of a 26 m hull is over every cap tried, so it sits on the cap.
+    // The default cap, 16 m, gives a 16 m tank; the old constant, 12 m, gave a 12 m one.
+    let run = |cap: Option<f64>| {
+        let mut o = FitOptions {
+            depths: vec![5.0],
+            tanks_wide: vec![1],
+            ..FitOptions::default()
+        };
+        if let Some(c) = cap {
+            o.max_tank_od_m = c;
+        }
+        fit(110.0, 26.0, "LNG", 4.0, &o).unwrap()
+    };
+    assert_eq!(run(None).tank_od_m, 16.0);
+    assert_eq!(run(Some(12.0)).tank_od_m, 12.0);
+}
+
+#[test]
+fn a_tank_longer_than_seven_diameters_is_not_accepted_under_either_ruleset() {
+    // A long, narrow hull has two tanks of about 60 m and 7 m across: L/D is about 9.
+    for ruleset in IGC_RULESETS {
+        let o = FitOptions {
+            depths: vec![5.0],
+            ruleset: ruleset.to_string(),
+            ..FitOptions::default()
+        };
+        let f = fit(170.0, 8.0, "LNG", 4.0, &o).unwrap();
+        assert!(slenderness(&f) > 7.0, "{ruleset}: L/D {}", slenderness(&f));
+        assert!(!f.feasible, "{ruleset} accepted L/D {}", slenderness(&f));
+        assert!(
+            f.failed_checks
+                .iter()
+                .any(|m| m.starts_with("tank_length_over_diameter:")),
+            "{ruleset}: {:?}",
+            f.failed_checks
+        );
+    }
+}
+
+#[test]
+fn no_feasible_fit_has_a_tank_longer_than_seven_diameters() {
+    // Sweep hulls from short and wide to long and narrow. Some must be refused for L/D, or the
+    // sweep proves nothing; every one that is accepted must hold the limit.
+    let (mut accepted, mut refused_for_slenderness) = (0, 0);
+    for ruleset in IGC_RULESETS {
+        for loa in [40.0, 60.0, 80.0, 100.0, 120.0, 150.0, 180.0] {
+            for beam in [8.0, 10.0, 12.0, 14.0, 18.0, 24.0, 30.0] {
+                let o = FitOptions {
+                    depths: vec![5.0],
+                    ruleset: ruleset.to_string(),
+                    ..FitOptions::default()
+                };
+                let f = fit(loa, beam, "LNG", 4.0, &o).unwrap();
+                if f.engine_result.gas_basis.is_none() {
+                    continue;
+                }
+                if f.feasible && f.payload_t > 0.0 {
+                    accepted += 1;
+                    assert!(
+                        slenderness(&f) <= 7.0,
+                        "{ruleset} {loa} x {beam}: L/D {}",
+                        slenderness(&f)
+                    );
+                } else if slenderness(&f) > 7.0 {
+                    refused_for_slenderness += 1;
+                }
+            }
+        }
+    }
+    assert!(accepted > 20, "only {accepted} accepted");
+    assert!(
+        refused_for_slenderness > 5,
+        "only {refused_for_slenderness} refused"
+    );
 }

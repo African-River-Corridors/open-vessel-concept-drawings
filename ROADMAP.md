@@ -7,9 +7,9 @@ Planned work. Each item links to its issue — comment there to help or to discu
   whose licence allows commercial reuse.
 - **Calibrate against more real barges** ([#3](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/3)) — more built vessels with published lightship, capacity
   and draught.
-- **Turn remaining baked-in defaults into inputs** ([#4](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/4)) — e.g. block coefficient 0.85, the 28 m tank-length
-  cap and the stern-block size. (Fabrication rates are already data: see
-  `examples/barge_cost_rates.example.yaml`.)
+- **Turn remaining baked-in defaults into inputs** ([#4](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/4)) — e.g. block coefficient 0.85 and the stern-block
+  size. (Fabrication rates are already data: see `examples/barge_cost_rates.example.yaml`. The tank
+  outer diameter cap is already an input, `max_tank_od_m`, and there is no tank-length cap.)
 - **Define an Option by a standard Vessel Class** ([#94](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/94)) — pick a class
   (e.g. CEMT Va) instead of typing length and beam. Waits for the maintainer's answers to its open questions.
 - **Close the mutation test gaps from the Rust port** ([#123](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/123)) — tests

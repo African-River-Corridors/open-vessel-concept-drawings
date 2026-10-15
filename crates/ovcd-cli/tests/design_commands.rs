@@ -53,7 +53,7 @@ fn new_design(dir: &Path) -> (PathBuf, Value) {
 fn design_with(inputs: Value) -> Value {
     json!({
         "format": "vdesign",
-        "format_version": 1,
+        "format_version": 2,
         "engine_version": "0.1.0",
         "options": [{ "name": "A", "inputs": inputs }]
     })
@@ -105,7 +105,7 @@ fn new_writes_one_option_with_engine_version_and_si_inputs() {
     let dir = temp_dir("new-shape");
     let (_, design) = new_design(&dir);
     assert_eq!(design["format"], "vdesign");
-    assert_eq!(design["format_version"], 1);
+    assert_eq!(design["format_version"], 2);
     assert_eq!(design["engine_version"], env!("CARGO_PKG_VERSION"));
     assert_eq!(design["units"], "SI");
     let options = design["options"].as_array().unwrap();
@@ -399,7 +399,7 @@ fn validate_inputs_shows_a_convoy_and_a_self_propelled_formation() {
         &file,
         &json!({
             "format": "vdesign",
-            "format_version": 1,
+            "format_version": 2,
             "engine_version": "0.1.0",
             "options": [
                 { "name": "Convoy", "inputs": convoy },
@@ -816,4 +816,98 @@ fn a_duplicate_key_fails_validate_run_and_fill_naming_the_key() {
     let out = ovcd(&["fill", path_str(&dup)]);
     assert!(!out.status.success());
     assert!(stdout(&out).is_empty());
+}
+
+// ---- version 1 files (issue #175) ---------------------------------------------------------------
+
+/// The version 1 file that names `ADN_G` and sets `adn_tank_cap_m3`, as version 1 wrote it.
+fn legacy_adn_file() -> String {
+    format!(
+        "{}/../ovcd-format/tests/legacy/v1_adn_g_self_propelled.vdesign",
+        env!("CARGO_MANIFEST_DIR")
+    )
+}
+
+#[test]
+fn validate_opens_a_version_1_adn_g_file_as_igc_2g_and_warns() {
+    let out = ovcd(&["validate", &legacy_adn_file()]);
+    assert!(out.status.success(), "{}{}", stdout(&out), stderr(&out));
+    let err = stdout(&out);
+    assert!(
+        err.contains("`ruleset` ADN_G is no longer offered"),
+        "{err}"
+    );
+    assert!(err.contains("opened as IGC_2G"), "{err}");
+    assert!(
+        err.contains("`adn_tank_cap_m3` is no longer an input"),
+        "{err}"
+    );
+    assert!(
+        stdout(&out).contains("0 error(s), 3 warning(s)"),
+        "{}",
+        stdout(&out)
+    );
+}
+
+#[test]
+fn fill_writes_a_version_1_adn_g_file_as_a_version_2_igc_2g_file_and_warns() {
+    let dir = temp_dir("legacy-fill");
+    let out_file = dir.join("out.vdesign");
+    let out = ovcd(&["fill", &legacy_adn_file(), path_str(&out_file)]);
+    assert!(out.status.success(), "{}{}", stdout(&out), stderr(&out));
+    let err = stderr(&out);
+    assert!(
+        err.contains("`ruleset` ADN_G is no longer offered"),
+        "{err}"
+    );
+    assert!(
+        err.contains("`adn_tank_cap_m3` is no longer an input"),
+        "{err}"
+    );
+    let design = read_json(&out_file);
+    assert_eq!(design["format_version"], 2);
+    let inputs = &design["options"][0]["inputs"];
+    assert_eq!(inputs["ruleset"]["value"], "IGC_2G");
+    assert!(inputs.get("adn_tank_cap_m3").is_none());
+    // The written file needs no more help.
+    let again = ovcd(&["validate", path_str(&out_file)]);
+    assert!(again.status.success(), "{}", stderr(&again));
+    assert!(
+        stdout(&again).contains("0 error(s), 0 warning(s)"),
+        "{}",
+        stdout(&again)
+    );
+}
+
+#[test]
+fn run_runs_a_version_1_adn_g_file_as_igc_2g() {
+    let out = ovcd(&["run", "--json", &legacy_adn_file()]);
+    assert!(out.status.success(), "{}{}", stdout(&out), stderr(&out));
+    assert!(stderr(&out).contains("`ruleset` ADN_G is no longer offered"));
+    let v: Value = serde_json::from_str(&stdout(&out)).unwrap();
+    assert_eq!(
+        v["options"][0]["results"]["arrangement"]["ruleset"],
+        "IGC_2G"
+    );
+}
+
+#[test]
+fn schema_has_no_adn_g_and_no_tank_cap_but_the_diameter_cap_with_its_basis() {
+    let out = ovcd(&["schema"]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let text = stdout(&out);
+    assert!(!text.contains("ADN_G"), "ADN_G is still in the schema");
+    assert!(
+        !text.contains("adn_tank_cap"),
+        "adn_tank_cap_m3 is still in the schema"
+    );
+    let v: Value = serde_json::from_str(&text).unwrap();
+    let od = v["inputs"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|i| i["name"] == "max_tank_od_m")
+        .expect("max_tank_od_m is an input");
+    assert_eq!(od["default"], 16.0);
+    assert!(!od["basis"].as_str().unwrap().is_empty());
 }

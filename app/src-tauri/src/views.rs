@@ -64,7 +64,7 @@ mod tests {
     fn a_computed_option_gets_three_svg_views() {
         for fixture in [
             "dry_bulk_box_hold.vdesign",
-            "gas_adn_g_self_propelled.vdesign",
+            "gas_igc_2g_self_propelled.vdesign",
         ] {
             let v = hull_views(&outcome(fixture));
             for key in ["side", "plan", "midship"] {

@@ -6,8 +6,11 @@ use ovcd_core::barge_capacity::{BargeCapacityInputs, compute, tanks_wide_for_bea
 
 #[test]
 fn the_quickstart_propane_barge_matches_python() {
+    // Python capped a tank at 12 m; the cap is now an input, 16 m by default (issue #175), so the
+    // case that Python printed sets the old value.
     let mut i = BargeCapacityInputs::new(90.0, 14.8, 6.5);
     i.cargo_type = "LPG_propane".to_string();
+    i.max_tank_od_m = 12.0;
     let r = compute(&i).unwrap();
     assert_eq!(r.cargo_capacity_t, 1156.0677139049296);
     assert_eq!(r.full_load_draft_m, 2.3053150177001953);

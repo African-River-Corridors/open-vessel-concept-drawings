@@ -1,5 +1,6 @@
 //! What the shell holds besides the Design session: the file path, the unsaved flag, the active
-//! Option (for the window title) and the hash warnings from the last open.
+//! Option (for the window title), and the hash warnings and the notes of a changed old file from the
+//! last open.
 //!
 //! This module has no Tauri types, so it is tested like any other Rust. It holds no calculation,
 //! validation or default logic: every answer comes from [`DesignSession`].
@@ -16,6 +17,8 @@ pub struct AppState {
     active_option: String,
     /// Names of the Options whose stored results hash differs from this engine's, at open.
     hash_changed: Vec<String>,
+    /// What changed when an old (version 1) file was read as the current inputs, at open.
+    migration_notes: Vec<String>,
 }
 
 fn first_option(session: &DesignSession) -> String {
@@ -38,6 +41,7 @@ impl AppState {
             dirty: false,
             active_option,
             hash_changed: Vec::new(),
+            migration_notes: Vec::new(),
         })
     }
 
@@ -57,6 +61,7 @@ impl AppState {
             dirty: false,
             active_option,
             hash_changed,
+            migration_notes: report.report.migration_notes,
         })
     }
 
@@ -177,8 +182,9 @@ impl AppState {
     pub fn saved(&mut self, path: &Path) {
         self.path = Some(path.to_path_buf());
         self.dirty = false;
-        // A saved file carries fresh hashes, so the open-time warning is over.
+        // A saved file carries fresh hashes and the current inputs, so the open-time warnings are over.
         self.hash_changed.clear();
+        self.migration_notes.clear();
     }
 
     pub fn file_name(&self) -> String {
@@ -213,6 +219,7 @@ impl AppState {
             "title": self.title(),
             "active_option": self.active_option,
             "hash_changed": self.hash_changed,
+            "migration_notes": self.migration_notes,
         })
     }
 }
@@ -315,6 +322,42 @@ mod tests {
         let mut state = state;
         state.saved(Path::new("old.vdesign"));
         assert_eq!(state.snapshot()["hash_changed"], json!([]));
+    }
+
+    #[test]
+    fn opening_a_version_1_adn_g_file_shows_what_changed_until_it_is_saved() {
+        // Issue #175: a version 1 file that names ADN_G opens as IGC_2G, and the window says so.
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../crates/ovcd-format/tests/legacy/v1_adn_g_self_propelled.vdesign"
+        );
+        let text = std::fs::read_to_string(path).unwrap();
+        let mut state = AppState::open(Path::new("old.vdesign"), &text).unwrap();
+        let notes = state.snapshot()["migration_notes"].clone();
+        let notes = notes.as_array().unwrap();
+        assert_eq!(notes.len(), 3, "{notes:?}");
+        assert!(
+            notes[0]
+                .as_str()
+                .unwrap()
+                .contains("ADN_G is no longer offered")
+        );
+        assert!(
+            notes[1]
+                .as_str()
+                .unwrap()
+                .contains("`adn_tank_cap_m3` is no longer an input")
+        );
+        let ruleset = &state.snapshot()["design"]["options"][0]["inputs"]["ruleset"];
+        assert_eq!(ruleset["value"], "IGC_2G");
+        // The saved file is the current format and needs no notes.
+        state.saved(Path::new("old.vdesign"));
+        assert_eq!(state.snapshot()["migration_notes"], json!([]));
+        let saved: Value = serde_json::from_str(&state.save_text().unwrap()).unwrap();
+        assert_eq!(saved["format_version"], 2);
+        // A file that needs no change has none.
+        let fresh = AppState::open(Path::new("a.vdesign"), &starter_text()).unwrap();
+        assert_eq!(fresh.snapshot()["migration_notes"], json!([]));
     }
 
     #[test]

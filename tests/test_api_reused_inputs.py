@@ -30,7 +30,9 @@ def test_gas_stability_assess_after_the_inputs_object_was_reused():
     """Label: snapshot"""
     expected = {90.0: (4.496070691510841, 6.706438965623047, 11.201087654316286),
                 70.0: (3.929578290990053, 6.178009228238304, 12.235044383044745)}
-    inp = B.BargeCapacityInputs(loa=90.0, beam=14.8, depth=6.5, cargo_type="LPG_propane")
+    # The 12 m tank diameter cap of 0.1.0 (it is an input, 16 m by default, since issue #175).
+    inp = B.BargeCapacityInputs(loa=90.0, beam=14.8, depth=6.5, cargo_type="LPG_propane",
+                                max_tank_od_m=12.0)
     results = []
     for loa in expected:
         inp.loa = loa

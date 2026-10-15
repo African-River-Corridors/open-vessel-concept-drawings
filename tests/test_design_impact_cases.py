@@ -29,7 +29,7 @@ def test_every_input_of_an_option_is_in_the_case_set():
 
 def test_the_optional_inputs_the_review_found_missing_are_covered():
     names = {"channel_current_kn", "air_draft_limit_m", "channel_bank_slope", "channel_under_keel_clearance_m",
-             "fill_ratio", "adn_tank_cap_m3", "block_coefficient", "min_freeboard_m",
+             "fill_ratio", "max_tank_od_m", "block_coefficient", "min_freeboard_m",
              "propulsive_efficiency", "lightship_factor_t_per_m3"}
     covered = {n[0] for n in di.OPTIONAL_INPUT_CASES}
     assert names <= covered

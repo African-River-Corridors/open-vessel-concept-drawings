@@ -1,6 +1,6 @@
 //! Protective location checks per IGF Code and IGC Code for Type C tanks.
-//! Port of `core/protective_location.py`. Comments on the sources of the ADN constants live in the
-//! Python file.
+//! Port of `core/protective_location.py`. The ADN type G vessel type was removed in issue #175: the
+//! engine applies IGC rules only to gas cargo tanks.
 
 use alloc::format;
 use alloc::string::{String, ToString};
@@ -12,8 +12,6 @@ pub enum VesselType {
     Igc1g,
     Igc2g,
     Igc3g,
-    /// ADN tank vessel type G: constant distances, not volume-stepped.
-    AdnG,
     /// IGC type 2G with d(Vc) applied exactly as written (per-tank volume, tank steel datum).
     Igc2gExact,
 }
@@ -26,7 +24,6 @@ impl VesselType {
             "IGC_1G" => Ok(Self::Igc1g),
             "IGC_2G" => Ok(Self::Igc2g),
             "IGC_3G" => Ok(Self::Igc3g),
-            "ADN_G" => Ok(Self::AdnG),
             "IGC_2G_EXACT" => Ok(Self::Igc2gExact),
             other => Err(format!("{} is not a valid VesselType", py_repr_str(other))),
         }
@@ -39,7 +36,6 @@ impl VesselType {
             Self::Igc1g => "IGC_1G",
             Self::Igc2g => "IGC_2G",
             Self::Igc3g => "IGC_3G",
-            Self::AdnG => "ADN_G",
             Self::Igc2gExact => "IGC_2G_EXACT",
         }
     }
@@ -81,19 +77,6 @@ fn py_repr_str(s: &str) -> String {
     out.push(quote);
     out
 }
-
-/// ADN type G side clearance: 0.80 (side shell to inner hull) + 0.45 (inspection gap), in Python's
-/// evaluation order.
-pub const ADN_G_SIDE_M: f64 = 0.80 + 0.45;
-/// ADN type G bottom clearance: double bottom 0.60 + saddle 0.50.
-pub const ADN_G_BOTTOM_M: f64 = 0.60 + 0.50;
-
-/// ADN type G: tank volume cap under 9.3.4 (m^3).
-pub const ADN_G_TANK_CAP_9_3_4_M3: f64 = 1000.0;
-/// ADN type G: largest tank length over diameter.
-pub const ADN_G_MAX_L_OVER_D: f64 = 7.0;
-/// ADN type G: a tank wider than this fraction of the beam needs extra stability checks.
-pub const ADN_G_WIDE_TANK_FRACTION: f64 = 0.70;
 
 /// Result of protective location clearance checks.
 #[derive(Debug, Clone, PartialEq)]
@@ -169,18 +152,13 @@ pub fn required_side_protection(
         Some(VesselType::Igf | VesselType::Igc1g) => Ok(py_max(py_min(beam / 5.0, 11.5), d_vc)),
         Some(VesselType::Igc2g) => Ok(d_vc),
         Some(VesselType::Igc3g) => Ok(0.8),
-        Some(VesselType::AdnG) => Ok(ADN_G_SIDE_M),
         Some(VesselType::Igc2gExact) => Ok(d_vc),
         None => Err("Unknown vessel type: None".to_string()),
     }
 }
 
-/// Required bottom clearance Cb from tank bottom to keel. The same formula for all types except
-/// ADN type G.
-pub fn required_bottom_protection(beam: f64, d_vc: f64, vessel_type: Option<VesselType>) -> f64 {
-    if vessel_type == Some(VesselType::AdnG) {
-        return ADN_G_BOTTOM_M;
-    }
+/// Required bottom clearance Cb from tank bottom to keel: the same formula for all types.
+pub fn required_bottom_protection(beam: f64, d_vc: f64, _vessel_type: Option<VesselType>) -> f64 {
     py_max(py_min(beam / 15.0, 2.0), d_vc)
 }
 

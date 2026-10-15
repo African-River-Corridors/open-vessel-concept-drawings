@@ -81,7 +81,6 @@ const FIT_OPTION_KEYS: &[&str] = &[
     "depths",
     "tanks_wide",
     "extra_clearance_m",
-    "adn_tank_cap_m3",
     "block_coefficient",
     "max_tank_od_m",
 ];
@@ -110,7 +109,6 @@ fn fit_options(o: &Map<String, Value>, base: FitOptions) -> Result<FitOptions, E
     if let Some(e) = float_list(o, "extra_clearance_m")? {
         f.extra_clearance_m = e;
     }
-    f.adn_tank_cap_m3 = float_or(o, "adn_tank_cap_m3", f.adn_tank_cap_m3)?;
     f.block_coefficient = float_or(o, "block_coefficient", f.block_coefficient)?;
     f.max_tank_od_m = float_or(o, "max_tank_od_m", f.max_tank_od_m)?;
     Ok(f)
@@ -168,6 +166,7 @@ fn engine_inputs_json(i: &BargeCapacityInputs) -> Value {
         ("bulk_steel_rate_per_cbm", num(i.bulk_steel_rate_per_cbm)),
         ("bulk_piping_factor", num(i.bulk_piping_factor)),
         ("bulk_outfitting_factor", num(i.bulk_outfitting_factor)),
+        ("max_tank_od_m", num(i.max_tank_od_m)),
     ])
 }
 

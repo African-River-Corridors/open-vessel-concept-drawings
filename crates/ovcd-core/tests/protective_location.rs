@@ -33,7 +33,7 @@ fn d_vc_exact_is_linear_in_bands() {
 
 #[test]
 fn vessel_type_round_trips_and_rejects_unknown_text_with_pythons_message() {
-    for t in ["IGF", "IGC_1G", "IGC_2G", "IGC_3G", "ADN_G", "IGC_2G_EXACT"] {
+    for t in ["IGF", "IGC_1G", "IGC_2G", "IGC_3G", "IGC_2G_EXACT"] {
         assert_eq!(VesselType::from_value(t).unwrap().value(), t);
     }
     assert_eq!(
@@ -72,8 +72,6 @@ fn side_protection_per_vessel_type() {
     assert_eq!(side(Igc2g, 300.0, 0.5), 0.5);
     assert_eq!(side(Igc3g, 14.8, 1.0), 0.8);
     assert_eq!(side(Igc3g, 3.0, 2.0), 0.8);
-    assert_eq!(side(AdnG, 14.8, 1.0), 1.25);
-    assert_eq!(side(AdnG, 300.0, 0.5), 1.25);
     assert_eq!(side(Igc2gExact, 80.0, 0.8), 0.8);
     assert_eq!(side(Igc2gExact, 3.0, 2.0), 2.0);
 }
@@ -97,13 +95,6 @@ fn bottom_protection_is_beam_over_15_capped_at_2_but_not_below_d_vc() {
     assert_eq!(required_bottom_protection(60.0, 0.8, None), 2.0);
     // beam/15 == 1.0 and d_vc == 1.0: either way 1.0; beam/15 > 2 caps at 2.0.
     assert_eq!(required_bottom_protection(15.0, 2.0, None), 2.0);
-}
-
-#[test]
-fn adn_g_bottom_is_constant_and_ignores_beam_and_d_vc() {
-    assert_eq!(bottom(VesselType::AdnG, 14.8, 1.0), 1.1);
-    assert_eq!(bottom(VesselType::AdnG, 300.0, 0.5), 1.1);
-    assert_eq!(bottom(VesselType::AdnG, 3.0, 2.0), 1.1);
 }
 
 #[test]
@@ -167,11 +158,18 @@ fn check_passes_exactly_at_the_limit_and_fails_just_below() {
     assert_eq!((r.d_vc, r.cb_required, r.cb_actual), (2.0, 2.0, 2.0));
     let r = check_protective_location("IGC_3G", 14.8, 6000.0, 0.7999, 1.0, 0.9999).unwrap();
     assert!(!r.cs_ok && !r.cb_ok);
-    let r = check_protective_location("ADN_G", 20.0, 300.0, 1.25, 0.6, 0.5).unwrap();
-    assert!(r.cs_ok && r.cb_ok);
+}
+
+#[test]
+fn adn_g_is_no_longer_a_vessel_type() {
+    // Issue #175: the engine applies IGC rules only.
     assert_eq!(
-        (r.cs_required, r.cb_required, r.cb_actual),
-        (1.25, 1.1, 1.1)
+        VesselType::from_value("ADN_G"),
+        Err("'ADN_G' is not a valid VesselType".to_string())
+    );
+    assert_eq!(
+        check_protective_location("ADN_G", 20.0, 300.0, 1.25, 0.6, 0.5),
+        Err("'ADN_G' is not a valid VesselType".to_string())
     );
 }
 

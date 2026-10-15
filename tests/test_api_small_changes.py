@@ -11,9 +11,11 @@ from vessel_designer.core import cargo, gas_arrangement
 from vessel_designer.core import protective_location as PL
 from vessel_designer.simulate import simulate
 
+# `max_tank_od_m` is the 12 m tank diameter cap of 0.1.0: it is an input, 16 m by default, since
+# issue #175, and the numbers in this file were printed by 0.1.0.
 CN_II = dict(vessel="gas_barge", cargo="LPG_propane", loa_m=90, beam_m=14.8, depth_m=6.5, cb=0.85,
              freeboard_min_m=0.3, draught_limit_m=4.4, self_propelled=True, ruleset="IGC_2G",
-             fill_ratio=0.95)
+             fill_ratio=0.95, max_tank_od_m=12.0)
 BOX = dict(vessel="box_barge", cargo="bauxite", loa_m=76.5, beam_m=11.4, depth_m=3.5, cb=0.928,
            lightship_k_t_per_m3=0.1093, freeboard_min_m=0.3)
 
@@ -64,11 +66,13 @@ def test_required_side_protection_wants_the_enum():
     assert PL.required_side_protection(PL.VesselType.IGC_2G, 14.8, 1.0) == 1.0
 
 
-def test_required_bottom_protection_counts_only_the_enum_as_adn():
-    # ce96e66: text "ADN_G" is not the member, so the general formula applies (1.0, not 1.1)
+def test_required_bottom_protection_is_one_formula_for_every_vessel_type():
+    # ce96e66: only the ADN_G member gave 1.1; text and every other member gave the general
+    # formula. ADN_G was removed (issue #175), so the formula is the same for all.
     """Label: snapshot"""
     assert PL.required_bottom_protection(14.8, 1.0, "ADN_G") == 1.0
-    assert PL.required_bottom_protection(14.8, 1.0, PL.VesselType.ADN_G) == pytest.approx(1.1)
+    assert PL.required_bottom_protection(14.8, 1.0, PL.VesselType.IGC_2G) == 1.0
+    assert PL.required_bottom_protection(14.8, 1.0, PL.VesselType.IGC_2G_EXACT) == 1.0
 
 
 @pytest.mark.parametrize("key", [5, None])

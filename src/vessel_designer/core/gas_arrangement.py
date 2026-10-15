@@ -1,7 +1,8 @@
 """Best gas-tank arrangement for a hull: search, don't trust the single AUTO answer.
 
 Rebuilt natively from an earlier project wrapper, fixing three defects (numbered 1, 3, 4
-in the original defect list) at the engine boundary:
+in the original defect list) at the engine boundary. Only IGC rules apply to the gas tanks:
+``IGC_2G`` and ``IGC_2G_EXACT`` (the ``ADN_G`` ruleset was removed in issue #175):
 
 1. ``barge_capacity``'s clearance loop has two self-consistent roots at some beams and its
    seed can land on the worse one (CN II at 14.8 m: AUTO 2 abreast ~1,156 t against
@@ -10,8 +11,9 @@ in the original defect list) at the engine boundary:
    more steel, and steel displaces cargo, so smaller-tank variants (extra side clearance,
    never below the code minimum) are also tried. A tank over the OD cap is re-tried ON the cap
    with the clearance widened -- and REJECTED if that clearance is below the rule for its volume.
-4. Tanks in line were fixed at 2. Under ADN type G each tank is capped in volume and in L/D,
-   so tanks are added along the hull until they comply.
+4. Two tanks lie along the hull. Every tank must keep to the outer diameter cap (``max_tank_od_m``,
+   16 m by default) and to length over diameter at most 7; ``barge_capacity`` checks both, and a
+   hull whose tanks are too long for that has no feasible arrangement (``feasible=False``).
 
 Moulded depth is not set by the waterway, so it is swept and the depth that carries the most
 per journey at the draught cap is kept -- among the candidates that PASS their error-severity
@@ -28,8 +30,7 @@ import inspect
 from dataclasses import dataclass, field
 from typing import List, Sequence
 
-from .barge_capacity import MAX_TANK_OD_M, BargeCapacityInputs, _result_from_json
-from .protective_location import (ADN_G_TANK_CAP_9_3_4_M3)
+from .barge_capacity import DEFAULT_MAX_TANK_OD_M, BargeCapacityInputs, _result_from_json
 from .. import _bridge
 from .._bridge import call as _call
 
@@ -39,14 +40,12 @@ from .barge_capacity import compute as capacity  # noqa: F401
 from .checks import all_ok  # noqa: F401
 from .journey_derating import JourneyDeratingInputs, compute as derate  # noqa: F401
 from .protective_location import (  # noqa: F401
-    ADN_G_MAX_L_OVER_D, ADN_G_WIDE_TANK_FRACTION, compute_required_clearances, d_vc_exact,
-    distance_d_vc)
+    compute_required_clearances, d_vc_exact, distance_d_vc)
 
-RULESETS = ("IGC_2G", "IGC_2G_EXACT", "ADN_G")
+RULESETS = ("IGC_2G", "IGC_2G_EXACT")
 DEFAULT_DEPTHS_M = tuple(round(3.5 + 0.25 * i, 2) for i in range(15))     # 3.5 .. 7.0 m
 DEFAULT_TANKS_WIDE = (1, 2, 3)
 DEFAULT_EXTRA_CLEARANCE_M = (0.5, 1.0, 1.5, 2.0)
-ADN_LONGITUDINAL_GAP_M = 2.0      # tank-to-tank gap the engine uses along the hull (a default, not a rule)
 
 
 @dataclass
@@ -98,8 +97,8 @@ def fit(loa: float, beam: float, cargo: str, t_max: float, *, ruleset: str = "IG
         fill_ratio: float = 0.95, self_propelled: bool = True,
         depths: Sequence[float] = DEFAULT_DEPTHS_M, tanks_wide: Sequence[int] = DEFAULT_TANKS_WIDE,
         extra_clearance_m: Sequence[float] = DEFAULT_EXTRA_CLEARANCE_M,
-        adn_tank_cap_m3: float = ADN_G_TANK_CAP_9_3_4_M3, block_coefficient: float = 0.85,
-        max_tank_od_m: float = MAX_TANK_OD_M) -> ArrangementFit:
+        block_coefficient: float = 0.85,
+        max_tank_od_m: float = DEFAULT_MAX_TANK_OD_M) -> ArrangementFit:
     """Most cargo per journey at draught cap ``t_max`` over depth x arrangement.
 
     Only candidates whose error-severity checks all pass can win. If none passes, the
@@ -108,7 +107,7 @@ def fit(loa: float, beam: float, cargo: str, t_max: float, *, ruleset: str = "IG
     data = _bridge.raw("gas_arrangement", "fit", _bridge.encode_args(dict(
         loa=loa, beam=beam, cargo=cargo, t_max=t_max, ruleset=ruleset, fill_ratio=fill_ratio,
         self_propelled=self_propelled, depths=list(depths), tanks_wide=list(tanks_wide),
-        extra_clearance_m=list(extra_clearance_m), adn_tank_cap_m3=adn_tank_cap_m3,
+        extra_clearance_m=list(extra_clearance_m),
         block_coefficient=block_coefficient, max_tank_od_m=max_tank_od_m)))
     if "error" in data:
         _bridge._raise(data["error"])

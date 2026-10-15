@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 fn design_with(inputs: Value) -> String {
     json!({
         "format": "vdesign",
-        "format_version": 1,
+        "format_version": 2,
         "engine_version": "0.1.0",
         "options": [{ "name": "A", "inputs": inputs }]
     })
@@ -85,16 +85,16 @@ fn gas_cargo_defaults_to_type_c_tanks_with_ruleset_and_fill_ratio() {
         (json!(0.98), Source::Default)
     );
     assert_eq!(
-        used(inputs.clone(), "adn_tank_cap_m3"),
-        (json!(1000.0), Source::Default)
+        used(inputs.clone(), "max_tank_od_m"),
+        (json!(16.0), Source::Default)
     );
-    // The fill ratio default follows a typed ruleset: ADN 95 %.
-    let adn = with(inputs, "ruleset", json!("ADN_G"));
+    // The fill ratio default follows a typed ruleset: 98 % under both IGC rulesets.
+    let igc = with(inputs, "ruleset", json!("IGC_2G"));
     assert_eq!(
-        used(adn.clone(), "ruleset"),
-        (json!("ADN_G"), Source::Typed)
+        used(igc.clone(), "ruleset"),
+        (json!("IGC_2G"), Source::Typed)
     );
-    assert_eq!(used(adn, "fill_ratio"), (json!(0.95), Source::Default));
+    assert_eq!(used(igc, "fill_ratio"), (json!(0.98), Source::Default));
 }
 
 #[test]
@@ -121,7 +121,7 @@ fn a_box_hold_has_no_gas_inputs_and_a_tank_barge_has_no_lightship_factor() {
 
 #[test]
 fn an_input_not_used_by_the_cargo_containment_is_ignored_with_a_warning() {
-    let w = warnings(with(required("bauxite"), "ruleset", json!("ADN_G")));
+    let w = warnings(with(required("bauxite"), "ruleset", json!("IGC_2G")));
     assert!(
         has(
             &w,
@@ -342,17 +342,23 @@ fn a_convoy_needs_whole_numbers_abreast_and_in_line() {
 fn file_level_problems_are_hard_errors() {
     let p = Profile::built_in();
     let r = check(
-        r#"{"format": "vdesign", "format_version": 2, "engine_version": "0.1.0", "options": []}"#,
+        r#"{"format": "vdesign", "format_version": 3, "engine_version": "0.1.0", "options": []}"#,
         &p,
     )
     .report;
-    assert!(has(&r.errors, "format_version 2 is not supported"), "{r:?}");
+    assert!(
+        has(
+            &r.errors,
+            "format_version 3 is not supported; this tool reads versions 1 to 2"
+        ),
+        "{r:?}"
+    );
     assert!(
         has(&r.errors, "a Design needs at least one Option"),
         "{r:?}"
     );
     let two = json!({
-        "format": "vdesign", "format_version": 1, "engine_version": "0.1.0",
+        "format": "vdesign", "format_version": 2, "engine_version": "0.1.0",
         "options": [
             { "name": "A", "inputs": required("bauxite") },
             { "name": "A", "inputs": required("bauxite") }
@@ -366,7 +372,7 @@ fn file_level_problems_are_hard_errors() {
 fn several_options_are_each_checked_by_name() {
     let p = Profile::built_in();
     let two = json!({
-        "format": "vdesign", "format_version": 1, "engine_version": "0.1.0",
+        "format": "vdesign", "format_version": 2, "engine_version": "0.1.0",
         "options": [
             { "name": "Short", "inputs": required("bauxite") },
             { "name": "Wide", "inputs": with(required("LNG"), "beam_m", json!(-1.0)) }
@@ -475,7 +481,7 @@ fn a_profile_with_only_a_keyed_default_for_a_plain_input_is_refused() {
     let err = edited_profile(|p| {
         let e = p["inputs"]["max_speed_kn"].as_object_mut().unwrap();
         e.remove("default");
-        e.insert("default_by_ruleset".into(), json!({ "ADN_G": 10.0 }));
+        e.insert("default_by_ruleset".into(), json!({ "IGC_2G": 10.0 }));
     })
     .unwrap_err();
     assert!(err.contains("no default for `max_speed_kn`"), "{err}");
@@ -596,7 +602,7 @@ fn a_profile_with_an_unknown_input_is_refused() {
 #[test]
 fn a_profile_with_a_keyed_default_outside_its_hard_range_is_refused() {
     let err = edited_profile(|p| {
-        p["inputs"]["fill_ratio"]["default_by_ruleset"]["ADN_G"] = json!(1.5);
+        p["inputs"]["fill_ratio"]["default_by_ruleset"]["IGC_2G"] = json!(1.5);
     })
     .unwrap_err();
     assert!(err.contains("`fill_ratio` = 1.5 is out of range"), "{err}");
@@ -890,7 +896,7 @@ fn a_duplicate_key_inside_a_value_is_a_hard_error() {
 #[test]
 fn the_same_key_in_different_objects_is_not_a_duplicate() {
     let two = json!({
-        "format": "vdesign", "format_version": 1, "engine_version": "0.1.0",
+        "format": "vdesign", "format_version": 2, "engine_version": "0.1.0",
         "options": [
             { "name": "A", "inputs": required("bauxite") },
             { "name": "B", "inputs": required("bauxite") }

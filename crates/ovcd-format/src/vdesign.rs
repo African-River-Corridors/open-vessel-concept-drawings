@@ -29,8 +29,19 @@ use serde_json::{Map, Value, json};
 use std::collections::HashSet;
 use std::fmt;
 
-/// The only `.vdesign` format version so far.
-pub const FORMAT_VERSION: u64 = 1;
+/// The `.vdesign` format version this tool writes. Version 2 changed the gas tank inputs (issue
+/// #175: `adn_tank_cap_m3` and the `ADN_G` ruleset went, `max_tank_od_m` came). A later change to
+/// the input table that needs the same kind of reading step reuses version 2 only while it is
+/// unreleased; see ADR 0007.
+pub const FORMAT_VERSION: u64 = 2;
+
+/// The oldest `.vdesign` format version this tool still reads. A version 1 file is changed to
+/// the current inputs as it is read, with a warning for each change (see [`migrate_v1_option`]).
+pub const OLDEST_FORMAT_VERSION: u64 = 1;
+
+/// The tank outer diameter cap, in m, that version 1 files were run with. A version 1 file has no
+/// `max_tank_od_m`, so it is read as having used this value.
+pub const V1_MAX_TANK_OD_M: f64 = 12.0;
 
 /// The engine version written into every new Design. One version covers every `ovcd-*` crate.
 pub const ENGINE_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -82,7 +93,7 @@ pub const DRY_BULK_DOUBLE_BOTTOM_M: f64 = 1.2;
 pub const DRY_BULK_COAMING_M: f64 = 1.0;
 
 /// Gas tank rulesets.
-pub const RULESETS: &[&str] = &["IGC_2G", "IGC_2G_EXACT", "ADN_G"];
+pub const RULESETS: &[&str] = &["IGC_2G", "IGC_2G_EXACT"];
 
 /// Formation kinds. Only the first two are computed in spec 0001.
 pub const FORMATION_KINDS: &[&str] = &["self_propelled", "pushed_barge", "pushed_convoy"];
@@ -286,8 +297,8 @@ pub const INPUTS: &[InputSpec] = &[
         Group::GasTanks,
     ),
     only(
-        "adn_tank_cap_m3",
-        "Tank capacity limit (ADN)",
+        "max_tank_od_m",
+        "Maximum tank outer diameter",
         NUM,
         "type_c_tanks",
         Group::GasTanks,
@@ -469,6 +480,9 @@ pub struct Report {
     pub error_inputs: Vec<Vec<String>>,
     /// The same for `warnings`.
     pub warning_inputs: Vec<Vec<String>>,
+    /// The warnings that say a version 1 file was changed to the current inputs as it was read
+    /// (also in `warnings`), so a front end can show them on their own.
+    pub migration_notes: Vec<String>,
 }
 
 impl Report {
@@ -698,11 +712,13 @@ fn read_design(
     if root.get("format").and_then(Value::as_str) != Some("vdesign") {
         report.error("the file needs `\"format\": \"vdesign\"`".into(), &[]);
     }
-    match root.get("format_version").and_then(Value::as_u64) {
-        Some(FORMAT_VERSION) => {}
+    let version = root.get("format_version").and_then(Value::as_u64);
+    match version {
+        Some(OLDEST_FORMAT_VERSION..=FORMAT_VERSION) => {}
         Some(v) => report.error(
             format!(
-                "format_version {v} is not supported; this tool reads version {FORMAT_VERSION}"
+                "format_version {v} is not supported; this tool reads versions \
+                 {OLDEST_FORMAT_VERSION} to {FORMAT_VERSION}"
             ),
             &[],
         ),
@@ -778,6 +794,15 @@ fn read_design(
                 );
             }
         }
+        let migrated;
+        let inputs = if version == Some(1) {
+            let mut m = inputs.clone();
+            migrate_v1_option(name, &mut m, report);
+            migrated = m;
+            &migrated
+        } else {
+            inputs
+        };
         let mut option = read_option(name, inputs, profile, missing, report);
         match raw.get("results_hash") {
             None | Some(Value::Null) => {}
@@ -797,6 +822,77 @@ fn read_design(
         defaults_profile,
         options,
     })
+}
+
+/// Change one Option of a version 1 file to the current inputs, with a warning for each change.
+/// Version 1 files hold three things that no longer exist (issue #175):
+///
+/// - the `ADN_G` ruleset: read as `IGC_2G`, the marker (`typed` or `default`) kept;
+/// - the input `adn_tank_cap_m3`: dropped;
+/// - no `max_tank_od_m` (a gas Option only): set to [`V1_MAX_TANK_OD_M`], the cap version 1 ran
+///   with, marked `default`.
+///
+/// The file on disk is not touched. Saving writes version 2.
+fn migrate_v1_option(name: &str, inputs: &mut Map<String, Value>, report: &mut Report) {
+    let at = |msg: String| format!("Option '{name}': {msg}");
+    let note = |report: &mut Report, text: String, inputs: &[&str]| {
+        report.migration_notes.push(text.clone());
+        report.warning(text, inputs);
+    };
+    let ruleset_is_adn = match inputs.get("ruleset") {
+        Some(Value::String(s)) => s == "ADN_G",
+        Some(Value::Object(o)) => o.get("value").and_then(Value::as_str) == Some("ADN_G"),
+        _ => false,
+    };
+    if ruleset_is_adn {
+        match inputs.get_mut("ruleset") {
+            Some(Value::Object(o)) => {
+                o.insert("value".into(), json!("IGC_2G"));
+            }
+            Some(v) => *v = json!("IGC_2G"),
+            None => {}
+        }
+        note(
+            report,
+            at(
+                "`ruleset` ADN_G is no longer offered (the engine applies IGC rules only to gas \
+                 tanks); this version 1 file was opened as IGC_2G"
+                    .into(),
+            ),
+            &["ruleset"],
+        );
+    }
+    if inputs.remove("adn_tank_cap_m3").is_some() {
+        note(
+            report,
+            at(
+                "`adn_tank_cap_m3` is no longer an input (there is no tank volume cap); it was \
+                 dropped"
+                    .into(),
+            ),
+            &["adn_tank_cap_m3"],
+        );
+    }
+    let containment = match inputs.get("cargo_containment") {
+        Some(Value::String(s)) => Some(s.as_str()),
+        Some(Value::Object(o)) => o.get("value").and_then(Value::as_str),
+        _ => None,
+    };
+    if containment == Some("type_c_tanks") && !inputs.contains_key("max_tank_od_m") {
+        inputs.insert(
+            "max_tank_od_m".into(),
+            json!({ "value": V1_MAX_TANK_OD_M, "source": "default" }),
+        );
+        note(
+            report,
+            at(format!(
+                "this version 1 file has no `max_tank_od_m`; it is set to {V1_MAX_TANK_OD_M} m, \
+                 the tank diameter cap version 1 used (a new Design starts at the Defaults \
+                 Profile value)"
+            )),
+            &["max_tank_od_m"],
+        );
+    }
 }
 
 /// Split a stored input into its value and marker. A bare value counts as typed.

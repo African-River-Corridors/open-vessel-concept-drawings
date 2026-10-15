@@ -59,15 +59,15 @@ def test_narrow_deep_gas_barge_fails_and_half_laden_governs():
     assert a.governing.name == "Half laden" and a.governing.gm_fluid_m < 0
 
 
-def test_adn_extra_criteria_only_for_wide_tanks():
-    """Label: property
+def test_both_igc_rulesets_use_the_is_code_and_the_adn_set_is_gone():
+    """Issue #175 removed the ADN criteria set with the ADN_G ruleset.
+
+    Label: property
     """
-    f = fit(110.0, 11.4, "LNG", 3.0, depths=[4.5], ruleset="ADN_G", fill_ratio=0.95,
-            adn_tank_cap_m3=380.0, self_propelled=False)
-    a = assess(f.engine_result, f.payload_t, criteria_set=criteria_set_for("ADN_G"))
-    wide = f.tank_od_m > 0.70 * 11.4
-    names = {x.name for x in a.conditions[0].criteria}
-    assert ("Area 0–27°" in names) == wide
+    assert criteria_set_for("IGC_2G") == criteria_set_for("IGC_2G_EXACT") == "IS_CODE_2008"
+    f = fit(110.0, 11.4, "LNG", 3.0, depths=[4.5], self_propelled=False)
+    with pytest.raises(ValueError, match="unknown criteria set 'ADN_9_3_1_14_2'"):
+        assess(f.engine_result, f.payload_t, criteria_set="ADN_9_3_1_14_2")
 
 
 def test_bulk_result_is_refused():

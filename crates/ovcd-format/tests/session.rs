@@ -12,7 +12,7 @@ const FIXTURES: &[&str] = &[
     "dry_bulk_box_hold",
     "dry_bulk_sloped_hopper",
     "gas_igc_2g_exact",
-    "gas_adn_g_self_propelled",
+    "gas_igc_2g_self_propelled",
     "two_options",
     "pushed_convoy",
 ];
@@ -105,7 +105,7 @@ fn open_reports_a_changed_hash_per_option() {
 #[test]
 fn open_writes_in_left_out_inputs_marked_default() {
     let file = json!({
-        "format": "vdesign", "format_version": 1, "engine_version": "0.2.0",
+        "format": "vdesign", "format_version": 2, "engine_version": "0.2.0",
         "options": [{ "name": "A", "inputs": {
             "cargo": "LNG", "hull_form": "raked_box", "formation": { "kind": "self_propelled" },
             "length_overall_m": 100.0, "beam_m": 12.0, "moulded_depth_m": 5.0,
@@ -282,11 +282,14 @@ fn convoy_to_self_propelled_and_back_restores_the_counts() {
 fn a_default_that_follows_another_input_follows_it_when_that_input_changes() {
     let mut s = open("gas_igc_2g_exact");
     assert_eq!(input(&s, "Option 1", "fill_ratio").value, json!(0.98));
-    s.set_input("Option 1", "ruleset", json!("ADN_G")).unwrap();
-    assert_eq!(input(&s, "Option 1", "fill_ratio").value, json!(0.95));
+    // Both IGC rulesets give 0.98, so the default stays and is still a default.
+    s.set_input("Option 1", "ruleset", json!("IGC_2G")).unwrap();
+    assert_eq!(input(&s, "Option 1", "fill_ratio").value, json!(0.98));
+    assert_eq!(input(&s, "Option 1", "fill_ratio").source, Source::Default);
     // A typed value stays.
     s.set_input("Option 1", "fill_ratio", json!(0.9)).unwrap();
-    s.set_input("Option 1", "ruleset", json!("IGC_2G")).unwrap();
+    s.set_input("Option 1", "ruleset", json!("IGC_2G_EXACT"))
+        .unwrap();
     assert_eq!(input(&s, "Option 1", "fill_ratio").value, json!(0.9));
 }
 
@@ -681,8 +684,37 @@ fn the_schema_names_cargo_and_gives_keyed_defaults_and_containments() {
     assert_eq!(get("fill_ratio")["applies_to"], json!(["type_c_tanks"]));
     assert_eq!(get("fill_ratio")["default_by"]["by"], json!("ruleset"));
     assert_eq!(
-        get("fill_ratio")["default_by"]["values"]["ADN_G"],
-        json!(0.95)
+        get("fill_ratio")["default_by"]["values"],
+        json!({ "IGC_2G": 0.98, "IGC_2G_EXACT": 0.98 })
+    );
+    // Issue #175: the ADN ruleset and its tank cap are gone; the diameter cap is an input.
+    let ruleset = get("ruleset");
+    let choices: Vec<&str> = ruleset["choices"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["value"].as_str().unwrap())
+        .collect();
+    assert_eq!(choices, ["IGC_2G", "IGC_2G_EXACT"]);
+    assert!(
+        schema["inputs"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|i| i["name"] != "adn_tank_cap_m3")
+    );
+    let od = get("max_tank_od_m");
+    assert_eq!(od["default"], json!(16.0));
+    assert_eq!(od["unit"], json!("m"));
+    assert_eq!(od["applies_to"], json!(["type_c_tanks"]));
+    assert_eq!(od["group"], json!("Gas tanks"));
+    assert!(
+        od["basis"]
+            .as_str()
+            .unwrap()
+            .contains("not an IGC Code rule"),
+        "{}",
+        od["basis"]
     );
     assert_eq!(get("max_speed_kn")["default"], json!(10.0));
     assert!(get("channel_depth_m")["default"].is_null());

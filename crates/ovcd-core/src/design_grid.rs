@@ -1,74 +1,34 @@
 //! Barge design-space sweep. Port of `core/design_grid.py`.
 //!
-//! Behaviour is copied exactly, including the errors and their message text. Python's
-//! `x or 0.0` on a float is `x == 0.0`, `math.ceil` is `libm::ceil` with CPython's NaN and
-//! infinity errors, and every expression keeps Python's evaluation order so the rounding is the
-//! same. `except Exception` around the capacity call is a match on the [`PyError`] it returns;
-//! the reason keeps the first 80 characters of the message (`str(exc)[:80]`).
+//! Behaviour was copied exactly from Python, including the errors and their message text, until
+//! issue #175 changed the tank rule (below). Python's `x or 0.0` on a float is `x == 0.0`, and
+//! every expression keeps Python's evaluation order so the rounding is the same. `except Exception`
+//! around the capacity call is a match on the [`PyError`] it returns; the reason keeps the first
+//! 80 characters of the message (`str(exc)[:80]`).
 //!
-//! A tank count above the 64-bit range is the fixed `OverflowError` of the integer range rule:
-//! Python holds a count of any size, and a 64-bit result field cannot.
+//! Every cell has two tanks along the hull, as `gas_arrangement::fit` has. There is no cap on tank
+//! length (issue #175: the 28 m cap is gone). A tank is limited only by its outer diameter cap and
+//! by length over diameter at most 7, which the capacity check applies: a hull too long for two
+//! tanks is an infeasible cell.
 
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
 use crate::barge_capacity::{BargeCapacityInputs, compute as capacity};
+use crate::gas_arrangement::length_over_diameter_check;
 use crate::pressure_vessel::PyError;
 use crate::tanks::INT_OVERFLOW_MESSAGE;
 
-/// Overall Type-C tank length cap (m). ESTIMATE.
-pub const MAX_TANK_LENGTH_M: f64 = 28.0;
+/// Tanks along the hull in every cell.
+pub const TANKS_LONG: i64 = 2;
 /// Standard IGC-2G protective-location spacing per side (m).
 pub const SIDE_CLEARANCE_M: f64 = 1.0;
-/// Mirrors the `models.py` default.
-pub const BOW_NON_TANK_PCT: f64 = 0.10;
-/// Mirrors the `models.py` default.
-pub const STERN_NON_TANK_PCT: f64 = 0.15;
 /// Kotug E-Pusher pattern, for the total-LOA note (m).
 pub const TUG_LOA_M: f64 = 16.0;
 
 /// The text of a reason: `str(exc)[:80]`, counted in characters.
 fn first_80(s: &str) -> String {
     s.chars().take(80).collect()
-}
-
-/// Tanks in a line for a given barge length (length-only, so curves stay smooth).
-///
-/// `ZeroDivisionError` when `max_tank_length_m` is zero. `math.ceil` raises `ValueError` on NaN
-/// and `OverflowError` on infinity. A ceiling below 1 is 1, however negative.
-pub fn n_tanks_for_length(barge_length_m: f64, max_tank_length_m: f64) -> Result<i64, PyError> {
-    let available = (1.0 - BOW_NON_TANK_PCT - STERN_NON_TANK_PCT) * barge_length_m;
-    if max_tank_length_m == 0.0 {
-        return Err(PyError {
-            kind: "ZeroDivisionError",
-            message: "float division by zero".to_string(),
-        });
-    }
-    let ratio = available / max_tank_length_m;
-    if ratio.is_nan() {
-        return Err(PyError {
-            kind: "ValueError",
-            message: "cannot convert float NaN to integer".to_string(),
-        });
-    }
-    if ratio.is_infinite() {
-        return Err(PyError {
-            kind: "OverflowError",
-            message: "cannot convert float infinity to integer".to_string(),
-        });
-    }
-    let n = libm::ceil(ratio);
-    if n < 1.0 {
-        return Ok(1);
-    }
-    // 2^63: the first float that no `i64` holds.
-    if n >= 9_223_372_036_854_775_808.0 {
-        return Err(PyError {
-            kind: "OverflowError",
-            message: INT_OVERFLOW_MESSAGE.to_string(),
-        });
-    }
-    Ok(n as i64)
 }
 
 /// One barge length x beam point of the grid.
@@ -116,7 +76,6 @@ pub struct DesignGrid {
     pub depth_m: f64,
     pub cargo_type: String,
     pub clearance_basis: String,
-    pub max_tank_length_m: f64,
     pub cells: Vec<GridCell>,
 }
 
@@ -130,21 +89,13 @@ impl DesignGrid {
     }
 }
 
-/// `_tank_overall_length`: one tank's overall length with a 2.0 m longitudinal gap.
-fn tank_overall_length(barge_length_m: f64, n: i64) -> f64 {
-    let available = (1.0 - BOW_NON_TANK_PCT - STERN_NON_TANK_PCT) * barge_length_m;
-    // `n >= 1`, so `n - 1` cannot overflow; the int-to-float conversion rounds once, as Python's.
-    (available - ((n - 1) as f64) * 2.0) / (n as f64)
-}
-
 fn cell(
     barge_length_m: f64,
     beam_m: f64,
     depth_m: f64,
     cargo_type: &str,
 ) -> Result<GridCell, PyError> {
-    // Outside Python's `try`: an error here ends the sweep.
-    let n = n_tanks_for_length(barge_length_m, MAX_TANK_LENGTH_M)?;
+    let n = TANKS_LONG;
     let mut inputs = BargeCapacityInputs::new(barge_length_m, beam_m, depth_m);
     inputs.cargo_type = cargo_type.to_string();
     inputs.n_tanks_long = n;
@@ -170,19 +121,22 @@ fn cell(
         Some(x) if x != 0.0 => x,
         _ => 0.0,
     };
-    // `a and b`: a falsy `a` (here 0.0) is the result, `b` only runs when `a` is truthy.
-    let tank_len = if r.cargo_volume_m3 == 0.0 {
-        r.cargo_volume_m3
-    } else {
-        tank_overall_length(barge_length_m, n)
+    // The engine's own overall tank length (heads included), the one its length over diameter
+    // check uses; zero when no tank was built.
+    let tank_len = match &r.gas_basis {
+        Some(b) if r.cargo_volume_m3 != 0.0 => b.tanks.overall_tank_length,
+        _ => 0.0,
     };
     // `barge_capacity` does not raise on impossible geometry; it returns a failed
     // `feasible_geometry` check with zero cargo. Read that, or every impossible cell would
-    // report feasible with 0 t.
-    if !r.ok() || r.cargo_capacity_t <= 0.0 {
+    // report feasible with 0 t. The tank length over diameter check is added here, as `fit` adds
+    // it to each candidate.
+    let length_check = length_over_diameter_check(&r);
+    if !r.ok() || r.cargo_capacity_t <= 0.0 || length_check.as_ref().is_some_and(|c| !c.ok) {
         let why = r
             .checks
             .iter()
+            .chain(length_check.iter())
             .find(|c| !c.ok)
             .map_or("no cargo volume", |c| c.message.as_str());
         return Ok(GridCell::infeasible(
@@ -221,7 +175,6 @@ pub fn sweep(
         cargo_type: cargo_type.to_string(),
         clearance_basis: "1.0 m standard side clearance per side (IGC-2G protective location)"
             .to_string(),
-        max_tank_length_m: MAX_TANK_LENGTH_M,
         cells: Vec::new(),
     };
     for &loa in barge_lengths_m {

@@ -65,11 +65,30 @@ class Ctx:
         return np.int64(i) if self.mode.startswith("np.") else int(i)
 
 
+# --- the changes of issue #175 -------------------------------------------------------------
+#
+# The frozen package (0.1.0) capped a gas tank's outer diameter at 12 m and had no input for it. The
+# package under test has the input `max_tank_od_m`, 16 m by default. So that a scenario still
+# compares like with like, a scenario that builds a gas hull pins the cap at 12 m on the package under
+# test (`cap12`); the frozen package has that cap already. The new input is not part of the plain
+# data of the inputs object (`ADDED_FIELDS`), because the frozen object has no such field. The ADN
+# parts of the old scenarios (the `ADN_G` ruleset, its criteria set and tank cap) and the tank-length
+# cap of `design_grid` are gone from the scenarios; the change is in CHANGELOG.md.
+
+ADDED_FIELDS = {"BargeCapacityInputs": {"max_tank_od_m"}}
+
+
+def cap12(c):
+    """Keyword arguments that give the package under test the 12 m cap the frozen one has."""
+    return {"max_tank_od_m": c.n(12.0)} if c.pkg == "vessel_designer" else {}
+
+
 # --- results -> plain data -----------------------------------------------------------------
 
 def norm(v):
     if dataclasses.is_dataclass(v) and not isinstance(v, type):
-        return {f.name: norm(getattr(v, f.name)) for f in dataclasses.fields(v)}
+        skip = ADDED_FIELDS.get(type(v).__name__, ())
+        return {f.name: norm(getattr(v, f.name)) for f in dataclasses.fields(v) if f.name not in skip}
     if isinstance(v, enum.Enum):
         return v.value
     if isinstance(v, np.generic):
@@ -129,7 +148,7 @@ def chain(c, **over):
 
 def gas_capacity(c, **over):
     b = c.mod("core.barge_capacity")
-    kw = dict(loa=c.n(90.0), beam=c.n(14.8), depth=c.n(6.5), cargo_type="LPG_propane")
+    kw = dict(loa=c.n(90.0), beam=c.n(14.8), depth=c.n(6.5), cargo_type="LPG_propane", **cap12(c))
     kw.update(over)
     inp = b.BargeCapacityInputs(**kw)
     return inp, b.compute(inp)
@@ -145,6 +164,10 @@ def bulk_capacity(c, **over):
 
 CN_II = dict(vessel="gas_barge", cargo="LPG_propane", cb=0.85, freeboard_min_m=0.3,
              self_propelled=True, ruleset="IGC_2G", fill_ratio=0.95)
+
+
+def sim_cn_ii(c):
+    return dict(CN_II, **cap12(c))
 
 
 # --- hull, tanks, weights, hydrostatics ----------------------------------------------------
@@ -256,7 +279,9 @@ def _(c):
 @scenario("barge_capacity.tanks_wide_for_beam", covers=["core.barge_capacity.tanks_wide_for_beam"])
 def _(c):
     f = c.mod("core.barge_capacity").tanks_wide_for_beam
-    return [f(c.n(20), c.n(1)), f(c.n(30), c.n(1), c.n(1), c.n(12)), f(c.n(14.8), c.n(1))]
+    # The two calls that leave out the cap use the default: 12 m in 0.1.0, 16 m now (issue #175).
+    od = {"max_od_m": c.n(12.0)} if c.pkg == "vessel_designer" else {}
+    return [f(c.n(20), c.n(1), **od), f(c.n(30), c.n(1), c.n(1), c.n(12)), f(c.n(14.8), c.n(1), **od)]
 
 
 def derate_of(c, capacity, **over):
@@ -291,7 +316,7 @@ def _(c):
 @scenario("gas_stability.criteria_set_for", covers=["core.gas_stability.criteria_set_for"])
 def _(c):
     f = c.mod("core.gas_stability").criteria_set_for
-    return [f("ADN_G"), f("IGC_2G")]
+    return [f("IGC_2G_EXACT"), f("IGC_2G")]
 
 
 @scenario("gas_stability.assess", covers=["core.gas_stability.assess"])
@@ -300,7 +325,7 @@ def _(c):
     res = gas_capacity(c)[1]
     return [g.assess(res, c.n(1500)), g.assess(res, c.n(1200), block_coefficient=c.n(0.9),
                                                water_density=c.n(1),
-                                               criteria_set="ADN_9_3_1_14_2")]
+                                               criteria_set="IS_CODE_2008")]
 
 
 @scenario("ga_adapter.is_gas", covers=["core.ga_adapter.is_gas"])
@@ -326,15 +351,16 @@ def _(c):
 def _(c):
     ga = c.mod("core.gas_arrangement")
     return ga.fit(c.n(90), c.n(14.8), "LPG_propane", c.n(4.4), ruleset="IGC_2G", fill_ratio=c.n(0.95),
-                  depths=[c.n(6.5)], tanks_wide=[c.k(1), c.k(2)], extra_clearance_m=[c.n(1), c.n(2)])
+                  depths=[c.n(6.5)], tanks_wide=[c.k(1), c.k(2)], extra_clearance_m=[c.n(1), c.n(2)],
+                  **cap12(c))
 
 
-@scenario("gas_arrangement.fit.adn", covers=["core.gas_arrangement.fit"])
+@scenario("gas_arrangement.fit.exact", covers=["core.gas_arrangement.fit"])
 def _(c):
     ga = c.mod("core.gas_arrangement")
-    return ga.fit(c.n(80), c.n(12), "LNG", c.n(3), ruleset="ADN_G", fill_ratio=c.n(0.95),
+    return ga.fit(c.n(80), c.n(12), "LNG", c.n(3), ruleset="IGC_2G_EXACT", fill_ratio=c.n(0.95),
                   self_propelled=False, depths=[c.n(5), c.n(6)], tanks_wide=[c.k(1)],
-                  extra_clearance_m=[c.n(1)], adn_tank_cap_m3=c.n(1000), block_coefficient=c.n(0.9),
+                  extra_clearance_m=[c.n(1)], block_coefficient=c.n(0.9),
                   max_tank_od_m=c.n(12))
 
 
@@ -343,7 +369,7 @@ def _(c):
 def _(c):
     f = c.mod("core.gas_arrangement").required_side_clearance
     return [f("IGC_2G", c.n(14.8), c.n(2000), c.n(1000), c.n(350)),
-            f("ADN_G", c.n(12), c.n(900), c.n(450), c.n(300))]
+            f("IGC_2G_EXACT", c.n(12), c.n(900), c.n(450), c.n(300))]
 
 
 @scenario("gas_arrangement.smallest_viable_loa",
@@ -351,7 +377,7 @@ def _(c):
 def _(c):
     f = c.mod("core.gas_arrangement").smallest_viable_loa
     return f(c.n(14.8), "LPG_propane", c.n(4.4), lo=c.n(20), hi=c.n(120), ruleset="IGC_2G",
-             depths=[c.n(6.5)], tanks_wide=[c.k(1)], extra_clearance_m=[c.n(1)])
+             depths=[c.n(6.5)], tanks_wide=[c.k(1)], extra_clearance_m=[c.n(1)], **cap12(c))
 
 
 # --- smaller modules -----------------------------------------------------------------------
@@ -390,9 +416,9 @@ def _(c):
     return dict(
         d=[p.distance_d_vc(c.n(v)) for v in (500, 3000, 8000)],
         exact=[p.d_vc_exact(c.n(v)) for v in (500, 2000, 10000, 40000)],
-        side=[p.required_side_protection(t, c.n(15), c.n(1)) for t in vt],
-        bottom=[p.required_bottom_protection(c.n(15), c.n(1)), p.required_bottom_protection(c.n(15), c.n(1), vt.ADN_G)],
-        clearances=[p.compute_required_clearances(t.value, c.n(14.8), c.n(1)) for t in vt],
+        side=[p.required_side_protection(t, c.n(15), c.n(1)) for t in vt if t.value != "ADN_G"],
+        bottom=[p.required_bottom_protection(c.n(15), c.n(1)), p.required_bottom_protection(c.n(15), c.n(1), vt.IGC_2G)],
+        clearances=[p.compute_required_clearances(t.value, c.n(14.8), c.n(1)) for t in vt if t.value != "ADN_G"],
         check=p.check_protective_location("IGC_2G", c.n(14.8), c.n(2000), c.n(2), c.n(1), c.n(0.5)))
 
 
@@ -505,13 +531,11 @@ def _(c):
             v.validate_catalogue({"Y": odd_standard(c, v)})]
 
 
-@scenario("design_grid", covers=["core.design_grid.n_tanks_for_length", "core.design_grid.sweep",
-                                 "core.design_grid.DesignGrid"])
+@scenario("design_grid", covers=["core.design_grid.sweep", "core.design_grid.DesignGrid"])
 def _(c):
     d = c.mod("core.design_grid")
     grid = d.sweep([c.n(60), c.n(90)], [c.n(10), c.n(14)], c.n(6), "LPG_propane")
-    return dict(n=[d.n_tanks_for_length(c.n(60)), d.n_tanks_for_length(c.n(90), c.n(30))],
-                grid=grid, curve=grid.curve(c.n(90)),
+    return dict(grid=grid, curve=grid.curve(c.n(90)),
                 default=d.sweep([c.n(70)], [c.n(12)]))
 
 
@@ -528,7 +552,7 @@ def _(c):
 
 
 def sim(c, **over):
-    p = dict(CN_II, loa_m=c.n(90), beam_m=c.n(14.8), depth_m=c.n(6.5), draught_limit_m=c.n(4.4))
+    p = dict(sim_cn_ii(c), loa_m=c.n(90), beam_m=c.n(14.8), depth_m=c.n(6.5), draught_limit_m=c.n(4.4))
     p.update(over)
     return c.mod("simulate").simulate(p)
 
@@ -538,9 +562,9 @@ def _(c):
     return sim(c)
 
 
-@scenario("simulate.gas_adn_channel", covers=["simulate.simulate"])
+@scenario("simulate.gas_igc_channel", covers=["simulate.simulate"])
 def _(c):
-    return sim(c, ruleset="ADN_G", fill_ratio=None, draught_limit_m=None,
+    return sim(c, ruleset="IGC_2G", fill_ratio=None, draught_limit_m=None,
                channel=dict(depth_m=c.n(5), ukc_m=c.n(0.5), bottom_width_m=c.n(40)))
 
 
@@ -684,7 +708,8 @@ def _(c):
 def _(c):
     b = c.mod("core.barge_capacity")
     g = c.mod("core.gas_stability")
-    inp = b.BargeCapacityInputs(loa=c.n(90), beam=c.n(14.8), depth=c.n(6.5), cargo_type="LPG_propane")
+    inp = b.BargeCapacityInputs(loa=c.n(90), beam=c.n(14.8), depth=c.n(6.5), cargo_type="LPG_propane",
+                                **cap12(c))
     results = []
     for loa in (90, 70):
         inp.loa = c.n(loa)
@@ -696,7 +721,8 @@ def _(c):
 def _(c):
     b = c.mod("core.barge_capacity")
     a = c.mod("core.ga_adapter")
-    inp = b.BargeCapacityInputs(loa=c.n(90), beam=c.n(14.8), depth=c.n(6.5), cargo_type="LPG_propane")
+    inp = b.BargeCapacityInputs(loa=c.n(90), beam=c.n(14.8), depth=c.n(6.5), cargo_type="LPG_propane",
+                                **cap12(c))
     gas = b.compute(inp)
     gas_inp = dataclasses.replace(inp)
     inp.cargo_type = "bauxite"

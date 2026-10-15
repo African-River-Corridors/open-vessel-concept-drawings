@@ -423,7 +423,7 @@ fn criterion(name: &str, value: f64, limit: f64, ok: bool, source: &str) -> Crit
     }
 }
 
-fn criteria(cset: &str, c: &Condition, wide_tank: bool) -> Result<Vec<Criterion>, PyError> {
+fn criteria(cset: &str, c: &Condition) -> Result<Vec<Criterion>, PyError> {
     if cset == "IS_CODE_2008" {
         let src = "IMO IS Code 2008, Part A 2.2";
         let gz_30_plus = py_max(c.gz.iter().filter(|p| p.0 >= 30).map(|p| p.1));
@@ -473,42 +473,6 @@ fn criteria(cset: &str, c: &Condition, wide_tank: bool) -> Result<Vec<Criterion>
             ),
         ]);
     }
-    if cset == "ADN_9_3_1_14_2" {
-        let src = "ADN 2025 9.3.1.14.2 (tank > 0.70 B)";
-        if !wide_tank {
-            return Ok(vec![criterion(
-                "Initial GM (fluid) > 0",
-                c.gm_fluid_m,
-                0.0,
-                c.gm_fluid_m > 0.0,
-                "ADN 9.3.1.14.1 \u{2014} no tank wider than 0.70 B, so 9.3.1.14.2 does not apply",
-            )]);
-        }
-        let gz_max_27 = py_max(c.gz.iter().filter(|p| p.0 <= 27).map(|p| p.1));
-        return Ok(vec![
-            criterion(
-                "Initial GM (fluid)",
-                c.gm_fluid_m,
-                0.10,
-                c.gm_fluid_m >= 0.10,
-                src,
-            ),
-            criterion(
-                "GZ within 27\u{b0}",
-                gz_max_27,
-                0.10,
-                gz_max_27 >= 0.10,
-                src,
-            ),
-            criterion(
-                "Area 0\u{2013}27\u{b0}",
-                c.area_0_27,
-                0.024,
-                c.area_0_27 >= 0.024,
-                src,
-            ),
-        ]);
-    }
     Err(PyError::Value(format!(
         "unknown criteria set {}",
         crate::pystr::repr_str(cset)
@@ -527,13 +491,10 @@ fn max_by_gz(gz: &[(i32, f64)]) -> (i32, f64) {
     (best_deg, best)
 }
 
-/// The criteria set a ruleset uses.
-pub fn criteria_set_for(ruleset: &str) -> &'static str {
-    if ruleset == "ADN_G" {
-        "ADN_9_3_1_14_2"
-    } else {
-        "IS_CODE_2008"
-    }
+/// The criteria set a ruleset uses. Both IGC rulesets use the IS Code 2008 intact criteria; the
+/// ADN set went with the `ADN_G` ruleset (issue #175).
+pub fn criteria_set_for(_ruleset: &str) -> &'static str {
+    "IS_CODE_2008"
 }
 
 /// What `assess` reads from a converged gas arrangement (`BargeCapacityResult.gas_basis`).
@@ -653,7 +614,6 @@ pub fn assess_num(
     let kg_tank = tank_bottom + od / 2.0;
     let inner_bottom = tank_bottom + (od / 2.0 - r_in);
     let v_inner_total = basis.total_tank_volume;
-    let wide_tank = od > 0.70 * b;
 
     // (t, KG m)
     let light_items: [(f64, f64); 4] = [
@@ -754,7 +714,7 @@ pub fn assess_num(
             gz,
             criteria: Vec::new(),
         };
-        c.criteria = criteria(criteria_set, &c, wide_tank)?;
+        c.criteria = criteria(criteria_set, &c)?;
         conds.push(c);
     }
 
@@ -946,28 +906,24 @@ mod tests {
         }
     }
 
-    fn oks(set: &str, c: &Condition, wide: bool) -> Vec<bool> {
-        criteria(set, c, wide)
-            .unwrap()
-            .iter()
-            .map(|k| k.ok)
-            .collect()
+    fn oks(set: &str, c: &Condition) -> Vec<bool> {
+        criteria(set, c).unwrap().iter().map(|k| k.ok).collect()
     }
 
-    // Python writes every limit as `>=` (and `> 0` for the narrow-tank ADN case), so a value that
+    // Python writes every limit as `>=`, so a value that
     // equals its limit passes, and one ulp below fails. Each case sets one value to the limit.
     #[test]
     fn every_is_code_criterion_passes_at_exactly_its_limit() {
         let gz = vec![(0, 0.0), (30, 0.20)];
         let base = cond(gz);
-        assert_eq!(oks("IS_CODE_2008", &base, false), [true; 6]);
+        assert_eq!(oks("IS_CODE_2008", &base), [true; 6]);
         let mut c = cond(vec![(30, 0.20)]);
         c.area_0_30 = 0.055;
         c.area_0_40 = 0.090;
         c.area_30_40 = 0.030;
         c.max_gz_deg = 25;
         c.gm_fluid_m = 0.15;
-        assert_eq!(oks("IS_CODE_2008", &c, false), [true; 6]);
+        assert_eq!(oks("IS_CODE_2008", &c), [true; 6]);
         let below = |x: f64| f64::from_bits(x.to_bits() - 1);
         let mut c = cond(vec![(30, below(0.20))]);
         c.area_0_30 = below(0.055);
@@ -975,26 +931,7 @@ mod tests {
         c.area_30_40 = below(0.030);
         c.max_gz_deg = 24;
         c.gm_fluid_m = below(0.15);
-        assert_eq!(oks("IS_CODE_2008", &c, false), [false; 6]);
-    }
-
-    #[test]
-    fn every_adn_criterion_passes_at_exactly_its_limit() {
-        let mut c = cond(vec![(27, 0.10)]);
-        c.gm_fluid_m = 0.10;
-        c.area_0_27 = 0.024;
-        assert_eq!(oks("ADN_9_3_1_14_2", &c, true), [true; 3]);
-        let below = |x: f64| f64::from_bits(x.to_bits() - 1);
-        let mut c = cond(vec![(27, below(0.10))]);
-        c.gm_fluid_m = below(0.10);
-        c.area_0_27 = below(0.024);
-        assert_eq!(oks("ADN_9_3_1_14_2", &c, true), [false; 3]);
-        // Narrow tank: the GM must be above zero, so exactly zero fails.
-        let mut c = cond(vec![(0, 0.0)]);
-        c.gm_fluid_m = 0.0;
-        assert_eq!(oks("ADN_9_3_1_14_2", &c, false), [false]);
-        c.gm_fluid_m = f64::MIN_POSITIVE;
-        assert_eq!(oks("ADN_9_3_1_14_2", &c, false), [true]);
+        assert_eq!(oks("IS_CODE_2008", &c), [false; 6]);
     }
 
     // Hand-run boundary checks for the guards whose mutants are equivalent. With |sum| == |x| the

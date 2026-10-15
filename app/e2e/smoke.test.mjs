@@ -153,7 +153,7 @@ describe("OVCD app smoke tests", () => {
     await until("the three views to be drawn", viewsDrawn);
     await type("Beam", "12");
     await until("the plan to show the new beam", async () => /12\.00/.test((await hullTexts()).plan ?? ""));
-    await open(path.join(FIXTURES, "gas_adn_g_self_propelled.vdesign"), "gas_adn_g_self_propelled.vdesign");
+    await open(path.join(FIXTURES, "gas_igc_2g_self_propelled.vdesign"), "gas_igc_2g_self_propelled.vdesign");
     await until("the gas views", async () => /LPG|Gas barge/.test((await hullTexts()).midship ?? ""));
     const circles = await browser.execute(() => document.querySelectorAll("[data-testid=slot-midship] svg circle[data-layer=OUTLINE]").length);
     assert.equal(circles, 1, "one tank across");

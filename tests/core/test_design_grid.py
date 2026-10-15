@@ -1,8 +1,8 @@
-"""Design-grid sweep: golden base point, tank-count rule, monotonicity."""
+"""Design-grid sweep: golden base point, two tanks along, no tank-length cap, monotonicity."""
 import math
 
-from vessel_designer.core.design_grid import (
-    sweep, n_tanks_for_length, MAX_TANK_LENGTH_M)
+from vessel_designer.core import design_grid
+from vessel_designer.core.design_grid import sweep
 
 
 def test_base_point_regression_anchor():
@@ -23,23 +23,37 @@ def test_base_point_regression_anchor():
     assert round(c.cargo_t) == 680
 
 
-def test_tank_count_rule_length_only():
-    """Count steps by length only (so each fixed-length curve is smooth).
+def test_every_cell_has_two_tanks_along_the_hull():
+    """Two tanks along, as `gas_arrangement.fit` has (issue #175 removed the 28 m tank-length cap
+    and with it the count that stepped up by length).
 
-    Label: snapshot
+    Label: property
     """
-    assert n_tanks_for_length(60) == 2       # base: 2 tanks
-    assert n_tanks_for_length(50) == 2
-    assert n_tanks_for_length(70) == 2
-    assert n_tanks_for_length(80) == 3       # steps up when the hull gets long
-    # independent of beam: the sweep uses the same count across all beams
-    g = sweep([70], [8.0, 12.0, 16.0])
-    assert {c.n_tanks_long for c in g.curve(70)} == {2}
+    g = sweep([60, 100, 140], [8.0, 12.0, 16.0])
+    assert {c.n_tanks_long for c in g.cells} == {2}
+    assert not hasattr(design_grid, "n_tanks_for_length")
+    assert not hasattr(design_grid, "MAX_TANK_LENGTH_M")
+    assert not hasattr(g, "max_tank_length_m")
+
+
+def test_a_tank_may_be_longer_than_28_m_but_not_more_than_seven_diameters():
+    """Tank length is limited only by length over diameter and the hull.
+
+    Label: property
+    """
+    long_tank = sweep([100], [14.0]).cells[0]
+    assert long_tank.feasible and long_tank.tank_length_m > 28.0
+    assert long_tank.slenderness <= 7.0
+    thin = sweep([200], [11.0]).cells[0]
+    assert not thin.feasible and "<= 7" in thin.reason
+    g = sweep([40 + 10 * i for i in range(17)], [6.0, 8.0, 10.0, 12.0, 16.0, 20.0, 28.0])
+    assert any(c.feasible for c in g.cells)
+    assert all(c.slenderness <= 7.0 for c in g.cells if c.feasible)
 
 
 def test_cargo_monotonic_in_length():
     """NARROWED. Monotonicity in BEAM no longer holds and should not be
-    asserted: the MAX_TANK_OD_M = 12 m rule switches to two tanks abreast as
+    asserted: the tank outer diameter cap (`max_tank_od_m`) switches to more tanks abreast as
     the beam grows, and on a short hull two smaller tanks lose more to their heads than
     the extra beam wins -- 60 m x 16 m carries LESS than 60 m x 12 m. That is the design
     space, not a defect. Monotonicity in LENGTH does still hold, and is the invariant
@@ -80,5 +94,8 @@ def test_short_hulls_are_now_infeasible_for_gas():
     for c in g.cells:
         by_loa.setdefault(c.barge_length_m, []).append(c)
     assert all(not c.feasible for c in by_loa[45]), "45 m gas vessel should not fit"
-    assert all(c.feasible for c in by_loa[60]), [c.reason for c in by_loa[60]]
+    assert all(c.feasible for c in by_loa[60] if c.beam_m < 16.0), [c.reason for c in by_loa[60]]
+    # Issue #175: with the 16 m diameter cap a 16 m beam is one 14 m tank, and two of those do not
+    # fit in the 60 m hull (it was two tanks across under the old 12 m cap).
+    assert [c.feasible for c in by_loa[60] if c.beam_m == 16.0] == [False]
     assert all(c.feasible for c in by_loa[90]), [c.reason for c in by_loa[90]]
