@@ -1,6 +1,8 @@
 name: Release
 
-# The release gate. It runs when a GitHub release is published and when a maintainer starts it by hand.
+# The release gate. It runs when a GitHub release is published, when a maintainer starts it by hand,
+# and as a called workflow from app-build.yml, which runs it before it publishes any release (a release
+# made with GITHUB_TOKEN does not start this workflow by itself).
 # There is no nightly run. It builds and tests; it publishes NOTHING (no PyPI, no upload to a release).
 # Wheels and binaries are kept as workflow artifacts for the maintainer to inspect.
 #
@@ -11,6 +13,7 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  workflow_call: # app-build.yml runs this gate before it publishes a pushed tag
 
 permissions:
   contents: read
@@ -37,7 +40,7 @@ jobs:
         run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
       - name: Check a release tag matches the package version
-        if: github.event_name == 'release'
+        if: startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           v=$(python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
@@ -74,10 +77,10 @@ jobs:
           "$PY" -c "import vessel_designer as v; print(v.__file__); assert 'site-packages' in v.__file__"
           "$PY" -m pytest -q tests \
             --ignore=tests/test_packaging.py --ignore=tests/test_housekeeping.py \
-            --ignore=tests/test_release_guard.py --ignore=tests/test_gates_fail_closed.py \
+            --ignore=tests/test_release_guard.py --ignore-glob='tests/test_gates*.py' \
             --ignore=tests/test_calibration_runs.py \
             --ignore=tests/test_pystr_tables.py --ignore=tests/test_vdesign_edge_sweep.py \
-            --ignore=tests/test_design_impact.py
+            --ignore-glob='tests/test_design_impact*.py' --ignore-glob='tests/test_workflows*.py'
       - uses: actions/upload-artifact@v4
         with:
           name: wheel-${{ matrix.os }}

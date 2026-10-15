@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix: publishing the app installers now needs `test` and `release-guard` to pass on a tagged commit that is on `main`, and runs the release gate (wheels, binaries, pytest on each system) first. No calculation result changes.
+
 ## 0.2.2 (2026-10-15)
 
 - Fix: the macOS app is now signed as a whole bundle (ad-hoc), so macOS no longer reports it as damaged. No calculation result changes.
