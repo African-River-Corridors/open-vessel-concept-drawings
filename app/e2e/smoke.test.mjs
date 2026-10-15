@@ -174,7 +174,8 @@ describe("OVCD app smoke tests", () => {
     assert.match(await browser.$(".field .msg.error").getText(), /^Beam/);
     assert.doesNotMatch(await browser.$(".field .msg.error").getText(), /`/);
     await until("the out-of-date mark", async () => (await browser.$$(".stale")).length > 0);
-    assert.match(await browser.$(".stale").getText(), /out of date/);
+    // webdriverio 10 refuses a selector that matches many elements; the compare table also marks each stale Option.
+    assert.match(await (await browser.$$(".stale"))[0].getText(), /out of date/);
     // The outputs header says why and where to look.
     assert.match(await browser.$('[data-testid="stale-why"]').getText(), /Not recalculated: fix the error under Beam/);
     // The last good numbers stay on screen.
