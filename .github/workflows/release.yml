@@ -102,6 +102,15 @@ jobs:
       - name: Smoke test
         shell: bash
         run: target/release/ovcd --version
+      # Platform-identical maths (spec 0001): the release binary must give the results hash that each
+      # fixture Design stores. `cargo test` checks this on Linux only; this checks it on Windows and on
+      # Intel and Apple-silicon macOS. Release gate only, not the pull request gate.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fixture results hashes match on this system
+        shell: bash
+        run: python tools/check_fixture_hashes.py target/release/ovcd
       - uses: actions/upload-artifact@v4
         with:
           name: ovcd-${{ matrix.os }}
