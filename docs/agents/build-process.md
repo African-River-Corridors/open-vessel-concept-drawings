@@ -26,9 +26,11 @@ ticket whose blockers are all closed, and no other. For each ticket:
 5. **Merge.** Squash-merge with the repo-local address, so the commit on `main` carries it and not
    the account's personal address: `gh pr merge <pr> --squash --delete-branch --author-email <repo-local
    address>`. The repo-local address is the one in this clone's `git config user.email` (do not write
-   it in a ticket, a PR or a doc). A local "main is already used by worktree" message is harmless.
+   it in a ticket, a PR or a doc). GitHub accepts `--author-email` only for an address verified on the merging account (account
+   settings, Emails). Until the maintainer verifies it there, GitHub refuses the merge with "Invalid email
+   address": merge without `--author-email` and note it in the build notes. A local "main is already used by worktree" message is harmless.
    Check that the PR is merged, the issue is closed, `origin/main` holds the squash commit, and
-   `git log -1 --format=%ae origin/main` shows the repo-local address. Then write the **build notes**
+   `git log -1 --format=%ae origin/main` shows the repo-local address (once it is verified). Then write the **build notes**
    (below) and remove the worktree.
 
    **Build notes** are one closing comment on the ticket: what was built, the commands run and their
