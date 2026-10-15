@@ -1,5 +1,5 @@
 //! The `.vdesign` file: a Design holding a named list of Options and the engine version, as
-//! versioned JSON, always SI (ADR 0007).
+//! versioned JSON, in SI units except speeds, which are in knots (ADR 0007).
 //!
 //! Every input is stored **as used**, with a marker saying where it came from:
 //!
@@ -15,6 +15,9 @@
 //! that leaves one out, because the value would come from whatever Defaults Profile is loaded
 //! today, and a profile edit would change what the file means. [`fill`] writes the left-out
 //! inputs in, as used and marked `default`, so a designer can still write only the required six.
+//!
+//! The `units` field holds `"SI"` and means: SI, except `max_speed_kn` and `channel_current_kn`,
+//! which are in knots (the inland-waterway convention, ADR 0007).
 //!
 //! Validation lives here only. The core copies Python exactly and adds no checks. Besides the
 //! range table, validation refuses inputs the original Python turns into a physically impossible

@@ -376,6 +376,18 @@ fn new_records_the_built_in_profile_name() {
 }
 
 #[test]
+fn the_help_and_profile_say_speeds_are_in_knots() {
+    // Issue #134: the file is SI except speeds. `ovcd new` writes `max_speed_kn`.
+    let help = stdout(&ovcd(&["--help"]));
+    assert!(help.contains("except speeds, which are in knots"), "{help}");
+    let profile = stdout(&ovcd(&["profile"]));
+    assert!(profile.contains("except speeds, which are in knots"));
+    let dir = temp_dir("knots");
+    let (_, design) = new_design(&dir);
+    assert!(design["options"][0]["inputs"]["max_speed_kn"].is_object());
+}
+
+#[test]
 fn validate_inputs_shows_a_convoy_and_a_self_propelled_formation() {
     let dir = temp_dir("inputs-formation");
     let file = dir.join("d.vdesign");
