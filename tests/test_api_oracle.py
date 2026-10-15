@@ -33,6 +33,30 @@ KNOWN_DIFFERENCES: dict = {
                    "tank diameter cap",
 }
 
+# Keys added to inputs and results after 0.1.0, with the issue that added them. They are dropped
+# from the actual answer before it is compared, and ONLY where 0.1.0 has no such key, so every key
+# and value of 0.1.0 is still compared. Each is listed as an addition in CHANGELOG.md.
+ADDED_KEYS: dict = {
+    # Issue #180: gas-fuelled stern (Weichai gas gensets, accommodation beside the wheelhouse).
+    **{k: "issue #180" for k in (
+        "propulsion", "electrical_load_kwe", "n_gensets", "genset_model", "genset_kwe",
+        "genset_length_m", "genset_width_m", "genset_height_m", "genset_engine_mass_t",
+        "genset_clear_m", "engine_room_end_clear_m", "gvu_room_length_m",
+        "container_layout", "container_units", "engine_room_x0_m", "engine_room_x1_m",
+        "gvu_room_x0_m", "gvu_room_x1_m", "genset_engine_model", "installed_kwe",
+        "genset_offsets_m", "genset_x0_m", "below_deck_length_m", "deck_length_m")},
+}
+
+
+def without_added(actual, expected):
+    """`actual` with the ADDED_KEYS that 0.1.0 does not have removed, all the way down."""
+    if isinstance(actual, dict) and isinstance(expected, dict):
+        return {k: without_added(v, expected.get(k)) for k, v in actual.items()
+                if k in expected or k not in ADDED_KEYS}
+    if isinstance(actual, list) and isinstance(expected, list):
+        return [without_added(a, e) for a, e in zip(actual, expected)] + actual[len(expected):]
+    return actual
+
 
 def same(actual, expected, path="result"):
     """None when equal, else a message that says where they differ."""
@@ -70,6 +94,7 @@ def test_the_api_gives_the_answers_of_0_1_0(name, mode):
     actual = S.run("vessel_designer", mode, name)
     if name in KNOWN_DIFFERENCES:
         pytest.skip(KNOWN_DIFFERENCES[name])
+    actual = without_added(actual, expected)
     assert same(actual, expected, "result") is None, same(actual, expected, "result")
 
 

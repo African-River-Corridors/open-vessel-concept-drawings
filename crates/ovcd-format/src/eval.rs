@@ -303,6 +303,16 @@ pub(crate) fn checks_json(checks: &[Check]) -> Value {
     )
 }
 
+/// A JSON object built key by key, in the order written. `json!` hits the macro recursion limit
+/// on objects this wide.
+macro_rules! wide_object {
+    ({ $($key:literal : $value:expr),* $(,)? }) => {{
+        let mut map = serde_json::Map::new();
+        $( map.insert($key.to_string(), json!($value)); )*
+        Value::Object(map)
+    }};
+}
+
 const AFT_FIELDS: &[&str] = &[
     "beam",
     "depth",
@@ -326,7 +336,44 @@ const AFT_FIELDS: &[&str] = &[
     "sightline_obstruction_m",
     "sightline_margin_m",
     "wheelhouse_max_lift_m",
+    "propulsion",
+    "electrical_load_kwe",
+    "n_gensets",
+    "genset_model",
+    "genset_kwe",
+    "genset_length_m",
+    "genset_width_m",
+    "genset_height_m",
+    "genset_engine_mass_t",
+    "genset_clear_m",
+    "engine_room_end_clear_m",
+    "gvu_room_length_m",
 ];
+
+fn opt_str_field(
+    inputs: &serde_json::Map<String, Value>,
+    name: &str,
+) -> Result<Option<String>, EvalError> {
+    match inputs.get(name) {
+        None => Ok(None),
+        Some(v) => v
+            .as_str()
+            .map(|t| Some(t.to_string()))
+            .ok_or_else(|| EvalError::BadInput(format!("`inputs.{name}` must be a string"))),
+    }
+}
+
+/// A number field that may be an explicit null.
+fn nullable_f64_field(
+    inputs: &serde_json::Map<String, Value>,
+    name: &str,
+) -> Result<Option<Option<f64>>, EvalError> {
+    match inputs.get(name) {
+        None => Ok(None),
+        Some(v) if v.is_null() => Ok(Some(None)),
+        Some(_) => Ok(Some(f64_field(inputs, name)?)),
+    }
+}
 
 fn aft_inputs(args: &Value) -> Result<AftArrangementInputs, EvalError> {
     let o = inputs_object(args, AFT_FIELDS)?;
@@ -345,7 +392,34 @@ fn aft_inputs(args: &Value) -> Result<AftArrangementInputs, EvalError> {
             if let Some(v) = i64_field(o, stringify!($field))? { i.$field = v; }
         )*};
     }
-    set_i64!(n_thrusters, n_battery_units, n_accom_units);
+    if let Some(p) = opt_str_field(o, "propulsion")? {
+        i.propulsion = p;
+    }
+    // Issue #180: a gas-fuelled block carries no battery, so an absent or null count means 0.
+    if i.is_gas_fuelled() {
+        i.n_battery_units = 0;
+    }
+    // Null keeps the propulsion's default: 1 battery-electric, 0 gas-fuelled.
+    if !o.get("n_battery_units").is_some_and(Value::is_null) {
+        set_i64!(n_battery_units);
+    }
+    set_i64!(n_thrusters, n_accom_units, n_gensets);
+    if let Some(m) = opt_str_field(o, "genset_model")? {
+        i.genset_model = m;
+    }
+    if let Some(v) = nullable_f64_field(o, "electrical_load_kwe")? {
+        i.electrical_load_kwe = v;
+    }
+    set_f64!(
+        genset_kwe,
+        genset_length_m,
+        genset_width_m,
+        genset_height_m,
+        genset_engine_mass_t,
+        genset_clear_m,
+        engine_room_end_clear_m,
+        gvu_room_length_m
+    );
     set_f64!(
         thruster_envelope_m,
         thruster_clear_m,
@@ -376,7 +450,7 @@ fn aft_inputs(args: &Value) -> Result<AftArrangementInputs, EvalError> {
 }
 
 fn aft_json(r: &AftArrangementResult) -> Value {
-    json!({
+    wide_object!({
         "length_m": num(r.length_m),
         "zones": r.zones.iter().map(|(l, a, f)| json!([l, num(*a), num(*f)])).collect::<Vec<_>>(),
         "thruster_offsets_m": nums(&r.thruster_offsets_m),
@@ -404,6 +478,27 @@ fn aft_json(r: &AftArrangementResult) -> Value {
         "block_top_lowered_m": num(r.block_top_lowered_m),
         "checks": checks_json(&r.checks),
         "warnings": r.warnings,
+        "propulsion": r.propulsion,
+        "container_layout": r.container_layout,
+        "container_units": r.container_units.iter()
+            .map(|(l, a, f, y)| json!([l, num(*a), num(*f), num(*y)])).collect::<Vec<_>>(),
+        "engine_room_x0_m": num(r.engine_room_x0_m),
+        "engine_room_x1_m": num(r.engine_room_x1_m),
+        "gvu_room_x0_m": num(r.gvu_room_x0_m),
+        "gvu_room_x1_m": num(r.gvu_room_x1_m),
+        "n_gensets": r.n_gensets,
+        "genset_model": r.genset_model,
+        "genset_engine_model": r.genset_engine_model,
+        "genset_kwe": num(r.genset_kwe),
+        "installed_kwe": num(r.installed_kwe),
+        "genset_offsets_m": nums(&r.genset_offsets_m),
+        "genset_x0_m": num(r.genset_x0_m),
+        "genset_length_m": num(r.genset_length_m),
+        "genset_width_m": num(r.genset_width_m),
+        "genset_height_m": num(r.genset_height_m),
+        "genset_engine_mass_t": num(r.genset_engine_mass_t),
+        "below_deck_length_m": num(r.below_deck_length_m),
+        "deck_length_m": num(r.deck_length_m),
     })
 }
 
@@ -413,6 +508,27 @@ fn aft_arrangement(function: &str, args: &Value) -> Result<Value, EvalError> {
             Ok(r) => ok(aft_json(&r)),
             Err(e) => py_exception(&e),
         },
+        // Issue #180: the gas genset catalogue, in selection order.
+        "genset_catalogue" => ok(Value::Array(
+            ovcd_core::aft_arrangement::GAS_GENSETS
+                .iter()
+                .map(|g| {
+                    json!({
+                        "genset_model": g.genset_model,
+                        "engine_model": g.engine_model,
+                        "kwe": num(g.kwe),
+                        "rpm": num(g.rpm),
+                        "engine_length_m": num(g.engine_length_m),
+                        "engine_width_m": num(g.engine_width_m),
+                        "engine_height_m": num(g.engine_height_m),
+                        "engine_mass_t": num(g.engine_mass_t),
+                        "length_m": num(g.length_m()),
+                        "width_m": num(g.width_m()),
+                        "height_m": num(g.height_m()),
+                    })
+                })
+                .collect(),
+        )),
         other => Err(EvalError::BadInput(format!(
             "aft_arrangement has no function `{other}`"
         ))),
@@ -1456,16 +1572,6 @@ fn hydrostatics(function: &str, args: &Value) -> Result<Value, EvalError> {
 }
 
 /// A float field; absent means Python's default.
-/// A JSON object built key by key, in the order written. `json!` hits the macro recursion limit
-/// on objects this wide.
-macro_rules! wide_object {
-    ({ $($key:literal : $value:expr),* $(,)? }) => {{
-        let mut map = serde_json::Map::new();
-        $( map.insert($key.to_string(), json!($value)); )*
-        Value::Object(map)
-    }};
-}
-
 fn barge_inputs_json(i: &BargeInputs) -> Value {
     wide_object!({
         "loa": num(i.loa),
@@ -1577,6 +1683,8 @@ const CAPACITY_FIELDS: &[&str] = &[
     "bulk_piping_factor",
     "bulk_outfitting_factor",
     "max_tank_od_m",
+    "propulsion",
+    "electrical_load_kwe",
 ];
 
 /// An `Optional[int]` field: absent keeps the default, an explicit null is `None`.
@@ -1626,7 +1734,7 @@ pub(crate) fn capacity_inputs(args: &Value) -> Result<BargeCapacityInputs, EvalE
             if let Some(v) = string_field(o, stringify!($field))? { i.$field = v; }
         )*};
     }
-    set_string!(cargo_type, vessel_type, hold_type);
+    set_string!(cargo_type, vessel_type, hold_type, propulsion);
     set_f64!(
         block_coefficient,
         water_density,
@@ -1659,7 +1767,8 @@ pub(crate) fn capacity_inputs(args: &Value) -> Result<BargeCapacityInputs, EvalE
         air_draft_limit_m,
         bow_rake_length_m,
         side_clearance_override_m,
-        lightship_k_t_per_m3
+        lightship_k_t_per_m3,
+        electrical_load_kwe
     );
     // This one defaults to a number, so an absent key and an explicit null differ.
     i.tank_wall_thickness = opt_f64_field(o, "tank_wall_thickness", i.tank_wall_thickness)?;

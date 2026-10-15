@@ -225,7 +225,19 @@
     "wheelhouse_eye_above_floor_m",
     "sightline_obstruction_m",
     "sightline_margin_m",
-    "wheelhouse_max_lift_m"
+    "wheelhouse_max_lift_m",
+    "propulsion",
+    "electrical_load_kwe",
+    "n_gensets",
+    "genset_model",
+    "genset_kwe",
+    "genset_length_m",
+    "genset_width_m",
+    "genset_height_m",
+    "genset_engine_mass_t",
+    "genset_clear_m",
+    "engine_room_end_clear_m",
+    "gvu_room_length_m"
    ],
    "frozen": false,
    "kind": "class",
@@ -259,13 +271,36 @@
     "wheelhouse_height_m",
     "block_top_lowered_m",
     "checks",
-    "warnings"
+    "warnings",
+    "propulsion",
+    "container_layout",
+    "container_units",
+    "engine_room_x0_m",
+    "engine_room_x1_m",
+    "gvu_room_x0_m",
+    "gvu_room_x1_m",
+    "n_gensets",
+    "genset_model",
+    "genset_engine_model",
+    "genset_kwe",
+    "installed_kwe",
+    "genset_offsets_m",
+    "genset_x0_m",
+    "genset_length_m",
+    "genset_width_m",
+    "genset_height_m",
+    "genset_engine_mass_t",
+    "below_deck_length_m",
+    "deck_length_m"
    ],
    "frozen": false,
    "kind": "class",
    "methods": [
     "ok"
    ]
+  },
+  "GAS_GENSETS": {
+   "kind": "constant"
   },
   "ISO40_HEIGHT_HC_M": {
    "kind": "constant"
@@ -277,6 +312,9 @@
    "kind": "constant"
   },
   "ISO40_WIDTH_M": {
+   "kind": "constant"
+  },
+  "PROPULSION_OPTIONS": {
    "kind": "constant"
   },
   "compute": {
@@ -305,6 +343,8 @@
     "aft",
     "separation",
     "self_propelled",
+    "propulsion",
+    "electrical_load_kwe",
     "pushed_stern_void_m",
     "bow_rake_length_m",
     "bulk_end_bulkhead_m",

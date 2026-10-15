@@ -53,6 +53,15 @@ ISO40_WIDTH_M = 2.438
 ISO40_HEIGHT_HC_M = 2.896
 ISO40_HEIGHT_STD_M = 2.591
 
+# Issue #180: the stern block's two propulsion arrangements.
+PROPULSION_OPTIONS = ("battery_electric", "gas_fuelled")
+
+# The Weichai gas genset catalogue the gas-fuelled block selects from, in selection order: one dict
+# per set (model, engine, kWe, rpm, published engine envelope and mass, and the set envelope with
+# the ESTIMATED alternator and base frame). Source: Weichai Power, "Weichai Medium Speed Marine
+# Engine" (April 2023). The table lives in the Rust core (`GAS_GENSETS`).
+GAS_GENSETS = _call("aft_arrangement", "genset_catalogue", {}, None)
+
 
 @dataclass
 class AftArrangementInputs:
@@ -74,7 +83,8 @@ class AftArrangementInputs:
 
     # --- Containerised battery and accommodation (40 ft ISO, side by side) ---
     # Defaults are the GAS vessel's mix. `barge_capacity` swaps them for dry bulk.
-    n_battery_units: int = 1
+    # None: the propulsion's default, 1 battery-electric, 0 gas-fuelled (issue #180).
+    n_battery_units: Optional[int] = None
     n_accom_units: int = 2
     container_length_m: float = ISO40_LENGTH_M
     container_width_m: float = ISO40_WIDTH_M
@@ -95,11 +105,38 @@ class AftArrangementInputs:
     sightline_margin_m: float = 0.50         # eye above the obstruction (m)
     wheelhouse_max_lift_m: float = 6.00      # stroke of the lifting column (m)
 
+    # --- Propulsion (issue #180) ---
+    # "battery_electric" (0.1.0, the default): battery units drive the thrusters.
+    # "gas_fuelled": gas gensets below deck burn the cargo boil-off and drive the thrusters.
+    # No battery; the accommodation units stand BESIDE the wheelhouse when the beam takes
+    # them, and the engine room and gas valve unit (GVU) room sit below deck. The block is
+    # then as long as the longer of the deck items and the rooms below.
+    propulsion: str = "battery_electric"
+    # Load (kWe) the gensets must carry with one set in reserve. When set, the genset and
+    # count come from GAS_GENSETS (smallest installed power, n-1 sets carry the load) and
+    # override the genset fields below.
+    electrical_load_kwe: Optional[float] = None
+    n_gensets: int = 2
+    # Default set: Weichai CCFJ1200J-WMW (8WH20LCD1440-1). Envelope = published engine +
+    # alternator 1.90 m long, 1.90 m wide + base frame 0.25 m (ESTIMATES, no vendor GA).
+    genset_model: str = "CCFJ1200J-WMW"
+    genset_kwe: float = 1200.0
+    genset_length_m: float = 6.032
+    genset_width_m: float = 1.90
+    genset_height_m: float = 2.892
+    genset_engine_mass_t: float = 12.5
+    genset_clear_m: float = 1.0              # between sets and to the shell (ESTIMATE)
+    engine_room_end_clear_m: float = 1.2     # maintenance space fore and aft (ESTIMATE)
+    gvu_room_length_m: float = 2.0           # gas valve unit room (ESTIMATE)
+
     def __post_init__(self):
         if self.beam <= 0 or self.depth <= 0:
             raise ValueError("beam and depth must be positive")
         if self.n_thrusters < 1:
             raise ValueError("n_thrusters must be >= 1")
+        if self.propulsion not in PROPULSION_OPTIONS:
+            raise ValueError(f"propulsion must be one of {PROPULSION_OPTIONS}, "
+                             f"got {self.propulsion!r}")
 
 
 @dataclass
@@ -146,6 +183,29 @@ class AftArrangementResult:
 
     checks: List[Check] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
+
+    # --- Issue #180: gas-fuelled stern (zeros/empty for battery_electric) ---
+    propulsion: str = "battery_electric"
+    container_layout: str = "rows"           # "rows" | "beside_wheelhouse"
+    # Every unit's footprint: (label, x_aft, x_fwd, y_centre), y + = port.
+    container_units: List[Tuple[str, float, float, float]] = field(default_factory=list)
+    engine_room_x0_m: float = 0.0
+    engine_room_x1_m: float = 0.0
+    gvu_room_x0_m: float = 0.0
+    gvu_room_x1_m: float = 0.0
+    n_gensets: int = 0
+    genset_model: str = ""
+    genset_engine_model: str = ""
+    genset_kwe: float = 0.0
+    installed_kwe: float = 0.0
+    genset_offsets_m: List[float] = field(default_factory=list)  # + = port
+    genset_x0_m: float = 0.0
+    genset_length_m: float = 0.0
+    genset_width_m: float = 0.0
+    genset_height_m: float = 0.0
+    genset_engine_mass_t: float = 0.0        # published engine dry mass, all sets (t)
+    below_deck_length_m: float = 0.0
+    deck_length_m: float = 0.0
 
     @property
     def ok(self) -> bool:

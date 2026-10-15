@@ -73,6 +73,13 @@ pub struct BargeCapacityInputs {
     pub separation: Option<GasSeparationInputs>,
     /// A self-propelled vessel carries the stern block; a pushed barge does not.
     pub self_propelled: bool,
+    /// Issue #180. Propulsion of the default stern block, one of
+    /// [`crate::aft_arrangement::PROPULSION_OPTIONS`]. Used only when `aft` is `None`; a given
+    /// `aft` must agree.
+    pub propulsion: String,
+    /// Issue #180. Electrical load (kWe) the gensets carry with one set in reserve; selects the
+    /// genset from the catalogue. Gas-fuelled only.
+    pub electrical_load_kwe: Option<f64>,
     /// Aft void of a pushed barge (m)
     pub pushed_stern_void_m: f64,
     /// Bow bottom rake (m). `None`: 1.6 x moulded depth.
@@ -133,6 +140,8 @@ impl BargeCapacityInputs {
             aft: None,
             separation: None,
             self_propelled: true,
+            propulsion: "battery_electric".to_string(),
+            electrical_load_kwe: None,
             pushed_stern_void_m: 3.0,
             bow_rake_length_m: None,
             bulk_end_bulkhead_m: 0.50,
@@ -609,11 +618,26 @@ struct Arrangement {
 fn arrangement(inp: &BargeCapacityInputs, is_gas: bool) -> Result<Arrangement, PyError> {
     // The mix of 40 ft units differs by cargo: dry bulk carries a second battery, gas a second
     // accommodation unit.
+    // Gas-fuelled (issue #180): no battery; the gensets burn the cargo boil-off.
     let mut aft_in = match &inp.aft {
-        Some(a) => a.clone(),
+        Some(a) => {
+            if inp.propulsion != "battery_electric" && a.propulsion != inp.propulsion {
+                return Err(value_error(format!(
+                    "propulsion={:?} disagrees with aft.propulsion={:?}",
+                    inp.propulsion, a.propulsion
+                )));
+            }
+            a.clone()
+        }
         None => {
             let mut a = AftArrangementInputs::new(inp.beam, inp.depth);
-            a.n_battery_units = if is_gas { 1 } else { 2 };
+            a.propulsion = inp.propulsion.clone();
+            if a.is_gas_fuelled() {
+                a.n_battery_units = 0;
+                a.electrical_load_kwe = inp.electrical_load_kwe;
+            } else {
+                a.n_battery_units = if is_gas { 1 } else { 2 };
+            }
             a.n_accom_units = if is_gas { 2 } else { 1 };
             a
         }
