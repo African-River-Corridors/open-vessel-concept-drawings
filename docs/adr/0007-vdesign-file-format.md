@@ -11,8 +11,10 @@ A Design is saved as one file with the extension `.vdesign`.
 - A Design holds a named list of one or more Options, the engine version, and a results hash for each
   Option.
 - An Option holds the typed `simulate` inputs, using glossary names, plus `hull_form` and `formation`.
-- Required inputs: Cargo, Hull Form, length, beam, Formation and moulded depth. Every other input
-  comes from the Defaults Profile.
+- Required inputs: Cargo, Hull Form, length, beam and Formation. Every other input comes from the
+  Defaults Profile. Moulded depth (keel to main deck at the side) is one of them: left out, it is the
+  depth-to-beam ratio of the Cargo times the beam, a rule in the Defaults Profile (issue #120), stored
+  as used and marked `default` like any other.
 - The file stores every input **as used**, and marks which ones came from a default. A later change to
   the Defaults Profile never changes the results of a saved file.
 - Each validation range is hard (the input is refused) or soft (the input is accepted with a warning).
@@ -48,5 +50,7 @@ save writes the current version.
 ## Consequences
 
 - A saved file gives the same results when opened again, on Windows and macOS.
-- Moulded depth is required until a default rule by Cargo exists.
+- Moulded depth had to be typed until issue #120. Now a file may leave it out, and `ovcd fill` writes
+  the rule's value in. This changes no file that has a depth and no format version: a depth that is
+  stored is used as it is. `ovcd new` still writes an example depth (typed), for the starter hull.
 - A convoy Formation is valid in the file, but its results are not yet available.

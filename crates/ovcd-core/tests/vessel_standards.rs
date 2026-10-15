@@ -3,7 +3,7 @@
 //! differs from the 12 classes the core used to hold by hand, the difference is stated beside the
 //! assertion.
 //!
-//! Label: property.
+//! Label: property
 
 use ovcd_core::vessel_standards::{built_in_catalogue, get_standard, standards_for};
 

@@ -466,7 +466,11 @@ fn a_hard_error_on_a_wrong_type_or_choice_is_kept_and_reported() {
 #[test]
 fn a_soft_range_warning_attaches_to_its_input_and_the_option_still_runs() {
     let mut s = starter();
+    // 300 m is outside the usual length range. The depth goes with it, so that the hull is not
+    // also "very slender for its depth" (a separate warning, tested in `default_depth.rs`).
     s.set_input("Option 1", "length_overall_m", json!(300.0))
+        .unwrap();
+    s.set_input("Option 1", "moulded_depth_m", json!(14.0))
         .unwrap();
     let o = &s.evaluate().options[0];
     let w: Vec<_> = o
@@ -582,7 +586,7 @@ fn the_schema_lists_every_input_in_table_order_with_its_group() {
             .to_string()
     };
     assert_eq!(group_of("cargo"), "Required");
-    assert_eq!(group_of("moulded_depth_m"), "Required");
+    assert_eq!(group_of("moulded_depth_m"), "Hull and containment");
     assert_eq!(group_of("vessel_scheme"), "Vessel Class");
     assert_eq!(group_of("vessel_class"), "Vessel Class");
     assert_eq!(group_of("cargo_containment"), "Hull and containment");
@@ -639,7 +643,11 @@ fn schema_ranges_equal_the_profiles() {
         }
         assert_eq!(entry["required"], json!(spec.required), "{}", spec.name);
         // The class inputs are held only by an Option defined by a class: they have no default.
-        if !spec.required && !ovcd_format::class_input::UNSET_WHEN_ABSENT.contains(&spec.name) {
+        // The class inputs have no default; the depth has a rule (`default_rule`), not a value.
+        if !spec.required
+            && !ovcd_format::class_input::UNSET_WHEN_ABSENT.contains(&spec.name)
+            && spec.name != "moulded_depth_m"
+        {
             assert!(
                 entry.get("default").is_some() || entry.get("default_by").is_some(),
                 "{} has no default",

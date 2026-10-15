@@ -4,7 +4,7 @@
 //! Defaults Profile diameter cap (version 1 had a fixed 12 m), and says so in a warning. Each test reads the real files in
 //! `tests/legacy/`, which are version 1 files as that version wrote them.
 //!
-//! Label: property.
+//! Label: property
 
 use ovcd_format::{DesignSession, HashStatus, Profile, Source, check, fill};
 use serde_json::{Value, json};

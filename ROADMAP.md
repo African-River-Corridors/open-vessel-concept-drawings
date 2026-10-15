@@ -25,7 +25,8 @@ there, in order:
    [#119](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/119)).
    **Done** as a warning only, while the model is in development: a case outside its band is marked in
    `calibration/results.md` and raises a CI warning annotation, and never fails the build.
-2. Default moulded-depth rule by Cargo (high priority): fewer inputs for non-experts
+2. Default moulded-depth rule by Cargo (high priority): fewer inputs for non-experts. **Done**: a left-out
+   depth is the beam times a ratio by Cargo (`catalogue/depth_rule.md` lists the reference vessels against it)
    ([#120](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/120)).
 3. Review of the known engineering findings and general improvements to the model. The findings are
    listed in [#121](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/121);

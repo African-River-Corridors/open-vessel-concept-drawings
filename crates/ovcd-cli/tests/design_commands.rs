@@ -59,7 +59,7 @@ fn design_with(inputs: Value) -> Value {
     })
 }
 
-/// The six required inputs of a box-hold dry-bulk pushed barge, typed.
+/// The inputs of a box-hold dry-bulk pushed barge, typed (depth too, though it has a default).
 fn required_inputs() -> Value {
     json!({
         "cargo": "bauxite",
@@ -195,31 +195,47 @@ fn missing_required_input_gives_the_stated_message() {
 }
 
 #[test]
-fn missing_depth_says_a_default_rule_is_planned() {
-    let mut inputs = required_inputs();
+fn a_left_out_depth_is_the_cargo_ratio_times_the_beam_marked_default() {
+    // Issue #120: depth is no longer required; `fill` writes the rule's value, marked default.
+    let dir = temp_dir("missing-depth");
+    let file = dir.join("d.vdesign");
+    let mut inputs = required_inputs(); // bauxite, beam 11.4
     inputs.as_object_mut().unwrap().remove("moulded_depth_m");
-    let out = validate_inputs("missing-depth", inputs);
-    assert!(!out.status.success());
-    let text = stdout(&out);
+    write_json(&file, &design_with(inputs));
+    let filled = dir.join("f.vdesign");
+    let out = ovcd(&["fill", path_str(&file), path_str(&filled)]);
+    assert!(out.status.success(), "{}", stderr(&out));
     assert!(
-        text.contains(
-            "error: Option 'A': missing required input `moulded_depth_m`: moulded depth is \
-             required for now; a default rule by Cargo is planned"
-        ),
-        "{text}"
+        stderr(&out).contains("`moulded_depth_m` was not stored in the file; wrote in the Defaults Profile value 3.762, marked default"),
+        "{}",
+        stderr(&out)
     );
+    let design = read_json(&filled);
+    assert_eq!(
+        design["options"][0]["inputs"]["moulded_depth_m"],
+        json!({ "value": 3.762, "source": "default" })
+    );
+    // `validate` of the unfilled file says it is not stored, like any other default.
+    let v = ovcd(&["validate", path_str(&file)]);
+    assert!(!v.status.success());
+    assert!(
+        stdout(&v).contains("inputs not stored in the file: "),
+        "{}",
+        stdout(&v)
+    );
+    assert!(stdout(&v).contains("moulded_depth_m"));
 }
 
 #[test]
-fn a_null_depth_says_a_default_rule_is_planned_too() {
-    // Issue #142: null gave only "must be a number"; a missing depth gave the full message.
+fn a_null_depth_is_refused_a_left_out_depth_is_not() {
+    // Null is not "left out": the designer wrote it. (Left out, the rule gives the value.)
     let mut inputs = required_inputs();
     inputs["moulded_depth_m"] = Value::Null;
     let out = validate_inputs("null-depth", inputs);
     assert!(!out.status.success());
     let text = stdout(&out);
     assert!(
-        text.contains("moulded depth is required for now; a default rule by Cargo is planned"),
+        text.contains("`moulded_depth_m` must be a number"),
         "{text}"
     );
 }
@@ -940,7 +956,11 @@ fn new_class_writes_an_option_defined_by_the_class_and_it_validates() {
         inputs["draught_limit_m"],
         json!({ "value": 4.5, "source": "class" })
     );
-    assert_eq!(inputs["moulded_depth_m"]["source"], "typed");
+    // The starter's typed depth is dropped: the depth comes from the rule, 0.33 x 22.8 m.
+    assert_eq!(
+        inputs["moulded_depth_m"],
+        json!({ "value": 7.524, "source": "default" })
+    );
     let v = ovcd(&["validate", path_str(&file)]);
     assert!(v.status.success(), "{}{}", stdout(&v), stderr(&v));
     assert!(
