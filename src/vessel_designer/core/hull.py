@@ -33,10 +33,7 @@ class HullGeometry:
 
     def _q(self, draft: float) -> dict:
         """Every quantity of this hull at ``draft``, from the Rust core."""
-        hull = {name: getattr(self, name) for name in (
-            "loa", "beam", "depth", "bow_rake_length", "bow_rake_rise",
-            "stern_rake_length", "stern_rake_rise")}
-        return _call("hull", "quantities", {"hull": hull, "draft": draft})
+        return _call("hull", "quantities", {"hull": self, "draft": draft})
 
     @property
     def parallel_length(self) -> float:
