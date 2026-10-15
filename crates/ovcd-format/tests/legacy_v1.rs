@@ -1,7 +1,7 @@
 //! Seam 4: a version 1 `.vdesign` file opens in the current format (issue #175). Version 2
 //! changed the gas tank inputs: the `ADN_G` ruleset and `adn_tank_cap_m3` are gone and
-//! `max_tank_od_m` is new. A version 1 file is read as `IGC_2G`, drops the cap, takes the 12 m
-//! diameter cap version 1 ran with, and says so in a warning. Each test reads the real files in
+//! `max_tank_od_m` is new. A version 1 file is read as `IGC_2G`, drops the cap, takes the
+//! Defaults Profile diameter cap (version 1 had a fixed 12 m), and says so in a warning. Each test reads the real files in
 //! `tests/legacy/`, which are version 1 files as that version wrote them.
 //!
 //! Label: property.
@@ -20,7 +20,7 @@ fn has(list: &[String], text: &str) -> bool {
 
 const ADN: &str = "`ruleset` ADN_G is no longer offered";
 const CAP: &str = "`adn_tank_cap_m3` is no longer an input";
-const OD: &str = "this version 1 file has no `max_tank_od_m`; it is set to 12 m";
+const OD: &str = "this version 1 file has no `max_tank_od_m`; it now uses the default 16 m";
 
 #[test]
 fn the_fixture_really_is_a_version_1_file_that_names_adn_g() {
@@ -52,7 +52,7 @@ fn validate_opens_it_as_igc_2g_without_the_cap_and_warns() {
     let od = o.input("max_tank_od_m").unwrap();
     assert_eq!(
         (od.value.clone(), od.source),
-        (json!(12.0), Source::Default)
+        (json!(16.0), Source::Default)
     );
 }
 

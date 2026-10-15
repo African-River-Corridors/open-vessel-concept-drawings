@@ -33,9 +33,9 @@ save writes the current version.
 - **2** (issue #175): the input table changed. `max_tank_od_m` is new. `adn_tank_cap_m3` and the
   `ADN_G` ruleset are gone, because the engine applies IGC rules only to gas tanks. A version 1 file
   that names `ADN_G` is read as `IGC_2G`, its `adn_tank_cap_m3` is dropped, and a gas Option with no
-  `max_tank_od_m` is read as having used 12 m, the cap version 1 ran with (new Designs start at the
-  Defaults Profile value, 16 m). The Vessel Class ticket (#94) also changes the input table before
-  the next release, so it reuses version 2 and does not bump again.
+  `max_tank_od_m` gets the Defaults Profile value (16 m), marked `default`, with a warning that
+  version 1 used a fixed 12 m cap, so results may change. The Vessel Class ticket (#94) also
+  changes the input table before the next release, so it reuses version 2 and does not bump again.
 
 ## Consequences
 

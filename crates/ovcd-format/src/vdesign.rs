@@ -39,10 +39,6 @@ pub const FORMAT_VERSION: u64 = 2;
 /// the current inputs as it is read, with a warning for each change (see [`migrate_v1_option`]).
 pub const OLDEST_FORMAT_VERSION: u64 = 1;
 
-/// The tank outer diameter cap, in m, that version 1 files were run with. A version 1 file has no
-/// `max_tank_od_m`, so it is read as having used this value.
-pub const V1_MAX_TANK_OD_M: f64 = 12.0;
-
 /// The engine version written into every new Design. One version covers every `ovcd-*` crate.
 pub const ENGINE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -797,7 +793,7 @@ fn read_design(
         let migrated;
         let inputs = if version == Some(1) {
             let mut m = inputs.clone();
-            migrate_v1_option(name, &mut m, report);
+            migrate_v1_option(name, &mut m, profile, report);
             migrated = m;
             &migrated
         } else {
@@ -829,11 +825,16 @@ fn read_design(
 ///
 /// - the `ADN_G` ruleset: read as `IGC_2G`, the marker (`typed` or `default`) kept;
 /// - the input `adn_tank_cap_m3`: dropped;
-/// - no `max_tank_od_m` (a gas Option only): set to [`V1_MAX_TANK_OD_M`], the cap version 1 ran
-///   with, marked `default`.
+/// - no `max_tank_od_m` (a gas Option only): set to the Defaults Profile value, marked `default`.
+///   Version 1 ran with a fixed 12 m cap, so the results may change.
 ///
 /// The file on disk is not touched. Saving writes version 2.
-fn migrate_v1_option(name: &str, inputs: &mut Map<String, Value>, report: &mut Report) {
+fn migrate_v1_option(
+    name: &str,
+    inputs: &mut Map<String, Value>,
+    profile: &Profile,
+    report: &mut Report,
+) {
     let at = |msg: String| format!("Option '{name}': {msg}");
     let note = |report: &mut Report, text: String, inputs: &[&str]| {
         report.migration_notes.push(text.clone());
@@ -878,17 +879,21 @@ fn migrate_v1_option(name: &str, inputs: &mut Map<String, Value>, report: &mut R
         Some(Value::Object(o)) => o.get("value").and_then(Value::as_str),
         _ => None,
     };
-    if containment == Some("type_c_tanks") && !inputs.contains_key("max_tank_od_m") {
+    // A profile with no default leaves the input out, and the ordinary "not stored" rule applies.
+    if containment == Some("type_c_tanks")
+        && !inputs.contains_key("max_tank_od_m")
+        && let Some(default) = profile.default("max_tank_od_m")
+    {
         inputs.insert(
             "max_tank_od_m".into(),
-            json!({ "value": V1_MAX_TANK_OD_M, "source": "default" }),
+            json!({ "value": default, "source": "default" }),
         );
         note(
             report,
             at(format!(
-                "this version 1 file has no `max_tank_od_m`; it is set to {V1_MAX_TANK_OD_M} m, \
-                 the tank diameter cap version 1 used (a new Design starts at the Defaults \
-                 Profile value)"
+                "this version 1 file has no `max_tank_od_m`; it now uses the default {} m \
+                 (version 1 used a fixed 12 m cap, so results may change)",
+                show(default)
             )),
             &["max_tank_od_m"],
         );
