@@ -22,6 +22,8 @@ export interface Snapshot {
   active_option: string;
   /** Options whose stored results hash differs from this engine's, at open. */
   hash_changed: string[];
+  /** What changed when an old (version 1) file was read as the current inputs, at open. */
+  migration_notes: string[];
 }
 export interface Choice {
   value: string;

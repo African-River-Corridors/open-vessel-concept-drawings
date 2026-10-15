@@ -192,6 +192,9 @@
   {#each evaluation?.file_messages ?? [] as m}
     <div class="banner {m.severity === 'error' ? 'error' : 'warn'}" role="status">{m.text}</div>
   {/each}
+  {#each snap?.migration_notes ?? [] as note}
+    <div class="banner warn" role="status" data-testid="migration-note">{note}</div>
+  {/each}
   {#if snap && snap.hash_changed.length > 0 && !bannerDismissed}
     <div class="banner warn" role="status">
       Results changed since this file was saved. Options affected: {snap.hash_changed.join(", ")}.

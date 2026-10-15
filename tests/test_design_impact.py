@@ -46,7 +46,8 @@ def test_the_case_set_covers_the_calibration_vessels_and_a_sweep():
     assert len(cs) >= 25
     assert any(k.startswith("calibration para-mississippi") for k in cs)
     assert any(k.startswith("sweep CN-derived liquid") for k in cs)
-    assert any(k.startswith("sweep gas ADN_G") for k in cs)
+    assert any(k.startswith("sweep gas IGC_2G_EXACT") for k in cs)
+    assert not any("ADN_G" in k for k in cs)
     for typed in cs.values():           # the six required inputs, so `ovcd fill` can complete the rest
         for key in ("cargo", "hull_form", "formation", "length_overall_m", "beam_m", "moulded_depth_m"):
             assert key in typed
@@ -170,3 +171,41 @@ def test_the_pull_request_workflow_only_measures_and_keeps_an_artifact():
     assert "pull-requests: write" not in text and "issues: write" not in text   # runs fork code: read only
     assert "pull_request_target" not in text
     assert "upload-artifact" in text and "pr.txt" in text
+
+
+def versioned_ovcd(tmp_path: Path, name: str, reads: tuple) -> Path:
+    """A stand-in `ovcd` that reads only the format versions in `reads`, as the real one says."""
+    script = tmp_path / name
+    script.write_text(textwrap.dedent(f'''\
+        #!{sys.executable}
+        import json, sys
+        cmd = sys.argv[1]
+        if cmd == "fill":
+            text = open(sys.argv[2]).read()
+            v = json.loads(text)["format_version"]
+            if v not in {reads!r}:
+                print(f"error: format_version {{v}} is not supported", file=sys.stderr); sys.exit(1)
+            open(sys.argv[3], "w").write(text)
+        elif cmd == "run":
+            d = json.load(open(sys.argv[3]))
+            print(json.dumps({{"options": [{{"name": "a", "results": {{
+                "results": {{"format_version_read": d["format_version"]}}}}}}]}}))
+    '''))
+    script.chmod(script.stat().st_mode | stat.S_IEXEC)
+    return script
+
+
+def test_a_case_is_given_to_each_binary_in_the_newest_format_it_reads(tmp_path):
+    """Version 2 for a binary that reads it (the head), version 1 for one that does not (a base
+    from before issue #175). Version 1 given to the head would give a gas design the 12 m tank
+    diameter cap of version 1 files, and hide the change of the default.
+
+    Label: property
+    """
+    cs = {"a": di._inputs("bauxite", "box_hold", "pushed_barge", 60.0, 10.0, 4.0)}
+    new = di.run_all(versioned_ovcd(tmp_path, "new", (1, 2)), cs)
+    old = di.run_all(versioned_ovcd(tmp_path, "old", (1,)), cs)
+    assert new["a"]["results"]["results"]["format_version_read"] == 2
+    assert old["a"]["results"]["results"]["format_version_read"] == 1
+    none = di.run_all(versioned_ovcd(tmp_path, "none", ()), cs)
+    assert "format_version" in none["a"]["error"]

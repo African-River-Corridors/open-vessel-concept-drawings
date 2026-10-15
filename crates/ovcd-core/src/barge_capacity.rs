@@ -38,9 +38,10 @@ use crate::pystr::repr_str;
 use crate::tanks::{INT_OVERFLOW_MESSAGE, calculate_tank_arrangement_wide};
 use crate::weights::calculate_weights;
 
-/// Maximum gas tank outer diameter (m): the design rule that caps tank OD and goes to more tanks
-/// across above it.
-pub const MAX_TANK_OD_M: f64 = 12.0;
+/// Default cap on a gas tank's outer diameter (m). It is a design limit of this tool, not a rule of
+/// the IGC Code: above it the engine goes to more tanks across the beam. The cap is an input
+/// (`BargeCapacityInputs::max_tank_od_m`); issue #175 raised it from 12 m and made it one.
+pub const DEFAULT_MAX_TANK_OD_M: f64 = 16.0;
 
 /// Inputs for the unified barge capacity calculation. [`BargeCapacityInputs::new`] gives the
 /// Python dataclass defaults.
@@ -85,6 +86,8 @@ pub struct BargeCapacityInputs {
     /// `None`: auto, the fewest tanks across that keeps each tank's OD within the cap.
     pub n_tanks_wide: Option<i64>,
     pub n_tanks_long: i64,
+    /// Cap on a tank's outer diameter (m): sets the automatic tank count across the beam.
+    pub max_tank_od_m: f64,
     /// mm; `None`: auto pressure-vessel formula
     pub tank_wall_thickness: Option<f64>,
     pub fill_ratio: f64,
@@ -137,6 +140,7 @@ impl BargeCapacityInputs {
             side_clearance_override_m: None,
             n_tanks_wide: None,
             n_tanks_long: 2,
+            max_tank_od_m: DEFAULT_MAX_TANK_OD_M,
             tank_wall_thickness: Some(25.0),
             fill_ratio: 0.95,
             dome_height: 2.0,
@@ -427,7 +431,7 @@ fn gas_volumetric(
                 inp.beam,
                 cs,
                 truthy_or_zero(base.tank_gap_transverse),
-                MAX_TANK_OD_M,
+                inp.max_tank_od_m,
             )?,
         };
         // `dataclasses.replace`: copy, set, run `__post_init__` again.
@@ -459,7 +463,7 @@ fn gas_volumetric(
     let detail = Detail {
         tank_outer_diameter_m: Some(tanks.outer_diameter),
         n_tanks_wide: Some(tanks.n_tanks_wide),
-        max_tank_od_m: Some(MAX_TANK_OD_M),
+        max_tank_od_m: Some(inp.max_tank_od_m),
         n_tanks_total: Some(tanks.n_tanks_total),
         side_clearance_m: Some(cs),
         bottom_clearance_m: Some(cb),
@@ -686,7 +690,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
                     lightship: 0.0,
                     h_top: inp.depth,
                     detail: Detail {
-                        max_tank_od_m: Some(MAX_TANK_OD_M),
+                        max_tank_od_m: Some(inp.max_tank_od_m),
                         containment_inner_volume_m3: Some(0.0),
                         fill_ratio_applied: Some(inp.fill_ratio),
                         ..Detail::default()

@@ -142,7 +142,7 @@ fn a_convoy_has_no_params_and_no_results() {
 #[test]
 fn fill_does_not_stamp_a_file_that_has_a_hard_error() {
     let text = json!({
-        "format": "vdesign", "format_version": 1, "engine_version": "0.1.0",
+        "format": "vdesign", "format_version": 2, "engine_version": "0.1.0",
         "options": [{ "name": "A", "inputs": {
             "cargo": "bauxite", "hull_form": "raked_box", "formation": {"kind": "pushed_barge"},
             "length_overall_m": 76.5, "beam_m": -1.0, "moulded_depth_m": 3.5 } }]
@@ -172,7 +172,7 @@ fn a_results_hash_that_is_not_text_is_a_hard_error() {
 
 fn raw_file(engine_version: &str, options: Value) -> String {
     json!({
-        "format": "vdesign", "format_version": 1, "engine_version": engine_version,
+        "format": "vdesign", "format_version": 2, "engine_version": engine_version,
         "options": options
     })
     .to_string()

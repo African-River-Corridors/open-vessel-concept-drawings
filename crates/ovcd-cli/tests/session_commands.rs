@@ -88,7 +88,7 @@ fn open_of_a_hand_written_file_equals_ovcd_fill() {
     let dir = temp_dir("open-fill");
     let file = dir.join("hand.vdesign");
     let hand = json!({
-        "format": "vdesign", "format_version": 1, "engine_version": "0.1.0",
+        "format": "vdesign", "format_version": 2, "engine_version": "0.1.0",
         "options": [
             { "name": "A", "inputs": {
                 "cargo": "LPG_propane", "hull_form": "raked_box",

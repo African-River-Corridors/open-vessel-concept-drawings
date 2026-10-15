@@ -1576,6 +1576,7 @@ const CAPACITY_FIELDS: &[&str] = &[
     "bulk_steel_rate_per_cbm",
     "bulk_piping_factor",
     "bulk_outfitting_factor",
+    "max_tank_od_m",
 ];
 
 /// An `Optional[int]` field: absent keeps the default, an explicit null is `None`.
@@ -1651,7 +1652,8 @@ pub(crate) fn capacity_inputs(args: &Value) -> Result<BargeCapacityInputs, EvalE
         bulk_structure_factor,
         bulk_steel_rate_per_cbm,
         bulk_piping_factor,
-        bulk_outfitting_factor
+        bulk_outfitting_factor,
+        max_tank_od_m
     );
     set_opt_f64!(
         air_draft_limit_m,
@@ -1753,7 +1755,11 @@ fn barge_capacity(function: &str, args: &Value) -> Result<Value, EvalError> {
                 f64_arg(args, "beam_m")?,
                 f64_arg(args, "side_clearance_m")?,
                 f64_arg_or(args, "tank_gap_transverse_m", 0.0)?,
-                f64_arg_or(args, "max_od_m", ovcd_core::barge_capacity::MAX_TANK_OD_M)?,
+                f64_arg_or(
+                    args,
+                    "max_od_m",
+                    ovcd_core::barge_capacity::DEFAULT_MAX_TANK_OD_M,
+                )?,
             ) {
                 Ok(n) => ok(json!(n)),
                 Err(e) => raised_py(&e),
@@ -2307,20 +2313,6 @@ fn grid_cell_json(c: &core_grid::GridCell) -> Value {
 
 fn design_grid(function: &str, args: &Value) -> Result<Value, EvalError> {
     match function {
-        "n_tanks_for_length" => {
-            let length = exact_number(
-                args.get("barge_length_m").unwrap_or(&Value::Null),
-                "args.barge_length_m",
-            )?;
-            let max_len = match args.get("max_tank_length_m") {
-                None => core_grid::MAX_TANK_LENGTH_M,
-                Some(v) => exact_number(v, "args.max_tank_length_m")?,
-            };
-            match core_grid::n_tanks_for_length(length, max_len) {
-                Ok(n) => ok(json!(n)),
-                Err(e) => raised_py(&e),
-            }
-        }
         "sweep" => {
             let (length_values, lengths) = number_list(args, "barge_lengths_m")?;
             let (beam_values, beams) = number_list(args, "beams_m")?;
@@ -2344,7 +2336,6 @@ fn design_grid(function: &str, args: &Value) -> Result<Value, EvalError> {
                     "depth_m": depth_value,
                     "cargo_type": g.cargo_type,
                     "clearance_basis": g.clearance_basis,
-                    "max_tank_length_m": num(g.max_tank_length_m),
                     "cells": g.cells.iter().map(grid_cell_json).collect::<Vec<_>>(),
                 })),
                 Err(e) => raised_py(&e),

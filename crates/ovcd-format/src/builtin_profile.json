@@ -61,18 +61,18 @@
       "default": "IGC_2G_EXACT"
     },
     "fill_ratio": {
-      "default_by_ruleset": { "IGC_2G": 0.98, "IGC_2G_EXACT": 0.98, "ADN_G": 0.95 },
+      "default_by_ruleset": { "IGC_2G": 0.98, "IGC_2G_EXACT": 0.98 },
       "unit": "-",
       "hard": { "ge": 0.1, "le": 1 },
       "soft": { "min": 0.8, "max": 0.99 },
-      "basis": "IGC 15.3 default 98 %, ADN 95 %"
+      "basis": "IGC Code 15.3 default filling limit, 98 %"
     },
-    "adn_tank_cap_m3": {
-      "default": 1000.0,
-      "unit": "m3",
-      "hard": { "ge": 1, "le": 100000 },
-      "soft": { "min": 100.0, "max": 1000.0 },
-      "basis": "ADN routes cap a tank at 380 or 1000 m3"
+    "max_tank_od_m": {
+      "default": 16.0,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 50 },
+      "soft": { "min": 4.0, "max": 20.0 },
+      "basis": "a design limit of this tool, not an IGC Code rule: a tank is never wider than this, so a wider hull gets more tanks across. Tank length is limited only by length over diameter, at most 7"
     },
     "optimise_depth": {
       "default": false

@@ -1,6 +1,12 @@
 //! Best gas-tank arrangement for a hull: search, do not trust the single AUTO answer.
 //! Port of `core/gas_arrangement.py`. The reasoning behind the search lives in the Python file.
 //!
+//! Only IGC rules apply to the gas tanks (issue #175): `IGC_2G` and `IGC_2G_EXACT`. Two tanks lie
+//! along the hull. Every tank has to keep to the outer diameter cap (`FitOptions::max_tank_od_m`)
+//! and to length over diameter at most [`MAX_TANK_LENGTH_OVER_OD`]. A candidate over that is not
+//! feasible: it gets the failed check `tank_length_over_diameter`, so it can never win while a
+//! compliant one exists, and a hull with none is reported infeasible, not given a payload.
+//!
 //! Behaviour is copied exactly, including the errors and their message text. Python's `x or 0.0`
 //! on a float is `truthy_or_zero`, `x or y` on an optional float is `or_else`, a strict `>` with
 //! the `1e-6` margin picks the winner (so the first of two near-equal candidates stays), and the
@@ -16,20 +22,22 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::barge_capacity::{
-    BargeCapacityInputs, BargeCapacityResult, MAX_TANK_OD_M, compute as capacity,
+    BargeCapacityInputs, BargeCapacityResult, DEFAULT_MAX_TANK_OD_M, compute as capacity,
 };
-use crate::checks::all_ok;
+use crate::checks::{Check, all_ok};
 use crate::journey_derating::{JourneyDeratingInputs, JourneyDeratingResult, compute as derate};
 use crate::pressure_vessel::PyError;
-use crate::protective_location::{
-    ADN_G_MAX_L_OVER_D, ADN_G_TANK_CAP_9_3_4_M3, ADN_G_WIDE_TANK_FRACTION,
-    compute_required_clearances, d_vc_exact, distance_d_vc,
-};
-use crate::pyfmt::{fixed, round_to};
+use crate::protective_location::{compute_required_clearances, d_vc_exact, distance_d_vc};
+use crate::pyfmt::{fixed, py_str, round_to};
 use crate::tanks::INT_OVERFLOW_MESSAGE;
 
 /// The rulesets `fit` accepts.
-pub const RULESETS: [&str; 3] = ["IGC_2G", "IGC_2G_EXACT", "ADN_G"];
+pub const RULESETS: [&str; 2] = ["IGC_2G", "IGC_2G_EXACT"];
+/// Largest overall tank length (heads included) over outer diameter, for every pressure tank. A
+/// design limit of this tool, the same under both rulesets. The figure is the one the removed
+/// `ADN_G` ruleset used (the comments of that ruleset cite ADN 2025 9.3.1.11.1(b)); no IGC Code
+/// paragraph is cited for it.
+pub const MAX_TANK_LENGTH_OVER_OD: f64 = 7.0;
 /// `round(3.5 + 0.25 * i, 2)` for `i` in `0..15`: every value is exact in binary, so the
 /// rounding changes nothing.
 pub const DEFAULT_DEPTHS_M: [f64; 15] = [
@@ -37,8 +45,6 @@ pub const DEFAULT_DEPTHS_M: [f64; 15] = [
 ];
 pub const DEFAULT_TANKS_WIDE: [i64; 3] = [1, 2, 3];
 pub const DEFAULT_EXTRA_CLEARANCE_M: [f64; 4] = [0.5, 1.0, 1.5, 2.0];
-/// Tank-to-tank gap the engine uses along the hull (a default, not a rule).
-pub const ADN_LONGITUDINAL_GAP_M: f64 = 2.0;
 
 /// The keyword arguments of `fit`. `Default` is the Python defaults.
 #[derive(Debug, Clone, PartialEq)]
@@ -49,8 +55,8 @@ pub struct FitOptions {
     pub depths: Vec<f64>,
     pub tanks_wide: Vec<i64>,
     pub extra_clearance_m: Vec<f64>,
-    pub adn_tank_cap_m3: f64,
     pub block_coefficient: f64,
+    /// Cap on a tank's outer diameter (m), under both rulesets.
     pub max_tank_od_m: f64,
 }
 
@@ -63,9 +69,8 @@ impl Default for FitOptions {
             depths: DEFAULT_DEPTHS_M.to_vec(),
             tanks_wide: DEFAULT_TANKS_WIDE.to_vec(),
             extra_clearance_m: DEFAULT_EXTRA_CLEARANCE_M.to_vec(),
-            adn_tank_cap_m3: ADN_G_TANK_CAP_9_3_4_M3,
             block_coefficient: 0.85,
-            max_tank_od_m: MAX_TANK_OD_M,
+            max_tank_od_m: DEFAULT_MAX_TANK_OD_M,
         }
     }
 }
@@ -165,7 +170,9 @@ fn floor_div(a: i64, b: i64) -> Result<i64, PyError> {
     })
 }
 
-/// The code minimum for the engine's clearance datum (outer face of the insulation).
+/// The code minimum for the engine's clearance datum (outer face of the insulation): the d(Vc)
+/// distance of IGC Code 2.4.1.1 (see `protective_location::d_vc_exact`; `IGC_2G` uses the
+/// stepped reading of `distance_d_vc`).
 ///
 /// `Err` is the `ValueError` for a ruleset that is not a vessel type.
 pub fn required_side_clearance(
@@ -176,12 +183,41 @@ pub fn required_side_clearance(
     insulation_mm: f64,
 ) -> Result<f64, PyError> {
     if ruleset == "IGC_2G_EXACT" {
-        // Per-tank d, measured to steel: insulation sits inside d.
+        // IGC Code 2.4.1.1, per tank, measured to the tank steel: the insulation sits inside d.
         return Ok(d_vc_exact(per_tank_m3) - insulation_mm / 1000.0);
     }
     compute_required_clearances(ruleset, beam, distance_d_vc(total_m3))
         .map(|c| c.cs_required)
         .map_err(value_error)
+}
+
+/// The length over diameter check of a candidate's tank. `None` when there is no tank (a bulk
+/// result, or a hull with no cargo area), which the other checks already report.
+pub fn length_over_diameter_check(r: &BargeCapacityResult) -> Option<Check> {
+    let tanks = &r.gas_basis.as_ref()?.tanks;
+    if tanks.outer_diameter <= 0.0 {
+        return None;
+    }
+    let ratio = tanks.overall_tank_length / tanks.outer_diameter;
+    Some(Check::new(
+        "tank_length_over_diameter",
+        ratio <= MAX_TANK_LENGTH_OVER_OD,
+        format!(
+            "tank length {} m / outer diameter {} m = {} <= {}",
+            fixed(tanks.overall_tank_length, 2),
+            fixed(tanks.outer_diameter, 2),
+            fixed(ratio, 2),
+            py_str(MAX_TANK_LENGTH_OVER_OD)
+        ),
+    ))
+}
+
+/// A candidate's checks: the capacity checks, the journey checks and the tank length check.
+fn candidate_checks(r: &BargeCapacityResult, j: &JourneyDeratingResult) -> Vec<Check> {
+    let mut all = r.checks.clone();
+    all.extend(j.checks.iter().cloned());
+    all.extend(length_over_diameter_check(r));
+    all
 }
 
 /// One built candidate: the inputs and the capacity result they gave.
@@ -231,6 +267,7 @@ impl Search<'_> {
         inp.block_coefficient = self.o.block_coefficient;
         inp.n_tanks_wide = Some(nw);
         inp.n_tanks_long = nl;
+        inp.max_tank_od_m = self.o.max_tank_od_m;
         inp
     }
 
@@ -279,17 +316,6 @@ impl Search<'_> {
                 return Ok(None);
             }
         }
-        if self.o.ruleset == "ADN_G" {
-            let per_tank =
-                opt_or_zero(r.containment_inner_volume_m3) / tank_divisor(r.n_tanks_total);
-            let tank_len = (opt_or_zero(r.cargo_zone_length_m)
-                - (nl - 1) as f64 * ADN_LONGITUDINAL_GAP_M)
-                / nl as f64;
-            let od = opt_or_zero(r.tank_outer_diameter_m);
-            if per_tank > self.o.adn_tank_cap_m3 + 1e-6 || tank_len > ADN_G_MAX_L_OVER_D * od {
-                return Ok(None);
-            }
-        }
         Ok(Some((inp, r)))
     }
 }
@@ -307,7 +333,7 @@ pub fn fit(
 ) -> Result<ArrangementFit, PyError> {
     if !RULESETS.contains(&o.ruleset.as_str()) {
         return Err(value_error(
-            "ruleset must be one of ('IGC_2G', 'IGC_2G_EXACT', 'ADN_G')".to_string(),
+            "ruleset must be one of ('IGC_2G', 'IGC_2G_EXACT')".to_string(),
         ));
     }
     let mut s = Search {
@@ -324,18 +350,7 @@ pub fn fit(
     for &d in &o.depths {
         for &nw in &o.tanks_wide {
             let mut cands: Vec<Built> = Vec::new();
-            if o.ruleset == "ADN_G" {
-                // Add tanks along the hull until one complies, then one more (shorter tanks lose
-                // head length but can balance better).
-                for nl in 2..25 {
-                    if let Some(x) = s.build(d, nw, nl)? {
-                        cands.push(x);
-                        if cands.len() == 2 {
-                            break;
-                        }
-                    }
-                }
-            } else if let Some(x) = s.build(d, nw, 2)? {
+            if let Some(x) = s.build(d, nw, 2)? {
                 cands.push(x);
             }
             let mut more: Vec<Built> = Vec::new();
@@ -359,11 +374,7 @@ pub fn fit(
             for (inp, r) in cands.into_iter().chain(more) {
                 let j = derate_candidate(&r, loa, beam, d, t_max, o.block_coefficient)?;
                 let tonnage = j.achievable_tonnage_t;
-                let passes = {
-                    let mut all = r.checks.clone();
-                    all.extend(j.checks.iter().cloned());
-                    all_ok(&all)
-                };
+                let passes = all_ok(&candidate_checks(&r, &j));
                 let beats_any = best_any.as_ref().is_none_or(|b| tonnage > b.tonnage + 1e-6);
                 let beats_best = passes && best.as_ref().is_none_or(|b| tonnage > b.tonnage + 1e-6);
                 if beats_any || beats_best {
@@ -418,27 +429,13 @@ pub fn fit(
     } = best;
     let n_total = opt_count(r.n_tanks_total);
     let n_wide = opt_count(r.n_tanks_wide);
-    let mut failed: Vec<String> = r
-        .checks
+    let checks = candidate_checks(&r, &j);
+    let failed: Vec<String> = checks
         .iter()
-        .chain(j.checks.iter())
         .filter(|c| !c.ok)
         .map(|c| format!("{}: {}", c.name, c.message))
         .collect();
-    let feasible = {
-        let mut all = r.checks.clone();
-        all.extend(j.checks.iter().cloned());
-        all_ok(&all)
-    };
-    if o.ruleset == "ADN_G"
-        // Killed by `a_tank_exactly_at_seventy_percent_of_beam_is_not_flagged_wide` (`>` to `>=`).
-        && opt_or_zero(r.tank_outer_diameter_m) > ADN_G_WIDE_TANK_FRACTION * beam
-    {
-        failed.push(format!(
-            "adn_wide_tank: tank {} m > 0.70 B; ADN 9.3.1.14.2 needs extra intact stability checks",
-            fixed(opt_or_zero(r.tank_outer_diameter_m), 1)
-        ));
-    }
+    let feasible = all_ok(&checks);
     let n_tanks_long = if n_wide != 0 {
         floor_div(n_total, n_wide)?
     } else {

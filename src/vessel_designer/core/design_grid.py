@@ -4,13 +4,10 @@ Pre-computes volume-bound gas cargo (Type-C tanks) across a grid of barge length
 x beam, so a study can draw the cargo-against-beam curves (one line per LOA)
 without any live calculation.
 
-Design rule for the tank count (the one free choice as length grows):
-  n_tanks_long = max(1, ceil(available_length / max_tank_length))
-where available_length = (1 - bow_pct - stern_pct) * barge_length. The count
-depends on LENGTH ONLY (not beam), so every fixed-LOA curve is smooth — you only
-step up a tank when the hull gets long enough to need one. max_tank_length is a
-fabrication/transport/support limit (ESTIMATE, 28 m; an example 60 m barge
-carries 2 tanks at ~21.5 m each, comfortably under).
+Every cell has two tanks along the hull, as ``gas_arrangement.fit`` has. There is no cap on tank
+length (issue #175 removed the 28 m cap): a tank is limited only by its outer diameter cap and by
+length over diameter at most 7. A hull too long for two tanks is an infeasible cell, and its
+``reason`` says so. ``tank_length_m`` and ``slenderness`` are the engine's own figures.
 
 Cargo is sized on the BARGE length (the tank-bearing hull); total ATB LOA = barge length + tug (16 m for the E-Pusher).
 
@@ -24,17 +21,10 @@ from typing import List, Optional
 from .._bridge import call as _call
 from .barge_capacity import BargeCapacityInputs  # noqa: F401  (0.1.0 exposed it here)
 
-MAX_TANK_LENGTH_M = 28.0       # overall Type-C tank length cap — ESTIMATE
 SIDE_CLEARANCE_M = 1.0         # standard IGC-2G protective-location spacing per side
 BOW_NON_TANK_PCT = 0.10        # mirror models.py defaults
 STERN_NON_TANK_PCT = 0.15
 TUG_LOA_M = 16.0               # Kotug E-Pusher pattern — for the total-LOA note
-
-
-def n_tanks_for_length(barge_length_m: float,
-                       max_tank_length_m: float = MAX_TANK_LENGTH_M) -> int:
-    """Tanks in a line for a given barge length (length-only, so curves stay smooth)."""
-    return _call("design_grid", "n_tanks_for_length", {"barge_length_m": barge_length_m, "max_tank_length_m": max_tank_length_m}, int)
 
 
 @dataclass
@@ -59,7 +49,6 @@ class DesignGrid:
     depth_m: float
     cargo_type: str
     clearance_basis: str
-    max_tank_length_m: float
     cells: List[GridCell] = field(default_factory=list)
 
     def curve(self, barge_length_m: float) -> List[GridCell]:

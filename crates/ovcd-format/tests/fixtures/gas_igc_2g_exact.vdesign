@@ -1,7 +1,7 @@
 {
   "format": "vdesign",
-  "format_version": 1,
-  "engine_version": "0.2.0",
+  "format_version": 2,
+  "engine_version": "0.2.2",
   "units": "SI",
   "options": [
     {
@@ -53,8 +53,8 @@
           "value": 0.98,
           "source": "default"
         },
-        "adn_tank_cap_m3": {
-          "value": 1000.0,
+        "max_tank_od_m": {
+          "value": 16.0,
           "source": "default"
         },
         "optimise_depth": {

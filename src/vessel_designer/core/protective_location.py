@@ -11,36 +11,12 @@ class VesselType(Enum):
     IGC_1G = "IGC_1G"
     IGC_2G = "IGC_2G"
     IGC_3G = "IGC_3G"
-    # ADN tank vessel type G (inland waterways, UNECE). Added as
-    # a selectable ruleset for river-only gas barges. Constant distances, NOT volume-stepped.
-    ADN_G = "ADN_G"
     # IGC type 2G with d(Vc) applied EXACTLY as written (2.4.1.1, 2.4.2): linear bands, on
     # the INDIVIDUAL tank's gross volume, measured to the tank STEEL (insulation excluded).
     # "IGC_2G" keeps the engine's older conservative reading
     # so existing results do not move unless a caller opts in.
+    # (The ADN tank vessel type G member was removed: the engine applies IGC rules only to gas tanks; issue #175.)
     IGC_2G_EXACT = "IGC_2G_EXACT"
-
-
-# ADN type G minimum distances (m), measured hull to tank (outer face, as the engine does).
-# ONE place. Source check: ADN 2025.
-#  - Side: LNG (refrigerated) tanks may sit ONLY in double-hull holds (9.3.1.11.2(a)), and the
-#    0.80 m is SIDE SHELL TO INNER HULL. ADN sets no inner-hull-to-tank figure; 0.45 m is taken by
-#    analogy with IGC 3.5.3.5 (curved tank to plating, inspection passage). 0.80 + 0.45 = 1.25 m.
-#  - Bottom: double bottom >= 0.60 m (9.3.1.11.2(a)); the tank sits on 0.50 m saddles above it,
-#    so tank to keel = 0.60 + 0.50 = 1.10 m (the engine subtracts the saddle to get the double bottom).
-ADN_G_DOUBLE_HULL_M = 0.80
-ADN_G_INSPECTION_GAP_M = 0.45      # NOT an ADN value: IGC 3.5.3.5 analogy
-ADN_G_SIDE_M = ADN_G_DOUBLE_HULL_M + ADN_G_INSPECTION_GAP_M
-ADN_G_DOUBLE_BOTTOM_M = 0.60
-ADN_G_SADDLE_M = 0.50
-ADN_G_BOTTOM_M = ADN_G_DOUBLE_BOTTOM_M + ADN_G_SADDLE_M
-# Per-tank capacity, 9.3.1.11.1(a): 380 m3 for hulls with L.B.H > 3,750 m3; up to 1,000 m3 (hard
-# cap) only under the 9.3.4 alternative-construction risk comparison. Pressure tanks L/D <= 7
-# (9.3.1.11.1(b)). Tank wider than 0.70 B triggers extra intact stability (9.3.1.14.2).
-ADN_G_TANK_CAP_M3 = 380.0
-ADN_G_TANK_CAP_9_3_4_M3 = 1000.0
-ADN_G_MAX_L_OVER_D = 7.0
-ADN_G_WIDE_TANK_FRACTION = 0.70
 
 
 @dataclass
@@ -107,7 +83,7 @@ def required_bottom_protection(beam: float, d_vc: float, vessel_type: VesselType
         Required Cb in metres.
     """
     if not isinstance(vessel_type, VesselType):
-        vessel_type = None      # 0.1.0 compared with `== VesselType.ADN_G`: only the enum member counts
+        vessel_type = None
     return _call("protective_location", "required_bottom_protection", {"beam": beam, "d_vc": d_vc, "vessel_type": vessel_type}, float)
 
 

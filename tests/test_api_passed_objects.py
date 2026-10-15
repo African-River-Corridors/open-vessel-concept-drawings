@@ -25,7 +25,9 @@ RAKED = H.HullGeometry(BI.loa, BI.beam, BI.depth, 10.0, 3.0, BI.stern_rake_lengt
                        BI.stern_rake_rise)
 TANKS = T.calculate_tank_arrangement(BI)
 WEIGHTS = W.calculate_weights(BI, HULL, TANKS)
-GAS = B.BargeCapacityInputs(loa=90.0, beam=14.8, depth=6.5, cargo_type="LPG_propane")
+# The 12 m tank diameter cap of 0.1.0: the cap is now an input, 16 m by default (issue #175), and the
+# numbers below were printed by 0.1.0.
+GAS = B.BargeCapacityInputs(loa=90.0, beam=14.8, depth=6.5, cargo_type="LPG_propane", max_tank_od_m=12.0)
 BULK = B.BargeCapacityInputs(loa=100.0, beam=16.0, depth=6.0, cargo_type="bauxite")
 
 

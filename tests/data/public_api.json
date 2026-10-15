@@ -334,7 +334,8 @@
     "bulk_structure_factor",
     "bulk_steel_rate_per_cbm",
     "bulk_piping_factor",
-    "bulk_outfitting_factor"
+    "bulk_outfitting_factor",
+    "max_tank_od_m"
    ],
    "frozen": false,
    "kind": "class",
@@ -393,7 +394,7 @@
     "ok"
    ]
   },
-  "MAX_TANK_OD_M": {
+  "DEFAULT_MAX_TANK_OD_M": {
    "kind": "constant"
   },
   "compute": {
@@ -427,7 +428,7 @@
     [
      "max_od_m",
      "POSITIONAL_OR_KEYWORD",
-     "12.0"
+     "16.0"
     ]
    ]
   }
@@ -599,7 +600,6 @@
     "depth_m",
     "cargo_type",
     "clearance_basis",
-    "max_tank_length_m",
     "cells"
    ],
    "frozen": false,
@@ -626,9 +626,6 @@
    "kind": "class",
    "methods": []
   },
-  "MAX_TANK_LENGTH_M": {
-   "kind": "constant"
-  },
   "SIDE_CLEARANCE_M": {
    "kind": "constant"
   },
@@ -637,21 +634,6 @@
   },
   "TUG_LOA_M": {
    "kind": "constant"
-  },
-  "n_tanks_for_length": {
-   "kind": "function",
-   "params": [
-    [
-     "barge_length_m",
-     "POSITIONAL_OR_KEYWORD",
-     null
-    ],
-    [
-     "max_tank_length_m",
-     "POSITIONAL_OR_KEYWORD",
-     "28.0"
-    ]
-   ]
   },
   "sweep": {
    "kind": "function",
@@ -806,9 +788,6 @@
   }
  },
  "vessel_designer.core.gas_arrangement": {
-  "ADN_LONGITUDINAL_GAP_M": {
-   "kind": "constant"
-  },
   "ArrangementFit": {
    "fields": [
     "loa_m",
@@ -914,11 +893,6 @@
      "(0.5, 1.0, 1.5, 2.0)"
     ],
     [
-     "adn_tank_cap_m3",
-     "KEYWORD_ONLY",
-     "1000.0"
-    ],
-    [
      "block_coefficient",
      "KEYWORD_ONLY",
      "0.85"
@@ -926,7 +900,7 @@
     [
      "max_tank_od_m",
      "KEYWORD_ONLY",
-     "12.0"
+     "16.0"
     ]
    ]
   },
@@ -1699,36 +1673,6 @@
   }
  },
  "vessel_designer.core.protective_location": {
-  "ADN_G_BOTTOM_M": {
-   "kind": "constant"
-  },
-  "ADN_G_DOUBLE_BOTTOM_M": {
-   "kind": "constant"
-  },
-  "ADN_G_DOUBLE_HULL_M": {
-   "kind": "constant"
-  },
-  "ADN_G_INSPECTION_GAP_M": {
-   "kind": "constant"
-  },
-  "ADN_G_MAX_L_OVER_D": {
-   "kind": "constant"
-  },
-  "ADN_G_SADDLE_M": {
-   "kind": "constant"
-  },
-  "ADN_G_SIDE_M": {
-   "kind": "constant"
-  },
-  "ADN_G_TANK_CAP_9_3_4_M3": {
-   "kind": "constant"
-  },
-  "ADN_G_TANK_CAP_M3": {
-   "kind": "constant"
-  },
-  "ADN_G_WIDE_TANK_FRACTION": {
-   "kind": "constant"
-  },
   "ProtectiveLocationResult": {
    "fields": [
     "vessel_type",
@@ -1762,7 +1706,6 @@
     "IGC_1G",
     "IGC_2G",
     "IGC_3G",
-    "ADN_G",
     "IGC_2G_EXACT"
    ],
    "methods": []

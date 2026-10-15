@@ -72,7 +72,8 @@ def current() -> dict:
 def test_the_snapshot_covers_the_whole_package():
     expected = json.loads(DATA.read_text(encoding="utf-8"))
     assert len(expected) >= 20 and "vessel_designer.core.barge_capacity" in expected
-    assert sum(len(v) for v in expected.values()) > 150
+    # Was 150. Issue #175 removed 20 names (see REMOVED_ON_PURPOSE), so the floor moved with them.
+    assert sum(len(v) for v in expected.values()) > 130
 
 
 def test_public_modules_names_signatures_and_result_fields_are_unchanged():
@@ -101,6 +102,25 @@ NAMES = json.loads((Path(__file__).parent / "data" / "importable_names_0_1_0.jso
 NOT_KEPT = {"math", "np", "replace", "asdict", "dataclass", "field", "Optional", "Tuple"}
 ROOT = Path(__file__).resolve().parents[1]
 
+# Names of 0.1.0 that issue #175 removed on purpose, with the reason. The maintainer's decision: the
+# engine applies IGC rules only to gas tanks (the ADN_G ruleset and everything that served it is
+# gone), a tank's outer diameter cap is the input `max_tank_od_m` (16 m by default) instead of a
+# 12 m constant, and there is no 28 m cap on tank length. CHANGELOG.md lists them.
+REMOVED_ON_PURPOSE = {
+    "core.barge_capacity": {"MAX_TANK_OD_M"},                 # now DEFAULT_MAX_TANK_OD_M = 16 m
+    "core.design_grid": {"MAX_TANK_LENGTH_M", "n_tanks_for_length"},
+    "core.gas_arrangement": {"ADN_G_MAX_L_OVER_D", "ADN_G_TANK_CAP_9_3_4_M3", "ADN_G_WIDE_TANK_FRACTION",
+                             "ADN_LONGITUDINAL_GAP_M", "MAX_TANK_OD_M"},
+    "core.protective_location": {"ADN_G_BOTTOM_M", "ADN_G_DOUBLE_BOTTOM_M", "ADN_G_DOUBLE_HULL_M",
+                                 "ADN_G_INSPECTION_GAP_M", "ADN_G_MAX_L_OVER_D", "ADN_G_SADDLE_M",
+                                 "ADN_G_SIDE_M", "ADN_G_TANK_CAP_9_3_4_M3", "ADN_G_TANK_CAP_M3",
+                                 "ADN_G_WIDE_TANK_FRACTION"},
+}
+# Constants that stay but whose value changed on purpose: the rulesets lost `ADN_G`.
+CHANGED_ON_PURPOSE = {"core.gas_arrangement": {"RULESETS"}, "simulate": {"RULESETS"}}
+# Dataclass fields that went on purpose: the grid no longer has a tank-length cap.
+REMOVED_FIELDS = {("core.design_grid", "DesignGrid", "max_tank_length_m")}
+
 
 def test_the_name_list_covers_every_public_module():
     assert sorted(NAMES) == sorted(m.removeprefix("vessel_designer.") for m in json.loads(DATA.read_text(encoding="utf-8")) if m != "vessel_designer.calibration")
@@ -115,10 +135,16 @@ def test_every_package_name_importable_in_0_1_0_still_imports():
             if entry["kind"] != "package":
                 continue
             if not hasattr(mod, name):
-                lost.append(f"{module}.{name}")
+                if name not in REMOVED_ON_PURPOSE.get(module, ()):
+                    lost.append(f"{module}.{name}")
             elif "value" in entry and entry["value"] != json.loads(json.dumps(getattr(mod, name))):
-                lost.append(f"{module}.{name} has another value")
+                if name not in CHANGED_ON_PURPOSE.get(module, ()):
+                    lost.append(f"{module}.{name} has another value")
     assert lost == []
+    # The list of removals is not a way to hide a loss: each name on it really is gone.
+    for module, gone in REMOVED_ON_PURPOSE.items():
+        mod = importlib.import_module(f"vessel_designer.{module}")
+        assert not [n for n in gone if hasattr(mod, n)]
 
 
 def test_the_names_that_are_not_kept_are_only_standard_library_and_numpy_helpers():
@@ -129,6 +155,14 @@ def test_the_names_that_are_not_kept_are_only_standard_library_and_numpy_helpers
     assert missing <= NOT_KEPT, sorted(missing - NOT_KEPT)
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     assert all(f"`{n}`" in changelog for n in NOT_KEPT)
+
+
+def test_every_name_removed_on_purpose_is_in_the_changelog():
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    names = {n for gone in REMOVED_ON_PURPOSE.values() for n in gone}
+    names |= {f for _, _, f in REMOVED_FIELDS}
+    assert len(names) == 15
+    assert [n for n in sorted(names) if f"`{n}`" not in changelog] == []
 
 
 def test_a_restored_name_is_the_object_of_its_defining_module():
@@ -156,6 +190,9 @@ def test_field_types_are_the_types_of_0_1_0():
         for cls_name, fields in classes.items():
             hints = typing.get_type_hints(getattr(mod, cls_name))
             for name, text in fields.items():
+                if (module, cls_name, name) in REMOVED_FIELDS:
+                    assert name not in hints
+                    continue
                 # Known change (CHANGELOG.md): a bare `list` of 0.1.0 is `List[...]` now, because the
                 # bridge reads the item type to build the result objects.
                 refined = text == "<class 'list'>" and str(hints[name]).startswith("typing.List[")

@@ -42,7 +42,7 @@ TOP_LEVEL = {
     "lightship_factor_t_per_m3": "lightship_k_t_per_m3",
     "ruleset": "ruleset",
     "fill_ratio": "fill_ratio",
-    "adn_tank_cap_m3": "adn_tank_cap_m3",
+    "max_tank_od_m": "max_tank_od_m",
     "optimise_depth": "optimise_depth",
     "propulsive_efficiency": "eta_d",
     "max_speed_kn": "speed_max_kn",
@@ -63,7 +63,7 @@ CARGOS = {"dry_bulk": ["bauxite"], "liquid_gas": ["LNG", "LNG_ethane", "LPG_prop
 CONTAINMENT_PHASE = {"box_hold": "dry_bulk", "sloped_hopper_hold": "dry_bulk",
                      "type_c_tanks": "liquid_gas"}
 ONLY_FOR = {"lightship_factor_t_per_m3": "box_hold", "ruleset": "type_c_tanks",
-            "fill_ratio": "type_c_tanks", "adn_tank_cap_m3": "type_c_tanks",
+            "fill_ratio": "type_c_tanks", "max_tank_od_m": "type_c_tanks",
             "optimise_depth": "type_c_tanks"}
 NULLABLE = {"air_draft_limit_m", "draught_limit_m", "channel_depth_m", "channel_bottom_width_m"}
 # Results that can never be negative on a real barge. Each is checked when present.
@@ -144,7 +144,7 @@ def sweep_options(profile: dict) -> list:
                 inside, outside = cand[name]
                 inputs[name] = rng.choice(outside if outside and rng.random() < 0.03 else inside)
         if containment == "type_c_tanks":
-            inputs["ruleset"] = rng.choice(["IGC_2G", "IGC_2G_EXACT", "ADN_G"])
+            inputs["ruleset"] = rng.choice(["IGC_2G", "IGC_2G_EXACT"])
             inputs["optimise_depth"] = rng.random() < 0.3
         # The cross-check boundaries, which a random pick would rarely hit.
         roll = rng.random()
@@ -168,7 +168,7 @@ def sweep_options(profile: dict) -> list:
 
 # The built-in defaults, written out so each boundary Option holds every input.
 TYPICAL = {"block_coefficient": 0.85, "min_freeboard_m": 0.3, "lightship_factor_t_per_m3": 0.1093,
-           "ruleset": "IGC_2G_EXACT", "fill_ratio": 0.98, "adn_tank_cap_m3": 1000.0,
+           "ruleset": "IGC_2G_EXACT", "fill_ratio": 0.98, "max_tank_od_m": 16.0,
            "optimise_depth": False, "propulsive_efficiency": 0.45, "max_speed_kn": 10.0,
            "air_draft_limit_m": None, "draught_limit_m": None, "channel_depth_m": None,
            "channel_under_keel_clearance_m": 0.5, "channel_bank_slope": 3.0,

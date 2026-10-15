@@ -94,8 +94,8 @@ OPTIONAL_INPUT_CASES = (
     ("channel_under_keel_clearance_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
      {**_DEEP_CHANNEL, "channel_under_keel_clearance_m": 0.8}),
     ("fill_ratio", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"fill_ratio": 0.85}),
-    ("adn_tank_cap_m3", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
-     {"ruleset": "ADN_G", "adn_tank_cap_m3": 250.0}),
+    ("max_tank_od_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 20.0, 6.0,
+     {"max_tank_od_m": 12.0}),
 )
 
 
@@ -144,7 +144,7 @@ def cases() -> dict[str, dict]:
         out[f"sweep hopper channel {tag}"] = _inputs(
             "bauxite", "sloped_hopper_hold", "self_propelled", loa, beam, 4.5, max_speed_kn=9.0,
             channel_current_kn=1.5, **_CHANNEL)
-        for ruleset in ("IGC_2G", "IGC_2G_EXACT", "ADN_G"):
+        for ruleset in ("IGC_2G", "IGC_2G_EXACT"):
             out[f"sweep gas {ruleset} {tag}"] = _inputs(
                 "LPG_propane", "type_c_tanks", "self_propelled", loa, beam, 5.5, ruleset=ruleset)
         out[f"sweep gas channel {tag}"] = _inputs(
@@ -159,8 +159,17 @@ def cases() -> dict[str, dict]:
     # Gas designs that pass every check, so a change to a check's wording or limit shows.
     out["sweep gas passes all checks IGC_2G 110x11.4"] = _inputs(
         "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, ruleset="IGC_2G")
-    out["sweep gas passes all checks ADN_G 80x14"] = _inputs(
-        "LPG_propane", "type_c_tanks", "self_propelled", 80.0, 14.0, 4.5, ruleset="ADN_G")
+    out["sweep gas passes all checks IGC_2G_EXACT 80x14"] = _inputs(
+        "LPG_propane", "type_c_tanks", "self_propelled", 80.0, 14.0, 4.5, ruleset="IGC_2G_EXACT")
+    # Wide hulls, where the tank outer diameter cap sets the tank (12 m until issue #175, 16 m now).
+    for ruleset in ("IGC_2G", "IGC_2G_EXACT"):
+        out[f"sweep gas wide hull {ruleset} 110x24"] = _inputs(
+            "LNG", "type_c_tanks", "self_propelled", 110.0, 24.0, 6.5, ruleset=ruleset,
+            draught_limit_m=4.5)
+    # A long hull: two tanks along it are longer than 7 diameters, which is refused. The ruleset is
+    # IGC_2G so that no other error check fails and the length check is the one that refuses it.
+    out["sweep gas tank longer than 7 diameters IGC_2G 200x12"] = _inputs(
+        "LNG", "type_c_tanks", "self_propelled", 200.0, 12.0, 5.5, ruleset="IGC_2G")
     # Designs that carry nothing: the messages are results too.
     out["sweep gas carries nothing (hull too short)"] = _inputs(
         "LPG_propane", "type_c_tanks", "self_propelled", 12.0, 4.0, 2.0)
@@ -184,9 +193,18 @@ def run_case(binary: Path, name: str, typed: dict, tmp: Path) -> dict:
     """One case through one binary: {"results": {...}} or {"error": "..."}."""
     raw, filled = tmp / "in.vdesign", tmp / "filled.vdesign"
     filled.unlink(missing_ok=True)
-    raw.write_text(json.dumps({"format": "vdesign", "format_version": 1, "engine_version": "0.0.0",
-                               "options": [{"name": name, "inputs": typed}]}), encoding="utf-8")
-    fill = run([str(binary), "fill", str(raw), str(filled)])
+    # The newest format the binary reads: version 2 (issue #175), or version 1 for a base that
+    # predates it. A version 1 file is changed to the current inputs as it is read, so the
+    # head must be given version 2: version 1 would give a gas design the 12 m tank diameter cap
+    # that version 1 files had, not the Defaults Profile value.
+    for version in (2, 1):
+        filled.unlink(missing_ok=True)
+        raw.write_text(json.dumps({"format": "vdesign", "format_version": version,
+                                   "engine_version": "0.0.0",
+                                   "options": [{"name": name, "inputs": typed}]}), encoding="utf-8")
+        fill = run([str(binary), "fill", str(raw), str(filled)])
+        if fill.returncode == 0 or "format_version" not in fill.stderr:
+            break
     if fill.returncode != 0:
         return {"error": "fill: " + " | ".join(fill.stderr.strip().splitlines()[-3:])}
     res = run([str(binary), "run", "--json", str(filled)])

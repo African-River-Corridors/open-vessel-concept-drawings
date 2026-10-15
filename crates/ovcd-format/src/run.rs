@@ -107,7 +107,7 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     put("lightship_k_t_per_m3", "lightship_factor_t_per_m3");
     put("ruleset", "ruleset");
     put("fill_ratio", "fill_ratio");
-    put("adn_tank_cap_m3", "adn_tank_cap_m3");
+    put("max_tank_od_m", "max_tank_od_m");
     put("optimise_depth", "optimise_depth");
     put("eta_d", "propulsive_efficiency");
     put("speed_max_kn", "max_speed_kn");

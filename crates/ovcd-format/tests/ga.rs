@@ -57,7 +57,7 @@ const DRY: &[&str] = &[
     "dry_bulk_sloped_hopper.vdesign",
 ];
 const GAS: &[&str] = &[
-    "gas_adn_g_self_propelled.vdesign",
+    "gas_igc_2g_self_propelled.vdesign",
     "gas_igc_2g_exact.vdesign",
 ];
 
@@ -362,7 +362,7 @@ fn a_sweep_of_hull_sizes_always_draws_a_valid_sheet() {
     for file in [
         "dry_bulk_box_hold.vdesign",
         "dry_bulk_sloped_hopper.vdesign",
-        "gas_adn_g_self_propelled.vdesign",
+        "gas_igc_2g_self_propelled.vdesign",
         "gas_igc_2g_exact.vdesign",
     ] {
         for loa in [

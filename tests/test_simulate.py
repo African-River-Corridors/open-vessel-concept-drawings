@@ -1,9 +1,11 @@
 """The web simulator's gas path goes through the arrangement search and hits the benchmarks."""
 from vessel_designer.simulate import simulate
 
+# `max_tank_od_m` is the 12 m tank diameter cap of 0.1.0: it is an input, 16 m by default, since
+# issue #175. The snapshots below were printed by 0.1.0, so they set it.
 CN_II = dict(vessel="gas_barge", cargo="LPG_propane", loa_m=90, beam_m=14.8, depth_m=6.5, cb=0.85,
              freeboard_min_m=0.3, draught_limit_m=4.4, self_propelled=True, ruleset="IGC_2G",
-             fill_ratio=0.95)
+             fill_ratio=0.95, max_tank_od_m=12.0)
 
 
 def test_gas_uses_the_search_not_auto():
@@ -19,6 +21,25 @@ def test_gas_optimised_depth_matches_snapshot():
                       fill_ratio=None, optimise_depth=True))
     assert abs(o["results"]["cargo_t"] - 1738) < 1.0
     assert o["arrangement"]["fill_ratio"] == 0.98          # ruleset-driven default
+
+
+def test_the_tank_diameter_cap_is_a_simulate_input_16_m_by_default():
+    """Label: property
+    """
+    default = {k: v for k, v in CN_II.items() if k != "max_tank_od_m"}
+    wide = dict(default, beam_m=26.0, loa_m=110, depth_m=5.0, cargo="LNG", draught_limit_m=4.0)
+    assert simulate(dict(wide, max_tank_od_m=12.0))["geometry"]["tank_outer_diameter_m"] <= 12.0 + 1e-6
+    od = simulate(wide)["geometry"]["tank_outer_diameter_m"]
+    assert 12.0 < od <= 16.0 + 1e-6
+
+
+def test_a_tank_longer_than_seven_diameters_is_a_failed_check():
+    """Label: property
+    """
+    o = simulate(dict(CN_II, loa_m=200, beam_m=11.0, depth_m=5.0, cargo="LNG", draught_limit_m=4.0))
+    failed = [c for c in o["checks"] if c["name"] == "tank length over diameter"]
+    assert failed and not failed[0]["ok"] and "<= 7" in failed[0]["message"]
+    assert not o["arrangement"]["feasible"]
 
 
 def test_gas_stability_is_assessed_for_three_conditions():

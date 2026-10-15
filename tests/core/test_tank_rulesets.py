@@ -1,15 +1,6 @@
-"""ADN type G as a selectable tank ruleset. Existing IGC/IGF behaviour unchanged."""
-from vessel_designer.core.protective_location import (ADN_G_BOTTOM_M, ADN_G_SIDE_M, ADN_G_DOUBLE_HULL_M,
-                                               compute_required_clearances, distance_d_vc)
+"""The tank rulesets. IGC/IGF behaviour unchanged; the ADN type G ruleset was removed (issue #175)."""
+from vessel_designer.core.protective_location import compute_required_clearances
 from vessel_designer.core.barge_capacity import BargeCapacityInputs, compute
-
-
-def test_adn_g_distances_are_constant_not_volume_stepped():
-    """Label: snapshot
-    """
-    for vc in (500.0, 3000.0, 20000.0):
-        r = compute_required_clearances("ADN_G", 18.0, distance_d_vc(vc))
-        assert r.cs_required == ADN_G_SIDE_M and r.cb_required == ADN_G_BOTTOM_M
 
 
 def test_igc_2g_unchanged():
@@ -20,21 +11,18 @@ def test_igc_2g_unchanged():
     assert compute_required_clearances("IGC_2G", 14.8, 0.8).cb_required == 14.8 / 15.0
 
 
-def test_adn_g_tank_diameter_follows_its_side_clearance():
-    """Label: property
-    """
-    common = dict(loa=90.0, beam=18.0, depth=6.0, cargo_type="LNG", n_tanks_wide=2)
-    adn = compute(BargeCapacityInputs(vessel_type="ADN_G", **common))
-    assert abs(adn.side_clearance_m - ADN_G_SIDE_M) < 1e-9
-    # OD = (beam - 2 cs - 1.0 m transverse gap) / 2
-    assert abs(adn.tank_outer_diameter_m - (18.0 - 2 * ADN_G_SIDE_M - 1.0) / 2) < 1e-6
+def test_adn_g_is_no_longer_a_vessel_type():
+    """Issue #175: the engine applies IGC rules only.
 
-
-def test_adn_side_includes_double_hull_and_gap():
-    """Label: snapshot
+    Label: property
     """
-    assert ADN_G_SIDE_M > ADN_G_DOUBLE_HULL_M          # LNG must sit inside a double hull
-    assert abs(ADN_G_SIDE_M - 1.25) < 1e-9 and abs(ADN_G_BOTTOM_M - 1.10) < 1e-9
+    import pytest
+    from vessel_designer.core import protective_location
+    assert [m.name for m in protective_location.VesselType] == [
+        "IGF", "IGC_1G", "IGC_2G", "IGC_3G", "IGC_2G_EXACT"]
+    with pytest.raises(ValueError, match="'ADN_G' is not a valid VesselType"):
+        compute_required_clearances("ADN_G", 18.0, 1.0)
+    assert not hasattr(protective_location, "ADN_G_SIDE_M")
 
 
 def test_d_vc_exact_bands():

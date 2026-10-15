@@ -24,9 +24,9 @@ Method (concept stage, stated on every result):
 Criteria sets:
   * ``IS_CODE_2008`` -- IMO Intact Stability Code 2008, Part A 2.2 (the general criteria IGC
     ch. 2 relies on). Seagoing; an inland administration may accept less.
-  * ``ADN_9_3_1_14_2`` -- ADN 2025 9.3.1.14.2, applies when a cargo tank is wider than 0.70 B:
-    GM >= 0.10 m, GZ >= 0.10 m and area >= 0.024 m.rad up to 27 deg. Values as transcribed from
-    a secondary research note; confirm against the ADN text before release.
+
+The ADN criteria set (``ADN_9_3_1_14_2``) went with the ``ADN_G`` ruleset (issue #175); both IGC
+rulesets use ``IS_CODE_2008``.
 
 Pure calculation, no I/O.
 """
