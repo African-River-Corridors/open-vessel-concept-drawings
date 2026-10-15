@@ -211,6 +211,20 @@ fn missing_depth_says_a_default_rule_is_planned() {
 }
 
 #[test]
+fn a_null_depth_says_a_default_rule_is_planned_too() {
+    // Issue #142: null gave only "must be a number"; a missing depth gave the full message.
+    let mut inputs = required_inputs();
+    inputs["moulded_depth_m"] = Value::Null;
+    let out = validate_inputs("null-depth", inputs);
+    assert!(!out.status.success());
+    let text = stdout(&out);
+    assert!(
+        text.contains("moulded depth is required for now; a default rule by Cargo is planned"),
+        "{text}"
+    );
+}
+
+#[test]
 fn hard_range_breach_is_refused_with_the_stated_message() {
     let mut inputs = required_inputs();
     inputs["beam_m"] = json!(-2.0);

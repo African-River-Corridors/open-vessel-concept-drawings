@@ -2,7 +2,7 @@
 
 Planned work. Each item links to its issue — comment there to help or to discuss.
 
-- **Publish to PyPI** ([#1](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/1)) so it installs with `pip install vessel_designer`.
+- **Publish to PyPI** ([#1](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/1)) so it installs with `pip install vessel-designer`.
 - **Public example river on an open DEM** ([#2](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/2)) — a worked case on a freely downloadable elevation model
   whose licence allows commercial reuse.
 - **Calibrate against more real barges** ([#3](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/3)) — more built vessels with published lightship, capacity

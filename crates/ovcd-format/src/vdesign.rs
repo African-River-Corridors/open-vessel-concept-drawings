@@ -530,6 +530,10 @@ pub fn new_design(profile: &Profile) -> Result<Design, String> {
     Ok(design)
 }
 
+/// Why a missing or null moulded depth is refused.
+const DEPTH_REQUIRED: &str =
+    "moulded depth is required for now; a default rule by Cargo is planned";
+
 /// What to do with an input the file leaves out.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Missing {
@@ -780,9 +784,7 @@ fn read_option(
         }
         if spec.required {
             let msg = if spec.name == "moulded_depth_m" {
-                "missing required input `moulded_depth_m`: moulded depth is required for now; \
-                 a default rule by Cargo is planned"
-                    .to_string()
+                format!("missing required input `moulded_depth_m`: {DEPTH_REQUIRED}")
             } else {
                 format!("missing required input `{}`", spec.name)
             };
@@ -908,6 +910,8 @@ fn check_value(
             if v.is_null() {
                 return if nullable {
                     Ok((Value::Null, vec![]))
+                } else if name == "moulded_depth_m" {
+                    Err(format!("`{name}` is null: {DEPTH_REQUIRED}"))
                 } else {
                     Err(format!("`{name}` must be a number"))
                 };

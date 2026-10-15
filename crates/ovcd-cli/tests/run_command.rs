@@ -86,6 +86,27 @@ fn the_summary_names_the_option_and_its_main_numbers() {
 }
 
 #[test]
+fn the_summary_keeps_the_case_of_the_vessel_label() {
+    // Issue #142. The Python label (frozen at ce96e66, vessel_designer.simulate) is
+    // "Box-hold dry bulk barge"; the summary used to lower-case it.
+    let dir = temp_dir("label-case");
+    let out = ovcd(&["run", p(&starter(&dir))]);
+    let v: Value = serde_json::from_str(&stdout(&ovcd(&[
+        "run",
+        "--json",
+        p(&dir.join("starter.vdesign")),
+    ])))
+    .unwrap();
+    let label = v["options"][0]["results"]["vessel"].as_str().unwrap();
+    assert!(label.chars().next().unwrap().is_uppercase(), "{label}");
+    assert!(
+        stdout(&out).contains(&format!(" in a {label} (")),
+        "{}",
+        stdout(&out)
+    );
+}
+
+#[test]
 fn running_the_same_file_twice_gives_the_same_hash() {
     let dir = temp_dir("twice");
     let file = starter(&dir);
