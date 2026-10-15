@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import importlib.util
 import json
 import math
 import os
@@ -370,8 +371,24 @@ def build(tree: Path, target: Path, fresh: bool = False) -> Path:
     return exe
 
 
-def measure() -> tuple[str, str, int, list[dict], bool]:
-    """Run both binaries. (base label, head label, case count, moved rows, ahead of main)."""
+def case_count_at(tree: Path) -> int | None:
+    """How many cases the check at `tree` (the base commit) runs: its own `cases()` is loaded and
+    counted. None when that commit has no check yet. A base that cannot be counted fails the gate."""
+    path = tree / "tools" / "design_impact.py"
+    if not path.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("design_impact_base", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return len(module.cases())
+    except Exception as e:                                       # noqa: BLE001 - any failure is a failure
+        raise SystemExit(f"design_impact: cannot count the cases of the base commit: {e!r}") from e
+
+
+def measure() -> tuple[str, str, int, list[dict], bool, int | None]:
+    """Run both binaries. (base label, head label, case count, moved rows, ahead of main, the
+    base commit's case count)."""
     base_sha, ahead = base_commit()
     case_set = cases()
     work = Path(tempfile.mkdtemp(prefix="design-impact-"))
@@ -379,6 +396,7 @@ def measure() -> tuple[str, str, int, list[dict], bool]:
         base_tree = work / "base"
         git("worktree", "add", "-q", "--detach", str(base_tree), base_sha)
         try:
+            base_total = case_count_at(base_tree)
             base_bin = build(base_tree, ROOT / "target" / "design-impact-base", fresh=True)
             head_bin = build(ROOT, ROOT / "target")
             before, after = run_all(base_bin, case_set), run_all(head_bin, case_set)
@@ -393,7 +411,7 @@ def measure() -> tuple[str, str, int, list[dict], bool]:
         shutil.rmtree(work, ignore_errors=True)
     base_label = ("main " if ahead else "the parent commit ") + base_sha[:7]
     head_label = "this branch " + git("rev-parse", "--short", "HEAD")
-    return base_label, head_label, len(case_set), compare(before, after), ahead
+    return base_label, head_label, len(case_set), compare(before, after), ahead, base_total
 
 
 # --- outputs ------------------------------------------------------------------------------------
@@ -552,7 +570,7 @@ def main() -> int:
             raise SystemExit("design_impact: publish-artifact needs DIR, --head-sha and --head-repo")
         publish_artifact(args.artifact_dir, args.head_sha, args.head_repo)
         return 0
-    base, head, total, rows, ahead = measure()
+    base, head, total, rows, ahead, base_total = measure()
     text, tbl = report_text(total, rows, base, head)
     write_outputs(text, rows)
     if args.publish:
@@ -566,6 +584,10 @@ def main() -> int:
         write_changelog(tbl, args.key or branch_key(), base, head)
         print(f"design_impact: wrote CHANGELOG.md ({args.key or branch_key()})")
         return 0
+    if args.mode == "gate" and base_total is not None and total < base_total:
+        print(f"design_impact: this branch runs {total} cases but the base commit runs {base_total}. "
+              "Removing cases weakens the check; keep every case, or ask a maintainer.", file=sys.stderr)
+        return 1
     if args.mode == "gate" and rows and ahead and not changelog_has(tbl):
         print("design_impact: this branch moves designs but CHANGELOG.md does not hold the table above.\n"
               "  Run: python3 tools/design_impact.py changelog   and commit CHANGELOG.md", file=sys.stderr)
