@@ -71,10 +71,6 @@ class JourneyDeratingResult:
 
 def compute(inp: JourneyDeratingInputs) -> JourneyDeratingResult:
     """Apply the channel draft cap to a volume-bound barge design."""
-    cap = getattr(inp.capacity, "_inputs", None)
-    if cap is None:
-        raise TypeError("journey_derating needs a capacity result returned by barge_capacity.compute "
-                        "or gas_arrangement.fit: the Rust core recomputes it from its inputs")
     args = _bridge.encode_fields(inp, exclude=("capacity",))
-    return _call("journey_derating", "compute", {"capacity_inputs": cap, "inputs": args},
+    return _call("journey_derating", "compute", {"capacity": inp.capacity, "inputs": args},
                  JourneyDeratingResult)
