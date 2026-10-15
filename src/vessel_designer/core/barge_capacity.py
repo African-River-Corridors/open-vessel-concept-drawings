@@ -22,11 +22,10 @@ stage, which re-derives the achievable per-journey tonnage from the actual chann
 
 Worked examples: see tests/core/test_barge_capacity.py and core/design_grid.py.
 
-Pure Python.
+The calculation runs in the Rust core (`vessel_designer._native`).
 """
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -37,6 +36,17 @@ from .models import BargeInputs
 from .. import _bridge
 from .models import TankResult, WeightBreakdown
 from .._bridge import call as _call
+
+# 0.1.0 modules exposed these names (they imported them), and user scripts import them from here.
+# Nothing in this module uses them: the calculation runs in the Rust core.
+from .aft_arrangement import compute as compute_aft_arrangement  # noqa: F401
+from .cargo import get_cargo  # noqa: F401
+from .gas_separation import compute as compute_gas_separation  # noqa: F401
+from .hull import HullGeometry  # noqa: F401
+from .hydrostatics import find_equilibrium_draft  # noqa: F401
+from .protective_location import compute_required_clearances, d_vc_exact, distance_d_vc  # noqa: F401
+from .tanks import calculate_tank_arrangement  # noqa: F401
+from .weights import calculate_weights  # noqa: F401
 
 
 @dataclass
@@ -234,18 +244,16 @@ def compute(inp: BargeCapacityInputs) -> BargeCapacityResult:
     data = _bridge.raw("barge_capacity", "compute", _bridge.encode_args({"inputs": inp}))
     if "error" in data:
         _bridge._raise(data["error"])
-    return _result_from_json(data["ok"], inp)
+    return _result_from_json(data["ok"])
 
 
-def _result_from_json(data: dict, inp: BargeCapacityInputs) -> BargeCapacityResult:
-    """The result object for the core's JSON answer. It remembers the inputs it was computed
-    from, so ``journey_derating`` and ``gas_stability`` can ask the core to recompute from them."""
+def _result_from_json(data: dict) -> BargeCapacityResult:
+    """The result object for the core's JSON answer. The result is plain data: functions that take
+    it (``journey_derating``, ``gas_stability.assess``, ``ga_adapter``) use the fields it has."""
     result = _bridge.decode(BargeCapacityResult, data)
     basis = result.gas_basis
     if basis is not None:
         result.gas_basis = {"inputs": _bridge.decode(BargeInputs, basis["inputs"]),
                             "tanks": _bridge.decode(TankResult, basis["tanks"]),
                             "weights": _bridge.decode(WeightBreakdown, basis["weights"])}
-    # A copy: the caller may edit or reuse `inp` (a sweep loop) after this call.
-    object.__setattr__(result, "_inputs", copy.deepcopy(inp))
     return result

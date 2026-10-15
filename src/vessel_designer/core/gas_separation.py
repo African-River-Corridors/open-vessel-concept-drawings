@@ -37,7 +37,7 @@ the opening setback at once. Override it if a designer places the openings elsew
 OPEN: the clause numbers above are the classification-society implementation. Confirm them
 against the ADN text itself before relying on them for a design.
 
-Pure functions + typed dataclasses; no I/O. Runs in Pyodide.
+Typed dataclasses and one function; the calculation runs in the Rust core (`vessel_designer._native`). No I/O.
 """
 from __future__ import annotations
 

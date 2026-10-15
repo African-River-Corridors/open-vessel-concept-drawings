@@ -1,7 +1,7 @@
 {
   "name": "built-in",
   "profile_version": 1,
-  "about": "The built-in Defaults Profile. Copy it (ovcd profile > my.profile.json), edit it, and pass it with --profile. All values are SI. A 'hard' range refuses an input; a 'soft' range accepts it with a warning. Hard ranges are physical limits, and keep every input inside what the engine can compute; a copy may tighten a hard range but never loosen it. Soft ranges are the catalogue's Vessel Class envelopes with headroom.",
+  "about": "The built-in Defaults Profile. Copy it (ovcd profile > my.profile.json), edit it, and pass it with --profile. All values are SI, except speeds, which are in knots. A 'hard' range refuses an input; a 'soft' range accepts it with a warning. Hard ranges are physical limits, and keep every input inside what the engine can compute; a copy may tighten a hard range but never loosen it. Soft ranges are the catalogue's Vessel Class envelopes with headroom.",
   "inputs": {
     "length_overall_m": {
       "unit": "m",

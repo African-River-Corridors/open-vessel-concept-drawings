@@ -211,6 +211,20 @@ fn missing_depth_says_a_default_rule_is_planned() {
 }
 
 #[test]
+fn a_null_depth_says_a_default_rule_is_planned_too() {
+    // Issue #142: null gave only "must be a number"; a missing depth gave the full message.
+    let mut inputs = required_inputs();
+    inputs["moulded_depth_m"] = Value::Null;
+    let out = validate_inputs("null-depth", inputs);
+    assert!(!out.status.success());
+    let text = stdout(&out);
+    assert!(
+        text.contains("moulded depth is required for now; a default rule by Cargo is planned"),
+        "{text}"
+    );
+}
+
+#[test]
 fn hard_range_breach_is_refused_with_the_stated_message() {
     let mut inputs = required_inputs();
     inputs["beam_m"] = json!(-2.0);
@@ -359,6 +373,18 @@ fn new_records_the_built_in_profile_name() {
     let dir = temp_dir("new-profile-name");
     let (_, design) = new_design(&dir);
     assert_eq!(design["defaults_profile"], "built-in");
+}
+
+#[test]
+fn the_help_and_profile_say_speeds_are_in_knots() {
+    // Issue #134: the file is SI except speeds. `ovcd new` writes `max_speed_kn`.
+    let help = stdout(&ovcd(&["--help"]));
+    assert!(help.contains("except speeds, which are in knots"), "{help}");
+    let profile = stdout(&ovcd(&["profile"]));
+    assert!(profile.contains("except speeds, which are in knots"));
+    let dir = temp_dir("knots");
+    let (_, design) = new_design(&dir);
+    assert!(design["options"][0]["inputs"]["max_speed_kn"].is_object());
 }
 
 #[test]
@@ -756,4 +782,38 @@ fn validate_refuses_a_one_metre_beam_box_barge() {
         "{}",
         stdout(&out)
     );
+}
+
+#[test]
+fn a_duplicate_key_fails_validate_run_and_fill_naming_the_key() {
+    // Issue #139: a second "beam_m" used to win without a word (0 errors, a confident result).
+    let dir = temp_dir("duplicate-key");
+    let (file, _) = new_design(&dir);
+    let text = std::fs::read_to_string(&file).unwrap();
+    let doubled = text.replacen(
+        "\"beam_m\": {",
+        "\"beam_m\": {\"value\": 14.8, \"source\": \"typed\"},\n        \"beam_m\": {",
+        1,
+    );
+    assert_ne!(doubled, text);
+    let dup = dir.join("dup.vdesign");
+    std::fs::write(&dup, doubled).unwrap();
+    let out = ovcd(&["validate", path_str(&dup)]);
+    assert!(!out.status.success(), "{}", stdout(&out));
+    assert!(
+        stdout(&out).contains("`beam_m` appears twice in options[0].inputs"),
+        "{}",
+        stdout(&out)
+    );
+    let out = ovcd(&["run", path_str(&dup)]);
+    assert!(!out.status.success());
+    assert!(stdout(&out).is_empty(), "no results from an ambiguous file");
+    assert!(
+        stderr(&out).contains("`beam_m` appears twice"),
+        "{}",
+        stderr(&out)
+    );
+    let out = ovcd(&["fill", path_str(&dup)]);
+    assert!(!out.status.success());
+    assert!(stdout(&out).is_empty());
 }

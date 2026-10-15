@@ -84,4 +84,8 @@ CARGO_DATABASE: Dict[str, CargoProperties] = {
 
 def get_cargo(cargo_type: str) -> CargoProperties:
     """Look up cargo properties by type key."""
+    if not isinstance(cargo_type, str):
+        cargo_type in CARGO_DATABASE        # an unhashable key raises TypeError, as in 0.1.0
+        valid = ", ".join(CARGO_DATABASE.keys())
+        raise ValueError(f"Unknown cargo type '{cargo_type}'. Valid types: {valid}")
     return _call("cargo", "get_cargo", {"cargo_type": cargo_type}, CargoProperties)

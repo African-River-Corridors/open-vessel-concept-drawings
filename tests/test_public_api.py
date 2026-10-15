@@ -86,3 +86,79 @@ def test_public_modules_names_signatures_and_result_fields_are_unchanged():
             if names.get(name) != got.get(name):
                 problems.append(f"{module}.{name}: expected {names.get(name)}, got {got.get(name)}")
     assert not problems, "\n".join(problems)
+
+
+# --- names importable in 0.1.0 (issue #143) --------------------------------------------------
+#
+# The snapshot above lists what each module defines. A script also imports what a module only
+# imported itself (`from vessel_designer.simulate import RULESETS`). `importable_names_0_1_0.json`
+# holds every name each public module of the 0.1.0 package had (made by
+# `tests/data/make_importable_names_0_1_0.py` from commit ce96e66). Every name of the package must
+# still import. Names that came from the standard library, typing or numpy are not kept when the
+# module no longer needs them; CHANGELOG.md lists them.
+
+NAMES = json.loads((Path(__file__).parent / "data" / "importable_names_0_1_0.json").read_text(encoding="utf-8"))["modules"]
+NOT_KEPT = {"math", "np", "replace", "asdict", "dataclass", "field", "Optional", "Tuple"}
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_the_name_list_covers_every_public_module():
+    assert sorted(NAMES) == sorted(m.removeprefix("vessel_designer.") for m in json.loads(DATA.read_text(encoding="utf-8")) if m != "vessel_designer.calibration")
+    assert sum(len(v) for v in NAMES.values()) > 300
+
+
+def test_every_package_name_importable_in_0_1_0_still_imports():
+    lost = []
+    for module, names in NAMES.items():
+        mod = importlib.import_module(f"vessel_designer.{module}")
+        for name, entry in names.items():
+            if entry["kind"] != "package":
+                continue
+            if not hasattr(mod, name):
+                lost.append(f"{module}.{name}")
+            elif "value" in entry and entry["value"] != json.loads(json.dumps(getattr(mod, name))):
+                lost.append(f"{module}.{name} has another value")
+    assert lost == []
+
+
+def test_the_names_that_are_not_kept_are_only_standard_library_and_numpy_helpers():
+    missing = set()
+    for module, names in NAMES.items():
+        mod = importlib.import_module(f"vessel_designer.{module}")
+        missing |= {n for n, e in names.items() if e["kind"] == "incidental" and not hasattr(mod, n)}
+    assert missing <= NOT_KEPT, sorted(missing - NOT_KEPT)
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert all(f"`{n}`" in changelog for n in NOT_KEPT)
+
+
+def test_a_restored_name_is_the_object_of_its_defining_module():
+    from vessel_designer import simulate
+    from vessel_designer.core import barge_capacity, design_grid, electric_energy, gas_arrangement
+    from vessel_designer.core import hull, hydrostatics, journey_derating, protective_location, resistance, tanks
+    assert simulate.BargeCapacityInputs is barge_capacity.BargeCapacityInputs
+    assert simulate.gas_fit is gas_arrangement.fit and simulate.capacity is barge_capacity.compute
+    assert barge_capacity.HullGeometry is hull.HullGeometry is journey_derating.HullGeometry
+    assert barge_capacity.distance_d_vc is protective_location.distance_d_vc
+    assert gas_arrangement.derate is journey_derating.compute
+    assert design_grid.BargeCapacityInputs is barge_capacity.BargeCapacityInputs
+    assert hydrostatics.free_surface_moment_cylindrical is tanks.free_surface_moment_cylindrical
+    assert electric_energy.R is resistance
+
+
+def test_field_types_are_the_types_of_0_1_0():
+    # The snapshot above compares field names. This compares their types, as text.
+    import typing
+    expected = json.loads((Path(__file__).parent / "data" / "importable_names_0_1_0.json").read_text(encoding="utf-8"))["field_types"]
+    assert sum(len(c) for c in expected.values()) > 30, "scanning too little"
+    wrong = []
+    for module, classes in expected.items():
+        mod = importlib.import_module(f"vessel_designer.{module}")
+        for cls_name, fields in classes.items():
+            hints = typing.get_type_hints(getattr(mod, cls_name))
+            for name, text in fields.items():
+                # Known change (CHANGELOG.md): a bare `list` of 0.1.0 is `List[...]` now, because the
+                # bridge reads the item type to build the result objects.
+                refined = text == "<class 'list'>" and str(hints[name]).startswith("typing.List[")
+                if str(hints[name]) != text and not refined:
+                    wrong.append(f"{module}.{cls_name}.{name}: {hints[name]} != {text}")
+    assert wrong == []
