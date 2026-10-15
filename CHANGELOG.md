@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix: a capacity result now keeps a copy of its inputs, so editing or reusing the inputs object after `barge_capacity.compute` no longer changes `journey_derating`, `gas_stability.assess` or `ga_adapter.is_gas` (issue #125). No calculation result changes.
+
 ## 0.2.2 (2026-10-15)
 
 - Fix: the macOS app is now signed as a whole bundle (ad-hoc), so macOS no longer reports it as damaged. No calculation result changes.
