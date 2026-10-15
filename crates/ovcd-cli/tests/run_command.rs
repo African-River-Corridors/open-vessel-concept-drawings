@@ -115,7 +115,7 @@ fn run_does_not_change_the_file() {
 }
 
 #[test]
-fn a_tampered_stored_hash_warns_that_results_changed_since_the_engine_version() {
+fn a_tampered_stored_hash_warns_that_results_differ_from_the_saved_hash() {
     let dir = temp_dir("tamper");
     let file = starter(&dir);
     let mut design = read_json(&file);
@@ -126,7 +126,9 @@ fn a_tampered_stored_hash_warns_that_results_changed_since_the_engine_version() 
     assert!(out.status.success(), "{}", stderr(&out));
     let err = stderr(&out);
     assert!(
-        err.contains("results changed since this file was saved with engine version 0.0.7"),
+        err.contains(
+            "results differ from the hash saved in the file (saved with engine version 0.0.7"
+        ),
         "{err}"
     );
     assert!(
@@ -139,7 +141,7 @@ fn a_tampered_stored_hash_warns_that_results_changed_since_the_engine_version() 
     let json_out = ovcd(&["run", "--json", p(&file)]);
     let v: Value = serde_json::from_str(&stdout(&json_out)).unwrap();
     assert_eq!(v["options"][0]["hash_status"], "differs");
-    assert!(stderr(&json_out).contains("results changed since"));
+    assert!(stderr(&json_out).contains("results differ from the hash saved in the file"));
 }
 
 #[test]
@@ -151,7 +153,7 @@ fn an_edited_input_with_the_old_hash_warns_too() {
     write_json(&file, &design);
     let out = ovcd(&["run", p(&file)]);
     assert!(
-        stderr(&out).contains("results changed since"),
+        stderr(&out).contains("results differ from the hash saved in the file"),
         "{}",
         stderr(&out)
     );
@@ -170,7 +172,7 @@ fn a_file_with_no_stored_hash_runs_and_says_so() {
     let out = ovcd(&["run", p(&file)]);
     assert!(out.status.success());
     assert!(stdout(&out).contains("none saved in the file"));
-    assert!(!stderr(&out).contains("results changed"));
+    assert!(!stderr(&out).contains("results differ"));
 }
 
 #[test]
@@ -376,5 +378,31 @@ fn fill_saves_a_hash_for_a_computable_option() {
         stdout(&out).contains("(matches the file)"),
         "{}",
         stdout(&out)
+    );
+}
+
+#[test]
+fn fill_names_this_engine_in_the_file_it_writes_a_hash_into() {
+    // Issue #137: the file said 0.1.0 and kept saying it, beside a hash that 0.1.0 never made.
+    let dir = temp_dir("fill-engine");
+    let file = filled(
+        &dir,
+        "g",
+        json!({
+            "cargo": "bauxite", "hull_form": "raked_box", "formation": {"kind": "pushed_barge"},
+            "length_overall_m": 76.5, "beam_m": 11.4, "moulded_depth_m": 3.5
+        }),
+    );
+    let design = read_json(&file);
+    assert_eq!(design["engine_version"], env!("CARGO_PKG_VERSION"));
+    assert!(design["options"][0]["results_hash"].is_string());
+    // An edit of an input, hash kept: the warning does not blame an engine version.
+    let mut edited = design.clone();
+    edited["options"][0]["inputs"]["beam_m"]["value"] = json!(11.0);
+    write_json(&file, &edited);
+    let err = stderr(&ovcd(&["run", p(&file)]));
+    assert!(
+        err.contains("results differ from the hash saved in the file"),
+        "{err}"
     );
 }

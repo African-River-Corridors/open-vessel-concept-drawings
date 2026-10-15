@@ -30,8 +30,8 @@ Usage:
   ovcd run [--profile <profile.json>] [--json] <file.vdesign>
       Compute every Option of a Design and print a short summary. --json prints the full
       results instead. Each Option's results hash is compared with the one saved in the file;
-      a difference is a warning that results changed since the file was saved with an engine
-      version. A pushed convoy prints \"convoy results not yet available\" and no numbers.
+      a difference is a warning that the results differ from the hash saved in the file (an
+      engine change, or an input edited by hand, can cause it). A pushed convoy prints \"convoy results not yet available\" and no numbers.
       Warnings go to stderr. Exits 1 if the file has a hard error or an Option cannot be computed.
   ovcd schema [--profile <profile.json>]
       Print the input schema as JSON: every input with its kind, unit, choices, group, default,

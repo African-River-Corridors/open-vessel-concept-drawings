@@ -167,3 +167,110 @@ fn a_results_hash_that_is_not_text_is_a_hard_error() {
         c.report.errors
     );
 }
+
+// Issue #137: the engine version, the warning wording, and the shape of a stored hash.
+
+fn raw_file(engine_version: &str, options: Value) -> String {
+    json!({
+        "format": "vdesign", "format_version": 1, "engine_version": engine_version,
+        "options": options
+    })
+    .to_string()
+}
+
+fn raw_option(name: &str, hash: Option<&str>) -> Value {
+    let mut o = json!({ "name": name, "inputs": {
+        "cargo": "bauxite", "hull_form": "raked_box", "formation": {"kind": "pushed_barge"},
+        "length_overall_m": 76.5, "beam_m": 11.4, "moulded_depth_m": 3.5 } });
+    if let Some(h) = hash {
+        o["results_hash"] = json!(h);
+    }
+    o
+}
+
+#[test]
+fn fill_that_writes_a_hash_sets_the_engine_version_to_this_engine() {
+    let text = raw_file("0.1.0", json!([raw_option("A", None)]));
+    let c = fill(&text, &Profile::built_in());
+    assert!(c.report.is_ok(), "{:?}", c.report.errors);
+    let design = c.design.unwrap();
+    assert!(design.options[0].results_hash.is_some());
+    assert_eq!(design.engine_version, ovcd_format::vdesign::ENGINE_VERSION);
+}
+
+#[test]
+fn fill_keeps_the_old_engine_version_when_it_writes_no_hash() {
+    // A convoy has no results, so no hash is written, so the version is not claimed.
+    let mut option = raw_option("A", None);
+    option["inputs"]["formation"] = json!({"kind": "pushed_convoy", "abreast": 2, "in_line": 2});
+    let c = fill(&raw_file("0.1.0", json!([option])), &Profile::built_in());
+    let design = c.design.unwrap();
+    assert!(design.options[0].results_hash.is_none());
+    assert_eq!(design.engine_version, "0.1.0");
+}
+
+#[test]
+fn fill_does_not_mix_engines_in_one_file() {
+    // Option A holds a hash saved under 0.1.0. A hash for B made by this engine would sit under
+    // the same version, so B is left without one.
+    let text = raw_file(
+        "0.1.0",
+        json!([
+            raw_option("A", Some(&"ab".repeat(32))),
+            raw_option("B", None)
+        ]),
+    );
+    let design = fill(&text, &Profile::built_in()).design.unwrap();
+    assert_eq!(design.engine_version, "0.1.0");
+    assert_eq!(design.options[0].results_hash, Some("ab".repeat(32)));
+    assert!(design.options[1].results_hash.is_none());
+}
+
+#[test]
+fn the_warning_does_not_blame_the_engine() {
+    let w = ovcd_format::hash_warning("G", "0.0.7", &"00".repeat(32), &"11".repeat(32));
+    assert!(
+        w.contains("results differ from the hash saved in the file"),
+        "{w}"
+    );
+    assert!(w.contains("saved with engine version 0.0.7"), "{w}");
+    assert!(!w.contains("changed since"), "{w}");
+}
+
+#[test]
+fn an_upper_case_copy_of_the_right_hash_matches() {
+    let mut design = starter();
+    let h = design.options[0].results_hash.clone().unwrap();
+    design.options[0].results_hash = Some(h.to_uppercase());
+    assert_eq!(run_design(&design)[0].hash_status, HashStatus::Matches);
+}
+
+#[test]
+fn a_stored_hash_that_is_not_64_hex_digits_is_a_hard_error() {
+    for bad in ["", "abc", &"g".repeat(64), &"ab".repeat(33)] {
+        let text = raw_file("0.1.0", json!([raw_option("A", Some(bad))]));
+        let c = ovcd_format::check(&text, &Profile::built_in());
+        assert!(
+            c.report
+                .errors
+                .iter()
+                .any(|e| e.contains("`results_hash` must be 64 hex digits")),
+            "{bad:?}: {:?}",
+            c.report.errors
+        );
+    }
+}
+
+#[test]
+fn an_empty_engine_version_is_a_hard_error() {
+    let text = raw_file("", json!([raw_option("A", None)]));
+    let c = fill(&text, &Profile::built_in());
+    assert!(
+        c.report
+            .errors
+            .iter()
+            .any(|e| e.contains("`engine_version`")),
+        "{:?}",
+        c.report.errors
+    );
+}
