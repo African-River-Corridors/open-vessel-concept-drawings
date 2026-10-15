@@ -18,16 +18,13 @@ from __future__ import annotations
 
 from typing import Optional, Tuple
 
-from .models import BargeInputs, BargeResults
+from .models import BargeInputs, BargeResults, TankResult  # noqa: F401  (TankResult: 0.1.0 exposed it)
 from .barge_capacity import BargeCapacityInputs, BargeCapacityResult
 from .._bridge import call as _call
 
 
 def is_gas(res: BargeCapacityResult) -> bool:
-    cap = getattr(res, "_inputs", None)
-    if cap is None:
-        raise TypeError("is_gas needs a result returned by barge_capacity.compute")
-    return _call("ga_adapter", "is_gas", {"inputs": cap}, bool)
+    return res.phase == "liquid_gas"
 
 
 def to_ga(inp: BargeCapacityInputs, res: BargeCapacityResult,
@@ -44,4 +41,4 @@ def to_ga(inp: BargeCapacityInputs, res: BargeCapacityResult,
     kwargs = {"motor_vessel": motor_vessel}
     if laden_draft_m is not None:
         kwargs["laden_draft_m"] = laden_draft_m
-    return _call("ga_adapter", "to_ga", {"inputs": inp, "kwargs": kwargs}, Tuple[BargeInputs, BargeResults])
+    return _call("ga_adapter", "to_ga", {"inputs": inp, "result": res, "kwargs": kwargs}, Tuple[BargeInputs, BargeResults])

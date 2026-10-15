@@ -24,6 +24,7 @@ Pure calculation, no I/O.
 """
 from __future__ import annotations
 
+import inspect
 from dataclasses import dataclass, field
 from typing import List, Sequence
 
@@ -31,6 +32,15 @@ from .barge_capacity import MAX_TANK_OD_M, BargeCapacityInputs, _result_from_jso
 from .protective_location import (ADN_G_TANK_CAP_9_3_4_M3)
 from .. import _bridge
 from .._bridge import call as _call
+
+# 0.1.0 modules exposed these names (they imported them), and user scripts import them from here.
+# Nothing in this module uses them: the calculation runs in the Rust core.
+from .barge_capacity import compute as capacity  # noqa: F401
+from .checks import all_ok  # noqa: F401
+from .journey_derating import JourneyDeratingInputs, compute as derate  # noqa: F401
+from .protective_location import (  # noqa: F401
+    ADN_G_MAX_L_OVER_D, ADN_G_WIDE_TANK_FRACTION, compute_required_clearances, d_vc_exact,
+    distance_d_vc)
 
 RULESETS = ("IGC_2G", "IGC_2G_EXACT", "ADN_G")
 DEFAULT_DEPTHS_M = tuple(round(3.5 + 0.25 * i, 2) for i in range(15))     # 3.5 .. 7.0 m
@@ -105,12 +115,21 @@ def fit(loa: float, beam: float, cargo: str, t_max: float, *, ruleset: str = "IG
     ok = data["ok"]
     f = _bridge.decode(ArrangementFit, ok)
     f.engine_inputs = _bridge.decode(BargeCapacityInputs, ok["engine_inputs"])
-    f.engine_result = _result_from_json(ok["engine_result"], f.engine_inputs)
+    f.engine_result = _result_from_json(ok["engine_result"])
     return f
+
+
+_FIT_KEYWORDS = frozenset(inspect.signature(fit).parameters) - {"loa", "beam", "cargo", "t_max"}
 
 
 def smallest_viable_loa(beam: float, cargo: str, t_max: float, *, lo: float = 20.0,
                         hi: float = 120.0, **kw) -> float:
     """Shortest LOA (to 0.1 m) at which the hull has any cargo area at all."""
+    for name in kw:
+        # What 0.1.0 said when it passed the keywords on to `fit`.
+        if name in ("loa", "beam", "cargo", "t_max"):
+            raise TypeError(f"fit() got multiple values for argument '{name}'")
+        if name not in _FIT_KEYWORDS:
+            raise TypeError(f"fit() got an unexpected keyword argument '{name}'")
     args = dict(beam=beam, cargo=cargo, t_max=t_max, lo=lo, hi=hi, **kw)
     return _call("gas_arrangement", "smallest_viable_loa", args, float)

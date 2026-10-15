@@ -25,5 +25,5 @@ def calculate_weights(
     Returns:
         WeightBreakdown with all component weights in tonnes.
     """
-    # The core derives the hull and the tank arrangement from ``inputs`` itself.
-    return _call("weights", "calculate_weights", {"inputs": inputs}, WeightBreakdown)
+    return _call("weights", "calculate_weights", {"inputs": inputs, "hull": hull, "tanks": tanks},
+                 WeightBreakdown)

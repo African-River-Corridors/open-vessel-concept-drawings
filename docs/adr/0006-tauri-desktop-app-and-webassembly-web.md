@@ -9,7 +9,7 @@ same engine as the app. `ovcd-core` has no file, clock or environment access for
 
 ## Consequences
 
-- Units are display-only and belong in the UI, so there is no units crate. Files and the core are SI.
+- Units are display-only and belong in the UI, so there is no units crate. Files and the core are SI (speeds in knots; ADR 0007).
 - The earlier static web simulator (Pyodide) cannot load the compiled package. It is removed. A new
   web version on the WebAssembly core is on the roadmap.
 - The command-line tool and the app are built in parallel on the same core.

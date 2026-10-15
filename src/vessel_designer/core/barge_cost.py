@@ -14,7 +14,7 @@ illustrative numbers for the worked example only — not market quotes.
 The rates file is flat YAML (``key: value  # comment``). The core reads that subset with the
 standard library so it stays free of third-party imports; nested YAML is rejected loudly.
 
-Pure Python (Pyodide-safe).
+The cost calculation runs in the Rust core (`vessel_designer._native`). No I/O.
 """
 from __future__ import annotations
 

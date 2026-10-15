@@ -47,7 +47,7 @@ WHAT THIS DOES NOT DO
 * Nothing about whether the vessel is CLASSED for the exposure. An inland hull in 1 m waves
   is a certification question, not a resistance one.
 
-Pure functions, math only — Pyodide-safe.
+Typed dataclasses and one function; the maths runs in the Rust core (`vessel_designer._native`). No I/O.
 """
 from __future__ import annotations
 

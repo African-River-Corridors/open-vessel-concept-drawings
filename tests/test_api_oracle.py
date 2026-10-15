@@ -1,0 +1,109 @@
+"""The public API against the original pure-Python package (issue #143).
+
+Every public function is called with whole numbers as `int`, with numpy integers and floats, with
+an edited or rebuilt result object, and with one inputs object reused in a loop. The calls are the
+scenarios of `tests/api_scenarios.py`. The expected answers are in `tests/data/api_ce96e66.json`,
+printed by the frozen Python at commit ce96e66 (`tests/data/make_api_ce96e66.py` says how).
+
+Floats are compared with the tolerance of spec 0001: relative and absolute 1e-9. It is the one the
+parity harness uses, and it is not loosened here. A whole number equals the same float. Text, flags,
+list lengths, keys and error messages must be identical.
+"""
+import json
+import math
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+import api_scenarios as S
+
+DATA = Path(__file__).parent / "data"
+EXPECTED = json.loads((DATA / "api_ce96e66.json").read_text(encoding="utf-8"))["scenarios"]
+API = json.loads((DATA / "public_api.json").read_text(encoding="utf-8"))
+
+# Scenarios whose answer is allowed to differ from 0.1.0, with the reason. Each is listed as a
+# known change in CHANGELOG.md. (None yet: every scenario matches.)
+KNOWN_DIFFERENCES: dict = {}
+
+
+def same(actual, expected, path="result"):
+    """None when equal, else a message that says where they differ."""
+    if isinstance(expected, bool) or isinstance(actual, bool):
+        return None if actual is expected else f"{path}: {actual!r} != {expected!r}"
+    if isinstance(expected, (int, float)) and isinstance(actual, (int, float)):
+        ok = actual == expected or math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-9)
+        return None if ok else f"{path}: {actual!r} != {expected!r}"
+    if isinstance(expected, dict) and isinstance(actual, dict):
+        if list(expected) != list(actual):
+            return f"{path}: keys {list(actual)} != {list(expected)}"
+        for key in expected:
+            found = same(actual[key], expected[key], f"{path}.{key}")
+            if found:
+                return found
+        return None
+    if isinstance(expected, list) and isinstance(actual, list):
+        if len(expected) != len(actual):
+            return f"{path}: length {len(actual)} != {len(expected)}"
+        for i, (a, e) in enumerate(zip(actual, expected)):
+            found = same(a, e, f"{path}[{i}]")
+            if found:
+                return found
+        return None
+    return None if actual == expected and type(actual) is type(expected) else f"{path}: {actual!r} != {expected!r}"
+
+
+CASES = [(name, mode) for name in S.SCENARIOS for mode in S.MODES]
+
+
+@pytest.mark.parametrize("name,mode", CASES, ids=[f"{n}[{m}]" for n, m in CASES])
+def test_the_api_gives_the_answers_of_0_1_0(name, mode):
+    expected = EXPECTED[name].get(mode, EXPECTED[name]["float"])
+    actual = S.run("vessel_designer", mode, name)
+    if name in KNOWN_DIFFERENCES:
+        pytest.skip(KNOWN_DIFFERENCES[name])
+    assert same(actual, expected, "result") is None, same(actual, expected, "result")
+
+
+def test_the_fixture_and_the_scenarios_list_the_same_cases():
+    assert sorted(EXPECTED) == sorted(S.SCENARIOS)
+    assert len(EXPECTED) >= 60
+
+
+def test_no_scenario_raised_in_0_1_0():
+    # A scenario that errors in the original is a broken scenario, not an expectation.
+    raised = [(n, m) for n, modes in EXPECTED.items() for m, r in modes.items() if "raised" in r]
+    assert raised == []
+
+
+def test_no_scenario_is_vacuous():
+    empty = [n for n, modes in EXPECTED.items() if modes["float"]["ok"] in (None, [], {})]
+    assert empty == []
+
+
+def test_every_public_function_is_called_by_a_scenario():
+    needed = {"simulate." + n for n, v in API["vessel_designer.simulate"].items() if v["kind"] == "function"}
+    for module, names in API.items():
+        if not module.startswith("vessel_designer.core."):
+            continue
+        short = module.removeprefix("vessel_designer.")
+        needed |= {f"{short}.{n}" for n, v in names.items() if v["kind"] == "function"}
+        # classes with callable methods of their own (not just an `ok` property)
+        needed |= {f"{short}.{n}" for n, v in names.items()
+                   if v["kind"] == "class" and [m for m in v["methods"] if m not in ("ok",)]
+                   and n in ("HullGeometry", "ResistanceCalculator", "VesselStandard", "DesignGrid")}
+    covered = {c for fn in S.SCENARIOS.values() for c in fn.covers}
+    assert sorted(needed - covered) == []
+    assert len(needed) > 50, "scanning too little"
+
+
+def test_the_modes_really_hand_over_the_numbers_they_name():
+    ints = S.Ctx("vessel_designer", "int")
+    assert type(ints.n(90.0)) is int and type(ints.n(0.5)) is float and type(ints.k(2)) is int
+    np_ints = S.Ctx("vessel_designer", "np.int64")
+    assert type(np_ints.n(90.0)) is np.int64 and type(np_ints.n(0.5)) is np.float64
+    assert type(np_ints.k(2)) is np.int64
+    np_floats = S.Ctx("vessel_designer", "np.float64")
+    assert type(np_floats.n(90.0)) is np.float64 and type(np_floats.n(0.5)) is np.float64
+    plain = S.Ctx("vessel_designer", "float")
+    assert type(plain.n(90.0)) is float
