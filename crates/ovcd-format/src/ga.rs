@@ -320,6 +320,10 @@ impl Canvas {
     }
 
     /// An arc counter-clockwise from `start` to `end` degrees.
+    // Drawing geometry, not a result: this only widens the drawing's extent, and no capacity, weight,
+    // draught or hash depends on it. The banned-maths rule (clippy.toml) is lifted for this one
+    // function; the standard-library `sin` and `cos` are fine here.
+    #[allow(clippy::disallowed_methods)]
     fn arc(
         &mut self,
         layer: &str,
