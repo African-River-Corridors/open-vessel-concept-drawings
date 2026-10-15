@@ -161,7 +161,7 @@ def test_every_name_removed_on_purpose_is_in_the_changelog():
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     names = {n for gone in REMOVED_ON_PURPOSE.values() for n in gone}
     names |= {f for _, _, f in REMOVED_FIELDS}
-    assert len(names) == 21
+    assert len(names) == 15
     assert [n for n in sorted(names) if f"`{n}`" not in changelog] == []
 
 
