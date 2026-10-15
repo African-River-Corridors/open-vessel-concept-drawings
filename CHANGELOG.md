@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Calibration Bands (issue #119): `calibration/bands.yaml` gives each figure a band per confidence (lightship ±15 / 20 / 30 %, deadweight ±7.5 / 10 / 15 % at high / medium / low). `calibration/results.md` shows each calibrated result against its band and marks cases outside it, and says the errors are in-sample. `python -m vessel_designer.calibration --check` prints a `::warning` annotation per case outside its band; the `test` CI job runs it (about a second). A band miss is a warning only and never fails the build; a crash fails. No calculation result changes.
 - Design change (issue #175): gas tanks follow IGC rules only. The before/after table is under "Design changes" below.
   - The `ADN_G` ruleset is removed: its per-tank volume cap, the tanks-along search, the wide-tank (0.70 B) check, the ADN stability criteria set and the ADN vessel type. The remaining rulesets are `IGC_2G` and `IGC_2G_EXACT`. The input `adn_tank_cap_m3` is removed.
   - New input `max_tank_od_m`, the cap on a tank's outer diameter, 16 m by default (it was the fixed constant `MAX_TANK_OD_M`, 12 m). It applies under both rulesets and is shown with its basis in `ovcd schema` and the app.

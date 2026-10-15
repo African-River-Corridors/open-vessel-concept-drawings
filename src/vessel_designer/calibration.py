@@ -1,13 +1,24 @@
 """Calibration pass: run Reference Vessel inputs through the core and compare with published figures.
 
-    python -m vessel_designer.calibration      # writes calibration/results.md and factors.yaml
+    python -m vessel_designer.calibration           # writes calibration/results.md and factors.yaml
+    python -m vessel_designer.calibration --check   # CI: one warning annotation per case outside its band
 
 The core is not tuned here. This module MEASURES the error; corrections are a separate,
 deliberate step recorded as a calibrated factor with its evidence.
+
+Calibration Bands (`calibration/bands.yaml`, issue #119): each observed figure of a case has a band,
+set per figure and per confidence of the case. A case outside its band is a WARNING only: the
+report marks it and `--check` prints a warning annotation. Nothing here fails on a band miss; a
+crash (a missing file, a bad case) still fails. The errors are in-sample: the fitted factors came
+from the same cases.
+
+The runner calls the core through the `vessel_designer.core` modules, which run the Rust core
+(`vessel_designer._native`) like every other Python caller. It takes about a second.
 """
 from __future__ import annotations
 
 import math
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -21,6 +32,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CAL = ROOT / "calibration"
 RHO_FRESH = 1.0
 KMH_PER_KN = 1.852
+BANDS = yaml.safe_load((CAL / "bands.yaml").read_text())
 
 
 # --- Independent lightship estimators (published, not ours) --------------------------------
@@ -140,6 +152,95 @@ def run_motor(cargo: str, r: list, speed_kmh: float) -> MotorRow:
     return MotorRow(cargo, loa, boa, T, disp, cargo_t, p, speed_kmh, cb, disp - cargo_t, delivered)
 
 
+# --- Calibration Bands -----------------------------------------------------------------------
+
+def load_cases() -> dict:
+    return yaml.safe_load((CAL / "cases.yaml").read_text())
+
+
+@dataclass
+class BandCheck:
+    """One calibrated result against its band."""
+    case: str
+    figure: str                 # "lightship_t" | "dwt_t"
+    observed: float
+    model: float
+    err_pct: float
+    band_pct: float
+    confidence: str
+    basis: str
+    excluded: str | None = None     # why the case is left out of the Cb fit, when it is
+
+    @property
+    def inside(self) -> bool:
+        return abs(self.err_pct) <= self.band_pct
+
+
+def _band_check(c: dict, figure: str, model: float) -> BandCheck:
+    band = BANDS["bands"][figure]
+    obs = c["observed"][figure]
+    return BandCheck(case=c["id"], figure=figure, observed=obs, model=model, err_pct=pct(model, obs),
+                     band_pct=float(band["pct"][c["confidence"]]), confidence=c["confidence"],
+                     basis=band["basis"], excluded=c.get("exclude_from_fit_cb"))
+
+
+def assess(cases: dict | None = None) -> list[BandCheck]:
+    """Every calibrated result that has a published figure, against its band. A lightship given
+    only as an upper bound (light draught, Cb = 1) has no band: it is a bound, not a figure."""
+    cases = cases if cases is not None else load_cases()
+    f = fit_factors(cases["dry_barge"])
+    out = []
+    for c in cases["dry_barge"]:
+        r = run_barge(c, f)
+        if "lightship_t" in c["observed"]:
+            out.append(_band_check(c, "lightship_t", r.ls_cal))
+        if "dwt_t" in c["observed"] and r.dwt_cal is not None:
+            out.append(_band_check(c, "dwt_t", r.dwt_cal))
+    return out
+
+
+def github_warning(message: str, title: str = "", file: str = "") -> str:
+    """A GitHub Actions warning annotation. `%`, CR and LF are escaped as the runner requires."""
+    esc = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+    props = ",".join(p for p in (f"file={file}" if file else "", f"title={title}" if title else "") if p)
+    return f"::warning {props}::{esc}" if props else f"::warning::{esc}"
+
+
+def warnings_for(checks: list[BandCheck]) -> list[str]:
+    """One annotation per result outside its band."""
+    lines = []
+    for b in checks:
+        if b.inside:
+            continue
+        label = BANDS["bands"][b.figure]["label"].lower()
+        note = f"; case excluded from the Cb fit: {b.excluded}" if b.excluded else ""
+        lines.append(github_warning(
+            f"{b.case}: calibrated {label} is {b.err_pct:+.1f} % from the published "
+            f"{b.observed:g} t (model {b.model:,.0f} t), outside ±{b.band_pct:g} % "
+            f"({b.confidence} confidence, in-sample){note}",
+            title="Calibration band", file="calibration/cases.yaml"))
+    return lines
+
+
+def main_check() -> int:
+    """Print one warning annotation per case outside its band. Exit 0 whatever the result: a band
+    miss is a warning. An exception (a missing file, a bad case) is a crash and fails."""
+    checks = assess()
+    for line in warnings_for(checks):
+        print(line)
+    outside = sum(1 for b in checks if not b.inside)
+    print(f"calibration: {len(checks)} results against their bands, {outside} outside (warning only)")
+    return 0
+
+
+def _band_cells(checks: list[BandCheck], case: str, figure: str) -> tuple[str, str]:
+    for b in checks:
+        if b.case == case and b.figure == figure:
+            return (f"±{b.band_pct:g} ({b.confidence})",
+                    "inside" if b.inside else "**OUTSIDE** ⚠")
+    return "–", "–"
+
+
 def fmt(x, nd=0):
     return "–" if x is None else f"{x:,.{nd}f}"
 
@@ -152,9 +253,10 @@ def factors_yaml(f: dict) -> str:
 
 def report() -> str:
     """The results text. Pure: it reads the calibration inputs and writes nothing."""
-    cases = yaml.safe_load((CAL / "cases.yaml").read_text())
+    cases = load_cases()
     f = fit_factors(cases["dry_barge"])
     rows = [run_barge(c, f) for c in cases["dry_barge"]]
+    checks = assess(cases)
     kb, cbf = f["lightship_k_t_per_m3"], f["block_coefficient_box_barge_on_loa"]
     out = ["<!-- GENERATED by python -m vessel_designer.calibration — do not edit -->",
            "# Calibration results", "",
@@ -165,9 +267,21 @@ def report() -> str:
         out.append(f"- **k, {ht} hold:** {v['value']} t/m³ (range {v['min']}–{v['max']}, n = {v['n']})")
     out += [f"- **Cb, box barge on LOA:** {cbf['value']} (range {cbf['min']}–{cbf['max']}, n = {cbf['n']}; "
             f"{len(cbf['excluded'])} excluded — see factors.yaml)", "",
+            "## Calibration Bands", "",
+            "Each observed figure has a band, set per figure and per confidence of the case "
+            "(`bands.yaml`): lightship ±15 / 20 / 30 % and deadweight ±7.5 / 10 / 15 % at high / "
+            "medium / low confidence. The band applies to the *Calibrated* result. "
+            "**The errors are in-sample:** the fitted factors (k per hold type, box-barge Cb) were "
+            "fitted to the same cases, and the container factor rests on one case, so a result "
+            "inside its band is not a validation. A case outside its band is marked "
+            "**OUTSIDE** and raises a CI warning annotation: **warning only, it never fails the "
+            "build.** A lightship given only as an upper bound has no band. Section 3 compares the "
+            "core with a design note, not a published figure, and has no band.", "",
+            f"{sum(1 for b in checks if b.inside)} of {len(checks)} calibrated results are inside "
+            f"their band.", "",
             "## 1. Push barges — lightship", "",
-            "| Case | Hold | Conf. | Observed (t) | Ported | err % | Calibrated | err % | Padovezi 0.12 | err % | CN draft | err % |",
-            "|---|---|---|---|---|---|---|---|---|---|---|---|"]
+            "| Case | Hold | Conf. | Observed (t) | Ported | err % | Calibrated | err % | Padovezi 0.12 | err % | CN draft | err % | Band ± % | Calibrated vs band |",
+            "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in rows:
         c, o = r.case, r.case["observed"]
         obs = o.get("lightship_t")
@@ -176,11 +290,12 @@ def report() -> str:
         out.append(f"| {c['id']} | {c['hold_type']} | {c['confidence']} | {obs_txt} | "
                    f"{fmt(r.ls_ported)} | {fmt(pct(r.ls_ported, obs), 1)} | {fmt(r.ls_cal)} | "
                    f"{fmt(pct(r.ls_cal, obs), 1)} | {fmt(r.ls_padovezi)} | {fmt(pct(r.ls_padovezi, obs), 1)} | "
-                   f"{fmt(r.ls_cn)} | {fmt(pct(r.ls_cn, obs), 1)} |")
+                   f"{fmt(r.ls_cn)} | {fmt(pct(r.ls_cn, obs), 1)} | "
+                   f"{' | '.join(_band_cells(checks, c['id'], 'lightship_t'))} |")
     out += ["", "Note: where a case is in the k fit, its calibrated error is in-sample.", "",
             "## 2. Push barges — deadweight at the stated draught", "",
-            "| Case | T (m) | Observed DWT (t) | Ported | err % | Calibrated | err % | In Cb fit |",
-            "|---|---|---|---|---|---|---|---|"]
+            "| Case | T (m) | Observed DWT (t) | Ported | err % | Calibrated | err % | In Cb fit | Band ± % | Calibrated vs band |",
+            "|---|---|---|---|---|---|---|---|---|---|"]
     fit_ids = {e["case"] for e in cbf["evidence"]}
     for r in rows:
         c, o = r.case, r.case["observed"]
@@ -189,7 +304,8 @@ def report() -> str:
         infit = "yes" if c["id"] in fit_ids else ("excluded" if c.get("exclude_from_fit_cb") else "no")
         out.append(f"| {c['id']} | {c['draught_m']} | {fmt(o.get('dwt_t'))} | {fmt(r.dwt_ported)} | "
                    f"{fmt(pct(r.dwt_ported, o.get('dwt_t')), 1)} | {fmt(r.dwt_cal)} | "
-                   f"{fmt(pct(r.dwt_cal, o.get('dwt_t')), 1)} | {infit} |")
+                   f"{fmt(pct(r.dwt_cal, o.get('dwt_t')), 1)} | {infit} | "
+                   f"{' | '.join(_band_cells(checks, c['id'], 'dwt_t'))} |")
 
     src = yaml.safe_load((CAL / "cn_yangtze_gb38030_draft_2018.yaml").read_text())
     mrows = []
@@ -215,11 +331,15 @@ def main(out_dir: Path = CAL) -> None:
     """Write results.md and factors.yaml into ``out_dir`` (the repo's calibration/ by default)."""
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    cases = yaml.safe_load((CAL / "cases.yaml").read_text())
+    cases = load_cases()
     (out_dir / "factors.yaml").write_text(factors_yaml(fit_factors(cases["dry_barge"])))
     (out_dir / "results.md").write_text(report())
     print((out_dir / "results.md").read_text())
 
 
 if __name__ == "__main__":
+    if sys.argv[1:] == ["--check"]:
+        sys.exit(main_check())
+    if sys.argv[1:]:
+        sys.exit("usage: python -m vessel_designer.calibration [--check]")
     main()

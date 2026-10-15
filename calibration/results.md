@@ -9,39 +9,45 @@
 - **k, container hold:** 0.1711 t/m³ (range 0.1711–0.1711, n = 1)
 - **Cb, box barge on LOA:** 0.928 (range 0.883–0.995, n = 7; 2 excluded — see factors.yaml)
 
+## Calibration Bands
+
+Each observed figure has a band, set per figure and per confidence of the case (`bands.yaml`): lightship ±15 / 20 / 30 % and deadweight ±7.5 / 10 / 15 % at high / medium / low confidence. The band applies to the *Calibrated* result. **The errors are in-sample:** the fitted factors (k per hold type, box-barge Cb) were fitted to the same cases, and the container factor rests on one case, so a result inside its band is not a validation. A case outside its band is marked **OUTSIDE** and raises a CI warning annotation: **warning only, it never fails the build.** A lightship given only as an upper bound has no band. Section 3 compares the core with a design note, not a published figure, and has no band.
+
+13 of 14 calibrated results are inside their band.
+
 ## 1. Push barges — lightship
 
-| Case | Hold | Conf. | Observed (t) | Ported | err % | Calibrated | err % | Padovezi 0.12 | err % | CN draft | err % |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| para-mississippi-2200 | box | medium | 264 | 558 | 111.3 | 304 | 15.1 | 333 | 26.3 | 426 | 61.5 |
-| amaggi-box-2000 | box | medium | – | 558 | – | 304 | – | 333 | – | 426 | – |
-| mcdonough-195x35x12 | box | medium | – | 483 | – | 254 | – | 279 | – | 387 | – |
-| jeffboat-am2100 | box | medium | – | 588 | – | 325 | – | 357 | – | 438 | – |
-| hidrovia-lhg-3200 | box | medium | – | 724 | – | 427 | – | 469 | – | 551 | – |
-| cargill-amazon-jumbo | box | medium | – | 724 | – | 427 | – | 469 | – | 551 | – |
-| europa-iib-rdb06 | box | medium | ≤487 (light draught, Cb=1) | 598 | – | 304 | – | 334 | – | 545 | – |
-| europa-iib-1635ou | box | medium | – | 678 | – | 359 | – | 394 | – | 578 | – |
-| danube-barge-77 | box | medium | 290 | 534 | 84.2 | 259 | -10.6 | 285 | -1.9 | 511 | 76.1 |
-| victor-83-container-barge | container | medium | 455 | 595 | 30.7 | 455 | 0.0 | 319 | -29.9 | 585 | 28.4 |
-| stretch-hopper-light | box | high | ≤514 (light draught, Cb=1) | 496 | – | 260 | – | 286 | – | 401 | – |
-| us-hopper-195x35-generic | box | low | 267 | 498 | 86.4 | 264 | -1.1 | 290 | 8.6 | 393 | 47.2 |
+| Case | Hold | Conf. | Observed (t) | Ported | err % | Calibrated | err % | Padovezi 0.12 | err % | CN draft | err % | Band ± % | Calibrated vs band |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| para-mississippi-2200 | box | medium | 264 | 558 | 111.3 | 304 | 15.1 | 333 | 26.3 | 426 | 61.5 | ±20 (medium) | inside |
+| amaggi-box-2000 | box | medium | – | 558 | – | 304 | – | 333 | – | 426 | – | – | – |
+| mcdonough-195x35x12 | box | medium | – | 483 | – | 254 | – | 279 | – | 387 | – | – | – |
+| jeffboat-am2100 | box | medium | – | 588 | – | 325 | – | 357 | – | 438 | – | – | – |
+| hidrovia-lhg-3200 | box | medium | – | 724 | – | 427 | – | 469 | – | 551 | – | – | – |
+| cargill-amazon-jumbo | box | medium | – | 724 | – | 427 | – | 469 | – | 551 | – | – | – |
+| europa-iib-rdb06 | box | medium | ≤487 (light draught, Cb=1) | 598 | – | 304 | – | 334 | – | 545 | – | – | – |
+| europa-iib-1635ou | box | medium | – | 678 | – | 359 | – | 394 | – | 578 | – | – | – |
+| danube-barge-77 | box | medium | 290 | 534 | 84.2 | 259 | -10.6 | 285 | -1.9 | 511 | 76.1 | ±20 (medium) | inside |
+| victor-83-container-barge | container | medium | 455 | 595 | 30.7 | 455 | 0.0 | 319 | -29.9 | 585 | 28.4 | ±20 (medium) | inside |
+| stretch-hopper-light | box | high | ≤514 (light draught, Cb=1) | 496 | – | 260 | – | 286 | – | 401 | – | – | – |
+| us-hopper-195x35-generic | box | low | 267 | 498 | 86.4 | 264 | -1.1 | 290 | 8.6 | 393 | 47.2 | ±30 (low) | inside |
 
 Note: where a case is in the k fit, its calibrated error is in-sample.
 
 ## 2. Push barges — deadweight at the stated draught
 
-| Case | T (m) | Observed DWT (t) | Ported | err % | Calibrated | err % | In Cb fit |
-|---|---|---|---|---|---|---|---|
-| para-mississippi-2200 | 3.66 | 2,200 | 1,466 | -33.4 | 1,906 | -13.4 | excluded |
-| amaggi-box-2000 | 3.56 | 2,000 | 1,411 | -29.5 | 1,845 | -7.7 | yes |
-| mcdonough-195x35x12 | 3.05 | 1,479 | 1,161 | -21.5 | 1,541 | 4.2 | yes |
-| jeffboat-am2100 | 3.84 | 1,905 | 1,535 | -19.4 | 1,993 | 4.6 | yes |
-| hidrovia-lhg-3200 | 3.96 | 3,200 | 2,356 | -26.4 | 2,935 | -8.3 | excluded |
-| cargill-amazon-jumbo | 4.0 | 3,126 | 2,387 | -23.6 | 2,969 | -5.0 | yes |
-| europa-iib-rdb06 | 3.0 | 2,000 | 1,620 | -19.0 | 2,117 | 5.8 | yes |
-| europa-iib-1635ou | 3.1 | 2,033 | 1,540 | -24.3 | 2,062 | 1.4 | yes |
-| danube-barge-77 | 2.5 | 1,700 | 1,266 | -25.5 | 1,706 | 0.3 | yes |
-| victor-83-container-barge | 2.6 | 1,976 | 1,505 | -23.8 | 1,838 | -7.0 | no |
+| Case | T (m) | Observed DWT (t) | Ported | err % | Calibrated | err % | In Cb fit | Band ± % | Calibrated vs band |
+|---|---|---|---|---|---|---|---|---|---|
+| para-mississippi-2200 | 3.66 | 2,200 | 1,466 | -33.4 | 1,906 | -13.4 | excluded | ±10 (medium) | **OUTSIDE** ⚠ |
+| amaggi-box-2000 | 3.56 | 2,000 | 1,411 | -29.5 | 1,845 | -7.7 | yes | ±10 (medium) | inside |
+| mcdonough-195x35x12 | 3.05 | 1,479 | 1,161 | -21.5 | 1,541 | 4.2 | yes | ±10 (medium) | inside |
+| jeffboat-am2100 | 3.84 | 1,905 | 1,535 | -19.4 | 1,993 | 4.6 | yes | ±10 (medium) | inside |
+| hidrovia-lhg-3200 | 3.96 | 3,200 | 2,356 | -26.4 | 2,935 | -8.3 | excluded | ±10 (medium) | inside |
+| cargill-amazon-jumbo | 4.0 | 3,126 | 2,387 | -23.6 | 2,969 | -5.0 | yes | ±10 (medium) | inside |
+| europa-iib-rdb06 | 3.0 | 2,000 | 1,620 | -19.0 | 2,117 | 5.8 | yes | ±10 (medium) | inside |
+| europa-iib-1635ou | 3.1 | 2,033 | 1,540 | -24.3 | 2,062 | 1.4 | yes | ±10 (medium) | inside |
+| danube-barge-77 | 2.5 | 1,700 | 1,266 | -25.5 | 1,706 | 0.3 | yes | ±10 (medium) | inside |
+| victor-83-container-barge | 2.6 | 1,976 | 1,505 | -23.8 | 1,838 | -7.0 | no | ±10 (medium) | inside |
 
 ## 3. Yangtze motor vessels — GB 38030 draft design points (2018)
 
