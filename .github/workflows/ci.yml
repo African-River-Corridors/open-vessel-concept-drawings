@@ -30,6 +30,10 @@ jobs:
           python -m pip install -e '.[dev]'
       - name: Fast gate
         run: bash tools/gates.sh
+      # Calibration Bands (issue #119): one warning annotation per case outside its band. A band miss
+      # never fails the build; a crash does. It takes about a second, so it stays in this job.
+      - name: Calibration against the Calibration Bands (warning only)
+        run: python -m vessel_designer.calibration --check
 
   # The drawing crate against the Python implementation of the same standard (spec 0003): the views
   # of every fixture Design give equal normalised content in both. The Python tool is installed at

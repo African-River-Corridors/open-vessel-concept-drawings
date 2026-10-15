@@ -4,6 +4,17 @@
 `python -m vessel_designer.calibration` runs them through the core and writes `results.md`.
 The pass **measures**; it does not tune. Each correction is a separate change with its evidence.
 
+## Calibration Bands
+
+`bands.yaml` gives each figure a band per confidence level (the `confidence` of the case):
+lightship ±15 / 20 / 30 % and deadweight ±7.5 / 10 / 15 % at high / medium / low. A case's band and its
+basis are therefore its figure plus its confidence. `results.md` shows each calibrated result against
+its band and marks cases outside it. `python -m vessel_designer.calibration --check` prints one
+`::warning` annotation per case outside its band; CI runs it. **A band miss is a warning, never a
+failure**, while the model is in development; a crash still fails. The errors are **in-sample**: the
+factors in `factors.yaml` were fitted to the same cases (the container factor to one case).
+To add a case, give it a `confidence`; it is banded from then on.
+
 ## Pass 1 findings (core as first ported)
 
 1. **Barge lightship is overestimated by 31–111 %.** The bulk branch adds the ported sloped-hopper
