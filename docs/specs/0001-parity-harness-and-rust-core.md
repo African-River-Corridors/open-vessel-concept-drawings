@@ -69,7 +69,8 @@ review, and nobody has agreed yet that they need fixing. General improvements co
 15. As an engineer, I want `ovcd run --json` to print the full results, so that I can feed them into my
     own tools.
 16. As an engineer, I want all files and output in SI units, so that there is no unit confusion. (US
-    units arrive later with the app's unit setting.)
+    units arrive later with the app's unit setting.) Note: speeds are the one exception. They are in
+    knots, the inland-waterway convention (ADR 0007, issue #134).
 
 ### Python library user
 17. As a Python user, I want `pip install vessel-designer` to keep working, so that my scripts do not
@@ -242,7 +243,8 @@ review, and nobody has agreed yet that they need fixing. General improvements co
   green.
 
 ### The `.vdesign` file
-- Versioned JSON. Always SI. Unit switching is only for display and input, in the app.
+- Versioned JSON. SI, except speeds, which are in knots (`max_speed_kn`, `channel_current_kn`; ADR 0007).
+  Unit switching is only for display and input, in the app.
 - A Design holds a named list of one or more Options, the engine version, and a results hash for each
   Option.
 - An Option holds the typed `simulate` inputs, with glossary names (for example `cargo_containment`,
@@ -276,7 +278,7 @@ review, and nobody has agreed yet that they need fixing. General improvements co
 - `ovcd run <file>`: a short summary by default. `--json` gives the full results.
 - `ovcd eval <entry-point>`: hidden. JSON on stdin, JSON on stdout. For parity only. It is removed
   with the Reference Results.
-- Output is SI only in this spec.
+- Output is SI only in this spec, except speeds, which are in knots (as the original Python gives them).
 
 ### End of port
 - "Port complete" means every entry point is at parity **and** the switch pull request has merged.

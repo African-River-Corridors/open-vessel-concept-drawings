@@ -53,7 +53,7 @@ Usage:
       implementation of the standard.
   ovcd --help | --version
 
-All files and output are SI.
+All files and output are SI, except speeds, which are in knots.
 ";
 
 fn main() -> ExitCode {
