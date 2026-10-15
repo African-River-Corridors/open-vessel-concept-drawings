@@ -28,7 +28,7 @@ Dimensions are the CLASS definition, not a specific hull. Draught ranges are the
 range; a project's design draught is its own decision, and the channel depth follows from
 it by the channel rules, not from this table.
 
-Pure Python, Pyodide-safe. No I/O.
+The catalogue and its lookups run in the Rust core (`vessel_designer._native`). No I/O.
 """
 
 from dataclasses import dataclass

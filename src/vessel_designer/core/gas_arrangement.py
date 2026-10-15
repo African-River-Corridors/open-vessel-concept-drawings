@@ -24,6 +24,7 @@ Pure calculation, no I/O.
 """
 from __future__ import annotations
 
+import inspect
 from dataclasses import dataclass, field
 from typing import List, Sequence
 
@@ -109,8 +110,17 @@ def fit(loa: float, beam: float, cargo: str, t_max: float, *, ruleset: str = "IG
     return f
 
 
+_FIT_KEYWORDS = frozenset(inspect.signature(fit).parameters) - {"loa", "beam", "cargo", "t_max"}
+
+
 def smallest_viable_loa(beam: float, cargo: str, t_max: float, *, lo: float = 20.0,
                         hi: float = 120.0, **kw) -> float:
     """Shortest LOA (to 0.1 m) at which the hull has any cargo area at all."""
+    for name in kw:
+        # What 0.1.0 said when it passed the keywords on to `fit`.
+        if name in ("loa", "beam", "cargo", "t_max"):
+            raise TypeError(f"fit() got multiple values for argument '{name}'")
+        if name not in _FIT_KEYWORDS:
+            raise TypeError(f"fit() got an unexpected keyword argument '{name}'")
     args = dict(beam=beam, cargo=cargo, t_max=t_max, lo=lo, hi=hi, **kw)
     return _call("gas_arrangement", "smallest_viable_loa", args, float)

@@ -9,7 +9,7 @@
 //! `barge_capacity.compute`).
 
 use crate::EvalError;
-use crate::eval::{capacity_inputs, raised_py};
+use crate::eval::{capacity_inputs, raised_py, tagged_f64};
 use ovcd_core::gas_stability::{self as gs, Condition, Criterion, PyError, PyNum};
 use serde_json::{Map, Value, json};
 
@@ -26,7 +26,7 @@ fn float(x: f64) -> Value {
 
 fn num_arg(args: &Value, name: &str) -> Result<f64, EvalError> {
     args.get(name)
-        .and_then(Value::as_f64)
+        .and_then(tagged_f64)
         .ok_or_else(|| EvalError::BadInput(format!("`args.{name}` must be a number")))
 }
 

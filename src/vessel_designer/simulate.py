@@ -1,4 +1,4 @@
-"""One-call barge simulation for the web simulator (runs in the browser via Pyodide).
+"""One-call barge simulation for the simulator.
 
     simulate(params: dict) -> dict      # JSON in, JSON out
 
