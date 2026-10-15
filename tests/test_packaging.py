@@ -145,6 +145,12 @@ def test_wheel_job_skips_the_tests_that_scan_files_it_does_not_copy():
     # the tools, workflow and gate tests read the repository itself (globs, so a new file is covered)
     for pattern in ("test_design_impact*.py", "test_workflows*.py", "test_gates*.py"):
         assert f"--ignore-glob='tests/{pattern}'" in text, pattern
+    # the label guard scans crates/*/tests, which the wheel job does not copy (issue #171)
+    assert "--ignore=tests/test_test_labels.py" in text
+    # single tests that read src/ or CHANGELOG.md, in files whose other tests check the wheel
+    for node in ("tests/test_api_small_changes.py::test_the_core_modules_no_longer_claim_to_run_in_pyodide",
+                 "tests/test_public_api.py::test_the_names_that_are_not_kept_are_only_standard_library_and_numpy_helpers"):
+        assert f"--deselect={node}" in text, node
 
 
 def test_version_is_0_2_2_everywhere():
