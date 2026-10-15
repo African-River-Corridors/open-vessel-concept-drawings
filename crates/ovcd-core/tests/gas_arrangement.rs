@@ -292,3 +292,31 @@ fn the_bisection_treats_a_zero_capacity_midpoint_as_not_viable() {
     assert!(loa > 35.0 && loa <= 40.0, "got {loa}");
     assert!(cap(loa) > 0.0);
 }
+
+// Label: property. States the two facts that make the `&&` and `>` in the extra-clearance loop of
+// `fit` equivalent mutants (issue #58; the reasoning is in the comment at that line).
+//
+// With a fill ratio of 0 every candidate has a tank (diameter above zero) but exactly zero
+// capacity: the case the mutants `||` and `>=` would let into the search. Worked out: the cargo
+// volume is the tank volume times the fill ratio, so it is 0.0 and the payload is 0.0 (it is
+// capped by the capacity). The `feasible_geometry` check needs a positive cargo volume, so it
+// fails and the result is infeasible.
+#[test]
+fn a_zero_capacity_arrangement_is_infeasible_and_carries_nothing() {
+    let o = FitOptions {
+        fill_ratio: 0.0,
+        ..FitOptions::default()
+    };
+    let f = fit(90.0, 14.8, "LNG", 3.0, &o).unwrap();
+    assert!(f.tank_od_m > 0.0, "the hull must have tanks for this case");
+    assert_eq!(f.volume_capacity_t, 0.0);
+    assert_eq!(f.payload_t, 0.0);
+    assert!(!f.feasible);
+    assert!(
+        f.failed_checks
+            .iter()
+            .any(|c| c.starts_with("feasible_geometry")),
+        "{:?}",
+        f.failed_checks
+    );
+}
