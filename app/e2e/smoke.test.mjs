@@ -53,6 +53,8 @@ describe("OVCD app smoke tests", () => {
       port: 4444,
       path: "/",
       logLevel: "warn",
+      // webdriverio 10 throws when a selector matches many elements; 9 took the first. The tests rely on that.
+      strictSelectors: false,
       capabilities: { "wdio:enforceWebDriverClassic": true, "tauri:options": { application: APP } },
     });
     try {
