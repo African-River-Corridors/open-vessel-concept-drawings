@@ -11,7 +11,8 @@ Planned work. Each item links to its issue — comment there to help or to discu
   size. (Fabrication rates are already data: see `examples/barge_cost_rates.example.yaml`. The tank
   outer diameter cap is already an input, `max_tank_od_m`, and there is no tank-length cap.)
 - **Define an Option by a standard Vessel Class** ([#94](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/94)) — pick a class
-  (e.g. CEMT Va) instead of typing length and beam. Waits for the maintainer's answers to its open questions.
+  (e.g. CEMT Va) instead of typing length and beam. **Done**: length and beam decide the class; picking
+  one sets them, the Formation and the draught and air-draft limits.
 - **Close the mutation test gaps from the Rust port** ([#123](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/123)) — tests
   only; no result changes.
 

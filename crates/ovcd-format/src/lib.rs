@@ -1,6 +1,7 @@
 //! The `.vdesign` format, the Defaults Profile and validation, running a Design, and the `eval`
 //! dispatch over every entry point of the calculation core (the Python package's seam).
 
+pub mod class_input;
 mod eval;
 pub mod ga;
 mod gas_arrangement;

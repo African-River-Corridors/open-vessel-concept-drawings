@@ -34,8 +34,16 @@ save writes the current version.
   `ADN_G` ruleset are gone, because the engine applies IGC rules only to gas tanks. A version 1 file
   that names `ADN_G` is read as `IGC_2G`, its `adn_tank_cap_m3` is dropped, and a gas Option with no
   `max_tank_od_m` gets the Defaults Profile value (16 m), marked `default`, with a warning that
-  version 1 used a fixed 12 m cap, so results may change. The Vessel Class ticket (#94) also
-  changes the input table before the next release, so it reuses version 2 and does not bump again.
+  version 1 used a fixed 12 m cap, so results may change.
+  The Vessel Class change (issue #94) also changes the input table before the next release, so it
+  reuses version 2 and does not bump again: a third source marker `class` (alongside `typed` and
+  `default`) marks an input that a Vessel Class gave, and two inputs, `vessel_scheme` and `vessel_class`,
+  are held only by an Option defined by a standard class (an Option with typed dimensions has neither,
+  so a version 1 file needs no change). The class is derived: after every read it is the smallest class
+  of the scheme whose length and beam maxima hold the vessel, so length and beam decide it; a stored
+  class that disagrees is replaced, with a warning. Picking a class sets length, beam and Formation
+  (and a convoy's counts), marked `class`; its draught (top of the range) and air draft (bottom of the
+  range) fill the two limits, marked `class`, unless a limit was typed. Depth stays typed.
 
 ## Consequences
 

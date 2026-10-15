@@ -96,6 +96,12 @@ OPTIONAL_INPUT_CASES = (
     ("fill_ratio", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"fill_ratio": 0.85}),
     ("max_tank_od_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 20.0, 6.0,
      {"max_tank_od_m": 12.0}),
+    # A Vessel Class (issue #94): the scheme places the vessel in a class, and the class fills the
+    # draught and air-draft limits. The results of the same dimensions are those of typed ones.
+    ("vessel_scheme", "bauxite", "box_hold", "self_propelled", 110.0, 11.4, 4.5,
+     {"vessel_scheme": "CEMT-1992"}),
+    ("vessel_class", "bauxite", "box_hold", "self_propelled", 100.0, 11.0, 4.5,
+     {"vessel_class": "CEMT-Va", "length_overall_m": 108.0}),
 )
 
 

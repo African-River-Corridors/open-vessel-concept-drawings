@@ -1,7 +1,8 @@
 // The only door to the Rust side. Every function forwards to a Tauri command; none computes.
 import { invoke } from "@tauri-apps/api/core";
 
-export type Source = "typed" | "default";
+/** Where an input came from: the designer, the Defaults Profile, or the Vessel Class. */
+export type Source = "typed" | "default" | "class";
 export interface StoredInput {
   value: unknown;
   source: Source;
@@ -28,6 +29,25 @@ export interface Snapshot {
 export interface Choice {
   value: string;
   label: string;
+  /** A Vessel Class choice: its scheme, the Formation kind it gives and what picking it sets. */
+  scheme?: string;
+  formation?: string | null;
+}
+/** The Vessel Class an Option sits in, and its reference deadweight (shown beside the cargo, never an input). */
+export interface VesselClassSummary {
+  id: string;
+  scheme: string;
+  formation: string;
+  length_max_m: number | null;
+  beam_max_m: number | null;
+  draught_m: [number, number] | null;
+  air_draft_m: [number, number] | null;
+  reference_dwt_t: [number, number] | null;
+  confidence: string;
+  source: string;
+  notes: string;
+  /** The vessel is longer or wider than the largest class of its scheme. */
+  beyond_largest: boolean;
 }
 export interface HardRange {
   gt?: number;
@@ -46,7 +66,7 @@ export interface InputSpec extends Ranges {
   label: string;
   group: string;
   required: boolean;
-  kind: "number" | "bool" | "choice" | "cargo" | "formation";
+  kind: "number" | "bool" | "choice" | "cargo" | "formation" | "vessel_scheme" | "vessel_class";
   nullable?: boolean;
   choices?: Choice[];
   default?: unknown;
@@ -75,6 +95,8 @@ export interface OptionEvaluation {
   name: string;
   messages: Message[];
   outcome: Outcome;
+  /** null for typed dimensions. */
+  vessel_class?: VesselClassSummary | null;
 }
 export interface Evaluation {
   options: OptionEvaluation[];

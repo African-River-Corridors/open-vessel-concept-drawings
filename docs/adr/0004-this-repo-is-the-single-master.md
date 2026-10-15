@@ -22,14 +22,15 @@ the only work was to bring over the vessel modules that had been left behind.
 
 | Module | Decision |
 |---|---|
-| `vessel_standards` | **ported** with its tests. Same names (`VESSEL_STANDARDS`, `VesselStandard`, `get_standard`, `standards_for`, `validate_catalogue`) and the same data. |
+| `vessel_standards` | **ported** with its tests. Same names (`VESSEL_STANDARDS`, `VesselStandard`, `get_standard`, `standards_for`, `validate_catalogue`). Since issue #94 the data is every class of `catalogue/vessel_classes.yaml`, generated into the core by `tools/gen_vessel_classes.py`. |
 | `ga_adapter` | **ported** (`to_ga`, `is_gas`), with new tests. Depends only on `models` and `barge_capacity`. |
 
 ## Consequences
 
-- `vessel_standards` overlaps `catalogue/`. It stays as a small typed lookup; deriving it from the
-  catalogue is a later step.
-- `CN_II_motor.moulded_depth_m = 6.5` is an example design value, not a published class value. It is
-  kept so existing results do not move.
+- `vessel_standards` overlapped `catalogue/`. Since issue #94 it does not: `catalogue/vessel_classes.yaml`
+  is the one source, the core's list is generated from it, and a test fails on any drift. The ids of the
+  12 classes held by hand before still work as aliases.
+- `CN_II_motor.moulded_depth_m = 6.5` was an example design value, not a published class value. Issue
+  #94 dropped it: no class sets a moulded depth, and depth stays typed.
 - `ga_adapter` builds the structures a GA drawer reads. This repo has no SVG GA drawer (ADR 0003); the
   adapter is here so callers keep one import path.
