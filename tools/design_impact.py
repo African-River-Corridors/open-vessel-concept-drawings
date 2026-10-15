@@ -166,9 +166,10 @@ def cases() -> dict[str, dict]:
         out[f"sweep gas wide hull {ruleset} 110x24"] = _inputs(
             "LNG", "type_c_tanks", "self_propelled", 110.0, 24.0, 6.5, ruleset=ruleset,
             draught_limit_m=4.5)
-    # A long, narrow hull: two tanks along it are longer than 7 diameters, which is refused.
-    out["sweep gas carries nothing (tank longer than 7 diameters)"] = _inputs(
-        "LNG", "type_c_tanks", "self_propelled", 200.0, 11.0, 5.0)
+    # A long hull: two tanks along it are longer than 7 diameters, which is refused. The ruleset is
+    # IGC_2G so that no other error check fails and the length check is the one that refuses it.
+    out["sweep gas tank longer than 7 diameters IGC_2G 200x12"] = _inputs(
+        "LNG", "type_c_tanks", "self_propelled", 200.0, 12.0, 5.5, ruleset="IGC_2G")
     # Designs that carry nothing: the messages are results too.
     out["sweep gas carries nothing (hull too short)"] = _inputs(
         "LPG_propane", "type_c_tanks", "self_propelled", 12.0, 4.0, 2.0)
