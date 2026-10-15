@@ -10,6 +10,7 @@ from .models import (
     WeightBreakdown,
 )
 from .._bridge import call as _call
+from .tanks import free_surface_moment_cylindrical  # noqa: F401  (0.1.0 exposed it here)
 
 
 def find_equilibrium_draft(

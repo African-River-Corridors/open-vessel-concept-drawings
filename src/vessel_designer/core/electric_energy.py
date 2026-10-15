@@ -23,6 +23,7 @@ from typing import List, Optional
 
 from .checks import Check, all_ok
 from .._bridge import call as _call
+from . import resistance as R  # noqa: F401  (0.1.0 exposed this alias)
 
 KN_TO_KMH = 1.852
 

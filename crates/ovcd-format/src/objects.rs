@@ -10,15 +10,13 @@
 //! be the tagged text `"float:nan"`, `"float:inf"` or `"float:-inf"`.
 
 use crate::EvalError;
-use crate::eval::barge_inputs_from;
+use crate::eval::{barge_inputs_from, tagged_f64};
 use ovcd_core::aft_arrangement::AftArrangementResult;
 use ovcd_core::barge_capacity::{BargeCapacityResult, GasBasis};
 use ovcd_core::checks::Check;
 use ovcd_core::gas_separation::GasSeparationResult;
 use ovcd_core::models::{TankResult, WeightBreakdown};
 use serde_json::{Map, Value};
-
-pub(crate) use crate::eval::tagged_f64;
 
 /// One JSON object with the name it is known by, for the error messages.
 struct Obj<'a> {

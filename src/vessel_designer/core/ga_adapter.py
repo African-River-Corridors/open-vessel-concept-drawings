@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import Optional, Tuple
 
-from .models import BargeInputs, BargeResults
+from .models import BargeInputs, BargeResults, TankResult  # noqa: F401  (TankResult: 0.1.0 exposed it)
 from .barge_capacity import BargeCapacityInputs, BargeCapacityResult
 from .._bridge import call as _call
 
