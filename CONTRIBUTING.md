@@ -52,8 +52,11 @@ reports whether designs moved (`tools/design_impact.py`, see `CHANGELOG.md`).
 3. Make sure tests and the release guard pass.
 4. Open a pull request using the template. Say what changed and how you checked it.
 
-Every pull request from outside the maintainers needs approval from a code owner
-(see `.github/CODEOWNERS`) before it merges.
+Branch protection on `main` requires two checks to pass, `test` and `release-guard`, and a linear
+history (squash merges). It does not require an approving review, and a pull request need not be up
+to date with `main` before it merges. The code owner in `.github/CODEOWNERS` is asked to review each
+pull request, and a maintainer reads outside contributions before merging them, but GitHub does not
+enforce that.
 
 ## Licence of contributions
 
