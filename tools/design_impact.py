@@ -31,6 +31,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 import yaml
@@ -253,12 +254,40 @@ def base_commit() -> tuple[str, bool]:
     return parent.stdout.strip(), False
 
 
-def build(tree: Path, target: Path) -> Path:
+def build(tree: Path, target: Path, fresh: bool = False) -> Path:
+    """Build `ovcd` in `tree` and return the binary that cargo says it built.
+
+    The path comes from cargo's own JSON messages, never from a guess about the target directory.
+    `fresh` starts from an empty target directory, and then the binary must be newer than the start
+    of the build. The check fails when cargo reports no `ovcd` binary, or the file is missing or
+    is not under `target`: a leftover binary from another tree must never be measured.
+    """
+    if fresh:
+        shutil.rmtree(target, ignore_errors=True)
+    started = time.time()
     env = {**os.environ, "CARGO_TARGET_DIR": str(target)}
-    r = subprocess.run(["cargo", "build", "-q", "-p", "ovcd-cli"], cwd=tree, env=env)
+    r = subprocess.run(["cargo", "build", "-q", "-p", "ovcd-cli", "--message-format=json-render-diagnostics"],
+                       cwd=tree, env=env, stdout=subprocess.PIPE, text=True)
     if r.returncode != 0:
         raise SystemExit(f"design_impact: cargo build failed in {tree}")
-    return target / "debug" / ("ovcd.exe" if os.name == "nt" else "ovcd")
+    exe = None
+    for line in r.stdout.splitlines():
+        try:
+            msg = json.loads(line)
+        except ValueError:
+            continue
+        if (isinstance(msg, dict) and msg.get("reason") == "compiler-artifact" and msg.get("executable")
+                and msg.get("target", {}).get("name") == "ovcd" and "bin" in msg["target"].get("kind", [])):
+            exe = Path(msg["executable"])
+    if exe is None:
+        raise SystemExit(f"design_impact: cargo built in {tree} but reported no `ovcd` binary")
+    if not exe.is_file():
+        raise SystemExit(f"design_impact: cargo reported {exe} but the file is missing")
+    if not exe.resolve().is_relative_to(target.resolve()):
+        raise SystemExit(f"design_impact: the `ovcd` binary {exe} is not under {target}")
+    if fresh and exe.stat().st_mtime < started - 2:
+        raise SystemExit(f"design_impact: {exe} is older than this build (stale binary)")
+    return exe
 
 
 def measure() -> tuple[str, str, int, list[dict], bool]:
@@ -270,7 +299,7 @@ def measure() -> tuple[str, str, int, list[dict], bool]:
         base_tree = work / "base"
         git("worktree", "add", "-q", "--detach", str(base_tree), base_sha)
         try:
-            base_bin = build(base_tree, ROOT / "target" / "design-impact-base")
+            base_bin = build(base_tree, ROOT / "target" / "design-impact-base", fresh=True)
             head_bin = build(ROOT, ROOT / "target")
             before, after = run_all(base_bin, case_set), run_all(head_bin, case_set)
             # Fail closed: a check that computed nothing on either side proves nothing.
