@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Calibration Bands (issue #119): `calibration/bands.yaml` gives each figure a band per confidence (lightship ±15 / 20 / 30 %, deadweight ±7.5 / 10 / 15 % at high / medium / low). `calibration/results.md` shows each calibrated result against its band and marks cases outside it, and says the errors are in-sample. `python -m vessel_designer.calibration --check` prints a `::warning` annotation per case outside its band; the `test` CI job runs it (about a second). A band miss is a warning only and never fails the build; a crash fails. No calculation result changes.
 - Addition (issue #180): a gas-fuelled self-propelled stern. The default stays battery-electric, and its results do not change.
   - New input `propulsion` on `AftArrangementInputs` and `BargeCapacityInputs`: `battery_electric` (default, as 0.1.0) or `gas_fuelled`. Any other value is a `ValueError`. `BargeCapacityInputs.propulsion` sets the default stern block when `aft` is not given; a given `aft` must agree.
   - Gas-fuelled: no battery units. Gas gensets in an engine room below deck burn the cargo boil-off, with a gas valve unit (GVU) room forward of it. The accommodation units stand beside the wheelhouse when the beam takes them (check `accom_beside_wheelhouse`, a warning; else they go in a row aft of the cab). The block is as long as the longer of the deck items and the rooms below. New checks `gensets_fit_beam`, `gensets_fit_under_deck` (warning) and `gensets_carry_load_with_one_in_reserve`.

@@ -14,8 +14,13 @@ the app breaks on odd inputs; install or build fails on one system; confidential
   through `ovcd` on `main` and on the branch. It says whether designs moved, with a before/after
   table. There are no stored answers, so nothing goes stale. A design change needs no sign-off. It is
   tracked.
-- **Calibration Bands:** a later spec adds a check that blocks a pull request when a Reference
-  Vessel leaves its band.
+- **Calibration Bands:** each Calibration Case has a band per figure and per confidence
+  (`calibration/bands.yaml`; lightship ±15 / 20 / 30 % and deadweight ±7.5 / 10 / 15 % at high / medium /
+  low). The check **warns and does not block** while the model is in development (issue #119, which
+  replaced the first plan to block a pull request): `calibration/results.md` marks each case outside its
+  band, and CI prints a warning annotation per case, and fails only if the run crashes. The errors are
+  in-sample, because the fitted factors in `calibration/factors.yaml` came from the same cases; the
+  report says so. A blocking band, and cases held out of the fit, wait for more cases.
 - **Fast gate:** every pull request, Linux, under 5 minutes, one fail-closed script. Required check
   names stay `test` and `release-guard`.
 - **Release gate:** per release only, plus a manual trigger. Wheels and binaries for Linux, macOS and

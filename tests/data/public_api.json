@@ -1,5 +1,26 @@
 {
  "vessel_designer.calibration": {
+  "BANDS": {
+   "kind": "constant"
+  },
+  "BandCheck": {
+   "fields": [
+    "case",
+    "figure",
+    "observed",
+    "model",
+    "err_pct",
+    "band_pct",
+    "confidence",
+    "basis",
+    "excluded"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": [
+    "inside"
+   ]
+  },
   "BargeRow": {
    "fields": [
     "case",
@@ -45,6 +66,16 @@
   "ROOT": {
    "kind": "constant"
   },
+  "assess": {
+   "kind": "function",
+   "params": [
+    [
+     "cases",
+     "POSITIONAL_OR_KEYWORD",
+     "None"
+    ]
+   ]
+  },
   "factors_yaml": {
    "kind": "function",
    "params": [
@@ -80,6 +111,26 @@
     ]
    ]
   },
+  "github_warning": {
+   "kind": "function",
+   "params": [
+    [
+     "message",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ],
+    [
+     "title",
+     "POSITIONAL_OR_KEYWORD",
+     "''"
+    ],
+    [
+     "file",
+     "POSITIONAL_OR_KEYWORD",
+     "''"
+    ]
+   ]
+  },
   "lbd": {
    "kind": "function",
    "params": [
@@ -89,6 +140,10 @@
      null
     ]
    ]
+  },
+  "load_cases": {
+   "kind": "function",
+   "params": []
   },
   "ls_cn_draft": {
    "kind": "function",
@@ -145,6 +200,10 @@
     ]
    ]
   },
+  "main_check": {
+   "kind": "function",
+   "params": []
+  },
   "pct": {
    "kind": "function",
    "params": [
@@ -194,6 +253,16 @@
     ],
     [
      "speed_kmh",
+     "POSITIONAL_OR_KEYWORD",
+     null
+    ]
+   ]
+  },
+  "warnings_for": {
+   "kind": "function",
+   "params": [
+    [
+     "checks",
      "POSITIONAL_OR_KEYWORD",
      null
     ]
