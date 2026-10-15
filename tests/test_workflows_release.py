@@ -67,7 +67,7 @@ def test_release_tag_check_works_when_called_from_another_workflow():
 
 
 def test_release_gate_skips_this_file_in_the_wheel_job():
-    assert "--ignore=tests/test_workflows_release.py" in RELEASE.read_text(encoding="utf-8")
+    assert "--ignore-glob='tests/test_workflows*.py'" in RELEASE.read_text(encoding="utf-8")
 
 
 def test_app_build_publishes_nothing_to_pypi():

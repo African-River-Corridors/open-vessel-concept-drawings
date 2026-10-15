@@ -77,10 +77,10 @@ jobs:
           "$PY" -c "import vessel_designer as v; print(v.__file__); assert 'site-packages' in v.__file__"
           "$PY" -m pytest -q tests \
             --ignore=tests/test_packaging.py --ignore=tests/test_housekeeping.py \
-            --ignore=tests/test_release_guard.py --ignore=tests/test_gates_fail_closed.py \
+            --ignore=tests/test_release_guard.py --ignore-glob='tests/test_gates*.py' \
             --ignore=tests/test_calibration_runs.py \
             --ignore=tests/test_pystr_tables.py --ignore=tests/test_vdesign_edge_sweep.py \
-            --ignore=tests/test_design_impact.py --ignore=tests/test_workflows_release.py
+            --ignore-glob='tests/test_design_impact*.py' --ignore-glob='tests/test_workflows*.py'
       - uses: actions/upload-artifact@v4
         with:
           name: wheel-${{ matrix.os }}
