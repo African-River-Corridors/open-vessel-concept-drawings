@@ -14,7 +14,7 @@ carries 2 tanks at ~21.5 m each, comfortably under).
 
 Cargo is sized on the BARGE length (the tank-bearing hull); total ATB LOA = barge length + tug (16 m for the E-Pusher).
 
-Pure Python (Pyodide-safe): wraps barge_capacity.compute, no I/O.
+The sweep runs in the Rust core (`vessel_designer._native`), on the same calculation as barge_capacity.compute. No I/O.
 """
 from __future__ import annotations
 

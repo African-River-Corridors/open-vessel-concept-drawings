@@ -10,27 +10,13 @@
 //! be the tagged text `"float:nan"`, `"float:inf"` or `"float:-inf"`.
 
 use crate::EvalError;
-use crate::eval::barge_inputs_from;
+use crate::eval::{barge_inputs_from, tagged_f64};
 use ovcd_core::aft_arrangement::AftArrangementResult;
 use ovcd_core::barge_capacity::{BargeCapacityResult, GasBasis};
 use ovcd_core::checks::Check;
 use ovcd_core::gas_separation::GasSeparationResult;
 use ovcd_core::models::{TankResult, WeightBreakdown};
 use serde_json::{Map, Value};
-
-/// A float as written by a result: a JSON number or a tagged non-finite value.
-pub(crate) fn tagged_f64(v: &Value) -> Option<f64> {
-    match v {
-        Value::Number(n) => n.as_f64(),
-        Value::String(s) => match s.as_str() {
-            "float:nan" => Some(f64::NAN),
-            "float:inf" => Some(f64::INFINITY),
-            "float:-inf" => Some(f64::NEG_INFINITY),
-            _ => None,
-        },
-        _ => None,
-    }
-}
 
 /// One JSON object with the name it is known by, for the error messages.
 struct Obj<'a> {

@@ -14,7 +14,7 @@ environment, the **Schijf limiting speed**, a chosen **service speed** (a target
 capped safely below the limit), and the energy **per trip / per year** — i.e. the model
 for the energy consumption of the electric barge and the speed it can hold.
 
-Pure Python (math only) so it runs client-side in Pyodide.
+The calculation runs in the Rust core (`vessel_designer._native`). No I/O.
 """
 from __future__ import annotations
 

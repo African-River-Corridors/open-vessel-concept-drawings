@@ -10,7 +10,7 @@
 
 use crate::eval::{
     EvalError, capacity_inputs, capacity_json, checks_json, f64_arg, num, ok, opt_num, raised,
-    raised_py, str_arg,
+    raised_py, str_arg, tagged_f64,
 };
 use crate::objects::capacity_result_from_json;
 use ovcd_core::barge_capacity::BargeCapacityInputs;
@@ -45,6 +45,9 @@ fn float_or(o: &Map<String, Value>, name: &str, default: f64) -> Result<f64, Eva
     match o.get(name) {
         None => Ok(default),
         Some(Value::Number(n)) if n.is_f64() => Ok(n.as_f64().unwrap_or(f64::NAN)),
+        Some(v @ Value::String(_)) if tagged_f64(v).is_some() => {
+            Ok(tagged_f64(v).unwrap_or(f64::NAN))
+        }
         Some(_) => Err(EvalError::BadInput(format!(
             "`args.{name}` must be a float (write 18.0, not 18)"
         ))),
