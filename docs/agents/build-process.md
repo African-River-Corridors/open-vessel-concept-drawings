@@ -66,3 +66,26 @@ switch to the Rust core to the agents. Problems found after a merge are fixed fo
   cannot lose the result.
 - The original Python and its Reference Results are in the history, not in the tree: the last commit that
   has them is named in `docs/specs/0001-parity-harness-and-rust-core.md`.
+
+## Fixed-number tests: labels, and re-pinning a snapshot
+
+A test that pins a number carries a label (`tests/test_test_labels.py` enforces it):
+
+- `Label: sourced - <citation>`: the number comes from a standard, a published example or a hand
+  calculation. It changes only when its source does. Name every changed sourced test in the PR body
+  (the template has the line "Sourced tests changed").
+- `Label: snapshot`: the number is what code printed. For the port it is what the original Python
+  printed (frozen at `ce96e66`). It shows that the Rust core still agrees, not that the number is
+  right.
+- `Label: property`: no fixed number.
+
+In Python the label is a line in the test's docstring. In Rust it is a `//! Label:` line in the file
+header; the check covers any file with a long float literal, except the files listed as unlabelled in
+`tests/test_test_labels.py`. That list may only shrink: label a file, then delete it from the list.
+
+**Re-pinning a snapshot after an agreed engineering change.** Never hand-edit the value and never
+loosen a tolerance. Change the code. Run the code, print the new value, and paste that value into
+the test. The before/after table that `tools/design_impact.py` writes into `CHANGELOG.md` (run
+`python3 tools/design_impact.py changelog`) is the record that the change moved the numbers. Say in
+the PR body which snapshots moved and why. A sourced test is not re-pinned this way: it needs a new
+source.
