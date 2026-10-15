@@ -48,9 +48,13 @@ def test_the_case_set_covers_the_calibration_vessels_and_a_sweep():
     assert any(k.startswith("sweep CN-derived liquid") for k in cs)
     assert any(k.startswith("sweep gas IGC_2G_EXACT") for k in cs)
     assert not any("ADN_G" in k for k in cs)
-    for typed in cs.values():           # the six required inputs, so `ovcd fill` can complete the rest
-        for key in ("cargo", "hull_form", "formation", "length_overall_m", "beam_m", "moulded_depth_m"):
+    for typed in cs.values():           # the five required inputs, so `ovcd fill` can complete the rest
+        for key in ("cargo", "hull_form", "formation", "length_overall_m", "beam_m"):
             assert key in typed
+    # Most cases type their depth, so a design that types it is compared as before; the cases that
+    # leave it out are the default-depth rule's (issue #120).
+    left_out = [k for k, v in cs.items() if "moulded_depth_m" not in v]
+    assert sorted(left_out) == ["sweep default depth dry bulk 90x14", "sweep default depth gas 90x14"]
 
 
 def test_identical_results_say_no_design_change(tmp_path):

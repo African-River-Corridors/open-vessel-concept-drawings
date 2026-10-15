@@ -250,12 +250,14 @@ pub const INPUTS: &[InputSpec] = &[
         Group::Required,
     ),
     spec("beam_m", "Beam", NUM, true, Group::Required),
+    // Moulded depth: keel to main deck at the side. Left out, it comes from a rule in the Defaults
+    // Profile: the depth-to-beam ratio of the Cargo times the beam (issue #120).
     spec(
         "moulded_depth_m",
         "Moulded depth",
         NUM,
-        true,
-        Group::Required,
+        false,
+        Group::HullAndContainment,
     ),
     // Held only when the Option is defined by a standard class (see `class_input`).
     spec(
@@ -571,9 +573,23 @@ pub fn new_design(profile: &Profile) -> Result<Design, String> {
     Ok(design)
 }
 
-/// Why a missing or null moulded depth is refused.
-const DEPTH_REQUIRED: &str =
-    "moulded depth is required for now; a default rule by Cargo is planned";
+/// The input whose default is a rule (ratio times beam) and not a value.
+pub const DEPTH_INPUT: &str = "moulded_depth_m";
+
+/// The Cargo groups of the depth rule, as the Defaults Profile names them
+/// (`depth_to_beam_ratio.default_by_cargo_group`). `liquid` has no Cargo yet.
+pub const DEPTH_GROUPS: &[&str] = &["dry_bulk", "liquid", "gas"];
+
+/// The depth rule's Cargo group of a Cargo: a dry-bulk Cargo is `dry_bulk` (the group also holds
+/// container), and every liquefied-gas Cargo (LNG, ethane, the LPGs) is `gas`. `None` for a Cargo
+/// the database does not have.
+pub fn depth_group(cargo: &str) -> Option<&'static str> {
+    match ovcd_core::cargo::get_cargo(cargo).ok()?.phase {
+        "dry_bulk" => Some("dry_bulk"),
+        "liquid_gas" => Some("gas"),
+        _ => None,
+    }
+}
 
 /// What to do with an input the file leaves out.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1026,12 +1042,10 @@ fn read_option(
             continue;
         }
         if spec.required {
-            let msg = if spec.name == "moulded_depth_m" {
-                format!("missing required input `moulded_depth_m`: {DEPTH_REQUIRED}")
-            } else {
-                format!("missing required input `{}`", spec.name)
-            };
-            report.error(at(msg), &[spec.name]);
+            report.error(
+                at(format!("missing required input `{}`", spec.name)),
+                &[spec.name],
+            );
             continue;
         }
         if !applies || crate::class_input::UNSET_WHEN_ABSENT.contains(&spec.name) {
@@ -1077,7 +1091,7 @@ fn read_option(
         );
     }
     crate::class_input::resolve(&mut inputs, profile, report, &at);
-    cross_checks(&inputs, report, &at);
+    cross_checks(&inputs, profile, report, &at);
     impossible_results(&inputs, report, &at);
     DesignOption {
         name: name.into(),
@@ -1100,6 +1114,9 @@ fn default_for(
             .find(|(k, _)| k == n)
             .and_then(|(_, i)| i.value.as_str().map(String::from))
     };
+    if name == DEPTH_INPUT {
+        return depth_default(inputs, profile);
+    }
     let (value, case) = match KEYED_DEFAULTS.iter().find(|(n, _, _)| *n == name) {
         Some((_, by, _)) => {
             let key = match *by {
@@ -1133,6 +1150,36 @@ fn default_for(
     }
 }
 
+/// The default moulded depth: the Cargo group's depth-to-beam ratio times the beam, rounded to the
+/// millimetre. `Ok(None)` when the Cargo or the beam is missing or wrong (that error is reported
+/// elsewhere).
+fn depth_default(
+    inputs: &[(String, StoredInput)],
+    profile: &Profile,
+) -> Result<Option<Value>, String> {
+    let get = |n: &str| inputs.iter().find(|(k, _)| k == n).map(|(_, i)| &i.value);
+    let Some(group) = get("cargo").and_then(Value::as_str).and_then(depth_group) else {
+        return Ok(None);
+    };
+    let Some(beam) = get("beam_m")
+        .and_then(Value::as_f64)
+        .filter(|b| b.is_finite())
+    else {
+        return Ok(None);
+    };
+    let ratio = profile
+        .default_by("depth_to_beam_ratio", "cargo_group", group)
+        .and_then(Value::as_f64)
+        .ok_or_else(|| {
+            format!(
+                "the Defaults Profile '{}' gives no depth-to-beam ratio for {group} Cargo \
+                 (`depth_to_beam_ratio.default_by_cargo_group.{group}` is missing)",
+                profile.name()
+            )
+        })?;
+    Ok(Some(json!(((ratio * beam) * 1000.0).round() / 1000.0)))
+}
+
 /// Store every number as a float, so `10` and `10.0` are the same input.
 fn normalise(v: Value) -> Value {
     match v.as_f64() {
@@ -1154,8 +1201,6 @@ fn check_value(
             if v.is_null() {
                 return if nullable {
                     Ok((Value::Null, vec![]))
-                } else if name == "moulded_depth_m" {
-                    Err(format!("`{name}` is null: {DEPTH_REQUIRED}"))
                 } else {
                     Err(format!("`{name}` must be a number"))
                 };
@@ -1302,10 +1347,31 @@ fn number_ranges(
 /// Checks across inputs.
 fn cross_checks(
     inputs: &[(String, StoredInput)],
+    profile: &Profile,
     report: &mut Report,
     at: &dyn Fn(String) -> String,
 ) {
     let get = |n: &str| inputs.iter().find(|(k, _)| k == n).map(|(_, i)| &i.value);
+    // A hull very long for its depth: a soft limit of the Defaults Profile (about 25).
+    if let (Some(loa), Some(depth), Ok(Some(soft))) = (
+        get("length_overall_m").and_then(Value::as_f64),
+        get(DEPTH_INPUT).and_then(Value::as_f64),
+        profile.soft("length_to_depth_ratio"),
+    ) && depth > 0.0
+        && loa / depth > soft.max
+    {
+        report.warning(
+            at(format!(
+                "`length_overall_m` = {} is {:.1} times `moulded_depth_m` = {}, over about {}: a \
+                 very slender hull for its depth (soft limit); accepted",
+                show(&json!(loa)),
+                loa / depth,
+                show(&json!(depth)),
+                show(&json!(soft.max))
+            )),
+            &["length_overall_m", "moulded_depth_m"],
+        );
+    }
     if let (Some(cargo), Some(containment)) = (
         get("cargo").and_then(Value::as_str),
         get("cargo_containment").and_then(Value::as_str),
@@ -1423,6 +1489,22 @@ fn impossible_results(
 
 /// Check every default in a profile against its own input's type and hard range.
 pub(crate) fn check_profile_defaults(profile: &Profile) -> Result<(), String> {
+    for group in DEPTH_GROUPS {
+        let ratio = profile
+            .default_by("depth_to_beam_ratio", "cargo_group", group)
+            .and_then(Value::as_f64)
+            .ok_or_else(|| {
+                format!(
+                    "profile gives no depth-to-beam ratio for {group} Cargo \
+                     (`depth_to_beam_ratio.default_by_cargo_group.{group}` is missing)"
+                )
+            })?;
+        if let Some(bound) = profile.hard("depth_to_beam_ratio")?.breach(ratio) {
+            return Err(format!(
+                "profile default is invalid: `depth_to_beam_ratio` for {group} = {ratio} is out of range: must be {bound} (hard limit)"
+            ));
+        }
+    }
     for spec in INPUTS.iter().filter(|s| !s.required) {
         let mut defaults: Vec<Value> = profile.default(spec.name).cloned().into_iter().collect();
         for (_, by, keys) in KEYED_DEFAULTS.iter().filter(|(n, _, _)| *n == spec.name) {

@@ -156,7 +156,13 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
             e.insert("convoy".into(), Value::Object(convoy));
         }
     }
-    if !spec.required && !crate::class_input::UNSET_WHEN_ABSENT.contains(&name) {
+    if name == crate::vdesign::DEPTH_INPUT {
+        e.insert("default_rule".into(), depth_rule(profile));
+    }
+    if !spec.required
+        && !crate::class_input::UNSET_WHEN_ABSENT.contains(&name)
+        && name != crate::vdesign::DEPTH_INPUT
+    {
         match KEYED_DEFAULTS.iter().find(|(n, _, _)| *n == name) {
             Some((_, by, keys)) => {
                 let values: Map<String, Value> = keys
@@ -177,6 +183,39 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
         }
     }
     Value::Object(e)
+}
+
+/// The rule that gives a left-out moulded depth: the depth-to-beam ratio of the Cargo group times
+/// the beam. The ratios and the basis come from the Defaults Profile; `groups` says which group
+/// each Cargo is in (a liquid group exists in the profile but no Cargo is in it yet).
+fn depth_rule(profile: &Profile) -> Value {
+    let ratios: Map<String, Value> = crate::vdesign::DEPTH_GROUPS
+        .iter()
+        .filter_map(|g| {
+            profile
+                .default_by("depth_to_beam_ratio", "cargo_group", g)
+                .map(|v| (g.to_string(), v.clone()))
+        })
+        .collect();
+    let cargo_group: Map<String, Value> = ovcd_core::cargo::CARGO_DATABASE
+        .iter()
+        .filter_map(|(key, _)| {
+            crate::vdesign::depth_group(key).map(|g| (key.to_string(), json!(g)))
+        })
+        .collect();
+    let mut soft = Value::Null;
+    if let Ok(Some(s)) = profile.soft("length_to_depth_ratio") {
+        soft = json!(s.max);
+    }
+    json!({
+        "form": "ratio x beam_m, to the millimetre",
+        "by": "cargo_group",
+        "ratios": ratios,
+        "cargo_group": cargo_group,
+        "length_to_depth_warning_above": soft,
+        "basis": profile.basis("depth_to_beam_ratio"),
+        "slenderness_basis": profile.basis("length_to_depth_ratio"),
+    })
 }
 
 /// Unit, hard range, soft range and basis of a profile entry.
@@ -497,6 +536,8 @@ impl DesignSession {
                 option.inputs.retain(|(n, _)| n != name);
             }
         }
+        // The beam changed, so a depth still on its default is worked out again.
+        self.drop_dependent_defaults(i, "beam_m");
         // The convoy counts of the class replace those that were waiting for a return.
         self.hidden
             .retain(|(o, n, _)| !(o == &self.design.options[i].name && n == CONVOY_MEMORY));
@@ -798,6 +839,19 @@ impl DesignSession {
     /// A default chosen by another input follows that input: when it changes, an input still on
     /// its default is dropped, so the next fill chooses it again.
     fn drop_dependent_defaults(&mut self, i: usize, changed: &str) {
+        // The default depth is the Cargo's ratio times the beam: when either changes, a depth still
+        // on its default is dropped, so the next fill works it out again.
+        if matches!(changed, "cargo" | "beam_m") {
+            let option = &mut self.design.options[i];
+            if option
+                .input(crate::vdesign::DEPTH_INPUT)
+                .is_some_and(|s| s.source == Source::Default)
+            {
+                option
+                    .inputs
+                    .retain(|(n, _)| n != crate::vdesign::DEPTH_INPUT);
+            }
+        }
         let mut changed = vec![changed.to_string()];
         while let Some(by_name) = changed.pop() {
             let by_name = if by_name == "cargo" {

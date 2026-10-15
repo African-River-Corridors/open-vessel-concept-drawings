@@ -1,14 +1,19 @@
 //! Seam 4: defining an Option by a standard Vessel Class (issue #94), through the Design session,
 //! `fill`/`check` and the schema. Each test states a rule the maintainer gave on the issue.
 //!
-//! Label: property.
+//! Label: property
 
 use ovcd_format::vdesign::Source;
 use ovcd_format::{DesignSession, Profile, Scope, Severity, check, fill, input_schema};
 use serde_json::{Value, json};
 
 fn session() -> DesignSession {
-    DesignSession::new_design(Profile::built_in()).unwrap()
+    // The starter's typed 3.5 m depth is for its 76.5 m hull; a 110 m class hull would be "very
+    // slender for its depth" (issue #120). A depth of 5 m keeps these tests about the class.
+    let mut s = DesignSession::new_design(Profile::built_in()).unwrap();
+    s.set_input("Option 1", "moulded_depth_m", json!(5.0))
+        .unwrap();
+    s
 }
 
 fn input(s: &DesignSession, name: &str) -> (Value, Source) {

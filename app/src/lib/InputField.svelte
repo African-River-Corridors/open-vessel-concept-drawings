@@ -45,6 +45,14 @@
       const by = Object.entries(spec.default_by.values).map(([k, v]) => `${k} ${show(v)}`).join(", ");
       lines.push(`Default by ${spec.default_by.by}: ${by}`);
     }
+    if (spec.default_rule) {
+      const r = spec.default_rule;
+      const NAMES: Record<string, string> = { dry_bulk: "dry bulk, container", liquid: "liquid", gas: "gas" };
+      const by = Object.entries(r.ratios).map(([g, v]) => `${NAMES[g] ?? g} ${v}`).join(", ");
+      lines.push(`Default when left out: the beam times a ratio by Cargo (${by}), to the millimetre`);
+      if (r.length_to_depth_warning_above !== null) lines.push(`Warns when length over depth is above ${r.length_to_depth_warning_above}`);
+      lines.push(`Rule basis: ${r.basis}`);
+    }
     if (spec.hard) lines.push(`Hard range: ${range(spec.hard)}`);
     if (spec.soft) lines.push(`Soft range: ${spec.soft.min} to ${spec.soft.max}`);
     if (spec.basis) lines.push(`Basis: ${spec.basis}`);

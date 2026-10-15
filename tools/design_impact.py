@@ -63,6 +63,8 @@ def _inputs(cargo, containment, formation, loa, beam, depth, **more):
     d = {"cargo": cargo, "hull_form": "raked_box", "formation": {"kind": formation},
          "length_overall_m": loa, "beam_m": beam, "moulded_depth_m": depth,
          "cargo_containment": containment}
+    if depth is None:               # left out: the Defaults Profile's rule gives it
+        del d["moulded_depth_m"]
     d.update(more)
     return d
 
@@ -183,6 +185,11 @@ def cases() -> dict[str, dict]:
         "LPG_propane", "type_c_tanks", "self_propelled", 90.0, 14.0, 5.5, draught_limit_m=0.5)
     out["sweep box lightship over the draught limit"] = _inputs(
         "bauxite", "box_hold", "pushed_barge", 60.0, 10.0, 4.5, draught_limit_m=0.3)
+    # A left-out moulded depth is the Cargo's ratio times the beam (issue #120): one case for each Cargo
+    # group the format has. A base from before the rule has no such default, so these show as new.
+    for cargo, containment, group in (("bauxite", "box_hold", "dry bulk"), ("LNG", "type_c_tanks", "gas")):
+        out[f"sweep default depth {group} 90x14"] = _inputs(
+            cargo, containment, "self_propelled", 90.0, 14.0, None)
     # One case for each optional input.
     for name, cargo, containment, formation, loa, beam, depth, extra in OPTIONAL_INPUT_CASES:
         out[f"sweep optional {name}"] = _inputs(cargo, containment, formation, loa, beam, depth, **extra)

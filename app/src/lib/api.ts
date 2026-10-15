@@ -71,6 +71,17 @@ export interface InputSpec extends Ranges {
   choices?: Choice[];
   default?: unknown;
   default_by?: { by: string; values: Record<string, unknown> };
+  /** A default that is a rule, not a value: moulded depth is a ratio of the Cargo group times the beam. */
+  default_rule?: {
+    form: string;
+    by: string;
+    ratios: Record<string, number>;
+    /** Which group each Cargo is in. */
+    cargo_group: Record<string, string>;
+    length_to_depth_warning_above: number | null;
+    basis: string;
+    slenderness_basis: string;
+  };
   convoy?: { abreast: Ranges; in_line: Ranges };
 }
 export interface Schema {
