@@ -274,3 +274,30 @@ fn an_empty_engine_version_is_a_hard_error() {
         c.report.errors
     );
 }
+
+// Issue #138: a not-yet-supported Option is told apart from a failed one.
+
+#[test]
+fn each_outcome_has_its_own_status_word() {
+    let results = run_option(&starter().options[0]);
+    assert_eq!(results.status(), "results");
+    assert_eq!(
+        RunOutcome::NotAvailable(CONVOY_NOT_AVAILABLE.into()).status(),
+        "not_yet_supported"
+    );
+    assert_eq!(RunOutcome::Failed("no".into()).status(), "failed");
+    assert!(!RunOutcome::NotAvailable("x".into()).is_failure());
+    assert!(RunOutcome::Failed("x".into()).is_failure());
+    assert!(!results.is_failure());
+}
+
+#[test]
+fn a_stored_hash_on_a_convoy_is_not_checked() {
+    let mut design = starter();
+    let o = &mut design.options[0];
+    let slot = o.inputs.iter_mut().find(|(n, _)| n == "formation").unwrap();
+    slot.1.value = json!({ "kind": "pushed_convoy", "abreast": 2, "in_line": 2 });
+    assert_eq!(run_design(&design)[0].hash_status, HashStatus::NotChecked);
+    design.options[0].results_hash = None;
+    assert_eq!(run_design(&design)[0].hash_status, HashStatus::NotStored);
+}

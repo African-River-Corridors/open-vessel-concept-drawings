@@ -175,10 +175,9 @@ fn a_file_with_no_stored_hash_runs_and_says_so() {
     assert!(!stderr(&out).contains("results differ"));
 }
 
-#[test]
-fn a_convoy_gives_the_not_yet_available_message_and_no_numbers() {
-    let dir = temp_dir("convoy");
-    let file = starter(&dir);
+/// The starter Design with its one Option turned into a pushed convoy, hash removed.
+fn convoy_design(dir: &Path) -> (PathBuf, Value) {
+    let file = starter(dir);
     let mut design = read_json(&file);
     design["options"][0]["inputs"]["formation"] = json!({ "value": { "kind": "pushed_convoy", "abreast": 2, "in_line": 2 }, "source": "typed" });
     design["options"][0]
@@ -186,21 +185,56 @@ fn a_convoy_gives_the_not_yet_available_message_and_no_numbers() {
         .unwrap()
         .remove("results_hash");
     write_json(&file, &design);
+    (file, design)
+}
+
+#[test]
+fn a_convoy_gives_the_not_yet_available_message_and_no_numbers() {
+    // Issue #138: a valid file whose only gap is a convoy exits 0; the message is a warning too.
+    let dir = temp_dir("convoy");
+    let (file, _) = convoy_design(&dir);
     let out = ovcd(&["run", p(&file)]);
-    assert!(!out.status.success(), "a convoy is not computed: exit 1");
+    assert!(
+        out.status.success(),
+        "a convoy alone is not a failure: {}",
+        stderr(&out)
+    );
     let text = stdout(&out);
     assert!(text.contains("convoy results not yet available"), "{text}");
     for number_line in ["Cargo:", "Lightship", "Draught", "Results hash"] {
         assert!(!text.contains(number_line), "{number_line} in:\n{text}");
     }
+    assert!(
+        stderr(&out).contains("warning: Option 'Option 1': convoy results not yet available"),
+        "{}",
+        stderr(&out)
+    );
     let j = ovcd(&["run", "--json", p(&file)]);
+    assert!(j.status.success());
     let v: Value = serde_json::from_str(&stdout(&j)).unwrap();
     assert_eq!(v["options"][0]["results"], Value::Null);
+    assert_eq!(v["options"][0]["status"], "not_yet_supported");
     assert_eq!(
         v["options"][0]["message"],
         "convoy results not yet available"
     );
     assert!(v["options"][0].get("results_hash").is_none());
+}
+
+#[test]
+fn json_tells_results_and_not_yet_supported_apart() {
+    let dir = temp_dir("status");
+    let file = starter(&dir);
+    let mut design = read_json(&file);
+    let mut convoy = design["options"][0].clone();
+    convoy["name"] = json!("Convoy");
+    convoy["inputs"]["formation"] = json!({ "value": { "kind": "pushed_convoy", "abreast": 2, "in_line": 1 }, "source": "typed" });
+    convoy.as_object_mut().unwrap().remove("results_hash");
+    design["options"].as_array_mut().unwrap().push(convoy);
+    write_json(&file, &design);
+    let v: Value = serde_json::from_str(&stdout(&ovcd(&["run", "--json", p(&file)]))).unwrap();
+    assert_eq!(v["options"][0]["status"], "results");
+    assert_eq!(v["options"][1]["status"], "not_yet_supported");
 }
 
 #[test]
@@ -221,7 +255,27 @@ fn a_two_option_design_runs_the_barge_and_reports_the_convoy_beside_it() {
         text.contains("Option 'Convoy': convoy results not yet available"),
         "{text}"
     );
-    assert!(!out.status.success());
+    assert!(
+        out.status.success(),
+        "convoy beside a computed Option exits 0"
+    );
+}
+
+#[test]
+fn a_hash_stored_on_a_convoy_option_gets_a_note_that_it_is_not_checked() {
+    let dir = temp_dir("convoy-hash");
+    let (file, mut design) = convoy_design(&dir);
+    design["options"][0]["results_hash"] = json!("ab".repeat(32));
+    write_json(&file, &design);
+    let out = ovcd(&["run", p(&file)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert!(
+        stderr(&out).contains("Option 'Option 1': the stored results hash is not checked"),
+        "{}",
+        stderr(&out)
+    );
+    let v: Value = serde_json::from_str(&stdout(&ovcd(&["run", "--json", p(&file)]))).unwrap();
+    assert_eq!(v["options"][0]["hash_status"], "not_checked");
 }
 
 #[test]
