@@ -161,11 +161,29 @@ fn py_error(kind: &str, message: String) -> Result<Value, EvalError> {
     Ok(json!({ "error": { "type": kind, "message": message } }))
 }
 
+/// A float as a case writes it: a JSON number, or the tagged text `"float:nan"`, `"float:inf"` or
+/// `"float:-inf"` (JSON has no such numbers).
+pub(crate) fn tagged_f64(v: &Value) -> Option<f64> {
+    match v {
+        Value::Number(n) => n.as_f64(),
+        Value::String(s) => match s.as_str() {
+            "float:nan" => Some(f64::NAN),
+            "float:inf" => Some(f64::INFINITY),
+            "float:-inf" => Some(f64::NEG_INFINITY),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
 /// A float argument. A JSON integer is refused: Python would keep an `int` and may echo it back
 /// as an `int`, which the Rust port does not model, so a case must write `18.0`, not `18`.
 pub(crate) fn f64_arg(args: &Value, name: &str) -> Result<f64, EvalError> {
     match args.get(name) {
         Some(Value::Number(n)) if n.is_f64() => Ok(n.as_f64().unwrap_or(f64::NAN)),
+        Some(v @ Value::String(_)) if tagged_f64(v).is_some() => {
+            Ok(tagged_f64(v).unwrap_or(f64::NAN))
+        }
         _ => Err(EvalError::BadInput(format!(
             "`args.{name}` must be a float (write 18.0, not 18)"
         ))),
@@ -250,8 +268,7 @@ fn f64_field(
 ) -> Result<Option<f64>, EvalError> {
     match inputs.get(name) {
         None => Ok(None),
-        Some(v) => v
-            .as_f64()
+        Some(v) => tagged_f64(v)
             .map(Some)
             .ok_or_else(|| EvalError::BadInput(format!("`inputs.{name}` must be a number"))),
     }

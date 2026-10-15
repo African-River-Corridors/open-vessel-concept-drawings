@@ -18,19 +18,7 @@ use ovcd_core::gas_separation::GasSeparationResult;
 use ovcd_core::models::{TankResult, WeightBreakdown};
 use serde_json::{Map, Value};
 
-/// A float as written by a result: a JSON number or a tagged non-finite value.
-pub(crate) fn tagged_f64(v: &Value) -> Option<f64> {
-    match v {
-        Value::Number(n) => n.as_f64(),
-        Value::String(s) => match s.as_str() {
-            "float:nan" => Some(f64::NAN),
-            "float:inf" => Some(f64::INFINITY),
-            "float:-inf" => Some(f64::NEG_INFINITY),
-            _ => None,
-        },
-        _ => None,
-    }
-}
+pub(crate) use crate::eval::tagged_f64;
 
 /// One JSON object with the name it is known by, for the error messages.
 struct Obj<'a> {

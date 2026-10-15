@@ -10,7 +10,7 @@ The weight branch inverts the *same* box-hull hydrostatics ``barge_capacity`` us
 
 Worked examples: see tests/core/test_journey_derating.py.
 
-Pure Python.
+The calculation runs in the Rust core (`vessel_designer._native`).
 """
 from __future__ import annotations
 

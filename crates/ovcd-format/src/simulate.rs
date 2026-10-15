@@ -2,9 +2,9 @@
 //!
 //! It lives in `ovcd-format`, not `ovcd-core`: it takes and returns plain JSON (`params` in, a
 //! result object out), the single entry point the future app calls. The Python `simulate` reads its
-//! `params` mapping loosely (`float(p["loa_m"])` takes an int, `p.get(..) or default` takes any
-//! falsy value as absent). This port reads numbers and booleans the same way, truthiness the same
-//! way, and refuses (as `EvalError::BadInput`) the inputs where Python would raise `KeyError` or
+//! `params` mapping loosely (`float(p["loa_m"])` takes an int or numeric text, `p.get(..) or default`
+//! takes any falsy value as absent). This port reads numbers, booleans and numeric text the same way
+//! (text that is not a number is a recorded `ValueError`), truthiness the same way, and refuses (as `EvalError::BadInput`) the inputs where Python would raise `KeyError` or
 //! `TypeError`, which the old Python callers never recorded either.
 //!
 //! A result that Python returns as `{"error": "..."}` (a cargo in the wrong vessel, a capacity
@@ -20,7 +20,7 @@ use ovcd_core::checks::Check;
 use ovcd_core::gas_arrangement::{self as ga, DEFAULT_DEPTHS_M, FitOptions, RULESETS};
 use ovcd_core::gas_stability::{self as gs, GasCapacityResult};
 use ovcd_core::pyfmt::{fixed, py_str};
-use ovcd_core::pystr::repr_str;
+use ovcd_core::pystr::{parse_float, repr_str};
 use ovcd_core::resistance::{self, EnvironmentInputs, ResistanceInputs, TugInputs};
 use serde_json::{Map, Value, json};
 
@@ -61,12 +61,42 @@ fn truthy(v: &Value) -> bool {
     }
 }
 
-/// Python `float(v)` on a number or a boolean. Text and null are refused.
+/// Python `float(v)` on a number, a boolean or text. Text that is not a number raises
+/// `ValueError`, as in Python. Null and containers are refused (Python raises `TypeError`).
 fn py_float(v: &Value, what: &str) -> R<f64> {
     match v {
         Value::Number(n) => Ok(n.as_f64().unwrap_or(f64::NAN)),
         Value::Bool(b) => Ok(f64::from(u8::from(*b))),
+        Value::String(s) => parse_float(s).ok_or_else(|| {
+            Stop::Raised(
+                "ValueError".to_string(),
+                format!("could not convert string to float: {}", repr_str(s)),
+            )
+        }),
         _ => bad(format!("`{what}` must be a number")),
+    }
+}
+
+/// Python `repr(v)` of a JSON value, for the text of an error message.
+fn py_repr(v: &Value) -> String {
+    match v {
+        Value::Null => "None".to_string(),
+        Value::Bool(true) => "True".to_string(),
+        Value::Bool(false) => "False".to_string(),
+        Value::Number(n) if n.is_f64() => py_str(n.as_f64().unwrap_or(f64::NAN)),
+        Value::Number(n) => n.to_string(),
+        Value::String(s) => repr_str(s),
+        Value::Array(items) => format!(
+            "[{}]",
+            items.iter().map(py_repr).collect::<Vec<_>>().join(", ")
+        ),
+        Value::Object(map) => format!(
+            "{{{}}}",
+            map.iter()
+                .map(|(k, x)| format!("{}: {}", repr_str(k), py_repr(x)))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
     }
 }
 
@@ -468,7 +498,10 @@ fn simulate_gas(
     let ruleset = match p.get("ruleset") {
         None => "IGC_2G_EXACT",
         Some(Value::String(s)) => s.as_str(),
-        Some(_) => return bad("`params.ruleset` must be text"),
+        // Python tests `ruleset not in RULESETS`, so any other value is an unknown ruleset.
+        Some(other) => {
+            return Ok(error_result(format!("Unknown ruleset {}.", py_repr(other))));
+        }
     };
     if !RULESETS.contains(&ruleset) {
         return Ok(error_result(format!(
