@@ -299,7 +299,7 @@ pub fn summary_lines(name: &str, results: &Value) -> Vec<String> {
     let mut lines = vec![format!(
         "Option '{name}': {} in a {} ({} x {} x {} m, Cb {})",
         results["cargo"].as_str().unwrap_or("?"),
-        results["vessel"].as_str().unwrap_or("?").to_lowercase(),
+        results["vessel"].as_str().unwrap_or("?"),
         f(dims, &["loa_m"], 1),
         f(dims, &["beam_m"], 1),
         f(dims, &["depth_m"], 1),
