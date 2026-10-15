@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 0.2.2
+## 0.2.2 (2026-10-15)
 
 - Fix: the macOS app is now signed as a whole bundle (ad-hoc), so macOS no longer reports it as damaged. No calculation result changes.
 

@@ -70,7 +70,7 @@ jobs:
         shell: bash
         run: |
           dmg=$(ls target/release/bundle/dmg/*.dmg)
-          mount=$(hdiutil attach -nobrowse -readonly "$dmg" | awk 'END { print $NF }')
+          mount=$(hdiutil attach -nobrowse -readonly "$dmg" | awk -F'\t' '/\/Volumes\// { print $NF }' | tail -n 1)
           app=$(find "$mount" -maxdepth 1 -name '*.app' | head -n 1)
           codesign -dv --verbose=2 "$app"
           if ! codesign --verify --deep --strict --verbose=2 "$app"; then
