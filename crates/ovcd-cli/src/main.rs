@@ -15,10 +15,12 @@ const HELP: &str = "\
 ovcd - Open Vessel Concept Drawings
 
 Usage:
-  ovcd new [--profile <profile.json>] [<file.vdesign>]
+  ovcd new [--profile <profile.json>] [--class <class id>] [<file.vdesign>]
       Write a starter Design with one Option. Its six required inputs (Cargo, Hull Form,
       Formation, length, beam, moulded depth) are examples to edit; every other input comes
       from the Defaults Profile and is marked \"default\". Prints to stdout when no file is given.
+      --class defines the Option by a standard Vessel Class (see `ovcd schema`, input
+      `vessel_class`): length, beam and Formation come from the class and are marked \"class\".
   ovcd fill [--profile <profile.json>] <in.vdesign> [<out.vdesign>]
       Write every input a hand-written Design leaves out in, as used and marked \"default\",
       from the Defaults Profile. Prints to stdout when no output file is given; never
@@ -163,9 +165,27 @@ fn load_profile(path: Option<&str>) -> Result<Profile, String> {
 }
 
 fn new(args: &[&str]) -> Result<(), String> {
-    let flags = parse_flags(args, false, false)?;
+    // `--class <id>` defines the starter Option by a standard Vessel Class (issue #94).
+    let mut class: Option<&str> = None;
+    let mut rest: Vec<&str> = Vec::new();
+    let mut it = args.iter();
+    while let Some(&arg) = it.next() {
+        if arg == "--class" {
+            class = Some(it.next().ok_or("--class needs a Vessel Class id")?);
+        } else {
+            rest.push(arg);
+        }
+    }
+    let flags = parse_flags(&rest, false, false)?;
     let profile = load_profile(flags.profile)?;
-    let text = ovcd_format::new_design(&profile)?.to_text();
+    let text = match class {
+        None => ovcd_format::new_design(&profile)?.to_text(),
+        Some(id) => {
+            let mut session = ovcd_format::DesignSession::new_design(profile)?;
+            session.set_input("Option 1", "vessel_class", serde_json::json!(id))?;
+            session.save()?
+        }
+    };
     match flags.files.as_slice() {
         [] => {
             print!("{text}");

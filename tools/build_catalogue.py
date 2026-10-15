@@ -10,6 +10,9 @@ Outputs (generated — edit the raw files, then re-run):
   catalogue/reference_vessels.yaml   one row per Reference Vessel, `classes: [ids]`
   catalogue/conflicts.yaml           field values that disagree between raw entries
   catalogue/README.md                human-readable summary table, by region
+
+`vessel_classes.yaml` is the one source of the Vessel Classes: the core's list is generated from it by
+`tools/gen_vessel_classes.py` (run it after this script), and a test fails when the two differ.
 """
 from __future__ import annotations
 

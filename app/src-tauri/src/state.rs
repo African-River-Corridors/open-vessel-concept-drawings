@@ -361,6 +361,26 @@ mod tests {
     }
 
     #[test]
+    fn a_class_pick_reaches_the_front_end_with_its_reference_deadweight() {
+        // Issue #94: the class the vessel sits in and its reference deadweight are in the
+        // evaluation, beside the outcome and not in the results.
+        let mut state = AppState::new_design().unwrap();
+        assert!(state.evaluate_json()["options"][0]["vessel_class"].is_null());
+        state
+            .set_input("Option 1", "vessel_class", json!("CEMT-Va"))
+            .unwrap();
+        let eval = state.evaluate_json();
+        let class = &eval["options"][0]["vessel_class"];
+        assert_eq!(class["id"], "CEMT-Va");
+        assert_eq!(class["reference_dwt_t"], json!([1500.0, 3000.0]));
+        assert_eq!(
+            state.snapshot()["design"]["options"][0]["inputs"]["length_overall_m"]["source"],
+            "class"
+        );
+        assert!(state.is_dirty());
+    }
+
+    #[test]
     fn option_commands_keep_the_active_option_in_step() {
         let mut state = AppState::new_design().unwrap();
         state.add_option().unwrap();

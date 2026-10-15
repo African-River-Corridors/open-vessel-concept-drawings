@@ -2239,7 +2239,11 @@
     "moulded_depth_m",
     "source",
     "cargo_modes",
-    "notes"
+    "notes",
+    "air_draft_m",
+    "region",
+    "waters",
+    "confidence"
    ],
    "frozen": true,
    "kind": "class",

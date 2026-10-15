@@ -124,6 +124,9 @@ REMOVED_FIELDS = {("core.design_grid", "DesignGrid", "max_tank_length_m")}
 # default battery count (1 battery-electric, 0 gas-fuelled); a given int is used as before.
 CHANGED_FIELD_TYPES = {("core.aft_arrangement", "AftArrangementInputs", "n_battery_units"):
                        "typing.Optional[int]"}
+# Dataclass fields whose type changed on purpose (issue #94): the Vessel Class catalogue does not give
+# every figure for every class, so a length, beam, draught or deadweight can be None.
+OPTIONAL_NOW = {("core.vessel_standards", "VesselStandard", f) for f in ("loa_m", "beam_m", "draught_m", "dwt_t")}
 
 
 def test_the_name_list_covers_every_public_module():
@@ -196,6 +199,11 @@ def test_field_types_are_the_types_of_0_1_0():
             for name, text in fields.items():
                 if (module, cls_name, name) in REMOVED_FIELDS:
                     assert name not in hints
+                    continue
+                if (module, cls_name, name) in OPTIONAL_NOW:
+                    assert str(hints[name]).startswith("typing.Optional["), name
+                    inner = "float" if name == "beam_m" else "typing.Tuple[float, float]"
+                    assert inner in str(hints[name]), name
                     continue
                 # Known change (CHANGELOG.md): a bare `list` of 0.1.0 is `List[...]` now, because the
                 # bridge reads the item type to build the result objects.

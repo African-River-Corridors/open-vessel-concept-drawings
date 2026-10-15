@@ -911,3 +911,107 @@ fn schema_has_no_adn_g_and_no_tank_cap_but_the_diameter_cap_with_its_basis() {
     assert_eq!(od["default"], 16.0);
     assert!(!od["basis"].as_str().unwrap().is_empty());
 }
+
+// ---- Vessel Class (issue #94) ---------------------------------------------------------------
+
+#[test]
+fn new_class_writes_an_option_defined_by_the_class_and_it_validates() {
+    let dir = temp_dir("new-class");
+    let file = dir.join("c.vdesign");
+    let out = ovcd(&["new", "--class", "CEMT-VIa", path_str(&file)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let design = read_json(&file);
+    assert_eq!(design["format_version"], 2);
+    let inputs = &design["options"][0]["inputs"];
+    assert_eq!(
+        inputs["vessel_class"],
+        json!({ "value": "CEMT-VIa", "source": "class" })
+    );
+    assert_eq!(inputs["vessel_scheme"]["value"], "CEMT-1992");
+    assert_eq!(
+        inputs["beam_m"],
+        json!({ "value": 22.8, "source": "class" })
+    );
+    assert_eq!(
+        inputs["formation"],
+        json!({ "value": { "kind": "pushed_convoy", "abreast": 2, "in_line": 1 }, "source": "class" })
+    );
+    assert_eq!(
+        inputs["draught_limit_m"],
+        json!({ "value": 4.5, "source": "class" })
+    );
+    assert_eq!(inputs["moulded_depth_m"]["source"], "typed");
+    let v = ovcd(&["validate", path_str(&file)]);
+    assert!(v.status.success(), "{}{}", stdout(&v), stderr(&v));
+    assert!(
+        stdout(&v).contains("0 error(s), 0 warning(s)"),
+        "{}",
+        stdout(&v)
+    );
+}
+
+#[test]
+fn new_class_accepts_an_old_id_and_refuses_a_class_that_cannot_define_a_vessel() {
+    let dir = temp_dir("new-class-bad");
+    let ok = ovcd(&[
+        "new",
+        "--class",
+        "CEMT_Va",
+        path_str(&dir.join("a.vdesign")),
+    ]);
+    assert!(ok.status.success(), "{}", stderr(&ok));
+    assert_eq!(
+        read_json(&dir.join("a.vdesign"))["options"][0]["inputs"]["vessel_class"]["value"],
+        "CEMT-Va"
+    );
+    for id in ["NO-SUCH-CLASS", "CN-V"] {
+        let bad = ovcd(&["new", "--class", id, path_str(&dir.join("b.vdesign"))]);
+        assert!(!bad.status.success(), "{id}");
+        assert!(!dir.join("b.vdesign").exists());
+    }
+    let missing = ovcd(&["new", "--class"]);
+    assert!(!missing.status.success());
+}
+
+#[test]
+fn fill_writes_the_dimensions_of_a_class_a_hand_written_design_names() {
+    let dir = temp_dir("fill-class");
+    let file = dir.join("h.vdesign");
+    let mut inputs = required_inputs();
+    for k in ["length_overall_m", "beam_m", "formation"] {
+        inputs.as_object_mut().unwrap().remove(k);
+    }
+    inputs["vessel_class"] = json!("CEMT-Va");
+    write_json(&file, &design_with(inputs));
+    let filled = dir.join("f.vdesign");
+    let out = ovcd(&["fill", path_str(&file), path_str(&filled)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let design = read_json(&filled);
+    let i = &design["options"][0]["inputs"];
+    assert_eq!(
+        i["length_overall_m"],
+        json!({ "value": 110.0, "source": "class" })
+    );
+    assert_eq!(i["vessel_class"]["value"], "CEMT-Va");
+    let v = ovcd(&["validate", path_str(&filled)]);
+    assert!(v.status.success(), "{}{}", stdout(&v), stderr(&v));
+}
+
+#[test]
+fn schema_lists_the_vessel_class_inputs() {
+    let out = ovcd(&["schema"]);
+    let v: Value = serde_json::from_str(&stdout(&out)).unwrap();
+    let names: Vec<&str> = v["inputs"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|i| i["name"].as_str().unwrap())
+        .collect();
+    assert!(names.contains(&"vessel_scheme") && names.contains(&"vessel_class"));
+    assert!(
+        v["groups"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("Vessel Class"))
+    );
+}

@@ -147,7 +147,10 @@ impl Profile {
                 return Err(format!("profile has an unknown input `{key}`"));
             }
         }
-        for spec in INPUTS.iter().filter(|s| !s.required) {
+        for spec in INPUTS
+            .iter()
+            .filter(|s| !s.required && !crate::class_input::UNSET_WHEN_ABSENT.contains(&s.name))
+        {
             let entry = self
                 .inputs
                 .get(spec.name)

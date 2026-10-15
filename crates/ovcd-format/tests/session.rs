@@ -563,6 +563,7 @@ fn the_schema_lists_every_input_in_table_order_with_its_group() {
         schema["groups"],
         json!([
             "Required",
+            "Vessel Class",
             "Hull and containment",
             "Gas tanks",
             "Waterway Limits",
@@ -582,6 +583,8 @@ fn the_schema_lists_every_input_in_table_order_with_its_group() {
     };
     assert_eq!(group_of("cargo"), "Required");
     assert_eq!(group_of("moulded_depth_m"), "Required");
+    assert_eq!(group_of("vessel_scheme"), "Vessel Class");
+    assert_eq!(group_of("vessel_class"), "Vessel Class");
     assert_eq!(group_of("cargo_containment"), "Hull and containment");
     assert_eq!(
         group_of("lightship_factor_t_per_m3"),
@@ -635,7 +638,8 @@ fn schema_ranges_equal_the_profiles() {
             assert_eq!(entry["basis"], json!(profile.basis(spec.name)));
         }
         assert_eq!(entry["required"], json!(spec.required), "{}", spec.name);
-        if !spec.required {
+        // The class inputs are held only by an Option defined by a class: they have no default.
+        if !spec.required && !ovcd_format::class_input::UNSET_WHEN_ABSENT.contains(&spec.name) {
             assert!(
                 entry.get("default").is_some() || entry.get("default_by").is_some(),
                 "{} has no default",

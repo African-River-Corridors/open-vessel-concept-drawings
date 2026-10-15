@@ -36,6 +36,7 @@ pub mod resistance;
 pub mod squat;
 pub mod tanks;
 mod unprintable;
+pub mod vessel_classes;
 pub mod vessel_standards;
 pub mod waves;
 pub mod weights;

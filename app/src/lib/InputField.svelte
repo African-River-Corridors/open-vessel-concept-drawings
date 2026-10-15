@@ -13,8 +13,15 @@
     onFormation: (kind: string, abreast: number | null, inLine: number | null) => void;
   } = $props();
 
+  // The box is filled once. When Rust changes the value later (the Vessel Class moved, say) it is
+  // refilled, unless the user is typing in it, so "76." is not turned into "76".
   function fill(el: HTMLInputElement, text: string) {
     el.value = text;
+    return {
+      update(next: string) {
+        if (document.activeElement !== el) el.value = next;
+      },
+    };
   }
 
   function range(r: Ranges["hard"]): string {
@@ -157,6 +164,7 @@
   .badge { font-size: 10px; padding: 0 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.03em; }
   .badge.typed { background: #e3e9f3; color: var(--navy); }
   .badge.default { background: #eee; color: #777; }
+  .badge.class { background: #dff0e3; color: #1f5a2c; }
   .link { background: none; border: none; color: var(--navy); text-decoration: underline; padding: 0; cursor: pointer; font-size: 11px; }
   .row { display: flex; gap: 6px; align-items: center; }
   .row.convoy label { display: flex; flex-direction: column; font-size: 11px; color: var(--dim); }

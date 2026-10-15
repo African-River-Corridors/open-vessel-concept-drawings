@@ -57,13 +57,21 @@ def test_golden_beam_over_draught_tradeoff():
 def test_property_ranges_and_dimensions():
     """Label: property
     """
+    seen = 0
     for s in VESSEL_STANDARDS.values():
-        assert s.loa_m[0] <= s.loa_m[1]
-        assert s.draught_m[0] <= s.draught_m[1]
-        assert s.dwt_t[0] <= s.dwt_t[1]
-        assert s.beam_m > 0 and s.loa_m[0] > 0
-        assert s.loa_m[0] <= s.loa_nominal_m <= s.loa_m[1]
-        assert s.dwt_t[0] <= s.dwt_nominal_t <= s.dwt_t[1]
+        # A figure the catalogue does not give is None; the ones it gives are ordered.
+        if s.loa_m is not None:
+            assert s.loa_m[0] <= s.loa_m[1] and s.loa_m[0] > 0
+            assert s.loa_m[0] <= s.loa_nominal_m <= s.loa_m[1]
+            seen += 1
+        if s.draught_m is not None:
+            assert s.draught_m[0] <= s.draught_m[1]
+        if s.dwt_t is not None:
+            assert s.dwt_t[0] <= s.dwt_t[1]
+            assert s.dwt_t[0] <= s.dwt_nominal_t <= s.dwt_t[1]
+        if s.beam_m is not None:
+            assert s.beam_m > 0
+    assert seen > 200
 
 
 def test_property_r_min_scales_with_length_not_beam():
@@ -94,13 +102,15 @@ def test_unknown_standard_id_raises_keyerror():
         raise AssertionError("get_standard should raise on an unknown id")
 
 
-def test_property_cargo_modes():
-    """Label: property
+def test_standards_for_no_longer_filters_by_cargo():
+    """Cargo is never a property of a Vessel Class (GLOSSARY), so since issue #94 `standards_for`
+    returns every class for either mode and still checks the mode.
+
+    Label: property
     """
     for mode in ("dry_bulk", "liquid_gas"):
         got = standards_for(mode)
-        assert got, mode
-        assert all(mode in s.cargo_modes for s in got)
+        assert [s.standard_id for s in got] == list(VESSEL_STANDARDS)
     try:
         standards_for("bananas")
     except ValueError:

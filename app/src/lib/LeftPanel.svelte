@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { OptionEvaluation, Schema, Snapshot } from "./api";
   import InputField from "./InputField.svelte";
+  import VesselClass from "./VesselClass.svelte";
 
   // The left panel. The groups, their order, the labels, the choices and the ranges all come from
   // the schema. An input is drawn when the Option holds it, so the panel needs no rule for which
@@ -23,9 +24,15 @@
   let groups = $derived(
     (schema?.groups ?? []).map((g) => ({
       name: g,
-      inputs: (schema?.inputs ?? []).filter((i) => i.group === g && option?.inputs[i.name] !== undefined),
-    })).filter((g) => g.inputs.length > 0),
+      inputs: (schema?.inputs ?? []).filter(
+        (i) => i.group === g && option?.inputs[i.name] !== undefined
+          && i.kind !== "vessel_scheme" && i.kind !== "vessel_class", // drawn by VesselClass
+      ),
+    })).filter((g) => g.inputs.length > 0 || g.name === VESSEL_CLASS_GROUP),
   );
+  const VESSEL_CLASS_GROUP = "Vessel Class";
+  const specOf = (name: string) => schema?.inputs.find((i) => i.name === name);
+  let classMessages = $derived([...messagesFor("vessel_scheme"), ...messagesFor("vessel_class")]);
 
   let renaming = $state(false);
   let renameText = $state("");
@@ -96,6 +103,16 @@
     {#each groups as g (g.name)}
       <details open={!closed[g.name]} ontoggle={(e) => (closed[g.name] = !e.currentTarget.open)}>
         <summary>{g.name}</summary>
+        {#if g.name === VESSEL_CLASS_GROUP}
+          <VesselClass
+            schemeSpec={specOf("vessel_scheme")}
+            classSpec={specOf("vessel_class")}
+            inputs={option!.inputs}
+            summary={evaluation?.vessel_class}
+            messages={classMessages}
+            onEdit={(name, v) => onEdit(name, v)}
+          />
+        {/if}
         {#each g.inputs as spec (`${spec.name}|${snap.active_option}|${generation}`)}
           <InputField
             {spec}

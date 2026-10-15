@@ -1,332 +1,128 @@
-//! Standard inland-vessel classes. Port of `core/vessel_standards.py`.
+//! Standard inland-vessel classes: the 0.1.0 lookup API over the Vessel Class catalogue.
 //!
-//! Reference data plus a validity check. The catalogue is compiled in, in the Python dict's order
-//! (the notes and sources are copied from the Python file; its header comment explains the two
-//! classification families). `get_standard`, `standards_for` and `validate_catalogue` copy the
-//! Python behaviour, including the error texts.
+//! Since issue #94 the classes are `catalogue/vessel_classes.yaml`, the one source (see
+//! [`crate::vessel_classes`]); this module presents them as [`VesselStandard`]s. The ids of the 12
+//! classes that were listed by hand before stay valid as aliases. [`get_standard`],
+//! [`standards_for`] and [`validate_catalogue`] keep the 0.1.0 contract and error texts, except where
+//! the catalogue made a change (see `CHANGELOG.md`): a figure the catalogue does not give is `None`,
+//! and `standards_for` no longer filters by Cargo.
 
 use crate::checks::Check;
 use crate::pystr::{repr_str, repr_str_list};
+use crate::vessel_classes::{CLASSES, ClassRow};
 use alloc::format;
-use alloc::string::String;
-use alloc::vec;
+use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
 /// One standard inland-vessel or convoy class.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct VesselStandard {
+    /// The catalogue id, e.g. `CEMT-Va`.
     pub standard_id: String,
-    /// "CEMT" | "CEMT-NL-2011" | "CN"
+    /// The scheme, e.g. `CEMT-1992`.
     pub family: String,
+    /// The class label; the catalogue id.
     pub class_name: String,
-    /// "motor_vessel" | "pushed_convoy" | "coupled_unit"
+    /// `motor_vessel`, `pushed_convoy`, `coupled_unit`, `pushed_barge`, ...
     pub formation: String,
-    /// (min, max) overall length
-    pub loa_m: (f64, f64),
-    pub beam_m: f64,
-    pub draught_m: (f64, f64),
-    pub dwt_t: (f64, f64),
+    /// (min, max) overall length; `None` when the class gives none.
+    pub loa_m: Option<(f64, f64)>,
+    /// The largest beam of the class; `None` when the class gives none.
+    pub beam_m: Option<f64>,
+    pub draught_m: Option<(f64, f64)>,
+    pub dwt_t: Option<(f64, f64)>,
     pub n_abreast: i64,
     pub n_in_line: i64,
+    /// Beam of one barge: beam over barges abreast, for a convoy class.
     pub unit_beam_m: Option<f64>,
+    /// The lowest bridge clearance the class gives: the bottom of its air-draft range.
     pub min_bridge_clearance_m: Option<f64>,
+    /// No class sets one (no source gives it); kept so 0.1.0 code that builds a standard still works.
     pub moulded_depth_m: Option<f64>,
     pub source: String,
+    /// Catalogue data. These do not filter classes.
     pub cargo_modes: Vec<String>,
     pub notes: String,
+    /// (min, max) air draft the class allows.
+    pub air_draft_m: Option<(f64, f64)>,
+    pub region: String,
+    pub waters: String,
+    pub confidence: String,
+}
+
+fn mid(r: Option<(f64, f64)>) -> Option<f64> {
+    r.map(|(lo, hi)| 0.5 * (lo + hi))
 }
 
 impl VesselStandard {
-    pub fn loa_nominal_m(&self) -> f64 {
-        0.5 * (self.loa_m.0 + self.loa_m.1)
+    pub fn loa_nominal_m(&self) -> Option<f64> {
+        mid(self.loa_m)
     }
 
-    pub fn draught_nominal_m(&self) -> f64 {
-        0.5 * (self.draught_m.0 + self.draught_m.1)
+    pub fn draught_nominal_m(&self) -> Option<f64> {
+        mid(self.draught_m)
     }
 
-    pub fn dwt_nominal_t(&self) -> f64 {
-        0.5 * (self.dwt_t.0 + self.dwt_t.1)
+    pub fn dwt_nominal_t(&self) -> Option<f64> {
+        mid(self.dwt_t)
     }
 
     /// Design minimum bend radius at the long end of the class length range.
-    pub fn r_min_m(&self, radius_multiple: f64) -> f64 {
-        radius_multiple * self.loa_m.1
+    pub fn r_min_m(&self, radius_multiple: f64) -> Option<f64> {
+        self.loa_m.map(|(_, hi)| radius_multiple * hi)
+    }
+}
+
+impl From<&ClassRow> for VesselStandard {
+    fn from(c: &ClassRow) -> Self {
+        let (abreast, in_line) = c.counts();
+        let beam = c.beam_max_m();
+        VesselStandard {
+            standard_id: c.id.to_string(),
+            family: c.family.to_string(),
+            class_name: c.id.to_string(),
+            formation: c.formation.to_string(),
+            loa_m: c.loa_m,
+            beam_m: beam,
+            draught_m: c.draught_m,
+            dwt_t: c.dwt_t,
+            n_abreast: abreast,
+            n_in_line: in_line,
+            unit_beam_m: beam
+                .filter(|_| abreast * in_line > 1)
+                .map(|b| b / abreast as f64),
+            min_bridge_clearance_m: c.air_draft_limit_m(),
+            moulded_depth_m: None,
+            source: c.source.to_string(),
+            cargo_modes: c.cargo_modes.iter().map(|m| m.to_string()).collect(),
+            notes: c.notes.to_string(),
+            air_draft_m: c.air_draft_m,
+            region: c.region.to_string(),
+            waters: c.waters.to_string(),
+            confidence: c.confidence.to_string(),
+        }
     }
 }
 
 /// A catalogue: (key, standard) pairs in insertion order, like the Python dict.
 pub type Catalogue = Vec<(String, VesselStandard)>;
 
-/// `VESSEL_STANDARDS`: the built-in catalogue.
+/// `VESSEL_STANDARDS`: the built-in catalogue, every class of `catalogue/vessel_classes.yaml`.
 pub fn built_in_catalogue() -> Catalogue {
-    let rows: [(&str, VesselStandard); 12] = [
-        (
-            "CEMT_IV",
-            VesselStandard {
-                standard_id: "CEMT_IV".into(),
-                family: "CEMT".into(),
-                class_name: "IV".into(),
-                formation: "motor_vessel".into(),
-                loa_m: (80.0, 85.0),
-                beam_m: 9.5,
-                draught_m: (2.5, 2.5),
-                dwt_t: (1000.0, 1500.0),
-                n_abreast: 1,
-                n_in_line: 1,
-                unit_beam_m: None,
-                min_bridge_clearance_m: Some(5.25),
-                moulded_depth_m: None,
-                source: "WG 141 Table 2.1 (p15)".into(),
-                cargo_modes: vec!["dry_bulk".into(), "liquid_gas".into()],
-                notes: "".into(),
-            },
-        ),
-        (
-            "CEMT_Va",
-            VesselStandard {
-                standard_id: "CEMT_Va".into(),
-                family: "CEMT".into(),
-                class_name: "Va".into(),
-                formation: "motor_vessel".into(),
-                loa_m: (95.0, 110.0),
-                beam_m: 11.4,
-                draught_m: (2.5, 4.5),
-                dwt_t: (1500.0, 3000.0),
-                n_abreast: 1,
-                n_in_line: 1,
-                unit_beam_m: None,
-                min_bridge_clearance_m: Some(5.25),
-                moulded_depth_m: None,
-                source: "WG 141 Table 2.1 (p15)".into(),
-                cargo_modes: vec!["dry_bulk".into(), "liquid_gas".into()],
-                notes: "The workhorse European barge. The unit that pairs abreast into VIa.".into(),
-            },
-        ),
-        (
-            "CEMT_Vb",
-            VesselStandard {
-                standard_id: "CEMT_Vb".into(),
-                family: "CEMT".into(),
-                class_name: "Vb".into(),
-                formation: "pushed_convoy".into(),
-                loa_m: (172.0, 185.0),
-                beam_m: 11.4,
-                draught_m: (2.5, 4.5),
-                dwt_t: (3200.0, 6000.0),
-                n_abreast: 1,
-                n_in_line: 2,
-                unit_beam_m: Some(11.4),
-                min_bridge_clearance_m: Some(7.0),
-                moulded_depth_m: None,
-                source: "WG 141 Table 2.1 (p15)".into(),
-                cargo_modes: vec!["dry_bulk".into(), "liquid_gas".into()],
-                notes: "2 IN LINE. R_min ~555 m at 3xLOA — a tight meander cannot usually deliver it.".into(),
-            },
-        ),
-        (
-            "CEMT_VIa",
-            VesselStandard {
-                standard_id: "CEMT_VIa".into(),
-                family: "CEMT".into(),
-                class_name: "VIa".into(),
-                formation: "pushed_convoy".into(),
-                loa_m: (95.0, 110.0),
-                beam_m: 22.8,
-                draught_m: (2.5, 4.5),
-                dwt_t: (3200.0, 6000.0),
-                n_abreast: 2,
-                n_in_line: 1,
-                unit_beam_m: Some(11.4),
-                min_bridge_clearance_m: Some(7.0),
-                moulded_depth_m: None,
-                source: "WG 141 Table 2.1 (p15); c_C row in Table E.5 (p261)".into(),
-                cargo_modes: vec!["dry_bulk".into(), "liquid_gas".into()],
-                notes: "2 Va ABREAST. Short and wide, so WG 141 p101 names this class as the worst case for bend widening (c_C 0.6 loaded downstream, 1.6 empty downstream).".into(),
-            },
-        ),
-        (
-            "CEMT_VIa_motor_NL2011",
-            VesselStandard {
-                standard_id: "CEMT_VIa_motor_NL2011".into(),
-                family: "CEMT-NL-2011".into(),
-                class_name: "VIa".into(),
-                formation: "motor_vessel".into(),
-                loa_m: (110.0, 135.0),
-                beam_m: 17.0,
-                draught_m: (4.0, 4.0),
-                dwt_t: (6000.0, 6000.0),
-                n_abreast: 1,
-                n_in_line: 1,
-                unit_beam_m: None,
-                min_bridge_clearance_m: Some(7.0),
-                moulded_depth_m: None,
-                source: "WG 141 Table 2.2 (p16) + Table 2.5 (p17)".into(),
-                cargo_modes: vec!["dry_bulk".into(), "liquid_gas".into()],
-                notes: "Post-CEMT'92 wide single hull. Shows Europe moving toward the Chinese beam-over-draught trade. 2,400 kW, 1,135 kW bow thruster (Table 2.5).".into(),
-            },
-        ),
-        (
-            "CN_I_motor",
-            VesselStandard {
-                standard_id: "CN_I_motor".into(),
-                family: "CN".into(),
-                class_name: "I".into(),
-                formation: "motor_vessel".into(),
-                loa_m: (95.0, 95.0),
-                beam_m: 16.2,
-                draught_m: (3.2, 3.2),
-                dwt_t: (3000.0, 3000.0),
-                n_abreast: 1,
-                n_in_line: 1,
-                unit_beam_m: None,
-                min_bridge_clearance_m: None,
-                moulded_depth_m: None,
-                source: "WG 141 Table 2.3 (p16); channel rules Table A.2 (p163)".into(),
-                cargo_modes: vec!["dry_bulk".into(), "liquid_gas".into()],
-                notes: "SINGLE HULL at 3,000 t with no pairing: R_min only ~285 m at 3xLOA.".into(),
-            },
-        ),
-        (
-            "CN_II_motor",
-            VesselStandard {
-                standard_id: "CN_II_motor".into(),
-                family: "CN".into(),
-                class_name: "II".into(),
-                formation: "motor_vessel".into(),
-                loa_m: (90.0, 90.0),
-                beam_m: 14.8,
-                draught_m: (2.6, 2.6),
-                dwt_t: (2000.0, 2000.0),
-                n_abreast: 1,
-                n_in_line: 1,
-                unit_beam_m: None,
-                min_bridge_clearance_m: None,
-                moulded_depth_m: Some(6.5),
-                source: "WG 141 Table 2.3 (p16)".into(),
-                cargo_modes: vec!["dry_bulk".into(), "liquid_gas".into()],
-                notes: "2,000 t on 2.6 m draught in a single standard hull. MODIFIED CLASS: moulded depth 6.5 m, not the draught+1.0 m rule of thumb. 6.5 m is where dry bulk stops being volume-bound and exactly consumes an example 4.40 m draught limit. Beyond it payload FALLS — the steel outweighs the cargo.".into(),
-            },
-        ),
-        (
-            "CN_III_motor",
-            VesselStandard {
-                standard_id: "CN_III_motor".into(),
-                family: "CN".into(),
-                class_name: "III".into(),
-                formation: "motor_vessel".into(),
-                loa_m: (85.0, 85.0),
-                beam_m: 10.8,
-                draught_m: (2.0, 2.0),
-                dwt_t: (1000.0, 1000.0),
-                n_abreast: 1,
-                n_in_line: 1,
-                unit_beam_m: None,
-                min_bridge_clearance_m: None,
-                moulded_depth_m: None,
-                source: "WG 141 Table 2.3 (p16); channel rules Table A.2 (p163): width 30 m, R 480 m".into(),
-                cargo_modes: vec!["dry_bulk".into(), "liquid_gas".into()],
-                notes: "The SHALLOWEST standard class of real size: 1,000 t on 2.0 m draught. On a river where depth is the expensive axis this is the one to beat. Its L/B of 7.87 is the top of the Chinese band, so the Chinese width rule applies to it without extrapolation — unlike every European class.".into(),
-            },
-        ),
-        (
-            "CN_III_convoy_2ab",
-            VesselStandard {
-                standard_id: "CN_III_convoy_2ab".into(),
-                family: "CN".into(),
-                class_name: "III".into(),
-                formation: "pushed_convoy".into(),
-                loa_m: (167.0, 167.0),
-                beam_m: 21.6,
-                draught_m: (2.0, 2.0),
-                dwt_t: (4000.0, 4000.0),
-                n_abreast: 2,
-                n_in_line: 2,
-                unit_beam_m: Some(10.8),
-                min_bridge_clearance_m: None,
-                moulded_depth_m: None,
-                source: "WG 141 Table 2.3 (p16); Table A.2 (p163): width 45 m, R 500 m".into(),
-                cargo_modes: vec!["dry_bulk".into(), "liquid_gas".into()],
-                notes: "DWT inferred as 4 x the 1,000 t Class III unit; WG 141 does not tabulate convoy deadweight. L/B 7.73, inside the Chinese band.".into(),
-            },
-        ),
-        (
-            "CN_IV_motor",
-            VesselStandard {
-                standard_id: "CN_IV_motor".into(),
-                family: "CN".into(),
-                class_name: "IV".into(),
-                formation: "motor_vessel".into(),
-                loa_m: (67.5, 67.5),
-                beam_m: 10.8,
-                draught_m: (1.6, 1.6),
-                dwt_t: (500.0, 500.0),
-                n_abreast: 1,
-                n_in_line: 1,
-                unit_beam_m: None,
-                min_bridge_clearance_m: None,
-                moulded_depth_m: None,
-                source: "WG 141 Table 2.3 (p16); Table A.2 (p163): width 30 m, R 330 m".into(),
-                cargo_modes: vec!["dry_bulk".into(), "liquid_gas".into()],
-                notes: "1.6 m draught. Carried as the shallow-draught floor of the comparison.".into(),
-            },
-        ),
-        (
-            "CN_II_convoy_2ab",
-            VesselStandard {
-                standard_id: "CN_II_convoy_2ab".into(),
-                family: "CN".into(),
-                class_name: "II".into(),
-                formation: "pushed_convoy".into(),
-                loa_m: (186.0, 186.0),
-                beam_m: 32.4,
-                draught_m: (2.6, 2.6),
-                dwt_t: (8000.0, 8000.0),
-                n_abreast: 2,
-                n_in_line: 2,
-                unit_beam_m: Some(16.2),
-                min_bridge_clearance_m: None,
-                moulded_depth_m: None,
-                source: "WG 141 Table 2.3 (p16); Table A.2 (p163): width 70 m, R 560 m".into(),
-                cargo_modes: vec!["dry_bulk".into(), "liquid_gas".into()],
-                notes: "4,000 t at only 2.6 m draught, but 186 m long -> R_min ~558 m. A tight meander cannot usually deliver that radius.".into(),
-            },
-        ),
-        (
-            "CN_I_convoy_2ab",
-            VesselStandard {
-                standard_id: "CN_I_convoy_2ab".into(),
-                family: "CN".into(),
-                class_name: "I".into(),
-                formation: "pushed_convoy".into(),
-                loa_m: (223.0, 223.0),
-                beam_m: 32.4,
-                draught_m: (3.5, 3.5),
-                dwt_t: (12000.0, 12000.0),
-                n_abreast: 2,
-                n_in_line: 2,
-                unit_beam_m: Some(16.2),
-                min_bridge_clearance_m: None,
-                moulded_depth_m: None,
-                source: "WG 141 Table 2.3 (p16); Table A.2 (p163): width 70 m, R 670 m".into(),
-                cargo_modes: vec!["dry_bulk".into(), "liquid_gas".into()],
-                notes: "Chinese Table A.2 prices this at 70 m channel width against PIANC's 91-110 m for the same beam — the clearest single illustration of the two traditions disagreeing.".into(),
-            },
-        ),
-
-    ];
-    rows.into_iter().map(|(k, v)| (k.into(), v)).collect()
+    CLASSES
+        .iter()
+        .map(|c| (c.id.to_string(), VesselStandard::from(c)))
+        .collect()
 }
 
 /// `get_standard`. The error is the text of Python's `KeyError` message (before `str()` wraps it
 /// in `repr`, which is what `str(KeyError(msg))` gives).
 pub fn get_standard(standard_id: &str) -> Result<VesselStandard, String> {
-    let catalogue = built_in_catalogue();
-    match catalogue.iter().find(|(k, _)| k == standard_id) {
-        Some((_, v)) => Ok(v.clone()),
+    match crate::vessel_classes::find(standard_id) {
+        Some(c) => Ok(VesselStandard::from(c)),
         None => {
-            let mut known: Vec<&str> = catalogue.iter().map(|(k, _)| k.as_str()).collect();
+            let mut known: Vec<&str> = CLASSES.iter().map(|c| c.id).collect();
             known.sort_unstable();
             Err(format!(
                 "unknown vessel standard {}; known: {}",
@@ -337,7 +133,9 @@ pub fn get_standard(standard_id: &str) -> Result<VesselStandard, String> {
     }
 }
 
-/// `standards_for`: every standard that can carry this cargo mode. The error is Python's
+/// `standards_for`: the 0.1.0 function that listed the standards able to carry a cargo mode. Cargo
+/// is never a property of a Vessel Class (GLOSSARY), so since issue #94 it still checks that the
+/// mode is `dry_bulk` or `liquid_gas`, as before, and returns every class. The error is Python's
 /// `ValueError` message.
 pub fn standards_for(cargo_mode: &str) -> Result<Vec<VesselStandard>, String> {
     if cargo_mode != "dry_bulk" && cargo_mode != "liquid_gas" {
@@ -346,11 +144,7 @@ pub fn standards_for(cargo_mode: &str) -> Result<Vec<VesselStandard>, String> {
             repr_str(cargo_mode)
         ));
     }
-    Ok(built_in_catalogue()
-        .into_iter()
-        .map(|(_, v)| v)
-        .filter(|s| s.cargo_modes.iter().any(|m| m == cargo_mode))
-        .collect())
+    Ok(built_in_catalogue().into_iter().map(|(_, v)| v).collect())
 }
 
 /// `validate_catalogue`: integrity of the fleet catalogue, as a list of checks.
@@ -379,9 +173,8 @@ pub fn validate_catalogue(catalogue: &[(String, VesselStandard)]) -> Vec<Check> 
         },
     ));
 
-    let bad = keys_where(&|v| {
-        v.loa_m.0 > v.loa_m.1 || v.draught_m.0 > v.draught_m.1 || v.dwt_t.0 > v.dwt_t.1
-    });
+    let inverted = |r: Option<(f64, f64)>| r.is_some_and(|(lo, hi)| lo > hi);
+    let bad = keys_where(&|v| inverted(v.loa_m) || inverted(v.draught_m) || inverted(v.dwt_t));
     checks.push(Check::new(
         "ranges_ordered",
         bad.is_empty(),
@@ -392,7 +185,9 @@ pub fn validate_catalogue(catalogue: &[(String, VesselStandard)]) -> Vec<Check> 
         },
     ));
 
-    let bad = keys_where(&|v| v.beam_m <= 0.0 || v.loa_m.0 <= 0.0);
+    let bad = keys_where(&|v| {
+        v.beam_m.is_some_and(|b| b <= 0.0) || v.loa_m.is_some_and(|(lo, _)| lo <= 0.0)
+    });
     checks.push(Check::new(
         "positive_dimensions",
         bad.is_empty(),
@@ -405,9 +200,9 @@ pub fn validate_catalogue(catalogue: &[(String, VesselStandard)]) -> Vec<Check> 
 
     // A convoy's overall beam should be its unit beam times the number abreast.
     // Python: `v.unit_beam_m and v.n_abreast > 1` (None and 0.0 are falsy).
-    let bad = keys_where(&|v| match v.unit_beam_m {
-        Some(unit) if unit != 0.0 && v.n_abreast > 1 => {
-            libm::fabs(unit * (v.n_abreast as f64) - v.beam_m) > 0.05
+    let bad = keys_where(&|v| match (v.unit_beam_m, v.beam_m) {
+        (Some(unit), Some(beam)) if unit != 0.0 && v.n_abreast > 1 => {
+            libm::fabs(unit * (v.n_abreast as f64) - beam) > 0.05
         }
         _ => false,
     });

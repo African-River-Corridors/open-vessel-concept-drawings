@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Vessel Class (issue #94): an Option is defined by typed dimensions or by a standard Vessel Class.
+  - New inputs `vessel_scheme` (the Class Scheme) and `vessel_class`, held only by an Option defined by a class. **Length and beam decide the class**: the vessel sits in the smallest class of the scheme (and Formation kind) whose length and beam maxima hold it, moves up or down as they change, and past the largest class of the scheme there is a warning, "beyond the largest <scheme> class". The scheme never changes by itself. Motor and convoy classes are separate ladders; the `CEMT` `-W` and `-E` classes share one.
+  - Picking a class sets length and beam to its maxima and the Formation (a convoy class also its abreast and in-line counts), and fills the draught limit (top of the class draught range) and the air-draft limit (bottom of its air-draft range, the lowest bridge clearance), unless a limit was typed; a typed limit above the class's is a warning. A class that gives no value fills nothing. Moulded depth stays typed. These inputs carry the new source marker `class` in the file and the left panel. The class's reference deadweight is shown beside the computed cargo and is never an input. The `.vdesign` format stays at version 2 (ADR 0007); version 1 files open unchanged. No calculation result changes for a given set of dimensions.
+  - The same in the app (left panel: "Typed dimensions" or "Standard class"), `ovcd new --class <id>`, `ovcd fill` (a class named in a hand-written file gives the dimensions it leaves out), the Design session and `ovcd schema`.
+  - One catalogue: `catalogue/vessel_classes.yaml` is the only source of the classes. The core's list is generated from it by `tools/gen_vessel_classes.py` (`--check`; a test in the fast gate fails on drift), and the Python `VESSEL_STANDARDS` is read from the core. Not every class can define a vessel: one with no length or beam, or a towed barge, ATB, pusher, tug or towboat (no Formation kind), is not offered. Cargo does not filter the list; `cargo_modes` stay catalogue data.
+  - Python `vessel_standards`, known changes from 0.1.0: the list is the catalogue's 292 classes, with the catalogue's ids (`CEMT-Va`, `CN-II-MOTOR`). The 12 old ids (`CEMT_Va`, `CN_II_motor`, `CEMT_VIa_motor_NL2011`, ...) still work in `get_standard` (the NL2011 class is `RWS-M12`) but are not keys of `VESSEL_STANDARDS`. `standards_for` returns every class for either cargo mode (it still rejects other modes), because Cargo is not a class property. The catalogue's figures replace the hand-typed ones: CEMT Va draught is 2.5 to 2.8 m (was 2.5 to 4.5), the NL2011 class is 135 m and 5601 t (was 110 to 135 m and 6000 t) with no bridge clearance (the 7.0 m had no source), `CN_II_motor` has no moulded depth (the 6.5 m had no source), and `family`, `class_name`, `source`, `notes` and `cargo_modes` are the catalogue's. `loa_m`, `beam_m`, `draught_m` and `dwt_t` can be `None` when a class gives no figure, `beam_m` is the largest beam, `min_bridge_clearance_m` is the bottom of the air-draft range, and `VesselStandard` has four new fields (`air_draft_m`, `region`, `waters`, `confidence`). The `vessel_standards` oracle scenario is a known difference.
 - Calibration Bands (issue #119): `calibration/bands.yaml` gives each figure a band per confidence (lightship ±15 / 20 / 30 %, deadweight ±7.5 / 10 / 15 % at high / medium / low). `calibration/results.md` shows each calibrated result against its band and marks cases outside it, and says the errors are in-sample. `python -m vessel_designer.calibration --check` prints a `::warning` annotation per case outside its band; the `test` CI job runs it (about a second). A band miss is a warning only and never fails the build; a crash fails. No calculation result changes.
 - Addition (issue #180): a gas-fuelled self-propelled stern. The default stays battery-electric, and its results do not change.
   - New input `propulsion` on `AftArrangementInputs` and `BargeCapacityInputs`: `battery_electric` (default, as 0.1.0) or `gas_fuelled`. Any other value is a `ValueError`. `BargeCapacityInputs.propulsion` sets the default stern block when `aft` is not given; a given `aft` must agree.
@@ -73,6 +79,15 @@
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### Vessel Class (#94) (2026-10-15)
+
+Between `main 882b30b` and `this branch c78f2d5`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep optional vessel_class | `result` | fill: warning: Option 'sweep optional vessel_class': `channel_bank_slope` was not stored in the file; wrote in the Defaults Profile value 3, marked default \| warning: Option 'sweep optional vessel_class': `channel_current_kn` was not stored in the file; wrote in the Defaults Profile value 0, marked default \| ovcd fill: 1 error(s); nothing written | computed | changed |
+| sweep optional vessel_scheme | `result` | fill: warning: Option 'sweep optional vessel_scheme': `channel_bank_slope` was not stored in the file; wrote in the Defaults Profile value 3, marked default \| warning: Option 'sweep optional vessel_scheme': `channel_current_kn` was not stored in the file; wrote in the Defaults Profile value 0, marked default \| ovcd fill: 1 error(s); nothing written | computed | changed |
 
 ### Gas tanks: IGC rules only (#175) (2026-10-15)
 

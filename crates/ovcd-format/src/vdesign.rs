@@ -107,6 +107,10 @@ pub enum InputKind {
     Cargo,
     /// `{ "kind": ..., "abreast": n, "in_line": n }`.
     Formation,
+    /// A scheme of the Vessel Class catalogue (a class `family`), or null.
+    VesselScheme,
+    /// A Vessel Class id (a pickable class; an old id of the core is read as its class), or null.
+    VesselClass,
 }
 
 /// Which Cargo Containments an input is used for.
@@ -121,6 +125,7 @@ pub enum AppliesTo {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Group {
     Required,
+    VesselClass,
     HullAndContainment,
     GasTanks,
     WaterwayLimits,
@@ -129,8 +134,9 @@ pub enum Group {
 
 impl Group {
     /// Every group, in the order a form shows them.
-    pub const ALL: [Group; 5] = [
+    pub const ALL: [Group; 6] = [
         Group::Required,
+        Group::VesselClass,
         Group::HullAndContainment,
         Group::GasTanks,
         Group::WaterwayLimits,
@@ -141,6 +147,7 @@ impl Group {
     pub fn label(self) -> &'static str {
         match self {
             Group::Required => "Required",
+            Group::VesselClass => "Vessel Class",
             Group::HullAndContainment => "Hull and containment",
             Group::GasTanks => "Gas tanks",
             Group::WaterwayLimits => "Waterway Limits",
@@ -249,6 +256,21 @@ pub const INPUTS: &[InputSpec] = &[
         NUM,
         true,
         Group::Required,
+    ),
+    // Held only when the Option is defined by a standard class (see `class_input`).
+    spec(
+        "vessel_scheme",
+        "Class Scheme",
+        InputKind::VesselScheme,
+        false,
+        Group::VesselClass,
+    ),
+    spec(
+        "vessel_class",
+        "Vessel Class",
+        InputKind::VesselClass,
+        false,
+        Group::VesselClass,
     ),
     spec(
         "cargo_containment",
@@ -378,6 +400,8 @@ pub enum Source {
     Typed,
     /// The Defaults Profile gave it.
     Default,
+    /// The Vessel Class gave it (issue #94).
+    Class,
 }
 
 impl Source {
@@ -385,6 +409,7 @@ impl Source {
         match self {
             Source::Typed => "typed",
             Source::Default => "default",
+            Source::Class => "class",
         }
     }
 }
@@ -908,7 +933,8 @@ pub(crate) fn unmark(raw: &Value) -> Result<StoredInput, String> {
         let source = match o.get("source").and_then(Value::as_str) {
             Some("typed") => Source::Typed,
             Some("default") => Source::Default,
-            _ => return Err("`source` must be \"typed\" or \"default\"".into()),
+            Some("class") => Source::Class,
+            _ => return Err("`source` must be \"typed\", \"default\" or \"class\"".into()),
         };
         let value = o.get("value").ok_or("a marked input needs a `value`")?;
         if o.len() != 2 {
@@ -934,6 +960,14 @@ fn read_option(
 ) -> DesignOption {
     let at = |msg: String| format!("Option '{name}': {msg}");
     let mut left_out: Vec<&str> = Vec::new();
+    // A class named with no length, beam or Formation gives them; `fill` writes them in.
+    let filled_from_class;
+    let raw = if matches!(missing, Missing::Fill) {
+        filled_from_class = crate::class_input::prefill(raw);
+        &filled_from_class
+    } else {
+        raw
+    };
     for key in raw.keys() {
         if !INPUTS.iter().any(|s| s.name == key) {
             report.error(at(format!("unknown input `{key}`")), &[]);
@@ -1000,7 +1034,7 @@ fn read_option(
             report.error(at(msg), &[spec.name]);
             continue;
         }
-        if !applies {
+        if !applies || crate::class_input::UNSET_WHEN_ABSENT.contains(&spec.name) {
             continue;
         }
         let default = match default_for(spec.name, &inputs, profile) {
@@ -1042,6 +1076,7 @@ fn read_option(
             &left_out,
         );
     }
+    crate::class_input::resolve(&mut inputs, profile, report, &at);
     cross_checks(&inputs, report, &at);
     impossible_results(&inputs, report, &at);
     DesignOption {
@@ -1160,6 +1195,31 @@ fn check_value(
             Ok((v.clone(), vec![]))
         }
         InputKind::Formation => check_formation(v, profile),
+        InputKind::VesselScheme => match v {
+            Value::Null => Ok((Value::Null, vec![])),
+            Value::String(s) if ovcd_core::vessel_classes::schemes().contains(&s.as_str()) => {
+                Ok((v.clone(), vec![]))
+            }
+            _ => Err(format!(
+                "`{name}` = {v} is not a scheme with a Vessel Class that can define a vessel \
+                 (see `ovcd schema`)"
+            )),
+        },
+        InputKind::VesselClass => match v {
+            Value::Null => Ok((Value::Null, vec![])),
+            Value::String(s) => match ovcd_core::vessel_classes::find(s) {
+                Some(c) if c.pickable() => Ok((json!(c.id), vec![])),
+                Some(c) => Err(format!(
+                    "`{name}` = {v} cannot define a vessel: class {} gives no length or beam, or \
+                     its Formation ({}) is not one a Design has",
+                    c.id, c.formation
+                )),
+                None => Err(format!(
+                    "`{name}` = {v} is not a Vessel Class (see `ovcd schema`)"
+                )),
+            },
+            _ => Err(format!("`{name}` must be a class id or null")),
+        },
     }
 }
 

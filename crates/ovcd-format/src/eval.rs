@@ -822,10 +822,10 @@ fn standard_json(s: &VesselStandard) -> Value {
         "family": s.family,
         "class_name": s.class_name,
         "formation": s.formation,
-        "loa_m": [s.loa_m.0, s.loa_m.1],
+        "loa_m": pair_json(s.loa_m),
         "beam_m": s.beam_m,
-        "draught_m": [s.draught_m.0, s.draught_m.1],
-        "dwt_t": [s.dwt_t.0, s.dwt_t.1],
+        "draught_m": pair_json(s.draught_m),
+        "dwt_t": pair_json(s.dwt_t),
         "n_abreast": s.n_abreast,
         "n_in_line": s.n_in_line,
         "unit_beam_m": s.unit_beam_m,
@@ -834,7 +834,23 @@ fn standard_json(s: &VesselStandard) -> Value {
         "source": s.source,
         "cargo_modes": s.cargo_modes,
         "notes": s.notes,
+        "air_draft_m": pair_json(s.air_draft_m),
+        "region": s.region,
+        "waters": s.waters,
+        "confidence": s.confidence,
     })
+}
+
+fn pair_json(p: Option<(f64, f64)>) -> Value {
+    p.map_or(Value::Null, |(lo, hi)| json!([lo, hi]))
+}
+
+/// `None` for a missing field or a null: a figure the class does not give.
+fn optional_pair(fields: &Value, name: &str) -> Result<Option<(f64, f64)>, EvalError> {
+    match fields.get(name) {
+        None | Some(Value::Null) => Ok(None),
+        Some(_) => pair_field(fields, name).map(Some),
+    }
 }
 
 fn pair_field(fields: &Value, name: &str) -> Result<(f64, f64), EvalError> {
@@ -913,15 +929,10 @@ fn standard_from_fields(fields: &Value) -> Result<VesselStandard, EvalError> {
         family: text_field(fields, "family", None)?,
         class_name: text_field(fields, "class_name", None)?,
         formation: text_field(fields, "formation", None)?,
-        loa_m: pair_field(fields, "loa_m")?,
-        beam_m: exact_number(
-            fields
-                .get("beam_m")
-                .ok_or_else(|| EvalError::BadInput("`beam_m` is required".into()))?,
-            "beam_m",
-        )?,
-        draught_m: pair_field(fields, "draught_m")?,
-        dwt_t: pair_field(fields, "dwt_t")?,
+        loa_m: optional_pair(fields, "loa_m")?,
+        beam_m: optional_number(fields, "beam_m")?,
+        draught_m: optional_pair(fields, "draught_m")?,
+        dwt_t: optional_pair(fields, "dwt_t")?,
         n_abreast,
         n_in_line: count_field(fields, "n_in_line")?,
         unit_beam_m: optional_number(fields, "unit_beam_m")?,
@@ -930,6 +941,10 @@ fn standard_from_fields(fields: &Value) -> Result<VesselStandard, EvalError> {
         source: text_field(fields, "source", Some(""))?,
         cargo_modes,
         notes: text_field(fields, "notes", Some(""))?,
+        air_draft_m: optional_pair(fields, "air_draft_m")?,
+        region: text_field(fields, "region", Some(""))?,
+        waters: text_field(fields, "waters", Some(""))?,
+        confidence: text_field(fields, "confidence", Some(""))?,
     })
 }
 
@@ -941,6 +956,12 @@ fn vessel_standards(function: &str, args: &Value) -> Result<Value, EvalError> {
                 Err(message) => key_error(&message),
             }
         }
+        "catalogue" => ok(Value::Array(
+            ovcd_core::vessel_standards::built_in_catalogue()
+                .iter()
+                .map(|(_, s)| standard_json(s))
+                .collect(),
+        )),
         "standards_for" => {
             match ovcd_core::vessel_standards::standards_for(str_arg(args, "cargo_mode")?) {
                 Ok(list) => ok(Value::Array(list.iter().map(standard_json).collect())),
