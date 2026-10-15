@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix: functions use the object they are given again, as 0.1.0 did. `hydrostatics.calculate_stability` and `calculate_trim` use the hull, tanks and weights passed in; `weights.calculate_weights` uses the hull and tanks; `ga_adapter.to_ga`, `journey_derating.compute` and `gas_stability.assess` use the capacity result passed in. A result rebuilt with `dataclasses.replace` or built by hand works (issue #126). No calculation result changes.
+
 ## 0.2.2 (2026-10-15)
 
 - Fix: the macOS app is now signed as a whole bundle (ad-hoc), so macOS no longer reports it as damaged. No calculation result changes.

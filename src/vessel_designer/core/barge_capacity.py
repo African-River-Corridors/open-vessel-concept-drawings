@@ -233,17 +233,16 @@ def compute(inp: BargeCapacityInputs) -> BargeCapacityResult:
     data = _bridge.raw("barge_capacity", "compute", _bridge.encode_args({"inputs": inp}))
     if "error" in data:
         _bridge._raise(data["error"])
-    return _result_from_json(data["ok"], inp)
+    return _result_from_json(data["ok"])
 
 
-def _result_from_json(data: dict, inp: BargeCapacityInputs) -> BargeCapacityResult:
-    """The result object for the core's JSON answer. It remembers the inputs it was computed
-    from, so ``journey_derating`` and ``gas_stability`` can ask the core to recompute from them."""
+def _result_from_json(data: dict) -> BargeCapacityResult:
+    """The result object for the core's JSON answer. The result is plain data: functions that take
+    it (``journey_derating``, ``gas_stability.assess``, ``ga_adapter``) use the fields it has."""
     result = _bridge.decode(BargeCapacityResult, data)
     basis = result.gas_basis
     if basis is not None:
         result.gas_basis = {"inputs": _bridge.decode(BargeInputs, basis["inputs"]),
                             "tanks": _bridge.decode(TankResult, basis["tanks"]),
                             "weights": _bridge.decode(WeightBreakdown, basis["weights"])}
-    object.__setattr__(result, "_inputs", inp)
     return result

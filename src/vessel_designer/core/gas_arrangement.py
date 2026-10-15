@@ -105,7 +105,7 @@ def fit(loa: float, beam: float, cargo: str, t_max: float, *, ruleset: str = "IG
     ok = data["ok"]
     f = _bridge.decode(ArrangementFit, ok)
     f.engine_inputs = _bridge.decode(BargeCapacityInputs, ok["engine_inputs"])
-    f.engine_result = _result_from_json(ok["engine_result"], f.engine_inputs)
+    f.engine_result = _result_from_json(ok["engine_result"])
     return f
 
 
