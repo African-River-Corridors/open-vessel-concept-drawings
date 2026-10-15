@@ -30,11 +30,30 @@ pub enum RunOutcome {
     Failed(String),
 }
 
+impl RunOutcome {
+    /// The word `ovcd run --json` gives the Option: `results`, `not_yet_supported` (a convoy: the
+    /// file is valid, the engine cannot compute it yet) or `failed`.
+    pub fn status(&self) -> &'static str {
+        match self {
+            RunOutcome::Results { .. } => "results",
+            RunOutcome::NotAvailable(_) => "not_yet_supported",
+            RunOutcome::Failed(_) => "failed",
+        }
+    }
+
+    /// Does this outcome make `ovcd run` exit 1? An Option that is not yet supported does not.
+    pub fn is_failure(&self) -> bool {
+        matches!(self, RunOutcome::Failed(_))
+    }
+}
+
 /// Is the stored hash of an Option the same as the one this engine computes?
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HashStatus {
     /// No hash in the file, or nothing to compare it with.
     NotStored,
+    /// A hash is in the file, but the Option has no results yet (a convoy), so it is not checked.
+    NotChecked,
     Matches,
     /// The file's hash differs from this engine's.
     Differs {
@@ -47,6 +66,7 @@ impl HashStatus {
     pub fn as_str(&self) -> &'static str {
         match self {
             HashStatus::NotStored => "not_stored",
+            HashStatus::NotChecked => "not_checked",
             HashStatus::Matches => "matches",
             HashStatus::Differs { .. } => "differs",
         }
@@ -203,6 +223,7 @@ pub fn run_design(design: &Design) -> Vec<RunOption> {
                     stored: stored.clone(),
                     computed: hash.clone(),
                 },
+                (RunOutcome::NotAvailable(_), Some(_)) => HashStatus::NotChecked,
                 _ => HashStatus::NotStored,
             };
             RunOption {

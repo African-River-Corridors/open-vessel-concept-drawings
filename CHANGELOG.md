@@ -6,6 +6,7 @@
 - Fix: a capacity result now keeps a copy of its inputs, so editing or reusing the inputs object after `barge_capacity.compute` no longer changes `journey_derating`, `gas_stability.assess` or `ga_adapter.is_gas` (issue #125). No calculation result changes.
 - Fix: publishing the app installers now needs `test` and `release-guard` to pass on a tagged commit that is on `main`, and runs the release gate (wheels, binaries, pytest on each system) first. No calculation result changes.
 - Fix: `ovcd fill` sets `engine_version` to this engine when it writes a results hash (and writes none beside a hash from another version). The hash warning now says "results differ from the hash saved in the file". A stored hash must be 64 hex digits, compared without regard to case; an empty `engine_version` is an error. No calculation result changes (#137).
+- Change: `ovcd run` exits 0 for a valid file whose only gap is an Option that is not yet computable (a pushed convoy). The "convoy results not yet available" message stays in the summary and goes to stderr as a warning. In `--json` each Option has a `status`: `results`, `not_yet_supported` or `failed`. A hash stored on a convoy Option gets a note that it is not checked. Hard errors and failed computations still exit 1. No calculation result changes (#138).
 
 ## 0.2.2 (2026-10-15)
 
