@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from .._bridge import call as _call
+from .barge_capacity import BargeCapacityInputs  # noqa: F401  (0.1.0 exposed it here)
 
 MAX_TANK_LENGTH_M = 28.0       # overall Type-C tank length cap — ESTIMATE
 SIDE_CLEARANCE_M = 1.0         # standard IGC-2G protective-location spacing per side

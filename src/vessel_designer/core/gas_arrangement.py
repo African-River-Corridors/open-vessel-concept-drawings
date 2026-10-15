@@ -33,6 +33,15 @@ from .protective_location import (ADN_G_TANK_CAP_9_3_4_M3)
 from .. import _bridge
 from .._bridge import call as _call
 
+# 0.1.0 modules exposed these names (they imported them), and user scripts import them from here.
+# Nothing in this module uses them: the calculation runs in the Rust core.
+from .barge_capacity import compute as capacity  # noqa: F401
+from .checks import all_ok  # noqa: F401
+from .journey_derating import JourneyDeratingInputs, compute as derate  # noqa: F401
+from .protective_location import (  # noqa: F401
+    ADN_G_MAX_L_OVER_D, ADN_G_WIDE_TANK_FRACTION, compute_required_clearances, d_vc_exact,
+    distance_d_vc)
+
 RULESETS = ("IGC_2G", "IGC_2G_EXACT", "ADN_G")
 DEFAULT_DEPTHS_M = tuple(round(3.5 + 0.25 * i, 2) for i in range(15))     # 3.5 .. 7.0 m
 DEFAULT_TANKS_WIDE = (1, 2, 3)

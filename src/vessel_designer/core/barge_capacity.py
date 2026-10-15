@@ -37,6 +37,17 @@ from .. import _bridge
 from .models import TankResult, WeightBreakdown
 from .._bridge import call as _call
 
+# 0.1.0 modules exposed these names (they imported them), and user scripts import them from here.
+# Nothing in this module uses them: the calculation runs in the Rust core.
+from .aft_arrangement import compute as compute_aft_arrangement  # noqa: F401
+from .cargo import get_cargo  # noqa: F401
+from .gas_separation import compute as compute_gas_separation  # noqa: F401
+from .hull import HullGeometry  # noqa: F401
+from .hydrostatics import find_equilibrium_draft  # noqa: F401
+from .protective_location import compute_required_clearances, d_vc_exact, distance_d_vc  # noqa: F401
+from .tanks import calculate_tank_arrangement  # noqa: F401
+from .weights import calculate_weights  # noqa: F401
+
 
 @dataclass
 class BargeCapacityInputs:

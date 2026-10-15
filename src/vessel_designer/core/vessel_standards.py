@@ -209,10 +209,4 @@ def validate_catalogue(catalogue: Optional[Dict[str, VesselStandard]] = None) ->
     """
     if catalogue is None:
         return _call("vessel_standards", "validate_catalogue", {"extra": None}, List[Check])
-    missing = sorted(set(VESSEL_STANDARDS) - set(catalogue))
-    if missing:
-        raise NotImplementedError(
-            f"a catalogue must keep the built-in standards (missing {missing}); "
-            "add entries to a copy of VESSEL_STANDARDS instead")
-    extra = {k: v for k, v in catalogue.items() if VESSEL_STANDARDS.get(k) != v}
-    return _call("vessel_standards", "validate_catalogue", {"extra": extra}, List[Check])
+    return _call("vessel_standards", "validate_catalogue", {"catalogue": catalogue}, List[Check])

@@ -19,6 +19,7 @@ from typing import List
 
 from .barge_capacity import BargeCapacityResult
 from .checks import Check, all_ok
+from .hull import HullGeometry  # noqa: F401  (0.1.0 exposed it here)
 from .. import _bridge
 from .._bridge import call as _call
 

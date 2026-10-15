@@ -832,6 +832,16 @@ fn vessel_standards(function: &str, args: &Value) -> Result<Value, EvalError> {
             }
         }
         "validate_catalogue" => {
+            // A whole catalogue the caller passes (any keys, in order) is validated as it is.
+            if let Some(whole) = args.get("catalogue").and_then(Value::as_object) {
+                let mut catalogue: Catalogue = Vec::new();
+                for (key, fields) in whole {
+                    catalogue.push((key.clone(), standard_from_fields(fields)?));
+                }
+                return ok(checks_json(
+                    &ovcd_core::vessel_standards::validate_catalogue(&catalogue),
+                ));
+            }
             let mut catalogue: Catalogue = ovcd_core::vessel_standards::built_in_catalogue();
             if let Some(extra) = args.get("extra").and_then(Value::as_object) {
                 for (key, fields) in extra {
