@@ -7,9 +7,13 @@ name: App build
 #     artifacts. It publishes nothing.
 #   - A pushed tag `v*` builds them and then publishes a GitHub PRE-RELEASE named after the tag, with
 #     the installers, a SHA-256 checksum file and the notes of that version from CHANGELOG.md.
+#   - A push to `main` (every merge) builds them and replaces the one rolling pre-release `latest`,
+#     pointed at that commit, with the notes of the `Unreleased` section (issue #169). A newer push
+#     cancels an older build still running, so `latest` is always the newest `main`. A tag is never
+#     cancelled.
 #
-# Nothing is built or published for a tag until `verify` passes: the tagged commit is on `main`, and
-# the CI jobs `test` and `release-guard` succeeded on it. Publishing also waits for `gate`, which runs
+# Nothing is built or published for a tag or a push to main until `verify` passes: the commit is on
+# `main`, and the CI jobs `test` and `release-guard` succeeded on it. Publishing also waits for `gate`, which runs
 # the whole release gate (release.yml: wheels, binaries and pytest on each system). A release made with
 # GITHUB_TOKEN does not start other workflows, so the gate is called from here, not left to the
 # `release: published` trigger.
@@ -18,15 +22,20 @@ name: App build
 
 on:
   push:
+    branches: ["main"]
     tags: ["v*"]
   workflow_dispatch:
+
+concurrency:
+  group: app-build-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
 
 permissions:
   contents: read
 
 jobs:
   verify:
-    # Runs for a manual start too, and passes there (its steps are for tags only), so `build` can
+    # Runs for a manual start too, and passes there (its steps are for pushes only), so `build` can
     # always list it in `needs` without `always()`.
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -35,17 +44,17 @@ jobs:
       checks: read
     steps:
       - uses: actions/checkout@v4
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'push'
         with:
           fetch-depth: 0
-      - name: The tagged commit is on main
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: The commit is on main
+        if: github.event_name == 'push'
         run: |
           git fetch --no-tags origin main
           git merge-base --is-ancestor "$GITHUB_SHA" origin/main \
             || { echo "the tagged commit $GITHUB_SHA is not on origin/main"; exit 1; }
-      - name: test and release-guard succeeded on the tagged commit
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: test and release-guard succeeded on the commit
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -71,7 +80,7 @@ jobs:
 
   gate:
     # The release gate (wheels, binaries, pytest on each system), before anything is published.
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'push'
     needs: verify
     uses: ./.github/workflows/release.yml
 
@@ -143,7 +152,8 @@ jobs:
           if-no-files-found: error
 
   release:
-    # Only for a pushed tag. A manual start stops after `build`.
+    # Only for a pushed tag. A push to main publishes `latest` instead (below); a manual start stops
+    # after `build`.
     if: startsWith(github.ref, 'refs/tags/')
     needs: [build, verify, gate]
     runs-on: ubuntu-latest
@@ -185,3 +195,52 @@ jobs:
             --title "$GITHUB_REF_NAME" \
             --notes-file notes.md \
             --verify-tag
+
+  latest:
+    # Only for a push to main: replace the one rolling pre-release `latest` with this commit's build.
+    if: github.ref == 'refs/heads/main'
+    needs: [build, verify, gate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: installers
+          pattern: ovcd-*
+          merge-multiple: true
+      - name: Checksums
+        working-directory: installers
+        run: |
+          ls -l
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - name: Notes from the Unreleased section of CHANGELOG.md
+        run: |
+          short="${GITHUB_SHA:0:7}"
+          awk '
+            /^## /{ if (on) exit; if ($0 == "## Unreleased") { on = 1; next } }
+            on { print }
+          ' CHANGELOG.md > unreleased.md
+          {
+            echo "The newest build of \`main\`, from commit ${short}. It is rebuilt after every merge and is not a numbered release. The installer file names carry the last numbered version."
+            echo
+            echo "## Changes since the last numbered release"
+            if grep -q '[^[:space:]]' unreleased.md; then cat unreleased.md; else echo; echo "None listed."; fi
+            echo
+            echo "These installers are not signed. Windows SmartScreen and macOS show a warning on first start; the README says what to click."
+            echo "OVCD is a concept design tool. Its results are not verified. There is no warranty."
+          } > notes.md
+          cat notes.md
+      - name: Replace the latest pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --cleanup-tag --yes || true
+          gh release create latest installers/* \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --latest=false \
+            --title "Latest build (main, ${GITHUB_SHA:0:7})" \
+            --notes-file notes.md

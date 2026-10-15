@@ -31,6 +31,10 @@ def test_the_publishing_job_waits_for_verify_and_the_release_gate():
         assert "always()" not in str(jobs[name].get("if", "")), f"{name} can run past a failed gate"
 
 
+# A pushed tag or a push to main publishes; a manual start only builds.
+PUBLISHING = "github.event_name == 'push'"
+
+
 def test_every_job_that_builds_waits_for_verify():
     jobs = workflow(APP_BUILD)["jobs"]
     assert "verify" in needs(jobs["build"])
@@ -55,8 +59,8 @@ def test_verify_fails_closed_on_a_failed_or_missing_check():
     run = next(s["run"] for s in steps if "check-runs" in s.get("run", ""))
     assert "exit 1" in run
     assert "did not succeed" in run and "timed out" in run
-    for s in steps:  # a tag must not skip the checks
-        assert "refs/tags/" in s.get("if", ""), s
+    for s in steps:  # neither a tag nor a push to main may skip the checks
+        assert s.get("if") == PUBLISHING, s
 
 
 def test_release_tag_check_works_when_called_from_another_workflow():
@@ -74,3 +78,45 @@ def test_app_build_publishes_nothing_to_pypi():
     text = APP_BUILD.read_text(encoding="utf-8").lower()
     for banned in ("pypi-publish", "twine", "maturin publish", "id-token", "environment: pypi"):
         assert banned not in text, banned
+
+
+# ---------- the rolling `latest` pre-release (issue #169) ----------
+
+def test_a_push_to_main_or_a_version_tag_starts_the_build():
+    push = workflow(APP_BUILD)["on"]["push"]
+    assert push == {"branches": ["main"], "tags": ["v*"]}
+
+
+def test_the_release_gate_runs_for_main_and_for_tags():
+    gate = workflow(APP_BUILD)["jobs"]["gate"]
+    assert gate["if"] == PUBLISHING and gate["uses"].endswith("release.yml")
+
+
+def test_a_numbered_release_is_made_only_for_a_tag():
+    job = workflow(APP_BUILD)["jobs"]["release"]
+    assert job["if"] == "startsWith(github.ref, 'refs/tags/')"
+    assert 'gh release create "$GITHUB_REF_NAME"' in str(job)
+
+
+def test_main_replaces_the_one_latest_pre_release_at_its_own_commit():
+    job = workflow(APP_BUILD)["jobs"]["latest"]
+    assert job["if"] == "github.ref == 'refs/heads/main'"
+    assert {"build", "verify", "gate"} <= needs(job)
+    assert job["permissions"] == {"contents": "write"}
+    run = "\n".join(s.get("run", "") for s in job["steps"])
+    assert "gh release delete latest --cleanup-tag --yes" in run
+    assert "gh release create latest" in run
+    assert '--target "$GITHUB_SHA"' in run and "--prerelease" in run
+    assert "--latest=false" in run          # never shown as the repository's latest numbered release
+    assert "SHA256SUMS.txt" in run and "## Unreleased" in run
+
+
+def test_a_newer_push_to_main_cancels_an_older_build_but_a_tag_is_never_cancelled():
+    c = workflow(APP_BUILD)["concurrency"]
+    assert "github.ref" in c["group"]
+    assert c["cancel-in-progress"] == "${{ github.ref == 'refs/heads/main' }}"
+
+
+def test_the_readme_says_where_the_latest_build_is():
+    text = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert "releases/tag/latest" in text
