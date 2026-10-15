@@ -51,8 +51,10 @@ and take the file for your computer:
 your system warns you once:
 
 - Windows SmartScreen says "Windows protected your PC". Click **More info**, then **Run anyway**.
-- macOS says the app cannot be checked. Open the `.dmg`, drag OVCD to Applications, then
-  **right-click the app and choose Open**, and confirm.
+- macOS says the app "can't be verified" (the download is not signed). Open the `.dmg`, drag OVCD to
+  Applications, then open it once from **System Settings → Privacy & Security → Open Anyway**. If
+  that does not work, run `xattr -dr com.apple.quarantine /Applications/OVCD.app` in Terminal and
+  open OVCD again.
 
 **Build from source.** You need Git, Node 24 and Rust (install with [rustup](https://rustup.rs)).
 On Windows, rustup also asks for the Microsoft C++ build tools (MSVC); accept that. Then:

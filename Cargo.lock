@@ -2325,7 +2325,7 @@ checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
 
 [[package]]
 name = "ovcd-app"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "ovcd-draw",
  "ovcd-format",
@@ -2337,7 +2337,7 @@ dependencies = [
 
 [[package]]
 name = "ovcd-cli"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "ovcd-draw",
  "ovcd-format",
@@ -2346,7 +2346,7 @@ dependencies = [
 
 [[package]]
 name = "ovcd-core"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "libm",
  "serde",
@@ -2354,7 +2354,7 @@ dependencies = [
 
 [[package]]
 name = "ovcd-draw"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "libm",
  "lopdf",
@@ -2369,7 +2369,7 @@ dependencies = [
 
 [[package]]
 name = "ovcd-format"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "ovcd-core",
  "ovcd-draw",
@@ -2379,7 +2379,7 @@ dependencies = [
 
 [[package]]
 name = "ovcd-py"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "ovcd-format",
  "pyo3",
@@ -4844,7 +4844,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.2.1"
+version = "0.2.2"
 
 [[package]]
 name = "yoke"
