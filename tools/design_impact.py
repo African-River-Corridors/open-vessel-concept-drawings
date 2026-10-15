@@ -48,6 +48,7 @@ CHANGELOG_HEAD = (
     "branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so\n"
     "a change can be traced later. Newest first.\n"
 )
+SECTION = "## Design changes"
 ENTRIES_AT = "\n### "
 
 
@@ -327,15 +328,28 @@ def changelog_has(tbl: str) -> bool:
 
 
 def write_changelog(tbl: str, key: str, base: str, head: str) -> None:
-    """Add (or replace, by `key`) one entry under "Design changes", newest first."""
+    """Add (or replace, by `key`) one entry under "Design changes", newest first.
+
+    Entries go after the `## Design changes` heading, whatever `### ` headings come before it.
+    Anything after the section (the next `## ` heading) is kept as it was.
+    """
     text = CHANGELOG.read_text(encoding="utf-8") if CHANGELOG.exists() else CHANGELOG_HEAD
-    head_part, _, rest = text.partition(ENTRIES_AT)
+    heading = re.search(rf"^{re.escape(SECTION)}[ \t]*$", text, re.M)
+    if heading is None:                                   # no section yet: start it at the end
+        intro_text = CHANGELOG_HEAD.split(SECTION, 1)[1]
+        text = text.rstrip("\n") + f"\n\n{SECTION}{intro_text}"
+        heading = re.search(rf"^{re.escape(SECTION)}[ \t]*$", text, re.M)
+    before, section = text[:heading.end()], text[heading.end():]
+    nxt = re.search(r"\n## ", section)
+    tail = section[nxt.start():] if nxt else ""
+    section = section[:nxt.start()] if nxt else section
+    intro, _, rest = section.partition(ENTRIES_AT)
     entries = [e for e in (ENTRIES_AT + rest).split(ENTRIES_AT) if e.strip()] if rest else []
     entries = [e for e in entries if not e.startswith(f"{key} ")]
     today = datetime.date.today().isoformat()
     entry = f"{key} ({today})\n\nBetween `{base}` and `{head}`.\n\n{tbl}\n"
-    new = head_part.rstrip("\n") + "\n" + "".join(ENTRIES_AT + e.rstrip("\n") + "\n" for e in [entry] + entries)
-    CHANGELOG.write_text(new, encoding="utf-8")
+    body = intro.rstrip("\n") + "\n" + "".join(ENTRIES_AT + e.rstrip("\n") + "\n" for e in [entry] + entries)
+    CHANGELOG.write_text(before + body + ("\n" + tail.lstrip("\n") if tail else ""), encoding="utf-8")
 
 
 def branch_key() -> str:
