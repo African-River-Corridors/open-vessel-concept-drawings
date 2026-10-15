@@ -140,8 +140,11 @@ def test_wheel_job_skips_the_tests_that_scan_files_it_does_not_copy():
     """The wheel job copies tests/, examples/, calibration/ and catalogue/ only. A test that
     scans src/ or tools/ would scan zero files there, so the job must skip it."""
     text = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
-    for name in ("test_pystr_tables.py", "test_vdesign_edge_sweep.py", "test_design_impact.py"):
+    for name in ("test_pystr_tables.py", "test_vdesign_edge_sweep.py"):
         assert f"--ignore=tests/{name}" in text, name
+    # the tools, workflow and gate tests read the repository itself (globs, so a new file is covered)
+    for pattern in ("test_design_impact*.py", "test_workflows*.py", "test_gates*.py"):
+        assert f"--ignore-glob='tests/{pattern}'" in text, pattern
 
 
 def test_version_is_0_2_2_everywhere():

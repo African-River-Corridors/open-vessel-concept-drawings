@@ -1,0 +1,49 @@
+"""One inputs object reused across several `compute` calls (issue #125).
+
+A capacity result must not change when the caller edits the inputs object afterwards. Expected
+values are printed by the original Python at commit ce96e66 (the frozen package under
+`parity/frozen_python` in that commit).
+"""
+from vessel_designer.core import barge_capacity as B
+from vessel_designer.core import ga_adapter, gas_stability, journey_derating as J
+
+
+def test_journey_derating_after_the_inputs_object_was_reused():
+    # ce96e66: capacity, achievable tonnage per loa
+    expected = {60.0: (1999.8456839999994, 1999.8456839999994),
+                80.0: (3355.305684, 3355.305684),
+                100.0: (4710.765684, 4569.524600031882)}
+    inp = B.BargeCapacityInputs(loa=60.0, beam=16.0, depth=6.0, cargo_type="bauxite")
+    results = []
+    for loa in expected:
+        inp.loa = loa
+        results.append((loa, B.compute(inp)))
+    for loa, res in results:
+        d = J.compute(J.JourneyDeratingInputs(capacity=res, loa=loa, beam=16.0, depth=6.0,
+                                              design_depth_m=5.0, ukc_m=0.5))
+        assert (d.cargo_capacity_t, d.achievable_tonnage_t) == expected[loa]
+
+
+def test_gas_stability_assess_after_the_inputs_object_was_reused():
+    # ce96e66: GM fluid of the Laden, Half laden and Light conditions, payload 1500 t
+    expected = {90.0: (4.496070691510841, 6.706438965623047, 11.201087654316286),
+                70.0: (3.929578290990053, 6.178009228238304, 12.235044383044745)}
+    inp = B.BargeCapacityInputs(loa=90.0, beam=14.8, depth=6.5, cargo_type="LPG_propane")
+    results = []
+    for loa in expected:
+        inp.loa = loa
+        results.append((loa, B.compute(inp)))
+    for loa, res in results:
+        a = gas_stability.assess(res, 1500.0)
+        assert tuple(c.gm_fluid_m for c in a.conditions) == expected[loa]
+
+
+def test_is_gas_after_the_inputs_object_was_reused():
+    # ce96e66: is_gas reads the result's phase
+    inp = B.BargeCapacityInputs(loa=90.0, beam=14.8, depth=6.5, cargo_type="LPG_propane")
+    gas = B.compute(inp)
+    inp.cargo_type = "bauxite"
+    bulk = B.compute(inp)
+    inp.cargo_type = "LPG_propane"
+    assert ga_adapter.is_gas(gas) is True
+    assert ga_adapter.is_gas(bulk) is False
