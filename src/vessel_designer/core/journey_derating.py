@@ -14,11 +14,12 @@ Pure Python.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field
 from typing import List
 
 from .barge_capacity import BargeCapacityResult
 from .checks import Check, all_ok
+from .. import _bridge
 from .._bridge import call as _call
 
 
@@ -74,6 +75,6 @@ def compute(inp: JourneyDeratingInputs) -> JourneyDeratingResult:
     if cap is None:
         raise TypeError("journey_derating needs a capacity result returned by barge_capacity.compute "
                         "or gas_arrangement.fit: the Rust core recomputes it from its inputs")
-    args = {f.name: getattr(inp, f.name) for f in fields(inp) if f.name != "capacity"}
+    args = _bridge.encode_fields(inp, exclude=("capacity",))
     return _call("journey_derating", "compute", {"capacity_inputs": cap, "inputs": args},
                  JourneyDeratingResult)

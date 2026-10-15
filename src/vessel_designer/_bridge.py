@@ -7,7 +7,9 @@ does not live in Python any more.
 
 Conventions:
 
-- a whole number given for a float field is sent as a float, as the dataclass declares;
+- a whole number given for a float field is sent as a float, as the dataclass declares, and a
+  whole float given for an int field is sent as an int;
+- numpy scalars and arrays are turned into plain Python numbers and lists first;
 - NaN and infinity travel as the strings "float:nan", "float:inf" and "float:-inf";
 - an error the core reports comes back as the Python exception of the same class and message.
 """
@@ -18,6 +20,7 @@ import dataclasses
 import enum
 import json
 import math
+import numbers
 import typing
 from functools import lru_cache
 
@@ -31,32 +34,66 @@ def _hints(cls):
     return typing.get_type_hints(cls)
 
 
-def _is_float_hint(hint) -> bool:
-    if hint is float:
-        return True
+def _hint_members(hint):
+    """The types a hint allows: `Optional[float]` gives (float, NoneType)."""
     if typing.get_origin(hint) is typing.Union:
-        return any(a is float for a in typing.get_args(hint))
-    return False
+        return typing.get_args(hint)
+    return (hint,)
+
+
+def _is_float_hint(hint) -> bool:
+    return float in _hint_members(hint)
+
+
+def _is_int_hint(hint) -> bool:
+    members = _hint_members(hint)
+    return int in members and float not in members
+
+
+def _plain(value):
+    """A Python number, bool or list for a numpy scalar or array (and for any other
+    `numbers.Real`); every other value comes back as it is."""
+    if isinstance(value, (bool, int, float, str, list, tuple, dict)) or value is None:
+        return value
+    if type(value).__module__ == "numpy":
+        if getattr(value, "shape", ()) == ():
+            return value.item()
+        return value.tolist()
+    if isinstance(value, numbers.Integral):
+        return int(value)
+    if isinstance(value, numbers.Real):
+        return float(value)
+    return value
+
+
+def _number(value, hint):
+    """A number cast to the type its hint declares: a whole number given for a float is a float,
+    a whole float or a bool given for an int is an int (as 0.1.0 accepted them)."""
+    if isinstance(value, float):
+        if math.isnan(value):
+            return "float:nan"
+        if math.isinf(value):
+            return "float:inf" if value > 0 else "float:-inf"
+        if _is_int_hint(hint) and value.is_integer():
+            return int(value)
+        return value
+    if _is_float_hint(hint):
+        return float(value)
+    return int(value) if isinstance(value, bool) and _is_int_hint(hint) else value
 
 
 def encode(value, hint=None):
-    """Plain JSON data for a value: dataclasses become objects, enums their value."""
+    """Plain JSON data for a value: dataclasses become objects, enums their value. Numbers are
+    cast by the type hint; numpy scalars and arrays become plain Python values."""
+    value = _plain(value)
     if dataclasses.is_dataclass(value) and not isinstance(value, type):
         hints = _hints(type(value))
         return {f.name: encode(getattr(value, f.name), hints.get(f.name))
                 for f in dataclasses.fields(value)}
     if isinstance(value, enum.Enum):
         return value.value
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, int):
-        return float(value) if _is_float_hint(hint) else value
-    if isinstance(value, float):
-        if math.isnan(value):
-            return "float:nan"
-        if math.isinf(value):
-            return "float:inf" if value > 0 else "float:-inf"
-        return value
+    if isinstance(value, (bool, int, float)):
+        return _number(value, hint)
     if isinstance(value, (list, tuple)):
         item = None
         args = typing.get_args(hint) if hint is not None else ()
@@ -67,6 +104,13 @@ def encode(value, hint=None):
     if isinstance(value, dict):
         return {str(k): encode(v) for k, v in value.items()}
     return value
+
+
+def encode_fields(obj, exclude=()) -> dict:
+    """`encode(obj)` without the named fields."""
+    hints = _hints(type(obj))
+    return {f.name: encode(getattr(obj, f.name), hints.get(f.name))
+            for f in dataclasses.fields(obj) if f.name not in exclude}
 
 
 def decode(hint, data):
@@ -125,8 +169,12 @@ def raw(entry_point: str, fn: str, args: dict):
 def encode_args(args: dict, int_ok=()) -> dict:
     """The JSON for a call's arguments. A whole number given for a float argument goes as a float
     (the core reads floats strictly); `int_ok` names the arguments where Python keeps an int."""
-    return {k: (float(v) if type(v) is int and k not in int_ok else encode(v))
-            for k, v in args.items()}
+    out = {}
+    for k, v in args.items():
+        v = _plain(v)
+        out[k] = (float(v) if type(v) is int and k not in int_ok
+                  else encode(v))
+    return out
 
 
 def call(entry_point: str, fn: str, args: dict, result=None, int_ok=()):
