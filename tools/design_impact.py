@@ -61,9 +61,46 @@ def _inputs(cargo, containment, formation, loa, beam, depth, **more):
     return d
 
 
+GAS_CARGOES = ("LNG", "LNG_ethane", "LPG_propane", "LPG_butane", "LPG_mix")
+# The CN note gives no depth. Draught plus this many metres is a stand-in that keeps the set stable.
+CN_DEPTH_ABOVE_DRAUGHT_M = 1.5
+DEPTH_NOTE = (f"The CN-derived cases take their length, beam, draught and speed from a published draft note. "
+              f"The note gives no moulded depth, so each uses the draught plus {CN_DEPTH_ABOVE_DRAUGHT_M:g} m "
+              f"as a stand-in. They are sweep points, not calibration comparisons.")
+
+# One case for each optional input, on a hull where the input moves a result. Each entry:
+# (case name, cargo, containment, formation, loa, beam, depth, extra inputs).
+_CHANNEL = {"channel_depth_m": 5.0, "channel_bottom_width_m": 60.0}
+_DEEP_CHANNEL = {"channel_depth_m": 3.0, "channel_bottom_width_m": 30.0}      # shallow and narrow
+OPTIONAL_INPUT_CASES = (
+    ("block_coefficient", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
+     {"block_coefficient": 0.7}),
+    ("min_freeboard_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5, {"min_freeboard_m": 0.9}),
+    ("lightship_factor_t_per_m3", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"lightship_factor_t_per_m3": 0.2}),
+    ("propulsive_efficiency", "bauxite", "box_hold", "self_propelled", 90.0, 14.0, 4.5,
+     {"propulsive_efficiency": 0.55, "max_speed_kn": 9.0}),
+    ("air_draft_limit_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5, {"air_draft_limit_m": 6.0}),
+    ("channel_current_kn", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {**_DEEP_CHANNEL, "channel_current_kn": 2.0}),
+    ("channel_bank_slope", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {**_DEEP_CHANNEL, "channel_bank_slope": 2.0}),
+    ("channel_under_keel_clearance_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {**_DEEP_CHANNEL, "channel_under_keel_clearance_m": 0.8}),
+    ("fill_ratio", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"fill_ratio": 0.85}),
+    ("adn_tank_cap_m3", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"ruleset": "ADN_G", "adn_tank_cap_m3": 250.0}),
+)
+
+
 def cases() -> dict[str, dict]:
     """Case name -> typed inputs of one Option. Everything else comes from the Defaults Profile,
-    so a change to the profile moves these designs too."""
+    so a change to the profile moves these designs too.
+
+    The set reaches every cargo, every optional input, dry bulk with a channel, gas designs that
+    pass every check and gas designs that carry nothing. `tests/test_design_impact_cases.py` checks
+    that it keeps doing so when an input or a cargo is added.
+    """
     out: dict[str, dict] = {}
     cal = yaml.safe_load((ROOT / "calibration" / "cases.yaml").read_text(encoding="utf-8"))
     for c in cal["dry_barge"]:
@@ -77,27 +114,57 @@ def cases() -> dict[str, dict]:
     for cargo in ("bulk", "liquid"):
         point = motor["design_points"][cargo]
         for i, (loa, boa, draught, *_rest) in enumerate(point["rows"][:3]):
-            # The note gives no depth: draught plus 1.5 m is a stand-in for a stable case set.
             knots = round(point["speed_kmh"] / 1.852, 1)
+            depth = round(draught + CN_DEPTH_ABOVE_DRAUGHT_M, 2)
             if cargo == "bulk":
                 inp = _inputs("bauxite", "sloped_hopper_hold", "self_propelled", loa, boa,
-                              round(draught + 1.5, 2), draught_limit_m=draught, max_speed_kn=knots)
+                              depth, draught_limit_m=draught, max_speed_kn=knots)
             else:
                 inp = _inputs("LPG_propane", "type_c_tanks", "self_propelled", loa, boa,
-                              round(draught + 1.5, 2), draught_limit_m=draught, max_speed_kn=knots)
-            out[f"calibration CN {cargo} {i + 1} ({loa:g}x{boa:g})"] = inp
-    # A small sweep over vessel kinds, sizes and a channel.
+                              depth, draught_limit_m=draught, max_speed_kn=knots)
+            out[f"sweep CN-derived {cargo} {i + 1} ({loa:g}x{boa:g})"] = inp
+    # A sweep over vessel kinds, sizes, formations and a channel.
     for loa, beam in ((60.0, 10.0), (90.0, 14.0)):
         tag = f"{loa:g}x{beam:g}"
         out[f"sweep box {tag}"] = _inputs("bauxite", "box_hold", "pushed_barge", loa, beam, 4.5)
+        out[f"sweep box self-propelled {tag}"] = _inputs(
+            "bauxite", "box_hold", "self_propelled", loa, beam, 4.5)
         out[f"sweep hopper {tag}"] = _inputs(
             "bauxite", "sloped_hopper_hold", "self_propelled", loa, beam, 4.5)
+        out[f"sweep hopper pushed {tag}"] = _inputs(
+            "bauxite", "sloped_hopper_hold", "pushed_barge", loa, beam, 4.5)
+        out[f"sweep box channel {tag}"] = _inputs(
+            "bauxite", "box_hold", "pushed_barge", loa, beam, 4.5, **_CHANNEL)
+        out[f"sweep hopper channel {tag}"] = _inputs(
+            "bauxite", "sloped_hopper_hold", "self_propelled", loa, beam, 4.5, max_speed_kn=9.0,
+            channel_current_kn=1.5, **_CHANNEL)
         for ruleset in ("IGC_2G", "IGC_2G_EXACT", "ADN_G"):
             out[f"sweep gas {ruleset} {tag}"] = _inputs(
                 "LPG_propane", "type_c_tanks", "self_propelled", loa, beam, 5.5, ruleset=ruleset)
         out[f"sweep gas channel {tag}"] = _inputs(
             "LNG", "type_c_tanks", "pushed_barge", loa, beam, 6.0, draught_limit_m=3.5,
             channel_depth_m=5.0, channel_bottom_width_m=60.0, optimise_depth=True)
+    # Every gas cargo (the sweep above uses only propane and LNG).
+    for cargo in GAS_CARGOES:
+        out[f"sweep gas cargo {cargo}"] = _inputs(
+            cargo, "type_c_tanks", "self_propelled", 90.0, 14.0, 5.5, max_speed_kn=9.0)
+        out[f"sweep gas cargo {cargo} pushed"] = _inputs(
+            cargo, "type_c_tanks", "pushed_barge", 90.0, 14.0, 6.0)
+    # Gas designs that pass every check, so a change to a check's wording or limit shows.
+    out["sweep gas passes all checks IGC_2G 110x11.4"] = _inputs(
+        "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, ruleset="IGC_2G")
+    out["sweep gas passes all checks ADN_G 80x14"] = _inputs(
+        "LPG_propane", "type_c_tanks", "self_propelled", 80.0, 14.0, 4.5, ruleset="ADN_G")
+    # Designs that carry nothing: the messages are results too.
+    out["sweep gas carries nothing (hull too short)"] = _inputs(
+        "LPG_propane", "type_c_tanks", "self_propelled", 12.0, 4.0, 2.0)
+    out["sweep gas carries nothing (draught limit)"] = _inputs(
+        "LPG_propane", "type_c_tanks", "self_propelled", 90.0, 14.0, 5.5, draught_limit_m=0.5)
+    out["sweep box lightship over the draught limit"] = _inputs(
+        "bauxite", "box_hold", "pushed_barge", 60.0, 10.0, 4.5, draught_limit_m=0.3)
+    # One case for each optional input.
+    for name, cargo, containment, formation, loa, beam, depth, extra in OPTIONAL_INPUT_CASES:
+        out[f"sweep optional {name}"] = _inputs(cargo, containment, formation, loa, beam, depth, **extra)
     return out
 
 
@@ -152,11 +219,13 @@ def show(v) -> str:
     if v is None:
         return "none"
     if isinstance(v, float):
-        return f"{v:.6g}"
+        return f"{v:.12g}"          # more than the 1e-9 tolerance needs, so a 1e-6 move shows
     return str(v)
 
 
 def change(a, b) -> str:
+    if is_number(a) and is_number(b) and isinstance(a, float) != isinstance(b, float) and a == b:
+        return f"{type(a).__name__} to {type(b).__name__}"
     if isinstance(a, (int, float)) and isinstance(b, (int, float)) \
             and not isinstance(a, bool) and not isinstance(b, bool):
         if a == 0:
@@ -165,11 +234,18 @@ def change(a, b) -> str:
     return "changed"
 
 
+def is_number(v) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
 def same(a, b) -> bool:
-    """Equal, with numbers compared at the project tolerance (relative and absolute 1e-9)."""
+    """Equal, with numbers compared at the project tolerance (relative and absolute 1e-9).
+    A change of type, int to float or back, is a change: it changes the results hash."""
     if isinstance(a, bool) or isinstance(b, bool):
         return a == b and type(a) is type(b)
     if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        if isinstance(a, float) != isinstance(b, float):
+            return False
         return math.isclose(a, b, rel_tol=1e-9, abs_tol=1e-9)
     return a == b
 
@@ -221,11 +297,11 @@ def report_text(total: int, rows: list[dict], base: str, head: str) -> tuple[str
     moved = sorted({r["case"] for r in rows})
     if not rows:
         return (f"## Design impact\n\nno design change: {total} case designs give identical results "
-                f"on `{base}` and on `{head}`.\n"), ""
+                f"on `{base}` and on `{head}`.\n\n{DEPTH_NOTE}\n"), ""
     t = table(rows)
     return (f"## Design impact\n\n**design change**: {len(moved)} of {total} case designs moved "
             f"({len(rows)} quantities) between `{base}` and `{head}`. Labelled `{LABEL}`; no "
-            f"sign-off is needed.\n\n{t}\n"), t
+            f"sign-off is needed.\n\n{t}\n\n{DEPTH_NOTE}\n"), t
 
 
 # --- finding and building the two binaries ------------------------------------------------------

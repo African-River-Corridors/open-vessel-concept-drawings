@@ -45,7 +45,7 @@ def test_the_case_set_covers_the_calibration_vessels_and_a_sweep():
     cs = di.cases()
     assert len(cs) >= 25
     assert any(k.startswith("calibration para-mississippi") for k in cs)
-    assert any(k.startswith("calibration CN liquid") for k in cs)
+    assert any(k.startswith("sweep CN-derived liquid") for k in cs)
     assert any(k.startswith("sweep gas ADN_G") for k in cs)
     for typed in cs.values():           # the six required inputs, so `ovcd fill` can complete the rest
         for key in ("cargo", "hull_form", "formation", "length_overall_m", "beam_m", "moulded_depth_m"):
