@@ -43,11 +43,13 @@ def test_maturin_builds_ovcd_py_as_a_submodule_of_the_package():
 
 
 def test_numpy_is_not_a_dependency():
-    # Neither the package nor any extra needs numpy (it was only for the old parity oracle).
+    # The package needs no numpy, and no extra for users does. Only the `dev` extra (the test
+    # tools) has it, because tests/test_api_ints_numpy.py passes numpy numbers to the API.
     proj = pyproject()["project"]
     extras = proj.get("optional-dependencies", {})
-    everything = proj["dependencies"] + [d for ds in extras.values() for d in ds]
+    everything = proj["dependencies"] + [d for k, ds in extras.items() if k != "dev" for d in ds]
     assert not [d for d in everything if re.match(r"numpy\b", d, re.I)]
+    assert [d for d in extras["dev"] if re.match(r"numpy\b", d, re.I)], "tests need numpy"
 
 
 def test_no_package_module_imports_numpy():
