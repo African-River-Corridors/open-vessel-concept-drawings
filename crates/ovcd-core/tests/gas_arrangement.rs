@@ -320,3 +320,38 @@ fn a_zero_capacity_arrangement_is_infeasible_and_carries_nothing() {
         f.failed_checks
     );
 }
+
+// Label: property. These two tests state the facts that make the guard `cs < 0.0` in `fit` (issue
+// #59) an equivalent mutant; the reasoning is in the comment at that line.
+//
+// Worked out for the first: with a cap of 5 m and two tanks across, `cs` is
+// (6 - 2 * 5) / 2 = -2 m, below zero. A 15 m hull has no room for tank heads, so the full-beam
+// tank has no usable diameter and the guard is reached. No arrangement can be made, so the hull is
+// reported infeasible with no capacity and no tank.
+#[test]
+fn a_hull_too_narrow_for_tanks_at_the_cap_gets_no_candidate() {
+    let o = FitOptions {
+        max_tank_od_m: 5.0,
+        tanks_wide: vec![2],
+        ..FitOptions::default()
+    };
+    let f = fit(15.0, 6.0, "LNG", 3.0, &o).unwrap();
+    assert!(!f.feasible);
+    assert_eq!(f.volume_capacity_t, 0.0);
+    assert_eq!(f.tank_od_m, 0.0);
+    assert_eq!(f.binding, "no cargo area");
+}
+
+// Worked out: IGC_2G needs the d(V) of the rule, at least 0.8 m; IGC_2G_EXACT needs d(V) less the
+// insulation, 0.8 m less 0.35 m = 0.45 m at least (the insulation is fixed at 350 mm). Either is
+// above any negative clearance.
+#[test]
+fn the_side_clearance_rule_is_never_below_0_45_m() {
+    for ruleset in RULESETS {
+        for total_m3 in [0.0, 1.0, 500.0, 2_000.0, 10_000.0, 100_000.0] {
+            let per_tank = total_m3 / 2.0;
+            let need = required_side_clearance(ruleset, 6.0, total_m3, per_tank, 350.0).unwrap();
+            assert!(need >= 0.45 - 1e-12, "{ruleset} {total_m3}: {need}");
+        }
+    }
+}

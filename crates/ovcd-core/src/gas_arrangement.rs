@@ -284,6 +284,19 @@ impl Search<'_> {
             // Full-beam tank infeasible or over the cap: put the tank ON the cap and widen the
             // clearance: a legitimate design only if that clearance meets the rule.
             let cs = (self.beam - nw as f64 * self.o.max_tank_od_m) / 2.0;
+            // Mutation survivor (#59), `cs < 0.0` to `cs == 0.0`: equivalent. `cs` is negative only
+            // when the beam is under `nw` tank diameters at the cap. A full-beam tank over the cap
+            // needs a beam over `nw` caps, so a negative `cs` is reached only with an unusable
+            // full-beam tank of zero diameter (the tanks do not fit the hull). Under the mutant
+            // the negative clearance goes on to `capacity`, which cannot make a tank over the cap
+            // (the diameter is then at most the cap) and a candidate with it is turned down by
+            // the rule check below: the rule needs at least 0.45 m (`d(V)` is at least 0.8 m, the
+            // insulation is the fixed 350 mm), and `cs + 1e-9 < need` holds for every negative
+            // `cs`. So `None` comes back either way. Searched with the mutant built in: 15 000
+            // random inputs (both rulesets, caps 0.2 to 8.2 m, beams 0.3 to 14.3 m, 1 to 5 tanks
+            // wide), the branch reached in at least 10 068 of them, no difference in any field.
+            // `a_hull_too_narrow_for_tanks_at_the_cap_gets_no_candidate` and
+            // `the_side_clearance_rule_is_never_below_0_45_m` guard the two facts this rests on.
             if cs < 0.0 {
                 return Ok(None);
             }
