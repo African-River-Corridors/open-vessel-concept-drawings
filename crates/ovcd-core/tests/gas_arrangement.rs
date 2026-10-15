@@ -261,3 +261,34 @@ fn no_feasible_fit_has_a_tank_longer_than_seven_diameters() {
         "only {refused_for_slenderness} refused"
     );
 }
+
+// Label: property. This test states a rule of the bisection, with the lengths it relies on checked
+// in the test itself, not a printed number.
+//
+// Issue #57: `smallest_viable_loa` must treat a length with exactly zero capacity as NOT viable
+// (`volume_capacity_t > 0.0`). The mutant `>=` would treat it as viable.
+//
+// Worked out. Beam 12 m, LNG, draught cap 3 m, search range 10 m to 60 m:
+//  - the first midpoint is 0.5 * (10 + 60) = 35 m;
+//  - at 35 m the hull has no cargo area, so the capacity is exactly 0.0 (asserted below);
+//  - at 60 m the capacity is positive (asserted below), so the search does not return infinity;
+//  - the real code therefore moves `lo` up to 35 and can only return a length above 35 m;
+//  - the mutant would move `hi` down to 35 and keep halving towards 10 m, so it could only return
+//    a length at most 35 m (it would stop at 10.1 m).
+// The answer must lie above the last length known to have zero capacity (35 m) and at most the
+// first length known to have capacity (40 m, asserted below).
+#[test]
+fn the_bisection_treats_a_zero_capacity_midpoint_as_not_viable() {
+    let o = FitOptions::for_smallest_viable_loa();
+    let cap = |loa: f64| fit(loa, 12.0, "LNG", 3.0, &o).unwrap().volume_capacity_t;
+    assert_eq!(
+        cap(35.0),
+        0.0,
+        "35 m (the first midpoint) must have exactly zero capacity"
+    );
+    assert!(cap(40.0) > 0.0);
+    assert!(cap(60.0) > 0.0);
+    let loa = smallest_viable_loa(12.0, "LNG", 3.0, 10.0, 60.0, &o).unwrap();
+    assert!(loa > 35.0 && loa <= 40.0, "got {loa}");
+    assert!(cap(loa) > 0.0);
+}
