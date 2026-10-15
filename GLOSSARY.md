@@ -8,9 +8,16 @@ concept General Arrangements, characteristics, tonnage, power and cost — check
 ### Catalogue
 
 **Vessel Class**:
-A standard envelope from a published scheme or a recognised size band (e.g. CEMT Va, US jumbo hopper),
-giving ranges for length, beam, draught, air draft and deadweight.
+A standard size envelope from a Class Scheme or a recognised size band (e.g. CEMT Va, US jumbo hopper).
+It sets maximum length and beam, and where the scheme gives them, draught, air draft and deadweight. A
+vessel sits in the smallest class of its scheme whose length and beam maxima it fits.
 _Avoid_: type, category, standard (on its own)
+
+**Class Scheme**:
+A published family of Vessel Classes ordered by size (e.g. CEMT, GB 38030). A vessel is classed within
+one scheme at a time; growing or shrinking moves it between classes of that scheme, never to another
+scheme.
+_Avoid_: standard (on its own), class system
 
 **Reference Vessel**:
 A real, built vessel with published particulars, filed under one or more Vessel Classes.
@@ -60,6 +67,11 @@ The named set of default input values and allowed input ranges used when an Opti
 out. Each range is hard (the input is refused) or soft (the input is accepted with a warning).
 _Avoid_: settings, config (on its own)
 
+**Moulded Depth**:
+The depth of a Hull from the top of the keel to the main deck at the side, at mid-length. Not the hold
+depth, which is less by the double bottom.
+_Avoid_: depth (on its own), hold depth, hull height
+
 **Calibration**:
 Running the design calculations from a Reference Vessel's inputs and comparing the results with its
 published particulars, to measure and correct the calculation logic.
@@ -67,7 +79,7 @@ _Avoid_: validation, tuning
 
 **Calibration Band**:
 The accepted range around a Reference Vessel's published figure (e.g. lightship ±20 %). A Calibration
-result outside its band is either accepted with a reason or logged as a bug.
+result outside its band is flagged with a warning, then either accepted with a reason or logged as a bug.
 _Avoid_: tolerance, error margin
 
 **General Arrangement (GA)**:
