@@ -10,6 +10,7 @@ from vessel_designer.core import ga_adapter, gas_stability, journey_derating as 
 
 def test_journey_derating_after_the_inputs_object_was_reused():
     # ce96e66: capacity, achievable tonnage per loa
+    """Label: snapshot"""
     expected = {60.0: (1999.8456839999994, 1999.8456839999994),
                 80.0: (3355.305684, 3355.305684),
                 100.0: (4710.765684, 4569.524600031882)}
@@ -26,6 +27,7 @@ def test_journey_derating_after_the_inputs_object_was_reused():
 
 def test_gas_stability_assess_after_the_inputs_object_was_reused():
     # ce96e66: GM fluid of the Laden, Half laden and Light conditions, payload 1500 t
+    """Label: snapshot"""
     expected = {90.0: (4.496070691510841, 6.706438965623047, 11.201087654316286),
                 70.0: (3.929578290990053, 6.178009228238304, 12.235044383044745)}
     inp = B.BargeCapacityInputs(loa=90.0, beam=14.8, depth=6.5, cargo_type="LPG_propane")
@@ -40,6 +42,7 @@ def test_gas_stability_assess_after_the_inputs_object_was_reused():
 
 def test_is_gas_after_the_inputs_object_was_reused():
     # ce96e66: is_gas reads the result's phase
+    """Label: snapshot"""
     inp = B.BargeCapacityInputs(loa=90.0, beam=14.8, depth=6.5, cargo_type="LPG_propane")
     gas = B.compute(inp)
     inp.cargo_type = "bauxite"

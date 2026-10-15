@@ -19,6 +19,7 @@
   - A numpy `float32` input is computed in float64 and returns a Python float. 0.1.0 did the sums in float32 and returned a numpy float32, so its answer differed in the last digits.
   - A float that is not whole in an int field (`n_holds=4.5`) raises `TypeError`. 0.1.0 let it through and often ignored it.
 - Fix: publishing the app installers now needs `test` and `release-guard` to pass on a tagged commit that is on `main`, and runs the release gate (wheels, binaries, pytest on each system) first. No calculation result changes.
+- Tests: `tests/test_test_labels.py` requires a `Label: sourced|snapshot|property` line on every Python calculation test, and on new Rust test files that hold fixed numbers. The PR template asks whether a sourced test changed; build-process.md says how a snapshot is re-pinned. No result changes (#141).
 - Docs: build notes go in a closing comment on the ticket and PR evidence must be reachable; squash merges use `--author-email`; CONTRIBUTING matches the real branch protection (#140, #136). No code or result changes.
 - Tests: two new `gas_arrangement` tests kill two mutation survivors from PR #56 (values from the original Python at `ce96e66`); the other two are recorded as equivalent in the code. No calculation or result changes (#146).
 - Docs: ADR 0007, spec 0001, the help text and the profile say a `.vdesign` file is SI except speeds, which are in knots (`max_speed_kn`, `channel_current_kn`). No format change; no calculation result changes (#134).

@@ -15,3 +15,4 @@ Filled in by CI (the `Design impact` section): "no design change", or a before/a
 - [ ] `bash tools/gates.sh` passes (fast gate: Rust, design impact, pytest)
 - [ ] `python tools/release_guard.py` passes
 - [ ] New calculations have golden, property and feasibility tests, with sources cited
+- Sourced tests changed: none / list each (a `Label: sourced` test changes only with its source named)

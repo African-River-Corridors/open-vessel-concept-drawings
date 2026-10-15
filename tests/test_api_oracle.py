@@ -58,6 +58,7 @@ CASES = [(name, mode) for name in S.SCENARIOS for mode in S.MODES]
 
 @pytest.mark.parametrize("name,mode", CASES, ids=[f"{n}[{m}]" for n, m in CASES])
 def test_the_api_gives_the_answers_of_0_1_0(name, mode):
+    """Label: snapshot"""
     expected = EXPECTED[name].get(mode, EXPECTED[name]["float"])
     actual = S.run("vessel_designer", mode, name)
     if name in KNOWN_DIFFERENCES:
@@ -66,22 +67,26 @@ def test_the_api_gives_the_answers_of_0_1_0(name, mode):
 
 
 def test_the_fixture_and_the_scenarios_list_the_same_cases():
+    """Label: property"""
     assert sorted(EXPECTED) == sorted(S.SCENARIOS)
     assert len(EXPECTED) >= 60
 
 
 def test_no_scenario_raised_in_0_1_0():
     # A scenario that errors in the original is a broken scenario, not an expectation.
+    """Label: property"""
     raised = [(n, m) for n, modes in EXPECTED.items() for m, r in modes.items() if "raised" in r]
     assert raised == []
 
 
 def test_no_scenario_is_vacuous():
+    """Label: property"""
     empty = [n for n, modes in EXPECTED.items() if modes["float"]["ok"] in (None, [], {})]
     assert empty == []
 
 
 def test_every_public_function_is_called_by_a_scenario():
+    """Label: property"""
     needed = {"simulate." + n for n, v in API["vessel_designer.simulate"].items() if v["kind"] == "function"}
     for module, names in API.items():
         if not module.startswith("vessel_designer.core."):
@@ -98,6 +103,7 @@ def test_every_public_function_is_called_by_a_scenario():
 
 
 def test_the_modes_really_hand_over_the_numbers_they_name():
+    """Label: property"""
     ints = S.Ctx("vessel_designer", "int")
     assert type(ints.n(90.0)) is int and type(ints.n(0.5)) is float and type(ints.k(2)) is int
     np_ints = S.Ctx("vessel_designer", "np.int64")

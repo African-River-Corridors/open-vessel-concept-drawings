@@ -23,17 +23,20 @@ BOX = dict(vessel="box_barge", cargo="bauxite", loa_m=76.5, beam_m=11.4, depth_m
     (True, "Unknown ruleset True."), (["a", 1], "Unknown ruleset ['a', 1]."),
 ])
 def test_simulate_reports_a_ruleset_that_is_not_text_as_unknown(ruleset, text):
+    """Label: property"""
     assert simulate(dict(CN_II, ruleset=ruleset)) == {"error": text}          # ce96e66
 
 
 @pytest.mark.parametrize("text", ["80", "  80 ", "8e1", "٨٠"])
 def test_simulate_reads_numbers_written_as_text(text):
+    """Label: snapshot"""
     out = simulate(dict(CN_II, loa_m=text))
     assert out["dims"]["loa_m"] == 80.0                                         # ce96e66
     assert out["results"]["cargo_t"] == pytest.approx(1986.5486284249137, rel=1e-9, abs=1e-9)
 
 
 def test_simulate_reads_every_number_as_text():
+    """Label: snapshot"""
     out = simulate(dict(CN_II, beam_m="14.8", draught_limit_m="4.4", fill_ratio="0.95"))
     assert out["results"]["cargo_t"] == pytest.approx(2058.228164213275, rel=1e-9, abs=1e-9)   # ce96e66
     out = simulate(dict(BOX, lightship_k_t_per_m3="0.1093"))
@@ -44,12 +47,14 @@ def test_simulate_reads_every_number_as_text():
 
 @pytest.mark.parametrize("text", ["0x10", "", "80,5"])
 def test_simulate_refuses_text_that_is_not_a_number_as_python_did(text):
+    """Label: property"""
     with pytest.raises(ValueError) as e:
         simulate(dict(CN_II, loa_m=text))
     assert str(e.value) == f"could not convert string to float: {text!r}"       # ce96e66
 
 
 def test_required_side_protection_wants_the_enum():
+    """Label: snapshot"""
     with pytest.raises(ValueError) as e:
         PL.required_side_protection("IGC_2G", 14.8, 1.0)
     assert str(e.value) == "Unknown vessel type: IGC_2G"                         # ce96e66
@@ -61,12 +66,14 @@ def test_required_side_protection_wants_the_enum():
 
 def test_required_bottom_protection_counts_only_the_enum_as_adn():
     # ce96e66: text "ADN_G" is not the member, so the general formula applies (1.0, not 1.1)
+    """Label: snapshot"""
     assert PL.required_bottom_protection(14.8, 1.0, "ADN_G") == 1.0
     assert PL.required_bottom_protection(14.8, 1.0, PL.VesselType.ADN_G) == pytest.approx(1.1)
 
 
 @pytest.mark.parametrize("key", [5, None])
 def test_get_cargo_with_a_key_that_is_not_text_is_a_value_error(key):
+    """Label: property"""
     with pytest.raises(ValueError) as e:
         cargo.get_cargo(key)
     assert str(e.value) == (f"Unknown cargo type '{key}'. Valid types: LNG, LNG_ethane, "
@@ -74,17 +81,20 @@ def test_get_cargo_with_a_key_that_is_not_text_is_a_value_error(key):
 
 
 def test_get_cargo_with_an_unhashable_key_is_a_type_error():
+    """Label: snapshot"""
     with pytest.raises(TypeError, match="unhashable type: 'list'"):                # ce96e66
         cargo.get_cargo([1])
 
 
 def test_smallest_viable_loa_names_the_keyword_it_does_not_know():
+    """Label: property"""
     with pytest.raises(TypeError) as e:
         gas_arrangement.smallest_viable_loa(14.8, "LPG_propane", 4.4, depth=6.5)
     assert str(e.value) == "fit() got an unexpected keyword argument 'depth'"      # ce96e66
 
 
 def test_capacity_takes_nan_and_infinity_as_0_1_0_did():
+    """Label: snapshot"""
     nan, inf = float("nan"), float("inf")
     bulk = dict(beam=16.0, depth=6.0, cargo_type="bauxite")
     assert B.compute(B.BargeCapacityInputs(loa=nan, **bulk)).cargo_capacity_t == 0.0     # ce96e66
@@ -97,6 +107,7 @@ def test_capacity_takes_nan_and_infinity_as_0_1_0_did():
 
 def test_the_core_modules_no_longer_claim_to_run_in_pyodide():
     # Issue #142: these modules call the Rust core now.
+    """Label: property"""
     from pathlib import Path
     core = Path(__file__).resolve().parents[1] / "src" / "vessel_designer" / "core"
     names = ("barge_cost", "design_grid", "electric_energy", "gas_separation", "squat", "waves",
