@@ -11,6 +11,9 @@ If anything moved, the report holds a before/after table.
     python3 tools/design_impact.py gate                        report, and fail when a change is
                                                                missing from CHANGELOG.md
     python3 tools/design_impact.py changelog [--key NAME]      write the table into CHANGELOG.md
+    python3 tools/design_impact.py publish-artifact DIR --head-sha SHA --head-repo OWNER/NAME
+                                                               publish a report built by a pull request
+                                                               workflow (used for fork pull requests)
 
 The report goes to target/design-impact/report.md (and summary.json), is printed, and is added to
 the GitHub step summary when there is one. `--publish` puts it into the pull request body between
@@ -308,6 +311,7 @@ def publish(text: str, moved: bool, pr: int) -> None:
     block = f"{START}\n{text.rstrip()}\n{END}"
     pattern = re.compile(re.escape(START) + r".*?" + re.escape(END), re.S)
     new = pattern.sub(lambda _m: block, body) if pattern.search(body) else (body.rstrip() + "\n\n" + block + "\n")
+    OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / "body.md"
     path.write_text(new, encoding="utf-8")
     subprocess.run(["gh", "pr", "edit", str(pr), "--body-file", str(path)], cwd=ROOT, check=True)
@@ -318,6 +322,77 @@ def publish(text: str, moved: bool, pr: int) -> None:
     else:
         subprocess.run(["gh", "pr", "edit", str(pr), "--remove-label", LABEL], cwd=ROOT,
                        capture_output=True)
+
+
+# --- publishing a report built by an untrusted run (fork pull requests) --------------------------
+# The `Design impact` workflow runs the pull request's own code with a read-only token and keeps
+# report.md, summary.json and pr.txt as an artifact. A second workflow (`workflow_run`, with a write
+# token, running THIS file from the default branch) calls `publish-artifact`. The artifact is data
+# from an untrusted run: it is size-limited, checked for shape and made harmless before use, and it
+# must belong to the pull request that the run was started for.
+
+MAX_REPORT_CHARS = 60_000                    # a pull request body is limited to 65,536
+ARTIFACT_FILES = ("report.md", "summary.json", "pr.txt")
+
+
+def load_artifact(directory: Path) -> tuple[str, bool, int]:
+    """(report text, whether designs moved, pull request number) from an untrusted artifact.
+    Raises SystemExit on anything that is not exactly the expected shape."""
+    def bad(why: str):
+        raise SystemExit(f"design_impact: artifact rejected: {why}")
+
+    for name in ARTIFACT_FILES:
+        f = directory / name
+        if f.is_symlink() or not f.is_file():
+            bad(f"{name} is missing or is not a plain file")
+        if f.stat().st_size > 4 * MAX_REPORT_CHARS:
+            bad(f"{name} is too large")
+    raw_pr = (directory / "pr.txt").read_text(encoding="utf-8").strip()
+    if not re.fullmatch(r"[1-9][0-9]{0,8}", raw_pr):
+        bad("pr.txt is not a pull request number")
+    try:
+        summary = json.loads((directory / "summary.json").read_text(encoding="utf-8"))
+    except ValueError:
+        bad("summary.json is not JSON")
+    if not isinstance(summary, dict) or not isinstance(summary.get("moved"), bool):
+        bad("summary.json has no boolean `moved`")
+    text = (directory / "report.md").read_text(encoding="utf-8")
+    if len(text) > MAX_REPORT_CHARS:
+        bad("report.md is too long")
+    if not text.startswith("## Design impact\n"):
+        bad("report.md does not start with the Design impact heading")
+    return harmless(text), summary["moved"], int(raw_pr)
+
+
+def harmless(text: str) -> str:
+    """The report is written by the pull request's code, so it may not carry markers that would
+    break out of its block, control characters, or an @mention that notifies someone."""
+    text = text.replace(START, "").replace(END, "")
+    text = "".join(c for c in text if c in "\n\t" or ord(c) >= 32)
+    return re.sub(r"@(?=[A-Za-z0-9_])", "@\u200b", text)
+
+
+def publish_artifact(directory: Path, head_sha: str, head_repo: str) -> None:
+    """Publish the report in `directory` to the pull request it names, if that pull request's head is
+    the commit (and repository) that the workflow run was made for. Needs GH_TOKEN."""
+    text, moved, pr = load_artifact(directory)
+    repo = os.environ.get("GITHUB_REPOSITORY") or ""
+    if not re.fullmatch(r"[\w.-]+/[\w.-]+", repo):
+        raise SystemExit("design_impact: GITHUB_REPOSITORY is not set")
+    r = subprocess.run(["gh", "api", f"repos/{repo}/pulls/{pr}", "--jq",
+                        '[.state, .head.sha, .head.repo.full_name // ""] | @tsv'],
+                       cwd=ROOT, capture_output=True, text=True)
+    if r.returncode != 0:
+        raise SystemExit(f"design_impact: cannot read pull request {pr}: {r.stderr.strip()}")
+    state, sha, repo_of_head = (r.stdout.strip().split("\t") + ["", "", ""])[:3]
+    if state != "open":
+        print(f"design_impact: pull request {pr} is {state}; nothing to publish")
+        return
+    if sha != head_sha or repo_of_head != head_repo:
+        print(f"design_impact: pull request {pr} has moved on (head {sha[:7]}, run was for {head_sha[:7]}); "
+              "a newer run will publish")
+        return
+    publish(text, moved, pr)
 
 
 # --- the changelog ------------------------------------------------------------------------------
@@ -345,11 +420,19 @@ def branch_key() -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("mode", choices=["report", "gate", "changelog"])
+    ap.add_argument("mode", choices=["report", "gate", "changelog", "publish-artifact"])
+    ap.add_argument("artifact_dir", nargs="?", type=Path, help="publish-artifact: the downloaded artifact")
+    ap.add_argument("--head-sha", help="publish-artifact: the commit the workflow run was made for")
+    ap.add_argument("--head-repo", help="publish-artifact: the repository that commit is in")
     ap.add_argument("--publish", action="store_true", help="report: put the report in the PR body and set the label")
     ap.add_argument("--pr", type=int, help="the pull request number for --publish")
     ap.add_argument("--key", help="changelog entry name (default: the branch)")
     args = ap.parse_args()
+    if args.mode == "publish-artifact":
+        if not (args.artifact_dir and args.head_sha and args.head_repo):
+            raise SystemExit("design_impact: publish-artifact needs DIR, --head-sha and --head-repo")
+        publish_artifact(args.artifact_dir, args.head_sha, args.head_repo)
+        return 0
     base, head, total, rows, ahead = measure()
     text, tbl = report_text(total, rows, base, head)
     write_outputs(text, rows)
