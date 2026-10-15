@@ -6,6 +6,7 @@
 //! Floats are shortest round-trip text; NaN and infinity are the tagged strings "float:nan",
 //! "float:inf" and "float:-inf".
 
+use crate::objects::{capacity_result_from_json, tanks_from_json, weights_from_json};
 use ovcd_core::aft_arrangement::{AftArrangementInputs, AftArrangementResult};
 use ovcd_core::barge_capacity::{BargeCapacityInputs, BargeCapacityResult};
 use ovcd_core::barge_cost::{BargeCostInputs, BargeCostRates, BargeCostResult, MappingValue};
@@ -160,11 +161,29 @@ fn py_error(kind: &str, message: String) -> Result<Value, EvalError> {
     Ok(json!({ "error": { "type": kind, "message": message } }))
 }
 
+/// A float as a case writes it: a JSON number, or the tagged text `"float:nan"`, `"float:inf"` or
+/// `"float:-inf"` (JSON has no such numbers).
+pub(crate) fn tagged_f64(v: &Value) -> Option<f64> {
+    match v {
+        Value::Number(n) => n.as_f64(),
+        Value::String(s) => match s.as_str() {
+            "float:nan" => Some(f64::NAN),
+            "float:inf" => Some(f64::INFINITY),
+            "float:-inf" => Some(f64::NEG_INFINITY),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
 /// A float argument. A JSON integer is refused: Python would keep an `int` and may echo it back
 /// as an `int`, which the Rust port does not model, so a case must write `18.0`, not `18`.
 pub(crate) fn f64_arg(args: &Value, name: &str) -> Result<f64, EvalError> {
     match args.get(name) {
         Some(Value::Number(n)) if n.is_f64() => Ok(n.as_f64().unwrap_or(f64::NAN)),
+        Some(v @ Value::String(_)) if tagged_f64(v).is_some() => {
+            Ok(tagged_f64(v).unwrap_or(f64::NAN))
+        }
         _ => Err(EvalError::BadInput(format!(
             "`args.{name}` must be a float (write 18.0, not 18)"
         ))),
@@ -249,8 +268,7 @@ fn f64_field(
 ) -> Result<Option<f64>, EvalError> {
     match inputs.get(name) {
         None => Ok(None),
-        Some(v) => v
-            .as_f64()
+        Some(v) => tagged_f64(v)
             .map(Some)
             .ok_or_else(|| EvalError::BadInput(format!("`inputs.{name}` must be a number"))),
     }
@@ -814,6 +832,16 @@ fn vessel_standards(function: &str, args: &Value) -> Result<Value, EvalError> {
             }
         }
         "validate_catalogue" => {
+            // A whole catalogue the caller passes (any keys, in order) is validated as it is.
+            if let Some(whole) = args.get("catalogue").and_then(Value::as_object) {
+                let mut catalogue: Catalogue = Vec::new();
+                for (key, fields) in whole {
+                    catalogue.push((key.clone(), standard_from_fields(fields)?));
+                }
+                return ok(checks_json(
+                    &ovcd_core::vessel_standards::validate_catalogue(&catalogue),
+                ));
+            }
             let mut catalogue: Catalogue = ovcd_core::vessel_standards::built_in_catalogue();
             if let Some(extra) = args.get("extra").and_then(Value::as_object) {
                 for (key, fields) in extra {
@@ -1098,6 +1126,11 @@ fn opt_f64_field(
     }
 }
 
+/// `BargeInputs` from the plain data of one inputs object (no post-init).
+pub(crate) fn barge_inputs_from(value: &Value) -> Result<BargeInputs, EvalError> {
+    barge_inputs(&json!({ "inputs": value }))
+}
+
 /// `BargeInputs` from plain data, as the Python bridge builds it. The caller runs
 /// `post_init`, as Python's `__post_init__` runs after the constructor.
 fn barge_inputs(args: &Value) -> Result<BargeInputs, EvalError> {
@@ -1303,20 +1336,37 @@ fn barge_chain(
 ) -> Result<(BargeInputs, HullGeometry, TankResult, WeightBreakdown, i128), ChainStop> {
     let mut inputs = barge_inputs(args)?;
     inputs.post_init()?;
-    let rake = |v: Option<f64>, name: &str| {
-        v.ok_or_else(|| EvalError::BadInput(format!("`inputs.{name}` is unset")))
+    // A hull, tank result or weight breakdown the caller passes is used as it is, as in Python.
+    // Only what is missing is derived from the inputs.
+    let hull = match args.get("hull") {
+        Some(_) => hull_arg(args)?,
+        None => {
+            let rake = |v: Option<f64>, name: &str| {
+                v.ok_or_else(|| EvalError::BadInput(format!("`inputs.{name}` is unset")))
+            };
+            HullGeometry::new(
+                inputs.loa,
+                inputs.beam,
+                inputs.depth,
+                inputs.bow_rake_length,
+                rake(inputs.bow_rake_rise, "bow_rake_rise")?,
+                inputs.stern_rake_length,
+                rake(inputs.stern_rake_rise, "stern_rake_rise")?,
+            )
+        }
     };
-    let hull = HullGeometry::new(
-        inputs.loa,
-        inputs.beam,
-        inputs.depth,
-        inputs.bow_rake_length,
-        rake(inputs.bow_rake_rise, "bow_rake_rise")?,
-        inputs.stern_rake_length,
-        rake(inputs.stern_rake_rise, "stern_rake_rise")?,
-    );
-    let (tanks, n_total) = ovcd_core::tanks::calculate_tank_arrangement_wide(&inputs)?;
-    let weights = ovcd_core::weights::calculate_weights(&inputs, &hull, &tanks)?;
+    let (tanks, n_total) = match args.get("tanks") {
+        Some(t) => {
+            let t = tanks_from_json(t, "tanks")?;
+            let n = i128::from(t.n_tanks_total);
+            (t, n)
+        }
+        None => ovcd_core::tanks::calculate_tank_arrangement_wide(&inputs)?,
+    };
+    let weights = match args.get("weights") {
+        Some(w) => weights_from_json(w, "weights")?,
+        None => ovcd_core::weights::calculate_weights(&inputs, &hull, &tanks)?,
+    };
     Ok((inputs, hull, tanks, weights, n_total))
 }
 
@@ -2384,11 +2434,15 @@ fn ga_adapter(function: &str, args: &Value) -> Result<Value, EvalError> {
             "ga_adapter has no function `{function}`"
         )));
     }
+    // A capacity result the caller passes is used as it is. Without one (the parity cases),
+    // Python's `compute` runs first, for both functions.
     let inputs = capacity_inputs(args)?;
-    // Python runs `compute` first, for both functions.
-    let result = match ovcd_core::barge_capacity::compute(&inputs) {
-        Ok(r) => r,
-        Err(e) => return raised_py(&e),
+    let result = match args.get("result") {
+        Some(r) => capacity_result_from_json(r, "result")?,
+        None => match ovcd_core::barge_capacity::compute(&inputs) {
+            Ok(r) => r,
+            Err(e) => return raised_py(&e),
+        },
     };
     if function == "is_gas" {
         return ok(json!(core_ga::is_gas(&result)));

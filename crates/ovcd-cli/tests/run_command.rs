@@ -86,6 +86,27 @@ fn the_summary_names_the_option_and_its_main_numbers() {
 }
 
 #[test]
+fn the_summary_keeps_the_case_of_the_vessel_label() {
+    // Issue #142. The Python label (frozen at ce96e66, vessel_designer.simulate) is
+    // "Box-hold dry bulk barge"; the summary used to lower-case it.
+    let dir = temp_dir("label-case");
+    let out = ovcd(&["run", p(&starter(&dir))]);
+    let v: Value = serde_json::from_str(&stdout(&ovcd(&[
+        "run",
+        "--json",
+        p(&dir.join("starter.vdesign")),
+    ])))
+    .unwrap();
+    let label = v["options"][0]["results"]["vessel"].as_str().unwrap();
+    assert!(label.chars().next().unwrap().is_uppercase(), "{label}");
+    assert!(
+        stdout(&out).contains(&format!(" in a {label} (")),
+        "{}",
+        stdout(&out)
+    );
+}
+
+#[test]
 fn running_the_same_file_twice_gives_the_same_hash() {
     let dir = temp_dir("twice");
     let file = starter(&dir);
@@ -115,7 +136,7 @@ fn run_does_not_change_the_file() {
 }
 
 #[test]
-fn a_tampered_stored_hash_warns_that_results_changed_since_the_engine_version() {
+fn a_tampered_stored_hash_warns_that_results_differ_from_the_saved_hash() {
     let dir = temp_dir("tamper");
     let file = starter(&dir);
     let mut design = read_json(&file);
@@ -126,7 +147,9 @@ fn a_tampered_stored_hash_warns_that_results_changed_since_the_engine_version() 
     assert!(out.status.success(), "{}", stderr(&out));
     let err = stderr(&out);
     assert!(
-        err.contains("results changed since this file was saved with engine version 0.0.7"),
+        err.contains(
+            "results differ from the hash saved in the file (saved with engine version 0.0.7"
+        ),
         "{err}"
     );
     assert!(
@@ -139,7 +162,7 @@ fn a_tampered_stored_hash_warns_that_results_changed_since_the_engine_version() 
     let json_out = ovcd(&["run", "--json", p(&file)]);
     let v: Value = serde_json::from_str(&stdout(&json_out)).unwrap();
     assert_eq!(v["options"][0]["hash_status"], "differs");
-    assert!(stderr(&json_out).contains("results changed since"));
+    assert!(stderr(&json_out).contains("results differ from the hash saved in the file"));
 }
 
 #[test]
@@ -151,7 +174,7 @@ fn an_edited_input_with_the_old_hash_warns_too() {
     write_json(&file, &design);
     let out = ovcd(&["run", p(&file)]);
     assert!(
-        stderr(&out).contains("results changed since"),
+        stderr(&out).contains("results differ from the hash saved in the file"),
         "{}",
         stderr(&out)
     );
@@ -170,13 +193,12 @@ fn a_file_with_no_stored_hash_runs_and_says_so() {
     let out = ovcd(&["run", p(&file)]);
     assert!(out.status.success());
     assert!(stdout(&out).contains("none saved in the file"));
-    assert!(!stderr(&out).contains("results changed"));
+    assert!(!stderr(&out).contains("results differ"));
 }
 
-#[test]
-fn a_convoy_gives_the_not_yet_available_message_and_no_numbers() {
-    let dir = temp_dir("convoy");
-    let file = starter(&dir);
+/// The starter Design with its one Option turned into a pushed convoy, hash removed.
+fn convoy_design(dir: &Path) -> (PathBuf, Value) {
+    let file = starter(dir);
     let mut design = read_json(&file);
     design["options"][0]["inputs"]["formation"] = json!({ "value": { "kind": "pushed_convoy", "abreast": 2, "in_line": 2 }, "source": "typed" });
     design["options"][0]
@@ -184,21 +206,56 @@ fn a_convoy_gives_the_not_yet_available_message_and_no_numbers() {
         .unwrap()
         .remove("results_hash");
     write_json(&file, &design);
+    (file, design)
+}
+
+#[test]
+fn a_convoy_gives_the_not_yet_available_message_and_no_numbers() {
+    // Issue #138: a valid file whose only gap is a convoy exits 0; the message is a warning too.
+    let dir = temp_dir("convoy");
+    let (file, _) = convoy_design(&dir);
     let out = ovcd(&["run", p(&file)]);
-    assert!(!out.status.success(), "a convoy is not computed: exit 1");
+    assert!(
+        out.status.success(),
+        "a convoy alone is not a failure: {}",
+        stderr(&out)
+    );
     let text = stdout(&out);
     assert!(text.contains("convoy results not yet available"), "{text}");
     for number_line in ["Cargo:", "Lightship", "Draught", "Results hash"] {
         assert!(!text.contains(number_line), "{number_line} in:\n{text}");
     }
+    assert!(
+        stderr(&out).contains("warning: Option 'Option 1': convoy results not yet available"),
+        "{}",
+        stderr(&out)
+    );
     let j = ovcd(&["run", "--json", p(&file)]);
+    assert!(j.status.success());
     let v: Value = serde_json::from_str(&stdout(&j)).unwrap();
     assert_eq!(v["options"][0]["results"], Value::Null);
+    assert_eq!(v["options"][0]["status"], "not_yet_supported");
     assert_eq!(
         v["options"][0]["message"],
         "convoy results not yet available"
     );
     assert!(v["options"][0].get("results_hash").is_none());
+}
+
+#[test]
+fn json_tells_results_and_not_yet_supported_apart() {
+    let dir = temp_dir("status");
+    let file = starter(&dir);
+    let mut design = read_json(&file);
+    let mut convoy = design["options"][0].clone();
+    convoy["name"] = json!("Convoy");
+    convoy["inputs"]["formation"] = json!({ "value": { "kind": "pushed_convoy", "abreast": 2, "in_line": 1 }, "source": "typed" });
+    convoy.as_object_mut().unwrap().remove("results_hash");
+    design["options"].as_array_mut().unwrap().push(convoy);
+    write_json(&file, &design);
+    let v: Value = serde_json::from_str(&stdout(&ovcd(&["run", "--json", p(&file)]))).unwrap();
+    assert_eq!(v["options"][0]["status"], "results");
+    assert_eq!(v["options"][1]["status"], "not_yet_supported");
 }
 
 #[test]
@@ -219,7 +276,27 @@ fn a_two_option_design_runs_the_barge_and_reports_the_convoy_beside_it() {
         text.contains("Option 'Convoy': convoy results not yet available"),
         "{text}"
     );
-    assert!(!out.status.success());
+    assert!(
+        out.status.success(),
+        "convoy beside a computed Option exits 0"
+    );
+}
+
+#[test]
+fn a_hash_stored_on_a_convoy_option_gets_a_note_that_it_is_not_checked() {
+    let dir = temp_dir("convoy-hash");
+    let (file, mut design) = convoy_design(&dir);
+    design["options"][0]["results_hash"] = json!("ab".repeat(32));
+    write_json(&file, &design);
+    let out = ovcd(&["run", p(&file)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert!(
+        stderr(&out).contains("Option 'Option 1': the stored results hash is not checked"),
+        "{}",
+        stderr(&out)
+    );
+    let v: Value = serde_json::from_str(&stdout(&ovcd(&["run", "--json", p(&file)]))).unwrap();
+    assert_eq!(v["options"][0]["hash_status"], "not_checked");
 }
 
 #[test]
@@ -376,5 +453,31 @@ fn fill_saves_a_hash_for_a_computable_option() {
         stdout(&out).contains("(matches the file)"),
         "{}",
         stdout(&out)
+    );
+}
+
+#[test]
+fn fill_names_this_engine_in_the_file_it_writes_a_hash_into() {
+    // Issue #137: the file said 0.1.0 and kept saying it, beside a hash that 0.1.0 never made.
+    let dir = temp_dir("fill-engine");
+    let file = filled(
+        &dir,
+        "g",
+        json!({
+            "cargo": "bauxite", "hull_form": "raked_box", "formation": {"kind": "pushed_barge"},
+            "length_overall_m": 76.5, "beam_m": 11.4, "moulded_depth_m": 3.5
+        }),
+    );
+    let design = read_json(&file);
+    assert_eq!(design["engine_version"], env!("CARGO_PKG_VERSION"));
+    assert!(design["options"][0]["results_hash"].is_string());
+    // An edit of an input, hash kept: the warning does not blame an engine version.
+    let mut edited = design.clone();
+    edited["options"][0]["inputs"]["beam_m"]["value"] = json!(11.0);
+    write_json(&file, &edited);
+    let err = stderr(&ovcd(&["run", p(&file)]));
+    assert!(
+        err.contains("results differ from the hash saved in the file"),
+        "{err}"
     );
 }

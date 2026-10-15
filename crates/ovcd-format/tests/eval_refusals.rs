@@ -155,6 +155,46 @@ fn simulate_refusal(params: &str) -> String {
     format!("{err:?}")
 }
 
+/// Python's `float(p["loa_m"])` reads numbers written as text; text that is not a number is a
+/// recorded `ValueError`, not a refusal. (Issue #128; expected values from the frozen Python at ce96e66.)
+#[test]
+fn simulate_reads_text_for_a_number_as_python_float_does() {
+    let run = |loa: &str| {
+        let case = ovcd_format::parse_case(&format!(
+            r#"{{"fn":"simulate","args":{{"params":{{"vessel":"hopper_barge","cargo":"bauxite","loa_m":{loa},"beam_m":11,"depth_m":4,"cb":0.9}}}}}}"#
+        ))
+        .unwrap();
+        eval("simulate", &case).unwrap()
+    };
+    assert_eq!(run(r#""70""#)["ok"]["dims"]["loa_m"], 70.0);
+    assert_eq!(run(r#"" 7e1 ""#)["ok"]["dims"]["loa_m"], 70.0);
+    let bad = run(r#""0x10""#);
+    assert_eq!(bad["error"]["type"], "ValueError");
+    assert_eq!(
+        bad["error"]["message"],
+        "could not convert string to float: '0x10'"
+    );
+}
+
+/// A ruleset that is not text is an unknown ruleset, as `ruleset not in RULESETS` is in Python.
+#[test]
+fn simulate_reports_a_ruleset_that_is_not_text_as_unknown() {
+    for (ruleset, text) in [
+        ("null", "Unknown ruleset None."),
+        ("5", "Unknown ruleset 5."),
+        ("true", "Unknown ruleset True."),
+        ("1.5", "Unknown ruleset 1.5."),
+        (r#"["a", 1]"#, "Unknown ruleset ['a', 1]."),
+    ] {
+        let case = ovcd_format::parse_case(&format!(
+            r#"{{"fn":"simulate","args":{{"params":{{"vessel":"gas_barge","cargo":"LPG_propane","loa_m":90,"beam_m":14.8,"depth_m":6.5,"cb":0.85,"ruleset":{ruleset}}}}}}}"#
+        ))
+        .unwrap();
+        let out = eval("simulate", &case).unwrap();
+        assert_eq!(out["ok"]["error"], text, "{ruleset}");
+    }
+}
+
 #[test]
 fn simulate_refuses_params_where_python_would_raise_key_or_type_error() {
     let good =
@@ -177,10 +217,6 @@ fn simulate_refuses_params_where_python_would_raise_key_or_type_error() {
         (
             "missing dimension",
             r#"{"vessel":"hopper_barge","cargo":"bauxite","beam_m":11,"depth_m":4,"cb":0.9}"#,
-        ),
-        (
-            "text for a number",
-            r#"{"vessel":"hopper_barge","cargo":"bauxite","loa_m":"70","beam_m":11,"depth_m":4,"cb":0.9}"#,
         ),
         (
             "null for a number",

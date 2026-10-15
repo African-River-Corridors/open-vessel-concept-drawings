@@ -1,0 +1,1927 @@
+{
+ "_about": "Names importable from each public module at commit ce96e66, made by tests/data/make_importable_names_0_1_0.py. Do not edit by hand.",
+ "modules": {
+  "core": {},
+  "core.aft_arrangement": {
+   "AftArrangementInputs": {
+    "kind": "package"
+   },
+   "AftArrangementResult": {
+    "kind": "package"
+   },
+   "Check": {
+    "kind": "package"
+   },
+   "ISO40_HEIGHT_HC_M": {
+    "kind": "package",
+    "value": 2.896
+   },
+   "ISO40_HEIGHT_STD_M": {
+    "kind": "package",
+    "value": 2.591
+   },
+   "ISO40_LENGTH_M": {
+    "kind": "package",
+    "value": 12.192
+   },
+   "ISO40_WIDTH_M": {
+    "kind": "package",
+    "value": 2.438
+   },
+   "Optional": {
+    "kind": "incidental"
+   },
+   "all_ok": {
+    "kind": "package"
+   },
+   "annotations": {
+    "kind": "incidental"
+   },
+   "compute": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "field": {
+    "kind": "incidental"
+   }
+  },
+  "core.barge_capacity": {
+   "AftArrangementInputs": {
+    "kind": "package"
+   },
+   "AftArrangementResult": {
+    "kind": "package"
+   },
+   "BargeCapacityInputs": {
+    "kind": "package"
+   },
+   "BargeCapacityResult": {
+    "kind": "package"
+   },
+   "BargeInputs": {
+    "kind": "package"
+   },
+   "Check": {
+    "kind": "package"
+   },
+   "GasSeparationInputs": {
+    "kind": "package"
+   },
+   "GasSeparationResult": {
+    "kind": "package"
+   },
+   "HullGeometry": {
+    "kind": "package"
+   },
+   "MAX_TANK_OD_M": {
+    "kind": "package",
+    "value": 12.0
+   },
+   "Optional": {
+    "kind": "incidental"
+   },
+   "all_ok": {
+    "kind": "package"
+   },
+   "annotations": {
+    "kind": "incidental"
+   },
+   "calculate_tank_arrangement": {
+    "kind": "package"
+   },
+   "calculate_weights": {
+    "kind": "package"
+   },
+   "compute": {
+    "kind": "package"
+   },
+   "compute_aft_arrangement": {
+    "kind": "package"
+   },
+   "compute_gas_separation": {
+    "kind": "package"
+   },
+   "compute_required_clearances": {
+    "kind": "package"
+   },
+   "d_vc_exact": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "distance_d_vc": {
+    "kind": "package"
+   },
+   "field": {
+    "kind": "incidental"
+   },
+   "find_equilibrium_draft": {
+    "kind": "package"
+   },
+   "get_cargo": {
+    "kind": "package"
+   },
+   "math": {
+    "kind": "incidental"
+   },
+   "replace": {
+    "kind": "incidental"
+   },
+   "tanks_wide_for_beam": {
+    "kind": "package"
+   }
+  },
+  "core.barge_cost": {
+   "BargeCostInputs": {
+    "kind": "package"
+   },
+   "BargeCostRates": {
+    "kind": "package"
+   },
+   "BargeCostResult": {
+    "kind": "package"
+   },
+   "Check": {
+    "kind": "package"
+   },
+   "Dict": {
+    "kind": "incidental"
+   },
+   "EXAMPLE_RATES_FILE": {
+    "kind": "package",
+    "value": "barge_cost_rates.example.yaml"
+   },
+   "List": {
+    "kind": "incidental"
+   },
+   "Mapping": {
+    "kind": "incidental"
+   },
+   "Optional": {
+    "kind": "incidental"
+   },
+   "Path": {
+    "kind": "incidental"
+   },
+   "PathLike": {
+    "kind": "incidental"
+   },
+   "RatesLike": {
+    "kind": "incidental"
+   },
+   "Union": {
+    "kind": "incidental"
+   },
+   "all_ok": {
+    "kind": "package"
+   },
+   "annotations": {
+    "kind": "incidental"
+   },
+   "compute": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "field": {
+    "kind": "incidental"
+   },
+   "fields": {
+    "kind": "incidental"
+   },
+   "load_rates": {
+    "kind": "package"
+   },
+   "parse_flat_yaml": {
+    "kind": "package"
+   },
+   "resources": {
+    "kind": "incidental"
+   }
+  },
+  "core.cargo": {
+   "CARGO_DATABASE": {
+    "kind": "package"
+   },
+   "CargoProperties": {
+    "kind": "package"
+   },
+   "Dict": {
+    "kind": "incidental"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "get_cargo": {
+    "kind": "package"
+   }
+  },
+  "core.checks": {
+   "Check": {
+    "kind": "package"
+   },
+   "all_ok": {
+    "kind": "package"
+   },
+   "annotations": {
+    "kind": "incidental"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   }
+  },
+  "core.design_grid": {
+   "BOW_NON_TANK_PCT": {
+    "kind": "package",
+    "value": 0.1
+   },
+   "BargeCapacityInputs": {
+    "kind": "package"
+   },
+   "DesignGrid": {
+    "kind": "package"
+   },
+   "GridCell": {
+    "kind": "package"
+   },
+   "List": {
+    "kind": "incidental"
+   },
+   "MAX_TANK_LENGTH_M": {
+    "kind": "package",
+    "value": 28.0
+   },
+   "Optional": {
+    "kind": "incidental"
+   },
+   "SIDE_CLEARANCE_M": {
+    "kind": "package",
+    "value": 1.0
+   },
+   "STERN_NON_TANK_PCT": {
+    "kind": "package",
+    "value": 0.15
+   },
+   "TUG_LOA_M": {
+    "kind": "package",
+    "value": 16.0
+   },
+   "annotations": {
+    "kind": "incidental"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "field": {
+    "kind": "incidental"
+   },
+   "math": {
+    "kind": "incidental"
+   },
+   "n_tanks_for_length": {
+    "kind": "package"
+   },
+   "sweep": {
+    "kind": "package"
+   }
+  },
+  "core.electric_energy": {
+   "Check": {
+    "kind": "package"
+   },
+   "EnergyEnvironment": {
+    "kind": "package"
+   },
+   "EnergyInputs": {
+    "kind": "package"
+   },
+   "EnergyPoint": {
+    "kind": "package"
+   },
+   "EnergyResult": {
+    "kind": "package"
+   },
+   "KN_TO_KMH": {
+    "kind": "package",
+    "value": 1.852
+   },
+   "List": {
+    "kind": "incidental"
+   },
+   "Optional": {
+    "kind": "incidental"
+   },
+   "R": {
+    "kind": "package"
+   },
+   "all_ok": {
+    "kind": "package"
+   },
+   "annotations": {
+    "kind": "incidental"
+   },
+   "compute": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "field": {
+    "kind": "incidental"
+   }
+  },
+  "core.ga_adapter": {
+   "BargeCapacityInputs": {
+    "kind": "package"
+   },
+   "BargeCapacityResult": {
+    "kind": "package"
+   },
+   "BargeInputs": {
+    "kind": "package"
+   },
+   "BargeResults": {
+    "kind": "package"
+   },
+   "Optional": {
+    "kind": "incidental"
+   },
+   "TankResult": {
+    "kind": "package"
+   },
+   "annotations": {
+    "kind": "incidental"
+   },
+   "is_gas": {
+    "kind": "package"
+   },
+   "math": {
+    "kind": "incidental"
+   },
+   "replace": {
+    "kind": "incidental"
+   },
+   "to_ga": {
+    "kind": "package"
+   }
+  },
+  "core.gas_arrangement": {
+   "ADN_G_MAX_L_OVER_D": {
+    "kind": "package",
+    "value": 7.0
+   },
+   "ADN_G_TANK_CAP_9_3_4_M3": {
+    "kind": "package",
+    "value": 1000.0
+   },
+   "ADN_G_WIDE_TANK_FRACTION": {
+    "kind": "package",
+    "value": 0.7
+   },
+   "ADN_LONGITUDINAL_GAP_M": {
+    "kind": "package",
+    "value": 2.0
+   },
+   "ArrangementFit": {
+    "kind": "package"
+   },
+   "BargeCapacityInputs": {
+    "kind": "package"
+   },
+   "DEFAULT_DEPTHS_M": {
+    "kind": "package",
+    "value": [
+     3.5,
+     3.75,
+     4.0,
+     4.25,
+     4.5,
+     4.75,
+     5.0,
+     5.25,
+     5.5,
+     5.75,
+     6.0,
+     6.25,
+     6.5,
+     6.75,
+     7.0
+    ]
+   },
+   "DEFAULT_EXTRA_CLEARANCE_M": {
+    "kind": "package",
+    "value": [
+     0.5,
+     1.0,
+     1.5,
+     2.0
+    ]
+   },
+   "DEFAULT_TANKS_WIDE": {
+    "kind": "package",
+    "value": [
+     1,
+     2,
+     3
+    ]
+   },
+   "JourneyDeratingInputs": {
+    "kind": "package"
+   },
+   "MAX_TANK_OD_M": {
+    "kind": "package",
+    "value": 12.0
+   },
+   "Optional": {
+    "kind": "incidental"
+   },
+   "RULESETS": {
+    "kind": "package",
+    "value": [
+     "IGC_2G",
+     "IGC_2G_EXACT",
+     "ADN_G"
+    ]
+   },
+   "Sequence": {
+    "kind": "incidental"
+   },
+   "all_ok": {
+    "kind": "package"
+   },
+   "annotations": {
+    "kind": "incidental"
+   },
+   "capacity": {
+    "kind": "package"
+   },
+   "compute_required_clearances": {
+    "kind": "package"
+   },
+   "d_vc_exact": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "derate": {
+    "kind": "package"
+   },
+   "distance_d_vc": {
+    "kind": "package"
+   },
+   "field": {
+    "kind": "incidental"
+   },
+   "fit": {
+    "kind": "package"
+   },
+   "replace": {
+    "kind": "incidental"
+   },
+   "required_side_clearance": {
+    "kind": "package"
+   },
+   "smallest_viable_loa": {
+    "kind": "package"
+   }
+  },
+  "core.gas_separation": {
+   "COFFERDAM_MIN_M": {
+    "kind": "package",
+    "value": 0.6
+   },
+   "Check": {
+    "kind": "package"
+   },
+   "DOUBLE_BOTTOM_MIN_TYPE_G_M": {
+    "kind": "package",
+    "value": 0.6
+   },
+   "END_BULKHEAD_SPACE_M": {
+    "kind": "package",
+    "value": 0.5
+   },
+   "END_BULKHEAD_SPACE_PRESSURE_M": {
+    "kind": "package",
+    "value": 0.2
+   },
+   "GasSeparationInputs": {
+    "kind": "package"
+   },
+   "GasSeparationResult": {
+    "kind": "package"
+   },
+   "OPENING_SETBACK_M": {
+    "kind": "package",
+    "value": 2.0
+   },
+   "SIDE_MIN_TYPE_G_M": {
+    "kind": "package",
+    "value": 0.8
+   },
+   "all_ok": {
+    "kind": "package"
+   },
+   "annotations": {
+    "kind": "incidental"
+   },
+   "compute": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "field": {
+    "kind": "incidental"
+   }
+  },
+  "core.gas_stability": {
+   "ANGLES_DEG": {
+    "kind": "package",
+    "value": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     41,
+     42,
+     43,
+     44,
+     45,
+     46,
+     47,
+     48,
+     49,
+     50,
+     51,
+     52,
+     53,
+     54,
+     55,
+     56,
+     57,
+     58,
+     59,
+     60
+    ]
+   },
+   "Condition": {
+    "kind": "package"
+   },
+   "Criterion": {
+    "kind": "package"
+   },
+   "Optional": {
+    "kind": "incidental"
+   },
+   "StabilityAssessment": {
+    "kind": "package"
+   },
+   "annotations": {
+    "kind": "incidental"
+   },
+   "assess": {
+    "kind": "package"
+   },
+   "box_gz": {
+    "kind": "package"
+   },
+   "criteria_set_for": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "field": {
+    "kind": "incidental"
+   },
+   "math": {
+    "kind": "incidental"
+   },
+   "segment_fill": {
+    "kind": "package"
+   }
+  },
+  "core.hull": {
+   "HullGeometry": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "math": {
+    "kind": "incidental"
+   },
+   "np": {
+    "kind": "incidental"
+   }
+  },
+  "core.hydrostatics": {
+   "BargeInputs": {
+    "kind": "package"
+   },
+   "HullGeometry": {
+    "kind": "package"
+   },
+   "StabilityResult": {
+    "kind": "package"
+   },
+   "TankResult": {
+    "kind": "package"
+   },
+   "TrimResult": {
+    "kind": "package"
+   },
+   "WeightBreakdown": {
+    "kind": "package"
+   },
+   "calculate_stability": {
+    "kind": "package"
+   },
+   "calculate_trim": {
+    "kind": "package"
+   },
+   "find_equilibrium_draft": {
+    "kind": "package"
+   },
+   "free_surface_moment_cylindrical": {
+    "kind": "package"
+   },
+   "math": {
+    "kind": "incidental"
+   }
+  },
+  "core.journey_derating": {
+   "BargeCapacityResult": {
+    "kind": "package"
+   },
+   "Check": {
+    "kind": "package"
+   },
+   "HullGeometry": {
+    "kind": "package"
+   },
+   "JourneyDeratingInputs": {
+    "kind": "package"
+   },
+   "JourneyDeratingResult": {
+    "kind": "package"
+   },
+   "all_ok": {
+    "kind": "package"
+   },
+   "annotations": {
+    "kind": "incidental"
+   },
+   "compute": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "field": {
+    "kind": "incidental"
+   }
+  },
+  "core.models": {
+   "AftArrangementResult": {
+    "kind": "package"
+   },
+   "BargeInputs": {
+    "kind": "package"
+   },
+   "BargeResults": {
+    "kind": "package"
+   },
+   "GasSeparationResult": {
+    "kind": "package"
+   },
+   "Optional": {
+    "kind": "incidental"
+   },
+   "ProtectiveLocationResult": {
+    "kind": "package"
+   },
+   "StabilityResult": {
+    "kind": "package"
+   },
+   "TankResult": {
+    "kind": "package"
+   },
+   "TrimResult": {
+    "kind": "package"
+   },
+   "WeightBreakdown": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "field": {
+    "kind": "incidental"
+   }
+  },
+  "core.pressure_vessel": {
+   "Dict": {
+    "kind": "incidental"
+   },
+   "TANK_MATERIAL_DATABASE": {
+    "kind": "package"
+   },
+   "TankMaterialProperties": {
+    "kind": "package"
+   },
+   "Tuple": {
+    "kind": "incidental"
+   },
+   "calculate_wall_thicknesses": {
+    "kind": "package"
+   },
+   "cylinder_wall_thickness": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "ellipsoidal_head_thickness": {
+    "kind": "package"
+   },
+   "get_tank_material": {
+    "kind": "package"
+   },
+   "hemisphere_head_thickness": {
+    "kind": "package"
+   },
+   "math": {
+    "kind": "incidental"
+   }
+  },
+  "core.protective_location": {
+   "ADN_G_BOTTOM_M": {
+    "kind": "package",
+    "value": 1.1
+   },
+   "ADN_G_DOUBLE_BOTTOM_M": {
+    "kind": "package",
+    "value": 0.6
+   },
+   "ADN_G_DOUBLE_HULL_M": {
+    "kind": "package",
+    "value": 0.8
+   },
+   "ADN_G_INSPECTION_GAP_M": {
+    "kind": "package",
+    "value": 0.45
+   },
+   "ADN_G_MAX_L_OVER_D": {
+    "kind": "package",
+    "value": 7.0
+   },
+   "ADN_G_SADDLE_M": {
+    "kind": "package",
+    "value": 0.5
+   },
+   "ADN_G_SIDE_M": {
+    "kind": "package",
+    "value": 1.25
+   },
+   "ADN_G_TANK_CAP_9_3_4_M3": {
+    "kind": "package",
+    "value": 1000.0
+   },
+   "ADN_G_TANK_CAP_M3": {
+    "kind": "package",
+    "value": 380.0
+   },
+   "ADN_G_WIDE_TANK_FRACTION": {
+    "kind": "package",
+    "value": 0.7
+   },
+   "Enum": {
+    "kind": "incidental"
+   },
+   "ProtectiveLocationResult": {
+    "kind": "package"
+   },
+   "RequiredClearances": {
+    "kind": "package"
+   },
+   "VesselType": {
+    "kind": "package"
+   },
+   "check_protective_location": {
+    "kind": "package"
+   },
+   "compute_required_clearances": {
+    "kind": "package"
+   },
+   "d_vc_exact": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "distance_d_vc": {
+    "kind": "package"
+   },
+   "required_bottom_protection": {
+    "kind": "package"
+   },
+   "required_side_protection": {
+    "kind": "package"
+   }
+  },
+  "core.resistance": {
+   "Check": {
+    "kind": "package"
+   },
+   "EnvironmentInputs": {
+    "kind": "package"
+   },
+   "EnvironmentResult": {
+    "kind": "package"
+   },
+   "GRAVITY": {
+    "kind": "package",
+    "value": 9.81
+   },
+   "KNOTS_TO_MS": {
+    "kind": "package",
+    "value": 0.5144
+   },
+   "KW_PER_KN_MS": {
+    "kind": "package",
+    "value": 1.0
+   },
+   "List": {
+    "kind": "incidental"
+   },
+   "Optional": {
+    "kind": "incidental"
+   },
+   "ResistanceCalculator": {
+    "kind": "package"
+   },
+   "ResistanceInputs": {
+    "kind": "package"
+   },
+   "ResistanceResults": {
+    "kind": "package"
+   },
+   "SpeedPoint": {
+    "kind": "package"
+   },
+   "TugInputs": {
+    "kind": "package"
+   },
+   "all_ok": {
+    "kind": "package"
+   },
+   "compute": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "default_environments": {
+    "kind": "package"
+   },
+   "field": {
+    "kind": "incidental"
+   },
+   "math": {
+    "kind": "incidental"
+   }
+  },
+  "core.squat": {
+   "Check": {
+    "kind": "package"
+   },
+   "DEFAULT_SAFETY_MARGIN_M": {
+    "kind": "package",
+    "value": 0.15
+   },
+   "FNH_VALID_MAX": {
+    "kind": "package",
+    "value": 0.7
+   },
+   "GRAVITY": {
+    "kind": "package",
+    "value": 9.80665
+   },
+   "List": {
+    "kind": "incidental"
+   },
+   "Optional": {
+    "kind": "incidental"
+   },
+   "SquatInputs": {
+    "kind": "package"
+   },
+   "SquatResult": {
+    "kind": "package"
+   },
+   "all_ok": {
+    "kind": "package"
+   },
+   "annotations": {
+    "kind": "incidental"
+   },
+   "compute": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "field": {
+    "kind": "incidental"
+   },
+   "math": {
+    "kind": "incidental"
+   },
+   "max_speed_for_ukc": {
+    "kind": "package"
+   }
+  },
+  "core.tanks": {
+   "BargeInputs": {
+    "kind": "package"
+   },
+   "TankResult": {
+    "kind": "package"
+   },
+   "Tuple": {
+    "kind": "incidental"
+   },
+   "calculate_tank_arrangement": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "free_surface_moment_cylindrical": {
+    "kind": "package"
+   },
+   "math": {
+    "kind": "incidental"
+   }
+  },
+  "core.vessel_standards": {
+   "Check": {
+    "kind": "package"
+   },
+   "Dict": {
+    "kind": "incidental"
+   },
+   "List": {
+    "kind": "incidental"
+   },
+   "Optional": {
+    "kind": "incidental"
+   },
+   "Tuple": {
+    "kind": "incidental"
+   },
+   "VESSEL_STANDARDS": {
+    "kind": "package"
+   },
+   "VesselStandard": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "field": {
+    "kind": "incidental"
+   },
+   "get_standard": {
+    "kind": "package"
+   },
+   "standards_for": {
+    "kind": "package"
+   },
+   "validate_catalogue": {
+    "kind": "package"
+   }
+  },
+  "core.waves": {
+   "Check": {
+    "kind": "package"
+   },
+   "GRAVITY": {
+    "kind": "package",
+    "value": 9.80665
+   },
+   "LAMBDA_OVER_LPP_MAX": {
+    "kind": "package",
+    "value": 0.5
+   },
+   "List": {
+    "kind": "incidental"
+   },
+   "SEAWATER_DENSITY_T_M3": {
+    "kind": "package",
+    "value": 1.025
+   },
+   "WaveResistanceInputs": {
+    "kind": "package"
+   },
+   "WaveResistanceResult": {
+    "kind": "package"
+   },
+   "all_ok": {
+    "kind": "package"
+   },
+   "annotations": {
+    "kind": "incidental"
+   },
+   "compute": {
+    "kind": "package"
+   },
+   "dataclass": {
+    "kind": "incidental"
+   },
+   "field": {
+    "kind": "incidental"
+   },
+   "math": {
+    "kind": "incidental"
+   }
+  },
+  "core.weights": {
+   "BargeInputs": {
+    "kind": "package"
+   },
+   "HullGeometry": {
+    "kind": "package"
+   },
+   "TankResult": {
+    "kind": "package"
+   },
+   "WeightBreakdown": {
+    "kind": "package"
+   },
+   "calculate_weights": {
+    "kind": "package"
+   },
+   "math": {
+    "kind": "incidental"
+   }
+  },
+  "simulate": {
+   "BargeCapacityInputs": {
+    "kind": "package"
+   },
+   "CARGO_DATABASE": {
+    "kind": "package"
+   },
+   "DEFAULT_DEPTHS_M": {
+    "kind": "package",
+    "value": [
+     3.5,
+     3.75,
+     4.0,
+     4.25,
+     4.5,
+     4.75,
+     5.0,
+     5.25,
+     5.5,
+     5.75,
+     6.0,
+     6.25,
+     6.5,
+     6.75,
+     7.0
+    ]
+   },
+   "EnvironmentInputs": {
+    "kind": "package"
+   },
+   "FILL_BY_RULESET": {
+    "kind": "package"
+   },
+   "RHO": {
+    "kind": "package",
+    "value": 1.0
+   },
+   "RULESETS": {
+    "kind": "package",
+    "value": [
+     "IGC_2G",
+     "IGC_2G_EXACT",
+     "ADN_G"
+    ]
+   },
+   "ResistanceInputs": {
+    "kind": "package"
+   },
+   "TugInputs": {
+    "kind": "package"
+   },
+   "VESSELS": {
+    "kind": "package"
+   },
+   "annotations": {
+    "kind": "incidental"
+   },
+   "asdict": {
+    "kind": "incidental"
+   },
+   "assess_stability": {
+    "kind": "package"
+   },
+   "capacity": {
+    "kind": "package"
+   },
+   "cargo_options": {
+    "kind": "package"
+   },
+   "criteria_set_for": {
+    "kind": "package"
+   },
+   "gas_fit": {
+    "kind": "package"
+   },
+   "resistance": {
+    "kind": "package"
+   },
+   "simulate": {
+    "kind": "package"
+   }
+  }
+ },
+ "field_types": {
+  "core.aft_arrangement": {
+   "AftArrangementInputs": {
+    "beam": "<class 'float'>",
+    "depth": "<class 'float'>",
+    "n_thrusters": "<class 'int'>",
+    "thruster_envelope_m": "<class 'float'>",
+    "thruster_clear_m": "<class 'float'>",
+    "thruster_room_length_m": "<class 'float'>",
+    "n_battery_units": "<class 'int'>",
+    "n_accom_units": "<class 'int'>",
+    "container_length_m": "<class 'float'>",
+    "container_width_m": "<class 'float'>",
+    "container_height_m": "<class 'float'>",
+    "container_side_gap_m": "<class 'float'>",
+    "container_gap_m": "<class 'float'>",
+    "container_foundation_m": "<class 'float'>",
+    "wheelhouse_length_m": "<class 'float'>",
+    "wheelhouse_width_m": "<class 'float'>",
+    "wheelhouse_height_m": "<class 'float'>",
+    "wheelhouse_gap_m": "<class 'float'>",
+    "wheelhouse_eye_above_floor_m": "<class 'float'>",
+    "sightline_obstruction_m": "typing.Optional[float]",
+    "sightline_margin_m": "<class 'float'>",
+    "wheelhouse_max_lift_m": "<class 'float'>"
+   },
+   "AftArrangementResult": {
+    "length_m": "<class 'float'>",
+    "zones": "<class 'list'>",
+    "thruster_offsets_m": "<class 'list'>",
+    "thruster_room_length_m": "<class 'float'>",
+    "container_x0_m": "<class 'float'>",
+    "container_x1_m": "<class 'float'>",
+    "container_total_width_m": "<class 'float'>",
+    "container_top_above_keel_m": "<class 'float'>",
+    "container_labels": "<class 'list'>",
+    "container_unit_width_m": "<class 'float'>",
+    "container_side_gap_m": "<class 'float'>",
+    "container_rows": "<class 'int'>",
+    "container_per_row": "<class 'int'>",
+    "container_row_length_m": "<class 'float'>",
+    "container_row_gap_m": "<class 'float'>",
+    "wheelhouse_x0_m": "<class 'float'>",
+    "wheelhouse_x1_m": "<class 'float'>",
+    "wheelhouse_floor_lowered_m": "<class 'float'>",
+    "wheelhouse_top_lowered_m": "<class 'float'>",
+    "wheelhouse_floor_raised_m": "<class 'float'>",
+    "wheelhouse_top_raised_m": "<class 'float'>",
+    "wheelhouse_lift_m": "<class 'float'>",
+    "wheelhouse_width_m": "<class 'float'>",
+    "wheelhouse_height_m": "<class 'float'>",
+    "block_top_lowered_m": "<class 'float'>",
+    "checks": "<class 'list'>",
+    "warnings": "<class 'list'>"
+   }
+  },
+  "core.barge_capacity": {
+   "BargeCapacityInputs": {
+    "loa": "<class 'float'>",
+    "beam": "<class 'float'>",
+    "depth": "<class 'float'>",
+    "cargo_type": "<class 'str'>",
+    "block_coefficient": "<class 'float'>",
+    "water_density": "<class 'float'>",
+    "required_freeboard": "<class 'float'>",
+    "air_draft_limit_m": "typing.Optional[float]",
+    "ballast_capacity_t": "<class 'float'>",
+    "aft": "typing.Optional[vessel_designer.core.aft_arrangement.AftArrangementInputs]",
+    "separation": "typing.Optional[vessel_designer.core.gas_separation.GasSeparationInputs]",
+    "self_propelled": "<class 'bool'>",
+    "pushed_stern_void_m": "<class 'float'>",
+    "bow_rake_length_m": "typing.Optional[float]",
+    "bulk_end_bulkhead_m": "<class 'float'>",
+    "vessel_type": "<class 'str'>",
+    "side_clearance_override_m": "typing.Optional[float]",
+    "n_tanks_wide": "typing.Optional[int]",
+    "n_tanks_long": "<class 'int'>",
+    "tank_wall_thickness": "typing.Optional[float]",
+    "fill_ratio": "<class 'float'>",
+    "dome_height": "<class 'float'>",
+    "tank_support_height": "<class 'float'>",
+    "hold_type": "<class 'str'>",
+    "lightship_k_t_per_m3": "typing.Optional[float]",
+    "wing_void_width": "<class 'float'>",
+    "double_bottom_height_bulk": "<class 'float'>",
+    "hopper_slope_h_per_v": "<class 'float'>",
+    "coaming_height": "<class 'float'>",
+    "n_holds": "<class 'int'>",
+    "hold_fill_ratio": "<class 'float'>",
+    "bow_void_fraction": "<class 'float'>",
+    "stern_void_fraction": "<class 'float'>",
+    "inner_bottom_t_mm": "<class 'float'>",
+    "hopper_plate_t_mm": "<class 'float'>",
+    "bulkhead_t_mm": "<class 'float'>",
+    "coaming_t_mm": "<class 'float'>",
+    "steel_density": "<class 'float'>",
+    "bulk_structure_factor": "<class 'float'>",
+    "bulk_steel_rate_per_cbm": "<class 'float'>",
+    "bulk_piping_factor": "<class 'float'>",
+    "bulk_outfitting_factor": "<class 'float'>"
+   },
+   "BargeCapacityResult": {
+    "cargo_type": "<class 'str'>",
+    "phase": "<class 'str'>",
+    "cargo_density_t_per_m3": "<class 'float'>",
+    "cargo_capacity_t": "<class 'float'>",
+    "full_load_draft_m": "<class 'float'>",
+    "air_draft_m": "<class 'float'>",
+    "cargo_volume_m3": "<class 'float'>",
+    "lightship_t": "<class 'float'>",
+    "displacement_t": "<class 'float'>",
+    "deadweight_t": "<class 'float'>",
+    "freeboard_m": "<class 'float'>",
+    "air_draft_top_above_keel_m": "<class 'float'>",
+    "overloaded": "<class 'bool'>",
+    "tank_outer_diameter_m": "typing.Optional[float]",
+    "n_tanks_wide": "typing.Optional[int]",
+    "max_tank_od_m": "typing.Optional[float]",
+    "n_tanks_total": "typing.Optional[int]",
+    "side_clearance_m": "typing.Optional[float]",
+    "bottom_clearance_m": "typing.Optional[float]",
+    "hold_height_m": "typing.Optional[float]",
+    "hold_top_width_m": "typing.Optional[float]",
+    "hold_bottom_width_m": "typing.Optional[float]",
+    "hold_section_area_m2": "typing.Optional[float]",
+    "gm_m": "typing.Optional[float]",
+    "bow_void_length_m": "typing.Optional[float]",
+    "stern_void_length_m": "typing.Optional[float]",
+    "cargo_zone_length_m": "typing.Optional[float]",
+    "bow_rake_length_m": "typing.Optional[float]",
+    "aft_arrangement": "typing.Optional[vessel_designer.core.aft_arrangement.AftArrangementResult]",
+    "separation": "typing.Optional[vessel_designer.core.gas_separation.GasSeparationResult]",
+    "containment_inner_volume_m3": "typing.Optional[float]",
+    "fill_ratio_applied": "typing.Optional[float]",
+    "insulation_thickness_mm": "typing.Optional[float]",
+    "tank_wall_thickness_mm": "typing.Optional[float]",
+    "tank_inner_diameter_m": "typing.Optional[float]",
+    "light_draft_m": "typing.Optional[float]",
+    "air_draft_light_m": "typing.Optional[float]",
+    "ballast_draft_m": "typing.Optional[float]",
+    "air_draft_ballast_m": "typing.Optional[float]",
+    "air_draft_navigating_light_m": "typing.Optional[float]",
+    "navigating_top_above_keel_m": "typing.Optional[float]",
+    "gas_basis": "typing.Optional[dict]",
+    "checks": "<class 'list'>",
+    "warnings": "<class 'list'>"
+   }
+  },
+  "core.barge_cost": {
+   "BargeCostInputs": {
+    "hull_steel_t": "<class 'float'>",
+    "wing_plate_t": "<class 'float'>",
+    "weather_shield_t": "<class 'float'>",
+    "tank_shell_t": "<class 'float'>",
+    "tank_supports_t": "<class 'float'>",
+    "insulation_t": "<class 'float'>",
+    "piping_machinery_t": "<class 'float'>",
+    "outfitting_t": "<class 'float'>",
+    "tug_hull_steel_t": "<class 'float'>",
+    "battery_kwh": "<class 'float'>",
+    "propulsion_kw": "<class 'float'>"
+   },
+   "BargeCostRates": {
+    "hull_steel_rate": "<class 'float'>",
+    "tank_shell_rate": "<class 'float'>",
+    "tank_supports_rate": "<class 'float'>",
+    "insulation_rate": "<class 'float'>",
+    "piping_rate": "<class 'float'>",
+    "outfitting_rate": "<class 'float'>",
+    "cargo_system_lump": "<class 'float'>",
+    "paint_anodes_misc": "<class 'float'>",
+    "battery_rate_per_kwh": "<class 'float'>",
+    "propulsion_rate_per_kw": "<class 'float'>",
+    "wheelhouse_accom_lump": "<class 'float'>",
+    "tug_outfitting_lump": "<class 'float'>",
+    "yard_margin_fraction": "<class 'float'>",
+    "delivery_lump": "<class 'float'>",
+    "currency": "<class 'str'>"
+   },
+   "BargeCostResult": {
+    "barge_breakdown": "typing.Dict[str, float]",
+    "tug_breakdown": "typing.Dict[str, float]",
+    "barge_subtotal": "<class 'float'>",
+    "tug_subtotal": "<class 'float'>",
+    "yard_margin": "<class 'float'>",
+    "delivery": "<class 'float'>",
+    "unit_total": "<class 'float'>",
+    "checks": "typing.List[vessel_designer.core.checks.Check]",
+    "rates": "typing.Optional[vessel_designer.core.barge_cost.BargeCostRates]"
+   }
+  },
+  "core.cargo": {
+   "CargoProperties": {
+    "name": "<class 'str'>",
+    "density": "<class 'float'>",
+    "temperature": "<class 'float'>",
+    "pressure": "<class 'float'>",
+    "description": "<class 'str'>",
+    "phase": "<class 'str'>"
+   }
+  },
+  "core.checks": {
+   "Check": {
+    "name": "<class 'str'>",
+    "ok": "<class 'bool'>",
+    "message": "<class 'str'>",
+    "severity": "<class 'str'>"
+   }
+  },
+  "core.design_grid": {
+   "DesignGrid": {
+    "barge_lengths_m": "typing.List[float]",
+    "beams_m": "typing.List[float]",
+    "depth_m": "<class 'float'>",
+    "cargo_type": "<class 'str'>",
+    "clearance_basis": "<class 'str'>",
+    "max_tank_length_m": "<class 'float'>",
+    "cells": "typing.List[vessel_designer.core.design_grid.GridCell]"
+   },
+   "GridCell": {
+    "barge_length_m": "<class 'float'>",
+    "beam_m": "<class 'float'>",
+    "n_tanks_long": "<class 'int'>",
+    "feasible": "<class 'bool'>",
+    "cargo_t": "typing.Optional[float]",
+    "tank_outer_diameter_m": "typing.Optional[float]",
+    "tank_length_m": "typing.Optional[float]",
+    "slenderness": "typing.Optional[float]",
+    "full_load_draft_m": "typing.Optional[float]",
+    "air_draft_m": "typing.Optional[float]",
+    "reason": "<class 'str'>"
+   }
+  },
+  "core.electric_energy": {
+   "EnergyEnvironment": {
+    "name": "<class 'str'>",
+    "limiting_speed_knots": "typing.Optional[float]",
+    "service_speed_knots": "<class 'float'>",
+    "blockage_ratio": "<class 'float'>",
+    "curve": "typing.List[vessel_designer.core.electric_energy.EnergyPoint]",
+    "resistance_kn": "<class 'float'>",
+    "shaft_power_kw": "<class 'float'>",
+    "battery_power_kw": "<class 'float'>",
+    "energy_kwh_per_km": "<class 'float'>",
+    "energy_per_trip_kwh": "<class 'float'>",
+    "energy_per_year_mwh": "<class 'float'>"
+   },
+   "EnergyInputs": {
+    "beam": "<class 'float'>",
+    "loa": "<class 'float'>",
+    "lwl": "<class 'float'>",
+    "draft": "<class 'float'>",
+    "block_coefficient": "<class 'float'>",
+    "channel_depth_m": "<class 'float'>",
+    "channel_bottom_width_m": "<class 'float'>",
+    "channel_top_width_m": "<class 'float'>",
+    "current_knots": "<class 'float'>",
+    "fresh_water": "<class 'bool'>",
+    "also_open_sea": "<class 'bool'>",
+    "propulsive_coefficient": "<class 'float'>",
+    "drivetrain_efficiency": "<class 'float'>",
+    "target_service_speed_knots": "<class 'float'>",
+    "service_speed_safety_fraction": "<class 'float'>",
+    "power_margin": "<class 'float'>",
+    "one_way_km": "<class 'float'>",
+    "trips_per_year": "<class 'float'>",
+    "speed_min_knots": "<class 'float'>",
+    "speed_max_knots": "<class 'float'>",
+    "speed_step_knots": "<class 'float'>"
+   },
+   "EnergyPoint": {
+    "speed_knots": "<class 'float'>",
+    "speed_kmh": "<class 'float'>",
+    "froude_depth": "<class 'float'>",
+    "resistance_kn": "<class 'float'>",
+    "shaft_power_kw": "<class 'float'>",
+    "battery_power_kw": "<class 'float'>",
+    "energy_kwh_per_km": "<class 'float'>"
+   },
+   "EnergyResult": {
+    "inputs": "<class 'vessel_designer.core.electric_energy.EnergyInputs'>",
+    "installed_power_kw": "<class 'float'>",
+    "environments": "typing.List[vessel_designer.core.electric_energy.EnergyEnvironment]",
+    "checks": "<class 'list'>"
+   }
+  },
+  "core.gas_arrangement": {
+   "ArrangementFit": {
+    "loa_m": "<class 'float'>",
+    "beam_m": "<class 'float'>",
+    "depth_m": "<class 'float'>",
+    "cargo": "<class 'str'>",
+    "ruleset": "<class 'str'>",
+    "fill_ratio": "<class 'float'>",
+    "self_propelled": "<class 'bool'>",
+    "t_max_m": "<class 'float'>",
+    "payload_t": "<class 'float'>",
+    "volume_capacity_t": "<class 'float'>",
+    "binding": "<class 'str'>",
+    "draft_at_payload_m": "<class 'float'>",
+    "cargo_zone_m": "<class 'float'>",
+    "stern_void_m": "<class 'float'>",
+    "bow_void_m": "<class 'float'>",
+    "tank_od_m": "<class 'float'>",
+    "n_tanks": "<class 'int'>",
+    "n_tanks_wide": "<class 'int'>",
+    "n_tanks_long": "<class 'int'>",
+    "lightship_t": "<class 'float'>",
+    "air_draft_light_m": "<class 'float'>",
+    "side_clearance_m": "<class 'float'>",
+    "tank_inner_diameter_m": "<class 'float'>",
+    "containment_inner_volume_m3": "<class 'float'>",
+    "per_tank_volume_m3": "<class 'float'>",
+    "cargo_volume_m3": "<class 'float'>",
+    "density_t_m3": "<class 'float'>",
+    "failed_checks": "<class 'list'>",
+    "feasible": "<class 'bool'>",
+    "candidates_tried": "<class 'int'>",
+    "engine_inputs": "<class 'object'>",
+    "engine_result": "<class 'object'>"
+   }
+  },
+  "core.gas_separation": {
+   "GasSeparationInputs": {
+    "cofferdam_m": "<class 'float'>",
+    "opening_setback_m": "<class 'float'>",
+    "fwd_end_bulkhead_m": "<class 'float'>",
+    "is_pressure_tank": "<class 'bool'>",
+    "side_clearance_m": "<class 'float'>",
+    "double_bottom_m": "<class 'float'>"
+   },
+   "GasSeparationResult": {
+    "aft_separation_m": "<class 'float'>",
+    "fwd_separation_m": "<class 'float'>",
+    "cofferdam_m": "<class 'float'>",
+    "service_space_m": "<class 'float'>",
+    "total_length_taken_m": "<class 'float'>",
+    "checks": "<class 'list'>",
+    "warnings": "<class 'list'>"
+   }
+  },
+  "core.gas_stability": {
+   "Condition": {
+    "name": "<class 'str'>",
+    "cargo_t": "<class 'float'>",
+    "fill_fraction": "<class 'float'>",
+    "displacement_t": "<class 'float'>",
+    "draught_m": "<class 'float'>",
+    "kg_m": "<class 'float'>",
+    "gm_solid_m": "<class 'float'>",
+    "free_surface_m": "<class 'float'>",
+    "gm_fluid_m": "<class 'float'>",
+    "gz": "<class 'list'>",
+    "max_gz_m": "<class 'float'>",
+    "max_gz_deg": "<class 'float'>",
+    "area_0_27": "<class 'float'>",
+    "area_0_30": "<class 'float'>",
+    "area_0_40": "<class 'float'>",
+    "area_30_40": "<class 'float'>",
+    "deck_edge_deg": "typing.Optional[float]",
+    "criteria": "<class 'list'>"
+   },
+   "Criterion": {
+    "name": "<class 'str'>",
+    "value": "<class 'float'>",
+    "limit": "<class 'float'>",
+    "ok": "<class 'bool'>",
+    "source": "<class 'str'>"
+   },
+   "StabilityAssessment": {
+    "criteria_set": "<class 'str'>",
+    "conditions": "<class 'list'>",
+    "limitations": "<class 'list'>"
+   }
+  },
+  "core.hull": {
+   "HullGeometry": {
+    "loa": "<class 'float'>",
+    "beam": "<class 'float'>",
+    "depth": "<class 'float'>",
+    "bow_rake_length": "<class 'float'>",
+    "bow_rake_rise": "<class 'float'>",
+    "stern_rake_length": "<class 'float'>",
+    "stern_rake_rise": "<class 'float'>"
+   }
+  },
+  "core.journey_derating": {
+   "JourneyDeratingInputs": {
+    "capacity": "<class 'vessel_designer.core.barge_capacity.BargeCapacityResult'>",
+    "loa": "<class 'float'>",
+    "beam": "<class 'float'>",
+    "depth": "<class 'float'>",
+    "block_coefficient": "<class 'float'>",
+    "water_density": "<class 'float'>",
+    "design_depth_m": "<class 'float'>",
+    "ukc_m": "<class 'float'>",
+    "utilisation_floor": "<class 'float'>"
+   },
+   "JourneyDeratingResult": {
+    "cargo_capacity_t": "<class 'float'>",
+    "t_max_m": "<class 'float'>",
+    "full_load_draft_m": "<class 'float'>",
+    "achievable_tonnage_t": "<class 'float'>",
+    "binding_limit": "<class 'str'>",
+    "volume_utilisation": "<class 'float'>",
+    "draft_at_achievable_m": "<class 'float'>",
+    "shed_tonnage_t": "<class 'float'>",
+    "checks": "<class 'list'>",
+    "warnings": "<class 'list'>"
+   }
+  },
+  "core.models": {
+   "BargeInputs": {
+    "loa": "<class 'float'>",
+    "beam": "<class 'float'>",
+    "depth": "<class 'float'>",
+    "max_draft": "<class 'float'>",
+    "vertical_clearance": "<class 'float'>",
+    "vessel_type": "<class 'str'>",
+    "bow_rake_length": "<class 'float'>",
+    "bow_rake_rise": "typing.Optional[float]",
+    "stern_rake_length": "<class 'float'>",
+    "stern_rake_rise": "typing.Optional[float]",
+    "bow_non_tank_pct": "<class 'float'>",
+    "stern_non_tank_pct": "<class 'float'>",
+    "bow_non_tank_length": "typing.Optional[float]",
+    "stern_non_tank_length": "typing.Optional[float]",
+    "wing_tank_width": "typing.Optional[float]",
+    "wing_tank_gap": "<class 'float'>",
+    "wing_tank_height_ratio": "<class 'float'>",
+    "weather_shield_thickness": "<class 'float'>",
+    "weather_shield_clearance": "<class 'float'>",
+    "dome_height": "<class 'float'>",
+    "side_clearance": "typing.Optional[float]",
+    "tank_gap_transverse": "<class 'float'>",
+    "tank_gap_longitudinal": "<class 'float'>",
+    "n_tanks_wide": "<class 'int'>",
+    "n_tanks_long": "<class 'int'>",
+    "tank_wall_thickness": "typing.Optional[float]",
+    "tank_head_type": "<class 'str'>",
+    "tank_material": "<class 'str'>",
+    "tank_material_density": "<class 'float'>",
+    "design_pressure": "<class 'float'>",
+    "weld_efficiency": "<class 'float'>",
+    "tank_structure_factor": "<class 'float'>",
+    "insulation_thickness": "<class 'float'>",
+    "insulation_density": "<class 'float'>",
+    "cargo_type": "<class 'str'>",
+    "cargo_density_override": "typing.Optional[float]",
+    "fill_ratio": "<class 'float'>",
+    "bottom_plate_thickness": "<class 'float'>",
+    "side_plate_thickness": "<class 'float'>",
+    "deck_plate_thickness": "<class 'float'>",
+    "structure_factor": "<class 'float'>",
+    "hull_steel_density": "<class 'float'>",
+    "steel_rate_per_cbm": "<class 'float'>",
+    "block_coefficient": "<class 'float'>",
+    "water_density": "<class 'float'>",
+    "underkeel_clearance": "<class 'float'>",
+    "outfitting_factor": "<class 'float'>",
+    "piping_factor": "<class 'float'>",
+    "stores_weight": "<class 'float'>",
+    "tank_support_height": "<class 'float'>",
+    "double_bottom_height": "typing.Optional[float]",
+    "aft_arrangement": "typing.Optional[vessel_designer.core.aft_arrangement.AftArrangementResult]",
+    "separation": "typing.Optional[vessel_designer.core.gas_separation.GasSeparationResult]",
+    "tug_length": "<class 'float'>",
+    "tug_beam": "<class 'float'>",
+    "notch_depth": "<class 'float'>"
+   },
+   "BargeResults": {
+    "inputs": "<class 'vessel_designer.core.models.BargeInputs'>",
+    "tanks": "<class 'vessel_designer.core.models.TankResult'>",
+    "cargo_type": "<class 'str'>",
+    "cargo_density": "<class 'float'>",
+    "cargo_mass": "<class 'float'>",
+    "weights": "<class 'vessel_designer.core.models.WeightBreakdown'>",
+    "displacement": "<class 'float'>",
+    "deadweight": "<class 'float'>",
+    "draft": "<class 'float'>",
+    "freeboard": "<class 'float'>",
+    "min_freeboard_ok": "<class 'bool'>",
+    "air_draft": "<class 'float'>",
+    "air_draft_ok": "<class 'bool'>",
+    "stability": "<class 'vessel_designer.core.models.StabilityResult'>",
+    "stability_ok": "<class 'bool'>",
+    "trim": "<class 'vessel_designer.core.models.TrimResult'>",
+    "total_depth_required": "<class 'float'>",
+    "air_draft_unladen": "<class 'float'>",
+    "light_draft": "<class 'float'>",
+    "air_draft_navigating_unladen": "<class 'float'>",
+    "protective_location": "typing.Optional[vessel_designer.core.protective_location.ProtectiveLocationResult]",
+    "binding_constraints": "<class 'list'>",
+    "warnings": "<class 'list'>"
+   },
+   "StabilityResult": {
+    "KB": "<class 'float'>",
+    "BM_transverse": "<class 'float'>",
+    "KG": "<class 'float'>",
+    "GM_solid": "<class 'float'>",
+    "free_surface_correction": "<class 'float'>",
+    "GM_fluid": "<class 'float'>",
+    "BM_longitudinal": "<class 'float'>"
+   },
+   "TankResult": {
+    "n_tanks_wide": "<class 'int'>",
+    "n_tanks_long": "<class 'int'>",
+    "n_tanks_total": "<class 'int'>",
+    "outer_diameter": "<class 'float'>",
+    "inner_diameter": "<class 'float'>",
+    "overall_tank_length": "<class 'float'>",
+    "cylinder_length": "<class 'float'>",
+    "head_length": "<class 'float'>",
+    "volume_per_tank": "<class 'float'>",
+    "volume_cylinder": "<class 'float'>",
+    "volume_heads": "<class 'float'>",
+    "total_tank_volume": "<class 'float'>",
+    "cargo_volume": "<class 'float'>",
+    "tank_shell_weight": "<class 'float'>",
+    "insulation_weight": "<class 'float'>",
+    "tank_top_above_keel": "<class 'float'>",
+    "cylinder_wall_thickness": "<class 'float'>",
+    "head_wall_thickness": "<class 'float'>",
+    "design_pressure": "<class 'float'>",
+    "tank_material": "<class 'str'>"
+   },
+   "TrimResult": {
+    "LCG": "<class 'float'>",
+    "LCB": "<class 'float'>",
+    "trim": "<class 'float'>",
+    "draft_aft": "<class 'float'>",
+    "draft_fwd": "<class 'float'>"
+   },
+   "WeightBreakdown": {
+    "hull_bottom_plating": "<class 'float'>",
+    "hull_side_plating": "<class 'float'>",
+    "hull_deck_plating": "<class 'float'>",
+    "hull_rake_plating": "<class 'float'>",
+    "hull_internal_structure": "<class 'float'>",
+    "hull_steel_total": "<class 'float'>",
+    "tank_shells": "<class 'float'>",
+    "tank_internals_supports": "<class 'float'>",
+    "tank_total": "<class 'float'>",
+    "insulation": "<class 'float'>",
+    "wing_plate": "<class 'float'>",
+    "weather_shield": "<class 'float'>",
+    "piping_machinery": "<class 'float'>",
+    "outfitting": "<class 'float'>",
+    "stores": "<class 'float'>",
+    "moulded_volume": "<class 'float'>",
+    "moulded_depth": "<class 'float'>",
+    "steel_top_down": "<class 'float'>",
+    "steel_bottom_up": "<class 'float'>",
+    "steel_delta": "<class 'float'>",
+    "lightship": "<class 'float'>"
+   }
+  },
+  "core.pressure_vessel": {
+   "TankMaterialProperties": {
+    "name": "<class 'str'>",
+    "allowable_stress": "<class 'float'>",
+    "density": "<class 'float'>",
+    "min_thickness": "<class 'float'>",
+    "corrosion_allowance": "<class 'float'>",
+    "description": "<class 'str'>"
+   }
+  },
+  "core.protective_location": {
+   "ProtectiveLocationResult": {
+    "vessel_type": "<class 'str'>",
+    "d_vc": "<class 'float'>",
+    "total_tank_volume": "<class 'float'>",
+    "cs_required": "<class 'float'>",
+    "cs_actual": "<class 'float'>",
+    "cs_ok": "<class 'bool'>",
+    "cb_required": "<class 'float'>",
+    "cb_actual": "<class 'float'>",
+    "cb_ok": "<class 'bool'>"
+   },
+   "RequiredClearances": {
+    "cs_required": "<class 'float'>",
+    "cb_required": "<class 'float'>",
+    "d_vc": "<class 'float'>"
+   }
+  },
+  "core.resistance": {
+   "EnvironmentInputs": {
+    "name": "<class 'str'>",
+    "water_depth": "<class 'float'>",
+    "channel_width_bottom": "<class 'float'>",
+    "channel_width_surface": "<class 'float'>",
+    "bank_slope": "<class 'float'>",
+    "current_speed_knots": "<class 'float'>",
+    "water_density": "<class 'float'>",
+    "is_deep_water": "<class 'bool'>",
+    "significant_wave_height_m": "<class 'float'>",
+    "wave_heading_deg_off_bow": "<class 'float'>",
+    "peak_wave_period_s": "<class 'float'>",
+    "squat_safety_margin_m": "<class 'float'>",
+    "apply_squat_limit": "<class 'bool'>"
+   },
+   "EnvironmentResult": {
+    "name": "<class 'str'>",
+    "limiting_speed_knots": "typing.Optional[float]",
+    "service_speed_knots": "<class 'float'>",
+    "blockage_ratio": "<class 'float'>",
+    "speed_curve": "typing.List[vessel_designer.core.resistance.SpeedPoint]",
+    "resistance_at_service_kn": "<class 'float'>",
+    "power_at_service_kw": "<class 'float'>",
+    "fuel_at_service_lph": "<class 'float'>",
+    "fuel_at_service_lpnm": "<class 'float'>",
+    "squat_limited_speed_knots": "typing.Optional[float]",
+    "service_speed_governed_by": "<class 'str'>"
+   },
+   "ResistanceInputs": {
+    "loa": "<class 'float'>",
+    "lwl": "<class 'float'>",
+    "beam": "<class 'float'>",
+    "draft": "<class 'float'>",
+    "block_coefficient": "<class 'float'>",
+    "wetted_surface_area": "<class 'float'>",
+    "displacement_tonnes": "<class 'float'>",
+    "tug": "<class 'vessel_designer.core.resistance.TugInputs'>",
+    "environments": "typing.List[vessel_designer.core.resistance.EnvironmentInputs]",
+    "speed_min_knots": "<class 'float'>",
+    "speed_max_knots": "<class 'float'>",
+    "speed_step_knots": "<class 'float'>"
+   },
+   "ResistanceResults": {
+    "inputs": "<class 'vessel_designer.core.resistance.ResistanceInputs'>",
+    "wetted_surface_area": "<class 'float'>",
+    "environments": "typing.List[vessel_designer.core.resistance.EnvironmentResult]",
+    "checks": "<class 'list'>",
+    "warnings": "<class 'list'>"
+   },
+   "SpeedPoint": {
+    "speed_knots": "<class 'float'>",
+    "speed_through_water_knots": "<class 'float'>",
+    "froude_number": "<class 'float'>",
+    "froude_depth": "<class 'float'>",
+    "resistance_frictional_kn": "<class 'float'>",
+    "resistance_residuary_kn": "<class 'float'>",
+    "resistance_shallow_factor": "<class 'float'>",
+    "resistance_total_kn": "<class 'float'>",
+    "effective_power_kw": "<class 'float'>",
+    "delivered_power_kw": "<class 'float'>",
+    "fuel_litres_per_hour": "<class 'float'>",
+    "fuel_litres_per_nm": "<class 'float'>",
+    "power_available": "<class 'bool'>",
+    "resistance_waves_kn": "<class 'float'>",
+    "squat_m": "<class 'float'>",
+    "dynamic_ukc_m": "<class 'float'>",
+    "squat_limited": "<class 'bool'>"
+   },
+   "TugInputs": {
+    "engine_power_kw": "<class 'float'>",
+    "propulsive_efficiency": "<class 'float'>",
+    "sfc_g_per_kwh": "<class 'float'>",
+    "fuel_density_kg_per_litre": "<class 'float'>"
+   }
+  },
+  "core.squat": {
+   "SquatInputs": {
+    "speed_through_water_kn": "<class 'float'>",
+    "draft_m": "<class 'float'>",
+    "beam_m": "<class 'float'>",
+    "lpp_m": "<class 'float'>",
+    "block_coefficient": "<class 'float'>",
+    "water_depth_m": "<class 'float'>",
+    "channel_area_m2": "<class 'float'>",
+    "displacement_m3": "<class 'float'>",
+    "safety_margin_m": "<class 'float'>"
+   },
+   "SquatResult": {
+    "method": "<class 'str'>",
+    "squat_m": "<class 'float'>",
+    "squat_barrass_m": "<class 'float'>",
+    "squat_icorels_m": "typing.Optional[float]",
+    "blockage_ratio": "<class 'float'>",
+    "froude_depth": "<class 'float'>",
+    "static_ukc_m": "<class 'float'>",
+    "dynamic_ukc_m": "<class 'float'>",
+    "grounds": "<class 'bool'>",
+    "checks": "typing.List[vessel_designer.core.checks.Check]",
+    "warnings": "typing.List[str]"
+   }
+  },
+  "core.vessel_standards": {
+   "VesselStandard": {
+    "standard_id": "<class 'str'>",
+    "family": "<class 'str'>",
+    "class_name": "<class 'str'>",
+    "formation": "<class 'str'>",
+    "loa_m": "typing.Tuple[float, float]",
+    "beam_m": "<class 'float'>",
+    "draught_m": "typing.Tuple[float, float]",
+    "dwt_t": "typing.Tuple[float, float]",
+    "n_abreast": "<class 'int'>",
+    "n_in_line": "<class 'int'>",
+    "unit_beam_m": "typing.Optional[float]",
+    "min_bridge_clearance_m": "typing.Optional[float]",
+    "moulded_depth_m": "typing.Optional[float]",
+    "source": "<class 'str'>",
+    "cargo_modes": "typing.Tuple[str, ...]",
+    "notes": "<class 'str'>"
+   }
+  },
+  "core.waves": {
+   "WaveResistanceInputs": {
+    "significant_wave_height_m": "<class 'float'>",
+    "beam_waterline_m": "<class 'float'>",
+    "lpp_m": "<class 'float'>",
+    "bow_waterline_length_m": "<class 'float'>",
+    "heading_deg_off_bow": "<class 'float'>",
+    "peak_wave_period_s": "<class 'float'>",
+    "water_density_t_m3": "<class 'float'>",
+    "speed_kn": "<class 'float'>"
+   },
+   "WaveResistanceResult": {
+    "added_resistance_kn": "<class 'float'>",
+    "added_resistance_head_seas_kn": "<class 'float'>",
+    "heading_factor": "<class 'float'>",
+    "bow_waterline_length_m": "<class 'float'>",
+    "wavelength_m": "<class 'float'>",
+    "lambda_over_lpp": "<class 'float'>",
+    "added_power_kw": "<class 'float'>",
+    "checks": "typing.List[vessel_designer.core.checks.Check]",
+    "warnings": "typing.List[str]"
+   }
+  }
+ }
+}

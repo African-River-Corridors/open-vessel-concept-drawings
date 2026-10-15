@@ -178,7 +178,7 @@ last ticket of this spec, and the standard blocks it.
   end.
 - **Results hash.** Recomputed on save. On open, a changed hash shows a warning banner with the
   Options affected (ADR 0007).
-- **Units.** SI only, as stored. One display rounding rule per quantity type, in the front end.
+- **Units.** SI only, as stored (speeds are in knots, as stored; ADR 0007). One display rounding rule per quantity type, in the front end.
 - **Platform.** A macOS development build for the maintainer, unsigned. The Windows build compiles
   in CI but has no installer.
 

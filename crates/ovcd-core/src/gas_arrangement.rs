@@ -256,6 +256,17 @@ impl Search<'_> {
                 return Ok(None);
             }
             let total = opt_or_zero(r.containment_inner_volume_m3);
+            // Mutation survivor (#146), `total / n` to `total % n` below: equivalent. The per-tank
+            // volume matters only to IGC_2G_EXACT, whose rule d(V) - insulation is non-decreasing
+            // in V, and continuous, so the loop that sets the clearance settles. We are here only when the full-beam tank is over the cap by more than the
+            // 1e-6 of `od_unusable`, so the clearance `cs` is at least 5e-7 above the one the
+            // full-beam attempt settled on, and that settled clearance is already at least the
+            // rule for the full-beam tank. The cap tank is smaller, so its rule is smaller still,
+            // and the check below passes whatever per-tank volume is given. The other way in, a
+            // full-beam tank of zero diameter, needs a beam under 0.9 m, where `cs` is under the
+            // 0.45 m floor of the rule for every volume the engine can build. Searched with the
+            // mutant built in: 180 000 random inputs, 240 000 more at hull sizes up to 4 km, none
+            // differ. Not a gap in the tests.
             let need = required_side_clearance(
                 &self.o.ruleset,
                 self.beam,
@@ -263,6 +274,7 @@ impl Search<'_> {
                 total / tank_divisor(r.n_tanks_total),
                 opt_or_zero(r.insulation_thickness_mm),
             )?;
+            // Killed by `a_cap_clearance_a_hair_under_the_rule_is_accepted_not_refused` (`+` to `-`).
             if cs + 1e-9 < need {
                 return Ok(None);
             }
@@ -419,6 +431,7 @@ pub fn fit(
         all_ok(&all)
     };
     if o.ruleset == "ADN_G"
+        // Killed by `a_tank_exactly_at_seventy_percent_of_beam_is_not_flagged_wide` (`>` to `>=`).
         && opt_or_zero(r.tank_outer_diameter_m) > ADN_G_WIDE_TANK_FRACTION * beam
     {
         failed.push(format!(
@@ -459,6 +472,16 @@ pub fn fit(
         n_tanks_long,
         lightship_t: r.lightship_t,
         air_draft_light_m: match r.air_draft_light_m {
+            // Python `r.air_draft_light_m or r.air_draft_m`. Mutation survivor (#146), the guard
+            // `x != 0.0` always true: no input found that tells it apart, so it is recorded as
+            // equivalent. It differs only when the light air draft is exactly 0.0 and the loaded
+            // air draft is not: the tank top level with the light waterline to the last bit, with
+            // the loaded waterline above it. When the draught is clamped at the depth (a lightship
+            // over the hull's displacement) both air drafts are the tank top less the depth, so
+            // the two sides agree. Hill-climbing the light air draft down over length, beam,
+            // depth, tank cap and draught cap, and 240 000 random inputs, found nothing under
+            // 0.0146 m, and that only for a hull 15 mm deep. The guard stays as the port of
+            // Python's `or`.
             Some(x) if x != 0.0 => x,
             _ => r.air_draft_m,
         },

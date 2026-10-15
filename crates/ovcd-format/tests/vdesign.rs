@@ -832,3 +832,70 @@ fn every_message_names_its_inputs_as_data() {
         .expect("a soft-range warning");
     assert_eq!(soft.warning_inputs[i], ["length_overall_m"]);
 }
+
+// Issue #139: a duplicate JSON key is ambiguous, so it is a hard error that names the key.
+
+fn text_with_duplicate(find: &str, replace: &str) -> String {
+    let text = serde_json::to_string_pretty(
+        &serde_json::from_str::<Value>(&design_with(required("bauxite"))).unwrap(),
+    )
+    .unwrap();
+    assert!(text.contains(find), "{find} not in {text}");
+    text.replacen(find, replace, 1)
+}
+
+#[test]
+fn a_duplicate_input_key_is_a_hard_error_naming_the_key() {
+    // The second "beam_m" would win in a plain JSON read (the review's example: 14.8 then 30.0).
+    let text = text_with_duplicate(
+        "\"beam_m\": 11.4",
+        "\"beam_m\": 14.8,\n \"beam_m\": {\"value\": 30.0, \"source\": \"typed\"}",
+    );
+    let r = fill(&text, &Profile::built_in()).report;
+    assert!(has(&r.errors, "`beam_m` appears twice"), "{r:?}");
+    assert!(has(&r.errors, "options[0].inputs"), "{r:?}");
+}
+
+#[test]
+fn a_duplicate_top_level_key_is_a_hard_error() {
+    let text = text_with_duplicate(
+        "\"engine_version\": \"0.1.0\"",
+        "\"engine_version\": \"0.1.0\", \"engine_version\": \"0.2.2\"",
+    );
+    let r = check(&text, &Profile::built_in()).report;
+    assert!(has(&r.errors, "`engine_version` appears twice"), "{r:?}");
+}
+
+#[test]
+fn a_duplicate_results_hash_is_a_hard_error() {
+    let h = "ab".repeat(32);
+    let text = text_with_duplicate(
+        "\"name\": \"A\"",
+        &format!("\"name\": \"A\", \"results_hash\": \"{h}\", \"results_hash\": \"{h}\""),
+    );
+    let r = check(&text, &Profile::built_in()).report;
+    assert!(has(&r.errors, "`results_hash` appears twice"), "{r:?}");
+}
+
+#[test]
+fn a_duplicate_key_inside_a_value_is_a_hard_error() {
+    let text = text_with_duplicate(
+        "\"kind\": \"self_propelled\"",
+        "\"kind\": \"self_propelled\", \"kind\": \"pushed_barge\"",
+    );
+    let r = check(&text, &Profile::built_in()).report;
+    assert!(has(&r.errors, "`kind` appears twice"), "{r:?}");
+}
+
+#[test]
+fn the_same_key_in_different_objects_is_not_a_duplicate() {
+    let two = json!({
+        "format": "vdesign", "format_version": 1, "engine_version": "0.1.0",
+        "options": [
+            { "name": "A", "inputs": required("bauxite") },
+            { "name": "B", "inputs": required("bauxite") }
+        ]
+    });
+    let r = fill(&two.to_string(), &Profile::built_in()).report;
+    assert!(!has(&r.errors, "appears twice"), "{r:?}");
+}
