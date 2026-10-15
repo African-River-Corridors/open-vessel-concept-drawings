@@ -28,7 +28,7 @@ Dimensions are the CLASS definition, not a specific hull. Draught ranges are the
 range; a project's design draught is its own decision, and the channel depth follows from
 it by the channel rules, not from this table.
 
-Pure Python, Pyodide-safe. No I/O.
+The catalogue and its lookups run in the Rust core (`vessel_designer._native`). No I/O.
 """
 
 from dataclasses import dataclass
@@ -209,10 +209,4 @@ def validate_catalogue(catalogue: Optional[Dict[str, VesselStandard]] = None) ->
     """
     if catalogue is None:
         return _call("vessel_standards", "validate_catalogue", {"extra": None}, List[Check])
-    missing = sorted(set(VESSEL_STANDARDS) - set(catalogue))
-    if missing:
-        raise NotImplementedError(
-            f"a catalogue must keep the built-in standards (missing {missing}); "
-            "add entries to a copy of VESSEL_STANDARDS instead")
-    extra = {k: v for k, v in catalogue.items() if VESSEL_STANDARDS.get(k) != v}
-    return _call("vessel_standards", "validate_catalogue", {"extra": extra}, List[Check])
+    return _call("vessel_standards", "validate_catalogue", {"catalogue": catalogue}, List[Check])

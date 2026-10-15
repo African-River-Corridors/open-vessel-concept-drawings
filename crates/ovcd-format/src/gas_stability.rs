@@ -4,12 +4,14 @@
 //!
 //! `eval("gas_stability", ..)` routes here.
 //!
-//! `assess` takes the arrangement it assesses either as `fit` (runs `gas_arrangement.fit` and
+//! `assess` takes the arrangement it assesses as `result` (a capacity result object, used as it is),
+//! or as `fit` (runs `gas_arrangement.fit` and
 //! uses its engine result and, unless `payload_t` is given, its payload) or as `capacity` (runs
 //! `barge_capacity.compute`).
 
 use crate::EvalError;
-use crate::eval::{capacity_inputs, raised_py};
+use crate::eval::{capacity_inputs, raised_py, tagged_f64};
+use crate::objects::capacity_result_from_json;
 use ovcd_core::gas_stability::{self as gs, Condition, Criterion, PyError, PyNum};
 use serde_json::{Map, Value, json};
 
@@ -26,7 +28,7 @@ fn float(x: f64) -> Value {
 
 fn num_arg(args: &Value, name: &str) -> Result<f64, EvalError> {
     args.get(name)
-        .and_then(Value::as_f64)
+        .and_then(tagged_f64)
         .ok_or_else(|| EvalError::BadInput(format!("`args.{name}` must be a number")))
 }
 
@@ -237,7 +239,10 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
         }
         "assess" => {
             // The result to assess comes from a gas fit (`fit`) or a capacity run (`capacity`).
-            let (result, default_payload) = if let Some(fit_args) = args.get("fit") {
+            // A capacity result the caller passes (`result`) is used as it is.
+            let (result, default_payload) = if let Some(passed) = args.get("result") {
+                (capacity_result_from_json(passed, "result")?, None)
+            } else if let Some(fit_args) = args.get("fit") {
                 match crate::gas_arrangement::run_fit(fit_args)? {
                     Ok(f) => (f.engine_result, Some(f.payload_t)),
                     Err(e) => return raised_py(&e),

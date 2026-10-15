@@ -10,6 +10,7 @@ from .models import (
     WeightBreakdown,
 )
 from .._bridge import call as _call
+from .tanks import free_surface_moment_cylindrical  # noqa: F401  (0.1.0 exposed it here)
 
 
 def find_equilibrium_draft(
@@ -68,9 +69,8 @@ def calculate_stability(
     Returns:
         StabilityResult with KB, BM, KG, GM values.
     """
-    # The core derives the hull, tanks and weights from ``inputs`` itself.
     return _call("hydrostatics", "calculate_stability", dict(
-        inputs=inputs, cargo_mass=cargo_mass, cargo_density_t=cargo_density_t, draft=draft),
+        hull=hull, inputs=inputs, tanks=tanks, weights=weights, cargo_mass=cargo_mass, cargo_density_t=cargo_density_t, draft=draft),
         StabilityResult)
 
 
@@ -99,4 +99,4 @@ def calculate_trim(
         TrimResult with LCG, LCB, trim, and drafts at bow/stern.
     """
     return _call("hydrostatics", "calculate_trim", dict(
-        inputs=inputs, cargo_mass=cargo_mass, draft=draft), TrimResult)
+        hull=hull, inputs=inputs, weights=weights, cargo_mass=cargo_mass, draft=draft), TrimResult)
