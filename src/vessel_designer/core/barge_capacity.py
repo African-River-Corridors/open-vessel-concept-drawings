@@ -26,6 +26,7 @@ Pure Python.
 """
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -245,5 +246,6 @@ def _result_from_json(data: dict, inp: BargeCapacityInputs) -> BargeCapacityResu
         result.gas_basis = {"inputs": _bridge.decode(BargeInputs, basis["inputs"]),
                             "tanks": _bridge.decode(TankResult, basis["tanks"]),
                             "weights": _bridge.decode(WeightBreakdown, basis["weights"])}
-    object.__setattr__(result, "_inputs", inp)
+    # A copy: the caller may edit or reuse `inp` (a sweep loop) after this call.
+    object.__setattr__(result, "_inputs", copy.deepcopy(inp))
     return result

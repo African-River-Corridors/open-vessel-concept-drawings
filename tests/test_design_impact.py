@@ -45,7 +45,7 @@ def test_the_case_set_covers_the_calibration_vessels_and_a_sweep():
     cs = di.cases()
     assert len(cs) >= 25
     assert any(k.startswith("calibration para-mississippi") for k in cs)
-    assert any(k.startswith("calibration CN liquid") for k in cs)
+    assert any(k.startswith("sweep CN-derived liquid") for k in cs)
     assert any(k.startswith("sweep gas ADN_G") for k in cs)
     for typed in cs.values():           # the six required inputs, so `ovcd fill` can complete the rest
         for key in ("cargo", "hull_form", "formation", "length_overall_m", "beam_m", "moulded_depth_m"):
@@ -164,8 +164,9 @@ def test_the_fast_gate_runs_the_check_and_counts_it():
     assert expected == f"EXPECTED_STEPS={len(steps)}"
 
 
-def test_the_pull_request_workflow_publishes_the_report_and_the_label():
+def test_the_pull_request_workflow_only_measures_and_keeps_an_artifact():
     text = (ROOT / ".github" / "workflows" / "design-impact.yml").read_text(encoding="utf-8")
-    assert "design_impact.py report --publish --pr" in text
-    assert "pull-requests: write" in text and "issues: write" in text
-    assert "head.repo.full_name == github.repository" in text      # a fork's token cannot write
+    assert "design_impact.py report" in text and "--publish" not in text
+    assert "pull-requests: write" not in text and "issues: write" not in text   # runs fork code: read only
+    assert "pull_request_target" not in text
+    assert "upload-artifact" in text and "pr.txt" in text

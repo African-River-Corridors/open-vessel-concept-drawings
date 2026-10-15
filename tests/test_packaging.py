@@ -43,11 +43,13 @@ def test_maturin_builds_ovcd_py_as_a_submodule_of_the_package():
 
 
 def test_numpy_is_not_a_dependency():
-    # Neither the package nor any extra needs numpy (it was only for the old parity oracle).
+    # The package needs no numpy, and no extra for users does. Only the `dev` extra (the test
+    # tools) has it, because tests/test_api_ints_numpy.py passes numpy numbers to the API.
     proj = pyproject()["project"]
     extras = proj.get("optional-dependencies", {})
-    everything = proj["dependencies"] + [d for ds in extras.values() for d in ds]
+    everything = proj["dependencies"] + [d for k, ds in extras.items() if k != "dev" for d in ds]
     assert not [d for d in everything if re.match(r"numpy\b", d, re.I)]
+    assert [d for d in extras["dev"] if re.match(r"numpy\b", d, re.I)], "tests need numpy"
 
 
 def test_no_package_module_imports_numpy():
@@ -138,8 +140,11 @@ def test_wheel_job_skips_the_tests_that_scan_files_it_does_not_copy():
     """The wheel job copies tests/, examples/, calibration/ and catalogue/ only. A test that
     scans src/ or tools/ would scan zero files there, so the job must skip it."""
     text = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
-    for name in ("test_pystr_tables.py", "test_vdesign_edge_sweep.py", "test_design_impact.py"):
+    for name in ("test_pystr_tables.py", "test_vdesign_edge_sweep.py"):
         assert f"--ignore=tests/{name}" in text, name
+    # the tools, workflow and gate tests read the repository itself (globs, so a new file is covered)
+    for pattern in ("test_design_impact*.py", "test_workflows*.py", "test_gates*.py"):
+        assert f"--ignore-glob='tests/{pattern}'" in text, pattern
 
 
 def test_version_is_0_2_2_everywhere():
