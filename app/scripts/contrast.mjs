@@ -78,7 +78,9 @@ export function check(css) {
   const dark = { ...light, ...darkAttr };
   const rows = [];
   const problems = [];
-  for (const key of new Set([...Object.keys(darkAttr), ...Object.keys(darkMedia)])) {
+  // The OS-dark block may be absent (Auto shows light while #248 is in progress); when present, it must match.
+  const media = Object.keys(darkMedia).length > 0;
+  for (const key of media ? new Set([...Object.keys(darkAttr), ...Object.keys(darkMedia)]) : []) {
     if (darkAttr[key] !== darkMedia[key]) {
       problems.push(`dark blocks differ on --${key}: data-theme="dark" has ${darkAttr[key]}, the OS-dark block has ${darkMedia[key]}`);
     }
