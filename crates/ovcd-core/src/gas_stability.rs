@@ -573,6 +573,93 @@ pub const DEFAULT_BLOCK_COEFFICIENT: f64 = 0.85;
 pub const DEFAULT_WATER_DENSITY: f64 = 1.0;
 pub const DEFAULT_CRITERIA_SET: &str = "IS_CODE_2008";
 
+/// Initial GM of a box section with no free surface: `KB + BM - KG`, with `KB = T / 2` and
+/// `BM = B^2 / (12 T)`.
+fn box_gm_solid(beam: f64, draught: f64, kg: f64) -> Result<f64, PyError> {
+    let (kb, bm) = (draught / 2.0, div(beam * beam, 12.0 * draught)?);
+    Ok(kb + bm - kg)
+}
+
+/// The stability of one box section at one condition: the GZ curve on the 1 degree grid, the
+/// areas, the angle of maximum GZ, and the criteria of `criteria_set`. `gm_solid` is the GM with no
+/// free surface; `free_surface_m` is the free surface correction (m of GM), applied to the GM and,
+/// as `FSC x sin(phi)`, to every GZ. The identity fields (`name`, cargo, fill, displacement) are
+/// left empty or zero for the caller to set.
+fn box_condition_at(
+    beam: f64,
+    depth: f64,
+    draught: f64,
+    kg: f64,
+    gm_solid: f64,
+    free_surface_m: f64,
+    criteria_set: &str,
+) -> Result<Condition, PyError> {
+    let (b, d, t, fsc) = (beam, depth, draught, free_surface_m);
+    let mut gz: Vec<(i32, f64)> = Vec::with_capacity(61);
+    for a in ANGLES_DEG {
+        let heel = box_gz(b, d, t, kg, f64::from(a))?;
+        gz.push((a, heel - fsc * sin(radians(f64::from(a)))?));
+    }
+    let (max_gz_deg, max_gz) = max_by_gz(&gz);
+    let deck_edge = degrees(libm::atan(div(2.0 * (d - t), b)?));
+    let mut c = Condition {
+        name: String::new(),
+        cargo_t: 0.0,
+        cargo_is_int: false,
+        fill_fraction: 0.0,
+        displacement_t: 0.0,
+        draught_m: t,
+        kg_m: kg,
+        gm_solid_m: gm_solid,
+        free_surface_m: fsc,
+        gm_fluid_m: gm_solid - fsc,
+        max_gz_m: max_gz,
+        max_gz_deg,
+        area_0_27: area(&gz, 0, 27),
+        area_0_30: area(&gz, 0, 30),
+        area_0_40: area(&gz, 0, 40),
+        area_30_40: area(&gz, 30, 40),
+        deck_edge_deg: Some(deck_edge),
+        gz,
+        criteria: Vec::new(),
+    };
+    c.criteria = criteria(criteria_set, &c)?;
+    Ok(c)
+}
+
+/// The intact stability criteria of a box section, for a known KG (issue #184). The same work
+/// `assess` does for each loading condition of a gas barge, without the gas arrangement: give the
+/// section (beam, depth, draught), KG above the keel, the free surface correction in metres of GM,
+/// and the criteria set (`"IS_CODE_2008"`). The draught must be below the depth (a hull that does
+/// not float with freeboard has no curve). `displacement_t`, cargo and fill are 0 here: the
+/// section does not know its length.
+pub fn box_condition(
+    beam: f64,
+    depth: f64,
+    draught: f64,
+    kg: f64,
+    free_surface_m: f64,
+    criteria_set: &str,
+) -> Result<Condition, PyError> {
+    if draught >= depth {
+        return Err(PyError::Value(
+            "box_condition needs a draught below the depth".to_string(),
+        ));
+    }
+    let gm_solid = box_gm_solid(beam, draught, kg)?;
+    let mut c = box_condition_at(
+        beam,
+        depth,
+        draught,
+        kg,
+        gm_solid,
+        free_surface_m,
+        criteria_set,
+    )?;
+    c.name = "Box".to_string();
+    Ok(c)
+}
+
 /// Assess a converged gas arrangement.
 pub fn assess(
     result: &GasCapacityResult,
@@ -676,8 +763,7 @@ pub fn assess_num(
             });
             continue;
         }
-        let (kb, bm) = (t / 2.0, div(b * b, 12.0 * t)?);
-        let gm_solid = kb + bm - kg;
+        let gm_solid = box_gm_solid(b, t, kg)?;
         // Free surface: chord at the liquid level, along the cylindrical length, every tank.
         let i_fs = if 0.0 < frac && frac < 1.0 {
             let chord = 2.0 * libm::sqrt(py_max2(sq(r_in)? - sq(r_in - h)?, 0.0));
@@ -686,35 +772,12 @@ pub fn assess_num(
             0.0
         };
         let fsc = div(rho_c * i_fs, disp)?;
-        let mut gz: Vec<(i32, f64)> = Vec::with_capacity(61);
-        for a in ANGLES_DEG {
-            let heel = box_gz(b, d, t, kg, f64::from(a))?;
-            gz.push((a, heel - fsc * sin(radians(f64::from(a)))?));
-        }
-        let (max_gz_deg, max_gz) = max_by_gz(&gz);
-        let deck_edge = degrees(libm::atan(div(2.0 * (d - t), b)?));
-        let mut c = Condition {
-            name: name.to_string(),
-            cargo_t: cargo,
-            cargo_is_int,
-            fill_fraction: frac,
-            displacement_t: disp,
-            draught_m: t,
-            kg_m: kg,
-            gm_solid_m: gm_solid,
-            free_surface_m: fsc,
-            gm_fluid_m: gm_solid - fsc,
-            max_gz_m: max_gz,
-            max_gz_deg,
-            area_0_27: area(&gz, 0, 27),
-            area_0_30: area(&gz, 0, 30),
-            area_0_40: area(&gz, 0, 40),
-            area_30_40: area(&gz, 30, 40),
-            deck_edge_deg: Some(deck_edge),
-            gz,
-            criteria: Vec::new(),
-        };
-        c.criteria = criteria(criteria_set, &c)?;
+        let mut c = box_condition_at(b, d, t, kg, gm_solid, fsc, criteria_set)?;
+        c.name = name.to_string();
+        c.cargo_t = cargo;
+        c.cargo_is_int = cargo_is_int;
+        c.fill_fraction = frac;
+        c.displacement_t = disp;
         conds.push(c);
     }
 
