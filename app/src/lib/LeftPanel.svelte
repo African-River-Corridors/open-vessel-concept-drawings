@@ -103,6 +103,7 @@
     {#each groups as g (g.name)}
       <details open={!closed[g.name]} ontoggle={(e) => (closed[g.name] = !e.currentTarget.open)}>
         <summary>{g.name}</summary>
+        {#if schema?.group_notes?.[g.name]}<p class="gnote" data-testid="group-note">{schema.group_notes[g.name]}</p>{/if}
         {#if g.name === VESSEL_CLASS_GROUP}
           <VesselClass
             schemeSpec={specOf("vessel_scheme")}
@@ -137,5 +138,6 @@
   .confirm { background: #fbe4e1; padding: 4px 6px; }
   .pname { font-size: 13px; }
   details { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 4px; }
+  .gnote { margin: 4px 0; font-size: 12px; color: var(--dim); }
   summary { font-family: var(--serif); color: var(--navy); font-size: 15px; cursor: pointer; }
 </style>

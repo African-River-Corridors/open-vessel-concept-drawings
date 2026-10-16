@@ -36,6 +36,7 @@ use serde_json::{Map, Value, json};
 /// ```text
 /// { "profile": name, "engine_version": v,
 ///   "groups": ["Required", ...],
+///   "group_notes": { group name: note },
 ///   "inputs": [ { "name", "group", "kind", "required", "applies_to": [containments],
 ///                 "applies_to_formation": [Formation kinds],
 ///                 "unit", "nullable", "choices": [{ "value", "label", ... }],
@@ -55,6 +56,10 @@ pub fn input_schema(profile: &Profile) -> Value {
         "profile": profile.name(),
         "engine_version": ENGINE_VERSION,
         "groups": Group::ALL.iter().map(|g| g.label()).collect::<Vec<_>>(),
+        "group_notes": Group::ALL
+            .iter()
+            .filter_map(|g| g.note().map(|n| (g.label().to_string(), json!(n))))
+            .collect::<Map<String, Value>>(),
         "inputs": inputs,
     })
 }

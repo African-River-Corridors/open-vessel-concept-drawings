@@ -82,10 +82,12 @@ fn a_sloped_hopper_hold_runs_as_the_sloped_hopper_barge() {
         panic!("a sloped hopper runs");
     };
     assert_eq!(results["vessel"], "Sloped-hopper dry bulk barge");
-    // The same answer `simulate` gives for the params the Option maps to.
+    // The same answer `simulate` gives for the params the Option maps to (`run` adds the budget).
     let params = simulate_params_of(&design.options[0]).unwrap();
     let case = json!({ "fn": "simulate", "args": { "params": params } });
-    assert_eq!(results, eval("simulate", &case).unwrap()["ok"]);
+    let mut without_cost = results.clone();
+    without_cost.as_object_mut().unwrap().remove("cost");
+    assert_eq!(without_cost, eval("simulate", &case).unwrap()["ok"]);
     // And not the box barge's answer: the hold shapes differ.
     let box_hold = run_option(&starter().options[0]);
     let RunOutcome::Results { results: boxed, .. } = box_hold else {
