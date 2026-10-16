@@ -570,6 +570,7 @@ fn the_schema_lists_every_input_in_table_order_with_its_group() {
             "Vessel Class",
             "Hull and containment",
             "Gas tanks",
+            "Dry-bulk hold",
             "Waterway Limits",
             "Speed and power"
         ])

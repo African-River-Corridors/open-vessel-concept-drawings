@@ -48,6 +48,11 @@ save writes the current version.
   class that disagrees is replaced, with a warning. Picking a class sets length, beam and Formation
   (and a convoy's counts), marked `class`; its draught (top of the range) and air draft (bottom of the
   range) fill the two limits, marked `class`, unless a limit was typed. Depth stays typed.
+- **Inputs added after the first files** (issue #4, from the dry-bulk hold): a file that lacks one of these
+  inputs, in version 1 or in a version 2 file from a test build, is read with the fixed value the engine
+  used before the input existed (a table in `vdesign.rs`, not the Defaults Profile), marked `default`, with
+  one warning per Option. Results cannot change. Every other left-out input is still refused. A Defaults
+  Profile copy that lacks an entry for such an input takes the built-in entry; `profile_version` is unchanged.
 
 ## Consequences
 

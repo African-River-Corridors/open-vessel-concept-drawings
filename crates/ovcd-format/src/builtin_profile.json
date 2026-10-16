@@ -87,6 +87,76 @@
       "soft": { "min": 4.0, "max": 20.0 },
       "basis": "a design limit of this tool, not an IGC Code rule: a tank is never wider than this, so a wider hull gets more tanks across. Tank length is limited only by length over diameter, at most 7"
     },
+    "hold_wing_void_width_m": {
+      "default": 1.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 0.5, "max": 2.5 },
+      "basis": "carried over from the original engine: the empty space at each side of the hold. The hold width is the beam less two of these. The hold must keep a width that is not negative (hard)"
+    },
+    "hold_double_bottom_m": {
+      "default": 1.2,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 20 },
+      "soft": { "min": 0.5, "max": 2.0 },
+      "basis": "carried over from the original engine: the height of the inner bottom above the keel. The hold height is the depth less this, plus the coaming; it must not be negative (hard)"
+    },
+    "hopper_slope_h_per_v": {
+      "default": 1.0,
+      "unit": "H:V",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.3, "max": 2.0 },
+      "basis": "carried over from the original engine: the slope of the hopper side plates, horizontal over vertical. The hopper bottom is never narrower than 1 m"
+    },
+    "hatch_coaming_height_m": {
+      "default": 1.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.3, "max": 2.0 },
+      "basis": "carried over from the original engine: the hatch coaming above the main deck. It adds to the hold height and to the air draft"
+    },
+    "n_holds": {
+      "default": 3,
+      "unit": "holds",
+      "hard": { "ge": 1, "le": 50 },
+      "soft": { "min": 1.0, "max": 8.0 },
+      "basis": "carried over from the original engine: a whole number. It sets the number of transverse bulkheads (holds plus one) in the hopper steel weight"
+    },
+    "hold_fill_ratio": {
+      "default": 0.95,
+      "unit": "-",
+      "hard": { "gt": 0, "le": 1 },
+      "soft": { "min": 0.8, "max": 1.0 },
+      "basis": "carried over from the original engine: the part of the hold volume that cargo fills"
+    },
+    "inner_bottom_plate_mm": {
+      "default": 14.0,
+      "unit": "mm",
+      "hard": { "gt": 0, "le": 100 },
+      "soft": { "min": 5.0, "max": 30.0 },
+      "basis": "carried over from the original engine: plate thickness in the hopper steel weight"
+    },
+    "hopper_plate_mm": {
+      "default": 14.0,
+      "unit": "mm",
+      "hard": { "gt": 0, "le": 100 },
+      "soft": { "min": 5.0, "max": 30.0 },
+      "basis": "carried over from the original engine: plate thickness in the hopper steel weight"
+    },
+    "hold_bulkhead_plate_mm": {
+      "default": 11.0,
+      "unit": "mm",
+      "hard": { "gt": 0, "le": 100 },
+      "soft": { "min": 5.0, "max": 30.0 },
+      "basis": "carried over from the original engine: plate thickness of the wing and transverse bulkheads in the hopper steel weight"
+    },
+    "hatch_coaming_plate_mm": {
+      "default": 10.0,
+      "unit": "mm",
+      "hard": { "gt": 0, "le": 100 },
+      "soft": { "min": 5.0, "max": 30.0 },
+      "basis": "carried over from the original engine: plate thickness in the hopper steel weight"
+    },
     "optimise_depth": {
       "default": false
     },

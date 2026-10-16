@@ -112,7 +112,8 @@ impl Profile {
 
     /// Load a profile and check it covers every input it must, with well-formed ranges.
     pub fn from_json(text: &str) -> Result<Profile, String> {
-        let profile = Profile::unchecked(text)?;
+        let mut profile = Profile::unchecked(text)?;
+        profile.fill_added_inputs()?;
         profile.check()?;
         Ok(profile)
     }
@@ -132,6 +133,20 @@ impl Profile {
             .ok_or("profile needs an object `inputs`")?
             .clone();
         Ok(Profile { name, inputs })
+    }
+
+    /// A profile written before an input existed has no entry for it. Such an input takes the
+    /// built-in profile's entry (the inputs of `LEGACY_FIXED_INPUTS`), so an older copy still loads.
+    fn fill_added_inputs(&mut self) -> Result<(), String> {
+        let built_in = Profile::unchecked(BUILT_IN)?;
+        for fixed in crate::vdesign::LEGACY_FIXED_INPUTS {
+            if !self.inputs.contains_key(fixed.name)
+                && let Some(entry) = built_in.inputs.get(fixed.name)
+            {
+                self.inputs.insert(fixed.name.to_string(), entry.clone());
+            }
+        }
+        Ok(())
     }
 
     pub fn name(&self) -> &str {
