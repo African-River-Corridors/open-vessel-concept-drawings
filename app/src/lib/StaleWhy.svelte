@@ -15,6 +15,6 @@
 {/if}
 
 <style>
-  .why { margin: 4px 0; font-size: 12px; color: #6b4a00; }
+  .why { margin: 4px 0; font-size: 12px; color: var(--warn); }
   a { color: inherit; text-decoration: underline; cursor: pointer; }
 </style>

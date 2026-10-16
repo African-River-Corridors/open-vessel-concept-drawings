@@ -614,4 +614,12 @@ describe("OVCD app smoke tests", () => {
     await until("the save", async () => !/unsaved/.test(await fileLabel()));
     assert.equal(fs.readFileSync(saved, "utf8"), first);
   });
+
+  it("switches the theme from the app bar: Dark sets data-theme, Auto removes it", async () => {
+    const theme = () => browser.execute(() => document.documentElement.dataset.theme ?? null);
+    await (await browser.$("button=Dark")).click();
+    await until("the dark theme", async () => (await theme()) === "dark");
+    await (await browser.$("button=Auto")).click();
+    await until("the theme attribute to go", async () => (await theme()) === null);
+  });
 });
