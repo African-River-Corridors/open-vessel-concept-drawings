@@ -65,6 +65,30 @@
           "value": 16.0,
           "source": "default"
         },
+        "tanks_in_line": {
+          "value": 2.0,
+          "source": "default"
+        },
+        "tank_support_height_m": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "tank_dome_height_m": {
+          "value": 2.0,
+          "source": "default"
+        },
+        "wing_tank_gap_m": {
+          "value": 0.6,
+          "source": "default"
+        },
+        "wing_tank_height_ratio": {
+          "value": 0.66,
+          "source": "default"
+        },
+        "tank_wall_thickness_mm": {
+          "value": 25.0,
+          "source": "default"
+        },
         "optimise_depth": {
           "value": false,
           "source": "default"
