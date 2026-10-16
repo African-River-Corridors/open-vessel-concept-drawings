@@ -2324,6 +2324,694 @@ mutants:
     locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
     licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
     confidence: high for the verdicts; a mutant is not an external published example
+- id: lcu_empty__angle_max_gz__pass_big
+  title: Navy LCU modelled as a box barge, empty (USNA EN400 problem 33), angle_max_gz just inside its
+    limit (big step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 41.148
+    beam_m: 10.668
+    depth_m: 2.12224761288
+    draught_m: 1.2192
+    kg_m: 0.57912
+    water_density_t_m3: 1.025
+    free_surface_m: 0.0
+  expected:
+    area_0_30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.7938316914
+      limit: 0.055
+      margin: 0.7388316914
+      grid: false
+    area_0_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 1.148130835
+      limit: 0.09
+      margin: 1.058130835
+      grid: false
+    area_30_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.3542991431
+      limit: 0.03
+      margin: 0.3242991431
+      grid: false
+    gz_30_plus:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 2.074023216
+      limit: 0.2
+      margin: 1.874023216
+      grid: false
+    angle_max_gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: pass
+      value: 27.0
+      limit: 25.0
+      margin: 2.0
+      grid: false
+    gm:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 7.80923
+      limit: 0.15
+      margin: 7.65923
+      grid: false
+  mutant:
+    parent: lcu_empty
+    criterion: angle_max_gz
+    side: pass
+    magnitude: big
+    moved: depth_m
+    target_value: 27.0
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs: not stated; course notes of a US federal academy, likely a US Government work (17
+      U.S.C. 105), not verified. Numbers only: the PDF is not committed; oracle: this repository (see
+      LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: lcu_empty__angle_max_gz__pass_small
+  title: Navy LCU modelled as a box barge, empty (USNA EN400 problem 33), angle_max_gz just inside its
+    limit (small step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 41.148
+    beam_m: 10.668
+    depth_m: 1.78270866354
+    draught_m: 1.2192
+    kg_m: 0.57912
+    water_density_t_m3: 1.025
+    free_surface_m: 0.0
+  expected:
+    area_0_30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.6303322461
+      limit: 0.055
+      margin: 0.5753322461
+      grid: false
+    area_0_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.8916432351
+      limit: 0.09
+      margin: 0.8016432351
+      grid: false
+    area_30_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.261310989
+      limit: 0.03
+      margin: 0.231310989
+      grid: false
+    gz_30_plus:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 1.537697705
+      limit: 0.2
+      margin: 1.337697705
+      grid: false
+    angle_max_gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: pass
+      value: 25.20000011
+      limit: 25.0
+      margin: 0.2000001129
+      grid: true
+    gm:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 7.80923
+      limit: 0.15
+      margin: 7.65923
+      grid: false
+  mutant:
+    parent: lcu_empty
+    criterion: angle_max_gz
+    side: pass
+    magnitude: small
+    moved: depth_m
+    target_value: 25.2
+    grid: true
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs: not stated; course notes of a US federal academy, likely a US Government work (17
+      U.S.C. 105), not verified. Numbers only: the PDF is not committed; oracle: this repository (see
+      LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: lcu_empty__angle_max_gz__fail_big
+  title: Navy LCU modelled as a box barge, empty (USNA EN400 problem 33), angle_max_gz just across its
+    limit (big step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 41.148
+    beam_m: 10.668
+    depth_m: 1.33481625505
+    draught_m: 1.2192
+    kg_m: 0.57912
+    water_density_t_m3: 1.025
+    free_surface_m: 0.0
+  expected:
+    area_0_30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.1964031184
+      limit: 0.055
+      margin: 0.1414031184
+      grid: false
+    area_0_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.2667766398
+      limit: 0.09
+      margin: 0.1767766398
+      grid: false
+    area_30_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.07037352142
+      limit: 0.03
+      margin: 0.04037352142
+      grid: false
+    gz_30_plus:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 0.4128297925
+      limit: 0.2
+      margin: 0.2128297925
+      grid: false
+    angle_max_gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 22.99999959
+      limit: 25.0
+      margin: -2.000000408
+      grid: false
+    gm:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 7.80923
+      limit: 0.15
+      margin: 7.65923
+      grid: false
+  mutant:
+    parent: lcu_empty
+    criterion: angle_max_gz
+    side: fail
+    magnitude: big
+    moved: depth_m
+    target_value: 23.0
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs: not stated; course notes of a US federal academy, likely a US Government work (17
+      U.S.C. 105), not verified. Numbers only: the PDF is not committed; oracle: this repository (see
+      LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: lcu_empty__angle_max_gz__fail_small
+  title: Navy LCU modelled as a box barge, empty (USNA EN400 problem 33), angle_max_gz just across its
+    limit (small step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 41.148
+    beam_m: 10.668
+    depth_m: 1.38527181624
+    draught_m: 1.2192
+    kg_m: 0.57912
+    water_density_t_m3: 1.025
+    free_surface_m: 0.0
+  expected:
+    area_0_30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.2646767599
+      limit: 0.055
+      margin: 0.2096767599
+      grid: false
+    area_0_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.3623338363
+      limit: 0.09
+      margin: 0.2723338363
+      grid: false
+    area_30_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.09765707641
+      limit: 0.03
+      margin: 0.06765707641
+      grid: false
+    gz_30_plus:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 0.5736719055
+      limit: 0.2
+      margin: 0.3736719055
+      grid: false
+    angle_max_gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 24.80000142
+      limit: 25.0
+      margin: -0.1999985789
+      grid: true
+    gm:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 7.80923
+      limit: 0.15
+      margin: 7.65923
+      grid: false
+  mutant:
+    parent: lcu_empty
+    criterion: angle_max_gz
+    side: fail
+    magnitude: small
+    moved: depth_m
+    target_value: 24.8
+    grid: true
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs: not stated; course notes of a US federal academy, likely a US Government work (17
+      U.S.C. 105), not verified. Numbers only: the PDF is not committed; oracle: this repository (see
+      LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: lcu_loaded__angle_max_gz__pass_big
+  title: Navy LCU modelled as a box barge, loaded with 3 M-60 tanks (USNA EN400 problem 33), angle_max_gz
+    just inside its limit (big step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 41.148
+    beam_m: 10.668
+    depth_m: 2.66337655219
+    draught_m: 1.6256
+    kg_m: 1.27254
+    water_density_t_m3: 1.025
+    free_surface_m: 0.0
+  expected:
+    area_0_30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.5963141475
+      limit: 0.055
+      margin: 0.5413141475
+      grid: false
+    area_0_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.8723456684
+      limit: 0.09
+      margin: 0.7823456684
+      grid: false
+    area_30_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.2760315208
+      limit: 0.03
+      margin: 0.2460315208
+      grid: false
+    gz_30_plus:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 1.632943417
+      limit: 0.2
+      margin: 1.432943417
+      grid: false
+    angle_max_gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: pass
+      value: 26.99999991
+      limit: 25.0
+      margin: 1.999999905
+      grid: false
+    gm:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 5.3743225
+      limit: 0.15
+      margin: 5.2243225
+      grid: false
+  mutant:
+    parent: lcu_loaded
+    criterion: angle_max_gz
+    side: pass
+    magnitude: big
+    moved: depth_m
+    target_value: 27.0
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs: not stated; course notes of a US federal academy, likely a US Government work (17
+      U.S.C. 105), not verified. Numbers only: the PDF is not committed; oracle: this repository (see
+      LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: lcu_loaded__angle_max_gz__pass_small
+  title: Navy LCU modelled as a box barge, loaded with 3 M-60 tanks (USNA EN400 problem 33), angle_max_gz
+    just inside its limit (small step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 41.148
+    beam_m: 10.668
+    depth_m: 2.40211575648
+    draught_m: 1.6256
+    kg_m: 1.27254
+    water_density_t_m3: 1.025
+    free_surface_m: 0.0
+  expected:
+    area_0_30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.5142618396
+      limit: 0.055
+      margin: 0.4592618396
+      grid: false
+    area_0_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.7337711356
+      limit: 0.09
+      margin: 0.6437711356
+      grid: false
+    area_30_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.219509296
+      limit: 0.03
+      margin: 0.189509296
+      grid: false
+    gz_30_plus:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 1.313331525
+      limit: 0.2
+      margin: 1.113331525
+      grid: false
+    angle_max_gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: pass
+      value: 25.19999905
+      limit: 25.0
+      margin: 0.1999990475
+      grid: true
+    gm:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 5.3743225
+      limit: 0.15
+      margin: 5.2243225
+      grid: false
+  mutant:
+    parent: lcu_loaded
+    criterion: angle_max_gz
+    side: pass
+    magnitude: small
+    moved: depth_m
+    target_value: 25.2
+    grid: true
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs: not stated; course notes of a US federal academy, likely a US Government work (17
+      U.S.C. 105), not verified. Numbers only: the PDF is not committed; oracle: this repository (see
+      LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: lcu_loaded__angle_max_gz__fail_big
+  title: Navy LCU modelled as a box barge, loaded with 3 M-60 tanks (USNA EN400 problem 33), angle_max_gz
+    just across its limit (big step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 41.148
+    beam_m: 10.668
+    depth_m: 2.10344732286
+    draught_m: 1.6256
+    kg_m: 1.27254
+    water_density_t_m3: 1.025
+    free_surface_m: 0.0
+  expected:
+    area_0_30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.3709052434
+      limit: 0.055
+      margin: 0.3159052434
+      grid: false
+    area_0_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.5087224986
+      limit: 0.09
+      margin: 0.4187224986
+      grid: false
+    area_30_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.1378172552
+      limit: 0.03
+      margin: 0.1078172552
+      grid: false
+    gz_30_plus:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 0.8421670475
+      limit: 0.2
+      margin: 0.6421670475
+      grid: false
+    angle_max_gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 23.0
+      limit: 25.0
+      margin: -2.0
+      grid: false
+    gm:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 5.3743225
+      limit: 0.15
+      margin: 5.2243225
+      grid: false
+  mutant:
+    parent: lcu_loaded
+    criterion: angle_max_gz
+    side: fail
+    magnitude: big
+    moved: depth_m
+    target_value: 23.0
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs: not stated; course notes of a US federal academy, likely a US Government work (17
+      U.S.C. 105), not verified. Numbers only: the PDF is not committed; oracle: this repository (see
+      LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: lcu_loaded__angle_max_gz__fail_small
+  title: Navy LCU modelled as a box barge, loaded with 3 M-60 tanks (USNA EN400 problem 33), angle_max_gz
+    just across its limit (small step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 41.148
+    beam_m: 10.668
+    depth_m: 2.34296835874
+    draught_m: 1.6256
+    kg_m: 1.27254
+    water_density_t_m3: 1.025
+    free_surface_m: 0.0
+  expected:
+    area_0_30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.4907105466
+      limit: 0.055
+      margin: 0.4357105466
+      grid: false
+    area_0_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.6956602959
+      limit: 0.09
+      margin: 0.6056602959
+      grid: false
+    area_30_40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.2049497493
+      limit: 0.03
+      margin: 0.1749497493
+      grid: false
+    gz_30_plus:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 1.230019321
+      limit: 0.2
+      margin: 1.030019321
+      grid: false
+    angle_max_gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 24.8000001
+      limit: 25.0
+      margin: -0.1999999036
+      grid: true
+    gm:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 5.3743225
+      limit: 0.15
+      margin: 5.2243225
+      grid: false
+  mutant:
+    parent: lcu_loaded
+    criterion: angle_max_gz
+    side: fail
+    magnitude: small
+    moved: depth_m
+    target_value: 24.8
+    grid: true
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs: not stated; course notes of a US federal academy, likely a US Government work (17
+      U.S.C. 105), not verified. Numbers only: the PDF is not committed; oracle: this repository (see
+      LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
 - id: generic_barge__area_0_30__pass_big
   title: Generic barge of Marlantes, Kim and Hurt (2022), section 5.1, area_0_30 just inside its limit
     (big step)
@@ -4483,6 +5171,206 @@ skipped:
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
+  criterion: gm
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: area_0_30
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: area_0_30
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: area_0_30
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: area_0_30
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: area_0_40
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: area_0_40
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: area_0_40
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: area_0_40
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: area_30_40
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: area_30_40
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: area_30_40
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: area_30_40
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: gz_30_plus
+  side: pass
+  magnitude: big
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: lcu_empty
+  criterion: gz_30_plus
+  side: pass
+  magnitude: small
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: lcu_empty
+  criterion: gz_30_plus
+  side: fail
+  magnitude: big
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: lcu_empty
+  criterion: gz_30_plus
+  side: fail
+  magnitude: small
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: lcu_empty
+  criterion: gm
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: gm
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: gm
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: gm
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: area_0_30
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: area_0_30
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: area_0_30
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: area_0_30
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: area_0_40
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: area_0_40
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: area_0_40
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: area_0_40
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: area_30_40
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: area_30_40
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: area_30_40
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: area_30_40
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: gz_30_plus
+  side: pass
+  magnitude: big
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: lcu_loaded
+  criterion: gz_30_plus
+  side: pass
+  magnitude: small
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: lcu_loaded
+  criterion: gz_30_plus
+  side: fail
+  magnitude: big
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: lcu_loaded
+  criterion: gz_30_plus
+  side: fail
+  magnitude: small
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: lcu_loaded
+  criterion: gm
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: gm
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: gm
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
   criterion: gm
   side: fail
   magnitude: small
