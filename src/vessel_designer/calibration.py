@@ -9,8 +9,9 @@ deliberate step recorded as a calibrated factor with its evidence.
 Calibration Bands (`calibration/bands.yaml`, issue #119): each observed figure of a case has a band,
 set per figure and per confidence of the case. A case outside its band is a WARNING only: the
 report marks it and `--check` prints a warning annotation. Nothing here fails on a band miss; a
-crash (a missing file, a bad case) still fails. The errors are in-sample: the fitted factors came
-from the same cases.
+crash (a missing file, a bad case) still fails. The errors of the first 12 cases are in-sample: the
+fitted factors came from the same cases. A case with a `held_out` marker (issue #3) is run and banded
+but never used in the fit, so its error is out of sample; `report()` shows those in section 4.
 
 The runner calls the core through the `vessel_designer.core` modules, which run the Rust core
 (`vessel_designer._native`) like every other Python caller. It takes about a second.
@@ -57,13 +58,31 @@ def lbd(c: dict) -> float:
     return c["loa_m"] * c["beam_m"] * c["depth_m"]
 
 
+def _is_held_out(c: dict) -> bool:
+    """A held-out case is run and banded but never used to fit a factor (issue #3)."""
+    return bool(c.get("held_out"))
+
+
+def _rho_of(c: dict) -> float:
+    """Water density (t/m3) for the case's predicted DWT: 1.000 (fresh) unless the case says so."""
+    return c.get("water_density_t_m3", RHO_FRESH)
+
+
+def _run_hold_type(c: dict) -> str:
+    """The hold type the core runs: `run_as` when the case has one (a deck barge runs as box)."""
+    return c.get("run_as", c["hold_type"])
+
+
 def fit_factors(cases: list) -> dict:
     """Fit the barge factors from the cases. The fit IS the algorithm: re-run to regenerate.
 
     k (t/m3, lightship / L.B.D) per hold type: mean over cases with an observed lightship.
     Cb (box barges, on LOA): mean of (observed DWT + lightship) / (L.B.T.rho) over cases with
     a draught and DWT, not excluded; lightship = observed, else the fitted k.
+
+    Held-out cases (a truthy `held_out`) are dropped first, here, so no caller can fit on them.
     """
+    cases = [c for c in cases if not _is_held_out(c)]
     k = {}
     for ht in sorted({c["hold_type"] for c in cases}):
         pts = [(c["id"], c["observed"]["lightship_t"] / lbd(c), c["confidence"])
@@ -80,7 +99,7 @@ def fit_factors(cases: list) -> dict:
                 or c.get("exclude_from_fit_cb"):
             continue
         ls = o.get("lightship_t", k["box"]["value"] * lbd(c))
-        cb_pts.append((c["id"], (o["dwt_t"] + ls) / (c["loa_m"] * c["beam_m"] * c["draught_m"] * RHO_FRESH)))
+        cb_pts.append((c["id"], (o["dwt_t"] + ls) / (c["loa_m"] * c["beam_m"] * c["draught_m"] * _rho_of(c))))
     vals = [v for _, v in cb_pts]
     cb = {"value": round(sum(vals) / len(vals), 3), "min": round(min(vals), 3),
           "max": round(max(vals), 3), "n": len(vals),
@@ -106,18 +125,19 @@ def run_barge(c: dict, f: dict) -> BargeRow:
     L, B, D, T = c["loa_m"], c["beam_m"], c["depth_m"], c.get("draught_m")
     ported = capacity(BargeCapacityInputs(loa=L, beam=B, depth=D, cargo_type="bauxite",
                                           self_propelled=False))
-    k = f["lightship_k_t_per_m3"][c["hold_type"]]["value"]
+    ht, rho = _run_hold_type(c), _rho_of(c)
+    k = f["lightship_k_t_per_m3"][ht]["value"]
     cb = f["block_coefficient_box_barge_on_loa"]["value"]
     cal = capacity(BargeCapacityInputs(loa=L, beam=B, depth=D, cargo_type="bauxite",
-                                       self_propelled=False, hold_type=c["hold_type"],
+                                       self_propelled=False, hold_type=ht,
                                        lightship_k_t_per_m3=k, block_coefficient=cb))
     row = BargeRow(case=c, ls_ported=ported.lightship_t, ls_cal=cal.lightship_t,
                    ls_padovezi=ls_padovezi(L, B, D), ls_cn=ls_cn_draft(L, B, D))
     if T:
-        row.dwt_ported = 0.85 * L * B * T * RHO_FRESH - ported.lightship_t
-        row.dwt_cal = cb * L * B * T * RHO_FRESH - cal.lightship_t
+        row.dwt_ported = 0.85 * L * B * T * rho - ported.lightship_t
+        row.dwt_cal = cb * L * B * T * rho - cal.lightship_t
     if "light_draught_m" in c["observed"]:
-        row.ls_from_light_draught_cb1 = L * B * c["observed"]["light_draught_m"] * RHO_FRESH
+        row.ls_from_light_draught_cb1 = L * B * c["observed"]["light_draught_m"] * rho
     return row
 
 
@@ -176,12 +196,27 @@ class BandCheck:
         return abs(self.err_pct) <= self.band_pct
 
 
+@dataclass
+class _Banded(BandCheck):
+    """What `assess` returns: a BandCheck that also says whether the case is held out of the fit
+    and which hull group it belongs to (for the summary). A subclass, so BandCheck keeps its fields."""
+    held_out: str | None = None     # why the case is held out of the fit, when it is
+    group: str = ""                 # "box", "container", "deck (run as box)"
+
+
+def _group(c: dict) -> str:
+    """The hull group of a case for the summary: its hold type, and what it runs as when different."""
+    ht, run = c["hold_type"], _run_hold_type(c)
+    return ht if ht == run else f"{ht} (run as {run})"
+
+
 def _band_check(c: dict, figure: str, model: float) -> BandCheck:
     band = BANDS["bands"][figure]
     obs = c["observed"][figure]
-    return BandCheck(case=c["id"], figure=figure, observed=obs, model=model, err_pct=pct(model, obs),
+    return _Banded(case=c["id"], figure=figure, observed=obs, model=model, err_pct=pct(model, obs),
                      band_pct=float(band["pct"][c["confidence"]]), confidence=c["confidence"],
-                     basis=band["basis"], excluded=c.get("exclude_from_fit_cb"))
+                     basis=band["basis"], excluded=c.get("exclude_from_fit_cb"),
+                     held_out=c.get("held_out") or None, group=_group(c))
 
 
 def assess(cases: dict | None = None) -> list[BandCheck]:
@@ -191,6 +226,8 @@ def assess(cases: dict | None = None) -> list[BandCheck]:
     f = fit_factors(cases["dry_barge"])
     out = []
     for c in cases["dry_barge"]:
+        if c.get("cross_check_only") or c.get("not_yet_runnable"):
+            continue                    # a cross-check has no band; a case that cannot run is not run
         r = run_barge(c, f)
         if "lightship_t" in c["observed"]:
             out.append(_band_check(c, "lightship_t", r.ls_cal))
@@ -217,7 +254,7 @@ def warnings_for(checks: list[BandCheck]) -> list[str]:
         lines.append(github_warning(
             f"{b.case}: calibrated {label} is {b.err_pct:+.1f} % from the published "
             f"{b.observed:g} t (model {b.model:,.0f} t), outside ±{b.band_pct:g} % "
-            f"({b.confidence} confidence, in-sample){note}",
+            f"({b.confidence} confidence, {'held-out' if getattr(b, 'held_out', None) else 'in-sample'}){note}",
             title="Calibration band", file="calibration/cases.yaml"))
     return lines
 
@@ -251,12 +288,146 @@ def factors_yaml(f: dict) -> str:
             + yaml.safe_dump(f, sort_keys=False, width=110))
 
 
+# --- Held-out cases (issue #3): section 4 of the report ----------------------------------------
+
+def _hull_label(c: dict) -> str:
+    return f"{c['hold_type']} / {c['run_as']}" if "run_as" in c else c["hold_type"]
+
+
+def _status(c: dict, b: BandCheck | None) -> tuple[str, str]:
+    """Band cell and verdict cell of a held-out row."""
+    if c.get("cross_check_only"):
+        return "–", "cross-check, no band"
+    if b is None:
+        return "–", "no band (not a DWT)"
+    tag = " (excluded)" if c.get("exclude_from_fit_cb") else ""
+    return (f"±{b.band_pct:g} ({b.confidence})",
+            ("inside" if b.inside else "**OUTSIDE** ⚠") + tag)
+
+
+def _held_out_rows(rows: list[BargeRow], checks: list[BandCheck]) -> list[str]:
+    """One table row per case and published figure. Cargo capacity (not a DWT) is shown against the
+    predicted DWT but has no band. A case with no such figure gets one row with what it publishes."""
+    out = []
+    for r in rows:
+        c, o = r.case, r.case["observed"]
+        figs = []
+        if "lightship_t" in o:
+            figs.append(("lightship", "lightship_t", o["lightship_t"], r.ls_cal))
+        if "dwt_t" in o:
+            figs.append(("DWT", "dwt_t", o["dwt_t"], r.dwt_cal))
+        if "cargo_capacity_t" in o and r.dwt_cal is not None:
+            figs.append(("cargo capacity (not DWT)", None, o["cargo_capacity_t"], r.dwt_cal))
+        head = f"| {c['id']} | {_hull_label(c)} | {c['confidence']} |"
+        if not figs:
+            what = (f"light draught {o['light_draught_m']:g} m only" if "light_draught_m" in o
+                    else "no lightship or DWT")
+            out.append(f"{head} {what} | – | – | – | – | {_status(c, None)[1].replace('no band (not a DWT)', 'nothing to compare')} |")
+        for label, fig, obs, model in figs:
+            b = next((x for x in checks if x.case == c["id"] and x.figure == fig), None) if fig else None
+            band, verdict = _status(c, b)
+            out.append(f"{head} {label} | {fmt(obs)} | {fmt(model)} | {fmt(pct(model, obs), 1)} | "
+                       f"{band} | {verdict} |")
+    return out
+
+
+def _figures_text(c: dict) -> str:
+    o, parts = c["observed"], []
+    for key, label, unit in (("lightship_t", "lightship", "t"), ("dwt_t", "DWT", "t"),
+                             ("cargo_capacity_t", "cargo capacity", "t"),
+                             ("tank_capacity_m3", "tanks", "m³"), ("lng_capacity_m3", "LNG", "m³"),
+                             ("light_draught_m", "light draught", "m")):
+        if key in o:
+            parts.append(f"{label} {o[key]:,g} {unit}")
+    return "; ".join(parts)
+
+
+def _not_yet_runnable_rows(cases: list[dict]) -> list[str]:
+    out = []
+    for c in cases:
+        dims = "×".join(f"{c[k]:g}" for k in ("loa_m", "beam_m", "depth_m") if k in c)
+        t = f", T {c['draught_m']:g}" if c.get("draught_m") else ""
+        why = c["not_yet_runnable"]
+        if c.get("cross_check_only"):
+            why += f". Cross-check only: {c['cross_check_only']}"
+        out.append(f"| {c['id']} | {c['hold_type']} | {c['confidence']} | {dims}{t} | "
+                   f"{_figures_text(c)} | {why} |")
+    return out
+
+
+def _summary_stats(checks: list[BandCheck]) -> dict | None:
+    """n, mean error, mean absolute error, range and count inside the band, or None when empty."""
+    if not checks:
+        return None
+    e = [b.err_pct for b in checks]
+    return {"n": len(e), "mean": sum(e) / len(e), "mean_abs": sum(abs(x) for x in e) / len(e),
+            "min": min(e), "max": max(e), "inside": sum(1 for b in checks if b.inside)}
+
+
+def _summary_rows(checks: list[BandCheck]) -> list[str]:
+    """For each figure: the in-sample results, then each held-out hull group. Cases left out of the
+    Cb fit for an impossible figure are not counted, in either sample."""
+    counted = [b for b in checks if not b.excluded]
+    out = []
+    for fig in ("lightship_t", "dwt_t"):
+        label = BANDS["bands"][fig]["label"]
+        groups = [("in-sample", "all in-sample cases", [b for b in counted
+                                                         if b.figure == fig and not b.held_out])]
+        for g in sorted({b.group for b in counted if b.held_out and b.figure == fig}):
+            groups.append(("out of sample", g, [b for b in counted
+                                                if b.figure == fig and b.held_out and b.group == g]))
+        for sample, g, bs in groups:
+            st = _summary_stats(bs)
+            if st:
+                out.append(f"| {label} | {sample} | {g} | {st['n']} | {st['mean']:+.1f} | "
+                           f"{st['mean_abs']:.1f} | {st['min']:+.1f} to {st['max']:+.1f} | "
+                           f"{st['inside']} of {st['n']} |")
+    return out
+
+
+def _held_out_section(held_cases: list[dict], held_rows: list[BargeRow], not_run: list[dict],
+                     all_checks: list[BandCheck]) -> list[str]:
+    held_checks = [b for b in all_checks if b.held_out]
+    out = ["", "## 4. Held-out cases (out of sample)", "",
+           "These cases were never used to fit k or Cb (issue #3). The calibrated model meets each one "
+           "for the first time here, so these errors are out of sample. A deck barge has hold type "
+           "`deck` and is run as a box barge (`run_as: box`): box k and box Cb, with no deck factor. "
+           "The test is whether the box model carries over to deck barges. Predicted DWT uses the "
+           "water density on the case: 1.025 for sea-going or saltwater figures, 1.000 otherwise. "
+           "Cargo capacity is not DWT, so it is shown against the predicted DWT but has no band. "
+           "Cases marked *excluded* are run and shown; their published figures cannot all describe "
+           "one condition. Cases marked *cross-check* have no band.", "",
+           "| Case | Hull (hold type / run as) | Conf. | Figure | Observed (t) | Calibrated (t) | err % | "
+           "Band ± % | Calibrated vs band |",
+           "|---|---|---|---|---|---|---|---|---|"]
+    out += _held_out_rows(held_rows, held_checks)
+    out += ["", "### Held-out cases the dry-barge path cannot run yet", "",
+            "Listed with their published figures and the reason. They are never run.", "",
+            "| Case | Hull | Conf. | LOA×B×D (m), T | Published figures | Why not run |",
+            "|---|---|---|---|---|---|"]
+    out += _not_yet_runnable_rows(not_run)
+    out += ["", "### Summary: out of sample against in-sample", "",
+            "Error is (calibrated − published) ÷ published. Cross-check cases and cases excluded for an "
+            "impossible figure are left out of every row. Band misses are warnings only (#119): they "
+            "never fail the build.", "",
+            "| Figure | Sample | Group | n | Mean err % | Mean abs err % | Range % | Inside band |",
+            "|---|---|---|---|---|---|---|---|"]
+    out += _summary_rows(all_checks)
+    return out
+
+
+
 def report() -> str:
     """The results text. Pure: it reads the calibration inputs and writes nothing."""
     cases = load_cases()
     f = fit_factors(cases["dry_barge"])
-    rows = [run_barge(c, f) for c in cases["dry_barge"]]
-    checks = assess(cases)
+    in_cases = [c for c in cases["dry_barge"] if not _is_held_out(c)]
+    held_cases = [c for c in cases["dry_barge"] if _is_held_out(c)]
+    rows = [run_barge(c, f) for c in in_cases]
+    held_rows = [run_barge(c, f) for c in held_cases]
+    all_checks = assess(cases)
+    checks = [b for b in all_checks if not b.held_out]
+    held_checks = [b for b in all_checks if b.held_out]
     kb, cbf = f["lightship_k_t_per_m3"], f["block_coefficient_box_barge_on_loa"]
     out = ["<!-- GENERATED by python -m vessel_designer.calibration — do not edit -->",
            "# Calibration results", "",
@@ -271,14 +442,18 @@ def report() -> str:
             "Each observed figure has a band, set per figure and per confidence of the case "
             "(`bands.yaml`): lightship ±15 / 20 / 30 % and deadweight ±7.5 / 10 / 15 % at high / "
             "medium / low confidence. The band applies to the *Calibrated* result. "
-            "**The errors are in-sample:** the fitted factors (k per hold type, box-barge Cb) were "
-            "fitted to the same cases, and the container factor rests on one case, so a result "
-            "inside its band is not a validation. A case outside its band is marked "
+            "**The errors in sections 1 and 2 are in-sample:** the fitted factors (k per hold type, "
+            "box-barge Cb) were fitted to the same cases, and the container factor rests on one case, "
+            "so a result inside its band is not a validation. **The errors in section 4 are out of "
+            "sample:** those cases were never used in a fit. A case outside its band is marked "
             "**OUTSIDE** and raises a CI warning annotation: **warning only, it never fails the "
             "build.** A lightship given only as an upper bound has no band. Section 3 compares the "
             "core with a design note, not a published figure, and has no band.", "",
-            f"{sum(1 for b in checks if b.inside)} of {len(checks)} calibrated results are inside "
-            f"their band.", "",
+            f"{sum(1 for b in checks if b.inside)} of {len(checks)} in-sample calibrated results are "
+            f"inside their band.",
+            f"{sum(1 for b in held_checks if b.inside and not b.excluded)} of "
+            f"{sum(1 for b in held_checks if not b.excluded)} held-out calibrated results are inside "
+            f"their band (section 4; cases excluded for an impossible figure are not counted).", "",
             "## 1. Push barges — lightship", "",
             "| Case | Hold | Conf. | Observed (t) | Ported | err % | Calibrated | err % | Padovezi 0.12 | err % | CN draft | err % | Band ± % | Calibrated vs band |",
             "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
@@ -324,6 +499,7 @@ def report() -> str:
         out.append(f"| {m.cargo} | {m.loa:g}×{m.boa:g}×{m.T:g} | {fmt(m.disp)} | {fmt(m.cargo_t)} | "
                    f"{fmt(m.ls_plus_consumables)} | {m.cb_implied:.3f} | {m.speed_kmh:g} | "
                    f"{fmt(m.power_kw)} | {fmt(m.delivered_kw)} | {fmt(ratio, 2)} |")
+    out += _held_out_section(held_cases, held_rows, cases.get("not_yet_runnable_cases", []), all_checks)
     return "\n".join(out) + "\n"
 
 

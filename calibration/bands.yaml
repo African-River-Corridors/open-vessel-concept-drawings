@@ -5,17 +5,18 @@
 # figure plus the confidence. `pct` is the accepted error of the model against the published
 # figure, in percent either way.
 #
-# Starting values, set by the maintainer (issue #119). The error is IN-SAMPLE: the fitted factors in
-# factors.yaml (hold-type k, box-barge Cb) were fitted to the same cases, and the container factor
-# rests on one case. The bands say how far the model may sit from the published figure while it is
-# in development; they are not a validation. A case outside its band is a WARNING only: the report
-# marks it and CI prints a warning annotation. It never fails the build.
+# Starting values, set by the maintainer (issue #119). For the first 12 cases the error is IN-SAMPLE: the
+# fitted factors in factors.yaml (hold-type k, box-barge Cb) were fitted to the same cases, and the
+# container factor rests on one case. For a case with a `held_out` marker (issue #3) the error is OUT
+# OF SAMPLE: the case is never used in a fit. The bands say how far the model may sit from the
+# published figure while it is in development; they are not a validation. A case outside its band is
+# a WARNING only: the report marks it and CI prints a warning annotation. It never fails the build.
 bands:
   lightship_t:
     label: Lightship
     pct: {high: 15.0, medium: 20.0, low: 30.0}
-    basis: "lightship +-15 % at high confidence, +-20 % at medium, +-30 % at low (maintainer, issue #119); in-sample"
+    basis: "lightship +-15 % at high confidence, +-20 % at medium, +-30 % at low (maintainer, issue #119); in-sample for fitted cases, out of sample for held-out cases"
   dwt_t:
     label: Deadweight at the stated draught
     pct: {high: 7.5, medium: 10.0, low: 15.0}
-    basis: "deadweight +-7.5 % at high confidence, +-10 % at medium, +-15 % at low (maintainer, issue #119); in-sample"
+    basis: "deadweight +-7.5 % at high confidence, +-10 % at medium, +-15 % at low (maintainer, issue #119); in-sample for fitted cases, out of sample for held-out cases"
