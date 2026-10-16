@@ -28,7 +28,7 @@ def test_importing_the_module_reads_no_file_and_takes_the_folder_from_the_enviro
 def test_the_bands_are_read_from_the_folder_cal_names_when_used(tmp_path, monkeypatch):
     """Label: property
     """
-    (tmp_path / "bands.yaml").write_text("bands: {lightship_t: {label: Test}}\n")
+    (tmp_path / "bands.yaml").write_text("bands: {lightship_t: {label: Test}}\n", encoding="utf-8")
     monkeypatch.setattr(calibration, "CAL", tmp_path)
     assert dict(calibration.BANDS) == {"bands": {"lightship_t": {"label": "Test"}}}
     monkeypatch.undo()
@@ -39,3 +39,23 @@ def test_the_tests_use_the_calibration_folder_next_to_them():
     """Label: property
     """
     assert calibration.CAL == Path(__file__).resolve().parents[1] / "calibration"
+
+
+def test_every_calibration_file_is_read_and_written_as_utf_8():
+    """The calibration files hold UTF-8 (en dashes, ±). Without an encoding, Windows reads them as
+    cp1252 and the release gate's Windows wheel check fails.
+
+    Label: property
+    """
+    import ast
+    tests = Path(__file__).resolve().parent
+    files = [Path(calibration.__file__), tests / "test_calibration_held_out.py",
+             tests / "test_calibration_runs.py", Path(__file__)]
+    missing = []
+    for f in files:
+        for n in ast.walk(ast.parse(f.read_text(encoding="utf-8"))):
+            if (isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+                    and n.func.attr in ("read_text", "write_text")
+                    and "encoding" not in {k.arg for k in n.keywords}):
+                missing.append(f"{f.name}:{n.lineno}")
+    assert missing == []
