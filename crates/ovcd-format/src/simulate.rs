@@ -647,7 +647,7 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
         "checks": checks,
         "warnings": r.warnings,
         "curves": curve_list,
-        "cost_masses": crate::cost::dry_bulk_masses(),
+        "cost_masses": Value::Null,
     }))
 }
 

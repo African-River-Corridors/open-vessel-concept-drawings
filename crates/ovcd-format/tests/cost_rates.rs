@@ -147,14 +147,16 @@ fn a_new_design_holds_the_example_rates_and_its_budget_uses_them() {
             "{name}"
         );
     }
-    let cost = &results(&s, 0)["cost"];
+    // The starter Design is dry bulk: no budget. A gas Design has one, with the example currency.
+    assert!(results(&s, 0)["cost"].is_null());
+    let cost = &results(&open(&raw_fixture("gas_igc_2g_exact")), 0)["cost"].clone();
     assert_eq!(cost["currency"], example_rates().unwrap().currency);
     assert_eq!(cost["basis"], "Example rates \u{2014} replace with yours.");
 }
 
 #[test]
 fn a_budget_is_the_sum_of_its_parts() {
-    for file in ["gas_igc_2g_exact", "dry_bulk_box_hold"] {
+    for file in ["gas_igc_2g_exact", "gas_igc_2g_self_propelled"] {
         let cost = results(&open(&raw_fixture(file)), 0)["cost"].clone();
         let sum = |key: &str| -> f64 {
             cost[key]
@@ -186,8 +188,10 @@ fn a_budget_is_the_sum_of_its_parts() {
 
 #[test]
 fn editing_one_rate_changes_that_options_budget_and_nothing_hashed() {
-    let mut s = open(&raw_fixture("two_options"));
+    // A gas Design with a second Option that is a copy of the first.
+    let mut s = open(&raw_fixture("gas_igc_2g_exact"));
     let first = s.design().options[0].name.clone();
+    s.duplicate_option(&first, None).unwrap();
     let before: Vec<Value> = (0..2).map(|i| results(&s, i)).collect();
     s.set_input(&first, "hull_steel_rate", json!(5000.0))
         .unwrap();
@@ -215,7 +219,7 @@ fn editing_one_rate_changes_that_options_budget_and_nothing_hashed() {
 #[test]
 fn the_budget_and_its_masses_are_not_in_the_results_hash() {
     assert!(UNHASHED_KEYS.contains(&"cost") && UNHASHED_KEYS.contains(&"cost_masses"));
-    for file in FIXTURES.iter().filter(|f| **f != "pushed_convoy") {
+    for file in ["gas_igc_2g_exact", "gas_igc_2g_self_propelled"] {
         let r = results(&open(&raw_fixture(file)), 0);
         let mut other = r.clone();
         other["cost"] = json!({"anything": 1});
@@ -278,7 +282,6 @@ fn a_gas_budget_takes_its_masses_from_the_design_and_says_which() {
             .map(|v| v.as_str().unwrap().to_string())
             .collect()
     };
-    assert_eq!(list("zero"), Vec::<String>::new());
     let (from, default) = (list("from_design"), list("core_default"));
     assert!(from.contains(&"tank_shell_t".to_string()));
     assert!(
@@ -295,28 +298,13 @@ fn a_gas_budget_takes_its_masses_from_the_design_and_says_which() {
 }
 
 #[test]
-fn a_dry_bulk_budget_has_no_tank_items_and_says_so() {
-    let cost = results(&open(&raw_fixture("dry_bulk_box_hold")), 0)["cost"].clone();
-    for item in [
-        "tank_shell_t",
-        "tank_supports_t",
-        "insulation_t",
-        "wing_plate_t",
-        "weather_shield_t",
-    ] {
-        assert_eq!(cost["masses"][item].as_f64(), Some(0.0), "{item}");
-        assert!(
-            cost["zero"].as_array().unwrap().contains(&json!(item)),
-            "{item}"
-        );
+fn a_dry_bulk_design_has_no_budget() {
+    // The core models a gas barge: a Cargo that is not gas has no `cost` and no masses.
+    for file in ["dry_bulk_box_hold", "dry_bulk_sloped_hopper"] {
+        let r = results(&open(&raw_fixture(file)), 0);
+        assert!(r["cost"].is_null(), "{file}");
+        assert!(r["cost_masses"].is_null(), "{file}");
     }
-    assert!(cost["from_design"].as_array().unwrap().is_empty());
-    assert!(
-        cost["core_default"]
-            .as_array()
-            .unwrap()
-            .contains(&json!("hull_steel_t"))
-    );
 }
 
 #[test]

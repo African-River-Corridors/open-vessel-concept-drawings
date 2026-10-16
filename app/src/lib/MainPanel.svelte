@@ -164,7 +164,7 @@
       {:else if !results}
         <p class="note">No results to show.</p>
       {:else}
-        <CapitalBudget cost={(results as { cost?: never }).cost} />
+        <CapitalBudget cost={(results as { cost?: never }).cost} phase={(results as { phase?: string }).phase} />
       {/if}
     {/if}
   </div>

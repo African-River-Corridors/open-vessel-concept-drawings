@@ -394,9 +394,9 @@ fn json_results_are_what_simulate_answers_for_a_pushed_barge() {
     let out = ovcd(&["run", "--json", p(&file)]);
     assert!(out.status.success(), "{}", stderr(&out));
     let v: Value = serde_json::from_str(&stdout(&out)).unwrap();
-    // `run` adds the capital budget (`cost`) to what `simulate` answers; the rest is the same.
+    // `run` adds the capital budget (`cost`, null for dry bulk) to what `simulate` answers; the rest is the same.
     let mut results = v["options"][0]["results"].clone();
-    assert!(results["cost"]["unit_total"].is_number());
+    assert!(results["cost"].is_null());
     results.as_object_mut().unwrap().remove("cost");
     let results = &results;
     let expected = simulate_answer(json!({
@@ -447,6 +447,7 @@ fn json_results_are_what_simulate_answers_for_a_self_propelled_gas_hull() {
     let v: Value = serde_json::from_str(&stdout(&out)).unwrap();
     // `run` adds the capital budget (`cost`) to what `simulate` answers; the rest is the same.
     let mut results = v["options"][0]["results"].clone();
+    assert!(results["cost"]["unit_total"].is_number());
     assert!(results["cost"]["unit_total"].is_number());
     results.as_object_mut().unwrap().remove("cost");
     let results = &results;

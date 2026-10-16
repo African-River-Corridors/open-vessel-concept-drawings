@@ -1,8 +1,8 @@
 //! The capital budget of an Option: the core's `barge_cost::compute`, run where the results are
-//! assembled. The mass inputs come from the Option's own results where the engine has them (the
-//! weight breakdown of a gas barge); the rest keep the core's defaults, or are zero where the item
-//! does not exist on the vessel (a dry-bulk barge has no tanks). The rates are the Option's cost-rate
-//! inputs. Nothing here feeds `simulate`: the budget is an output, kept out of the results hash
+//! assembled, for a gas barge only: the core models a barge with Type C tanks and an LNG cargo system,
+//! so any other Cargo has no budget (`cost` is null). The mass inputs come from the Option's own
+//! weight breakdown; the tug, which the engine does not size, keeps the core's defaults. The rates are
+//! the Option's cost-rate inputs. Nothing here feeds `simulate`: the budget is an output, kept out of the results hash
 //! (`UNHASHED_KEYS`), so saved Designs keep their hashes.
 
 use crate::vdesign::{COST_RATES_BASIS, DesignOption};
@@ -42,8 +42,8 @@ pub fn rates_of(option: &DesignOption) -> Option<BargeCostRates> {
     Some(rates)
 }
 
-/// Which mass inputs of the core come from where, as `simulate` reports them next to the masses.
-fn masses_json(m: &BargeCostInputs, from_design: &[&str], zero: &[&str]) -> Value {
+/// The masses and which of them come from the design, as `simulate` reports them.
+fn masses_json(m: &BargeCostInputs, from_design: &[&str]) -> Value {
     let all = [
         ("hull_steel_t", m.hull_steel_t),
         ("wing_plate_t", m.wing_plate_t),
@@ -60,12 +60,11 @@ fn masses_json(m: &BargeCostInputs, from_design: &[&str], zero: &[&str]) -> Valu
     let core_default: Vec<&str> = all
         .iter()
         .map(|(n, _)| *n)
-        .filter(|n| !from_design.contains(n) && !zero.contains(n))
+        .filter(|n| !from_design.contains(n))
         .collect();
     json!({
         "masses": all.iter().map(|(n, v)| ((*n).to_string(), json!(v))).collect::<serde_json::Map<_, _>>(),
         "from_design": from_design,
-        "zero": zero,
         "core_default": core_default,
     })
 }
@@ -95,32 +94,6 @@ pub fn gas_masses(w: &WeightBreakdown) -> Value {
             "insulation_t",
             "piping_machinery_t",
             "outfitting_t",
-        ],
-        &[],
-    )
-}
-
-/// The masses of a dry-bulk barge. The engine gives no weight breakdown for a hold, so the hull steel,
-/// piping and outfitting keep the core's defaults; the items of a gas barge (tanks, supports,
-/// insulation, wing plate, weather shield) do not exist on it and are zero.
-pub fn dry_bulk_masses() -> Value {
-    let m = BargeCostInputs {
-        wing_plate_t: 0.0,
-        weather_shield_t: 0.0,
-        tank_shell_t: 0.0,
-        tank_supports_t: 0.0,
-        insulation_t: 0.0,
-        ..BargeCostInputs::default()
-    };
-    masses_json(
-        &m,
-        &[],
-        &[
-            "wing_plate_t",
-            "weather_shield_t",
-            "tank_shell_t",
-            "tank_supports_t",
-            "insulation_t",
         ],
     )
 }
@@ -169,13 +142,12 @@ fn result_json(r: &BargeCostResult, masses: &Value) -> Value {
         "checks": crate::eval::checks_json(&r.checks),
         "masses": masses["masses"],
         "from_design": masses["from_design"],
-        "zero": masses["zero"],
         "core_default": masses["core_default"],
     })
 }
 
-/// The `cost` of an Option: the budget, or `null` when the results have no masses (a gas hull that
-/// holds no arrangement) or the figures cannot be rounded.
+/// The `cost` of an Option: the budget, or `null` when the results have no masses (a Cargo that is not
+/// gas, or a gas hull that holds no arrangement) or the figures cannot be rounded.
 pub fn cost_of(option: &DesignOption, results: &Value) -> Value {
     let masses = &results["cost_masses"];
     let (Some(inputs), Some(rates)) = (masses_of(masses), rates_of(option)) else {
