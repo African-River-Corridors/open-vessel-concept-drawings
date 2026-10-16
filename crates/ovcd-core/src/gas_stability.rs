@@ -27,6 +27,10 @@ use alloc::vec::Vec;
 /// Heel angles of the GZ curve, in degrees: `range(0, 61)`.
 pub const ANGLES_DEG: core::ops::RangeInclusive<i32> = 0..=60;
 
+/// The two heel angles at which the IS Code criteria cut the GZ curve: the areas run to 30 and 40
+/// degrees, and the GZ criterion looks at 30 degrees and above. A view marks them from here.
+pub const CRITERIA_ANGLES_DEG: [i32; 2] = [30, 40];
+
 /// What Python would raise.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PyError {
@@ -426,7 +430,11 @@ fn criterion(name: &str, value: f64, limit: f64, ok: bool, source: &str) -> Crit
 fn criteria(cset: &str, c: &Condition) -> Result<Vec<Criterion>, PyError> {
     if cset == "IS_CODE_2008" {
         let src = "IMO IS Code 2008, Part A 2.2";
-        let gz_30_plus = py_max(c.gz.iter().filter(|p| p.0 >= 30).map(|p| p.1));
+        let gz_30_plus = py_max(
+            c.gz.iter()
+                .filter(|p| p.0 >= CRITERIA_ANGLES_DEG[0])
+                .map(|p| p.1),
+        );
         let s = |suffix: &str| format!("{src}{suffix}");
         return Ok(vec![
             criterion(
@@ -616,9 +624,9 @@ fn box_condition_at(
         max_gz_m: max_gz,
         max_gz_deg,
         area_0_27: area(&gz, 0, 27),
-        area_0_30: area(&gz, 0, 30),
-        area_0_40: area(&gz, 0, 40),
-        area_30_40: area(&gz, 30, 40),
+        area_0_30: area(&gz, 0, CRITERIA_ANGLES_DEG[0]),
+        area_0_40: area(&gz, 0, CRITERIA_ANGLES_DEG[1]),
+        area_30_40: area(&gz, CRITERIA_ANGLES_DEG[0], CRITERIA_ANGLES_DEG[1]),
         deck_edge_deg: Some(deck_edge),
         gz,
         criteria: Vec::new(),

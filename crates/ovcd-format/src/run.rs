@@ -205,13 +205,19 @@ fn write_canonical(v: &Value, out: &mut String) {
     }
 }
 
-/// SHA-256 of the canonical JSON of `results`, as 64 lower-case hex digits. The top-level `drawing`
-/// object (drawing geometry from the core, not a result) is left out, so adding to it never changes
-/// a saved hash.
+/// Top-level results keys that are not results: drawing geometry and what a view marks. They are left
+/// out of the results hash, so adding to one never changes a saved hash, and `tools/design_impact.py`
+/// leaves them out of its comparison (it holds the same list; `tests/test_design_impact_unhashed_keys.py` checks
+/// that the two lists agree).
+pub const UNHASHED_KEYS: [&str; 2] = ["drawing", "stability_marks"];
+
+/// SHA-256 of the canonical JSON of `results`, without the [`UNHASHED_KEYS`].
 pub fn results_hash(results: &Value) -> String {
     let mut hashed = results.clone();
     if let Some(o) = hashed.as_object_mut() {
-        o.remove("drawing");
+        for key in UNHASHED_KEYS {
+            o.remove(key);
+        }
     }
     let digest = Sha256::digest(canonical_json(&hashed).as_bytes());
     digest.iter().map(|b| format!("{b:02x}")).collect()

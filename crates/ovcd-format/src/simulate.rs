@@ -830,6 +830,8 @@ fn simulate_gas(
         checks.push(air_draft_check(r, limit)?);
     }
     let mut stability = Value::Null;
+    // What a view marks on the GZ curves. Not a result: it is left out of the results hash.
+    let mut stability_marks = Value::Null;
     if f.payload_t > 0.0 && r.gas_basis.is_some() {
         let basis = GasCapacityResult::try_from(r)
             .map_err(|m| Stop::Eval(EvalError::BadInput(m.into())))?;
@@ -867,6 +869,7 @@ fn simulate_gas(
             "IS_CODE_2008" => "IMO IS Code 2008, Part A 2.2",
             other => return bad(format!("unknown criteria set `{other}`")),
         };
+        stability_marks = json!({ "criteria_angles_deg": gs::CRITERIA_ANGLES_DEG });
         stability = json!({
             "criteria_set": set_label,
             "ok": a.ok(),
@@ -932,6 +935,7 @@ fn simulate_gas(
         "warnings": r.warnings,
         "curves": curve_list,
         "stability": stability,
+        "stability_marks": stability_marks,
     }))
 }
 

@@ -44,6 +44,11 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "target" / "design-impact"
 CHANGELOG = ROOT / "CHANGELOG.md"
 START, END = "<!-- design-impact:start -->", "<!-- design-impact:end -->"
+# Top-level results keys that are not results (drawing geometry, what a view marks). The results hash
+# leaves them out too: UNHASHED_KEYS in crates/ovcd-format/src/run.rs. tests/test_design_impact_unhashed_keys.py
+# checks that the two lists agree.
+UNHASHED_KEYS = ("drawing", "stability_marks")
+
 LABEL = "design-change"
 MAX_ROWS = 40
 CHANGELOG_HEAD = (
@@ -366,10 +371,10 @@ def compare(before: dict[str, dict], after: dict[str, dict]) -> list[dict]:
                              "before": a.get("error", "computed"), "after": b.get("error", "computed"),
                              "change": "changed"})
             continue
-        # The top-level `drawing` object is drawing geometry, not a result, and is not in the
-        # results hash (docs/adr/0007): a new key there is not a design change.
-        la = leaves({k: v for k, v in a["results"].items() if k != "drawing"})
-        lb = leaves({k: v for k, v in b["results"].items() if k != "drawing"})
+        # The UNHASHED_KEYS are not results and are not in the results hash (docs/adr/0007): a new
+        # key there is not a design change.
+        la = leaves({k: v for k, v in a["results"].items() if k not in UNHASHED_KEYS})
+        lb = leaves({k: v for k, v in b["results"].items() if k not in UNHASHED_KEYS})
         for path in sorted(set(la) | set(lb)):
             va, vb = la.get(path, "absent"), lb.get(path, "absent")
             if not same(va, vb):

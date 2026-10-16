@@ -74,7 +74,7 @@ jobs:
           # A test run here may read only the folders copied below; tests/test_workflows_release.py
           # checks that in `test`, so a new test that needs tools/ fails there, not at release (#211).
           mkdir "$RUNNER_TEMP/wheel-check"
-          cp -r tests examples calibration catalogue evaluation "$RUNNER_TEMP/wheel-check/"
+          cp -r tests tools examples calibration catalogue evaluation "$RUNNER_TEMP/wheel-check/"
           cd "$RUNNER_TEMP/wheel-check"
           "$PY" -c "import vessel_designer as v; print(v.__file__); assert 'site-packages' in v.__file__"
           "$PY" -m pytest -q tests \

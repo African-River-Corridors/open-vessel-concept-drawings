@@ -67,6 +67,7 @@
     const prior = lastGood[active]?.outcome;
     return outcome?.status === "not_run" && prior?.status === "results" ? prior.results : null;
   });
+  const stabilityOf = (r: unknown) => (r as { stability?: never }).stability;
   let stale = $derived(outcome?.status === "not_run");
   /** The views of the Option: its own, or the last good ones while the Design has a hard error. */
   let views = $derived.by((): HullViews | null => {
@@ -132,16 +133,16 @@
         {/if}
       </div>
     {:else if current === "stability"}
-      <!-- Until the GZ curves (#231), the tables keep their size, so this view has its own scroll. -->
-      <div class="inner">
-        {#if message}
-          <p class="note">{message}</p>
-        {:else if !results}
-          <p class="note">No results to show.</p>
-        {:else}
-          <Stability stability={(results as { stability?: never }).stability} />
-        {/if}
-      </div>
+      {#if message}
+        <p class="note">{message}</p>
+      {:else if !results}
+        <p class="note">No results to show.</p>
+      {:else}
+        <!-- New results build a new chart, fitted. -->
+        {#key JSON.stringify([active, stabilityOf(results)])}
+          <Stability stability={stabilityOf(results)} marks={(results as { stability_marks?: never }).stability_marks} />
+        {/key}
+      {/if}
     {:else if current === "rules"}
       <p class="note" data-testid="placeholder-rules">The rule check table is coming soon. The checks for now are in the Outputs panel.</p>
     {:else if current === "boq"}
@@ -166,7 +167,6 @@
   .view { flex: 1; min-height: 0; padding: 10px 14px; box-sizing: border-box; }
   .slot { height: 100%; }
   .charts { height: 100%; display: flex; flex-direction: column; gap: 10px; }
-  .inner { height: 100%; overflow: auto; }
   .note { color: var(--dim); }
   .stale { margin-left: auto; align-self: center; background: #fdf1d3; color: #6b4a00; font: 11px var(--sans); padding: 1px 6px; border-radius: 3px; }
 </style>

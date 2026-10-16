@@ -11,12 +11,16 @@ list lengths, keys and error messages must be identical.
 """
 import json
 import math
+import sys
 from pathlib import Path
 
 import numpy as np
 import pytest
 
 import api_scenarios as S
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+from design_impact import UNHASHED_KEYS  # noqa: E402
 
 DATA = Path(__file__).parent / "data"
 EXPECTED = json.loads((DATA / "api_ce96e66.json").read_text(encoding="utf-8"))["scenarios"]
@@ -48,7 +52,7 @@ def same(actual, expected, path="result"):
         ok = actual == expected or math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-9)
         return None if ok else f"{path}: {actual!r} != {expected!r}"
     if isinstance(expected, dict) and isinstance(actual, dict):
-        if list(expected) != [k for k in actual if k != "drawing"]:  # `drawing` is new in #192, not a result
+        if list(expected) != [k for k in actual if k not in UNHASHED_KEYS]:  # not results (#192, #231)
             return f"{path}: keys {list(actual)} != {list(expected)}"
         for key in expected:
             found = same(actual[key], expected[key], f"{path}.{key}")
