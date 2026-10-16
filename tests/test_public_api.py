@@ -109,6 +109,7 @@ ROOT = Path(__file__).resolve().parents[1]
 REMOVED_ON_PURPOSE = {
     "core.barge_capacity": {"MAX_TANK_OD_M"},                 # now DEFAULT_MAX_TANK_OD_M = 16 m
     "core.design_grid": {"MAX_TANK_LENGTH_M", "n_tanks_for_length"},
+    "core.gas_separation": {"SIDE_MIN_TYPE_G_M", "DOUBLE_BOTTOM_MIN_TYPE_G_M"},   # issue #215
     "core.gas_arrangement": {"ADN_G_MAX_L_OVER_D", "ADN_G_TANK_CAP_9_3_4_M3", "ADN_G_WIDE_TANK_FRACTION",
                              "ADN_LONGITUDINAL_GAP_M", "MAX_TANK_OD_M"},
     "core.protective_location": {"ADN_G_BOTTOM_M", "ADN_G_DOUBLE_BOTTOM_M", "ADN_G_DOUBLE_HULL_M",
@@ -164,7 +165,7 @@ def test_every_name_removed_on_purpose_is_in_the_changelog():
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     names = {n for gone in REMOVED_ON_PURPOSE.values() for n in gone}
     names |= {f for _, _, f in REMOVED_FIELDS}
-    assert len(names) == 15
+    assert len(names) == 17
     assert [n for n in sorted(names) if f"`{n}`" not in changelog] == []
 
 

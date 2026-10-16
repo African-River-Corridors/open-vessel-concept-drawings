@@ -71,15 +71,18 @@ def test_box_barge_unchanged():
 def test_gas_infeasible_fit_is_shown_as_a_failed_check():
     """Issue #6: when fit() finds no passing arrangement, the page says so, not just the tonnage.
 
-    A 60 x 7 m tender hull carries cargo but no arrangement passes its checks (the Rust core runs
-    the search, so the test uses this hull instead of patching the search).
+    A 150 x 8 m hull carries cargo but no tank is within 7 diameters of length (the Rust core runs
+    the search, so the test uses this hull instead of patching the search). The 60 x 7 m tender hull
+    used here before failed only the inland type-G side floor, which issue #215 removed: it is
+    feasible now.
 
     Label: property
     """
     tender = dict(vessel="gas_barge", cargo="LPG_propane", loa_m=60, beam_m=7.0, depth_m=6.0,
                   cb=0.85, freeboard_min_m=0.3, self_propelled=False, ruleset="IGC_2G_EXACT",
                   fill_ratio=0.98)
-    o = simulate(tender)
+    assert simulate(tender)["arrangement"]["feasible"] is True
+    o = simulate(dict(tender, loa_m=150, beam_m=8.0))
     assert o["results"]["cargo_t"] > 0
     assert o["arrangement"]["feasible"] is False
     assert any(c["name"] == "Feasible arrangement" and not c["ok"] for c in o["checks"])

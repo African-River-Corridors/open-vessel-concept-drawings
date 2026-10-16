@@ -355,3 +355,24 @@ fn the_side_clearance_rule_is_never_below_0_45_m() {
         }
     }
 }
+
+// --- Issue #215: the inland type-G floors are gone ---
+
+/// Label: property. A 120 x 18 m hull with only a two-abreast arrangement on offer has a 0.48 m side
+/// clearance. That used to fail the inland type-G side floor, and nothing else. It now passes, and
+/// no check carries a type-G name.
+#[test]
+fn a_design_that_failed_only_the_type_g_floor_now_passes() {
+    let o = FitOptions {
+        ruleset: "IGC_2G_EXACT".to_string(),
+        fill_ratio: 0.98,
+        depths: vec![5.75],
+        tanks_wide: vec![2],
+        extra_clearance_m: vec![],
+        ..FitOptions::default()
+    };
+    let f = fit(120.0, 18.0, "LNG", 3.0, &o).unwrap();
+    assert!(f.side_clearance_m < 0.8);
+    assert!(f.feasible);
+    assert!(f.failed_checks.is_empty());
+}

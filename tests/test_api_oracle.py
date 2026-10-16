@@ -35,6 +35,22 @@ KNOWN_DIFFERENCES: dict = {
     # and `DesignGrid.max_tank_length_m` are gone. The 12 m diameter cap of 0.1.0 is now 16 m.
     "design_grid": "issue #175: no tank-length cap; the grid has two tanks along and a 16 m "
                    "tank diameter cap",
+    # Issue #215: the inland type-G floors (`side_clearance_type_g_floor`, `double_bottom_type_g_floor`)
+    # are removed, so a gas result lists two checks fewer, and a search that used to reject an
+    # arrangement for them can pick another one. Each scenario below holds a gas check list or fit.
+    "barge_capacity.compute.gas": "issue #215: the inland type-G floors are removed",
+    "barge_capacity.compute.gas_counts": "issue #215: the inland type-G floors are removed",
+    "barge_capacity.compute.nested": "issue #215: the inland type-G floors are removed",
+    "ga_adapter.to_ga": "issue #215: the inland type-G floors are removed",
+    "gas_arrangement.fit": "issue #215: the inland type-G floors are removed",
+    "gas_arrangement.fit.exact": "issue #215: the inland type-G floors are removed",
+    "gas_separation.compute": "issue #215: the inland type-G floors are removed",
+    "simulate.gas": "issue #215: the inland type-G floors are removed",
+    "simulate.gas_igc_channel": "issue #215: the inland type-G floors are removed",
+    "simulate.gas_optimise_depth": "issue #215: the inland type-G floors are removed",
+    "edited.to_ga_with_other_draft": "issue #215: the inland type-G floors are removed",
+    "edited.to_ga_with_rebuilt_result": "issue #215: the inland type-G floors are removed",
+    "reuse.is_gas_and_to_ga_over_a_sweep": "issue #215: the inland type-G floors are removed",
     # Issue #94: the class list is `catalogue/vessel_classes.yaml`, the one source. The ids are the
     # catalogue's (the 12 old ids still work for `get_standard`), `standards_for` returns every class
     # (Cargo is not a class property), the figures are the catalogue's (CEMT Va draught 2.5-2.8 m,
