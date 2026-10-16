@@ -1,0 +1,97 @@
+# Type C tank calibration cases (issue #292): published cargo tanks run through the tank maths only
+# (one tank, no hull), with the published figures they are compared against. They are kept apart from
+# cases.yaml because they run `calculate_tank_arrangement` on ONE tank, not a hull.
+#
+# Every case is held out (`held_out`, a one-line reason): run and banded, never used to fit a factor. A
+# figure the source does not give is absent. Nothing is estimated, rounded or filled in. Each case
+# cites a listed source (sources.yaml, `web_sources`), by its id, and keeps the source text as printed
+# in `published`.
+#
+# The engine's tank outer diameter is the OUTSIDE OF THE INSULATION. A source prints a diameter on some
+# datum, so the basis fields are REQUIRED: a diameter or length without its basis cannot be run.
+#   diameter_basis   steel_outer | steel_inner | insulation_outer
+#   length_basis     steel_outer_overall | inner_overall | insulation_outer_overall   (heads included)
+# `run_as_head` is the nearest head the engine has (hemisphere or ellipsoidal_2to1); the gap is part of
+# the result. `run_as_material` is the engine's key for the steel; where the published steel is not in
+# the engine, the nearest key is used and the gap is part of the result.
+# `structure_factor` is the value the built-in Defaults Profile gives for the case's carriage
+# condition (a test keeps the two equal). `steel_in_sample` says a figure of the case was used to work
+# out a default, so its error is in-sample.
+# observed:
+#   gross_volume_m3      the tank's gross volume as published, heads included, domes not
+#   shell_thickness_mm   the cylinder shell thickness as published. It is also the thickness the volume and
+#                        the steel weight are run at
+#   tank_steel_t         the published weight of the tank steel
+type_c_tank:
+  - id: senjanovic-2006-river-lpg
+    what: "Cargo tank of a river liquefied gas carrier design (8 cylindrical tanks in 2 rows; ship not named), GL / ADNR"
+    built: unconfirmed
+    carriage_condition: fully_pressurised
+    cargo: "LPG / VCM"
+    diameter_m: 4.730
+    diameter_basis: steel_outer
+    length_m: 21.000
+    length_basis: steel_outer_overall
+    head_published: "spherical dished ends with a toroidal connection (sphere part 10.5 mm)"
+    run_as_head: ellipsoidal_2to1
+    design_pressure_mpa: 1.58
+    material_published: "S690QL1 (Re 690, Rm 770 MPa, allowable stress Rm/2.7 = 285 MPa)"
+    run_as_material: S690QL1
+    weld_efficiency: 1.0
+    insulation_mm: 0
+    structure_factor: 1.12
+    steel_in_sample: "the structure factor 1.12 of fully pressurised LPG in the Defaults Profile was worked out from this tank's published steel weight"
+    observed: {gross_volume_m3: 351.4, shell_thickness_mm: 13.1, tank_steel_t: 34.4}
+    published: "outer diameter 4730 mm; length 21000 mm; 15.8 bar; S690QL1; cylinder 13.1 mm, sphere 10.5 mm; about 34.4 t of steel; 351.4 m3"
+    source: "P1 — Senjanovic et al., Structure design of cargo tanks in river liquefied gas carriers, DESIGN 2006, sections 2 to 6, accessed 2026-10-16"
+    confidence: medium
+    held_out: "first tank cases (issue #292); the maintainer decides fitting"
+    flags: "The paper does not say whether the 21000 mm total length is outer or inner, or whether the ship was built. The 4730 mm is the outer diameter. Test pressure is printed 237 bar (likely 23.7). The 13.1 mm is the paper's own figure; the formula before the allowance gives 13.08 mm."
+    note: "The weld efficiency is 1.0 and the stress 285 MPa, as the paper uses. The engine's cylinder wall adds the 0.5 mm allowance and rounds up to 0.5 mm, so the model wall is 14.0 mm against 13.1 mm printed."
+  - id: seo-2026-lco2-5000
+    what: "5,000 m3 liquid CO2 Type C cargo tank, design study (not built)"
+    built: design_study
+    cargo: "liquid CO2 (not an OVCD cargo; the tank maths does not use the cargo)"
+    diameter_m: 13.400
+    diameter_basis: steel_inner
+    length_m: 40.000
+    length_basis: inner_overall
+    head_published: "hemispherical caps (25.0 mm)"
+    run_as_head: hemisphere
+    design_pressure_mpa: 1.8
+    material_published: "LT-FH70 (the allowable stress is not in the engine's database)"
+    run_as_material: 9Ni
+    insulation_mm: 200
+    structure_factor: 1.30
+    observed: {gross_volume_m3: 5000.0, shell_thickness_mm: 50.0}
+    published: "inner diameter 13.4 m; length 40.0 m including hemispherical caps; MARVS 15 barg, design about 18 barg, -35 C; LT-FH70; shell 50.0 mm (48.2 mm required), heads 25.0 mm; 200 mm PUF insulation; 5,000 m3"
+    source: "P2 — Seo and Lee, J. Mar. Sci. Eng. 2026, 14, 821, sections 2 and Tables 2 to 4, accessed 2026-10-16"
+    confidence: low
+    held_out: "first tank cases (issue #292); the maintainer decides fitting"
+    flags: "A design study, not a built tank. The engine has no LT-FH70, so 9Ni is used: its allowable stress (230 MPa) is lower than the real steel's, and the model wall is thicker than the published 50.0 mm. The 48.2 mm required by the paper is not used as the figure."
+    note: "The inner diameter and the inner overall length are brought to the engine's datum (outside of the insulation) by adding the 50 mm wall and the 200 mm insulation on each side."
+
+# Published tank records that the tank maths cannot run yet: listed in the report with their figures and
+# the reason. They are never run.
+not_yet_runnable_tank_cases:
+  - id: kanrei-2007-22-pressurised-lpg
+    what: "Pressurised LPG carrier built 2007, two horizontal cylindrical tanks"
+    published: "3,757.967 m3 per tank at 100 %; diameter 12,000 mm (basis not printed); 17.65 barg, 0 to 45 C; no insulation; tank centre 7,350 mm above base"
+    source: "P3 — owner's published general arrangement and midship drawings and Form C sheet, accessed 2026-10-16"
+    confidence: medium
+    held_out: "first tank cases (issue #292)"
+    not_yet_runnable: "no tank length is printed and the diameter basis is not stated. A bottom-clearance check against the 7,350 mm centre needs the hull (arrangement block, not yet in the runner)"
+  - id: alice-cosulich-lng-bunker
+    what: "LNG bunker vessel built 2022, two bilobe tanks"
+    published: "4,100.0 and 4,371.2 m3 at 100 % (4,038.5 and 4,305.6 m3 at 98.5 %); MARVS 3.6 barg; -163 C; one pump per lobe"
+    source: "P4 — owner's published Form B particulars, accessed 2026-10-16"
+    confidence: medium
+    held_out: "first tank cases (issue #292)"
+    not_yet_runnable: "bilobe tanks are not modelled; which volume belongs to which tank is not stated"
+  - id: kim-2025-lco2-bilobe-9800
+    what: "About 9,800 m3 liquid CO2 bilobe tank, design study (not built)"
+    published: "internal diameter about 15.6 m; length 36 m; two saddles; LTFH36; a dome on the top side and a sump on the bottom side"
+    source: "P5 — Kim et al., J. Mar. Sci. Eng. 2025, 13, 2185, accessed 2026-10-16"
+    confidence: low
+    held_out: "first tank cases (issue #292)"
+    not_yet_runnable: "a bilobe tank is not modelled, and the paper prints no thickness or weight to compare"

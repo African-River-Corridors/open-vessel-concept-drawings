@@ -27,7 +27,10 @@ from pathlib import Path
 
 import yaml
 
+from vessel_designer.core import pressure_vessel as _pv
 from vessel_designer.core.barge_capacity import BargeCapacityInputs, compute as capacity
+from vessel_designer.core.models import BargeInputs
+from vessel_designer.core.tanks import calculate_tank_arrangement
 from vessel_designer.core.resistance import (EnvironmentInputs, ResistanceInputs, TugInputs,
                                              compute as resistance)
 
@@ -287,14 +290,173 @@ def warnings_for(checks: list[BandCheck]) -> list[str]:
     return lines
 
 
+# --- Type C tank cases (issue #292) --------------------------------------------------------------
+# One cargo tank, run through the tank maths only (no hull): `calibration/tank_cases.yaml`, with its
+# own bands in `tank_bands.yaml`. Every case is held out: it is never used to fit a factor. The
+# pass measures; it does not tune.
+
+_TANK_FIGURES = ("tank_volume_m3", "tank_wall_mm", "tank_steel_t")
+
+
+def _load_tank_cases() -> dict:
+    return yaml.safe_load((CAL / "tank_cases.yaml").read_text(encoding="utf-8"))
+
+
+def _load_tank_bands() -> dict:
+    return yaml.safe_load((CAL / "tank_bands.yaml").read_text(encoding="utf-8"))["bands"]
+
+
+@dataclass
+class _TankRow:
+    """One tank case, run. Diameters and the length are in the engine's datum (see `_tank_geometry`)."""
+    case: dict
+    steel_od_m: float
+    insulated_od_m: float
+    insulated_length_m: float
+    volume_m3: float
+    required_mm: float          # the shell formula before the allowance and the rounding
+    wall_mm: float              # the full chain: allowance, rounded up to 0.5 mm, the IGC minimum
+    head_wall_mm: float
+    steel_t: float | None       # tank steel at the published shell thickness, times the structure factor
+    steel_formula_t: float | None  # the same with the thickness the formula gives
+
+
+def _tank_geometry(c: dict) -> tuple[float, float, float]:
+    """(steel outer diameter, insulated outer diameter, insulated overall length), all in m.
+
+    The engine's tank outer diameter is the outside of the insulation. A source prints the diameter
+    on one datum (`diameter_basis`) and the length on another (`length_basis`); both are brought
+    to the engine's. `shell_thickness_mm` and `insulation_mm` of the case do the conversion.
+    """
+    wall, ins = c["observed"]["shell_thickness_mm"] / 1000.0, c.get("insulation_mm", 0.0) / 1000.0
+    d, basis = c["diameter_m"], c["diameter_basis"]
+    steel_od = {"steel_outer": d, "steel_inner": d + 2 * wall, "insulation_outer": d - 2 * ins}[basis]
+    length, lb = c["length_m"], c["length_basis"]
+    envelope = {"steel_outer_overall": length + 2 * ins, "inner_overall": length + 2 * (wall + ins),
+                "insulation_outer_overall": length}[lb]
+    return steel_od, steel_od + 2 * ins, envelope
+
+
+def _tank_inputs(c: dict, od: float, length: float, wall_mm: float | None) -> BargeInputs:
+    """One tank filling the envelope: no side clearance, no gaps, no non-tank length."""
+    return BargeInputs(
+        loa=length, beam=od, depth=1.0, max_draft=1.0, vertical_clearance=10.0,
+        n_tanks_wide=1, n_tanks_long=1, bow_non_tank_length=0.0, stern_non_tank_length=0.0,
+        side_clearance=0.0, double_bottom_height=0.0, tank_wall_thickness=wall_mm,
+        tank_head_type=c["run_as_head"], tank_material=c["run_as_material"],
+        design_pressure=c["design_pressure_mpa"], weld_efficiency=c.get("weld_efficiency", 0.95),
+        insulation_thickness=c.get("insulation_mm", 0.0), tank_structure_factor=c["structure_factor"],
+        fill_ratio=1.0)
+
+
+def _run_tank(c: dict) -> _TankRow:
+    steel_od, od, length = _tank_geometry(c)
+    published = c["observed"]["shell_thickness_mm"]
+    # Volume and steel at the published shell thickness: the geometry and the datum are what is tested.
+    fixed = calculate_tank_arrangement(_tank_inputs(c, od, length, published))
+    # The wall from the formula, on the steel diameter (the engine's gas path does the same).
+    cyl, head = _pv.calculate_wall_thicknesses(steel_od, c["design_pressure_mpa"], c["run_as_material"],
+                                               c["run_as_head"], c.get("weld_efficiency", 0.95))
+    mat = _pv.get_tank_material(c["run_as_material"])
+    f, e, p = mat.allowable_stress, c.get("weld_efficiency", 0.95), c["design_pressure_mpa"]
+    r = steel_od * 1000.0 / 2.0
+    required = _pv.cylinder_wall_thickness(p, r - _pv.cylinder_wall_thickness(p, r, f, e), f, e)
+    steel_t = steel_formula_t = None
+    if "tank_steel_t" in c["observed"]:
+        steel_t = fixed.tank_shell_weight * c["structure_factor"]
+        formula = calculate_tank_arrangement(_tank_inputs(c, od, length, cyl))
+        steel_formula_t = formula.tank_shell_weight * c["structure_factor"]
+    return _TankRow(case=c, steel_od_m=steel_od, insulated_od_m=od, insulated_length_m=length,
+                   volume_m3=fixed.total_tank_volume, required_mm=required, wall_mm=cyl,
+                   head_wall_mm=head, steel_t=steel_t, steel_formula_t=steel_formula_t)
+
+
+def _tank_model(row: _TankRow, figure: str) -> float | None:
+    return {"tank_volume_m3": row.volume_m3, "tank_wall_mm": row.wall_mm, "tank_steel_t": row.steel_t}[figure]
+
+
+def _assess_tanks(cases: dict | None = None) -> list[BandCheck]:
+    """Every tank figure that has a published value, against its band."""
+    cases = cases if cases is not None else _load_tank_cases()
+    bands = _load_tank_bands()
+    out = []
+    for c in cases["type_c_tank"]:
+        row = _run_tank(c)
+        for fig, key in (("tank_volume_m3", "gross_volume_m3"), ("tank_wall_mm", "shell_thickness_mm"),
+                         ("tank_steel_t", "tank_steel_t")):
+            if key not in c["observed"]:
+                continue
+            band = bands[fig]
+            out.append(_Banded(case=c["id"], figure=fig, observed=c["observed"][key],
+                               model=_tank_model(row, fig), err_pct=pct(_tank_model(row, fig), c["observed"][key]),
+                               band_pct=float(band["pct"][c["confidence"]]), confidence=c["confidence"],
+                               basis=band["basis"], held_out=c.get("held_out") or None, group="type C tank"))
+    return out
+
+
+def _tank_warnings_for(checks: list[BandCheck]) -> list[str]:
+    """One annotation per tank result outside its band."""
+    bands = _load_tank_bands()
+    lines = []
+    for b in checks:
+        if b.inside:
+            continue
+        label = bands[b.figure]["label"].lower()
+        lines.append(github_warning(
+            f"{b.case}: modelled {label} is {b.err_pct:+.1f} % from the published {b.observed:g} "
+            f"(model {b.model:,.1f}), outside ±{b.band_pct:g} % ({b.confidence} confidence, held-out)",
+            title="Calibration band", file="calibration/tank_cases.yaml"))
+    return lines
+
+
+def _tank_section() -> list[str]:
+    cases = _load_tank_cases()
+    bands = _load_tank_bands()
+    rows = [_run_tank(c) for c in cases["type_c_tank"]]
+    checks = _assess_tanks(cases)
+    out = ["", "## 5. Type C tank cases (held out)", "",
+           "One cargo tank, run through the tank maths only (`tank_cases.yaml`, bands in `tank_bands.yaml`). "
+           "Every case is held out: it is never used to fit a factor. The engine's tank diameter is the "
+           "outside of the insulation, so each source's diameter and length are first brought to that "
+           "datum (`diameter_basis`, `length_basis`). Volume and steel are run at the published shell "
+           "thickness; the wall is the pressure-vessel formula at the steel diameter, with the "
+           "material the case says it is run as. **Steel weight of the first case is in-sample for the "
+           "structure factor** of fully pressurised LPG in the Defaults Profile, which was worked out from "
+           "that one published weight. A miss is a warning only.", "",
+           "| Case | Conf. | Figure | Published | Model | err % | Band ± % | vs band |", "|---|---|---|---|---|---|---|---|"]
+    for row in rows:
+        c = row.case
+        for b in (x for x in checks if x.case == c["id"]):
+            unit = "m³" if b.figure == "tank_volume_m3" else ("mm" if b.figure == "tank_wall_mm" else "t")
+            note = " (in-sample)" if b.figure == "tank_steel_t" and c.get("steel_in_sample") else ""
+            out.append(f"| {c['id']} | {c['confidence']} | {bands[b.figure]['label']} ({unit}) | "
+                       f"{fmt(b.observed, 1)} | {fmt(b.model, 1)} | {fmt(b.err_pct, 1)} | ±{b.band_pct:g} | "
+                       f"{'inside' if b.inside else '**OUTSIDE** ⚠'}{note} |")
+    out += ["", "| Case | Steel outer Ø (m) | Insulated outer Ø (m) | Insulated length (m) | Formula before allowance (mm) | "
+            "Head wall (mm) | Steel at formula thickness (t) |", "|---|---|---|---|---|---|---|"]
+    for row in rows:
+        out.append(f"| {row.case['id']} | {row.steel_od_m:.3f} | {row.insulated_od_m:.3f} | "
+                   f"{row.insulated_length_m:.3f} | {row.required_mm:.2f} | {row.head_wall_mm:g} | "
+                   f"{fmt(row.steel_formula_t, 1)} |")
+    out += ["", "### Tank records that cannot run yet", "", "Listed with their published figures and the reason. "
+            "They are never run.", "", "| Case | Published | Why not run |", "|---|---|---|"]
+    for c in cases.get("not_yet_runnable_tank_cases", []):
+        out.append(f"| {c['id']} | {c['published']} | {c['not_yet_runnable']} |")
+    return out
+
+
 def main_check() -> int:
     """Print one warning annotation per case outside its band. Exit 0 whatever the result: a band
     miss is a warning. An exception (a missing file, a bad case) is a crash and fails."""
     checks = assess()
     for line in warnings_for(checks):
         print(line)
-    outside = sum(1 for b in checks if not b.inside)
-    print(f"calibration: {len(checks)} results against their bands, {outside} outside (warning only)")
+    tank_checks = _assess_tanks()
+    for line in _tank_warnings_for(tank_checks):
+        print(line)
+    outside = sum(1 for b in checks + tank_checks if not b.inside)
+    print(f"calibration: {len(checks) + len(tank_checks)} results against their bands, {outside} outside "
+          f"(warning only)")
     return 0
 
 
@@ -528,6 +690,7 @@ def report() -> str:
                    f"{fmt(m.ls_plus_consumables)} | {m.cb_implied:.3f} | {m.speed_kmh:g} | "
                    f"{fmt(m.power_kw)} | {fmt(m.delivered_kw)} | {fmt(ratio, 2)} |")
     out += _held_out_section(held_cases, held_rows, cases.get("not_yet_runnable_cases", []), all_checks)
+    out += _tank_section()
     return "\n".join(out) + "\n"
 
 
