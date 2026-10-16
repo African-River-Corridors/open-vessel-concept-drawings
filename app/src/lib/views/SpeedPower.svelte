@@ -2,12 +2,16 @@
   import uPlot from "uplot";
   import "uplot/dist/uPlot.min.css";
   import { onMount } from "svelte";
+  import { axisInkHooks, currentTokens, dashFor, uiFont, watchTheme, type ChartTokens } from "../chartTheme";
 
   // One speed-power chart for one channel environment: power and fuel against speed. It draws the
   // `curves` entry exactly as the engine gave it. The limiting speed is a dashed line; points where
   // squat limits the speed are red dots. There is no zoom, pan or hover. The user clicks a point to
   // select it, and the readout shows that point's values. The design speed is selected to start with
-  // (the point at the Option's `max_speed_kn`, or the nearest computed point).
+  // (the point at the Option's `max_speed_kn`, or the nearest computed point). Colours come from the
+  // CSS tokens each time the chart draws (chartTheme.ts); a theme change redraws it, keeping the state.
+  // Power is a solid line in --ink and fuel a dashed line in --accent, each named on its line, so the two
+  // are never told apart by colour alone.
   interface Point {
     kn: number;
     kw: number;
@@ -31,9 +35,10 @@
   /** Index in `points` of the selected point. */
   let selected = $state(0);
 
-  const NAVY = "#14325a";
-  const GOLD = "#b8932f";
-  const RED = "#a02a1a";
+  /** The tokens now in force; read again at the start of every draw. */
+  let tok: ChartTokens = currentTokens();
+  const FUEL_DASH = dashFor(1);
+  const scaled = (dash: number[]) => dash.map((d) => d * devicePixelRatio);
 
   let squatCount = $derived(points.filter((p) => p.squat_limited).length);
 
@@ -62,7 +67,7 @@
   const num = (v: number, dp: number) => v.toLocaleString("en-GB", { minimumFractionDigits: dp, maximumFractionDigits: dp });
   let point = $derived<Point | undefined>(points[selected]);
 
-  /** A ring on each curve at the selected point, and a thin line down to the speed axis. */
+  /** A hollow ring on each curve at the selected point, and a thin line down to the speed axis. */
   function marker(u: uPlot) {
     const p = points[selected];
     if (!p) return;
@@ -72,18 +77,17 @@
     const ctx = u.ctx;
     const k = devicePixelRatio;
     ctx.save();
-    ctx.strokeStyle = "#666";
+    ctx.strokeStyle = tok.ink3;
     ctx.lineWidth = k;
     ctx.beginPath();
     ctx.moveTo(x, top);
     ctx.lineTo(x, top + height);
     ctx.stroke();
-    for (const [scale, value, colour] of [["kw", p.kw, NAVY], ["fuel", p.fuel_lph, GOLD]] as const) {
+    // A hollow circle on each curve: the curve shows through it.
+    for (const [scale, value, colour] of [["kw", p.kw, tok.ink], ["fuel", p.fuel_lph, tok.accent]] as const) {
       ctx.beginPath();
       ctx.arc(x, u.valToPos(value, scale, true), 6 * k, 0, 2 * Math.PI);
-      ctx.fillStyle = "#fff";
-      ctx.fill();
-      ctx.lineWidth = 2.5 * k;
+      ctx.lineWidth = 2 * k;
       ctx.strokeStyle = colour;
       ctx.stroke();
     }
@@ -97,8 +101,8 @@
     if (x < left || x > left + width) return;
     const ctx = u.ctx;
     ctx.save();
-    ctx.strokeStyle = RED;
-    ctx.fillStyle = RED;
+    ctx.strokeStyle = tok.fail;
+    ctx.fillStyle = tok.fail;
     ctx.lineWidth = 1.5 * devicePixelRatio;
     ctx.setLineDash([6 * devicePixelRatio, 4 * devicePixelRatio]);
     ctx.beginPath();
@@ -106,13 +110,67 @@
     ctx.lineTo(x, top + height);
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.font = `${11 * devicePixelRatio}px sans-serif`;
+    ctx.font = uiFont(tok, 11 * devicePixelRatio);
     ctx.textAlign = x > left + width / 2 ? "right" : "left";
     ctx.fillText(`limit ${limitingSpeed.toFixed(2)} kn`, x + (x > left + width / 2 ? -4 : 4) * devicePixelRatio, top + 12 * devicePixelRatio);
     ctx.restore();
   }
 
+  /** Squat-limited points: a cross (a shape, not a colour), drawn over the power curve. */
+  function squatMarks(u: uPlot) {
+    const k = devicePixelRatio;
+    const { left, top, width, height } = u.bbox;
+    const ctx = u.ctx;
+    ctx.save();
+    ctx.strokeStyle = tok.fail;
+    ctx.lineWidth = 2 * k;
+    for (const p of points) {
+      if (!p.squat_limited) continue;
+      const x = u.valToPos(p.kn, "x", true);
+      const y = u.valToPos(p.kw, "kw", true);
+      if (x < left || x > left + width || y < top || y > top + height) continue;
+      ctx.beginPath();
+      ctx.moveTo(x - 4 * k, y - 4 * k);
+      ctx.lineTo(x + 4 * k, y + 4 * k);
+      ctx.moveTo(x - 4 * k, y + 4 * k);
+      ctx.lineTo(x + 4 * k, y - 4 * k);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /** Each curve is named on its line, above it: power three quarters along, fuel under half way. */
+  function curveNames(u: uPlot) {
+    if (points.length === 0) return;
+    const k = devicePixelRatio;
+    const { top, height } = u.bbox;
+    const ctx = u.ctx;
+    const at = (fraction: number) => points[Math.round(fraction * (points.length - 1))];
+    const power = at(0.75);
+    const fuel = at(0.4);
+    ctx.save();
+    ctx.font = uiFont(tok, 11 * k, 500);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    const clamp = (y: number) => Math.min(Math.max(y, top + 14 * k), top + height - 4 * k);
+    ctx.fillStyle = tok.ink;
+    ctx.fillText("Power", u.valToPos(power.kn, "x", true), clamp(u.valToPos(power.kw, "kw", true) - 8 * k));
+    ctx.fillStyle = tok.accent;
+    ctx.fillText("Fuel", u.valToPos(fuel.kn, "x", true), clamp(u.valToPos(fuel.fuel_lph, "fuel", true) - 8 * k));
+    ctx.restore();
+  }
+
   function options(width: number, height: number): uPlot.Options {
+    const ink = axisInkHooks(() => tok);
+    const t0 = tok;
+    const axis = {
+      stroke: () => tok.ink3,
+      font: uiFont(t0, 11),
+      labelFont: uiFont(t0, 12, 600),
+      grid: { stroke: () => tok.rule, width: 1 },
+      ticks: { stroke: () => tok.rule, width: 1 },
+      border: { show: false },
+    };
     return {
       width,
       height,
@@ -121,22 +179,25 @@
       cursor: { show: false, drag: { x: false, y: false } },
       legend: { show: false },
       hooks: {
-        draw: [limitLine, marker],
+        // Read the tokens first, then the axes draw their text in two inks, then the marks over the curves.
+        drawClear: [() => (tok = currentTokens()), ink.drawClear],
+        drawAxes: [ink.drawAxes],
+        draw: [limitLine, squatMarks, curveNames, marker],
       },
       axes: [
-        { label: "Speed (kn)", stroke: "#444" },
-        { label: "Power (kW)", stroke: NAVY, scale: "kw" },
-        { label: "Fuel (l/h)", stroke: GOLD, scale: "fuel", side: 1, grid: { show: false } },
+        { ...axis, label: "Speed (kn)" },
+        { ...axis, label: "Power (kW)", scale: "kw" },
+        { ...axis, label: "Fuel (l/h)", scale: "fuel", side: 1, grid: { show: false } },
       ],
       series: [
         { label: "Speed (kn)", value: exact },
-        { label: "Power (kW)", scale: "kw", stroke: NAVY, width: 2, value: exact },
-        { label: "Fuel (l/h)", scale: "fuel", stroke: GOLD, width: 2, value: exact },
+        { label: "Power (kW)", scale: "kw", stroke: () => tok.ink, width: 2, value: exact },
+        { label: "Fuel (l/h)", scale: "fuel", stroke: () => tok.accent, width: 2, dash: scaled(FUEL_DASH), value: exact },
         {
           label: "Squat-limited (kW)",
           scale: "kw",
           paths: () => null,
-          points: { show: true, size: 9, fill: RED, stroke: RED },
+          points: { show: false },
           value: exact,
         },
       ],
@@ -163,7 +224,12 @@
     plot.over.addEventListener("click", onClick);
     const ro = new ResizeObserver(() => plot?.setSize({ width: host.clientWidth, height: hostHeight() }));
     ro.observe(host);
+    // A theme change: draw again in the new colours. The data, the selected point and the size stay.
+    const stopTheme = watchTheme(() => plot?.redraw(false));
+    // The bundled font may arrive after the first draw: draw again, with the axes measured again.
+    void document.fonts?.ready.then(() => plot?.redraw(true, true));
     return () => {
+      stopTheme();
       ro.disconnect();
       plot?.destroy();
     };
@@ -210,9 +276,9 @@
 <style>
   .chart { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .head { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; font-size: 13px; }
-  .dim { color: var(--dim); font-size: 12px; }
+  .dim { color: var(--ink-3); font-size: 12px; }
   .readout { display: flex; gap: 14px; flex-wrap: wrap; margin: 2px 0 4px; font-size: 12px; }
-  .readout .sel { color: var(--dim); }
-  .host { flex: 1; min-height: 0; width: 100%; }
+  .readout .sel { color: var(--ink-3); }
+  .host { flex: 1; min-height: 0; width: 100%; background: var(--surface); border: 1px solid var(--rule); box-sizing: border-box; }
   .host :global(.u-over) { cursor: pointer; }
 </style>
