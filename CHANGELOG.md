@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Design change (issue #264): `fit` returns the arrangement with the most cargo among those that meet every check, stability included (IS Code 2008 Part A 2.2, each loading condition). Before, it ranked by cargo and ran stability afterwards, so it could return a design that failed it. If no arrangement passes, `feasible` is false, the closest candidate (fewest failed checks, then most cargo) comes back, and `failed_checks` lists what it fails. The before/after table is under "Design changes" below.
+  - The check list of the search is one place, `gas_arrangement.rs` ("THE CHECKS THE SEARCH USES"; the rules engine, #176, will replace it): the capacity, journey and gas-separation checks the engine already ran, tank length over diameter, the air draft limit (new `FitOptions::air_draft_limit_m`, passed from `air_draft_limit_m`), freeboard at the carried draught (new `required_freeboard_m`, passed from `freeboard_min_m`), and stability. Cheap checks run first; stability runs only for the candidates that pass them, from the most cargo down. A check of warning severity (the wheelhouse sightline, for one) is advisory and does not gate, as before.
+  - `failed_checks` lists failed error checks only (it also listed failed warnings). `smallest_viable_loa` asks for a length with a passing arrangement and scans up from `lo` in 2 m steps before halving to 0.1 m, because viability is not monotone in length. The design sweep (`design_grid`) does not search arrangements (one fixed arrangement per cell) and is unchanged. `ovcd run`: the "Feasible arrangement" check now says no arrangement passes and names the failed checks of the closest one.
+  - Tests re-pinned to what the code prints now (no tolerance loosened; old values in the history). Rust: `the_cn_ii_benchmark_is_reproduced` (2,832.6643735601965 t, binding "volume"), `the_smallest_viable_loa_is_found_to_a_tenth_of_a_metre` (39.9 m), `a_hull_too_short_for_a_tank_is_reported_infeasible_not_raised` (2 failed checks), `json_results_are_what_simulate_answers_for_a_self_propelled_gas_hull` (cargo 2,832.6643735601965 t, lightship 1,893.6869533634328 t, governs "tank volume"), the stored results hashes of the two gas fixtures. Python: `test_cn_ii_benchmark_is_reproduced`, the two regression snapshots `(90, 12.9)` (12 m cap) and `(90, 14.8)` (16 m cap), the quickstart example (README). Tests changed in meaning, not re-pinned: `the_default_cap_lets_a_tank_pass_the_old_12_m`, `max_tank_od_m_reaches_the_arrangement_search`, the failed-checks note test (now a hull where nothing passes), the section drawing test (also draws a 6 m deep hull), `test_tender_gas_barge_shows_failed_stability_checks` and the two stability tests that need a failing design (now a 60 x 10 x 6 m hull). No sourced test changed.
 - Design change (issue #237): one gas rule set, `IGC_2G`, the per-tank distance d(Vc) of IGC Code 2.4.1.1. The stepped reading (d from the total tank volume: 0.8 m up to 1,000 m3, 1.0 m up to 5,000 m3, 2.0 m above) is removed: it is not in the IGC or IGF text. The text was checked against the Code as adopted by MSC.370(93) and every amendment in force; none changes 2.4. The before/after table is under "Design changes" below.
   - The rule. d is read per individual tank: up to 1,000 m3 0.8 m; 1,000 to 5,000 m3 0.75 + Vc x 0.2 / 4,000 m; 5,000 to 30,000 m3 0.8 + Vc / 25,000 m; 30,000 m3 and over 2 m. The datum is 2.4.2: d runs "plate to plate, from the moulded line to the moulded line, excluding insulation", so the clear gap from the outer face of the insulation is d less the insulation thickness (as `IGC_2G_EXACT` already did). Every gas search now takes the per-tank loop.
   - The dome counts in Vc (2.4.1.1: "100 % of the gross design volume of the individual cargo tank at 20 C, including domes and appendages"). New input `tank_dome_diameter_m` in the Gas tanks group, 2.0 m by default: a nominal cylindrical dome as wide as it is high; there is no published source for the size yet, and the maintainer is to confirm it. The dome volume, pi/4 x diameter^2 x dome height per tank, goes into Vc only, not into the cargo volume, the fill ratio, the weights or `containment_inner_volume_m3`. Appendages (nozzles, manways and the like) are not modelled: no volume is added for them. At 2 m by 2 m the dome adds 6.3 m3 per tank, which moves d by 0.3 mm.
@@ -102,6 +106,54 @@
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/264-feasible-fit (2026-10-16)
+
+Between `main 06d10da` and `this branch 5a78519`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 1 (88x16.3) | `checks[12].message` | GM 2.36 m (fluid), max GZ 0.55 m at 16° — fails: Area 30–40° 0.024 < 0.03, Angle of max GZ 16.000 < 25.0 | GM 3.93 m (fluid), max GZ 1.60 m at 26° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[12].ok` | False | True | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[13].message` | GM 3.86 m (fluid), max GZ 1.65 m at 25° | GM 5.96 m (fluid), max GZ 2.41 m at 27° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[14].message` | GM 9.66 m (fluid), max GZ 3.05 m at 29° | GM 12.07 m (fluid), max GZ 3.35 m at 28° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[8].message` | raised eye 13.20 m >= obstruction 15.88 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.20 m >= obstruction 13.88 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `results.governs` | draught — Draught limit | tank volume | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `stability.conditions[0].criteria[2].ok` | False | True | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `stability.conditions[0].criteria[4].ok` | False | True | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `stability.ok` | False | True | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `warnings[0]` | Sightline needs 9.18 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 7.18 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].message` | GM 2.47 m (fluid), max GZ 0.58 m at 17° — fails: Angle of max GZ 17.000 < 25.0 | GM 3.21 m (fluid), max GZ 1.06 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].ok` | False | True | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[13].message` | GM 3.95 m (fluid), max GZ 1.69 m at 26° | GM 4.96 m (fluid), max GZ 2.09 m at 27° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | GM 10.18 m (fluid), max GZ 3.11 m at 29° | GM 11.48 m (fluid), max GZ 3.28 m at 28° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[8].message` | raised eye 13.20 m >= obstruction 14.60 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.20 m >= obstruction 13.60 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `results.governs` | draught — Draught limit | tank volume | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[0].criteria[4].ok` | False | True | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `stability.ok` | False | True | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `warnings[0]` | Sightline needs 7.90 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 6.90 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[12].message` | GM 2.75 m (fluid), max GZ 0.61 m at 16° — fails: Area 30–40° 0.023 < 0.03, Angle of max GZ 16.000 < 25.0 | GM 5.18 m (fluid), max GZ 1.99 m at 28° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[12].ok` | False | True | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[13].message` | GM 4.54 m (fluid), max GZ 1.82 m at 25° | GM 7.48 m (fluid), max GZ 2.93 m at 28° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[14].message` | GM 10.89 m (fluid), max GZ 3.35 m at 29° | GM 14.77 m (fluid), max GZ 3.83 m at 28° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[8].message` | raised eye 13.20 m >= obstruction 15.50 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 10.91 m >= obstruction 10.41 m + 0.50 m margin (lift used 3.71 m of 6.00 m) | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[8].ok` | False | True | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `results.governs` | draught — Draught limit | tank volume | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `stability.conditions[0].criteria[2].ok` | False | True | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `stability.conditions[0].criteria[4].ok` | False | True | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `stability.ok` | False | True | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `warnings[0]` | Sightline needs 8.80 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release. | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `warnings[1]` | Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release. | absent | changed |
+| sweep gas IGC_2G 60x10 | `arrangement.feasible` | True | False | changed |
+| sweep gas IGC_2G 60x10 | `checks[10].message` | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | cofferdam 0.60 m >= 0.60 m (cl. 3.6.13) | changed |
+| sweep gas IGC_2G 60x10 | `checks[10].name` | opening setback | cofferdam min width | changed |
+| sweep gas IGC_2G 60x10 | `checks[11].message` | forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3) | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | changed |
+| sweep gas IGC_2G 60x10 | `checks[11].name` | fwd end bulkhead space | opening setback | changed |
+| sweep gas IGC_2G 60x10 | `checks[12].message` | GM 5.81 m (fluid), max GZ 1.82 m at 29° | forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3) | changed |
+| sweep gas IGC_2G 60x10 | `checks[12].name` | Stability — laden | fwd end bulkhead space | changed |
+| sweep gas IGC_2G 60x10 | `checks[12].severity` | absent | error | changed |
+| sweep gas IGC_2G 60x10 | `checks[13].message` | GM 6.48 m (fluid), max GZ 1.85 m at 26° | GM 5.81 m (fluid), max GZ 1.82 m at 29° | changed |
+| ... | 12817 more changed quantities | | | |
 
 ### Per-tank gas tank clearance, dome in Vc (#237) (2026-10-16)
 

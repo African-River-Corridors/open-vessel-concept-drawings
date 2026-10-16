@@ -11,14 +11,15 @@ from vessel_designer.core.gas_arrangement import fit, required_side_clearance, s
 def test_cn_ii_benchmark_is_reproduced():
     """Example CN II gas figure: 90 x 14.8 x 6.5 m, propane, T 4.4 m, IGC 2G, fill 0.95.
 
-    Re-pinned in issue #237 (the per-tank d(Vc) of IGC 2.4.1.1, datum of 2.4.2, dome in Vc): the
-    value is what the code prints now, 2,943.44 t. It was 2,058 t under the stepped reading, which
-    asked for 2.0 m of side clearance at this tank volume. See the before/after table in CHANGELOG.md.
+    Re-pinned in issue #237 (the per-tank d(Vc) of IGC 2.4.1.1, datum of 2.4.2, dome in Vc) to
+    2,943.44 t; it was 2,058 t under the stepped reading. Re-pinned again in issue #264 (the search
+    keeps only arrangements that pass stability) to what the code prints now, 2,832.66 t. See the
+    before/after table in CHANGELOG.md.
 
     Label: snapshot
     """
     f = fit(90.0, 14.8, "LPG_propane", 4.4, depths=[6.5], ruleset="IGC_2G", fill_ratio=0.95)
-    assert abs(f.payload_t - 2943) < 1.0
+    assert abs(f.payload_t - 2833) < 1.0
     assert f.n_tanks_wide == 1
 
 
@@ -72,7 +73,8 @@ def test_payload_never_exceeds_the_draught_cap():
 # floor. Issue #215 removed that floor, so it is 2,922 t (2 x 8.0 m) again, the value of 0.1.0.
 # These are the cases of the 12 m tank diameter cap, which was fixed until issue #175 made it
 # an input (16 m by default), so each sets `max_tank_od_m=12.0`. The 16 m cases are below.
-SNAPSHOT = [((90, 12.9), 1505), ((90, 14.8), 1738), ((90, 18.0), 2033), ((120, 18.0), 2922)]
+# (90, 12.9) re-pinned in issue #264 (stability gates the search): printed 1497.6289987038715; was 1505.
+SNAPSHOT = [((90, 12.9), 1498), ((90, 14.8), 1738), ((90, 18.0), 2033), ((120, 18.0), 2922)]
 
 
 @pytest.mark.parametrize("dims,expected", SNAPSHOT)
@@ -100,7 +102,9 @@ def test_snapshot_120x18_is_two_8m_tanks_abreast():
 # value moved again with issue #215 (the inland type-G side floor went); the printed value is pinned.
 # Issue #237 (the dome now counts in Vc) moved both again, by under 0.1 t: re-pinned to the printed
 # values; they were 1755.1158212773869 and 2921.7916111312247.
-SNAPSHOT_16 = [((90, 14.8), 1755.2051149886904), ((120, 18.0), 2921.887266646023)]
+# (90, 14.8) re-pinned in issue #264 (stability gates the search): printed 1692.4687453268486; was
+# 1755.2051149886904.
+SNAPSHOT_16 = [((90, 14.8), 1692.4687453268486), ((120, 18.0), 2921.887266646023)]
 
 
 @pytest.mark.parametrize("dims,expected", SNAPSHOT_16)

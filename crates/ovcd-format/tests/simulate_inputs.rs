@@ -534,27 +534,25 @@ fn a_number_in_an_error_message_is_written_as_python_writes_it() {
 // --- The gas route -----------------------------------------------------------------------
 
 /// Worked out: `max_tank_od_m` reaches the arrangement search, and the search never makes a tank
-/// wider than it. So the tank outer diameter is at most the cap, a smaller cap on a wide hull
+/// wider than it. So the tank outer diameter is at most the cap, a small cap on a wide hull
 /// gives a smaller tank and less cargo, and the default cap (16 m) given explicitly changes
 /// nothing. (Replaces the issue's "non-default ADN tank cap": that input was removed in #175.)
 #[test]
 fn max_tank_od_m_reaches_the_arrangement_search() {
     let default = sim(gas(json!({})));
     assert_eq!(sim(gas(json!({ "max_tank_od_m": 16.0 }))), default);
-    let mut last_od = f64::INFINITY;
-    let mut last_cargo = f64::INFINITY;
+    // Since issue #264 the search keeps only arrangements that pass stability, so a smaller cap
+    // does not always mean less cargo (the arrangement left after the cap can be a stabler one):
+    // each cap holds the tank to the cap, and the smallest cap gives a smaller tank and less cargo.
+    let (mut od, mut cargo) = (f64::INFINITY, f64::INFINITY);
     for cap in [12.0, 8.0, 6.0] {
         let v = sim(gas(json!({ "max_tank_od_m": cap })));
-        let od = num(&v["arrangement"]["tank_od_m"]);
+        od = num(&v["arrangement"]["tank_od_m"]);
+        cargo = num(&v["results"]["cargo_t"]);
         assert!(od <= cap + 1e-6, "cap {cap}: tank OD {od}");
-        assert!(
-            od < last_od && num(&v["results"]["cargo_t"]) < last_cargo,
-            "cap {cap}"
-        );
-        last_od = od;
-        last_cargo = num(&v["results"]["cargo_t"]);
     }
-    assert!(last_od < num(&default["arrangement"]["tank_od_m"]));
+    assert!(od < num(&default["arrangement"]["tank_od_m"]));
+    assert!(cargo < num(&default["results"]["cargo_t"]));
 }
 
 /// Worked out: a hull too short for any tank carries nothing, so there is no loaded draught and

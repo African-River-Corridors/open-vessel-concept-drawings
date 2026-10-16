@@ -30,7 +30,7 @@ use crate::barge_capacity::{
     compute as capacity, dome_volume_m3,
 };
 use crate::checks::{Check, all_ok};
-use crate::gas_stability::DEFAULT_WATER_DENSITY;
+use crate::gas_stability::{self as gs, DEFAULT_WATER_DENSITY, GasCapacityResult};
 use crate::journey_derating::{JourneyDeratingInputs, JourneyDeratingResult, compute as derate};
 use crate::pressure_vessel::PyError;
 use crate::protective_location::d_vc_exact;
@@ -51,6 +51,8 @@ pub const DEFAULT_DEPTHS_M: [f64; 15] = [
 ];
 pub const DEFAULT_TANKS_WIDE: [i64; 3] = [1, 2, 3];
 pub const DEFAULT_EXTRA_CLEARANCE_M: [f64; 4] = [0.5, 1.0, 1.5, 2.0];
+/// The default least freeboard (m), the one `BargeCapacityInputs` uses.
+pub const DEFAULT_REQUIRED_FREEBOARD_M: f64 = 0.3;
 
 /// The keyword arguments of `fit`. `Default` is the Python defaults.
 #[derive(Debug, Clone, PartialEq)]
@@ -85,6 +87,11 @@ pub struct FitOptions {
     pub tank_wall_thickness_mm: f64,
     /// Water density for the draught of every candidate and its journey de-rating (t/m3).
     pub water_density_t_per_m3: f64,
+    /// Least freeboard at the carried draught (m): a candidate that carries its payload deeper
+    /// than the hull depth less this fails `freeboard_at_payload`.
+    pub required_freeboard_m: f64,
+    /// Air draft limit of the light condition (m), as the capacity check reads it. `None`: none.
+    pub air_draft_limit_m: Option<f64>,
 }
 
 impl Default for FitOptions {
@@ -108,6 +115,8 @@ impl Default for FitOptions {
             wing_tank_height_ratio: DEFAULT_WING_TANK_HEIGHT_RATIO,
             tank_wall_thickness_mm: DEFAULT_TANK_WALL_THICKNESS_MM,
             water_density_t_per_m3: DEFAULT_WATER_DENSITY,
+            required_freeboard_m: DEFAULT_REQUIRED_FREEBOARD_M,
+            air_draft_limit_m: None,
         }
     }
 }
@@ -257,11 +266,119 @@ pub fn length_over_diameter_check(r: &BargeCapacityResult) -> Option<Check> {
     ))
 }
 
-/// A candidate's checks: the capacity checks, the journey checks and the tank length check.
-fn candidate_checks(r: &BargeCapacityResult, j: &JourneyDeratingResult) -> Vec<Check> {
+// ---------------------------------------------------------------------------------------------
+// THE CHECKS THE SEARCH USES (issue #264). This is the one list. `fit` and `smallest_viable_loa`
+// keep a candidate only if every error-severity check below passes, then rank the passing ones by
+// cargo. When the rules engine (#176) lands, it replaces this list with the Design's selected rules.
+//
+// Cheap checks (run first, from numbers the search has already computed):
+//   - the capacity result's own checks: feasible geometry, not overloaded, freeboard, cargo zone,
+//     the aft arrangement (thrusters, containers, wheelhouse), the gas separation (protective
+//     location clearances), and the air draft limit of the light condition when one is set;
+//   - the journey checks: the channel draught limit leaves a payload that floats;
+//   - `tank_length_over_diameter`: overall tank length over outer diameter, at most 7;
+//   - `freeboard_at_payload`: the hull depth less the carried draught, at least the required freeboard.
+// Costly check (run only for a candidate that passed the cheap ones and could still win):
+//   - stability: IS Code 2008 Part A 2.2, each loading condition (`gas_stability::assess`).
+// A check of warning severity is advisory: it never gates (`all_ok`), as everywhere else.
+// ---------------------------------------------------------------------------------------------
+
+/// The cheap checks of a candidate: see the list above.
+fn cheap_checks(
+    r: &BargeCapacityResult,
+    j: &JourneyDeratingResult,
+    depth: f64,
+    o: &FitOptions,
+) -> Vec<Check> {
     let mut all = r.checks.clone();
     all.extend(j.checks.iter().cloned());
     all.extend(length_over_diameter_check(r));
+    let freeboard = depth - j.draft_at_achievable_m;
+    all.push(Check::new(
+        "freeboard_at_payload",
+        freeboard + 1e-9 >= o.required_freeboard_m,
+        format!(
+            "freeboard {} m at the carried draught {} m >= required {} m",
+            fixed(freeboard, 2),
+            fixed(j.draft_at_achievable_m, 2),
+            py_str(o.required_freeboard_m)
+        ),
+    ));
+    all
+}
+
+/// One stability condition as a check, named and worded as the simulation lists it.
+pub fn stability_check(c: &gs::Condition) -> Check {
+    let bad: Vec<&gs::Criterion> = c.criteria.iter().filter(|x| !x.ok).collect();
+    let mut message = format!(
+        "GM {} m (fluid), max GZ {} m at {}\u{b0}",
+        fixed(c.gm_fluid_m, 2),
+        fixed(c.max_gz_m, 2),
+        fixed(f64::from(c.max_gz_deg), 0)
+    );
+    if !bad.is_empty() {
+        let parts: Vec<String> = bad
+            .iter()
+            .map(|x| {
+                let v = match x.value {
+                    gs::PyNum::Int(i) => i as f64,
+                    gs::PyNum::Float(v) => v,
+                };
+                format!("{} {} < {}", x.name, fixed(v, 3), py_str(x.limit))
+            })
+            .collect();
+        message.push_str(" \u{2014} fails: ");
+        message.push_str(&parts.join(", "));
+    }
+    Check::new(
+        format!("Stability \u{2014} {}", c.name.to_lowercase()),
+        bad.is_empty(),
+        message,
+    )
+}
+
+/// The stability checks of a candidate, one per loading condition. None when it carries nothing or
+/// has no gas tanks (the cheap checks report that). An assessment that cannot be made is one failed
+/// check, so that a candidate the engine cannot judge never passes and never stops the search.
+fn stability_checks(
+    r: &BargeCapacityResult,
+    j: &JourneyDeratingResult,
+    o: &FitOptions,
+) -> Vec<Check> {
+    if j.achievable_tonnage_t <= 0.0 || r.gas_basis.is_none() {
+        return Vec::new();
+    }
+    let assessed = GasCapacityResult::try_from(r)
+        .map_err(|m| m.to_string())
+        .and_then(|basis| {
+            gs::assess(
+                &basis,
+                j.achievable_tonnage_t,
+                o.block_coefficient,
+                o.water_density_t_per_m3,
+                gs::criteria_set_for(&o.ruleset),
+            )
+            .map_err(|e| e.message().to_string())
+        });
+    match assessed {
+        Ok(a) => a.conditions.iter().map(stability_check).collect(),
+        Err(m) => vec![Check::new(
+            "Stability \u{2014} not assessed",
+            false,
+            format!("stability could not be assessed: {m}"),
+        )],
+    }
+}
+
+/// Every check of a candidate: the cheap ones, then stability.
+fn search_checks(
+    r: &BargeCapacityResult,
+    j: &JourneyDeratingResult,
+    depth: f64,
+    o: &FitOptions,
+) -> Vec<Check> {
+    let mut all = cheap_checks(r, j, depth, o);
+    all.extend(stability_checks(r, j, o));
     all
 }
 
@@ -271,6 +388,8 @@ type Built = (BargeCapacityInputs, BargeCapacityResult);
 /// One scored candidate, as Python's `(payload, depth, result, journey, inputs)` tuple.
 #[derive(Clone)]
 struct Candidate {
+    /// Every cheap check passes (see "THE CHECKS THE SEARCH USES").
+    cheap_ok: bool,
     tonnage: f64,
     depth: f64,
     result: BargeCapacityResult,
@@ -324,6 +443,7 @@ impl Search<'_> {
         inp.wing_tank_height_ratio = self.o.wing_tank_height_ratio;
         inp.tank_wall_thickness = Some(self.o.tank_wall_thickness_mm);
         inp.water_density = self.o.water_density_t_per_m3;
+        inp.air_draft_limit_m = self.o.air_draft_limit_m;
         inp
     }
 
@@ -391,33 +511,24 @@ impl Search<'_> {
     }
 }
 
-/// Most cargo per journey at draught cap `t_max` over depth x arrangement.
-///
-/// Only candidates whose error-severity checks all pass can win. If none passes, the best-tonnage
-/// candidate comes back with `feasible == false`; check it before using the payload.
-pub fn fit(
-    loa: f64,
-    beam: f64,
-    cargo: &str,
-    t_max: f64,
-    o: &FitOptions,
-) -> Result<ArrangementFit, PyError> {
-    if !RULESETS.contains(&o.ruleset.as_str()) {
-        return Err(value_error(
-            "ruleset must be one of ('IGC_2G',)".to_string(),
-        ));
-    }
-    let mut s = Search {
-        loa,
-        beam,
-        cargo,
-        o,
-        tried: 0,
-    };
-    // Best candidate that passes its error checks, and best overall (reported only if none passes).
-    let mut best: Option<Candidate> = None;
-    let mut best_any: Option<Candidate> = None;
+/// Every candidate the search built, and the index of the best one that passes every check.
+struct Pool {
+    all: Vec<Candidate>,
+    best: Option<usize>,
+}
 
+/// Build every candidate and judge it by the whole check list. Every candidate gets the cheap
+/// checks. The stability assessment, the costly check, runs only for the candidates that passed
+/// the cheap ones, from the most cargo down, and stops at the first that passes it: a candidate
+/// with less cargo cannot win, so its stability is not needed. Among candidates within 1e-6 t of
+/// the winner the first built stays, as before. With `stop_at_first_pass` the search ends at the
+/// first passing candidate (for a yes or no answer).
+fn search(s: &mut Search<'_>, t_max: f64, stop_at_first_pass: bool) -> Result<Pool, PyError> {
+    let (loa, beam, o) = (s.loa, s.beam, s.o);
+    let mut pool = Pool {
+        all: Vec::new(),
+        best: None,
+    };
     for &d in &o.depths {
         for &nw in &o.tanks_wide {
             let mut cands: Vec<Built> = Vec::new();
@@ -465,34 +576,98 @@ pub fn fit(
                     o.block_coefficient,
                     o.water_density_t_per_m3,
                 )?;
-                let tonnage = j.achievable_tonnage_t;
-                let passes = all_ok(&candidate_checks(&r, &j));
-                let beats_any = best_any.as_ref().is_none_or(|b| tonnage > b.tonnage + 1e-6);
-                let beats_best = passes && best.as_ref().is_none_or(|b| tonnage > b.tonnage + 1e-6);
-                if beats_any || beats_best {
-                    let cand = Candidate {
-                        tonnage,
-                        depth: d,
-                        result: r,
-                        journey: j,
-                        inputs: inp,
-                    };
-                    match (beats_any, beats_best) {
-                        (true, true) => {
-                            best_any = Some(cand.clone());
-                            best = Some(cand);
-                        }
-                        (true, false) => best_any = Some(cand),
-                        _ => best = Some(cand),
-                    }
-                }
+                let cheap_ok = all_ok(&cheap_checks(&r, &j, d, o));
+                pool.all.push(Candidate {
+                    cheap_ok,
+                    tonnage: j.achievable_tonnage_t,
+                    depth: d,
+                    result: r,
+                    journey: j,
+                    inputs: inp,
+                });
             }
         }
     }
+    // The costly check, from the most cargo down (a stable sort keeps the build order of equals).
+    let mut order: Vec<usize> = (0..pool.all.len())
+        .filter(|&i| pool.all[i].cheap_ok)
+        .collect();
+    order.sort_by(|&a, &b| pool.all[b].tonnage.total_cmp(&pool.all[a].tonnage));
+    let mut top = 0.0;
+    for i in order {
+        let c = &pool.all[i];
+        if pool.best.is_some() && c.tonnage < top - 1e-6 {
+            break;
+        }
+        if all_ok(&stability_checks(&c.result, &c.journey, o)) {
+            match pool.best {
+                None => {
+                    top = c.tonnage;
+                    pool.best = Some(i);
+                    if stop_at_first_pass {
+                        break;
+                    }
+                }
+                Some(w) if i < w => pool.best = Some(i),
+                Some(_) => {}
+            }
+        }
+    }
+    Ok(pool)
+}
 
-    // Nothing passes: report the best failing candidate, flagged infeasible.
-    let best = match best.or(best_any) {
-        Some(b) => b,
+/// The closest candidate to passing, when none passes: the fewest failed error checks, then the
+/// most cargo (the first of two near-equal ones stays).
+fn closest_to_passing(pool: &[Candidate], o: &FitOptions) -> Option<usize> {
+    let mut best: Option<(usize, usize)> = None;
+    for (i, c) in pool.iter().enumerate() {
+        let failed = search_checks(&c.result, &c.journey, c.depth, o)
+            .iter()
+            .filter(|k| k.is_error() && !k.ok)
+            .count();
+        let better = match best {
+            None => true,
+            Some((bi, bf)) => failed < bf || (failed == bf && c.tonnage > pool[bi].tonnage + 1e-6),
+        };
+        if better {
+            best = Some((i, failed));
+        }
+    }
+    best.map(|(i, _)| i)
+}
+
+/// The arrangement that meets every check of the search, with the most cargo per journey at draught
+/// cap `t_max` over depth x arrangement.
+///
+/// A candidate must pass every error-severity check (see "THE CHECKS THE SEARCH USES"), stability
+/// included, to win. If none passes, the closest candidate to passing comes back with
+/// `feasible == false` and its failing checks in `failed_checks`; it is not an answer, so check
+/// `feasible` before using the payload.
+pub fn fit(
+    loa: f64,
+    beam: f64,
+    cargo: &str,
+    t_max: f64,
+    o: &FitOptions,
+) -> Result<ArrangementFit, PyError> {
+    if !RULESETS.contains(&o.ruleset.as_str()) {
+        return Err(value_error(
+            "ruleset must be one of ('IGC_2G',)".to_string(),
+        ));
+    }
+    let mut s = Search {
+        loa,
+        beam,
+        cargo,
+        o,
+        tried: 0,
+    };
+    let pool = search(&mut s, t_max, false)?;
+    let pick = pool.best.or_else(|| closest_to_passing(&pool.all, o));
+    let mut all = pool.all;
+    // Nothing passes: report the closest failing candidate, flagged infeasible.
+    let best = match pick {
+        Some(i) => all.swap_remove(i),
         None => {
             // Nothing fitted: report the plain single-tank attempt, which carries nothing.
             let d = *o.depths.first().ok_or_else(|| PyError {
@@ -511,6 +686,7 @@ pub fn fit(
                 o.water_density_t_per_m3,
             )?;
             Candidate {
+                cheap_ok: false,
                 tonnage: 0.0,
                 depth: d,
                 result: r,
@@ -529,10 +705,10 @@ pub fn fit(
     } = best;
     let n_total = opt_count(r.n_tanks_total);
     let n_wide = opt_count(r.n_tanks_wide);
-    let checks = candidate_checks(&r, &j);
+    let checks = search_checks(&r, &j, d, o);
     let failed: Vec<String> = checks
         .iter()
-        .filter(|c| !c.ok)
+        .filter(|c| c.is_error() && !c.ok)
         .map(|c| format!("{}: {}", c.name, c.message))
         .collect();
     let feasible = all_ok(&checks);
@@ -596,9 +772,41 @@ pub fn fit(
     })
 }
 
-/// Shortest LOA (to 0.1 m) at which the hull has any cargo area at all. Infinity when even `hi`
-/// has none. Python defaults `depths` to the first default depth only for this function: start
-/// from [`FitOptions::for_smallest_viable_loa`].
+/// Whether some arrangement of this hull meets every check of the search (the first one found
+/// ends the search).
+fn has_passing_arrangement(
+    loa: f64,
+    beam: f64,
+    cargo: &str,
+    t_max: f64,
+    o: &FitOptions,
+) -> Result<bool, PyError> {
+    if !RULESETS.contains(&o.ruleset.as_str()) {
+        return Err(value_error(
+            "ruleset must be one of ('IGC_2G',)".to_string(),
+        ));
+    }
+    let mut s = Search {
+        loa,
+        beam,
+        cargo,
+        o,
+        tried: 0,
+    };
+    Ok(search(&mut s, t_max, true)?.best.is_some())
+}
+
+/// Step of the upward scan of `smallest_viable_loa` (m).
+const VIABLE_LOA_SCAN_STEP_M: f64 = 2.0;
+
+/// Shortest LOA (to 0.1 m) at which some arrangement of the hull meets every check of the search
+/// (the same list as `fit`, stability included). Infinity when no LOA from `lo` to `hi` has one.
+///
+/// Whether a hull is viable is not monotone in its length: a long hull can fail length over
+/// diameter, and stability moves with length. So the search scans upward from `lo` in steps of
+/// [`VIABLE_LOA_SCAN_STEP_M`] to the first viable length, then halves the last step to 0.1 m. The
+/// length it returns always has a passing arrangement. Python defaults `depths` to the first
+/// default depth only for this function: start from [`FitOptions::for_smallest_viable_loa`].
 pub fn smallest_viable_loa(
     beam: f64,
     cargo: &str,
@@ -607,13 +815,22 @@ pub fn smallest_viable_loa(
     hi: f64,
     o: &FitOptions,
 ) -> Result<f64, PyError> {
-    let (mut lo, mut hi) = (lo, hi);
-    if fit(hi, beam, cargo, t_max, o)?.volume_capacity_t <= 0.0 {
-        return Ok(f64::INFINITY);
+    let mut below = lo;
+    let mut at = lo;
+    loop {
+        if has_passing_arrangement(at, beam, cargo, t_max, o)? {
+            break;
+        }
+        if at >= hi {
+            return Ok(f64::INFINITY);
+        }
+        below = at;
+        at = (at + VIABLE_LOA_SCAN_STEP_M).min(hi);
     }
+    let (mut lo, mut hi) = (below, at);
     while hi - lo > 0.1 {
         let mid = 0.5 * (lo + hi);
-        if fit(mid, beam, cargo, t_max, o)?.volume_capacity_t > 0.0 {
+        if has_passing_arrangement(mid, beam, cargo, t_max, o)? {
             hi = mid;
         } else {
             lo = mid;

@@ -11,12 +11,22 @@ use ovcd_format::{GaViews, Profile, RunOutcome, check, ga_views_of, run_design};
 use serde_json::{Value, json};
 
 fn gas_self_propelled() -> Value {
+    gas_hull("LNG", 76.5, 11.4, 3.5)
+}
+
+/// A hull on which no arrangement passes every check (issue #264): the closest one is drawn and
+/// its failed checks make the note. 60 x 10 x 6 m LPG propane fails light stability.
+fn gas_nothing_passes() -> Value {
+    gas_hull("LPG_propane", 60.0, 10.0, 6.0)
+}
+
+fn gas_hull(cargo: &str, loa: f64, beam: f64, depth: f64) -> Value {
     let t = |v: Value| json!({"value": v, "source": "typed"});
     let design = json!({"format": "vdesign", "format_version": 2, "engine_version": "0.2.2",
         "units": "SI", "options": [{"name": "Option 1", "inputs": {
-            "cargo": t(json!("LNG")), "hull_form": t(json!("raked_box")),
-            "formation": t(json!({"kind": "self_propelled"})), "length_overall_m": t(json!(76.5)),
-            "beam_m": t(json!(11.4)), "moulded_depth_m": t(json!(3.5)),
+            "cargo": t(json!(cargo)), "hull_form": t(json!("raked_box")),
+            "formation": t(json!({"kind": "self_propelled"})), "length_overall_m": t(json!(loa)),
+            "beam_m": t(json!(beam)), "moulded_depth_m": t(json!(depth)),
             "cargo_containment": t(json!("type_c_tanks"))}}]});
     let checked = check(&design.to_string(), &Profile::built_in());
     match run_design(&checked.design.expect("a valid Design"))
@@ -93,7 +103,25 @@ fn check_strip(what: &str, document: &Value, failed: usize) {
 }
 
 #[test]
-fn the_failed_checks_of_the_lng_self_propelled_case_make_one_numbered_note() {
+fn the_failed_checks_of_a_hull_where_nothing_passes_make_one_numbered_note() {
+    let r = gas_nothing_passes();
+    let failed = r["checks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|c| c["ok"] == false)
+        .count();
+    // "Feasible arrangement" says plainly that none passes; the failed light stability is listed too.
+    assert!(failed >= 2, "{failed} failed checks");
+    for (view, doc) in views(&r).all() {
+        check_strip(view, doc, failed);
+    }
+}
+
+#[test]
+fn the_lng_self_propelled_case_now_passes_and_makes_no_failed_checks_note() {
+    // Before issue #264 this hull got a 10.5 m tank that failed six checks; the search now returns
+    // an arrangement that passes, so the strip has no failed-checks note.
     let r = gas_self_propelled();
     let failed = r["checks"]
         .as_array()
@@ -101,9 +129,7 @@ fn the_failed_checks_of_the_lng_self_propelled_case_make_one_numbered_note() {
         .iter()
         .filter(|c| c["ok"] == false)
         .count();
-    // Six before issue #215: two of them were the inland type-G floors. The three stability
-    // criteria sets that fail on this hull are left.
-    assert!(failed >= 3, "{failed} failed checks");
+    assert_eq!(failed, 0);
     for (view, doc) in views(&r).all() {
         check_strip(view, doc, failed);
     }

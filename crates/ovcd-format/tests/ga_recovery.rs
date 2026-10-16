@@ -11,12 +11,18 @@ use serde_json::Value;
 use std::path::Path;
 
 fn results_of(fixture: &str, self_propelled: bool) -> Value {
+    results_at_depth(fixture, self_propelled, "4.5")
+}
+
+/// As `results_of`, with the moulded depth (the fixtures say 4.5 m) replaced by `depth`.
+fn results_at_depth(fixture: &str, self_propelled: bool, depth: &str) -> Value {
     let mut text = std::fs::read_to_string(
         Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("tests/fixtures")
             .join(fixture),
     )
-    .expect("fixture");
+    .expect("fixture")
+    .replace("\"value\": 4.5,", &format!("\"value\": {depth},"));
     if self_propelled {
         text = text.replace("pushed_barge", "self_propelled");
     } else {
@@ -706,9 +712,11 @@ fn polylines_with(document: &Value, layer: &str, x: f64) -> Vec<Vec<(f64, f64)>>
 #[test]
 fn the_section_draws_the_double_bottom_wing_tanks_voids_cradles_and_domes_from_the_results() {
     let mut with_double_bottom = 0;
-    for file in GAS_FIXTURES {
+    // Since issue #264 the search keeps only arrangements that pass stability, and the fixtures at
+    // their own 4.5 m depth no longer leave a double bottom, so a deeper hull is drawn too.
+    for (file, depth) in GAS_FIXTURES.iter().flat_map(|f| [(f, "4.5"), (f, "6.0")]) {
         for self_propelled in [false, true] {
-            let r = results_of(file, self_propelled);
+            let r = results_at_depth(file, self_propelled, depth);
             let v = views(&r);
             let d = &r["drawing"];
             let half = f(&r["dims"]["beam_m"]) / 2.0;

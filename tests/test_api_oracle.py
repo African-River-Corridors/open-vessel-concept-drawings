@@ -55,6 +55,9 @@ KNOWN_DIFFERENCES: dict = {
     # `distance_d_vc` and the `IGC_2G_EXACT` name are gone; the dome now counts in Vc). A gas design
     # has less side clearance, so its tanks, cargo, weights and stability move. The scenarios below
     # hold a gas result or a rule call. The scenarios of #215 above moved again for the same reason.
+    # Issue #264: a viable length needs an arrangement that passes every check, stability included.
+    "gas_arrangement.smallest_viable_loa": "issue #264: a viable length needs an arrangement that "
+                                            "passes every check",
     "gas_stability.assess": "issue #237: the per-tank d(Vc) moves the gas designs",
     "edited.assess_with_rebuilt_result": "issue #237: the per-tank d(Vc) moves the gas designs",
     "edited.assess_with_edited_basis": "issue #237: the per-tank d(Vc) moves the gas designs",

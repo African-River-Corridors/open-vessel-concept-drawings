@@ -59,10 +59,16 @@ def test_gas_stability_is_assessed_for_three_conditions():
 def test_tender_gas_barge_shows_failed_stability_checks():
     """Label: property
     """
-    o = simulate(dict(CN_II, loa_m=60, beam_m=7.0, depth_m=6.0, draught_limit_m=None,
-                      ruleset="IGC_2G", fill_ratio=0.98, self_propelled=False))
+    # 60 x 10 x 6 m, self-propelled: no arrangement passes the light condition (issue #264: with a
+    # beam of 7 m, pushed, the search now finds a stable smaller arrangement, so that hull is not used).
+    o = simulate(dict(CN_II, loa_m=60, beam_m=10.0, depth_m=6.0, draught_limit_m=None,
+                      ruleset="IGC_2G", fill_ratio=0.98, self_propelled=True))
     assert not o["stability"]["ok"]
     assert any(c["name"].startswith("Stability") and not c["ok"] for c in o["checks"])
+    assert not o["arrangement"]["feasible"]
+    feasible = next(c for c in o["checks"] if c["name"] == "Feasible arrangement")
+    assert not feasible["ok"] and "No arrangement passes every check" in feasible["message"]
+    assert "Stability \u2014 light" in feasible["message"]
 
 
 def test_box_barge_unchanged():
