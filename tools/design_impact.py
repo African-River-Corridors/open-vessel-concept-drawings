@@ -141,6 +141,12 @@ OPTIONAL_INPUT_CASES = (
      {"wing_tank_height_ratio": 0.66}),
     ("tank_wall_thickness_mm", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"tank_wall_thickness_mm": 25.0}),
+    # The environment inputs (issue #4, slice 6), set to their defaults in the same way. The squat
+    # margin matters only in a channel, so that case has one.
+    ("water_density_t_per_m3", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"water_density_t_per_m3": 1.0}),
+    ("squat_safety_margin_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {**_DEEP_CHANNEL, "squat_safety_margin_m": 0.15}),
     # A Vessel Class (issue #94): the scheme places the vessel in a class, and the class fills the
     # draught and air-draft limits. The results of the same dimensions are those of typed ones.
     ("vessel_scheme", "bauxite", "box_hold", "self_propelled", 110.0, 11.4, 4.5,

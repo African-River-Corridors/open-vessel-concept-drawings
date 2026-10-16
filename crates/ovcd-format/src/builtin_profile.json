@@ -280,6 +280,20 @@
       "unit": "kn",
       "hard": { "ge": 0, "le": 50 },
       "soft": { "min": 0.0, "max": 5.0 }
+    },
+    "water_density_t_per_m3": {
+      "default": 1.0,
+      "unit": "t/m3",
+      "hard": { "ge": 0.9, "le": 1.1 },
+      "soft": { "min": 0.99, "max": 1.03 },
+      "basis": "fresh water, as the original engine; sea water is about 1.025. One value is used for the draught of the hull, the stability and the resistance curves"
+    },
+    "squat_safety_margin_m": {
+      "default": 0.15,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.05, "max": 0.5 },
+      "basis": "carried over from the original engine: the under-keel clearance kept below the squatted keel. It limits the speed in a channel; deep water has no squat limit"
     }
   }
 }

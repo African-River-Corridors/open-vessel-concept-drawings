@@ -28,6 +28,7 @@ use crate::barge_capacity::{
     DEFAULT_WING_TANK_GAP_M, DEFAULT_WING_TANK_HEIGHT_RATIO, compute as capacity,
 };
 use crate::checks::{Check, all_ok};
+use crate::gas_stability::DEFAULT_WATER_DENSITY;
 use crate::journey_derating::{JourneyDeratingInputs, JourneyDeratingResult, compute as derate};
 use crate::pressure_vessel::PyError;
 use crate::protective_location::{compute_required_clearances, d_vc_exact, distance_d_vc};
@@ -77,6 +78,8 @@ pub struct FitOptions {
     pub wing_tank_height_ratio: f64,
     /// Fixed tank wall thickness (mm).
     pub tank_wall_thickness_mm: f64,
+    /// Water density for the draught of every candidate and its journey de-rating (t/m3).
+    pub water_density_t_per_m3: f64,
 }
 
 impl Default for FitOptions {
@@ -98,6 +101,7 @@ impl Default for FitOptions {
             wing_tank_gap_m: DEFAULT_WING_TANK_GAP_M,
             wing_tank_height_ratio: DEFAULT_WING_TANK_HEIGHT_RATIO,
             tank_wall_thickness_mm: DEFAULT_TANK_WALL_THICKNESS_MM,
+            water_density_t_per_m3: DEFAULT_WATER_DENSITY,
         }
     }
 }
@@ -267,9 +271,11 @@ fn derate_candidate(
     depth: f64,
     t_max: f64,
     block_coefficient: f64,
+    water_density: f64,
 ) -> Result<JourneyDeratingResult, PyError> {
     let mut ji = JourneyDeratingInputs::new(r, loa, beam, depth);
     ji.block_coefficient = block_coefficient;
+    ji.water_density = water_density;
     ji.design_depth_m = t_max;
     ji.ukc_m = 0.0;
     derate(&ji).map_err(value_error)
@@ -302,6 +308,7 @@ impl Search<'_> {
         inp.wing_tank_gap_m = self.o.wing_tank_gap_m;
         inp.wing_tank_height_ratio = self.o.wing_tank_height_ratio;
         inp.tank_wall_thickness = Some(self.o.tank_wall_thickness_mm);
+        inp.water_density = self.o.water_density_t_per_m3;
         inp
     }
 
@@ -432,7 +439,15 @@ pub fn fit(
                 }
             }
             for (inp, r) in cands.into_iter().chain(more) {
-                let j = derate_candidate(&r, loa, beam, d, t_max, o.block_coefficient)?;
+                let j = derate_candidate(
+                    &r,
+                    loa,
+                    beam,
+                    d,
+                    t_max,
+                    o.block_coefficient,
+                    o.water_density_t_per_m3,
+                )?;
                 let tonnage = j.achievable_tonnage_t;
                 let passes = all_ok(&candidate_checks(&r, &j));
                 let beats_any = best_any.as_ref().is_none_or(|b| tonnage > b.tonnage + 1e-6);
@@ -469,7 +484,15 @@ pub fn fit(
             })?;
             let inp = s.base_inputs(d, 1, o.tanks_in_line);
             let r = capacity(&inp)?;
-            let j = derate_candidate(&r, loa, beam, d, t_max, o.block_coefficient)?;
+            let j = derate_candidate(
+                &r,
+                loa,
+                beam,
+                d,
+                t_max,
+                o.block_coefficient,
+                o.water_density_t_per_m3,
+            )?;
             Candidate {
                 tonnage: 0.0,
                 depth: d,

@@ -116,6 +116,12 @@ pub const GAS_WING_TANK_GAP_M: f64 = 0.6;
 pub const GAS_WING_TANK_HEIGHT_RATIO: f64 = 0.66;
 pub const GAS_TANK_WALL_THICKNESS_MM: f64 = 25.0;
 
+/// The water density of the run, in t/m3: fresh water (`barge_capacity`, `gas_stability` and
+/// `journey_derating` default).
+pub const WATER_DENSITY_T_PER_M3: f64 = 1.0;
+/// The under-keel clearance kept below the squatted keel, in m (`resistance` default).
+pub const SQUAT_SAFETY_MARGIN_M: f64 = 0.15;
+
 /// Both dry-bulk holds.
 const DRY_HOLDS: &[&str] = &["box_hold", "sloped_hopper_hold"];
 
@@ -251,6 +257,18 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
         applies_to: AppliesTo::Only("type_c_tanks"),
         formations: None,
         value: GAS_TANK_WALL_THICKNESS_MM,
+    },
+    LegacyFixed {
+        name: "water_density_t_per_m3",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: WATER_DENSITY_T_PER_M3,
+    },
+    LegacyFixed {
+        name: "squat_safety_margin_m",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: SQUAT_SAFETY_MARGIN_M,
     },
 ];
 
@@ -763,6 +781,20 @@ pub const INPUTS: &[InputSpec] = &[
     spec(
         "channel_current_kn",
         "Current",
+        NUM,
+        false,
+        Group::WaterwayLimits,
+    ),
+    spec(
+        "water_density_t_per_m3",
+        "Water density",
+        NUM,
+        false,
+        Group::WaterwayLimits,
+    ),
+    spec(
+        "squat_safety_margin_m",
+        "Squat safety margin",
         NUM,
         false,
         Group::WaterwayLimits,
