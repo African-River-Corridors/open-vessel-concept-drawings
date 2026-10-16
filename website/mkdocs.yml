@@ -1,0 +1,68 @@
+# OVCD docs. Built by website/build.py, which assembles _docs/ from the repo's own Markdown.
+site_name: OVCD Docs
+site_description: Documentation for OVCD, Open Vessel Concept Design.
+site_url: https://www.africanrivercorridors.com/ovcd/docs/
+repo_url: https://github.com/African-River-Corridors/open-vessel-concept-drawings
+repo_name: open-vessel-concept-drawings
+edit_uri: ""
+copyright: Apache 2.0 · Hosted by African River Corridors
+docs_dir: _docs
+use_directory_urls: false # page.html, served as /page (see hooks.py)
+
+hooks:
+  - hooks.py
+
+theme:
+  name: material
+  custom_dir: overrides
+  font: false # Google Fonts load from extra_css
+  favicon: assets/favicon.svg
+  palette:
+    scheme: ovcd
+  features:
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+extra_css:
+  - https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Barlow+Semi+Condensed:wght@400;500;600&family=IBM+Plex+Mono:wght@400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap
+  - assets/tokens.css
+  - assets/ovcd.css
+
+markdown_extensions:
+  - tables
+  - toc:
+      permalink: true
+  - admonition
+  - pymdownx.superfences
+  - pymdownx.highlight
+
+plugins:
+  - search
+
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+  links:
+    not_found: warn
+    anchors: warn
+    absolute_links: warn
+    unrecognized_links: warn
+
+# "adr/" and "specs/" expand to every page in the folder (hooks.py).
+nav:
+  - Overview: index.md
+  - Roadmap: roadmap.md
+  - Glossary: glossary.md
+  - Decisions: adr/
+  - Specs: specs/
+  - Contribute:
+      - contributing.md
+      - code-of-conduct.md
+      - security.md
+  - Changelog: changelog.md
+
+extra:
+  homepage: /ovcd # the logo goes to the website
