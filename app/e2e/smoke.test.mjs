@@ -429,6 +429,46 @@ describe("OVCD app smoke tests", () => {
     await until("Base active again", async () => (await picker.getValue()) === "Base");
   });
 
+  it("draws a GZ curve for each loading condition of a gas Design, with the governing one marked, and zooms with Fit", async () => {
+    await open(path.join(FIXTURES, "gas_igc_2g_exact.vdesign"), "gas_igc_2g_exact.vdesign");
+    await show("Stability & Propulsion", "Intact stability");
+    await until("the GZ chart", async () => (await browser.$$("[data-testid=stability-chart] canvas")).length >= 1);
+    // One legend entry per condition, with its GM and max GZ from the engine.
+    const items = await browser.$$("[data-testid=stability-chart] .legend .item");
+    assert.ok(items.length >= 2, "a curve per loading condition");
+    for (let i = 0; i < items.length; i++) assert.match(await items[i].getText(), /GM -?[\d.]+ m · max GZ -?[\d.]+ m at \d+°/i);
+    // The governing condition in the legend is the one the table marks.
+    const governing = await browser.$("[data-testid=stability-chart] .item.governing-item");
+    const row = await browser.$("tr[data-governing=true] th");
+    const name = await governing.getAttribute("data-condition");
+    assert.ok((await row.getText()).toLowerCase().includes(name.toLowerCase()), `the table marks ${name} as governing`);
+    assert.equal((await browser.$$("[data-testid=stability-chart] .item.governing-item")).length, 1);
+    assert.equal((await browser.$$("[data-testid=stability-wip]")).length, 0);
+    await shot("231-gas-intact-stability");
+
+    const fitButton = await browser.$('button[aria-label="Fit to the panel"]');
+    assert.equal(await fitButton.isEnabled(), false, "fitted to start with");
+    await (await browser.$('button[aria-label="Zoom in"]')).click();
+    await until("Fit to be offered", async () => await fitButton.isEnabled());
+    await shot("231-gas-intact-stability-zoomed");
+    await fitButton.click();
+    await until("fitted again", async () => !(await fitButton.isEnabled()));
+    // Another view and back starts fitted.
+    await (await browser.$('button[aria-label="Zoom in"]')).click();
+    await show("Stability & Propulsion", "Rule check calculations");
+    await show("Stability & Propulsion", "Intact stability");
+    await until("fitted after switching view", async () => !(await (await browser.$('button[aria-label="Fit to the panel"]')).isEnabled()));
+  });
+
+  it("says that stability is work in development for a dry-bulk Design", async () => {
+    await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    await show("Stability & Propulsion", "Intact stability");
+    await until("the work-in-development state", async () => (await browser.$$("[data-testid=stability-wip]")).length === 1);
+    assert.match(await browser.$("[data-testid=stability-wip]").getText(), /work in development/);
+    assert.equal((await browser.$$("[data-testid=stability-chart]")).length, 0, "no empty chart");
+    await shot("231-dry-bulk-intact-stability");
+  });
+
   it("changes an output when an input is edited", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
     const before = await cargoOutput();
