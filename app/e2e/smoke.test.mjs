@@ -124,19 +124,64 @@ describe("OVCD app smoke tests", () => {
     assert.equal(await (await browser.$("[data-testid=engine-version]")).getText(), `Engine ${appVersion}`);
   });
 
-  /** The text of the SVG drawn in each hull view slot. */
-  const hullTexts = () =>
-    browser.execute(() =>
-      Object.fromEntries(
-        ["side", "plan", "midship"].map((k) => [k, document.querySelector(`[data-testid=slot-${k}] svg`)?.textContent ?? null]),
-      ),
-    );
-  const viewsDrawn = async () => (await hullTexts()).midship !== null && (await hullTexts()).plan !== null && (await hullTexts()).side !== null;
+  const HULL_TABS = { side: "Side elevation", plan: "Plan", midship: "Cross-section" };
+  // The views, by top tab. Every view is checked for scrolling and photographed.
+  const GROUPS = [
+    ["Drawings", ["Side elevation", "Plan", "Cross-section"]],
+    ["Stability & Propulsion", ["Intact stability", "Power and speed curves", "Rule check calculations"]],
+    ["BOQ & Finance", ["BOQ", "Capital budget"]],
+  ];
+  const tab = (label) => browser.$(`//button[@role="tab" and normalize-space()="${label}"]`);
+  /** The text of each element in a list, in order. */
+  async function texts(list) {
+    const out = [];
+    for (let i = 0; i < list.length; i++) out.push(await list[i].getText());
+    return out;
+  }
+  const slug = (label) => label.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "");
+
+  /** Show a view: its top tab, then its sub-tab. */
+  async function show(group, view) {
+    await (await tab(group)).click();
+    await (await tab(view)).click();
+    await until(`the ${view} tab to be selected`, async () => (await (await tab(view)).getAttribute("aria-selected")) === "true");
+  }
+
+  /** The text of the SVG drawn in a hull view (shows that view first). */
+  async function hullText(key) {
+    await show("Drawings", HULL_TABS[key]);
+    await until(`the ${key} drawing`, async () => (await browser.$$(`[data-testid=slot-${key}] svg`)).length === 1);
+    return browser.execute((k) => document.querySelector(`[data-testid=slot-${k}] svg`).textContent, key);
+  }
+
+  // Screenshots for review: when OVCD_E2E_SHOTS names a folder, save one per named point there.
+  const SHOTS = process.env.OVCD_E2E_SHOTS;
+  async function shot(name) {
+    if (!SHOTS) return;
+    fs.mkdirSync(SHOTS, { recursive: true });
+    await browser.saveScreenshot(path.join(SHOTS, `${name}.png`));
+  }
+
+  /** How far the Views panel's content reaches past its box: more than 0 means it scrolls. */
+  const overflow = () =>
+    browser.execute(() => {
+      const p = document.querySelector("[data-testid=views-panel]");
+      return p.scrollHeight - p.clientHeight;
+    });
+
+  const toggle = (what, shown) => browser.$(`button[aria-label="${shown ? "Hide" : "Show"} the ${what} panel"]`);
+  /** Hide or show a side panel through its toggle in the header. */
+  async function setPanel(what, shown) {
+    const button = await toggle(what, !shown);
+    if (await button.isExisting()) await button.click();
+    await until(`the ${what} panel to be ${shown ? "shown" : "hidden"}`, async () => (await toggle(what, shown).isExisting()));
+  }
+  const sideDisplayed = (cls) => browser.execute((c) => getComputedStyle(document.querySelector(`.body > section.${c}`)).display !== "none", cls);
+  const sheetScale = () => browser.execute(() => document.querySelector(".sheet")?.style.transform ?? "");
 
   it("draws the side elevation, plan and midship section, dimensioned from the results", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
-    await until("the three views to be drawn", viewsDrawn);
-    const t = await hullTexts();
+    const t = { side: await hullText("side"), plan: await hullText("plan"), midship: await hullText("midship") };
     // LOA 76.5 m, beam 11.4 m, depth 3.5 m: the dimension texts are computed from the geometry in Rust.
     assert.match(t.side, /76\.50/);
     assert.match(t.plan, /76\.50/);
@@ -144,21 +189,153 @@ describe("OVCD app smoke tests", () => {
     assert.match(t.midship, /11\.40/);
     assert.match(t.midship, /3\.50/);
     assert.match(t.side, /SIDE ELEVATION/);
-    // The front end only places the drawing: one SVG in each slot, and the zoom buttons.
-    for (const slot of ["side", "plan", "midship"]) {
-      assert.equal((await browser.$$(`[data-testid=slot-${slot}] svg`)).length, 1);
-    }
   });
 
   it("redraws the views when an input changes, and draws tanks for a gas Cargo", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
-    await until("the three views to be drawn", viewsDrawn);
+    await hullText("plan");
     await type("Beam", "12");
-    await until("the plan to show the new beam", async () => /12\.00/.test((await hullTexts()).plan ?? ""));
+    await until("the plan to show the new beam", async () =>
+      /12\.00/.test(await browser.execute(() => document.querySelector("[data-testid=slot-plan] svg")?.textContent ?? "")));
     await open(path.join(FIXTURES, "gas_igc_2g_self_propelled.vdesign"), "gas_igc_2g_self_propelled.vdesign");
-    await until("the gas views", async () => /LPG|Gas barge/.test((await hullTexts()).midship ?? ""));
+    await show("Drawings", "Cross-section");
+    await until("the gas views", async () =>
+      /LPG|Gas barge/.test(await browser.execute(() => document.querySelector("[data-testid=slot-midship] svg")?.textContent ?? "")));
     const circles = await browser.execute(() => document.querySelectorAll("[data-testid=slot-midship] svg circle[data-layer=OUTLINE]").length);
     assert.equal(circles, 1, "one tank across");
+  });
+
+  it("shows two levels of tabs, with no jump list, and plain placeholders for later views", async () => {
+    await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    assert.equal((await browser.$$('select[aria-label="Jump to view"]')).length, 0, "the jump list is gone");
+    const top = await browser.$$('[role=tablist][aria-label="View groups"] button');
+    assert.deepEqual(await texts(top), GROUPS.map(([g]) => g));
+    for (const [group, views] of GROUPS) {
+      await (await tab(group)).click();
+      const subs = await browser.$$(`[role=tablist][aria-label="Views of ${group}"] button`);
+      assert.deepEqual(await texts(subs), views, `the views of ${group}`);
+      // Picking a top tab selects its first view.
+      assert.equal(await subs[0].getAttribute("aria-selected"), "true");
+    }
+    await show("Stability & Propulsion", "Rule check calculations");
+    assert.ok(await browser.$("[data-testid=placeholder-rules]").isExisting());
+    await show("BOQ & Finance", "BOQ");
+    assert.ok(await browser.$("[data-testid=placeholder-boq]").isExisting());
+    await show("BOQ & Finance", "Capital budget");
+    assert.ok(await browser.$("[data-testid=placeholder-capital]").isExisting());
+  });
+
+  for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
+    it(`no view scrolls, with the side panels shown or hidden (${cargo})`, async () => {
+      await open(path.join(FIXTURES, fixture), fixture);
+      try {
+        for (const hidden of [false, true]) {
+          await setPanel("Input", !hidden);
+          await setPanel("Outputs", !hidden);
+          for (const [group, views] of GROUPS) {
+            for (const view of views) {
+              await show(group, view);
+              if (group === "Drawings") await until(`the ${view} drawing`, async () => (await browser.$$("[data-testid^=slot-] svg")).length === 1);
+              await browser.pause(300);
+              assert.ok((await overflow()) <= 0, `${view} scrolls (${cargo}, panels ${hidden ? "hidden" : "shown"})`);
+              await shot(`229-${cargo}-${slug(view)}${hidden ? "-panels-hidden" : ""}`);
+            }
+          }
+        }
+      } finally {
+        await setPanel("Input", true);
+        await setPanel("Outputs", true);
+      }
+    });
+  }
+
+  it("zooms a drawing, and Fit, a new view, a resized panel or a hidden panel return it to fitted", async () => {
+    await open(path.join(FIXTURES, "gas_igc_2g_exact.vdesign"), "gas_igc_2g_exact.vdesign");
+    const zoomIn = async () => {
+      await (await browser.$('button[aria-label="Zoom in"]')).click();
+      await until("the drawing to be zoomed", async () => !/scale\(1\)/.test(await sheetScale()));
+    };
+    const fitted = (why) => until(`fitted after ${why}`, async () => /scale\(1\)/.test(await sheetScale()));
+    await hullText("plan");
+    await fitted("opening the plan");
+    await zoomIn();
+    await shot("229-gas-plan-zoomed");
+    await (await browser.$('button[aria-label="Fit to the panel"]')).click();
+    await fitted("Fit");
+
+    await zoomIn();
+    await show("Drawings", "Cross-section");
+    await show("Drawings", "Plan");
+    await fitted("switching view");
+
+    await zoomIn();
+    await show("Stability & Propulsion", "Intact stability");
+    await show("Drawings", "Plan");
+    await fitted("switching top tab");
+
+    try {
+      await zoomIn();
+      await setPanel("Outputs", false);
+      await fitted("hiding the Outputs panel");
+      await zoomIn();
+      await setPanel("Input", false);
+      await fitted("hiding the Input panel");
+      await zoomIn();
+      await setPanel("Input", true);
+      await fitted("showing the Input panel");
+    } finally {
+      await setPanel("Input", true);
+      await setPanel("Outputs", true);
+    }
+
+    await zoomIn();
+    const size = await browser.getWindowSize();
+    try {
+      await browser.setWindowSize(size.width - 200, size.height - 150);
+      await fitted("resizing the window");
+    } finally {
+      await browser.setWindowSize(size.width, size.height);
+    }
+  });
+
+  it("hides and shows each side panel, and remembers the choice", async () => {
+    await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    const stored = () => browser.execute(() => localStorage.getItem("ovcd.panels"));
+    // Both are shown by default.
+    assert.ok(await toggle("Input", true).isExisting());
+    assert.ok(await toggle("Outputs", true).isExisting());
+    assert.equal(await sideDisplayed("left"), true);
+    assert.equal(await sideDisplayed("bottom"), true);
+    try {
+      await setPanel("Input", false);
+      assert.equal(await sideDisplayed("left"), false);
+      assert.equal(await sideDisplayed("bottom"), true, "the other panel stays");
+      await setPanel("Outputs", false);
+      assert.equal(await sideDisplayed("bottom"), false);
+      assert.deepEqual(JSON.parse(await stored()), { input: false, outputs: false });
+
+      // A restart of the page reads the choice back.
+      await browser.refresh();
+      await until("the app to draw again", async () => (await browser.$("header")).isExisting());
+      await until("the Input toggle to offer Show", async () => (await toggle("Input", false)).isExisting());
+      assert.ok(await toggle("Outputs", false).isExisting());
+      assert.equal(await sideDisplayed("left"), false);
+
+      await setPanel("Input", true);
+      await setPanel("Outputs", true);
+      assert.deepEqual(JSON.parse(await stored()), { input: true, outputs: true });
+    } finally {
+      await setPanel("Input", true);
+      await setPanel("Outputs", true);
+    }
+  });
+
+  it("falls back to both panels shown when the stored choice is unreadable", async () => {
+    await browser.execute(() => localStorage.setItem("ovcd.panels", "not json"));
+    await browser.refresh();
+    await until("the app to draw again", async () => (await browser.$("header")).isExisting());
+    assert.ok(await toggle("Input", true).isExisting());
+    assert.ok(await toggle("Outputs", true).isExisting());
   });
 
   it("changes an output when an input is edited", async () => {
@@ -171,6 +348,7 @@ describe("OVCD app smoke tests", () => {
 
   it("shows the error and marks the outputs out of date for a value outside the hard range", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    await show("Drawings", "Plan");
     await type("Beam", "-1");
     await until("the error under the field", async () => (await browser.$$(".field .msg.error")).length > 0);
     assert.match(await browser.$(".field .msg.error").getText(), /^Beam/);

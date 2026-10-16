@@ -1,6 +1,7 @@
 <script lang="ts">
   // One hull view. The SVG is made in Rust (the drawing crate, to the Drawing Format Standard); this
-  // component only places it and lets the user zoom and move it. It holds no geometry and no scale.
+  // component only places it, fitted to the space it has, and lets the user zoom and move it. It holds
+  // no geometry and no scale. When the space changes size, the view returns to the fitted extent.
   let { svg, label }: { svg: string; label: string } = $props();
 
   const MIN = 1;
@@ -28,7 +29,7 @@
     clamp();
   }
 
-  /** Ctrl (or Cmd) and the wheel, or a pinch, zooms. A plain wheel scrolls the panel as usual. */
+  /** Ctrl (or Cmd) and the wheel, or a pinch, zooms. */
   function onWheel(e: WheelEvent) {
     if (!(e.ctrlKey || e.metaKey)) return;
     e.preventDefault();
@@ -40,6 +41,13 @@
   $effect(() => {
     frame.addEventListener("wheel", onWheel, { passive: false });
     return () => frame.removeEventListener("wheel", onWheel);
+  });
+
+  // The window, a panel or the tab layout changed the frame: fit again.
+  $effect(() => {
+    const watch = new ResizeObserver(() => fit());
+    watch.observe(frame);
+    return () => watch.disconnect();
   });
 
   function onDown(e: PointerEvent) {
@@ -95,12 +103,13 @@
 </div>
 
 <style>
-  .wrap { position: relative; }
+  .wrap { position: relative; height: 100%; }
   .tools { position: absolute; top: 6px; right: 6px; z-index: 1; display: flex; gap: 4px; }
   .tools button { padding: 1px 8px; background: rgba(255, 255, 255, 0.92); border: 1px solid var(--line); border-radius: 3px; cursor: pointer; }
   .tools button:disabled { color: var(--dim); cursor: default; }
-  .frame { overflow: hidden; border: 1px solid var(--line); background: #fff; touch-action: none; }
+  .frame { height: 100%; box-sizing: border-box; overflow: hidden; border: 1px solid var(--line); background: #fff; touch-action: none; }
   .frame.movable { cursor: grab; }
-  .sheet { transform-origin: 0 0; }
-  .sheet :global(svg) { display: block; width: 100%; height: auto; }
+  .sheet { transform-origin: 0 0; width: 100%; height: 100%; }
+  /* The drawing has a view box, so it scales to fit both width and height. */
+  .sheet :global(svg) { display: block; width: 100%; height: 100%; }
 </style>
