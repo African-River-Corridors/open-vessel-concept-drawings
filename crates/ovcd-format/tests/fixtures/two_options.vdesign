@@ -49,6 +49,22 @@
           "value": 0.1093,
           "source": "default"
         },
+        "hold_wing_void_width_m": {
+          "value": 1.0,
+          "source": "default"
+        },
+        "hold_double_bottom_m": {
+          "value": 1.2,
+          "source": "default"
+        },
+        "hatch_coaming_height_m": {
+          "value": 1.0,
+          "source": "default"
+        },
+        "hold_fill_ratio": {
+          "value": 0.95,
+          "source": "default"
+        },
         "propulsive_efficiency": {
           "value": 0.45,
           "source": "default"
@@ -131,6 +147,22 @@
         },
         "lightship_factor_t_per_m3": {
           "value": 0.1093,
+          "source": "default"
+        },
+        "hold_wing_void_width_m": {
+          "value": 1.0,
+          "source": "default"
+        },
+        "hold_double_bottom_m": {
+          "value": 1.2,
+          "source": "default"
+        },
+        "hatch_coaming_height_m": {
+          "value": 1.0,
+          "source": "default"
+        },
+        "hold_fill_ratio": {
+          "value": 0.95,
           "source": "default"
         },
         "propulsive_efficiency": {

@@ -71,8 +71,8 @@ pub const HULL_FORMS: &[&str] = &["raked_box"];
 /// (`DEFAULT_DEPTHS_M`, 3.5 to 7.0 m).
 pub const DEPTH_SEARCH_MAX_M: f64 = 7.0;
 
-/// The dry-bulk hold section, copied from the `barge_capacity` defaults (fixed in the
-/// core, not inputs): each side has a wing void of this width, in m. The hold width is
+/// The dry-bulk hold section, copied from the `barge_capacity` defaults (now inputs; these are
+/// the values older files get): each side has a wing void of this width, in m. The hold width is
 /// `beam - 2 * wing void`.
 ///
 /// The rule (issue #41): the original Python returns a negative cargo mass and draught when the
@@ -87,6 +87,90 @@ pub const DRY_BULK_DOUBLE_BOTTOM_M: f64 = 1.2;
 /// The dry-bulk hatch coaming height, in m (`barge_capacity` default). The hold height is
 /// `(depth - double bottom) + coaming`, in that order, as the Python computes it.
 pub const DRY_BULK_COAMING_M: f64 = 1.0;
+
+/// The dry-bulk hopper slope, horizontal over vertical (`barge_capacity` default).
+pub const DRY_BULK_HOPPER_SLOPE: f64 = 1.0;
+/// The number of dry-bulk holds (`barge_capacity` default).
+pub const DRY_BULK_N_HOLDS: f64 = 3.0;
+/// The dry-bulk hold fill ratio (`barge_capacity` default).
+pub const DRY_BULK_HOLD_FILL: f64 = 0.95;
+/// Plate thicknesses of the sloped hopper hold, in mm (`barge_capacity` defaults).
+pub const DRY_BULK_INNER_BOTTOM_PLATE_MM: f64 = 14.0;
+pub const DRY_BULK_HOPPER_PLATE_MM: f64 = 14.0;
+pub const DRY_BULK_BULKHEAD_PLATE_MM: f64 = 11.0;
+pub const DRY_BULK_COAMING_PLATE_MM: f64 = 10.0;
+
+/// Both dry-bulk holds.
+const DRY_HOLDS: &[&str] = &["box_hold", "sloped_hopper_hold"];
+
+/// An input that was a fixed value in the engine before it became an input.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct LegacyFixed {
+    pub name: &'static str,
+    pub applies_to: AppliesTo,
+    /// The value the engine used for every design.
+    pub value: f64,
+}
+
+/// The fixed values behind the inputs that came after the first `.vdesign` files. A file that
+/// lacks one of these inputs (version 1, or a version 2 file written by a test build) is read with
+/// this value, marked `default`, so its results cannot change. The value is held here, not read
+/// from the Defaults Profile: a later edit of the profile must not move an old file. A test holds
+/// each value equal to the profile default and to the core default.
+///
+/// A profile that has no entry for one of these inputs takes the built-in profile's entry.
+pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
+    LegacyFixed {
+        name: "hold_wing_void_width_m",
+        applies_to: AppliesTo::AnyOf(DRY_HOLDS),
+        value: DRY_BULK_WING_VOID_M,
+    },
+    LegacyFixed {
+        name: "hold_double_bottom_m",
+        applies_to: AppliesTo::AnyOf(DRY_HOLDS),
+        value: DRY_BULK_DOUBLE_BOTTOM_M,
+    },
+    LegacyFixed {
+        name: "hopper_slope_h_per_v",
+        applies_to: AppliesTo::Only("sloped_hopper_hold"),
+        value: DRY_BULK_HOPPER_SLOPE,
+    },
+    LegacyFixed {
+        name: "hatch_coaming_height_m",
+        applies_to: AppliesTo::AnyOf(DRY_HOLDS),
+        value: DRY_BULK_COAMING_M,
+    },
+    LegacyFixed {
+        name: "n_holds",
+        applies_to: AppliesTo::Only("sloped_hopper_hold"),
+        value: DRY_BULK_N_HOLDS,
+    },
+    LegacyFixed {
+        name: "hold_fill_ratio",
+        applies_to: AppliesTo::AnyOf(DRY_HOLDS),
+        value: DRY_BULK_HOLD_FILL,
+    },
+    LegacyFixed {
+        name: "inner_bottom_plate_mm",
+        applies_to: AppliesTo::Only("sloped_hopper_hold"),
+        value: DRY_BULK_INNER_BOTTOM_PLATE_MM,
+    },
+    LegacyFixed {
+        name: "hopper_plate_mm",
+        applies_to: AppliesTo::Only("sloped_hopper_hold"),
+        value: DRY_BULK_HOPPER_PLATE_MM,
+    },
+    LegacyFixed {
+        name: "hold_bulkhead_plate_mm",
+        applies_to: AppliesTo::Only("sloped_hopper_hold"),
+        value: DRY_BULK_BULKHEAD_PLATE_MM,
+    },
+    LegacyFixed {
+        name: "hatch_coaming_plate_mm",
+        applies_to: AppliesTo::Only("sloped_hopper_hold"),
+        value: DRY_BULK_COAMING_PLATE_MM,
+    },
+];
 
 /// Gas tank rulesets.
 pub const RULESETS: &[&str] = &["IGC_2G", "IGC_2G_EXACT"];
@@ -118,6 +202,28 @@ pub enum InputKind {
 pub enum AppliesTo {
     All,
     Only(&'static str),
+    /// Used for each of these Cargo Containments.
+    AnyOf(&'static [&'static str]),
+}
+
+impl AppliesTo {
+    /// Whether an input with this scope is used for the Cargo Containment `c`.
+    pub fn includes(self, c: &str) -> bool {
+        match self {
+            AppliesTo::All => true,
+            AppliesTo::Only(only) => only == c,
+            AppliesTo::AnyOf(list) => list.contains(&c),
+        }
+    }
+
+    /// The Cargo Containments the input is used for, in the order of `CARGO_CONTAINMENTS`.
+    pub fn containments(self) -> Vec<&'static str> {
+        CARGO_CONTAINMENTS
+            .iter()
+            .map(|(c, _)| *c)
+            .filter(|c| self.includes(c))
+            .collect()
+    }
 }
 
 /// The group an input belongs to in a form. The group is part of the input table, so a front end
@@ -128,17 +234,19 @@ pub enum Group {
     VesselClass,
     HullAndContainment,
     GasTanks,
+    DryBulkHold,
     WaterwayLimits,
     SpeedAndPower,
 }
 
 impl Group {
     /// Every group, in the order a form shows them.
-    pub const ALL: [Group; 6] = [
+    pub const ALL: [Group; 7] = [
         Group::Required,
         Group::VesselClass,
         Group::HullAndContainment,
         Group::GasTanks,
+        Group::DryBulkHold,
         Group::WaterwayLimits,
         Group::SpeedAndPower,
     ];
@@ -150,6 +258,7 @@ impl Group {
             Group::VesselClass => "Vessel Class",
             Group::HullAndContainment => "Hull and containment",
             Group::GasTanks => "Gas tanks",
+            Group::DryBulkHold => "Dry-bulk hold",
             Group::WaterwayLimits => "Waterway Limits",
             Group::SpeedAndPower => "Speed and power",
         }
@@ -217,6 +326,23 @@ const fn only(
         kind,
         required: false,
         applies_to: AppliesTo::Only(containment),
+        group,
+    }
+}
+
+const fn only_in(
+    name: &'static str,
+    label: &'static str,
+    kind: InputKind,
+    containments: &'static [&'static str],
+    group: Group,
+) -> InputSpec {
+    InputSpec {
+        name,
+        label,
+        kind,
+        required: false,
+        applies_to: AppliesTo::AnyOf(containments),
         group,
     }
 }
@@ -329,6 +455,76 @@ pub const INPUTS: &[InputSpec] = &[
         InputKind::Bool,
         "type_c_tanks",
         Group::GasTanks,
+    ),
+    only_in(
+        "hold_wing_void_width_m",
+        "Wing void width",
+        NUM,
+        DRY_HOLDS,
+        Group::DryBulkHold,
+    ),
+    only_in(
+        "hold_double_bottom_m",
+        "Hold double bottom",
+        NUM,
+        DRY_HOLDS,
+        Group::DryBulkHold,
+    ),
+    only(
+        "hopper_slope_h_per_v",
+        "Hopper slope (horizontal over vertical)",
+        NUM,
+        "sloped_hopper_hold",
+        Group::DryBulkHold,
+    ),
+    only_in(
+        "hatch_coaming_height_m",
+        "Hatch coaming height",
+        NUM,
+        DRY_HOLDS,
+        Group::DryBulkHold,
+    ),
+    only(
+        "n_holds",
+        "Number of holds",
+        NUM,
+        "sloped_hopper_hold",
+        Group::DryBulkHold,
+    ),
+    only_in(
+        "hold_fill_ratio",
+        "Hold fill ratio",
+        NUM,
+        DRY_HOLDS,
+        Group::DryBulkHold,
+    ),
+    only(
+        "inner_bottom_plate_mm",
+        "Inner bottom plate thickness",
+        NUM,
+        "sloped_hopper_hold",
+        Group::DryBulkHold,
+    ),
+    only(
+        "hopper_plate_mm",
+        "Hopper plate thickness",
+        NUM,
+        "sloped_hopper_hold",
+        Group::DryBulkHold,
+    ),
+    only(
+        "hold_bulkhead_plate_mm",
+        "Hold bulkhead plate thickness",
+        NUM,
+        "sloped_hopper_hold",
+        Group::DryBulkHold,
+    ),
+    only(
+        "hatch_coaming_plate_mm",
+        "Hatch coaming plate thickness",
+        NUM,
+        "sloped_hopper_hold",
+        Group::DryBulkHold,
     ),
     spec(
         "propulsive_efficiency",
@@ -831,15 +1027,12 @@ fn read_design(
                 );
             }
         }
-        let migrated;
-        let inputs = if version == Some(1) {
-            let mut m = inputs.clone();
+        let mut m = inputs.clone();
+        if version == Some(1) {
             migrate_v1_option(name, &mut m, profile, report);
-            migrated = m;
-            &migrated
-        } else {
-            inputs
-        };
+        }
+        fill_legacy_fixed(name, &mut m, profile, report);
+        let inputs = &m;
         let mut option = read_option(name, inputs, profile, missing, report);
         match raw.get("results_hash") {
             None | Some(Value::Null) => {}
@@ -941,6 +1134,64 @@ fn migrate_v1_option(
     }
 }
 
+/// The Cargo Containment an Option's raw inputs name, or the one its Cargo would get by default.
+fn containment_of_raw(inputs: &Map<String, Value>, profile: &Profile) -> Option<String> {
+    let text = |v: &Value| match v {
+        Value::String(s) => Some(s.clone()),
+        Value::Object(o) => o.get("value").and_then(Value::as_str).map(String::from),
+        _ => None,
+    };
+    if let Some(c) = inputs.get("cargo_containment").and_then(text) {
+        return Some(c);
+    }
+    let cargo = inputs.get("cargo").and_then(text)?;
+    let phase = ovcd_core::cargo::get_cargo(&cargo).ok()?.phase;
+    profile
+        .default_by("cargo_containment", "cargo_phase", phase)
+        .and_then(Value::as_str)
+        .map(String::from)
+}
+
+/// An input that is new since the first files (see [`LEGACY_FIXED_INPUTS`]) and that the file
+/// leaves out gets the fixed value the engine used before, marked `default`, with one warning per
+/// Option. This runs for every format version: a version 2 file from a test build lacks them too.
+/// Every other left-out input keeps the ordinary rule.
+fn fill_legacy_fixed(
+    name: &str,
+    inputs: &mut Map<String, Value>,
+    profile: &Profile,
+    report: &mut Report,
+) {
+    let Some(containment) = containment_of_raw(inputs, profile) else {
+        return;
+    };
+    let mut added: Vec<&'static str> = Vec::new();
+    for fixed in LEGACY_FIXED_INPUTS {
+        if inputs.contains_key(fixed.name) || !fixed.applies_to.includes(&containment) {
+            continue;
+        }
+        inputs.insert(
+            fixed.name.into(),
+            json!({ "value": fixed.value, "source": "default" }),
+        );
+        added.push(fixed.name);
+    }
+    if added.is_empty() {
+        return;
+    }
+    let list = added
+        .iter()
+        .map(|n| format!("`{n}`"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let text = format!(
+        "Option '{name}': this file has no {list}; each now holds the fixed value the engine used \
+         before it was an input (marked default), so the results are unchanged"
+    );
+    report.migration_notes.push(text.clone());
+    report.warning(text, &added);
+}
+
 /// Split a stored input into its value and marker. A bare value counts as typed.
 pub(crate) fn unmark(raw: &Value) -> Result<StoredInput, String> {
     if let Some(o) = raw.as_object()
@@ -1000,7 +1251,10 @@ fn read_option(
         let containment = value_of(&inputs, "cargo_containment");
         let applies = match spec.applies_to {
             AppliesTo::All => true,
-            AppliesTo::Only(c) => containment.as_ref().and_then(Value::as_str) == Some(c),
+            scope => containment
+                .as_ref()
+                .and_then(Value::as_str)
+                .is_some_and(|c| scope.includes(c)),
         };
         if let Some(raw_input) = raw.get(spec.name) {
             let stored = match unmark(raw_input) {
@@ -1408,6 +1662,17 @@ fn cross_checks(
             &["min_freeboard_m", "moulded_depth_m"],
         );
     }
+    // A count of holds is a whole number.
+    if let Some(n) = get("n_holds").and_then(Value::as_f64)
+        && n.fract() != 0.0
+    {
+        report.error(
+            at(format!(
+                "`n_holds` = {n} must be a whole number (hard limit)"
+            )),
+            &["n_holds"],
+        );
+    }
     // The depth search tries hulls up to a fixed depth; above it no searched hull keeps the
     // freeboard, and the core raises when no waterway limit caps the draught.
     if get("optimise_depth").and_then(Value::as_bool) == Some(true)
@@ -1459,29 +1724,42 @@ fn impossible_results(
     }
     const NEGATIVE: &str = "a negative hold gives a negative cargo mass and draught (hard limit)";
     if let Some(beam) = get("beam_m").and_then(Value::as_f64) {
-        let width = beam - 2.0 * DRY_BULK_WING_VOID_M;
+        let void = get("hold_wing_void_width_m")
+            .and_then(Value::as_f64)
+            .unwrap_or(DRY_BULK_WING_VOID_M);
+        let width = beam - 2.0 * void;
         if width < 0.0 {
             report.error(
                 at(format!(
                     "`beam_m` = {beam} leaves a hold width of {} m after the two \
-                 {DRY_BULK_WING_VOID_M} m wing voids; {NEGATIVE}",
+                 {void} m wing voids; {NEGATIVE}",
                     show_m(width)
                 )),
-                &["beam_m"],
+                &["beam_m", "hold_wing_void_width_m"],
             );
         }
     }
     if let Some(depth) = get("moulded_depth_m").and_then(Value::as_f64) {
-        let height = (depth - DRY_BULK_DOUBLE_BOTTOM_M) + DRY_BULK_COAMING_M;
+        let double_bottom = get("hold_double_bottom_m")
+            .and_then(Value::as_f64)
+            .unwrap_or(DRY_BULK_DOUBLE_BOTTOM_M);
+        let coaming = get("hatch_coaming_height_m")
+            .and_then(Value::as_f64)
+            .unwrap_or(DRY_BULK_COAMING_M);
+        let height = (depth - double_bottom) + coaming;
         if height < 0.0 {
             report.error(
                 at(format!(
                     "`moulded_depth_m` = {depth} leaves a hold height of {} m (depth less the \
-                 {DRY_BULK_DOUBLE_BOTTOM_M} m double bottom, plus the {DRY_BULK_COAMING_M} m \
+                 {double_bottom} m double bottom, plus the {coaming} m \
                  coaming); {NEGATIVE}",
                     show_m(height)
                 )),
-                &["moulded_depth_m"],
+                &[
+                    "moulded_depth_m",
+                    "hold_double_bottom_m",
+                    "hatch_coaming_height_m",
+                ],
             );
         }
     }

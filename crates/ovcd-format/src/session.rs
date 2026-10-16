@@ -65,10 +65,7 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
     e.insert("label".into(), json!(spec.label));
     e.insert("group".into(), json!(spec.group.label()));
     e.insert("required".into(), json!(spec.required));
-    let applies: Vec<&str> = match spec.applies_to {
-        AppliesTo::All => CARGO_CONTAINMENTS.iter().map(|(c, _)| *c).collect(),
-        AppliesTo::Only(c) => vec![c],
-    };
+    let applies: Vec<&str> = spec.applies_to.containments();
     e.insert("applies_to".into(), json!(applies));
     match spec.kind {
         InputKind::Number { nullable } => {
@@ -479,9 +476,9 @@ impl DesignSession {
             .find(|s| s.name == name)
             .ok_or_else(|| format!("unknown input `{name}`"))?;
         let i = self.index_of(option)?;
-        if let AppliesTo::Only(c) = spec.applies_to
+        if spec.applies_to != AppliesTo::All
             && let Some(current) = containment_of(&self.design.options[i])
-            && current != c
+            && !spec.applies_to.includes(current)
         {
             return Err(format!(
                 "`{name}` is not used for a {current} Cargo Containment"
@@ -892,8 +889,8 @@ impl DesignSession {
             let mut inputs: Vec<(String, StoredInput)> = Vec::new();
             for spec in INPUTS {
                 let applies = match (spec.applies_to, applicable) {
-                    (AppliesTo::Only(c), Some(current)) => c == current,
-                    _ => true,
+                    (AppliesTo::All, _) | (_, None) => true,
+                    (scope, Some(current)) => scope.includes(current),
                 };
                 let held = self
                     .hidden

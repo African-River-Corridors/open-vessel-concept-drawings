@@ -142,10 +142,18 @@ fn a_bare_value_form_is_changed_too() {
 }
 
 #[test]
-fn a_version_1_file_that_needs_no_change_opens_with_no_warning() {
+fn a_version_1_dry_bulk_file_gets_only_the_note_about_the_new_hold_inputs() {
+    // Slice 1 of issue #4: the hold inputs are new, so the one warning is about them. The gas
+    // changes of version 2 do not touch a dry-bulk file.
     let checked = check(&legacy("v1_dry_bulk_box_hold"), &Profile::built_in());
     assert_eq!(checked.report.errors, Vec::<String>::new());
-    assert_eq!(checked.report.warnings, Vec::<String>::new());
+    let w = &checked.report.warnings;
+    assert_eq!(w.len(), 1, "{w:?}");
+    assert!(
+        has(w, "fixed value the engine used before it was an input"),
+        "{w:?}"
+    );
+    assert!(!has(w, ADN) && !has(w, CAP) && !has(w, OD), "{w:?}");
     let (_, opened) =
         DesignSession::open(&legacy("v1_dry_bulk_box_hold"), Profile::built_in()).unwrap();
     assert_eq!(opened.hash_status[0].1, HashStatus::Matches);

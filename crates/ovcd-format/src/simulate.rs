@@ -117,6 +117,14 @@ fn get_or(p: &Map<String, Value>, key: &str, default: f64) -> R<f64> {
     }
 }
 
+/// A count read as a number: a whole number within `i64`, or refused.
+fn whole_number(x: f64, what: &str) -> R<i64> {
+    if x.fract() != 0.0 || !x.is_finite() || x.abs() > 1e15 {
+        return bad(format!("`params.{what}` must be a whole number"));
+    }
+    Ok(x as i64)
+}
+
 /// `p.get(key)` as the truthy-checked number: `Some(float(..))` when truthy, else `None`.
 fn truthy_float(p: &Map<String, Value>, key: &str) -> R<Option<f64>> {
     match p.get(key) {
@@ -492,6 +500,19 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
     inp.block_coefficient = cb;
     inp.required_freeboard = freeboard;
     inp.air_draft_limit_m = air_draft_limit;
+    // The hold design values. A key left out keeps the core default, which is the value the engine
+    // used before these were inputs.
+    inp.wing_void_width = get_or(p, "hold_wing_void_width_m", inp.wing_void_width)?;
+    inp.double_bottom_height_bulk =
+        get_or(p, "hold_double_bottom_m", inp.double_bottom_height_bulk)?;
+    inp.hopper_slope_h_per_v = get_or(p, "hopper_slope_h_per_v", inp.hopper_slope_h_per_v)?;
+    inp.coaming_height = get_or(p, "hatch_coaming_height_m", inp.coaming_height)?;
+    inp.n_holds = whole_number(get_or(p, "n_holds", inp.n_holds as f64)?, "n_holds")?;
+    inp.hold_fill_ratio = get_or(p, "hold_fill_ratio", inp.hold_fill_ratio)?;
+    inp.inner_bottom_t_mm = get_or(p, "inner_bottom_plate_mm", inp.inner_bottom_t_mm)?;
+    inp.hopper_plate_t_mm = get_or(p, "hopper_plate_mm", inp.hopper_plate_t_mm)?;
+    inp.bulkhead_t_mm = get_or(p, "hold_bulkhead_plate_mm", inp.bulkhead_t_mm)?;
+    inp.coaming_t_mm = get_or(p, "hatch_coaming_plate_mm", inp.coaming_t_mm)?;
     if let Some(h) = hold_type {
         inp.hold_type = h.to_string();
         if h != "sloped_hopper" {
