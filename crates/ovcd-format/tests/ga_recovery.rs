@@ -6,7 +6,7 @@
 use ovcd_core::barge_capacity::{self, BargeCapacityInputs};
 use ovcd_core::gas_arrangement::{self as ga, FitOptions};
 use ovcd_core::gas_separation::GasSeparationInputs;
-use ovcd_format::{Profile, RunOutcome, check, run_design};
+use ovcd_format::{GaViews, Profile, RunOutcome, check, ga_views_of, run_design};
 use serde_json::Value;
 use std::path::Path;
 
@@ -237,5 +237,139 @@ fn existing_stored_hashes_still_match_with_the_drawing_object_present() {
             ovcd_format::HashStatus::Matches,
             "{fixture}"
         );
+    }
+}
+
+// ---- #193: the dry-bulk hold floor (inner bottom) and the hatch coaming -------------------------
+
+fn views(results: &Value) -> GaViews {
+    ga_views_of(&RunOutcome::Results {
+        results: results.clone(),
+        hash: String::new(),
+    })
+    .expect("views")
+}
+
+fn entities(document: &Value) -> &Vec<Value> {
+    document["viewports"][0]["entities"].as_array().unwrap()
+}
+
+fn of_layer<'a>(document: &'a Value, layer: &str, kind: &str) -> Vec<&'a Value> {
+    entities(document)
+        .iter()
+        .filter(|e| e["layer"] == layer && e["type"] == kind)
+        .collect()
+}
+
+fn close(a: f64, b: f64) -> bool {
+    (a - b).abs() < 1e-9
+}
+
+/// Both ends of a line: ((x, y), (x, y)).
+fn ends(e: &Value) -> ((f64, f64), (f64, f64)) {
+    let p = |k: &str| (f(&e[k][0]), f(&e[k][1]));
+    (p("from_m"), p("to_m"))
+}
+
+fn points(e: &Value) -> Vec<(f64, f64)> {
+    e["points_m"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|p| (f(&p[0]), f(&p[1])))
+        .collect()
+}
+
+const HOLDS: &[&str] = &[
+    "dry_bulk_box_hold.vdesign",
+    "dry_bulk_sloped_hopper.vdesign",
+];
+
+#[test]
+fn the_hold_floor_is_the_inner_bottom_not_depth_less_hold_height() {
+    for file in HOLDS {
+        let r = results_of(file, false);
+        let depth = f(&r["dims"]["depth_m"]);
+        let db = f(&r["drawing"]["double_bottom_m"]);
+        let coaming = f(&r["drawing"]["hatch_coaming_height_m"]);
+        let hold_h = f(&r["geometry"]["hold_height_m"]);
+        // The core's hold height runs from the inner bottom to the coaming top, so
+        // `depth - hold_height` is the inner bottom less the coaming: the two do not agree.
+        assert!(close(depth - hold_h, db - coaming), "{file}");
+        assert!(!close(depth - hold_h, db), "{file}");
+
+        let v = views(&r);
+        // side elevation: the inner bottom is a hidden line across the hull, at the inner bottom
+        let hidden = of_layer(&v.side_elevation, "HIDDEN", "line");
+        assert!(
+            hidden.iter().any(|e| {
+                let (a, b) = ends(e);
+                close(a.1, db) && close(b.1, db) && b.0 > a.0
+            }),
+            "{file}: a hidden line at the inner bottom"
+        );
+        let hold = of_layer(&v.side_elevation, "HIDDEN", "polyline");
+        let low = points(hold[0])
+            .iter()
+            .map(|p| p.1)
+            .fold(f64::INFINITY, f64::min);
+        assert!(close(low, db), "{file}: the hold floor in elevation");
+        // the coaming stands above the deck, at its height
+        let top = of_layer(&v.side_elevation, "OUTLINE", "polyline")
+            .iter()
+            .flat_map(|e| points(e))
+            .map(|p| p.1)
+            .fold(f64::NEG_INFINITY, f64::max);
+        assert!(
+            close(top, depth + coaming),
+            "{file}: coaming top in elevation"
+        );
+
+        // midship section: a line across the hull at the inner bottom, and the coaming above deck
+        let half = f(&r["dims"]["beam_m"]) / 2.0;
+        let section_lines = of_layer(&v.midship_section, "OUTLINE", "line");
+        assert!(
+            section_lines.iter().any(|e| {
+                let (a, b) = ends(e);
+                close(a.1, db) && close(b.1, db) && close(a.0.abs(), half) && close(b.0.abs(), half)
+            }),
+            "{file}: the inner bottom across the hull"
+        );
+        let top_w = f(&r["geometry"]["hold_top_width_m"]);
+        let coamings: Vec<_> = section_lines
+            .iter()
+            .filter(|e| {
+                let (a, b) = ends(e);
+                close(a.0, b.0)
+                    && close(a.1.min(b.1), depth)
+                    && close(a.1.max(b.1), depth + coaming)
+            })
+            .collect();
+        assert_eq!(
+            coamings.len(),
+            2,
+            "{file}: two coaming sides in the section"
+        );
+        assert!(
+            coamings
+                .iter()
+                .all(|e| close(ends(e).0.0.abs(), top_w / 2.0))
+        );
+        // the hold polyline in section ends on the inner bottom
+        let hold_section = of_layer(&v.midship_section, "OUTLINE", "polyline");
+        assert!(
+            hold_section
+                .iter()
+                .any(|p| points(p).iter().any(|q| close(q.1, db)) && points(p).len() == 4),
+            "{file}: hold section floor at the inner bottom"
+        );
+
+        // plan: the hold opening, the width and length of the coaming
+        let opening = of_layer(&v.plan, "OBJECT", "polyline");
+        let pts = points(opening[0]);
+        let x0 = f(&r["geometry"]["stern_void_length_m"]);
+        let x1 = f(&r["dims"]["loa_m"]) - f(&r["geometry"]["bow_void_length_m"]);
+        assert!(pts.iter().any(|p| close(p.0, x0)) && pts.iter().any(|p| close(p.0, x1)));
+        assert!(pts.iter().all(|p| close(p.1.abs(), top_w / 2.0)));
     }
 }

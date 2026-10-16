@@ -102,9 +102,14 @@ struct Hull {
 enum Containment {
     /// A box hold or a sloped hopper hold.
     Hold {
-        height: f64,
         top_width: f64,
         bottom_width: f64,
+        /// The hold floor: the inner bottom, in metres above the keel (`drawing.double_bottom_m`).
+        /// The core's `hold_height_m` runs from here to the coaming top, so `depth - hold_height`
+        /// is not the floor.
+        inner_bottom: f64,
+        /// The hatch coaming above the deck (`drawing.hatch_coaming_height_m`).
+        coaming: f64,
     },
     /// Type C tanks: horizontal cylinders with hemispherical heads.
     Tanks {
@@ -153,10 +158,12 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
             gap_across: defaults.tank_gap_transverse,
         }
     } else {
+        let drawing = |key: &str| need(results, &["drawing", key]);
         Containment::Hold {
-            height: geo("hold_height_m")?,
             top_width: geo("hold_top_width_m")?,
             bottom_width: geo("hold_bottom_width_m")?,
+            inner_bottom: drawing("double_bottom_m")?,
+            coaming: drawing("hatch_coaming_height_m")?,
         }
     };
     for (name, value) in [
@@ -478,17 +485,40 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
     }
     // the hold or the tanks, hidden under the deck
     match &h.containment {
-        Containment::Hold { height, .. } => {
+        Containment::Hold {
+            inner_bottom,
+            coaming,
+            ..
+        } => {
             let (x0, x1) = (h.stern_void, h.loa - h.bow_void);
+            // the hold's ends and sides under the deck; the floor is the inner bottom line below
             c.polyline(
                 "HIDDEN",
                 &[
-                    [x0, h.depth - height],
-                    [x1, h.depth - height],
-                    [x1, h.depth],
+                    [x0, *inner_bottom],
                     [x0, h.depth],
+                    [x1, h.depth],
+                    [x1, *inner_bottom],
                 ],
-                true,
+                false,
+            );
+            // the inner bottom runs the length of the hull
+            c.line(
+                "HIDDEN",
+                [h.stern_x_at_height(*inner_bottom), *inner_bottom],
+                [h.x_at_height(*inner_bottom), *inner_bottom],
+                None,
+            );
+            // the hatch coaming stands above the deck over the hold
+            c.polyline(
+                "OUTLINE",
+                &[
+                    [x0, h.depth],
+                    [x0, h.depth + coaming],
+                    [x1, h.depth + coaming],
+                    [x1, h.depth],
+                ],
+                false,
             );
         }
         Containment::Tanks {
@@ -630,11 +660,27 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
     let mut labels: Vec<(String, [f64; 2])> = Vec::new();
     match &h.containment {
         Containment::Hold {
-            height,
             top_width,
             bottom_width,
+            inner_bottom,
+            coaming,
         } => {
-            let bottom = h.depth - height;
+            let bottom = *inner_bottom;
+            // the inner bottom across the hull, and the coaming above the deck on each side
+            c.line("OUTLINE", [-half, bottom], [half, bottom], None);
+            for side in [-1.0, 1.0] {
+                c.line(
+                    "OUTLINE",
+                    [side * top_width / 2.0, h.depth],
+                    [side * top_width / 2.0, h.depth + coaming],
+                    None,
+                );
+            }
+            labels.push((format!("INNER BOTTOM {}", metres(bottom)), [-half, bottom]));
+            labels.push((
+                format!("COAMING {}", metres(*coaming)),
+                [-top_width / 2.0, h.depth + coaming],
+            ));
             c.polyline(
                 "OUTLINE",
                 &[
