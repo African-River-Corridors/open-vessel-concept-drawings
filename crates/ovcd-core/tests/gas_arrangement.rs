@@ -21,11 +21,13 @@ fn the_cn_ii_benchmark_is_reproduced() {
         ..FitOptions::default()
     };
     let f = fit(90.0, 14.8, "LPG_propane", 4.4, &o).unwrap();
-    // Re-pinned (issue #237); was 2058.228164213275 under the stepped IGC_2G.
-    assert_eq!(f.payload_t, 2943.4407266060916);
+    // Re-pinned (issue #264, the search keeps only arrangements that pass stability); was
+    // 2943.4407266060916 (issue #237) and 2058.228164213275 under the stepped IGC_2G.
+    assert_eq!(f.payload_t, 2832.6643735601965);
     assert_eq!((f.n_tanks, f.n_tanks_wide, f.n_tanks_long), (2, 1, 2));
-    // Re-pinned (issue #237); was "volume": the hull now carries more than the draught allows.
-    assert_eq!(f.binding, "draft");
+    // Re-pinned (issue #264); was "volume" under the stepped IGC_2G and "draft" (issue #237): the
+    // arrangement that passes stability is smaller, so the volume binds again.
+    assert_eq!(f.binding, "volume");
     assert_eq!(f.candidates_tried, 15);
     assert!(f.feasible);
 }
@@ -40,7 +42,9 @@ fn a_hull_too_short_for_a_tank_is_reported_infeasible_not_raised() {
     assert_eq!(f.binding, "no cargo area");
     assert_eq!(f.payload_t, 0.0);
     assert!(!f.feasible);
-    assert_eq!(f.failed_checks.len(), 3);
+    // Re-pinned (issue #264): `failed_checks` lists the failed error checks only; it was 3 and
+    // included a warning.
+    assert_eq!(f.failed_checks.len(), 2);
 }
 
 #[test]
@@ -82,8 +86,9 @@ fn the_smallest_viable_loa_is_found_to_a_tenth_of_a_metre() {
     let o = FitOptions::for_smallest_viable_loa();
     assert_eq!(
         smallest_viable_loa(12.0, "LNG", 3.0, 20.0, 120.0, &o).unwrap(),
-        // Re-pinned (issue #237); was 35.6 under the stepped IGC_2G.
-        36.1
+        // Re-pinned (issue #264, a viable length needs an arrangement that passes every check,
+        // stability included); was 36.1 (issue #237) and 35.6 under the stepped IGC_2G.
+        39.9
     );
 }
 
@@ -199,7 +204,9 @@ fn a_wide_hull_gets_tanks_up_to_the_cap_under_both_rulesets() {
 #[test]
 fn the_default_cap_lets_a_tank_pass_the_old_12_m() {
     // IGC_2G: the full-beam tank of a 26 m hull is over every cap tried, so it sits on the cap.
-    // The default cap, 16 m, gives a 16 m tank; the old constant, 12 m, gave a 12 m one.
+    // The default cap, 16 m, gives a 16 m tank. Since issue #264 the search keeps only arrangements
+    // that pass stability, so the 12 m cap no longer gives a 12 m tank on this hull: it gives a
+    // smaller one, never over the cap.
     let run = |cap: Option<f64>| {
         let mut o = FitOptions {
             depths: vec![5.0],
@@ -212,7 +219,7 @@ fn the_default_cap_lets_a_tank_pass_the_old_12_m() {
         fit(110.0, 26.0, "LNG", 4.0, &o).unwrap()
     };
     assert_eq!(run(None).tank_od_m, 16.0);
-    assert_eq!(run(Some(12.0)).tank_od_m, 12.0);
+    assert!(run(Some(12.0)).tank_od_m <= 12.0 + 1e-6);
 }
 
 #[test]

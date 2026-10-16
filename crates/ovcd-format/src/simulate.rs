@@ -786,6 +786,8 @@ fn simulate_gas(
             ovcd_core::barge_capacity::DEFAULT_TANK_WALL_THICKNESS_MM,
         )?,
         water_density_t_per_m3: rho,
+        required_freeboard_m: fb,
+        air_draft_limit_m: truthy_float(p, "air_draft_limit_m")?,
         ..FitOptions::default()
     };
     let f = ga::fit(l, b, cargo_key, t_max, &options)
@@ -814,11 +816,20 @@ fn simulate_gas(
         "ok": f.payload_t > 0.0,
         "message": if f.payload_t > 0.0 { "OK" } else { "Nothing fits: lengthen or widen the hull." },
     })];
-    if f.payload_t > 0.0 && !f.feasible {
+    if !f.feasible {
+        // Said plainly: no arrangement passes (issue #264). The design shown is the closest one.
+        let names: Vec<&str> = f
+            .failed_checks
+            .iter()
+            .map(|m| m.split_once(": ").map_or(m.as_str(), |(name, _)| name))
+            .collect();
         checks.push(json!({
             "name": "Feasible arrangement",
             "ok": false,
-            "message": "No tank arrangement passes its checks on this hull; the best failing one is shown. See the failed checks.",
+            "message": format!(
+                "No arrangement passes every check on this hull. The closest one is shown. It fails: {}.",
+                names.join("; ")
+            ),
         }));
     }
     capacity_checks(r, &mut checks);
@@ -844,31 +855,11 @@ fn simulate_gas(
         let a = gs::assess(&basis, f.payload_t, cb, rho, gs::criteria_set_for(ruleset))
             .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))?;
         for c in &a.conditions {
-            let bad_criteria: Vec<_> = c.criteria.iter().filter(|x| !x.ok).collect();
-            let mut message = format!(
-                "GM {} m (fluid), max GZ {} m at {}\u{b0}",
-                fixed(c.gm_fluid_m, 2),
-                fixed(c.max_gz_m, 2),
-                fixed(f64::from(c.max_gz_deg), 0)
-            );
-            if !bad_criteria.is_empty() {
-                let parts: Vec<String> = bad_criteria
-                    .iter()
-                    .map(|x| {
-                        let v = match x.value {
-                            gs::PyNum::Int(i) => i as f64,
-                            gs::PyNum::Float(v) => v,
-                        };
-                        format!("{} {} < {}", x.name, fixed(v, 3), py_str(x.limit))
-                    })
-                    .collect();
-                message.push_str(" \u{2014} fails: ");
-                message.push_str(&parts.join(", "));
-            }
+            let k = ga::stability_check(c);
             checks.push(json!({
-                "name": format!("Stability \u{2014} {}", c.name.to_lowercase()),
-                "ok": bad_criteria.is_empty(),
-                "message": message,
+                "name": k.name,
+                "ok": k.ok,
+                "message": k.message,
             }));
         }
         let set_label = match a.criteria_set.as_str() {
