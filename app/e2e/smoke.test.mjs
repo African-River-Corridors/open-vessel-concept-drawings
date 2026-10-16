@@ -338,6 +338,91 @@ describe("OVCD app smoke tests", () => {
     assert.ok(await toggle("Outputs", true).isExisting());
   });
 
+  // Power and speed curves: one chart and one readout per channel environment.
+  const charts = () => browser.$$("[data-testid=speed-power-chart]");
+  const readout = async (i) => {
+    const el = (await browser.$$("[data-testid=speed-power-readout]"))[i];
+    return { kn: Number(await el.getAttribute("data-kn")), design: (await el.getAttribute("data-design")) === "true", text: await el.getText() };
+  };
+  /** Click near the left or right end of a chart's plot area (the nearest computed point is chosen). */
+  async function clickEnd(i, end) {
+    const over = (await browser.$$("[data-testid=speed-power-chart] .u-over"))[i];
+    const { width } = await over.getSize();
+    await over.click({ x: Math.round(end === "left" ? 4 - width / 2 : width / 2 - 4), y: 0 });
+  }
+  const designSpeedSelected = (n) =>
+    until("the design speed to be selected in every chart", async () => {
+      for (let i = 0; i < n; i++) {
+        const r = await readout(i);
+        if (!(r.kn === 10 && r.design)) return false;
+      }
+      return true;
+    });
+
+  for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
+    it(`selects the design speed in the power and speed curves, and a click selects another point (${cargo})`, async () => {
+      await open(path.join(FIXTURES, fixture), fixture);
+      await show("Stability & Propulsion", "Power and speed curves");
+      await until("the chart", async () => (await charts()).length >= 1);
+      assert.equal((await browser.$$("button=Reset zoom")).length, 0, "no zoom");
+      await designSpeedSelected(1);
+      const first = await readout(0);
+      assert.match(first.text, /speed 10\.00 kn/);
+      assert.match(first.text, /power [\d,]+ kW/);
+      assert.match(first.text, /fuel [\d,.]+ l\/h/);
+      assert.match(first.text, /squat [\d.]+ m/);
+      assert.match(first.text, /squat-limited (yes|no)/);
+      await shot(`230-${cargo}-power-and-speed-curves`);
+
+      await clickEnd(0, "left");
+      await until("the first point", async () => (await readout(0)).kn === 1);
+      const low = await readout(0);
+      assert.equal(low.design, false);
+      assert.notEqual(low.text, first.text, "the readout shows the clicked point");
+      await shot(`230-${cargo}-power-and-speed-curves-clicked`);
+
+      // An input change selects the design speed again.
+      await type("Beam", "12");
+      await designSpeedSelected(1);
+    });
+  }
+
+  it("shows one readout per channel environment, and the design speed follows the Maximum speed input", async () => {
+    await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    await type("Channel depth", "6");
+    await type("Channel bottom width", "40");
+    await show("Stability & Propulsion", "Power and speed curves");
+    await until("two charts", async () => (await charts()).length === 2);
+    await designSpeedSelected(2);
+    // Clicking in one chart leaves the other alone.
+    await clickEnd(0, "left");
+    await until("the first chart's new point", async () => (await readout(0)).kn === 1);
+    assert.equal((await readout(1)).kn, 10);
+    assert.ok((await overflow()) <= 0, "two charts fit the panel");
+    await shot("230-dry-bulk-power-and-speed-curves-two-environments");
+
+    // A new Maximum speed is the new design speed (the curves now end there).
+    await type("Maximum speed", "8");
+    await until("the new design speed", async () => {
+      const r = await readout(0);
+      return r.kn === 8 && r.design;
+    });
+  });
+
+  it("selects the design speed again after an Option switch", async () => {
+    await open(path.join(FIXTURES, "two_options.vdesign"), "two_options.vdesign");
+    await show("Stability & Propulsion", "Power and speed curves");
+    await until("the chart", async () => (await charts()).length >= 1);
+    await clickEnd(0, "left");
+    await until("the clicked point", async () => (await readout(0)).kn === 1);
+    const picker = await browser.$('select[aria-label="Active Option"]');
+    await picker.selectByVisibleText("Option 2");
+    await until("the design speed of Option 2", async () => {
+      const r = await readout(0);
+      return r.kn === 10 && r.design;
+    });
+  });
+
   it("changes an output when an input is edited", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
     const before = await cargoOutput();

@@ -161,6 +161,11 @@
   }
 
   let active = $derived(snap?.active_option ?? "");
+  /** The active Option's design speed, from the Design session's inputs. */
+  let designSpeed = $derived.by(() => {
+    const v = snap?.design.options.find((o) => o.name === active)?.inputs.max_speed_kn?.value;
+    return typeof v === "number" ? v : null;
+  });
   let activeEval = $derived(evaluation?.options.find((o) => o.name === active));
   /** The inputs of the active Option that have a hard error, with their schema labels. */
   let blockers = $derived.by(() => {
@@ -226,7 +231,7 @@
       onOption={optionAction}
       onProfile={(a) => command(a === "load" ? api.loadProfile : api.useBuiltInProfile, true)} /></section>
     <div class="handle v" hidden={!showInput} role="separator" aria-orientation="vertical" onpointerdown={drag("x")}></div>
-    <section class="main"><MainPanel {evaluation} {active} {lastGood} {blockers} /></section>
+    <section class="main"><MainPanel {evaluation} {active} {lastGood} {blockers} {designSpeed} /></section>
     <div class="handle h" hidden={!showOutputs} role="separator" aria-orientation="horizontal" onpointerdown={drag("y")}></div>
     <section class="bottom" hidden={!showOutputs}><BottomPanel {evaluation} {active} {lastGood} {blockers} onActivate={(name) => command(() => api.setActiveOption(name))} /></section>
   </div>
