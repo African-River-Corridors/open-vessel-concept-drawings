@@ -93,7 +93,7 @@ fn check_strip(what: &str, document: &Value, failed: usize) {
 }
 
 #[test]
-fn the_six_failed_checks_of_the_lng_self_propelled_case_make_one_numbered_note() {
+fn the_failed_checks_of_the_lng_self_propelled_case_make_one_numbered_note() {
     let r = gas_self_propelled();
     let failed = r["checks"]
         .as_array()
@@ -101,7 +101,9 @@ fn the_six_failed_checks_of_the_lng_self_propelled_case_make_one_numbered_note()
         .iter()
         .filter(|c| c["ok"] == false)
         .count();
-    assert!(failed >= 6, "{failed} failed checks");
+    // Six before issue #215: two of them were the inland type-G floors. The three stability
+    // criteria sets that fail on this hull are left.
+    assert!(failed >= 3, "{failed} failed checks");
     for (view, doc) in views(&r).all() {
         check_strip(view, doc, failed);
     }
