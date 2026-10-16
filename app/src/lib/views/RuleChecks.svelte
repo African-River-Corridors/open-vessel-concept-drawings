@@ -39,7 +39,7 @@
             <tr class:failed={!c.ok} data-testid="rule-check-row" data-ok={c.ok}>
               {#each COLUMNS as col (col.cell)}
                 {#if col.cell === "result"}
-                  <td><span class="tag {c.ok ? 'ok' : 'fail'}">{c.ok ? "PASS" : "FAIL"}</span></td>
+                  <td><span class="tag {c.ok ? 'ok' : 'fail'}"><span aria-hidden="true">{c.ok ? "✓" : "✕"}</span> {c.ok ? "PASS" : "FAIL"}</span></td>
                 {:else if col.cell === "name"}
                   <th scope="row">{c.name}</th>
                 {:else}
@@ -57,15 +57,15 @@
 <style>
   .rules { height: 100%; display: flex; flex-direction: column; }
   .count { margin: 0 0 6px; font-weight: 600; }
-  .note { color: var(--dim); }
-  .body { flex: 1; min-height: 0; overflow: auto; border: 1px solid var(--line); }
-  table { border-collapse: collapse; width: 100%; font-size: 12px; }
-  thead th { position: sticky; top: 0; background: var(--cream); text-align: left; font-weight: 600; padding: 4px 10px; border-bottom: 1px solid var(--line); }
-  td, tbody th { padding: 4px 10px; vertical-align: top; text-align: left; border-bottom: 1px solid #eee; }
+  .note { color: var(--ink-3); }
+  .body { flex: 1; min-height: 0; overflow: auto; border: var(--lw-thin) solid var(--rule); }
+  table { border-collapse: collapse; width: 100%; font-size: var(--fs-13); }
+  thead th { position: sticky; top: 0; background: var(--surface-2); color: var(--ink); text-align: left; font-weight: 600; padding: var(--sp-1) 10px; border-bottom: var(--lw-thick) solid var(--ink); }
+  td, tbody th { padding: var(--sp-1) 10px; vertical-align: top; text-align: left; border-bottom: var(--lw-thin) solid var(--rule); }
   tbody th { font-weight: 600; white-space: nowrap; }
-  tr.failed th { color: #7a1d12; }
-  .message { color: var(--dim); }
-  .tag { font-size: 10px; padding: 0 5px; border-radius: 3px; }
-  .tag.ok { background: #e1f0e1; color: #245c24; }
-  .tag.fail { background: #fbe4e1; color: #a02a1a; }
+  tr.failed th { color: var(--fail); }
+  .message { color: var(--ink-3); }
+  .tag { font: 600 var(--fs-11) var(--font-ui); padding: 1px 6px; border-radius: var(--radius); white-space: nowrap; }
+  .tag.ok { background: var(--pass-soft); color: var(--pass); }
+  .tag.fail { background: var(--fail-soft); color: var(--fail); }
 </style>

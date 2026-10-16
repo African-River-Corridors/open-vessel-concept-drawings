@@ -138,6 +138,7 @@ failure; `npm run build` runs it.
 | `pass` on `pass-soft` | text | 5.96 | 7.57 |
 | `fail` on `fail-soft` | text | 5.92 | 7.36 |
 | `warn` on `warn-soft` | text | 5.69 | 7.59 |
+| `ink` on `warn-soft` | text | 9.79 | 8.67 |
 | `pass` on `surface` | text | 6.62 | 6.29 |
 | `fail` on `surface` | text | 6.95 | 5.45 |
 | `warn` on `surface` | text | 6.76 | 6.51 |

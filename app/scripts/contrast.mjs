@@ -15,7 +15,7 @@ export const PAIRS = [
   ["ink-3", "paper", "text"], ["ink-3", "surface", "text"], ["ink-3", "surface-2", "text"],
   ["accent", "paper", "text"], ["accent", "surface", "text"], ["accent", "surface-2", "text"],
   ["accent-ink", "accent", "text"], ["ink", "accent-soft", "text"], ["accent", "accent-soft", "text"],
-  ["pass", "pass-soft", "text"], ["fail", "fail-soft", "text"], ["warn", "warn-soft", "text"],
+  ["pass", "pass-soft", "text"], ["fail", "fail-soft", "text"], ["warn", "warn-soft", "text"], ["ink", "warn-soft", "text"],
   ["pass", "surface", "text"], ["fail", "surface", "text"], ["warn", "surface", "text"],
   ["src-class", "surface", "text"], ["stale", "surface", "text"],
   ["sheet-ink", "sheet", "text"], ["sheet-ink-2", "sheet", "text"],
