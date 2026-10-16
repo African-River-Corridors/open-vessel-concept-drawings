@@ -120,7 +120,8 @@
       },
       axes: [
         { label: "Heel angle (deg)", stroke: "#444" },
-        { label: "GZ (m)", stroke: "#444" },
+        // A tick about every 28 pixels, written to two decimals, so GZ can be read off the axis.
+        { label: "GZ (m)", stroke: "#444", space: 28, values: (_u, ticks) => ticks.map((v) => v.toFixed(2)), size: 56 },
       ],
       series: [
         {},
@@ -238,7 +239,10 @@
 
 <div class="stab" data-testid="stability">
   {#if !stability}
-    <p class="note" data-testid="stability-wip">Stability is computed for gas cargo only. Dry-bulk stability is work in development.</p>
+    <div data-testid="stability-wip">
+      <h3 class="wip">Work in development</h3>
+      <p class="note">Stability is computed for gas cargo only. Dry-bulk stability is work in development.</p>
+    </div>
   {:else}
     <div class="chartbox" data-testid="stability-chart">
       <div class="legend">
@@ -320,7 +324,7 @@
 
 <style>
   .stab { height: 100%; display: flex; flex-direction: column; gap: 8px; }
-  .chartbox { flex: 3; min-height: 0; display: flex; flex-direction: column; }
+  .chartbox { flex: 3; min-height: 210px; display: flex; flex-direction: column; }
   .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; font-size: 12px; margin-bottom: 4px; }
   .item.governing-item { font-weight: 600; }
   .swatch { display: inline-block; width: 14px; height: 4px; margin-right: 4px; vertical-align: middle; }
@@ -335,6 +339,7 @@
   .summary { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin: 0 0 8px; }
   .dim { color: var(--dim); font-size: 12px; }
   .note { color: var(--dim); }
+  .wip { font-family: var(--serif); color: var(--navy); font-size: 16px; margin: 0 0 4px; }
   table { border-collapse: collapse; font-size: 12px; }
   .conditions { display: block; overflow-x: auto; max-width: 100%; }
   th { text-align: left; font-weight: normal; padding: 3px 10px 3px 0; white-space: nowrap; }

@@ -218,7 +218,7 @@ describe("OVCD app smoke tests", () => {
       assert.equal(await subs[0].getAttribute("aria-selected"), "true");
     }
     await show("Stability & Propulsion", "Rule check calculations");
-    assert.ok(await browser.$("[data-testid=placeholder-rules]").isExisting());
+    assert.ok(await browser.$("[data-testid=rule-checks]").isExisting());
     await show("BOQ & Finance", "BOQ");
     assert.ok(await browser.$("[data-testid=placeholder-boq]").isExisting());
     await show("BOQ & Finance", "Capital budget");
@@ -445,6 +445,7 @@ describe("OVCD app smoke tests", () => {
     assert.equal((await browser.$$("[data-testid=stability-chart] .item.governing-item")).length, 1);
     assert.equal((await browser.$$("[data-testid=stability-wip]")).length, 0);
     await shot("231-gas-intact-stability");
+    await shot("232-gas-intact-stability");
 
     const fitButton = await browser.$('button[aria-label="Fit to the panel"]');
     assert.equal(await fitButton.isEnabled(), false, "fitted to start with");
@@ -464,10 +465,35 @@ describe("OVCD app smoke tests", () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
     await show("Stability & Propulsion", "Intact stability");
     await until("the work-in-development state", async () => (await browser.$$("[data-testid=stability-wip]")).length === 1);
-    assert.match(await browser.$("[data-testid=stability-wip]").getText(), /work in development/);
+    assert.match(await browser.$("[data-testid=stability-wip]").getText(), /^Work in development\s+Stability is computed for gas cargo only\. Dry-bulk stability is work in development\.$/);
     assert.equal((await browser.$$("[data-testid=stability-chart]")).length, 0, "no empty chart");
     await shot("231-dry-bulk-intact-stability");
+    await shot("232-dry-bulk-intact-stability");
   });
+
+  for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
+    it(`lists every check in the Rule check calculations table, failures first (${cargo})`, async () => {
+      await open(path.join(FIXTURES, fixture), fixture);
+      // The Outputs panel lists the same checks, in the engine's order.
+      const engine = await browser.execute(() =>
+        [...document.querySelectorAll("[data-testid=checks] li")].map((li) => ({ fail: li.classList.contains("fail"), text: li.textContent })),
+      );
+      await show("Stability & Propulsion", "Rule check calculations");
+      await until("the table", async () => (await browser.$$("[data-testid=rule-check-row]")).length > 0);
+      const rows = await browser.execute(() =>
+        [...document.querySelectorAll("[data-testid=rule-check-row]")].map((tr) => ({ ok: tr.dataset.ok === "true", name: tr.querySelector("th").textContent })),
+      );
+      assert.equal(rows.length, engine.length, "every check appears once");
+      assert.equal(new Set(rows.map((r) => r.name)).size, rows.length, "no check twice");
+      const failing = rows.filter((r) => !r.ok).length;
+      assert.equal(failing, engine.filter((c) => c.fail).length);
+      // Failures first: no pass above a fail.
+      assert.deepEqual(rows.map((r) => r.ok), [...rows.map((r) => r.ok)].sort((a, b) => Number(a) - Number(b)));
+      assert.match(await browser.$("[data-testid=rule-check-count]").getText(), new RegExp(`^${failing} of ${rows.length} checks? fails?$`));
+      assert.ok((await overflow()) <= 0, "the panel does not scroll");
+      await shot(`232-${cargo}-rule-check-calculations`);
+    });
+  }
 
   it("changes an output when an input is edited", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
