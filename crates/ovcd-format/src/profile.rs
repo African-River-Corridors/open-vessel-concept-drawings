@@ -4,7 +4,10 @@
 //! The profile holds values only. Which inputs exist, and their types, is fixed by the schema in
 //! `vdesign.rs`.
 
-use crate::vdesign::{INPUTS, InputKind, KEYED_DEFAULTS};
+use crate::vdesign::{
+    INPUTS, InputKind, KEYED_DEFAULTS, LEGACY_FIXED_INPUTS, LEGACY_FIXED_OTHER, TABLE_DEFAULTS,
+    TABLE_KEYS, TABLE_STATUSES, table_combinations,
+};
 use serde_json::{Map, Value};
 
 const BUILT_IN: &str = include_str!("builtin_profile.json");
@@ -14,6 +17,130 @@ const BUILT_IN: &str = include_str!("builtin_profile.json");
 pub struct Profile {
     name: String,
     inputs: Map<String, Value>,
+}
+
+/// The row of a default table that gave a value (see [`Profile::table_default`]).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TableHit<'a> {
+    pub value: &'a Value,
+    /// `sourced` or `estimate`.
+    pub status: &'a str,
+    /// The published source, for a `sourced` value (and often an `estimate` too).
+    pub source: Option<&'a str>,
+    /// How the value was chosen, always given.
+    pub basis: &'a str,
+}
+
+/// Whether a table row's `when` fits the context: each key it lists holds one of the values named.
+fn row_fits(row: &Value, context: &[(&str, &str)]) -> bool {
+    let Some(when) = row.get("when").and_then(Value::as_object) else {
+        return false;
+    };
+    when.iter().all(|(key, wanted)| {
+        let Some((_, have)) = context.iter().find(|(k, _)| k == key) else {
+            return false;
+        };
+        match wanted {
+            Value::String(w) => w == have,
+            Value::Array(list) => list.iter().any(|w| w.as_str() == Some(have)),
+            _ => false,
+        }
+    })
+}
+
+/// Check the default table of one input (issue #292): its shape, the status and source of every
+/// row, and that every combination of Cargo Containment, Cargo and carriage condition the schema
+/// can make has a row.
+fn check_table(name: &str, entry: &Map<String, Value>) -> Result<(), String> {
+    let table = entry
+        .get("default_by_table")
+        .and_then(Value::as_object)
+        .ok_or_else(|| {
+            format!(
+                "profile gives no default table for `{name}` (`{name}.default_by_table` is missing)"
+            )
+        })?;
+    let by: Vec<&str> = table
+        .get("by")
+        .and_then(Value::as_array)
+        .map(|l| l.iter().filter_map(Value::as_str).collect())
+        .unwrap_or_default();
+    if by != TABLE_KEYS {
+        return Err(format!(
+            "profile `{name}.default_by_table.by` must be {}",
+            TABLE_KEYS.join(", ")
+        ));
+    }
+    let rows = table
+        .get("rows")
+        .and_then(Value::as_array)
+        .ok_or_else(|| format!("profile `{name}.default_by_table.rows` must be a list"))?;
+    for (i, row) in rows.iter().enumerate() {
+        let at = format!("`{name}.default_by_table.rows[{i}]`");
+        let row = row
+            .as_object()
+            .ok_or_else(|| format!("profile {at} must be an object"))?;
+        let when = row
+            .get("when")
+            .and_then(Value::as_object)
+            .ok_or_else(|| format!("profile {at} needs an object `when`"))?;
+        for (key, wanted) in when {
+            if !TABLE_KEYS.contains(&key.as_str()) {
+                return Err(format!("profile {at}.when has an unknown key `{key}`"));
+            }
+            let ok = match wanted {
+                Value::String(_) => true,
+                Value::Array(l) => !l.is_empty() && l.iter().all(Value::is_string),
+                _ => false,
+            };
+            if !ok {
+                return Err(format!(
+                    "profile {at}.when.{key} must be a name or a list of names"
+                ));
+            }
+        }
+        if !row.contains_key("value") {
+            return Err(format!("profile {at} needs a `value`"));
+        }
+        let status = row.get("status").and_then(Value::as_str).unwrap_or("");
+        if !TABLE_STATUSES.contains(&status) {
+            return Err(format!(
+                "profile {at} needs a `status` of {}",
+                TABLE_STATUSES.join(" or ")
+            ));
+        }
+        let text = |k: &str| {
+            row.get(k)
+                .and_then(Value::as_str)
+                .is_some_and(|t| !t.trim().is_empty())
+        };
+        if !text("basis") {
+            return Err(format!(
+                "profile {at} needs a `basis`: how the value was chosen"
+            ));
+        }
+        if status == "sourced" && !text("source") {
+            return Err(format!(
+                "profile {at} is `sourced` but gives no `source`; a value with no source is an `estimate`"
+            ));
+        }
+    }
+    for combination in table_combinations() {
+        let context: Vec<(&str, &str)> =
+            combination.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        if !rows.iter().any(|row| row_fits(row, &context)) {
+            let shown: Vec<String> = combination
+                .iter()
+                .filter(|(_, v)| !v.is_empty())
+                .map(|(k, v)| format!("{k} {v}"))
+                .collect();
+            return Err(format!(
+                "profile gives no default for `{name}` when {} (no row of `{name}.default_by_table` fits)",
+                shown.join(", ")
+            ));
+        }
+    }
+    Ok(())
 }
 
 /// A hard range: the bounds an input must meet or be refused.
@@ -139,12 +266,59 @@ impl Profile {
     /// built-in profile's entry (the inputs of `LEGACY_FIXED_INPUTS`), so an older copy still loads.
     fn fill_added_inputs(&mut self) -> Result<(), String> {
         let built_in = Profile::unchecked(BUILT_IN)?;
-        for fixed in crate::vdesign::LEGACY_FIXED_INPUTS {
-            if !self.inputs.contains_key(fixed.name)
-                && let Some(entry) = built_in.inputs.get(fixed.name)
+        let added = LEGACY_FIXED_INPUTS
+            .iter()
+            .map(|l| l.name)
+            .chain(LEGACY_FIXED_OTHER.iter().map(|l| l.name))
+            .chain(TABLE_DEFAULTS.iter().copied());
+        for name in added {
+            if !self.inputs.contains_key(name)
+                && let Some(entry) = built_in.inputs.get(name)
             {
-                self.inputs.insert(fixed.name.to_string(), entry.clone());
+                self.inputs.insert(name.to_string(), entry.clone());
             }
+        }
+        // An input that now has a default table (issue #292) but whose entry in an older copy has
+        // none takes the built-in table. A copy's own `fill_ratio` default (it was keyed by
+        // ruleset) is kept: every row takes that value, marked an estimate from the copy.
+        for name in TABLE_DEFAULTS {
+            let Some(built) = built_in.inputs.get(*name).and_then(Value::as_object) else {
+                continue;
+            };
+            let Some(entry) = self.inputs.get_mut(*name).and_then(Value::as_object_mut) else {
+                continue;
+            };
+            if entry.contains_key("default_by_table") {
+                continue;
+            }
+            let mut table = built
+                .get("default_by_table")
+                .cloned()
+                .unwrap_or(Value::Null);
+            let own = entry
+                .get("default_by_ruleset")
+                .and_then(|m| m.get("IGC_2G"))
+                .and_then(Value::as_f64);
+            if *name == "fill_ratio"
+                && let Some(own) = own
+                && let Some(rows) = table.get_mut("rows").and_then(Value::as_array_mut)
+            {
+                for row in rows.iter_mut().filter_map(Value::as_object_mut) {
+                    if row.get("value").and_then(Value::as_f64) != Some(own) {
+                        row.insert("value".into(), Value::from(own));
+                        row.insert("status".into(), Value::from("estimate"));
+                        row.remove("source");
+                        row.insert(
+                            "basis".into(),
+                            Value::from(format!(
+                                "the fill ratio of this profile copy (`default_by_ruleset.IGC_2G` = {own}), \
+                                 which was one value for every Cargo before the table existed"
+                            )),
+                        );
+                    }
+                }
+            }
+            entry.insert("default_by_table".into(), table);
         }
         Ok(())
     }
@@ -179,6 +353,10 @@ impl Profile {
                 .ok_or_else(|| format!("profile `{}` must be an object", spec.name))?;
             // Every lookup the schema can make must find a value; a gap would leave an
             // Option silently short of an input.
+            if TABLE_DEFAULTS.contains(&spec.name) {
+                check_table(spec.name, entry)?;
+                continue;
+            }
             match KEYED_DEFAULTS.iter().find(|(n, _, _)| *n == spec.name) {
                 Some((_, by, keys)) => {
                     let field = format!("default_by_{by}");
@@ -234,6 +412,45 @@ impl Profile {
     /// The plain default of an input, if the profile gives one.
     pub fn default(&self, name: &str) -> Option<&Value> {
         self.entry(name).and_then(|e| e.get("default"))
+    }
+
+    /// The rows of an input's default table (`default_by_table.rows`), empty when it has none.
+    fn table_rows(&self, name: &str) -> &[Value] {
+        self.entry(name)
+            .and_then(|e| e.get("default_by_table"))
+            .and_then(|t| t.get("rows"))
+            .and_then(Value::as_array)
+            .map_or(&[], Vec::as_slice)
+    }
+
+    /// The row of an input's default table that fits `context` (a value for each of
+    /// [`TABLE_KEYS`]): the first whose `when` names every key it lists as one of the context's
+    /// values. `None` when no row fits.
+    pub fn table_default(&self, name: &str, context: &[(&str, &str)]) -> Option<TableHit<'_>> {
+        self.table_rows(name)
+            .iter()
+            .find(|row| row_fits(row, context))
+            .and_then(|row| {
+                Some(TableHit {
+                    value: row.get("value")?,
+                    status: row.get("status").and_then(Value::as_str).unwrap_or(""),
+                    source: row.get("source").and_then(Value::as_str),
+                    basis: row.get("basis").and_then(Value::as_str).unwrap_or(""),
+                })
+            })
+    }
+
+    /// Every value in an input's default table, for the checks.
+    pub fn table_values(&self, name: &str) -> Vec<Value> {
+        self.table_rows(name)
+            .iter()
+            .filter_map(|r| r.get("value").cloned())
+            .collect()
+    }
+
+    /// The rows of an input's default table as the schema shows them.
+    pub fn table_json(&self, name: &str) -> Option<&Value> {
+        self.entry(name).and_then(|e| e.get("default_by_table"))
     }
 
     /// A default chosen by another input's value: `default_by_<by>[key]`.

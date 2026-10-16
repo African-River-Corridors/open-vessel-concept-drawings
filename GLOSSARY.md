@@ -54,6 +54,19 @@ Vessel Class.
 How a Hull holds its Cargo: a box hold, a sloped hopper hold, or IMO Type C tanks.
 _Avoid_: vessel type, barge type
 
+**LPG Carriage Condition**:
+How an LPG Cargo is carried in Type C tanks: fully pressurised (ambient temperature, the vapour
+pressure of the cargo), semi-pressurised or semi-refrigerated (cooled, at a middle pressure), or fully
+refrigerated or cryogenic (cooled, near atmospheric pressure). An input for LPG Cargos only. The tank
+design defaults follow the Cargo Containment, the Cargo and this condition.
+_Avoid_: LPG type, LPG mode
+
+**Tank Outer Diameter**:
+The diameter of a Type C tank measured to the outside of its insulation. The steel outer diameter is
+that less twice the insulation thickness. The side and bottom clearances, the tank top and the drawing
+use the insulated face; the wall thickness and the volume start from the steel diameter.
+_Avoid_: tank diameter (on its own), OD (on its own)
+
 **Design**:
 One study saved as a single file: one or more Options, compared side by side.
 _Avoid_: project, model
@@ -69,7 +82,9 @@ _Avoid_: hold depth, draught (a result, not an input)
 
 **Defaults Profile**:
 The named set of default input values and allowed input ranges used when an Option leaves an input
-out. Each range is hard (the input is refused) or soft (the input is accepted with a warning).
+out. Each range is hard (the input is refused) or soft (the input is accepted with a warning). A
+default may depend on another input (the Cargo Containment, the Cargo, the LPG Carriage Condition); each
+value of such a table says whether it is sourced from a published tank or is an estimate, and why.
 _Avoid_: settings, config (on its own)
 
 **Moulded Depth**:

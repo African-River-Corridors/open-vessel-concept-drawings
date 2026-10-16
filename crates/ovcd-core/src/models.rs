@@ -78,8 +78,10 @@ pub struct BargeInputs {
     pub tank_wall_thickness: Option<f64>,
     /// "hemisphere" or "ellipsoidal_2to1"
     pub tank_head_type: String,
-    /// Material key: "304L", "316L", "9Ni"
+    /// Material key: "304L", "316L", "9Ni", "S690QL1"
     pub tank_material: String,
+    /// Allowable stress (MPa) the thickness formula uses; `None`: the material's own.
+    pub tank_allowable_stress: Option<f64>,
     /// Tank material density (t/m^3)
     pub tank_material_density: f64,
     /// Design pressure (MPa)
@@ -185,6 +187,7 @@ impl BargeInputs {
             tank_wall_thickness: Some(25.0),
             tank_head_type: "hemisphere".to_string(),
             tank_material: "9Ni".to_string(),
+            tank_allowable_stress: None,
             tank_material_density: 7.85,
             design_pressure: 0.5,
             weld_efficiency: 0.95,

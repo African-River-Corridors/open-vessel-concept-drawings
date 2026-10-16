@@ -450,13 +450,18 @@ fn json_results_are_what_simulate_answers_for_a_self_propelled_gas_hull() {
     assert!(results["cost"]["unit_total"].is_number());
     assert!(results["cost"]["unit_total"].is_number());
     results.as_object_mut().unwrap().remove("cost");
+    // `drawing.tank` (issue #292) echoes the tank design values the file held; the plain `simulate`
+    // call below is given none of them. The numbers are the same, so compare without it.
+    let tank = results["drawing"].as_object_mut().unwrap().remove("tank");
+    assert_eq!(tank.unwrap()["material"], "9Ni");
     let results = &results;
-    let expected = simulate_answer(json!({
+    let mut expected = simulate_answer(json!({
         "vessel": "gas_barge", "cargo": "LPG_propane", "loa_m": 90.0, "beam_m": 14.8,
         "depth_m": 6.5, "cb": 0.85, "freeboard_min_m": 0.3, "draught_limit_m": 4.4,
         "self_propelled": true, "ruleset": "IGC_2G", "fill_ratio": 0.95, "max_tank_od_m": 16.0,
         "optimise_depth": false, "eta_d": 0.45, "speed_max_kn": 10.0
     }));
+    expected["drawing"].as_object_mut().unwrap().remove("tank");
     assert_eq!(results, &expected);
     // Pinned values: the original Python, re-pinned (issue #237) to what the current code prints;
     // were 2058.228164213275 and 1813.9027562650056 under the stepped IGC_2G. `cargo_t` re-pinned

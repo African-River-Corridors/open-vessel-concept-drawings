@@ -52,13 +52,16 @@ fn an_automatic_wall_names_the_material_and_uses_the_pressure_vessel_formula() {
     i.tank_wall_thickness = None;
     i.post_init().unwrap();
     let t = calculate_tank_arrangement(&i).unwrap();
+    // Re-pinned for issue #292 (a datum fix, printed by this code): the formula takes the steel
+    // outer diameter, the outer diameter less twice the 350 mm of insulation. It took the insulated
+    // diameter before: 7.5 mm, inner diameter 5.1850000000000005 m, shell 96.71601494722185 t.
     assert_eq!(
         (t.cylinder_wall_thickness, t.head_wall_thickness),
-        (7.5, 5.0)
+        (6.5, 5.0)
     );
     assert_eq!(t.tank_material, "9Ni");
-    assert_eq!(t.inner_diameter, 5.1850000000000005);
-    assert_eq!(t.tank_shell_weight, 96.71601494722185);
+    assert_eq!(t.inner_diameter, 5.187);
+    assert_eq!(t.tank_shell_weight, 85.61272160006104);
 }
 
 #[test]
@@ -70,8 +73,10 @@ fn an_ellipsoidal_head_is_half_as_long_and_uses_its_own_area_constant() {
     let t = calculate_tank_arrangement(&i).unwrap();
     assert_eq!(t.head_length, 1.475);
     assert_eq!(t.cylinder_length, 24.653999999999996);
-    assert_eq!(t.volume_heads, 36.49344885686704);
-    assert_eq!(t.tank_shell_weight, 105.55486138152804);
+    // Re-pinned for issue #292 (the same datum fix): heads 36.49344885686704 m3 and shell
+    // 105.55486138152804 t before.
+    assert_eq!(t.volume_heads, 36.535694789998075);
+    assert_eq!(t.tank_shell_weight, 91.49668798563093);
     assert_eq!(t.insulation_weight, 43.36450948944139);
 }
 

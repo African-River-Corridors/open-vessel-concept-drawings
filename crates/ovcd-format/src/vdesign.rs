@@ -61,10 +61,84 @@ pub const KEYED_DEFAULTS: &[(&str, &str, &[&str])] = &[
         "cargo_containment",
         &["box_hold"],
     ),
-    ("fill_ratio", "ruleset", RULESETS),
     ("battery_unit_count", "cargo_phase", CARGO_PHASES),
     ("accommodation_unit_count", "cargo_phase", CARGO_PHASES),
 ];
+
+/// The LPG Cargos: the ones that are carried in one of three conditions (issue #292).
+pub const LPG_CARGOS: &[&str] = &["LPG_propane", "LPG_butane", "LPG_mix"];
+
+/// How an LPG Cargo is carried: in a tank at ambient temperature and the vapour pressure it has
+/// there, cooled to a middle pressure, or cooled to near atmospheric pressure.
+pub const CARRIAGE_CONDITIONS: &[&str] = &[
+    "fully_pressurised",
+    "semi_pressurised",
+    "fully_refrigerated",
+];
+
+/// The carriage condition an LPG file takes when it names none (issue #292).
+pub const DEFAULT_CARRIAGE_CONDITION: &str = "fully_pressurised";
+
+/// The tank materials, as `ovcd_core::pressure_vessel::TANK_MATERIAL_DATABASE` keys (a test keeps
+/// the two lists equal).
+pub const TANK_MATERIALS: &[&str] = &["304L", "316L", "9Ni", "S690QL1"];
+
+/// The tank insulation types. `unspecified` is the generic insulation the engine used before the
+/// type was an input; the density is the one value (60 kg/m3) for every type.
+pub const INSULATION_TYPES: &[&str] = &["unspecified", "none", "pu_foam", "panel"];
+
+/// The inputs whose default comes from a table of the whole Defaults Profile keyed by the
+/// combination of [`TABLE_KEYS`] (issue #292): `<input>.default_by_table`, a list of rows, each a
+/// `when` (the keys it fits; a key it leaves out is any), a `value`, and the `status` of the value
+/// (`sourced` with its `source`, or `estimate`) with its `basis`. The first row that fits wins. The
+/// profile must have a row for every combination the schema can make.
+pub const TABLE_DEFAULTS: &[&str] = &[
+    "fill_ratio",
+    "tank_design_pressure_mpa",
+    "tank_design_temperature_c",
+    "tank_material",
+    "tank_insulation_type",
+    "tank_insulation_thickness_mm",
+    "tank_structure_factor",
+];
+
+/// The keys of a default table, in the order the schema names them. The carriage condition is
+/// empty for a Cargo that has none.
+pub const TABLE_KEYS: &[&str] = &["cargo_containment", "cargo", "lpg_carriage_condition"];
+
+/// The statuses a table value can have.
+pub const TABLE_STATUSES: &[&str] = &["sourced", "estimate"];
+
+/// Every combination of [`TABLE_KEYS`] the schema can make: the Cargo Containment, each Cargo it
+/// carries, and, for an LPG Cargo, each carriage condition (an empty text for a Cargo that has none).
+/// The Defaults Profile must give a table row for each.
+pub fn table_combinations() -> Vec<[(&'static str, String); 3]> {
+    let mut out = Vec::new();
+    for (containment, phase) in CARGO_CONTAINMENTS {
+        // The tables are for the gas tanks; no other Cargo Containment has table inputs.
+        if *containment != "type_c_tanks" {
+            continue;
+        }
+        for (cargo, props) in ovcd_core::cargo::CARGO_DATABASE.iter() {
+            if props.phase != *phase {
+                continue;
+            }
+            let carriages: Vec<&str> = if LPG_CARGOS.contains(cargo) {
+                CARRIAGE_CONDITIONS.to_vec()
+            } else {
+                vec![""]
+            };
+            for carriage in carriages {
+                out.push([
+                    ("cargo_containment", containment.to_string()),
+                    ("cargo", cargo.to_string()),
+                    ("lpg_carriage_condition", carriage.to_string()),
+                ]);
+            }
+        }
+    }
+    out
+}
 
 /// Hull Forms that exist today.
 pub const HULL_FORMS: &[&str] = &["raked_box"];
@@ -121,6 +195,12 @@ pub const GAS_WING_TANK_GAP_M: f64 = 0.6;
 pub const GAS_WING_TANK_HEIGHT_RATIO: f64 = 0.66;
 pub const GAS_TANK_WALL_THICKNESS_MM: f64 = 25.0;
 
+/// The Cargo-dependent tank design values fixed in the engine before they were inputs (issue #292;
+/// `models::BargeInputs` defaults).
+pub const GAS_TANK_DESIGN_PRESSURE_MPA: f64 = 0.5;
+pub const GAS_TANK_INSULATION_MM: f64 = 350.0;
+pub const GAS_TANK_STRUCTURE_FACTOR: f64 = 1.30;
+
 /// The aft block values fixed in the engine before they were inputs (`aft_arrangement` and
 /// `barge_capacity` defaults). The unit counts differ by Cargo phase.
 pub const AFT_THRUSTER_COUNT: f64 = 3.0;
@@ -148,6 +228,14 @@ pub const AFT_WHEELHOUSE_MAX_LIFT_M: f64 = 6.00;
 pub const WATER_DENSITY_T_PER_M3: f64 = 1.0;
 /// The under-keel clearance kept below the squatted keel, in m (`resistance` default).
 pub const SQUAT_SAFETY_MARGIN_M: f64 = 0.15;
+
+/// What the gas tank values are, shown with the group (issue #292).
+pub const GAS_TANKS_NOTE: &str = "The tank outer diameter (the cap below and the result) is \
+    measured to the outside of the insulation; the clearances and the drawing use that face. The \
+    steel diameter is that less twice the insulation thickness. The wall thickness is worked out \
+    from the pressure-vessel formula unless a thickness is typed. The design values below depend \
+    on the Cargo and, for LPG, on the carriage condition; each shows its source or marks an \
+    estimate.";
 
 /// What the cost rates are, shown with the group and in the capital budget.
 pub const COST_RATES_BASIS: &str = "Example rates \u{2014} replace with yours.";
@@ -293,6 +381,24 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
         applies_to: AppliesTo::Only("type_c_tanks"),
         formations: None,
         value: GAS_TANK_WALL_THICKNESS_MM,
+    },
+    LegacyFixed {
+        name: "tank_design_pressure_mpa",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: GAS_TANK_DESIGN_PRESSURE_MPA,
+    },
+    LegacyFixed {
+        name: "tank_insulation_thickness_mm",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: GAS_TANK_INSULATION_MM,
+    },
+    LegacyFixed {
+        name: "tank_structure_factor",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: GAS_TANK_STRUCTURE_FACTOR,
     },
     LegacyFixed {
         name: "water_density_t_per_m3",
@@ -506,6 +612,63 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
     },
 ];
 
+/// An input that held a text or `none` before it was an input (issue #292): the tank material, the
+/// insulation type, the design temperature (the engine used no temperature), the allowable stress
+/// (the material's own) and the carriage
+/// condition of an LPG Cargo (the engine knew none; a file that names none is read as fully
+/// pressurised, with its own warning). `value` is JSON.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct LegacyFixedJson {
+    pub name: &'static str,
+    pub applies_to: AppliesTo,
+    pub value: &'static str,
+}
+
+/// See [`LegacyFixedJson`]. Read by a file that lacks the input, like [`LEGACY_FIXED_INPUTS`].
+pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
+    LegacyFixedJson {
+        name: "lpg_carriage_condition",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        value: "\"fully_pressurised\"",
+    },
+    LegacyFixedJson {
+        name: "tank_material",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        value: "\"9Ni\"",
+    },
+    LegacyFixedJson {
+        name: "tank_insulation_type",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        value: "\"unspecified\"",
+    },
+    LegacyFixedJson {
+        name: "tank_design_temperature_c",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "tank_allowable_stress_mpa",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        value: "null",
+    },
+];
+
+/// The value an input took before it was an input, for a file that lacks it (a number from
+/// [`LEGACY_FIXED_INPUTS`], or a text or `none` from [`LEGACY_FIXED_OTHER`]). `None` when the
+/// input was never fixed in the engine, or does not apply to `containment`.
+pub fn legacy_value(name: &str, containment: Option<&str>) -> Option<Value> {
+    if let Some(fixed) = LEGACY_FIXED_INPUTS
+        .iter()
+        .find(|l| l.name == name && containment.is_none_or(|c| l.applies_to.includes(c)))
+    {
+        return Some(json!(fixed.value));
+    }
+    LEGACY_FIXED_OTHER
+        .iter()
+        .find(|l| l.name == name && containment.is_none_or(|c| l.applies_to.includes(c)))
+        .map(|l| serde_json::from_str(l.value).expect("a legacy value is JSON"))
+}
+
 /// Gas tank rulesets.
 ///
 /// One rule set: `IGC_2G` is the per-tank d(Vc) of IGC 2.4.1.1, measured plate to plate (2.4.2).
@@ -523,6 +686,15 @@ pub const SELF_PROPELLED: &[&str] = &["self_propelled"];
 pub fn formation_includes(formations: Option<&[&str]>, kind: Option<&str>) -> bool {
     match (formations, kind) {
         (Some(list), Some(k)) => list.contains(&k),
+        _ => true,
+    }
+}
+
+/// Whether an input used for the Cargos in `cargos` applies to `cargo`. An unknown Cargo (none given
+/// yet) counts as applying, so nothing is dropped before the Cargo is known.
+pub fn cargo_includes(cargos: Option<&[&str]>, cargo: Option<&str>) -> bool {
+    match (cargos, cargo) {
+        (Some(list), Some(c)) => list.contains(&c),
         _ => true,
     }
 }
@@ -626,6 +798,7 @@ impl Group {
     pub fn note(self) -> Option<&'static str> {
         match self {
             Group::CostRates => Some(COST_RATES_BASIS),
+            Group::GasTanks => Some(GAS_TANKS_NOTE),
             _ => None,
         }
     }
@@ -640,6 +813,17 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("self_propelled", "Self-propelled"),
     ("pushed_barge", "Pushed barge"),
     ("pushed_convoy", "Pushed convoy"),
+    ("fully_pressurised", "Fully pressurised"),
+    ("semi_pressurised", "Semi-pressurised (semi-refrigerated)"),
+    ("fully_refrigerated", "Fully refrigerated (cryogenic)"),
+    ("304L", "304L stainless steel"),
+    ("316L", "316L stainless steel"),
+    ("9Ni", "9 % nickel steel"),
+    ("S690QL1", "S690QL1 quenched and tempered steel"),
+    ("unspecified", "Unspecified"),
+    ("none", "None"),
+    ("pu_foam", "Polyurethane foam"),
+    ("panel", "Insulation panel"),
 ];
 
 /// The display name of a choice value.
@@ -661,6 +845,9 @@ pub struct InputSpec {
     pub applies_to: AppliesTo,
     /// The Formation kinds the input is used for; `None` for every Formation.
     pub formations: Option<&'static [&'static str]>,
+    /// The Cargos the input is used for (the LPG carriage condition is for LPG only); `None` for
+    /// every Cargo.
+    pub cargos: Option<&'static [&'static str]>,
     pub group: Group,
 }
 
@@ -678,6 +865,7 @@ const fn spec(
         required,
         applies_to: AppliesTo::All,
         formations: None,
+        cargos: None,
         group,
     }
 }
@@ -696,6 +884,7 @@ const fn only(
         required: false,
         applies_to: AppliesTo::Only(containment),
         formations: None,
+        cargos: None,
         group,
     }
 }
@@ -714,6 +903,7 @@ const fn only_in(
         required: false,
         applies_to: AppliesTo::AnyOf(containments),
         formations: None,
+        cargos: None,
         group,
     }
 }
@@ -731,6 +921,7 @@ const fn pushed(
         required: false,
         applies_to: AppliesTo::All,
         formations: Some(PUSHED),
+        cargos: None,
         group,
     }
 }
@@ -748,6 +939,27 @@ const fn self_propelled(
         required: false,
         applies_to: AppliesTo::All,
         formations: Some(SELF_PROPELLED),
+        cargos: None,
+        group,
+    }
+}
+
+/// An input of the gas tanks that only an LPG Cargo has (the carriage condition).
+const fn lpg(
+    name: &'static str,
+    label: &'static str,
+    kind: InputKind,
+    containment: &'static str,
+    group: Group,
+) -> InputSpec {
+    InputSpec {
+        name,
+        label,
+        kind,
+        required: false,
+        applies_to: AppliesTo::Only(containment),
+        formations: None,
+        cargos: Some(LPG_CARGOS),
         group,
     }
 }
@@ -853,6 +1065,13 @@ pub const INPUTS: &[InputSpec] = &[
         "type_c_tanks",
         Group::GasTanks,
     ),
+    lpg(
+        "lpg_carriage_condition",
+        "LPG carriage condition",
+        InputKind::Choice(CARRIAGE_CONDITIONS),
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
     only(
         "fill_ratio",
         "Fill ratio",
@@ -863,6 +1082,55 @@ pub const INPUTS: &[InputSpec] = &[
     only(
         "max_tank_od_m",
         "Maximum tank outer diameter",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_design_pressure_mpa",
+        "Tank design pressure (MARVS)",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_design_temperature_c",
+        "Tank design temperature",
+        NUM_OR_NONE,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_material",
+        "Tank material",
+        InputKind::Choice(TANK_MATERIALS),
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_allowable_stress_mpa",
+        "Tank allowable stress (override)",
+        NUM_OR_NONE,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_insulation_type",
+        "Tank insulation type",
+        InputKind::Choice(INSULATION_TYPES),
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_insulation_thickness_mm",
+        "Tank insulation thickness",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_structure_factor",
+        "Tank structure factor",
         NUM,
         "type_c_tanks",
         Group::GasTanks,
@@ -911,8 +1179,8 @@ pub const INPUTS: &[InputSpec] = &[
     ),
     only(
         "tank_wall_thickness_mm",
-        "Tank wall thickness",
-        NUM,
+        "Tank wall thickness (override)",
+        NUM_OR_NONE,
         "type_c_tanks",
         Group::GasTanks,
     ),
@@ -1471,6 +1739,14 @@ pub fn fill(text: &str, profile: &Profile) -> Checked {
     fill_as(text, profile, Missing::Fill)
 }
 
+/// As [`fill`], for a Design that is new (issue #292): an input the file leaves out takes the
+/// Defaults Profile value, never the fixed value an old file gets. For a hand-written file made
+/// now, and for the design-impact check, which must see what the Defaults Profile gives a new
+/// Design. Do not use it on an old file: its results would change.
+pub fn fill_as_new(text: &str, profile: &Profile) -> Checked {
+    fill_as(text, profile, Missing::FillProfile)
+}
+
 /// As [`fill`], for a Design being edited in a session: an input the Design lacks (a reset input,
 /// or one a changed Cargo Containment or Formation now uses) takes the Defaults Profile value,
 /// never the fixed value an old file gets.
@@ -1911,13 +2187,16 @@ fn read_option(
             .as_ref()
             .and_then(|f| f.get("kind"))
             .and_then(Value::as_str);
+        let cargo = value_of(&inputs, "cargo");
+        let cargo = cargo.as_ref().and_then(Value::as_str);
         let applies = match spec.applies_to {
             AppliesTo::All => true,
             scope => containment
                 .as_ref()
                 .and_then(Value::as_str)
                 .is_some_and(|c| scope.includes(c)),
-        } && formation_includes(spec.formations, kind);
+        } && formation_includes(spec.formations, kind)
+            && cargo_includes(spec.cargos, cargo);
         if let Some(raw_input) = raw.get(spec.name) {
             let stored = match unmark(raw_input) {
                 Ok(s) => s,
@@ -1931,7 +2210,13 @@ fn read_option(
                     .as_ref()
                     .and_then(Value::as_str)
                     .unwrap_or("unknown");
-                let text = if formation_includes(spec.formations, kind) {
+                let text = if !cargo_includes(spec.cargos, cargo) {
+                    format!(
+                        "`{}` is not used for the Cargo {}; ignored",
+                        spec.name,
+                        cargo.unwrap_or("unknown")
+                    )
+                } else if formation_includes(spec.formations, kind) {
                     format!(
                         "`{}` is not used for a {c} Cargo Containment; ignored",
                         spec.name
@@ -1976,19 +2261,14 @@ fn read_option(
         // An input that is new since the first files, left out of a file: the fixed value the
         // engine used before it was an input (never the profile value), noted once per Option.
         if !matches!(missing, Missing::FillProfile)
-            && let Some(fixed) = LEGACY_FIXED_INPUTS.iter().find(|l| {
-                l.name == spec.name
-                    && containment
-                        .as_ref()
-                        .and_then(Value::as_str)
-                        .is_none_or(|c| l.applies_to.includes(c))
-            })
+            && let Some(fixed) =
+                legacy_value(spec.name, containment.as_ref().and_then(Value::as_str))
         {
             legacy_added.push(spec.name);
             inputs.push((
                 spec.name.into(),
                 StoredInput {
-                    value: json!(fixed.value),
+                    value: fixed,
                     source: Source::Default,
                 },
             ));
@@ -2037,6 +2317,28 @@ fn read_option(
         );
         report.migration_notes.push(text.clone());
         report.warning(text, &["tank_dome_diameter_m"]);
+    }
+    // An LPG Cargo that names no carriage condition is read as fully pressurised, and the file says
+    // so. The tank values it lacks keep what the engine used before, so the results are unchanged.
+    if let Some(at_i) = legacy_added
+        .iter()
+        .position(|n| *n == "lpg_carriage_condition")
+    {
+        legacy_added.remove(at_i);
+        let cargo = inputs
+            .iter()
+            .find(|(k, _)| k == "cargo")
+            .and_then(|(_, i)| i.value.as_str())
+            .unwrap_or("LPG");
+        let text = format!(
+            "Option '{name}': this file has no `lpg_carriage_condition` for the LPG Cargo {cargo}; \
+             it is read as {DEFAULT_CARRIAGE_CONDITION} (marked default). The tank values the file \
+             lacks keep what the engine used before (design pressure, material, insulation, \
+             structure factor), so the results are unchanged; set the carriage condition and reset \
+             those inputs to take the defaults of that condition"
+        );
+        report.migration_notes.push(text.clone());
+        report.warning(text, &["lpg_carriage_condition"]);
     }
     if !legacy_added.is_empty() {
         let list = legacy_added
@@ -2094,6 +2396,9 @@ fn default_for(
     if name == DEPTH_INPUT {
         return depth_default(inputs, profile);
     }
+    if TABLE_DEFAULTS.contains(&name) {
+        return table_default_for(name, inputs, profile);
+    }
     let (value, case) = match KEYED_DEFAULTS.iter().find(|(n, _, _)| *n == name) {
         Some((_, by, _)) => {
             let key = match *by {
@@ -2123,6 +2428,46 @@ fn default_for(
         None => Err(format!(
             "the Defaults Profile '{}' gives no default for `{name}` ({case} is missing)",
             profile.name()
+        )),
+    }
+}
+
+/// The default of an input that has a table keyed by Cargo Containment, Cargo and carriage condition
+/// (see [`TABLE_DEFAULTS`]). `Ok(None)` when a key it needs is missing or wrong (that error is
+/// reported elsewhere).
+fn table_default_for(
+    name: &str,
+    inputs: &[(String, StoredInput)],
+    profile: &Profile,
+) -> Result<Option<Value>, String> {
+    let got = |n: &str| {
+        inputs
+            .iter()
+            .find(|(k, _)| k == n)
+            .and_then(|(_, i)| i.value.as_str())
+    };
+    let (Some(containment), Some(cargo)) = (got("cargo_containment"), got("cargo")) else {
+        return Ok(None);
+    };
+    // An LPG Cargo whose carriage condition is missing or wrong: that error is reported elsewhere.
+    let carriage = got("lpg_carriage_condition");
+    if LPG_CARGOS.contains(&cargo) && !carriage.is_some_and(|c| CARRIAGE_CONDITIONS.contains(&c)) {
+        return Ok(None);
+    }
+    let context = [
+        ("cargo_containment", containment),
+        ("cargo", cargo),
+        ("lpg_carriage_condition", carriage.unwrap_or("")),
+    ];
+    match profile.table_default(name, &context) {
+        Some(hit) => Ok(Some(normalise(hit.value.clone()))),
+        None => Err(format!(
+            "the Defaults Profile '{}' gives no default for `{name}` when the Cargo Containment is \
+             {containment}, the Cargo {cargo}{} (no row of `{name}.default_by_table` fits)",
+            profile.name(),
+            carriage.map_or(String::new(), |c| format!(
+                " and the carriage condition {c}"
+            ))
         )),
     }
 }
@@ -2404,6 +2749,21 @@ fn cross_checks(
             );
         }
     }
+    // The insulation type and its thickness say the same thing (issue #292): none is no thickness.
+    if let (Some(kind), Some(thickness)) = (
+        get("tank_insulation_type").and_then(Value::as_str),
+        get("tank_insulation_thickness_mm").and_then(Value::as_f64),
+    ) && ((kind == "none") != (thickness == 0.0))
+        && kind != "unspecified"
+    {
+        report.warning(
+            at(format!(
+                "`tank_insulation_type` is {kind} but `tank_insulation_thickness_mm` is {thickness}: \
+                 the type and the thickness disagree (soft check); accepted"
+            )),
+            &["tank_insulation_type", "tank_insulation_thickness_mm"],
+        );
+    }
     // The depth search tries hulls up to a fixed depth; above it no searched hull keeps the
     // freeboard, and the core raises when no waterway limit caps the draught.
     if get("optimise_depth").and_then(Value::as_bool) == Some(true)
@@ -2521,6 +2881,7 @@ pub(crate) fn check_profile_defaults(profile: &Profile) -> Result<(), String> {
                 defaults.extend(profile.default_by(spec.name, by, key).cloned());
             }
         }
+        defaults.extend(profile.table_values(spec.name));
         for d in defaults {
             check_value(spec, &d, profile)
                 .map_err(|e| format!("profile default is invalid: {e}"))?;

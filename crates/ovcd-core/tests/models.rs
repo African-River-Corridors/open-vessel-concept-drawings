@@ -110,7 +110,7 @@ fn an_unknown_material_with_an_automatic_wall_is_a_value_error() {
         (e.kind, e.message.as_str()),
         (
             "ValueError",
-            "Unknown tank material 'A36'. Valid: 304L, 316L, 9Ni"
+            "Unknown tank material 'A36'. Valid: 304L, 316L, 9Ni, S690QL1"
         )
     );
 }

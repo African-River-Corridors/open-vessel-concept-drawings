@@ -119,6 +119,14 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
         "wing_tank_gap_m",
         "wing_tank_height_ratio",
         "tank_wall_thickness_mm",
+        "lpg_carriage_condition",
+        "tank_design_pressure_mpa",
+        "tank_design_temperature_c",
+        "tank_material",
+        "tank_allowable_stress_mpa",
+        "tank_insulation_type",
+        "tank_insulation_thickness_mm",
+        "tank_structure_factor",
         "bow_rake_length_to_depth_ratio",
         "pushed_stern_void_m",
         "bulk_end_bulkhead_m",
@@ -156,6 +164,11 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     put("speed_max_kn", "max_speed_kn");
     put("air_draft_limit_m", "air_draft_limit_m");
     put("draught_limit_m", "draught_limit_m");
+    // A null wall thickness asks for the pressure-vessel formula (issue #292); `put` leaves nulls
+    // out, and a key left out means the engine's old fixed 25 mm.
+    if get("tank_wall_thickness_mm").is_some_and(|v| v.is_null()) {
+        p.insert("tank_wall_thickness_mm".to_string(), Value::Null);
+    }
     let vessel = match get("cargo_containment").as_ref().and_then(Value::as_str) {
         Some("box_hold") => "box_barge",
         Some("sloped_hopper_hold") => "hopper_barge",
@@ -388,6 +401,24 @@ pub fn summary_lines(name: &str, results: &Value) -> Vec<String> {
         f(r, &["air_draft_loaded_m"], 2),
         f(r, &["air_draft_light_m"], 2)
     ));
+    // A gas Design: the tank, with its diameter datum said (issue #292).
+    let tank = &results["drawing"]["tank"];
+    if tank.is_object() {
+        lines.push(format!(
+            "  Tank: outer diameter {} m to the outside of the insulation ({} mm), steel {} m; \
+             wall {} mm ({}), {}, {} MPa",
+            f(tank, &["tank_outer_diameter_m"], 2),
+            f(tank, &["insulation_thickness_mm"], 0),
+            f(tank, &["tank_steel_outer_diameter_m"], 2),
+            f(tank, &["cylinder_wall_thickness_mm"], 1),
+            match tank["wall_thickness_source"].as_str() {
+                Some("override") => "typed",
+                _ => "from the formula",
+            },
+            tank["material"].as_str().unwrap_or("?"),
+            f(tank, &["design_pressure_mpa"], 2),
+        ));
+    }
     let checks = results["checks"].as_array().cloned().unwrap_or_default();
     let failed: Vec<String> = checks
         .iter()

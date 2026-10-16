@@ -524,6 +524,126 @@ fn aft_design_of(p: &Map<String, Value>) -> R<ovcd_core::aft_arrangement::AftDes
     })
 }
 
+/// The tank wall thickness of the params (issue #292). A key left out keeps the fixed 25 mm the
+/// engine used before the input was optional; `null` asks for the pressure-vessel formula, which is
+/// what a Design takes from the Defaults Profile.
+fn tank_wall_of(p: &Map<String, Value>) -> R<Option<f64>> {
+    match p.get("tank_wall_thickness_mm") {
+        None => Ok(Some(
+            ovcd_core::barge_capacity::DEFAULT_TANK_WALL_THICKNESS_MM,
+        )),
+        Some(Value::Null) => Ok(None),
+        Some(v) => Ok(Some(py_float(v, "params.tank_wall_thickness_mm")?)),
+    }
+}
+
+/// The Cargo-dependent tank design values from the params (issue #292). A key left out keeps what
+/// the engine used before these were inputs; `tank_allowable_stress_mpa` null or left out means the
+/// material's own.
+fn tank_design_of(p: &Map<String, Value>) -> R<ovcd_core::barge_capacity::TankDesign> {
+    use ovcd_core::barge_capacity as b;
+    let material = match p.get("tank_material") {
+        None => b::DEFAULT_TANK_MATERIAL.to_string(),
+        Some(Value::String(s)) => s.clone(),
+        Some(other) => {
+            return bad(format!(
+                "`params.tank_material` must be text, not {}",
+                py_repr(other)
+            ));
+        }
+    };
+    let allowable = match p.get("tank_allowable_stress_mpa") {
+        None | Some(Value::Null) => None,
+        Some(v) => Some(py_float(v, "params.tank_allowable_stress_mpa")?),
+    };
+    Ok(b::TankDesign {
+        design_pressure_mpa: get_or(
+            p,
+            "tank_design_pressure_mpa",
+            b::DEFAULT_TANK_DESIGN_PRESSURE_MPA,
+        )?,
+        material,
+        allowable_stress_mpa: allowable,
+        insulation_thickness_mm: get_or(
+            p,
+            "tank_insulation_thickness_mm",
+            b::DEFAULT_TANK_INSULATION_MM,
+        )?,
+        structure_factor: get_or(p, "tank_structure_factor", b::DEFAULT_TANK_STRUCTURE_FACTOR)?,
+    })
+}
+
+/// What the tank was designed to, for the `drawing.tank` object (not a result, not hashed): the
+/// values in force, where the wall thickness came from, and the diameter datum.
+///
+/// Datum (issue #292): `tank_outer_diameter_m` of the results is the outside of the insulation.
+/// The side and bottom clearances, the tank top height and the drawing all use that face, and the
+/// IGC distances d are measured plate to plate, so the insulation is taken off them (IGC 2.4.2).
+/// The steel diameter is that less twice the insulation; the wall thickness formula and the volume
+/// both start from the steel diameter. `tank_steel_outer_diameter_m` shows it.
+fn tank_report(
+    p: &Map<String, Value>,
+    inp: &BargeCapacityInputs,
+    r: &BargeCapacityResult,
+) -> Value {
+    let design = &inp.tank_design;
+    let steel = r.tank_outer_diameter_m.map(|od| {
+        od - 2.0
+            * r.insulation_thickness_mm
+                .unwrap_or(design.insulation_thickness_mm)
+            / 1000.0
+    });
+    let head = r.gas_basis.as_ref().map(|b| b.tanks.head_wall_thickness);
+    let allowable = design.allowable_stress_mpa.or_else(|| {
+        ovcd_core::pressure_vessel::get_tank_material(&design.material)
+            .ok()
+            .map(|m| m.allowable_stress)
+    });
+    let text = |key: &str| p.get(key).cloned().unwrap_or(Value::Null);
+    Value::Object(
+        [
+            ("lpg_carriage_condition", text("lpg_carriage_condition")),
+            ("design_pressure_mpa", num(design.design_pressure_mpa)),
+            ("design_temperature_c", text("tank_design_temperature_c")),
+            ("material", json!(design.material)),
+            ("allowable_stress_mpa", opt_num(allowable)),
+            ("insulation_type", text("tank_insulation_type")),
+            (
+                "insulation_thickness_mm",
+                num(design.insulation_thickness_mm),
+            ),
+            ("structure_factor", num(design.structure_factor)),
+            (
+                "wall_thickness_source",
+                json!(if inp.tank_wall_thickness.is_some() {
+                    "override"
+                } else {
+                    "formula"
+                }),
+            ),
+            (
+                "cylinder_wall_thickness_mm",
+                opt_num(r.tank_wall_thickness_mm),
+            ),
+            ("head_wall_thickness_mm", opt_num(head)),
+            ("tank_outer_diameter_m", opt_num(r.tank_outer_diameter_m)),
+            ("tank_steel_outer_diameter_m", opt_num(steel)),
+            ("tank_inner_diameter_m", opt_num(r.tank_inner_diameter_m)),
+            (
+                "diameter_datum",
+                json!(
+                    "tank_outer_diameter_m is the outside of the insulation; the clearances, the \
+                     tank top and the drawing use that face. The steel outer diameter is that \
+                     less twice the insulation; the wall thickness and the volume start from it"
+                ),
+            ),
+        ]
+        .into_iter()
+        .map(|(k, v)| (k.to_string(), v))
+        .collect(),
+    )
+}
+
 fn simulate(p: &Map<String, Value>) -> R<Value> {
     let vessel_id = match p.get("vessel") {
         None => "box_barge",
@@ -819,11 +939,8 @@ fn simulate_gas(
             "wing_tank_height_ratio",
             ovcd_core::barge_capacity::DEFAULT_WING_TANK_HEIGHT_RATIO,
         )?,
-        tank_wall_thickness_mm: get_or(
-            p,
-            "tank_wall_thickness_mm",
-            ovcd_core::barge_capacity::DEFAULT_TANK_WALL_THICKNESS_MM,
-        )?,
+        tank_wall_thickness_mm: tank_wall_of(p)?,
+        tank_design: tank_design_of(p)?,
         water_density_t_per_m3: rho,
         required_freeboard_m: fb,
         air_draft_limit_m: truthy_float(p, "air_draft_limit_m")?,
@@ -928,7 +1045,9 @@ fn simulate_gas(
         "bottom_clearance_m": opt_num(r.bottom_clearance_m),
         "insulation_thickness_mm": opt_num(r.insulation_thickness_mm),
     });
-    let drawing = drawing_json(structure_json(r, f.engine_inputs.separation.as_ref(), None));
+    let mut drawing_parts = structure_json(r, f.engine_inputs.separation.as_ref(), None);
+    drawing_parts.push(("tank", tank_report(p, &f.engine_inputs, r)));
+    let drawing = drawing_json(drawing_parts);
     let air_loaded = r.air_draft_top_above_keel_m - t;
     Ok(json!({
         "vessel": label,

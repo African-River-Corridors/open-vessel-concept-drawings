@@ -39,8 +39,10 @@ pub struct TankMaterialProperties {
     pub description: &'static str,
 }
 
-/// `TANK_MATERIAL_DATABASE`: (key, properties), in the Python dict's insertion order.
-pub static TANK_MATERIAL_DATABASE: [(&str, TankMaterialProperties); 3] = [
+/// `TANK_MATERIAL_DATABASE`: (key, properties). The first three are in the Python dict's insertion
+/// order, with the values of the original engine (their allowable stresses carry no cited basis).
+/// `S690QL1` was added for the Type C tank defaults by cargo (issue #292).
+pub static TANK_MATERIAL_DATABASE: [(&str, TankMaterialProperties); 4] = [
     (
         "304L",
         TankMaterialProperties {
@@ -72,6 +74,22 @@ pub static TANK_MATERIAL_DATABASE: [(&str, TankMaterialProperties); 3] = [
             min_thickness: 5.0,
             corrosion_allowance: 0.5,
             description: "ASTM A553 Type I, LNG service to -196\u{b0}C",
+        },
+    ),
+    // Issue #292. The allowable stress is the one a published river LPG tank design uses for this
+    // steel: Rm 770 MPa over 2.7 = 285 MPa (Senjanovic et al., "Structure design of cargo tanks in
+    // river liquefied gas carriers", DESIGN 2006). Density, minimum thickness and corrosion
+    // allowance are not in that paper: they take the values of the other carbon and nickel steels
+    // above (7.85 t/m3, 5 mm, 0.5 mm), an estimate.
+    (
+        "S690QL1",
+        TankMaterialProperties {
+            name: "S690QL1 quenched and tempered steel",
+            allowable_stress: 285.0,
+            density: 7.85,
+            min_thickness: 5.0,
+            corrosion_allowance: 0.5,
+            description: "High-strength C-Mn steel (Re 690, Rm 770 MPa), pressurised LPG tanks",
         },
     ),
 ];
@@ -181,6 +199,25 @@ pub fn ellipsoidal_head_thickness(
     div(p * d, 2.0 * f * e - 0.2 * p)
 }
 
+/// The cylinder shell thickness the pressure-vessel formula asks for (mm), before the corrosion
+/// allowance, the rounding to 0.5 mm and the IGC minimum: two passes of the ASME UG-27 shell
+/// formula, the first on the outer radius and the second on the inner radius it gave. The radius
+/// is the steel outer one, so the caller gives the steel outer diameter (the diameter without any
+/// insulation).
+pub fn required_cylinder_thickness_mm(
+    outer_diameter_m: f64,
+    design_pressure_mpa: f64,
+    allowable_stress_mpa: f64,
+    weld_efficiency: f64,
+) -> Result<f64, PyError> {
+    let outer_radius_mm = outer_diameter_m * 1000.0 / 2.0;
+    let (p, f, e) = (design_pressure_mpa, allowable_stress_mpa, weld_efficiency);
+    // First pass: approximate with inner radius ~ outer radius.
+    let t_cyl = cylinder_wall_thickness(p, outer_radius_mm, f, e)?;
+    // Second pass: refine with the corrected inner radius.
+    cylinder_wall_thickness(p, outer_radius_mm - t_cyl, f, e)
+}
+
 /// Required wall thicknesses (mm) for the cylinder and the heads: `(cylinder, head)`.
 ///
 /// Two passes on the cylinder, corrosion allowance, rounding up to 0.5 mm, then the IGC minimum.
@@ -192,9 +229,29 @@ pub fn calculate_wall_thicknesses(
     head_type: &str,
     weld_efficiency: f64,
 ) -> Result<(f64, f64), PyError> {
+    calculate_wall_thicknesses_with(
+        outer_diameter_m,
+        design_pressure_mpa,
+        material_key,
+        head_type,
+        weld_efficiency,
+        None,
+    )
+}
+
+/// As [`calculate_wall_thicknesses`], with an allowable stress of the designer's own (MPa) instead
+/// of the material's. The material still gives the minimum thickness and the corrosion allowance.
+pub fn calculate_wall_thicknesses_with(
+    outer_diameter_m: f64,
+    design_pressure_mpa: f64,
+    material_key: &str,
+    head_type: &str,
+    weld_efficiency: f64,
+    allowable_stress_mpa: Option<f64>,
+) -> Result<(f64, f64), PyError> {
     let mat = get_tank_material(material_key)?;
     let outer_radius_mm = outer_diameter_m * 1000.0 / 2.0;
-    let f = mat.allowable_stress;
+    let f = allowable_stress_mpa.unwrap_or(mat.allowable_stress);
     let p = design_pressure_mpa;
     let e = weld_efficiency;
 

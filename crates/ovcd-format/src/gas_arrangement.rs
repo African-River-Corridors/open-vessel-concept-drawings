@@ -92,6 +92,11 @@ const FIT_OPTION_KEYS: &[&str] = &[
     "wing_tank_gap_m",
     "wing_tank_height_ratio",
     "tank_wall_thickness_mm",
+    "tank_design_pressure_mpa",
+    "tank_material",
+    "tank_allowable_stress_mpa",
+    "tank_insulation_thickness_mm",
+    "tank_structure_factor",
     "n_thrusters",
     "thruster_envelope_m",
     "thruster_clear_m",
@@ -149,7 +154,40 @@ fn fit_options(o: &Map<String, Value>, base: FitOptions) -> Result<FitOptions, E
     f.tank_dome_diameter_m = float_or(o, "tank_dome_diameter_m", f.tank_dome_diameter_m)?;
     f.wing_tank_gap_m = float_or(o, "wing_tank_gap_m", f.wing_tank_gap_m)?;
     f.wing_tank_height_ratio = float_or(o, "wing_tank_height_ratio", f.wing_tank_height_ratio)?;
-    f.tank_wall_thickness_mm = float_or(o, "tank_wall_thickness_mm", f.tank_wall_thickness_mm)?;
+    // A key left out keeps the base; `null` asks for the pressure-vessel formula (issue #292).
+    match o.get("tank_wall_thickness_mm") {
+        None => {}
+        Some(Value::Null) => f.tank_wall_thickness_mm = None,
+        Some(_) => {
+            f.tank_wall_thickness_mm = Some(float_or(o, "tank_wall_thickness_mm", 0.0)?);
+        }
+    }
+    f.tank_design.design_pressure_mpa = float_or(
+        o,
+        "tank_design_pressure_mpa",
+        f.tank_design.design_pressure_mpa,
+    )?;
+    if let Some(v) = o.get("tank_material") {
+        f.tank_design.material = v
+            .as_str()
+            .ok_or_else(|| EvalError::BadInput("`args.tank_material` must be a string".into()))?
+            .to_string();
+    }
+    match o.get("tank_allowable_stress_mpa") {
+        None => {}
+        Some(Value::Null) => f.tank_design.allowable_stress_mpa = None,
+        Some(_) => {
+            f.tank_design.allowable_stress_mpa =
+                Some(float_or(o, "tank_allowable_stress_mpa", 0.0)?);
+        }
+    }
+    f.tank_design.insulation_thickness_mm = float_or(
+        o,
+        "tank_insulation_thickness_mm",
+        f.tank_design.insulation_thickness_mm,
+    )?;
+    f.tank_design.structure_factor =
+        float_or(o, "tank_structure_factor", f.tank_design.structure_factor)?;
     // The stern block's design values (issue #4): used by every candidate of a self-propelled hull.
     let whole = |name: &str| -> Result<Option<i64>, EvalError> {
         o.get(name)

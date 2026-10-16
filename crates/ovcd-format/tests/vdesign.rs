@@ -601,8 +601,9 @@ fn a_profile_with_an_unknown_input_is_refused() {
 
 #[test]
 fn a_profile_with_a_keyed_default_outside_its_hard_range_is_refused() {
+    // Issue #292: the fill ratio is a table; a value of a row is held to the hard range too.
     let err = edited_profile(|p| {
-        p["inputs"]["fill_ratio"]["default_by_ruleset"]["IGC_2G"] = json!(1.5);
+        p["inputs"]["fill_ratio"]["default_by_table"]["rows"][0]["value"] = json!(1.5);
     })
     .unwrap_err();
     assert!(err.contains("`fill_ratio` = 1.5 is out of range"), "{err}");

@@ -89,6 +89,7 @@ def test_a_base_that_refuses_a_new_input_is_run_without_it(tmp_path):
     fake.write_text(
         '#!/bin/sh\n'
         'if [ "$1" = fill ]; then\n'
+        '  if [ "$2" = --as-new ]; then shift; fi\n'
         '  if grep -q n_holds "$2"; then echo \'Option x: unknown input `n_holds`\' >&2; exit 1; fi\n'
         '  cp "$2" "$3"; exit 0\n'
         'fi\n'
@@ -97,3 +98,34 @@ def test_a_base_that_refuses_a_new_input_is_run_without_it(tmp_path):
     fake.chmod(0o755)
     out = di.run_case(fake, "case", {"cargo": "bauxite", "n_holds": 3}, tmp_path)
     assert out == {"results": {"seen": "ok"}}
+
+
+def test_a_base_from_before_the_as_new_flag_is_filled_without_it(tmp_path):
+    """`fill --as-new` (issue #292) gives a file made now the Defaults Profile value of an input added
+    after the first files. A base that does not know the flag refuses it by name; `fill_file` then
+    fills the way that base always did, and a head that knows it is given the flag.
+
+    Label: property
+    """
+    log = tmp_path / "calls.txt"
+    fake = tmp_path / "ovcd"
+    fake.write_text(
+        '#!/bin/sh\n'
+        f'echo "$@" >> {log}\n'
+        'if [ "$1" = fill ]; then\n'
+        '  if [ "$2" = --as-new ] && [ -e "$(dirname "$0")/old" ]; then\n'
+        '    echo "error: unknown option `--as-new`" >&2; exit 1; fi\n'
+        '  if [ "$2" = --as-new ]; then shift; fi\n'
+        '  cp "$2" "$3"; exit 0\n'
+        'fi\n'
+        'echo \'{"options":[{"results":{"seen":"ok"}}]}\'\n',
+        encoding="utf-8")
+    fake.chmod(0o755)
+    case = {"cargo": "bauxite"}
+    assert di.run_case(fake, "case", case, tmp_path) == {"results": {"seen": "ok"}}
+    assert "fill --as-new" in log.read_text(encoding="utf-8")
+    log.unlink()
+    (tmp_path / "old").write_text("")
+    assert di.run_case(fake, "case", case, tmp_path) == {"results": {"seen": "ok"}}
+    calls = log.read_text(encoding="utf-8").splitlines()
+    assert any(c.startswith("fill --as-new") for c in calls) and any(c.startswith("fill ") and "--as-new" not in c for c in calls)

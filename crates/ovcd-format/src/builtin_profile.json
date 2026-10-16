@@ -88,19 +88,241 @@
       "default": "IGC_2G",
       "basis": "IGC Code 2.4.1.1: the distance d(Vc) of each individual cargo tank (Vc the gross design volume of one tank at 20 C, domes and appendages included): 0.8 m up to 1,000 m3; 0.75 + Vc x 0.2 / 4,000 m up to 5,000 m3; 0.8 + Vc / 25,000 m up to 30,000 m3; 2 m above. IGC 2.4.2: d is measured plate to plate, from the moulded line to the moulded line, excluding insulation, so the clear gap needed is d less the insulation thickness"
     },
+    "lpg_carriage_condition": {
+      "default": "fully_pressurised",
+      "basis": "How an LPG Cargo is carried: fully pressurised (ambient temperature, the vapour pressure of the cargo), semi-pressurised or semi-refrigerated (cooled, at a middle pressure), or fully refrigerated or cryogenic (cooled to near atmospheric pressure). The input is for LPG Cargos only, and the tank design defaults below follow it. A file that names none is read as fully pressurised"
+    },
     "fill_ratio": {
-      "default_by_ruleset": { "IGC_2G": 0.98 },
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": {},
+            "value": 0.98,
+            "status": "sourced",
+            "source": "IMO IGC Code, resolution MSC.370(93), paragraph 15.3 (default filling limit 98 %)",
+            "basis": "The limit is 98 % of the tank volume at the reference temperature. Owners' sheets agree: 98 % on 16 pressurised LPG carriers and 98.5 % on one 2022 LNG bunker vessel. The real limit changes with the cargo density at the loading and reference temperatures; one value is used for every Cargo and carriage condition"
+          }
+        ]
+      },
       "unit": "-",
       "hard": { "ge": 0.1, "le": 1 },
       "soft": { "min": 0.8, "max": 0.99 },
-      "basis": "IGC Code 15.3 default filling limit, 98 %"
+      "basis": "The part of the gross tank volume that cargo fills (the filling limit). The default is the IGC Code 15.3 limit, 98 %. The original engine used 0.95 in its tank inputs; a Design never uses that value"
     },
     "max_tank_od_m": {
       "default": 16.0,
       "unit": "m",
       "hard": { "gt": 0, "le": 50 },
       "soft": { "min": 4.0, "max": 20.0 },
-      "basis": "a design limit of this tool, not an IGC Code rule: a tank is never wider than this, so a wider hull gets more tanks across. Tank length is limited only by length over diameter, at most 7"
+      "basis": "a design limit of this tool, not an IGC Code rule: a tank is never wider than this, so a wider hull gets more tanks across. The diameter is measured to the outside of the insulation, not to the steel: the steel diameter is smaller by twice the insulation thickness. Tank length is limited only by length over diameter, at most 7"
+    },
+    "tank_design_pressure_mpa": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LNG"] },
+            "value": 0.4,
+            "status": "sourced",
+            "source": "Owners' published spec sheets of a 12,000 m3 LNG bunker barge and a 5,000 m3 LNG bunker tug-barge design: 4 bar maximum tank pressure. TGE Marine, general presentation, 2018 (a Type C tank maker): design pressure 3 to 5 barg, tank steel 9 % Ni or 304L for LNG",
+            "basis": "4 bar, inside the 3.2 to 5.0 bar MARVS of built LNG bunker vessels and the 3 to 5 barg a Type C tank maker publishes"
+          },
+          {
+            "when": { "cargo": ["LNG_ethane"] },
+            "value": 0.4,
+            "status": "estimate",
+            "basis": "No published tank data for an LNG and ethane blend; taken as for LNG, 4 bar"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": 1.77,
+            "status": "sourced",
+            "source": "Owner's published Form C charter particulars of 16 fully pressurised LPG carriers built 2006 to 2020: design pressure 17.65 to 17.7 barg",
+            "basis": "The highest value printed (17.7 barg); the 2007 ship prints 17.65 barg. The same ships carry propane, butane and mixes"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "semi_pressurised" },
+            "value": 1.0,
+            "status": "estimate",
+            "source": "Trade-press report (SWZ Maritime, 2022) of a 3,300 m3 gas carrier built 2010 to 2014: 9.97 bar and -48 C; the carriage condition is not stated",
+            "basis": "No source gives a design pressure for a semi-pressurised LPG Type C tank. One trade-press report gives 9.97 bar at -48 C for a 3,300 m3 carrier whose carriage condition is not stated; rounded to 10 bar"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_refrigerated" },
+            "value": 0.4,
+            "status": "estimate",
+            "basis": "No source gives a design pressure for a fully refrigerated LPG Type C tank. Taken as for LNG bunker tanks, 4 bar; the vapour pressure of the cold cargo is near atmospheric, so this is a margin, not a calculation"
+          }
+        ]
+      },
+      "unit": "MPa",
+      "hard": { "gt": 0, "le": 5 },
+      "soft": { "min": 0.1, "max": 2.5 },
+      "basis": "The design pressure of the tank, the maximum allowable relief valve setting (MARVS), in MPa (1 MPa = 10 bar). It sets the wall thickness through the pressure-vessel formula. The engine adds no liquid head. The default depends on the Cargo and, for LPG, the carriage condition"
+    },
+    "tank_design_temperature_c": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LNG", "LNG_ethane"] },
+            "value": -163.0,
+            "status": "sourced",
+            "source": "Owner's published Form B particulars of a 2022 LNG bunker vessel: tank MARVS 3.6 barg, design temperature -163 C, filling limit 98.5 %",
+            "basis": "Lowest design temperature of the cargo, -163 C. Other LNG bunker vessels print -163 C or -165 C"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": 0.0,
+            "status": "sourced",
+            "source": "Owner's published Form C sheet and general arrangement drawing of a pressurised LPG carrier built 2007: 17.65 barg, 0 to 45 C, tanks not insulated",
+            "basis": "Lowest design temperature, 0 C (the sheet gives 0 to 45 C)"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "semi_pressurised" },
+            "value": -48.0,
+            "status": "estimate",
+            "source": "Trade-press report (SWZ Maritime, 2022) of a 3,300 m3 gas carrier built 2010 to 2014: 9.97 bar and -48 C; the carriage condition is not stated",
+            "basis": "From the one trade-press report of a gas carrier at -48 C; no source states a semi-pressurised design temperature"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_refrigerated" },
+            "value": -48.0,
+            "status": "estimate",
+            "source": "Trade-press report (SWZ Maritime, 2022) of a 3,300 m3 gas carrier built 2010 to 2014: 9.97 bar and -48 C; the carriage condition is not stated",
+            "basis": "Propane boils at -42.1 C (the storage temperature in the engine's cargo data); -48 C leaves a margin and matches the one report of a refrigerated gas carrier. Butane, which boils at about -1 C, is carried colder than it needs"
+          }
+        ]
+      },
+      "unit": "C",
+      "hard": { "gt": -273.15, "le": 200 },
+      "soft": { "min": -170, "max": 60 },
+      "basis": "The lowest design temperature of the tank. The engine does not use it in a calculation yet: it is recorded and shown with the results, and it says what steel the tank needs. The default depends on the Cargo and the carriage condition"
+    },
+    "tank_material": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LNG", "LNG_ethane"] },
+            "value": "9Ni",
+            "status": "sourced",
+            "source": "TGE Marine, general presentation, 2018 (a Type C tank maker): design pressure 3 to 5 barg, tank steel 9 % Ni or 304L for LNG",
+            "basis": "9 % nickel steel (allowable stress 230 MPa, carried over from the original engine with no source cited). The maker lists 9 % Ni steel or 304L for LNG; 9 % Ni is the engine's existing choice"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": "S690QL1",
+            "status": "sourced",
+            "source": "Senjanovic et al., Structure design of cargo tanks in river liquefied gas carriers, DESIGN 2006 (Design Society): S690QL1 steel, Re 690 and Rm 770 MPa, allowable stress Rm/2.7 = 285 MPa, design pressure 15.8 bar, cylinder shell 13.1 mm, about 34.4 t of tank steel",
+            "basis": "Quenched and tempered high-strength steel, allowable stress 285 MPa (Rm 770 MPa over 2.7). It is the steel of the one published pressurised LPG tank with a thickness and a weight"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "semi_pressurised" },
+            "value": "9Ni",
+            "status": "estimate",
+            "basis": "No source gives the steel of a semi-pressurised LPG Type C tank. 9 % nickel steel is the engine's existing choice and serves at -48 C"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_refrigerated" },
+            "value": "9Ni",
+            "status": "estimate",
+            "basis": "No source gives the steel of a fully refrigerated LPG Type C tank. 9 % nickel steel is the engine's existing choice and serves at -48 C; a low-temperature carbon-manganese steel would be lighter"
+          }
+        ]
+      },
+      "basis": "The tank steel. It gives the density, the least thickness after forming, the corrosion allowance and the allowable stress, unless a stress is typed. Allowable stress: 304L 113 MPa, 316L 113 MPa and 9Ni 230 MPa are carried over from the original engine with no source cited; S690QL1 is 285 MPa, Rm 770 MPa over 2.7, from the published river LPG tank design (Senjanovic et al., DESIGN 2006). The default depends on the Cargo and the carriage condition"
+    },
+    "tank_allowable_stress_mpa": {
+      "default": null,
+      "unit": "MPa",
+      "hard": { "gt": 0, "le": 1000 },
+      "soft": { "min": 100, "max": 400 },
+      "basis": "An allowable stress of your own, in MPa, for the wall thickness formula. none: the stress of the tank material (see Tank material)"
+    },
+    "tank_insulation_type": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LNG", "LNG_ethane"] },
+            "value": "panel",
+            "status": "estimate",
+            "basis": "An insulation panel system on the tank. Only one secondary report names it; no maker data was found"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": "none",
+            "status": "sourced",
+            "source": "Owner's published Form C sheet and general arrangement drawing of a pressurised LPG carrier built 2007: 17.65 barg, 0 to 45 C, tanks not insulated",
+            "basis": "Pressurised LPG tanks carry no insulation"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": ["semi_pressurised", "fully_refrigerated"] },
+            "value": "pu_foam",
+            "status": "estimate",
+            "source": "Seo and Lee, J. Mar. Sci. Eng. 2026, 14, 821: a 5,000 m3 liquid CO2 Type C tank design study with 200 mm PUF insulation at -35 C",
+            "basis": "Polyurethane foam, as on the one published cold Type C tank at -35 C. No source gives the insulation of a semi-pressurised or fully refrigerated LPG tank"
+          }
+        ]
+      },
+      "basis": "The kind of insulation on the tank. The engine uses one density for every kind (60 kg/m3, carried over from the original engine); the type is recorded and shown with the results. The default depends on the Cargo and the carriage condition"
+    },
+    "tank_insulation_thickness_mm": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LNG", "LNG_ethane"] },
+            "value": 330.0,
+            "status": "estimate",
+            "basis": "One secondary report gives 330 mm of panel on a built LNG carrier's Type C tanks; the maker's data was not found. Small LNG fuel tanks use 300 mm of perlite in vacuum, a different build. The engine's old 350 mm is the top of this range"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": 0.0,
+            "status": "sourced",
+            "source": "Owner's published Form C sheet and general arrangement drawing of a pressurised LPG carrier built 2007: 17.65 barg, 0 to 45 C, tanks not insulated",
+            "basis": "None"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": ["semi_pressurised", "fully_refrigerated"] },
+            "value": 200.0,
+            "status": "estimate",
+            "source": "Seo and Lee, J. Mar. Sci. Eng. 2026, 14, 821: a 5,000 m3 liquid CO2 Type C tank design study with 200 mm PUF insulation at -35 C",
+            "basis": "The one published cold Type C tank (-35 C) has 200 mm of foam. Propane at -42 C is colder, so this may be thin. No source gives a thickness for these conditions"
+          }
+        ]
+      },
+      "unit": "mm",
+      "hard": { "ge": 0, "le": 1000 },
+      "soft": { "min": 0, "max": 400 },
+      "basis": "The insulation on the tank, in mm. The tank outer diameter is measured to the outside of this layer: the clearances and the drawing use that face, and the steel diameter is the outer diameter less twice this thickness. The default depends on the Cargo and the carriage condition"
+    },
+    "tank_structure_factor": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": 1.12,
+            "status": "estimate",
+            "source": "Senjanovic et al., Structure design of cargo tanks in river liquefied gas carriers, DESIGN 2006 (Design Society): S690QL1 steel, Re 690 and Rm 770 MPa, allowable stress Rm/2.7 = 285 MPa, design pressure 15.8 bar, cylinder shell 13.1 mm, about 34.4 t of tank steel",
+            "basis": "One published tank: about 34.4 t of tank steel against about 30.6 t of shell plates at the published thicknesses (hemispherical heads), a factor of 1.12. One data point, an uninsulated pressurised tank"
+          },
+          {
+            "when": {},
+            "value": 1.3,
+            "status": "estimate",
+            "basis": "Carried over from the original engine. The one published tank weight is for an uninsulated pressurised tank, so no source supports another value for an insulated tank"
+          }
+        ]
+      },
+      "unit": "-",
+      "hard": { "ge": 1, "le": 3 },
+      "soft": { "min": 1.0, "max": 1.6 },
+      "basis": "The weight of the stiffeners, rings and saddles as a multiple of the tank shell weight. The default depends on the Cargo and the carriage condition"
     },
     "hold_wing_void_width_m": {
       "default": 1.0,
@@ -222,11 +444,11 @@
       "basis": "carried over from the original engine: the wing tank height as a fraction of the cargo tank outer diameter. It sets the wing plate level, and so the moulded volume in the lightship"
     },
     "tank_wall_thickness_mm": {
-      "default": 25.0,
+      "default": null,
       "unit": "mm",
       "hard": { "gt": 0, "le": 200 },
       "soft": { "min": 10.0, "max": 50.0 },
-      "basis": "carried over from the original engine: a fixed wall thickness for the shell and the heads. The engine does not check it against a pressure vessel rule"
+      "basis": "A fixed wall thickness for the shell and the heads, in mm. none: the pressure-vessel formula gives the thickness (the ASME UG-27 shell formula, two passes, the corrosion allowance, rounded up to 0.5 mm, not less than the IGC minimum), from the design pressure, the allowable stress and the steel diameter. A saved file that stores a value keeps it"
     },
     "optimise_depth": {
       "default": false

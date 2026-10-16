@@ -16,7 +16,7 @@ use core::f64::consts::PI;
 use libm::{fabs, pow, sqrt};
 
 use crate::models::{BargeInputs, TankResult};
-use crate::pressure_vessel::{PyError, calculate_wall_thicknesses};
+use crate::pressure_vessel::{PyError, calculate_wall_thicknesses_with};
 use crate::pyfmt::{fixed, py_str};
 
 /// The one message for a tank count product that no 64-bit field can hold.
@@ -120,12 +120,14 @@ pub fn calculate_tank_arrangement_wide(
         // User-provided fixed thickness.
         Some(t) => (t, t),
         // Auto-calculate from the pressure vessel formula.
-        None => calculate_wall_thicknesses(
-            outer_diameter,
+        // The formula takes the steel outer diameter: the diameter without the insulation.
+        None => calculate_wall_thicknesses_with(
+            outer_diameter - 2.0 * inputs.insulation_thickness / 1000.0,
             inputs.design_pressure,
             &inputs.tank_material,
             &inputs.tank_head_type,
             inputs.weld_efficiency,
+            inputs.tank_allowable_stress,
         )?,
     };
 

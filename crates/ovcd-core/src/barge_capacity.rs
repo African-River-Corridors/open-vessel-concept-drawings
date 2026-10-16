@@ -33,7 +33,7 @@ use crate::gas_separation::{
 use crate::hull::HullGeometry;
 use crate::hydrostatics::find_equilibrium_draft;
 use crate::models::{BargeInputs, TankResult, WeightBreakdown};
-use crate::pressure_vessel::PyError;
+use crate::pressure_vessel::{PyError, get_tank_material};
 use crate::protective_location::{compute_required_clearances, d_vc_exact};
 use crate::pyfmt::{fixed, py_str};
 use crate::pystr::repr_str;
@@ -58,12 +58,48 @@ pub const DEFAULT_TANK_DOME_HEIGHT_M: f64 = 2.0;
 pub const DEFAULT_TANK_DOME_DIAMETER_M: f64 = 2.0;
 /// Default fixed tank wall thickness (mm).
 pub const DEFAULT_TANK_WALL_THICKNESS_MM: f64 = 25.0;
+/// The tank design values the engine used before they were inputs (`models::BargeInputs`
+/// defaults): design pressure 0.5 MPa, 9 % nickel steel, 350 mm insulation, structure factor 1.30.
+pub const DEFAULT_TANK_DESIGN_PRESSURE_MPA: f64 = 0.5;
+pub const DEFAULT_TANK_MATERIAL: &str = "9Ni";
+pub const DEFAULT_TANK_INSULATION_MM: f64 = 350.0;
+pub const DEFAULT_TANK_STRUCTURE_FACTOR: f64 = 1.30;
 /// Default gap between the wing tank and the cargo tank, per side (m).
 pub const DEFAULT_WING_TANK_GAP_M: f64 = 0.6;
 /// Default wing tank height as a fraction of the cargo tank outer diameter.
 pub const DEFAULT_WING_TANK_HEIGHT_RATIO: f64 = 0.66;
 /// Default aft void of a pushed barge (m).
 pub const DEFAULT_PUSHED_STERN_VOID_M: f64 = 3.0;
+
+/// The design values of a gas tank that depend on the Cargo (issue #292): the pressure, the steel,
+/// the insulation and the structure factor. `Default` is what the engine used before they were
+/// inputs. The tank wall thickness is not here: it is `BargeCapacityInputs::tank_wall_thickness`
+/// (`None`: the pressure-vessel formula gives it).
+#[derive(Debug, Clone, PartialEq)]
+pub struct TankDesign {
+    /// Design pressure, MARVS (MPa).
+    pub design_pressure_mpa: f64,
+    /// Material key of `pressure_vessel::TANK_MATERIAL_DATABASE`.
+    pub material: String,
+    /// Allowable stress (MPa); `None`: the material's own.
+    pub allowable_stress_mpa: Option<f64>,
+    /// Insulation thickness (mm). The tank outer diameter is the outside of it.
+    pub insulation_thickness_mm: f64,
+    /// Internal stiffeners, supports and saddles as a multiple of the shell weight.
+    pub structure_factor: f64,
+}
+
+impl Default for TankDesign {
+    fn default() -> Self {
+        Self {
+            design_pressure_mpa: DEFAULT_TANK_DESIGN_PRESSURE_MPA,
+            material: DEFAULT_TANK_MATERIAL.to_string(),
+            allowable_stress_mpa: None,
+            insulation_thickness_mm: DEFAULT_TANK_INSULATION_MM,
+            structure_factor: DEFAULT_TANK_STRUCTURE_FACTOR,
+        }
+    }
+}
 
 /// Inputs for the unified barge capacity calculation. [`BargeCapacityInputs::new`] gives the
 /// Python dataclass defaults.
@@ -124,6 +160,8 @@ pub struct BargeCapacityInputs {
     pub max_tank_od_m: f64,
     /// mm; `None`: auto pressure-vessel formula
     pub tank_wall_thickness: Option<f64>,
+    /// The Cargo-dependent tank design values (issue #292).
+    pub tank_design: TankDesign,
     pub fill_ratio: f64,
     pub dome_height: f64,
     /// Diameter of the cylindrical dome (m). With `dome_height` it gives the dome's volume, which
@@ -188,6 +226,7 @@ impl BargeCapacityInputs {
             n_tanks_long: DEFAULT_TANKS_IN_LINE,
             max_tank_od_m: DEFAULT_MAX_TANK_OD_M,
             tank_wall_thickness: Some(DEFAULT_TANK_WALL_THICKNESS_MM),
+            tank_design: TankDesign::default(),
             fill_ratio: 0.95,
             dome_height: DEFAULT_TANK_DOME_HEIGHT_M,
             dome_diameter: DEFAULT_TANK_DOME_DIAMETER_M,
@@ -450,6 +489,14 @@ fn gas_volumetric(
     };
     base.n_tanks_long = inp.n_tanks_long;
     base.tank_wall_thickness = inp.tank_wall_thickness;
+    base.design_pressure = inp.tank_design.design_pressure_mpa;
+    base.tank_material = inp.tank_design.material.clone();
+    base.tank_allowable_stress = inp.tank_design.allowable_stress_mpa;
+    base.insulation_thickness = inp.tank_design.insulation_thickness_mm;
+    base.tank_structure_factor = inp.tank_design.structure_factor;
+    // The mass of the steel is the material's, whether the wall is fixed or from the formula. (The
+    // dataclass default is 9Ni's 7.85 t/m3, so a design on the default material is unchanged.)
+    base.tank_material_density = get_tank_material(&inp.tank_design.material)?.density;
     base.fill_ratio = inp.fill_ratio;
     base.dome_height = inp.dome_height;
     base.tank_support_height = inp.tank_support_height;

@@ -860,8 +860,9 @@ fn validate_opens_a_version_1_adn_g_file_as_igc_2g_and_warns() {
     );
     assert!(
         // Three for the version 1 changes, one for the dome diameter a version 1 file lacks (issue
-        // #237), one for the hull end input a version 1 file lacks.
-        stdout(&out).contains("0 error(s), 5 warning(s)"),
+        // #237), one for the hull end input a version 1 file lacks, one for the LPG carriage
+        // condition the file lacks (issue #292: read as fully pressurised).
+        stdout(&out).contains("0 error(s), 6 warning(s)"),
         "{}",
         stdout(&out)
     );
@@ -1035,5 +1036,93 @@ fn schema_lists_the_vessel_class_inputs() {
             .as_array()
             .unwrap()
             .contains(&json!("Vessel Class"))
+    );
+}
+
+// ---- the Type C tank defaults (issue #292) ----------------------------------------------------
+
+#[test]
+fn fill_keeps_the_old_tank_values_and_fill_as_new_takes_the_defaults_of_the_cargo() {
+    let dir = temp_dir("fill-as-new");
+    let raw = dir.join("raw.vdesign");
+    write_json(
+        &raw,
+        &json!({
+            "format": "vdesign", "format_version": 2, "engine_version": "0.0.0",
+            "options": [{ "name": "o", "inputs": {
+                "cargo": "LPG_propane", "hull_form": "raked_box",
+                "formation": { "kind": "self_propelled" },
+                "length_overall_m": 110.0, "beam_m": 11.4, "moulded_depth_m": 6.0,
+                "cargo_containment": "type_c_tanks"
+            }}]
+        }),
+    );
+    let old = dir.join("old.vdesign");
+    let out = ovcd(&["fill", path_str(&raw), path_str(&old)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    // An old file: the fixed values, and the note that it is read as fully pressurised.
+    assert!(
+        stderr(&out).contains("has no `lpg_carriage_condition`"),
+        "{}",
+        stderr(&out)
+    );
+    let i = read_json(&old)["options"][0]["inputs"].clone();
+    assert_eq!(i["tank_design_pressure_mpa"]["value"], 0.5);
+    assert_eq!(i["tank_wall_thickness_mm"]["value"], 25.0);
+    let new = dir.join("new.vdesign");
+    let out = ovcd(&["fill", "--as-new", path_str(&raw), path_str(&new)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let i = read_json(&new)["options"][0]["inputs"].clone();
+    assert_eq!(
+        i["lpg_carriage_condition"],
+        json!({ "value": "fully_pressurised", "source": "default" })
+    );
+    assert_eq!(i["tank_design_pressure_mpa"]["value"], 1.77);
+    assert_eq!(i["tank_material"]["value"], "S690QL1");
+    assert_eq!(i["tank_wall_thickness_mm"]["value"], Value::Null);
+    assert_eq!(i["fill_ratio"]["value"], 0.98);
+    // The filled file is a valid Design and runs.
+    let v = ovcd(&["validate", path_str(&new)]);
+    assert!(v.status.success(), "{}{}", stdout(&v), stderr(&v));
+    let r = ovcd(&["run", "--json", path_str(&new)]);
+    assert!(r.status.success(), "{}", stderr(&r));
+    let results: Value = serde_json::from_str(&stdout(&r)).unwrap();
+    let tank = &results["options"][0]["results"]["drawing"]["tank"];
+    assert_eq!(tank["wall_thickness_source"], "formula");
+    assert_eq!(tank["material"], "S690QL1");
+}
+
+#[test]
+fn the_schema_gives_the_carriage_condition_and_the_default_tables_with_their_status() {
+    let out = ovcd(&["schema"]);
+    let v: Value = serde_json::from_str(&stdout(&out)).unwrap();
+    let get = |name: &str| {
+        v["inputs"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|i| i["name"] == name)
+            .unwrap_or_else(|| panic!("{name}"))
+            .clone()
+    };
+    let carriage = get("lpg_carriage_condition");
+    assert_eq!(
+        carriage["applies_to_cargo"],
+        json!(["LPG_propane", "LPG_butane", "LPG_mix"])
+    );
+    let pressure = get("tank_design_pressure_mpa");
+    let rows = pressure["default_table"]["rows"].as_array().unwrap();
+    assert!(
+        rows.iter()
+            .all(|r| r["status"] == "sourced" || r["status"] == "estimate")
+    );
+    assert!(rows.iter().any(|r| r["status"] == "estimate"));
+    assert_eq!(get("tank_wall_thickness_mm")["default"], Value::Null);
+    assert_eq!(get("tank_wall_thickness_mm")["nullable"], true);
+    assert!(
+        v["group_notes"]["Gas tanks"]
+            .as_str()
+            .unwrap()
+            .contains("outside of the insulation")
     );
 }
