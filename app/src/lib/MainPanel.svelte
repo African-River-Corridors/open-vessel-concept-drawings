@@ -1,14 +1,12 @@
 <script lang="ts">
-  import { onMount, tick } from "svelte";
-  import type { Evaluation, HullViews, OptionEvaluation } from "./api";
+    import type { Evaluation, HullViews, OptionEvaluation } from "./api";
   import StaleWhy from "./StaleWhy.svelte";
   import HullView from "./HullView.svelte";
   import SpeedPower from "./views/SpeedPower.svelte";
   import Stability from "./views/Stability.svelte";
 
-  // The views, stacked in one scrolling panel. A dropdown at the top right jumps to a view and
-  // follows the scroll. The hull views are SVG drawn in Rust to the Drawing Format Standard
-  // (ADR 0009, spec 0003); the panel only places and zooms them.
+  // The hull views are SVG drawn in Rust to the Drawing Format Standard (ADR 0009, spec 0003); the
+  // panel only places and zooms them.
   let { evaluation, active, lastGood, blockers }: {
     evaluation: Evaluation | null;
     active: string;
@@ -16,18 +14,50 @@
     blockers: { name: string; label: string }[];
   } = $props();
 
-  const VIEWS = [
-    { id: "side", label: "Side elevation" },
-    { id: "plan", label: "Plan" },
-    { id: "midship", label: "Midship section" },
-    { id: "speed-power", label: "Speed and power" },
-    { id: "stability", label: "Stability" },
+  // Two levels of tabs: a group, then a view of that group. The panel never scrolls: a drawing is
+  // fitted to the space it has. Switching a tab starts the new view fitted again.
+  const GROUPS = [
+    {
+      id: "drawings",
+      label: "Drawings",
+      views: [
+        { id: "side", label: "Side elevation" },
+        { id: "plan", label: "Plan" },
+        { id: "midship", label: "Cross-section" },
+      ],
+    },
+    {
+      id: "stability-propulsion",
+      label: "Stability & Propulsion",
+      views: [
+        { id: "stability", label: "Intact stability" },
+        { id: "speed-power", label: "Power and speed curves" },
+        { id: "rules", label: "Rule check calculations" },
+      ],
+    },
+    {
+      id: "boq-finance",
+      label: "BOQ & Finance",
+      views: [
+        { id: "boq", label: "BOQ" },
+        { id: "capital", label: "Capital budget" },
+      ],
+    },
   ];
   const HULL = ["side", "plan", "midship"];
+  /** Views that show results of the Option, and so can be out of date. */
+  const FROM_RESULTS = [...HULL, "stability", "speed-power"];
   type HullKey = "side" | "plan" | "midship";
 
-  let scroller: HTMLDivElement;
-  let current = $state(VIEWS[0].id);
+  let groupId = $state(GROUPS[0].id);
+  let current = $state(GROUPS[0].views[0].id);
+  let group = $derived(GROUPS.find((g) => g.id === groupId) ?? GROUPS[0]);
+  let currentLabel = $derived(group.views.find((v) => v.id === current)?.label ?? "");
+
+  function pickGroup(id: string) {
+    groupId = id;
+    current = GROUPS.find((g) => g.id === id)!.views[0].id;
+  }
 
   let outcome = $derived(evaluation?.options.find((o) => o.name === active)?.outcome);
   let results = $derived.by(() => {
@@ -52,61 +82,44 @@
     points: { kn: number; kw: number; fuel_lph: number; squat_m: number; squat_limited: boolean }[];
   }
   let curves = $derived(((results as { curves?: Curve[] } | null)?.curves ?? []));
-
-  function sectionTop(id: string): number {
-    const el = scroller.querySelector<HTMLElement>(`[data-view="${id}"]`)!;
-    // The panel is the offset parent, so this is the distance from the top of its content.
-    return el.offsetTop;
-  }
-
-  function jump(id: string) {
-    current = id;
-    scroller.scrollTo({ top: sectionTop(id) - 40 });
-  }
-
-  /** The view in sight is the last one whose top has passed the top of the panel. */
-  function follow() {
-    let found = VIEWS[0].id;
-    for (const v of VIEWS) if (sectionTop(v.id) - 60 <= scroller.scrollTop) found = v.id;
-    // At the very bottom the last view counts even if it is short.
-    if (scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2) found = VIEWS[VIEWS.length - 1].id;
-    current = found;
-  }
-
-  onMount(() => {
-    tick().then(follow);
-  });
 </script>
 
-<div class="panel" bind:this={scroller} onscroll={follow}>
+<div class="panel" data-testid="views-panel">
   <header>
     <h2>Views</h2>
-    <select aria-label="Jump to view" value={current} onchange={(e) => jump(e.currentTarget.value)}>
-      {#each VIEWS as v (v.id)}
-        <option value={v.id}>{v.label}</option>
+    <div class="tabs" role="tablist" aria-label="View groups">
+      {#each GROUPS as g (g.id)}
+        <button type="button" role="tab" aria-selected={g.id === groupId} class:on={g.id === groupId} onclick={() => pickGroup(g.id)}>{g.label}</button>
       {/each}
-    </select>
+    </div>
+    {#if stale && FROM_RESULTS.includes(current)}<span class="stale">out of date</span>{/if}
   </header>
+  <div class="tabs sub" role="tablist" aria-label="Views of {group.label}">
+    {#each group.views as v (v.id)}
+      <button type="button" role="tab" aria-selected={v.id === current} class:on={v.id === current} onclick={() => (current = v.id)}>{v.label}</button>
+    {/each}
+  </div>
   {#if stale}<div class="whyrow"><StaleWhy {blockers} /></div>{/if}
 
-  {#each VIEWS as v (v.id)}
-    <section data-view={v.id} class:hull={HULL.includes(v.id)}>
-      <h3>{v.label}</h3>
-      {#if HULL.includes(v.id)}
-        <div class="slot" data-testid="slot-{v.id}">
-          {#if stale && drawing(v.id as HullKey)}<span class="stale">out of date</span>{/if}
-          {#if drawing(v.id as HullKey)}
-            <HullView svg={drawing(v.id as HullKey) ?? ""} label={v.label} />
-          {:else if message}
-            <p class="note">{message}</p>
-          {:else if views && "message" in views}
-            <p class="note">{views.message}</p>
-          {:else}
-            <p class="note">No results to draw.</p>
-          {/if}
-        </div>
-      {:else if v.id === "speed-power"}
-        {#if stale}<span class="stale">out of date</span>{/if}
+  <div class="view" data-view={current}>
+    {#if HULL.includes(current)}
+      <div class="slot" data-testid="slot-{current}">
+        {#if drawing(current as HullKey)}
+          <!-- A new key starts the view fitted again. -->
+          {#key current}
+            <HullView svg={drawing(current as HullKey) ?? ""} label={currentLabel} />
+          {/key}
+        {:else if message}
+          <p class="note">{message}</p>
+        {:else if views && "message" in views}
+          <p class="note">{views.message}</p>
+        {:else}
+          <p class="note">No results to draw.</p>
+        {/if}
+      </div>
+    {:else if current === "speed-power"}
+      <!-- Until the click-to-read chart (#230), the charts keep their size, so this view has its own scroll. -->
+      <div class="inner">
         {#if message}
           <p class="note">{message}</p>
         {:else if curves.length === 0}
@@ -116,8 +129,10 @@
             <SpeedPower name={c.name} limitingSpeed={c.limiting_speed_kn} blockage={c.blockage} points={c.points} />
           {/each}
         {/if}
-      {:else if v.id === "stability"}
-        {#if stale}<span class="stale">out of date</span>{/if}
+      </div>
+    {:else if current === "stability"}
+      <!-- Until the GZ curves (#231), the tables keep their size, so this view has its own scroll. -->
+      <div class="inner">
         {#if message}
           <p class="note">{message}</p>
         {:else if !results}
@@ -125,20 +140,31 @@
         {:else}
           <Stability stability={(results as { stability?: never }).stability} />
         {/if}
-      {/if}
-    </section>
-  {/each}
+      </div>
+    {:else if current === "rules"}
+      <p class="note" data-testid="placeholder-rules">The rule check table is coming soon. The checks for now are in the Outputs panel.</p>
+    {:else if current === "boq"}
+      <p class="note" data-testid="placeholder-boq">The bill of quantities comes in a later phase.</p>
+    {:else if current === "capital"}
+      <p class="note" data-testid="placeholder-capital">The capital budget is coming soon.</p>
+    {/if}
+  </div>
 </div>
 
 <style>
-  .panel { height: 100%; overflow-y: auto; position: relative; }
-  header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: 6px 14px; background: rgba(255, 255, 255, 0.95); border-bottom: 1px solid var(--line); }
-  h2 { font-family: var(--serif); font-size: 16px; margin: 0; }
-  h3 { font-family: var(--serif); color: var(--navy); font-size: 15px; margin: 0 0 6px; }
-  select { padding: 3px 6px; font: inherit; }
-  section { padding: 14px; border-bottom: 1px solid var(--line); min-height: 180px; }
+  .panel { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+  header { display: flex; align-items: center; gap: 14px; padding: 6px 14px 0; border-bottom: 1px solid var(--line); }
+  h2 { font-family: var(--serif); font-size: 16px; margin: 0; align-self: center; padding-bottom: 6px; }
+  .tabs { display: flex; gap: 2px; }
+  .tabs button { background: none; border: 1px solid transparent; border-bottom: 0; border-radius: 4px 4px 0 0; padding: 4px 12px; cursor: pointer; color: var(--dim); }
+  .tabs button.on { color: var(--navy); font-weight: 600; background: #fff; border-color: var(--line); margin-bottom: -1px; padding-bottom: 5px; }
+  .tabs.sub { padding: 6px 14px; border-bottom: 1px solid var(--line); }
+  .tabs.sub button { border: 1px solid var(--line); border-radius: 12px; padding: 2px 12px; }
+  .tabs.sub button.on { background: var(--cream); border-color: var(--gold); margin: 0; padding-bottom: 2px; }
   .whyrow { padding: 0 14px; background: #fdf1d3; border-bottom: 1px solid var(--line); }
-  .slot { min-height: 60px; }
+  .view { flex: 1; min-height: 0; padding: 10px 14px; box-sizing: border-box; }
+  .slot { height: 100%; }
+  .inner { height: 100%; overflow: auto; }
   .note { color: var(--dim); }
-  .stale { background: #fdf1d3; color: #6b4a00; font: 11px var(--sans); padding: 1px 6px; border-radius: 3px; }
+  .stale { margin-left: auto; align-self: center; background: #fdf1d3; color: #6b4a00; font: 11px var(--sans); padding: 1px 6px; border-radius: 3px; }
 </style>

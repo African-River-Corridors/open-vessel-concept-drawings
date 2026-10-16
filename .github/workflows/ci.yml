@@ -181,4 +181,14 @@ jobs:
           npx tauri build --debug --no-bundle
       - name: Smoke tests
         working-directory: app
+        env:
+          # The smoke tests save a screenshot of each view here, for review.
+          OVCD_E2E_SHOTS: ${{ runner.temp }}/app-screenshots
         run: xvfb-run -a bash e2e/run.sh
+      - name: Upload the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-screenshots
+          path: ${{ runner.temp }}/app-screenshots
+          if-no-files-found: warn
