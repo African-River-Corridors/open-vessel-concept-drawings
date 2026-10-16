@@ -373,3 +373,158 @@ fn the_hold_floor_is_the_inner_bottom_not_depth_less_hold_height() {
         assert!(pts.iter().all(|p| close(p.1.abs(), top_w / 2.0)));
     }
 }
+
+// ---- #194: the gas tank in the midship section and the elevation ---------------------------------
+
+const GAS_FIXTURES: &[&str] = &[
+    "gas_igc_2g_self_propelled.vdesign",
+    "gas_igc_2g_exact.vdesign",
+];
+
+/// The tank centres across the beam, read off the circles of the section.
+fn circles(v: &GaViews) -> Vec<((f64, f64), f64)> {
+    of_layer(&v.midship_section, "OUTLINE", "circle")
+        .iter()
+        .map(|e| {
+            (
+                (f(&e["centre_m"][0]), f(&e["centre_m"][1])),
+                f(&e["radius_m"]),
+            )
+        })
+        .collect()
+}
+
+fn leader<'a>(document: &'a Value, starts: &str) -> &'a Value {
+    entities(document)
+        .iter()
+        .find(|e| {
+            e["type"] == "leader"
+                && e["text"]
+                    .as_str()
+                    .is_some_and(|t| starts.split('|').any(|s| t.starts_with(s)))
+        })
+        .unwrap_or_else(|| panic!("no leader `{starts}`"))
+}
+
+#[test]
+fn the_tank_stands_on_the_double_bottom_plus_support_in_both_views() {
+    for file in GAS_FIXTURES {
+        for self_propelled in [false, true] {
+            let r = results_of(file, self_propelled);
+            let d = &r["drawing"];
+            let od = f(&r["geometry"]["tank_outer_diameter_m"]);
+            let want = f(&d["double_bottom_m"]) + f(&d["tank_support_height_m"]) + od / 2.0;
+            let v = views(&r);
+            let section = circles(&v);
+            assert!(!section.is_empty());
+            for ((_, y), radius) in &section {
+                assert!(
+                    close(*y, want) && close(*radius, od / 2.0),
+                    "{file}: section"
+                );
+            }
+            // the elevation's tank arcs have the same centre height
+            let arcs = of_layer(&v.side_elevation, "HIDDEN", "arc");
+            assert!(!arcs.is_empty());
+            assert!(
+                arcs.iter().all(|a| close(f(&a["centre_m"][1]), want)),
+                "{file}: elevation"
+            );
+            if !self_propelled {
+                // With no aft block the obstruction height is the tank top: the tank top above the
+                // keel, less the dome, is the drawn top of the tank.
+                let top = f(&r["results"]["air_draft_loaded_m"]) + f(&r["results"]["draught_m"]);
+                assert!(
+                    close(top - f(&d["dome_height_m"]), want + od / 2.0),
+                    "{file}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn the_side_clearance_leader_points_into_the_gap_between_hull_side_and_tank() {
+    for file in GAS_FIXTURES {
+        let r = results_of(file, false);
+        let v = views(&r);
+        let half = f(&r["dims"]["beam_m"]) / 2.0;
+        let depth = f(&r["dims"]["depth_m"]);
+        let target = &leader(&v.midship_section, "SIDE CLEARANCE")["from"]["point_m"];
+        let (x, y) = (f(&target[0]), f(&target[1]));
+        let tanks = circles(&v);
+        let ((xc, yc), radius) = tanks
+            .iter()
+            .min_by(|a, b| (a.0.0).partial_cmp(&b.0.0).unwrap())
+            .copied()
+            .unwrap();
+        assert!(y > 0.0 && y < depth, "{file}: below the deck");
+        assert!(
+            x > -half && x < xc,
+            "{file}: between the hull side and the tank centre"
+        );
+        let dist = ((x - xc) * (x - xc) + (y - yc) * (y - yc)).sqrt();
+        assert!(dist > radius, "{file}: outside the tank");
+        // and it is at the tank's centre height, or just below the deck if the centre is above it
+        assert!(
+            y <= yc.min(depth) && y > yc.min(depth) - 0.1 * depth,
+            "{file}: height"
+        );
+    }
+}
+
+#[test]
+fn the_bottom_clearance_leader_points_at_the_gap_under_the_tank() {
+    for file in GAS_FIXTURES {
+        let r = results_of(file, false);
+        let d = &r["drawing"];
+        let bottom = f(&d["double_bottom_m"]) + f(&d["tank_support_height_m"]);
+        let v = views(&r);
+        let l = leader(&v.midship_section, "TANK BOTTOM|BOTTOM CLEARANCE");
+        let (x, y) = (f(&l["from"]["point_m"][0]), f(&l["from"]["point_m"][1]));
+        assert!(
+            y > 0.0 && y < bottom,
+            "{file}: in the gap between the keel and the tank"
+        );
+        let ((xc, _), _) = circles(&v)[0];
+        assert!(close(x, xc), "{file}: under the nearest tank");
+    }
+}
+
+#[test]
+fn the_section_deck_line_stops_at_a_tank_and_never_crosses_one() {
+    let mut crossed = 0;
+    for file in GAS_FIXTURES {
+        for self_propelled in [false, true] {
+            let r = results_of(file, self_propelled);
+            let v = views(&r);
+            let depth = f(&r["dims"]["depth_m"]);
+            let half = f(&r["dims"]["beam_m"]) / 2.0;
+            let deck: Vec<(f64, f64)> = of_layer(&v.midship_section, "OUTLINE", "line")
+                .iter()
+                .filter_map(|e| {
+                    let (a, b) = ends(e);
+                    (close(a.1, depth) && close(b.1, depth)).then_some((a.0.min(b.0), a.0.max(b.0)))
+                })
+                .collect();
+            for ((xc, yc), radius) in circles(&v) {
+                let dy = depth - yc;
+                if dy.abs() >= radius {
+                    continue;
+                }
+                crossed += 1;
+                let w = (radius * radius - dy * dy).sqrt();
+                for (a, b) in &deck {
+                    assert!(
+                        *b <= xc - w + 1e-9 || *a >= xc + w - 1e-9,
+                        "{file}: a deck segment crosses a tank"
+                    );
+                }
+                // the line starts again past the tank
+                assert!(deck.iter().any(|(a, _)| close(*a, xc + w)) || close(xc + w, half));
+                assert!(deck.iter().any(|(_, b)| close(*b, xc - w)) || close(xc - w, -half));
+            }
+        }
+    }
+    assert!(crossed > 0, "no fixture has a tank through the deck");
+}

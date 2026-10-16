@@ -118,6 +118,10 @@ enum Containment {
         n_long: usize,
         side_clearance: f64,
         bottom_clearance: f64,
+        /// `drawing.double_bottom_m` and `drawing.tank_support_height_m`: the tank bottom is their
+        /// sum above the keel (the core's `h_top` is this + diameter + dome).
+        double_bottom: f64,
+        support_height: f64,
         gap_long: f64,
         gap_across: f64,
     },
@@ -154,6 +158,8 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
             n_long: arrangement("n_long")? as usize,
             side_clearance: geo("side_clearance_m")?,
             bottom_clearance: geo("bottom_clearance_m")?,
+            double_bottom: need(results, &["drawing", "double_bottom_m"])?,
+            support_height: need(results, &["drawing", "tank_support_height_m"])?,
             gap_long: defaults.tank_gap_longitudinal,
             gap_across: defaults.tank_gap_transverse,
         }
@@ -222,6 +228,27 @@ impl Hull {
             self.stern_rake * (1.0 - y / self.depth)
         } else {
             0.0
+        }
+    }
+
+    /// The tank bottom above the keel: double bottom plus support height, as the core stands the
+    /// tank. `None` for a hold.
+    fn tank_bottom(&self) -> Option<f64> {
+        match &self.containment {
+            Containment::Tanks {
+                double_bottom,
+                support_height,
+                ..
+            } => Some(double_bottom + support_height),
+            Containment::Hold { .. } => None,
+        }
+    }
+
+    /// The tank centre height above the keel, for the section and the elevation alike.
+    fn tank_centre_y(&self) -> Option<f64> {
+        match &self.containment {
+            Containment::Tanks { od, .. } => Some(self.tank_bottom()? + od / 2.0),
+            Containment::Hold { .. } => None,
         }
     }
 
@@ -521,14 +548,9 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
                 false,
             );
         }
-        Containment::Tanks {
-            od,
-            bottom_clearance,
-            ..
-        } => {
-            if let Some((length, starts, _)) = h.tank_layout() {
+        Containment::Tanks { od, .. } => {
+            if let (Some((length, starts, _)), Some(yc)) = (h.tank_layout(), h.tank_centre_y()) {
                 let r = od / 2.0;
-                let yc = bottom_clearance + r;
                 for x0 in starts {
                     let (xa, xb) = (x0 + r, x0 + length - r);
                     c.line("HIDDEN", [xa, yc + r], [xb, yc + r], None);
@@ -644,6 +666,40 @@ fn plan(h: &Hull, n: u32) -> Canvas {
     c
 }
 
+/// The x of the left edge of a circle at height `y` (its centre if `y` is outside the circle).
+fn circle_left_edge(xc: f64, yc: f64, r: f64, y: f64) -> f64 {
+    let dy = y - yc;
+    if dy.abs() >= r {
+        xc
+    } else {
+        xc - (r * r - dy * dy).sqrt()
+    }
+}
+
+/// The deck line of the section. A tank that stands through the deck cuts it: the line stops at the
+/// tank circle and starts again past it, so no segment lies inside a circle. (Not done in the
+/// elevation: there the deck edge is the near side of the hull and passes in front of the tank.)
+fn section_deck_line(c: &mut Canvas, h: &Hull) {
+    let half = h.beam / 2.0;
+    let mut cuts: Vec<(f64, f64)> = Vec::new();
+    if let (Containment::Tanks { od, .. }, Some(yc), Some((_, _, centres))) =
+        (&h.containment, h.tank_centre_y(), h.tank_layout())
+    {
+        let r = od / 2.0;
+        let dy = h.depth - yc;
+        if dy.abs() < r {
+            let w = (r * r - dy * dy).sqrt();
+            cuts = centres.iter().map(|x| (x - w, x + w)).collect();
+        }
+    }
+    let mut x = -half;
+    for (a, b) in cuts {
+        c.line("OUTLINE", [x, h.depth], [a.max(x), h.depth], None);
+        x = x.max(b);
+    }
+    c.line("OUTLINE", [x, h.depth], [half, h.depth], None);
+}
+
 fn midship_section(h: &Hull, n: u32) -> Canvas {
     let mut c = Canvas::new(n);
     let half = h.beam / 2.0;
@@ -652,7 +708,7 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
         &[[-half, h.depth], [-half, 0.0], [half, 0.0], [half, h.depth]],
         false,
     );
-    c.line("OUTLINE", [-half, h.depth], [half, h.depth], None);
+    section_deck_line(&mut c, h);
     c.line("WATER", [-half, h.draught], [half, h.draught], None);
     if let Some(t) = h.light_draught {
         c.line("WATER", [-half, t], [half, t], Some("chain_double_dashed"));
@@ -698,19 +754,33 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
             bottom_clearance,
             ..
         } => {
-            if let Some((_, _, centres)) = h.tank_layout() {
-                let yc = bottom_clearance + od / 2.0;
+            if let (Some((_, _, centres)), Some(yc), Some(bottom)) =
+                (h.tank_layout(), h.tank_centre_y(), h.tank_bottom())
+            {
                 for x in &centres {
                     c.circle("OUTLINE", [*x, yc], od / 2.0);
                 }
+                // Side clearance: a point in the gap between the hull side and the nearest tank,
+                // at the tank's centre height, or just below the deck when the centre is above it.
+                let y = yc.min(h.depth) - 1.5 * c.k;
+                let edge = circle_left_edge(centres[0], yc, od / 2.0, y);
                 labels.push((
                     format!("SIDE CLEARANCE {}", metres(*side_clearance)),
-                    [-half + side_clearance / 2.0, yc.min(h.depth)],
+                    [(-half + edge.max(-half)) / 2.0, y],
                 ));
-                labels.push((
-                    format!("BOTTOM CLEARANCE {}", metres(*bottom_clearance)),
-                    [0.0, bottom_clearance / 2.0],
-                ));
+                // Bottom clearance: the gap between the keel and the tank bottom, under the
+                // nearest tank. The core stands the tank on double bottom + support height, which
+                // is not always the clearance it asks for; both are given when they differ.
+                let text = if (bottom - bottom_clearance).abs() < 1e-9 {
+                    format!("BOTTOM CLEARANCE {}", metres(*bottom_clearance))
+                } else {
+                    format!(
+                        "TANK BOTTOM {} (CLEARANCE {})",
+                        metres(bottom),
+                        metres(*bottom_clearance)
+                    )
+                };
+                labels.push((text, [centres[0], bottom / 2.0]));
             }
         }
     }
