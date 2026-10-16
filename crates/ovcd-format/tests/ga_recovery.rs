@@ -1,4 +1,4 @@
-//! GA drawing recovery, ticket 1 (#192): the `simulate` geometry carries the structural values the
+//! GA drawing recovery, ticket 1 (#192): the `simulate` `drawing` object carries the structural values the
 //! core already computes, read from the core's own result and inputs.
 //!
 //! Label: property - each key is compared with the core value it comes from; no number is fixed.
@@ -59,7 +59,7 @@ const GAS_ONLY: &[&str] = &[
 #[test]
 fn dry_bulk_geometry_has_the_inner_bottom_and_coaming_from_the_core_inputs() {
     let r = results_of("dry_bulk_box_hold.vdesign", false);
-    let g = &r["geometry"];
+    let g = &r["drawing"];
     let inp = dry_inputs(false);
     assert_eq!(f(&g["double_bottom_m"]), inp.double_bottom_height_bulk);
     assert_eq!(f(&g["hatch_coaming_height_m"]), inp.coaming_height);
@@ -75,7 +75,7 @@ fn dry_bulk_self_propelled_geometry_has_the_core_aft_arrangement() {
     let r = results_of("dry_bulk_box_hold.vdesign", true);
     let core = barge_capacity::compute(&dry_inputs(true)).unwrap();
     let a = core.aft_arrangement.expect("the core builds an aft block");
-    let g = &r["geometry"]["aft_arrangement"];
+    let g = &r["drawing"]["aft_arrangement"];
     assert_eq!(f(&g["length_m"]), a.length_m);
     assert_eq!(f(&g["thruster_room_length_m"]), a.thruster_room_length_m);
     assert_eq!(f(&g["wheelhouse_x0_m"]), a.wheelhouse_x0_m);
@@ -140,7 +140,7 @@ fn gas_fit(self_propelled: bool) -> ga::ArrangementFit {
 #[test]
 fn gas_geometry_has_the_core_values() {
     let r = results_of("gas_igc_2g_self_propelled.vdesign", true);
-    let g = &r["geometry"];
+    let g = &r["drawing"];
     let fit = gas_fit(true);
     let core = &fit.engine_result;
     let basis = core.gas_basis.as_ref().expect("a gas basis");
@@ -193,8 +193,49 @@ fn gas_geometry_has_the_core_values() {
 #[test]
 fn a_pushed_gas_barge_has_a_separation_but_no_aft_block() {
     let r = results_of("gas_igc_2g_self_propelled.vdesign", false);
-    let g = &r["geometry"];
+    let g = &r["drawing"];
     assert!(g["aft_arrangement"].is_null());
     assert!(g["separation"].is_object());
     assert!(g["double_bottom_m"].is_number());
+}
+
+#[test]
+fn the_drawing_object_is_not_in_the_results_hash() {
+    use serde_json::json;
+    let without = json!({"cargo_t": 2038.5, "geometry": {"a": 1.0}});
+    let with =
+        json!({"cargo_t": 2038.5, "geometry": {"a": 1.0}, "drawing": {"double_bottom_m": 1.2}});
+    assert_eq!(
+        ovcd_format::results_hash(&without),
+        ovcd_format::results_hash(&with)
+    );
+}
+
+#[test]
+fn existing_stored_hashes_still_match_with_the_drawing_object_present() {
+    for fixture in [
+        "dry_bulk_box_hold.vdesign",
+        "gas_igc_2g_self_propelled.vdesign",
+        "gas_igc_2g_exact.vdesign",
+    ] {
+        let text = std::fs::read_to_string(
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("tests/fixtures")
+                .join(fixture),
+        )
+        .unwrap();
+        let design = check(&text, &Profile::built_in()).design.expect("valid");
+        let run = run_design(&design).remove(0);
+        match &run.outcome {
+            RunOutcome::Results { results, .. } => {
+                assert!(results["drawing"].is_object(), "{fixture}: drawing present")
+            }
+            other => panic!("{other:?}"),
+        }
+        assert_eq!(
+            run.hash_status,
+            ovcd_format::HashStatus::Matches,
+            "{fixture}"
+        );
+    }
 }

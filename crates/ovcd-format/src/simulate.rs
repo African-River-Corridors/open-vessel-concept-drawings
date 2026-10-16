@@ -428,13 +428,10 @@ fn structure_json(
     ]
 }
 
-fn with_structure(mut geo: Value, extra: Vec<(&'static str, Value)>) -> Value {
-    if let Some(m) = geo.as_object_mut() {
-        for (k, v) in extra {
-            m.insert(k.to_string(), v);
-        }
-    }
-    geo
+/// The `drawing` object: the structural values as an object, kept out of `geometry` and out of the
+/// results hash.
+fn drawing_json(extra: Vec<(&'static str, Value)>) -> Value {
+    Value::Object(extra.into_iter().map(|(k, v)| (k.to_string(), v)).collect())
 }
 
 fn simulate(p: &Map<String, Value>) -> R<Value> {
@@ -536,7 +533,7 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
         "hold_bottom_width_m": opt_num(r.hold_bottom_width_m),
         "insulation_thickness_mm": opt_num(r.insulation_thickness_mm),
     });
-    let geo = with_structure(geo, structure_json(&r, inp.separation.as_ref(), Some(&inp)));
+    let drawing = drawing_json(structure_json(&r, inp.separation.as_ref(), Some(&inp)));
     Ok(json!({
         "vessel": label,
         "cargo": cargo.name,
@@ -545,6 +542,7 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
         "arrangement": Value::Null,
         "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(cb) },
         "geometry": geo,
+        "drawing": drawing,
         "results": {
             "cargo_t": num(cargo_t),
             "cargo_volume_bound_t": num(cargo_volume_bound),
@@ -766,10 +764,7 @@ fn simulate_gas(
         "bottom_clearance_m": opt_num(r.bottom_clearance_m),
         "insulation_thickness_mm": opt_num(r.insulation_thickness_mm),
     });
-    let geo = with_structure(
-        geo,
-        structure_json(r, f.engine_inputs.separation.as_ref(), None),
-    );
+    let drawing = drawing_json(structure_json(r, f.engine_inputs.separation.as_ref(), None));
     let air_loaded = r.air_draft_top_above_keel_m - t;
     Ok(json!({
         "vessel": label,
@@ -778,6 +773,7 @@ fn simulate_gas(
         "self_propelled": self_propelled,
         "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(cb) },
         "geometry": geo,
+        "drawing": drawing,
         "arrangement": {
             "ruleset": ruleset,
             "fill_ratio": num(fill),

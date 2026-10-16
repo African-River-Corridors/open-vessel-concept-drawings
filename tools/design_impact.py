@@ -308,7 +308,10 @@ def compare(before: dict[str, dict], after: dict[str, dict]) -> list[dict]:
                              "before": a.get("error", "computed"), "after": b.get("error", "computed"),
                              "change": "changed"})
             continue
-        la, lb = leaves(a["results"]), leaves(b["results"])
+        # The top-level `drawing` object is drawing geometry, not a result, and is not in the
+        # results hash (docs/adr/0007): a new key there is not a design change.
+        la = leaves({k: v for k, v in a["results"].items() if k != "drawing"})
+        lb = leaves({k: v for k, v in b["results"].items() if k != "drawing"})
         for path in sorted(set(la) | set(lb)):
             va, vb = la.get(path, "absent"), lb.get(path, "absent")
             if not same(va, vb):
