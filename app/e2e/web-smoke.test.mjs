@@ -60,7 +60,8 @@ describe("OVCD web smoke tests", () => {
     await until(b, "the notice to close", async () => !(await (await b.$("[data-testid=notice]")).isExisting()));
     await until(b, "results", async () => (await outputs(b)).isExisting());
     assert.ok((await (await outputs(b)).getText()).length > 0, "outputs have text");
-    assert.equal(await (await b.$("[data-testid=web-label]")).getText(), "Web version");
+    // The style sheet sets the label in capitals.
+    assert.equal((await (await b.$("[data-testid=web-label]")).getText()).toLowerCase(), "web version");
     assert.equal(await (await b.$("a=Download the desktop app")).getAttribute("href"), "/ovcd#install");
     // Reload: the notice was remembered.
     await b.url(`${origin}/ovcd/app`);
