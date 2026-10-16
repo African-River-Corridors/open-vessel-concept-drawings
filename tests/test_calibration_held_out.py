@@ -111,7 +111,7 @@ def test_the_fit_ignores_held_out_cases():
     assert any(_is_held_out(c) for c in cases) and any(not _is_held_out(c) for c in cases)
     in_sample = [c for c in cases if not _is_held_out(c)]
     assert fit_factors(in_sample) == fit_factors(cases)
-    assert factors_yaml(fit_factors(cases)) == (CAL / "factors.yaml").read_text()
+    assert factors_yaml(fit_factors(cases)) == (CAL / "factors.yaml").read_text(encoding="utf-8")
 
 
 def test_the_fit_filter_is_live():
@@ -135,7 +135,7 @@ def test_the_fit_filter_is_live():
 def test_no_held_out_case_is_in_the_committed_factors():
     """Label: property
     """
-    text = (CAL / "factors.yaml").read_text()
+    text = (CAL / "factors.yaml").read_text(encoding="utf-8")
     for c in _held_out(_cases()):
         assert c["id"] not in text
 
@@ -209,7 +209,7 @@ def test_excluded_and_cross_check_cases_are_marked_with_a_reason():
 def test_every_new_case_cites_a_listed_web_source():
     """Label: property
     """
-    web = yaml.safe_load((CAL / "sources.yaml").read_text())["web_sources"]
+    web = yaml.safe_load((CAL / "sources.yaml").read_text(encoding="utf-8"))["web_sources"]
     ids = [w["id"] for w in web]
     assert len(ids) == len(set(ids))
     for w in web:
@@ -222,7 +222,7 @@ def test_every_new_case_cites_a_listed_web_source():
         assert c["source"].startswith(f"{sid} — "), c["id"]
         assert c["source"].endswith("accessed 2026-10-16"), c["id"]
     # The stored-file records are untouched.
-    assert len(yaml.safe_load((CAL / "sources.yaml").read_text())["sources"]) == 8
+    assert len(yaml.safe_load((CAL / "sources.yaml").read_text(encoding="utf-8"))["sources"]) == 8
 
 
 def test_each_cb_check_recomputed_from_the_cases_matches_the_research_note():

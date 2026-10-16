@@ -197,11 +197,35 @@ def repo_folders_read(path: Path, deselected=()) -> set:
 
 
 def modules_that_read_the_checkout() -> set:
-    """Package modules that find files from their own path up to the repo root (`parents[2]`). From a
-    wheel that is site-packages, so a test that imports one can run only in a checkout."""
+    """Package modules that find files from their own path up to the repo root (`parents[2]`) and read
+    one at import. From a wheel that path is in site-packages, so the import fails and a test that
+    imports the module can run only in a checkout. A module that reads only when called (issue #217)
+    can be imported; its tests give it the folder they need."""
     src = ROOT / "src" / "vessel_designer"
-    return {"vessel_designer." + ".".join(p.relative_to(src).with_suffix("").parts)
-            for p in src.rglob("*.py") if "parents[2]" in p.read_text(encoding="utf-8")}
+    found = set()
+    for p in src.rglob("*.py"):
+        text = p.read_text(encoding="utf-8")
+        if "parents[2]" in text and reads_files_at_import(text):
+            found.add("vessel_designer." + ".".join(p.relative_to(src).with_suffix("").parts))
+    return found
+
+
+def reads_files_at_import(source: str) -> bool:
+    """True when module-level code (not a function body, not the `__main__` block) reads a file."""
+    import ast
+    reads = {"open", "read_text", "read_bytes", "iterdir", "glob", "rglob"}
+    todo = list(ast.parse(source).body)
+    while todo:
+        n = todo.pop()
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+            continue                                         # runs when called, not at import
+        if isinstance(n, ast.If) and "__main__" in ast.unparse(n.test):
+            continue
+        f = n.func if isinstance(n, ast.Call) else None
+        if (isinstance(f, ast.Name) and f.id in reads) or (isinstance(f, ast.Attribute) and f.attr in reads):
+            return True
+        todo += ast.iter_child_nodes(n)
+    return False
 
 
 def files_under_tests():
@@ -253,10 +277,17 @@ def test_the_wheel_check_guard_sees_what_a_test_reads():
     assert "tools" in repo_folders_read(tests / "test_gen_depth_rule.py")
     assert "tools" in repo_folders_read(tests / "test_gen_vessel_classes.py")
     assert "evaluation" in repo_folders_read(tests / "test_evaluation_runner.py")
-    assert "vessel_designer.calibration" in modules_that_read_the_checkout()
-    assert "checkout" in repo_folders_read(tests / "test_calibration_held_out.py")
+    # A module that reads from its own path at import cannot import from a wheel (issue #217).
+    assert reads_files_at_import('X = (Path(__file__).resolve().parents[2] / "a.yaml").read_text()')
+    assert reads_files_at_import('with open(Path(__file__).parents[2] / "a") as f:\n    A = f.read()')
+    assert not reads_files_at_import('def a():\n    return (Path(__file__).parents[2] / "a").read_text()')
+    assert not reads_files_at_import('if __name__ == "__main__":\n    open("a").read()')
+    assert not reads_files_at_import('class A:\n    def a(self):\n        return open("a").read()')
+    # The calibration module reads its folder only when used, so tests that import it run from a wheel.
+    assert "vessel_designer.calibration" not in modules_that_read_the_checkout()
+    assert "checkout" not in repo_folders_read(tests / "test_calibration_held_out.py")
     # The package walk sits in a helper; it counts while a test that calls the helper runs.
-    assert {"CHANGELOG.md", "checkout"} <= repo_folders_read(tests / "test_public_api.py")
+    assert "CHANGELOG.md" in repo_folders_read(tests / "test_public_api.py")
     _, _, deselected = wheel_check_plan()
     api = {d.split("::")[1] for d in deselected if d.startswith("tests/test_public_api.py::")}
     assert repo_folders_read(tests / "test_public_api.py", api) == set()
