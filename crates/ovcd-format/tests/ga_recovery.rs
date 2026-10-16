@@ -1179,3 +1179,122 @@ fn a_pushed_barge_has_no_aft_block_and_a_null_arrangement_draws_nothing() {
         }
     }
 }
+
+// ---- #198: a design that fails its checks says so ------------------------------------------------
+
+fn failed_names(r: &Value) -> Vec<String> {
+    r["checks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|c| c["ok"] == false)
+        .map(|c| c["name"].as_str().unwrap().to_string())
+        .collect()
+}
+
+fn notes_of(document: &Value) -> Vec<String> {
+    document["notes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|n| n.as_str().unwrap().to_string())
+        .collect()
+}
+
+fn accepted(document: &Value) {
+    match ovcd_draw::run_value(document, &ovcd_draw::NoFiles) {
+        ovcd_draw::RunResult::Ok(_) => {}
+        ovcd_draw::RunResult::Errors(e) => panic!("the standard refuses the document {e:?}"),
+    }
+}
+
+#[test]
+fn a_failing_design_carries_a_note_in_each_view_and_still_passes_the_standard() {
+    let mut seen = 0;
+    for file in GAS_FIXTURES {
+        for self_propelled in [false, true] {
+            let r = results_of(file, self_propelled);
+            let failed = failed_names(&r);
+            if failed.is_empty() {
+                continue;
+            }
+            seen += 1;
+            let v = views(&r);
+            for (name, doc) in v.all() {
+                let notes = notes_of(doc);
+                let fail_notes: Vec<&String> = notes.iter().skip(2).collect();
+                assert!(
+                    !fail_notes.is_empty(),
+                    "{file} {name}: a note for the failed checks"
+                );
+                assert!(
+                    fail_notes[0].starts_with(&format!("DESIGN FAILS {} CHECK", failed.len())),
+                    "{file} {name}: the count"
+                );
+                // every name is there, in plain capitals, or the count stands alone
+                let text = fail_notes
+                    .iter()
+                    .map(|s| s.as_str())
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                assert!(text.is_ascii() && text.chars().all(|c| !c.is_ascii_lowercase()));
+                if fail_notes.len() > 1 || text.contains(':') {
+                    for n in &failed {
+                        let plain: String = n
+                            .chars()
+                            .filter_map(|c| match c {
+                                '\u{2014}' => Some('-'),
+                                '_' => Some(' '),
+                                c if c.is_ascii() => Some(c.to_ascii_uppercase()),
+                                _ => None,
+                            })
+                            .collect();
+                        assert!(text.contains(plain.trim()), "{file} {name}: {plain}");
+                    }
+                }
+                // the status is still one the standard defines, and the strip holds every note
+                assert_eq!(doc["status"], "concept");
+                let strip = f(&doc["strips"][0]["size_mm"]);
+                assert!(
+                    close(strip, (12.0 + 4.5 * notes.len() as f64).max(21.0)),
+                    "{file} {name}"
+                );
+                assert!(notes.iter().all(|n| n.chars().count() <= 120));
+                accepted(doc);
+            }
+        }
+    }
+    assert!(seen > 0, "no fixture fails a check");
+}
+
+#[test]
+fn a_passing_design_has_the_usual_notes_and_strip() {
+    for file in HOLDS {
+        let r = results_of(file, false);
+        assert!(failed_names(&r).is_empty(), "{file}");
+        for (name, doc) in views(&r).all() {
+            assert_eq!(notes_of(doc).len(), 2, "{file} {name}");
+            assert!(!notes_of(doc).iter().any(|n| n.starts_with("DESIGN FAILS")));
+            assert!(
+                close(f(&doc["strips"][0]["size_mm"]), 21.0),
+                "{file} {name}"
+            );
+            accepted(doc);
+        }
+    }
+}
+
+#[test]
+fn a_failing_design_with_many_names_gives_the_count_alone() {
+    let mut r = results_of("dry_bulk_box_hold.vdesign", false);
+    let checks: Vec<Value> = (0..30)
+        .map(|i| serde_json::json!({"name": format!("A VERY LONG CHECK NAME NUMBER {i}"), "ok": false, "message": ""}))
+        .collect();
+    r["checks"] = Value::Array(checks);
+    for (_, doc) in views(&r).all() {
+        let notes = notes_of(doc);
+        assert_eq!(notes.len(), 3);
+        assert_eq!(notes[2], "DESIGN FAILS 30 CHECKS");
+        accepted(doc);
+    }
+}
