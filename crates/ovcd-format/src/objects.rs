@@ -229,7 +229,69 @@ fn aft_from_json(value: &Value, ctx: &str) -> Result<AftArrangementResult, EvalE
         block_top_lowered_m: o.f64("block_top_lowered_m")?,
         checks: o.checks("checks")?,
         warnings: o.string_list("warnings")?,
+        // Issue #180 fields. A result saved before them is a battery-electric block.
+        propulsion: opt_str(value, "propulsion", "battery_electric"),
+        container_layout: opt_str(value, "container_layout", "rows"),
+        container_units: match value.get("container_units") {
+            None | Some(Value::Null) => Vec::new(),
+            Some(_) => o
+                .array("container_units")?
+                .iter()
+                .enumerate()
+                .map(|(i, u)| {
+                    let bad = || {
+                        EvalError::BadInput(format!(
+                            "`{ctx}.container_units[{i}]` must be [label, x, x, y]"
+                        ))
+                    };
+                    match u.as_array().map(Vec::as_slice) {
+                        Some([label, a, f, y]) => Ok((
+                            label.as_str().ok_or_else(bad)?.to_string(),
+                            tagged_f64(a).ok_or_else(bad)?,
+                            tagged_f64(f).ok_or_else(bad)?,
+                            tagged_f64(y).ok_or_else(bad)?,
+                        )),
+                        _ => Err(bad()),
+                    }
+                })
+                .collect::<Result<Vec<_>, _>>()?,
+        },
+        engine_room_x0_m: opt_f64(value, "engine_room_x0_m"),
+        engine_room_x1_m: opt_f64(value, "engine_room_x1_m"),
+        gvu_room_x0_m: opt_f64(value, "gvu_room_x0_m"),
+        gvu_room_x1_m: opt_f64(value, "gvu_room_x1_m"),
+        n_gensets: value.get("n_gensets").and_then(Value::as_i64).unwrap_or(0),
+        genset_model: opt_str(value, "genset_model", ""),
+        genset_engine_model: opt_str(value, "genset_engine_model", ""),
+        genset_kwe: opt_f64(value, "genset_kwe"),
+        installed_kwe: opt_f64(value, "installed_kwe"),
+        genset_offsets_m: match value.get("genset_offsets_m") {
+            None | Some(Value::Null) => Vec::new(),
+            Some(_) => o.f64_list("genset_offsets_m")?,
+        },
+        genset_x0_m: opt_f64(value, "genset_x0_m"),
+        genset_length_m: opt_f64(value, "genset_length_m"),
+        genset_width_m: opt_f64(value, "genset_width_m"),
+        genset_height_m: opt_f64(value, "genset_height_m"),
+        genset_engine_mass_t: opt_f64(value, "genset_engine_mass_t"),
+        below_deck_length_m: opt_f64(value, "below_deck_length_m"),
+        deck_length_m: match value.get("deck_length_m") {
+            None | Some(Value::Null) => o.f64("length_m")?,
+            Some(_) => o.f64("deck_length_m")?,
+        },
     })
+}
+
+fn opt_str(value: &Value, key: &str, default: &str) -> String {
+    value
+        .get(key)
+        .and_then(Value::as_str)
+        .unwrap_or(default)
+        .to_string()
+}
+
+fn opt_f64(value: &Value, key: &str) -> f64 {
+    value.get(key).and_then(tagged_f64).unwrap_or(0.0)
 }
 
 fn separation_from_json(value: &Value, ctx: &str) -> Result<GasSeparationResult, EvalError> {

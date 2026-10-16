@@ -124,6 +124,10 @@ REMOVED_ON_PURPOSE = {
 CHANGED_ON_PURPOSE = {"core.gas_arrangement": {"RULESETS"}, "simulate": {"RULESETS"}}
 # Dataclass fields that went on purpose: the grid no longer has a tank-length cap.
 REMOVED_FIELDS = {("core.design_grid", "DesignGrid", "max_tank_length_m")}
+# Dataclass fields whose type changed on purpose. Issue #180: `None` gives the propulsion's own
+# default battery count (1 battery-electric, 0 gas-fuelled); a given int is used as before.
+CHANGED_FIELD_TYPES = {("core.aft_arrangement", "AftArrangementInputs", "n_battery_units"):
+                       "typing.Optional[int]"}
 # Dataclass fields whose type changed on purpose (issue #94): the Vessel Class catalogue does not give
 # every figure for every class, so a length, beam, draught or deadweight can be None.
 OPTIONAL_NOW = {("core.vessel_standards", "VesselStandard", f) for f in ("loa_m", "beam_m", "draught_m", "dwt_t")}
@@ -207,6 +211,7 @@ def test_field_types_are_the_types_of_0_1_0():
                 # Known change (CHANGELOG.md): a bare `list` of 0.1.0 is `List[...]` now, because the
                 # bridge reads the item type to build the result objects.
                 refined = text == "<class 'list'>" and str(hints[name]).startswith("typing.List[")
-                if str(hints[name]) != text and not refined:
+                changed = CHANGED_FIELD_TYPES.get((module, cls_name, name)) == str(hints[name])
+                if str(hints[name]) != text and not refined and not changed:
                     wrong.append(f"{module}.{cls_name}.{name}: {hints[name]} != {text}")
     assert wrong == []
