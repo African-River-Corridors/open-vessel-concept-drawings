@@ -82,6 +82,12 @@ pub struct BargeInputs {
     pub tank_material: String,
     /// Allowable stress (MPa) the thickness formula uses; `None`: the material's own.
     pub tank_allowable_stress: Option<f64>,
+    /// Whether the wall thickness formula takes the steel outer diameter (the outer diameter less
+    /// twice the insulation) or the outer diameter as it is. The original engine, and so the Python
+    /// API of the 0.1.0 answers, took the outer diameter as it is, which includes the insulation:
+    /// `false`. The gas capacity calculation sets `true` (issue #292): the formula is for the shell,
+    /// and the shell is inside the insulation.
+    pub wall_formula_on_steel_diameter: bool,
     /// Tank material density (t/m^3)
     pub tank_material_density: f64,
     /// Design pressure (MPa)
@@ -188,6 +194,7 @@ impl BargeInputs {
             tank_head_type: "hemisphere".to_string(),
             tank_material: "9Ni".to_string(),
             tank_allowable_stress: None,
+            wall_formula_on_steel_diameter: false,
             tank_material_density: 7.85,
             design_pressure: 0.5,
             weld_efficiency: 0.95,

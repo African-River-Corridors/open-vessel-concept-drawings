@@ -492,6 +492,8 @@ fn gas_volumetric(
     base.design_pressure = inp.tank_design.design_pressure_mpa;
     base.tank_material = inp.tank_design.material.clone();
     base.tank_allowable_stress = inp.tank_design.allowable_stress_mpa;
+    // The wall formula takes the steel diameter, inside the insulation (issue #292).
+    base.wall_formula_on_steel_diameter = true;
     base.insulation_thickness = inp.tank_design.insulation_thickness_mm;
     base.tank_structure_factor = inp.tank_design.structure_factor;
     // The mass of the steel is the material's, whether the wall is fixed or from the formula. (The

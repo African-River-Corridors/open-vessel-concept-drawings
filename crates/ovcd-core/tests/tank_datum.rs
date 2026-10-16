@@ -57,6 +57,7 @@ fn the_wall_formula_takes_the_steel_diameter_not_the_insulated_one() {
     b.design_pressure = 1.8;
     b.tank_material = "S690QL1".into();
     b.insulation_thickness = 400.0;
+    b.wall_formula_on_steel_diameter = true;
     b.post_init().unwrap();
     let t = calculate_tank_arrangement(&b).unwrap();
     let steel_od = t.outer_diameter - 2.0 * 0.4;
@@ -77,6 +78,68 @@ fn the_wall_formula_takes_the_steel_diameter_not_the_insulated_one() {
     // The cargo space is inside the steel: inner = outer - 2 insulation - 2 wall.
     let inner = t.outer_diameter - 0.8 - 2.0 * t.cylinder_wall_thickness / 1000.0;
     assert!((t.inner_diameter - inner).abs() < 1e-12);
+}
+
+#[test]
+fn the_python_api_default_keeps_the_original_formula_diameter() {
+    // The original engine gave the formula the insulated diameter, and the Python API of the 0.1.0
+    // answers still does: `wall_formula_on_steel_diameter` is false unless the gas capacity
+    // calculation sets it. Changing that is a change to the public API.
+    let mut b = BargeInputs::new(90.0, 14.8, 6.5, 6.5, 65.0);
+    b.bow_non_tank_length = Some(10.9);
+    b.stern_non_tank_length = Some(21.9);
+    b.n_tanks_wide = 2;
+    b.n_tanks_long = 2;
+    b.double_bottom_height = Some(0.5);
+    b.tank_wall_thickness = None;
+    b.design_pressure = 1.8;
+    b.tank_material = "S690QL1".into();
+    b.insulation_thickness = 400.0;
+    assert!(!b.wall_formula_on_steel_diameter);
+    b.post_init().unwrap();
+    let t = calculate_tank_arrangement(&b).unwrap();
+    let on_insulated = calculate_wall_thicknesses(
+        t.outer_diameter,
+        1.8,
+        "S690QL1",
+        "hemisphere",
+        b.weld_efficiency,
+    )
+    .unwrap();
+    assert_eq!(
+        (t.cylinder_wall_thickness, t.head_wall_thickness),
+        on_insulated
+    );
+}
+
+#[test]
+fn the_capacity_calculation_puts_the_formula_on_the_steel_diameter() {
+    // Through `compute`: the wall of a gas design is the formula at the steel diameter.
+    let design = TankDesign {
+        design_pressure_mpa: 1.77,
+        material: "S690QL1".into(),
+        insulation_thickness_mm: 200.0,
+        ..TankDesign::default()
+    };
+    let r = compute(&gas(design, None)).unwrap();
+    let basis = r.gas_basis.as_ref().unwrap();
+    assert!(basis.inputs.wall_formula_on_steel_diameter);
+    let steel = r.tank_outer_diameter_m.unwrap() - 0.4;
+    let want = calculate_wall_thicknesses(
+        steel,
+        1.77,
+        "S690QL1",
+        "hemisphere",
+        basis.inputs.weld_efficiency,
+    )
+    .unwrap();
+    assert_eq!(
+        (
+            basis.tanks.cylinder_wall_thickness,
+            basis.tanks.head_wall_thickness
+        ),
+        want
+    );
 }
 
 #[test]
