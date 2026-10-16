@@ -15,6 +15,11 @@ The OVCD website and docs. Live at **https://www.africanrivercorridors.com/ovcd*
   against the wrong folder at `/ovcd`. GitHub Pages serves `page.html` for `/page`.
 - The ARC rewrites map two folder URLs to their index page: `/ovcd` and `/ovcd/docs`. Do not add
   other folder index pages; name the page instead (`app.html`, served as `/ovcd/app`).
+- The web app page is `app.html`, served at `/ovcd/app`. Its files (JS, CSS, font, `.wasm`) are
+  under `/ovcd/app-files/`, never `app/`: a folder named `app/` next to `app.html` makes GitHub
+  Pages redirect `/app` to `/app/` on its own host, which breaks the proxy.
+- `build.py --app-dist app/dist-web` copies the web build in. Without the flag the "coming soon"
+  `app.html` stays, so the docs build with no Rust or Node.
 - The `github.io` address serves the same files, but its links point to `/ovcd/...`, so browse the
   ARC address.
 
@@ -23,7 +28,7 @@ The OVCD website and docs. Live at **https://www.africanrivercorridors.com/ovcd*
 | Path | What it is |
 | --- | --- |
 | `index.html`, `site.css`, `tokens.css` | The home page. Plain HTML and CSS, no build step. |
-| `app.html` | The "web app, coming soon" page. |
+| `app.html` | The "web app, coming soon" page. With `--app-dist`, the web app itself (files in `app-files/`). |
 | `assets/` | Logo, illustrations. `favicon.svg` is at the root. |
 | `mkdocs.yml`, `hooks.py`, `overrides/` | The docs: mkdocs-material with the OVCD theme. |
 | `docs-theme/ovcd.css` | The docs theme over `tokens.css`. |
