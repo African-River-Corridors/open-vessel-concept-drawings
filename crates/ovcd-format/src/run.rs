@@ -205,11 +205,12 @@ fn write_canonical(v: &Value, out: &mut String) {
     }
 }
 
-/// Top-level results keys that are not results: drawing geometry and what a view marks. They are left
+/// Top-level results keys that are not results: drawing geometry, what a view marks, and the capital
+/// budget with the masses it was worked from. They are left
 /// out of the results hash, so adding to one never changes a saved hash, and `tools/design_impact.py`
 /// leaves them out of its comparison (it holds the same list; `tests/test_design_impact_unhashed_keys.py` checks
 /// that the two lists agree).
-pub const UNHASHED_KEYS: [&str; 2] = ["drawing", "stability_marks"];
+pub const UNHASHED_KEYS: [&str; 4] = ["drawing", "stability_marks", "cost_masses", "cost"];
 
 /// SHA-256 of the canonical JSON of `results`, without the [`UNHASHED_KEYS`].
 pub fn results_hash(results: &Value) -> String {
@@ -234,6 +235,12 @@ pub fn run_option(option: &DesignOption) -> RunOutcome {
         Outcome::Result(v) => match v.get("error").and_then(Value::as_str) {
             Some(message) => RunOutcome::Failed(message.to_string()),
             None => {
+                // The capital budget: an output, not hashed, never fed back into the run.
+                let mut v = v;
+                let cost = crate::cost::cost_of(option, &v);
+                if let Some(o) = v.as_object_mut() {
+                    o.insert("cost".to_string(), cost);
+                }
                 let hash = results_hash(&v);
                 RunOutcome::Results { results: v, hash }
             }

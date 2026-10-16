@@ -47,7 +47,7 @@ START, END = "<!-- design-impact:start -->", "<!-- design-impact:end -->"
 # Top-level results keys that are not results (drawing geometry, what a view marks). The results hash
 # leaves them out too: UNHASHED_KEYS in crates/ovcd-format/src/run.rs. tests/test_design_impact_unhashed_keys.py
 # checks that the two lists agree.
-UNHASHED_KEYS = ("drawing", "stability_marks")
+UNHASHED_KEYS = ("drawing", "stability_marks", "cost_masses", "cost")
 
 LABEL = "design-change"
 MAX_ROWS = 40
@@ -158,6 +158,22 @@ OPTIONAL_INPUT_CASES = (
      {"vessel_scheme": "CEMT-1992"}),
     ("vessel_class", "bauxite", "box_hold", "self_propelled", 100.0, 11.0, 4.5,
      {"vessel_class": "CEMT-Va", "length_overall_m": 108.0}),
+    # The cost rates (issue #233), set to their defaults. They do not reach `simulate`: they feed the
+    # capital budget, which is not part of the results hash.
+    ("hull_steel_rate", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"hull_steel_rate": 2500.0}),
+    ("tank_shell_rate", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"tank_shell_rate": 10000.0}),
+    ("tank_supports_rate", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"tank_supports_rate": 2000.0}),
+    ("insulation_rate", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"insulation_rate": 4000.0}),
+    ("piping_rate", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"piping_rate": 4500.0}),
+    ("outfitting_rate", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"outfitting_rate": 4000.0}),
+    ("cargo_system_lump", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"cargo_system_lump": 500000.0}),
+    ("paint_anodes_misc", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"paint_anodes_misc": 100000.0}),
+    ("battery_rate_per_kwh", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"battery_rate_per_kwh": 250.0}),
+    ("propulsion_rate_per_kw", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"propulsion_rate_per_kw": 1000.0}),
+    ("wheelhouse_accom_lump", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"wheelhouse_accom_lump": 450000.0}),
+    ("tug_outfitting_lump", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"tug_outfitting_lump": 200000.0}),
+    ("yard_margin_fraction", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"yard_margin_fraction": 0.1}),
+    ("delivery_lump", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"delivery_lump": 200000.0}),
 )
 
 

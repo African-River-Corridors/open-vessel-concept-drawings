@@ -92,6 +92,8 @@ export interface Schema {
   profile: string;
   engine_version: string;
   groups: string[];
+  /** A note to show under a group's name, by group name. */
+  group_notes?: Record<string, string>;
   inputs: InputSpec[];
 }
 export interface Message {

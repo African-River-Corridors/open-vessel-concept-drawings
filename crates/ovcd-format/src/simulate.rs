@@ -647,6 +647,7 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
         "checks": checks,
         "warnings": r.warnings,
         "curves": curve_list,
+        "cost_masses": Value::Null,
     }))
 }
 
@@ -936,6 +937,7 @@ fn simulate_gas(
         "curves": curve_list,
         "stability": stability,
         "stability_marks": stability_marks,
+        "cost_masses": r.gas_basis.as_ref().map_or(Value::Null, |b| crate::cost::gas_masses(&b.weights)),
     }))
 }
 

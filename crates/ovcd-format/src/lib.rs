@@ -2,6 +2,7 @@
 //! dispatch over every entry point of the calculation core (the Python package's seam).
 
 pub mod class_input;
+mod cost;
 mod eval;
 pub mod ga;
 mod gas_arrangement;

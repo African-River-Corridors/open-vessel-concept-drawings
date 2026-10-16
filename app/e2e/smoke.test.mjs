@@ -222,7 +222,7 @@ describe("OVCD app smoke tests", () => {
     await show("BOQ & Finance", "BOQ");
     assert.ok(await browser.$("[data-testid=placeholder-boq]").isExisting());
     await show("BOQ & Finance", "Capital budget");
-    assert.ok(await browser.$("[data-testid=placeholder-capital]").isExisting());
+    assert.ok(await browser.$("[data-testid=capital-budget]").isExisting());
   });
 
   for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
@@ -494,6 +494,70 @@ describe("OVCD app smoke tests", () => {
       await shot(`232-${cargo}-rule-check-calculations`);
     });
   }
+
+  const unitTotal = async () => Number((await browser.$("[data-testid=cost-unit-total]").getText()).replace(/,/g, ""));
+
+  it("shows the capital budget of a gas Design with its basis, labels and where the masses come from", async () => {
+    await open(path.join(FIXTURES, "gas_igc_2g_exact.vdesign"), "gas_igc_2g_exact.vdesign");
+    await show("BOQ & Finance", "Capital budget");
+    await until("the budget", async () => (await browser.$$("[data-testid=cost-unit-total]")).length === 1);
+    assert.equal((await browser.$$("[data-testid=capital-budget-wip]")).length, 0);
+    assert.match(await browser.$("[data-testid=capital-budget-basis]").getText(), /^Example rates . replace with yours\. All amounts are in [A-Z]{3}\.$/);
+    for (const table of ["barge", "tug", "total"]) assert.ok(await browser.$(`[data-testid=cost-${table}]`).isExisting(), table);
+    // Plain names, as the input labels have them.
+    const barge = await browser.$("[data-testid=cost-barge]").getText();
+    for (const label of ["Type C tanks", "Piping and machinery", "Paint, anodes and miscellaneous"]) assert.ok(barge.includes(label), label);
+    assert.ok((await browser.$("[data-testid=cost-tug]").getText()).includes("Wheelhouse and accommodation"));
+    assert.ok((await unitTotal()) > 0);
+    const masses = await browser.$("[data-testid=cost-masses]").getText();
+    assert.match(masses, /^Mass from this design: .*Tank shell/);
+    assert.match(masses, /Core defaults, not from this design: .*Battery/);
+    assert.ok((await overflow()) <= 0, "the panel does not scroll");
+    await shot("233-gas-capital-budget");
+
+    // Editing a cost rate changes the total.
+    const before = await unitTotal();
+    await type("Hull steel rate", "5000");
+    await until("the total to change", async () => (await unitTotal()) !== before);
+    // Put the rate back: the next test opens the same file name and must not meet this edit.
+    await type("Hull steel rate", "2500");
+    await until("the total to return", async () => (await unitTotal()) === before);
+  });
+
+  it("says that the capital budget is work in development for a dry-bulk Design", async () => {
+    await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    await show("BOQ & Finance", "Capital budget");
+    await until("the work-in-development state", async () => (await browser.$$("[data-testid=capital-budget-wip]")).length === 1);
+    assert.match(
+      await browser.$("[data-testid=capital-budget-wip]").getText(),
+      /^Work in development\s+The capital budget is computed for gas cargo only\. A dry-bulk budget is work in development\.$/,
+    );
+    assert.equal((await browser.$$("[data-testid=cost-unit-total]")).length, 0, "no budget table");
+    await shot("233-dry-bulk-capital-budget");
+  });
+
+  for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
+    it(`says the bill of quantities comes in a later phase (${cargo})`, async () => {
+      await open(path.join(FIXTURES, fixture), fixture);
+      await show("BOQ & Finance", "BOQ");
+      const text = await browser.$("[data-testid=placeholder-boq]").getText();
+      assert.match(text, /^Coming in a later phase\s+The bill of quantities is planned for phase 4 of the roadmap\.$/);
+      await shot(`233-${cargo}-boq`);
+    });
+  }
+
+  it("has a Cost rates group with its basis, 14 inputs and the example values", async () => {
+    await open(path.join(FIXTURES, "gas_igc_2g_exact.vdesign"), "gas_igc_2g_exact.vdesign");
+    const group = await browser.$("//details[summary[normalize-space()='Cost rates']]");
+    assert.ok(await group.isExisting(), "the group is in the left panel");
+    assert.match(await group.$("[data-testid=group-note]").getText(), /^Example rates . replace with yours\.$/);
+    assert.equal((await group.$$(".field")).length, 14);
+    await until("the example rate", async () => (await (await field("Hull steel rate")).getValue()) === "2500");
+    assert.equal(await (await field("Yard margin")).getValue(), "0.1");
+    await browser.execute(() => document.querySelector("[data-testid=group-note]").scrollIntoView({ block: "start" }));
+    await browser.pause(300);
+    await shot("233-gas-cost-rates-inputs");
+  });
 
   it("changes an output when an input is edited", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");

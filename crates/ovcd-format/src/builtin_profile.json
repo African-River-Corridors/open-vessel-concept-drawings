@@ -294,6 +294,90 @@
       "hard": { "ge": 0, "le": 5 },
       "soft": { "min": 0.05, "max": 0.5 },
       "basis": "carried over from the original engine: the under-keel clearance kept below the squatted keel. It limits the speed in a channel; deep water has no squat limit"
+    },
+    "hull_steel_rate": {
+      "default": 2500.0,
+      "unit": "per t",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate for fabricated hull structure; also used for the tug hull. Not a market quote: replace with your own"
+    },
+    "tank_shell_rate": {
+      "default": 10000.0,
+      "unit": "per t",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate for the Type C pressure-vessel shell and heads. Not a market quote: replace with your own"
+    },
+    "tank_supports_rate": {
+      "default": 2000.0,
+      "unit": "per t",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate for saddles, anti-flotation and internals. Not a market quote: replace with your own"
+    },
+    "insulation_rate": {
+      "default": 4000.0,
+      "unit": "per t",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate for the installed insulation system, per tonne equivalent. Not a market quote: replace with your own"
+    },
+    "piping_rate": {
+      "default": 4500.0,
+      "unit": "per t",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate for piping and machinery. Not a market quote: replace with your own"
+    },
+    "outfitting_rate": {
+      "default": 4000.0,
+      "unit": "per t",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate for outfitting. Not a market quote: replace with your own"
+    },
+    "cargo_system_lump": {
+      "default": 500000.0,
+      "unit": "per unit",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum per unit for pumps, manifold, ESD, relief and gauging. Not a market quote: replace with your own"
+    },
+    "paint_anodes_misc": {
+      "default": 100000.0,
+      "unit": "per unit",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum per unit. Not a market quote: replace with your own"
+    },
+    "battery_rate_per_kwh": {
+      "default": 250.0,
+      "unit": "per kWh",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate per kWh installed in the tug. Not a market quote: replace with your own"
+    },
+    "propulsion_rate_per_kw": {
+      "default": 1000.0,
+      "unit": "per kW",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate per kW installed in the tug: thrusters, drives, switchboard. Not a market quote: replace with your own"
+    },
+    "wheelhouse_accom_lump": {
+      "default": 450000.0,
+      "unit": "per unit",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum per unit for wheelhouse, crew spaces, navigation and controls. Not a market quote: replace with your own"
+    },
+    "tug_outfitting_lump": {
+      "default": 200000.0,
+      "unit": "per unit",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum per unit. Not a market quote: replace with your own"
+    },
+    "yard_margin_fraction": {
+      "default": 0.1,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "basis": "example rate fraction of the barge and tug subtotal, for engineering, class, trials and margin. Not a market quote: replace with your own"
+    },
+    "delivery_lump": {
+      "default": 200000.0,
+      "unit": "per unit",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum per unit for the delivery voyage or heavy lift. Not a market quote: replace with your own"
     }
   }
 }
