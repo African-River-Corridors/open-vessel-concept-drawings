@@ -36,6 +36,7 @@ def fake_dist(root: Path) -> Path:
 
 
 def test_app_dist_lands_at_app_html_and_app_files(build, tmp_path):
+    """Label: property"""
     mod, site = build
     mod.add_app(fake_dist(tmp_path))
     assert "app-files/assets/x.js" in (site / "app.html").read_text()
@@ -46,6 +47,7 @@ def test_app_dist_lands_at_app_html_and_app_files(build, tmp_path):
 
 
 def test_missing_index_fails_clearly(build, tmp_path, capsys):
+    """Label: property"""
     mod, site = build
     (tmp_path / "empty").mkdir()
     msg = mod.main(["--app-dist", str(tmp_path / "empty")])
