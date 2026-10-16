@@ -139,3 +139,125 @@ def test_the_readme_says_how_releases_are_made():
     text = (ROOT / "README.md").read_text(encoding="utf-8")
     assert "releases/tag/latest" not in text
     assert "/releases)" in text
+
+
+# ---------- the wheel check runs only tests it has the files for (issue #211) ----------
+
+def wheel_check_run() -> str:
+    steps = workflow(RELEASE)["jobs"]["wheels"]["steps"]
+    return next(s["run"] for s in steps if "wheel-check" in s.get("run", ""))
+
+
+def wheel_check_plan():
+    """What the wheel check copies and what it skips, read from release.yml."""
+    import shlex
+    lines = [ln for ln in wheel_check_run().splitlines() if not ln.strip().startswith("#")]
+    words = shlex.split("\n".join(lines).replace("\\\n", " "))
+    cp = words.index("cp")
+    copied = set(words[cp + 2:words.index('$RUNNER_TEMP/wheel-check/', cp)])
+    ignored = [w.split("=", 1)[1] for w in words if w.startswith(("--ignore=", "--ignore-glob="))]
+    deselected = [w.split("=", 1)[1] for w in words if w.startswith("--deselect=")]
+    return copied, ignored, deselected
+
+
+def repo_folders_read(path: Path, deselected=()) -> set:
+    """The top-level names under the repo root that the tests in a file read, e.g. `ROOT / "tools"`,
+    and "checkout" when they import a package module that reads the checkout.
+
+    Starts from module-level code, decorated functions (fixtures) and every test function not in
+    `deselected`, and follows the module's own helper functions they name. It sees `ROOT / "x"` (ROOT
+    is the repo root by convention here) and `Path(__file__)...parents[n] / "x"` at the repo root."""
+    import ast
+    import re
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    funcs = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef)}
+    todo = [n for n in tree.body if not isinstance(n, ast.FunctionDef)
+            or n.decorator_list or (n.name.startswith("test") and n.name not in deselected)]
+    seen = []
+    while todo:
+        node = todo.pop()
+        if any(node is s for s in seen):
+            continue
+        seen.append(node)
+        todo += [funcs[n.id] for n in ast.walk(node) if isinstance(n, ast.Name) and n.id in funcs]
+    text = "\n".join(ast.unparse(n) for n in seen)
+    depth = len(path.relative_to(ROOT).parts) - 1        # parents[depth] of the file is the repo root
+    names = set(re.findall(r"\bROOT\s*/\s*['\"]([^'\"/]+)", text))
+    names |= set(re.findall(rf"parents\[{depth}\]\s*/\s*['\"]([^'\"/]+)", text))
+    checkout = modules_that_read_the_checkout()
+    for node in (n for s in seen for n in ast.walk(s)):
+        mods = [a.name for a in node.names] if isinstance(node, ast.Import) else []
+        if isinstance(node, ast.ImportFrom) and node.module:
+            mods = [node.module, *(f"{node.module}.{a.name}" for a in node.names)]
+        if checkout & set(mods):
+            names.add("checkout")
+    if "walk_packages" in text and checkout:             # imports every module of the package
+        names.add("checkout")
+    return names
+
+
+def modules_that_read_the_checkout() -> set:
+    """Package modules that find files from their own path up to the repo root (`parents[2]`). From a
+    wheel that is site-packages, so a test that imports one can run only in a checkout."""
+    src = ROOT / "src" / "vessel_designer"
+    return {"vessel_designer." + ".".join(p.relative_to(src).with_suffix("").parts)
+            for p in src.rglob("*.py") if "parents[2]" in p.read_text(encoding="utf-8")}
+
+
+def files_under_tests():
+    """Python files pytest may load under tests/; tests/data holds data and the scripts that made it."""
+    files = sorted(p.relative_to(ROOT).as_posix() for p in (ROOT / "tests").rglob("*.py"))
+    assert files
+    return [f for f in files if not f.startswith("tests/data/")]
+
+
+def skipped(f: str, ignored) -> bool:
+    from fnmatch import fnmatch
+    return any(fnmatch(f, pat) or f == pat for pat in ignored)
+
+
+def test_the_wheel_check_copies_folders_and_skips_tests_that_exist():
+    copied, ignored, deselected = wheel_check_plan()
+    assert "tests" in copied and all((ROOT / c).is_dir() for c in copied), copied
+    for pat in ignored:
+        assert any(skipped(f, [pat]) for f in files_under_tests()), f"{pat} skips nothing"
+    for d in deselected:
+        f, name = d.split("::")
+        assert f"def {name}(" in (ROOT / f).read_text(encoding="utf-8"), d
+
+
+def test_every_test_the_wheel_check_runs_has_its_files_copied():
+    """A test that reads a repo folder the wheel check does not copy (tools/, src/, CHANGELOG.md, ...),
+    or imports a package module that reads the checkout, fails the release gate only at release time.
+    Catch it here instead: copy the folder in release.yml, or skip the test there (--ignore, --deselect).
+
+    Label: property"""
+    copied, ignored, deselected = wheel_check_plan()
+    skips = {}
+    for d in deselected:
+        f, name = d.split("::")
+        skips.setdefault(f, set()).add(name)
+    missing = {}
+    for f in (f for f in files_under_tests() if not skipped(f, ignored)):
+        names = repo_folders_read(ROOT / f, skips.get(f, set())) - copied
+        if names:
+            missing[f] = sorted(names)
+    assert missing == {}, f"the wheel check runs these tests but does not copy what they read: {missing}"
+
+
+def test_the_wheel_check_guard_sees_what_a_test_reads():
+    """The guard has teeth: each case below is one that broke, or would have broken, the wheel check.
+
+    Label: property"""
+    tests = ROOT / "tests"
+    assert "tools" in repo_folders_read(tests / "test_gen_depth_rule.py")
+    assert "tools" in repo_folders_read(tests / "test_gen_vessel_classes.py")
+    assert "evaluation" in repo_folders_read(tests / "test_evaluation_runner.py")
+    assert "vessel_designer.calibration" in modules_that_read_the_checkout()
+    assert "checkout" in repo_folders_read(tests / "test_calibration_held_out.py")
+    # The package walk sits in a helper; it counts while a test that calls the helper runs.
+    assert {"CHANGELOG.md", "checkout"} <= repo_folders_read(tests / "test_public_api.py")
+    _, _, deselected = wheel_check_plan()
+    api = {d.split("::")[1] for d in deselected if d.startswith("tests/test_public_api.py::")}
+    assert repo_folders_read(tests / "test_public_api.py", api) == set()
+    assert repo_folders_read(tests / "core" / "test_barge_cost.py") == {"examples"}
