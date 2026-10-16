@@ -570,6 +570,7 @@ fn the_schema_lists_every_input_in_table_order_with_its_group() {
             "Hull and containment",
             "Gas tanks",
             "Dry-bulk hold",
+            "Aft block",
             "Waterway Limits",
             "Speed and power",
             "Cost rates"

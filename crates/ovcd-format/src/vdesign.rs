@@ -62,6 +62,8 @@ pub const KEYED_DEFAULTS: &[(&str, &str, &[&str])] = &[
         &["box_hold"],
     ),
     ("fill_ratio", "ruleset", RULESETS),
+    ("battery_unit_count", "cargo_phase", CARGO_PHASES),
+    ("accommodation_unit_count", "cargo_phase", CARGO_PHASES),
 ];
 
 /// Hull Forms that exist today.
@@ -118,6 +120,28 @@ pub const GAS_TANK_DOME_DIAMETER_M: f64 = 2.0;
 pub const GAS_WING_TANK_GAP_M: f64 = 0.6;
 pub const GAS_WING_TANK_HEIGHT_RATIO: f64 = 0.66;
 pub const GAS_TANK_WALL_THICKNESS_MM: f64 = 25.0;
+
+/// The aft block values fixed in the engine before they were inputs (`aft_arrangement` and
+/// `barge_capacity` defaults). The unit counts differ by Cargo phase.
+pub const AFT_THRUSTER_COUNT: f64 = 3.0;
+pub const AFT_THRUSTER_ENVELOPE_M: f64 = 2.60;
+pub const AFT_THRUSTER_CLEARANCE_M: f64 = 0.60;
+pub const AFT_THRUSTER_ROOM_LENGTH_M: f64 = 3.50;
+pub const AFT_BATTERY_UNITS_GAS: f64 = 1.0;
+pub const AFT_BATTERY_UNITS_DRY: f64 = 2.0;
+pub const AFT_ACCOM_UNITS_GAS: f64 = 2.0;
+pub const AFT_ACCOM_UNITS_DRY: f64 = 1.0;
+pub const AFT_UNIT_HEIGHT_M: f64 = 2.896;
+pub const AFT_UNIT_SIDE_GAP_M: f64 = 0.90;
+pub const AFT_UNIT_ROW_GAP_M: f64 = 0.80;
+pub const AFT_UNIT_FOUNDATION_M: f64 = 0.30;
+pub const AFT_WHEELHOUSE_LENGTH_M: f64 = 3.60;
+pub const AFT_WHEELHOUSE_WIDTH_M: f64 = 6.40;
+pub const AFT_WHEELHOUSE_HEIGHT_M: f64 = 3.40;
+pub const AFT_WHEELHOUSE_GAP_M: f64 = 0.30;
+pub const AFT_WHEELHOUSE_EYE_HEIGHT_M: f64 = 1.50;
+pub const AFT_SIGHTLINE_MARGIN_M: f64 = 0.50;
+pub const AFT_WHEELHOUSE_MAX_LIFT_M: f64 = 6.00;
 
 /// The water density of the run, in t/m3: fresh water (`barge_capacity`, `gas_stability` and
 /// `journey_derating` default).
@@ -366,6 +390,120 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
         formations: None,
         value: 200000.0,
     },
+    LegacyFixed {
+        name: "thruster_count",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: AFT_THRUSTER_COUNT,
+    },
+    LegacyFixed {
+        name: "thruster_envelope_m",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: AFT_THRUSTER_ENVELOPE_M,
+    },
+    LegacyFixed {
+        name: "thruster_clearance_m",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: AFT_THRUSTER_CLEARANCE_M,
+    },
+    LegacyFixed {
+        name: "thruster_room_length_m",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: AFT_THRUSTER_ROOM_LENGTH_M,
+    },
+    LegacyFixed {
+        name: "battery_unit_count",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: Some(SELF_PROPELLED),
+        value: AFT_BATTERY_UNITS_GAS,
+    },
+    LegacyFixed {
+        name: "battery_unit_count",
+        applies_to: AppliesTo::AnyOf(DRY_HOLDS),
+        formations: Some(SELF_PROPELLED),
+        value: AFT_BATTERY_UNITS_DRY,
+    },
+    LegacyFixed {
+        name: "accommodation_unit_count",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: Some(SELF_PROPELLED),
+        value: AFT_ACCOM_UNITS_GAS,
+    },
+    LegacyFixed {
+        name: "accommodation_unit_count",
+        applies_to: AppliesTo::AnyOf(DRY_HOLDS),
+        formations: Some(SELF_PROPELLED),
+        value: AFT_ACCOM_UNITS_DRY,
+    },
+    LegacyFixed {
+        name: "unit_height_m",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: AFT_UNIT_HEIGHT_M,
+    },
+    LegacyFixed {
+        name: "unit_side_gap_m",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: AFT_UNIT_SIDE_GAP_M,
+    },
+    LegacyFixed {
+        name: "unit_row_gap_m",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: AFT_UNIT_ROW_GAP_M,
+    },
+    LegacyFixed {
+        name: "unit_foundation_m",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: AFT_UNIT_FOUNDATION_M,
+    },
+    LegacyFixed {
+        name: "wheelhouse_length_m",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: AFT_WHEELHOUSE_LENGTH_M,
+    },
+    LegacyFixed {
+        name: "wheelhouse_width_m",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: AFT_WHEELHOUSE_WIDTH_M,
+    },
+    LegacyFixed {
+        name: "wheelhouse_height_m",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: AFT_WHEELHOUSE_HEIGHT_M,
+    },
+    LegacyFixed {
+        name: "wheelhouse_gap_m",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: AFT_WHEELHOUSE_GAP_M,
+    },
+    LegacyFixed {
+        name: "wheelhouse_eye_height_m",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: AFT_WHEELHOUSE_EYE_HEIGHT_M,
+    },
+    LegacyFixed {
+        name: "sightline_margin_m",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: AFT_SIGHTLINE_MARGIN_M,
+    },
+    LegacyFixed {
+        name: "wheelhouse_max_lift_m",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: AFT_WHEELHOUSE_MAX_LIFT_M,
+    },
 ];
 
 /// Gas tank rulesets.
@@ -376,6 +514,9 @@ pub const RULESETS: &[&str] = &["IGC_2G"];
 
 /// The Formation kinds of a pushed barge or convoy: the ones with no stern block of their own.
 pub const PUSHED: &[&str] = &["pushed_barge", "pushed_convoy"];
+
+/// The Formation kind that carries a stern block of its own.
+pub const SELF_PROPELLED: &[&str] = &["self_propelled"];
 
 /// Whether an input used for `formations` applies to a Formation of `kind`. An unknown kind
 /// (none given yet) counts as applying, so nothing is dropped before the Formation is known.
@@ -446,6 +587,7 @@ pub enum Group {
     HullAndContainment,
     GasTanks,
     DryBulkHold,
+    AftBlock,
     WaterwayLimits,
     SpeedAndPower,
     CostRates,
@@ -453,12 +595,13 @@ pub enum Group {
 
 impl Group {
     /// Every group, in the order a form shows them.
-    pub const ALL: [Group; 8] = [
+    pub const ALL: [Group; 9] = [
         Group::Required,
         Group::VesselClass,
         Group::HullAndContainment,
         Group::GasTanks,
         Group::DryBulkHold,
+        Group::AftBlock,
         Group::WaterwayLimits,
         Group::SpeedAndPower,
         Group::CostRates,
@@ -472,6 +615,7 @@ impl Group {
             Group::HullAndContainment => "Hull and containment",
             Group::GasTanks => "Gas tanks",
             Group::DryBulkHold => "Dry-bulk hold",
+            Group::AftBlock => "Aft block",
             Group::WaterwayLimits => "Waterway Limits",
             Group::SpeedAndPower => "Speed and power",
             Group::CostRates => "Cost rates",
@@ -587,6 +731,23 @@ const fn pushed(
         required: false,
         applies_to: AppliesTo::All,
         formations: Some(PUSHED),
+        group,
+    }
+}
+
+const fn self_propelled(
+    name: &'static str,
+    label: &'static str,
+    kind: InputKind,
+    group: Group,
+) -> InputSpec {
+    InputSpec {
+        name,
+        label,
+        kind,
+        required: false,
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
         group,
     }
 }
@@ -852,6 +1013,83 @@ pub const INPUTS: &[InputSpec] = &[
         NUM,
         false,
         Group::SpeedAndPower,
+    ),
+    self_propelled(
+        "thruster_count",
+        "Thruster count (most)",
+        NUM,
+        Group::AftBlock,
+    ),
+    self_propelled(
+        "thruster_envelope_m",
+        "Thruster envelope",
+        NUM,
+        Group::AftBlock,
+    ),
+    self_propelled(
+        "thruster_clearance_m",
+        "Thruster clearance",
+        NUM,
+        Group::AftBlock,
+    ),
+    self_propelled(
+        "thruster_room_length_m",
+        "Thruster room length",
+        NUM,
+        Group::AftBlock,
+    ),
+    self_propelled("battery_unit_count", "Battery units", NUM, Group::AftBlock),
+    self_propelled(
+        "accommodation_unit_count",
+        "Accommodation units",
+        NUM,
+        Group::AftBlock,
+    ),
+    self_propelled("unit_height_m", "Unit height", NUM, Group::AftBlock),
+    self_propelled("unit_side_gap_m", "Unit side gap", NUM, Group::AftBlock),
+    self_propelled("unit_row_gap_m", "Unit row gap", NUM, Group::AftBlock),
+    self_propelled(
+        "unit_foundation_m",
+        "Unit foundation height",
+        NUM,
+        Group::AftBlock,
+    ),
+    self_propelled(
+        "wheelhouse_length_m",
+        "Wheelhouse length",
+        NUM,
+        Group::AftBlock,
+    ),
+    self_propelled(
+        "wheelhouse_width_m",
+        "Wheelhouse width",
+        NUM,
+        Group::AftBlock,
+    ),
+    self_propelled(
+        "wheelhouse_height_m",
+        "Wheelhouse height",
+        NUM,
+        Group::AftBlock,
+    ),
+    self_propelled("wheelhouse_gap_m", "Wheelhouse gap", NUM, Group::AftBlock),
+    self_propelled(
+        "wheelhouse_eye_height_m",
+        "Wheelhouse eye height above floor",
+        NUM,
+        Group::AftBlock,
+    ),
+    self_propelled(
+        "sightline_margin_m",
+        "Sightline margin",
+        NUM,
+        Group::AftBlock,
+    ),
+    self_propelled(
+        "wheelhouse_max_lift_m",
+        "Wheelhouse maximum lift",
+        NUM,
+        Group::AftBlock,
     ),
     spec(
         "air_draft_limit_m",
@@ -1738,7 +1976,13 @@ fn read_option(
         // An input that is new since the first files, left out of a file: the fixed value the
         // engine used before it was an input (never the profile value), noted once per Option.
         if !matches!(missing, Missing::FillProfile)
-            && let Some(fixed) = LEGACY_FIXED_INPUTS.iter().find(|l| l.name == spec.name)
+            && let Some(fixed) = LEGACY_FIXED_INPUTS.iter().find(|l| {
+                l.name == spec.name
+                    && containment
+                        .as_ref()
+                        .and_then(Value::as_str)
+                        .is_none_or(|c| l.applies_to.includes(c))
+            })
         {
             legacy_added.push(spec.name);
             inputs.push((
@@ -2142,7 +2386,13 @@ fn cross_checks(
         );
     }
     // A count is a whole number.
-    for name in ["n_holds", "tanks_in_line"] {
+    for name in [
+        "n_holds",
+        "tanks_in_line",
+        "thruster_count",
+        "battery_unit_count",
+        "accommodation_unit_count",
+    ] {
         if let Some(n) = get(name).and_then(Value::as_f64)
             && n.fract() != 0.0
         {

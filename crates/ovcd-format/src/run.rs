@@ -132,6 +132,23 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
         "hopper_plate_mm",
         "hold_bulkhead_plate_mm",
         "hatch_coaming_plate_mm",
+        "thruster_count",
+        "thruster_envelope_m",
+        "thruster_clearance_m",
+        "thruster_room_length_m",
+        "battery_unit_count",
+        "accommodation_unit_count",
+        "unit_height_m",
+        "unit_side_gap_m",
+        "unit_row_gap_m",
+        "unit_foundation_m",
+        "wheelhouse_length_m",
+        "wheelhouse_width_m",
+        "wheelhouse_height_m",
+        "wheelhouse_gap_m",
+        "wheelhouse_eye_height_m",
+        "sightline_margin_m",
+        "wheelhouse_max_lift_m",
     ] {
         put(name, name);
     }

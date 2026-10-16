@@ -21,7 +21,9 @@ use alloc::vec::Vec;
 use libm::{fabs, sqrt};
 
 use crate::aft_arrangement::{
-    AftArrangementInputs, AftArrangementResult, PyException, compute as compute_aft_arrangement,
+    AftArrangementInputs, AftArrangementResult, AftDesign, DEFAULT_ACCOM_UNITS_DRY,
+    DEFAULT_ACCOM_UNITS_GAS, DEFAULT_BATTERY_UNITS_DRY, DEFAULT_BATTERY_UNITS_GAS, PyException,
+    compute as compute_aft_arrangement,
 };
 use crate::cargo::get_cargo;
 use crate::checks::{Check, all_ok};
@@ -90,6 +92,9 @@ pub struct BargeCapacityInputs {
 
     // --- Arrangement ---
     pub aft: Option<AftArrangementInputs>,
+    /// The design values of the default stern block (thrusters, units, wheelhouse). Used only
+    /// when `aft` is `None`; a given `aft` is used as it is.
+    pub aft_design: AftDesign,
     pub separation: Option<GasSeparationInputs>,
     /// A self-propelled vessel carries the stern block; a pushed barge does not.
     pub self_propelled: bool,
@@ -168,6 +173,7 @@ impl BargeCapacityInputs {
             air_draft_limit_m: None,
             ballast_capacity_t: 0.0,
             aft: None,
+            aft_design: AftDesign::default(),
             separation: None,
             self_propelled: true,
             propulsion: "battery_electric".to_string(),
@@ -677,15 +683,39 @@ fn arrangement(inp: &BargeCapacityInputs, is_gas: bool) -> Result<Arrangement, P
             a.clone()
         }
         None => {
+            let d = &inp.aft_design;
             let mut a = AftArrangementInputs::new(inp.beam, inp.depth);
+            a.n_thrusters = d.n_thrusters;
+            a.thruster_envelope_m = d.thruster_envelope_m;
+            a.thruster_clear_m = d.thruster_clear_m;
+            a.thruster_room_length_m = d.thruster_room_length_m;
+            a.container_height_m = d.container_height_m;
+            a.container_side_gap_m = d.container_side_gap_m;
+            a.container_gap_m = d.container_gap_m;
+            a.container_foundation_m = d.container_foundation_m;
+            a.wheelhouse_length_m = d.wheelhouse_length_m;
+            a.wheelhouse_width_m = d.wheelhouse_width_m;
+            a.wheelhouse_height_m = d.wheelhouse_height_m;
+            a.wheelhouse_gap_m = d.wheelhouse_gap_m;
+            a.wheelhouse_eye_above_floor_m = d.wheelhouse_eye_above_floor_m;
+            a.sightline_margin_m = d.sightline_margin_m;
+            a.wheelhouse_max_lift_m = d.wheelhouse_max_lift_m;
             a.propulsion = inp.propulsion.clone();
             if a.is_gas_fuelled() {
                 a.n_battery_units = 0;
                 a.electrical_load_kwe = inp.electrical_load_kwe;
             } else {
-                a.n_battery_units = if is_gas { 1 } else { 2 };
+                a.n_battery_units = d.n_battery_units.unwrap_or(if is_gas {
+                    DEFAULT_BATTERY_UNITS_GAS
+                } else {
+                    DEFAULT_BATTERY_UNITS_DRY
+                });
             }
-            a.n_accom_units = if is_gas { 2 } else { 1 };
+            a.n_accom_units = d.n_accom_units.unwrap_or(if is_gas {
+                DEFAULT_ACCOM_UNITS_GAS
+            } else {
+                DEFAULT_ACCOM_UNITS_DRY
+            });
             a
         }
     };
