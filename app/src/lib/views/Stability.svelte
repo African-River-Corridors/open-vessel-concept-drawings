@@ -141,12 +141,24 @@
     return !(near(x.min, fitted.x[0]) && near(x.max, fitted.x[1]) && near(y.min, fitted.y[0]) && near(y.max, fitted.y[1]));
   }
 
+  /** The extent that shows every curve whole: all heel angles, and GZ from zero (or below) to the top. */
+  function extent() {
+    const [angles, ...columns] = data();
+    const gz = columns.flat().filter((v): v is number => typeof v === "number");
+    const top = Math.max(...gz, 0.1);
+    const bottom = Math.min(...gz, 0);
+    const pad = (top - bottom) * 0.08;
+    return { x: [angles[0], angles[angles.length - 1]], y: [bottom - (bottom < 0 ? pad : 0), top + pad] };
+  }
+
   /** The whole curve in the panel. */
   function fit() {
     if (!plot || !host) return;
+    fitted = extent();
     plot.setSize({ width: host.clientWidth, height: Math.max(host.clientHeight, 120) });
-    plot.setData(data(), true);
-    fitted = { x: [plot.scales.x.min!, plot.scales.x.max!], y: [plot.scales.y.min!, plot.scales.y.max!] };
+    plot.setData(data(), false);
+    plot.setScale("x", { min: fitted.x[0], max: fitted.x[1] });
+    plot.setScale("y", { min: fitted.y[0], max: fitted.y[1] });
     zoomed = false;
   }
 
