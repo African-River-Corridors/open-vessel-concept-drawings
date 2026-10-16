@@ -48,12 +48,7 @@ section { padding: var(--sp-7) 0; }
 .btn:hover { background: var(--surface-2); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .btn.primary:hover { filter: brightness(1.08); }
-/* Not yet available: dashed outline, muted text, a badge in words. The link stays, so deploying the
-   web app to app/ makes it live; then drop the badge and the .soon class. */
-.btn.soon { border-style: dashed; border-color: var(--rule-strong); color: var(--ink-2); display: inline-flex; align-items: center; gap: 10px; }
-.btn.soon:hover { background: var(--surface-2); }
 .badge { font: 600 11px/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--warn); background: var(--warn-soft); border: 1px solid var(--warn); border-radius: var(--radius); padding: 3px 6px; white-space: nowrap; vertical-align: middle; }
-.hero .btn.soon { flex-direction: column; align-items: flex-start; gap: 4px; padding-top: 6px; padding-bottom: 6px; }
 .hero .cta { align-items: stretch; }
 .hero .btn.primary { display: inline-flex; align-items: center; }
 h3 .badge { margin-left: 6px; position: relative; top: -2px; }
