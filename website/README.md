@@ -1,6 +1,6 @@
 # Website and docs
 
-The OVCD website and docs. Live at **https://africanrivercorridors.com/ovcd** (docs at
+The OVCD website and docs. Live at **https://www.africanrivercorridors.com/ovcd** (docs at
 `/ovcd/docs`).
 
 ## How it is served

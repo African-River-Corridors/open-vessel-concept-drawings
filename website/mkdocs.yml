@@ -1,7 +1,7 @@
 # OVCD docs. Built by website/build.py, which assembles _docs/ from the repo's own Markdown.
 site_name: OVCD Docs
 site_description: Documentation for OVCD, Open Vessel Concept Design.
-site_url: https://africanrivercorridors.com/ovcd/docs/
+site_url: https://www.africanrivercorridors.com/ovcd/docs/
 repo_url: https://github.com/African-River-Corridors/open-vessel-concept-drawings
 repo_name: open-vessel-concept-drawings
 edit_uri: ""

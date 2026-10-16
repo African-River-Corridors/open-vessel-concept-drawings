@@ -1,6 +1,6 @@
 """Build the OVCD website and docs into website/_site/.
 
-The site lives at https://africanrivercorridors.com/ovcd. The ARC site proxies /ovcd to this
+The site lives at https://www.africanrivercorridors.com/ovcd. The ARC site proxies /ovcd to this
 repo's GitHub Pages site, so every URL in the output is an absolute /ovcd/... path (see
 website/README.md for why).
 

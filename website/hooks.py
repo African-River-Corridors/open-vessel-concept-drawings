@@ -59,7 +59,7 @@ def on_post_page(output, page, config):
     site = config["site_url"].rstrip("/")
     output = output.replace(
         f'<link rel="canonical" href="{site}/{page.file.url}">',
-        f'<link rel="canonical" href="https://africanrivercorridors.com{clean(PREFIX + page.file.url)}">',
+        f'<link rel="canonical" href="https://www.africanrivercorridors.com{clean(PREFIX + page.file.url)}">',
     )
 
     def fix_config(m):
