@@ -132,6 +132,12 @@ describe("OVCD app smoke tests", () => {
     ["BOQ & Finance", ["BOQ", "Capital budget"]],
   ];
   const tab = (label) => browser.$(`//button[@role="tab" and normalize-space()="${label}"]`);
+  /** The text of each element in a list, in order. */
+  async function texts(list) {
+    const out = [];
+    for (let i = 0; i < list.length; i++) out.push(await list[i].getText());
+    return out;
+  }
   const slug = (label) => label.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "");
 
   /** Show a view: its top tab, then its sub-tab. */
@@ -203,11 +209,11 @@ describe("OVCD app smoke tests", () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
     assert.equal((await browser.$$('select[aria-label="Jump to view"]')).length, 0, "the jump list is gone");
     const top = await browser.$$('[role=tablist][aria-label="View groups"] button');
-    assert.deepEqual(await Promise.all(top.map((b) => b.getText())), GROUPS.map(([g]) => g));
+    assert.deepEqual(await texts(top), GROUPS.map(([g]) => g));
     for (const [group, views] of GROUPS) {
       await (await tab(group)).click();
       const subs = await browser.$$(`[role=tablist][aria-label="Views of ${group}"] button`);
-      assert.deepEqual(await Promise.all(subs.map((b) => b.getText())), views, `the views of ${group}`);
+      assert.deepEqual(await texts(subs), views, `the views of ${group}`);
       // Picking a top tab selects its first view.
       assert.equal(await subs[0].getAttribute("aria-selected"), "true");
     }
