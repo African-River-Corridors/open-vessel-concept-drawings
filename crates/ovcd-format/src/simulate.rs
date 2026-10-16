@@ -146,6 +146,9 @@ fn py_div(a: f64, b: f64) -> R<f64> {
     Ok(a / b)
 }
 
+// Mutation survivors (#64), `>` to `>=` in `py_max` and `<` to `<=` in `py_min`: equivalent. They
+// differ only on a tie, and on a tie both arguments are the same number, so either is returned.
+// (A tie of 0.0 and -0.0 would differ in sign only; neither caller can make a -0.0.)
 fn py_max(a: f64, b: f64) -> f64 {
     if b > a { b } else { a }
 }
@@ -207,6 +210,11 @@ fn env(
     deep: bool,
 ) -> EnvironmentInputs {
     let surface = bottom_w + 2.0 * slope * depth;
+    // Mutation survivors (#64), in the struct below: deleting `bank_slope` and deleting
+    // `apply_squat_limit` are equivalent. The core never reads `bank_slope` (the surface width,
+    // set above, carries the slope), and `apply_squat_limit` defaults to `true`, which is what the
+    // channel gets; deep water gets `false`, and the core does not apply squat in deep water
+    // whatever this flag says (`squat_applies` also tests `is_deep_water`).
     EnvironmentInputs {
         name: name.to_string(),
         water_depth: depth,
@@ -245,6 +253,10 @@ fn channel_limit(ch: &Map<String, Value>) -> R<Option<f64>> {
 
 fn h_over_t(ch: &Map<String, Value>, t: f64) -> R<Value> {
     match ch.get("depth_m") {
+        // Mutation survivor (#64), `t > 0.0` to `t >= 0.0`: equivalent. `t` is the loaded draught,
+        // which is above zero for every hull: displacement over `cb * l * b` for a barge, and the
+        // light draught the hydrostatics gives (never zero, even for a 0.5 m hull) for a hull
+        // that carries nothing.
         Some(v) if truthy(v) && t > 0.0 => Ok(num(py_float(v, "params.channel.depth_m")? / t)),
         _ => Ok(Value::Null),
     }
@@ -273,6 +285,12 @@ fn curves(p: &Map<String, Value>, l: f64, b: f64, t: f64, cb: f64, disp: f64) ->
     if t <= 0.0 {
         return Ok(json!([]));
     }
+    // Mutation survivors (#64), deleting one of these fields below: equivalent, each for its own
+    // reason. `loa` and `displacement_tonnes` are never read by the resistance code (it uses `lwl`,
+    // set to the same length, and works out the displacement itself). `speed_step_knots` is 0.5,
+    // which is also the default. `engine_power_kw` (1e6 here, 2400 by default) only sets whether a
+    // speed is "power available", which feeds the service speed; `simulate` lists neither, and the
+    // curve is not cut by it.
     let inputs = ResistanceInputs {
         loa: l,
         lwl: l,
@@ -576,6 +594,8 @@ fn simulate_gas(
     let t = if f.payload_t > 0.0 {
         f.draft_at_payload_m
     } else {
+        // Mutation survivor (#64), the guard `x != 0.0` to `true` or `false`: equivalent. When `x`
+        // is 0.0 both arms give 0.0, and the guard only chooses between `x` and 0.0.
         match r.light_draft_m {
             Some(x) if x != 0.0 => x,
             _ => 0.0,
