@@ -48,6 +48,7 @@ In order. Each phase builds on the one before; dates depend on contributors.
 
 | Phase | Version | Theme | Main work | What users get |
 |---|---|---|---|---|
+| Now | 0.2 | Concept tool | Capacity, gas tank arrangement, hydrostatics, journey de-rating, resistance and power; the desktop app with live results and GA drawings | **Released** as unsigned test builds |
 | 0 | 0.3 | Trust the base | Post-port fixes, test gaps (#123, #168), findings register (#121), more calibration cases (#3), PyPI (#1), recover the earlier GA arrangement detail (double bottom, voids, cofferdams, tank cradles), rules structure design (#176), evaluation harness phase 0 (#184), scope statement | `pip install`; a fuller GA; a stated scope |
 | 1 | 0.4 | Rules and geometry | Rules engine with versioned rule sets; hull geometry as a sections table ([ADR 0012](docs/adr/0012-hull-geometry-as-a-sections-table.md)) with more Hull Forms (V-bottom, chine); intact stability for every Cargo, with the weather criterion; harness rule trace and automatic sorting | Stability for any cargo and hull form, every criterion cited |
 | 2 | 0.5 | Spaces and damage | Compartments, tanks and loading conditions; deterministic damage stability; better equipment and accommodation arrangement; GA drawings from the compartment model; checkable reports | Damage stability, tank tables, loading conditions |
