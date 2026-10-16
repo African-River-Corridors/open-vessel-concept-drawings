@@ -96,6 +96,46 @@ def test_the_real_fixtures_are_what_the_script_expects():
     assert len(names - chk.NO_RESULTS_YET) >= 5
 
 
+# ---------- WebAssembly, under wasmtime (ticket 168) ----------
+
+def fake_wasmtime(tmp_path: Path) -> Path:
+    """A stand-in wasmtime: `wasmtime run --dir D module args...` runs `module args...`."""
+    script = tmp_path / "wasmtime"
+    script.write_text(textwrap.dedent(f'''\
+        #!{sys.executable}
+        import subprocess, sys
+        a = sys.argv[1:]
+        assert a[:2] == ["run", "--dir"], a
+        sys.exit(subprocess.run([sys.executable, a[3]] + a[4:]).returncode)
+    '''))
+    script.chmod(script.stat().st_mode | stat.S_IEXEC)
+    return script
+
+
+def run_wasm(tmp_path, module, names=SIX, wasmtime=None):
+    wt = wasmtime or fake_wasmtime(tmp_path)
+    return subprocess.run([sys.executable, str(SCRIPT), "--wasmtime", str(wt), str(module),
+                           str(fixtures(tmp_path, names))], capture_output=True, text=True)
+
+
+def test_the_wasm_module_is_run_under_wasmtime_and_matching_hashes_pass(tmp_path):
+    r = run_wasm(tmp_path, fake_ovcd(tmp_path))
+    assert r.returncode == 0, r.stderr
+    assert "under" in r.stdout and "every fixture hash matches" in r.stdout
+
+
+def test_a_wasm_hash_mismatch_fails(tmp_path):
+    r = run_wasm(tmp_path, fake_ovcd(tmp_path, status="differs"))
+    assert r.returncode == 1 and "'differs'" in r.stderr
+
+
+def test_a_missing_wasmtime_or_module_fails(tmp_path):
+    r = run_wasm(tmp_path, fake_ovcd(tmp_path), wasmtime=tmp_path / "no-such-wasmtime")
+    assert r.returncode == 1 and "no wasmtime" in r.stderr
+    r = run_wasm(tmp_path, tmp_path / "no-such.wasm")
+    assert r.returncode == 1 and "no ovcd binary" in r.stderr
+
+
 # ---------- where it runs ----------
 
 def workflow(name):
@@ -116,3 +156,20 @@ def test_the_pull_request_gate_does_not_run_it():
     for name in ("ci.yml",):
         assert "check_fixture_hashes" not in (ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
     assert "check_fixture_hashes" not in (ROOT / "tools" / "gates.sh").read_text(encoding="utf-8")
+
+
+def test_the_release_gate_runs_it_on_webassembly_with_a_pinned_wasmtime():
+    wf = workflow("release.yml")
+    job = wf["jobs"]["wasm-hashes"]
+    assert job["needs"] == "gate"
+    text = "\n".join(str(s.get("run", "")) + str(s.get("with", "")) for s in job["steps"])
+    runs = [s.get("run", "") for s in job["steps"]]
+    assert "--target wasm32-wasip1" in text
+    # An exact wasmtime version, locked.
+    assert "cargo install wasmtime-cli --version 49.0.3 --locked" in text
+    build = next(i for i, r in enumerate(runs) if "cargo build --release" in r and "wasm32-wasip1" in r)
+    check = next(i for i, r in enumerate(runs) if "check_fixture_hashes.py --wasmtime" in r
+                 and "ovcd.wasm" in r)
+    assert check > build
+    assert not any("--no-fail" in r or "|| true" in r for r in runs)
+    assert "continue-on-error" not in str(job)
