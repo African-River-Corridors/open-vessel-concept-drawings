@@ -9,6 +9,8 @@ export default defineConfig({
   define: { __APP_VERSION__: JSON.stringify(version) },
   plugins: [svelte()],
   clearScreen: false,
+  // The desktop bundle holds the Tauri adapter only (the web build sets this to true).
+  define: { __OVCD_WEB__: false },
   // The font file lives in the drawing crate's vendored standard, one folder up from the app.
   server: { port: 1420, strictPort: true, watch: { ignored: ["**/src-tauri/**"] }, fs: { allow: [".."] } },
 });
