@@ -72,8 +72,7 @@ def _bisect(f, lo, hi, target, increasing):
     """x in [lo, hi] with f(x) = target, f monotone (increasing or decreasing)."""
     flo, fhi = f(lo), f(hi)
     if not (min(flo, fhi) <= target <= max(flo, fhi)):
-        raise Unreachable(f"no KG between the keel and the deck gives {target:.4g} "
-                          f"(the value runs from {max(flo, fhi):.4g} to {min(flo, fhi):.4g})")
+        raise Unreachable("no KG between the keel and the deck gives the wanted value")
     for _ in range(60):
         mid = 0.5 * (lo + hi)
         v = f(mid)
@@ -87,7 +86,7 @@ def _bisect(f, lo, hi, target, increasing):
 def _kg_on_the_hull(name, kg, depth):
     """A KG must lie on the hull: between the keel and the deck."""
     if not 0.0 < kg <= depth:
-        raise Unreachable(f"KG {kg:.3f} m is not between the keel and the deck ({depth} m)")
+        raise Unreachable("the KG that crosses the limit is not between the keel and the deck")
     return name, kg
 
 
@@ -181,9 +180,10 @@ def render(docs: list[dict], skipped: list[dict]) -> str:
 def main(argv: list[str]) -> int:
     text = render(*generate())
     if "--check" in argv:
-        if not OUT.exists() or not write_cases.same(yaml.safe_load(OUT.read_text(encoding="utf-8")),
-                                                    yaml.safe_load(text)):
-            print(f"mutants: {OUT} differs from what the oracle generates", file=sys.stderr)
+        diff = "missing" if not OUT.exists() else write_cases.first_difference(
+            yaml.safe_load(OUT.read_text(encoding="utf-8")), yaml.safe_load(text))
+        if diff:
+            print(f"mutants: {OUT} differs from what the oracle generates at {diff}", file=sys.stderr)
             return 1
         return 0
     OUT.write_text(text, encoding="utf-8")

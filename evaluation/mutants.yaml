@@ -2329,99 +2329,99 @@ skipped:
   criterion: area_0_30
   side: pass
   magnitude: big
-  reason: KG 10.292 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
   criterion: area_0_30
   side: pass
   magnitude: small
-  reason: KG 10.307 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
   criterion: area_0_30
   side: fail
   magnitude: big
-  reason: KG 10.322 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
   criterion: area_0_30
   side: fail
   magnitude: small
-  reason: KG 10.307 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
   criterion: area_0_40
   side: pass
   magnitude: big
-  reason: KG 9.836 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
   criterion: area_0_40
   side: pass
   magnitude: small
-  reason: KG 9.845 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
   criterion: area_0_40
   side: fail
   magnitude: big
-  reason: KG 9.853 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
   criterion: area_0_40
   side: fail
   magnitude: small
-  reason: KG 9.845 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
   criterion: area_30_40
   side: pass
   magnitude: big
-  reason: KG 9.255 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
   criterion: area_30_40
   side: pass
   magnitude: small
-  reason: KG 9.275 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
   criterion: area_30_40
   side: fail
   magnitude: big
-  reason: KG 9.295 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
   criterion: area_30_40
   side: fail
   magnitude: small
-  reason: KG 9.275 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
   criterion: gz_30_plus
   side: pass
   magnitude: big
-  reason: no KG between the keel and the deck gives 0.21 (the value runs from 5.817 to 1.175)
+  reason: no KG between the keel and the deck gives the wanted value
 - parent: box_a
   criterion: gz_30_plus
   side: pass
   magnitude: small
-  reason: no KG between the keel and the deck gives 0.2001 (the value runs from 5.817 to 1.175)
+  reason: no KG between the keel and the deck gives the wanted value
 - parent: box_a
   criterion: gz_30_plus
   side: fail
   magnitude: big
-  reason: no KG between the keel and the deck gives 0.19 (the value runs from 5.817 to 1.175)
+  reason: no KG between the keel and the deck gives the wanted value
 - parent: box_a
   criterion: gz_30_plus
   side: fail
   magnitude: small
-  reason: no KG between the keel and the deck gives 0.1999 (the value runs from 5.817 to 1.175)
+  reason: no KG between the keel and the deck gives the wanted value
 - parent: box_a
   criterion: gm
   side: pass
   magnitude: big
-  reason: KG 10.178 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
   criterion: gm
   side: pass
   magnitude: small
-  reason: KG 10.182 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
   criterion: gm
   side: fail
   magnitude: big
-  reason: KG 10.188 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
   criterion: gm
   side: fail
   magnitude: small
-  reason: KG 10.184 m is not between the keel and the deck (8.0 m)
+  reason: the KG that crosses the limit is not between the keel and the deck

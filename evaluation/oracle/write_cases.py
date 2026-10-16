@@ -53,6 +53,74 @@ def sig(x: float, n: int = 10) -> float:
     return float(f"{x:.{n}g}")
 
 
+def first_difference(a, b, rel: float = 1e-6, abs_: float = 1e-9, path: str = "") -> str | None:
+    """The path and the two values of the first place where `a` and `b` differ as data, or None. Text
+    and structure must match exactly; numbers to a relative tolerance. The angle of maximum GZ is
+    found by a search on a flat curve, so its last digits depend on the platform's maths library
+    (about 1e-8 degree): a generated file is compared with this, not byte for byte."""
+    if isinstance(a, dict) and isinstance(b, dict):
+        if list(a) != list(b):
+            return f"{path}: keys {list(a)[:4]} vs {list(b)[:4]}"
+        for k in a:
+            d = first_difference(a[k], b[k], rel, abs_, f"{path}/{k}")
+            if d:
+                return d
+        return None
+    if isinstance(a, list) and isinstance(b, list):
+        if len(a) != len(b):
+            return f"{path}: length {len(a)} vs {len(b)}"
+        for i, (x, y) in enumerate(zip(a, b)):
+            d = first_difference(x, y, rel, abs_, f"{path}[{i}]")
+            if d:
+                return d
+        return None
+    if isinstance(a, bool) or isinstance(b, bool):
+        return None if a is b else f"{path}: {a!r} vs {b!r}"
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        return None if abs(a - b) <= max(abs_, rel * max(abs(a), abs(b))) else f"{path}: {a!r} vs {b!r}"
+    return None if a == b else f"{path}: {a!r} vs {b!r}"
+
+
+def same(a, b, rel: float = 1e-6, abs_: float = 1e-9) -> bool:
+    return first_difference(a, b, rel, abs_) is None
+
+
+CASES_DIR = HERE.parent / "cases"
+
+RULES = {
+    "area_0_30": ("IS Code 2008 Part A 2.2.1", "area under the GZ curve, 0 to 30 degrees", "m rad"),
+    "area_0_40": ("IS Code 2008 Part A 2.2.1", "area under the GZ curve, 0 to 40 degrees", "m rad"),
+    "area_30_40": ("IS Code 2008 Part A 2.2.1", "area under the GZ curve, 30 to 40 degrees", "m rad"),
+    "gz_30_plus": ("IS Code 2008 Part A 2.2.2", "GZ at an angle of heel of 30 degrees or more", "m"),
+    "angle_max_gz": ("IS Code 2008 Part A 2.2.3", "angle of maximum GZ", "deg"),
+    "gm": ("IS Code 2008 Part A 2.2.4", "initial metacentric height", "m"),
+}
+
+SOURCE_RULES = (
+    "IMO resolution MSC.267(85), annex, International Code on Intact Stability, 2008, Part A 2.2.1 "
+    "to 2.2.4 (printed pages 11 and 12): the limits."
+)
+
+BASE_CASES = [
+    {
+        "id": "box_a",
+        "title": "Box barge A, large margins",
+        "L": 100.0, "B": 20.0, "D": 8.0, "T": 4.0, "KG": 6.0,
+        "note": "Wide and low: every criterion passes with a large margin.",
+    },
+    {
+        "id": "box_b",
+        "title": "Box barge B, small margins",
+        "L": 100.0, "B": 14.0, "D": 8.0, "T": 5.0, "KG": 5.5,
+        "note": "GM 0.267 m, areas within 0.025 m rad of their limits, angle of maximum GZ about 31.6 degrees.",
+    },
+]
+
+
+def sig(x: float, n: int = 10) -> float:
+    return float(f"{x:.{n}g}")
+
+
 def same(a, b, rel: float = 1e-6, abs_: float = 1e-9) -> bool:
     """Equal as data: text and structure exactly, numbers to a relative tolerance. The angle of maximum
     GZ is found by a search on a flat curve, so its last digits depend on the platform's maths library
@@ -116,9 +184,10 @@ def main(argv: list[str]) -> int:
         path = CASES_DIR / f"{c['id']}.yaml"
         text = render(case_document(c))
         if check:
-            if not path.exists() or not same(yaml.safe_load(path.read_text(encoding="utf-8")),
-                                             yaml.safe_load(text)):
-                print(f"write_cases: {path} differs from the oracle", file=sys.stderr)
+            diff = "missing" if not path.exists() else first_difference(
+                yaml.safe_load(path.read_text(encoding="utf-8")), yaml.safe_load(text))
+            if diff:
+                print(f"write_cases: {path} differs from the oracle at {diff}", file=sys.stderr)
                 bad += 1
         else:
             path.write_text(text, encoding="utf-8")

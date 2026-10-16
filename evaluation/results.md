@@ -37,23 +37,23 @@ None.
 
 A limit that no physical input crosses has no mutant (the KG would have to be above the deck).
 
-- `box_a`, Area 0-30 deg (2.2.1), pass, big step: KG 10.292 m is not between the keel and the deck (8.0 m)
-- `box_a`, Area 0-30 deg (2.2.1), pass, small step: KG 10.307 m is not between the keel and the deck (8.0 m)
-- `box_a`, Area 0-30 deg (2.2.1), fail, big step: KG 10.322 m is not between the keel and the deck (8.0 m)
-- `box_a`, Area 0-30 deg (2.2.1), fail, small step: KG 10.307 m is not between the keel and the deck (8.0 m)
-- `box_a`, Area 0-40 deg (2.2.1), pass, big step: KG 9.836 m is not between the keel and the deck (8.0 m)
-- `box_a`, Area 0-40 deg (2.2.1), pass, small step: KG 9.845 m is not between the keel and the deck (8.0 m)
-- `box_a`, Area 0-40 deg (2.2.1), fail, big step: KG 9.853 m is not between the keel and the deck (8.0 m)
-- `box_a`, Area 0-40 deg (2.2.1), fail, small step: KG 9.845 m is not between the keel and the deck (8.0 m)
-- `box_a`, Area 30-40 deg (2.2.1), pass, big step: KG 9.255 m is not between the keel and the deck (8.0 m)
-- `box_a`, Area 30-40 deg (2.2.1), pass, small step: KG 9.275 m is not between the keel and the deck (8.0 m)
-- `box_a`, Area 30-40 deg (2.2.1), fail, big step: KG 9.295 m is not between the keel and the deck (8.0 m)
-- `box_a`, Area 30-40 deg (2.2.1), fail, small step: KG 9.275 m is not between the keel and the deck (8.0 m)
-- `box_a`, GZ at 30 deg or more (2.2.2), pass, big step: no KG between the keel and the deck gives 0.21 (the value runs from 5.817 to 1.175)
-- `box_a`, GZ at 30 deg or more (2.2.2), pass, small step: no KG between the keel and the deck gives 0.2001 (the value runs from 5.817 to 1.175)
-- `box_a`, GZ at 30 deg or more (2.2.2), fail, big step: no KG between the keel and the deck gives 0.19 (the value runs from 5.817 to 1.175)
-- `box_a`, GZ at 30 deg or more (2.2.2), fail, small step: no KG between the keel and the deck gives 0.1999 (the value runs from 5.817 to 1.175)
-- `box_a`, Initial GM (2.2.4), pass, big step: KG 10.178 m is not between the keel and the deck (8.0 m)
-- `box_a`, Initial GM (2.2.4), pass, small step: KG 10.182 m is not between the keel and the deck (8.0 m)
-- `box_a`, Initial GM (2.2.4), fail, big step: KG 10.188 m is not between the keel and the deck (8.0 m)
-- `box_a`, Initial GM (2.2.4), fail, small step: KG 10.184 m is not between the keel and the deck (8.0 m)
+- `box_a`, Area 0-30 deg (2.2.1), pass, big step: the KG that crosses the limit is not between the keel and the deck
+- `box_a`, Area 0-30 deg (2.2.1), pass, small step: the KG that crosses the limit is not between the keel and the deck
+- `box_a`, Area 0-30 deg (2.2.1), fail, big step: the KG that crosses the limit is not between the keel and the deck
+- `box_a`, Area 0-30 deg (2.2.1), fail, small step: the KG that crosses the limit is not between the keel and the deck
+- `box_a`, Area 0-40 deg (2.2.1), pass, big step: the KG that crosses the limit is not between the keel and the deck
+- `box_a`, Area 0-40 deg (2.2.1), pass, small step: the KG that crosses the limit is not between the keel and the deck
+- `box_a`, Area 0-40 deg (2.2.1), fail, big step: the KG that crosses the limit is not between the keel and the deck
+- `box_a`, Area 0-40 deg (2.2.1), fail, small step: the KG that crosses the limit is not between the keel and the deck
+- `box_a`, Area 30-40 deg (2.2.1), pass, big step: the KG that crosses the limit is not between the keel and the deck
+- `box_a`, Area 30-40 deg (2.2.1), pass, small step: the KG that crosses the limit is not between the keel and the deck
+- `box_a`, Area 30-40 deg (2.2.1), fail, big step: the KG that crosses the limit is not between the keel and the deck
+- `box_a`, Area 30-40 deg (2.2.1), fail, small step: the KG that crosses the limit is not between the keel and the deck
+- `box_a`, GZ at 30 deg or more (2.2.2), pass, big step: no KG between the keel and the deck gives the wanted value
+- `box_a`, GZ at 30 deg or more (2.2.2), pass, small step: no KG between the keel and the deck gives the wanted value
+- `box_a`, GZ at 30 deg or more (2.2.2), fail, big step: no KG between the keel and the deck gives the wanted value
+- `box_a`, GZ at 30 deg or more (2.2.2), fail, small step: no KG between the keel and the deck gives the wanted value
+- `box_a`, Initial GM (2.2.4), pass, big step: the KG that crosses the limit is not between the keel and the deck
+- `box_a`, Initial GM (2.2.4), pass, small step: the KG that crosses the limit is not between the keel and the deck
+- `box_a`, Initial GM (2.2.4), fail, big step: the KG that crosses the limit is not between the keel and the deck
+- `box_a`, Initial GM (2.2.4), fail, small step: the KG that crosses the limit is not between the keel and the deck
