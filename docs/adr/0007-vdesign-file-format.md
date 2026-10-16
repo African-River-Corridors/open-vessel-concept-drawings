@@ -22,6 +22,8 @@ A Design is saved as one file with the extension `.vdesign`.
 - The results hash is the SHA-256 of the canonical JSON of an Option's results. If a file opens on an
   engine version that gives a different hash, the tool warns that the results differ from the hash
   saved in the file. It cannot tell an engine change from a hand edit, so it does not blame either.
+  The top-level `drawing` object of the results holds drawing geometry from the core (double
+  bottom, wing tanks, separation, aft block). It is not a result, and the hash leaves it out.
 
 ## Format versions
 
