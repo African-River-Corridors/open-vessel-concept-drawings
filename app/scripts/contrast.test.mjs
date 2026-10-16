@@ -42,7 +42,9 @@ test("a failing line pair in the dark theme exits 1", () => {
 
 test("dark blocks that disagree exit 1", () => {
   const dir = mkdtempSync(join(tmpdir(), "contrast-"));
-  const css = readFileSync(appCss, "utf8").replace("--pass: #b9efc3;  --pass-soft: #1f4a4b;", "--pass: #b9efc4;  --pass-soft: #1f4a4b;");
+  // An OS-dark block whose --pass differs from the data-theme="dark" block.
+  const dark = readFileSync(appCss, "utf8").match(/:root\[data-theme="dark"\] \{([^}]*)\}/)[1];
+  const css = readFileSync(appCss, "utf8") + `\n@media (prefers-color-scheme: dark) {\n  :root:not([data-theme="light"]) {${dark.replace("--pass: #b9efc3;", "--pass: #b9efc4;")}}\n}\n`;
   const bad = join(dir, "bad-sync.css");
   writeFileSync(bad, css);
   const r = run(bad);
