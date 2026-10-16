@@ -107,6 +107,10 @@
   {#if stale}<div class="whyrow"><StaleWhy {blockers} /></div>{/if}
 
   <div class="view" data-view={current}>
+    <!-- The view title, in the yard form (style guide section 7). The app has no scale to show, and the
+         zoom state of a drawing sits with its canvas, so nothing goes beneath the name. -->
+    <h3 class="title" data-testid="view-title">{currentLabel}</h3>
+    <div class="content">
     {#if HULL.includes(current)}
       <div class="slot" data-testid="slot-{current}">
         {#if drawing(current as HullKey)}
@@ -155,8 +159,7 @@
       {/if}
     {:else if current === "boq"}
       <div data-testid="placeholder-boq">
-        <h3 class="wip">Coming in a later phase</h3>
-        <p class="note">The bill of quantities is planned for phase 4 of the roadmap.</p>
+        <p class="note">The bill of quantities comes in a later phase. See the roadmap.</p>
       </div>
     {:else if current === "capital"}
       {#if message}
@@ -167,6 +170,7 @@
         <CapitalBudget cost={(results as { cost?: never }).cost} phase={(results as { phase?: string }).phase} />
       {/if}
     {/if}
+    </div>
   </div>
 </div>
 
@@ -192,10 +196,18 @@
   .tabs.sub button:hover { background: var(--surface-2); }
   .tabs.sub button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); }
   .whyrow { padding: 0 var(--sp-4); background: var(--warn-soft); border-bottom: var(--lw-thin) solid var(--rule); }
-  .view { flex: 1; min-height: 0; padding: 10px 14px; box-sizing: border-box; }
+  .view { flex: 1; min-height: 0; padding: 10px 14px; box-sizing: border-box; display: flex; flex-direction: column; }
+  /* View title: hand lettering, capitals, slanted, letter-spaced, 16 px, double underline (two 1 px
+     lines, 2 px apart). It takes its height from the view; the content below fits what is left. */
+  .title {
+    flex: none; align-self: flex-start; margin: 0 0 var(--sp-3); padding-bottom: 2px;
+    font-family: var(--font-hand); font-size: var(--fs-16); font-weight: 400; font-style: oblique 10deg;
+    text-transform: uppercase; letter-spacing: 0.1em; line-height: var(--lh-tight); color: var(--ink);
+    border-bottom: var(--lw-thin) solid var(--ink); box-shadow: 0 3px 0 0 var(--ink);
+  }
+  .content { flex: 1; min-height: 0; }
   .slot { height: 100%; }
   .charts { height: 100%; display: flex; flex-direction: column; gap: 10px; }
   .note { color: var(--ink-3); }
-  .wip { font-family: var(--font-serif); color: var(--ink); font-size: var(--fs-16); margin: 0 0 4px; }
   .stale { margin-left: auto; align-self: center; margin-bottom: var(--sp-1); background: var(--warn-soft); color: var(--warn); border: var(--lw-thin) solid var(--warn); font: var(--fs-11) var(--font-ui); padding: 1px 6px; border-radius: var(--radius); }
 </style>

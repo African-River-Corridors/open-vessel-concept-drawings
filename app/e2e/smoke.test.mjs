@@ -541,7 +541,8 @@ describe("OVCD app smoke tests", () => {
       await open(path.join(FIXTURES, fixture), fixture);
       await show("BOQ & Finance", "BOQ");
       const text = await browser.$("[data-testid=placeholder-boq]").getText();
-      assert.match(text, /^Coming in a later phase\s+The bill of quantities is planned for phase 4 of the roadmap\.$/);
+      assert.equal(text, "The bill of quantities comes in a later phase. See the roadmap.");
+      assert.equal(await browser.$("[data-testid=view-title]").getText(), "BOQ", "the view title is over the placeholder");
       await shot(`233-${cargo}-boq`);
     });
   }
