@@ -944,3 +944,368 @@ fn an_item_whose_value_is_null_is_left_out_without_an_error() {
     assert!(has_leader(&v.midship_section, "CRADLE"));
     assert!(has_leader(&v.side_elevation, "FWD EQUIP."));
 }
+
+// ---- #197: the aft block of a self-propelled hull ---------------------------------------------------
+
+/// A self-propelled gas Design and a self-propelled dry-bulk Design.
+fn self_propelled() -> Vec<(&'static str, Value)> {
+    [
+        "gas_igc_2g_self_propelled.vdesign",
+        "dry_bulk_box_hold.vdesign",
+    ]
+    .into_iter()
+    .map(|file| (file, results_of(file, true)))
+    .collect()
+}
+
+fn leader_target(document: &Value, text: &str) -> (f64, f64) {
+    let l = leader(document, text);
+    (f(&l["from"]["point_m"][0]), f(&l["from"]["point_m"][1]))
+}
+
+#[test]
+fn the_aft_block_x_is_measured_from_the_stern_and_ends_where_the_stern_void_does_less_the_separation()
+ {
+    for (file, r) in self_propelled() {
+        let a = &r["drawing"]["aft_arrangement"];
+        let stern_void = f(&r["geometry"]["stern_void_length_m"]);
+        // the block starts at the stern (x = 0) and its last zone ends at the block length
+        let zones = a["zones"].as_array().unwrap();
+        assert!(
+            close(f(&zones[0][1]), 0.0),
+            "{file}: the first zone starts at the stern"
+        );
+        assert!(
+            close(f(&zones.last().unwrap()[2]), f(&a["length_m"])),
+            "{file}"
+        );
+        // the stern void is the block plus the separation to the cargo zone: the gas separation,
+        // or the dry-bulk end bulkhead space (0.5 m, the core's default)
+        let gap = if r["drawing"]["separation"].is_object() {
+            f(&r["drawing"]["separation"]["aft_separation_m"])
+        } else {
+            0.5
+        };
+        assert!(close(stern_void, f(&a["length_m"]) + gap), "{file}");
+    }
+}
+
+#[test]
+fn the_elevation_draws_the_zone_bulkheads_containers_wheelhouse_and_thrusters_where_the_results_put_them()
+ {
+    for (file, r) in self_propelled() {
+        let a = &r["drawing"]["aft_arrangement"];
+        let v = views(&r);
+        let ent = &v.side_elevation;
+        let depth = f(&r["dims"]["depth_m"]);
+        // zone bulkheads: the forward end of each zone, under the deck
+        // (for a gas hull the last bulkhead is also the cofferdam's first, drawn once)
+        for z in a["zones"].as_array().unwrap() {
+            let x = f(&z[2]);
+            assert!(
+                has_line(ent, "HIDDEN", (x, 0.0), (x, depth)),
+                "{file}: bulkhead at {x}"
+            );
+        }
+        // containers: one box a row, from the deck to the container top, on EQUIP
+        let top = f(&a["container_top_above_keel_m"]);
+        let boxes: Vec<Vec<(f64, f64)>> = of_layer(ent, "EQUIP", "polyline")
+            .iter()
+            .map(|e| points(e))
+            .collect();
+        assert_eq!(
+            boxes.len(),
+            a["container_rows"].as_u64().unwrap() as usize,
+            "{file}"
+        );
+        for (row, b) in boxes.iter().enumerate() {
+            let x0 = f(&a["container_x0_m"])
+                + row as f64 * (f(&a["container_row_length_m"]) + f(&a["container_row_gap_m"]));
+            assert!(
+                b.iter().any(|p| close(p.0, x0) && close(p.1, depth)),
+                "{file}"
+            );
+            assert!(
+                b.iter()
+                    .any(|p| close(p.0, x0 + f(&a["container_row_length_m"])) && close(p.1, top)),
+                "{file}"
+            );
+        }
+        // the wheelhouse at its lowered height, on OBJECT
+        let (wx0, wx1) = (f(&a["wheelhouse_x0_m"]), f(&a["wheelhouse_x1_m"]));
+        let (floor, wtop) = (
+            f(&a["wheelhouse_floor_lowered_m"]),
+            f(&a["wheelhouse_top_lowered_m"]),
+        );
+        let cab = of_layer(ent, "OBJECT", "polyline")
+            .iter()
+            .map(|e| points(e))
+            .find(|p| {
+                p.iter().any(|q| close(q.0, wx0))
+                    && p.iter().any(|q| close(q.0, wx1))
+                    && p.iter().any(|q| close(q.1, wtop))
+            })
+            .unwrap_or_else(|| panic!("{file}: no wheelhouse"));
+        assert!(cab.iter().any(|p| close(p.1, floor)), "{file}");
+        // a thruster circle in the steering flat
+        let room = f(&a["thruster_room_length_m"]);
+        let circles_e: Vec<_> = of_layer(ent, "EQUIP", "circle");
+        assert_eq!(circles_e.len(), 1, "{file}");
+        assert!(close(f(&circles_e[0]["centre_m"][0]), room / 2.0), "{file}");
+        // the block top is named, at its height
+        let block_top = f(&a["block_top_lowered_m"]);
+        let cab_label = format!(
+            "WHEELHOUSE, BLOCK TOP {} m",
+            ovcd_core::pyfmt::fixed(block_top, 2)
+        );
+        assert!(close(leader_target(ent, &cab_label).1, block_top), "{file}");
+        assert!(has_leader(
+            ent,
+            &format!(
+                "CONTAINERS ({} x {})",
+                a["container_per_row"], a["container_rows"]
+            )
+        ));
+        assert!(has_leader(
+            ent,
+            &format!(
+                "THRUSTERS ({})",
+                a["thruster_offsets_m"].as_array().unwrap().len()
+            )
+        ));
+    }
+}
+
+#[test]
+fn the_plan_draws_the_wheelhouse_footprint_container_rows_and_thrusters_where_the_results_put_them()
+{
+    for (file, r) in self_propelled() {
+        let a = &r["drawing"]["aft_arrangement"];
+        let v = views(&r);
+        let ent = &v.plan;
+        // wheelhouse footprint on OBJECT
+        let hw = f(&a["wheelhouse_width_m"]) / 2.0;
+        let (wx0, wx1) = (f(&a["wheelhouse_x0_m"]), f(&a["wheelhouse_x1_m"]));
+        let cab = of_layer(ent, "OBJECT", "polyline")
+            .iter()
+            .map(|e| points(e))
+            .find(|p| p.len() == 4 && p.iter().all(|q| close(q.1.abs(), hw)))
+            .unwrap_or_else(|| panic!("{file}: no wheelhouse footprint"));
+        assert!(cab.iter().any(|q| close(q.0, wx0)) && cab.iter().any(|q| close(q.0, wx1)));
+        // container units, `per_row` abreast across the beam, on EQUIP
+        let units: Vec<Vec<(f64, f64)>> = of_layer(ent, "EQUIP", "polyline")
+            .iter()
+            .map(|e| points(e))
+            .collect();
+        let labels = a["container_labels"].as_array().unwrap().len();
+        assert_eq!(units.len(), labels, "{file}");
+        let (unit_w, gap) = (
+            f(&a["container_unit_width_m"]),
+            f(&a["container_side_gap_m"]),
+        );
+        let y0 = f(&a["container_total_width_m"]) / 2.0 - gap;
+        let per_row = a["container_per_row"].as_u64().unwrap() as usize;
+        for (i, u) in units.iter().enumerate() {
+            let (row, col) = (i / per_row, i % per_row);
+            let x0 = f(&a["container_x0_m"])
+                + row as f64 * (f(&a["container_row_length_m"]) + f(&a["container_row_gap_m"]));
+            let yc = y0 - col as f64 * (unit_w + gap) - unit_w / 2.0;
+            assert!(
+                u.iter()
+                    .any(|p| close(p.0, x0) && close(p.1, yc - unit_w / 2.0)),
+                "{file}: unit {i}"
+            );
+            assert!(
+                u.iter()
+                    .any(|p| close(p.0, x0 + f(&a["container_row_length_m"]))
+                        && close(p.1, yc + unit_w / 2.0)),
+                "{file}: unit {i}"
+            );
+        }
+        // thrusters: one circle at each offset, in the steering flat
+        let offsets: Vec<f64> = a["thruster_offsets_m"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(f)
+            .collect();
+        let room = f(&a["thruster_room_length_m"]);
+        let drawn: Vec<(f64, f64)> = of_layer(ent, "EQUIP", "circle")
+            .iter()
+            .map(|e| (f(&e["centre_m"][0]), f(&e["centre_m"][1])))
+            .collect();
+        assert_eq!(drawn.len(), offsets.len(), "{file}");
+        for off in offsets {
+            assert!(
+                drawn
+                    .iter()
+                    .any(|p| close(p.0, room / 2.0) && close(p.1, off)),
+                "{file}"
+            );
+        }
+        assert!(has_leader(ent, "WHEELHOUSE"));
+    }
+}
+
+#[test]
+fn a_pushed_barge_has_no_aft_block_and_a_null_arrangement_draws_nothing() {
+    for file in [
+        "gas_igc_2g_self_propelled.vdesign",
+        "dry_bulk_box_hold.vdesign",
+    ] {
+        let pushed = results_of(file, false);
+        assert!(pushed["drawing"]["aft_arrangement"].is_null());
+        let mut nulled = results_of(file, true);
+        nulled["drawing"]["aft_arrangement"] = Value::Null;
+        for r in [&pushed, &nulled] {
+            let v = views(r);
+            for (name, view) in [("elevation", &v.side_elevation), ("plan", &v.plan)] {
+                assert!(
+                    of_layer(view, "EQUIP", "polyline").is_empty(),
+                    "{file} {name}"
+                );
+                assert!(
+                    of_layer(view, "EQUIP", "circle").is_empty(),
+                    "{file} {name}"
+                );
+                let t = texts(view);
+                assert!(
+                    !t.iter().any(|x| x == "WHEELHOUSE"
+                        || x.starts_with("THRUSTERS")
+                        || x.starts_with("CONTAINERS")),
+                    "{file} {name}"
+                );
+            }
+        }
+    }
+}
+
+// ---- #198: a design that fails its checks says so ------------------------------------------------
+
+fn failed_names(r: &Value) -> Vec<String> {
+    r["checks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|c| c["ok"] == false)
+        .map(|c| c["name"].as_str().unwrap().to_string())
+        .collect()
+}
+
+fn notes_of(document: &Value) -> Vec<String> {
+    document["notes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|n| n.as_str().unwrap().to_string())
+        .collect()
+}
+
+fn accepted(document: &Value) {
+    match ovcd_draw::run_value(document, &ovcd_draw::NoFiles) {
+        ovcd_draw::RunResult::Ok(_) => {}
+        ovcd_draw::RunResult::Errors(e) => panic!("the standard refuses the document {e:?}"),
+    }
+}
+
+#[test]
+fn a_failing_design_carries_a_note_in_each_view_and_still_passes_the_standard() {
+    let mut seen = 0;
+    for file in GAS_FIXTURES {
+        for self_propelled in [false, true] {
+            let r = results_of(file, self_propelled);
+            let failed = failed_names(&r);
+            if failed.is_empty() {
+                continue;
+            }
+            seen += 1;
+            let v = views(&r);
+            for (name, doc) in v.all() {
+                let notes = notes_of(doc);
+                let fail_notes: Vec<&String> = notes.iter().skip(2).collect();
+                assert!(
+                    !fail_notes.is_empty(),
+                    "{file} {name}: a note for the failed checks"
+                );
+                assert!(
+                    fail_notes[0].starts_with(&format!("DESIGN FAILS {} CHECK", failed.len())),
+                    "{file} {name}: the count"
+                );
+                // one note on one line, in plain capitals
+                assert_eq!(fail_notes.len(), 1, "{file} {name}: one failed-checks note");
+                let text = fail_notes
+                    .iter()
+                    .map(|s| s.as_str())
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                assert!(text.is_ascii() && text.chars().all(|c| !c.is_ascii_lowercase()));
+                // every name is there, or the note counts the rest ("AND k MORE")
+                if text.contains(':') {
+                    for n in failed.iter().take(if text.contains(" MORE") {
+                        1
+                    } else {
+                        failed.len()
+                    }) {
+                        let plain: String = n
+                            .chars()
+                            .filter_map(|c| match c {
+                                '\u{2014}' => Some('-'),
+                                '_' => Some(' '),
+                                c if c.is_ascii() => Some(c.to_ascii_uppercase()),
+                                _ => None,
+                            })
+                            .collect();
+                        assert!(text.contains(plain.trim()), "{file} {name}: {plain}");
+                    }
+                }
+                // the status is still one the standard defines, and the strip holds every note
+                assert_eq!(doc["status"], "concept");
+                let strip = f(&doc["strips"][0]["size_mm"]);
+                assert!(
+                    close(strip, (12.0 + 4.5 * notes.len() as f64).max(21.0)),
+                    "{file} {name}"
+                );
+                assert!(notes.iter().all(|n| n.chars().count() <= 120));
+                accepted(doc);
+            }
+        }
+    }
+    assert!(seen > 0, "no fixture fails a check");
+}
+
+#[test]
+fn a_passing_design_has_the_usual_notes_and_strip() {
+    for file in HOLDS {
+        let r = results_of(file, false);
+        assert!(failed_names(&r).is_empty(), "{file}");
+        for (name, doc) in views(&r).all() {
+            assert_eq!(notes_of(doc).len(), 2, "{file} {name}");
+            assert!(!notes_of(doc).iter().any(|n| n.starts_with("DESIGN FAILS")));
+            assert!(
+                close(f(&doc["strips"][0]["size_mm"]), 21.0),
+                "{file} {name}"
+            );
+            accepted(doc);
+        }
+    }
+}
+
+#[test]
+fn a_failing_design_with_many_names_names_some_and_counts_the_rest() {
+    let mut r = results_of("dry_bulk_box_hold.vdesign", false);
+    let checks: Vec<Value> = (0..30)
+        .map(|i| serde_json::json!({"name": format!("A VERY LONG CHECK NAME NUMBER {i}"), "ok": false, "message": ""}))
+        .collect();
+    r["checks"] = Value::Array(checks);
+    for (_, doc) in views(&r).all() {
+        let notes = notes_of(doc);
+        assert_eq!(notes.len(), 3);
+        assert!(
+            notes[2].starts_with("DESIGN FAILS 30 CHECKS: A VERY LONG CHECK NAME NUMBER 0, "),
+            "{}",
+            notes[2]
+        );
+        assert!(notes[2].ends_with(" MORE") && notes[2].chars().count() <= 120);
+        accepted(doc);
+    }
+}

@@ -45,6 +45,58 @@
           "value": 0.3,
           "source": "default"
         },
+        "bow_rake_length_to_depth_ratio": {
+          "value": 1.6,
+          "source": "default"
+        },
+        "pushed_stern_void_m": {
+          "value": 3.0,
+          "source": "default"
+        },
+        "hold_wing_void_width_m": {
+          "value": 1.0,
+          "source": "default"
+        },
+        "hold_double_bottom_m": {
+          "value": 1.2,
+          "source": "default"
+        },
+        "hopper_slope_h_per_v": {
+          "value": 1.0,
+          "source": "default"
+        },
+        "hatch_coaming_height_m": {
+          "value": 1.0,
+          "source": "default"
+        },
+        "n_holds": {
+          "value": 3.0,
+          "source": "default"
+        },
+        "bulk_end_bulkhead_m": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "hold_fill_ratio": {
+          "value": 0.95,
+          "source": "default"
+        },
+        "inner_bottom_plate_mm": {
+          "value": 14.0,
+          "source": "default"
+        },
+        "hopper_plate_mm": {
+          "value": 14.0,
+          "source": "default"
+        },
+        "hold_bulkhead_plate_mm": {
+          "value": 11.0,
+          "source": "default"
+        },
+        "hatch_coaming_plate_mm": {
+          "value": 10.0,
+          "source": "default"
+        },
         "propulsive_efficiency": {
           "value": 0.45,
           "source": "default"

@@ -9,12 +9,12 @@ repository.workspace = true
 
 [dependencies]
 ovcd-core.workspace = true
+# The GA views take the width of a label from the standard's text-width table (clause 11.7). The tests
+# also check the views against the standard itself (spec 0003).
+ovcd-draw.workspace = true
 # The pure-Rust `libm`, as the core uses (the standard library `asin` is banned: spec 0001).
 libm = "0.2"
 serde = "1"
 serde_json.workspace = true
 sha2 = "0.11.1"
 
-[dev-dependencies]
-# The tests check the views against the standard itself (spec 0003). The library does not use it.
-ovcd-draw.workspace = true

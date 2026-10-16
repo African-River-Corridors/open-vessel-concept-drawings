@@ -109,6 +109,23 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     put("fill_ratio", "fill_ratio");
     put("max_tank_od_m", "max_tank_od_m");
     put("optimise_depth", "optimise_depth");
+    for name in [
+        "bow_rake_length_to_depth_ratio",
+        "pushed_stern_void_m",
+        "bulk_end_bulkhead_m",
+        "hold_wing_void_width_m",
+        "hold_double_bottom_m",
+        "hopper_slope_h_per_v",
+        "hatch_coaming_height_m",
+        "n_holds",
+        "hold_fill_ratio",
+        "inner_bottom_plate_mm",
+        "hopper_plate_mm",
+        "hold_bulkhead_plate_mm",
+        "hatch_coaming_plate_mm",
+    ] {
+        put(name, name);
+    }
     put("eta_d", "propulsive_efficiency");
     put("speed_max_kn", "max_speed_kn");
     put("air_draft_limit_m", "air_draft_limit_m");

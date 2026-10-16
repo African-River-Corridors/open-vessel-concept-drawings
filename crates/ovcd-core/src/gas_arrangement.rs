@@ -22,7 +22,8 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::barge_capacity::{
-    BargeCapacityInputs, BargeCapacityResult, DEFAULT_MAX_TANK_OD_M, compute as capacity,
+    BargeCapacityInputs, BargeCapacityResult, DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
+    DEFAULT_MAX_TANK_OD_M, DEFAULT_PUSHED_STERN_VOID_M, compute as capacity,
 };
 use crate::checks::{Check, all_ok};
 use crate::journey_derating::{JourneyDeratingInputs, JourneyDeratingResult, compute as derate};
@@ -58,6 +59,10 @@ pub struct FitOptions {
     pub block_coefficient: f64,
     /// Cap on a tank's outer diameter (m), under both rulesets.
     pub max_tank_od_m: f64,
+    /// Bow rake as a multiple of the moulded depth of each candidate.
+    pub bow_rake_to_depth_ratio: f64,
+    /// Aft void of a pushed barge (m).
+    pub pushed_stern_void_m: f64,
 }
 
 impl Default for FitOptions {
@@ -71,6 +76,8 @@ impl Default for FitOptions {
             extra_clearance_m: DEFAULT_EXTRA_CLEARANCE_M.to_vec(),
             block_coefficient: 0.85,
             max_tank_od_m: DEFAULT_MAX_TANK_OD_M,
+            bow_rake_to_depth_ratio: DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
+            pushed_stern_void_m: DEFAULT_PUSHED_STERN_VOID_M,
         }
     }
 }
@@ -268,6 +275,8 @@ impl Search<'_> {
         inp.n_tanks_wide = Some(nw);
         inp.n_tanks_long = nl;
         inp.max_tank_od_m = self.o.max_tank_od_m;
+        inp.bow_rake_to_depth_ratio = self.o.bow_rake_to_depth_ratio;
+        inp.pushed_stern_void_m = self.o.pushed_stern_void_m;
         inp
     }
 

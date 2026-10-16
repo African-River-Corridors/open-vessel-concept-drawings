@@ -80,3 +80,20 @@ def test_a_1e_6_move_is_visible_in_the_table():
     assert len(rows) == 1
     before, after = di.show(rows[0]["before"]), di.show(rows[0]["after"])
     assert before != after, (before, after)
+
+
+def test_a_base_that_refuses_a_new_input_is_run_without_it(tmp_path):
+    """The base binary of a design-impact run may predate an input (issue #4). `run_case` leaves out
+    an input the binary refuses by name, so the case still runs on it."""
+    fake = tmp_path / "ovcd"
+    fake.write_text(
+        '#!/bin/sh\n'
+        'if [ "$1" = fill ]; then\n'
+        '  if grep -q n_holds "$2"; then echo \'Option x: unknown input `n_holds`\' >&2; exit 1; fi\n'
+        '  cp "$2" "$3"; exit 0\n'
+        'fi\n'
+        'echo \'{"options":[{"results":{"seen":"ok"}}]}\'\n',
+        encoding="utf-8")
+    fake.chmod(0o755)
+    out = di.run_case(fake, "case", {"cargo": "bauxite", "n_holds": 3}, tmp_path)
+    assert out == {"results": {"seen": "ok"}}

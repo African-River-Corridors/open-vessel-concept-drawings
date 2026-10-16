@@ -60,6 +60,13 @@ const SHEET: (f64, f64, f64, f64) = (20.0, 10.0, 390.0, 277.0);
 /// The height of the notes strip at the bottom of the sheet: the heading, two notes and the status
 /// line on its last line (clauses 14.9 and 14.10.1).
 const STRIP_MM: f64 = 21.0;
+/// The pitch of the notes in a strip (clause 14.10.1).
+const NOTE_PITCH_MM: f64 = 4.5;
+/// The most characters of a note: the schema allows 120. 120 capitals at height 2.5 are well under
+/// the width of the strip (390 mm).
+const NOTE_MAX_CHARS: usize = 120;
+/// The text height of a note (clause 14.10.1), in millimetres.
+const NOTE_TEXT_MM: f64 = 2.5;
 /// The ratios of the standard (clauses 7.3.1 and 7.3.4), smallest denominator first.
 const RATIOS: [u32; 20] = [
     1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 1250, 2000, 2500, 5000, 10000, 20000, 50000,
@@ -69,11 +76,18 @@ const RATIOS: [u32; 20] = [
 const DIM_OFFSET_MM: f64 = 12.0;
 /// Room that a dimension or label needs beyond the geometry on its side, in millimetres.
 const DIM_ROOM_MM: f64 = 6.0;
-/// Spacing of stacked labels, in millimetres.
+/// Spacing of stacked labels, in millimetres: the text height and a gap of 2.5 mm.
 const LABEL_STEP_MM: f64 = 6.0;
-/// A safe width for one character of label text at height 3.5, in millimetres. The labels are capital
-/// letters, digits and a few signs, which average 2.3 mm; the window only needs to be generous.
-const CHAR_MM: f64 = 2.5;
+/// The text height of a leader label (clause 12.6), in millimetres.
+const LABEL_TEXT_MM: f64 = 3.5;
+/// The gap from the label point to the text of a leader (half a unit, clause 12.6).
+const LEADER_TEXT_GAP_MM: f64 = 0.9;
+/// Clear room kept round every label text in the window, in millimetres. With the window's own 3 mm
+/// it keeps a label 6.5 mm inside the frame, clear of the centring marks, which reach 5 mm into the
+/// drawing space (clause 6.4) wherever a label stands along the side.
+const LABEL_CLEAR_MM: f64 = 3.5;
+/// The most passes of the swap that uncrosses the leaders of a column.
+const UNCROSS_PASSES: usize = 100;
 /// Room kept under the drawing for the scale bar, in millimetres.
 const BAR_ROOM_MM: f64 = 26.0;
 /// The shortest dimension line that has room for its arrowheads, in millimetres (clause 12.4.3 asks
@@ -92,6 +106,13 @@ const DOME_HALF_BASE_OF_OD: f64 = 0.15;
 /// metres.
 const DOME_HALF_BASE_OF_LENGTH: f64 = 0.06;
 const DOME_HALF_BASE_MIN_M: f64 = 1.2;
+/// A thruster is drawn as a circle: in elevation a fraction of the thruster room length (at most
+/// 1.1 m) standing 0.2 m above the keel, in plan a fraction (at most 1.3 m).
+const THRUSTER_R_ELEVATION_OF_ROOM: f64 = 0.30;
+const THRUSTER_R_ELEVATION_MAX_M: f64 = 1.1;
+const THRUSTER_LIFT_M: f64 = 0.2;
+const THRUSTER_R_PLAN_OF_ROOM: f64 = 0.32;
+const THRUSTER_R_PLAN_MAX_M: f64 = 1.3;
 
 // ---- the geometry that the views draw ------------------------------------------------------------
 
@@ -112,7 +133,109 @@ struct Hull {
     /// The gas separation forward of the stern block (`drawing.separation`): the cofferdam and the
     /// aft separation, whose end is the start of the cargo zone. `None` for dry bulk.
     separation: Option<(f64, f64)>,
+    /// The aft block of a self-propelled hull (`drawing.aft_arrangement`); `None` for a pushed
+    /// barge. Its x is measured from the stern, as the hull's x is.
+    aft: Option<Aft>,
+    /// The names of the checks that fail (`results.checks` with `ok` false), as plain capitals.
+    failed_checks: Vec<String>,
     containment: Containment,
+}
+
+/// The values of the core's aft arrangement that the views draw.
+struct Aft {
+    zones: Vec<(String, f64, f64)>,
+    thruster_offsets: Vec<f64>,
+    thruster_room: f64,
+    container_x0: f64,
+    container_width: f64,
+    container_top: f64,
+    container_labels: Vec<String>,
+    unit_width: f64,
+    side_gap: f64,
+    rows: usize,
+    per_row: usize,
+    row_length: f64,
+    row_gap: f64,
+    wheelhouse_x0: f64,
+    wheelhouse_x1: f64,
+    wheelhouse_width: f64,
+    wheelhouse_floor: f64,
+    wheelhouse_top: f64,
+    block_top: f64,
+}
+
+/// The names of the failed checks, in the plain capitals a note allows: an em dash becomes a hyphen,
+/// an underscore a space, and any other character outside printable ASCII is dropped.
+fn failed_checks(results: &Value) -> Vec<String> {
+    let Some(checks) = results.get("checks").and_then(Value::as_array) else {
+        return Vec::new();
+    };
+    checks
+        .iter()
+        .filter(|c| c.get("ok").and_then(Value::as_bool) == Some(false))
+        .map(|c| {
+            let name = c.get("name").and_then(Value::as_str).unwrap_or("CHECK");
+            let plain: String = name
+                .chars()
+                .filter_map(|ch| match ch {
+                    '\u{2014}' | '\u{2013}' | '\u{2212}' => Some('-'),
+                    '_' => Some(' '),
+                    ch if (' '..='~').contains(&ch) => Some(ch.to_ascii_uppercase()),
+                    _ => None,
+                })
+                .collect();
+            plain.split_whitespace().collect::<Vec<_>>().join(" ")
+        })
+        .collect()
+}
+
+fn read_aft(results: &Value) -> Option<Aft> {
+    let a = results.get("drawing")?.get("aft_arrangement")?;
+    if !a.is_object() {
+        return None;
+    }
+    let n = |key: &str| a.get(key).and_then(Value::as_f64);
+    let list = |key: &str| -> Option<Vec<f64>> {
+        a.get(key)?.as_array()?.iter().map(Value::as_f64).collect()
+    };
+    let zones = a
+        .get("zones")?
+        .as_array()?
+        .iter()
+        .map(|z| {
+            Some((
+                z.get(0)?.as_str()?.to_string(),
+                z.get(1)?.as_f64()?,
+                z.get(2)?.as_f64()?,
+            ))
+        })
+        .collect::<Option<Vec<_>>>()?;
+    Some(Aft {
+        zones,
+        thruster_offsets: list("thruster_offsets_m")?,
+        thruster_room: n("thruster_room_length_m")?,
+        container_x0: n("container_x0_m")?,
+        container_width: n("container_total_width_m")?,
+        container_top: n("container_top_above_keel_m")?,
+        container_labels: a
+            .get("container_labels")?
+            .as_array()?
+            .iter()
+            .map(|t| t.as_str().map(str::to_string))
+            .collect::<Option<Vec<_>>>()?,
+        unit_width: n("container_unit_width_m")?,
+        side_gap: n("container_side_gap_m")?,
+        rows: n("container_rows")? as usize,
+        per_row: n("container_per_row")? as usize,
+        row_length: n("container_row_length_m")?,
+        row_gap: n("container_row_gap_m")?,
+        wheelhouse_x0: n("wheelhouse_x0_m")?,
+        wheelhouse_x1: n("wheelhouse_x1_m")?,
+        wheelhouse_width: n("wheelhouse_width_m")?,
+        wheelhouse_floor: n("wheelhouse_floor_lowered_m")?,
+        wheelhouse_top: n("wheelhouse_top_lowered_m")?,
+        block_top: n("block_top_lowered_m")?,
+    })
 }
 
 enum Containment {
@@ -233,6 +356,8 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
             results,
             &["drawing", "separation", "aft_separation_m"],
         )),
+        aft: read_aft(results),
+        failed_checks: failed_checks(results),
         containment,
     })
 }
@@ -567,38 +692,110 @@ impl Canvas {
     }
 
     /// A leader to `target` with its label at `label_at`; the text stands to the right of the label
-    /// point when it is right of the target, to the left otherwise.
+    /// point when it is right of the target, to the left otherwise. The window takes in the text
+    /// box of the standard (clause 11.7), not an estimate of it.
     fn leader(&mut self, text: &str, target: [f64; 2], label_at: [f64; 2]) {
         self.extend(target);
-        let width = (text.chars().count() as f64 * CHAR_MM + 2.0) * self.k;
+        let right = label_at[0] >= target[0];
+        let reach = (LEADER_TEXT_GAP_MM + text_width_mm(text) + LABEL_CLEAR_MM) * self.k;
+        let half = (LABEL_TEXT_MM / 2.0 + LABEL_CLEAR_MM) * self.k;
         self.extend([
-            label_at[0]
-                + if label_at[0] >= target[0] {
-                    width
-                } else {
-                    -width
-                },
-            label_at[1] + 4.0 * self.k,
+            label_at[0] + if right { reach } else { -reach },
+            label_at[1] + half,
         ]);
-        self.extend([label_at[0], label_at[1] - 4.0 * self.k]);
+        self.extend([label_at[0], label_at[1] - half]);
         self.entities.push(json!({"type": "leader", "layer": "ANNO", "from": {"point_m": pt(target)}, "label_at_m": pt(label_at), "text": text}));
     }
 
-    /// Labels in a column at `x`, one under another from the highest target, each at least one
-    /// step below the one above, so that the texts do not touch. Leaders run level or downward.
+    /// Labels in a column at `x`, with the text standing outside the column and the leaders running
+    /// in to the targets. The labels keep their order by target height and a gap of one step from
+    /// the real text height; each stands as near its target as the gap allows (the least-squares
+    /// spread of `spread_slots`). Where two leaders still cross, the two labels swap places: a swap
+    /// of two crossing leaders always makes their total length shorter, so the loop ends, and when
+    /// it ends no two leaders of the column cross.
     fn label_column(&mut self, x: f64, labels: &mut [(String, [f64; 2])]) {
         labels.sort_by(|a, b| {
             b.1[1]
                 .partial_cmp(&a.1[1])
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
-        let mut previous = f64::INFINITY;
-        for (text, target) in labels.iter() {
-            let y = target[1].min(previous - LABEL_STEP_MM * self.k);
-            self.leader(text, *target, [x, y]);
-            previous = y;
+        let wanted: Vec<f64> = labels.iter().map(|l| l.1[1]).collect();
+        let slots = spread_slots(&wanted, LABEL_STEP_MM * self.k);
+        let mut order: Vec<usize> = (0..labels.len()).collect();
+        // order[i] is the label that stands at slot i
+        for _ in 0..UNCROSS_PASSES {
+            let mut swapped = false;
+            for i in 0..order.len() {
+                for j in i + 1..order.len() {
+                    let a = (labels[order[i]].1, [x, slots[i]]);
+                    let b = (labels[order[j]].1, [x, slots[j]]);
+                    if segments_cross(a, b) {
+                        order.swap(i, j);
+                        swapped = true;
+                    }
+                }
+            }
+            if !swapped {
+                break;
+            }
+        }
+        for (slot, &label) in order.iter().enumerate() {
+            let (text, target) = &labels[label];
+            self.leader(text, *target, [x, slots[slot]]);
         }
     }
+}
+
+/// The width of a label text on paper, in millimetres, from the width table of the standard
+/// (clause 11.7.1). A character that the table lacks takes the widest capital's room.
+fn text_width_mm(text: &str) -> f64 {
+    ovcd_draw::rules::text_width_exact(text, LABEL_TEXT_MM)
+        .unwrap_or(text.chars().count() as f64 * LABEL_TEXT_MM)
+}
+
+/// The heights of the label slots for targets at heights `wanted` (highest first): each slot is at
+/// least `step` below the one above, and as near its target as that allows, in the least-squares
+/// sense. Slot `i + 1` less slot `i` is at most `-step`, so with `z = slot + i * step` the `z` run
+/// down, and the nearest such `z` come from pooling neighbours that break the order.
+fn spread_slots(wanted: &[f64], step: f64) -> Vec<f64> {
+    // blocks of (sum of z, count)
+    let mut blocks: Vec<(f64, f64)> = Vec::new();
+    for (i, w) in wanted.iter().enumerate() {
+        blocks.push((w + i as f64 * step, 1.0));
+        while blocks.len() > 1 {
+            let n = blocks.len();
+            let (last, before) = (blocks[n - 1], blocks[n - 2]);
+            if last.0 / last.1 <= before.0 / before.1 {
+                break;
+            }
+            blocks.truncate(n - 2);
+            blocks.push((last.0 + before.0, last.1 + before.1));
+        }
+    }
+    let mut z = Vec::with_capacity(wanted.len());
+    for (sum, count) in blocks {
+        for _ in 0..count as usize {
+            z.push(sum / count);
+        }
+    }
+    z.iter()
+        .enumerate()
+        .map(|(i, z)| z - i as f64 * step)
+        .collect()
+}
+
+/// Do two leader segments (target first, label point second) cross, or touch other than at a common
+/// target point?
+fn segments_cross(a: ([f64; 2], [f64; 2]), b: ([f64; 2], [f64; 2])) -> bool {
+    if (a.0[0] - b.0[0]).abs() < 1e-9 && (a.0[1] - b.0[1]).abs() < 1e-9 {
+        return false;
+    }
+    let side = |o: [f64; 2], p: [f64; 2], q: [f64; 2]| {
+        (p[0] - o[0]) * (q[1] - o[1]) - (p[1] - o[1]) * (q[0] - o[0])
+    };
+    let (d1, d2) = (side(b.0, b.1, a.0), side(b.0, b.1, a.1));
+    let (d3, d4) = (side(a.0, a.1, b.0), side(a.0, a.1, b.1));
+    d1 * d2 <= 0.0 && d3 * d4 <= 0.0
 }
 
 fn metres(x: f64) -> String {
@@ -673,8 +870,8 @@ enum View {
 
 /// The longitudinal zones, in elevation and plan: the limits of the cargo zone (dashed ZONE lines,
 /// not physical), the cofferdam of a gas hull (its two bulkheads, hidden under the deck) and the
-/// forward equipment zone, each named by a leader above the hull.
-fn zones(c: &mut Canvas, h: &Hull, view: View) {
+/// forward equipment zone, each named by a leader (the forward zone's goes in the caller's column of labels).
+fn zones(c: &mut Canvas, h: &Hull, view: View, labels: &mut Vec<(String, [f64; 2])>) {
     let (lo, hi) = match view {
         View::Elevation => (0.0, h.depth),
         View::Plan => (-h.beam / 2.0, h.beam / 2.0),
@@ -687,7 +884,6 @@ fn zones(c: &mut Canvas, h: &Hull, view: View) {
             c.line("ZONE", a, b, None);
         }
     }
-    let above = hi + 10.0 * c.k;
     if let Some((cofferdam, aft)) = h.separation
         && cofferdam > 0.0
     {
@@ -697,14 +893,167 @@ fn zones(c: &mut Canvas, h: &Hull, view: View) {
             c.line("HIDDEN", a, b, None);
         }
         let mid = start + cofferdam / 2.0;
-        // the text stands to the left of the label point, over the stern, well clear of the first tank
-        c.leader("COFFERDAM", [mid, hi], [mid - 8.0 * c.k, above]);
+        // The label stands under the hull, its text to the right of the label point, so that it
+        // keeps clear of the aft block and the first tank above the deck, and of the thrusters'
+        // label, whose text stands to the left of the stern.
+        c.leader("COFFERDAM", [mid, lo], [mid + 2.0 * c.k, lo - 6.0 * c.k]);
     }
     if h.bow_void > 0.0 {
         let mid = h.loa - h.bow_void / 2.0;
-        // the text stands to the right of the label point, over the bow
-        c.leader("FWD EQUIP.", [mid, hi], [mid + 2.0 * c.k, above]);
+        // named in the column of the bow labels, with the others, so that the texts keep apart
+        labels.push(("FWD EQUIP.".to_string(), [mid, hi]));
     }
+}
+
+/// The aft block of a self-propelled hull, from `drawing.aft_arrangement`; nothing for a pushed
+/// barge. Layers: the units and thrusters are equipment (EQUIP); the wheelhouse is part of the
+/// vessel (OBJECT, like the tanks); the zone bulkheads are below the deck (HIDDEN in elevation).
+/// The wheelhouse is drawn lowered, as the air draft is measured; the raised position is not drawn,
+/// because the standard's only chain line type already stands for the light waterline.
+fn aft_block(c: &mut Canvas, h: &Hull, view: View) {
+    let Some(a) = &h.aft else {
+        return;
+    };
+    let k = c.k;
+    let wh_mid = (a.wheelhouse_x0 + a.wheelhouse_x1) / 2.0;
+    let room_mid = a.thruster_room / 2.0;
+    let unit_row_mid = a.container_x0 + a.row_length / 2.0;
+    match view {
+        View::Elevation => {
+            // zone bulkheads: the forward end of each zone, under the deck (not where the
+            // cofferdam's first bulkhead is already)
+            for (_, _, x_fwd) in &a.zones {
+                let at_cofferdam = h
+                    .separation
+                    .is_some_and(|(_, aft)| (x_fwd - (h.stern_void - aft)).abs() < 1e-9);
+                if !at_cofferdam {
+                    c.line("HIDDEN", [*x_fwd, 0.0], [*x_fwd, h.depth], None);
+                }
+            }
+            // the container units on deck: one box for each row (the units of a row are abreast)
+            if a.container_top > h.depth {
+                for row in 0..a.rows {
+                    let x0 = a.container_x0 + row as f64 * (a.row_length + a.row_gap);
+                    c.polyline(
+                        "EQUIP",
+                        &[
+                            [x0, h.depth],
+                            [x0 + a.row_length, h.depth],
+                            [x0 + a.row_length, a.container_top],
+                            [x0, a.container_top],
+                        ],
+                        true,
+                    );
+                }
+            }
+            // the wheelhouse, lowered
+            c.polyline(
+                "OBJECT",
+                &[
+                    [a.wheelhouse_x0, a.wheelhouse_floor],
+                    [a.wheelhouse_x1, a.wheelhouse_floor],
+                    [a.wheelhouse_x1, a.wheelhouse_top],
+                    [a.wheelhouse_x0, a.wheelhouse_top],
+                ],
+                true,
+            );
+            // the thrusters, in the steering flat
+            let r =
+                (a.thruster_room * THRUSTER_R_ELEVATION_OF_ROOM).min(THRUSTER_R_ELEVATION_MAX_M);
+            if !a.thruster_offsets.is_empty() && r > 0.0 {
+                c.circle("EQUIP", [room_mid, r + THRUSTER_LIFT_M], r);
+                c.leader(
+                    &format!("THRUSTERS ({})", a.thruster_offsets.len()),
+                    [room_mid, THRUSTER_LIFT_M],
+                    [room_mid + 2.0 * k, -6.0 * k],
+                );
+            }
+            // Labels above the block; the lower one is the one further from the stern end. The
+            // block top, a height above the keel, is named on the label of the part that makes it.
+            let top = a.block_top.max(h.depth);
+            let block_top = format!("BLOCK TOP {}", metres(a.block_top));
+            let wheelhouse_is_top = (a.wheelhouse_top - a.block_top).abs() < 1e-9;
+            let mut units = container_label(a);
+            let mut cab = "WHEELHOUSE".to_string();
+            if wheelhouse_is_top {
+                cab = format!("{cab}, {block_top}");
+            } else {
+                units = format!("{units}, {block_top}");
+            }
+            c.leader(
+                &units,
+                [unit_row_mid, a.container_top.max(h.depth)],
+                [unit_row_mid - 5.0 * k, top + 6.0 * k],
+            );
+            c.leader(
+                &cab,
+                [wh_mid, a.wheelhouse_top],
+                [wh_mid - 5.0 * k, top + 12.0 * k],
+            );
+        }
+        View::Plan => {
+            // the container units, from the arrangement: `per_row` abreast, `rows` along
+            let per_row = a.per_row.max(1);
+            let y0 = a.container_width / 2.0 - a.side_gap;
+            for i in 0..a.container_labels.len() {
+                let (row, col) = (i / per_row, i % per_row);
+                let x0 = a.container_x0 + row as f64 * (a.row_length + a.row_gap);
+                let yc = y0 - col as f64 * (a.unit_width + a.side_gap) - a.unit_width / 2.0;
+                c.polyline(
+                    "EQUIP",
+                    &[
+                        [x0, yc - a.unit_width / 2.0],
+                        [x0 + a.row_length, yc - a.unit_width / 2.0],
+                        [x0 + a.row_length, yc + a.unit_width / 2.0],
+                        [x0, yc + a.unit_width / 2.0],
+                    ],
+                    true,
+                );
+            }
+            // the wheelhouse footprint
+            let hw = a.wheelhouse_width / 2.0;
+            c.polyline(
+                "OBJECT",
+                &[
+                    [a.wheelhouse_x0, -hw],
+                    [a.wheelhouse_x1, -hw],
+                    [a.wheelhouse_x1, hw],
+                    [a.wheelhouse_x0, hw],
+                ],
+                true,
+            );
+            // the thrusters abreast in the steering flat
+            let r = (a.thruster_room * THRUSTER_R_PLAN_OF_ROOM).min(THRUSTER_R_PLAN_MAX_M);
+            if r > 0.0 {
+                for off in &a.thruster_offsets {
+                    c.circle("EQUIP", [room_mid, *off], r);
+                }
+                if let Some(low) = a.thruster_offsets.iter().copied().reduce(f64::min) {
+                    c.leader(
+                        &format!("THRUSTERS ({})", a.thruster_offsets.len()),
+                        [room_mid, low - r],
+                        [room_mid + 2.0 * k, -h.beam / 2.0 - 6.0 * k],
+                    );
+                }
+            }
+            let top = h.beam / 2.0;
+            c.leader(
+                &container_label(a),
+                [unit_row_mid, y0],
+                [unit_row_mid - 5.0 * k, top + 6.0 * k],
+            );
+            c.leader(
+                "WHEELHOUSE",
+                [wh_mid, hw],
+                [wh_mid - 5.0 * k, top + 12.0 * k],
+            );
+        }
+    }
+}
+
+/// The label of the container units: how many abreast and how many rows, from the arrangement.
+fn container_label(a: &Aft) -> String {
+    format!("CONTAINERS ({} x {})", a.per_row, a.rows)
 }
 
 fn side_elevation(h: &Hull, n: u32) -> Canvas {
@@ -778,7 +1127,8 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
     }
     let mut labels: Vec<(String, [f64; 2])> = Vec::new();
     elevation_gas_detail(&mut c, h, &mut labels);
-    zones(&mut c, h, View::Elevation);
+    aft_block(&mut c, h, View::Elevation);
+    zones(&mut c, h, View::Elevation, &mut labels);
     if !c.try_dim_horizontal([0.0, 0.0], [h.loa, 0.0], -DIM_OFFSET_MM) {
         labels.push((format!("LOA {}", metres(h.loa)), [h.loa, 0.0]));
     }
@@ -879,10 +1229,11 @@ fn plan(h: &Hull, n: u32) -> Canvas {
             }
         }
     }
-    zones(&mut c, h, View::Plan);
+    aft_block(&mut c, h, View::Plan);
+    let mut labels: Vec<(String, [f64; 2])> = Vec::new();
+    zones(&mut c, h, View::Plan, &mut labels);
     let overshoot = 4.0 * c.k;
     c.centre_line([-overshoot, 0.0], [h.loa + overshoot, 0.0]);
-    let mut labels: Vec<(String, [f64; 2])> = Vec::new();
     if !c.try_dim_horizontal([0.0, y0], [h.loa, y0], -DIM_OFFSET_MM) {
         labels.push((format!("LOA {}", metres(h.loa)), [h.loa, y0]));
     }
@@ -1113,9 +1464,9 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
     if let Some(t) = h.light_draught {
         labels.push((format!("LIGHT DRAUGHT {}", metres(t)), [-half, t]));
     }
-    // labels run to the left of the hull
-    let column = -half - 2.0 * DIM_OFFSET_MM * c.k;
-    c.label_column(column, &mut labels);
+    // The labels stand in one column to the left of the hull. The right side holds the dimensions,
+    // and a leader from beyond them would run through their lines and figures.
+    c.label_column(-half - 2.0 * DIM_OFFSET_MM * c.k, &mut labels);
     c
 }
 
@@ -1132,26 +1483,76 @@ fn window_of(c: &Canvas) -> [f64; 4] {
     ]
 }
 
-/// The frame of the viewport: the drawing space less the strip of notes.
-fn frame() -> (f64, f64, f64, f64) {
-    (SHEET.0, SHEET.1, SHEET.2, SHEET.3 - STRIP_MM)
+/// The notes for a design that fails checks: none, or one note on one line. The standard has no
+/// note of several lines and no line that continues a note (clauses 11.3.3 and 14.10.1), and a note
+/// is never cut or made smaller (clause 14.6). So the note names as many checks as fit, in order,
+/// and then says how many more there are: `DESIGN FAILS 6 CHECKS: A, B AND 4 MORE`. It fits when it
+/// has at most `NOTE_MAX_CHARS` characters (the schema) and its width, with the number in front of
+/// it, is within the strip (clause 14.6). If not even the first name fits, the count stands alone.
+fn failed_notes(failed: &[String]) -> Vec<String> {
+    if failed.is_empty() {
+        return Vec::new();
+    }
+    let count = failed.len();
+    let plural = if count == 1 { "CHECK" } else { "CHECKS" };
+    let head = format!("DESIGN FAILS {count} {plural}");
+    for shown in (1..=count).rev() {
+        let mut note = format!("{head}: {}", failed[..shown].join(", "));
+        if shown < count {
+            note.push_str(&format!(" AND {} MORE", count - shown));
+        }
+        if note_fits(&note) {
+            return vec![note];
+        }
+    }
+    vec![head]
 }
 
-fn fits(window: [f64; 4], n: u32) -> bool {
+/// Does a note fit its line in the strip? At most `NOTE_MAX_CHARS` characters, and a width, after
+/// a number of two digits and the full stop, of at most the strip width less `2 * 2` mm (clause
+/// 14.6), by the width table of the standard (clause 11.7.1) at the note height.
+fn note_fits(note: &str) -> bool {
+    note.chars().count() <= NOTE_MAX_CHARS
+        && ovcd_draw::rules::text_width(&format!("99. {note}"), NOTE_TEXT_MM)
+            .is_some_and(|w| w <= SHEET.2 - 4.0)
+}
+
+/// The height of the strip of notes (clause 14.10.1): the heading, the notes at one pitch each, and
+/// the status line on the last line; never under the usual strip.
+fn strip_mm(notes: usize) -> f64 {
+    (12.0 + NOTE_PITCH_MM * notes as f64).max(STRIP_MM)
+}
+
+/// The frame of the viewport: the drawing space less the strip of notes.
+fn frame(strip: f64) -> (f64, f64, f64, f64) {
+    (SHEET.0, SHEET.1, SHEET.2, SHEET.3 - strip)
+}
+
+fn fits(window: [f64; 4], n: u32, strip: f64) -> bool {
     let k = 1000.0 / f64::from(n);
-    let (_, _, fw, fh) = frame();
+    let (_, _, fw, fh) = frame(strip);
     (window[2] - window[0]) * k <= fw + 1e-9 && (window[3] - window[1]) * k <= fh + 1e-9
 }
 
 /// Build one view at the largest scale at which everything fits.
 fn document(h: &Hull, title: &str, build: fn(&Hull, u32) -> Canvas) -> Result<Value, String> {
+    let mut notes = vec![format!("{title}. DIMENSIONS IN METRES.")];
+    let what = format!("{}; {}", h.vessel, h.cargo);
+    if what.len() > 2
+        && what.chars().all(|c| (' '..='~').contains(&c))
+        && what.chars().count() <= 100
+    {
+        notes.push(what);
+    }
+    notes.extend(failed_notes(&h.failed_checks));
+    let strip = strip_mm(notes.len());
     for n in RATIOS {
         let canvas = build(h, n);
         let window = window_of(&canvas);
-        if !fits(window, n) {
+        if !fits(window, n, strip) {
             continue;
         }
-        let (fx, fy, fw, fh) = frame();
+        let (fx, fy, fw, fh) = frame(strip);
         let layers: Vec<Value> = [
             "OUTLINE",
             "OBJECT",
@@ -1163,24 +1564,17 @@ fn document(h: &Hull, title: &str, build: fn(&Hull, u32) -> Canvas) -> Result<Va
             "WATER",
             "HATCH",
             "ZONE",
+            "EQUIP",
         ]
         .iter()
         .map(|n| json!({"name": n}))
         .collect();
-        let mut notes = vec![format!("{title}. DIMENSIONS IN METRES.")];
-        let what = format!("{}; {}", h.vessel, h.cargo);
-        if what.len() > 2
-            && what.chars().all(|c| (' '..='~').contains(&c))
-            && what.chars().count() <= 100
-        {
-            notes.push(what);
-        }
         return Ok(json!({
             "standard_version": "1.0",
             "sheet": {"size": "A3", "orientation": "landscape"},
             "layers": layers,
             "status": "concept",
-            "strips": [{"id": "notes", "edge": "bottom", "size_mm": STRIP_MM, "content": "notes"}],
+            "strips": [{"id": "notes", "edge": "bottom", "size_mm": strip, "content": "notes"}],
             "notes": notes,
             "viewports": [{
                 "id": "main",
@@ -1203,4 +1597,73 @@ pub fn ga_views(results: &Value) -> Result<GaViews, String> {
         plan: document(&hull, "PLAN", plan)?,
         midship_section: document(&hull, "MIDSHIP SECTION", midship_section)?,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn names(n: usize, long: bool) -> Vec<String> {
+        (0..n)
+            .map(|i| {
+                if long {
+                    format!("A VERY LONG CHECK NAME FOR THE TEST NUMBER {i}")
+                } else {
+                    format!("CHECK {i}")
+                }
+            })
+            .collect()
+    }
+
+    #[test]
+    fn no_failed_checks_make_no_note() {
+        assert!(failed_notes(&[]).is_empty());
+    }
+
+    #[test]
+    fn one_failed_check_is_named_in_the_singular() {
+        assert_eq!(
+            failed_notes(&["STABILITY - LADEN".to_string()]),
+            ["DESIGN FAILS 1 CHECK: STABILITY - LADEN"]
+        );
+    }
+
+    #[test]
+    fn a_few_failed_checks_are_all_named_in_order() {
+        assert_eq!(
+            failed_notes(&names(3, false)),
+            ["DESIGN FAILS 3 CHECKS: CHECK 0, CHECK 1, CHECK 2"]
+        );
+    }
+
+    #[test]
+    fn many_failed_checks_make_one_note_that_counts_the_rest() {
+        for count in [8, 20, 60] {
+            let notes = failed_notes(&names(count, true));
+            assert_eq!(notes.len(), 1);
+            let note = &notes[0];
+            assert!(note.starts_with(&format!("DESIGN FAILS {count} CHECKS: A VERY LONG")));
+            assert!(note.contains(" AND ") && note.ends_with(" MORE"), "{note}");
+            assert!(note_fits(note), "{note}");
+            // one name more would not have fitted
+            let shown = note.matches(" NUMBER ").count();
+            let more = count - shown;
+            assert!(note.ends_with(&format!("AND {more} MORE")), "{note}");
+            let next = format!(
+                "{}, {}",
+                &note[..note.rfind(" AND ").unwrap()],
+                names(count, true)[shown]
+            );
+            assert!(!note_fits(&format!("{next} AND {} MORE", more - 1)) || more == 1);
+        }
+    }
+
+    #[test]
+    fn a_name_too_long_for_the_line_gives_the_count_alone() {
+        let long = "X".repeat(200);
+        assert_eq!(
+            failed_notes(&[long.clone(), long]),
+            ["DESIGN FAILS 2 CHECKS"]
+        );
+    }
 }

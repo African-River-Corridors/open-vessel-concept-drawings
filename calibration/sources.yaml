@@ -375,3 +375,218 @@ web_sources:
   url: https://web.archive.org/web/20190917063635/http://vesselinfo.kirbycorp.com/BargeInfo/Details/177933
   accessed: '2026-10-16'
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: W1
+  title: "Williams Shipping, spec sheet Wilcarry 250"
+  url: https://www.williams-shipping.co.uk/wp-content/uploads/2020/07/Wilcarry250.pdf
+  accessed: '2026-10-16'
+  note: "Text layer; read as text"
+- id: W2
+  title: "Williams Shipping, spec sheet Wilcarry 300"
+  url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-300-0817.pdf
+  accessed: '2026-10-16'
+  note: "No text layer; read from the rendered page"
+- id: W3
+  title: "Williams Shipping, spec sheet Wilcarry 350"
+  url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-350-0817.pdf
+  accessed: '2026-10-16'
+  note: "No text layer; read from the rendered page"
+- id: W4
+  title: "Williams Shipping, spec sheet Wilcarry 501"
+  url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-501-0817.pdf
+  accessed: '2026-10-16'
+  note: "No text layer; read from the rendered page"
+- id: W5
+  title: "Williams Shipping, spec sheet Wilcarry 503"
+  url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-503-0817.pdf
+  accessed: '2026-10-16'
+  note: "No text layer; read from the rendered page; same figures as 501"
+- id: W6
+  title: "Williams Shipping, spec sheet Wilcarry 504"
+  url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-504-0817.pdf
+  accessed: '2026-10-16'
+  note: "No text layer; read from the rendered page; same figures as 501"
+- id: W7
+  title: "Williams Shipping, spec sheet Wilcarry 1500"
+  url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-1500-0817.pdf
+  accessed: '2026-10-16'
+  note: "No text layer; read from the rendered page"
+- id: W8
+  title: "Williams Shipping, spec sheet Wilcarry 1711"
+  url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-1711-0817.pdf
+  accessed: '2026-10-16'
+  note: "No text layer; read from the rendered page"
+- id: W9
+  title: "Williams Shipping, spec sheet Wilcarry 1717"
+  url: https://www.williams-shipping.co.uk/wp-content/uploads/2018/06/Willcarry_1717.pdf
+  accessed: '2026-10-16'
+  note: "No text layer; read from the rendered page; same figures as 1711"
+- id: W10
+  title: "Williams Shipping, spec sheet Wilcarry 1750"
+  url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-1750-0817.pdf
+  accessed: '2026-10-16'
+  note: "No text layer; read from the rendered page"
+- id: W11
+  title: "Williams Shipping, spec sheet Wilcarry 22"
+  url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-22-0817.pdf
+  accessed: '2026-10-16'
+  note: "No text layer; read from the rendered page"
+- id: W12
+  title: "Williams Shipping, spec sheet Wilcarry 2508"
+  url: https://www.williams-shipping.co.uk/wp-content/uploads/2025/11/Wilcarry-2508.pdf
+  accessed: '2026-10-16'
+  note: "Text layer; read as text"
+- id: M12
+  title: "Marine Engineering Bureau (MEB), Project RDB15"
+  url: https://mebspb.com/drye/RDB15e.html
+  accessed: '2026-10-16'
+  note: "Designer's project page"
+- id: M13
+  title: "Marine Engineering Bureau (MEB), Project RDB21"
+  url: https://mebspb.com/drye/RDB21e.html
+  accessed: '2026-10-16'
+  note: "Designer's project page"
+- id: M14
+  title: "Marine Engineering Bureau (MEB), Project DCB26"
+  url: https://mebspb.com/drye/DCB26e.html
+  accessed: '2026-10-16'
+  note: "Designer's project page"
+- id: C1
+  title: "Canal Barge Company, Hopper Barge Draft Table"
+  url: https://www.canalbarge.com/resources/barges/hopper-barge-draft
+  accessed: '2026-10-16'
+  note: "Live page; the table has no title row for the quantity or the unit"
+- id: D1
+  title: "DSB Offshore, Holdbarge for sale or charter, built 1997, 76.5 x 11.44 m"
+  url: https://www.dsboffshore.com/vessel/hold-barge-for-sale-built-1997-76-5-x-11-44/
+  accessed: '2026-10-16'
+  note: "Broker listing, folio BP027C"
+- id: J1
+  title: "Jenkins Marine, JML 50 spec sheet"
+  url: https://www.jenkinsmarine.co.uk/sg_userfiles/jml50-50mx14m-flat-top-pontoon-barge-spec-sheet.pdf
+  accessed: '2026-10-16'
+  note: "The JML 5014 web page lists the same light draught, gross tonnage and capacity"
+- id: K15
+  title: "Kirby Corporation barge database, USL 147"
+  url: https://web.archive.org/web/20190722202911/http://vesselinfo.kirbycorp.com/BargeInfo/Details/58779
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K16
+  title: "Kirby Corporation barge database, USL 148"
+  url: https://web.archive.org/web/20210927230007/https://vesselinfo.kirbycorp.com/BargeInfo/Details/56841
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K17
+  title: "Kirby Corporation barge database, DBL 709"
+  url: https://web.archive.org/web/20241108200707/https://vesselinfo.kirbycorp.com/BargeInfo/Details/259310
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K18
+  title: "Kirby Corporation barge database, CHEYENNE"
+  url: https://web.archive.org/web/20210919101737/https://vesselinfo.kirbycorp.com/BargeInfo/Details/52919
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K19
+  title: "Kirby Corporation barge database, ARROWHEAD 266"
+  url: https://web.archive.org/web/20210919102536/https://vesselinfo.kirbycorp.com/BargeInfo/Details/61757
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K20
+  title: "Kirby Corporation barge database, CREEK"
+  url: https://web.archive.org/web/20190917063613/http://vesselinfo.kirbycorp.com/BargeInfo/Details/54225
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K21
+  title: "Kirby Corporation barge database, CHEROKEE-BG"
+  url: https://web.archive.org/web/20210919112759/https://vesselinfo.kirbycorp.com/BargeInfo/Details/213825
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K22
+  title: "Kirby Corporation barge database, CC 133"
+  url: https://web.archive.org/web/20171220203926/http://vesselinfo.kirbycorp.com/BargeInfo/Details/52579
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K23
+  title: "Kirby Corporation barge database, CC 132"
+  url: https://web.archive.org/web/20171220194100/http://vesselinfo.kirbycorp.com/BargeInfo/Details/50860
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K24
+  title: "Kirby Corporation barge database, USL 146"
+  url: https://web.archive.org/web/20210927231905/https://vesselinfo.kirbycorp.com/BargeInfo/Details/51182
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K25
+  title: "Kirby Corporation barge database, CITY OF GALVESTON"
+  url: https://web.archive.org/web/20190922120816/http://vesselinfo.kirbycorp.com/BargeInfo/Details/213827
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K26
+  title: "Kirby Corporation barge database, CI 1609"
+  url: https://web.archive.org/web/20190923132307/http://vesselinfo.kirbycorp.com/BargeInfo/Details/187082
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K27
+  title: "Kirby Corporation barge database, KARANKAWA"
+  url: https://web.archive.org/web/20241104235328/https://vesselinfo.kirbycorp.com/BargeInfo/Details/210399
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K28
+  title: "Kirby Corporation barge database, FMT 2054"
+  url: https://web.archive.org/web/20210919113453/https://vesselinfo.kirbycorp.com/BargeInfo/Details/219881
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K29
+  title: "Kirby Corporation barge database, FMT 2068"
+  url: https://web.archive.org/web/20210919105431/https://vesselinfo.kirbycorp.com/BargeInfo/Details/228470
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K30
+  title: "Kirby Corporation barge database, DBL 703"
+  url: https://web.archive.org/web/20190917064247/http://vesselinfo.kirbycorp.com/BargeInfo/Details/187469
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K31
+  title: "Kirby Corporation barge database, 401"
+  url: https://web.archive.org/web/20171220204216/http://vesselinfo.kirbycorp.com/BargeInfo/Details/62329
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K32
+  title: "Kirby Corporation barge database, KIRBY 27730"
+  url: https://web.archive.org/web/20190722214140/http://vesselinfo.kirbycorp.com/BargeInfo/Details/53174
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K33
+  title: "Kirby Corporation barge database, KIRBY 21853"
+  url: https://web.archive.org/web/20230528182558/https://vesselinfo.kirbycorp.com/BargeInfo/Details/61306
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K34
+  title: "Kirby Corporation barge database, KIRBY 29173"
+  url: https://web.archive.org/web/20241209173452/https://vesselinfo.kirbycorp.com/BargeInfo/Details/101618
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K35
+  title: "Kirby Corporation barge database, CTCO 251"
+  url: https://web.archive.org/web/20190923132338/http://vesselinfo.kirbycorp.com/BargeInfo/Details/189172
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K36
+  title: "Kirby Corporation barge database, CTCO 3000"
+  url: https://web.archive.org/web/20190922122924/http://vesselinfo.kirbycorp.com/BargeInfo/Details/216541
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K37
+  title: "Kirby Corporation barge database, COMANCHE"
+  url: https://web.archive.org/web/20190923131953/http://vesselinfo.kirbycorp.com/BargeInfo/Details/213824
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K38
+  title: "Kirby Corporation barge database, WINNA WILSON"
+  url: https://web.archive.org/web/20210927223659/https://vesselinfo.kirbycorp.com/BargeInfo/Details/188654
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K39
+  title: "Kirby Corporation barge database, MISS DOTT O"
+  url: https://web.archive.org/web/20190917063735/http://vesselinfo.kirbycorp.com/BargeInfo/Details/51933
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"

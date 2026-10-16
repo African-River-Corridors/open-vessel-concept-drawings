@@ -98,6 +98,36 @@ OPTIONAL_INPUT_CASES = (
     ("fill_ratio", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"fill_ratio": 0.85}),
     ("max_tank_od_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 20.0, 6.0,
      {"max_tank_od_m": 12.0}),
+    # The dry-bulk hold inputs (issue #4, slice 1). Each is set to its default, which is the value the engine
+    # used before it was an input. A base from before the input does not know it; `run_case` leaves
+    # an input the base refuses out, so these show that the head, with the value typed, gives the
+    # base's results.
+    ("hold_wing_void_width_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"hold_wing_void_width_m": 1.0}),
+    ("hold_double_bottom_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"hold_double_bottom_m": 1.2}),
+    ("hatch_coaming_height_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"hatch_coaming_height_m": 1.0}),
+    ("hold_fill_ratio", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"hold_fill_ratio": 0.95}),
+    ("hopper_slope_h_per_v", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
+     {"hopper_slope_h_per_v": 1.0}),
+    ("n_holds", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5, {"n_holds": 3}),
+    ("inner_bottom_plate_mm", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
+     {"inner_bottom_plate_mm": 14.0}),
+    ("hopper_plate_mm", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
+     {"hopper_plate_mm": 14.0}),
+    ("hold_bulkhead_plate_mm", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
+     {"hold_bulkhead_plate_mm": 11.0}),
+    ("hatch_coaming_plate_mm", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
+     {"hatch_coaming_plate_mm": 10.0}),
+    # The hull end shapes (issue #4, slice 2), set to their defaults in the same way.
+    ("bow_rake_length_to_depth_ratio", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
+     {"bow_rake_length_to_depth_ratio": 1.6}),
+    ("pushed_stern_void_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"pushed_stern_void_m": 3.0}),
+    ("bulk_end_bulkhead_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"bulk_end_bulkhead_m": 0.5}),
     # A Vessel Class (issue #94): the scheme places the vessel in a class, and the class fills the
     # draught and air-draft limits. The results of the same dimensions are those of typed ones.
     ("vessel_scheme", "bauxite", "box_hold", "self_propelled", 110.0, 11.4, 4.5,
@@ -210,12 +240,21 @@ def run_case(binary: Path, name: str, typed: dict, tmp: Path) -> dict:
     # predates it. A version 1 file is changed to the current inputs as it is read, so the
     # head must be given version 2: version 1 would give a gas design the 12 m tank diameter cap
     # that version 1 files had, not the Defaults Profile value.
+    typed = dict(typed)
     for version in (2, 1):
-        filled.unlink(missing_ok=True)
-        raw.write_text(json.dumps({"format": "vdesign", "format_version": version,
-                                   "engine_version": "0.0.0",
-                                   "options": [{"name": name, "inputs": typed}]}), encoding="utf-8")
-        fill = run([str(binary), "fill", str(raw), str(filled)])
+        while True:
+            filled.unlink(missing_ok=True)
+            raw.write_text(json.dumps({"format": "vdesign", "format_version": version,
+                                       "engine_version": "0.0.0",
+                                       "options": [{"name": name, "inputs": typed}]}), encoding="utf-8")
+            fill = run([str(binary), "fill", str(raw), str(filled)])
+            # A binary from before an input existed refuses it by name. Leave it out: that binary
+            # then uses the fixed value it always used, which the case sets the input to.
+            unknown = re.search(r"unknown input `([a-z0-9_]+)`", fill.stderr)
+            if fill.returncode != 0 and unknown and unknown.group(1) in typed:
+                del typed[unknown.group(1)]
+                continue
+            break
         if fill.returncode == 0 or "format_version" not in fill.stderr:
             break
     if fill.returncode != 0:
