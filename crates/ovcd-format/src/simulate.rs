@@ -713,6 +713,39 @@ fn simulate_gas(
             "pushed_stern_void_m",
             ovcd_core::barge_capacity::DEFAULT_PUSHED_STERN_VOID_M,
         )?,
+        tanks_in_line: whole_number(
+            get_or(
+                p,
+                "tanks_in_line",
+                ovcd_core::barge_capacity::DEFAULT_TANKS_IN_LINE as f64,
+            )?,
+            "tanks_in_line",
+        )?,
+        tank_support_height_m: get_or(
+            p,
+            "tank_support_height_m",
+            ovcd_core::barge_capacity::DEFAULT_TANK_SUPPORT_HEIGHT_M,
+        )?,
+        tank_dome_height_m: get_or(
+            p,
+            "tank_dome_height_m",
+            ovcd_core::barge_capacity::DEFAULT_TANK_DOME_HEIGHT_M,
+        )?,
+        wing_tank_gap_m: get_or(
+            p,
+            "wing_tank_gap_m",
+            ovcd_core::barge_capacity::DEFAULT_WING_TANK_GAP_M,
+        )?,
+        wing_tank_height_ratio: get_or(
+            p,
+            "wing_tank_height_ratio",
+            ovcd_core::barge_capacity::DEFAULT_WING_TANK_HEIGHT_RATIO,
+        )?,
+        tank_wall_thickness_mm: get_or(
+            p,
+            "tank_wall_thickness_mm",
+            ovcd_core::barge_capacity::DEFAULT_TANK_WALL_THICKNESS_MM,
+        )?,
         ..FitOptions::default()
     };
     let f = ga::fit(l, b, cargo_key, t_max, &options)

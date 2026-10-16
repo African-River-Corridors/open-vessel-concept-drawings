@@ -107,6 +107,15 @@ pub const PUSHED_STERN_VOID_M: f64 = 3.0;
 /// The dry-bulk end-bulkhead allowance at each end of the hold, in m (`barge_capacity` default).
 pub const BULK_END_BULKHEAD_M: f64 = 0.5;
 
+/// The gas tank arrangement values fixed in the engine before they were inputs (`barge_capacity`
+/// and `models` defaults).
+pub const GAS_TANKS_IN_LINE: f64 = 2.0;
+pub const GAS_TANK_SUPPORT_HEIGHT_M: f64 = 0.5;
+pub const GAS_TANK_DOME_HEIGHT_M: f64 = 2.0;
+pub const GAS_WING_TANK_GAP_M: f64 = 0.6;
+pub const GAS_WING_TANK_HEIGHT_RATIO: f64 = 0.66;
+pub const GAS_TANK_WALL_THICKNESS_MM: f64 = 25.0;
+
 /// Both dry-bulk holds.
 const DRY_HOLDS: &[&str] = &["box_hold", "sloped_hopper_hold"];
 
@@ -206,6 +215,42 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
         applies_to: AppliesTo::AnyOf(DRY_HOLDS),
         formations: None,
         value: BULK_END_BULKHEAD_M,
+    },
+    LegacyFixed {
+        name: "tanks_in_line",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: GAS_TANKS_IN_LINE,
+    },
+    LegacyFixed {
+        name: "tank_support_height_m",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: GAS_TANK_SUPPORT_HEIGHT_M,
+    },
+    LegacyFixed {
+        name: "tank_dome_height_m",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: GAS_TANK_DOME_HEIGHT_M,
+    },
+    LegacyFixed {
+        name: "wing_tank_gap_m",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: GAS_WING_TANK_GAP_M,
+    },
+    LegacyFixed {
+        name: "wing_tank_height_ratio",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: GAS_WING_TANK_HEIGHT_RATIO,
+    },
+    LegacyFixed {
+        name: "tank_wall_thickness_mm",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: GAS_TANK_WALL_THICKNESS_MM,
     },
 ];
 
@@ -529,6 +574,48 @@ pub const INPUTS: &[InputSpec] = &[
     only(
         "max_tank_od_m",
         "Maximum tank outer diameter",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tanks_in_line",
+        "Tanks in line",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_support_height_m",
+        "Tank support height",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_dome_height_m",
+        "Tank dome height",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "wing_tank_gap_m",
+        "Wing tank gap",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "wing_tank_height_ratio",
+        "Wing tank height over tank diameter",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_wall_thickness_mm",
+        "Tank wall thickness",
         NUM,
         "type_c_tanks",
         Group::GasTanks,
@@ -1754,16 +1841,18 @@ fn cross_checks(
             &["min_freeboard_m", "moulded_depth_m"],
         );
     }
-    // A count of holds is a whole number.
-    if let Some(n) = get("n_holds").and_then(Value::as_f64)
-        && n.fract() != 0.0
-    {
-        report.error(
-            at(format!(
-                "`n_holds` = {n} must be a whole number (hard limit)"
-            )),
-            &["n_holds"],
-        );
+    // A count is a whole number.
+    for name in ["n_holds", "tanks_in_line"] {
+        if let Some(n) = get(name).and_then(Value::as_f64)
+            && n.fract() != 0.0
+        {
+            report.error(
+                at(format!(
+                    "`{name}` = {n} must be a whole number (hard limit)"
+                )),
+                &[name],
+            );
+        }
     }
     // The depth search tries hulls up to a fixed depth; above it no searched hull keeps the
     // freeboard, and the core raises when no waterway limit caps the draught.

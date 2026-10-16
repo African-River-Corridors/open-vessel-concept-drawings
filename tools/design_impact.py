@@ -128,6 +128,19 @@ OPTIONAL_INPUT_CASES = (
      {"pushed_stern_void_m": 3.0}),
     ("bulk_end_bulkhead_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
      {"bulk_end_bulkhead_m": 0.5}),
+    # The gas tank arrangement inputs (issue #4, slice 3), set to their defaults in the same way.
+    ("tanks_in_line", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tanks_in_line": 2}),
+    ("tank_support_height_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tank_support_height_m": 0.5}),
+    ("tank_dome_height_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tank_dome_height_m": 2.0}),
+    ("wing_tank_gap_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"wing_tank_gap_m": 0.6}),
+    ("wing_tank_height_ratio", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"wing_tank_height_ratio": 0.66}),
+    ("tank_wall_thickness_mm", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tank_wall_thickness_mm": 25.0}),
     # A Vessel Class (issue #94): the scheme places the vessel in a class, and the class fills the
     # draught and air-draft limits. The results of the same dimensions are those of typed ones.
     ("vessel_scheme", "bauxite", "box_hold", "self_propelled", 110.0, 11.4, 4.5,
