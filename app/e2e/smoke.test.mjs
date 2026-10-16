@@ -424,6 +424,9 @@ describe("OVCD app smoke tests", () => {
       const r = await readout(0);
       return r.kn === 10 && r.design;
     });
+    // Leave the file as it opened: the next test opens the same file name and expects Base active.
+    await picker.selectByVisibleText("Base");
+    await until("Base active again", async () => (await picker.getValue()) === "Base");
   });
 
   it("changes an output when an input is edited", async () => {
