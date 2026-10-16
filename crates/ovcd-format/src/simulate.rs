@@ -25,8 +25,6 @@ use ovcd_core::pystr::{parse_float, repr_str};
 use ovcd_core::resistance::{self, EnvironmentInputs, ResistanceInputs, TugInputs};
 use serde_json::{Map, Value, json};
 
-/// Water density of the simulator (fresh water, t/m3).
-const RHO: f64 = 1.0;
 const EM_DASH: &str = "\u{2014}";
 const MINUS: &str = "\u{2212}";
 
@@ -217,6 +215,7 @@ fn env(
     slope: f64,
     current_kn: f64,
     deep: bool,
+    (rho, squat_margin_m): (f64, f64),
 ) -> EnvironmentInputs {
     let surface = bottom_w + 2.0 * slope * depth;
     // Mutation survivors (#64), in the struct below: deleting `bank_slope` and deleting
@@ -231,7 +230,8 @@ fn env(
         channel_width_surface: surface,
         bank_slope: slope,
         current_speed_knots: current_kn,
-        water_density: RHO,
+        water_density: rho,
+        squat_safety_margin_m: squat_margin_m,
         is_deep_water: deep,
         apply_squat_limit: !deep,
         ..EnvironmentInputs::default()
@@ -272,9 +272,30 @@ fn h_over_t(ch: &Map<String, Value>, t: f64) -> R<Value> {
 }
 
 /// `_curves`: speed-power for the hull alone.
-fn curves(p: &Map<String, Value>, l: f64, b: f64, t: f64, cb: f64, disp: f64) -> R<Value> {
+fn curves(
+    p: &Map<String, Value>,
+    l: f64,
+    b: f64,
+    t: f64,
+    cb: f64,
+    disp: f64,
+    rho: f64,
+) -> R<Value> {
+    let margin = get_or(
+        p,
+        "squat_safety_margin_m",
+        EnvironmentInputs::default().squat_safety_margin_m,
+    )?;
     let ch = channel(p)?;
-    let mut envs = vec![env("Deep water", 50.0, 1000.0, 3.0, 0.0, true)];
+    let mut envs = vec![env(
+        "Deep water",
+        50.0,
+        1000.0,
+        3.0,
+        0.0,
+        true,
+        (rho, margin),
+    )];
     if let (Some(d), Some(w)) = (ch.get("depth_m"), ch.get("bottom_width_m"))
         && truthy(d)
         && truthy(w)
@@ -288,6 +309,7 @@ fn curves(p: &Map<String, Value>, l: f64, b: f64, t: f64, cb: f64, disp: f64) ->
                 get_or(&ch, "bank_slope", 3.0)?,
                 get_or(&ch, "current_kn", 0.0)?,
                 false,
+                (rho, margin),
             ),
         );
     }
@@ -485,9 +507,19 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
     }
     let (l, b, d) = (need(p, "loa_m")?, need(p, "beam_m")?, need(p, "depth_m")?);
     let cb = need(p, "cb")?;
+    // One water density for the whole run: the draught, the stability and the resistance curves.
+    let rho = get_or(p, "water_density_t_per_m3", gs::DEFAULT_WATER_DENSITY)?;
     let self_propelled = p.get("self_propelled").is_some_and(truthy);
     if vessel_id == "gas_barge" {
-        return simulate_gas(p, label, cargo, cargo_key, (l, b, d), cb, self_propelled);
+        return simulate_gas(
+            p,
+            label,
+            cargo,
+            cargo_key,
+            (l, b, d),
+            (cb, rho),
+            self_propelled,
+        );
     }
     let freeboard = get_or(p, "freeboard_min_m", 0.3)?;
     let air_draft_limit = match p.get("air_draft_limit_m") {
@@ -498,6 +530,7 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
     inp.cargo_type = cargo_key.to_string();
     inp.self_propelled = self_propelled;
     inp.block_coefficient = cb;
+    inp.water_density = rho;
     inp.required_freeboard = freeboard;
     inp.air_draft_limit_m = air_draft_limit;
     // The end spaces. A key left out keeps the core default, the value the engine always used.
@@ -546,7 +579,7 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
     }
     let (lim_name, t_max) = min_item(&limits);
     let ls = r.lightship_t;
-    let disp_max = cb * l * b * t_max * RHO;
+    let disp_max = cb * l * b * t_max * rho;
     let cargo_weight_bound = py_max(0.0, disp_max - ls);
     let cargo_volume_bound = r.cargo_capacity_t;
     let cargo_t = py_min(cargo_volume_bound, cargo_weight_bound);
@@ -556,7 +589,7 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
         format!("draught {EM_DASH} {lim_name}")
     };
     let disp = ls + cargo_t;
-    let t = py_div(disp, cb * l * b * RHO)?;
+    let t = py_div(disp, cb * l * b * rho)?;
     let h_top = r.air_draft_top_above_keel_m;
 
     let mut checks = vec![json!({
@@ -568,7 +601,7 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
     if let Some(limit) = truthy_float(p, "air_draft_limit_m")? {
         checks.push(air_draft_check(&r, limit)?);
     }
-    let curve_list = curves(p, l, b, t, cb, disp)?;
+    let curve_list = curves(p, l, b, t, cb, disp, rho)?;
     let geo = json!({
         "bow_void_length_m": opt_num(r.bow_void_length_m),
         "stern_void_length_m": opt_num(r.stern_void_length_m),
@@ -614,6 +647,7 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
         "checks": checks,
         "warnings": r.warnings,
         "curves": curve_list,
+        "cost_masses": Value::Null,
     }))
 }
 
@@ -628,11 +662,11 @@ fn simulate_gas(
     cargo: &CargoProperties,
     cargo_key: &str,
     (l, b, d0): (f64, f64, f64),
-    cb: f64,
+    (cb, rho): (f64, f64),
     self_propelled: bool,
 ) -> R<Value> {
     let ruleset = match p.get("ruleset") {
-        None => "IGC_2G_EXACT",
+        None => "IGC_2G",
         Some(Value::String(s)) => s.as_str(),
         // Python tests `ruleset not in RULESETS`, so any other value is an unknown ruleset.
         Some(other) => {
@@ -731,6 +765,11 @@ fn simulate_gas(
             "tank_dome_height_m",
             ovcd_core::barge_capacity::DEFAULT_TANK_DOME_HEIGHT_M,
         )?,
+        tank_dome_diameter_m: get_or(
+            p,
+            "tank_dome_diameter_m",
+            ovcd_core::barge_capacity::DEFAULT_TANK_DOME_DIAMETER_M,
+        )?,
         wing_tank_gap_m: get_or(
             p,
             "wing_tank_gap_m",
@@ -746,6 +785,7 @@ fn simulate_gas(
             "tank_wall_thickness_mm",
             ovcd_core::barge_capacity::DEFAULT_TANK_WALL_THICKNESS_MM,
         )?,
+        water_density_t_per_m3: rho,
         ..FitOptions::default()
     };
     let f = ga::fit(l, b, cargo_key, t_max, &options)
@@ -796,17 +836,13 @@ fn simulate_gas(
         checks.push(air_draft_check(r, limit)?);
     }
     let mut stability = Value::Null;
+    // What a view marks on the GZ curves. Not a result: it is left out of the results hash.
+    let mut stability_marks = Value::Null;
     if f.payload_t > 0.0 && r.gas_basis.is_some() {
         let basis = GasCapacityResult::try_from(r)
             .map_err(|m| Stop::Eval(EvalError::BadInput(m.into())))?;
-        let a = gs::assess(
-            &basis,
-            f.payload_t,
-            cb,
-            gs::DEFAULT_WATER_DENSITY,
-            gs::criteria_set_for(ruleset),
-        )
-        .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))?;
+        let a = gs::assess(&basis, f.payload_t, cb, rho, gs::criteria_set_for(ruleset))
+            .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))?;
         for c in &a.conditions {
             let bad_criteria: Vec<_> = c.criteria.iter().filter(|x| !x.ok).collect();
             let mut message = format!(
@@ -839,6 +875,7 @@ fn simulate_gas(
             "IS_CODE_2008" => "IMO IS Code 2008, Part A 2.2",
             other => return bad(format!("unknown criteria set `{other}`")),
         };
+        stability_marks = json!({ "criteria_angles_deg": gs::CRITERIA_ANGLES_DEG });
         stability = json!({
             "criteria_set": set_label,
             "ok": a.ok(),
@@ -847,7 +884,7 @@ fn simulate_gas(
             "conditions": a.conditions.iter().map(simulate_condition).collect::<Vec<_>>(),
         });
     }
-    let curve_list = curves(p, l, b, t, cb, disp)?;
+    let curve_list = curves(p, l, b, t, cb, disp, rho)?;
     let geo = json!({
         "bow_void_length_m": opt_num(r.bow_void_length_m),
         "stern_void_length_m": opt_num(r.stern_void_length_m),
@@ -886,7 +923,7 @@ fn simulate_gas(
         "results": {
             "cargo_t": num(f.payload_t),
             "cargo_volume_bound_t": num(f.volume_capacity_t),
-            "cargo_weight_bound_t": num(py_max(0.0, cb * l * b * t_max * RHO - r.lightship_t)),
+            "cargo_weight_bound_t": num(py_max(0.0, cb * l * b * t_max * rho - r.lightship_t)),
             "governs": governs,
             "cargo_volume_m3": num(r.cargo_volume_m3),
             "lightship_t": num(r.lightship_t),
@@ -904,6 +941,8 @@ fn simulate_gas(
         "warnings": r.warnings,
         "curves": curve_list,
         "stability": stability,
+        "stability_marks": stability_marks,
+        "cost_masses": r.gas_basis.as_ref().map_or(Value::Null, |b| crate::cost::gas_masses(&b.weights)),
     }))
 }
 

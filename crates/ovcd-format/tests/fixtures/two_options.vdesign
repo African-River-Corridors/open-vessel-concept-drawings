@@ -112,6 +112,70 @@
         "channel_current_kn": {
           "value": 0.0,
           "source": "default"
+        },
+        "water_density_t_per_m3": {
+          "value": 1.0,
+          "source": "default"
+        },
+        "squat_safety_margin_m": {
+          "value": 0.15,
+          "source": "default"
+        },
+        "hull_steel_rate": {
+          "value": 2500.0,
+          "source": "default"
+        },
+        "tank_shell_rate": {
+          "value": 10000.0,
+          "source": "default"
+        },
+        "tank_supports_rate": {
+          "value": 2000.0,
+          "source": "default"
+        },
+        "insulation_rate": {
+          "value": 4000.0,
+          "source": "default"
+        },
+        "piping_rate": {
+          "value": 4500.0,
+          "source": "default"
+        },
+        "outfitting_rate": {
+          "value": 4000.0,
+          "source": "default"
+        },
+        "cargo_system_lump": {
+          "value": 500000.0,
+          "source": "default"
+        },
+        "paint_anodes_misc": {
+          "value": 100000.0,
+          "source": "default"
+        },
+        "battery_rate_per_kwh": {
+          "value": 250.0,
+          "source": "default"
+        },
+        "propulsion_rate_per_kw": {
+          "value": 1000.0,
+          "source": "default"
+        },
+        "wheelhouse_accom_lump": {
+          "value": 450000.0,
+          "source": "default"
+        },
+        "tug_outfitting_lump": {
+          "value": 200000.0,
+          "source": "default"
+        },
+        "yard_margin_fraction": {
+          "value": 0.1,
+          "source": "default"
+        },
+        "delivery_lump": {
+          "value": 200000.0,
+          "source": "default"
         }
       },
       "results_hash": "07539d06ceaa798b28ed7686f390cea612fa25d569ef36f8a18a11e06d532257"
@@ -223,6 +287,70 @@
         },
         "channel_current_kn": {
           "value": 0.0,
+          "source": "default"
+        },
+        "water_density_t_per_m3": {
+          "value": 1.0,
+          "source": "default"
+        },
+        "squat_safety_margin_m": {
+          "value": 0.15,
+          "source": "default"
+        },
+        "hull_steel_rate": {
+          "value": 2500.0,
+          "source": "default"
+        },
+        "tank_shell_rate": {
+          "value": 10000.0,
+          "source": "default"
+        },
+        "tank_supports_rate": {
+          "value": 2000.0,
+          "source": "default"
+        },
+        "insulation_rate": {
+          "value": 4000.0,
+          "source": "default"
+        },
+        "piping_rate": {
+          "value": 4500.0,
+          "source": "default"
+        },
+        "outfitting_rate": {
+          "value": 4000.0,
+          "source": "default"
+        },
+        "cargo_system_lump": {
+          "value": 500000.0,
+          "source": "default"
+        },
+        "paint_anodes_misc": {
+          "value": 100000.0,
+          "source": "default"
+        },
+        "battery_rate_per_kwh": {
+          "value": 250.0,
+          "source": "default"
+        },
+        "propulsion_rate_per_kw": {
+          "value": 1000.0,
+          "source": "default"
+        },
+        "wheelhouse_accom_lump": {
+          "value": 450000.0,
+          "source": "default"
+        },
+        "tug_outfitting_lump": {
+          "value": 200000.0,
+          "source": "default"
+        },
+        "yard_margin_fraction": {
+          "value": 0.1,
+          "source": "default"
+        },
+        "delivery_lump": {
+          "value": 200000.0,
           "source": "default"
         }
       },

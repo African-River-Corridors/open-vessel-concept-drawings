@@ -5,8 +5,9 @@
 
   // One speed-power chart for one channel environment: power and fuel against speed. It draws the
   // `curves` entry exactly as the engine gave it. The limiting speed is a dashed line; points where
-  // squat limits the speed are red dots. Hover shows exact values in the legend. Zoom: drag a box,
-  // or wheel; pan: shift + wheel, or drag with Alt held; double-click or the button resets.
+  // squat limits the speed are red dots. There is no zoom, pan or hover. The user clicks a point to
+  // select it, and the readout shows that point's values. The design speed is selected to start with
+  // (the point at the Option's `max_speed_kn`, or the nearest computed point).
   interface Point {
     kn: number;
     kw: number;
@@ -14,23 +15,80 @@
     squat_m: number;
     squat_limited: boolean;
   }
-  let { name, limitingSpeed, blockage, points }: {
+  let { name, limitingSpeed, blockage, points, designSpeed, option }: {
     name: string;
     limitingSpeed: number | null;
     blockage: number;
     points: Point[];
+    /** The Option's `max_speed_kn` input, from the Design session. */
+    designSpeed: number | null;
+    /** The active Option: a new Option starts again from the design speed. */
+    option: string;
   } = $props();
 
   let host: HTMLDivElement;
   let plot: uPlot | undefined;
-  let zoomed = $state(false);
+  /** Index in `points` of the selected point. */
+  let selected = $state(0);
 
   const NAVY = "#14325a";
   const GOLD = "#b8932f";
   const RED = "#a02a1a";
 
   let squatCount = $derived(points.filter((p) => p.squat_limited).length);
+
+  /** The point at the design speed, else the nearest one; on a tie, the lower speed. */
+  function defaultIndex(list: Point[], speed: number | null): number {
+    if (speed === null || list.length === 0) return 0;
+    let best = 0;
+    for (let i = 1; i < list.length; i++) {
+      const d = Math.abs(list[i].kn - speed);
+      const b = Math.abs(list[best].kn - speed);
+      if (d < b || (d === b && list[i].kn < list[best].kn)) best = i;
+    }
+    return best;
+  }
+
+  /** The point nearest to a speed along the x axis. */
+  function nearestIndex(speed: number): number {
+    let best = 0;
+    for (let i = 1; i < points.length; i++) {
+      if (Math.abs(points[i].kn - speed) < Math.abs(points[best].kn - speed)) best = i;
+    }
+    return best;
+  }
+
   const exact = (_u: uPlot, v: number | null) => (v === null ? "--" : String(v));
+  const num = (v: number, dp: number) => v.toLocaleString("en-GB", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  let point = $derived<Point | undefined>(points[selected]);
+
+  /** A ring on each curve at the selected point, and a thin line down to the speed axis. */
+  function marker(u: uPlot) {
+    const p = points[selected];
+    if (!p) return;
+    const x = u.valToPos(p.kn, "x", true);
+    const { left, top, width, height } = u.bbox;
+    if (x < left || x > left + width) return;
+    const ctx = u.ctx;
+    const k = devicePixelRatio;
+    ctx.save();
+    ctx.strokeStyle = "#666";
+    ctx.lineWidth = k;
+    ctx.beginPath();
+    ctx.moveTo(x, top);
+    ctx.lineTo(x, top + height);
+    ctx.stroke();
+    for (const [scale, value, colour] of [["kw", p.kw, NAVY], ["fuel", p.fuel_lph, GOLD]] as const) {
+      ctx.beginPath();
+      ctx.arc(x, u.valToPos(value, scale, true), 6 * k, 0, 2 * Math.PI);
+      ctx.fillStyle = "#fff";
+      ctx.fill();
+      ctx.lineWidth = 2.5 * k;
+      ctx.strokeStyle = colour;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
 
   function limitLine(u: uPlot) {
     if (limitingSpeed === null) return;
@@ -54,15 +112,16 @@
     ctx.restore();
   }
 
-  function options(width: number): uPlot.Options {
+  function options(width: number, height: number): uPlot.Options {
     return {
       width,
-      height: 260,
+      height,
       scales: { x: { time: false } },
-      cursor: { drag: { x: true, y: false, uni: 20 } },
+      // No hover readout, no selection box: the chart answers clicks only.
+      cursor: { show: false, drag: { x: false, y: false } },
+      legend: { show: false },
       hooks: {
-        draw: [limitLine],
-        setScale: [(u, key) => { if (key === "x") zoomed = u.scales.x.min !== points[0]?.kn || u.scales.x.max !== points[points.length - 1]?.kn; }],
+        draw: [limitLine, marker],
       },
       axes: [
         { label: "Speed (kn)", stroke: "#444" },
@@ -93,66 +152,35 @@
     ];
   }
 
-  export function resetZoom() {
-    plot?.setData(data(), true);
-  }
+  const hostHeight = () => Math.max(host.clientHeight, 120);
 
   onMount(() => {
-    plot = new uPlot(options(host.clientWidth || 600), data(), host);
-    const over = plot.over;
-    const zoomX = (factor: number, centre: number) => {
-      const u = plot!;
-      const { min, max } = u.scales.x;
-      if (min === undefined || max === undefined) return;
-      const at = u.posToVal(centre, "x");
-      u.setScale("x", { min: at - (at - min) * factor, max: at + (max - at) * factor });
+    plot = new uPlot(options(host.clientWidth || 600, hostHeight()), data(), host);
+    const onClick = (e: MouseEvent) => {
+      const rect = plot!.over.getBoundingClientRect();
+      selected = nearestIndex(plot!.posToVal(e.clientX - rect.left, "x"));
     };
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const u = plot!;
-      const { min, max } = u.scales.x;
-      if (min === undefined || max === undefined) return;
-      if (e.shiftKey) {
-        const shift = ((max - min) * Math.sign(e.deltaY || e.deltaX)) * 0.1;
-        u.setScale("x", { min: min + shift, max: max + shift });
-      } else {
-        zoomX(e.deltaY < 0 ? 0.8 : 1.25, e.offsetX);
-      }
-    };
-    let panning: { x: number; min: number; max: number } | null = null;
-    const down = (e: MouseEvent) => {
-      if (!e.altKey) return;
-      const { min, max } = plot!.scales.x;
-      panning = { x: e.clientX, min: min!, max: max! };
-      e.stopPropagation();
-    };
-    const move = (e: MouseEvent) => {
-      if (!panning) return;
-      const u = plot!;
-      const perPx = (panning.max - panning.min) / u.bbox.width * devicePixelRatio;
-      const d = (e.clientX - panning.x) * perPx;
-      u.setScale("x", { min: panning.min - d, max: panning.max - d });
-    };
-    const up = () => (panning = null);
-    over.addEventListener("wheel", onWheel, { passive: false });
-    over.addEventListener("mousedown", down, true);
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
-    const ro = new ResizeObserver(() => plot?.setSize({ width: host.clientWidth, height: 260 }));
+    plot.over.addEventListener("click", onClick);
+    const ro = new ResizeObserver(() => plot?.setSize({ width: host.clientWidth, height: hostHeight() }));
     ro.observe(host);
     return () => {
       ro.disconnect();
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", up);
       plot?.destroy();
     };
   });
 
-  // New results for the same chart: replace the data and keep the zoom out of the way.
+  // New results, a new design speed or another Option: replace the data and select the design speed.
   $effect(() => {
-    points;
+    option;
+    selected = defaultIndex(points, designSpeed);
     limitingSpeed;
     plot?.setData(data(), true);
+  });
+
+  // A click changes the selected point: draw the marker again.
+  $effect(() => {
+    selected;
+    plot?.redraw(false);
   });
 </script>
 
@@ -164,15 +192,27 @@
       · blockage {blockage.toFixed(3)}
       {#if squatCount > 0}· {squatCount} squat-limited point{squatCount === 1 ? "" : "s"}{/if}
     </span>
-    <button onclick={resetZoom} disabled={!zoomed}>Reset zoom</button>
   </div>
+  {#if point}
+    <p class="readout" data-testid="speed-power-readout" data-kn={point.kn} data-design={selected === defaultIndex(points, designSpeed)}>
+      <span class="sel">Selected point</span>
+      <span>speed <strong>{num(point.kn, 2)} kn</strong></span>
+      <span>power <strong>{num(point.kw, 0)} kW</strong></span>
+      <span>fuel <strong>{num(point.fuel_lph, 1)} l/h</strong></span>
+      <span>squat <strong>{num(point.squat_m, 2)} m</strong></span>
+      <span>squat-limited <strong>{point.squat_limited ? "yes" : "no"}</strong></span>
+      {#if limitingSpeed !== null}<span>limiting speed <strong>{num(limitingSpeed, 2)} kn</strong></span>{/if}
+    </p>
+  {/if}
   <div bind:this={host} class="host"></div>
 </div>
 
 <style>
-  .chart { margin: 8px 0 18px; }
+  .chart { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .head { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; font-size: 13px; }
   .dim { color: var(--dim); font-size: 12px; }
-  button { margin-left: auto; font-size: 12px; }
-  .host { width: 100%; }
+  .readout { display: flex; gap: 14px; flex-wrap: wrap; margin: 2px 0 4px; font-size: 12px; }
+  .readout .sel { color: var(--dim); }
+  .host { flex: 1; min-height: 0; width: 100%; }
+  .host :global(.u-over) { cursor: pointer; }
 </style>

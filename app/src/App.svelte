@@ -6,6 +6,7 @@
   import MainPanel from "./lib/MainPanel.svelte";
   import BottomPanel from "./lib/BottomPanel.svelte";
   import Notice from "./lib/Notice.svelte";
+  import { loadPanels, savePanels } from "./lib/panels";
 
   // Display state only: the Design, its checks and its results all come from Rust.
   let snap = $state<Snapshot | null>(null);
@@ -22,6 +23,11 @@
 
   let leftWidth = $state(340);
   let bottomHeight = $state(260);
+  // Both side panels are shown unless the user hid one last time.
+  const saved = loadPanels();
+  let showInput = $state(saved.input);
+  let showOutputs = $state(saved.outputs);
+  $effect(() => savePanels({ input: showInput, outputs: showOutputs }));
 
   const EVALUATE_PAUSE_MS = 150;
   let pending: ReturnType<typeof setTimeout> | undefined;
@@ -155,6 +161,11 @@
   }
 
   let active = $derived(snap?.active_option ?? "");
+  /** The active Option's design speed, from the Design session's inputs. */
+  let designSpeed = $derived.by(() => {
+    const v = snap?.design.options.find((o) => o.name === active)?.inputs.max_speed_kn?.value;
+    return typeof v === "number" ? v : null;
+  });
   let activeEval = $derived(evaluation?.options.find((o) => o.name === active));
   /** The inputs of the active Option that have a hard error, with their schema labels. */
   let blockers = $derived.by(() => {
@@ -176,6 +187,8 @@
     <button onclick={() => fileAction(api.saveAs, false)}>Save as</button>
     <button onclick={() => (noticeOpen = true)}>About</button>
     <span class="grow"></span>
+    <button type="button" aria-label={showInput ? "Hide the Input panel" : "Show the Input panel"} aria-pressed={showInput} onclick={() => (showInput = !showInput)}>Input panel</button>
+    <button type="button" aria-label={showOutputs ? "Hide the Outputs panel" : "Show the Outputs panel"} aria-pressed={showOutputs} onclick={() => (showOutputs = !showOutputs)}>Outputs panel</button>
     {#if snap}
       <span class="meta">{snap.file_name}{snap.dirty ? " (unsaved)" : ""}</span>
       <span class="meta">Defaults: {snap.profile}</span>
@@ -202,8 +215,8 @@
     </div>
   {/if}
 
-  <div class="body" style:grid-template-columns="{leftWidth}px 6px 1fr" style:grid-template-rows="1fr 6px {bottomHeight}px">
-    <section class="left"><LeftPanel {snap} {schema} {generation} evaluation={activeEval}
+  <div class="body" style:grid-template-columns={showInput ? `${leftWidth}px 6px 1fr` : "0 0 1fr"} style:grid-template-rows={showOutputs ? `1fr 6px ${bottomHeight}px` : "1fr 0 0"}>
+    <section class="left" hidden={!showInput}><LeftPanel {snap} {schema} {generation} evaluation={activeEval}
       onPick={(name) => command(() => api.setActiveOption(name))}
       onEdit={(name, value) => {
         const option = active;
@@ -217,10 +230,10 @@
       }}
       onOption={optionAction}
       onProfile={(a) => command(a === "load" ? api.loadProfile : api.useBuiltInProfile, true)} /></section>
-    <div class="handle v" role="separator" aria-orientation="vertical" onpointerdown={drag("x")}></div>
-    <section class="main"><MainPanel {evaluation} {active} {lastGood} {blockers} /></section>
-    <div class="handle h" role="separator" aria-orientation="horizontal" onpointerdown={drag("y")}></div>
-    <section class="bottom"><BottomPanel {evaluation} {active} {lastGood} {blockers} onActivate={(name) => command(() => api.setActiveOption(name))} /></section>
+    <div class="handle v" hidden={!showInput} role="separator" aria-orientation="vertical" onpointerdown={drag("x")}></div>
+    <section class="main"><MainPanel {evaluation} {active} {lastGood} {blockers} {designSpeed} /></section>
+    <div class="handle h" hidden={!showOutputs} role="separator" aria-orientation="horizontal" onpointerdown={drag("y")}></div>
+    <section class="bottom" hidden={!showOutputs}><BottomPanel {evaluation} {active} {lastGood} {blockers} onActivate={(name) => command(() => api.setActiveOption(name))} /></section>
   </div>
 </div>
 
@@ -240,5 +253,6 @@
   .body > .main { overflow: hidden; }
   .handle.h { grid-column: 3; grid-row: 2; cursor: row-resize; background: var(--line); }
   .bottom { grid-column: 3; grid-row: 3; }
+  .body > [hidden] { display: none; }
   .handle:hover { background: var(--gold); }
 </style>

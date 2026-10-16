@@ -1,0 +1,134 @@
+/* OVCD website. Plain CSS over tokens.css. No build step. */
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 18px/var(--lh-read) var(--font-serif); }
+img { max-width: 100%; }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+code, pre { font-family: var(--font-mono); font-size: 0.82em; }
+pre { background: var(--surface-2); padding: var(--sp-3) var(--sp-4); overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; border-left: var(--lw-thick) solid var(--rule-strong); line-height: 1.5; }
+h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; line-height: var(--lh-tight); margin: 0 0 var(--sp-4); }
+h1 { font-size: clamp(32px, 4.6vw, 52px); letter-spacing: -0.01em; }
+h2 { font-size: clamp(26px, 3vw, 34px); }
+h3 { font-size: 21px; }
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 var(--sp-5); }
+@media (max-width: 600px) { .wrap { padding: 0 16px; } }
+
+.skip { position: absolute; left: -999px; }
+.skip:focus { left: 16px; top: 8px; background: var(--surface); padding: 8px; z-index: 9; }
+
+.on-dark { display: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .on-light { display: none; } :root:not([data-theme="light"]) .on-dark { display: inline; } }
+:root[data-theme="dark"] .on-light { display: none; }
+:root[data-theme="dark"] .on-dark { display: inline; }
+
+/* Header: a rule under it, like the top of a sheet */
+.top { border-bottom: var(--lw-thick) solid var(--gilt); background: var(--paper); position: sticky; top: 0; z-index: 5; }
+.top-row { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: var(--sp-4); }
+.home { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); font: 600 20px var(--font-ui); letter-spacing: 0.12em; }
+nav { display: flex; gap: var(--sp-5); font: 500 16px var(--font-ui); flex-wrap: wrap; }
+nav a { color: var(--ink-2); text-decoration: none; }
+nav a:hover { color: var(--accent); text-decoration: underline; }
+@media (max-width: 760px) { nav { display: none; } }
+
+section { padding: var(--sp-7) 0; }
+.band { background: var(--surface); border-top: var(--lw-thin) solid var(--rule); border-bottom: var(--lw-thin) solid var(--rule); }
+.eyebrow { font: 400 16px var(--font-hand); letter-spacing: 0.12em; font-style: oblique 10deg; text-transform: uppercase; color: var(--ink-3); margin: 0 0 var(--sp-3); }
+.lede { font-size: 21px; color: var(--ink-2); max-width: 36em; }
+.sub { color: var(--ink-2); margin-top: calc(-1 * var(--sp-2)); }
+.fine { font: 15px var(--font-ui); color: var(--ink-3); }
+
+.hero { padding: 72px 0 64px; overflow: hidden; }
+.hero-grid { display: grid; grid-template-columns: 0.9fr 1.45fr; gap: var(--sp-6); align-items: center; }
+@media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; } }
+.cta { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin: var(--sp-5) 0 var(--sp-3); }
+.btn { display: inline-block; font: 600 16px var(--font-ui); letter-spacing: 0.04em; padding: 11px 18px; border: var(--lw-thick) solid var(--ink); color: var(--ink); text-decoration: none; border-radius: var(--radius); background: transparent; }
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.08); }
+/* Not yet available: dashed outline, muted text, a badge in words. The link stays, so deploying the
+   web app to app/ makes it live; then drop the badge and the .soon class. */
+.btn.soon { border-style: dashed; border-color: var(--rule-strong); color: var(--ink-2); display: inline-flex; align-items: center; gap: 10px; }
+.btn.soon:hover { background: var(--surface-2); }
+.badge { font: 600 11px/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--warn); background: var(--warn-soft); border: 1px solid var(--warn); border-radius: var(--radius); padding: 3px 6px; white-space: nowrap; vertical-align: middle; }
+.hero .btn.soon { flex-direction: column; align-items: flex-start; gap: 4px; padding-top: 6px; padding-bottom: 6px; }
+.hero .cta { align-items: stretch; }
+.hero .btn.primary { display: inline-flex; align-items: center; }
+h3 .badge { margin-left: 6px; position: relative; top: -2px; }
+
+/* The hero is the blueprint field in both themes: white ink, thin white ruled borders. */
+.hero { background: radial-gradient(ellipse at 70% 40%, #2a5378 0%, var(--blueprint) 55%, var(--blueprint-deep) 100%);
+  color: var(--white-ink); position: relative; border-bottom: 6px solid var(--gilt);
+  --ink: var(--white-ink); --ink-2: #d2e2e8; --ink-3: #b9cfda; --accent: var(--white-ink); --accent-ink: var(--blueprint-deep);
+  --rule-strong: #95b4c6; --surface-2: var(--blueprint-deep); --warn: #ffe3a3; --warn-soft: #43473e; }
+.hero::before { content: ""; position: absolute; inset: 12px; border: 1.5px solid var(--white-ink); opacity: .85; pointer-events: none; }
+.hero::after { content: ""; position: absolute; inset: 18px; border: 1px solid var(--white-ink); opacity: .4; pointer-events: none; }
+.hero a:not(.btn) { color: var(--white-ink); }
+.hero .eyebrow { color: #d2e2e8; }
+.hero-drawing { margin: 0; }
+@media (max-width: 600px) { .hero .wrap { padding: 0 30px; } .hero { padding: 48px 0 40px; } }
+.hero-drawing img { display: block; width: 100%; }
+
+/* A drawing framed in gilt on the cream mat, as the reference hangs */
+.framed { margin: var(--sp-6) 0 0; }
+.gilt { padding: 12px; background: linear-gradient(135deg, #c4a670, #a78654 30%, #8d6f40 55%, #b8986a 80%, #9a7b49);
+  box-shadow: 0 2px 8px rgba(60, 40, 10, .25); }
+.gilt img { display: block; width: 100%; }
+/* An OVCD drawing sheet (black on white) shown as a blueprint: inverted to white on black, then
+   screened onto the blueprint field, so black becomes the field. The drawing itself is unchanged. */
+.sheet-blueprint { background: var(--blueprint); isolation: isolate; }
+.sheet-blueprint img { display: block; width: 100%; height: auto; background: #fff; filter: invert(1); mix-blend-mode: screen; }
+.framed figcaption { font: 14px var(--font-ui); color: var(--ink-2); margin-top: var(--sp-3); }
+
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-6); }
+.three { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-5); }
+.four { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-5); }
+.card.web { border-top: var(--lw-extra) dashed var(--rule-strong); }
+@media (max-width: 900px) { .two, .three, .four { grid-template-columns: 1fr; } }
+.is, .isnot { background: var(--paper); border: var(--lw-thin) solid var(--rule); padding: var(--sp-5); }
+.is { border-top: var(--lw-extra) solid var(--pass); }
+.isnot { border-top: var(--lw-extra) solid var(--ink-2); }
+.is h3 .mark { color: var(--pass); }
+.isnot h3 .mark { color: var(--ink-2); }
+ul { padding-left: 1.1em; }
+li { margin: 0.35em 0; }
+
+.craft-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: var(--sp-6); align-items: start; }
+@media (max-width: 900px) { .craft-grid { grid-template-columns: 1fr; } }
+.prose p { margin: 0 0 1em; max-width: 34em; }
+.offsets { margin: 0; background: var(--surface); color: var(--ink); border: var(--lw-thick) solid var(--ink); padding: var(--sp-4) var(--sp-5); }
+.offsets table { border-collapse: collapse; width: 100%; font: 15px var(--font-ui); font-variant-numeric: tabular-nums; }
+.offsets caption { text-align: left; font: 400 14px var(--font-hand); font-style: oblique 10deg; letter-spacing: .1em; text-transform: uppercase; padding-bottom: var(--sp-2); }
+.offsets th, .offsets td { padding: 5px 8px; text-align: right; border-bottom: var(--lw-thin) solid var(--rule); }
+.offsets th { font-weight: 600; border-bottom: var(--lw-thick) solid var(--ink); }
+.offsets th:first-child, .offsets td:first-child { text-align: left; }
+.offsets figcaption { font: 13px var(--font-ui); color: var(--ink-3); margin-top: var(--sp-2); }
+.tools { list-style: none; padding: 0; margin: var(--sp-6) 0 0; display: grid; grid-template-columns: repeat(4, 1fr); border-top: var(--lw-thick) solid var(--ink); }
+@media (max-width: 900px) { .tools { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .tools { grid-template-columns: 1fr; } }
+.tools li { margin: 0; padding: var(--sp-4) var(--sp-4) var(--sp-4) 0; border-bottom: var(--lw-thin) solid var(--rule); font: 16px/1.45 var(--font-ui); color: var(--ink-2); }
+.tools b { display: block; font: 400 17px var(--font-hand); letter-spacing: .08em; text-transform: uppercase; font-style: oblique 10deg; color: var(--ink); margin-bottom: 4px; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1px; }
+
+.card { background: var(--surface); border: var(--lw-thin) solid var(--rule); padding: var(--sp-5); min-width: 0; }
+.card p, .card li { font: 16px/1.5 var(--font-ui); color: var(--ink-2); }
+.files { padding-left: 1em; }
+.note { font-size: 14px !important; color: var(--ink-3) !important; }
+
+.ai { background: var(--paper); border: var(--lw-thin) solid var(--rule); padding: var(--sp-5); align-self: start; }
+.ai p { font-size: 17px; color: var(--ink-2); }
+
+.callout { border: var(--lw-thick) solid var(--warn); border-left-width: 10px; background: var(--warn-soft); padding: var(--sp-5) var(--sp-6); }
+.callout h2 { font-size: 26px; color: var(--ink); }
+.callout h2::before { content: "⚠ "; color: var(--warn); }
+.callout p { max-width: 46em; }
+
+footer { border-top: var(--lw-thick) solid var(--ink); padding: var(--sp-6) 0 var(--sp-7); }
+.foot { display: grid; grid-template-columns: 260px 1fr; gap: var(--sp-6); align-items: center; }
+@media (max-width: 760px) { .foot { grid-template-columns: 1fr; } }
+footer .tb { display: grid; grid-template-columns: 1.3fr 0.8fr 1fr 1.6fr; border: var(--lw-thick) solid var(--ink); font: 15px var(--font-ui); }
+@media (max-width: 760px) { footer .tb { grid-template-columns: 1fr 1fr; } }
+footer .tb div { padding: 10px 14px; border-right: var(--lw-thin) solid var(--ink); }
+footer .tb div:last-child { border-right: 0; }
+footer .tb span { display: block; font: 400 12px var(--font-hand); font-style: oblique 10deg; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }

@@ -177,7 +177,7 @@ review, and nobody has agreed yet that they need fixing. General improvements co
 - **Rule: every public function of the Python package gets Reference Results.** Private helpers do
   not. The entry points are:
   - `cargo`: cargo lookup and the cargo list
-  - `protective_location`: `distance_d_vc`, `d_vc_exact`, `required_side_protection`,
+  - `protective_location`: `d_vc_exact` (and `distance_d_vc` until issue #237), `required_side_protection`,
     `required_bottom_protection`, `compute_required_clearances`, `check_protective_location`
   - `pressure_vessel`: the public wall-thickness functions
   - `hull`: the hull geometry quantities (volume, KB, LCB, BM, areas)
@@ -258,7 +258,7 @@ review, and nobody has agreed yet that they need fixing. General improvements co
     available".
 - Every other input comes from the **Defaults Profile**. A built-in profile ships with the tool, and a
   user may copy and edit it. It holds the defaults (Cb 0.85, minimum freeboard 0.3 m, ruleset
-  IGC_2G_EXACT, fill ratio by ruleset, lightship factor by Cargo Containment, propulsive efficiency
+  IGC_2G (IGC_2G_EXACT until issue #237), fill ratio by ruleset, lightship factor by Cargo Containment, propulsive efficiency
   0.45, maximum speed 10 kn, no channel, and so on) and the validation ranges.
 - Each range is **hard** (refuse the input) or **soft** (accept it with a warning). The first ranges
   are proposed from two sources: physical limits (no NaN, no negative lengths, Cb in (0, 1], and so

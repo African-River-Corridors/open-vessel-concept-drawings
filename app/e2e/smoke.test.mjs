@@ -124,19 +124,64 @@ describe("OVCD app smoke tests", () => {
     assert.equal(await (await browser.$("[data-testid=engine-version]")).getText(), `Engine ${appVersion}`);
   });
 
-  /** The text of the SVG drawn in each hull view slot. */
-  const hullTexts = () =>
-    browser.execute(() =>
-      Object.fromEntries(
-        ["side", "plan", "midship"].map((k) => [k, document.querySelector(`[data-testid=slot-${k}] svg`)?.textContent ?? null]),
-      ),
-    );
-  const viewsDrawn = async () => (await hullTexts()).midship !== null && (await hullTexts()).plan !== null && (await hullTexts()).side !== null;
+  const HULL_TABS = { side: "Side elevation", plan: "Plan", midship: "Cross-section" };
+  // The views, by top tab. Every view is checked for scrolling and photographed.
+  const GROUPS = [
+    ["Drawings", ["Side elevation", "Plan", "Cross-section"]],
+    ["Stability & Propulsion", ["Intact stability", "Power and speed curves", "Rule check calculations"]],
+    ["BOQ & Finance", ["BOQ", "Capital budget"]],
+  ];
+  const tab = (label) => browser.$(`//button[@role="tab" and normalize-space()="${label}"]`);
+  /** The text of each element in a list, in order. */
+  async function texts(list) {
+    const out = [];
+    for (let i = 0; i < list.length; i++) out.push(await list[i].getText());
+    return out;
+  }
+  const slug = (label) => label.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "");
+
+  /** Show a view: its top tab, then its sub-tab. */
+  async function show(group, view) {
+    await (await tab(group)).click();
+    await (await tab(view)).click();
+    await until(`the ${view} tab to be selected`, async () => (await (await tab(view)).getAttribute("aria-selected")) === "true");
+  }
+
+  /** The text of the SVG drawn in a hull view (shows that view first). */
+  async function hullText(key) {
+    await show("Drawings", HULL_TABS[key]);
+    await until(`the ${key} drawing`, async () => (await browser.$$(`[data-testid=slot-${key}] svg`)).length === 1);
+    return browser.execute((k) => document.querySelector(`[data-testid=slot-${k}] svg`).textContent, key);
+  }
+
+  // Screenshots for review: when OVCD_E2E_SHOTS names a folder, save one per named point there.
+  const SHOTS = process.env.OVCD_E2E_SHOTS;
+  async function shot(name) {
+    if (!SHOTS) return;
+    fs.mkdirSync(SHOTS, { recursive: true });
+    await browser.saveScreenshot(path.join(SHOTS, `${name}.png`));
+  }
+
+  /** How far the Views panel's content reaches past its box: more than 0 means it scrolls. */
+  const overflow = () =>
+    browser.execute(() => {
+      const p = document.querySelector("[data-testid=views-panel]");
+      return p.scrollHeight - p.clientHeight;
+    });
+
+  const toggle = (what, shown) => browser.$(`button[aria-label="${shown ? "Hide" : "Show"} the ${what} panel"]`);
+  /** Hide or show a side panel through its toggle in the header. */
+  async function setPanel(what, shown) {
+    const button = await toggle(what, !shown);
+    if (await button.isExisting()) await button.click();
+    await until(`the ${what} panel to be ${shown ? "shown" : "hidden"}`, async () => (await toggle(what, shown).isExisting()));
+  }
+  const sideDisplayed = (cls) => browser.execute((c) => getComputedStyle(document.querySelector(`.body > section.${c}`)).display !== "none", cls);
+  const sheetScale = () => browser.execute(() => document.querySelector(".sheet")?.style.transform ?? "");
 
   it("draws the side elevation, plan and midship section, dimensioned from the results", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
-    await until("the three views to be drawn", viewsDrawn);
-    const t = await hullTexts();
+    const t = { side: await hullText("side"), plan: await hullText("plan"), midship: await hullText("midship") };
     // LOA 76.5 m, beam 11.4 m, depth 3.5 m: the dimension texts are computed from the geometry in Rust.
     assert.match(t.side, /76\.50/);
     assert.match(t.plan, /76\.50/);
@@ -144,21 +189,374 @@ describe("OVCD app smoke tests", () => {
     assert.match(t.midship, /11\.40/);
     assert.match(t.midship, /3\.50/);
     assert.match(t.side, /SIDE ELEVATION/);
-    // The front end only places the drawing: one SVG in each slot, and the zoom buttons.
-    for (const slot of ["side", "plan", "midship"]) {
-      assert.equal((await browser.$$(`[data-testid=slot-${slot}] svg`)).length, 1);
-    }
   });
 
   it("redraws the views when an input changes, and draws tanks for a gas Cargo", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
-    await until("the three views to be drawn", viewsDrawn);
+    await hullText("plan");
     await type("Beam", "12");
-    await until("the plan to show the new beam", async () => /12\.00/.test((await hullTexts()).plan ?? ""));
+    await until("the plan to show the new beam", async () =>
+      /12\.00/.test(await browser.execute(() => document.querySelector("[data-testid=slot-plan] svg")?.textContent ?? "")));
     await open(path.join(FIXTURES, "gas_igc_2g_self_propelled.vdesign"), "gas_igc_2g_self_propelled.vdesign");
-    await until("the gas views", async () => /LPG|Gas barge/.test((await hullTexts()).midship ?? ""));
+    await show("Drawings", "Cross-section");
+    await until("the gas views", async () =>
+      /LPG|Gas barge/.test(await browser.execute(() => document.querySelector("[data-testid=slot-midship] svg")?.textContent ?? "")));
     const circles = await browser.execute(() => document.querySelectorAll("[data-testid=slot-midship] svg circle[data-layer=OUTLINE]").length);
     assert.equal(circles, 1, "one tank across");
+  });
+
+  it("shows two levels of tabs, with no jump list, and plain placeholders for later views", async () => {
+    await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    assert.equal((await browser.$$('select[aria-label="Jump to view"]')).length, 0, "the jump list is gone");
+    const top = await browser.$$('[role=tablist][aria-label="View groups"] button');
+    assert.deepEqual(await texts(top), GROUPS.map(([g]) => g));
+    for (const [group, views] of GROUPS) {
+      await (await tab(group)).click();
+      const subs = await browser.$$(`[role=tablist][aria-label="Views of ${group}"] button`);
+      assert.deepEqual(await texts(subs), views, `the views of ${group}`);
+      // Picking a top tab selects its first view.
+      assert.equal(await subs[0].getAttribute("aria-selected"), "true");
+    }
+    await show("Stability & Propulsion", "Rule check calculations");
+    assert.ok(await browser.$("[data-testid=rule-checks]").isExisting());
+    await show("BOQ & Finance", "BOQ");
+    assert.ok(await browser.$("[data-testid=placeholder-boq]").isExisting());
+    await show("BOQ & Finance", "Capital budget");
+    assert.ok(await browser.$("[data-testid=capital-budget]").isExisting());
+  });
+
+  for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
+    it(`no view scrolls, with the side panels shown or hidden (${cargo})`, async () => {
+      await open(path.join(FIXTURES, fixture), fixture);
+      try {
+        for (const hidden of [false, true]) {
+          await setPanel("Input", !hidden);
+          await setPanel("Outputs", !hidden);
+          for (const [group, views] of GROUPS) {
+            for (const view of views) {
+              await show(group, view);
+              if (group === "Drawings") await until(`the ${view} drawing`, async () => (await browser.$$("[data-testid^=slot-] svg")).length === 1);
+              await browser.pause(300);
+              assert.ok((await overflow()) <= 0, `${view} scrolls (${cargo}, panels ${hidden ? "hidden" : "shown"})`);
+              await shot(`229-${cargo}-${slug(view)}${hidden ? "-panels-hidden" : ""}`);
+            }
+          }
+        }
+      } finally {
+        await setPanel("Input", true);
+        await setPanel("Outputs", true);
+      }
+    });
+  }
+
+  it("zooms a drawing, and Fit, a new view, a resized panel or a hidden panel return it to fitted", async () => {
+    await open(path.join(FIXTURES, "gas_igc_2g_exact.vdesign"), "gas_igc_2g_exact.vdesign");
+    const zoomIn = async () => {
+      await (await browser.$('button[aria-label="Zoom in"]')).click();
+      await until("the drawing to be zoomed", async () => !/scale\(1\)/.test(await sheetScale()));
+    };
+    const fitted = (why) => until(`fitted after ${why}`, async () => /scale\(1\)/.test(await sheetScale()));
+    await hullText("plan");
+    await fitted("opening the plan");
+    await zoomIn();
+    await shot("229-gas-plan-zoomed");
+    await (await browser.$('button[aria-label="Fit to the panel"]')).click();
+    await fitted("Fit");
+
+    await zoomIn();
+    await show("Drawings", "Cross-section");
+    await show("Drawings", "Plan");
+    await fitted("switching view");
+
+    await zoomIn();
+    await show("Stability & Propulsion", "Intact stability");
+    await show("Drawings", "Plan");
+    await fitted("switching top tab");
+
+    try {
+      await zoomIn();
+      await setPanel("Outputs", false);
+      await fitted("hiding the Outputs panel");
+      await zoomIn();
+      await setPanel("Input", false);
+      await fitted("hiding the Input panel");
+      await zoomIn();
+      await setPanel("Input", true);
+      await fitted("showing the Input panel");
+    } finally {
+      await setPanel("Input", true);
+      await setPanel("Outputs", true);
+    }
+
+    await zoomIn();
+    const size = await browser.getWindowSize();
+    try {
+      await browser.setWindowSize(size.width - 200, size.height - 150);
+      await fitted("resizing the window");
+    } finally {
+      await browser.setWindowSize(size.width, size.height);
+    }
+  });
+
+  it("hides and shows each side panel, and remembers the choice", async () => {
+    await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    const stored = () => browser.execute(() => localStorage.getItem("ovcd.panels"));
+    // Both are shown by default.
+    assert.ok(await toggle("Input", true).isExisting());
+    assert.ok(await toggle("Outputs", true).isExisting());
+    assert.equal(await sideDisplayed("left"), true);
+    assert.equal(await sideDisplayed("bottom"), true);
+    try {
+      await setPanel("Input", false);
+      assert.equal(await sideDisplayed("left"), false);
+      assert.equal(await sideDisplayed("bottom"), true, "the other panel stays");
+      await setPanel("Outputs", false);
+      assert.equal(await sideDisplayed("bottom"), false);
+      assert.deepEqual(JSON.parse(await stored()), { input: false, outputs: false });
+
+      // A restart of the page reads the choice back.
+      await browser.refresh();
+      await until("the app to draw again", async () => (await browser.$("header")).isExisting());
+      await until("the Input toggle to offer Show", async () => (await toggle("Input", false)).isExisting());
+      assert.ok(await toggle("Outputs", false).isExisting());
+      assert.equal(await sideDisplayed("left"), false);
+
+      await setPanel("Input", true);
+      await setPanel("Outputs", true);
+      assert.deepEqual(JSON.parse(await stored()), { input: true, outputs: true });
+    } finally {
+      await setPanel("Input", true);
+      await setPanel("Outputs", true);
+    }
+  });
+
+  it("falls back to both panels shown when the stored choice is unreadable", async () => {
+    await browser.execute(() => localStorage.setItem("ovcd.panels", "not json"));
+    await browser.refresh();
+    await until("the app to draw again", async () => (await browser.$("header")).isExisting());
+    assert.ok(await toggle("Input", true).isExisting());
+    assert.ok(await toggle("Outputs", true).isExisting());
+  });
+
+  // Power and speed curves: one chart and one readout per channel environment.
+  const charts = () => browser.$$("[data-testid=speed-power-chart]");
+  const readout = async (i) => {
+    const el = (await browser.$$("[data-testid=speed-power-readout]"))[i];
+    return { kn: Number(await el.getAttribute("data-kn")), design: (await el.getAttribute("data-design")) === "true", text: await el.getText() };
+  };
+  /** Click near the left or right end of a chart's plot area (the nearest computed point is chosen). */
+  async function clickEnd(i, end) {
+    const over = (await browser.$$("[data-testid=speed-power-chart] .u-over"))[i];
+    const { width } = await over.getSize();
+    await over.click({ x: Math.round(end === "left" ? 4 - width / 2 : width / 2 - 4), y: 0 });
+  }
+  const designSpeedSelected = (n) =>
+    until("the design speed to be selected in every chart", async () => {
+      for (let i = 0; i < n; i++) {
+        const r = await readout(i);
+        if (!(r.kn === 10 && r.design)) return false;
+      }
+      return true;
+    });
+
+  for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
+    it(`selects the design speed in the power and speed curves, and a click selects another point (${cargo})`, async () => {
+      await open(path.join(FIXTURES, fixture), fixture);
+      await show("Stability & Propulsion", "Power and speed curves");
+      await until("the chart", async () => (await charts()).length >= 1);
+      assert.equal((await browser.$$("button=Reset zoom")).length, 0, "no zoom");
+      await designSpeedSelected(1);
+      const first = await readout(0);
+      assert.match(first.text, /speed 10\.00 kn/);
+      assert.match(first.text, /power [\d,]+ kW/);
+      assert.match(first.text, /fuel [\d,.]+ l\/h/);
+      assert.match(first.text, /squat [\d.]+ m/);
+      assert.match(first.text, /squat-limited (yes|no)/);
+      await shot(`230-${cargo}-power-and-speed-curves`);
+
+      await clickEnd(0, "left");
+      await until("the first point", async () => (await readout(0)).kn === 1);
+      const low = await readout(0);
+      assert.equal(low.design, false);
+      assert.notEqual(low.text, first.text, "the readout shows the clicked point");
+      await shot(`230-${cargo}-power-and-speed-curves-clicked`);
+
+      // An input change selects the design speed again.
+      await type("Beam", "12");
+      await designSpeedSelected(1);
+    });
+  }
+
+  it("shows one readout per channel environment, and the design speed follows the Maximum speed input", async () => {
+    await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    // These two inputs are "none" to start with: untick "none", then type the value.
+    for (const [name, label, value] of [["channel_depth_m", "Channel depth", "6"], ["channel_bottom_width_m", "Channel bottom width", "40"]]) {
+      await (await browser.$(`[data-input="${name}"] .none input`)).click();
+      await type(label, value);
+    }
+    await show("Stability & Propulsion", "Power and speed curves");
+    await until("two charts", async () => (await charts()).length === 2);
+    await designSpeedSelected(2);
+    // Clicking in one chart leaves the other alone.
+    await clickEnd(0, "left");
+    await until("the first chart's new point", async () => (await readout(0)).kn === 1);
+    assert.equal((await readout(1)).kn, 10);
+    assert.ok((await overflow()) <= 0, "two charts fit the panel");
+    await shot("230-dry-bulk-power-and-speed-curves-two-environments");
+
+    // A new Maximum speed is the new design speed (the curves now end there).
+    await type("Maximum speed", "8");
+    await until("the new design speed", async () => {
+      const r = await readout(0);
+      return r.kn === 8 && r.design;
+    });
+  });
+
+  it("selects the design speed again after an Option switch", async () => {
+    await open(path.join(FIXTURES, "two_options.vdesign"), "two_options.vdesign");
+    await show("Stability & Propulsion", "Power and speed curves");
+    await until("the chart", async () => (await charts()).length >= 1);
+    await clickEnd(0, "left");
+    await until("the clicked point", async () => (await readout(0)).kn === 1);
+    const picker = await browser.$('select[aria-label="Active Option"]');
+    await picker.selectByVisibleText("Option 2");
+    await until("the design speed of Option 2", async () => {
+      const r = await readout(0);
+      return r.kn === 10 && r.design;
+    });
+    // Leave the file as it opened: the next test opens the same file name and expects Base active.
+    await picker.selectByVisibleText("Base");
+    await until("Base active again", async () => (await picker.getValue()) === "Base");
+  });
+
+  it("draws a GZ curve for each loading condition of a gas Design, with the governing one marked, and zooms with Fit", async () => {
+    await open(path.join(FIXTURES, "gas_igc_2g_exact.vdesign"), "gas_igc_2g_exact.vdesign");
+    await show("Stability & Propulsion", "Intact stability");
+    await until("the GZ chart", async () => (await browser.$$("[data-testid=stability-chart] canvas")).length >= 1);
+    // One legend entry per condition, with its GM and max GZ from the engine.
+    const items = await browser.$$("[data-testid=stability-chart] .legend .item");
+    assert.ok(items.length >= 2, "a curve per loading condition");
+    for (let i = 0; i < items.length; i++) assert.match(await items[i].getText(), /GM -?[\d.]+ m · max GZ -?[\d.]+ m at \d+°/i);
+    // The governing condition in the legend is the one the table marks.
+    const governing = await browser.$("[data-testid=stability-chart] .item.governing-item");
+    const row = await browser.$("tr[data-governing=true] th");
+    const name = await governing.getAttribute("data-condition");
+    assert.ok((await row.getText()).toLowerCase().includes(name.toLowerCase()), `the table marks ${name} as governing`);
+    assert.equal((await browser.$$("[data-testid=stability-chart] .item.governing-item")).length, 1);
+    assert.equal((await browser.$$("[data-testid=stability-wip]")).length, 0);
+    await shot("231-gas-intact-stability");
+    await shot("232-gas-intact-stability");
+
+    const fitButton = await browser.$('button[aria-label="Fit to the panel"]');
+    assert.equal(await fitButton.isEnabled(), false, "fitted to start with");
+    await (await browser.$('button[aria-label="Zoom in"]')).click();
+    await until("Fit to be offered", async () => await fitButton.isEnabled());
+    await shot("231-gas-intact-stability-zoomed");
+    await fitButton.click();
+    await until("fitted again", async () => !(await fitButton.isEnabled()));
+    // Another view and back starts fitted.
+    await (await browser.$('button[aria-label="Zoom in"]')).click();
+    await show("Stability & Propulsion", "Rule check calculations");
+    await show("Stability & Propulsion", "Intact stability");
+    await until("fitted after switching view", async () => !(await (await browser.$('button[aria-label="Fit to the panel"]')).isEnabled()));
+  });
+
+  it("says that stability is work in development for a dry-bulk Design", async () => {
+    await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    await show("Stability & Propulsion", "Intact stability");
+    await until("the work-in-development state", async () => (await browser.$$("[data-testid=stability-wip]")).length === 1);
+    assert.match(await browser.$("[data-testid=stability-wip]").getText(), /^Work in development\s+Stability is computed for gas cargo only\. Dry-bulk stability is work in development\.$/);
+    assert.equal((await browser.$$("[data-testid=stability-chart]")).length, 0, "no empty chart");
+    await shot("231-dry-bulk-intact-stability");
+    await shot("232-dry-bulk-intact-stability");
+  });
+
+  for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
+    it(`lists every check in the Rule check calculations table, failures first (${cargo})`, async () => {
+      await open(path.join(FIXTURES, fixture), fixture);
+      // The Outputs panel lists the same checks, in the engine's order.
+      const engine = await browser.execute(() =>
+        [...document.querySelectorAll("[data-testid=checks] li")].map((li) => ({ fail: li.classList.contains("fail"), text: li.textContent })),
+      );
+      await show("Stability & Propulsion", "Rule check calculations");
+      await until("the table", async () => (await browser.$$("[data-testid=rule-check-row]")).length > 0);
+      const rows = await browser.execute(() =>
+        [...document.querySelectorAll("[data-testid=rule-check-row]")].map((tr) => ({ ok: tr.dataset.ok === "true", name: tr.querySelector("th").textContent })),
+      );
+      assert.equal(rows.length, engine.length, "every check appears once");
+      assert.equal(new Set(rows.map((r) => r.name)).size, rows.length, "no check twice");
+      const failing = rows.filter((r) => !r.ok).length;
+      assert.equal(failing, engine.filter((c) => c.fail).length);
+      // Failures first: no pass above a fail.
+      assert.deepEqual(rows.map((r) => r.ok), [...rows.map((r) => r.ok)].sort((a, b) => Number(a) - Number(b)));
+      assert.match(await browser.$("[data-testid=rule-check-count]").getText(), new RegExp(`^${failing} of ${rows.length} checks? fails?$`));
+      assert.ok((await overflow()) <= 0, "the panel does not scroll");
+      await shot(`232-${cargo}-rule-check-calculations`);
+    });
+  }
+
+  const unitTotal = async () => Number((await browser.$("[data-testid=cost-unit-total]").getText()).replace(/,/g, ""));
+
+  it("shows the capital budget of a gas Design with its basis, labels and where the masses come from", async () => {
+    await open(path.join(FIXTURES, "gas_igc_2g_exact.vdesign"), "gas_igc_2g_exact.vdesign");
+    await show("BOQ & Finance", "Capital budget");
+    await until("the budget", async () => (await browser.$$("[data-testid=cost-unit-total]")).length === 1);
+    assert.equal((await browser.$$("[data-testid=capital-budget-wip]")).length, 0);
+    assert.match(await browser.$("[data-testid=capital-budget-basis]").getText(), /^Example rates . replace with yours\. All amounts are in [A-Z]{3}\.$/);
+    for (const table of ["barge", "tug", "total"]) assert.ok(await browser.$(`[data-testid=cost-${table}]`).isExisting(), table);
+    // Plain names, as the input labels have them.
+    const barge = await browser.$("[data-testid=cost-barge]").getText();
+    for (const label of ["Type C tanks", "Piping and machinery", "Paint, anodes and miscellaneous"]) assert.ok(barge.includes(label), label);
+    assert.ok((await browser.$("[data-testid=cost-tug]").getText()).includes("Wheelhouse and accommodation"));
+    assert.ok((await unitTotal()) > 0);
+    const masses = await browser.$("[data-testid=cost-masses]").getText();
+    assert.match(masses, /^Mass from this design: .*Tank shell/);
+    assert.match(masses, /Core defaults, not from this design: .*Battery/);
+    assert.ok((await overflow()) <= 0, "the panel does not scroll");
+    await shot("233-gas-capital-budget");
+
+    // Editing a cost rate changes the total.
+    const before = await unitTotal();
+    await type("Hull steel rate", "5000");
+    await until("the total to change", async () => (await unitTotal()) !== before);
+    // Put the rate back: the next test opens the same file name and must not meet this edit.
+    await type("Hull steel rate", "2500");
+    await until("the total to return", async () => (await unitTotal()) === before);
+  });
+
+  it("says that the capital budget is work in development for a dry-bulk Design", async () => {
+    await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    await show("BOQ & Finance", "Capital budget");
+    await until("the work-in-development state", async () => (await browser.$$("[data-testid=capital-budget-wip]")).length === 1);
+    assert.match(
+      await browser.$("[data-testid=capital-budget-wip]").getText(),
+      /^Work in development\s+The capital budget is computed for gas cargo only\. A dry-bulk budget is work in development\.$/,
+    );
+    assert.equal((await browser.$$("[data-testid=cost-unit-total]")).length, 0, "no budget table");
+    await shot("233-dry-bulk-capital-budget");
+  });
+
+  for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
+    it(`says the bill of quantities comes in a later phase (${cargo})`, async () => {
+      await open(path.join(FIXTURES, fixture), fixture);
+      await show("BOQ & Finance", "BOQ");
+      const text = await browser.$("[data-testid=placeholder-boq]").getText();
+      assert.match(text, /^Coming in a later phase\s+The bill of quantities is planned for phase 4 of the roadmap\.$/);
+      await shot(`233-${cargo}-boq`);
+    });
+  }
+
+  it("has a Cost rates group with its basis, 14 inputs and the example values", async () => {
+    await open(path.join(FIXTURES, "gas_igc_2g_exact.vdesign"), "gas_igc_2g_exact.vdesign");
+    const group = await browser.$("//details[summary[normalize-space()='Cost rates']]");
+    assert.ok(await group.isExisting(), "the group is in the left panel");
+    assert.match(await group.$("[data-testid=group-note]").getText(), /^Example rates . replace with yours\.$/);
+    assert.equal((await group.$$(".field")).length, 14);
+    await until("the example rate", async () => (await (await field("Hull steel rate")).getValue()) === "2500");
+    assert.equal(await (await field("Yard margin")).getValue(), "0.1");
+    await browser.execute(() => document.querySelector("[data-testid=group-note]").scrollIntoView({ block: "start" }));
+    await browser.pause(300);
+    await shot("233-gas-cost-rates-inputs");
   });
 
   it("changes an output when an input is edited", async () => {
@@ -171,6 +569,7 @@ describe("OVCD app smoke tests", () => {
 
   it("shows the error and marks the outputs out of date for a value outside the hard range", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    await show("Drawings", "Plan");
     await type("Beam", "-1");
     await until("the error under the field", async () => (await browser.$$(".field .msg.error")).length > 0);
     assert.match(await browser.$(".field .msg.error").getText(), /^Beam/);

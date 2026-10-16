@@ -107,14 +107,18 @@ ROOT = Path(__file__).resolve().parents[1]
 # gone), a tank's outer diameter cap is the input `max_tank_od_m` (16 m by default) instead of a
 # 12 m constant, and there is no 28 m cap on tank length. CHANGELOG.md lists them.
 REMOVED_ON_PURPOSE = {
-    "core.barge_capacity": {"MAX_TANK_OD_M"},                 # now DEFAULT_MAX_TANK_OD_M = 16 m
     "core.design_grid": {"MAX_TANK_LENGTH_M", "n_tanks_for_length"},
+    "core.gas_separation": {"SIDE_MIN_TYPE_G_M", "DOUBLE_BOTTOM_MIN_TYPE_G_M"},   # issue #215
+    # Issue #237: the stepped d(Vc) (total volume; 0.8, 1.0, 2.0 m) is removed; `d_vc_exact` is the one
+    # rule (IGC 2.4.1.1, per tank). The enum member `IGC_2G_EXACT` went with it (a file that names it
+    # still opens, as IGC_2G).
+    "core.barge_capacity": {"MAX_TANK_OD_M", "distance_d_vc"},                 # now DEFAULT_MAX_TANK_OD_M = 16 m
     "core.gas_arrangement": {"ADN_G_MAX_L_OVER_D", "ADN_G_TANK_CAP_9_3_4_M3", "ADN_G_WIDE_TANK_FRACTION",
-                             "ADN_LONGITUDINAL_GAP_M", "MAX_TANK_OD_M"},
+                             "ADN_LONGITUDINAL_GAP_M", "MAX_TANK_OD_M", "distance_d_vc"},
     "core.protective_location": {"ADN_G_BOTTOM_M", "ADN_G_DOUBLE_BOTTOM_M", "ADN_G_DOUBLE_HULL_M",
                                  "ADN_G_INSPECTION_GAP_M", "ADN_G_MAX_L_OVER_D", "ADN_G_SADDLE_M",
                                  "ADN_G_SIDE_M", "ADN_G_TANK_CAP_9_3_4_M3", "ADN_G_TANK_CAP_M3",
-                                 "ADN_G_WIDE_TANK_FRACTION"},
+                                 "ADN_G_WIDE_TANK_FRACTION", "distance_d_vc"},
 }
 # Constants that stay but whose value changed on purpose: the rulesets lost `ADN_G`.
 CHANGED_ON_PURPOSE = {"core.gas_arrangement": {"RULESETS"}, "simulate": {"RULESETS"}}
@@ -168,7 +172,7 @@ def test_every_name_removed_on_purpose_is_in_the_changelog():
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     names = {n for gone in REMOVED_ON_PURPOSE.values() for n in gone}
     names |= {f for _, _, f in REMOVED_FIELDS}
-    assert len(names) == 15
+    assert len(names) == 18
     assert [n for n in sorted(names) if f"`{n}`" not in changelog] == []
 
 
@@ -179,7 +183,6 @@ def test_a_restored_name_is_the_object_of_its_defining_module():
     assert simulate.BargeCapacityInputs is barge_capacity.BargeCapacityInputs
     assert simulate.gas_fit is gas_arrangement.fit and simulate.capacity is barge_capacity.compute
     assert barge_capacity.HullGeometry is hull.HullGeometry is journey_derating.HullGeometry
-    assert barge_capacity.distance_d_vc is protective_location.distance_d_vc
     assert gas_arrangement.derate is journey_derating.compute
     assert design_grid.BargeCapacityInputs is barge_capacity.BargeCapacityInputs
     assert hydrostatics.free_surface_moment_cylindrical is tanks.free_surface_moment_cylindrical

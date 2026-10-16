@@ -11,13 +11,15 @@ CN_II = dict(vessel="gas_barge", cargo="LPG_propane", loa_m=90, beam_m=14.8, dep
 def test_gas_uses_the_search_not_auto():
     """Label: snapshot
     """
-    assert abs(simulate(CN_II)["results"]["cargo_t"] - 2058) < 1.0
+    # Re-pinned (issue #237: the per-tank d(Vc) of IGC 2.4.1.1, dome in Vc); was 2058 under the
+    # stepped IGC_2G.
+    assert abs(simulate(CN_II)["results"]["cargo_t"] - 2535) < 1.0
 
 
 def test_gas_optimised_depth_matches_snapshot():
     """Label: snapshot
     """
-    o = simulate(dict(CN_II, cargo="LNG", draught_limit_m=3.0, ruleset="IGC_2G_EXACT",
+    o = simulate(dict(CN_II, cargo="LNG", draught_limit_m=3.0, ruleset="IGC_2G",
                       fill_ratio=None, optimise_depth=True))
     assert abs(o["results"]["cargo_t"] - 1738) < 1.0
     assert o["arrangement"]["fill_ratio"] == 0.98          # ruleset-driven default
@@ -27,7 +29,10 @@ def test_the_tank_diameter_cap_is_a_simulate_input_16_m_by_default():
     """Label: property
     """
     default = {k: v for k, v in CN_II.items() if k != "max_tank_od_m"}
-    wide = dict(default, beam_m=26.0, loa_m=110, depth_m=5.0, cargo="LNG", draught_limit_m=4.0)
+    # Issue #237: the per-tank rule asks for less side clearance, so on a 26 m beam the search
+    # prefers two tanks abreast and the cap does not bind. At the CN II beam, 14.8 m, one tank
+    # fills the beam and the cap sets its diameter (13.7 m at the default cap).
+    wide = dict(default, beam_m=14.8, loa_m=90, depth_m=6.5, cargo="LNG", draught_limit_m=4.4)
     assert simulate(dict(wide, max_tank_od_m=12.0))["geometry"]["tank_outer_diameter_m"] <= 12.0 + 1e-6
     od = simulate(wide)["geometry"]["tank_outer_diameter_m"]
     assert 12.0 < od <= 16.0 + 1e-6
@@ -55,7 +60,7 @@ def test_tender_gas_barge_shows_failed_stability_checks():
     """Label: property
     """
     o = simulate(dict(CN_II, loa_m=60, beam_m=7.0, depth_m=6.0, draught_limit_m=None,
-                      ruleset="IGC_2G_EXACT", fill_ratio=0.98, self_propelled=False))
+                      ruleset="IGC_2G", fill_ratio=0.98, self_propelled=False))
     assert not o["stability"]["ok"]
     assert any(c["name"].startswith("Stability") and not c["ok"] for c in o["checks"])
 
@@ -71,15 +76,18 @@ def test_box_barge_unchanged():
 def test_gas_infeasible_fit_is_shown_as_a_failed_check():
     """Issue #6: when fit() finds no passing arrangement, the page says so, not just the tonnage.
 
-    A 60 x 7 m tender hull carries cargo but no arrangement passes its checks (the Rust core runs
-    the search, so the test uses this hull instead of patching the search).
+    A 150 x 8 m hull carries cargo but no tank is within 7 diameters of length (the Rust core runs
+    the search, so the test uses this hull instead of patching the search). The 60 x 7 m tender hull
+    used here before failed only the inland type-G side floor, which issue #215 removed: it is
+    feasible now.
 
     Label: property
     """
     tender = dict(vessel="gas_barge", cargo="LPG_propane", loa_m=60, beam_m=7.0, depth_m=6.0,
-                  cb=0.85, freeboard_min_m=0.3, self_propelled=False, ruleset="IGC_2G_EXACT",
+                  cb=0.85, freeboard_min_m=0.3, self_propelled=False, ruleset="IGC_2G",
                   fill_ratio=0.98)
-    o = simulate(tender)
+    assert simulate(tender)["arrangement"]["feasible"] is True
+    o = simulate(dict(tender, loa_m=150, beam_m=8.0))
     assert o["results"]["cargo_t"] > 0
     assert o["arrangement"]["feasible"] is False
     assert any(c["name"] == "Feasible arrangement" and not c["ok"] for c in o["checks"])

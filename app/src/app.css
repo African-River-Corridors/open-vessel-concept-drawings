@@ -1,20 +1,182 @@
-/* The font of the Drawing Format Standard (SIL Open Font License 1.1, licence in licenses/). The hull
-   views are SVG text set in this font; the file is the copy that the drawing crate vendors. */
+/* Fonts. All are bundled: the app runs offline and loads no font from any service (SIL Open Font
+   License 1.1, licences in public/licenses/). Barlow Semi Condensed 400 is the drawing font of the
+   Drawing Format Standard, the copy that the drawing crate vendors; the hull views are SVG text set in it. */
 @font-face {
   font-family: "Barlow Semi Condensed";
+  font-weight: 400;
   src: url("../../crates/ovcd-draw/standard/fonts/BarlowSemiCondensed-Regular.ttf") format("truetype");
 }
-:root {
-  --navy: #14325a;
-  --gold: #b8932f;
-  --cream: #f6f1e4;
-  --ink: #1b2430;
-  --dim: #5a6472;
-  --line: #d9d2bd;
-  --bar: var(--cream);
-  --serif: Georgia, "Times New Roman", serif;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+@font-face {
+  font-family: "Barlow Semi Condensed";
+  font-weight: 500;
+  src: url("./fonts/BarlowSemiCondensed-Medium.ttf") format("truetype");
 }
-html, body { margin: 0; background: #fff; color: var(--ink); font: 14px var(--sans); }
-button { font: inherit; padding: 3px 10px; }
-h2 { color: var(--navy); }
+@font-face {
+  font-family: "Barlow Semi Condensed";
+  font-weight: 600;
+  src: url("./fonts/BarlowSemiCondensed-SemiBold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: normal;
+  font-weight: 200 900;
+  src: url("./fonts/SourceSerif4-Variable.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: italic;
+  font-weight: 200 900;
+  src: url("./fonts/SourceSerif4-Italic-Variable.ttf") format("truetype");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-weight: 400;
+  src: url("./fonts/IBMPlexMono-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Architects Daughter";
+  font-weight: 400;
+  src: url("./fonts/ArchitectsDaughter-Regular.ttf") format("truetype");
+}
+
+/* OVCD design tokens (docs/design/style-guide.md, sections 2 to 5 and 9). The light theme is the cream
+   mat with Prussian-blue ink; the dark theme is the blueprint field. The drawing sheet stays white in
+   both. scripts/contrast.mjs reads this file: keep one token per line pair as written. */
+:root {
+  /* The four colours of the reference, used by both themes */
+  --blueprint: #24496c;       /* the blueprint field: splash, hero, dark theme, app icon */
+  --blueprint-deep: #1a3753;  /* the darker edges of the paper */
+  --white-ink: #eef6f6;       /* line work and lettering on the blueprint (faint cool tint) */
+  --gilt: #a78654;            /* the frame, as sampled. Decoration only: frames, ornament rules */
+  --gilt-mark: #8a6a35;       /* gilt that carries meaning (selected marker, focus edge): 3:1 on the ground */
+  --cream: #f6edd8;           /* the mat */
+
+  /* Surfaces */
+  --paper: #f6edd8;           /* cream mat: window and chrome ground */
+  --surface: #fbf6ea;         /* panels and cards */
+  --surface-2: #efe4c9;       /* inset: tab rail, table header, code */
+  --sheet: #ffffff;           /* the drawing sheet. Never tinted. */
+  --sheet-ink: #1c2326;       /* text and lines ON the sheet, the same in both themes */
+  --sheet-ink-2: #4f585d;     /* captions on the sheet, the same in both themes */
+
+  /* Ink: Prussian blue on cream, like a blue-line print */
+  --ink: #1c3550;
+  --ink-2: #3c5268;
+  --ink-3: #56687a;
+  --rule: #dccfae;            /* hairlines and borders (not text) */
+  --rule-strong: #8c7b56;     /* input borders (3:1 on surfaces) */
+
+  /* Accent */
+  --accent: #24496c;          /* blueprint: links, active tab, focus, primary button */
+  --accent-ink: #eef6f6;      /* text on --accent: white ink on blueprint */
+  --accent-soft: #dfe6ea;     /* selected row, active sub-tab ground */
+  --gilt-ink: #765825;        /* gilt as text on cream (AA) */
+
+  /* Status. Always with a word and a shape; colour is never the only signal. */
+  --pass: #2a6339;   --pass-soft: #e3eedc;
+  --fail: #9e2a1c;   --fail-soft: #f7e0d6;
+  --warn: #73500b;   --warn-soft: #f2e2bd;
+  --stale: #56687a;           /* out-of-date results: struck through + the words "out of date" */
+
+  /* Input source tags */
+  --src-typed: var(--accent);
+  --src-default: var(--ink-3);
+  --src-class: #5a3f86;       /* value set by the chosen Vessel Class */
+
+  /* Type */
+  --font-ui: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
+  --font-serif: "Source Serif 4", "Source Serif Pro", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --font-hand: "Architects Daughter", "Barlow Semi Condensed", sans-serif; /* display only, caps, slanted */
+
+  --fs-11: 11px;  --fs-12: 12px;  --fs-13: 13px;  --fs-14: 14px;
+  --fs-16: 16px;  --fs-20: 20px;  --fs-24: 24px;  --fs-32: 32px;  --fs-48: 48px;
+  --lh-tight: 1.2;  --lh-ui: 1.35;  --lh-read: 1.6;
+
+  /* Space: a 4 px step */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;  --sp-4: 16px;  --sp-5: 24px;  --sp-6: 32px;  --sp-7: 48px;
+
+  /* Line weights on screen, in the drawing standard's 1 : 2 : 4 ratio */
+  --lw-thin: 1px;   --lw-thick: 2px;   --lw-extra: 4px;
+
+  --radius: 3px;
+  --radius-lg: 6px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur-1: 120ms;  --dur-2: 200ms;  --dur-3: 320ms;
+
+  color-scheme: light;
+}
+
+/* Dark: the blueprint field */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #24496c;  --surface: #2a5278;  --surface-2: #1a3753;
+    --ink: #eef6f6;  --ink-2: #d2e2e8;  --ink-3: #b9cfda;
+    --rule: #4b7192;  --rule-strong: #95b4c6;
+    --accent: #e6cd96;  --accent-ink: #1a3753;  --accent-soft: #2f577c;  --gilt-ink: #e6cd96;  --gilt-mark: #d9bb80;
+    --pass: #b9efc3;  --pass-soft: #1f4a4b;  --fail: #ffc6ba;  --fail-soft: #4e3448;
+    --warn: #ffe3a3;  --warn-soft: #43473e;  --stale: #b9cfda;
+    --src-class: #e0d4ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #24496c;  --surface: #2a5278;  --surface-2: #1a3753;
+  --ink: #eef6f6;  --ink-2: #d2e2e8;  --ink-3: #b9cfda;
+  --rule: #4b7192;  --rule-strong: #95b4c6;
+  --accent: #e6cd96;  --accent-ink: #1a3753;  --accent-soft: #2f577c;  --gilt-ink: #e6cd96;  --gilt-mark: #d9bb80;
+  --pass: #b9efc3;  --pass-soft: #1f4a4b;  --fail: #ffc6ba;  --fail-soft: #4e3448;
+  --warn: #ffe3a3;  --warn-soft: #43473e;  --stale: #b9cfda;
+  --src-class: #e0d4ff;
+  color-scheme: dark;
+}
+
+/* Old names, kept as aliases until the component tickets (#250 to #254) have moved to the new tokens;
+   #254 removes them. --ink and --cream keep their names with the new values. */
+:root {
+  --navy: var(--ink);
+  --gold: var(--gilt-mark);
+  --dim: var(--ink-3);
+  --line: var(--rule);
+  --bar: var(--surface-2);
+  --serif: var(--font-serif);
+  --sans: var(--font-ui);
+}
+
+/* Base styles */
+html, body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--fs-13) / var(--lh-ui) var(--font-ui);
+  font-variant-numeric: tabular-nums;
+}
+h1, h2, h3, h4 { font-family: var(--font-serif); font-weight: 600; color: var(--ink); }
+h2 { font-size: var(--fs-16); }
+a { color: var(--accent); }
+code, kbd, samp, pre { font-family: var(--font-mono); }
+button {
+  font: inherit;
+  font-size: var(--fs-14);
+  padding: 3px 10px;
+  background: var(--surface);
+  color: var(--ink);
+  border: var(--lw-thin) solid var(--rule-strong);
+  border-radius: var(--radius);
+  transition: background-color var(--dur-1) var(--ease);
+}
+button:hover:not(:disabled) { background: var(--surface-2); }
+button:disabled { color: var(--ink-3); }
+input, select, textarea {
+  font: inherit;
+  background: var(--surface);
+  color: var(--ink);
+  border: var(--lw-thin) solid var(--rule-strong);
+  border-radius: var(--radius);
+}
+:focus-visible { outline: var(--lw-thick) solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

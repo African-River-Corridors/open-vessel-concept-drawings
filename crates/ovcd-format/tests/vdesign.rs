@@ -78,7 +78,7 @@ fn gas_cargo_defaults_to_type_c_tanks_with_ruleset_and_fill_ratio() {
     );
     assert_eq!(
         used(inputs.clone(), "ruleset"),
-        (json!("IGC_2G_EXACT"), Source::Default)
+        (json!("IGC_2G"), Source::Default)
     );
     assert_eq!(
         used(inputs.clone(), "fill_ratio"),

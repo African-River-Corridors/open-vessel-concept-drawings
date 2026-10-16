@@ -359,9 +359,9 @@ fn block_coefficient_and_water_density_both_scale_the_draught() {
 
 #[test]
 fn criteria_set_follows_the_ruleset() {
-    // Issue #175: the ADN set went with the `ADN_G` ruleset; both IGC rulesets use the IS Code.
+    // Issue #175: the ADN set went with the `ADN_G` ruleset; the IGC rule set uses the IS Code.
+    // Issue #237: `IGC_2G_EXACT` is gone; the function ignores the name, so any text gives the same.
     assert_eq!(criteria_set_for("IGC_2G"), "IS_CODE_2008");
-    assert_eq!(criteria_set_for("IGC_2G_EXACT"), "IS_CODE_2008");
     assert_eq!(criteria_set_for(""), "IS_CODE_2008");
 }
 

@@ -112,9 +112,21 @@ pub const BULK_END_BULKHEAD_M: f64 = 0.5;
 pub const GAS_TANKS_IN_LINE: f64 = 2.0;
 pub const GAS_TANK_SUPPORT_HEIGHT_M: f64 = 0.5;
 pub const GAS_TANK_DOME_HEIGHT_M: f64 = 2.0;
+/// The dome diameter (issue #237). Unlike the others it is NOT a value the engine used before: the
+/// engine had no dome in Vc. A file that lacks it gets this value, and its results may move.
+pub const GAS_TANK_DOME_DIAMETER_M: f64 = 2.0;
 pub const GAS_WING_TANK_GAP_M: f64 = 0.6;
 pub const GAS_WING_TANK_HEIGHT_RATIO: f64 = 0.66;
 pub const GAS_TANK_WALL_THICKNESS_MM: f64 = 25.0;
+
+/// The water density of the run, in t/m3: fresh water (`barge_capacity`, `gas_stability` and
+/// `journey_derating` default).
+pub const WATER_DENSITY_T_PER_M3: f64 = 1.0;
+/// The under-keel clearance kept below the squatted keel, in m (`resistance` default).
+pub const SQUAT_SAFETY_MARGIN_M: f64 = 0.15;
+
+/// What the cost rates are, shown with the group and in the capital budget.
+pub const COST_RATES_BASIS: &str = "Example rates \u{2014} replace with yours.";
 
 /// Both dry-bulk holds.
 const DRY_HOLDS: &[&str] = &["box_hold", "sloped_hopper_hold"];
@@ -235,6 +247,12 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
         value: GAS_TANK_DOME_HEIGHT_M,
     },
     LegacyFixed {
+        name: "tank_dome_diameter_m",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: GAS_TANK_DOME_DIAMETER_M,
+    },
+    LegacyFixed {
         name: "wing_tank_gap_m",
         applies_to: AppliesTo::Only("type_c_tanks"),
         formations: None,
@@ -252,10 +270,109 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
         formations: None,
         value: GAS_TANK_WALL_THICKNESS_MM,
     },
+    LegacyFixed {
+        name: "water_density_t_per_m3",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: WATER_DENSITY_T_PER_M3,
+    },
+    LegacyFixed {
+        name: "squat_safety_margin_m",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: SQUAT_SAFETY_MARGIN_M,
+    },
+    LegacyFixed {
+        name: "hull_steel_rate",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 2500.0,
+    },
+    LegacyFixed {
+        name: "tank_shell_rate",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 10000.0,
+    },
+    LegacyFixed {
+        name: "tank_supports_rate",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 2000.0,
+    },
+    LegacyFixed {
+        name: "insulation_rate",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 4000.0,
+    },
+    LegacyFixed {
+        name: "piping_rate",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 4500.0,
+    },
+    LegacyFixed {
+        name: "outfitting_rate",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 4000.0,
+    },
+    LegacyFixed {
+        name: "cargo_system_lump",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 500000.0,
+    },
+    LegacyFixed {
+        name: "paint_anodes_misc",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 100000.0,
+    },
+    LegacyFixed {
+        name: "battery_rate_per_kwh",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 250.0,
+    },
+    LegacyFixed {
+        name: "propulsion_rate_per_kw",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 1000.0,
+    },
+    LegacyFixed {
+        name: "wheelhouse_accom_lump",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 450000.0,
+    },
+    LegacyFixed {
+        name: "tug_outfitting_lump",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 200000.0,
+    },
+    LegacyFixed {
+        name: "yard_margin_fraction",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 0.1,
+    },
+    LegacyFixed {
+        name: "delivery_lump",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 200000.0,
+    },
 ];
 
 /// Gas tank rulesets.
-pub const RULESETS: &[&str] = &["IGC_2G", "IGC_2G_EXACT"];
+///
+/// One rule set: `IGC_2G` is the per-tank d(Vc) of IGC 2.4.1.1, measured plate to plate (2.4.2).
+/// A file that names the old `IGC_2G_EXACT` is read as `IGC_2G` (see [`migrate_ruleset`]).
+pub const RULESETS: &[&str] = &["IGC_2G"];
 
 /// The Formation kinds of a pushed barge or convoy: the ones with no stern block of their own.
 pub const PUSHED: &[&str] = &["pushed_barge", "pushed_convoy"];
@@ -331,11 +448,12 @@ pub enum Group {
     DryBulkHold,
     WaterwayLimits,
     SpeedAndPower,
+    CostRates,
 }
 
 impl Group {
     /// Every group, in the order a form shows them.
-    pub const ALL: [Group; 7] = [
+    pub const ALL: [Group; 8] = [
         Group::Required,
         Group::VesselClass,
         Group::HullAndContainment,
@@ -343,6 +461,7 @@ impl Group {
         Group::DryBulkHold,
         Group::WaterwayLimits,
         Group::SpeedAndPower,
+        Group::CostRates,
     ];
 
     /// The group's display name.
@@ -355,6 +474,15 @@ impl Group {
             Group::DryBulkHold => "Dry-bulk hold",
             Group::WaterwayLimits => "Waterway Limits",
             Group::SpeedAndPower => "Speed and power",
+            Group::CostRates => "Cost rates",
+        }
+    }
+
+    /// A note on the group's values that a form shows under its name, if it has one.
+    pub fn note(self) -> Option<&'static str> {
+        match self {
+            Group::CostRates => Some(COST_RATES_BASIS),
+            _ => None,
         }
     }
 }
@@ -600,6 +728,13 @@ pub const INPUTS: &[InputSpec] = &[
         Group::GasTanks,
     ),
     only(
+        "tank_dome_diameter_m",
+        "Tank dome diameter",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
         "wing_tank_gap_m",
         "Wing tank gap",
         NUM,
@@ -767,6 +902,112 @@ pub const INPUTS: &[InputSpec] = &[
         false,
         Group::WaterwayLimits,
     ),
+    spec(
+        "water_density_t_per_m3",
+        "Water density",
+        NUM,
+        false,
+        Group::WaterwayLimits,
+    ),
+    spec(
+        "squat_safety_margin_m",
+        "Squat safety margin",
+        NUM,
+        false,
+        Group::WaterwayLimits,
+    ),
+    spec(
+        "hull_steel_rate",
+        "Hull steel rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "tank_shell_rate",
+        "Tank shell rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "tank_supports_rate",
+        "Tank supports rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "insulation_rate",
+        "Insulation rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "piping_rate",
+        "Piping and machinery rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "outfitting_rate",
+        "Outfitting rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "cargo_system_lump",
+        "Cargo system",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "paint_anodes_misc",
+        "Paint, anodes and miscellaneous",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "battery_rate_per_kwh",
+        "Battery rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "propulsion_rate_per_kw",
+        "Propulsion rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "wheelhouse_accom_lump",
+        "Wheelhouse and accommodation",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "tug_outfitting_lump",
+        "Tug outfitting",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "yard_margin_fraction",
+        "Yard margin",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec("delivery_lump", "Delivery", NUM, false, Group::CostRates),
 ];
 
 /// Where a stored input came from.
@@ -1221,6 +1462,7 @@ fn read_design(
             }
         }
         let mut m = inputs.clone();
+        migrate_ruleset(name, &mut m, version, report);
         if version == Some(1) {
             migrate_v1_option(name, &mut m, profile, report);
         }
@@ -1244,6 +1486,48 @@ fn read_design(
         defaults_profile,
         options,
     })
+}
+
+/// The rule set name of an Option (issue #237): there is one, `IGC_2G`, the per-tank d(Vc) of
+/// IGC 2.4.1.1.
+///
+/// - `IGC_2G_EXACT` (any format version) is read as `IGC_2G`, with a warning. It was the same
+///   per-tank rule.
+/// - `IGC_2G` in a version 1 file is the old stepped reading (total volume, 0.8 / 1.0 / 2.0 m):
+///   it is kept as `IGC_2G`, with a warning that it now means the per-tank rule, so results may
+///   change. A version 2 file is written by this build, so it needs no note; version 2 is
+///   unreleased (ADR 0007).
+fn migrate_ruleset(
+    name: &str,
+    inputs: &mut Map<String, Value>,
+    version: Option<u64>,
+    report: &mut Report,
+) {
+    let current = match inputs.get("ruleset") {
+        Some(Value::String(s)) => Some(s.clone()),
+        Some(Value::Object(o)) => o.get("value").and_then(Value::as_str).map(String::from),
+        _ => None,
+    };
+    let text = match (current.as_deref(), version) {
+        (Some("IGC_2G_EXACT"), _) => {
+            match inputs.get_mut("ruleset") {
+                Some(Value::Object(o)) => {
+                    o.insert("value".into(), json!("IGC_2G"));
+                }
+                Some(v) => *v = json!("IGC_2G"),
+                None => {}
+            }
+            "IGC_2G_EXACT is now IGC_2G: the same per-tank rule of IGC 2.4.1.1"
+        }
+        (Some("IGC_2G"), Some(1)) => {
+            "IGC_2G now uses the per-tank rule of IGC 2.4.1.1 (d(Vc) from the gross volume of \
+             each tank, dome included, measured plate to plate per 2.4.2), so results may change"
+        }
+        _ => return,
+    };
+    let text = format!("Option '{name}': `ruleset`: {text}");
+    report.migration_notes.push(text.clone());
+    report.warning(text, &["ruleset"]);
 }
 
 /// Change one Option of a version 1 file to the current inputs, with a warning for each change.
@@ -1493,6 +1777,22 @@ fn read_option(
                 source: Source::Default,
             },
         ));
+    }
+    // The dome diameter is not a value the engine used before: the dome was not in Vc. It gets its
+    // own note, which says the results may change.
+    if let Some(at_i) = legacy_added
+        .iter()
+        .position(|n| *n == "tank_dome_diameter_m")
+    {
+        legacy_added.remove(at_i);
+        let text = format!(
+            "Option '{name}': this file has no `tank_dome_diameter_m`; it now holds {:.1} m (marked \
+             default). The dome now counts in Vc for d(Vc) (IGC 2.4.1.1), so the results may \
+             change",
+            GAS_TANK_DOME_DIAMETER_M
+        );
+        report.migration_notes.push(text.clone());
+        report.warning(text, &["tank_dome_diameter_m"]);
     }
     if !legacy_added.is_empty() {
         let list = legacy_added

@@ -57,18 +57,14 @@ def test_short_opening_setback_fails():
     assert any(c.name == "opening_setback" and not c.ok for c in r.checks)
 
 
-def test_type_g_side_floor_fires_below_0_80():
-    """Label: property
-    """
-    r = compute(GasSeparationInputs(side_clearance_m=0.5, double_bottom_m=1.0))
-    assert any(c.name == "side_clearance_type_g_floor" and not c.ok for c in r.checks)
+def test_clearances_add_no_inland_floor_check():
+    """Issue #215: the inland type-G floors are gone, so clearances below them fail nothing.
 
-
-def test_type_g_side_floor_passes_at_the_igc_default():
-    """Label: property
+    Label: property
     """
-    r = compute(GasSeparationInputs(side_clearance_m=1.0, double_bottom_m=1.0))
-    assert all(c.ok for c in r.checks)
+    r = compute(GasSeparationInputs(side_clearance_m=0.05, double_bottom_m=0.05))
+    assert [c.name for c in r.checks] == ["cofferdam_min_width", "opening_setback", "fwd_end_bulkhead_space"]
+    assert r.ok
 
 
 def test_constants_are_the_cited_values():

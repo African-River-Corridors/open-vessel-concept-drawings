@@ -44,6 +44,11 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "target" / "design-impact"
 CHANGELOG = ROOT / "CHANGELOG.md"
 START, END = "<!-- design-impact:start -->", "<!-- design-impact:end -->"
+# Top-level results keys that are not results (drawing geometry, what a view marks). The results hash
+# leaves them out too: UNHASHED_KEYS in crates/ovcd-format/src/run.rs. tests/test_design_impact_unhashed_keys.py
+# checks that the two lists agree.
+UNHASHED_KEYS = ("drawing", "stability_marks", "cost_masses", "cost")
+
 LABEL = "design-change"
 MAX_ROWS = 40
 CHANGELOG_HEAD = (
@@ -135,18 +140,44 @@ OPTIONAL_INPUT_CASES = (
      {"tank_support_height_m": 0.5}),
     ("tank_dome_height_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"tank_dome_height_m": 2.0}),
+    # The dome diameter (issue #237) is new with the per-tank rule: a design that sets it to its
+    # default has the same results as one that leaves it out.
+    ("tank_dome_diameter_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tank_dome_diameter_m": 2.0}),
     ("wing_tank_gap_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"wing_tank_gap_m": 0.6}),
     ("wing_tank_height_ratio", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"wing_tank_height_ratio": 0.66}),
     ("tank_wall_thickness_mm", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"tank_wall_thickness_mm": 25.0}),
+    # The environment inputs (issue #4, slice 6), set to their defaults in the same way. The squat
+    # margin matters only in a channel, so that case has one.
+    ("water_density_t_per_m3", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"water_density_t_per_m3": 1.0}),
+    ("squat_safety_margin_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {**_DEEP_CHANNEL, "squat_safety_margin_m": 0.15}),
     # A Vessel Class (issue #94): the scheme places the vessel in a class, and the class fills the
     # draught and air-draft limits. The results of the same dimensions are those of typed ones.
     ("vessel_scheme", "bauxite", "box_hold", "self_propelled", 110.0, 11.4, 4.5,
      {"vessel_scheme": "CEMT-1992"}),
     ("vessel_class", "bauxite", "box_hold", "self_propelled", 100.0, 11.0, 4.5,
      {"vessel_class": "CEMT-Va", "length_overall_m": 108.0}),
+    # The cost rates (issue #233), set to their defaults. They do not reach `simulate`: they feed the
+    # capital budget, which is not part of the results hash.
+    ("hull_steel_rate", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"hull_steel_rate": 2500.0}),
+    ("tank_shell_rate", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"tank_shell_rate": 10000.0}),
+    ("tank_supports_rate", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"tank_supports_rate": 2000.0}),
+    ("insulation_rate", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"insulation_rate": 4000.0}),
+    ("piping_rate", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"piping_rate": 4500.0}),
+    ("outfitting_rate", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"outfitting_rate": 4000.0}),
+    ("cargo_system_lump", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"cargo_system_lump": 500000.0}),
+    ("paint_anodes_misc", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"paint_anodes_misc": 100000.0}),
+    ("battery_rate_per_kwh", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"battery_rate_per_kwh": 250.0}),
+    ("propulsion_rate_per_kw", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"propulsion_rate_per_kw": 1000.0}),
+    ("wheelhouse_accom_lump", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"wheelhouse_accom_lump": 450000.0}),
+    ("tug_outfitting_lump", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"tug_outfitting_lump": 200000.0}),
+    ("yard_margin_fraction", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"yard_margin_fraction": 0.1}),
+    ("delivery_lump", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"delivery_lump": 200000.0}),
 )
 
 
@@ -195,6 +226,9 @@ def cases() -> dict[str, dict]:
         out[f"sweep hopper channel {tag}"] = _inputs(
             "bauxite", "sloped_hopper_hold", "self_propelled", loa, beam, 4.5, max_speed_kn=9.0,
             channel_current_kn=1.5, **_CHANNEL)
+        # `IGC_2G_EXACT` is not offered since issue #237: a file that names it is read as `IGC_2G`
+        # (with a warning). The cases keep that name so that a base from before #237 and this tree
+        # run the same designs and the table shows what moved (the stepped IGC_2G cases moved most).
         for ruleset in ("IGC_2G", "IGC_2G_EXACT"):
             out[f"sweep gas {ruleset} {tag}"] = _inputs(
                 "LPG_propane", "type_c_tanks", "self_propelled", loa, beam, 5.5, ruleset=ruleset)
@@ -360,10 +394,10 @@ def compare(before: dict[str, dict], after: dict[str, dict]) -> list[dict]:
                              "before": a.get("error", "computed"), "after": b.get("error", "computed"),
                              "change": "changed"})
             continue
-        # The top-level `drawing` object is drawing geometry, not a result, and is not in the
-        # results hash (docs/adr/0007): a new key there is not a design change.
-        la = leaves({k: v for k, v in a["results"].items() if k != "drawing"})
-        lb = leaves({k: v for k, v in b["results"].items() if k != "drawing"})
+        # The UNHASHED_KEYS are not results and are not in the results hash (docs/adr/0007): a new
+        # key there is not a design change.
+        la = leaves({k: v for k, v in a["results"].items() if k not in UNHASHED_KEYS})
+        lb = leaves({k: v for k, v in b["results"].items() if k not in UNHASHED_KEYS})
         for path in sorted(set(la) | set(lb)):
             va, vb = la.get(path, "absent"), lb.get(path, "absent")
             if not same(va, vb):

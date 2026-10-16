@@ -13,8 +13,6 @@ pub const COFFERDAM_MIN_M: f64 = 0.60;
 pub const OPENING_SETBACK_M: f64 = 2.00;
 pub const END_BULKHEAD_SPACE_M: f64 = 0.50;
 pub const END_BULKHEAD_SPACE_PRESSURE_M: f64 = 0.20;
-pub const SIDE_MIN_TYPE_G_M: f64 = 0.80;
-pub const DOUBLE_BOTTOM_MIN_TYPE_G_M: f64 = 0.60;
 
 const CLAUSE_WARNING: &str = "Separation clauses are cited from the classification rules for \
 inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release.";
@@ -26,9 +24,10 @@ pub struct GasSeparationInputs {
     pub opening_setback_m: f64,
     pub fwd_end_bulkhead_m: f64,
     pub is_pressure_tank: bool,
-    /// As-designed value, for the checks (0 means not given).
+    /// Kept so older callers still build. No check reads it (the inland type-G floors went in
+    /// issue #215).
     pub side_clearance_m: f64,
-    /// As-designed value, for the checks (0 means not given).
+    /// Kept so older callers still build. No check reads it (see `side_clearance_m`).
     pub double_bottom_m: f64,
 }
 
@@ -93,7 +92,7 @@ pub fn compute(inp: &GasSeparationInputs) -> Result<GasSeparationResult, String>
         END_BULKHEAD_SPACE_M
     };
 
-    let mut checks = alloc::vec![
+    let checks = alloc::vec![
         Check::new(
             "cofferdam_min_width",
             inp.cofferdam_m >= COFFERDAM_MIN_M - 1e-9,
@@ -128,29 +127,6 @@ pub fn compute(inp: &GasSeparationInputs) -> Result<GasSeparationResult, String>
             ),
         ),
     ];
-    if inp.side_clearance_m > 0.0 {
-        checks.push(Check::new(
-            "side_clearance_type_g_floor",
-            inp.side_clearance_m >= SIDE_MIN_TYPE_G_M - 1e-9,
-            format!(
-                "side clearance {} m >= {} m inland type-G floor (cl. 3.5.2); IGC d(Vc) may \
-                 require more",
-                fixed(inp.side_clearance_m, 2),
-                fixed(SIDE_MIN_TYPE_G_M, 2)
-            ),
-        ));
-    }
-    if inp.double_bottom_m > 0.0 {
-        checks.push(Check::new(
-            "double_bottom_type_g_floor",
-            inp.double_bottom_m >= DOUBLE_BOTTOM_MIN_TYPE_G_M - 1e-9,
-            format!(
-                "double bottom {} m >= {} m inland type-G floor (cl. 3.5.2)",
-                fixed(inp.double_bottom_m, 2),
-                fixed(DOUBLE_BOTTOM_MIN_TYPE_G_M, 2)
-            ),
-        ));
-    }
 
     Ok(GasSeparationResult {
         aft_separation_m: aft,

@@ -11,12 +11,16 @@ list lengths, keys and error messages must be identical.
 """
 import json
 import math
+import sys
 from pathlib import Path
 
 import numpy as np
 import pytest
 
 import api_scenarios as S
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+from design_impact import UNHASHED_KEYS  # noqa: E402
 
 DATA = Path(__file__).parent / "data"
 EXPECTED = json.loads((DATA / "api_ce96e66.json").read_text(encoding="utf-8"))["scenarios"]
@@ -31,6 +35,34 @@ KNOWN_DIFFERENCES: dict = {
     # and `DesignGrid.max_tank_length_m` are gone. The 12 m diameter cap of 0.1.0 is now 16 m.
     "design_grid": "issue #175: no tank-length cap; the grid has two tanks along and a 16 m "
                    "tank diameter cap",
+    # Issue #215: the inland type-G floors (`side_clearance_type_g_floor`, `double_bottom_type_g_floor`)
+    # are removed, so a gas result lists two checks fewer, and a search that used to reject an
+    # arrangement for them can pick another one. Each scenario below holds a gas check list or fit.
+    "barge_capacity.compute.gas": "issue #215: the inland type-G floors are removed",
+    "barge_capacity.compute.gas_counts": "issue #215: the inland type-G floors are removed",
+    "barge_capacity.compute.nested": "issue #215: the inland type-G floors are removed",
+    "ga_adapter.to_ga": "issue #215: the inland type-G floors are removed",
+    "gas_arrangement.fit": "issue #215: the inland type-G floors are removed",
+    "gas_arrangement.fit.exact": "issue #215: the inland type-G floors are removed",
+    "gas_separation.compute": "issue #215: the inland type-G floors are removed",
+    "simulate.gas": "issue #215: the inland type-G floors are removed",
+    "simulate.gas_igc_channel": "issue #215: the inland type-G floors are removed",
+    "simulate.gas_optimise_depth": "issue #215: the inland type-G floors are removed",
+    "edited.to_ga_with_other_draft": "issue #215: the inland type-G floors are removed",
+    "edited.to_ga_with_rebuilt_result": "issue #215: the inland type-G floors are removed",
+    "reuse.is_gas_and_to_ga_over_a_sweep": "issue #215: the inland type-G floors are removed",
+    # Issue #237: one gas rule set, `IGC_2G`, the per-tank d(Vc) of IGC 2.4.1.1 (the stepped
+    # `distance_d_vc` and the `IGC_2G_EXACT` name are gone; the dome now counts in Vc). A gas design
+    # has less side clearance, so its tanks, cargo, weights and stability move. The scenarios below
+    # hold a gas result or a rule call. The scenarios of #215 above moved again for the same reason.
+    "gas_stability.assess": "issue #237: the per-tank d(Vc) moves the gas designs",
+    "edited.assess_with_rebuilt_result": "issue #237: the per-tank d(Vc) moves the gas designs",
+    "edited.assess_with_edited_basis": "issue #237: the per-tank d(Vc) moves the gas designs",
+    "reuse.assess_over_a_sweep": "issue #237: the per-tank d(Vc) moves the gas designs",
+    "gas_arrangement.required_side_clearance": "issue #237: the one rule is the per-tank d(Vc); "
+                                               "IGC_2G_EXACT is not a rule set",
+    "protective_location": "issue #237: `distance_d_vc` and `VesselType.IGC_2G_EXACT` are removed; "
+                           "`check_protective_location` reads one tank's volume",
     # Issue #94: the class list is `catalogue/vessel_classes.yaml`, the one source. The ids are the
     # catalogue's (the 12 old ids still work for `get_standard`), `standards_for` returns every class
     # (Cargo is not a class property), the figures are the catalogue's (CEMT Va draught 2.5-2.8 m,
@@ -72,7 +104,7 @@ def same(actual, expected, path="result"):
         ok = actual == expected or math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-9)
         return None if ok else f"{path}: {actual!r} != {expected!r}"
     if isinstance(expected, dict) and isinstance(actual, dict):
-        if list(expected) != [k for k in actual if k != "drawing"]:  # `drawing` is new in #192, not a result
+        if list(expected) != [k for k in actual if k not in UNHASHED_KEYS]:  # not results (#192, #231)
             return f"{path}: keys {list(actual)} != {list(expected)}"
         for key in expected:
             found = same(actual[key], expected[key], f"{path}.{key}")

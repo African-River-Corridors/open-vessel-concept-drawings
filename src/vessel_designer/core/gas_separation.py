@@ -21,10 +21,11 @@ July 2022 — the inland implementation of ADN Part 9, and consistent with IGC C
   * 3.3.7   Engine-room entrances not less than 2,00 m from the cargo area.
   * 3.3.11  Entrances and openable windows of superstructures and accommodation spaces
             not less than 2,00 m from the cargo area.
-  * 3.5.2   (type G) Internal distance side plating to longitudinal bulkhead not less than
-            0,80 m; double bottom not less than 0,60 m. A FLOOR under the IGC d(Vc) values.
   * 3.5.3 / 3.6.3  Space between the tanks and the end bulkheads not less than 0,50 m,
             reducible to 0,20 m where the tank is a pressure tank.
+
+NOT CHECKED: the inland type G floors of 3.5.2 (side clearance 0,80 m, double bottom 0,60 m) were
+removed in issue #215. Gas tanks are sized under IGC only; the side clearance is the IGC d(Vc).
 
 WHAT GOVERNS AFT. The A-60 bulkhead carries no width, so on its own it would take no
 length. The binding number is the 2,00 m setback of any openable entrance or window
@@ -52,8 +53,6 @@ COFFERDAM_MIN_M = 0.60          # 3.6.13 / 3.7.4 (type C/N convention; IGC 3.1.2
 OPENING_SETBACK_M = 2.00        # 3.3.7 + 3.3.11 — entrances/windows from the cargo area
 END_BULKHEAD_SPACE_M = 0.50     # 3.5.3 / 3.6.3
 END_BULKHEAD_SPACE_PRESSURE_M = 0.20    # same clause, pressure tanks
-SIDE_MIN_TYPE_G_M = 0.80        # 3.5.2 — floor under the IGC d(Vc) side clearance
-DOUBLE_BOTTOM_MIN_TYPE_G_M = 0.60       # 3.5.2
 
 
 @dataclass
@@ -67,7 +66,8 @@ class GasSeparationInputs:
     # designer's call, not a default.
     fwd_end_bulkhead_m: float = END_BULKHEAD_SPACE_M
     is_pressure_tank: bool = True
-    # As-designed values, for the checks
+    # Kept so older callers still build. No check reads them (the inland type-G floors went in
+    # issue #215).
     side_clearance_m: float = 0.0
     double_bottom_m: float = 0.0
 

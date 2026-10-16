@@ -39,6 +39,16 @@ save writes the current version.
   that names `ADN_G` is read as `IGC_2G`, its `adn_tank_cap_m3` is dropped, and a gas Option with no
   `max_tank_od_m` gets the Defaults Profile value (16 m), marked `default`, with a warning that
   version 1 used a fixed 12 m cap, so results may change.
+  Issue #237 (the one gas rule set) also reuses version 2, as version 2 is unreleased: `IGC_2G` is now
+  the per-tank d(Vc) of IGC 2.4.1.1 (measured plate to plate, 2.4.2, dome included in Vc), and
+  `IGC_2G_EXACT` is no longer offered. A file of any version that names `IGC_2G_EXACT` is read as
+  `IGC_2G`, with the warning "IGC_2G_EXACT is now IGC_2G: the same per-tank rule of IGC 2.4.1.1". A
+  version 1 file that names `IGC_2G` meant the old stepped reading, so it is read as `IGC_2G` with a
+  warning that the per-tank rule applies now and results may change (a version 2 file needs no such
+  note: this build wrote it). The version 1 `ADN_G` mapping to `IGC_2G` is kept. A file that lacks the
+  new input `tank_dome_diameter_m` (2.0 m, marked `default`) gets a warning that results may change,
+  not the "results are unchanged" note of the other inputs added after the first files, because the
+  engine had no dome in Vc before.
   The Vessel Class change (issue #94) also changes the input table before the next release, so it
   reuses version 2 and does not bump again: a third source marker `class` (alongside `typed` and
   `default`) marks an input that a Vessel Class gave, and two inputs, `vessel_scheme` and `vessel_class`,
@@ -48,7 +58,7 @@ save writes the current version.
   class that disagrees is replaced, with a warning. Picking a class sets length, beam and Formation
   (and a convoy's counts), marked `class`; its draught (top of the range) and air draft (bottom of the
   range) fill the two limits, marked `class`, unless a limit was typed. Depth stays typed.
-- **Inputs added after the first files** (issue #4: the dry-bulk hold, the bow rake over depth, the stern void of a pushed barge, the end bulkhead allowance, the gas tank arrangement values): a file that lacks one of these
+- **Inputs added after the first files** (issue #4: the dry-bulk hold, the bow rake over depth, the stern void of a pushed barge, the end bulkhead allowance, the gas tank arrangement values, the water density, the squat safety margin, the 14 cost rates): a file that lacks one of these
   inputs, in version 1 or in a version 2 file from a test build, is read with the fixed value the engine
   used before the input existed (a table in `vdesign.rs`, not the Defaults Profile), marked `default`, with
   one warning per Option. Results cannot change. Every other left-out input is still refused. A Defaults

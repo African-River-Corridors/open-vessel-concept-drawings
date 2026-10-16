@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Vessel Concept Design</title>
+<meta name="description" content="OVCD is a free, open-source tool for the concept and preliminary design of inland and coastal vessels. Documented methods, open formats, every result cited.">
+<link rel="icon" href="/ovcd/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Barlow+Semi+Condensed:wght@400;500;600&family=IBM+Plex+Mono:wght@400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/ovcd/tokens.css">
+<link rel="stylesheet" href="/ovcd/site.css">
+<link rel="canonical" href="https://www.africanrivercorridors.com/ovcd">
+<script>
+  const q = new URLSearchParams(location.search);
+  if (q.get("theme")) document.documentElement.dataset.theme = q.get("theme");
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="home" href="/ovcd" aria-label="OVCD home">
+      <img class="on-light" src="/ovcd/assets/logo/ovcd-mark.svg" width="34" height="34" alt="">
+      <img class="on-dark" src="/ovcd/assets/logo/ovcd-mark-reversed-clear.svg" width="34" height="34" alt="">
+      <span>OVCD</span>
+    </a>
+    <nav aria-label="Main">
+      <a href="#what">What it is</a>
+      <a href="#craft">The craft</a>
+      <a href="/ovcd/docs/roadmap#toward-version-10">Roadmap</a>
+      <a href="#install">Install</a>
+      <a href="#open">Contribute</a>
+      <a href="/ovcd/docs">Docs</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">Open Vessel Concept Design</p>
+        <h1>An open instrument for the concept design of inland and coastal vessels.</h1>
+        <p class="lede">Give it a hull and a cargo. It gives you capacity, draught, weights, tank arrangement, stability, resistance and power, each result with its rule, its source and its checks. Free to use, open formats, no gatekeeping.</p>
+        <p class="cta">
+          <a class="btn primary" href="#install">Download the desktop app</a>
+          <a class="btn soon" href="/ovcd/app" aria-describedby="web-soon">Open in your browser <span class="badge" id="web-soon">In development · coming soon</span></a>
+        </p>
+        <p class="fine">Version 0.2.2, test build. Concept and preliminary design only. Results are not verified. <a href="https://github.com/African-River-Corridors/open-vessel-concept-drawings">Source on GitHub</a>.</p>
+      </div>
+      <figure class="hero-drawing">
+        <img src="/ovcd/assets/illustrations/midship-section-bare-white.svg" alt="An illustrative midship section of a concept barge, drawn as a construction blueprint, with its parts named on leader lines">
+      </figure>
+    </div>
+  </section>
+
+  <section id="what" class="band">
+    <div class="wrap">
+      <h2>What it is, and what it is not</h2>
+      <div class="two">
+        <div class="is">
+          <h3><span class="mark" aria-hidden="true">✓</span> It is</h3>
+          <ul>
+            <li>A concept and preliminary design tool for inland and coastal vessels and tug-barge systems.</li>
+            <li>A calculation core you can read: every result names its rule set, edition and paragraph, and every coefficient its source.</li>
+            <li>Calibrated against real barges and published design points, with the cases in the open.</li>
+            <li>A desktop app, a command line and a Python library over one Rust core.</li>
+            <li>Drawings to an open Drawing Format Standard, as SVG, PDF and DXF.</li>
+          </ul>
+        </div>
+        <div class="isnot">
+          <h3><span class="mark" aria-hidden="true">✕</span> It is not</h3>
+          <ul>
+            <li>Class approval, a stability booklet or construction approval. It never will be.</li>
+            <li>A substitute for a naval architect, a yard design office or a class surveyor.</li>
+            <li>A tool for seagoing ships under the IACS Common Structural Rules (not before version 1.0).</li>
+            <li>Verified yet. Known engineering findings are under review in the open.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="craft" class="craft">
+    <div class="wrap">
+      <h2>Made in the tradition of the drawing office and the yard</h2>
+      <div class="craft-grid">
+        <div class="prose">
+          <p>Before the screen, a vessel was drawn in the drawing office and built from the drawings. Draughtsmen laid down the lines, then drew the construction: a section at each key station, every plate, frame and girder named on a leader line, the title lettered by hand and underlined. The drawings went out as blueprints, white line on blue, to the people in the yard who built from them.</p>
+          <p>That work took skill on both sides of the yard door: the judgement to arrange a structure that is strong and simple to build, and the craft to build it true to the drawing. It still does.</p>
+          <p>OVCD is made in that spirit. It does the arithmetic quickly and shows its working. The judgement stays with you. It is one more instrument in the drawing office, not a machine that replaces the people who draw and build.</p>
+        </div>
+        <figure class="offsets">
+          <table>
+            <caption>Table of offsets · half-breadths, m</caption>
+            <thead><tr><th>Waterline</th><th>St 0</th><th>St 2</th><th>St 5</th><th>St 8</th><th>St 10</th></tr></thead>
+            <tbody>
+              <tr><td>Deck</td><td>2.10</td><td>3.62</td><td>4.00</td><td>3.71</td><td>1.42</td></tr>
+              <tr><td>WL 3</td><td>1.86</td><td>3.55</td><td>4.00</td><td>3.58</td><td>0.96</td></tr>
+              <tr><td>WL 2</td><td>1.40</td><td>3.38</td><td>4.00</td><td>3.30</td><td>0.58</td></tr>
+              <tr><td>WL 1</td><td>0.62</td><td>2.84</td><td>3.86</td><td>2.61</td><td>0.24</td></tr>
+              <tr><td>Base</td><td>0.00</td><td>1.70</td><td>3.40</td><td>1.22</td><td>0.00</td></tr>
+            </tbody>
+          </table>
+          <figcaption>An illustrative table of offsets, set as a draughtsman would. Not a real hull.</figcaption>
+        </figure>
+      </div>
+      <figure class="framed">
+        <div class="gilt">
+          <div class="sheet-blueprint"><img src="/ovcd/assets/drawings/touax-193-midship-section.svg" width="1588" height="1123" alt="OVCD midship section of the pushed dry-cargo barge Touax 193: beam 11.40 m, depth 3.80 m, draught 3.50 m, with the inner bottom, hatch coaming, freeboard and light draught named on leaders"></div>
+        </div>
+        <figcaption><b>Touax 193 / 194 (2021)</b>, a pushed dry-cargo barge: 79.00 × 11.40 m, depth 3.80 m, draught 3.50 m, from the <a href="https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-touax-193-sell-and-leasing-">Touax River Barges listing</a>. Drawn by OVCD from its published particulars; concept geometry, not the builder's drawing. The cargo is OVCD's one dry-bulk cargo, bauxite. Shown here in blueprint colours. <a href="/ovcd/assets/drawings/touax-193-midship-section.pdf">The sheet as drawn (PDF)</a> · <a href="/ovcd/assets/examples/touax-193.vdesign">the design file</a>.</figcaption>
+      </figure>
+      <ol class="tools">
+        <li><b>Lines plan</b><span>Sheer, half-breadth and body plan: the hull in three views.</span></li>
+        <li><b>Table of offsets</b><span>The hull as numbers. In OVCD, the hull is a sections table too.</span></li>
+        <li><b>Construction section</b><span>Each part named on a leader. Name the part, state the fact: the voice of OVCD's text.</span></li>
+        <li><b>Title block</b><span>What it is, at what scale, by whom. Every OVCD result says what it is and which rule it used.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="wrap">
+      <h2>Install</h2>
+      <div class="four">
+        <div class="card web">
+          <h3>Web app <span class="badge">In development · coming soon</span></h3>
+          <p>OVCD runs in your browser. Nothing to install. The calculation core and the drawings run on your computer, so your designs stay there: no server sees them.</p>
+          <p><a class="btn soon" href="/ovcd/app">Open in your browser</a></p>
+          <p class="note">Not available yet. The same concept design tool: results are not verified.</p>
+        </div>
+        <div class="card">
+          <h3>Desktop app</h3>
+          <p>Take the installer for your computer from the <a href="https://github.com/African-River-Corridors/open-vessel-concept-drawings/releases">newest release</a>. It needs no Python.</p>
+          <ul class="files"><li>Windows: <code>OVCD_&lt;version&gt;_x64-setup.exe</code></li><li>macOS, Apple silicon: <code>OVCD_&lt;version&gt;_aarch64.dmg</code></li><li>macOS, Intel: <code>OVCD_&lt;version&gt;_x64.dmg</code></li></ul>
+          <p class="note">The installers are not signed yet. Your system warns you once. Check the download with <code>SHA256SUMS.txt</code>.</p>
+        </div>
+        <div class="card">
+          <h3>Python library</h3>
+          <p>Python 3.12 or later.</p>
+<pre><code>pip install git+https://github.com/African-River-Corridors/open-vessel-concept-drawings</code></pre>
+        </div>
+        <div class="card">
+          <h3>From source</h3>
+          <p>You need Git, Node 24 and Rust.</p>
+<pre><code>git clone https://github.com/African-River-Corridors/open-vessel-concept-drawings
+cd open-vessel-concept-drawings/app
+npm ci
+npx tauri dev</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="open" class="band">
+    <div class="wrap two">
+      <div>
+        <h2>Open source, and open to practitioners</h2>
+        <p>OVCD is Apache 2.0 licensed. The methods are documented, the formats are open and the calibration cases are public. Nothing sits behind a login.</p>
+        <p>The project needs people who know ships. <b>Expert contributors are welcome as reviewers:</b> an evaluation harness sorts most problems by machine, so your time goes to the cases only a person can judge. Naval architects, yard engineers, surveyors and students are all welcome.</p>
+        <p class="cta"><a class="btn" href="/ovcd/docs/contributing">How to contribute</a> <a class="btn" href="https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues">Open issues</a></p>
+      </div>
+      <div class="ai">
+        <h3>How it is made</h3>
+        <p>We use AI assistants to help write code and documents, and we say so openly. Every change is tested, reviewed and recorded in the public history. The engineering judgement, and the responsibility, stay with people.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="responsible">
+    <div class="wrap">
+      <div class="callout">
+        <h2>Responsible use</h2>
+        <p>OVCD is for concept and preliminary design. Its results are not verified and there is no warranty. Do not use it to approve, build or operate a vessel. A real design needs a qualified naval architect, the applicable class rules and the approval of the flag state or classification society.</p>
+        <p>Every result states its rule set and its calibrated range. Outside that range, treat a result as a question, not an answer.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="foot-brand"><img class="on-light" src="/ovcd/assets/logo/ovcd-lockup.svg" width="210" alt="OVCD, Open Vessel Concept Design"><img class="on-dark" src="/ovcd/assets/logo/ovcd-lockup-reversed-clear.svg" width="210" alt="OVCD, Open Vessel Concept Design"></div>
+    <div class="tb">
+      <div><span>Project</span>Open Vessel Concept Design</div>
+      <div><span>Licence</span>Apache 2.0</div>
+      <div><span>Hosted by</span>African River Corridors</div>
+      <div><span>Fonts</span>Barlow Semi Condensed, Source Serif 4, IBM Plex Mono, Architects Daughter (OFL 1.1)</div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

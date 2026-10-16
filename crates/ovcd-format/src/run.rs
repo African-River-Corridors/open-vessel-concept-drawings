@@ -110,9 +110,12 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     put("max_tank_od_m", "max_tank_od_m");
     put("optimise_depth", "optimise_depth");
     for name in [
+        "water_density_t_per_m3",
+        "squat_safety_margin_m",
         "tanks_in_line",
         "tank_support_height_m",
         "tank_dome_height_m",
+        "tank_dome_diameter_m",
         "wing_tank_gap_m",
         "wing_tank_height_ratio",
         "tank_wall_thickness_mm",
@@ -203,13 +206,20 @@ fn write_canonical(v: &Value, out: &mut String) {
     }
 }
 
-/// SHA-256 of the canonical JSON of `results`, as 64 lower-case hex digits. The top-level `drawing`
-/// object (drawing geometry from the core, not a result) is left out, so adding to it never changes
-/// a saved hash.
+/// Top-level results keys that are not results: drawing geometry, what a view marks, and the capital
+/// budget with the masses it was worked from. They are left
+/// out of the results hash, so adding to one never changes a saved hash, and `tools/design_impact.py`
+/// leaves them out of its comparison (it holds the same list; `tests/test_design_impact_unhashed_keys.py` checks
+/// that the two lists agree).
+pub const UNHASHED_KEYS: [&str; 4] = ["drawing", "stability_marks", "cost_masses", "cost"];
+
+/// SHA-256 of the canonical JSON of `results`, without the [`UNHASHED_KEYS`].
 pub fn results_hash(results: &Value) -> String {
     let mut hashed = results.clone();
     if let Some(o) = hashed.as_object_mut() {
-        o.remove("drawing");
+        for key in UNHASHED_KEYS {
+            o.remove(key);
+        }
     }
     let digest = Sha256::digest(canonical_json(&hashed).as_bytes());
     digest.iter().map(|b| format!("{b:02x}")).collect()
@@ -226,6 +236,12 @@ pub fn run_option(option: &DesignOption) -> RunOutcome {
         Outcome::Result(v) => match v.get("error").and_then(Value::as_str) {
             Some(message) => RunOutcome::Failed(message.to_string()),
             None => {
+                // The capital budget: an output, not hashed, never fed back into the run.
+                let mut v = v;
+                let cost = crate::cost::cost_of(option, &v);
+                if let Some(o) = v.as_object_mut() {
+                    o.insert("cost".to_string(), cost);
+                }
                 let hash = results_hash(&v);
                 RunOutcome::Results { results: v, hash }
             }

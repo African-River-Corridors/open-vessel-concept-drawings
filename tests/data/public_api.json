@@ -424,6 +424,7 @@
     "tank_wall_thickness",
     "fill_ratio",
     "dome_height",
+    "dome_diameter",
     "tank_support_height",
     "hold_type",
     "lightship_k_t_per_m3",
@@ -1083,9 +1084,6 @@
   "COFFERDAM_MIN_M": {
    "kind": "constant"
   },
-  "DOUBLE_BOTTOM_MIN_TYPE_G_M": {
-   "kind": "constant"
-  },
   "END_BULKHEAD_SPACE_M": {
    "kind": "constant"
   },
@@ -1122,9 +1120,6 @@
    ]
   },
   "OPENING_SETBACK_M": {
-   "kind": "constant"
-  },
-  "SIDE_MIN_TYPE_G_M": {
    "kind": "constant"
   },
   "compute": {
@@ -1814,8 +1809,7 @@
     "IGF",
     "IGC_1G",
     "IGC_2G",
-    "IGC_3G",
-    "IGC_2G_EXACT"
+    "IGC_3G"
    ],
    "methods": []
   },
@@ -1879,16 +1873,6 @@
    "params": [
     [
      "vc_individual_m3",
-     "POSITIONAL_OR_KEYWORD",
-     null
-    ]
-   ]
-  },
-  "distance_d_vc": {
-   "kind": "function",
-   "params": [
-    [
-     "vc",
      "POSITIONAL_OR_KEYWORD",
      null
     ]

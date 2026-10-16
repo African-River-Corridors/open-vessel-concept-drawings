@@ -1,12 +1,38 @@
-# vessel_designer
+# Open Vessel Concept Design (OVCD)
 
-Concept design of inland and coastal cargo vessels for feasibility studies. Give it a hull and a
-cargo; it gives you capacity, draught, weights, tank arrangement, stability, resistance and power —
-checked against real vessels.
+An open instrument for the concept and preliminary design of inland and coastal vessels and
+tug-barge systems. Give it a hull and a cargo; it gives you capacity, draught, weights, tank
+arrangement, stability, resistance and power, and general-arrangement drawings — each result with
+its checks, checked against real vessels.
 
-It is a Python library over a compiled Rust calculation core (pure calculation, no I/O): the Python
-imports, names and result types are unchanged, and the numbers come from `ovcd-core`. A desktop app
-is planned; see the [roadmap](ROADMAP.md).
+**Website and docs:** [africanrivercorridors.com/ovcd](https://www.africanrivercorridors.com/ovcd) ·
+**Roadmap:** [ROADMAP.md](ROADMAP.md) · **Decisions:** [architecture decision records](docs/adr/0011-scope-concept-and-preliminary-design-never-approval.md)
+
+## Ways to use it
+
+- **Desktop app** (Windows and macOS): live results as you type, drawings to the Drawing Format
+  Standard (SVG, PDF and DXF), stability curves, rule checks and a capital budget. See
+  [Run the desktop app](#run-the-desktop-app).
+- **Web version — coming.** The same Rust core compiled to WebAssembly, running in your browser
+  with nothing to install; your designs stay on your computer. Planned on the [roadmap](ROADMAP.md).
+- **Command line** (`ovcd`): create, check, run and draw `.vdesign` files.
+- **Python library** (`vessel_designer`): the calculation core from Python.
+
+All of them use one compiled Rust calculation core (`ovcd-core`: pure calculation, no I/O), so they
+give the same numbers.
+
+## What it is, and what it is not
+
+**It is** a concept and preliminary design tool for inland and coastal vessels and tug-barge
+systems; a calculation core you can read, where results name their checks and sources; calibrated
+against real barges and published design points, with the cases in the open; free, with open
+formats and documented methods.
+
+**It is not** class approval, a stability booklet or construction approval, and it never will be
+([ADR 0011](docs/adr/0011-scope-concept-and-preliminary-design-never-approval.md)). It is not a
+substitute for a naval architect, a yard design office or a class surveyor. It is not yet verified:
+known engineering findings are under review in the open
+([#121](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/121)).
 
 ## What it does
 
@@ -15,8 +41,8 @@ is planned; see the [roadmap](ROADMAP.md).
   `vessel_designer.core.vessel_standards`.
 - **Capacity.** Volume-bound cargo for dry-bulk holds (sloped hopper, box, container) and for
   liquefied-gas barges with IMO Type C tanks (`core.barge_capacity`).
-- **Gas tank arrangement.** Protective-location clearances under IGC type 2G (stepped, or exactly as
-  written), a tank outer diameter cap (an input, 16 m by default) and tank length at most 7
+- **Gas tank arrangement.** Protective-location clearances under IGC type 2G (the distance d(Vc) of
+  IGC 2.4.1.1 per tank, dome included in Vc, measured plate to plate per 2.4.2), a tank outer diameter cap (an input, 16 m by default) and tank length at most 7
   diameters, and a search over depth and tanks abreast for the most cargo at a draught limit
   (`core.gas_arrangement`). Only IGC rules apply to gas tanks.
 - **Hydrostatics and stability.** Equilibrium draught, freeboard, air draught, and intact stability
@@ -26,8 +52,6 @@ is planned; see the [roadmap](ROADMAP.md).
 - **Resistance, squat, waves and power** in deep and confined shallow water (`core.resistance`,
   `core.squat`, `core.waves`, `core.electric_energy`).
 - **Calibration** against real barges and published design points (`calibration/`).
-
-Concept stage only. It does not replace class approval, a stability booklet or a yard design.
 
 ## Install
 
@@ -93,15 +117,17 @@ best = fit(loa, beam, "LPG_propane", 4.4, ruleset="IGC_2G", depths=(6.5,))
 Output:
 
 ```
-Class CN II: 90 m x 14.8 m, 2,000 t class deadweight
-Single run : 2 tanks abreast, OD 5.90 m, 1,156 t, laden draught 2.31 m
-Searched   : 1 tank(s) abreast, OD 10.80 m, 2,058 t (volume-bound), draught 3.42 m
-  check failed: wheelhouse_sees_over_cargo: raised eye 14.00 m >= obstruction 14.80 m + 0.50 m margin (lift used 6.00 m of 6.00 m)
+Class CN-GB50139 CN-II-MOTOR: 90 m x 14.8 m, 2,000 t class deadweight
+Single run : 1 tanks abreast, OD 13.70 m, 3,278 t, laden draught 4.70 m
+Searched   : 1 tank(s) abreast, OD 13.70 m, 2,943 t (draft-bound), draught 4.40 m
+  check failed: wheelhouse_sees_over_cargo: raised eye 14.00 m >= obstruction 16.34 m + 0.50 m margin (lift used 6.00 m of 6.00 m)
 ```
 
-The single run settles on two small tanks; the search finds one large tank carries 78 % more. Every
-result carries its checks. Here the wheelhouse cannot see over the large tank, so a real design must
-raise the eye or accept a smaller tank.
+The single run fills the tank volume and ignores the draught cap: its laden draught, 4.70 m, is over
+the 4.4 m cap. The search respects the cap and carries 2,943 t. Tank side clearance follows IGC Code
+2.4.1.1 (the distance d(Vc), per tank, dome included in Vc), measured plate to plate with the
+insulation inside d (2.4.2). Every result carries its checks. Here the wheelhouse cannot see over the
+large tank, so a real design must raise the eye or accept a smaller tank.
 
 ## Layout
 
@@ -111,6 +137,9 @@ raise the eye or accept a smaller tank.
 | `src/vessel_designer/simulate.py` | one-call JSON-in, JSON-out simulation |
 | `catalogue/` | standard vessel classes and reference vessels, with sources |
 | `calibration/` | calibration cases, fitted factors and results |
+| `crates/` | the Rust core (`ovcd-core`), file format and Design session (`ovcd-format`), drawings (`ovcd-draw`) and CLI |
+| `app/` | the desktop app (Tauri) |
+| `website/` | the website and docs ([africanrivercorridors.com/ovcd](https://www.africanrivercorridors.com/ovcd)) |
 | `docs/adr/` | architecture decisions |
 | `GLOSSARY.md` | the domain language |
 

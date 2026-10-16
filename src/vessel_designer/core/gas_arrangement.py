@@ -2,7 +2,8 @@
 
 Rebuilt natively from an earlier project wrapper, fixing three defects (numbered 1, 3, 4
 in the original defect list) at the engine boundary. Only IGC rules apply to the gas tanks:
-``IGC_2G`` and ``IGC_2G_EXACT`` (the ``ADN_G`` ruleset was removed in issue #175):
+``IGC_2G``, the per-tank d(Vc) of IGC 2.4.1.1 measured plate to plate (2.4.2) (the ``ADN_G`` ruleset
+was removed in issue #175; ``IGC_2G_EXACT`` was merged into ``IGC_2G`` in issue #237):
 
 1. ``barge_capacity``'s clearance loop has two self-consistent roots at some beams and its
    seed can land on the worse one (CN II at 14.8 m: AUTO 2 abreast ~1,156 t against
@@ -40,9 +41,9 @@ from .barge_capacity import compute as capacity  # noqa: F401
 from .checks import all_ok  # noqa: F401
 from .journey_derating import JourneyDeratingInputs, compute as derate  # noqa: F401
 from .protective_location import (  # noqa: F401
-    compute_required_clearances, d_vc_exact, distance_d_vc)
+    compute_required_clearances, d_vc_exact)
 
-RULESETS = ("IGC_2G", "IGC_2G_EXACT")
+RULESETS = ("IGC_2G",)
 DEFAULT_DEPTHS_M = tuple(round(3.5 + 0.25 * i, 2) for i in range(15))     # 3.5 .. 7.0 m
 DEFAULT_TANKS_WIDE = (1, 2, 3)
 DEFAULT_EXTRA_CLEARANCE_M = (0.5, 1.0, 1.5, 2.0)
