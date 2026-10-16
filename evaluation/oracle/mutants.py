@@ -181,7 +181,8 @@ def render(docs: list[dict], skipped: list[dict]) -> str:
 def main(argv: list[str]) -> int:
     text = render(*generate())
     if "--check" in argv:
-        if not OUT.exists() or OUT.read_text(encoding="utf-8") != text:
+        if not OUT.exists() or not write_cases.same(yaml.safe_load(OUT.read_text(encoding="utf-8")),
+                                                    yaml.safe_load(text)):
             print(f"mutants: {OUT} differs from what the oracle generates", file=sys.stderr)
             return 1
         return 0
