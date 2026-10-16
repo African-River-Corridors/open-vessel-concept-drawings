@@ -245,3 +245,30 @@ Error is (calibrated − published) ÷ published. Cross-check cases and cases ex
 | Deadweight at the stated draught | out of sample | box | 30 | -2.1 | 4.1 | -8.8 to +7.0 | 30 of 30 |
 | Deadweight at the stated draught | out of sample | deck (run as box) | 13 | +7.6 | 8.2 | -4.1 to +16.8 | 8 of 13 |
 | Deadweight at the stated draught | out of sample | pontoon (run as box) | 7 | +25.8 | 25.8 | +2.8 to +76.1 | 3 of 7 |
+
+## 5. Type C tank cases (held out)
+
+One cargo tank, run through the tank maths only (`tank_cases.yaml`, bands in `tank_bands.yaml`). Every case is held out: it is never used to fit a factor. The engine's tank diameter is the outside of the insulation, so each source's diameter and length are first brought to that datum (`diameter_basis`, `length_basis`). Volume and steel are run at the published shell thickness; the wall is the pressure-vessel formula at the steel diameter, with the material the case says it is run as. **Steel weight of the first case is in-sample for the structure factor** of fully pressurised LPG in the Defaults Profile, which was worked out from that one published weight. A miss is a warning only.
+
+| Case | Conf. | Figure | Published | Model | err % | Band ± % | vs band |
+|---|---|---|---|---|---|---|---|
+| senjanovic-2006-river-lpg | medium | Gross tank volume (m³) | 351.4 | 351.1 | -0.1 | ±5 | inside |
+| senjanovic-2006-river-lpg | medium | Cylinder wall thickness (mm) | 13.1 | 14.0 | 6.9 | ±15 | inside |
+| senjanovic-2006-river-lpg | medium | Tank steel weight (t) | 34.4 | 36.2 | 5.2 | ±20 | inside (in-sample) |
+| seo-2026-lco2-5000 | low | Gross tank volume (m³) | 5,000.0 | 5,011.1 | 0.2 | ±10 | inside |
+| seo-2026-lco2-5000 | low | Cylinder wall thickness (mm) | 50.0 | 56.0 | 12.0 | ±25 | inside |
+
+| Case | Steel outer Ø (m) | Insulated outer Ø (m) | Insulated length (m) | Formula before allowance (mm) | Head wall (mm) | Steel at formula thickness (t) |
+|---|---|---|---|---|---|---|
+| senjanovic-2006-river-lpg | 4.730 | 4.730 | 21.000 | 13.08 | 14 | 38.7 |
+| seo-2026-lco2-5000 | 13.500 | 13.900 | 40.500 | 55.42 | 28.5 | – |
+
+### Tank records that cannot run yet
+
+Listed with their published figures and the reason. They are never run.
+
+| Case | Published | Why not run |
+|---|---|---|
+| kanrei-2007-22-pressurised-lpg | 3,757.967 m3 per tank at 100 %; diameter 12,000 mm (basis not printed); 17.65 barg, 0 to 45 C; no insulation; tank centre 7,350 mm above base | no tank length is printed and the diameter basis is not stated. A bottom-clearance check against the 7,350 mm centre needs the hull (arrangement block, not yet in the runner) |
+| alice-cosulich-lng-bunker | 4,100.0 and 4,371.2 m3 at 100 % (4,038.5 and 4,305.6 m3 at 98.5 %); MARVS 3.6 barg; -163 C; one pump per lobe | bilobe tanks are not modelled; which volume belongs to which tank is not stated |
+| kim-2025-lco2-bilobe-9800 | internal diameter about 15.6 m; length 36 m; two saddles; LTFH36; a dome on the top side and a sump on the bottom side | a bilobe tank is not modelled, and the paper prints no thickness or weight to compare |

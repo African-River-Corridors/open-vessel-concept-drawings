@@ -590,3 +590,28 @@ web_sources:
   url: https://web.archive.org/web/20190917063735/http://vesselinfo.kirbycorp.com/BargeInfo/Details/51933
   accessed: '2026-10-16'
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: P1
+  title: "Senjanovic et al., Structure design of cargo tanks in river liquefied gas carriers, DESIGN 2006 (Design Society)"
+  url: https://datainformed.designsociety.org/download-publication/19022/STRUCTURE+DESIGN+OF+CARGO+TANKS+IN+RIVER+LIQUEFIED+GAS+CARRIERS
+  accessed: '2026-10-16'
+  note: "Read with curl; a TLS error stops some browsers. Used for the first tank case (issue #292)"
+- id: P2
+  title: "Seo and Lee, J. Mar. Sci. Eng. 2026, 14, 821 (a 5,000 m3 liquid CO2 Type C tank design study)"
+  url: https://mdpi-res.com/d_attachment/jmse/jmse-14-00821/article_deploy/jmse-14-00821.pdf
+  accessed: '2026-10-16'
+  note: "Tank case, issue #292"
+- id: P3
+  title: "Owner's published general arrangement and midship drawings of a pressurised LPG carrier built 2007 (hull 2007-22), and its Form C sheet"
+  url: https://www.stealthgas.com/images/stories/files/INo.2007-22_GA-nb7500.PDF
+  accessed: '2026-10-16'
+  note: "Midship drawing: https://www.stealthgas.com/images/stories/files/INo.2007-22_MIDSHIP-nb7500.PDF. Listed in tank_cases.yaml as a tank record that cannot run yet"
+- id: P4
+  title: "Owner's published Form B particulars of an LNG bunker vessel built 2022 (two bilobe tanks)"
+  url: https://marine-energy.cosulich.com/pdf/ships/Marine%20Energy%20-%20Ship%20Management%20-%20M_V%20Alice%20Cosulich.pdf
+  accessed: '2026-10-16'
+  note: "Tank record that cannot run yet (bilobe)"
+- id: P5
+  title: "Kim et al., J. Mar. Sci. Eng. 2025, 13, 2185 (a bilobe liquid CO2 tank design study)"
+  url: https://mdpi-res.com/d_attachment/jmse/jmse-13-02185/article_deploy/jmse-13-02185.pdf
+  accessed: '2026-10-16'
+  note: "Tank record that cannot run yet (bilobe)"
