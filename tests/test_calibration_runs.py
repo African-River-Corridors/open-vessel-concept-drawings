@@ -130,7 +130,9 @@ def test_the_check_prints_warnings_and_still_exits_zero():
     out = subprocess.run([sys.executable, "-m", "vessel_designer.calibration", "--check"],
                          capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
-    assert out.stdout.count("::warning ") == sum(1 for b in assess() if not b.inside)
+    from vessel_designer.calibration import _assess_tanks
+    # One annotation for each result outside its band: the barge results and the tank results (issue #292).
+    assert out.stdout.count("::warning ") == sum(1 for b in assess() + _assess_tanks() if not b.inside)
 
 
 def test_the_check_fails_on_a_crash_not_on_a_band_miss(tmp_path, monkeypatch):

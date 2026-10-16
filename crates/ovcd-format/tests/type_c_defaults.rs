@@ -625,3 +625,49 @@ fn the_fill_ratio_of_a_design_is_the_igc_limit_and_the_old_0_95_is_never_used() 
     let direct = ovcd_format::eval("simulate", &case).unwrap()["ok"].clone();
     assert_eq!(direct["arrangement"]["fill_ratio"], 0.98);
 }
+
+/// The `structure_factor` of each runnable case of `calibration/tank_cases.yaml`, with its carriage
+/// condition, read as plain text (no YAML parser): the two lines of a case.
+fn calibration_structure_factors() -> Vec<(String, String, f64)> {
+    let path = format!(
+        "{}/../../calibration/tank_cases.yaml",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: {e}"));
+    let runnable = text.split("not_yet_runnable_tank_cases:").next().unwrap();
+    let (mut id, mut carriage, mut out) = (String::new(), String::new(), Vec::new());
+    for line in runnable.lines() {
+        let line = line.trim_start_matches(" - ").trim();
+        if let Some(v) = line.strip_prefix("- id:") {
+            id = v.trim().to_string();
+            carriage.clear();
+        } else if let Some(v) = line.strip_prefix("id:") {
+            id = v.trim().to_string();
+            carriage.clear();
+        } else if let Some(v) = line.strip_prefix("carriage_condition:") {
+            carriage = v.trim().to_string();
+        } else if let Some(v) = line.strip_prefix("structure_factor:") {
+            out.push((id.clone(), carriage.clone(), v.trim().parse().unwrap()));
+        }
+    }
+    out
+}
+
+#[test]
+fn a_tank_calibration_case_uses_the_structure_factor_of_the_profile() {
+    let profile = Profile::built_in();
+    let cases = calibration_structure_factors();
+    assert!(cases.len() >= 2, "{cases:?}");
+    for (id, carriage, factor) in cases {
+        // The case's Cargo does not matter to the factor; an LPG carriage condition does.
+        let cargo = if carriage.is_empty() {
+            "LNG"
+        } else {
+            "LPG_propane"
+        };
+        let hit = profile
+            .table_default("tank_structure_factor", &context(cargo, &carriage))
+            .unwrap_or_else(|| panic!("{id}"));
+        assert_eq!(hit.value, &json!(factor), "{id}");
+    }
+}

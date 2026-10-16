@@ -38,6 +38,29 @@ research note suggested (`note_suggests`).
   but left out of its summary. A cross-check has no band.
 - A figure the source does not give is left out of the case. Nothing is estimated or filled in.
 
+## Type C tank cases (issue #292)
+
+`tank_cases.yaml` holds published cargo tanks, run through the tank maths only (one tank, no hull), with
+their own bands in `tank_bands.yaml` (starting values in the shape of the barge bands: volume ±3 / 5 / 10 %,
+wall thickness ±10 / 15 / 25 %, steel weight ±15 / 20 / 30 % at high / medium / low confidence; the maintainer
+sets them). They are kept apart from `cases.yaml` because they do not run a hull. The conventions are the
+same: every case is held out (run, banded, never used to fit), it cites a listed source (`web_sources`,
+ids `P1` and up), `published` keeps the source text, and a figure the source does not give is absent.
+A band miss is a warning, never a failure; `--check` prints one annotation per tank miss too.
+
+- **The datum is stated, not assumed.** The engine's tank outer diameter is the outside of the insulation.
+  A source prints the diameter on another face, so each case gives `diameter_basis` and `length_basis`, and
+  the runner brings them to the engine's datum (a case without them cannot run). The report shows the steel
+  and the insulated diameters it used.
+- **What is run.** Volume and steel weight at the published shell thickness (the geometry and the datum are
+  what is tested); the wall thickness from the pressure-vessel formula at the steel diameter, with the steel
+  the case says it is run as. `run_as_head` and `run_as_material` are the nearest the engine has; the gap is
+  part of the result.
+- **In-sample warning.** The structure factor of fully pressurised LPG in the Defaults Profile (1.12) was worked
+  out from the one published tank steel weight (the first case). That case's steel error is in-sample.
+- **Not yet runnable.** Bilobe tanks, a record with no length, and a double-shell fuel tank are listed in
+  `not_yet_runnable_tank_cases` with the reason.
+
 ## Pass 1 findings (core as first ported)
 
 1. **Barge lightship is overestimated by 31–111 %.** The bulk branch adds the ported sloped-hopper
