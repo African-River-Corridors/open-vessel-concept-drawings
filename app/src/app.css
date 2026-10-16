@@ -135,19 +135,6 @@
   color-scheme: dark;
 }
 
-/* Old names, kept as aliases only for the two chart components (views/SpeedPower.svelte, Stability.svelte),
-   which the chart ticket (#253) moves to the new tokens. Remove the aliases when that has merged: no
-   other file uses them. --ink and --cream keep their names with the new values. */
-:root {
-  --navy: var(--ink);
-  --gold: var(--gilt-mark);
-  --dim: var(--ink-3);
-  --line: var(--rule);
-  --bar: var(--surface-2);
-  --serif: var(--font-serif);
-  --sans: var(--font-ui);
-}
-
 /* Base styles */
 html, body {
   margin: 0;
