@@ -108,6 +108,54 @@ Each entry is a before/after table written by `python3 tools/design_impact.py ch
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
 
+### ticket/292-typec-defaults (2026-10-16)
+
+Between `main 5b0fa58` and `this branch 9d42348`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 1 (88x16.3) | `checks[13].message` | GM 5.96 m (fluid), max GZ 2.41 m at 27° | GM 6.04 m (fluid), max GZ 2.43 m at 27° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[14].message` | GM 12.07 m (fluid), max GZ 3.35 m at 28° | GM 12.62 m (fluid), max GZ 3.41 m at 27° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[8].message` | raised eye 13.20 m >= obstruction 13.88 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.20 m >= obstruction 13.52 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `warnings[0]` | Sightline needs 7.18 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 6.82 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].message` | GM 3.21 m (fluid), max GZ 1.06 m at 25° | GM 3.20 m (fluid), max GZ 1.05 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[13].message` | GM 4.96 m (fluid), max GZ 2.09 m at 27° | GM 4.97 m (fluid), max GZ 2.10 m at 27° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | GM 11.48 m (fluid), max GZ 3.28 m at 28° | GM 11.70 m (fluid), max GZ 3.30 m at 28° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[8].message` | raised eye 13.20 m >= obstruction 13.60 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.20 m >= obstruction 13.24 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `warnings[0]` | Sightline needs 6.90 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 6.54 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[12].message` | GM 5.18 m (fluid), max GZ 1.99 m at 28° | GM 4.95 m (fluid), max GZ 1.85 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[13].message` | GM 7.48 m (fluid), max GZ 2.93 m at 28° | GM 7.46 m (fluid), max GZ 2.91 m at 28° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[14].message` | GM 14.77 m (fluid), max GZ 3.83 m at 28° | GM 16.70 m (fluid), max GZ 3.96 m at 26° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[8].message` | raised eye 10.91 m >= obstruction 10.41 m + 0.50 m margin (lift used 3.71 m of 6.00 m) | raised eye 10.90 m >= obstruction 10.40 m + 0.50 m margin (lift used 3.70 m of 6.00 m) | changed |
+| sweep default depth gas 90x14 | `arrangement.feasible` | True | False | changed |
+| sweep default depth gas 90x14 | `checks[10].message` | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | cofferdam 0.60 m >= 0.60 m (cl. 3.6.13) | changed |
+| sweep default depth gas 90x14 | `checks[10].name` | opening setback | cofferdam min width | changed |
+| sweep default depth gas 90x14 | `checks[11].message` | forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3) | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | changed |
+| sweep default depth gas 90x14 | `checks[11].name` | fwd end bulkhead space | opening setback | changed |
+| sweep default depth gas 90x14 | `checks[12].message` | GM 1.02 m (fluid), max GZ 0.96 m at 36° | forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3) | changed |
+| sweep default depth gas 90x14 | `checks[12].name` | Stability — laden | fwd end bulkhead space | changed |
+| sweep default depth gas 90x14 | `checks[12].severity` | absent | error | changed |
+| sweep default depth gas 90x14 | `checks[13].message` | GM 1.88 m (fluid), max GZ 1.16 m at 36° | GM 1.42 m (fluid), max GZ 1.19 m at 37° | changed |
+| sweep default depth gas 90x14 | `checks[13].name` | Stability — half laden | Stability — laden | changed |
+| sweep default depth gas 90x14 | `checks[14].message` | GM 5.40 m (fluid), max GZ 1.83 m at 26° | GM 2.70 m (fluid), max GZ 1.37 m at 33° | changed |
+| sweep default depth gas 90x14 | `checks[14].name` | Stability — light | Stability — half laden | changed |
+| sweep default depth gas 90x14 | `checks[15].message` | absent | GM 7.92 m (fluid), max GZ 2.26 m at 24° — fails: Angle of max GZ 24.000 < 25.0 | changed |
+| sweep default depth gas 90x14 | `checks[15].name` | absent | Stability — light | changed |
+| sweep default depth gas 90x14 | `checks[15].ok` | absent | False | changed |
+| sweep default depth gas 90x14 | `checks[1].message` | cargo volume must be positive (tank/hold fits) | No arrangement passes every check on this hull. The closest one is shown. It fails: Stability — light. | changed |
+| sweep default depth gas 90x14 | `checks[1].name` | feasible geometry | Feasible arrangement | changed |
+| sweep default depth gas 90x14 | `checks[1].ok` | True | False | changed |
+| sweep default depth gas 90x14 | `checks[1].severity` | error | absent | changed |
+| sweep default depth gas 90x14 | `checks[2].message` | cargo zone 55.29 m = LOA 90.0 - bow void 12.82 m - stern void 21.89 m | cargo volume must be positive (tank/hold fits) | changed |
+| sweep default depth gas 90x14 | `checks[2].name` | cargo zone positive | feasible geometry | changed |
+| sweep default depth gas 90x14 | `checks[3].message` | 3 x 2.60 m thrusters need 10.20 m across a 14.00 m beam | cargo zone 55.29 m = LOA 90.0 - bow void 12.82 m - stern void 21.89 m | changed |
+| sweep default depth gas 90x14 | `checks[3].name` | thrusters fit beam | cargo zone positive | changed |
+| sweep default depth gas 90x14 | `checks[4].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 14.00 m beam | 3 x 2.60 m thrusters need 10.20 m across a 14.00 m beam | changed |
+| sweep default depth gas 90x14 | `checks[4].name` | requested thruster count fits | thrusters fit beam | changed |
+| sweep default depth gas 90x14 | `checks[4].severity` | warning | error | changed |
+| sweep default depth gas 90x14 | `checks[5].message` | 3 x 40 ft units abreast need 10.91 m across a 14.00 m beam | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 14.00 m beam | changed |
+| ... | 23567 more changed quantities | | | |
+
 ### ticket/264-feasible-fit (2026-10-16)
 
 Between `main 06d10da` and `this branch 5a78519`.
