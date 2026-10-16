@@ -164,8 +164,11 @@ describe("OVCD app smoke tests", () => {
 
   /** Wait until the page can be photographed: fonts loaded, nothing mid-layout. */
   async function settle() {
-    await browser.execute(() => document.fonts.ready.then(() => true));
-    await browser.executeAsync((done) => requestAnimationFrame(() => requestAnimationFrame(() => done(true))));
+    await browser.execute(() => {
+      window.__fontsReady = false;
+      document.fonts.ready.then(() => { window.__fontsReady = true; });
+    });
+    await until("the fonts to load", async () => browser.execute(() => window.__fontsReady === true));
     await browser.pause(400);
   }
   const setTheme = async (name) => {
