@@ -92,6 +92,13 @@ const DOME_HALF_BASE_OF_OD: f64 = 0.15;
 /// metres.
 const DOME_HALF_BASE_OF_LENGTH: f64 = 0.06;
 const DOME_HALF_BASE_MIN_M: f64 = 1.2;
+/// A thruster is drawn as a circle: in elevation a fraction of the thruster room length (at most
+/// 1.1 m) standing 0.2 m above the keel, in plan a fraction (at most 1.3 m).
+const THRUSTER_R_ELEVATION_OF_ROOM: f64 = 0.30;
+const THRUSTER_R_ELEVATION_MAX_M: f64 = 1.1;
+const THRUSTER_LIFT_M: f64 = 0.2;
+const THRUSTER_R_PLAN_OF_ROOM: f64 = 0.32;
+const THRUSTER_R_PLAN_MAX_M: f64 = 1.3;
 
 // ---- the geometry that the views draw ------------------------------------------------------------
 
@@ -112,7 +119,82 @@ struct Hull {
     /// The gas separation forward of the stern block (`drawing.separation`): the cofferdam and the
     /// aft separation, whose end is the start of the cargo zone. `None` for dry bulk.
     separation: Option<(f64, f64)>,
+    /// The aft block of a self-propelled hull (`drawing.aft_arrangement`); `None` for a pushed
+    /// barge. Its x is measured from the stern, as the hull's x is.
+    aft: Option<Aft>,
     containment: Containment,
+}
+
+/// The values of the core's aft arrangement that the views draw.
+struct Aft {
+    zones: Vec<(String, f64, f64)>,
+    thruster_offsets: Vec<f64>,
+    thruster_room: f64,
+    container_x0: f64,
+    container_width: f64,
+    container_top: f64,
+    container_labels: Vec<String>,
+    unit_width: f64,
+    side_gap: f64,
+    rows: usize,
+    per_row: usize,
+    row_length: f64,
+    row_gap: f64,
+    wheelhouse_x0: f64,
+    wheelhouse_x1: f64,
+    wheelhouse_width: f64,
+    wheelhouse_floor: f64,
+    wheelhouse_top: f64,
+    block_top: f64,
+}
+
+fn read_aft(results: &Value) -> Option<Aft> {
+    let a = results.get("drawing")?.get("aft_arrangement")?;
+    if !a.is_object() {
+        return None;
+    }
+    let n = |key: &str| a.get(key).and_then(Value::as_f64);
+    let list = |key: &str| -> Option<Vec<f64>> {
+        a.get(key)?.as_array()?.iter().map(Value::as_f64).collect()
+    };
+    let zones = a
+        .get("zones")?
+        .as_array()?
+        .iter()
+        .map(|z| {
+            Some((
+                z.get(0)?.as_str()?.to_string(),
+                z.get(1)?.as_f64()?,
+                z.get(2)?.as_f64()?,
+            ))
+        })
+        .collect::<Option<Vec<_>>>()?;
+    Some(Aft {
+        zones,
+        thruster_offsets: list("thruster_offsets_m")?,
+        thruster_room: n("thruster_room_length_m")?,
+        container_x0: n("container_x0_m")?,
+        container_width: n("container_total_width_m")?,
+        container_top: n("container_top_above_keel_m")?,
+        container_labels: a
+            .get("container_labels")?
+            .as_array()?
+            .iter()
+            .map(|t| t.as_str().map(str::to_string))
+            .collect::<Option<Vec<_>>>()?,
+        unit_width: n("container_unit_width_m")?,
+        side_gap: n("container_side_gap_m")?,
+        rows: n("container_rows")? as usize,
+        per_row: n("container_per_row")? as usize,
+        row_length: n("container_row_length_m")?,
+        row_gap: n("container_row_gap_m")?,
+        wheelhouse_x0: n("wheelhouse_x0_m")?,
+        wheelhouse_x1: n("wheelhouse_x1_m")?,
+        wheelhouse_width: n("wheelhouse_width_m")?,
+        wheelhouse_floor: n("wheelhouse_floor_lowered_m")?,
+        wheelhouse_top: n("wheelhouse_top_lowered_m")?,
+        block_top: n("block_top_lowered_m")?,
+    })
 }
 
 enum Containment {
@@ -233,6 +315,7 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
             results,
             &["drawing", "separation", "aft_separation_m"],
         )),
+        aft: read_aft(results),
         containment,
     })
 }
@@ -697,14 +780,167 @@ fn zones(c: &mut Canvas, h: &Hull, view: View) {
             c.line("HIDDEN", a, b, None);
         }
         let mid = start + cofferdam / 2.0;
-        // the text stands to the left of the label point, over the stern, well clear of the first tank
-        c.leader("COFFERDAM", [mid, hi], [mid - 8.0 * c.k, above]);
+        // The label stands under the hull, its text to the right of the label point, so that it
+        // keeps clear of the aft block and the first tank above the deck, and of the thrusters'
+        // label, whose text stands to the left of the stern.
+        c.leader("COFFERDAM", [mid, lo], [mid + 2.0 * c.k, lo - 6.0 * c.k]);
     }
     if h.bow_void > 0.0 {
         let mid = h.loa - h.bow_void / 2.0;
         // the text stands to the right of the label point, over the bow
         c.leader("FWD EQUIP.", [mid, hi], [mid + 2.0 * c.k, above]);
     }
+}
+
+/// The aft block of a self-propelled hull, from `drawing.aft_arrangement`; nothing for a pushed
+/// barge. Layers: the units and thrusters are equipment (EQUIP); the wheelhouse is part of the
+/// vessel (OBJECT, like the tanks); the zone bulkheads are below the deck (HIDDEN in elevation).
+/// The wheelhouse is drawn lowered, as the air draft is measured; the raised position is not drawn,
+/// because the standard's only chain line type already stands for the light waterline.
+fn aft_block(c: &mut Canvas, h: &Hull, view: View) {
+    let Some(a) = &h.aft else {
+        return;
+    };
+    let k = c.k;
+    let wh_mid = (a.wheelhouse_x0 + a.wheelhouse_x1) / 2.0;
+    let room_mid = a.thruster_room / 2.0;
+    let unit_row_mid = a.container_x0 + a.row_length / 2.0;
+    match view {
+        View::Elevation => {
+            // zone bulkheads: the forward end of each zone, under the deck (not where the
+            // cofferdam's first bulkhead is already)
+            for (_, _, x_fwd) in &a.zones {
+                let at_cofferdam = h
+                    .separation
+                    .is_some_and(|(_, aft)| (x_fwd - (h.stern_void - aft)).abs() < 1e-9);
+                if !at_cofferdam {
+                    c.line("HIDDEN", [*x_fwd, 0.0], [*x_fwd, h.depth], None);
+                }
+            }
+            // the container units on deck: one box for each row (the units of a row are abreast)
+            if a.container_top > h.depth {
+                for row in 0..a.rows {
+                    let x0 = a.container_x0 + row as f64 * (a.row_length + a.row_gap);
+                    c.polyline(
+                        "EQUIP",
+                        &[
+                            [x0, h.depth],
+                            [x0 + a.row_length, h.depth],
+                            [x0 + a.row_length, a.container_top],
+                            [x0, a.container_top],
+                        ],
+                        true,
+                    );
+                }
+            }
+            // the wheelhouse, lowered
+            c.polyline(
+                "OBJECT",
+                &[
+                    [a.wheelhouse_x0, a.wheelhouse_floor],
+                    [a.wheelhouse_x1, a.wheelhouse_floor],
+                    [a.wheelhouse_x1, a.wheelhouse_top],
+                    [a.wheelhouse_x0, a.wheelhouse_top],
+                ],
+                true,
+            );
+            // the thrusters, in the steering flat
+            let r =
+                (a.thruster_room * THRUSTER_R_ELEVATION_OF_ROOM).min(THRUSTER_R_ELEVATION_MAX_M);
+            if !a.thruster_offsets.is_empty() && r > 0.0 {
+                c.circle("EQUIP", [room_mid, r + THRUSTER_LIFT_M], r);
+                c.leader(
+                    &format!("THRUSTERS ({})", a.thruster_offsets.len()),
+                    [room_mid, THRUSTER_LIFT_M],
+                    [room_mid + 2.0 * k, -6.0 * k],
+                );
+            }
+            // Labels above the block; the lower one is the one further from the stern end. The
+            // block top, a height above the keel, is named on the label of the part that makes it.
+            let top = a.block_top.max(h.depth);
+            let block_top = format!("BLOCK TOP {}", metres(a.block_top));
+            let wheelhouse_is_top = (a.wheelhouse_top - a.block_top).abs() < 1e-9;
+            let mut units = container_label(a);
+            let mut cab = "WHEELHOUSE".to_string();
+            if wheelhouse_is_top {
+                cab = format!("{cab}, {block_top}");
+            } else {
+                units = format!("{units}, {block_top}");
+            }
+            c.leader(
+                &units,
+                [unit_row_mid, a.container_top.max(h.depth)],
+                [unit_row_mid - 5.0 * k, top + 6.0 * k],
+            );
+            c.leader(
+                &cab,
+                [wh_mid, a.wheelhouse_top],
+                [wh_mid - 5.0 * k, top + 12.0 * k],
+            );
+        }
+        View::Plan => {
+            // the container units, from the arrangement: `per_row` abreast, `rows` along
+            let per_row = a.per_row.max(1);
+            let y0 = a.container_width / 2.0 - a.side_gap;
+            for i in 0..a.container_labels.len() {
+                let (row, col) = (i / per_row, i % per_row);
+                let x0 = a.container_x0 + row as f64 * (a.row_length + a.row_gap);
+                let yc = y0 - col as f64 * (a.unit_width + a.side_gap) - a.unit_width / 2.0;
+                c.polyline(
+                    "EQUIP",
+                    &[
+                        [x0, yc - a.unit_width / 2.0],
+                        [x0 + a.row_length, yc - a.unit_width / 2.0],
+                        [x0 + a.row_length, yc + a.unit_width / 2.0],
+                        [x0, yc + a.unit_width / 2.0],
+                    ],
+                    true,
+                );
+            }
+            // the wheelhouse footprint
+            let hw = a.wheelhouse_width / 2.0;
+            c.polyline(
+                "OBJECT",
+                &[
+                    [a.wheelhouse_x0, -hw],
+                    [a.wheelhouse_x1, -hw],
+                    [a.wheelhouse_x1, hw],
+                    [a.wheelhouse_x0, hw],
+                ],
+                true,
+            );
+            // the thrusters abreast in the steering flat
+            let r = (a.thruster_room * THRUSTER_R_PLAN_OF_ROOM).min(THRUSTER_R_PLAN_MAX_M);
+            if r > 0.0 {
+                for off in &a.thruster_offsets {
+                    c.circle("EQUIP", [room_mid, *off], r);
+                }
+                if let Some(low) = a.thruster_offsets.iter().copied().reduce(f64::min) {
+                    c.leader(
+                        &format!("THRUSTERS ({})", a.thruster_offsets.len()),
+                        [room_mid, low - r],
+                        [room_mid + 2.0 * k, -h.beam / 2.0 - 6.0 * k],
+                    );
+                }
+            }
+            let top = h.beam / 2.0;
+            c.leader(
+                &container_label(a),
+                [unit_row_mid, y0],
+                [unit_row_mid - 5.0 * k, top + 6.0 * k],
+            );
+            c.leader(
+                "WHEELHOUSE",
+                [wh_mid, hw],
+                [wh_mid - 5.0 * k, top + 12.0 * k],
+            );
+        }
+    }
+}
+
+/// The label of the container units: how many abreast and how many rows, from the arrangement.
+fn container_label(a: &Aft) -> String {
+    format!("CONTAINERS ({} x {})", a.per_row, a.rows)
 }
 
 fn side_elevation(h: &Hull, n: u32) -> Canvas {
@@ -778,6 +1014,7 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
     }
     let mut labels: Vec<(String, [f64; 2])> = Vec::new();
     elevation_gas_detail(&mut c, h, &mut labels);
+    aft_block(&mut c, h, View::Elevation);
     zones(&mut c, h, View::Elevation);
     if !c.try_dim_horizontal([0.0, 0.0], [h.loa, 0.0], -DIM_OFFSET_MM) {
         labels.push((format!("LOA {}", metres(h.loa)), [h.loa, 0.0]));
@@ -879,6 +1116,7 @@ fn plan(h: &Hull, n: u32) -> Canvas {
             }
         }
     }
+    aft_block(&mut c, h, View::Plan);
     zones(&mut c, h, View::Plan);
     let overshoot = 4.0 * c.k;
     c.centre_line([-overshoot, 0.0], [h.loa + overshoot, 0.0]);
@@ -1163,6 +1401,7 @@ fn document(h: &Hull, title: &str, build: fn(&Hull, u32) -> Canvas) -> Result<Va
             "WATER",
             "HATCH",
             "ZONE",
+            "EQUIP",
         ]
         .iter()
         .map(|n| json!({"name": n}))
