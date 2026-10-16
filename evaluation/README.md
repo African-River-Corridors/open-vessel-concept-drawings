@@ -5,13 +5,51 @@ The runner (added in the second part of phase 0, issue #184) runs every case thr
 compares verdicts, so that a disagreement shows whether the rule or the code is wrong. See
 `ROADMAP.md`, "Evaluation harness".
 
-This folder holds, so far:
+This folder holds:
 
 - `cases/`: the corpus (format below).
+- `mutants.yaml`: the boundary mutants, generated from the cases by `oracle/mutants.py`.
+- `run.py`: the runner. `results.md`: its generated report.
 - `oracle/box_oracle.py`: an independent calculation of the IS Code criteria for a box section. It
   never calls the engine and shares no code with it.
 - `oracle/write_cases.py`: writes the base case files from the oracle. Expected values of a derived
   case are printed by the oracle, never typed by hand. `--check` fails if a file differs.
+
+## Run it
+
+    python3 evaluation/run.py            # run every case and mutant; write evaluation/results.md
+    python3 evaluation/run.py --check    # what CI runs
+
+CI runs `--check` on every pull request, in the `test` job. **A false pass fails the build**: the
+engine passes a criterion a case expects to fail. A false fail (the engine fails a criterion expected to
+pass) and a coverage gap (a criterion with no passing or no failing case) are warning annotations, as
+the Calibration Bands are (issue #119). A `results.md` that is not what the run writes also fails.
+`results.md` reports the false-fail rate, the false-pass rate and the per-criterion coverage.
+
+## Boundary mutants
+
+`oracle/mutants.py` makes the mutants; none is written by hand. For each base case and each of the six
+criteria it sets the criterion's governing value to its limit plus and minus a step (so each criterion
+is tested from both sides), with a big step and a small one:
+
+- A **big step** is above the engine's grid error (the trapezoid rule on a 1 degree grid, and a
+  whole-degree angle). The engine must get its verdict right.
+- A **small step** is inside the grid error on purpose and has `grid: true`. Grid criteria are run and
+  listed, but never counted as a false fail or a false pass.
+
+The steps: areas 0.002 m rad (small 0.00002), GZ 0.01 m (0.0001), angle 2 degrees (0.2), GM 0.005 m (0.001;
+the engine's GM is exact). A criterion whose expected margin is inside its grid tolerance (areas 0.0005
+m rad, GZ 0.002 m, angle 1 degree, GM 1e-6 m) is marked `grid: true` for that mutant, whichever criterion
+the mutant targets. The tolerances are above the largest engine error seen on the corpus
+(`tests/test_evaluation_runner.py` checks it).
+
+Which input moves: **KG** for GM, the three areas and GZ at 30 degrees or more (at fixed displacement GZ
+changes by -dKG x sin(phi), so GM moves by -dKG and each area by -dKG x (cos a0 - cos a1); the oracle
+finds the KG, by bisection for GZ at 30 degrees); **depth** for the angle of maximum GZ (a lower depth
+brings the deck edge under sooner, and the oracle finds the depth by bisection). The expected verdict of
+all six criteria is recorded for every mutant, from the oracle. When no KG on the hull (between keel and
+deck) crosses a limit, as for box A (whose margins are large), the mutant is not made and `results.md`
+lists it.
 
 ## Why phase 0 uses particulars
 
@@ -57,13 +95,25 @@ Every source is opened and read before a number from it is used. Cite or skip.
    `derived`: worked out by the oracle, which is checked against closed forms (GM = KB + BM - KG and
    the wall-sided GZ formula) in `tests/test_evaluation_oracle.py`.
 
-**Cases with an external published source for the inputs: none yet.** A generic barge in a 2022 open
-access paper on the second generation intact stability guidelines (Marlantes, Kim and Hurt,
-*J. Mar. Sci. Eng.* 10(1), 41, <https://doi.org/10.3390/jmse10010041>, CC BY 4.0) was planned as a
-published case. The publisher refused the page and the PDF (HTTP 403), so the numbers could not be
-checked and none is recorded here. A search for another free worked example of a box-like hull with a
-published IS Code 2.2 verdict found none. The corpus therefore counts two derived cases and no
-published ones. A published case is added only when its source has been opened and its page recorded.
+3. **The generic barge** (`cases/generic_barge.yaml`). Marlantes, K. E.; Kim, S.; Hurt, L. A. (authors as
+   printed on the paper), "Implementation of the IMO Second Generation Intact Stability Guidelines",
+   *J. Mar. Sci. Eng.* 2022, 10(1), 41, published 30 December 2021, <https://doi.org/10.3390/jmse10010041>,
+   licence CC BY 4.0 (<https://creativecommons.org/licenses/by/4.0/>; attribution to these authors).
+   Section 5.1, "Barge": "a simple uniform rectangular cross section". Table 3 (principal dimensions):
+   L 100.00 m, B 20.00 m, D 10.00 m, full draught 5.00 m, CB 1.00, CM 1.00. Table 4 (loading condition):
+   draughts aft and fore 5 m, KG 7 m, **GM 2.167 m**, volumetric displacement 10 000 m3, and the angle at
+   which openings immerse, 40 degrees (so the 2.2.1 areas run to 40 degrees unchanged). Table 5 is the
+   second generation dead-ship level 1 check, not an IS Code 2.2 check, and is not used. *How it was read:*
+   in a browser by the maintainer's build coordinator on 2026-10-16, because the publisher blocks scripted
+   downloads (HTTP 403). The inputs are `published`; the paper gives no IS Code 2.2 verdict, so the verdicts
+   are `derived` by the oracle. The published GM is a cited intermediate value: KB 2.5 + BM 6.667 - KG 7 =
+   2.167, and the oracle and the engine both reproduce it to the printed three decimals
+   (`tests/test_evaluation_oracle.py`).
+
+**Cases with an external published source for the inputs: one** (`generic_barge`, verdicts derived),
+beside **two derived** cases. A search for another free worked example of a box-like hull with a published
+IS Code 2.2 verdict found none. A published case is added only when its source has been opened and its
+page or section recorded.
 
 ## Assumptions of the oracle
 
