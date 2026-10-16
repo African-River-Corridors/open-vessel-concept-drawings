@@ -91,6 +91,12 @@ class BargeCapacityInputs:
     # space twice.
     self_propelled: bool = True
     # Aft void of a PUSHED barge (m): stern rake plus the coupling/steering void. ESTIMATE.
+    # Issue #180. Propulsion of the default stern block when `aft` is None:
+    # "battery_electric" (0.1.0) or "gas_fuelled" (gas gensets, no battery). A given `aft`
+    # must agree.
+    propulsion: str = "battery_electric"
+    # Gas-fuelled: load (kWe) the gensets carry with one in reserve; selects the genset.
+    electrical_load_kwe: Optional[float] = None
     pushed_stern_void_m: float = 3.0
     # Bow bottom rake (m). None -> 1.6 x moulded depth. ESTIMATE: no rake is surveyed or
     # specified for this vessel; it is carried as an input so it can be replaced, not
