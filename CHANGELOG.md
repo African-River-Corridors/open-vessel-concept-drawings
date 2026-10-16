@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## 0.2.3 (2026-10-16)
+
+Highlights, since 0.2.2:
+
+- The web app. OVCD now also runs in the browser, at `/ovcd/app`, with no install. The engine is compiled to WebAssembly and runs fully in the page. Its results hashes equal the native ones.
+- Gas tanks follow the IGC Code only. One rule set, `IGC_2G`, sets the side clearance per tank. The inland type-G checks are gone.
+- A new calculations table lists each rule check with its working.
+- A capital budget is worked out from 14 cost rates, which are now inputs.
+- 38 more design values are inputs, for the dry-bulk hold, the hull ends, the gas tank arrangement, the waterway and the aft block (thrusters, battery and accommodation units).
+- The search for the best gas arrangement now returns a design that meets every check, stability included.
+- A gas-fuelled self-propelled stern, with gas gensets and the accommodation beside the wheelhouse.
+- The general arrangement drawings show much more of the hull and tanks, and their labels and leaders are easier to read.
+- The Views tabs fit to the panel, zoom and pan, and the side panels can be hidden.
+- An evaluation harness tests the checks against a corpus, and the calibration now has held-out cases.
+- The app has a new look: style guide, tokens, fonts, icon, splash, app bar and tabs, input and output panels, charts and the drawing canvas. It has light and dark themes and follows the system setting by default.
+
+Notes:
+
 - 17 aft block values are now inputs, in a new "Aft block" group (issue #4, fourth slice), for a self-propelled Formation only: `thruster_count` (3, the most the beam takes), `thruster_envelope_m` (2.6 m), `thruster_clearance_m` (0.6 m), `thruster_room_length_m` (3.5 m), `battery_unit_count` and `accommodation_unit_count` (default by Cargo phase: gas 1 and 2, dry bulk 2 and 1), `unit_height_m` (2.896 m, a high-cube 40 ft unit), `unit_side_gap_m` (0.9 m), `unit_row_gap_m` (0.8 m), `unit_foundation_m` (0.3 m), `wheelhouse_length_m` (3.6 m), `wheelhouse_width_m` (6.4 m), `wheelhouse_height_m` (3.4 m), `wheelhouse_gap_m` (0.3 m), `wheelhouse_eye_height_m` (1.5 m), `sightline_margin_m` (0.5 m) and `wheelhouse_max_lift_m` (6 m). Each default is the value the engine used before. A self-propelled file that lacks them opens with the same values, marked `default`, with one warning; a pushed file has none of them. The gas search carries the values to every candidate. The ISO container length and width, the genset data and the gas-fuelled stern allowances stay in the engine (propulsion is not yet an input). Not a design change: no calculation result moves. The evaluation entry point `fit` accepts the new values under the core's names.
 - Design change (issue #264): `fit` returns the arrangement with the most cargo among those that meet every check, stability included (IS Code 2008 Part A 2.2, each loading condition). Before, it ranked by cargo and ran stability afterwards, so it could return a design that failed it. If no arrangement passes, `feasible` is false, the closest candidate (fewest failed checks, then most cargo) comes back, and `failed_checks` lists what it fails. The before/after table is under "Design changes" below.
   - The check list of the search is one place, `gas_arrangement.rs` ("THE CHECKS THE SEARCH USES"; the rules engine, #176, will replace it): the capacity, journey and gas-separation checks the engine already ran, tank length over diameter, the air draft limit (new `FitOptions::air_draft_limit_m`, passed from `air_draft_limit_m`), freeboard at the carried draught (new `required_freeboard_m`, passed from `freeboard_min_m`), and stability. Cheap checks run first; stability runs only for the candidates that pass them, from the most cargo down. A check of warning severity (the wheelhouse sightline, for one) is advisory and does not gate, as before.
@@ -79,6 +97,12 @@
 - Fix: `ovcd fill` sets `engine_version` to this engine when it writes a results hash (and writes none beside a hash from another version). The hash warning now says "results differ from the hash saved in the file". A stored hash must be 64 hex digits, compared without regard to case; an empty `engine_version` is an error. No calculation result changes (#137).
 - Change: `ovcd run` exits 0 for a valid file whose only gap is an Option that is not yet computable (a pushed convoy). The "convoy results not yet available" message stays in the summary and goes to stderr as a warning. In `--json` each Option has a `status`: `results`, `not_yet_supported` or `failed`. A hash stored on a convoy Option gets a note that it is not checked. Hard errors and failed computations still exit 1. No calculation result changes (#138).
 - Fix: a `.vdesign` file with a duplicate JSON key (anywhere in the file) is now a hard validation error that names the key, instead of silently taking the last value. No calculation result changes (#139).
+- Web app (issues #245 and #266): `ovcd-web` is the Design session compiled to WebAssembly, with a platform adapter and a web build of the app. The release gate checks that the fixture results hashes match on WebAssembly under wasmtime. No calculation result changes.
+- App restyle, so far (issues #248, #250, #251, #255, #257): a style guide, tokens, bundled fonts, a new icon, splash and first-run notice, a new app bar, panel toggles, theme control and two-level tabs, and new input fields with source tags. The theme setting `Auto` shows light until the restyle is complete. No calculation result changes.
+- Views (issues #234, #235): tabs, fit to the panel with zoom and pan, and hide the side panels; a click on a point of the power and speed curves reads its values. Intact stability shows GZ curves with marks from the engine (#236), and a rule check calculations table was added with two Intact stability fixes (#232).
+- GA views (issues #192 to #198, #213, #214): the drawing is an object in `simulate` results; tank, double bottom, wing tanks, voids, cradles, domes, cofferdam, zone limits, the dry-bulk hold and the aft block are drawn; a failed-checks note sits in the strip; leaders in a column do not cross and labels keep clear of each other and the frame.
+- Evaluation harness (issue #184): a box-condition check, an oracle, a corpus format, a mutant set, a runner and a CI gate. The corpus includes the Navy LCU, empty and loaded, from published inputs.
+- Calibration (issue #3): 126 cited held-out cases (62 and 64), with an out-of-sample section in `calibration/results.md`.
 
 ## 0.2.2 (2026-10-15)
 

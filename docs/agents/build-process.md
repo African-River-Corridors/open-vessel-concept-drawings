@@ -78,6 +78,8 @@ changes every day. So it is a separate activity, never a gate on a merge:
 
 Installers are built and published only on purpose (issue #173; `tools/release_plan.py` decides):
 
+During development the app makes 0.2.x patch releases only. Version 0.3 is reserved for the first release shared with expert reviewers, and any minor bump needs the maintainer.
+
 - **A version bump.** A merge to `main` that changes `version` in `pyproject.toml` publishes the
   pre-release `v<version>`, tagged at that commit. Bump the version in every place the version test
   names, and add a `## <version>` section to `CHANGELOG.md` (its text is the release notes; the release

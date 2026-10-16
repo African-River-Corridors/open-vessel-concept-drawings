@@ -1,6 +1,6 @@
 [project]
 name = "vessel-designer"
-version = "0.2.2"
+version = "0.2.3"
 description = "Concept design of inland and coastal cargo vessels: GA, characteristics, BOQ, cost — calibrated on real vessels."
 requires-python = ">=3.12"
 license = "Apache-2.0"
