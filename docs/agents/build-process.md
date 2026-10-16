@@ -38,10 +38,9 @@ ticket whose blockers are all closed, and no other. For each ticket:
    `issue-tracker.md` first. The comment is the home of the notes; the PR body stays the home of the
    evidence for each ticked criterion. Large outputs (a calibration run, say) go in the PR as a file
    or a pasted block, not only in the comment.
-6. **Mutation run, after the merge.** A background mutation run on the merged change starts and the
-   builder moves on without waiting. Its findings are reviewed later; the builder does not fix them.
 
-There is no mutation test and no per-ticket reviewer before a merge.
+Mutation testing is **not part of the build**: no mutation run before or after a merge, and no
+per-ticket reviewer before a merge. See "Hardening pass" below.
 
 ## After the build: adversarial review
 
@@ -54,6 +53,26 @@ Separate review sessions read what was merged:
 3. Each verified finding, and each mutation finding that changes a public output, becomes a fix-forward
    issue (a sub-issue of the spec's issue, labelled `ready-for-agent`). A builder fixes it under the
    same gates.
+
+## Hardening pass (mutation testing)
+
+Mutation testing checks whether the tests would notice a change to the code. It does not check whether
+an answer is right; the oracles do that (the design-impact check, Calibration Bands, the evaluation
+harness). It pays off on code whose behaviour is settled, and it slows iteration on code that still
+changes every day. So it is a separate activity, never a gate on a merge:
+
+- **When:** once per release, before the version bump, or weekly, whichever comes first.
+- **What:** only **stable** modules: files unchanged on `main` for about two weeks, or listed as stable by
+  the maintainer. Code still under active change is skipped.
+- **How:** one run per module on a detached worktree at a fixed `main` commit, with capped concurrency.
+  Never stop another session's processes.
+- **Output:** one batch of issues. A surviving mutant that shows a **wrong answer** is a `bug`,
+  `ready-for-agent`. A test gap is an `enhancement` under the test-gap epic. An equivalent mutant is
+  recorded with its reason in the batch's summary comment.
+- Acceptance criteria of the form "`cargo mutants` no longer reports …" are checked by the next
+  hardening pass, not by the builder.
+- **Exception:** mutation of **rule data** (moving a limit or coefficient to check that some evaluation
+  case notices) is part of the evaluation harness, not of this pass.
 
 ## Releases
 
