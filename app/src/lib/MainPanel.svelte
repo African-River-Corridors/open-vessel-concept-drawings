@@ -4,6 +4,7 @@
   import HullView from "./HullView.svelte";
   import SpeedPower from "./views/SpeedPower.svelte";
   import Stability from "./views/Stability.svelte";
+  import RuleChecks from "./views/RuleChecks.svelte";
 
   // The hull views are SVG drawn in Rust to the Drawing Format Standard (ADR 0009, spec 0003); the
   // panel only places and zooms them.
@@ -48,7 +49,7 @@
   ];
   const HULL = ["side", "plan", "midship"];
   /** Views that show results of the Option, and so can be out of date. */
-  const FROM_RESULTS = [...HULL, "stability", "speed-power"];
+  const FROM_RESULTS = [...HULL, "stability", "speed-power", "rules"];
   type HullKey = "side" | "plan" | "midship";
 
   let groupId = $state(GROUPS[0].id);
@@ -144,7 +145,13 @@
         {/key}
       {/if}
     {:else if current === "rules"}
-      <p class="note" data-testid="placeholder-rules">The rule check table is coming soon. The checks for now are in the Outputs panel.</p>
+      {#if message}
+        <p class="note">{message}</p>
+      {:else if !results}
+        <p class="note">No results to show.</p>
+      {:else}
+        <RuleChecks checks={(results as { checks?: { name: string; ok: boolean; message: string }[] }).checks ?? []} />
+      {/if}
     {:else if current === "boq"}
       <p class="note" data-testid="placeholder-boq">The bill of quantities comes in a later phase.</p>
     {:else if current === "capital"}
