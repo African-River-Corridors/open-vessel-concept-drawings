@@ -20,12 +20,16 @@ To add a case, give it a `confidence`; it is banded from then on.
 
 A case with a `held_out` marker (a one-line reason) is run and banded but **never used to fit** k or Cb:
 `fit_factors` drops it, so `factors.yaml` does not move when held-out cases are added. The 62 cases
-added for issue #3 are all held out. Each carries the source text as printed (`published`), a `source`
-that starts with an id in `sources.yaml` (`web_sources`), and what the research note suggested
-(`note_suggests`).
+added for issue #3 from the research note are all held out, and so are 64 more found by follow-up
+research the same day (`found_by`, no `note_suggests`). Each carries the source text as printed (`published`), a `source`
+that starts with an id in `sources.yaml` (`web_sources`), and, for the note's 62, what the
+research note suggested (`note_suggests`).
 
 - **Deck barges** have `hold_type: deck` and `run_as: box`. The core has no deck model, so they run
   with the box k and box Cb. This tests whether the box model carries over. There is no deck factor.
+- **Pontoons** (`hold_type: pontoon`, `run_as: box`) are flat-top pontoon barges from the follow-up batch.
+  They run as box barges and get their own summary group, "pontoon (run as box)". A published DWT with
+  no draught is kept as `observed.dwt_t_draught_not_stated` and in `published`; it is never banded.
 - **`water_density_t_m3`** (1.025 for sea-going or saltwater figures) sets the density of the predicted
   DWT. Left out, it is 1.000.
 - **`not_yet_runnable_cases`** (tank, gas and the motor container point) have no hull model in the
