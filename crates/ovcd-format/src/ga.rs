@@ -76,11 +76,18 @@ const RATIOS: [u32; 20] = [
 const DIM_OFFSET_MM: f64 = 12.0;
 /// Room that a dimension or label needs beyond the geometry on its side, in millimetres.
 const DIM_ROOM_MM: f64 = 6.0;
-/// Spacing of stacked labels, in millimetres.
+/// Spacing of stacked labels, in millimetres: the text height and a gap of 2.5 mm.
 const LABEL_STEP_MM: f64 = 6.0;
-/// A safe width for one character of label text at height 3.5, in millimetres. The labels are capital
-/// letters, digits and a few signs, which average 2.3 mm; the window only needs to be generous.
-const CHAR_MM: f64 = 2.5;
+/// The text height of a leader label (clause 12.6), in millimetres.
+const LABEL_TEXT_MM: f64 = 3.5;
+/// The gap from the label point to the text of a leader (half a unit, clause 12.6).
+const LEADER_TEXT_GAP_MM: f64 = 0.9;
+/// Clear room kept round every label text in the window, in millimetres. With the window's own 3 mm
+/// it keeps a label 6.5 mm inside the frame, clear of the centring marks, which reach 5 mm into the
+/// drawing space (clause 6.4) wherever a label stands along the side.
+const LABEL_CLEAR_MM: f64 = 3.5;
+/// The most passes of the swap that uncrosses the leaders of a column.
+const UNCROSS_PASSES: usize = 100;
 /// Room kept under the drawing for the scale bar, in millimetres.
 const BAR_ROOM_MM: f64 = 26.0;
 /// The shortest dimension line that has room for its arrowheads, in millimetres (clause 12.4.3 asks
@@ -685,38 +692,110 @@ impl Canvas {
     }
 
     /// A leader to `target` with its label at `label_at`; the text stands to the right of the label
-    /// point when it is right of the target, to the left otherwise.
+    /// point when it is right of the target, to the left otherwise. The window takes in the text
+    /// box of the standard (clause 11.7), not an estimate of it.
     fn leader(&mut self, text: &str, target: [f64; 2], label_at: [f64; 2]) {
         self.extend(target);
-        let width = (text.chars().count() as f64 * CHAR_MM + 2.0) * self.k;
+        let right = label_at[0] >= target[0];
+        let reach = (LEADER_TEXT_GAP_MM + text_width_mm(text) + LABEL_CLEAR_MM) * self.k;
+        let half = (LABEL_TEXT_MM / 2.0 + LABEL_CLEAR_MM) * self.k;
         self.extend([
-            label_at[0]
-                + if label_at[0] >= target[0] {
-                    width
-                } else {
-                    -width
-                },
-            label_at[1] + 4.0 * self.k,
+            label_at[0] + if right { reach } else { -reach },
+            label_at[1] + half,
         ]);
-        self.extend([label_at[0], label_at[1] - 4.0 * self.k]);
+        self.extend([label_at[0], label_at[1] - half]);
         self.entities.push(json!({"type": "leader", "layer": "ANNO", "from": {"point_m": pt(target)}, "label_at_m": pt(label_at), "text": text}));
     }
 
-    /// Labels in a column at `x`, one under another from the highest target, each at least one
-    /// step below the one above, so that the texts do not touch. Leaders run level or downward.
+    /// Labels in a column at `x`, with the text standing outside the column and the leaders running
+    /// in to the targets. The labels keep their order by target height and a gap of one step from
+    /// the real text height; each stands as near its target as the gap allows (the least-squares
+    /// spread of `spread_slots`). Where two leaders still cross, the two labels swap places: a swap
+    /// of two crossing leaders always makes their total length shorter, so the loop ends, and when
+    /// it ends no two leaders of the column cross.
     fn label_column(&mut self, x: f64, labels: &mut [(String, [f64; 2])]) {
         labels.sort_by(|a, b| {
             b.1[1]
                 .partial_cmp(&a.1[1])
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
-        let mut previous = f64::INFINITY;
-        for (text, target) in labels.iter() {
-            let y = target[1].min(previous - LABEL_STEP_MM * self.k);
-            self.leader(text, *target, [x, y]);
-            previous = y;
+        let wanted: Vec<f64> = labels.iter().map(|l| l.1[1]).collect();
+        let slots = spread_slots(&wanted, LABEL_STEP_MM * self.k);
+        let mut order: Vec<usize> = (0..labels.len()).collect();
+        // order[i] is the label that stands at slot i
+        for _ in 0..UNCROSS_PASSES {
+            let mut swapped = false;
+            for i in 0..order.len() {
+                for j in i + 1..order.len() {
+                    let a = (labels[order[i]].1, [x, slots[i]]);
+                    let b = (labels[order[j]].1, [x, slots[j]]);
+                    if segments_cross(a, b) {
+                        order.swap(i, j);
+                        swapped = true;
+                    }
+                }
+            }
+            if !swapped {
+                break;
+            }
+        }
+        for (slot, &label) in order.iter().enumerate() {
+            let (text, target) = &labels[label];
+            self.leader(text, *target, [x, slots[slot]]);
         }
     }
+}
+
+/// The width of a label text on paper, in millimetres, from the width table of the standard
+/// (clause 11.7.1). A character that the table lacks takes the widest capital's room.
+fn text_width_mm(text: &str) -> f64 {
+    ovcd_draw::rules::text_width_exact(text, LABEL_TEXT_MM)
+        .unwrap_or(text.chars().count() as f64 * LABEL_TEXT_MM)
+}
+
+/// The heights of the label slots for targets at heights `wanted` (highest first): each slot is at
+/// least `step` below the one above, and as near its target as that allows, in the least-squares
+/// sense. Slot `i + 1` less slot `i` is at most `-step`, so with `z = slot + i * step` the `z` run
+/// down, and the nearest such `z` come from pooling neighbours that break the order.
+fn spread_slots(wanted: &[f64], step: f64) -> Vec<f64> {
+    // blocks of (sum of z, count)
+    let mut blocks: Vec<(f64, f64)> = Vec::new();
+    for (i, w) in wanted.iter().enumerate() {
+        blocks.push((w + i as f64 * step, 1.0));
+        while blocks.len() > 1 {
+            let n = blocks.len();
+            let (last, before) = (blocks[n - 1], blocks[n - 2]);
+            if last.0 / last.1 <= before.0 / before.1 {
+                break;
+            }
+            blocks.truncate(n - 2);
+            blocks.push((last.0 + before.0, last.1 + before.1));
+        }
+    }
+    let mut z = Vec::with_capacity(wanted.len());
+    for (sum, count) in blocks {
+        for _ in 0..count as usize {
+            z.push(sum / count);
+        }
+    }
+    z.iter()
+        .enumerate()
+        .map(|(i, z)| z - i as f64 * step)
+        .collect()
+}
+
+/// Do two leader segments (target first, label point second) cross, or touch other than at a common
+/// target point?
+fn segments_cross(a: ([f64; 2], [f64; 2]), b: ([f64; 2], [f64; 2])) -> bool {
+    if (a.0[0] - b.0[0]).abs() < 1e-9 && (a.0[1] - b.0[1]).abs() < 1e-9 {
+        return false;
+    }
+    let side = |o: [f64; 2], p: [f64; 2], q: [f64; 2]| {
+        (p[0] - o[0]) * (q[1] - o[1]) - (p[1] - o[1]) * (q[0] - o[0])
+    };
+    let (d1, d2) = (side(b.0, b.1, a.0), side(b.0, b.1, a.1));
+    let (d3, d4) = (side(a.0, a.1, b.0), side(a.0, a.1, b.1));
+    d1 * d2 <= 0.0 && d3 * d4 <= 0.0
 }
 
 fn metres(x: f64) -> String {
@@ -791,8 +870,8 @@ enum View {
 
 /// The longitudinal zones, in elevation and plan: the limits of the cargo zone (dashed ZONE lines,
 /// not physical), the cofferdam of a gas hull (its two bulkheads, hidden under the deck) and the
-/// forward equipment zone, each named by a leader above the hull.
-fn zones(c: &mut Canvas, h: &Hull, view: View) {
+/// forward equipment zone, each named by a leader (the forward zone's goes in the caller's column of labels).
+fn zones(c: &mut Canvas, h: &Hull, view: View, labels: &mut Vec<(String, [f64; 2])>) {
     let (lo, hi) = match view {
         View::Elevation => (0.0, h.depth),
         View::Plan => (-h.beam / 2.0, h.beam / 2.0),
@@ -805,7 +884,6 @@ fn zones(c: &mut Canvas, h: &Hull, view: View) {
             c.line("ZONE", a, b, None);
         }
     }
-    let above = hi + 10.0 * c.k;
     if let Some((cofferdam, aft)) = h.separation
         && cofferdam > 0.0
     {
@@ -822,8 +900,8 @@ fn zones(c: &mut Canvas, h: &Hull, view: View) {
     }
     if h.bow_void > 0.0 {
         let mid = h.loa - h.bow_void / 2.0;
-        // the text stands to the right of the label point, over the bow
-        c.leader("FWD EQUIP.", [mid, hi], [mid + 2.0 * c.k, above]);
+        // named in the column of the bow labels, with the others, so that the texts keep apart
+        labels.push(("FWD EQUIP.".to_string(), [mid, hi]));
     }
 }
 
@@ -1050,7 +1128,7 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
     let mut labels: Vec<(String, [f64; 2])> = Vec::new();
     elevation_gas_detail(&mut c, h, &mut labels);
     aft_block(&mut c, h, View::Elevation);
-    zones(&mut c, h, View::Elevation);
+    zones(&mut c, h, View::Elevation, &mut labels);
     if !c.try_dim_horizontal([0.0, 0.0], [h.loa, 0.0], -DIM_OFFSET_MM) {
         labels.push((format!("LOA {}", metres(h.loa)), [h.loa, 0.0]));
     }
@@ -1152,10 +1230,10 @@ fn plan(h: &Hull, n: u32) -> Canvas {
         }
     }
     aft_block(&mut c, h, View::Plan);
-    zones(&mut c, h, View::Plan);
+    let mut labels: Vec<(String, [f64; 2])> = Vec::new();
+    zones(&mut c, h, View::Plan, &mut labels);
     let overshoot = 4.0 * c.k;
     c.centre_line([-overshoot, 0.0], [h.loa + overshoot, 0.0]);
-    let mut labels: Vec<(String, [f64; 2])> = Vec::new();
     if !c.try_dim_horizontal([0.0, y0], [h.loa, y0], -DIM_OFFSET_MM) {
         labels.push((format!("LOA {}", metres(h.loa)), [h.loa, y0]));
     }
@@ -1386,9 +1464,9 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
     if let Some(t) = h.light_draught {
         labels.push((format!("LIGHT DRAUGHT {}", metres(t)), [-half, t]));
     }
-    // labels run to the left of the hull
-    let column = -half - 2.0 * DIM_OFFSET_MM * c.k;
-    c.label_column(column, &mut labels);
+    // The labels stand in one column to the left of the hull. The right side holds the dimensions,
+    // and a leader from beyond them would run through their lines and figures.
+    c.label_column(-half - 2.0 * DIM_OFFSET_MM * c.k, &mut labels);
     c
 }
 
