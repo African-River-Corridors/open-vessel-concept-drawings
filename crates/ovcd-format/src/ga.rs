@@ -60,6 +60,13 @@ const SHEET: (f64, f64, f64, f64) = (20.0, 10.0, 390.0, 277.0);
 /// The height of the notes strip at the bottom of the sheet: the heading, two notes and the status
 /// line on its last line (clauses 14.9 and 14.10.1).
 const STRIP_MM: f64 = 21.0;
+/// The pitch of the notes in a strip (clause 14.10.1).
+const NOTE_PITCH_MM: f64 = 4.5;
+/// The most characters of a note: the schema allows 120. 120 capitals at height 2.5 are well under
+/// the width of the strip (390 mm).
+const NOTE_MAX_CHARS: usize = 120;
+/// The most lines the failed checks may take; beyond it the note gives the count alone.
+const FAIL_NOTES_MAX: usize = 3;
 /// The ratios of the standard (clauses 7.3.1 and 7.3.4), smallest denominator first.
 const RATIOS: [u32; 20] = [
     1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 1250, 2000, 2500, 5000, 10000, 20000, 50000,
@@ -122,6 +129,8 @@ struct Hull {
     /// The aft block of a self-propelled hull (`drawing.aft_arrangement`); `None` for a pushed
     /// barge. Its x is measured from the stern, as the hull's x is.
     aft: Option<Aft>,
+    /// The names of the checks that fail (`results.checks` with `ok` false), as plain capitals.
+    failed_checks: Vec<String>,
     containment: Containment,
 }
 
@@ -146,6 +155,31 @@ struct Aft {
     wheelhouse_floor: f64,
     wheelhouse_top: f64,
     block_top: f64,
+}
+
+/// The names of the failed checks, in the plain capitals a note allows: an em dash becomes a hyphen,
+/// an underscore a space, and any other character outside printable ASCII is dropped.
+fn failed_checks(results: &Value) -> Vec<String> {
+    let Some(checks) = results.get("checks").and_then(Value::as_array) else {
+        return Vec::new();
+    };
+    checks
+        .iter()
+        .filter(|c| c.get("ok").and_then(Value::as_bool) == Some(false))
+        .map(|c| {
+            let name = c.get("name").and_then(Value::as_str).unwrap_or("CHECK");
+            let plain: String = name
+                .chars()
+                .filter_map(|ch| match ch {
+                    '\u{2014}' | '\u{2013}' | '\u{2212}' => Some('-'),
+                    '_' => Some(' '),
+                    ch if (' '..='~').contains(&ch) => Some(ch.to_ascii_uppercase()),
+                    _ => None,
+                })
+                .collect();
+            plain.split_whitespace().collect::<Vec<_>>().join(" ")
+        })
+        .collect()
 }
 
 fn read_aft(results: &Value) -> Option<Aft> {
@@ -316,6 +350,7 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
             &["drawing", "separation", "aft_separation_m"],
         )),
         aft: read_aft(results),
+        failed_checks: failed_checks(results),
         containment,
     })
 }
@@ -1370,26 +1405,75 @@ fn window_of(c: &Canvas) -> [f64; 4] {
     ]
 }
 
-/// The frame of the viewport: the drawing space less the strip of notes.
-fn frame() -> (f64, f64, f64, f64) {
-    (SHEET.0, SHEET.1, SHEET.2, SHEET.3 - STRIP_MM)
+/// The notes for a design that fails checks: the count and the names, packed into lines. A note is
+/// at most 120 characters (the schema) and is never cut or made smaller (clause 14.6), so the names
+/// run on over several notes; with more than `FAIL_NOTES_MAX` of them the count alone is given.
+fn failed_notes(failed: &[String]) -> Vec<String> {
+    if failed.is_empty() {
+        return Vec::new();
+    }
+    let count = failed.len();
+    let plural = if count == 1 { "CHECK" } else { "CHECKS" };
+    let head = format!("DESIGN FAILS {count} {plural}");
+    let mut lines: Vec<String> = Vec::new();
+    let mut current = format!("{head}:");
+    for (i, name) in failed.iter().enumerate() {
+        let sep = if i + 1 < count { "," } else { "" };
+        let piece = format!(" {name}{sep}");
+        if current.chars().count() + piece.chars().count() > NOTE_MAX_CHARS {
+            lines.push(std::mem::replace(&mut current, "  ".to_string()));
+            // a name that cannot stand on a line of its own: give the count alone
+            if piece.chars().count() + 1 > NOTE_MAX_CHARS {
+                return vec![head];
+            }
+            current.push_str(piece.trim_start());
+        } else {
+            current.push_str(&piece);
+        }
+    }
+    lines.push(current);
+    if lines.len() > FAIL_NOTES_MAX {
+        return vec![head];
+    }
+    lines
 }
 
-fn fits(window: [f64; 4], n: u32) -> bool {
+/// The height of the strip of notes (clause 14.10.1): the heading, the notes at one pitch each, and
+/// the status line on the last line; never under the usual strip.
+fn strip_mm(notes: usize) -> f64 {
+    (12.0 + NOTE_PITCH_MM * notes as f64).max(STRIP_MM)
+}
+
+/// The frame of the viewport: the drawing space less the strip of notes.
+fn frame(strip: f64) -> (f64, f64, f64, f64) {
+    (SHEET.0, SHEET.1, SHEET.2, SHEET.3 - strip)
+}
+
+fn fits(window: [f64; 4], n: u32, strip: f64) -> bool {
     let k = 1000.0 / f64::from(n);
-    let (_, _, fw, fh) = frame();
+    let (_, _, fw, fh) = frame(strip);
     (window[2] - window[0]) * k <= fw + 1e-9 && (window[3] - window[1]) * k <= fh + 1e-9
 }
 
 /// Build one view at the largest scale at which everything fits.
 fn document(h: &Hull, title: &str, build: fn(&Hull, u32) -> Canvas) -> Result<Value, String> {
+    let mut notes = vec![format!("{title}. DIMENSIONS IN METRES.")];
+    let what = format!("{}; {}", h.vessel, h.cargo);
+    if what.len() > 2
+        && what.chars().all(|c| (' '..='~').contains(&c))
+        && what.chars().count() <= 100
+    {
+        notes.push(what);
+    }
+    notes.extend(failed_notes(&h.failed_checks));
+    let strip = strip_mm(notes.len());
     for n in RATIOS {
         let canvas = build(h, n);
         let window = window_of(&canvas);
-        if !fits(window, n) {
+        if !fits(window, n, strip) {
             continue;
         }
-        let (fx, fy, fw, fh) = frame();
+        let (fx, fy, fw, fh) = frame(strip);
         let layers: Vec<Value> = [
             "OUTLINE",
             "OBJECT",
@@ -1406,20 +1490,12 @@ fn document(h: &Hull, title: &str, build: fn(&Hull, u32) -> Canvas) -> Result<Va
         .iter()
         .map(|n| json!({"name": n}))
         .collect();
-        let mut notes = vec![format!("{title}. DIMENSIONS IN METRES.")];
-        let what = format!("{}; {}", h.vessel, h.cargo);
-        if what.len() > 2
-            && what.chars().all(|c| (' '..='~').contains(&c))
-            && what.chars().count() <= 100
-        {
-            notes.push(what);
-        }
         return Ok(json!({
             "standard_version": "1.0",
             "sheet": {"size": "A3", "orientation": "landscape"},
             "layers": layers,
             "status": "concept",
-            "strips": [{"id": "notes", "edge": "bottom", "size_mm": STRIP_MM, "content": "notes"}],
+            "strips": [{"id": "notes", "edge": "bottom", "size_mm": strip, "content": "notes"}],
             "notes": notes,
             "viewports": [{
                 "id": "main",
