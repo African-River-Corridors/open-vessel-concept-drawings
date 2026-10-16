@@ -5,13 +5,51 @@ The runner (added in the second part of phase 0, issue #184) runs every case thr
 compares verdicts, so that a disagreement shows whether the rule or the code is wrong. See
 `ROADMAP.md`, "Evaluation harness".
 
-This folder holds, so far:
+This folder holds:
 
 - `cases/`: the corpus (format below).
+- `mutants.yaml`: the boundary mutants, generated from the cases by `oracle/mutants.py`.
+- `run.py`: the runner. `results.md`: its generated report.
 - `oracle/box_oracle.py`: an independent calculation of the IS Code criteria for a box section. It
   never calls the engine and shares no code with it.
 - `oracle/write_cases.py`: writes the base case files from the oracle. Expected values of a derived
   case are printed by the oracle, never typed by hand. `--check` fails if a file differs.
+
+## Run it
+
+    python3 evaluation/run.py            # run every case and mutant; write evaluation/results.md
+    python3 evaluation/run.py --check    # what CI runs
+
+CI runs `--check` on every pull request, in the `test` job. **A false pass fails the build**: the
+engine passes a criterion a case expects to fail. A false fail (the engine fails a criterion expected to
+pass) and a coverage gap (a criterion with no passing or no failing case) are warning annotations, as
+the Calibration Bands are (issue #119). A `results.md` that is not what the run writes also fails.
+`results.md` reports the false-fail rate, the false-pass rate and the per-criterion coverage.
+
+## Boundary mutants
+
+`oracle/mutants.py` makes the mutants; none is written by hand. For each base case and each of the six
+criteria it sets the criterion's governing value to its limit plus and minus a step (so each criterion
+is tested from both sides), with a big step and a small one:
+
+- A **big step** is above the engine's grid error (the trapezoid rule on a 1 degree grid, and a
+  whole-degree angle). The engine must get its verdict right.
+- A **small step** is inside the grid error on purpose and has `grid: true`. Grid criteria are run and
+  listed, but never counted as a false fail or a false pass.
+
+The steps: areas 0.002 m rad (small 0.00002), GZ 0.01 m (0.0001), angle 2 degrees (0.2), GM 0.005 m (0.001;
+the engine's GM is exact). A criterion whose expected margin is inside its grid tolerance (areas 0.0005
+m rad, GZ 0.002 m, angle 1 degree, GM 1e-6 m) is marked `grid: true` for that mutant, whichever criterion
+the mutant targets. The tolerances are above the largest engine error seen on the corpus
+(`tests/test_evaluation_runner.py` checks it).
+
+Which input moves: **KG** for GM, the three areas and GZ at 30 degrees or more (at fixed displacement GZ
+changes by -dKG x sin(phi), so GM moves by -dKG and each area by -dKG x (cos a0 - cos a1); the oracle
+finds the KG, by bisection for GZ at 30 degrees); **depth** for the angle of maximum GZ (a lower depth
+brings the deck edge under sooner, and the oracle finds the depth by bisection). The expected verdict of
+all six criteria is recorded for every mutant, from the oracle. When no KG on the hull (between keel and
+deck) crosses a limit, as for box A (whose margins are large), the mutant is not made and `results.md`
+lists it.
 
 ## Why phase 0 uses particulars
 
