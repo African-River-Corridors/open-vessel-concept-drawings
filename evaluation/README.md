@@ -95,13 +95,25 @@ Every source is opened and read before a number from it is used. Cite or skip.
    `derived`: worked out by the oracle, which is checked against closed forms (GM = KB + BM - KG and
    the wall-sided GZ formula) in `tests/test_evaluation_oracle.py`.
 
-**Cases with an external published source for the inputs: none yet.** A generic barge in a 2022 open
-access paper on the second generation intact stability guidelines (Marlantes, Kim and Hurt,
-*J. Mar. Sci. Eng.* 10(1), 41, <https://doi.org/10.3390/jmse10010041>, CC BY 4.0) was planned as a
-published case. The publisher refused the page and the PDF (HTTP 403), so the numbers could not be
-checked and none is recorded here. A search for another free worked example of a box-like hull with a
-published IS Code 2.2 verdict found none. The corpus therefore counts two derived cases and no
-published ones. A published case is added only when its source has been opened and its page recorded.
+3. **The generic barge** (`cases/generic_barge.yaml`). Marlantes, K. E.; Kim, S.; Hurt, L. A. (authors as
+   printed on the paper), "Implementation of the IMO Second Generation Intact Stability Guidelines",
+   *J. Mar. Sci. Eng.* 2022, 10(1), 41, published 30 December 2021, <https://doi.org/10.3390/jmse10010041>,
+   licence CC BY 4.0 (<https://creativecommons.org/licenses/by/4.0/>; attribution to these authors).
+   Section 5.1, "Barge": "a simple uniform rectangular cross section". Table 3 (principal dimensions):
+   L 100.00 m, B 20.00 m, D 10.00 m, full draught 5.00 m, CB 1.00, CM 1.00. Table 4 (loading condition):
+   draughts aft and fore 5 m, KG 7 m, **GM 2.167 m**, volumetric displacement 10 000 m3, and the angle at
+   which openings immerse, 40 degrees (so the 2.2.1 areas run to 40 degrees unchanged). Table 5 is the
+   second generation dead-ship level 1 check, not an IS Code 2.2 check, and is not used. *How it was read:*
+   in a browser by the maintainer's build coordinator on 2026-10-16, because the publisher blocks scripted
+   downloads (HTTP 403). The inputs are `published`; the paper gives no IS Code 2.2 verdict, so the verdicts
+   are `derived` by the oracle. The published GM is a cited intermediate value: KB 2.5 + BM 6.667 - KG 7 =
+   2.167, and the oracle and the engine both reproduce it to the printed three decimals
+   (`tests/test_evaluation_oracle.py`).
+
+**Cases with an external published source for the inputs: one** (`generic_barge`, verdicts derived),
+beside **two derived** cases. A search for another free worked example of a box-like hull with a published
+IS Code 2.2 verdict found none. A published case is added only when its source has been opened and its
+page or section recorded.
 
 ## Assumptions of the oracle
 

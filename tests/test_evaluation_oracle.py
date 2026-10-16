@@ -22,7 +22,7 @@ from vessel_designer.core.gas_stability import assess, box_gz  # noqa: E402
 sys.path.insert(0, str(ROOT / "evaluation"))
 from engine import box_condition  # noqa: E402
 
-CASES = sorted((ROOT / "evaluation" / "cases").glob("box_*.yaml"))
+CASES = sorted((ROOT / "evaluation" / "cases").glob("*.yaml"))
 KEYS = ["area_0_30", "area_0_40", "area_30_40", "gz_30_plus", "angle_max_gz", "gm"]
 ENGINE_NAMES = ["Area 0–30°", "Area 0–40°", "Area 30–40°",
                 "GZ at ≥ 30°", "Angle of max GZ", "Initial GM (fluid)"]
@@ -85,6 +85,7 @@ def test_a_case_file_has_the_documented_fields(path):
     """Label: property - every case has inputs, an expected verdict per criterion and provenance."""
     case = yaml.safe_load(path.read_text(encoding="utf-8"))
     assert case["id"] == path.stem and case["kind"] == "box"
+    assert case["provenance"].get("inputs_basis")
     assert case["inputs"]["form"] == "particulars" and "vdesign" in case["inputs"]
     assert list(case["expected"]) == KEYS
     for e in case["expected"].values():
@@ -130,3 +131,20 @@ def test_box_condition_needs_a_draught_below_the_depth():
     """Label: property - a draught at or above the depth is a refused input, not a curve."""
     with pytest.raises(ValueError):
         box_condition(14.0, 5.0, 5.0, 3.0)
+
+
+def test_the_generic_barge_reproduces_the_published_gm():
+    """Label: sourced - Marlantes, Kim and Hurt, J. Mar. Sci. Eng. 2022, 10(1), 41, section 5.1,
+    Tables 3 and 4: L 100, B 20, D 10, d 5, KG 7 m give GM 2.167 m. KB 2.5 + BM 400/60 = 6.667, less KG 7, is 2.167."""
+    case = yaml.safe_load((ROOT / "evaluation" / "cases" / "generic_barge.yaml").read_text(encoding="utf-8"))
+    i = case["inputs"]
+    assert (i["length_m"], i["beam_m"], i["depth_m"], i["draught_m"], i["kg_m"]) == (100.0, 20.0, 10.0, 5.0, 7.0)
+    assert i["downflooding_angle_deg"] == 40.0
+    cited = case["provenance"]["cited_values"]["gm_m"]
+    assert cited == 2.167
+    # KB 2.5 + BM 6.667 - KG 7, to the printed three decimals: by hand, by the oracle, by the engine.
+    assert round(2.5 + 20.0 ** 2 / (12 * 5.0) - 7.0, 3) == cited
+    assert round(oracle.gm(20.0, 5.0, 7.0), 3) == cited
+    engine = box_condition(20.0, 10.0, 5.0, 7.0)
+    assert round(engine.gm_fluid_m, 3) == cited
+    assert case["provenance"]["inputs_basis"] == "published" and case["provenance"]["verdict_basis"] == "derived"

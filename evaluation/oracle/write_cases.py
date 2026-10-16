@@ -33,6 +33,26 @@ SOURCE_RULES = (
     "to 2.2.4 (printed pages 11 and 12): the limits."
 )
 
+PAPER = {
+    "citation": "Marlantes, K. E.; Kim, S.; Hurt, L. A. Implementation of the IMO Second Generation "
+                "Intact Stability Guidelines. J. Mar. Sci. Eng. 2022, 10(1), 41, published 30 December "
+                "2021, https://doi.org/10.3390/jmse10010041 (authors as printed on the paper)",
+    "locator": "section 5.1, Tables 3 and 4",
+    "licence": "CC BY 4.0, https://creativecommons.org/licenses/by/4.0/ (attribution: the authors above)",
+    "read": "read in a browser by the maintainer's build coordinator, 2026-10-16; a scripted download "
+            "returns HTTP 403",
+    "as_printed": {
+        "section": "5.1, a simple uniform rectangular cross section",
+        "table_3_principal_dimensions": {"L_m": 100.0, "B_m": 20.0, "D_m": 10.0, "d_full_m": 5.0,
+                                          "CB": 1.0, "CM": 1.0},
+        "table_4_loading_condition": {"d_aft_m": 5.0, "d_fore_m": 5.0, "KG_m": 7.0, "GM_m": 2.167,
+                                       "volumetric_displacement_m3": 10000.0,
+                                       "downflooding_angle_phi_f_deg": 40.0},
+        "not_used": "Table 5 is the second generation dead-ship level 1 check, not IS Code 2.2",
+    },
+    "cited_values": {"gm_m": 2.167},
+}
+
 BASE_CASES = [
     {
         "id": "box_a",
@@ -45,6 +65,14 @@ BASE_CASES = [
         "title": "Box barge B, small margins",
         "L": 100.0, "B": 14.0, "D": 8.0, "T": 5.0, "KG": 5.5,
         "note": "GM 0.267 m, areas within 0.025 m rad of their limits, angle of maximum GZ about 31.6 degrees.",
+    },
+    {
+        "id": "generic_barge",
+        "title": "Generic barge of Marlantes, Kim and Hurt (2022), section 5.1",
+        "L": 100.0, "B": 20.0, "D": 10.0, "T": 5.0, "KG": 7.0,
+        "note": "A simple uniform rectangular cross section. The paper gives no IS Code 2.2 verdict: the "
+                "verdicts here are derived by the oracle. The published GM (2.167 m) is a cited check.",
+        "published": PAPER,
     },
 ]
 
@@ -96,6 +124,28 @@ def case_document(c: dict) -> dict:
             "verdict": "pass" if e["ok"] else "fail",
             "value": sig(e["value"]), "limit": e["limit"], "margin": sig(e["margin"]),
         }
+    published = c.get("published")
+    prov = {
+        "verdict_basis": "derived",
+        "inputs_basis": "chosen for this corpus (not from a publication)",
+        "source": "evaluation/oracle/box_oracle.py (exact polygon GZ, Simpson areas) and "
+                  + SOURCE_RULES,
+        "edition": "2008 IS Code, MSC.267(85)",
+        "locator": "Part A 2.2.1 to 2.2.4, printed pages 11 and 12",
+        "licence": "inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text",
+        "confidence": "high for the verdicts (the oracle is checked against closed forms); the case is not an external published example",
+        "note": c["note"],
+    }
+    if published:
+        prov["inputs_basis"] = "published"
+        prov["inputs_source"] = {k: published[k] for k in ("citation", "locator", "licence", "read", "as_printed")}
+        prov["cited_values"] = published["cited_values"]
+        prov["licence"] = ("inputs: " + published["licence"] + "; oracle: this repository (see LICENSE); "
+                           "the limits are quoted from the IMO text")
+        prov["confidence"] = ("high for the inputs (read from Tables 3 and 4 as printed); high for the verdicts "
+                              "(derived by the oracle, which is checked against closed forms). The paper gives no "
+                              "IS Code 2.2 verdict, so `verdict_basis` is derived. The published GM is a cited "
+                              "check that the oracle and the engine reproduce")
     return {
         "id": c["id"],
         "title": c["title"],
@@ -105,19 +155,10 @@ def case_document(c: dict) -> dict:
             "vdesign": None,
             "length_m": c["L"], "beam_m": c["B"], "depth_m": c["D"], "draught_m": c["T"],
             "kg_m": c["KG"], "water_density_t_m3": 1.0, "free_surface_m": 0.0,
+            **({"downflooding_angle_deg": 40.0} if published else {}),
         },
         "expected": expected,
-        "provenance": {
-            "verdict_basis": "derived",
-            "inputs_basis": "chosen for this corpus (not from a publication)",
-            "source": "evaluation/oracle/box_oracle.py (exact polygon GZ, Simpson areas) and "
-                      + SOURCE_RULES,
-            "edition": "2008 IS Code, MSC.267(85)",
-            "locator": "Part A 2.2.1 to 2.2.4, printed pages 11 and 12",
-            "licence": "inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text",
-            "confidence": "high for the verdicts (the oracle is checked against closed forms); the case is not an external published example",
-            "note": c["note"],
-        },
+        "provenance": prov,
     }
 
 

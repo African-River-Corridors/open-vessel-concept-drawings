@@ -120,7 +120,7 @@ def report(result: dict) -> str:
     cases, per, t = result["cases"], result["per"], totals(result)
     base = [c for c in cases if "mutant" not in c]
     mutants = [c for c in cases if "mutant" in c]
-    external = [c for c in base if c["provenance"]["verdict_basis"] == "published"]
+    external = [c for c in base if c["provenance"].get("inputs_basis") == "published"]
     skipped = []
     if MUTANTS.exists():
         skipped = yaml.safe_load(MUTANTS.read_text(encoding="utf-8")).get("skipped", [])
@@ -136,8 +136,10 @@ def report(result: dict) -> str:
         "",
         f"- Cases: {len(base)} base cases and {len(mutants)} generated boundary mutants "
         f"({len(skipped)} possible mutants skipped because no KG on the hull crosses the limit).",
-        f"- Base cases with an external published source for the inputs: **{len(external)}**. "
-        f"Derived by the oracle: {len(base) - len(external)}.",
+        f"- Base cases with an external published source for the inputs: **{len(external)}** "
+        f"({', '.join('`' + c['id'] + '`' for c in external) or 'none'}; its verdicts are still derived by the "
+        f"oracle, the source gives no IS Code 2.2 verdict). Derived entirely by the oracle: "
+        f"{len(base) - len(external)}.",
         f"- Criterion verdicts compared (outside the grid error): {t['known_good'] + t['known_bad']} "
         f"({t['known_good']} expected to pass, {t['known_bad']} expected to fail).",
         f"- **False fails** (engine fails a known-good criterion): {t['false_fails']} "
@@ -166,10 +168,14 @@ def report(result: dict) -> str:
         out.append(f"- false fail: `{i}`, {LABELS[k]}")
     for k, i in passes:
         out.append(f"- false pass: `{i}`, {LABELS[k]}")
-    out += ["", "## Base cases", "", "| Case | Verdict basis | Source |", "|---|---|---|"]
+    out += ["", "## Base cases", "", "| Case | Inputs basis | Verdict basis | Source |", "|---|---|---|---|"]
     for c in base:
         pv = c["provenance"]
-        out.append(f"| `{c['id']}` | {pv['verdict_basis']} | {pv['edition']}, {pv['locator']} |")
+        src = f"{pv['edition']}, {pv['locator']}"
+        if "inputs_source" in pv:
+            src = f"inputs: {pv['inputs_source']['locator']} of the paper cited in README.md; limits: {src}"
+        out.append(f"| `{c['id']}` | {'published' if pv.get('inputs_basis') == 'published' else 'chosen'} | "
+                   f"{pv['verdict_basis']} | {src} |")
     if skipped:
         out += ["", "## Mutants not generated", "",
                 "A limit that no physical input crosses has no mutant (the KG would have to be above the deck).", ""]
