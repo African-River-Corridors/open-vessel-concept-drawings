@@ -123,7 +123,6 @@ fn the_capacity_calculation_puts_the_formula_on_the_steel_diameter() {
     };
     let r = compute(&gas(design, None)).unwrap();
     let basis = r.gas_basis.as_ref().unwrap();
-    assert!(basis.inputs.wall_formula_on_steel_diameter);
     let steel = r.tank_outer_diameter_m.unwrap() - 0.4;
     let want = calculate_wall_thicknesses(
         steel,

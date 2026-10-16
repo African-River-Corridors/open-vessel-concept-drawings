@@ -584,7 +584,14 @@ fn gas_volumetric(
         tank_wall_thickness_mm: Some(tanks.cylinder_wall_thickness),
         tank_inner_diameter_m: Some(tanks.inner_diameter),
         gas_basis: Some(GasBasis {
-            inputs: bi,
+            // The two calculation-only switches of issue #292 go back to their defaults: the stored
+            // inputs are the ones the Python API's `BargeInputs` has, and a result written as JSON
+            // and read back must be the same result.
+            inputs: BargeInputs {
+                wall_formula_on_steel_diameter: false,
+                tank_allowable_stress: None,
+                ..bi
+            },
             tanks: tanks.clone(),
             weights,
         }),
