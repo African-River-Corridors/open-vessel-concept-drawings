@@ -131,7 +131,7 @@ describe("OVCD app smoke tests", () => {
     ["Stability & Propulsion", ["Intact stability", "Power and speed curves", "Rule check calculations"]],
     ["BOQ & Finance", ["BOQ", "Capital budget"]],
   ];
-  const tab = (label) => browser.$(`button[role=tab]=${label}`);
+  const tab = (label) => browser.$(`//button[@role="tab" and normalize-space()="${label}"]`);
   const slug = (label) => label.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "");
 
   /** Show a view: its top tab, then its sub-tab. */
