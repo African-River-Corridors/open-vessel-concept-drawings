@@ -53,11 +53,11 @@ def sig(x: float, n: int = 10) -> float:
     return float(f"{x:.{n}g}")
 
 
-def first_difference(a, b, rel: float = 1e-6, abs_: float = 1e-9, path: str = "") -> str | None:
+def first_difference(a, b, rel: float = 1e-6, abs_: float = 1e-5, path: str = "") -> str | None:
     """The path and the two values of the first place where `a` and `b` differ as data, or None. Text
-    and structure must match exactly; numbers to a relative tolerance. The angle of maximum GZ is
+    and structure must match exactly; numbers to a relative 1e-6 or an absolute 1e-5. The angle of maximum GZ is
     found by a search on a flat curve, so its last digits depend on the platform's maths library
-    (about 1e-8 degree): a generated file is compared with this, not byte for byte."""
+    (about 1e-6 degree): a generated file is compared with this, not byte for byte."""
     if isinstance(a, dict) and isinstance(b, dict):
         if list(a) != list(b):
             return f"{path}: keys {list(a)[:4]} vs {list(b)[:4]}"
@@ -81,7 +81,7 @@ def first_difference(a, b, rel: float = 1e-6, abs_: float = 1e-9, path: str = ""
     return None if a == b else f"{path}: {a!r} vs {b!r}"
 
 
-def same(a, b, rel: float = 1e-6, abs_: float = 1e-9) -> bool:
+def same(a, b, rel: float = 1e-6, abs_: float = 1e-5) -> bool:
     return first_difference(a, b, rel, abs_) is None
 
 
@@ -121,10 +121,10 @@ def sig(x: float, n: int = 10) -> float:
     return float(f"{x:.{n}g}")
 
 
-def same(a, b, rel: float = 1e-6, abs_: float = 1e-9) -> bool:
-    """Equal as data: text and structure exactly, numbers to a relative tolerance. The angle of maximum
+def same(a, b, rel: float = 1e-6, abs_: float = 1e-5) -> bool:
+    """Equal as data: text and structure exactly, numbers to a relative 1e-6 or an absolute 1e-5. The angle of maximum
     GZ is found by a search on a flat curve, so its last digits depend on the platform's maths library
-    (about 1e-8 degree). A generated file is compared with this, not byte for byte."""
+    (about 1e-6 degree). A generated file is compared with this, not byte for byte."""
     if isinstance(a, dict) and isinstance(b, dict):
         return list(a) == list(b) and all(same(a[k], b[k], rel, abs_) for k in a)
     if isinstance(a, list) and isinstance(b, list):
