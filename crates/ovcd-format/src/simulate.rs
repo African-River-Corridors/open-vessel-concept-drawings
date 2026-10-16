@@ -12,12 +12,13 @@
 //! `simulate` (every `ValueError` from the gas path) is a recorded error.
 
 use crate::EvalError;
-use crate::eval::{checks_json, num, ok, raised};
+use crate::eval::{aft_json, checks_json, gas_separation_json, num, ok, raised};
 use crate::gas_stability::condition_json;
 use ovcd_core::barge_capacity::{self, BargeCapacityInputs, BargeCapacityResult};
 use ovcd_core::cargo::{CARGO_DATABASE, CargoProperties};
 use ovcd_core::checks::Check;
 use ovcd_core::gas_arrangement::{self as ga, DEFAULT_DEPTHS_M, FitOptions, RULESETS};
+use ovcd_core::gas_separation::GasSeparationInputs;
 use ovcd_core::gas_stability::{self as gs, GasCapacityResult};
 use ovcd_core::pyfmt::{fixed, py_str};
 use ovcd_core::pystr::{parse_float, repr_str};
@@ -351,6 +352,91 @@ fn opt_num(x: Option<f64>) -> Value {
 }
 
 /// `simulate(params)`.
+/// The structural values the core already computes, for the GA view (#192). Nothing is worked out
+/// here: each key is read from the core's result or inputs, and is `null` where the core has no
+/// such value on this path.
+///
+/// - Gas: the double bottom, support, dome and wing tank values come from the converged
+///   arrangement (`gas_basis`); `null` for a hull too small to hold one.
+/// - `separation` is the core's gas separation result (gas only). `opening_setback_m` and
+///   `fwd_end_bulkhead_m` are the separation inputs it was computed from.
+/// - `aft_arrangement` is the core's aft block: `null` for a pushed barge, which has none.
+/// - Dry bulk: `double_bottom_m` is the inner bottom height, `hatch_coaming_height_m` the coaming.
+fn structure_json(
+    r: &BargeCapacityResult,
+    separation_inputs: Option<&GasSeparationInputs>,
+    dry: Option<&BargeCapacityInputs>,
+) -> Vec<(&'static str, Value)> {
+    let basis = r.gas_basis.as_ref().map(|b| &b.inputs);
+    let sep_in = separation_inputs.cloned().unwrap_or_default();
+    let is_gas = r.separation.is_some();
+    vec![
+        (
+            "double_bottom_m",
+            match (basis, dry) {
+                (Some(b), _) => opt_num(b.double_bottom_height),
+                (None, Some(i)) => num(i.double_bottom_height_bulk),
+                _ => Value::Null,
+            },
+        ),
+        (
+            "hatch_coaming_height_m",
+            dry.map_or(Value::Null, |i| num(i.coaming_height)),
+        ),
+        (
+            "tank_support_height_m",
+            basis.map_or(Value::Null, |b| num(b.tank_support_height)),
+        ),
+        (
+            "dome_height_m",
+            basis.map_or(Value::Null, |b| num(b.dome_height)),
+        ),
+        (
+            "wing_tank_width_m",
+            basis.map_or(Value::Null, |b| opt_num(b.wing_tank_width)),
+        ),
+        (
+            "wing_tank_gap_m",
+            basis.map_or(Value::Null, |b| num(b.wing_tank_gap)),
+        ),
+        (
+            "opening_setback_m",
+            if is_gas {
+                num(sep_in.opening_setback_m)
+            } else {
+                Value::Null
+            },
+        ),
+        (
+            "fwd_end_bulkhead_m",
+            if is_gas {
+                num(sep_in.fwd_end_bulkhead_m)
+            } else {
+                Value::Null
+            },
+        ),
+        (
+            "separation",
+            r.separation
+                .as_ref()
+                .map_or(Value::Null, gas_separation_json),
+        ),
+        (
+            "aft_arrangement",
+            r.aft_arrangement.as_ref().map_or(Value::Null, aft_json),
+        ),
+    ]
+}
+
+fn with_structure(mut geo: Value, extra: Vec<(&'static str, Value)>) -> Value {
+    if let Some(m) = geo.as_object_mut() {
+        for (k, v) in extra {
+            m.insert(k.to_string(), v);
+        }
+    }
+    geo
+}
+
 fn simulate(p: &Map<String, Value>) -> R<Value> {
     let vessel_id = match p.get("vessel") {
         None => "box_barge",
@@ -450,6 +536,7 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
         "hold_bottom_width_m": opt_num(r.hold_bottom_width_m),
         "insulation_thickness_mm": opt_num(r.insulation_thickness_mm),
     });
+    let geo = with_structure(geo, structure_json(&r, inp.separation.as_ref(), Some(&inp)));
     Ok(json!({
         "vessel": label,
         "cargo": cargo.name,
@@ -679,6 +766,10 @@ fn simulate_gas(
         "bottom_clearance_m": opt_num(r.bottom_clearance_m),
         "insulation_thickness_mm": opt_num(r.insulation_thickness_mm),
     });
+    let geo = with_structure(
+        geo,
+        structure_json(r, f.engine_inputs.separation.as_ref(), None),
+    );
     let air_loaded = r.air_draft_top_above_keel_m - t;
     Ok(json!({
         "vessel": label,
