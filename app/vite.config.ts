@@ -6,11 +6,10 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 const { version } = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
 
 export default defineConfig({
-  define: { __APP_VERSION__: JSON.stringify(version) },
+  // The desktop bundle holds the Tauri adapter only (the web build sets __OVCD_WEB__ to true).
+  define: { __APP_VERSION__: JSON.stringify(version), __OVCD_WEB__: false },
   plugins: [svelte()],
   clearScreen: false,
-  // The desktop bundle holds the Tauri adapter only (the web build sets this to true).
-  define: { __OVCD_WEB__: false },
   // The font file lives in the drawing crate's vendored standard, one folder up from the app.
   server: { port: 1420, strictPort: true, watch: { ignored: ["**/src-tauri/**"] }, fs: { allow: [".."] } },
 });
