@@ -164,6 +164,14 @@ fn the_dome_diameter_is_a_gas_tank_input_with_a_basis_and_a_range() {
 }
 
 #[test]
+fn the_profile_basis_of_the_ruleset_cites_the_two_paragraphs() {
+    let basis = Profile::built_in().basis("ruleset").to_string();
+    assert!(basis.contains("IGC Code 2.4.1.1"), "{basis}");
+    assert!(basis.contains("IGC 2.4.2"), "{basis}");
+    assert!(basis.contains("excluding insulation"), "{basis}");
+}
+
+#[test]
 fn the_profile_basis_of_the_dome_diameter_says_what_it_is_and_cites_the_rule() {
     let basis = Profile::built_in()
         .basis("tank_dome_diameter_m")
