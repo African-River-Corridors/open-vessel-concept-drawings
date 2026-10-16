@@ -70,12 +70,14 @@ def test_a_false_fail_is_only_a_warning(tmp_path):
 
 
 def test_a_coverage_gap_is_only_a_warning(tmp_path):
-    """Label: property - with no mutants only the base cases run; every criterion expected to pass and
-    none to fail is a coverage gap: warnings, exit 0."""
+    """Label: property - with no mutants only the base cases run. Every criterion is expected to pass in
+    them except the angle of maximum GZ, which the loaded LCU fails: the other five are coverage gaps
+    (warnings, exit 0) and the angle is not."""
     cases, _, results = corpus_copy(tmp_path)
     r = run_runner("--cases", str(cases), "--mutants", str(tmp_path / "none.yaml"), "--results", str(results))
     assert r.returncode == 0, r.stdout
-    assert r.stdout.count("::warning title=Evaluation coverage gap") == 6
+    assert r.stdout.count("::warning title=Evaluation coverage gap") == 5
+    assert "Angle of max GZ (2.2.3) has no" not in r.stdout
 
 
 def test_a_stale_results_file_fails_the_check(tmp_path):

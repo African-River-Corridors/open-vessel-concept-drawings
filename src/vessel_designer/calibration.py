@@ -19,7 +19,9 @@ The runner calls the core through the `vessel_designer.core` modules, which run 
 from __future__ import annotations
 
 import math
+import os
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -30,10 +32,36 @@ from vessel_designer.core.resistance import (EnvironmentInputs, ResistanceInputs
                                              compute as resistance)
 
 ROOT = Path(__file__).resolve().parents[2]
-CAL = ROOT / "calibration"
+# The calibration folder. Importing this module reads no file, so it imports from an installed wheel,
+# where ROOT is in site-packages (issue #217): set OVCD_CALIBRATION_DIR there. A caller may also set CAL.
+CAL = Path(os.environ.get("OVCD_CALIBRATION_DIR") or ROOT / "calibration")
 RHO_FRESH = 1.0
 KMH_PER_KN = 1.852
-BANDS = yaml.safe_load((CAL / "bands.yaml").read_text())
+
+
+class _Bands(Mapping):
+    """`CAL / "bands.yaml"`, read when first used and again when CAL names another folder."""
+
+    def __init__(self):
+        self._path, self._data = None, None
+
+    def _load(self) -> dict:
+        if self._path != CAL / "bands.yaml":
+            self._data = yaml.safe_load((CAL / "bands.yaml").read_text(encoding="utf-8"))
+            self._path = CAL / "bands.yaml"
+        return self._data
+
+    def __getitem__(self, key):
+        return self._load()[key]
+
+    def __iter__(self):
+        return iter(self._load())
+
+    def __len__(self):
+        return len(self._load())
+
+
+BANDS = _Bands()
 
 
 # --- Independent lightship estimators (published, not ours) --------------------------------
@@ -175,7 +203,7 @@ def run_motor(cargo: str, r: list, speed_kmh: float) -> MotorRow:
 # --- Calibration Bands -----------------------------------------------------------------------
 
 def load_cases() -> dict:
-    return yaml.safe_load((CAL / "cases.yaml").read_text())
+    return yaml.safe_load((CAL / "cases.yaml").read_text(encoding="utf-8"))
 
 
 @dataclass
@@ -482,7 +510,7 @@ def report() -> str:
                    f"{fmt(pct(r.dwt_cal, o.get('dwt_t')), 1)} | {infit} | "
                    f"{' | '.join(_band_cells(checks, c['id'], 'dwt_t'))} |")
 
-    src = yaml.safe_load((CAL / "cn_yangtze_gb38030_draft_2018.yaml").read_text())
+    src = yaml.safe_load((CAL / "cn_yangtze_gb38030_draft_2018.yaml").read_text(encoding="utf-8"))
     mrows = []
     for cargo in ("bulk", "liquid"):
         dp = src["design_points"][cargo]
@@ -508,9 +536,9 @@ def main(out_dir: Path = CAL) -> None:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     cases = load_cases()
-    (out_dir / "factors.yaml").write_text(factors_yaml(fit_factors(cases["dry_barge"])))
-    (out_dir / "results.md").write_text(report())
-    print((out_dir / "results.md").read_text())
+    (out_dir / "factors.yaml").write_text(factors_yaml(fit_factors(cases["dry_barge"])), encoding="utf-8")
+    (out_dir / "results.md").write_text(report(), encoding="utf-8")
+    print((out_dir / "results.md").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

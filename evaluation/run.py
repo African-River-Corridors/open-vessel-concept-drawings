@@ -137,8 +137,8 @@ def report(result: dict) -> str:
         f"- Cases: {len(base)} base cases and {len(mutants)} generated boundary mutants "
         f"({len(skipped)} possible mutants skipped because no KG on the hull crosses the limit).",
         f"- Base cases with an external published source for the inputs: **{len(external)}** "
-        f"({', '.join('`' + c['id'] + '`' for c in external) or 'none'}; its verdicts are still derived by the "
-        f"oracle, the source gives no IS Code 2.2 verdict). Derived entirely by the oracle: "
+        f"({', '.join('`' + c['id'] + '`' for c in external) or 'none'}; their verdicts are still derived by the "
+        f"oracle, the sources give no IS Code 2.2 verdict). Derived entirely by the oracle: "
         f"{len(base) - len(external)}.",
         f"- Criterion verdicts compared (outside the grid error): {t['known_good'] + t['known_bad']} "
         f"({t['known_good']} expected to pass, {t['known_bad']} expected to fail).",

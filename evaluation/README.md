@@ -110,10 +110,36 @@ Every source is opened and read before a number from it is used. Cite or skip.
    2.167, and the oracle and the engine both reproduce it to the printed three decimals
    (`tests/test_evaluation_oracle.py`).
 
-**Cases with an external published source for the inputs: one** (`generic_barge`, verdicts derived),
-beside **two derived** cases. A search for another free worked example of a box-like hull with a published
-IS Code 2.2 verdict found none. A published case is added only when its source has been opened and its
-page or section recorded.
+4. **The Navy LCU** (`cases/lcu_empty.yaml`, `cases/lcu_loaded.yaml`). US Naval Academy, Naval
+   Architecture and Ocean Engineering Department, *EN400 Principles of Ship Performance, Course Notes*,
+   Version: Summer 2020,
+   <https://www.usna.edu/NAOE/_files/documents/Courses/EN400/EN400_Course_Notes_Summer_2020.pdf>.
+   Chapter 4 (Stability), end-of-chapter problem 33, printed page 4-51 (PDF page 190 of 484). *Licence:*
+   not stated; course notes of a US federal academy, likely a US Government work (17 U.S.C. 105), not
+   verified. Only numbers are used; the PDF is not committed. *How it was read:* downloaded and read with
+   `pdftotext` on 2026-10-16. Printed: "A Navy LCU can be modeled as a rectangular, box-shaped barge", length
+   135 ft, beam 35 ft, depth 7 ft, deck 7 ft above the keel, gunwales 4 ft above the deck; draft 4, 5, 6 ft
+   with KM 27.5, 22.9, 20.0 ft and TPI 11.25 LT/in. Empty: draft 4 ft, KG 1.9 ft. Loaded to maximum capacity
+   with 3 M-60 tanks, 60 LT each, centre of gravity 4 ft above the deck.
+   - `lcu_empty`: draft 4 ft, KG 1.9 ft. Cited value: KM 27.5 ft (a box gives 27.52), GM 25.6 ft.
+   - `lcu_loaded`: the draft and the KG are worked from the printed numbers (the arithmetic is in the case
+     file, `worked_from_printed`): the notes derive TPI = Awp/420 from 64 lb/ft3 (so 35 ft3 per long ton);
+     180 LT / 11.25 LT per inch = 16 in, so the draft is 5.333 ft; the empty displacement is 540 LT (the box
+     at 4 ft); KG = (540 x 1.9 + 180 x 11) / 720 = 4.175 ft. The printed KM at 5 ft (22.9) and 6 ft (20.0)
+     bracket the box KM at 5.333 ft (21.81); linear interpolation of the printed table gives 21.93, a little
+     higher, because the curve is convex.
+   - Feet are converted to metres with 0.3048. The deck edge is at the depth, 7 ft: the gunwales that
+     extend 4 ft above the deck are not watertight hull and are not modelled. The source gives no
+     downflooding angle, so none is set. Parts (d) to (g) of the problem (water on deck) are not used.
+   - The notes give no IS Code 2.2 verdict. The verdicts are `derived` by the oracle and recorded as it
+     gives them; no input is adjusted to make a verdict pass. The loaded LCU fails 2.2.3 (the angle of
+     maximum GZ is 23.4 degrees: a wide shallow box loses its righting lever when the deck edge goes under).
+
+**Cases with an external published source for the inputs: three** (`generic_barge`, `lcu_empty`,
+`lcu_loaded`), with verdicts **derived** by the oracle in every case, because no free source with a
+published IS Code 2.2 verdict for a box-like hull was found. **Two** cases (box A, box B) are derived
+entirely. A published case is added only when its source has been opened and its page or section
+recorded.
 
 ## Assumptions of the oracle
 

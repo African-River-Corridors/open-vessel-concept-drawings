@@ -72,9 +72,9 @@ provenance:
   locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
   licence: 'inputs: CC BY 4.0, https://creativecommons.org/licenses/by/4.0/ (attribution: the authors
     above); oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
-  confidence: high for the inputs (read from Tables 3 and 4 as printed); high for the verdicts (derived
-    by the oracle, which is checked against closed forms). The paper gives no IS Code 2.2 verdict, so
-    `verdict_basis` is derived. The published GM is a cited check that the oracle and the engine reproduce
+  confidence: high for the inputs (read from the source as printed); high for the verdicts (derived by
+    the oracle, which is checked against closed forms). The source gives no IS Code 2.2 verdict, so `verdict_basis`
+    is derived. The cited values are checks that the oracle and the engine reproduce
   note: 'A simple uniform rectangular cross section. The paper gives no IS Code 2.2 verdict: the verdicts
     here are derived by the oracle. The published GM (2.167 m) is a cited check.'
   inputs_source:
