@@ -25,5 +25,6 @@ pub use session::{
     DesignSession, Evaluation, Message, OpenReport, OptionEvaluation, Scope, Severity, input_schema,
 };
 pub use vdesign::{
-    Checked, Design, DesignOption, Report, Source, StoredInput, check, fill, new_design,
+    Checked, Design, DesignOption, Report, Source, StoredInput, check, fill, fill_as_new,
+    new_design,
 };

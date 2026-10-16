@@ -105,8 +105,16 @@ fn a_version_1_adn_g_file_still_opens_as_igc_2g() {
 fn igc_2g_exact_is_not_a_choice_and_the_profile_default_is_igc_2g() {
     let profile = Profile::built_in();
     assert_eq!(profile.default("ruleset"), Some(&json!("IGC_2G")));
+    // Issue #292: the fill ratio is a table by Cargo and carriage condition, 98 % (IGC 15.3).
+    let context = [
+        ("cargo_containment", "type_c_tanks"),
+        ("cargo", "LNG"),
+        ("lpg_carriage_condition", ""),
+    ];
     assert_eq!(
-        profile.default_by("fill_ratio", "ruleset", "IGC_2G"),
+        profile
+            .table_default("fill_ratio", &context)
+            .map(|h| h.value),
         Some(&json!(0.98))
     );
     assert_eq!(ovcd_format::vdesign::RULESETS, ["IGC_2G"]);

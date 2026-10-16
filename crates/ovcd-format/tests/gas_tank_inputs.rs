@@ -53,7 +53,10 @@ fn core_default(name: &str) -> f64 {
         "tank_dome_height_m" => (c.dome_height, f.tank_dome_height_m),
         "wing_tank_gap_m" => (c.wing_tank_gap_m, f.wing_tank_gap_m),
         "wing_tank_height_ratio" => (c.wing_tank_height_ratio, f.wing_tank_height_ratio),
-        "tank_wall_thickness_mm" => (c.tank_wall_thickness.unwrap(), f.tank_wall_thickness_mm),
+        "tank_wall_thickness_mm" => (
+            c.tank_wall_thickness.unwrap(),
+            f.tank_wall_thickness_mm.unwrap(),
+        ),
         other => panic!("{other}"),
     };
     assert_eq!(cap, fit, "{name}: capacity default vs search default");
@@ -77,6 +80,13 @@ fn each_default_equals_the_legacy_table_value_and_the_core_default() {
             .iter()
             .find(|l| l.name == name)
             .unwrap_or_else(|| panic!("{name} is not in the legacy table"));
+        // Issue #292: the wall thickness is an optional override. The profile default is none (the
+        // formula gives the thickness); a file that lacks it keeps the 25 mm the engine used.
+        if name == "tank_wall_thickness_mm" {
+            assert_eq!(profile.default(name), Some(&Value::Null), "{name}");
+            assert_eq!(legacy.value, core_default(name), "{name}: table vs core");
+            continue;
+        }
         let from_profile = profile.default(name).and_then(Value::as_f64).unwrap();
         assert_eq!(from_profile, legacy.value, "{name}: profile vs table");
         assert_eq!(legacy.value, core_default(name), "{name}: table vs core");

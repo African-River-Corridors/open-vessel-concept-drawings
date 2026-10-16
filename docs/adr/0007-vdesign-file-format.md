@@ -73,6 +73,28 @@ save writes the current version.
   Containment), and so two rows each in the table of fixed values: an old file gets the value of its Cargo
   Containment (gas 1 and 2, dry bulk 2 and 1).
 
+- **Type C tank defaults by Cargo** (issue #292): the gas tank design values are inputs and depend on the
+  Cargo Containment, the Cargo and, for an LPG Cargo, its carriage condition (`lpg_carriage_condition`:
+  `fully_pressurised`, `semi_pressurised` or `fully_refrigerated`, an input of the LPG Cargos only). New
+  inputs: `lpg_carriage_condition`, `tank_design_pressure_mpa`, `tank_design_temperature_c`,
+  `tank_material`, `tank_allowable_stress_mpa` (none: the material's), `tank_insulation_type`,
+  `tank_insulation_thickness_mm` and `tank_structure_factor`; `fill_ratio` now takes its default from the
+  same table (it was keyed by ruleset), and `tank_wall_thickness_mm` is an optional override (none: the
+  pressure-vessel formula gives the thickness; a file that stores 25 keeps 25). The Defaults Profile holds
+  one table for each of these inputs, `default_by_table`: rows of `when` (the keys it fits), `value`,
+  `status` (`sourced`, with its `source`, or `estimate`) and `basis`; the first row that fits wins, and the
+  profile must have a row for every combination the schema can make. An older profile copy that lacks the
+  entries takes the built-in ones; its own `fill_ratio` default (one value for every Cargo) is kept as an
+  estimate on every row. A file that lacks the new inputs gets the values the engine used before (a table in
+  `vdesign.rs`, marked `default`), so its results do not change; an LPG file that names no carriage
+  condition is read as fully pressurised, with its own warning that says so. A Design made now takes the
+  profile values (`ovcd fill --as-new` does this for a hand-written file). The format version is not
+  changed (version 2 is the version of this build).
+  The tank outer diameter is measured to the outside of the insulation. The clearances (IGC 2.4.2 gives d
+  plate to plate, so the insulation is taken off it), the tank top and the drawing use that face; the wall
+  thickness formula and the volume start from the steel diameter, the outer diameter less twice the
+  insulation. The results show both (`drawing.tank`).
+
 ## Consequences
 
 - A saved file gives the same results when opened again, on Windows and macOS.

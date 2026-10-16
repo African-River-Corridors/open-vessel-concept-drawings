@@ -27,7 +27,7 @@ use crate::barge_capacity::{
     BargeCapacityInputs, BargeCapacityResult, DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
     DEFAULT_MAX_TANK_OD_M, DEFAULT_PUSHED_STERN_VOID_M, DEFAULT_TANK_DOME_DIAMETER_M,
     DEFAULT_TANK_DOME_HEIGHT_M, DEFAULT_TANK_SUPPORT_HEIGHT_M, DEFAULT_TANK_WALL_THICKNESS_MM,
-    DEFAULT_TANKS_IN_LINE, DEFAULT_WING_TANK_GAP_M, DEFAULT_WING_TANK_HEIGHT_RATIO,
+    DEFAULT_TANKS_IN_LINE, DEFAULT_WING_TANK_GAP_M, DEFAULT_WING_TANK_HEIGHT_RATIO, TankDesign,
     compute as capacity, dome_volume_m3,
 };
 use crate::checks::{Check, all_ok};
@@ -84,8 +84,10 @@ pub struct FitOptions {
     pub wing_tank_gap_m: f64,
     /// Wing tank height as a fraction of the cargo tank outer diameter.
     pub wing_tank_height_ratio: f64,
-    /// Fixed tank wall thickness (mm).
-    pub tank_wall_thickness_mm: f64,
+    /// Fixed tank wall thickness (mm); `None`: the pressure-vessel formula gives it (issue #292).
+    pub tank_wall_thickness_mm: Option<f64>,
+    /// The Cargo-dependent tank design values: pressure, steel, insulation, structure factor.
+    pub tank_design: TankDesign,
     /// Water density for the draught of every candidate and its journey de-rating (t/m3).
     pub water_density_t_per_m3: f64,
     /// Least freeboard at the carried draught (m): a candidate that carries its payload deeper
@@ -116,7 +118,8 @@ impl Default for FitOptions {
             tank_dome_diameter_m: DEFAULT_TANK_DOME_DIAMETER_M,
             wing_tank_gap_m: DEFAULT_WING_TANK_GAP_M,
             wing_tank_height_ratio: DEFAULT_WING_TANK_HEIGHT_RATIO,
-            tank_wall_thickness_mm: DEFAULT_TANK_WALL_THICKNESS_MM,
+            tank_wall_thickness_mm: Some(DEFAULT_TANK_WALL_THICKNESS_MM),
+            tank_design: TankDesign::default(),
             water_density_t_per_m3: DEFAULT_WATER_DENSITY,
             required_freeboard_m: DEFAULT_REQUIRED_FREEBOARD_M,
             air_draft_limit_m: None,
@@ -445,7 +448,8 @@ impl Search<'_> {
         inp.dome_diameter = self.o.tank_dome_diameter_m;
         inp.wing_tank_gap_m = self.o.wing_tank_gap_m;
         inp.wing_tank_height_ratio = self.o.wing_tank_height_ratio;
-        inp.tank_wall_thickness = Some(self.o.tank_wall_thickness_mm);
+        inp.tank_wall_thickness = self.o.tank_wall_thickness_mm;
+        inp.tank_design = self.o.tank_design.clone();
         inp.water_density = self.o.water_density_t_per_m3;
         inp.air_draft_limit_m = self.o.air_draft_limit_m;
         inp.aft_design = self.o.aft_design.clone();

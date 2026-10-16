@@ -696,10 +696,19 @@ fn the_schema_names_cargo_and_gives_keyed_defaults_and_containments() {
     assert_eq!(lng["label"], json!("LNG / Ethane"));
     assert_eq!(lng["phase"], json!("liquid_gas"));
     assert_eq!(get("fill_ratio")["applies_to"], json!(["type_c_tanks"]));
-    assert_eq!(get("fill_ratio")["default_by"]["by"], json!("ruleset"));
+    // Issue #292: a table by Cargo and carriage condition (98 % for all, IGC 15.3). `default_by` is
+    // its short form for a consumer that knows only that; `default_table` is the table itself.
+    assert_eq!(
+        get("fill_ratio")["default_by"]["by"],
+        json!("Cargo, LPG carriage condition")
+    );
     assert_eq!(
         get("fill_ratio")["default_by"]["values"],
-        json!({ "IGC_2G": 0.98 })
+        json!({ "any": 0.98 })
+    );
+    assert_eq!(
+        get("fill_ratio")["default_table"]["rows"][0]["status"],
+        json!("sourced")
     );
     // Issue #175: the ADN ruleset and its tank cap are gone; the diameter cap is an input.
     let ruleset = get("ruleset");

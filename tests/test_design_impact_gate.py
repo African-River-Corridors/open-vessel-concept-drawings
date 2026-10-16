@@ -25,7 +25,7 @@ FAKE_CARGO = textwrap.dedent('''\
     cat > "$exe" <<EOS
     #!/bin/sh
     case "\\$1" in
-      fill) if [ "$factor" = dead ]; then echo "error: refused" >&2; exit 1; fi; cp "\\$2" "\\$3" ;;
+      fill) if [ "$factor" = dead ]; then echo "error: refused" >&2; exit 1; fi; if [ "\\$2" = --as-new ]; then shift; fi; cp "\\$2" "\\$3" ;;
       run) echo '{"options":[{"name":"x","results":{"results":{"cargo_t":$factor,"governs":"hold"},"checks":[]}}]}' ;;
     esac
     EOS

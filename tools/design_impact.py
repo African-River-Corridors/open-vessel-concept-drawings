@@ -193,6 +193,25 @@ OPTIONAL_INPUT_CASES = (
      {"accommodation_unit_count": 1}),
     ("aft_block_all_dry", "bauxite", "box_hold", "self_propelled", 90.0, 14.0, 4.5,
      {"thruster_count": 3, "thruster_envelope_m": 2.6, "thruster_clearance_m": 0.6, "thruster_room_length_m": 3.5, "unit_height_m": 2.896, "unit_side_gap_m": 0.9, "unit_row_gap_m": 0.8, "unit_foundation_m": 0.3, "wheelhouse_length_m": 3.6, "wheelhouse_width_m": 6.4, "wheelhouse_height_m": 3.4, "wheelhouse_gap_m": 0.3, "wheelhouse_eye_height_m": 1.5, "sightline_margin_m": 0.5, "wheelhouse_max_lift_m": 6.0, "battery_unit_count": 2, "accommodation_unit_count": 1}),
+    # The Type C tank design inputs (issue #292), typed away from their defaults on a hull where each
+    # moves a result. The defaults themselves depend on the Cargo and the LPG carriage condition, so
+    # the sweep below also runs every LPG Cargo in each of the three conditions.
+    ("lpg_carriage_condition", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"lpg_carriage_condition": "semi_pressurised"}),
+    ("tank_design_pressure_mpa", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tank_design_pressure_mpa": 1.0}),
+    ("tank_design_temperature_c", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tank_design_temperature_c": -48.0}),
+    ("tank_material", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tank_material": "304L"}),
+    ("tank_allowable_stress_mpa", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tank_allowable_stress_mpa": 200.0}),
+    ("tank_insulation_type", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tank_insulation_type": "pu_foam"}),
+    ("tank_insulation_thickness_mm", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tank_insulation_thickness_mm": 200.0}),
+    ("tank_structure_factor", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tank_structure_factor": 1.2}),
     # The environment inputs (issue #4, slice 6), set to their defaults in the same way. The squat
     # margin matters only in a channel, so that case has one.
     ("water_density_t_per_m3", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
@@ -284,6 +303,12 @@ def cases() -> dict[str, dict]:
             cargo, "type_c_tanks", "self_propelled", 90.0, 14.0, 5.5, max_speed_kn=9.0)
         out[f"sweep gas cargo {cargo} pushed"] = _inputs(
             cargo, "type_c_tanks", "pushed_barge", 90.0, 14.0, 6.0)
+    # Each LPG Cargo in each carriage condition (issue #292): a different row of the tank default tables.
+    for cargo in ("LPG_propane", "LPG_butane", "LPG_mix"):
+        for carriage in ("fully_pressurised", "semi_pressurised", "fully_refrigerated"):
+            out[f"sweep gas carriage {cargo} {carriage}"] = _inputs(
+                cargo, "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, max_speed_kn=9.0,
+                lpg_carriage_condition=carriage)
     # Gas designs that pass every check, so a change to a check's wording or limit shows.
     out["sweep gas passes all checks IGC_2G 110x11.4"] = _inputs(
         "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, ruleset="IGC_2G")
@@ -322,6 +347,17 @@ def run(cmd, **kw) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, capture_output=True, text=True, **kw)
 
 
+def fill_file(binary: Path, raw: Path, filled: Path) -> subprocess.CompletedProcess:
+    """`ovcd fill` of one case, as a new Design: an input added after the first files takes the
+    Defaults Profile value (`--as-new`, issue #292). Without it `fill` would give such an input the
+    fixed value an old file gets, and a change to the profile could not show. A base from before the
+    flag does not know it and fills as it always did."""
+    fill = run([str(binary), "fill", "--as-new", str(raw), str(filled)])
+    if fill.returncode != 0 and "unknown option" in fill.stderr:
+        fill = run([str(binary), "fill", str(raw), str(filled)])
+    return fill
+
+
 def run_case(binary: Path, name: str, typed: dict, tmp: Path) -> dict:
     """One case through one binary: {"results": {...}} or {"error": "..."}."""
     raw, filled = tmp / "in.vdesign", tmp / "filled.vdesign"
@@ -337,7 +373,7 @@ def run_case(binary: Path, name: str, typed: dict, tmp: Path) -> dict:
             raw.write_text(json.dumps({"format": "vdesign", "format_version": version,
                                        "engine_version": "0.0.0",
                                        "options": [{"name": name, "inputs": typed}]}), encoding="utf-8")
-            fill = run([str(binary), "fill", str(raw), str(filled)])
+            fill = fill_file(binary, raw, filled)
             # A binary from before an input existed refuses it by name. Leave it out: that binary
             # then uses the fixed value it always used, which the case sets the input to.
             unknown = re.search(r"unknown input `([a-z0-9_]+)`", fill.stderr)

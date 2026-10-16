@@ -53,12 +53,44 @@
           "value": "IGC_2G",
           "source": "typed"
         },
+        "lpg_carriage_condition": {
+          "value": "fully_pressurised",
+          "source": "default"
+        },
         "fill_ratio": {
           "value": 0.98,
           "source": "default"
         },
         "max_tank_od_m": {
           "value": 16.0,
+          "source": "default"
+        },
+        "tank_design_pressure_mpa": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "tank_design_temperature_c": {
+          "value": null,
+          "source": "default"
+        },
+        "tank_material": {
+          "value": "9Ni",
+          "source": "default"
+        },
+        "tank_allowable_stress_mpa": {
+          "value": null,
+          "source": "default"
+        },
+        "tank_insulation_type": {
+          "value": "unspecified",
+          "source": "default"
+        },
+        "tank_insulation_thickness_mm": {
+          "value": 350.0,
+          "source": "default"
+        },
+        "tank_structure_factor": {
+          "value": 1.3,
           "source": "default"
         },
         "tanks_in_line": {

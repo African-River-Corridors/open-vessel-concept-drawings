@@ -24,11 +24,12 @@ def fake_ovcd(tmp_path: Path, name: str, factor: float = 1.0, fail_on: str = "")
         #!{sys.executable}
         import json, shutil, sys
         cmd = sys.argv[1]
+        args = [a for a in sys.argv[2:] if a != "--as-new"]     # `fill` is given the flag (issue #292)
         if cmd == "fill":
-            text = open(sys.argv[2]).read()
+            text = open(args[0]).read()
             if {fail_on!r} and {fail_on!r} in text:
                 print("error: refused", file=sys.stderr); sys.exit(1)
-            open(sys.argv[3], "w").write(text)
+            open(args[1], "w").write(text)
         elif cmd == "run":
             d = json.load(open(sys.argv[3]))
             o = d["options"][0]
@@ -184,12 +185,13 @@ def versioned_ovcd(tmp_path: Path, name: str, reads: tuple) -> Path:
         #!{sys.executable}
         import json, sys
         cmd = sys.argv[1]
+        args = [a for a in sys.argv[2:] if a != "--as-new"]     # `fill` is given the flag (issue #292)
         if cmd == "fill":
-            text = open(sys.argv[2]).read()
+            text = open(args[0]).read()
             v = json.loads(text)["format_version"]
             if v not in {reads!r}:
                 print(f"error: format_version {{v}} is not supported", file=sys.stderr); sys.exit(1)
-            open(sys.argv[3], "w").write(text)
+            open(args[1], "w").write(text)
         elif cmd == "run":
             d = json.load(open(sys.argv[3]))
             print(json.dumps({{"options": [{{"name": "a", "results": {{

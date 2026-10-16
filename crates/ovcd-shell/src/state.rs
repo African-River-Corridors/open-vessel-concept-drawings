@@ -337,8 +337,9 @@ mod tests {
         let notes = notes.as_array().unwrap();
         // Three for the version 1 changes, one for the dome diameter (issue #237: the dome now
         // counts in Vc, so results may change), and one for the hull end input a version 1 file
-        // lacks (issue #4): it gets the fixed value the engine used.
-        assert_eq!(notes.len(), 5, "{notes:?}");
+        // lacks (issue #4): it gets the fixed value the engine used. One more for the LPG carriage
+        // condition the file lacks (issue #292): it is read as fully pressurised.
+        assert_eq!(notes.len(), 6, "{notes:?}");
         assert!(
             notes[0]
                 .as_str()
@@ -364,7 +365,14 @@ mod tests {
                 .contains("has no `tank_dome_diameter_m`; it now holds 2.0 m"),
             "{notes:?}"
         );
-        let last = notes[4].as_str().unwrap();
+        assert!(
+            notes[4]
+                .as_str()
+                .unwrap()
+                .contains("has no `lpg_carriage_condition`"),
+            "{notes:?}"
+        );
+        let last = notes[5].as_str().unwrap();
         assert!(
             last.contains("has no `bow_rake_length_to_depth_ratio`"),
             "{last}"

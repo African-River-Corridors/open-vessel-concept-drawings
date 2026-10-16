@@ -25,8 +25,8 @@ use crate::profile::Profile;
 use crate::run::{HashStatus, RunOutcome, results_hash, run_design, run_option};
 use crate::vdesign::{
     AppliesTo, CARGO_CONTAINMENTS, Design, DesignOption, ENGINE_VERSION, FORMATION_KINDS, Group,
-    INPUTS, InputKind, KEYED_DEFAULTS, Report, Source, StoredInput, check, choice_label, fill,
-    formation_includes, new_design,
+    INPUTS, InputKind, KEYED_DEFAULTS, Report, Source, StoredInput, TABLE_DEFAULTS, TABLE_KEYS,
+    cargo_includes, check, choice_label, fill, formation_includes, new_design,
 };
 use serde_json::{Map, Value, json};
 
@@ -39,8 +39,11 @@ use serde_json::{Map, Value, json};
 ///   "group_notes": { group name: note },
 ///   "inputs": [ { "name", "group", "kind", "required", "applies_to": [containments],
 ///                 "applies_to_formation": [Formation kinds],
+///                 "applies_to_cargo": [Cargo keys],
 ///                 "unit", "nullable", "choices": [{ "value", "label", ... }],
 ///                 "default" | "default_by": { "by", "values" },
+///                 "default_table": { "by": [keys], "rows": [{ "when", "value", "status", "source",
+///                                    "basis" }] },
 ///                 "hard": { "gt"|"ge"|"lt"|"le" }, "soft": { "min", "max" }, "basis" } ] }
 /// ```
 ///
@@ -81,6 +84,14 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
         .filter(|k| formation_includes(spec.formations, Some(k)))
         .collect();
     e.insert("applies_to_formation".into(), json!(kinds));
+    // The Cargos the input is used for (the LPG carriage condition is for LPG only). A consumer that
+    // reads only `applies_to` still works, as with the Formation.
+    let cargos: Vec<&str> = ovcd_core::cargo::CARGO_DATABASE
+        .iter()
+        .map(|(k, _)| *k)
+        .filter(|k| cargo_includes(spec.cargos, Some(k)))
+        .collect();
+    e.insert("applies_to_cargo".into(), json!(cargos));
     match spec.kind {
         InputKind::Number { nullable } => {
             e.insert("kind".into(), json!("number"));
@@ -174,26 +185,73 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
         && !crate::class_input::UNSET_WHEN_ABSENT.contains(&name)
         && name != crate::vdesign::DEPTH_INPUT
     {
-        match KEYED_DEFAULTS.iter().find(|(n, _, _)| *n == name) {
-            Some((_, by, keys)) => {
-                let values: Map<String, Value> = keys
-                    .iter()
-                    .filter_map(|k| {
-                        profile
-                            .default_by(name, by, k)
-                            .map(|v| (k.to_string(), v.clone()))
-                    })
-                    .collect();
-                e.insert("default_by".into(), json!({ "by": by, "values": values }));
+        if TABLE_DEFAULTS.contains(&name) {
+            // The table as it is, and a short form of it in the shape of `default_by` for a
+            // consumer that knows only that: one entry per row, keyed by the cargos and carriage
+            // condition the row fits.
+            if let Some(table) = profile.table_json(name) {
+                e.insert("default_table".into(), table.clone());
+                e.insert("default_by".into(), table_summary(table));
             }
-            None => {
-                if let Some(d) = profile.default(name) {
-                    e.insert("default".into(), d.clone());
+        } else {
+            match KEYED_DEFAULTS.iter().find(|(n, _, _)| *n == name) {
+                Some((_, by, keys)) => {
+                    let values: Map<String, Value> = keys
+                        .iter()
+                        .filter_map(|k| {
+                            profile
+                                .default_by(name, by, k)
+                                .map(|v| (k.to_string(), v.clone()))
+                        })
+                        .collect();
+                    e.insert("default_by".into(), json!({ "by": by, "values": values }));
+                }
+                None => {
+                    if let Some(d) = profile.default(name) {
+                        e.insert("default".into(), d.clone());
+                    }
                 }
             }
         }
     }
     Value::Object(e)
+}
+
+/// A default table in the shape of `default_by`: `{ "by": "Cargo, LPG carriage condition",
+/// "values": { "LNG, LNG_ethane": 0.4, "LPG_propane, LPG_butane, LPG_mix, fully_pressurised": .. } }`.
+/// The key of each entry names the Cargos of its row, then its carriage conditions when it has a
+/// carriage condition. The full table is `default_table`.
+fn table_summary(table: &Value) -> Value {
+    let names = |when: &Value, key: &str| -> Vec<String> {
+        match when.get(key) {
+            Some(Value::String(s)) => vec![s.clone()],
+            Some(Value::Array(l)) => l
+                .iter()
+                .filter_map(|v| v.as_str().map(String::from))
+                .collect(),
+            _ => Vec::new(),
+        }
+    };
+    let mut values = Map::new();
+    for row in table
+        .get("rows")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
+        let when = row.get("when").cloned().unwrap_or(Value::Null);
+        let mut parts = names(&when, "cargo");
+        parts.extend(names(&when, "lpg_carriage_condition"));
+        let key = if parts.is_empty() {
+            "any".to_string()
+        } else {
+            parts.join(", ")
+        };
+        if let Some(v) = row.get("value") {
+            values.insert(key, v.clone());
+        }
+    }
+    json!({ "by": "Cargo, LPG carriage condition", "values": values })
 }
 
 /// The rule that gives a left-out moulded depth: the depth-to-beam ratio of the Cargo group times
@@ -503,6 +561,12 @@ impl DesignSession {
             && !formation_includes(spec.formations, Some(kind))
         {
             return Err(format!("`{name}` is not used for a {kind} Formation"));
+        }
+        if spec.cargos.is_some()
+            && let Some(cargo) = cargo_of(&self.design.options[i])
+            && !cargo_includes(spec.cargos, Some(cargo))
+        {
+            return Err(format!("`{name}` is not used for the Cargo {cargo}"));
         }
         match name {
             "vessel_class" => self.pick_class(i, &value)?,
@@ -888,6 +952,25 @@ impl DesignSession {
                     }
                 }
             }
+            // A default from a table follows the Cargo Containment, the Cargo and the carriage
+            // condition (issue #292). The original input name is the key, not `cargo_phase`.
+            let key = if by_name == "cargo_phase" {
+                "cargo"
+            } else {
+                by_name.as_str()
+            };
+            if TABLE_KEYS.contains(&key) {
+                for input in TABLE_DEFAULTS {
+                    let option = &mut self.design.options[i];
+                    let on_default = option
+                        .input(input)
+                        .is_some_and(|s| s.source == Source::Default);
+                    if on_default {
+                        option.inputs.retain(|(n, _)| n != input);
+                        changed.push(input.to_string());
+                    }
+                }
+            }
         }
     }
 
@@ -907,12 +990,14 @@ impl DesignSession {
             let applicable = containment_of(from_fill)
                 .filter(|c| CARGO_CONTAINMENTS.iter().any(|(known, _)| known == c));
             let kind = formation_kind_of(from_fill);
+            let cargo = cargo_of(from_fill);
             let mut inputs: Vec<(String, StoredInput)> = Vec::new();
             for spec in INPUTS {
                 let applies = match (spec.applies_to, applicable) {
                     (AppliesTo::All, _) | (_, None) => true,
                     (scope, Some(current)) => scope.includes(current),
-                } && formation_includes(spec.formations, kind);
+                } && formation_includes(spec.formations, kind)
+                    && cargo_includes(spec.cargos, cargo);
                 let held = self
                     .hidden
                     .iter()
@@ -967,6 +1052,10 @@ fn sort_inputs(option: &mut DesignOption) {
 
 fn formation_kind_of(option: &DesignOption) -> Option<&str> {
     option.input("formation")?.value.get("kind")?.as_str()
+}
+
+fn cargo_of(option: &DesignOption) -> Option<&str> {
+    option.input("cargo")?.value.as_str()
 }
 
 fn containment_of(option: &DesignOption) -> Option<&str> {

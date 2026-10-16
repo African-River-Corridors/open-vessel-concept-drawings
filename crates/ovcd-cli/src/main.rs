@@ -23,10 +23,13 @@ Usage:
       Prints to stdout when no file is given.
       --class defines the Option by a standard Vessel Class (see `ovcd schema`, input
       `vessel_class`): length, beam and Formation come from the class and are marked \"class\".
-  ovcd fill [--profile <profile.json>] <in.vdesign> [<out.vdesign>]
+  ovcd fill [--profile <profile.json>] [--as-new] <in.vdesign> [<out.vdesign>]
       Write every input a hand-written Design leaves out in, as used and marked \"default\",
       from the Defaults Profile. Prints to stdout when no output file is given; never
       overwrites a file. Writes nothing and exits 1 if there is any hard error.
+      An input that was added after the first files (see ADR 0007) takes the fixed value the
+      engine used before it existed, so an old file keeps its results. --as-new takes the
+      Defaults Profile value instead, as a new Design does: use it for a file you write now.
   ovcd validate [--profile <profile.json>] [--inputs] <file.vdesign>
       List hard errors and soft warnings without running. --inputs also lists every input
       as used, typed or default. Exits 1 if there is any hard error. A file must store
@@ -126,6 +129,7 @@ struct Flags<'a> {
     profile: Option<&'a str>,
     inputs: bool,
     json: bool,
+    as_new: bool,
     files: Vec<&'a str>,
 }
 
@@ -133,11 +137,13 @@ fn parse_flags<'a>(
     args: &[&'a str],
     allow_inputs: bool,
     allow_json: bool,
+    allow_as_new: bool,
 ) -> Result<Flags<'a>, String> {
     let mut flags = Flags {
         profile: None,
         inputs: false,
         json: false,
+        as_new: false,
         files: Vec::new(),
     };
     let mut it = args.iter();
@@ -148,6 +154,7 @@ fn parse_flags<'a>(
             }
             "--inputs" if allow_inputs => flags.inputs = true,
             "--json" if allow_json => flags.json = true,
+            "--as-new" if allow_as_new => flags.as_new = true,
             a if a.starts_with('-') => return Err(format!("unknown option `{a}`")),
             a => flags.files.push(a),
         }
@@ -178,7 +185,7 @@ fn new(args: &[&str]) -> Result<(), String> {
             rest.push(arg);
         }
     }
-    let flags = parse_flags(&rest, false, false)?;
+    let flags = parse_flags(&rest, false, false, false)?;
     let profile = load_profile(flags.profile)?;
     let text = match class {
         None => ovcd_format::new_design(&profile)?.to_text(),
@@ -201,7 +208,7 @@ fn new(args: &[&str]) -> Result<(), String> {
 }
 
 fn schema(args: &[&str]) -> Result<(), String> {
-    let flags = parse_flags(args, false, false)?;
+    let flags = parse_flags(args, false, false, false)?;
     if !flags.files.is_empty() {
         return Err("takes no file; use --profile <profile.json>".into());
     }
@@ -231,7 +238,7 @@ fn write_new(path: &str, text: &str) -> Result<(), String> {
 }
 
 fn fill(args: &[&str]) -> Result<(), String> {
-    let flags = parse_flags(args, false, false)?;
+    let flags = parse_flags(args, false, false, true)?;
     let (input, output) = match flags.files.as_slice() {
         [input] => (*input, None),
         [input, output] => (*input, Some(*output)),
@@ -239,7 +246,11 @@ fn fill(args: &[&str]) -> Result<(), String> {
     };
     let profile = load_profile(flags.profile)?;
     let text = std::fs::read_to_string(input).map_err(|e| format!("cannot read {input}: {e}"))?;
-    let filled = ovcd_format::fill(&text, &profile);
+    let filled = if flags.as_new {
+        ovcd_format::fill_as_new(&text, &profile)
+    } else {
+        ovcd_format::fill(&text, &profile)
+    };
     let r = &filled.report;
     for e in &r.errors {
         eprintln!("error: {e}");
@@ -268,7 +279,7 @@ fn fill(args: &[&str]) -> Result<(), String> {
 
 /// Returns whether the file has no hard errors.
 fn validate(args: &[&str]) -> Result<bool, String> {
-    let flags = parse_flags(args, true, false)?;
+    let flags = parse_flags(args, true, false, false)?;
     let [path] = flags.files.as_slice() else {
         return Err("give exactly one .vdesign file".into());
     };
@@ -314,7 +325,7 @@ fn validate(args: &[&str]) -> Result<bool, String> {
 /// that is not yet supported (a convoy) is not a failure.
 fn run(args: &[&str]) -> Result<bool, String> {
     use ovcd_format::{HashStatus, RunOutcome};
-    let flags = parse_flags(args, false, true)?;
+    let flags = parse_flags(args, false, true, false)?;
     let [path] = flags.files.as_slice() else {
         return Err("give exactly one .vdesign file".into());
     };

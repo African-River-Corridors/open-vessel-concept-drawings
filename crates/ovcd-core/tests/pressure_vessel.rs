@@ -6,7 +6,8 @@ use ovcd_core::pressure_vessel::*;
 #[test]
 fn material_database_keeps_pythons_values_and_order() {
     let keys: Vec<&str> = TANK_MATERIAL_DATABASE.iter().map(|(k, _)| *k).collect();
-    assert_eq!(keys, ["304L", "316L", "9Ni"]);
+    // Issue #292 added S690QL1 after the three of the original engine.
+    assert_eq!(keys, ["304L", "316L", "9Ni", "S690QL1"]);
     let m = get_tank_material("9Ni").unwrap();
     assert_eq!(m.name, "9% Nickel Steel");
     assert_eq!(
@@ -42,7 +43,7 @@ fn unknown_material_fails_with_pythons_message() {
     assert_eq!(e.kind, "ValueError");
     assert_eq!(
         e.message,
-        "Unknown tank material 'A36'. Valid: 304L, 316L, 9Ni"
+        "Unknown tank material 'A36'. Valid: 304L, 316L, 9Ni, S690QL1"
     );
 }
 
@@ -134,7 +135,7 @@ fn unknown_head_type_fails_after_the_cylinder_passes() {
     let e = calculate_wall_thicknesses(5.9, 0.5, "duplex", "torispherical", 0.95).unwrap_err();
     assert_eq!(
         e.message,
-        "Unknown tank material 'duplex'. Valid: 304L, 316L, 9Ni"
+        "Unknown tank material 'duplex'. Valid: 304L, 316L, 9Ni, S690QL1"
     );
 }
 
