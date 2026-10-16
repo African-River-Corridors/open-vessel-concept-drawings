@@ -1231,15 +1231,21 @@ fn a_failing_design_carries_a_note_in_each_view_and_still_passes_the_standard() 
                     fail_notes[0].starts_with(&format!("DESIGN FAILS {} CHECK", failed.len())),
                     "{file} {name}: the count"
                 );
-                // every name is there, in plain capitals, or the count stands alone
+                // one note on one line, in plain capitals
+                assert_eq!(fail_notes.len(), 1, "{file} {name}: one failed-checks note");
                 let text = fail_notes
                     .iter()
                     .map(|s| s.as_str())
                     .collect::<Vec<_>>()
                     .join(" ");
                 assert!(text.is_ascii() && text.chars().all(|c| !c.is_ascii_lowercase()));
-                if fail_notes.len() > 1 || text.contains(':') {
-                    for n in &failed {
+                // every name is there, or the note counts the rest ("AND k MORE")
+                if text.contains(':') {
+                    for n in failed.iter().take(if text.contains(" MORE") {
+                        1
+                    } else {
+                        failed.len()
+                    }) {
                         let plain: String = n
                             .chars()
                             .filter_map(|c| match c {
@@ -1285,7 +1291,7 @@ fn a_passing_design_has_the_usual_notes_and_strip() {
 }
 
 #[test]
-fn a_failing_design_with_many_names_gives_the_count_alone() {
+fn a_failing_design_with_many_names_names_some_and_counts_the_rest() {
     let mut r = results_of("dry_bulk_box_hold.vdesign", false);
     let checks: Vec<Value> = (0..30)
         .map(|i| serde_json::json!({"name": format!("A VERY LONG CHECK NAME NUMBER {i}"), "ok": false, "message": ""}))
@@ -1294,7 +1300,12 @@ fn a_failing_design_with_many_names_gives_the_count_alone() {
     for (_, doc) in views(&r).all() {
         let notes = notes_of(doc);
         assert_eq!(notes.len(), 3);
-        assert_eq!(notes[2], "DESIGN FAILS 30 CHECKS");
+        assert!(
+            notes[2].starts_with("DESIGN FAILS 30 CHECKS: A VERY LONG CHECK NAME NUMBER 0, "),
+            "{}",
+            notes[2]
+        );
+        assert!(notes[2].ends_with(" MORE") && notes[2].chars().count() <= 120);
         accepted(doc);
     }
 }

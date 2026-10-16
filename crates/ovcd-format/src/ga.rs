@@ -65,8 +65,8 @@ const NOTE_PITCH_MM: f64 = 4.5;
 /// The most characters of a note: the schema allows 120. 120 capitals at height 2.5 are well under
 /// the width of the strip (390 mm).
 const NOTE_MAX_CHARS: usize = 120;
-/// The most lines the failed checks may take; beyond it the note gives the count alone.
-const FAIL_NOTES_MAX: usize = 3;
+/// The text height of a note (clause 14.10.1), in millimetres.
+const NOTE_TEXT_MM: f64 = 2.5;
 /// The ratios of the standard (clauses 7.3.1 and 7.3.4), smallest denominator first.
 const RATIOS: [u32; 20] = [
     1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 1250, 2000, 2500, 5000, 10000, 20000, 50000,
@@ -1405,9 +1405,12 @@ fn window_of(c: &Canvas) -> [f64; 4] {
     ]
 }
 
-/// The notes for a design that fails checks: the count and the names, packed into lines. A note is
-/// at most 120 characters (the schema) and is never cut or made smaller (clause 14.6), so the names
-/// run on over several notes; with more than `FAIL_NOTES_MAX` of them the count alone is given.
+/// The notes for a design that fails checks: none, or one note on one line. The standard has no
+/// note of several lines and no line that continues a note (clauses 11.3.3 and 14.10.1), and a note
+/// is never cut or made smaller (clause 14.6). So the note names as many checks as fit, in order,
+/// and then says how many more there are: `DESIGN FAILS 6 CHECKS: A, B AND 4 MORE`. It fits when it
+/// has at most `NOTE_MAX_CHARS` characters (the schema) and its width, with the number in front of
+/// it, is within the strip (clause 14.6). If not even the first name fits, the count stands alone.
 fn failed_notes(failed: &[String]) -> Vec<String> {
     if failed.is_empty() {
         return Vec::new();
@@ -1415,27 +1418,25 @@ fn failed_notes(failed: &[String]) -> Vec<String> {
     let count = failed.len();
     let plural = if count == 1 { "CHECK" } else { "CHECKS" };
     let head = format!("DESIGN FAILS {count} {plural}");
-    let mut lines: Vec<String> = Vec::new();
-    let mut current = format!("{head}:");
-    for (i, name) in failed.iter().enumerate() {
-        let sep = if i + 1 < count { "," } else { "" };
-        let piece = format!(" {name}{sep}");
-        if current.chars().count() + piece.chars().count() > NOTE_MAX_CHARS {
-            lines.push(std::mem::replace(&mut current, "  ".to_string()));
-            // a name that cannot stand on a line of its own: give the count alone
-            if piece.chars().count() + 1 > NOTE_MAX_CHARS {
-                return vec![head];
-            }
-            current.push_str(piece.trim_start());
-        } else {
-            current.push_str(&piece);
+    for shown in (1..=count).rev() {
+        let mut note = format!("{head}: {}", failed[..shown].join(", "));
+        if shown < count {
+            note.push_str(&format!(" AND {} MORE", count - shown));
+        }
+        if note_fits(&note) {
+            return vec![note];
         }
     }
-    lines.push(current);
-    if lines.len() > FAIL_NOTES_MAX {
-        return vec![head];
-    }
-    lines
+    vec![head]
+}
+
+/// Does a note fit its line in the strip? At most `NOTE_MAX_CHARS` characters, and a width, after
+/// a number of two digits and the full stop, of at most the strip width less `2 * 2` mm (clause
+/// 14.6), by the width table of the standard (clause 11.7.1) at the note height.
+fn note_fits(note: &str) -> bool {
+    note.chars().count() <= NOTE_MAX_CHARS
+        && ovcd_draw::rules::text_width(&format!("99. {note}"), NOTE_TEXT_MM)
+            .is_some_and(|w| w <= SHEET.2 - 4.0)
 }
 
 /// The height of the strip of notes (clause 14.10.1): the heading, the notes at one pitch each, and
@@ -1518,4 +1519,73 @@ pub fn ga_views(results: &Value) -> Result<GaViews, String> {
         plan: document(&hull, "PLAN", plan)?,
         midship_section: document(&hull, "MIDSHIP SECTION", midship_section)?,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn names(n: usize, long: bool) -> Vec<String> {
+        (0..n)
+            .map(|i| {
+                if long {
+                    format!("A VERY LONG CHECK NAME FOR THE TEST NUMBER {i}")
+                } else {
+                    format!("CHECK {i}")
+                }
+            })
+            .collect()
+    }
+
+    #[test]
+    fn no_failed_checks_make_no_note() {
+        assert!(failed_notes(&[]).is_empty());
+    }
+
+    #[test]
+    fn one_failed_check_is_named_in_the_singular() {
+        assert_eq!(
+            failed_notes(&["STABILITY - LADEN".to_string()]),
+            ["DESIGN FAILS 1 CHECK: STABILITY - LADEN"]
+        );
+    }
+
+    #[test]
+    fn a_few_failed_checks_are_all_named_in_order() {
+        assert_eq!(
+            failed_notes(&names(3, false)),
+            ["DESIGN FAILS 3 CHECKS: CHECK 0, CHECK 1, CHECK 2"]
+        );
+    }
+
+    #[test]
+    fn many_failed_checks_make_one_note_that_counts_the_rest() {
+        for count in [8, 20, 60] {
+            let notes = failed_notes(&names(count, true));
+            assert_eq!(notes.len(), 1);
+            let note = &notes[0];
+            assert!(note.starts_with(&format!("DESIGN FAILS {count} CHECKS: A VERY LONG")));
+            assert!(note.contains(" AND ") && note.ends_with(" MORE"), "{note}");
+            assert!(note_fits(note), "{note}");
+            // one name more would not have fitted
+            let shown = note.matches(" NUMBER ").count();
+            let more = count - shown;
+            assert!(note.ends_with(&format!("AND {more} MORE")), "{note}");
+            let next = format!(
+                "{}, {}",
+                &note[..note.rfind(" AND ").unwrap()],
+                names(count, true)[shown]
+            );
+            assert!(!note_fits(&format!("{next} AND {} MORE", more - 1)) || more == 1);
+        }
+    }
+
+    #[test]
+    fn a_name_too_long_for_the_line_gives_the_count_alone() {
+        let long = "X".repeat(200);
+        assert_eq!(
+            failed_notes(&[long.clone(), long]),
+            ["DESIGN FAILS 2 CHECKS"]
+        );
+    }
 }
