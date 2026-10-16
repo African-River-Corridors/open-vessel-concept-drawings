@@ -243,7 +243,7 @@
     <div class="chartbox" data-testid="stability-chart">
       <div class="legend">
         {#each stability.conditions as c, i (c.name)}
-          <span class="item" class:gov={c.name === stability.governing} data-condition={c.name}>
+          <span class="item" class:governing-item={c.name === stability.governing} data-condition={c.name}>
             <span class="swatch" style:background={colour(c, i)}></span>
             <strong>{c.name}</strong>{#if c.name === stability.governing}<span class="govtag">governs</span>{/if}
             GM {r(c.gm_fluid_m, 2)} m · max GZ {r(c.max_gz_m, 2)} m at {r(c.max_gz_deg, 0)}°
@@ -322,7 +322,7 @@
   .stab { height: 100%; display: flex; flex-direction: column; gap: 8px; }
   .chartbox { flex: 3; min-height: 0; display: flex; flex-direction: column; }
   .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; font-size: 12px; margin-bottom: 4px; }
-  .item.gov { font-weight: 600; }
+  .item.governing-item { font-weight: 600; }
   .swatch { display: inline-block; width: 14px; height: 4px; margin-right: 4px; vertical-align: middle; }
   .govtag { font-size: 10px; background: var(--gold); color: #fff; padding: 0 5px; border-radius: 3px; margin: 0 4px; text-transform: uppercase; }
   .tools { margin-left: auto; display: flex; gap: 4px; }
