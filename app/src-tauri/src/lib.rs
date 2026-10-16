@@ -5,10 +5,8 @@
 //! and nothing else. It holds no calculation, validation or default logic.
 
 mod notice;
-mod state;
-mod views;
 
-use state::AppState;
+use ovcd_shell::AppState;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager, State, Window, WindowEvent};

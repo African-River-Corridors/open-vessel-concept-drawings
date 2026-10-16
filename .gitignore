@@ -13,3 +13,8 @@ dist/
 app/node_modules/
 app/dist/
 app/src-tauri/gen/
+
+# web build output (tools/build_web.sh, npm run build:web)
+app/wasm-pkg/
+app/dist-web/
+app/dist-web-test/

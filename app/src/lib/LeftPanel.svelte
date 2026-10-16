@@ -130,14 +130,16 @@
 </div>
 
 <style>
-  .panel { padding: 10px 12px; }
-  h2 { font-family: var(--serif); font-size: 14px; margin: 10px 0 4px; }
-  select, input[type="text"] { width: 100%; padding: 4px 6px; font: inherit; box-sizing: border-box; }
-  .buttons { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
-  .inline { display: flex; gap: 4px; margin-top: 6px; align-items: center; font-size: 13px; }
-  .confirm { background: #fbe4e1; padding: 4px 6px; }
-  .pname { font-size: 13px; }
-  details { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 4px; }
-  .gnote { margin: 4px 0; font-size: 12px; color: var(--dim); }
-  summary { font-family: var(--serif); color: var(--navy); font-size: 15px; cursor: pointer; }
+  .panel { padding: 10px var(--sp-3); }
+  h2 { font-family: var(--font-serif); font-size: var(--fs-16); font-weight: 600; color: var(--ink); margin: 10px 0 4px; }
+  select, input[type="text"] { width: 100%; padding: 3px 5px; font: inherit; color: var(--ink); background: var(--surface); border: var(--lw-thin) solid var(--rule-strong); border-radius: var(--radius); box-sizing: border-box; }
+  select:focus-visible, input[type="text"]:focus-visible { outline-offset: 0; }
+  .buttons { display: flex; gap: var(--sp-1); margin-top: 6px; flex-wrap: wrap; }
+  .buttons button, .inline button { font-size: var(--fs-13); }
+  .inline { display: flex; gap: var(--sp-1); margin-top: 6px; align-items: center; font-size: var(--fs-13); }
+  .confirm { background: var(--fail-soft); color: var(--fail); padding: var(--sp-1) 6px; }
+  .pname { font-size: var(--fs-13); }
+  details { border-top: var(--lw-thin) solid var(--rule); margin-top: 10px; padding-top: var(--sp-1); }
+  .gnote { margin: var(--sp-1) 0; font-size: var(--fs-12); color: var(--ink-3); }
+  summary { font-family: var(--font-serif); font-weight: 600; color: var(--ink); font-size: var(--fs-16); cursor: pointer; }
 </style>

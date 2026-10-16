@@ -41,6 +41,79 @@ jobs:
       - name: Evaluation harness (a false pass fails the build)
         run: python evaluation/run.py --check
 
+  # The web build (issue #245): the wasm Design session gives the same results hash as native
+  # `ovcd run --json` for every fixture. The wasm-bindgen CLI is the version the crate pins.
+  web-parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: The pinned wasm-bindgen version
+        id: wb
+        run: echo "version=$(sed -n 's/^wasm-bindgen = "=\([0-9.]*\)".*/\1/p' crates/ovcd-web/Cargo.toml)" >> "$GITHUB_OUTPUT"
+      - name: wasm-bindgen CLI (cached)
+        id: cli
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/wasm-bindgen
+          key: wasm-bindgen-cli-${{ steps.wb.outputs.version }}-${{ runner.os }}
+      - name: Install wasm-bindgen CLI
+        if: steps.cli.outputs.cache-hit != 'true'
+        run: cargo install wasm-bindgen-cli --version "${{ steps.wb.outputs.version }}" --locked
+      - name: Build the web package
+        run: bash tools/build_web.sh
+      - name: Build ovcd
+        run: cargo build -p ovcd-cli
+      - name: Results-hash parity, wasm against native
+        run: node tools/web_parity.mjs
+
+  # The web app (issue #246): the web build of the front end over the wasm Design session, in
+  # headless Chrome. The wasm-bindgen CLI is the version the ovcd-web crate pins.
+  web-app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: The pinned wasm-bindgen version
+        id: wb
+        run: echo "version=$(sed -n 's/^wasm-bindgen = "=\([0-9.]*\)".*/\1/p' crates/ovcd-web/Cargo.toml)" >> "$GITHUB_OUTPUT"
+      - name: wasm-bindgen CLI (cached)
+        id: cli
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/wasm-bindgen
+          key: wasm-bindgen-cli-${{ steps.wb.outputs.version }}-${{ runner.os }}
+      - name: Install wasm-bindgen CLI
+        if: steps.cli.outputs.cache-hit != 'true'
+        run: cargo install wasm-bindgen-cli --version "${{ steps.wb.outputs.version }}" --locked
+      - name: Build the web package
+        run: bash tools/build_web.sh
+      - name: Build ovcd
+        run: cargo build -p ovcd-cli
+      - name: Front end (type check, desktop build, web build)
+        working-directory: app
+        run: |
+          npm ci
+          npm run build
+          npm run build:web
+      - name: Web smoke test (headless Chrome)
+        working-directory: app
+        run: bash e2e/run-web.sh
+
   # The drawing crate against the Python implementation of the same standard (spec 0003): the views
   # of every fixture Design give equal normalised content in both. The Python tool is installed at
   # the commit that crates/ovcd-draw/standard/PIN.json pins, so a suite update moves both together.

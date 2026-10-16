@@ -1,8 +1,8 @@
 [workspace]
 resolver = "3"
-members = ["crates/ovcd-core", "crates/ovcd-format", "crates/ovcd-draw", "crates/ovcd-cli", "crates/ovcd-py", "app/src-tauri", "xtask"]
+members = ["crates/ovcd-core", "crates/ovcd-format", "crates/ovcd-draw", "crates/ovcd-cli", "crates/ovcd-py", "crates/ovcd-shell", "crates/ovcd-web", "app/src-tauri", "xtask"]
 # ovcd-py (PyO3 bindings) and the app (Tauri, needs Node for the front end) are left out so `cargo build` and `cargo test` need no Python.
-default-members = ["crates/ovcd-core", "crates/ovcd-format", "crates/ovcd-draw", "crates/ovcd-cli", "xtask"]
+default-members = ["crates/ovcd-core", "crates/ovcd-format", "crates/ovcd-draw", "crates/ovcd-cli", "crates/ovcd-shell", "crates/ovcd-web", "xtask"]
 
 [workspace.package]
 version = "0.2.2"
@@ -15,6 +15,7 @@ repository = "https://github.com/African-River-Corridors/open-vessel-concept-dra
 ovcd-core = { path = "crates/ovcd-core" }
 ovcd-format = { path = "crates/ovcd-format" }
 ovcd-draw = { path = "crates/ovcd-draw" }
+ovcd-shell = { path = "crates/ovcd-shell" }
 # float_roundtrip, arbitrary_precision: read every number exactly as written, big ints too.
 # preserve_order: a JSON object keeps its key order, as a Python dict does.
 serde_json = { version = "1", features = ["float_roundtrip", "arbitrary_precision", "preserve_order"] }

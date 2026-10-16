@@ -64,6 +64,10 @@
     if (text.trim() !== "" && Number.isFinite(n)) send(n);
   }
 
+  // The shape tells the three sources apart without colour; the word stays the accessible text.
+  const SHAPES: Record<string, string> = { typed: "●", default: "○", class: "◆" };
+  let hasError = $derived(messages.some((m) => m.severity === "error"));
+
   let value = $derived(stored.value);
   // Local display state, taken once: the field is drawn afresh (new key) when Rust changes a value.
   /* svelte-ignore state_referenced_locally */
@@ -81,7 +85,7 @@
 <div class="field" data-input={spec.name} title={help}>
   <div class="head">
     <span class="label">{spec.label}</span>
-    <span class="badge {stored.source}">{stored.source}</span>
+    <span class="badge {stored.source}"><span class="shape" aria-hidden="true">{SHAPES[stored.source] ?? ""} </span>{stored.source}</span>
     {#if !spec.required && stored.source === "typed"}
       <button class="link" onclick={onReset} title="Go back to the default">reset</button>
     {/if}
@@ -94,6 +98,7 @@
           type="text"
           inputmode="decimal"
           aria-label={spec.label}
+          class:invalid={hasError}
           use:fill={value === null ? "" : String(value)}
           oninput={(e) => typed(e.currentTarget.value, (n) => onEdit(n))}
         />
@@ -119,7 +124,7 @@
       {value === true ? "yes" : "no"}
     </label>
   {:else if spec.kind === "choice" || spec.kind === "cargo"}
-    <select aria-label={spec.label} value={String(value)} onchange={(e) => onEdit(e.currentTarget.value)}>
+    <select aria-label={spec.label} class:invalid={hasError} value={String(value)} onchange={(e) => onEdit(e.currentTarget.value)}>
       {#each spec.choices ?? [] as c (c.value)}
         <option value={c.value}>{c.label}</option>
       {/each}
@@ -127,6 +132,7 @@
   {:else if spec.kind === "formation"}
     <select
       aria-label={spec.label}
+      class:invalid={hasError}
       value={formation.kind}
       onchange={(e) => onFormation(e.currentTarget.value, e.currentTarget.value === "pushed_convoy" ? abreast : null, e.currentTarget.value === "pushed_convoy" ? inLine : null)}
     >
@@ -166,20 +172,27 @@
 </div>
 
 <style>
-  .field { margin: 8px 0 10px; }
+  .field { margin: var(--sp-2) 0 10px; }
   .head { display: flex; align-items: baseline; gap: 6px; }
-  .label { font-size: 12px; color: var(--dim); }
-  .badge { font-size: 10px; padding: 0 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.03em; }
-  .badge.typed { background: #e3e9f3; color: var(--navy); }
-  .badge.default { background: #eee; color: #777; }
-  .badge.class { background: #dff0e3; color: #1f5a2c; }
-  .link { background: none; border: none; color: var(--navy); text-decoration: underline; padding: 0; cursor: pointer; font-size: 11px; }
+  .label { font-size: var(--fs-12); color: var(--ink-2); }
+  .badge { font-size: var(--fs-11); padding: 0 5px; border-radius: var(--radius); text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; }
+  .badge.typed { color: var(--src-typed); }
+  .badge.default { color: var(--src-default); }
+  .badge.class { color: var(--src-class); }
+  .link { background: none; border: none; color: var(--accent); text-decoration: underline; padding: 0; cursor: pointer; font-size: var(--fs-11); }
+  .link:hover:not(:disabled) { background: none; }
   .row { display: flex; gap: 6px; align-items: center; }
-  .row.convoy label { display: flex; flex-direction: column; font-size: 11px; color: var(--dim); }
-  input[type="text"], select { width: 100%; padding: 4px 6px; font: inherit; color: var(--ink); box-sizing: border-box; }
-  .unit { min-width: 2.2em; font-size: 12px; }
-  .none { font-size: 12px; display: flex; gap: 4px; align-items: center; white-space: nowrap; }
-  .msg { font-size: 12px; margin-top: 2px; }
-  .msg.error { color: #a02a1a; }
-  .msg.warning { color: #8a6000; }
+  .row.convoy label { display: flex; flex-direction: column; font-size: var(--fs-11); color: var(--ink-3); }
+  input[type="text"], select { width: 100%; padding: 3px 5px; font: inherit; color: var(--ink); background: var(--surface); border: var(--lw-thin) solid var(--rule-strong); border-radius: var(--radius); box-sizing: border-box; }
+  input[type="text"] { text-align: right; font-variant-numeric: tabular-nums; }
+  input:focus-visible, select:focus-visible { outline-offset: 0; }
+  input.invalid, select.invalid { border-width: var(--lw-thick); border-color: var(--fail); padding: 2px 4px; }
+  .unit { min-width: 2.2em; font-size: var(--fs-12); color: var(--ink-3); }
+  .none { font-size: var(--fs-12); display: flex; gap: 4px; align-items: center; white-space: nowrap; }
+  .msg { font-size: var(--fs-12); margin-top: 2px; }
+  /* The shape is generated, so it is not part of the message text; the empty alternative keeps it out of speech. */
+  .msg.error { color: var(--fail); }
+  .msg.error::before { content: "✕ " / ""; }
+  .msg.warning { color: var(--warn); }
+  .msg.warning::before { content: "▲ " / ""; }
 </style>

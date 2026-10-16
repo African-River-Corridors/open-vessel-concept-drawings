@@ -1,5 +1,8 @@
-// The only door to the Rust side. Every function forwards to a Tauri command; none computes.
-import { invoke } from "@tauri-apps/api/core";
+// The only door to the Rust side. Every function forwards to the platform adapter (Tauri commands on the
+// desktop, the WebAssembly session in the browser); none computes.
+import { platform } from "./platform";
+export type { DrawingFormat, DrawingView } from "./platform";
+import type { DrawingFormat, DrawingView } from "./platform";
 
 /** Where an input came from: the designer, the Defaults Profile, or the Vessel Class. */
 export type Source = "typed" | "default" | "class";
@@ -121,34 +124,36 @@ export interface Evaluation {
   file_messages: Message[];
 }
 
-export const snapshot = () => invoke<Snapshot>("snapshot");
-export const inputSchema = () => invoke<Schema>("input_schema");
-export const evaluate = () => invoke<Evaluation>("evaluate");
+export const snapshot = () => platform().snapshot();
+export const inputSchema = () => platform().inputSchema();
+export const evaluate = () => platform().evaluate();
 /** Each of these returns null when the user cancels a dialog. */
-export const newFile = () => invoke<Snapshot | null>("new_file");
-export const openFile = () => invoke<Snapshot | null>("open_file");
-export const save = () => invoke<Snapshot | null>("save");
-export const saveAs = () => invoke<Snapshot | null>("save_as");
+export const newFile = () => platform().newFile();
+export const openFile = () => platform().openFile();
+export const save = () => platform().save();
+export const saveAs = () => platform().saveAs();
 export const setInput = (option: string, name: string, value: unknown) =>
-  invoke<Snapshot>("set_input", { option, name, value });
-export const resetInput = (option: string, name: string) =>
-  invoke<Snapshot>("reset_input", { option, name });
-export const setActiveOption = (option: string) =>
-  invoke<Snapshot>("set_active_option", { option });
+  platform().setInput(option, name, value);
+export const resetInput = (option: string, name: string) => platform().resetInput(option, name);
+export const setActiveOption = (option: string) => platform().setActiveOption(option);
 export const setFormation = (
   option: string,
   kind: string,
   abreast: number | null,
   inLine: number | null,
-) => invoke<Snapshot>("set_formation", { option, kind, abreast, inLine });
-export const addOption = () => invoke<Snapshot>("add_option");
-export const duplicateOption = (option: string) => invoke<Snapshot>("duplicate_option", { option });
-export const renameOption = (option: string, newName: string) =>
-  invoke<Snapshot>("rename_option", { option, newName });
-export const deleteOption = (option: string) => invoke<Snapshot>("delete_option", { option });
+) => platform().setFormation(option, kind, abreast, inLine);
+export const addOption = () => platform().addOption();
+export const duplicateOption = (option: string) => platform().duplicateOption(option);
+export const renameOption = (option: string, newName: string) => platform().renameOption(option, newName);
+export const deleteOption = (option: string) => platform().deleteOption(option);
 /** null when the user cancels the file dialog; rejects with the reason when the profile is refused. */
-export const loadProfile = () => invoke<Snapshot | null>("load_profile");
-export const useBuiltInProfile = () => invoke<Snapshot>("use_built_in_profile");
+export const loadProfile = () => platform().loadProfile();
+export const useBuiltInProfile = () => platform().useBuiltInProfile();
 /** The first-run notice: has it been accepted, and remember that it was. */
-export const noticeSeen = () => invoke<boolean>("notice_seen");
-export const acceptNotice = () => invoke<void>("accept_notice");
+export const noticeSeen = () => platform().noticeSeen();
+export const acceptNotice = () => platform().acceptNotice();
+/** True in the browser build. */
+export const isWeb = () => platform().kind === "web";
+/** Save a drawing view as a download. false where the platform cannot (the desktop app, for now). */
+export const exportDrawing = (option: string, view: DrawingView, format: DrawingFormat) =>
+  platform().exportDrawing(option, view, format);

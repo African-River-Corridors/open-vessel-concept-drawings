@@ -98,7 +98,7 @@
     {/if}
     {#if summary}
       <div class="sits" data-testid="vessel-sits-in">
-        The vessel sits in <strong>{summary.id}</strong> <span class="badge">class</span>
+        The vessel sits in <strong>{summary.id}</strong> <span class="badge"><span aria-hidden="true">◆ </span>class</span>
         <div class="dim">
           Up to {summary.length_max_m} m long and {summary.beam_max_m} m wide.
           Draught {range(summary.draught_m, "m")}; air draft {range(summary.air_draft_m, "m")}.
@@ -114,17 +114,20 @@
 </div>
 
 <style>
-  .vc { margin: 8px 0 10px; }
-  .modes { display: flex; gap: 12px; font-size: 13px; margin-bottom: 6px; }
+  .vc { margin: var(--sp-2) 0 10px; }
+  .modes { display: flex; gap: var(--sp-3); font-size: var(--fs-13); margin-bottom: 6px; }
   .modes label { display: flex; gap: 4px; align-items: center; }
   .field { margin: 6px 0; }
-  .label { display: block; font-size: 12px; color: var(--dim); }
-  select { width: 100%; padding: 4px 6px; font: inherit; color: var(--ink); box-sizing: border-box; }
-  .sits { margin-top: 6px; font-size: 13px; }
-  .dim { font-size: 12px; color: var(--dim); margin-top: 2px; }
-  .badge { font-size: 10px; padding: 0 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.03em; background: #dff0e3; color: #1f5a2c; }
-  .msg { font-size: 12px; margin-top: 2px; }
-  .msg.error { color: #a02a1a; }
-  .msg.warning { color: #8a6000; }
-  .msg.note { color: var(--dim); }
+  .label { display: block; font-size: var(--fs-12); color: var(--ink-2); }
+  select { width: 100%; padding: 3px 5px; font: inherit; color: var(--ink); background: var(--surface); border: var(--lw-thin) solid var(--rule-strong); border-radius: var(--radius); box-sizing: border-box; }
+  select:focus-visible { outline-offset: 0; }
+  .sits { margin-top: 6px; font-size: var(--fs-13); }
+  .dim { font-size: var(--fs-12); color: var(--ink-3); margin-top: 2px; }
+  .badge { font-size: var(--fs-11); padding: 0 5px; border-radius: var(--radius); text-transform: uppercase; letter-spacing: 0.03em; color: var(--src-class); white-space: nowrap; }
+  .msg { font-size: var(--fs-12); margin-top: 2px; }
+  .msg.error { color: var(--fail); }
+  .msg.error::before { content: "✕ " / ""; }
+  .msg.warning { color: var(--warn); }
+  .msg.warning::before { content: "▲ " / ""; }
+  .msg.note { color: var(--ink-3); }
 </style>

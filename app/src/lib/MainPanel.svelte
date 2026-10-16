@@ -172,19 +172,30 @@
 
 <style>
   .panel { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-  header { display: flex; align-items: center; gap: 14px; padding: 6px 14px 0; border-bottom: 1px solid var(--line); }
-  h2 { font-family: var(--serif); font-size: 16px; margin: 0; align-self: center; padding-bottom: 6px; }
-  .tabs { display: flex; gap: 2px; }
-  .tabs button { background: none; border: 1px solid transparent; border-bottom: 0; border-radius: 4px 4px 0 0; padding: 4px 12px; cursor: pointer; color: var(--dim); }
-  .tabs button.on { color: var(--navy); font-weight: 600; background: #fff; border-color: var(--line); margin-bottom: -1px; padding-bottom: 5px; }
-  .tabs.sub { padding: 6px 14px; border-bottom: 1px solid var(--line); }
-  .tabs.sub button { border: 1px solid var(--line); border-radius: 12px; padding: 2px 12px; }
-  .tabs.sub button.on { background: var(--cream); border-color: var(--gold); margin: 0; padding-bottom: 2px; }
-  .whyrow { padding: 0 14px; background: #fdf1d3; border-bottom: 1px solid var(--line); }
+  header { display: flex; align-items: flex-end; gap: var(--sp-4); padding: var(--sp-2) var(--sp-4) 0; background: var(--surface-2); border-bottom: var(--lw-thin) solid var(--rule); }
+  h2 { font-family: var(--font-serif); font-size: var(--fs-16); margin: 0; align-self: center; padding-bottom: var(--sp-2); }
+  .tabs { display: flex; gap: var(--sp-1); }
+  /* Level 1: 14 px, 600, the active tab in --ink with a 3 px rule under it. */
+  .tabs button {
+    background: none; border: 0; border-bottom: 3px solid transparent; border-radius: 0; cursor: pointer;
+    padding: var(--sp-1) var(--sp-3) var(--sp-2); margin-bottom: -1px;
+    font-size: var(--fs-14); font-weight: 600; color: var(--ink-2);
+  }
+  .tabs button:hover { background: none; color: var(--ink); }
+  .tabs button.on { color: var(--ink); border-bottom-color: var(--ink); }
+  /* Level 2: 13 px chips; the active chip has the soft accent ground and an accent border. */
+  .tabs.sub { flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); background: var(--surface); border-bottom: var(--lw-thin) solid var(--rule); }
+  .tabs.sub button {
+    border: var(--lw-thin) solid var(--rule-strong); border-radius: 12px; margin: 0;
+    padding: 2px var(--sp-3); font-size: var(--fs-13); font-weight: 400; color: var(--ink);
+  }
+  .tabs.sub button:hover { background: var(--surface-2); }
+  .tabs.sub button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); }
+  .whyrow { padding: 0 var(--sp-4); background: var(--warn-soft); border-bottom: var(--lw-thin) solid var(--rule); }
   .view { flex: 1; min-height: 0; padding: 10px 14px; box-sizing: border-box; }
   .slot { height: 100%; }
   .charts { height: 100%; display: flex; flex-direction: column; gap: 10px; }
-  .note { color: var(--dim); }
-  .wip { font-family: var(--serif); color: var(--navy); font-size: 16px; margin: 0 0 4px; }
-  .stale { margin-left: auto; align-self: center; background: #fdf1d3; color: #6b4a00; font: 11px var(--sans); padding: 1px 6px; border-radius: 3px; }
+  .note { color: var(--ink-3); }
+  .wip { font-family: var(--font-serif); color: var(--ink); font-size: var(--fs-16); margin: 0 0 4px; }
+  .stale { margin-left: auto; align-self: center; margin-bottom: var(--sp-1); background: var(--warn-soft); color: var(--warn); border: var(--lw-thin) solid var(--warn); font: var(--fs-11) var(--font-ui); padding: 1px 6px; border-radius: var(--radius); }
 </style>

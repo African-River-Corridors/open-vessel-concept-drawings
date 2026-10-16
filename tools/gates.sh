@@ -13,7 +13,7 @@
 #   3. clippy on ovcd-py, warnings as errors (not a default member, so step 2 skips it; it needs
 #      Python only to configure PyO3, and clippy does not link, so the step needs no libpython)
 #   4. cargo test, with Python made unusable, to prove the Rust loop needs no Python
-#   5. the WebAssembly build of ovcd-core and ovcd-draw
+#   5. the WebAssembly build of ovcd-core, ovcd-draw and ovcd-web
 #   6. the design-impact check (before/after on main; fails only if a change is missing from
 #      CHANGELOG.md)
 #   7. pytest against the shipped package
@@ -88,7 +88,7 @@ step "cargo fmt --check" cargo fmt --all --check
 step "clippy -D warnings" cargo clippy --all-targets --all-features -- -D warnings
 step "clippy ovcd-py -D warnings" env PYO3_PYTHON="$PY" cargo clippy -p ovcd-py --all-targets --all-features -- -D warnings
 step "cargo test (no Python)" cargo_test_without_python
-step "WebAssembly build of ovcd-core and ovcd-draw" cargo build -p ovcd-core -p ovcd-draw --all-features --target "$WASM_TARGET"
+step "WebAssembly build of ovcd-core, ovcd-draw and ovcd-web" cargo build -p ovcd-core -p ovcd-draw -p ovcd-web --all-features --target "$WASM_TARGET"
 step "design impact" "$PY" tools/design_impact.py gate
 step "pytest" "$PY" -m pytest -q
 

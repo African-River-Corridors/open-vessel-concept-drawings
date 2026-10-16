@@ -91,3 +91,49 @@ _Avoid_: tolerance, error margin
 A concept drawing set for one Hull — plan, elevation and cross-section — for feasibility studies, not
 for construction or class approval.
 _Avoid_: layout, drawing (on its own)
+
+### Rules
+
+**Rule**:
+One requirement from one published source about one Measure: what is compared, against which limit,
+and what happens if it is not met. A Rule is sourced only when its paragraph has been checked against
+the actual text; otherwise it is unverified, and every result says so.
+_Avoid_: criterion, check (on its own), regulation
+
+**Rule Set**:
+A named, versioned group of Rules from one source edition (e.g. the IS Code 2008 Part A, or the IGC
+Code as amended for ship type 2G). A Design selects the Rule Sets it is checked against. Its version is
+OVCD's encoding of the edition, so one edition can have several versions; every released version is
+kept.
+_Avoid_: ruleset (one word), criteria set, code (on its own)
+
+**Measure**:
+A quantity the engine computes from a Design for one object, such as the GZ area from 0° to 30° of a
+loading condition or the clear side gap of a tank. Rules compare Measures against limits.
+_Avoid_: metric, parameter
+
+**Service Area**:
+Where an Option is meant to operate: river only, or coastal and river. It sets the default Rule Sets of
+the Option.
+_Avoid_: route, zone, trade
+
+**Rule Trace**:
+The list, in every result, of each Rule of each selected Rule Set: its citation, the inputs used, the
+value, the limit, the Margin and the outcome. A Rule the engine cannot evaluate yet is listed as not
+evaluated, never left out.
+_Avoid_: log, audit (on its own)
+
+**Margin**:
+How far a value is from its Rule's limit, signed so that a positive Margin passes.
+_Avoid_: tolerance, slack
+
+**Governing Rule**:
+Of several Rules that cover the same requirement, the one with the smallest Margin. All of them apply;
+the strictest governs.
+_Avoid_: controlling rule, binding rule
+
+**OVCD Check**:
+A check that OVCD makes but no published rule requires: physical feasibility (the draught is below the
+depth), a method's validity range, or a limit of the tool. Shown in the Rule Trace with its origin, never
+as a published Rule.
+_Avoid_: rule (for these), design rule
