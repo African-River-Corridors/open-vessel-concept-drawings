@@ -459,20 +459,22 @@ fn json_results_are_what_simulate_answers_for_a_self_propelled_gas_hull() {
     }));
     assert_eq!(results, &expected);
     // Pinned values: the original Python, re-pinned (issue #237) to what the current code prints;
-    // were 2058.228164213275 and 1813.9027562650056 under the stepped IGC_2G.
+    // were 2058.228164213275 and 1813.9027562650056 under the stepped IGC_2G. `cargo_t` re-pinned
+    // again (issue #264, the search keeps only arrangements that pass stability); was
+    // 2943.4407266060916, and lightship_t 2038.2392733939087.
     let r = &results["results"];
     assert_close(
         r["cargo_t"].as_f64().unwrap(),
-        2943.4407266060916,
+        2832.6643735601965,
         "cargo_t",
     );
     assert_close(
         r["lightship_t"].as_f64().unwrap(),
-        2038.2392733939087,
+        1893.6869533634328,
         "lightship_t",
     );
-    // Re-pinned (issue #237); was "tank volume".
-    assert_eq!(r["governs"], "draught — Draught limit");
+    // Re-pinned (issue #264); was "tank volume" (stepped IGC_2G) and "draught — Draught limit" (issue #237).
+    assert_eq!(r["governs"], "tank volume");
     // The summary of a gas Option lists the failed stability checks, if any, by name.
     let s = ovcd(&["run", p(&file)]);
     assert!(stdout(&s).contains("Checks: "), "{}", stdout(&s));

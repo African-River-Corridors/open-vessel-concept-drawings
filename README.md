@@ -119,15 +119,17 @@ Output:
 ```
 Class CN-GB50139 CN-II-MOTOR: 90 m x 14.8 m, 2,000 t class deadweight
 Single run : 1 tanks abreast, OD 13.70 m, 3,278 t, laden draught 4.70 m
-Searched   : 1 tank(s) abreast, OD 13.70 m, 2,943 t (draft-bound), draught 4.40 m
-  check failed: wheelhouse_sees_over_cargo: raised eye 14.00 m >= obstruction 16.34 m + 0.50 m margin (lift used 6.00 m of 6.00 m)
+Searched   : 1 tank(s) abreast, OD 12.70 m, 2,833 t (volume-bound), draught 4.17 m
 ```
 
 The single run fills the tank volume and ignores the draught cap: its laden draught, 4.70 m, is over
-the 4.4 m cap. The search respects the cap and carries 2,943 t. Tank side clearance follows IGC Code
+the 4.4 m cap. The search respects the cap. It also keeps only arrangements that pass every check,
+stability included, so the 13.70 m tank (too tender when laden) is not returned and the search
+carries 2,833 t in a 12.70 m tank. If no arrangement passed, `feasible` would be false and
+`failed_checks` would list the checks the closest one fails. Tank side clearance follows IGC Code
 2.4.1.1 (the distance d(Vc), per tank, dome included in Vc), measured plate to plate with the
-insulation inside d (2.4.2). Every result carries its checks. Here the wheelhouse cannot see over the
-large tank, so a real design must raise the eye or accept a smaller tank.
+insulation inside d (2.4.2). A check that is only advisory, such as the wheelhouse sightline, does
+not stop an arrangement passing; it stays in the results as a failed check.
 
 ## Layout
 

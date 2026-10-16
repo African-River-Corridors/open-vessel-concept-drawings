@@ -547,14 +547,17 @@ fn max_tank_od_m_reaches_the_arrangement_search() {
         let v = sim(gas(json!({ "max_tank_od_m": cap })));
         let od = num(&v["arrangement"]["tank_od_m"]);
         assert!(od <= cap + 1e-6, "cap {cap}: tank OD {od}");
+        // Since issue #264 the search keeps only arrangements that pass stability, so a smaller cap
+        // can leave the answer as it was (the 8 m cap gives the same tank as the 12 m cap here).
         assert!(
-            od < last_od && num(&v["results"]["cargo_t"]) < last_cargo,
+            od <= last_od && num(&v["results"]["cargo_t"]) <= last_cargo,
             "cap {cap}"
         );
         last_od = od;
         last_cargo = num(&v["results"]["cargo_t"]);
     }
     assert!(last_od < num(&default["arrangement"]["tank_od_m"]));
+    assert!(last_cargo < num(&default["results"]["cargo_t"]));
 }
 
 /// Worked out: a hull too short for any tank carries nothing, so there is no loaded draught and

@@ -92,7 +92,11 @@ fn a_hull_where_nothing_passes_is_infeasible_and_lists_the_failing_checks() {
     );
     assert!(!stability_ok(&f));
     // Nothing in the search passes it either: the viable length is beyond this hull's own.
-    assert!(smallest_viable_loa(10.0, "LPG_propane", 5.7, 20.0, 60.0, &options(6.0)).unwrap().is_infinite());
+    assert!(
+        smallest_viable_loa(10.0, "LPG_propane", 5.7, 20.0, 60.0, &options(6.0))
+            .unwrap()
+            .is_infinite()
+    );
 }
 
 #[test]
@@ -136,11 +140,23 @@ fn a_candidate_that_over_runs_the_air_draft_limit_does_not_pass() {
 }
 
 #[test]
-fn a_draught_cap_above_the_hull_depth_less_the_freeboard_does_not_pass() {
-    // A 3.5 m deep hull asked to carry to a 3.4 m draught (the load is draught-bound) has 0.1 m of
-    // freeboard, under the 0.3 m the search requires.
-    let f = fit(90.0, 14.8, "LPG_propane", 3.4, &options(3.5)).unwrap();
-    assert_eq!(f.binding, "draft");
+fn a_load_that_leaves_less_freeboard_than_required_does_not_pass() {
+    // A 3.5 m deep hull held to a 0.8 m draught is draught-bound and keeps 2.7 m of freeboard. The
+    // search passes it at the default 0.3 m and refuses it when 2.8 m is required.
+    let ok = fit(110.0, 20.0, "LPG_propane", 0.8, &options(3.5)).unwrap();
+    assert_eq!(ok.binding, "draft");
+    assert!(
+        !ok.failed_checks
+            .iter()
+            .any(|c| c.starts_with("freeboard_at_payload")),
+        "{:?}",
+        ok.failed_checks
+    );
+    let o = FitOptions {
+        required_freeboard_m: 2.8,
+        ..options(3.5)
+    };
+    let f = fit(110.0, 20.0, "LPG_propane", 0.8, &o).unwrap();
     assert!(!f.feasible);
     assert!(
         f.failed_checks
@@ -182,7 +198,10 @@ fn no_arrangement_labelled_feasible_has_a_failing_check() {
         }
     }
     // The sweep must have both kinds, or it proves nothing.
-    assert!(feasible > 20 && infeasible > 20, "{feasible} / {infeasible}");
+    assert!(
+        feasible > 20 && infeasible > 20,
+        "{feasible} / {infeasible}"
+    );
 }
 
 #[test]

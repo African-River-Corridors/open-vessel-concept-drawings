@@ -53,31 +53,34 @@ def test_cn_ii_passes_the_is_code():
     assert {c.name for c in a.conditions} == {"Laden", "Half laden", "Light"}
 
 
-def test_cn_ii_at_the_default_16_m_cap_fails_the_laden_angle_of_maximum_gz():
-    """Issue #237 finding: with the smaller side clearance of the per-tank rule, the search puts
-    more cargo in one wider tank and the laden condition is tender. The search does not gate on
-    stability, so the design is returned and the assessment says so.
+def test_cn_ii_at_the_default_16_m_cap_passes_stability_because_the_search_gates_on_it():
+    """Issue #237 finding: with the smaller side clearance of the per-tank rule, the search put more
+    cargo in one wider tank and the laden condition was tender. Since issue #264 the search keeps
+    only arrangements that pass stability, so the design it returns is stable in every condition.
 
-    Label: snapshot
+    Label: property
     """
     f = fit(90.0, 14.8, "LPG_propane", 4.4, depths=[6.5], ruleset="IGC_2G", fill_ratio=0.95)
+    assert f.feasible and f.failed_checks == []
     a = assess(f.engine_result, f.payload_t, criteria_set="IS_CODE_2008")
-    assert not a.ok
-    laden = next(c for c in a.conditions if c.name == "Laden")
-    angle = next(x for x in laden.criteria if x.name == "Angle of max GZ")
-    assert not angle.ok and angle.value == 21 and angle.limit == 25.0
+    assert a.ok
 
 
-def test_narrow_deep_gas_barge_fails_and_half_laden_governs():
-    """The check must be able to fail: a 7 m beam on a 6 m deep hull is tender.
+def test_a_hull_where_nothing_passes_has_a_failing_assessment_and_light_governs_the_note():
+    """The check must be able to fail: on a 60 x 10 x 6 m self-propelled hull every arrangement fails
+    the light condition. `fit` says so (`feasible` false, the failed check named) and the closest
+    candidate it returns fails its own assessment. (Before issue #264 this was a 60 x 7 x 6 m hull; the
+    search now finds a stable smaller arrangement there.)
 
-    Label: snapshot
+    Label: property
     """
-    f = fit(60.0, 7.0, "LPG_propane", 10.0, depths=[6.0], ruleset="IGC_2G",
-            fill_ratio=0.98, self_propelled=False)
+    f = fit(60.0, 10.0, "LPG_propane", 5.7, depths=[6.0], ruleset="IGC_2G", fill_ratio=0.98)
+    assert not f.feasible
+    assert [m.split(":")[0] for m in f.failed_checks] == ["Stability \u2014 light"]
     a = assess(f.engine_result, f.payload_t, criteria_set="IS_CODE_2008")
     assert not a.ok
-    assert a.governing.name == "Half laden" and a.governing.gm_fluid_m < 0
+    light = next(c for c in a.conditions if c.name == "Light")
+    assert not light.ok
 
 
 def test_the_igc_rule_set_uses_the_is_code_and_the_adn_set_is_gone():

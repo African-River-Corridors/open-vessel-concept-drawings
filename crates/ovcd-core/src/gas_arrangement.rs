@@ -340,7 +340,11 @@ pub fn stability_check(c: &gs::Condition) -> Check {
 /// The stability checks of a candidate, one per loading condition. None when it carries nothing or
 /// has no gas tanks (the cheap checks report that). An assessment that cannot be made is one failed
 /// check, so that a candidate the engine cannot judge never passes and never stops the search.
-fn stability_checks(r: &BargeCapacityResult, j: &JourneyDeratingResult, o: &FitOptions) -> Vec<Check> {
+fn stability_checks(
+    r: &BargeCapacityResult,
+    j: &JourneyDeratingResult,
+    o: &FitOptions,
+) -> Vec<Check> {
     if j.achievable_tonnage_t <= 0.0 || r.gas_basis.is_none() {
         return Vec::new();
     }
@@ -384,6 +388,8 @@ type Built = (BargeCapacityInputs, BargeCapacityResult);
 /// One scored candidate, as Python's `(payload, depth, result, journey, inputs)` tuple.
 #[derive(Clone)]
 struct Candidate {
+    /// Every cheap check passes (see "THE CHECKS THE SEARCH USES").
+    cheap_ok: bool,
     tonnage: f64,
     depth: f64,
     result: BargeCapacityResult,
@@ -511,10 +517,12 @@ struct Pool {
     best: Option<usize>,
 }
 
-/// Build every candidate and judge it by the whole check list. A candidate is judged by the cheap
-/// checks first; the stability assessment runs only for one that passed them and is above the best
-/// passing tonnage so far (a lower one cannot win, so its stability is not needed). With
-/// `stop_at_first_pass` the search ends at the first passing candidate (for a yes or no answer).
+/// Build every candidate and judge it by the whole check list. Every candidate gets the cheap
+/// checks. The stability assessment, the costly check, runs only for the candidates that passed
+/// the cheap ones, from the most cargo down, and stops at the first that passes it: a candidate
+/// with less cargo cannot win, so its stability is not needed. Among candidates within 1e-6 t of
+/// the winner the first built stays, as before. With `stop_at_first_pass` the search ends at the
+/// first passing candidate (for a yes or no answer).
 fn search(s: &mut Search<'_>, t_max: f64, stop_at_first_pass: bool) -> Result<Pool, PyError> {
     let (loa, beam, o) = (s.loa, s.beam, s.o);
     let mut pool = Pool {
@@ -568,27 +576,40 @@ fn search(s: &mut Search<'_>, t_max: f64, stop_at_first_pass: bool) -> Result<Po
                     o.block_coefficient,
                     o.water_density_t_per_m3,
                 )?;
-                let tonnage = j.achievable_tonnage_t;
-                // Cheap checks first; stability only for a candidate that could still win.
-                let could_win = pool
-                    .best
-                    .is_none_or(|i| tonnage > pool.all[i].tonnage + 1e-6);
-                let wins = could_win
-                    && all_ok(&cheap_checks(&r, &j, d, o))
-                    && all_ok(&stability_checks(&r, &j, o));
+                let cheap_ok = all_ok(&cheap_checks(&r, &j, d, o));
                 pool.all.push(Candidate {
-                    tonnage,
+                    cheap_ok,
+                    tonnage: j.achievable_tonnage_t,
                     depth: d,
                     result: r,
                     journey: j,
                     inputs: inp,
                 });
-                if wins {
-                    pool.best = Some(pool.all.len() - 1);
+            }
+        }
+    }
+    // The costly check, from the most cargo down (a stable sort keeps the build order of equals).
+    let mut order: Vec<usize> = (0..pool.all.len())
+        .filter(|&i| pool.all[i].cheap_ok)
+        .collect();
+    order.sort_by(|&a, &b| pool.all[b].tonnage.total_cmp(&pool.all[a].tonnage));
+    let mut top = 0.0;
+    for i in order {
+        let c = &pool.all[i];
+        if pool.best.is_some() && c.tonnage < top - 1e-6 {
+            break;
+        }
+        if all_ok(&stability_checks(&c.result, &c.journey, o)) {
+            match pool.best {
+                None => {
+                    top = c.tonnage;
+                    pool.best = Some(i);
                     if stop_at_first_pass {
-                        return Ok(pool);
+                        break;
                     }
                 }
+                Some(w) if i < w => pool.best = Some(i),
+                Some(_) => {}
             }
         }
     }
@@ -665,6 +686,7 @@ pub fn fit(
                 o.water_density_t_per_m3,
             )?;
             Candidate {
+                cheap_ok: false,
                 tonnage: 0.0,
                 depth: d,
                 result: r,
