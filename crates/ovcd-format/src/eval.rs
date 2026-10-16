@@ -1704,6 +1704,9 @@ const CAPACITY_FIELDS: &[&str] = &[
     "bulk_piping_factor",
     "bulk_outfitting_factor",
     "max_tank_od_m",
+    "bow_rake_to_depth_ratio",
+    "wing_tank_gap_m",
+    "wing_tank_height_ratio",
     "propulsion",
     "electrical_load_kwe",
 ];
@@ -1782,7 +1785,10 @@ pub(crate) fn capacity_inputs(args: &Value) -> Result<BargeCapacityInputs, EvalE
         bulk_steel_rate_per_cbm,
         bulk_piping_factor,
         bulk_outfitting_factor,
-        max_tank_od_m
+        max_tank_od_m,
+        bow_rake_to_depth_ratio,
+        wing_tank_gap_m,
+        wing_tank_height_ratio
     );
     set_opt_f64!(
         air_draft_limit_m,

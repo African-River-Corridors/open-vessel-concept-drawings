@@ -23,7 +23,9 @@ use alloc::vec::Vec;
 
 use crate::barge_capacity::{
     BargeCapacityInputs, BargeCapacityResult, DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
-    DEFAULT_MAX_TANK_OD_M, DEFAULT_PUSHED_STERN_VOID_M, compute as capacity,
+    DEFAULT_MAX_TANK_OD_M, DEFAULT_PUSHED_STERN_VOID_M, DEFAULT_TANK_DOME_HEIGHT_M,
+    DEFAULT_TANK_SUPPORT_HEIGHT_M, DEFAULT_TANK_WALL_THICKNESS_MM, DEFAULT_TANKS_IN_LINE,
+    DEFAULT_WING_TANK_GAP_M, DEFAULT_WING_TANK_HEIGHT_RATIO, compute as capacity,
 };
 use crate::checks::{Check, all_ok};
 use crate::journey_derating::{JourneyDeratingInputs, JourneyDeratingResult, compute as derate};
@@ -63,6 +65,18 @@ pub struct FitOptions {
     pub bow_rake_to_depth_ratio: f64,
     /// Aft void of a pushed barge (m).
     pub pushed_stern_void_m: f64,
+    /// Tanks along the hull, for every candidate.
+    pub tanks_in_line: i64,
+    /// Height of the tank saddles above the inner bottom (m).
+    pub tank_support_height_m: f64,
+    /// Dome height above the tank top (m).
+    pub tank_dome_height_m: f64,
+    /// Gap between the wing tank and the cargo tank, per side (m).
+    pub wing_tank_gap_m: f64,
+    /// Wing tank height as a fraction of the cargo tank outer diameter.
+    pub wing_tank_height_ratio: f64,
+    /// Fixed tank wall thickness (mm).
+    pub tank_wall_thickness_mm: f64,
 }
 
 impl Default for FitOptions {
@@ -78,6 +92,12 @@ impl Default for FitOptions {
             max_tank_od_m: DEFAULT_MAX_TANK_OD_M,
             bow_rake_to_depth_ratio: DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
             pushed_stern_void_m: DEFAULT_PUSHED_STERN_VOID_M,
+            tanks_in_line: DEFAULT_TANKS_IN_LINE,
+            tank_support_height_m: DEFAULT_TANK_SUPPORT_HEIGHT_M,
+            tank_dome_height_m: DEFAULT_TANK_DOME_HEIGHT_M,
+            wing_tank_gap_m: DEFAULT_WING_TANK_GAP_M,
+            wing_tank_height_ratio: DEFAULT_WING_TANK_HEIGHT_RATIO,
+            tank_wall_thickness_mm: DEFAULT_TANK_WALL_THICKNESS_MM,
         }
     }
 }
@@ -277,6 +297,11 @@ impl Search<'_> {
         inp.max_tank_od_m = self.o.max_tank_od_m;
         inp.bow_rake_to_depth_ratio = self.o.bow_rake_to_depth_ratio;
         inp.pushed_stern_void_m = self.o.pushed_stern_void_m;
+        inp.tank_support_height = self.o.tank_support_height_m;
+        inp.dome_height = self.o.tank_dome_height_m;
+        inp.wing_tank_gap_m = self.o.wing_tank_gap_m;
+        inp.wing_tank_height_ratio = self.o.wing_tank_height_ratio;
+        inp.tank_wall_thickness = Some(self.o.tank_wall_thickness_mm);
         inp
     }
 
@@ -372,7 +397,7 @@ pub fn fit(
     for &d in &o.depths {
         for &nw in &o.tanks_wide {
             let mut cands: Vec<Built> = Vec::new();
-            if let Some(x) = s.build(d, nw, 2)? {
+            if let Some(x) = s.build(d, nw, o.tanks_in_line)? {
                 cands.push(x);
             }
             let mut more: Vec<Built> = Vec::new();
@@ -442,7 +467,7 @@ pub fn fit(
                 kind: "IndexError",
                 message: "list index out of range".to_string(),
             })?;
-            let inp = s.base_inputs(d, 1, 2);
+            let inp = s.base_inputs(d, 1, o.tanks_in_line);
             let r = capacity(&inp)?;
             let j = derate_candidate(&r, loa, beam, d, t_max, o.block_coefficient)?;
             Candidate {

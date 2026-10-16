@@ -178,6 +178,48 @@
       "soft": { "min": 5.0, "max": 30.0 },
       "basis": "carried over from the original engine: plate thickness in the hopper steel weight"
     },
+    "tanks_in_line": {
+      "default": 2,
+      "unit": "tanks",
+      "hard": { "ge": 1, "le": 50 },
+      "soft": { "min": 1.0, "max": 4.0 },
+      "basis": "carried over from the original engine: a whole number of tanks along the hull. Fewer tanks are longer; a tank longer than 7 outer diameters fails the length over diameter check, and a tank too short for its heads makes the hull infeasible"
+    },
+    "tank_support_height_m": {
+      "default": 0.5,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.2, "max": 1.5 },
+      "basis": "carried over from the original engine: the height of the tank saddles above the inner bottom. The double bottom is the bottom clearance less this, and not less than zero"
+    },
+    "tank_dome_height_m": {
+      "default": 2.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.5, "max": 3.0 },
+      "basis": "carried over from the original engine: the dome above the tank top. It raises the air draft"
+    },
+    "wing_tank_gap_m": {
+      "default": 0.6,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.3, "max": 1.0 },
+      "basis": "carried over from the original engine: the gap between the wing ballast tank and the cargo tank, per side. The wing tank width is the side clearance less this gap, and not less than zero"
+    },
+    "wing_tank_height_ratio": {
+      "default": 0.66,
+      "unit": "-",
+      "hard": { "gt": 0, "le": 2 },
+      "soft": { "min": 0.4, "max": 1.0 },
+      "basis": "carried over from the original engine: the wing tank height as a fraction of the cargo tank outer diameter. It sets the wing plate level, and so the moulded volume in the lightship"
+    },
+    "tank_wall_thickness_mm": {
+      "default": 25.0,
+      "unit": "mm",
+      "hard": { "gt": 0, "le": 200 },
+      "soft": { "min": 10.0, "max": 50.0 },
+      "basis": "carried over from the original engine: a fixed wall thickness for the shell and the heads. The engine does not check it against a pressure vessel rule"
+    },
     "optimise_depth": {
       "default": false
     },

@@ -83,6 +83,14 @@ const FIT_OPTION_KEYS: &[&str] = &[
     "extra_clearance_m",
     "block_coefficient",
     "max_tank_od_m",
+    "bow_rake_to_depth_ratio",
+    "pushed_stern_void_m",
+    "tanks_in_line",
+    "tank_support_height_m",
+    "tank_dome_height_m",
+    "wing_tank_gap_m",
+    "wing_tank_height_ratio",
+    "tank_wall_thickness_mm",
 ];
 
 /// The keyword arguments of `fit`, over `base` (the defaults of the function being called).
@@ -111,9 +119,24 @@ fn fit_options(o: &Map<String, Value>, base: FitOptions) -> Result<FitOptions, E
     }
     f.block_coefficient = float_or(o, "block_coefficient", f.block_coefficient)?;
     f.max_tank_od_m = float_or(o, "max_tank_od_m", f.max_tank_od_m)?;
+    f.bow_rake_to_depth_ratio = float_or(o, "bow_rake_to_depth_ratio", f.bow_rake_to_depth_ratio)?;
+    f.pushed_stern_void_m = float_or(o, "pushed_stern_void_m", f.pushed_stern_void_m)?;
+    if let Some(v) = o.get("tanks_in_line") {
+        f.tanks_in_line = v.as_i64().ok_or_else(|| {
+            EvalError::BadInput("`args.tanks_in_line` must be a whole number".into())
+        })?;
+    }
+    f.tank_support_height_m = float_or(o, "tank_support_height_m", f.tank_support_height_m)?;
+    f.tank_dome_height_m = float_or(o, "tank_dome_height_m", f.tank_dome_height_m)?;
+    f.wing_tank_gap_m = float_or(o, "wing_tank_gap_m", f.wing_tank_gap_m)?;
+    f.wing_tank_height_ratio = float_or(o, "wing_tank_height_ratio", f.wing_tank_height_ratio)?;
+    f.tank_wall_thickness_mm = float_or(o, "tank_wall_thickness_mm", f.tank_wall_thickness_mm)?;
     Ok(f)
 }
 
+/// The engine inputs of a `fit` result, as the Python `BargeCapacityInputs` has them. The Python
+/// bridge builds that dataclass from this object, so a field of the core that Python lacks (the bow
+/// rake ratio and the wing tank values, issue #4) is not listed: it keeps its default there.
 fn engine_inputs_json(i: &BargeCapacityInputs) -> Value {
     // `fit` never sets the nested aft or separation inputs.
     debug_assert!(i.aft.is_none() && i.separation.is_none());

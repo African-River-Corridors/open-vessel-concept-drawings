@@ -45,6 +45,18 @@ pub const DEFAULT_MAX_TANK_OD_M: f64 = 16.0;
 
 /// Default bow rake length as a multiple of the moulded depth.
 pub const DEFAULT_BOW_RAKE_TO_DEPTH_RATIO: f64 = 1.6;
+/// Default number of gas tanks along the hull.
+pub const DEFAULT_TANKS_IN_LINE: i64 = 2;
+/// Default height of the tank saddles above the inner bottom (m).
+pub const DEFAULT_TANK_SUPPORT_HEIGHT_M: f64 = 0.5;
+/// Default dome height above the tank top (m).
+pub const DEFAULT_TANK_DOME_HEIGHT_M: f64 = 2.0;
+/// Default fixed tank wall thickness (mm).
+pub const DEFAULT_TANK_WALL_THICKNESS_MM: f64 = 25.0;
+/// Default gap between the wing tank and the cargo tank, per side (m).
+pub const DEFAULT_WING_TANK_GAP_M: f64 = 0.6;
+/// Default wing tank height as a fraction of the cargo tank outer diameter.
+pub const DEFAULT_WING_TANK_HEIGHT_RATIO: f64 = 0.66;
 /// Default aft void of a pushed barge (m).
 pub const DEFAULT_PUSHED_STERN_VOID_M: f64 = 3.0;
 
@@ -107,6 +119,10 @@ pub struct BargeCapacityInputs {
     pub fill_ratio: f64,
     pub dome_height: f64,
     pub tank_support_height: f64,
+    /// Gap between the wing tank and the cargo tank, per side (m).
+    pub wing_tank_gap_m: f64,
+    /// Wing tank height as a fraction of the cargo tank outer diameter.
+    pub wing_tank_height_ratio: f64,
 
     // --- Bulk branch ---
     /// "sloped_hopper", "box" or "container"
@@ -156,12 +172,14 @@ impl BargeCapacityInputs {
             vessel_type: "IGC_2G".to_string(),
             side_clearance_override_m: None,
             n_tanks_wide: None,
-            n_tanks_long: 2,
+            n_tanks_long: DEFAULT_TANKS_IN_LINE,
             max_tank_od_m: DEFAULT_MAX_TANK_OD_M,
-            tank_wall_thickness: Some(25.0),
+            tank_wall_thickness: Some(DEFAULT_TANK_WALL_THICKNESS_MM),
             fill_ratio: 0.95,
-            dome_height: 2.0,
-            tank_support_height: 0.5,
+            dome_height: DEFAULT_TANK_DOME_HEIGHT_M,
+            tank_support_height: DEFAULT_TANK_SUPPORT_HEIGHT_M,
+            wing_tank_gap_m: DEFAULT_WING_TANK_GAP_M,
+            wing_tank_height_ratio: DEFAULT_WING_TANK_HEIGHT_RATIO,
             hold_type: "sloped_hopper".to_string(),
             lightship_k_t_per_m3: None,
             wing_void_width: 1.0,
@@ -415,6 +433,8 @@ fn gas_volumetric(
     base.fill_ratio = inp.fill_ratio;
     base.dome_height = inp.dome_height;
     base.tank_support_height = inp.tank_support_height;
+    base.wing_tank_gap = inp.wing_tank_gap_m;
+    base.wing_tank_height_ratio = inp.wing_tank_height_ratio;
     base.post_init()?;
 
     let mut d_vc = 1.0;

@@ -110,6 +110,12 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     put("max_tank_od_m", "max_tank_od_m");
     put("optimise_depth", "optimise_depth");
     for name in [
+        "tanks_in_line",
+        "tank_support_height_m",
+        "tank_dome_height_m",
+        "wing_tank_gap_m",
+        "wing_tank_height_ratio",
+        "tank_wall_thickness_mm",
         "bow_rake_length_to_depth_ratio",
         "pushed_stern_void_m",
         "bulk_end_bulkhead_m",
