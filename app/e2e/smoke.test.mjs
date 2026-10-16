@@ -192,7 +192,8 @@ describe("OVCD app smoke tests", () => {
     await until(`the ${what} panel to be ${shown ? "shown" : "hidden"}`, async () => (await toggle(what, shown).isExisting()));
   }
   const sideDisplayed = (cls) => browser.execute((c) => getComputedStyle(document.querySelector(`.body > section.${c}`)).display !== "none", cls);
-  const sheetScale = () => browser.execute(() => document.querySelector(".sheet")?.style.transform ?? "");
+  // The sheet is sized, not scaled (#297), so read the zoom state text: "scale(1)" stands for fitted.
+  const sheetScale = () => browser.execute(() => (document.querySelector("[data-testid=zoom-state]")?.textContent === "fitted" ? "scale(1)" : "zoomed"));
 
   it("draws the side elevation, plan and midship section, dimensioned from the results", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");

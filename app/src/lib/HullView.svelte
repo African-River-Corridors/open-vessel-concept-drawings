@@ -97,7 +97,14 @@
       role="img"
       aria-label={label}
     >
-      <div class="sheet" style:transform="translate({x}px, {y}px) scale({zoom})">
+      <!-- Zoom sizes the sheet, it does not scale it: a CSS scale() would stretch the bitmap the web
+           view drew at the fitted size, and the text and lines would blur. -->
+      <div
+        class="sheet"
+        style:width="{zoom * 100}%"
+        style:height="{zoom * 100}%"
+        style:transform="translate({x}px, {y}px)"
+      >
         {@html svg}
       </div>
     </div>
@@ -115,7 +122,7 @@
   /* The sheet is white in both themes: it is paper, and the standard draws black on white. */
   .frame { height: 100%; box-sizing: border-box; overflow: hidden; background: var(--sheet); touch-action: none; }
   .frame.movable { cursor: grab; }
-  .sheet { transform-origin: 0 0; width: 100%; height: 100%; }
+  .sheet { width: 100%; height: 100%; }
   /* The drawing has a view box, so it scales to fit both width and height. */
   .sheet :global(svg) { display: block; width: 100%; height: 100%; }
   .state { flex: none; font: var(--fs-11) / var(--lh-ui) var(--font-ui); color: var(--ink-3); }
