@@ -70,11 +70,7 @@ h3 .badge { margin-left: 6px; position: relative; top: -2px; }
 .framed { margin: var(--sp-6) 0 0; }
 .gilt { padding: 12px; background: linear-gradient(135deg, #c4a670, #a78654 30%, #8d6f40 55%, #b8986a 80%, #9a7b49);
   box-shadow: 0 2px 8px rgba(60, 40, 10, .25); }
-.gilt img { display: block; width: 100%; }
-/* An OVCD drawing sheet (black on white) shown as a blueprint: inverted to white on black, then
-   screened onto the blueprint field, so black becomes the field. The drawing itself is unchanged. */
-.sheet-blueprint { background: var(--blueprint); isolation: isolate; }
-.sheet-blueprint img { display: block; width: 100%; height: auto; background: #fff; filter: invert(1); mix-blend-mode: screen; }
+.gilt img { display: block; width: 100%; height: auto; }
 .framed figcaption { font: 14px var(--font-ui); color: var(--ink-2); margin-top: var(--sp-3); }
 
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-6); }
