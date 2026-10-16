@@ -30,6 +30,12 @@ The OVCD website and docs. Live at **https://www.africanrivercorridors.com/ovcd*
 | `build.py` | Builds everything into `_site/`. |
 | `check_links.py` | Fails on any broken internal link in `_site/`. |
 
+The drawing in "Made in the tradition" is a real OVCD drawing of Touax 193 (calibration case
+`touax-193-194-2021`). `assets/examples/touax-193.vdesign` is its design file. To make it again, build
+the CLI, then run `ovcd draw --out <dir> website/assets/examples/touax-193.vdesign` and copy
+`touax-193-midship-section.svg` and `.pdf` into `assets/drawings/`. The page shows it in blueprint
+colours with CSS only (`.sheet-blueprint` in `site.css`).
+
 The docs are the repo's own Markdown: README, ROADMAP, GLOSSARY, CONTRIBUTING, CODE_OF_CONDUCT,
 SECURITY, CHANGELOG, `docs/adr/` and `docs/specs/`. `build.py` copies them into `_docs/` at build
 time. Edit the files where they are; never in `_docs/`. A new ADR or spec joins the nav by itself.

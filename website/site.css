@@ -76,6 +76,10 @@ h3 .badge { margin-left: 6px; position: relative; top: -2px; }
 .gilt { padding: 12px; background: linear-gradient(135deg, #c4a670, #a78654 30%, #8d6f40 55%, #b8986a 80%, #9a7b49);
   box-shadow: 0 2px 8px rgba(60, 40, 10, .25); }
 .gilt img { display: block; width: 100%; }
+/* An OVCD drawing sheet (black on white) shown as a blueprint: inverted to white on black, then
+   screened onto the blueprint field, so black becomes the field. The drawing itself is unchanged. */
+.sheet-blueprint { background: var(--blueprint); isolation: isolate; }
+.sheet-blueprint img { display: block; width: 100%; height: auto; background: #fff; filter: invert(1); mix-blend-mode: screen; }
 .framed figcaption { font: 14px var(--font-ui); color: var(--ink-2); margin-top: var(--sp-3); }
 
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-6); }
@@ -106,15 +110,6 @@ li { margin: 0.35em 0; }
 @media (max-width: 520px) { .tools { grid-template-columns: 1fr; } }
 .tools li { margin: 0; padding: var(--sp-4) var(--sp-4) var(--sp-4) 0; border-bottom: var(--lw-thin) solid var(--rule); font: 16px/1.45 var(--font-ui); color: var(--ink-2); }
 .tools b { display: block; font: 400 17px var(--font-hand); letter-spacing: .08em; text-transform: uppercase; font-style: oblique 10deg; color: var(--ink); margin-bottom: 4px; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1px; }
-
-/* Roadmap: a station list, one line per phase */
-.phases { list-style: none; padding: 0; margin: var(--sp-5) 0 0; border-left: var(--lw-thick) solid var(--ink); }
-.phases li { position: relative; padding: var(--sp-3) 0 var(--sp-3) 76px; margin: 0; font: 17px/1.45 var(--font-ui); color: var(--ink-2); border-bottom: var(--lw-thin) dashed var(--rule); }
-.phases li b { display: block; font: 600 19px var(--font-serif); color: var(--ink); }
-.phases .ph { position: absolute; left: 14px; top: var(--sp-3); width: 46px; text-align: center; font: 600 13px var(--font-ui); letter-spacing: .08em; border: var(--lw-thin) solid var(--ink-2); padding: 2px 0; border-radius: var(--radius); color: var(--ink-2); }
-.phases li.done .ph { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.phases li::before { content: ""; position: absolute; left: -7px; top: 22px; width: 12px; height: 12px; border-radius: 50%; background: var(--paper); border: var(--lw-thick) solid var(--ink); }
-.phases li.done::before { background: var(--ink); }
 
 .card { background: var(--surface); border: var(--lw-thin) solid var(--rule); padding: var(--sp-5); min-width: 0; }
 .card p, .card li { font: 16px/1.5 var(--font-ui); color: var(--ink-2); }
