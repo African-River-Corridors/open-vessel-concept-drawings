@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Design change (issue #215): the two inland "type G" checks are removed. Gas tanks are sized under IGC only (#175), and these floors came from the inland ADN rules. The before/after table is under "Design changes" below. ADN may return later as a selectable rule set, not as fixed checks (#176).
+  - Removed checks: `side_clearance_type_g_floor` (side clearance at least 0.80 m) and `double_bottom_type_g_floor` (double bottom at least 0.60 m). A gas result lists two checks fewer. A design that failed only these checks now passes its feasibility, and the arrangement search can pick an arrangement it used to reject (for example 120 x 18 m, LNG, `IGC_2G_EXACT`: two 8 m tanks abreast, 2,922 t, where it picked one 11 m tank, 2,813 t). The IGC side clearance d(Vc) is not changed here (issue #237).
+  - Python, known changes from 0.1.0: removed names `SIDE_MIN_TYPE_G_M` and `DOUBLE_BOTTOM_MIN_TYPE_G_M` (`core.gas_separation`). The inputs `side_clearance_m` and `double_bottom_m` of `GasSeparationInputs` stay, so older code still runs, but no check reads them. The scenarios of `tests/data/api_ce96e66.json` that hold a gas check list or fit are listed as known differences in `tests/test_api_oracle.py`.
+  - The second run of the gas separation in `barge_capacity.compute` is removed. It existed only to pass the as-designed clearances to the type-G checks; the separation lengths, checks and warnings do not depend on them, so no other output changes.
+  - Tests: the stored results hashes of the two gas fixtures (`gas_igc_2g_exact`, `gas_igc_2g_self_propelled`) are re-pinned to the values the engine prints now, and 120 x 18 m LNG (`IGC_2G_EXACT`) is pinned at 2,922 t (two 8 m tanks) again, the value of 0.1.0. The failed-check note test of the self-propelled LNG case now needs 3 failed checks, not 6 (two of the six were the removed floors).
 - Two environment values are now inputs, in the Waterway Limits group (issue #4, sixth slice): `water_density_t_per_m3` (1.0 t/m3, fresh water; sea water is about 1.025) and `squat_safety_margin_m` (0.15 m). The water density was held in four places (the `simulate` constant, the capacity inputs, the stability default and the journey de-rating); on the `ovcd run` path all four, and the resistance curves, now read the one input, so a changed value moves the draught, the stability and the speed curves together. A file that lacks them opens with the old values, marked `default`, with a warning. Not a design change: no calculation result moves. The utilisation floor (advisory, 0.5) is not an input yet: it only sets a warning check that no `ovcd run` result shows.
 - Six gas tank arrangement values are now inputs, in the Gas tanks group (issue #4, third slice): `tanks_in_line` (2), `tank_support_height_m` (0.5 m), `tank_dome_height_m` (2.0 m), `wing_tank_gap_m` (0.6 m), `wing_tank_height_ratio` (0.66) and `tank_wall_thickness_mm` (25 mm). Each default is the value the engine used before. A gas file that lacks them opens with the same values, marked `default`, with a warning. A different `tanks_in_line` changes the tanks along the hull for every candidate: fewer tanks are longer and may break the length over diameter limit of 7, more tanks are shorter and may leave no room for their heads (the hull is then infeasible). The drawing follows each input through the results. Not a design change: no calculation result moves. The evaluation entry points `barge_capacity` and `gas_arrangement` accept the new fields (and `bow_rake_to_depth_ratio` from the second slice).
 - Three hull end values are now inputs (issue #4, second slice): `bow_rake_length_to_depth_ratio` (1.6, the bow rake as a multiple of the moulded depth, every hull), `pushed_stern_void_m` (3.0 m, the aft void of a pushed barge or convoy) and `bulk_end_bulkhead_m` (0.5 m, the end bulkhead allowance at each end of a dry-bulk hold). Each default is the value the engine used before. An input can now apply to some Formations only: `ovcd schema` gives `applies_to_formation` for every input, and the app shows the stern void for a pushed Formation only. A file that lacks them opens with the same values, marked `default`, with a warning. Also: in the app and the Design session, an input that a reset, a new Option or a changed Cargo Containment or Formation brings back takes the Defaults Profile value (slice 1 gave it the fixed value of an old file, so an edited profile entry for a dry-bulk hold input was ignored there). Not a design change: no calculation result moves.
@@ -82,6 +87,54 @@
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### Remove the inland type-G checks (#215) (2026-10-16)
+
+Between `main 84deae4` and `this branch fd101cd`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 1 (88x16.3) | `checks[12].message` | side clearance 1.58 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more | GM 2.36 m (fluid), max GZ 0.55 m at 16° — fails: Area 30–40° 0.024 < 0.03, Angle of max GZ 16.000 < 25.0 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[12].name` | side clearance type g floor | Stability — laden | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[12].ok` | True | False | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[12].severity` | error | absent | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[13].message` | double bottom 0.74 m >= 0.60 m inland type-G floor (cl. 3.5.2) | GM 3.86 m (fluid), max GZ 1.65 m at 25° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[13].name` | double bottom type g floor | Stability — half laden | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[13].severity` | error | absent | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[14].message` | GM 2.36 m (fluid), max GZ 0.55 m at 16° — fails: Area 30–40° 0.024 < 0.03, Angle of max GZ 16.000 < 25.0 | GM 9.66 m (fluid), max GZ 3.05 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[14].name` | Stability — laden | Stability — light | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[14].ok` | False | True | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[15].message` | GM 3.86 m (fluid), max GZ 1.65 m at 25° | absent | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[15].name` | Stability — half laden | absent | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[15].ok` | True | absent | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[16].message` | GM 9.66 m (fluid), max GZ 3.05 m at 29° | absent | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[16].name` | Stability — light | absent | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[16].ok` | True | absent | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].message` | side clearance 2.22 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more | GM 2.46 m (fluid), max GZ 0.58 m at 17° — fails: Angle of max GZ 17.000 < 25.0 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].name` | side clearance type g floor | Stability — laden | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].ok` | True | False | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].severity` | error | absent | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[13].message` | double bottom 0.74 m >= 0.60 m inland type-G floor (cl. 3.5.2) | GM 3.95 m (fluid), max GZ 1.69 m at 26° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[13].name` | double bottom type g floor | Stability — half laden | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[13].severity` | error | absent | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | GM 2.46 m (fluid), max GZ 0.58 m at 17° — fails: Angle of max GZ 17.000 < 25.0 | GM 10.18 m (fluid), max GZ 3.11 m at 29° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].name` | Stability — laden | Stability — light | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].ok` | False | True | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[15].message` | GM 3.95 m (fluid), max GZ 1.69 m at 26° | absent | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[15].name` | Stability — half laden | absent | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[15].ok` | True | absent | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[16].message` | GM 10.18 m (fluid), max GZ 3.11 m at 29° | absent | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[16].name` | Stability — light | absent | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[16].ok` | True | absent | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[12].message` | side clearance 2.25 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more | GM 2.75 m (fluid), max GZ 0.61 m at 16° — fails: Area 30–40° 0.023 < 0.03, Angle of max GZ 16.000 < 25.0 | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[12].name` | side clearance type g floor | Stability — laden | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[12].ok` | True | False | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[12].severity` | error | absent | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[13].message` | double bottom 0.80 m >= 0.60 m inland type-G floor (cl. 3.5.2) | GM 4.54 m (fluid), max GZ 1.82 m at 25° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[13].name` | double bottom type g floor | Stability — half laden | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[13].severity` | error | absent | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[14].message` | GM 2.75 m (fluid), max GZ 0.61 m at 16° — fails: Area 30–40° 0.023 < 0.03, Angle of max GZ 16.000 < 25.0 | GM 10.89 m (fluid), max GZ 3.35 m at 29° | changed |
+| ... | 2649 more changed quantities | | | |
 
 ### Default moulded depth (#120) (2026-10-15)
 

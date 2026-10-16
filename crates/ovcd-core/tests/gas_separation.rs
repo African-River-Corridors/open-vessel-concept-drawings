@@ -2,9 +2,8 @@
 //! Python (`core/gas_separation.py`), not worked out by hand.
 
 use ovcd_core::gas_separation::{
-    COFFERDAM_MIN_M, DOUBLE_BOTTOM_MIN_TYPE_G_M, END_BULKHEAD_SPACE_M,
-    END_BULKHEAD_SPACE_PRESSURE_M, GasSeparationInputs, OPENING_SETBACK_M, SIDE_MIN_TYPE_G_M,
-    compute,
+    COFFERDAM_MIN_M, END_BULKHEAD_SPACE_M, END_BULKHEAD_SPACE_PRESSURE_M, GasSeparationInputs,
+    OPENING_SETBACK_M, compute,
 };
 
 const CLAUSE_WARNING: &str = "Separation clauses are cited from the classification rules for \
@@ -16,8 +15,6 @@ fn constants_are_the_cited_values() {
     assert_eq!(OPENING_SETBACK_M, 2.00);
     assert_eq!(END_BULKHEAD_SPACE_M, 0.50);
     assert_eq!(END_BULKHEAD_SPACE_PRESSURE_M, 0.20);
-    assert_eq!(SIDE_MIN_TYPE_G_M, 0.80);
-    assert_eq!(DOUBLE_BOTTOM_MIN_TYPE_G_M, 0.60);
 }
 
 #[test]
@@ -106,13 +103,15 @@ fn a_cofferdam_wider_than_the_setback_leaves_no_service_space() {
     assert_eq!(r.total_length_taken_m, 3.5);
 }
 
+/// Issue #215: the inland type-G floors are gone. Clearances given in the inputs add no check, however
+/// small they are; the three separation checks are all there is.
 #[test]
-fn as_designed_clearances_add_checks_in_python_order() {
+fn as_designed_clearances_add_no_check() {
     let r = compute(&GasSeparationInputs {
         fwd_end_bulkhead_m: 0.3,
         is_pressure_tank: false,
-        side_clearance_m: 0.5,
-        double_bottom_m: 1.0,
+        side_clearance_m: 0.05,
+        double_bottom_m: 0.05,
         ..Default::default()
     })
     .unwrap();
@@ -124,25 +123,14 @@ fn as_designed_clearances_add_checks_in_python_order() {
         [
             "cofferdam_min_width",
             "opening_setback",
-            "fwd_end_bulkhead_space",
-            "side_clearance_type_g_floor",
-            "double_bottom_type_g_floor"
+            "fwd_end_bulkhead_space"
         ]
     );
     assert_eq!(
         r.checks[2].message,
         "forward end-bulkhead space 0.30 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)"
     );
-    assert_eq!(
-        r.checks[3].message,
-        "side clearance 0.50 m >= 0.80 m inland type-G floor (cl. 3.5.2); IGC d(Vc) may require more"
-    );
-    assert!(!r.checks[3].ok);
-    assert!(r.checks[4].ok);
-    assert_eq!(
-        r.checks[4].message,
-        "double bottom 1.00 m >= 0.60 m inland type-G floor (cl. 3.5.2)"
-    );
+    assert!(r.checks.iter().all(|c| !c.name.contains("type_g")));
 }
 
 /// The checks allow a 1e-9 slack, so a value a hair under the floor still passes.
@@ -211,21 +199,4 @@ fn zero_separations_are_valid_and_fail_their_checks() {
     .unwrap();
     let oks: Vec<bool> = r.checks.iter().map(|c| c.ok).collect();
     assert_eq!(oks, [false, false, false]);
-}
-
-/// The type-G floors sit exactly on their limits, with the same 1e-9 slack as the others.
-#[test]
-fn the_type_g_floors_pass_on_the_limit_and_within_the_slack() {
-    let ok_at = |side: f64, bottom: f64| {
-        let r = compute(&GasSeparationInputs {
-            side_clearance_m: side,
-            double_bottom_m: bottom,
-            ..Default::default()
-        })
-        .unwrap();
-        (r.checks[3].ok, r.checks[4].ok)
-    };
-    assert_eq!(ok_at(0.8, 0.6), (true, true));
-    assert_eq!(ok_at(0.8 - 1e-10, 0.6 - 1e-10), (true, true));
-    assert_eq!(ok_at(0.8 - 1e-8, 0.6 - 1e-8), (false, false));
 }

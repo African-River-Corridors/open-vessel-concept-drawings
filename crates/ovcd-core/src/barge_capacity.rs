@@ -833,19 +833,11 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     if let Some(a) = &aft {
         checks.extend(a.checks.iter().cloned());
     }
-    let sep = match arr.separation {
-        Some(_) => {
-            // Re-run with the as-designed clearances so the type-G floors are checked against
-            // real numbers rather than zeros.
-            let mut sep_in = inp.separation.clone().unwrap_or_default();
-            sep_in.side_clearance_m = truthy_or_zero(detail.side_clearance_m.unwrap_or(0.0));
-            sep_in.double_bottom_m = truthy_or_zero(detail.bottom_clearance_m.unwrap_or(0.0));
-            let sep = compute_gas_separation(&sep_in).map_err(value_error)?;
-            checks.extend(sep.checks.iter().cloned());
-            Some(sep)
-        }
-        None => None,
-    };
+    // The separation was resolved once in `arrangement`; its checks join the roll-up here.
+    let sep = arr.separation;
+    if let Some(s) = &sep {
+        checks.extend(s.checks.iter().cloned());
+    }
     // Bridge clearance is gated on the LIGHT (or ballasted-light) condition, never the laden one.
     if let Some(limit) = inp.air_draft_limit_m {
         let ballasted = inp.ballast_capacity_t > 0.0;

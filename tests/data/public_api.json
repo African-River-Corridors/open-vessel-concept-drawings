@@ -1043,9 +1043,6 @@
   "COFFERDAM_MIN_M": {
    "kind": "constant"
   },
-  "DOUBLE_BOTTOM_MIN_TYPE_G_M": {
-   "kind": "constant"
-  },
   "END_BULKHEAD_SPACE_M": {
    "kind": "constant"
   },
@@ -1082,9 +1079,6 @@
    ]
   },
   "OPENING_SETBACK_M": {
-   "kind": "constant"
-  },
-  "SIDE_MIN_TYPE_G_M": {
    "kind": "constant"
   },
   "compute": {

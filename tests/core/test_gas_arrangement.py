@@ -63,11 +63,11 @@ def test_payload_never_exceeds_the_draught_cap():
 
 # Regression snapshot: IGC_2G_EXACT, fill 0.98, T 3.0 m, self-propelled, LNG.
 # 120 x 18 was re-pinned from 2,922 t (2 x 8.0 m tanks) to 2,813 t (1 x 11.0 m) by the
-# pass-first fix (issue #6): the old design had 0.48 m side clearance, below the 0.80 m
-# inland type-G floor (cl. 3.5.2), an error-severity check.
+# pass-first fix (issue #6): the old design had 0.48 m side clearance, below an inland 0.80 m
+# floor. Issue #215 removed that floor, so it is 2,922 t (2 x 8.0 m) again, the value of 0.1.0.
 # These are the cases of the 12 m tank diameter cap, which was fixed until issue #175 made it
 # an input (16 m by default), so each sets `max_tank_od_m=12.0`. The 16 m cases are below.
-SNAPSHOT = [((90, 12.9), 1505), ((90, 14.8), 1738), ((90, 18.0), 2033), ((120, 18.0), 2813)]
+SNAPSHOT = [((90, 12.9), 1505), ((90, 14.8), 1738), ((90, 18.0), 2033), ((120, 18.0), 2922)]
 
 
 @pytest.mark.parametrize("dims,expected", SNAPSHOT)
@@ -79,19 +79,21 @@ def test_regression_snapshot(dims, expected):
     assert abs(f.payload_t - expected) < 1.0, f.payload_t
 
 
-def test_snapshot_120x18_is_one_11m_tank():
-    """Was 2 x 8 m abreast, which breaks the type-G side-clearance floor (issue #6).
+def test_snapshot_120x18_is_two_8m_tanks_abreast():
+    """Issue #6 moved this to one 11 m tank because the 2 x 8 m design broke an inland type-G side
+    floor (0.48 m clearance). Issue #215 removed the floor: the search picks 2 x 8 m again.
 
     Label: snapshot
     """
     f = fit(120.0, 18.0, "LNG", 3.0, ruleset="IGC_2G_EXACT", fill_ratio=0.98, max_tank_od_m=12.0)
     assert f.feasible
-    assert f.n_tanks_wide == 1 and abs(f.tank_od_m - 11.0) < 0.05
+    assert f.n_tanks_wide == 2 and abs(f.tank_od_m - 8.017) < 0.001
 
 
 # The same hulls under the default 16 m cap. Values printed by this code when the cap moved
-# (issue #175), not by the frozen Python; the before/after table is in CHANGELOG.md.
-SNAPSHOT_16 = [((90, 14.8), 1755.1158212773869), ((120, 18.0), 2661.673617765123)]
+# (issue #175), not by the frozen Python; the before/after table is in CHANGELOG.md. The 120 x 18
+# value moved again with issue #215 (the inland type-G side floor went); the printed value is pinned.
+SNAPSHOT_16 = [((90, 14.8), 1755.1158212773869), ((120, 18.0), 2921.7916111312247)]
 
 
 @pytest.mark.parametrize("dims,expected", SNAPSHOT_16)
@@ -118,15 +120,16 @@ def test_cn_ii_free_depth_picks_a_passing_hull():
     assert not (f.depth_m == 3.5 and abs(f.draft_at_payload_m - 3.5) < 1e-3)
 
 
-def test_no_passing_candidate_is_flagged_infeasible():
-    """Only the 0.48 m-clearance 2-abreast design is on offer: returned, but flagged.
+def test_the_design_that_failed_only_the_type_g_floor_now_passes():
+    """Issue #215: the 0.48 m-clearance 2-abreast design failed only the inland type-G side
+    floor, which is gone. Its feasibility holds and no check carries a type-G name.
 
     Label: property
     """
     f = fit(120.0, 18.0, "LNG", 3.0, ruleset="IGC_2G_EXACT", fill_ratio=0.98,
             depths=[5.75], tanks_wide=(2,), extra_clearance_m=())
-    assert not f.feasible
-    assert any(m.startswith("side_clearance_type_g_floor") for m in f.failed_checks)
+    assert f.feasible
+    assert f.failed_checks == []
 
 
 def test_nothing_fits_is_infeasible():
