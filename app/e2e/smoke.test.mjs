@@ -162,6 +162,21 @@ describe("OVCD app smoke tests", () => {
     await browser.saveScreenshot(path.join(SHOTS, `${name}.png`));
   }
 
+  /** Wait until the page can be photographed: fonts loaded, nothing mid-layout. */
+  async function settle() {
+    await browser.execute(() => {
+      window.__fontsReady = false;
+      document.fonts.ready.then(() => { window.__fontsReady = true; });
+    });
+    await until("the fonts to load", async () => browser.execute(() => window.__fontsReady === true));
+    await browser.pause(400);
+  }
+  const setTheme = async (name) => {
+    await (await browser.$(`button=${name}`)).click();
+    const want = name === "Auto" ? null : name.toLowerCase();
+    await until(`the ${name} theme`, async () => (await browser.execute(() => document.documentElement.dataset.theme ?? null)) === want);
+  };
+
   /** How far the Views panel's content reaches past its box: more than 0 means it scrolls. */
   const overflow = () =>
     browser.execute(() => {
@@ -238,7 +253,8 @@ describe("OVCD app smoke tests", () => {
               if (group === "Drawings") await until(`the ${view} drawing`, async () => (await browser.$$("[data-testid^=slot-] svg")).length === 1);
               await browser.pause(300);
               assert.ok((await overflow()) <= 0, `${view} scrolls (${cargo}, panels ${hidden ? "hidden" : "shown"})`);
-              await shot(`229-${cargo}-${slug(view)}${hidden ? "-panels-hidden" : ""}`);
+              // The panels-shown views are in the 248 set; keep one panels-hidden shot per tab group.
+              if (hidden && view === views[0]) await shot(`229-${cargo}-${slug(view)}-panels-hidden`);
             }
           }
         }
@@ -372,7 +388,6 @@ describe("OVCD app smoke tests", () => {
       assert.match(first.text, /fuel [\d,.]+ l\/h/);
       assert.match(first.text, /squat [\d.]+ m/);
       assert.match(first.text, /squat-limited (yes|no)/);
-      await shot(`230-${cargo}-power-and-speed-curves`);
 
       await clickEnd(0, "left");
       await until("the first point", async () => (await readout(0)).kn === 1);
@@ -444,8 +459,6 @@ describe("OVCD app smoke tests", () => {
     assert.ok((await row.getText()).toLowerCase().includes(name.toLowerCase()), `the table marks ${name} as governing`);
     assert.equal((await browser.$$("[data-testid=stability-chart] .item.governing-item")).length, 1);
     assert.equal((await browser.$$("[data-testid=stability-wip]")).length, 0);
-    await shot("231-gas-intact-stability");
-    await shot("232-gas-intact-stability");
 
     const fitButton = await browser.$('button[aria-label="Fit to the panel"]');
     assert.equal(await fitButton.isEnabled(), false, "fitted to start with");
@@ -467,8 +480,6 @@ describe("OVCD app smoke tests", () => {
     await until("the work-in-development state", async () => (await browser.$$("[data-testid=stability-wip]")).length === 1);
     assert.match(await browser.$("[data-testid=stability-wip]").getText(), /^Work in development\s+Stability is computed for gas cargo only\. Dry-bulk stability is work in development\.$/);
     assert.equal((await browser.$$("[data-testid=stability-chart]")).length, 0, "no empty chart");
-    await shot("231-dry-bulk-intact-stability");
-    await shot("232-dry-bulk-intact-stability");
   });
 
   for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
@@ -491,7 +502,6 @@ describe("OVCD app smoke tests", () => {
       assert.deepEqual(rows.map((r) => r.ok), [...rows.map((r) => r.ok)].sort((a, b) => Number(a) - Number(b)));
       assert.match(await browser.$("[data-testid=rule-check-count]").getText(), new RegExp(`^${failing} of ${rows.length} checks? fails?$`));
       assert.ok((await overflow()) <= 0, "the panel does not scroll");
-      await shot(`232-${cargo}-rule-check-calculations`);
     });
   }
 
@@ -513,7 +523,6 @@ describe("OVCD app smoke tests", () => {
     assert.match(masses, /^Mass from this design: .*Tank shell/);
     assert.match(masses, /Core defaults, not from this design: .*Battery/);
     assert.ok((await overflow()) <= 0, "the panel does not scroll");
-    await shot("233-gas-capital-budget");
 
     // Editing a cost rate changes the total.
     const before = await unitTotal();
@@ -533,7 +542,6 @@ describe("OVCD app smoke tests", () => {
       /^Work in development\s+The capital budget is computed for gas cargo only\. A dry-bulk budget is work in development\.$/,
     );
     assert.equal((await browser.$$("[data-testid=cost-unit-total]")).length, 0, "no budget table");
-    await shot("233-dry-bulk-capital-budget");
   });
 
   for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
@@ -543,7 +551,6 @@ describe("OVCD app smoke tests", () => {
       const text = await browser.$("[data-testid=placeholder-boq]").getText();
       assert.equal(text, "The bill of quantities comes in a later phase. See the roadmap.");
       assert.equal(await browser.$("[data-testid=view-title]").getText(), "BOQ", "the view title is over the placeholder");
-      await shot(`233-${cargo}-boq`);
     });
   }
 
@@ -615,6 +622,54 @@ describe("OVCD app smoke tests", () => {
     await until("the save", async () => !/unsaved/.test(await fileLabel()));
     assert.equal(fs.readFileSync(saved, "utf8"), first);
   });
+
+  // The screenshot set of spec 248: every view of every tab, gas and dry bulk, in light and in dark,
+  // plus the first-run notice and one error state. The theme is set with the app-bar control.
+  for (const theme of ["Light", "Dark"]) {
+    const t = theme.toLowerCase();
+    for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
+      it(`takes the ${t} screenshot set of every view (${cargo})`, async () => {
+        await setTheme(theme);
+        try {
+          await open(path.join(FIXTURES, fixture), fixture);
+          for (const [group, views] of GROUPS) {
+            for (const view of views) {
+              await show(group, view);
+              if (group === "Drawings") await until(`the ${view} drawing`, async () => (await browser.$$("[data-testid^=slot-] svg")).length === 1);
+              if (view === "Power and speed curves") await until("the chart", async () => (await charts()).length >= 1);
+              if (view === "Intact stability" && cargo === "gas") await until("the GZ chart", async () => (await browser.$$("[data-testid=stability-chart] canvas")).length >= 1);
+              await settle();
+              await shot(`248-${t}-${cargo}-${slug(view)}`);
+            }
+          }
+        } finally {
+          await setTheme("Auto");
+        }
+      });
+    }
+
+    it(`takes the ${t} screenshots of the first-run notice and of an error`, async () => {
+      await setTheme(theme);
+      try {
+        await (await browser.$("button=About")).click();
+        await until("the notice", async () => (await browser.$("[data-testid=notice]")).isExisting());
+        await settle();
+        await shot(`248-${t}-notice`);
+        await (await browser.$("button=I understand")).click();
+        await until("the notice to close", async () => !(await browser.$("[data-testid=notice]").isExisting()));
+
+        await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+        await show("Drawings", "Plan");
+        await type("Beam", "-1");
+        await until("the error under the field", async () => (await browser.$$(".field .msg.error")).length > 0);
+        await until("the out-of-date mark", async () => (await browser.$$(".stale")).length > 0);
+        await settle();
+        await shot(`248-${t}-error`);
+      } finally {
+        await setTheme("Auto");
+      }
+    });
+  }
 
   it("switches the theme from the app bar: Dark sets data-theme, Auto removes it", async () => {
     const theme = () => browser.execute(() => document.documentElement.dataset.theme ?? null);
