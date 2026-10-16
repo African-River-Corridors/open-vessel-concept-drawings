@@ -242,6 +242,38 @@ fn a_convoy_gives_the_not_yet_available_message_and_no_numbers() {
     assert!(v["options"][0].get("results_hash").is_none());
 }
 
+/// Issue #64: a sloped-hopper Design runs as the sloped-hopper barge, in the summary and in
+/// `--json`, and its hold is not the box barge's (it has a hold bottom narrower than the top).
+#[test]
+fn a_sloped_hopper_design_runs_as_the_sloped_hopper_barge() {
+    let dir = temp_dir("hopper");
+    let file = filled(
+        &dir,
+        "hopper",
+        json!({
+            "cargo": "bauxite",
+            "hull_form": "raked_box",
+            "formation": { "kind": "pushed_barge" },
+            "length_overall_m": 76.5,
+            "beam_m": 11.4,
+            "moulded_depth_m": 3.5,
+            "cargo_containment": "sloped_hopper_hold",
+            "block_coefficient": 0.85
+        }),
+    );
+    let out = ovcd(&["run", p(&file)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert!(
+        stdout(&out).contains("Option 'Option 1': Bauxite in a Sloped-hopper dry bulk barge ("),
+        "{}",
+        stdout(&out)
+    );
+    let j = ovcd(&["run", "--json", p(&file)]);
+    let v: Value = serde_json::from_str(&stdout(&j)).unwrap();
+    let g = &v["options"][0]["results"]["geometry"];
+    assert!(g["hold_bottom_width_m"].as_f64().unwrap() < g["hold_top_width_m"].as_f64().unwrap());
+}
+
 #[test]
 fn json_tells_results_and_not_yet_supported_apart() {
     let dir = temp_dir("status");
