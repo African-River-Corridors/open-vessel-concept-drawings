@@ -8,8 +8,10 @@
     "build": "node scripts/contrast.mjs && npm run test:unit && svelte-check --tsconfig ./tsconfig.json && vite build",
     "test:unit": "node --test scripts/theme.test.mjs scripts/contrast.test.mjs",
     "check": "svelte-check --tsconfig ./tsconfig.json",
+    "build:web": "svelte-check --tsconfig ./tsconfig.json && vite build --config vite.web.config.ts",
     "tauri": "tauri",
-    "e2e": "bash e2e/run.sh"
+    "e2e": "bash e2e/run.sh",
+    "e2e:web": "bash e2e/run-web.sh"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.3",

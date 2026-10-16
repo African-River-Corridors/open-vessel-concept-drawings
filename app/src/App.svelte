@@ -21,6 +21,8 @@
   /** The first-run notice: open on first start, and again from About. */
   let noticeOpen = $state(false);
   let noticeIsFirstRun = $state(false);
+  /** The browser build: shows a label and a link to the desktop app. */
+  const web = api.isWeb();
 
   let leftWidth = $state(340);
   let bottomHeight = $state(260);
@@ -197,6 +199,7 @@
     <button onclick={() => fileAction(api.save, false)}>Save</button>
     <button onclick={() => fileAction(api.saveAs, false)}>Save as</button>
     <button onclick={() => (noticeOpen = true)}>About</button>
+    {#if web}<span class="web-badge" data-testid="web-label">Web version</span> <a href="/ovcd#install">Download the desktop app</a>{/if}
     <span class="grow"></span>
     <button type="button" aria-label={showInput ? "Hide the Input panel" : "Show the Input panel"} aria-pressed={showInput} onclick={() => (showInput = !showInput)}>Input panel</button>
     <button type="button" aria-label={showOutputs ? "Hide the Outputs panel" : "Show the Outputs panel"} aria-pressed={showOutputs} onclick={() => (showOutputs = !showOutputs)}>Outputs panel</button>
