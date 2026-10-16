@@ -53,6 +53,21 @@ def sig(x: float, n: int = 10) -> float:
     return float(f"{x:.{n}g}")
 
 
+def same(a, b, rel: float = 1e-6, abs_: float = 1e-9) -> bool:
+    """Equal as data: text and structure exactly, numbers to a relative tolerance. The angle of maximum
+    GZ is found by a search on a flat curve, so its last digits depend on the platform's maths library
+    (about 1e-8 degree). A generated file is compared with this, not byte for byte."""
+    if isinstance(a, dict) and isinstance(b, dict):
+        return list(a) == list(b) and all(same(a[k], b[k], rel, abs_) for k in a)
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(same(x, y, rel, abs_) for x, y in zip(a, b))
+    if isinstance(a, bool) or isinstance(b, bool):
+        return a is b
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        return abs(a - b) <= max(abs_, rel * max(abs(a), abs(b)))
+    return a == b
+
+
 def case_document(c: dict) -> dict:
     r = oracle.assess(c["B"], c["D"], c["T"], c["KG"], 0.0)
     expected = {}
@@ -101,7 +116,8 @@ def main(argv: list[str]) -> int:
         path = CASES_DIR / f"{c['id']}.yaml"
         text = render(case_document(c))
         if check:
-            if not path.exists() or path.read_text(encoding="utf-8") != text:
+            if not path.exists() or not same(yaml.safe_load(path.read_text(encoding="utf-8")),
+                                             yaml.safe_load(text)):
                 print(f"write_cases: {path} differs from the oracle", file=sys.stderr)
                 bad += 1
         else:
