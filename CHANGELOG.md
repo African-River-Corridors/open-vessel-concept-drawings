@@ -98,7 +98,7 @@ a change can be traced later. Newest first.
 
 ### Per-tank gas tank clearance, dome in Vc (#237) (2026-10-16)
 
-Between `main 89fba45` and `this branch 52fe10a`.
+Between `main d7dbbbe` and `this branch e7477e5`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -142,7 +142,7 @@ Between `main 89fba45` and `this branch 52fe10a`.
 | sweep gas passes all checks IGC_2G 110x11.4 | `checks[12].message` | GM 0.36 m (fluid), max GZ 0.31 m at 31° | GM 0.30 m (fluid), max GZ 0.15 m at 21° — fails: Area 0–30° 0.045 < 0.055, Area 0–40° 0.048 < 0.09, Area 30–40° 0.002 < 0.03, GZ at ≥ 30° 0.088 < 0.2, Angle of max GZ 21.000 < 25.0 | changed |
 | sweep gas passes all checks IGC_2G 110x11.4 | `checks[12].ok` | True | False | changed |
 | sweep gas passes all checks IGC_2G 110x11.4 | `checks[13].message` | GM 0.86 m (fluid), max GZ 0.71 m at 34° | GM 0.51 m (fluid), max GZ 0.56 m at 33° | changed |
-| ... | 8819 more changed quantities | | | |
+| ... | 12711 more changed quantities | | | |
 
 ### Remove the inland type-G checks (#215) (2026-10-16)
 
