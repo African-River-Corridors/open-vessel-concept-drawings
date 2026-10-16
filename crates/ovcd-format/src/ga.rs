@@ -80,6 +80,19 @@ const BAR_ROOM_MM: f64 = 26.0;
 /// for two arrow lengths, 7.2 mm on A3).
 const MIN_DIM_MM: f64 = 8.0;
 
+// Drawing proportions. The core has no value for these: they only set how a detail is drawn, as the
+// earlier Python GA drawer did, and are not engineering data.
+/// A tank cradle wraps this many degrees of the tank's underside.
+const CRADLE_WRAP_DEG: f64 = 120.0;
+/// A cradle stands this far outside the tank envelope, in metres.
+const CRADLE_CLEARANCE_M: f64 = 0.05;
+/// Half the base of a dome in the midship section, as a fraction of the tank diameter.
+const DOME_HALF_BASE_OF_OD: f64 = 0.15;
+/// Half the base of a dome in the elevation, as a fraction of one tank's length, and its floor in
+/// metres.
+const DOME_HALF_BASE_OF_LENGTH: f64 = 0.06;
+const DOME_HALF_BASE_MIN_M: f64 = 1.2;
+
 // ---- the geometry that the views draw ------------------------------------------------------------
 
 /// What the results give about the hull and its cargo containment.
@@ -96,6 +109,9 @@ struct Hull {
     bow_void: f64,
     stern_void: f64,
     cargo_zone: f64,
+    /// The gas separation forward of the stern block (`drawing.separation`): the cofferdam and the
+    /// aft separation, whose end is the start of the cargo zone. `None` for dry bulk.
+    separation: Option<(f64, f64)>,
     containment: Containment,
 }
 
@@ -122,6 +138,13 @@ enum Containment {
         /// sum above the keel (the core's `h_top` is this + diameter + dome).
         double_bottom: f64,
         support_height: f64,
+        /// `drawing.dome_height_m`, if the results have it.
+        dome: Option<f64>,
+        /// The wing ballast tank: width per side, gap to the cargo tank and height as a fraction of
+        /// the tank diameter (`drawing`), if the results have them.
+        wing_width: Option<f64>,
+        wing_gap: Option<f64>,
+        wing_ratio: Option<f64>,
         gap_long: f64,
         gap_across: f64,
     },
@@ -160,6 +183,10 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
             bottom_clearance: geo("bottom_clearance_m")?,
             double_bottom: need(results, &["drawing", "double_bottom_m"])?,
             support_height: need(results, &["drawing", "tank_support_height_m"])?,
+            dome: num_at(results, &["drawing", "dome_height_m"]),
+            wing_width: num_at(results, &["drawing", "wing_tank_width_m"]),
+            wing_gap: num_at(results, &["drawing", "wing_tank_gap_m"]),
+            wing_ratio: num_at(results, &["drawing", "wing_tank_height_ratio"]),
             gap_long: defaults.tank_gap_longitudinal,
             gap_across: defaults.tank_gap_transverse,
         }
@@ -202,6 +229,10 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
         bow_void: geo("bow_void_length_m")?,
         stern_void: geo("stern_void_length_m")?,
         cargo_zone: geo("cargo_zone_length_m")?,
+        separation: num_at(results, &["drawing", "separation", "cofferdam_m"]).zip(num_at(
+            results,
+            &["drawing", "separation", "aft_separation_m"],
+        )),
         containment,
     })
 }
@@ -249,6 +280,46 @@ impl Hull {
         match &self.containment {
             Containment::Tanks { od, .. } => Some(self.tank_bottom()? + od / 2.0),
             Containment::Hold { .. } => None,
+        }
+    }
+
+    /// The wing ballast tank: (width per side, gap to the cargo tank, top). The top is `ratio` of
+    /// the tank diameter above the tank bottom, kept under the deck. `None` without a width, or
+    /// when the width does not fit in the side clearance. The core takes the wing tank width from
+    /// the default 1 m side clearance and does not work it out again once the clearance is known,
+    /// so width and gap can add up to more than the clearance: the gap drawn is then cut to the
+    /// room that is left, so that no line enters a tank.
+    fn wing_tank(&self) -> Option<(f64, f64, f64)> {
+        match &self.containment {
+            Containment::Tanks {
+                od,
+                side_clearance,
+                wing_width: Some(w),
+                wing_gap,
+                wing_ratio: Some(ratio),
+                ..
+            } if *w > 0.0 && *w < *side_clearance => {
+                let top = (self.tank_bottom()? + ratio * od).min(self.depth);
+                let gap = wing_gap.unwrap_or(0.0).max(0.0).min(side_clearance - w);
+                Some((*w, gap, top))
+            }
+            _ => None,
+        }
+    }
+
+    /// The double bottom of a gas hull (zero: none).
+    fn gas_double_bottom(&self) -> f64 {
+        match &self.containment {
+            Containment::Tanks { double_bottom, .. } => *double_bottom,
+            Containment::Hold { .. } => 0.0,
+        }
+    }
+
+    /// The dome height of the gas tanks, if the results have a positive one.
+    fn dome(&self) -> Option<f64> {
+        match &self.containment {
+            Containment::Tanks { dome: Some(d), .. } if *d > 0.0 => Some(*d),
+            _ => None,
         }
     }
 
@@ -421,6 +492,31 @@ impl Canvas {
         self.arc(above, [xb, yc], r, a, 90.0, None);
     }
 
+    /// A hatch over a closed boundary.
+    fn hatch(&mut self, layer: &str, boundary: &[[f64; 2]], pattern: &str) {
+        for p in boundary {
+            self.extend(*p);
+        }
+        self.entities.push(json!({"type": "hatch", "layer": layer, "boundary_m": boundary.iter().map(|p| pt(*p)).collect::<Vec<_>>(), "pattern": pattern}));
+    }
+
+    /// A dome: a quadratic curve from `(x - half, base)` to `(x + half, base)` whose apex is at
+    /// `base + rise` (the control point is at twice the rise).
+    fn dome(&mut self, layer: &str, x: f64, base: f64, half: f64, rise: f64) {
+        let steps = 16;
+        let pts: Vec<[f64; 2]> = (0..=steps)
+            .map(|i| {
+                let t = f64::from(i) / f64::from(steps);
+                let u = 1.0 - t;
+                [
+                    u * u * (x - half) + 2.0 * u * t * x + t * t * (x + half),
+                    (u * u + t * t) * base + 2.0 * u * t * (base + 2.0 * rise),
+                ]
+            })
+            .collect();
+        self.polyline(layer, &pts, false);
+    }
+
     fn centre_line(&mut self, a: [f64; 2], b: [f64; 2]) {
         self.extend(a);
         self.extend(b);
@@ -529,6 +625,88 @@ fn profile_points(h: &Hull) -> Vec<[f64; 2]> {
     pts
 }
 
+/// The gas detail of the side elevation, from `drawing`: the double bottom and the wing ballast tanks
+/// behind the tanks (hidden), and a dome on each tank. A dome is in view when the tank top is above
+/// the deck, hidden when it is under it.
+fn elevation_gas_detail(c: &mut Canvas, h: &Hull, labels: &mut Vec<(String, [f64; 2])>) {
+    let (Some(yc), Containment::Tanks { od, .. }) = (h.tank_centre_y(), &h.containment) else {
+        return;
+    };
+    let (x0, x1, db) = (h.stern_void, h.loa - h.bow_void, h.gas_double_bottom());
+    if db > 0.0 {
+        let x_fwd = h.x_at_height(db);
+        c.line("HIDDEN", [h.stern_x_at_height(db), db], [x_fwd, db], None);
+        labels.push(("DOUBLE BOTTOM".to_string(), [x_fwd, db]));
+    }
+    if let Some((_, _, top)) = h.wing_tank() {
+        c.polyline("HIDDEN", &[[x0, db], [x0, top], [x1, top], [x1, db]], false);
+        labels.push(("WBT (BOTH SIDES)".to_string(), [x1, (db + top) / 2.0]));
+    }
+    if let (Some(rise), Some((length, starts, _))) = (h.dome(), h.tank_layout()) {
+        let r = od / 2.0;
+        let layer = if yc + r >= h.depth {
+            "OBJECT"
+        } else {
+            "HIDDEN"
+        };
+        for x in &starts {
+            let mid = x + length / 2.0;
+            let half = (DOME_HALF_BASE_OF_LENGTH * length)
+                .max(DOME_HALF_BASE_MIN_M)
+                .min(length / 2.0 - r);
+            if half > 0.0 {
+                c.dome(layer, mid, yc + r, half, rise);
+            }
+        }
+        // named at the last dome, nearest the label column
+        if let Some(x) = starts.last() {
+            labels.push(("DOME".to_string(), [x + length / 2.0, yc + r + rise]));
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum View {
+    Elevation,
+    Plan,
+}
+
+/// The longitudinal zones, in elevation and plan: the limits of the cargo zone (dashed ZONE lines,
+/// not physical), the cofferdam of a gas hull (its two bulkheads, hidden under the deck) and the
+/// forward equipment zone, each named by a leader above the hull.
+fn zones(c: &mut Canvas, h: &Hull, view: View) {
+    let (lo, hi) = match view {
+        View::Elevation => (0.0, h.depth),
+        View::Plan => (-h.beam / 2.0, h.beam / 2.0),
+    };
+    let across = |x: f64| ([x, lo], [x, hi]);
+    let (x0, x1) = (h.stern_void, h.loa - h.bow_void);
+    for x in [x0, x1] {
+        if x > 0.0 && x < h.loa {
+            let (a, b) = across(x);
+            c.line("ZONE", a, b, None);
+        }
+    }
+    let above = hi + 10.0 * c.k;
+    if let Some((cofferdam, aft)) = h.separation
+        && cofferdam > 0.0
+    {
+        let start = x0 - aft;
+        for x in [start, start + cofferdam] {
+            let (a, b) = across(x);
+            c.line("HIDDEN", a, b, None);
+        }
+        let mid = start + cofferdam / 2.0;
+        // the text stands to the left of the label point, over the stern, well clear of the first tank
+        c.leader("COFFERDAM", [mid, hi], [mid - 8.0 * c.k, above]);
+    }
+    if h.bow_void > 0.0 {
+        let mid = h.loa - h.bow_void / 2.0;
+        // the text stands to the right of the label point, over the bow
+        c.leader("FWD EQUIP.", [mid, hi], [mid + 2.0 * c.k, above]);
+    }
+}
+
 fn side_elevation(h: &Hull, n: u32) -> Canvas {
     let mut c = Canvas::new(n);
     c.polyline("OUTLINE", &profile_points(h), false);
@@ -599,6 +777,8 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
         }
     }
     let mut labels: Vec<(String, [f64; 2])> = Vec::new();
+    elevation_gas_detail(&mut c, h, &mut labels);
+    zones(&mut c, h, View::Elevation);
     if !c.try_dim_horizontal([0.0, 0.0], [h.loa, 0.0], -DIM_OFFSET_MM) {
         labels.push((format!("LOA {}", metres(h.loa)), [h.loa, 0.0]));
     }
@@ -699,6 +879,7 @@ fn plan(h: &Hull, n: u32) -> Canvas {
             }
         }
     }
+    zones(&mut c, h, View::Plan);
     let overshoot = 4.0 * c.k;
     c.centre_line([-overshoot, 0.0], [h.loa + overshoot, 0.0]);
     let mut labels: Vec<(String, [f64; 2])> = Vec::new();
@@ -725,6 +906,80 @@ fn circle_left_edge(xc: f64, yc: f64, r: f64, y: f64) -> f64 {
         xc
     } else {
         xc - (r * r - dy * dy).sqrt()
+    }
+}
+
+/// The gas detail of the midship section, from `drawing`: the double bottom with its hatch, the wing
+/// ballast tanks and the voids beside the cargo tanks, a cradle under each tank and the domes.
+/// Anything the results leave out (`null`) is left out. The labels go to the left column and stand
+/// for both sides.
+fn section_gas_detail(
+    c: &mut Canvas,
+    h: &Hull,
+    centres: &[f64],
+    labels: &mut Vec<(String, [f64; 2])>,
+) {
+    let (Some(yc), Containment::Tanks { od, .. }) = (h.tank_centre_y(), &h.containment) else {
+        return;
+    };
+    let (half, r, db) = (h.beam / 2.0, od / 2.0, h.gas_double_bottom());
+    // double bottom: the inner bottom line across the hull, and a line hatch in the band below it
+    if db > 0.0 {
+        c.line("OBJECT", [-half, db], [half, db], None);
+        c.hatch(
+            "HATCH",
+            &[[-half, 0.0], [half, 0.0], [half, db], [-half, db]],
+            "lines",
+        );
+        labels.push(("DOUBLE BOTTOM".to_string(), [-half + 0.15 * half, db / 2.0]));
+    }
+    // wing ballast tanks (the wall inboard and the top) and the void between each and the cargo tank
+    if let Some((w, gap, top)) = h.wing_tank() {
+        for side in [-1.0, 1.0] {
+            let (outer, wall, edge) = (side * half, side * (half - w), side * (half - w - gap));
+            c.polyline("OBJECT", &[[outer, top], [wall, top], [wall, db]], false);
+            if gap > 0.0 {
+                c.polyline("ZONE", &[[wall, top], [edge, top], [edge, db]], false);
+            }
+        }
+        let mid = (db + top) / 2.0;
+        labels.push(("WBT (BOTH SIDES)".to_string(), [-half + w / 2.0, mid]));
+        if gap > 0.0 {
+            labels.push((
+                "VOID (BOTH SIDES)".to_string(),
+                [-half + w + gap / 2.0, mid],
+            ));
+        }
+    }
+    // a cradle under each tank: the underside arc, a little outside the tank, and its two legs
+    let radius = r + CRADLE_CLEARANCE_M;
+    let (a0, a1) = (270.0 - CRADLE_WRAP_DEG / 2.0, 270.0 + CRADLE_WRAP_DEG / 2.0);
+    for (i, x) in centres.iter().enumerate() {
+        let on = |deg: f64| {
+            [
+                x + radius * libm::cos(deg.to_radians()),
+                yc + radius * libm::sin(deg.to_radians()),
+            ]
+        };
+        let (left, right) = (on(a0), on(a1));
+        c.arc("OBJECT", [*x, yc], radius, a0, a1, None);
+        c.line("OBJECT", left, [left[0], db], None);
+        c.line("OBJECT", right, [right[0], db], None);
+        if i == 0 {
+            labels.push(("CRADLE".to_string(), [left[0], (left[1] + db) / 2.0]));
+        }
+    }
+    // a dome on top of each tank
+    if let Some(rise) = h.dome() {
+        let half_base = DOME_HALF_BASE_OF_OD * od;
+        let base = yc + (r * r - half_base * half_base).sqrt();
+        let sag = yc + r + rise - base;
+        for (i, x) in centres.iter().enumerate() {
+            c.dome("OBJECT", *x, base, half_base, sag);
+            if i == 0 {
+                labels.push(("DOME".to_string(), [*x, base + sag]));
+            }
+        }
     }
 }
 
@@ -812,6 +1067,7 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
                 for x in &centres {
                     c.circle("OUTLINE", [*x, yc], od / 2.0);
                 }
+                section_gas_detail(&mut c, h, &centres, &mut labels);
                 // Side clearance: a point in the gap between the hull side and the nearest tank,
                 // at the tank's centre height, or just below the deck when the centre is above it.
                 let y = yc.min(h.depth) - 1.5 * c.k;
@@ -905,6 +1161,8 @@ fn document(h: &Hull, title: &str, build: fn(&Hull, u32) -> Canvas) -> Result<Va
             "ANNO",
             "TEXT",
             "WATER",
+            "HATCH",
+            "ZONE",
         ]
         .iter()
         .map(|n| json!({"name": n}))
