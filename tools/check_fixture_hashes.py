@@ -2,11 +2,13 @@
 """Run `ovcd run --json` on the pinned fixture designs and fail on any results-hash mismatch.
 
     python3 tools/check_fixture_hashes.py <path to ovcd> [<fixtures directory>]
+    python3 tools/check_fixture_hashes.py --wasmtime <path to wasmtime> <path to ovcd.wasm> [<fixtures directory>]
 
 The fixtures in crates/ovcd-format/tests/fixtures/*.vdesign store the results hash of each Option.
 The hash depends on bit-identical maths on every system (spec 0001, "platform-identical maths").
 `cargo test` checks it on Linux. The release gate runs this on Windows and on Intel and Apple-silicon
-macOS, with the release binary, so a platform whose maths differs cannot be released.
+macOS, with the release binary, and on WebAssembly: the same CLI built for `wasm32-wasip1` and run
+under `wasmtime` (issue #168). So a platform whose maths differs cannot be released.
 
 It fails when an Option's `hash_status` is anything but "matches", when a fixture that should compute
 does not, when `ovcd` exits non-zero (except for a convoy), or when fewer than MIN_MATCHED Options matched (so an empty
@@ -33,7 +35,15 @@ def find_binary(path: str) -> Path:
     raise SystemExit(f"check_fixture_hashes: no ovcd binary at {path}")
 
 
-def check(binary: Path, fixtures: Path) -> list[str]:
+def command_for(binary: Path, fixtures: Path, wasmtime: Path | None, file: Path) -> list[str]:
+    """The command that runs one fixture: the binary itself, or the wasm module under wasmtime."""
+    if wasmtime is None:
+        return [str(binary), "run", "--json", str(file)]
+    # The module sees only the fixtures directory (same path inside as outside).
+    return [str(wasmtime), "run", "--dir", str(fixtures), str(binary), "run", "--json", str(file)]
+
+
+def check(binary: Path, fixtures: Path, wasmtime: Path | None = None) -> list[str]:
     """Problems found, one line each. Prints one line per Option."""
     files = sorted(fixtures.glob("*.vdesign"))
     problems: list[str] = []
@@ -41,7 +51,7 @@ def check(binary: Path, fixtures: Path) -> list[str]:
         return [f"no .vdesign fixtures in {fixtures}"]
     matched = 0
     for f in files:
-        r = subprocess.run([str(binary), "run", "--json", str(f)], capture_output=True,
+        r = subprocess.run(command_for(binary, fixtures, wasmtime, f), capture_output=True,
                            encoding="utf-8", errors="replace")
         # A pushed convoy has no results, so `ovcd run` exits 1 for it (not every Option computed).
         if r.returncode != 0 and f.name not in NO_RESULTS_YET:
@@ -72,13 +82,23 @@ def check(binary: Path, fixtures: Path) -> list[str]:
 
 
 def main(argv: list[str]) -> int:
-    if not 2 <= len(argv) <= 3:
+    args = argv[1:]
+    wasmtime: Path | None = None
+    if args[:1] == ["--wasmtime"]:
+        if len(args) < 2:
+            print(__doc__, file=sys.stderr)
+            return 2
+        wasmtime = Path(args[1])
+        if not wasmtime.is_file():
+            raise SystemExit(f"check_fixture_hashes: no wasmtime at {wasmtime}")
+        args = args[2:]
+    if not 1 <= len(args) <= 2:
         print(__doc__, file=sys.stderr)
         return 2
-    binary = find_binary(argv[1])
-    fixtures = Path(argv[2]) if len(argv) == 3 else FIXTURES
-    print(f"check_fixture_hashes: {binary}")
-    problems = check(binary, fixtures)
+    binary = find_binary(args[0])
+    fixtures = Path(args[1]) if len(args) == 2 else FIXTURES
+    print(f"check_fixture_hashes: {binary}" + (f" under {wasmtime}" if wasmtime else ""))
+    problems = check(binary, fixtures, wasmtime)
     for p in problems:
         print(f"check_fixture_hashes: FAIL: {p}", file=sys.stderr)
     if not problems:

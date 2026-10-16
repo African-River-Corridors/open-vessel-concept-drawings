@@ -89,6 +89,38 @@ jobs:
           name: wheel-${{ matrix.os }}
           path: dist/*.whl
 
+  # Platform-identical maths, WebAssembly (issue #168): the same CLI, built for `wasm32-wasip1` and run
+  # under wasmtime, must give the results hash that each fixture Design stores. Release gate only.
+  # wasmtime is built from the crates.io release, exact version, locked, and cached by version.
+  wasm-hashes:
+    needs: gate
+    name: fixture hashes on WebAssembly (wasmtime)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - name: Add the WebAssembly System Interface target
+        run: rustup target add wasm32-wasip1
+      - uses: Swatinem/rust-cache@v2
+      - name: wasmtime (cached)
+        id: wasmtime
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/wasmtime
+          key: wasmtime-49.0.3-${{ runner.os }}
+      - name: Install wasmtime 49.0.3
+        if: steps.wasmtime.outputs.cache-hit != 'true'
+        run: cargo install wasmtime-cli --version 49.0.3 --locked
+      - name: Build ovcd for wasm32-wasip1
+        run: cargo build --release --locked -p ovcd-cli --target wasm32-wasip1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fixture results hashes match under wasmtime
+        run: python tools/check_fixture_hashes.py --wasmtime ~/.cargo/bin/wasmtime target/wasm32-wasip1/release/ovcd.wasm
+
   binaries:
     needs: gate
     name: ovcd binary (${{ matrix.os }})
