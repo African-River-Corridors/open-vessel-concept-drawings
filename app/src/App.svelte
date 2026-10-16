@@ -6,6 +6,7 @@
   import MainPanel from "./lib/MainPanel.svelte";
   import BottomPanel from "./lib/BottomPanel.svelte";
   import Notice from "./lib/Notice.svelte";
+  import ThemeControl from "./lib/ThemeControl.svelte";
   import { loadPanels, savePanels } from "./lib/panels";
 
   // Display state only: the Design, its checks and its results all come from Rust.
@@ -181,6 +182,16 @@
 
 <div class="shell">
   <header>
+    <!-- The 32 px OVCD mark, drawn in the text colour so it reads in both themes. -->
+    <svg class="mark" viewBox="0 0 64 64" width="32" height="32" aria-hidden="true" focusable="false">
+      <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5.5 34 H58.5" stroke-width="3" />
+        <path d="M32 43.5 C24.5 43.5 19 37 18.8 14.4" stroke-width="3" />
+        <path d="M32 48 C37.8 45.8 44.6 34 45.6 12.8" stroke-width="3" />
+        <path d="M32 48 H18 Q10 48 10 40 V16 M32 48 H46 Q54 48 54 40 V16" stroke-width="5" />
+      </g>
+    </svg>
+    <span class="brand">OVCD</span>
     <button onclick={() => fileAction(api.newFile, true)}>New</button>
     <button onclick={() => fileAction(api.openFile, true)}>Open</button>
     <button onclick={() => fileAction(api.save, false)}>Save</button>
@@ -189,8 +200,9 @@
     <span class="grow"></span>
     <button type="button" aria-label={showInput ? "Hide the Input panel" : "Show the Input panel"} aria-pressed={showInput} onclick={() => (showInput = !showInput)}>Input panel</button>
     <button type="button" aria-label={showOutputs ? "Hide the Outputs panel" : "Show the Outputs panel"} aria-pressed={showOutputs} onclick={() => (showOutputs = !showOutputs)}>Outputs panel</button>
+    <ThemeControl />
     {#if snap}
-      <span class="meta">{snap.file_name}{snap.dirty ? " (unsaved)" : ""}</span>
+      <span class="meta file">{snap.file_name}{snap.dirty ? " (unsaved)" : ""}</span>
       <span class="meta">Defaults: {snap.profile}</span>
       <span class="meta" data-testid="engine-version">Engine {snap.engine_version}</span>
     {/if}
@@ -198,7 +210,7 @@
 
   {#if error}
     <div class="banner error" role="alert">
-      {error}
+      <span class="msg">{error}</span>
       <button onclick={() => (error = null)}>Dismiss</button>
     </div>
   {/if}
@@ -239,20 +251,46 @@
 
 <style>
   .shell { display: flex; flex-direction: column; height: 100vh; }
-  header { display: flex; gap: 6px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--line); background: var(--bar); }
+  header {
+    display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; box-sizing: border-box;
+    min-height: 40px; padding: 0 var(--sp-3);
+    background: var(--paper); color: var(--ink);
+    border-bottom: var(--lw-thick) solid var(--gilt-mark);
+  }
+  .mark { color: var(--ink); flex: none; }
+  .brand { font-weight: 600; font-size: var(--fs-14); letter-spacing: 0.08em; margin-right: var(--sp-2); }
+  header button { background: var(--surface); }
+  header button:hover:not(:disabled) { background: var(--surface-2); }
+  header button[aria-pressed] { background: transparent; }
+  header button[aria-pressed="true"],
+  header button[aria-pressed="true"]:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--accent); }
   .grow { flex: 1; }
-  .meta { color: var(--dim); font-size: 12px; margin-left: 12px; }
-  .banner { padding: 6px 10px; font-size: 13px; }
-  .banner.error { background: #fbe4e1; color: #7a1d12; }
-  .banner.warn { background: #fdf1d3; color: #6b4a00; }
+  .meta { color: var(--ink-3); font-size: var(--fs-12); margin-left: var(--sp-2); }
+  .meta.file { font-family: var(--font-mono); }
+  header :global(.web-badge) {
+    font-size: var(--fs-11); text-transform: uppercase; letter-spacing: 0.08em; padding: 1px var(--sp-2);
+    background: var(--surface-2); color: var(--ink-2); border: var(--lw-thin) solid var(--rule-strong); border-radius: var(--radius);
+  }
+  header :global(a) { color: var(--accent); font-size: var(--fs-13); }
+  .banner {
+    display: flex; align-items: baseline; gap: var(--sp-2); padding: var(--sp-1) var(--sp-3); font-size: var(--fs-13);
+    border-bottom: var(--lw-thin) solid var(--rule);
+  }
+  .banner::before { flex: none; }
+  .banner .msg { flex: 1; }
+  .banner button { margin-left: var(--sp-2); font-size: var(--fs-13); padding: 1px var(--sp-2); }
+  .banner.error { background: var(--fail-soft); color: var(--fail); }
+  .banner.error::before { content: "\2715"; }
+  .banner.warn { background: var(--warn-soft); color: var(--warn); }
+  .banner.warn::before { content: "\25B2"; }
   .body { flex: 1; display: grid; min-height: 0; }
   .body > section { overflow: auto; min-width: 0; min-height: 0; }
   .left { grid-column: 1; grid-row: 1 / 4; }
-  .handle.v { grid-column: 2; grid-row: 1 / 4; cursor: col-resize; background: var(--line); }
+  .handle.v { grid-column: 2; grid-row: 1 / 4; cursor: col-resize; background: var(--rule); }
   .main { grid-column: 3; grid-row: 1; }
   .body > .main { overflow: hidden; }
-  .handle.h { grid-column: 3; grid-row: 2; cursor: row-resize; background: var(--line); }
+  .handle.h { grid-column: 3; grid-row: 2; cursor: row-resize; background: var(--rule); }
   .bottom { grid-column: 3; grid-row: 3; }
   .body > [hidden] { display: none; }
-  .handle:hover { background: var(--gold); }
+  .handle:hover { background: var(--gilt-mark); }
 </style>
