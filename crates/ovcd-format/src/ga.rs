@@ -383,6 +383,44 @@ impl Canvas {
         self.entities.push(e);
     }
 
+    /// A horizontal stadium (two lines and two half-circle ends) from `xa` to `xb` about height `yc`.
+    fn stadium(&mut self, layer: &str, xa: f64, xb: f64, yc: f64, r: f64) {
+        self.line(layer, [xa, yc + r], [xb, yc + r], None);
+        self.line(layer, [xa, yc - r], [xb, yc - r], None);
+        self.arc(layer, [xa, yc], r, 90.0, 270.0, None);
+        self.arc(layer, [xb, yc], r, 270.0, 90.0, None);
+    }
+
+    /// The same stadium split at height `level`: the part at or above it on `above`, the part
+    /// below on `below`. Lines lie wholly on one side; the end arcs are split at the angle where
+    /// the circle meets `level`.
+    fn stadium_split(
+        &mut self,
+        (above, below): (&str, &str),
+        (xa, xb, yc, r): (f64, f64, f64, f64),
+        level: f64,
+    ) {
+        let s = (level - yc) / r;
+        let layer_of = |y: f64| if y >= level { above } else { below };
+        self.line(layer_of(yc + r), [xa, yc + r], [xb, yc + r], None);
+        self.line(layer_of(yc - r), [xa, yc - r], [xb, yc - r], None);
+        if s >= 1.0 || s <= -1.0 {
+            // the level is at or beyond a pole: the whole arc is on one side
+            let layer = layer_of(yc);
+            self.arc(layer, [xa, yc], r, 90.0, 270.0, None);
+            self.arc(layer, [xb, yc], r, 270.0, 90.0, None);
+            return;
+        }
+        // the angle (degrees, in -90..90) on the right half of a circle where y = level
+        let a = libm::asin(s).to_degrees();
+        // left end: above is 90 to 180 - a, below is 180 - a to 270
+        self.arc(above, [xa, yc], r, 90.0, 180.0 - a, None);
+        self.arc(below, [xa, yc], r, 180.0 - a, 270.0, None);
+        // right end: below is 270 to a, above is a to 90
+        self.arc(below, [xb, yc], r, 270.0, a, None);
+        self.arc(above, [xb, yc], r, a, 90.0, None);
+    }
+
     fn centre_line(&mut self, a: [f64; 2], b: [f64; 2]) {
         self.extend(a);
         self.extend(b);
@@ -551,12 +589,11 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
         Containment::Tanks { od, .. } => {
             if let (Some((length, starts, _)), Some(yc)) = (h.tank_layout(), h.tank_centre_y()) {
                 let r = od / 2.0;
+                // The part of a tank above the deck is in plain view (OBJECT: a secondary object
+                // line, the hull profile being the primary outline); the part below it is hidden.
                 for x0 in starts {
                     let (xa, xb) = (x0 + r, x0 + length - r);
-                    c.line("HIDDEN", [xa, yc + r], [xb, yc + r], None);
-                    c.line("HIDDEN", [xa, yc - r], [xb, yc - r], None);
-                    c.arc("HIDDEN", [xa, yc], r, 90.0, 270.0, None);
-                    c.arc("HIDDEN", [xb, yc], r, 270.0, 90.0, None);
+                    c.stadium_split(("OBJECT", "HIDDEN"), (xa, xb, yc, r), h.depth);
                 }
             }
         }
@@ -640,13 +677,23 @@ fn plan(h: &Hull, n: u32) -> Canvas {
         Containment::Tanks { od, .. } => {
             if let Some((length, starts, centres)) = h.tank_layout() {
                 let r = od / 2.0;
+                let tank_y = h.tank_centre_y().unwrap_or(0.0);
                 for x0 in &starts {
                     for yc in &centres {
                         let (xa, xb) = (x0 + r, x0 + length - r);
-                        c.line("HIDDEN", [xa, yc + r], [xb, yc + r], None);
-                        c.line("HIDDEN", [xa, yc - r], [xb, yc - r], None);
-                        c.arc("HIDDEN", [xa, *yc], r, 90.0, 270.0, None);
-                        c.arc("HIDDEN", [xb, *yc], r, 270.0, 90.0, None);
+                        if tank_y >= h.depth {
+                            // the widest part stands above the deck: the whole outline is in view
+                            c.stadium("OBJECT", xa, xb, *yc, r);
+                        } else {
+                            // The widest part is under the deck, so the outline is hidden. Where the
+                            // tank's top stands above the deck, the part above is in view, and from
+                            // above it is narrower: a sphere or cylinder cut at the deck height.
+                            c.stadium("HIDDEN", xa, xb, *yc, r);
+                            let dy = h.depth - tank_y;
+                            if dy < r {
+                                c.stadium("OBJECT", xa, xb, *yc, chord_half(r, dy));
+                            }
+                        }
                     }
                 }
             }
@@ -664,6 +711,11 @@ fn plan(h: &Hull, n: u32) -> Canvas {
     let column = h.loa + 6.0 * c.k;
     c.label_column(column, &mut labels);
     c
+}
+
+/// Half the chord of a circle of radius `r` at distance `d` (under `r`) from its centre.
+fn chord_half(r: f64, d: f64) -> f64 {
+    (r * r - d * d).sqrt()
 }
 
 /// The x of the left edge of a circle at height `y` (its centre if `y` is outside the circle).

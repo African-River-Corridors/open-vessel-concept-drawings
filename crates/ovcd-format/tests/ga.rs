@@ -268,7 +268,20 @@ fn gas_shows_its_tank_arrangement() {
                     .iter()
                     .all(|c| close(c["radius_m"].as_f64().unwrap(), od / 2.0))
             );
-            let hidden_arcs = |d: &Value| of_layer(d, "HIDDEN", "arc").len();
+            // A head is one arc centre. Its arc may be split between HIDDEN and OBJECT where the
+            // tank stands through the deck (#195), and the plan may draw a head twice (its widest
+            // outline and the part above the deck), so heads are counted by distinct centre and
+            // radius.
+            let hidden_arcs = |d: &Value| {
+                let mut heads: Vec<String> = ["HIDDEN", "OBJECT"]
+                    .iter()
+                    .flat_map(|layer| of_layer(d, layer, "arc"))
+                    .map(|e| e["centre_m"].to_string())
+                    .collect();
+                heads.sort();
+                heads.dedup();
+                heads.len()
+            };
             assert_eq!(
                 hidden_arcs(&v.side_elevation),
                 2 * n_long,

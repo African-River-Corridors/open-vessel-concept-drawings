@@ -528,3 +528,141 @@ fn the_section_deck_line_stops_at_a_tank_and_never_crosses_one() {
     }
     assert!(crossed > 0, "no fixture has a tank through the deck");
 }
+
+// ---- #195: the part of a tank above the deck is in view; the part below is hidden ---------------
+
+/// The point of an arc entity at `deg` degrees.
+fn arc_point(e: &Value, deg: f64) -> (f64, f64) {
+    let (cx, cy, r) = (
+        f(&e["centre_m"][0]),
+        f(&e["centre_m"][1]),
+        f(&e["radius_m"]),
+    );
+    (
+        cx + r * libm::cos(deg.to_radians()),
+        cy + r * libm::sin(deg.to_radians()),
+    )
+}
+
+/// Sample points of an arc, from start to end counter-clockwise.
+fn arc_samples(e: &Value) -> Vec<(f64, f64)> {
+    let (s, t) = (f(&e["start_deg"]), f(&e["end_deg"]));
+    let sweep = (t - s).rem_euclid(360.0);
+    (0..=20)
+        .map(|i| arc_point(e, s + sweep * f64::from(i) / 20.0))
+        .collect()
+}
+
+fn line_ys(e: &Value) -> Vec<f64> {
+    let (a, b) = ends(e);
+    vec![a.1, b.1]
+}
+
+#[test]
+fn in_elevation_the_tank_above_the_deck_is_visible_and_below_it_hidden() {
+    let mut split = 0;
+    for file in GAS_FIXTURES {
+        for self_propelled in [false, true] {
+            let r = results_of(file, self_propelled);
+            let v = views(&r);
+            let depth = f(&r["dims"]["depth_m"]);
+            let eps = 1e-9;
+            let ent = &v.side_elevation;
+            // visible tank pieces (OBJECT in elevation is only the tank) lie at or above the deck
+            for e in of_layer(ent, "OBJECT", "line") {
+                assert!(
+                    line_ys(e).iter().all(|y| *y >= depth - eps),
+                    "{file}: visible line below deck"
+                );
+            }
+            for e in of_layer(ent, "OBJECT", "arc") {
+                assert!(
+                    arc_samples(e).iter().all(|p| p.1 >= depth - eps),
+                    "{file}: visible arc below deck"
+                );
+            }
+            // hidden tank pieces (the polylines are not tank pieces) lie at or below it
+            for e in of_layer(ent, "HIDDEN", "line") {
+                assert!(
+                    line_ys(e).iter().all(|y| *y <= depth + eps),
+                    "{file}: hidden line above deck"
+                );
+            }
+            for e in of_layer(ent, "HIDDEN", "arc") {
+                assert!(
+                    arc_samples(e).iter().all(|p| p.1 <= depth + eps),
+                    "{file}: hidden arc above deck"
+                );
+            }
+            // the pieces join at the deck: a visible and a hidden arc end meet at deck height
+            let visible = of_layer(ent, "OBJECT", "arc");
+            let hidden = of_layer(ent, "HIDDEN", "arc");
+            for a in &visible {
+                let ends_a = [f(&a["start_deg"]), f(&a["end_deg"])].map(|d| arc_point(a, d));
+                for pa in ends_a.iter().filter(|p| close(p.1, depth)) {
+                    let joined = hidden.iter().any(|b| {
+                        [f(&b["start_deg"]), f(&b["end_deg"])]
+                            .map(|d| arc_point(b, d))
+                            .iter()
+                            .any(|pb| close(pb.0, pa.0) && close(pb.1, pa.1))
+                    });
+                    assert!(
+                        joined,
+                        "{file}: a visible arc meets no hidden arc at the deck"
+                    );
+                    split += 1;
+                }
+            }
+            // the tank is drawn at the section's centre height
+            let want = f(&r["drawing"]["double_bottom_m"])
+                + f(&r["drawing"]["tank_support_height_m"])
+                + f(&r["geometry"]["tank_outer_diameter_m"]) / 2.0;
+            for a in visible.iter().chain(hidden.iter()) {
+                assert!(close(f(&a["centre_m"][1]), want));
+            }
+        }
+    }
+    assert!(split > 0, "no fixture has a tank through the deck");
+}
+
+#[test]
+fn in_plan_the_tank_part_above_the_deck_is_visible() {
+    let mut cases = [0; 3];
+    for file in GAS_FIXTURES {
+        let r = results_of(file, false);
+        let v = views(&r);
+        let depth = f(&r["dims"]["depth_m"]);
+        let radius = f(&r["geometry"]["tank_outer_diameter_m"]) / 2.0;
+        let yc = f(&r["drawing"]["double_bottom_m"])
+            + f(&r["drawing"]["tank_support_height_m"])
+            + radius;
+        // the athwartships centres of the tanks, from the section circles
+        let centres: Vec<f64> = circles(&v).iter().map(|c| (c.0).0).collect();
+        let has = |layer: &str, half: f64| {
+            let lines = of_layer(&v.plan, layer, "line");
+            centres.iter().all(|c| {
+                [c - half, c + half].iter().all(|y| {
+                    lines
+                        .iter()
+                        .any(|e| close(ends(e).0.1, *y) && close(ends(e).1.1, *y))
+                })
+            })
+        };
+        let any_hidden = !of_layer(&v.plan, "HIDDEN", "line").is_empty();
+        if yc >= depth {
+            // the widest part is above the deck: the whole outline is in view, nothing hidden
+            assert!(has("OBJECT", radius) && !any_hidden, "{file}");
+            cases[0] += 1;
+        } else if yc + radius > depth {
+            // the widest part is under the deck (hidden); above it the tank is narrower, in view
+            let dy = depth - yc;
+            let w = (radius * radius - dy * dy).sqrt();
+            assert!(has("HIDDEN", radius) && has("OBJECT", w), "{file}");
+            cases[1] += 1;
+        } else {
+            assert!(has("HIDDEN", radius), "{file}");
+            cases[2] += 1;
+        }
+    }
+    assert!(cases.iter().sum::<i32>() > 0);
+}

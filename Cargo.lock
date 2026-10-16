@@ -2371,6 +2371,7 @@ dependencies = [
 name = "ovcd-format"
 version = "0.2.2"
 dependencies = [
+ "libm",
  "ovcd-core",
  "ovcd-draw",
  "serde",
