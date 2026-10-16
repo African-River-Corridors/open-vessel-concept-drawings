@@ -45,6 +45,14 @@
           "value": 0.3,
           "source": "default"
         },
+        "bow_rake_length_to_depth_ratio": {
+          "value": 1.6,
+          "source": "default"
+        },
+        "pushed_stern_void_m": {
+          "value": 3.0,
+          "source": "default"
+        },
         "hold_wing_void_width_m": {
           "value": 1.0,
           "source": "default"
@@ -63,6 +71,10 @@
         },
         "n_holds": {
           "value": 3.0,
+          "source": "default"
+        },
+        "bulk_end_bulkhead_m": {
+          "value": 0.5,
           "source": "default"
         },
         "hold_fill_ratio": {

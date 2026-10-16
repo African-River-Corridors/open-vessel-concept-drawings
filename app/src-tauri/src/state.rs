@@ -335,7 +335,9 @@ mod tests {
         let mut state = AppState::open(Path::new("old.vdesign"), &text).unwrap();
         let notes = state.snapshot()["migration_notes"].clone();
         let notes = notes.as_array().unwrap();
-        assert_eq!(notes.len(), 3, "{notes:?}");
+        // Three for the version 1 changes, and one for the hull end input a version 1 file lacks
+        // (issue #4): it gets the fixed value the engine used.
+        assert_eq!(notes.len(), 4, "{notes:?}");
         assert!(
             notes[0]
                 .as_str()
@@ -347,6 +349,21 @@ mod tests {
                 .as_str()
                 .unwrap()
                 .contains("`adn_tank_cap_m3` is no longer an input")
+        );
+        assert!(
+            notes[2]
+                .as_str()
+                .unwrap()
+                .contains("has no `max_tank_od_m`; it now uses the default 16 m")
+        );
+        let last = notes[3].as_str().unwrap();
+        assert!(
+            last.contains("has no `bow_rake_length_to_depth_ratio`"),
+            "{last}"
+        );
+        assert!(
+            last.contains("fixed value the engine used before it was an input"),
+            "{last}"
         );
         let ruleset = &state.snapshot()["design"]["options"][0]["inputs"]["ruleset"];
         assert_eq!(ruleset["value"], "IGC_2G");

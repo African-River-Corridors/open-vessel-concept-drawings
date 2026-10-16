@@ -100,6 +100,13 @@ pub const DRY_BULK_HOPPER_PLATE_MM: f64 = 14.0;
 pub const DRY_BULK_BULKHEAD_PLATE_MM: f64 = 11.0;
 pub const DRY_BULK_COAMING_PLATE_MM: f64 = 10.0;
 
+/// The bow rake length as a multiple of the moulded depth (`barge_capacity` default).
+pub const BOW_RAKE_TO_DEPTH_RATIO: f64 = 1.6;
+/// The stern void of a pushed barge, in m (`barge_capacity` default).
+pub const PUSHED_STERN_VOID_M: f64 = 3.0;
+/// The dry-bulk end-bulkhead allowance at each end of the hold, in m (`barge_capacity` default).
+pub const BULK_END_BULKHEAD_M: f64 = 0.5;
+
 /// Both dry-bulk holds.
 const DRY_HOLDS: &[&str] = &["box_hold", "sloped_hopper_hold"];
 
@@ -108,6 +115,8 @@ const DRY_HOLDS: &[&str] = &["box_hold", "sloped_hopper_hold"];
 pub struct LegacyFixed {
     pub name: &'static str,
     pub applies_to: AppliesTo,
+    /// The Formation kinds it applies to; `None` for every Formation.
+    pub formations: Option<&'static [&'static str]>,
     /// The value the engine used for every design.
     pub value: f64,
 }
@@ -123,57 +132,97 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
     LegacyFixed {
         name: "hold_wing_void_width_m",
         applies_to: AppliesTo::AnyOf(DRY_HOLDS),
+        formations: None,
         value: DRY_BULK_WING_VOID_M,
     },
     LegacyFixed {
         name: "hold_double_bottom_m",
         applies_to: AppliesTo::AnyOf(DRY_HOLDS),
+        formations: None,
         value: DRY_BULK_DOUBLE_BOTTOM_M,
     },
     LegacyFixed {
         name: "hopper_slope_h_per_v",
         applies_to: AppliesTo::Only("sloped_hopper_hold"),
+        formations: None,
         value: DRY_BULK_HOPPER_SLOPE,
     },
     LegacyFixed {
         name: "hatch_coaming_height_m",
         applies_to: AppliesTo::AnyOf(DRY_HOLDS),
+        formations: None,
         value: DRY_BULK_COAMING_M,
     },
     LegacyFixed {
         name: "n_holds",
         applies_to: AppliesTo::Only("sloped_hopper_hold"),
+        formations: None,
         value: DRY_BULK_N_HOLDS,
     },
     LegacyFixed {
         name: "hold_fill_ratio",
         applies_to: AppliesTo::AnyOf(DRY_HOLDS),
+        formations: None,
         value: DRY_BULK_HOLD_FILL,
     },
     LegacyFixed {
         name: "inner_bottom_plate_mm",
         applies_to: AppliesTo::Only("sloped_hopper_hold"),
+        formations: None,
         value: DRY_BULK_INNER_BOTTOM_PLATE_MM,
     },
     LegacyFixed {
         name: "hopper_plate_mm",
         applies_to: AppliesTo::Only("sloped_hopper_hold"),
+        formations: None,
         value: DRY_BULK_HOPPER_PLATE_MM,
     },
     LegacyFixed {
         name: "hold_bulkhead_plate_mm",
         applies_to: AppliesTo::Only("sloped_hopper_hold"),
+        formations: None,
         value: DRY_BULK_BULKHEAD_PLATE_MM,
     },
     LegacyFixed {
         name: "hatch_coaming_plate_mm",
         applies_to: AppliesTo::Only("sloped_hopper_hold"),
+        formations: None,
         value: DRY_BULK_COAMING_PLATE_MM,
+    },
+    LegacyFixed {
+        name: "bow_rake_length_to_depth_ratio",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: BOW_RAKE_TO_DEPTH_RATIO,
+    },
+    LegacyFixed {
+        name: "pushed_stern_void_m",
+        applies_to: AppliesTo::All,
+        formations: Some(PUSHED),
+        value: PUSHED_STERN_VOID_M,
+    },
+    LegacyFixed {
+        name: "bulk_end_bulkhead_m",
+        applies_to: AppliesTo::AnyOf(DRY_HOLDS),
+        formations: None,
+        value: BULK_END_BULKHEAD_M,
     },
 ];
 
 /// Gas tank rulesets.
 pub const RULESETS: &[&str] = &["IGC_2G", "IGC_2G_EXACT"];
+
+/// The Formation kinds of a pushed barge or convoy: the ones with no stern block of their own.
+pub const PUSHED: &[&str] = &["pushed_barge", "pushed_convoy"];
+
+/// Whether an input used for `formations` applies to a Formation of `kind`. An unknown kind
+/// (none given yet) counts as applying, so nothing is dropped before the Formation is known.
+pub fn formation_includes(formations: Option<&[&str]>, kind: Option<&str>) -> bool {
+    match (formations, kind) {
+        (Some(list), Some(k)) => list.contains(&k),
+        _ => true,
+    }
+}
 
 /// Formation kinds. Only the first two are computed in spec 0001.
 pub const FORMATION_KINDS: &[&str] = &["self_propelled", "pushed_barge", "pushed_convoy"];
@@ -293,6 +342,8 @@ pub struct InputSpec {
     pub kind: InputKind,
     pub required: bool,
     pub applies_to: AppliesTo,
+    /// The Formation kinds the input is used for; `None` for every Formation.
+    pub formations: Option<&'static [&'static str]>,
     pub group: Group,
 }
 
@@ -309,6 +360,7 @@ const fn spec(
         kind,
         required,
         applies_to: AppliesTo::All,
+        formations: None,
         group,
     }
 }
@@ -326,6 +378,7 @@ const fn only(
         kind,
         required: false,
         applies_to: AppliesTo::Only(containment),
+        formations: None,
         group,
     }
 }
@@ -343,6 +396,24 @@ const fn only_in(
         kind,
         required: false,
         applies_to: AppliesTo::AnyOf(containments),
+        formations: None,
+        group,
+    }
+}
+
+const fn pushed(
+    name: &'static str,
+    label: &'static str,
+    kind: InputKind,
+    group: Group,
+) -> InputSpec {
+    InputSpec {
+        name,
+        label,
+        kind,
+        required: false,
+        applies_to: AppliesTo::All,
+        formations: Some(PUSHED),
         group,
     }
 }
@@ -421,6 +492,19 @@ pub const INPUTS: &[InputSpec] = &[
         false,
         Group::HullAndContainment,
     ),
+    spec(
+        "bow_rake_length_to_depth_ratio",
+        "Bow rake length over depth",
+        NUM,
+        false,
+        Group::HullAndContainment,
+    ),
+    pushed(
+        "pushed_stern_void_m",
+        "Stern void of a pushed barge",
+        NUM,
+        Group::HullAndContainment,
+    ),
     only(
         "lightship_factor_t_per_m3",
         "Lightship factor",
@@ -489,6 +573,13 @@ pub const INPUTS: &[InputSpec] = &[
         "Number of holds",
         NUM,
         "sloped_hopper_hold",
+        Group::DryBulkHold,
+    ),
+    only_in(
+        "bulk_end_bulkhead_m",
+        "End bulkhead allowance",
+        NUM,
+        DRY_HOLDS,
         Group::DryBulkHold,
     ),
     only_in(
@@ -750,7 +841,7 @@ pub fn new_design(profile: &Profile) -> Result<Design, String> {
         "Option 1",
         typed.as_object().expect("an object"),
         profile,
-        Missing::Fill,
+        Missing::FillProfile,
         &mut report,
     );
     if !report.is_ok() {
@@ -792,8 +883,12 @@ pub fn depth_group(cargo: &str) -> Option<&'static str> {
 enum Missing {
     /// A hard error: a saved file must hold every input as used.
     Refuse,
-    /// Write the Defaults Profile value in, marked `default`, with a warning.
+    /// Write the Defaults Profile value in, marked `default`, with a warning. An input that is new
+    /// since the first files takes the fixed value the engine used (see [`LEGACY_FIXED_INPUTS`]).
     Fill,
+    /// As `Fill`, for a Design being made or edited now (a new Option, a reset input), where the
+    /// Defaults Profile gives every value, new inputs included.
+    FillProfile,
 }
 
 /// Read and validate a `.vdesign` file's text, without running it. A file that leaves out an
@@ -807,7 +902,18 @@ pub fn check(text: &str, profile: &Profile) -> Checked {
 /// `default`, from `profile`. The report holds every other problem, as [`check`] gives it. Save
 /// the returned Design only when the report has no hard errors.
 pub fn fill(text: &str, profile: &Profile) -> Checked {
-    let mut checked = read_text(text, profile, Missing::Fill);
+    fill_as(text, profile, Missing::Fill)
+}
+
+/// As [`fill`], for a Design being edited in a session: an input the Design lacks (a reset input,
+/// or one a changed Cargo Containment or Formation now uses) takes the Defaults Profile value,
+/// never the fixed value an old file gets.
+pub(crate) fn fill_from_profile(text: &str, profile: &Profile) -> Checked {
+    fill_as(text, profile, Missing::FillProfile)
+}
+
+fn fill_as(text: &str, profile: &Profile, missing: Missing) -> Checked {
+    let mut checked = read_text(text, profile, missing);
     if let Some(design) = &mut checked.design
         && checked.report.warnings.iter().any(|w| w.contains(FILLED))
     {
@@ -1031,7 +1137,6 @@ fn read_design(
         if version == Some(1) {
             migrate_v1_option(name, &mut m, profile, report);
         }
-        fill_legacy_fixed(name, &mut m, profile, report);
         let inputs = &m;
         let mut option = read_option(name, inputs, profile, missing, report);
         match raw.get("results_hash") {
@@ -1134,64 +1239,6 @@ fn migrate_v1_option(
     }
 }
 
-/// The Cargo Containment an Option's raw inputs name, or the one its Cargo would get by default.
-fn containment_of_raw(inputs: &Map<String, Value>, profile: &Profile) -> Option<String> {
-    let text = |v: &Value| match v {
-        Value::String(s) => Some(s.clone()),
-        Value::Object(o) => o.get("value").and_then(Value::as_str).map(String::from),
-        _ => None,
-    };
-    if let Some(c) = inputs.get("cargo_containment").and_then(text) {
-        return Some(c);
-    }
-    let cargo = inputs.get("cargo").and_then(text)?;
-    let phase = ovcd_core::cargo::get_cargo(&cargo).ok()?.phase;
-    profile
-        .default_by("cargo_containment", "cargo_phase", phase)
-        .and_then(Value::as_str)
-        .map(String::from)
-}
-
-/// An input that is new since the first files (see [`LEGACY_FIXED_INPUTS`]) and that the file
-/// leaves out gets the fixed value the engine used before, marked `default`, with one warning per
-/// Option. This runs for every format version: a version 2 file from a test build lacks them too.
-/// Every other left-out input keeps the ordinary rule.
-fn fill_legacy_fixed(
-    name: &str,
-    inputs: &mut Map<String, Value>,
-    profile: &Profile,
-    report: &mut Report,
-) {
-    let Some(containment) = containment_of_raw(inputs, profile) else {
-        return;
-    };
-    let mut added: Vec<&'static str> = Vec::new();
-    for fixed in LEGACY_FIXED_INPUTS {
-        if inputs.contains_key(fixed.name) || !fixed.applies_to.includes(&containment) {
-            continue;
-        }
-        inputs.insert(
-            fixed.name.into(),
-            json!({ "value": fixed.value, "source": "default" }),
-        );
-        added.push(fixed.name);
-    }
-    if added.is_empty() {
-        return;
-    }
-    let list = added
-        .iter()
-        .map(|n| format!("`{n}`"))
-        .collect::<Vec<_>>()
-        .join(", ");
-    let text = format!(
-        "Option '{name}': this file has no {list}; each now holds the fixed value the engine used \
-         before it was an input (marked default), so the results are unchanged"
-    );
-    report.migration_notes.push(text.clone());
-    report.warning(text, &added);
-}
-
 /// Split a stored input into its value and marker. A bare value counts as typed.
 pub(crate) fn unmark(raw: &Value) -> Result<StoredInput, String> {
     if let Some(o) = raw.as_object()
@@ -1227,9 +1274,10 @@ fn read_option(
 ) -> DesignOption {
     let at = |msg: String| format!("Option '{name}': {msg}");
     let mut left_out: Vec<&str> = Vec::new();
+    let mut legacy_added: Vec<&'static str> = Vec::new();
     // A class named with no length, beam or Formation gives them; `fill` writes them in.
     let filled_from_class;
-    let raw = if matches!(missing, Missing::Fill) {
+    let raw = if matches!(missing, Missing::Fill | Missing::FillProfile) {
         filled_from_class = crate::class_input::prefill(raw);
         &filled_from_class
     } else {
@@ -1249,13 +1297,18 @@ fn read_option(
     };
     for spec in INPUTS {
         let containment = value_of(&inputs, "cargo_containment");
+        let formation = value_of(&inputs, "formation");
+        let kind = formation
+            .as_ref()
+            .and_then(|f| f.get("kind"))
+            .and_then(Value::as_str);
         let applies = match spec.applies_to {
             AppliesTo::All => true,
             scope => containment
                 .as_ref()
                 .and_then(Value::as_str)
                 .is_some_and(|c| scope.includes(c)),
-        };
+        } && formation_includes(spec.formations, kind);
         if let Some(raw_input) = raw.get(spec.name) {
             let stored = match unmark(raw_input) {
                 Ok(s) => s,
@@ -1269,13 +1322,19 @@ fn read_option(
                     .as_ref()
                     .and_then(Value::as_str)
                     .unwrap_or("unknown");
-                report.warning(
-                    at(format!(
+                let text = if formation_includes(spec.formations, kind) {
+                    format!(
                         "`{}` is not used for a {c} Cargo Containment; ignored",
                         spec.name
-                    )),
-                    &[spec.name],
-                );
+                    )
+                } else {
+                    format!(
+                        "`{}` is not used for a {} Formation; ignored",
+                        spec.name,
+                        kind.unwrap_or("unknown")
+                    )
+                };
+                report.warning(at(text), &[spec.name]);
                 continue;
             }
             match check_value(spec, &stored.value, profile) {
@@ -1305,6 +1364,21 @@ fn read_option(
         if !applies || crate::class_input::UNSET_WHEN_ABSENT.contains(&spec.name) {
             continue;
         }
+        // An input that is new since the first files, left out of a file: the fixed value the
+        // engine used before it was an input (never the profile value), noted once per Option.
+        if !matches!(missing, Missing::FillProfile)
+            && let Some(fixed) = LEGACY_FIXED_INPUTS.iter().find(|l| l.name == spec.name)
+        {
+            legacy_added.push(spec.name);
+            inputs.push((
+                spec.name.into(),
+                StoredInput {
+                    value: json!(fixed.value),
+                    source: Source::Default,
+                },
+            ));
+            continue;
+        }
         let default = match default_for(spec.name, &inputs, profile) {
             Ok(Some(d)) => d,
             // The input it depends on is missing or wrong; that error is already reported.
@@ -1316,7 +1390,7 @@ fn read_option(
         };
         match missing {
             Missing::Refuse => left_out.push(spec.name),
-            Missing::Fill => report.warning(
+            Missing::Fill | Missing::FillProfile => report.warning(
                 at(format!(
                     "`{}` {FILLED} {}, marked default",
                     spec.name,
@@ -1332,6 +1406,24 @@ fn read_option(
                 source: Source::Default,
             },
         ));
+    }
+    if !legacy_added.is_empty() {
+        let list = legacy_added
+            .iter()
+            .map(|n| format!("`{n}`"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let text = format!(
+            "Option '{name}': this file has no {list}; {} the fixed value the engine \
+             used before it was an input (marked default), so the results are unchanged",
+            if legacy_added.len() == 1 {
+                "it now holds"
+            } else {
+                "each now holds"
+            }
+        );
+        report.migration_notes.push(text.clone());
+        report.warning(text, &legacy_added);
     }
     if !left_out.is_empty() {
         report.error(
