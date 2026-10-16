@@ -648,7 +648,10 @@ fn in_plan_the_tank_part_above_the_deck_is_visible() {
                 })
             })
         };
-        let any_hidden = !of_layer(&v.plan, "HIDDEN", "line").is_empty();
+        // (a tank line runs along the hull; the cofferdam bulkheads, also hidden, run across it)
+        let any_hidden = of_layer(&v.plan, "HIDDEN", "line")
+            .iter()
+            .any(|e| close(ends(e).0.1, ends(e).1.1));
         if yc >= depth {
             // the widest part is above the deck: the whole outline is in view, nothing hidden
             assert!(has("OBJECT", radius) && !any_hidden, "{file}");
@@ -665,4 +668,279 @@ fn in_plan_the_tank_part_above_the_deck_is_visible() {
         }
     }
     assert!(cases.iter().sum::<i32>() > 0);
+}
+
+// ---- #196: the section detail of the earlier Python GA drawer -------------------------------------
+
+fn texts(document: &Value) -> Vec<String> {
+    entities(document)
+        .iter()
+        .filter(|e| e["type"] == "leader")
+        .map(|e| e["text"].as_str().unwrap().to_string())
+        .collect()
+}
+
+fn has_leader(document: &Value, text: &str) -> bool {
+    entities(document)
+        .iter()
+        .any(|e| e["type"] == "leader" && e["layer"] == "ANNO" && e["text"] == text)
+}
+
+/// Is there a line (any direction) of this layer from `a` to `b`, in either order?
+fn has_line(document: &Value, layer: &str, a: (f64, f64), b: (f64, f64)) -> bool {
+    let same = |p: (f64, f64), q: (f64, f64)| close(p.0, q.0) && close(p.1, q.1);
+    of_layer(document, layer, "line").iter().any(|e| {
+        let (p, q) = ends(e);
+        (same(p, a) && same(q, b)) || (same(p, b) && same(q, a))
+    })
+}
+
+fn polylines_with(document: &Value, layer: &str, x: f64) -> Vec<Vec<(f64, f64)>> {
+    of_layer(document, layer, "polyline")
+        .iter()
+        .map(|e| points(e))
+        .filter(|p| p.iter().any(|q| close(q.0, x)))
+        .collect()
+}
+
+#[test]
+fn the_section_draws_the_double_bottom_wing_tanks_voids_cradles_and_domes_from_the_results() {
+    let mut with_double_bottom = 0;
+    for file in GAS_FIXTURES {
+        for self_propelled in [false, true] {
+            let r = results_of(file, self_propelled);
+            let v = views(&r);
+            let d = &r["drawing"];
+            let half = f(&r["dims"]["beam_m"]) / 2.0;
+            let depth = f(&r["dims"]["depth_m"]);
+            let od = f(&r["geometry"]["tank_outer_diameter_m"]);
+            let cs = f(&r["geometry"]["side_clearance_m"]);
+            let (db, support) = (f(&d["double_bottom_m"]), f(&d["tank_support_height_m"]));
+            let ent = &v.midship_section;
+
+            // the tank stands on double bottom + support height once, not twice
+            let bottom = circles(&v)
+                .iter()
+                .map(|((_, y), r)| y - r)
+                .fold(f64::INFINITY, f64::min);
+            assert!(close(bottom, db + support), "{file}: tank bottom");
+            assert!(
+                !close(bottom, db + support + support),
+                "{file}: not on the support twice"
+            );
+
+            // double bottom: a line across the hull and a line hatch in the band under it
+            let hatches = of_layer(ent, "HATCH", "hatch");
+            if db > 0.0 {
+                with_double_bottom += 1;
+                assert!(has_line(ent, "OBJECT", (-half, db), (half, db)), "{file}");
+                assert_eq!(hatches.len(), 1, "{file}");
+                assert_eq!(hatches[0]["pattern"], "lines");
+                let ys: Vec<f64> = hatches[0]["boundary_m"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|p| f(&p[1]))
+                    .collect();
+                assert!(
+                    ys.iter().any(|y| close(*y, 0.0)) && ys.iter().any(|y| close(*y, db)),
+                    "{file}"
+                );
+                assert!(has_leader(ent, "DOUBLE BOTTOM"));
+            } else {
+                assert!(hatches.is_empty(), "{file}: no band, no hatch");
+                assert!(!has_leader(ent, "DOUBLE BOTTOM"));
+            }
+
+            // wing tanks: the inboard wall from the double bottom to the top, on both sides
+            let w = f(&d["wing_tank_width_m"]);
+            let gap = f(&d["wing_tank_gap_m"]);
+            let top = (db + support + f(&d["wing_tank_height_ratio"]) * od).min(depth);
+            assert!(w > 0.0 && w < cs, "{file}: the fixtures have a wing tank");
+            for side in [-1.0, 1.0] {
+                let wall = polylines_with(ent, "OBJECT", side * (half - w));
+                assert_eq!(wall.len(), 1, "{file}");
+                assert!(
+                    wall[0].iter().any(|p| close(p.1, db))
+                        && wall[0].iter().any(|p| close(p.1, top))
+                );
+                // the void, to the cargo tank's side clearance at most
+                let edge = side * (half - w - gap.min(cs - w));
+                let void = polylines_with(ent, "ZONE", edge);
+                assert_eq!(void.len(), 1, "{file}: void on the ZONE layer");
+                // the void lies between the wing tank wall and the cargo tank's side clearance
+                assert!(
+                    void[0]
+                        .iter()
+                        .all(|p| { p.0.abs() >= half - cs - 1e-9 && p.0.abs() <= half - w + 1e-9 })
+                );
+            }
+            assert!(has_leader(ent, "WBT (BOTH SIDES)"));
+            assert!(has_leader(ent, "VOID (BOTH SIDES)"));
+
+            // a cradle under each tank, a little outside it, with its legs to the double bottom
+            let arcs = of_layer(ent, "OBJECT", "arc");
+            assert_eq!(arcs.len(), circles(&v).len(), "{file}");
+            for (a, ((cx, cy), radius)) in arcs.iter().zip(circles(&v)) {
+                assert!(close(f(&a["centre_m"][0]), cx) && close(f(&a["centre_m"][1]), cy));
+                assert!(close(f(&a["radius_m"]), radius + 0.05));
+                let (s, e) = (
+                    arc_point(a, f(&a["start_deg"])),
+                    arc_point(a, f(&a["end_deg"])),
+                );
+                assert!(
+                    has_line(ent, "OBJECT", (s.0, s.1), (s.0, db)),
+                    "{file}: left leg"
+                );
+                assert!(
+                    has_line(ent, "OBJECT", (e.0, e.1), (e.0, db)),
+                    "{file}: right leg"
+                );
+            }
+            assert!(has_leader(ent, "CRADLE"));
+
+            // a dome on each tank, to the dome height above the tank top
+            let dome = f(&d["dome_height_m"]);
+            let top_of_tank = db + support + od;
+            let apexes: Vec<f64> = of_layer(ent, "OBJECT", "polyline")
+                .iter()
+                .map(|e| points(e))
+                .filter(|p| p.len() == 17)
+                .map(|p| p.iter().map(|q| q.1).fold(f64::NEG_INFINITY, f64::max))
+                .collect();
+            assert_eq!(apexes.len(), circles(&v).len(), "{file}");
+            assert!(
+                apexes.iter().all(|y| close(*y, top_of_tank + dome)),
+                "{file}: dome height"
+            );
+            assert!(has_leader(ent, "DOME"));
+        }
+    }
+    assert!(with_double_bottom > 0);
+}
+
+#[test]
+fn the_elevation_and_plan_draw_the_cofferdam_zone_limits_and_forward_equipment() {
+    for file in GAS_FIXTURES {
+        let r = results_of(file, true);
+        let v = views(&r);
+        let loa = f(&r["dims"]["loa_m"]);
+        let half = f(&r["dims"]["beam_m"]) / 2.0;
+        let depth = f(&r["dims"]["depth_m"]);
+        let stern = f(&r["geometry"]["stern_void_length_m"]);
+        let bow = f(&r["geometry"]["bow_void_length_m"]);
+        let sep = &r["drawing"]["separation"];
+        let start = stern - f(&sep["aft_separation_m"]);
+        let end = start + f(&sep["cofferdam_m"]);
+        for (view, lo, hi) in [(&v.side_elevation, 0.0, depth), (&v.plan, -half, half)] {
+            // the cargo zone limits: dashed ZONE lines
+            for x in [stern, loa - bow] {
+                assert!(
+                    has_line(view, "ZONE", (x, lo), (x, hi)),
+                    "{file}: zone limit at {x}"
+                );
+            }
+            // the cofferdam's two bulkheads, hidden under the deck
+            for x in [start, end] {
+                assert!(
+                    has_line(view, "HIDDEN", (x, lo), (x, hi)),
+                    "{file}: cofferdam bulkhead at {x}"
+                );
+            }
+            assert!(has_leader(view, "COFFERDAM") && has_leader(view, "FWD EQUIP."));
+        }
+        // elevation: the double bottom is a hidden line along the hull, the wing tank a hidden band
+        let db = f(&r["drawing"]["double_bottom_m"]);
+        if db > 0.0 {
+            let hidden = of_layer(&v.side_elevation, "HIDDEN", "line");
+            assert!(hidden.iter().any(|e| close(ends(e).0.1, db)
+                && close(ends(e).1.1, db)
+                && ends(e).1.0 - ends(e).0.0 > loa / 2.0));
+        }
+        assert!(has_leader(&v.side_elevation, "WBT (BOTH SIDES)"));
+        // elevation domes: one on each tank; the tank top is above the deck here, so they are in view
+        let top = f(&r["drawing"]["double_bottom_m"])
+            + f(&r["drawing"]["tank_support_height_m"])
+            + f(&r["geometry"]["tank_outer_diameter_m"]);
+        let domes: Vec<_> = of_layer(&v.side_elevation, "OBJECT", "polyline")
+            .iter()
+            .map(|e| points(e))
+            .filter(|p| p.len() == 17)
+            .collect();
+        assert!(!domes.is_empty());
+        for p in domes {
+            let apex = p.iter().map(|q| q.1).fold(f64::NEG_INFINITY, f64::max);
+            assert!(
+                close(apex, top + f(&r["drawing"]["dome_height_m"])),
+                "{file}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_dry_bulk_design_draws_its_zone_limits_and_forward_equipment_and_no_gas_items() {
+    for file in HOLDS {
+        let r = results_of(file, false);
+        let v = views(&r);
+        let loa = f(&r["dims"]["loa_m"]);
+        let depth = f(&r["dims"]["depth_m"]);
+        let half = f(&r["dims"]["beam_m"]) / 2.0;
+        let (stern, bow) = (
+            f(&r["geometry"]["stern_void_length_m"]),
+            f(&r["geometry"]["bow_void_length_m"]),
+        );
+        for (view, lo, hi) in [(&v.side_elevation, 0.0, depth), (&v.plan, -half, half)] {
+            for x in [stern, loa - bow] {
+                assert!(has_line(view, "ZONE", (x, lo), (x, hi)), "{file}");
+            }
+            assert!(has_leader(view, "FWD EQUIP."), "{file}");
+        }
+        for (name, view) in [
+            ("elevation", &v.side_elevation),
+            ("plan", &v.plan),
+            ("section", &v.midship_section),
+        ] {
+            let t = texts(view);
+            for gas in [
+                "COFFERDAM",
+                "DOME",
+                "CRADLE",
+                "WBT (BOTH SIDES)",
+                "VOID (BOTH SIDES)",
+                "DOUBLE BOTTOM",
+            ] {
+                assert!(!t.iter().any(|x| x == gas), "{file} {name}: {gas}");
+            }
+            assert!(of_layer(view, "HATCH", "hatch").is_empty(), "{file} {name}");
+        }
+    }
+}
+
+#[test]
+fn an_item_whose_value_is_null_is_left_out_without_an_error() {
+    let mut r = results_of("gas_igc_2g_self_propelled.vdesign", false);
+    for key in [
+        "wing_tank_width_m",
+        "wing_tank_gap_m",
+        "wing_tank_height_ratio",
+        "dome_height_m",
+        "separation",
+    ] {
+        r["drawing"][key] = Value::Null;
+    }
+    let v = views(&r);
+    for (name, view) in [
+        ("elevation", &v.side_elevation),
+        ("plan", &v.plan),
+        ("section", &v.midship_section),
+    ] {
+        let t = texts(view);
+        for gone in ["COFFERDAM", "DOME", "WBT (BOTH SIDES)", "VOID (BOTH SIDES)"] {
+            assert!(!t.iter().any(|x| x == gone), "{name}: {gone}");
+        }
+    }
+    // what is still given is still drawn
+    assert!(has_leader(&v.midship_section, "CRADLE"));
+    assert!(has_leader(&v.side_elevation, "FWD EQUIP."));
 }

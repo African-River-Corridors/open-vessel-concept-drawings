@@ -418,6 +418,10 @@ fn structure_json(
             basis.map_or(Value::Null, |b| num(b.wing_tank_gap)),
         ),
         (
+            "wing_tank_height_ratio",
+            basis.map_or(Value::Null, |b| num(b.wing_tank_height_ratio)),
+        ),
+        (
             "opening_setback_m",
             if is_gas {
                 num(sep_in.opening_setback_m)

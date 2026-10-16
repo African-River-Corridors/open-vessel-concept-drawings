@@ -292,8 +292,12 @@ fn gas_shows_its_tank_arrangement() {
                 2 * n_long * n_wide,
                 "{file}: two heads for each tank of the plan"
             );
-            assert!(
-                of_layer(&v.side_elevation, "HIDDEN", "polyline").is_empty(),
+            // No hold in a gas barge. The one hidden polyline there may be is the wing ballast
+            // tank band (#196), which is there only when the results give a wing tank width.
+            let wing = r["drawing"]["wing_tank_width_m"].as_f64().unwrap_or(0.0) > 0.0;
+            assert_eq!(
+                of_layer(&v.side_elevation, "HIDDEN", "polyline").len(),
+                usize::from(wing),
                 "no hold in a gas barge"
             );
         }
