@@ -486,6 +486,44 @@ fn drawing_json(extra: Vec<(&'static str, Value)>) -> Value {
     Value::Object(extra.into_iter().map(|(k, v)| (k.to_string(), v)).collect())
 }
 
+/// The stern block's design values from the params. A key left out keeps the core default, the
+/// value the engine used before these were inputs (the unit counts keep the Cargo phase default).
+fn aft_design_of(p: &Map<String, Value>) -> R<ovcd_core::aft_arrangement::AftDesign> {
+    use ovcd_core::aft_arrangement as a;
+    let d = a::AftDesign::default();
+    let whole =
+        |key: &str, default: i64| -> R<i64> { whole_number(get_or(p, key, default as f64)?, key) };
+    let units = |key: &str| -> R<Option<i64>> {
+        match p.get(key) {
+            None => Ok(None),
+            Some(_) => Ok(Some(whole(key, 0)?)),
+        }
+    };
+    Ok(a::AftDesign {
+        n_thrusters: whole("thruster_count", d.n_thrusters)?,
+        thruster_envelope_m: get_or(p, "thruster_envelope_m", d.thruster_envelope_m)?,
+        thruster_clear_m: get_or(p, "thruster_clearance_m", d.thruster_clear_m)?,
+        thruster_room_length_m: get_or(p, "thruster_room_length_m", d.thruster_room_length_m)?,
+        n_battery_units: units("battery_unit_count")?,
+        n_accom_units: units("accommodation_unit_count")?,
+        container_height_m: get_or(p, "unit_height_m", d.container_height_m)?,
+        container_side_gap_m: get_or(p, "unit_side_gap_m", d.container_side_gap_m)?,
+        container_gap_m: get_or(p, "unit_row_gap_m", d.container_gap_m)?,
+        container_foundation_m: get_or(p, "unit_foundation_m", d.container_foundation_m)?,
+        wheelhouse_length_m: get_or(p, "wheelhouse_length_m", d.wheelhouse_length_m)?,
+        wheelhouse_width_m: get_or(p, "wheelhouse_width_m", d.wheelhouse_width_m)?,
+        wheelhouse_height_m: get_or(p, "wheelhouse_height_m", d.wheelhouse_height_m)?,
+        wheelhouse_gap_m: get_or(p, "wheelhouse_gap_m", d.wheelhouse_gap_m)?,
+        wheelhouse_eye_above_floor_m: get_or(
+            p,
+            "wheelhouse_eye_height_m",
+            d.wheelhouse_eye_above_floor_m,
+        )?,
+        sightline_margin_m: get_or(p, "sightline_margin_m", d.sightline_margin_m)?,
+        wheelhouse_max_lift_m: get_or(p, "wheelhouse_max_lift_m", d.wheelhouse_max_lift_m)?,
+    })
+}
+
 fn simulate(p: &Map<String, Value>) -> R<Value> {
     let vessel_id = match p.get("vessel") {
         None => "box_barge",
@@ -541,6 +579,7 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
     )?;
     inp.pushed_stern_void_m = get_or(p, "pushed_stern_void_m", inp.pushed_stern_void_m)?;
     inp.bulk_end_bulkhead_m = get_or(p, "bulk_end_bulkhead_m", inp.bulk_end_bulkhead_m)?;
+    inp.aft_design = aft_design_of(p)?;
     // The hold design values. A key left out keeps the core default, which is the value the engine
     // used before these were inputs.
     inp.wing_void_width = get_or(p, "hold_wing_void_width_m", inp.wing_void_width)?;
@@ -788,6 +827,7 @@ fn simulate_gas(
         water_density_t_per_m3: rho,
         required_freeboard_m: fb,
         air_draft_limit_m: truthy_float(p, "air_draft_limit_m")?,
+        aft_design: aft_design_of(p)?,
         ..FitOptions::default()
     };
     let f = ga::fit(l, b, cargo_key, t_max, &options)

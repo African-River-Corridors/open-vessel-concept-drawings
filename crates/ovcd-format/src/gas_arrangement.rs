@@ -92,6 +92,23 @@ const FIT_OPTION_KEYS: &[&str] = &[
     "wing_tank_gap_m",
     "wing_tank_height_ratio",
     "tank_wall_thickness_mm",
+    "n_thrusters",
+    "thruster_envelope_m",
+    "thruster_clear_m",
+    "thruster_room_length_m",
+    "n_battery_units",
+    "n_accom_units",
+    "container_height_m",
+    "container_side_gap_m",
+    "container_gap_m",
+    "container_foundation_m",
+    "wheelhouse_length_m",
+    "wheelhouse_width_m",
+    "wheelhouse_height_m",
+    "wheelhouse_gap_m",
+    "wheelhouse_eye_above_floor_m",
+    "sightline_margin_m",
+    "wheelhouse_max_lift_m",
 ];
 
 /// The keyword arguments of `fit`, over `base` (the defaults of the function being called).
@@ -133,6 +150,62 @@ fn fit_options(o: &Map<String, Value>, base: FitOptions) -> Result<FitOptions, E
     f.wing_tank_gap_m = float_or(o, "wing_tank_gap_m", f.wing_tank_gap_m)?;
     f.wing_tank_height_ratio = float_or(o, "wing_tank_height_ratio", f.wing_tank_height_ratio)?;
     f.tank_wall_thickness_mm = float_or(o, "tank_wall_thickness_mm", f.tank_wall_thickness_mm)?;
+    // The stern block's design values (issue #4): used by every candidate of a self-propelled hull.
+    let whole = |name: &str| -> Result<Option<i64>, EvalError> {
+        o.get(name)
+            .map(|v| {
+                v.as_i64().ok_or_else(|| {
+                    EvalError::BadInput(format!("`args.{name}` must be a whole number"))
+                })
+            })
+            .transpose()
+    };
+    if let Some(n) = whole("n_thrusters")? {
+        f.aft_design.n_thrusters = n;
+    }
+    if let Some(n) = whole("n_battery_units")? {
+        f.aft_design.n_battery_units = Some(n);
+    }
+    if let Some(n) = whole("n_accom_units")? {
+        f.aft_design.n_accom_units = Some(n);
+    }
+    f.aft_design.thruster_envelope_m =
+        float_or(o, "thruster_envelope_m", f.aft_design.thruster_envelope_m)?;
+    f.aft_design.thruster_clear_m = float_or(o, "thruster_clear_m", f.aft_design.thruster_clear_m)?;
+    f.aft_design.thruster_room_length_m = float_or(
+        o,
+        "thruster_room_length_m",
+        f.aft_design.thruster_room_length_m,
+    )?;
+    f.aft_design.container_height_m =
+        float_or(o, "container_height_m", f.aft_design.container_height_m)?;
+    f.aft_design.container_side_gap_m =
+        float_or(o, "container_side_gap_m", f.aft_design.container_side_gap_m)?;
+    f.aft_design.container_gap_m = float_or(o, "container_gap_m", f.aft_design.container_gap_m)?;
+    f.aft_design.container_foundation_m = float_or(
+        o,
+        "container_foundation_m",
+        f.aft_design.container_foundation_m,
+    )?;
+    f.aft_design.wheelhouse_length_m =
+        float_or(o, "wheelhouse_length_m", f.aft_design.wheelhouse_length_m)?;
+    f.aft_design.wheelhouse_width_m =
+        float_or(o, "wheelhouse_width_m", f.aft_design.wheelhouse_width_m)?;
+    f.aft_design.wheelhouse_height_m =
+        float_or(o, "wheelhouse_height_m", f.aft_design.wheelhouse_height_m)?;
+    f.aft_design.wheelhouse_gap_m = float_or(o, "wheelhouse_gap_m", f.aft_design.wheelhouse_gap_m)?;
+    f.aft_design.wheelhouse_eye_above_floor_m = float_or(
+        o,
+        "wheelhouse_eye_above_floor_m",
+        f.aft_design.wheelhouse_eye_above_floor_m,
+    )?;
+    f.aft_design.sightline_margin_m =
+        float_or(o, "sightline_margin_m", f.aft_design.sightline_margin_m)?;
+    f.aft_design.wheelhouse_max_lift_m = float_or(
+        o,
+        "wheelhouse_max_lift_m",
+        f.aft_design.wheelhouse_max_lift_m,
+    )?;
     Ok(f)
 }
 

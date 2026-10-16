@@ -14,6 +14,81 @@ pub const ISO40_WIDTH_M: f64 = 2.438;
 pub const ISO40_HEIGHT_HC_M: f64 = 2.896;
 pub const ISO40_HEIGHT_STD_M: f64 = 2.591;
 
+// The aft block's design values before they were inputs (issue #4). `AftArrangementInputs::new`
+// and `AftDesign::default` both read them, and so does the `.vdesign` table of fixed values for
+// files that lack the inputs, through a test that holds them equal.
+/// Most thrusters the block asks for; the beam may take fewer.
+pub const DEFAULT_N_THRUSTERS: i64 = 3;
+pub const DEFAULT_THRUSTER_ENVELOPE_M: f64 = 2.60;
+pub const DEFAULT_THRUSTER_CLEAR_M: f64 = 0.60;
+pub const DEFAULT_THRUSTER_ROOM_LENGTH_M: f64 = 3.50;
+/// 40 ft units by Cargo phase: dry bulk carries a second battery, gas a second accommodation unit.
+pub const DEFAULT_BATTERY_UNITS_GAS: i64 = 1;
+pub const DEFAULT_BATTERY_UNITS_DRY: i64 = 2;
+pub const DEFAULT_ACCOM_UNITS_GAS: i64 = 2;
+pub const DEFAULT_ACCOM_UNITS_DRY: i64 = 1;
+pub const DEFAULT_CONTAINER_SIDE_GAP_M: f64 = 0.90;
+pub const DEFAULT_CONTAINER_GAP_M: f64 = 0.80;
+pub const DEFAULT_CONTAINER_FOUNDATION_M: f64 = 0.30;
+pub const DEFAULT_WHEELHOUSE_LENGTH_M: f64 = 3.60;
+pub const DEFAULT_WHEELHOUSE_WIDTH_M: f64 = 6.40;
+pub const DEFAULT_WHEELHOUSE_HEIGHT_M: f64 = 3.40;
+pub const DEFAULT_WHEELHOUSE_GAP_M: f64 = 0.30;
+pub const DEFAULT_WHEELHOUSE_EYE_ABOVE_FLOOR_M: f64 = 1.50;
+pub const DEFAULT_SIGHTLINE_MARGIN_M: f64 = 0.50;
+pub const DEFAULT_WHEELHOUSE_MAX_LIFT_M: f64 = 6.00;
+
+/// The design values of the stern block that a design chooses (not ISO dimensions, not genset
+/// data). `Default` is the values the engine used before they were inputs. A vessel built with
+/// these needs no `AftArrangementInputs`: `barge_capacity` makes the block from them.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AftDesign {
+    /// A maximum: `compute` fits what the beam takes.
+    pub n_thrusters: i64,
+    pub thruster_envelope_m: f64,
+    pub thruster_clear_m: f64,
+    pub thruster_room_length_m: f64,
+    /// `None`: the default of the Cargo phase (gas 1, dry 2).
+    pub n_battery_units: Option<i64>,
+    /// `None`: the default of the Cargo phase (gas 2, dry 1).
+    pub n_accom_units: Option<i64>,
+    pub container_height_m: f64,
+    pub container_side_gap_m: f64,
+    pub container_gap_m: f64,
+    pub container_foundation_m: f64,
+    pub wheelhouse_length_m: f64,
+    pub wheelhouse_width_m: f64,
+    pub wheelhouse_height_m: f64,
+    pub wheelhouse_gap_m: f64,
+    pub wheelhouse_eye_above_floor_m: f64,
+    pub sightline_margin_m: f64,
+    pub wheelhouse_max_lift_m: f64,
+}
+
+impl Default for AftDesign {
+    fn default() -> Self {
+        Self {
+            n_thrusters: DEFAULT_N_THRUSTERS,
+            thruster_envelope_m: DEFAULT_THRUSTER_ENVELOPE_M,
+            thruster_clear_m: DEFAULT_THRUSTER_CLEAR_M,
+            thruster_room_length_m: DEFAULT_THRUSTER_ROOM_LENGTH_M,
+            n_battery_units: None,
+            n_accom_units: None,
+            container_height_m: ISO40_HEIGHT_HC_M,
+            container_side_gap_m: DEFAULT_CONTAINER_SIDE_GAP_M,
+            container_gap_m: DEFAULT_CONTAINER_GAP_M,
+            container_foundation_m: DEFAULT_CONTAINER_FOUNDATION_M,
+            wheelhouse_length_m: DEFAULT_WHEELHOUSE_LENGTH_M,
+            wheelhouse_width_m: DEFAULT_WHEELHOUSE_WIDTH_M,
+            wheelhouse_height_m: DEFAULT_WHEELHOUSE_HEIGHT_M,
+            wheelhouse_gap_m: DEFAULT_WHEELHOUSE_GAP_M,
+            wheelhouse_eye_above_floor_m: DEFAULT_WHEELHOUSE_EYE_ABOVE_FLOOR_M,
+            sightline_margin_m: DEFAULT_SIGHTLINE_MARGIN_M,
+            wheelhouse_max_lift_m: DEFAULT_WHEELHOUSE_MAX_LIFT_M,
+        }
+    }
+}
+
 /// The two propulsion arrangements. `battery_electric` is the default and its numbers are those of
 /// 0.1.0; `gas_fuelled` is issue #180 (see the Python file for the layout).
 pub const PROPULSION_OPTIONS: [&str; 2] = ["battery_electric", "gas_fuelled"];
@@ -229,26 +304,26 @@ impl AftArrangementInputs {
         Self {
             beam,
             depth,
-            n_thrusters: 3,
-            thruster_envelope_m: 2.60,
-            thruster_clear_m: 0.60,
-            thruster_room_length_m: 3.50,
-            n_battery_units: 1,
-            n_accom_units: 2,
+            n_thrusters: DEFAULT_N_THRUSTERS,
+            thruster_envelope_m: DEFAULT_THRUSTER_ENVELOPE_M,
+            thruster_clear_m: DEFAULT_THRUSTER_CLEAR_M,
+            thruster_room_length_m: DEFAULT_THRUSTER_ROOM_LENGTH_M,
+            n_battery_units: DEFAULT_BATTERY_UNITS_GAS,
+            n_accom_units: DEFAULT_ACCOM_UNITS_GAS,
             container_length_m: ISO40_LENGTH_M,
             container_width_m: ISO40_WIDTH_M,
             container_height_m: ISO40_HEIGHT_HC_M,
-            container_side_gap_m: 0.90,
-            container_gap_m: 0.80,
-            container_foundation_m: 0.30,
-            wheelhouse_length_m: 3.60,
-            wheelhouse_width_m: 6.40,
-            wheelhouse_height_m: 3.40,
-            wheelhouse_gap_m: 0.30,
-            wheelhouse_eye_above_floor_m: 1.50,
+            container_side_gap_m: DEFAULT_CONTAINER_SIDE_GAP_M,
+            container_gap_m: DEFAULT_CONTAINER_GAP_M,
+            container_foundation_m: DEFAULT_CONTAINER_FOUNDATION_M,
+            wheelhouse_length_m: DEFAULT_WHEELHOUSE_LENGTH_M,
+            wheelhouse_width_m: DEFAULT_WHEELHOUSE_WIDTH_M,
+            wheelhouse_height_m: DEFAULT_WHEELHOUSE_HEIGHT_M,
+            wheelhouse_gap_m: DEFAULT_WHEELHOUSE_GAP_M,
+            wheelhouse_eye_above_floor_m: DEFAULT_WHEELHOUSE_EYE_ABOVE_FLOOR_M,
             sightline_obstruction_m: None,
-            sightline_margin_m: 0.50,
-            wheelhouse_max_lift_m: 6.00,
+            sightline_margin_m: DEFAULT_SIGHTLINE_MARGIN_M,
+            wheelhouse_max_lift_m: DEFAULT_WHEELHOUSE_MAX_LIFT_M,
             propulsion: "battery_electric".to_string(),
             electrical_load_kwe: None,
             n_gensets: 2,

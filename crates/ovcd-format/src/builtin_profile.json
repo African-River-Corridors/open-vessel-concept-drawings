@@ -289,6 +289,125 @@
       "hard": { "ge": 0, "le": 50 },
       "soft": { "min": 0.0, "max": 5.0 }
     },
+    "thruster_count": {
+      "default": 3,
+      "unit": "thrusters",
+      "hard": { "ge": 1, "le": 6 },
+      "soft": { "min": 1.0, "max": 4.0 },
+      "basis": "carried over from the original engine: the most thrusters the stern block asks for, a whole number. It is a maximum: the stern block fits as many as the beam takes, and not fewer than one"
+    },
+    "thruster_envelope_m": {
+      "default": 2.6,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 10 },
+      "soft": { "min": 1.5, "max": 4.0 },
+      "basis": "carried over from the original engine: the width one thruster takes across the beam"
+    },
+    "thruster_clearance_m": {
+      "default": 0.6,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.3, "max": 1.5 },
+      "basis": "carried over from the original engine: the gap between thrusters and between a thruster and the shell"
+    },
+    "thruster_room_length_m": {
+      "default": 3.5,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 20 },
+      "soft": { "min": 2.0, "max": 6.0 },
+      "basis": "carried over from the original engine: the length of the thruster room at the stern"
+    },
+    "battery_unit_count": {
+      "default_by_cargo_phase": { "dry_bulk": 2, "liquid_gas": 1 },
+      "unit": "units",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.0, "max": 3.0 },
+      "basis": "carried over from the original engine: the number of 40 ft battery units in the stern block, a whole number. The default depends on the Cargo phase: dry bulk carries a second battery, gas carries one"
+    },
+    "accommodation_unit_count": {
+      "default_by_cargo_phase": { "dry_bulk": 1, "liquid_gas": 2 },
+      "unit": "units",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.0, "max": 3.0 },
+      "basis": "carried over from the original engine: the number of 40 ft accommodation units in the stern block, a whole number. The default depends on the Cargo phase: gas carries a second accommodation unit, dry bulk carries one"
+    },
+    "unit_height_m": {
+      "default": 2.896,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 5 },
+      "soft": { "min": 2.5, "max": 3.0 },
+      "basis": "carried over from the original engine: the height of a 40 ft unit, high-cube (ISO 668 1AAA, 2.896 m). A standard-height unit is 2.591 m"
+    },
+    "unit_side_gap_m": {
+      "default": 0.9,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.5, "max": 1.5 },
+      "basis": "carried over from the original engine: the walkway beside the units and between units abreast"
+    },
+    "unit_row_gap_m": {
+      "default": 0.8,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.5, "max": 1.5 },
+      "basis": "carried over from the original engine: the gap between rows of units along the hull"
+    },
+    "unit_foundation_m": {
+      "default": 0.3,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 3 },
+      "soft": { "min": 0.1, "max": 1.0 },
+      "basis": "carried over from the original engine: the foundation length between the thruster room and the first units"
+    },
+    "wheelhouse_length_m": {
+      "default": 3.6,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 20 },
+      "soft": { "min": 2.0, "max": 8.0 },
+      "basis": "carried over from the original engine: the length of the lifting wheelhouse"
+    },
+    "wheelhouse_width_m": {
+      "default": 6.4,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 20 },
+      "soft": { "min": 3.0, "max": 10.0 },
+      "basis": "carried over from the original engine: the width of the lifting wheelhouse"
+    },
+    "wheelhouse_height_m": {
+      "default": 3.4,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 10 },
+      "soft": { "min": 2.2, "max": 5.0 },
+      "basis": "carried over from the original engine: the height of the lifting wheelhouse"
+    },
+    "wheelhouse_gap_m": {
+      "default": 0.3,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.0, "max": 1.5 },
+      "basis": "carried over from the original engine: the gap between the units and the wheelhouse"
+    },
+    "wheelhouse_eye_height_m": {
+      "default": 1.5,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 5 },
+      "soft": { "min": 1.2, "max": 2.0 },
+      "basis": "carried over from the original engine: the helmsman's eye height above the wheelhouse floor"
+    },
+    "sightline_margin_m": {
+      "default": 0.5,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.2, "max": 1.5 },
+      "basis": "carried over from the original engine: how far the helmsman's eye must clear the cargo top when the wheelhouse is raised. It sets the sightline warning only"
+    },
+    "wheelhouse_max_lift_m": {
+      "default": 6.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 30 },
+      "soft": { "min": 3.0, "max": 10.0 },
+      "basis": "carried over from the original engine: the most the wheelhouse can rise on its lift"
+    },
     "water_density_t_per_m3": {
       "default": 1.0,
       "unit": "t/m3",

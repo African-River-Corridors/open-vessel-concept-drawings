@@ -22,6 +22,7 @@ use alloc::string::{String, ToString};
 use alloc::vec;
 use alloc::vec::Vec;
 
+use crate::aft_arrangement::AftDesign;
 use crate::barge_capacity::{
     BargeCapacityInputs, BargeCapacityResult, DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
     DEFAULT_MAX_TANK_OD_M, DEFAULT_PUSHED_STERN_VOID_M, DEFAULT_TANK_DOME_DIAMETER_M,
@@ -92,6 +93,8 @@ pub struct FitOptions {
     pub required_freeboard_m: f64,
     /// Air draft limit of the light condition (m), as the capacity check reads it. `None`: none.
     pub air_draft_limit_m: Option<f64>,
+    /// The stern block's design values for every candidate (a self-propelled hull only).
+    pub aft_design: AftDesign,
 }
 
 impl Default for FitOptions {
@@ -117,6 +120,7 @@ impl Default for FitOptions {
             water_density_t_per_m3: DEFAULT_WATER_DENSITY,
             required_freeboard_m: DEFAULT_REQUIRED_FREEBOARD_M,
             air_draft_limit_m: None,
+            aft_design: AftDesign::default(),
         }
     }
 }
@@ -444,6 +448,7 @@ impl Search<'_> {
         inp.tank_wall_thickness = Some(self.o.tank_wall_thickness_mm);
         inp.water_density = self.o.water_density_t_per_m3;
         inp.air_draft_limit_m = self.o.air_draft_limit_m;
+        inp.aft_design = self.o.aft_design.clone();
         inp
     }
 
