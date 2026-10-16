@@ -83,33 +83,40 @@
 </script>
 
 <div class="wrap">
-  <div class="tools" role="group" aria-label="Zoom {label}">
-    <button type="button" aria-label="Zoom out" onclick={() => step(1 / 1.5)} disabled={zoom <= MIN}>−</button>
-    <button type="button" aria-label="Zoom in" onclick={() => step(1.5)} disabled={zoom >= MAX}>+</button>
-    <button type="button" aria-label="Fit to the panel" onclick={fit} disabled={zoom === 1}>Fit</button>
-  </div>
-  <div
-    class="frame"
-    class:movable={zoom > 1}
-    bind:this={frame}
-    onpointerdown={onDown}
-    role="img"
-    aria-label={label}
-  >
-    <div class="sheet" style:transform="translate({x}px, {y}px) scale({zoom})">
-      {@html svg}
+  <div class="mat">
+    <div class="tools" role="group" aria-label="Zoom {label}">
+      <button type="button" aria-label="Zoom out" onclick={() => step(1 / 1.5)} disabled={zoom <= MIN}>−</button>
+      <button type="button" aria-label="Zoom in" onclick={() => step(1.5)} disabled={zoom >= MAX}>+</button>
+      <button type="button" aria-label="Fit to the panel" onclick={fit} disabled={zoom === 1}>Fit</button>
+    </div>
+    <div
+      class="frame"
+      class:movable={zoom > 1}
+      bind:this={frame}
+      onpointerdown={onDown}
+      role="img"
+      aria-label={label}
+    >
+      <div class="sheet" style:transform="translate({x}px, {y}px) scale({zoom})">
+        {@html svg}
+      </div>
     </div>
   </div>
+  <div class="state" data-testid="zoom-state">{zoom === 1 ? "fitted" : "zoomed"}</div>
 </div>
 
 <style>
-  .wrap { position: relative; height: 100%; }
-  .tools { position: absolute; top: 6px; right: 6px; z-index: 1; display: flex; gap: 4px; }
-  .tools button { padding: 1px 8px; background: rgba(255, 255, 255, 0.92); border: 1px solid var(--line); border-radius: 3px; cursor: pointer; }
-  .tools button:disabled { color: var(--dim); cursor: default; }
-  .frame { height: 100%; box-sizing: border-box; overflow: hidden; border: 1px solid var(--line); background: #fff; touch-action: none; }
+  .wrap { display: flex; flex-direction: column; height: 100%; gap: var(--sp-1); }
+  /* The mat: the drawing sheet sits on --surface-2, in a 1 px --rule-strong border, square corners. */
+  .mat { position: relative; flex: 1; min-height: 0; box-sizing: border-box; padding: var(--sp-2); background: var(--surface-2); border: var(--lw-thin) solid var(--rule-strong); border-radius: 0; }
+  .tools { position: absolute; top: var(--sp-3); right: var(--sp-3); z-index: 1; display: flex; gap: var(--sp-1); }
+  .tools button { padding: 1px var(--sp-2); cursor: pointer; }
+  .tools button:disabled { cursor: default; }
+  /* The sheet is white in both themes: it is paper, and the standard draws black on white. */
+  .frame { height: 100%; box-sizing: border-box; overflow: hidden; background: var(--sheet); touch-action: none; }
   .frame.movable { cursor: grab; }
   .sheet { transform-origin: 0 0; width: 100%; height: 100%; }
   /* The drawing has a view box, so it scales to fit both width and height. */
   .sheet :global(svg) { display: block; width: 100%; height: 100%; }
+  .state { flex: none; font: var(--fs-11) / var(--lh-ui) var(--font-ui); color: var(--ink-3); }
 </style>

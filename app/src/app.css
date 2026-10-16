@@ -109,9 +109,8 @@
   color-scheme: light;
 }
 
-/* Dark: the blueprint field. Chosen by hand (data-theme="dark") for now.
-   Following the OS dark setting waits until the restyle (#248) has moved every component to
-   tokens; #254 puts the OS-dark block back. Until then Auto shows light.
+/* Dark: the blueprint field. Auto follows the OS setting; data-theme="dark" or "light" overrides it.
+   The two blocks hold the same values (scripts/contrast.mjs checks that). */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --paper: #24496c;  --surface: #2a5278;  --surface-2: #1a3753;
@@ -123,7 +122,7 @@
     --src-class: #e0d4ff;
     color-scheme: dark;
   }
-} */
+}
 :root[data-theme="dark"] {
   --paper: #24496c;  --surface: #2a5278;  --surface-2: #1a3753;
   --ink: #eef6f6;  --ink-2: #d2e2e8;  --ink-3: #b9cfda;
@@ -133,18 +132,6 @@
   --warn: #ffe3a3;  --warn-soft: #43473e;  --stale: #b9cfda;
   --src-class: #e0d4ff;
   color-scheme: dark;
-}
-
-/* Old names, kept as aliases until the component tickets (#250 to #254) have moved to the new tokens;
-   #254 removes them. --ink and --cream keep their names with the new values. */
-:root {
-  --navy: var(--ink);
-  --gold: var(--gilt-mark);
-  --dim: var(--ink-3);
-  --line: var(--rule);
-  --bar: var(--surface-2);
-  --serif: var(--font-serif);
-  --sans: var(--font-ui);
 }
 
 /* Base styles */
