@@ -188,8 +188,10 @@ fn dry_bulk_shows_its_own_containment() {
     for file in DRY {
         for (_, r) in computed(file) {
             let g = &r["geometry"];
-            let (hold_h, top_w, bottom_w) = (
-                g["hold_height_m"].as_f64().unwrap(),
+            // The hold floor is the inner bottom (#193), not `depth - hold_height_m`: the core's hold
+            // height runs on up to the top of the coaming.
+            let (inner_bottom, top_w, bottom_w) = (
+                r["drawing"]["double_bottom_m"].as_f64().unwrap(),
                 g["hold_top_width_m"].as_f64().unwrap(),
                 g["hold_bottom_width_m"].as_f64().unwrap(),
             );
@@ -205,8 +207,8 @@ fn dry_bulk_shows_its_own_containment() {
                 .map(|p| p[1].as_f64().unwrap())
                 .collect();
             assert!(
-                ys.iter().any(|y| close(*y, depth - hold_h)) && ys.iter().any(|y| close(*y, depth)),
-                "{file}: the hold spans the hold height"
+                ys.iter().any(|y| close(*y, inner_bottom)) && ys.iter().any(|y| close(*y, depth)),
+                "{file}: the hold spans the inner bottom to the deck"
             );
             let hx = xs(&hidden[0]["points_m"]);
             assert!(close(
