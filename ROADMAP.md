@@ -46,18 +46,20 @@ runs against the engine on every pull request ([#184](https://github.com/African
 
 In order. Each phase builds on the one before; dates depend on contributors.
 
-| Phase | Version | Theme | Main work | What users get |
-|---|---|---|---|---|
-| Now | 0.2 | Concept tool | Capacity, gas tank arrangement, hydrostatics, journey de-rating, resistance and power; the desktop app with live results and GA drawings | **Released** as unsigned test builds |
-| 0 | 0.3 | Trust the base | Post-port fixes, test gaps (#123, #168), findings register (#121), more calibration cases (#3), PyPI (#1), recover the earlier GA arrangement detail (double bottom, voids, cofferdams, tank cradles), rules structure design (#176), evaluation harness phase 0 (#184), scope statement | `pip install`; a fuller GA; a stated scope |
-| 1 | 0.4 | Rules and geometry | Rules engine with versioned rule sets; hull geometry as a sections table ([ADR 0012](docs/adr/0012-hull-geometry-as-a-sections-table.md)) with more Hull Forms (V-bottom, chine); intact stability for every Cargo, with the weather criterion; harness rule trace and automatic sorting | Stability for any cargo and hull form, every criterion cited |
-| 2 | 0.5 | Spaces and damage | Compartments, tanks and loading conditions; deterministic damage stability; better equipment and accommodation arrangement; GA drawings from the compartment model; checkable reports | Damage stability, tank tables, loading conditions |
-| 3 | 0.6 | Structure and strength | Structural model; still-water and wave bending moment and shear; section modulus; first inland scantling rule set; lightship from the steel weight | Longitudinal strength and scantlings |
-| 4 | 0.7 | Build outputs | Midship section, shell expansion, plate and stiffener lists; bill of quantities; signed installers (#122); the web version | Drawings and quantities a yard can price |
-| 5 | 0.8 | Systems and voyages | Convoys, towing and articulated tug-barges with a library of standard tugs; resistance, propeller and power; voyage simulation on a real river | Barge and tug designed together; trip time, fuel and cargo |
-| 6 | 0.9 | Cost | Build cost, running cost and lifecycle cost from the same design file, with an open rate set | Cost per tonne-km over the vessel's life |
-| 7 | 1.0 | Trusted analysis tool | Every claimed rule set at full harness coverage; expert review of what the harness cannot sort; a verification and validation report; translations | A tool a yard, a lender's engineer or a class reviewer can check and cite |
-| Later | 1.x | Beyond | CFD and seakeeping through open solvers (research starts earlier, in parallel); probabilistic damage stability; production export; a wider vessel envelope only by a new ADR | High-fidelity physics on free solvers |
+**Versions:** 0.2.x during development. 0.3 is the first release we share with expert reviewers. 1.0 is the trusted analysis tool. Phases are not tied to version numbers.
+
+| Phase | Theme | Main work | What users get |
+|---|---|---|---|
+| Now | Concept tool (0.2.x) | Capacity, gas tank arrangement, hydrostatics, journey de-rating, resistance and power; the desktop app with live results and GA drawings | **Released** as unsigned test builds |
+| 0 | Trust the base | Post-port fixes, test gaps (#123, #168), findings register (#121), more calibration cases (#3), PyPI (#1), recover the earlier GA arrangement detail (double bottom, voids, cofferdams, tank cradles), rules structure design (#176), evaluation harness phase 0 (#184), scope statement | `pip install`; a fuller GA; a stated scope |
+| 1 | Rules and geometry | Rules engine with versioned rule sets; hull geometry as a sections table ([ADR 0012](docs/adr/0012-hull-geometry-as-a-sections-table.md)) with more Hull Forms (V-bottom, chine); intact stability for every Cargo, with the weather criterion; harness rule trace and automatic sorting | Stability for any cargo and hull form, every criterion cited |
+| 2 | Spaces and damage | Compartments, tanks and loading conditions; deterministic damage stability; better equipment and accommodation arrangement; GA drawings from the compartment model; checkable reports | Damage stability, tank tables, loading conditions |
+| 3 | Structure and strength | Structural model; still-water and wave bending moment and shear; section modulus; first inland scantling rule set; lightship from the steel weight | Longitudinal strength and scantlings |
+| 4 | Build outputs | Midship section, shell expansion, plate and stiffener lists; bill of quantities; signed installers (#122); the web version | Drawings and quantities a yard can price |
+| 5 | Systems and voyages | Convoys, towing and articulated tug-barges with a library of standard tugs; resistance, propeller and power; voyage simulation on a real river | Barge and tug designed together; trip time, fuel and cargo |
+| 6 | Cost | Build cost, running cost and lifecycle cost from the same design file, with an open rate set | Cost per tonne-km over the vessel's life |
+| 7 | Trusted analysis tool (1.0) | Every claimed rule set at full harness coverage; expert review of what the harness cannot sort; a verification and validation report; translations | A tool a yard, a lender's engineer or a class reviewer can check and cite |
+| Later | Beyond 1.0 | CFD and seakeeping through open solvers (research starts earlier, in parallel); probabilistic damage stability; production export; a wider vessel envelope only by a new ADR | High-fidelity physics on free solvers |
 
 ## Near term
 
