@@ -7,11 +7,13 @@
 
   // The hull views are SVG drawn in Rust to the Drawing Format Standard (ADR 0009, spec 0003); the
   // panel only places and zooms them.
-  let { evaluation, active, lastGood, blockers }: {
+  let { evaluation, active, lastGood, blockers, designSpeed }: {
     evaluation: Evaluation | null;
     active: string;
     lastGood: Record<string, OptionEvaluation>;
     blockers: { name: string; label: string }[];
+    /** The active Option's `max_speed_kn` input, from the Design session. */
+    designSpeed: number | null;
   } = $props();
 
   // Two levels of tabs: a group, then a view of that group. The panel never scrolls: a drawing is
@@ -118,15 +120,14 @@
         {/if}
       </div>
     {:else if current === "speed-power"}
-      <!-- Until the click-to-read chart (#230), the charts keep their size, so this view has its own scroll. -->
-      <div class="inner">
+      <div class="charts">
         {#if message}
           <p class="note">{message}</p>
         {:else if curves.length === 0}
           <p class="note">No results to chart.</p>
         {:else}
           {#each curves as c (c.name)}
-            <SpeedPower name={c.name} limitingSpeed={c.limiting_speed_kn} blockage={c.blockage} points={c.points} />
+            <SpeedPower name={c.name} limitingSpeed={c.limiting_speed_kn} blockage={c.blockage} points={c.points} {designSpeed} option={active} />
           {/each}
         {/if}
       </div>
@@ -164,6 +165,7 @@
   .whyrow { padding: 0 14px; background: #fdf1d3; border-bottom: 1px solid var(--line); }
   .view { flex: 1; min-height: 0; padding: 10px 14px; box-sizing: border-box; }
   .slot { height: 100%; }
+  .charts { height: 100%; display: flex; flex-direction: column; gap: 10px; }
   .inner { height: 100%; overflow: auto; }
   .note { color: var(--dim); }
   .stale { margin-left: auto; align-self: center; background: #fdf1d3; color: #6b4a00; font: 11px var(--sans); padding: 1px 6px; border-radius: 3px; }
