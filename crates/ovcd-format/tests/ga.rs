@@ -89,14 +89,15 @@ fn every_document_of_every_fixture_validates() {
     }
 }
 
-/// The texts of the dimensions and leaders of a view: what a reader of the drawing reads.
+/// The texts of the dimensions and leaders of a view: what a reader of the drawing reads. A leader's
+/// text carries a space on the side of its line; the reader does not read it.
 fn read_texts(norm: &Normalised) -> Vec<String> {
     norm.entities
         .iter()
         .filter(|e| e.origin.ends_with(".dimension") || e.origin.ends_with(".leader"))
         .filter_map(|e| {
             if let Shape::Text { text, .. } = &e.shape {
-                Some(text.clone())
+                Some(text.trim().to_string())
             } else {
                 None
             }

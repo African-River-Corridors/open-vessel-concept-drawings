@@ -401,7 +401,7 @@ fn leader<'a>(document: &'a Value, starts: &str) -> &'a Value {
             e["type"] == "leader"
                 && e["text"]
                     .as_str()
-                    .is_some_and(|t| starts.split('|').any(|s| t.starts_with(s)))
+                    .is_some_and(|t| starts.split('|').any(|s| t.trim().starts_with(s)))
         })
         .unwrap_or_else(|| panic!("no leader `{starts}`"))
 }
@@ -676,14 +676,16 @@ fn texts(document: &Value) -> Vec<String> {
     entities(document)
         .iter()
         .filter(|e| e["type"] == "leader")
-        .map(|e| e["text"].as_str().unwrap().to_string())
+        .map(|e| e["text"].as_str().unwrap().trim().to_string())
         .collect()
 }
 
 fn has_leader(document: &Value, text: &str) -> bool {
-    entities(document)
-        .iter()
-        .any(|e| e["type"] == "leader" && e["layer"] == "ANNO" && e["text"] == text)
+    entities(document).iter().any(|e| {
+        e["type"] == "leader"
+            && e["layer"] == "ANNO"
+            && e["text"].as_str().map(str::trim) == Some(text)
+    })
 }
 
 /// Is there a line (any direction) of this layer from `a` to `b`, in either order?

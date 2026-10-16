@@ -24,6 +24,8 @@ use crate::run::RunOutcome;
 use ovcd_core::models::BargeInputs;
 use ovcd_core::pyfmt::fixed;
 use serde_json::{Value, json};
+use std::collections::HashMap;
+use std::sync::OnceLock;
 
 /// The three views of one Option, as drawing documents.
 #[derive(Debug, Clone, PartialEq)]
@@ -78,9 +80,17 @@ const DIM_OFFSET_MM: f64 = 12.0;
 const DIM_ROOM_MM: f64 = 6.0;
 /// Spacing of stacked labels, in millimetres.
 const LABEL_STEP_MM: f64 = 6.0;
-/// A safe width for one character of label text at height 3.5, in millimetres. The labels are capital
-/// letters, digits and a few signs, which average 2.3 mm; the window only needs to be generous.
-const CHAR_MM: f64 = 2.5;
+/// The height of leader text: the standard's default (clause 12.6), in millimetres.
+const LABEL_TEXT_MM: f64 = 3.5;
+/// The gap the standard keeps between a leader's label point and its text: `u / 2`, where the hatch
+/// unit `u` of the A3 line group is 1.8 mm (clauses 10.5.1 and 12.3).
+const LEADER_GAP_MM: f64 = 0.9;
+/// Clear room kept round every label text in the window, in millimetres. With the window's own 3 mm
+/// it keeps a label 6.5 mm inside the frame, clear of the centring marks, which reach 5 mm into the
+/// drawing space (clause 6.4) wherever a label stands along the side.
+const LABEL_CLEAR_MM: f64 = 3.5;
+/// The standard's width table (clause 11.7.1), read for the width of label text.
+const FONT_WIDTHS: &str = include_str!("../../ovcd-draw/standard/data/font-widths.json");
 /// Room kept under the drawing for the scale bar, in millimetres.
 const BAR_ROOM_MM: f64 = 26.0;
 /// The shortest dimension line that has room for its arrowheads, in millimetres (clause 12.4.3 asks
@@ -685,38 +695,104 @@ impl Canvas {
     }
 
     /// A leader to `target` with its label at `label_at`; the text stands to the right of the label
-    /// point when it is right of the target, to the left otherwise.
+    /// point when it is right of the target, to the left otherwise. The text carries one space on
+    /// the side of the leader, so the line starts clear of the last letter (the standard's own gap is
+    /// only `u / 2`). The window takes the whole text box, with clear room round it.
     fn leader(&mut self, text: &str, target: [f64; 2], label_at: [f64; 2]) {
         self.extend(target);
-        let width = (text.chars().count() as f64 * CHAR_MM + 2.0) * self.k;
+        let right = label_at[0] >= target[0];
+        let text = if right {
+            format!(" {text}")
+        } else {
+            format!("{text} ")
+        };
+        let reach = (LEADER_GAP_MM + text_width_mm(&text) + LABEL_CLEAR_MM) * self.k;
+        let half = (LABEL_TEXT_MM / 2.0 + LABEL_CLEAR_MM) * self.k;
         self.extend([
-            label_at[0]
-                + if label_at[0] >= target[0] {
-                    width
-                } else {
-                    -width
-                },
-            label_at[1] + 4.0 * self.k,
+            label_at[0] + if right { reach } else { -reach },
+            label_at[1] + half,
         ]);
-        self.extend([label_at[0], label_at[1] - 4.0 * self.k]);
+        self.extend([label_at[0], label_at[1] - half]);
         self.entities.push(json!({"type": "leader", "layer": "ANNO", "from": {"point_m": pt(target)}, "label_at_m": pt(label_at), "text": text}));
     }
 
-    /// Labels in a column at `x`, one under another from the highest target, each at least one
-    /// step below the one above, so that the texts do not touch. Leaders run level or downward.
+    /// Labels in a column at `x`, one under another, each at least one step below the one above, so
+    /// that the texts do not touch. The slots are set from the targets, highest first: a slot is at
+    /// its target's height unless the slot above pushes it down. Then the labels are given to the
+    /// slots so that no two leaders cross: two leaders that cross swap their slots, which makes the
+    /// two shorter, so the swapping ends.
     fn label_column(&mut self, x: f64, labels: &mut [(String, [f64; 2])]) {
         labels.sort_by(|a, b| {
             b.1[1]
                 .partial_cmp(&a.1[1])
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
+        let mut slots: Vec<f64> = Vec::with_capacity(labels.len());
         let mut previous = f64::INFINITY;
-        for (text, target) in labels.iter() {
+        for (_, target) in labels.iter() {
             let y = target[1].min(previous - LABEL_STEP_MM * self.k);
-            self.leader(text, *target, [x, y]);
+            slots.push(y);
             previous = y;
         }
+        let mut order: Vec<usize> = (0..labels.len()).collect();
+        // Each swap shortens the total length of the leaders, so a pass without a swap comes; the
+        // bound only guards against rounding.
+        for _ in 0..labels.len() * labels.len() + 1 {
+            let mut swapped = false;
+            for i in 0..order.len() {
+                for j in i + 1..order.len() {
+                    let a = ([x, slots[i]], labels[order[i]].1);
+                    let b = ([x, slots[j]], labels[order[j]].1);
+                    if segments_cross(a, b) {
+                        order.swap(i, j);
+                        swapped = true;
+                    }
+                }
+            }
+            if !swapped {
+                break;
+            }
+        }
+        for (slot, &k) in slots.iter().zip(&order) {
+            let (text, target) = &labels[k];
+            self.leader(text, *target, [x, *slot]);
+        }
     }
+}
+
+/// The width of leader text, in millimetres, from the standard's width table (clause 11.7.1). A
+/// character the table does not hold counts as one em, wider than any it holds.
+fn text_width_mm(text: &str) -> f64 {
+    static TABLE: OnceLock<(HashMap<char, f64>, f64)> = OnceLock::new();
+    let (advance, cap) = TABLE.get_or_init(|| {
+        let v: Value = serde_json::from_str(FONT_WIDTHS).expect("the width table is JSON");
+        let advance = v["advance"]
+            .as_object()
+            .expect("the width table has advances")
+            .iter()
+            .filter_map(|(c, w)| Some((c.chars().next()?, w.as_f64()?)))
+            .collect();
+        let cap = v["cap_height_units"]
+            .as_f64()
+            .expect("the width table has a cap height");
+        (advance, cap)
+    });
+    let units: f64 = text
+        .chars()
+        .map(|c| advance.get(&c).copied().unwrap_or(1000.0))
+        .sum();
+    units * LABEL_TEXT_MM / cap
+}
+
+/// Do two segments cross at a point inside both? Segments that only touch, or that lie on one
+/// line, do not cross.
+fn segments_cross(a: ([f64; 2], [f64; 2]), b: ([f64; 2], [f64; 2])) -> bool {
+    let side = |p: [f64; 2], q: [f64; 2], r: [f64; 2]| {
+        (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+    };
+    let (d1, d2) = (side(b.0, b.1, a.0), side(b.0, b.1, a.1));
+    let (d3, d4) = (side(a.0, a.1, b.0), side(a.0, a.1, b.1));
+    d1 * d2 < 0.0 && d3 * d4 < 0.0
 }
 
 fn metres(x: f64) -> String {
