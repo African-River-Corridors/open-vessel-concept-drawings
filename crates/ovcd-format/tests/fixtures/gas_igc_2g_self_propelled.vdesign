@@ -124,6 +124,14 @@
         "channel_current_kn": {
           "value": 0.0,
           "source": "default"
+        },
+        "water_density_t_per_m3": {
+          "value": 1.0,
+          "source": "default"
+        },
+        "squat_safety_margin_m": {
+          "value": 0.15,
+          "source": "default"
         }
       },
       "results_hash": "5905dc5f6ab0083e5c6531ab093a6b86f42cf97e53f0a378be7297de3df5c559"
