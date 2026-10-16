@@ -40,7 +40,8 @@ def test_simulate_reads_numbers_written_as_text(text):
 def test_simulate_reads_every_number_as_text():
     """Label: snapshot"""
     out = simulate(dict(CN_II, beam_m="14.8", draught_limit_m="4.4", fill_ratio="0.95"))
-    assert out["results"]["cargo_t"] == pytest.approx(2058.228164213275, rel=1e-9, abs=1e-9)   # ce96e66
+    # Re-pinned (issue #237); was 2058.228164213275 at ce96e66.
+    assert out["results"]["cargo_t"] == pytest.approx(2535.1977193509288, rel=1e-9, abs=1e-9)
     out = simulate(dict(BOX, lightship_k_t_per_m3="0.1093"))
     assert out["results"]["cargo_t"] == pytest.approx(2256.166305, rel=1e-9, abs=1e-9)         # ce96e66
     out = simulate(dict(BOX, channel=dict(depth_m="5", ukc_m="0.5", bottom_width_m="40")))
@@ -72,7 +73,6 @@ def test_required_bottom_protection_is_one_formula_for_every_vessel_type():
     """Label: snapshot"""
     assert PL.required_bottom_protection(14.8, 1.0, "ADN_G") == 1.0
     assert PL.required_bottom_protection(14.8, 1.0, PL.VesselType.IGC_2G) == 1.0
-    assert PL.required_bottom_protection(14.8, 1.0, PL.VesselType.IGC_2G_EXACT) == 1.0
 
 
 @pytest.mark.parametrize("key", [5, None])

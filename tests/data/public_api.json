@@ -384,6 +384,7 @@
     "tank_wall_thickness",
     "fill_ratio",
     "dome_height",
+    "dome_diameter",
     "tank_support_height",
     "hold_type",
     "lightship_k_t_per_m3",
@@ -1768,8 +1769,7 @@
     "IGF",
     "IGC_1G",
     "IGC_2G",
-    "IGC_3G",
-    "IGC_2G_EXACT"
+    "IGC_3G"
    ],
    "methods": []
   },
@@ -1833,16 +1833,6 @@
    "params": [
     [
      "vc_individual_m3",
-     "POSITIONAL_OR_KEYWORD",
-     null
-    ]
-   ]
-  },
-  "distance_d_vc": {
-   "kind": "function",
-   "params": [
-    [
-     "vc",
      "POSITIONAL_OR_KEYWORD",
      null
     ]

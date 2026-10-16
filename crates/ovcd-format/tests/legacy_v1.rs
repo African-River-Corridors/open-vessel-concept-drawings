@@ -166,10 +166,7 @@ fn a_version_2_file_gets_no_such_help() {
     raw["format_version"] = json!(2);
     let r = check(&raw.to_string(), &Profile::built_in()).report;
     assert!(
-        has(
-            &r.errors,
-            "`ruleset` = \"ADN_G\" must be one of: IGC_2G, IGC_2G_EXACT"
-        ),
+        has(&r.errors, "`ruleset` = \"ADN_G\" must be one of: IGC_2G"),
         "{r:?}"
     );
     assert!(has(&r.errors, "unknown input `adn_tank_cap_m3`"), "{r:?}");

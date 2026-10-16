@@ -15,8 +15,8 @@ the only work was to bring over the vessel modules that had been left behind.
 | `hydrostatics` | none | keep |
 | `journey_derating` | none | keep |
 | `models`, `checks`, `tanks`, `weights` | none | keep |
-| `barge_capacity` | here only: `hold_type` + `lightship_k_t_per_m3` (calibration pass 1, box/container holds); `IGC_2G_EXACT` clearance loop (`d_vc_exact`); `gas_basis` on the result (feeds `gas_stability`) | keep — intentional improvements. All new fields default to the old behaviour, so existing callers get the same numbers. |
-| `protective_location` | here only: the `IGC_2G_EXACT` ruleset, `d_vc_exact` (the `ADN_G` ruleset it also had was removed in issue #175: the engine applies IGC rules only to gas tanks); `required_bottom_protection` folded into the clearance functions | keep — the "IGC_2G" reading is unchanged. No caller outside the module used `required_bottom_protection`. |
+| `barge_capacity` | here only: `hold_type` + `lightship_k_t_per_m3` (calibration pass 1, box/container holds); the per-tank clearance loop (`d_vc_exact`, run for the one rule set `IGC_2G` since issue #237, with the dome in Vc); `gas_basis` on the result (feeds `gas_stability`) | keep — intentional improvements. All new fields default to the old behaviour, so existing callers get the same numbers. |
+| `protective_location` | here only: `d_vc_exact` (IGC 2.4.1.1, per tank) and, until issue #237, the `IGC_2G_EXACT` ruleset (the `ADN_G` ruleset it also had was removed in issue #175: the engine applies IGC rules only to gas tanks); `required_bottom_protection` folded into the clearance functions | keep. Issue #237 made the per-tank rule the one reading: `IGC_2G` now means it, `IGC_2G_EXACT` is read as `IGC_2G`, and the stepped `distance_d_vc` (total volume; 0.8, 1.0 and 2.0 m) is removed. No caller outside the module used `required_bottom_protection`. |
 
 ## Modules brought over in the reconciliation
 

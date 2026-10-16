@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Design change (issue #237): one gas rule set, `IGC_2G`, the per-tank distance d(Vc) of IGC Code 2.4.1.1. The stepped reading (d from the total tank volume: 0.8 m up to 1,000 m3, 1.0 m up to 5,000 m3, 2.0 m above) is removed: it is not in the IGC or IGF text. The text was checked against the Code as adopted by MSC.370(93) and every amendment in force; none changes 2.4. The before/after table is under "Design changes" below.
+  - The rule. d is read per individual tank: up to 1,000 m3 0.8 m; 1,000 to 5,000 m3 0.75 + Vc x 0.2 / 4,000 m; 5,000 to 30,000 m3 0.8 + Vc / 25,000 m; 30,000 m3 and over 2 m. The datum is 2.4.2: d runs "plate to plate, from the moulded line to the moulded line, excluding insulation", so the clear gap from the outer face of the insulation is d less the insulation thickness (as `IGC_2G_EXACT` already did). Every gas search now takes the per-tank loop.
+  - The dome counts in Vc (2.4.1.1: "100 % of the gross design volume of the individual cargo tank at 20 C, including domes and appendages"). New input `tank_dome_diameter_m` in the Gas tanks group, 2.0 m by default: a nominal cylindrical dome as wide as it is high; there is no published source for the size yet, and the maintainer is to confirm it. The dome volume, pi/4 x diameter^2 x dome height per tank, goes into Vc only, not into the cargo volume, the fill ratio, the weights or `containment_inner_volume_m3`. Appendages (nozzles, manways and the like) are not modelled: no volume is added for them. At 2 m by 2 m the dome adds 6.3 m3 per tank, which moves d by 0.3 mm.
+  - Names. `IGC_2G_EXACT` is no longer offered; the Defaults Profile ruleset default is `IGC_2G` (fill ratio 0.98). A file of any format version that names `IGC_2G_EXACT` opens as `IGC_2G` with the warning "IGC_2G_EXACT is now IGC_2G: the same per-tank rule of IGC 2.4.1.1". A version 1 file that names `IGC_2G` meant the stepped reading: it opens as `IGC_2G` with a warning that the per-tank rule applies now and results may change. (A version 2 file gets no such warning: version 2 is unreleased and this build wrote it.) The version 1 `ADN_G` mapping to `IGC_2G` still works. A file that lacks `tank_dome_diameter_m` gets 2.0 m, marked `default`, with a warning that results may change, because the engine had no dome in Vc before. ADR 0007 is updated.
+  - Python, known changes from 0.1.0: removed names `distance_d_vc` (`core.protective_location`, and the copies `core.barge_capacity` and `core.gas_arrangement` imported) and the enum member `VesselType.IGC_2G_EXACT`; `RULESETS` is `("IGC_2G",)`. `check_protective_location` reads the volume of one tank (its argument keeps the name `total_tank_volume`). `required_side_clearance` ignores `total_m3` and takes the per-tank volume. `BargeCapacityInputs` has the new field `dome_diameter` (2.0 m). The scenarios of `tests/data/api_ce96e66.json` that hold a gas stability result, the side clearance rule or the protective location are listed as known differences in `tests/test_api_oracle.py`.
+  - Stability. A design that carries more because it has less side clearance can be less stable. In the fixed design set, `sweep gas passes all checks IGC_2G 110x11.4` and `sweep gas tank longer than 7 diameters IGC_2G 200x12` now fail the laden stability check. The CN II hull (90 x 14.8 m, propane, 4.4 m draught) with the default 16 m tank cap carries 2,943 t in one 13.7 m tank and fails the laden angle of maximum GZ (21 degrees, limit 25); the search does not gate on stability. The arrangement search itself is unchanged.
+  - Tests re-pinned to what the engine prints now (never by hand, no tolerance loosened; the old values are in the history). Rust: `the_cn_ii_benchmark_is_reproduced` (2,943.4407266060916 t, binding "draft"), `the_smallest_viable_loa_is_found_to_a_tenth_of_a_metre` (36.1 m), `the_quickstart_propane_barge_matches_python`, `json_results_are_what_simulate_answers_for_a_self_propelled_gas_hull`, the stored results hashes of the two gas fixtures. Python: the CN II and 16 m cap snapshots, the gas stability values of `tests/test_api_passed_objects.py` and `tests/test_api_reused_inputs.py`, `tests/test_api_ints_numpy.py`, `tests/test_simulate.py`, `tests/test_api_small_changes.py` and the quickstart example (README). The gas fixture `gas_igc_2g_exact.vdesign` keeps its name and now names `IGC_2G`. New tests: the d(Vc) boundaries at 1,000, 5,000 and 30,000 m3 and either side (sourced, IGC Code 2.4.1.1), the 2.4.2 datum, the dome in Vc, and the opening of files that name the old rule sets.
 - Design change (issue #215): the two inland "type G" checks are removed. Gas tanks are sized under IGC only (#175), and these floors came from the inland ADN rules. The before/after table is under "Design changes" below. ADN may return later as a selectable rule set, not as fixed checks (#176).
   - Removed checks: `side_clearance_type_g_floor` (side clearance at least 0.80 m) and `double_bottom_type_g_floor` (double bottom at least 0.60 m). A gas result lists two checks fewer. A design that failed only these checks now passes its feasibility, and the arrangement search can pick an arrangement it used to reject (for example 120 x 18 m, LNG, `IGC_2G_EXACT`: two 8 m tanks abreast, 2,922 t, where it picked one 11 m tank, 2,813 t). The IGC side clearance d(Vc) is not changed here (issue #237).
   - Python, known changes from 0.1.0: removed names `SIDE_MIN_TYPE_G_M` and `DOUBLE_BOTTOM_MIN_TYPE_G_M` (`core.gas_separation`). The inputs `side_clearance_m` and `double_bottom_m` of `GasSeparationInputs` stay, so older code still runs, but no check reads them. The scenarios of `tests/data/api_ce96e66.json` that hold a gas check list or fit are listed as known differences in `tests/test_api_oracle.py`.
@@ -88,6 +95,54 @@
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### Per-tank gas tank clearance, dome in Vc (#237) (2026-10-16)
+
+Between `main d7dbbbe` and `this branch e7477e5`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 1 (88x16.3) | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].message` | GM 2.46 m (fluid), max GZ 0.58 m at 17° — fails: Angle of max GZ 17.000 < 25.0 | GM 2.47 m (fluid), max GZ 0.58 m at 17° — fails: Angle of max GZ 17.000 < 25.0 | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep default depth gas 90x14 | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas IGC_2G 60x10 | `checks[12].message` | GM 6.12 m (fluid), max GZ 1.82 m at 27° | GM 5.81 m (fluid), max GZ 1.82 m at 29° | changed |
+| sweep gas IGC_2G 60x10 | `checks[13].message` | GM 6.74 m (fluid), max GZ 1.85 m at 26° | GM 6.48 m (fluid), max GZ 1.85 m at 26° | changed |
+| sweep gas IGC_2G 60x10 | `checks[14].message` | GM 7.53 m (fluid), max GZ 1.90 m at 24° — fails: Angle of max GZ 24.000 < 25.0 | GM 7.37 m (fluid), max GZ 1.90 m at 24° — fails: Angle of max GZ 24.000 < 25.0 | changed |
+| sweep gas IGC_2G 60x10 | `checks[8].message` | raised eye 7.00 m >= obstruction 6.50 m + 0.50 m margin (lift used 0.00 m of 6.00 m) | raised eye 7.05 m >= obstruction 6.55 m + 0.50 m margin (lift used 0.05 m of 6.00 m) | changed |
+| sweep gas IGC_2G 90x14 | `checks[12].message` | GM 1.04 m (fluid), max GZ 0.23 m at 14° — fails: Area 0–40° 0.007 < 0.09, Area 30–40° -0.050 < 0.03, GZ at ≥ 30° -0.120 < 0.2, Angle of max GZ 14.000 < 25.0 | GM 0.91 m (fluid), max GZ 0.12 m at 8° — fails: Area 0–30° -0.035 < 0.055, Area 0–40° -0.148 < 0.09, Area 30–40° -0.113 < 0.03, GZ at ≥ 30° -0.466 < 0.2, Angle of max GZ 8.000 < 25.0 | changed |
+| sweep gas IGC_2G 90x14 | `checks[13].message` | GM 1.96 m (fluid), max GZ 0.98 m at 26° | GM 1.59 m (fluid), max GZ 0.73 m at 26° | changed |
+| sweep gas IGC_2G 90x14 | `checks[14].message` | GM 6.41 m (fluid), max GZ 2.23 m at 29° | GM 5.99 m (fluid), max GZ 2.17 m at 30° | changed |
+| sweep gas IGC_2G 90x14 | `checks[8].message` | raised eye 13.00 m >= obstruction 15.00 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.00 m >= obstruction 15.51 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep gas IGC_2G 90x14 | `stability.conditions[0].criteria[0].ok` | True | False | changed |
+| sweep gas IGC_2G 90x14 | `warnings[0]` | Sightline needs 8.50 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 9.01 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep gas IGC_2G_EXACT 60x10 | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas IGC_2G_EXACT 90x14 | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas IGC_2G_EXACT 90x14 | `checks[12].message` | GM 0.91 m (fluid), max GZ 0.12 m at 8° — fails: Area 0–30° -0.036 < 0.055, Area 0–40° -0.148 < 0.09, Area 30–40° -0.113 < 0.03, GZ at ≥ 30° -0.467 < 0.2, Angle of max GZ 8.000 < 25.0 | GM 0.91 m (fluid), max GZ 0.12 m at 8° — fails: Area 0–30° -0.035 < 0.055, Area 0–40° -0.148 < 0.09, Area 30–40° -0.113 < 0.03, GZ at ≥ 30° -0.466 < 0.2, Angle of max GZ 8.000 < 25.0 | changed |
+| sweep gas cargo LNG | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas cargo LNG | `checks[12].message` | GM 1.22 m (fluid), max GZ 0.32 m at 16° — fails: Area 30–40° -0.011 < 0.03, GZ at ≥ 30° 0.083 < 0.2, Angle of max GZ 16.000 < 25.0 | GM 1.22 m (fluid), max GZ 0.32 m at 16° — fails: Area 30–40° -0.011 < 0.03, GZ at ≥ 30° 0.084 < 0.2, Angle of max GZ 16.000 < 25.0 | changed |
+| sweep gas cargo LNG pushed | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas cargo LNG_ethane | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas cargo LNG_ethane | `checks[12].message` | GM 1.08 m (fluid), max GZ 0.23 m at 13° — fails: Area 0–30° 0.054 < 0.055, Area 0–40° 0.002 < 0.09, Area 30–40° -0.052 < 0.03, GZ at ≥ 30° -0.136 < 0.2, Angle of max GZ 13.000 < 25.0 | GM 1.08 m (fluid), max GZ 0.23 m at 13° — fails: Area 0–30° 0.054 < 0.055, Area 0–40° 0.002 < 0.09, Area 30–40° -0.052 < 0.03, GZ at ≥ 30° -0.135 < 0.2, Angle of max GZ 13.000 < 25.0 | changed |
+| sweep gas cargo LNG_ethane pushed | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas cargo LNG_ethane pushed | `checks[6].message` | GM 0.61 m (fluid), max GZ 0.07 m at 7° — fails: Area 0–30° -0.072 < 0.055, Area 0–40° -0.202 < 0.09, Area 30–40° -0.130 < 0.03, GZ at ≥ 30° -0.565 < 0.2, Angle of max GZ 7.000 < 25.0 | GM 0.61 m (fluid), max GZ 0.07 m at 7° — fails: Area 0–30° -0.072 < 0.055, Area 0–40° -0.201 < 0.09, Area 30–40° -0.130 < 0.03, GZ at ≥ 30° -0.564 < 0.2, Angle of max GZ 7.000 < 25.0 | changed |
+| sweep gas cargo LPG_butane | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas cargo LPG_butane | `checks[12].message` | GM 0.88 m (fluid), max GZ 0.10 m at 7° — fails: Area 0–30° -0.058 < 0.055, Area 0–40° -0.185 < 0.09, Area 30–40° -0.126 < 0.03, GZ at ≥ 30° -0.542 < 0.2, Angle of max GZ 7.000 < 25.0 | GM 0.88 m (fluid), max GZ 0.10 m at 7° — fails: Area 0–30° -0.058 < 0.055, Area 0–40° -0.184 < 0.09, Area 30–40° -0.126 < 0.03, GZ at ≥ 30° -0.541 < 0.2, Angle of max GZ 7.000 < 25.0 | changed |
+| sweep gas cargo LPG_butane pushed | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas cargo LPG_mix | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas cargo LPG_mix pushed | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas cargo LPG_propane | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas cargo LPG_propane | `checks[12].message` | GM 0.91 m (fluid), max GZ 0.12 m at 8° — fails: Area 0–30° -0.036 < 0.055, Area 0–40° -0.148 < 0.09, Area 30–40° -0.113 < 0.03, GZ at ≥ 30° -0.467 < 0.2, Angle of max GZ 8.000 < 25.0 | GM 0.91 m (fluid), max GZ 0.12 m at 8° — fails: Area 0–30° -0.035 < 0.055, Area 0–40° -0.148 < 0.09, Area 30–40° -0.113 < 0.03, GZ at ≥ 30° -0.466 < 0.2, Angle of max GZ 8.000 < 25.0 | changed |
+| sweep gas cargo LPG_propane pushed | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas carries nothing (draught limit) | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas carries nothing (hull too short) | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas channel 60x10 | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas channel 90x14 | `arrangement.ruleset` | IGC_2G_EXACT | IGC_2G | changed |
+| sweep gas passes all checks IGC_2G 110x11.4 | `checks[12].message` | GM 0.36 m (fluid), max GZ 0.31 m at 31° | GM 0.30 m (fluid), max GZ 0.15 m at 21° — fails: Area 0–30° 0.045 < 0.055, Area 0–40° 0.048 < 0.09, Area 30–40° 0.002 < 0.03, GZ at ≥ 30° 0.088 < 0.2, Angle of max GZ 21.000 < 25.0 | changed |
+| sweep gas passes all checks IGC_2G 110x11.4 | `checks[12].ok` | True | False | changed |
+| sweep gas passes all checks IGC_2G 110x11.4 | `checks[13].message` | GM 0.86 m (fluid), max GZ 0.71 m at 34° | GM 0.51 m (fluid), max GZ 0.56 m at 33° | changed |
+| ... | 12711 more changed quantities | | | |
 
 ### Remove the inland type-G checks (#215) (2026-10-16)
 

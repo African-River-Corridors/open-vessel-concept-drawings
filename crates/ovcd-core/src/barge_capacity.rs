@@ -32,7 +32,7 @@ use crate::hull::HullGeometry;
 use crate::hydrostatics::find_equilibrium_draft;
 use crate::models::{BargeInputs, TankResult, WeightBreakdown};
 use crate::pressure_vessel::PyError;
-use crate::protective_location::{compute_required_clearances, d_vc_exact, distance_d_vc};
+use crate::protective_location::{compute_required_clearances, d_vc_exact};
 use crate::pyfmt::{fixed, py_str};
 use crate::pystr::repr_str;
 use crate::tanks::{INT_OVERFLOW_MESSAGE, calculate_tank_arrangement_wide};
@@ -51,6 +51,9 @@ pub const DEFAULT_TANKS_IN_LINE: i64 = 2;
 pub const DEFAULT_TANK_SUPPORT_HEIGHT_M: f64 = 0.5;
 /// Default dome height above the tank top (m).
 pub const DEFAULT_TANK_DOME_HEIGHT_M: f64 = 2.0;
+/// Default dome diameter (m), used only for the dome's volume in Vc. A nominal cylindrical dome as
+/// wide as it is high (the default dome height is 2.0 m); there is no published source for it yet.
+pub const DEFAULT_TANK_DOME_DIAMETER_M: f64 = 2.0;
 /// Default fixed tank wall thickness (mm).
 pub const DEFAULT_TANK_WALL_THICKNESS_MM: f64 = 25.0;
 /// Default gap between the wing tank and the cargo tank, per side (m).
@@ -111,6 +114,10 @@ pub struct BargeCapacityInputs {
     pub tank_wall_thickness: Option<f64>,
     pub fill_ratio: f64,
     pub dome_height: f64,
+    /// Diameter of the cylindrical dome (m). With `dome_height` it gives the dome's volume, which
+    /// counts in Vc for d(Vc) only (IGC 2.4.1.1: Vc includes domes and appendages), not in the
+    /// cargo volume, the fill or the weights.
+    pub dome_diameter: f64,
     pub tank_support_height: f64,
     /// Gap between the wing tank and the cargo tank, per side (m).
     pub wing_tank_gap_m: f64,
@@ -168,6 +175,7 @@ impl BargeCapacityInputs {
             tank_wall_thickness: Some(DEFAULT_TANK_WALL_THICKNESS_MM),
             fill_ratio: 0.95,
             dome_height: DEFAULT_TANK_DOME_HEIGHT_M,
+            dome_diameter: DEFAULT_TANK_DOME_DIAMETER_M,
             tank_support_height: DEFAULT_TANK_SUPPORT_HEIGHT_M,
             wing_tank_gap_m: DEFAULT_WING_TANK_GAP_M,
             wing_tank_height_ratio: DEFAULT_WING_TANK_HEIGHT_RATIO,
@@ -400,6 +408,12 @@ struct Volumetric {
     n_total: i128,
 }
 
+/// Volume of one cylindrical dome (m^3): pi/4 x diameter^2 x height. It counts in Vc for d(Vc)
+/// only (IGC 2.4.1.1: Vc includes domes and appendages).
+pub fn dome_volume_m3(diameter_m: f64, height_m: f64) -> f64 {
+    core::f64::consts::FRAC_PI_4 * diameter_m * diameter_m * height_m
+}
+
 /// IGC/IGF protective-location clearances, then the tank arrangement, then cargo volume.
 ///
 /// Resolves the volume and d(Vc) circular dependency by iterating.
@@ -434,12 +448,21 @@ fn gas_volumetric(
     let mut cs = 0.0;
     let mut cb = 0.0;
     let mut db = 0.0;
-    let exact = inp.vessel_type == "IGC_2G_EXACT";
-    // The engine measures clearance to the OUTER face of the insulation (OD includes it).
+    // IGC 2.4.2: d is measured plate to plate, from the moulded line to the moulded line,
+    // excluding insulation. So the insulation lies inside d and the clear gap needed from the
+    // engine's datum (the outer face of the insulation, which the tank OD includes) is d less it.
     let ins_m = truthy_or_zero(base.insulation_thickness) / 1000.0;
-    let rounds = if exact { 40 } else { 8 };
-    for _ in 0..rounds {
-        if exact {
+    // IGC 2.4.1.1: Vc is 100 % of the gross design volume of the individual cargo tank at 20 C,
+    // including domes and appendages. The dome is a cylinder of `dome_diameter` and `dome_height`.
+    // Appendages (nozzles, manways and the like) are not modelled: no volume is added for them.
+    // The dome counts in Vc only, not in the cargo volume, the fill or the weights.
+    let dome_volume_m3 = dome_volume_m3(inp.dome_diameter, inp.dome_height);
+    let is_2g = inp.vessel_type == "IGC_2G";
+    // d(Vc) depends on the tank volume, which depends on the clearance: iterate. d is continuous
+    // and piecewise linear in Vc with a slope of at most 5e-5 per m^3, and a larger d gives a
+    // smaller tank, so the map is a contraction and settles in a few rounds.
+    for _ in 0..40 {
+        if is_2g {
             cs = py_max(d_vc - ins_m, 0.0);
             cb = py_max(py_min(inp.beam / 15.0, 2.0), d_vc) - ins_m;
         } else {
@@ -469,20 +492,16 @@ fn gas_volumetric(
         bi.n_tanks_wide = n_wide;
         bi.post_init()?;
         let (t, n_total) = calculate_tank_arrangement_wide(&bi)?;
-        let new_d_vc = if exact {
-            // Per-tank gross volume, linear bands: a continuous map, so it converges.
-            let count = if n_total > 1 { n_total } else { 1 };
-            d_vc_exact(t.total_tank_volume / (count as f64))
-        } else {
-            distance_d_vc(t.total_tank_volume)
-        };
+        // Per-tank Vc (IGC 2.4.1.1), tank plus dome.
+        let count = if n_total > 1 { n_total } else { 1 };
+        let new_d_vc = d_vc_exact(t.total_tank_volume / (count as f64) + dome_volume_m3);
         tanks = Some((t, n_total));
         if fabs(new_d_vc - d_vc) < 1e-9 {
             break;
         }
         d_vc = new_d_vc;
     }
-    let (tanks, n_total) = tanks.expect("the loop runs at least eight times");
+    let (tanks, n_total) = tanks.expect("the loop runs at least once");
 
     let hull = HullGeometry::new(inp.loa, inp.beam, inp.depth, 0.0, 0.0, 0.0, 0.0);
     let weights = calculate_weights(&bi, &hull, &tanks)?;

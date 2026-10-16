@@ -112,6 +112,9 @@ pub const BULK_END_BULKHEAD_M: f64 = 0.5;
 pub const GAS_TANKS_IN_LINE: f64 = 2.0;
 pub const GAS_TANK_SUPPORT_HEIGHT_M: f64 = 0.5;
 pub const GAS_TANK_DOME_HEIGHT_M: f64 = 2.0;
+/// The dome diameter (issue #237). Unlike the others it is NOT a value the engine used before: the
+/// engine had no dome in Vc. A file that lacks it gets this value, and its results may move.
+pub const GAS_TANK_DOME_DIAMETER_M: f64 = 2.0;
 pub const GAS_WING_TANK_GAP_M: f64 = 0.6;
 pub const GAS_WING_TANK_HEIGHT_RATIO: f64 = 0.66;
 pub const GAS_TANK_WALL_THICKNESS_MM: f64 = 25.0;
@@ -244,6 +247,12 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
         value: GAS_TANK_DOME_HEIGHT_M,
     },
     LegacyFixed {
+        name: "tank_dome_diameter_m",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: GAS_TANK_DOME_DIAMETER_M,
+    },
+    LegacyFixed {
         name: "wing_tank_gap_m",
         applies_to: AppliesTo::Only("type_c_tanks"),
         formations: None,
@@ -360,7 +369,10 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
 ];
 
 /// Gas tank rulesets.
-pub const RULESETS: &[&str] = &["IGC_2G", "IGC_2G_EXACT"];
+///
+/// One rule set: `IGC_2G` is the per-tank d(Vc) of IGC 2.4.1.1, measured plate to plate (2.4.2).
+/// A file that names the old `IGC_2G_EXACT` is read as `IGC_2G` (see [`migrate_ruleset`]).
+pub const RULESETS: &[&str] = &["IGC_2G"];
 
 /// The Formation kinds of a pushed barge or convoy: the ones with no stern block of their own.
 pub const PUSHED: &[&str] = &["pushed_barge", "pushed_convoy"];
@@ -711,6 +723,13 @@ pub const INPUTS: &[InputSpec] = &[
     only(
         "tank_dome_height_m",
         "Tank dome height",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_dome_diameter_m",
+        "Tank dome diameter",
         NUM,
         "type_c_tanks",
         Group::GasTanks,
@@ -1443,6 +1462,7 @@ fn read_design(
             }
         }
         let mut m = inputs.clone();
+        migrate_ruleset(name, &mut m, version, report);
         if version == Some(1) {
             migrate_v1_option(name, &mut m, profile, report);
         }
@@ -1466,6 +1486,48 @@ fn read_design(
         defaults_profile,
         options,
     })
+}
+
+/// The rule set name of an Option (issue #237): there is one, `IGC_2G`, the per-tank d(Vc) of
+/// IGC 2.4.1.1.
+///
+/// - `IGC_2G_EXACT` (any format version) is read as `IGC_2G`, with a warning. It was the same
+///   per-tank rule.
+/// - `IGC_2G` in a version 1 file is the old stepped reading (total volume, 0.8 / 1.0 / 2.0 m):
+///   it is kept as `IGC_2G`, with a warning that it now means the per-tank rule, so results may
+///   change. A version 2 file is written by this build, so it needs no note; version 2 is
+///   unreleased (ADR 0007).
+fn migrate_ruleset(
+    name: &str,
+    inputs: &mut Map<String, Value>,
+    version: Option<u64>,
+    report: &mut Report,
+) {
+    let current = match inputs.get("ruleset") {
+        Some(Value::String(s)) => Some(s.clone()),
+        Some(Value::Object(o)) => o.get("value").and_then(Value::as_str).map(String::from),
+        _ => None,
+    };
+    let text = match (current.as_deref(), version) {
+        (Some("IGC_2G_EXACT"), _) => {
+            match inputs.get_mut("ruleset") {
+                Some(Value::Object(o)) => {
+                    o.insert("value".into(), json!("IGC_2G"));
+                }
+                Some(v) => *v = json!("IGC_2G"),
+                None => {}
+            }
+            "IGC_2G_EXACT is now IGC_2G: the same per-tank rule of IGC 2.4.1.1"
+        }
+        (Some("IGC_2G"), Some(1)) => {
+            "IGC_2G now uses the per-tank rule of IGC 2.4.1.1 (d(Vc) from the gross volume of \
+             each tank, dome included, measured plate to plate per 2.4.2), so results may change"
+        }
+        _ => return,
+    };
+    let text = format!("Option '{name}': `ruleset`: {text}");
+    report.migration_notes.push(text.clone());
+    report.warning(text, &["ruleset"]);
 }
 
 /// Change one Option of a version 1 file to the current inputs, with a warning for each change.
@@ -1715,6 +1777,22 @@ fn read_option(
                 source: Source::Default,
             },
         ));
+    }
+    // The dome diameter is not a value the engine used before: the dome was not in Vc. It gets its
+    // own note, which says the results may change.
+    if let Some(at_i) = legacy_added
+        .iter()
+        .position(|n| *n == "tank_dome_diameter_m")
+    {
+        legacy_added.remove(at_i);
+        let text = format!(
+            "Option '{name}': this file has no `tank_dome_diameter_m`; it now holds {:.1} m (marked \
+             default). The dome now counts in Vc for d(Vc) (IGC 2.4.1.1), so the results may \
+             change",
+            GAS_TANK_DOME_DIAMETER_M
+        );
+        report.migration_notes.push(text.clone());
+        report.warning(text, &["tank_dome_diameter_m"]);
     }
     if !legacy_added.is_empty() {
         let list = legacy_added

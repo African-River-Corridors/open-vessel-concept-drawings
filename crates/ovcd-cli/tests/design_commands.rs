@@ -859,8 +859,9 @@ fn validate_opens_a_version_1_adn_g_file_as_igc_2g_and_warns() {
         "{err}"
     );
     assert!(
-        // Three for the version 1 changes, one for the hull end input a version 1 file lacks.
-        stdout(&out).contains("0 error(s), 4 warning(s)"),
+        // Three for the version 1 changes, one for the dome diameter a version 1 file lacks (issue
+        // #237), one for the hull end input a version 1 file lacks.
+        stdout(&out).contains("0 error(s), 5 warning(s)"),
         "{}",
         stdout(&out)
     );

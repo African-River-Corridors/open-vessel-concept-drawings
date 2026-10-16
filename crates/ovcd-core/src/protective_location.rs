@@ -10,10 +10,10 @@ use alloc::string::{String, ToString};
 pub enum VesselType {
     Igf,
     Igc1g,
+    /// IGC type 2G: d(Vc) of IGC 2.4.1.1 on the gross volume of each individual tank, measured
+    /// plate to plate, moulded line to moulded line, excluding insulation (IGC 2.4.2).
     Igc2g,
     Igc3g,
-    /// IGC type 2G with d(Vc) applied exactly as written (per-tank volume, tank steel datum).
-    Igc2gExact,
 }
 
 impl VesselType {
@@ -24,7 +24,6 @@ impl VesselType {
             "IGC_1G" => Ok(Self::Igc1g),
             "IGC_2G" => Ok(Self::Igc2g),
             "IGC_3G" => Ok(Self::Igc3g),
-            "IGC_2G_EXACT" => Ok(Self::Igc2gExact),
             other => Err(format!("{} is not a valid VesselType", py_repr_str(other))),
         }
     }
@@ -36,7 +35,6 @@ impl VesselType {
             Self::Igc1g => "IGC_1G",
             Self::Igc2g => "IGC_2G",
             Self::Igc3g => "IGC_3G",
-            Self::Igc2gExact => "IGC_2G_EXACT",
         }
     }
 }
@@ -115,18 +113,16 @@ fn py_min(a: f64, b: f64) -> f64 {
     if b < a { b } else { a }
 }
 
-/// Volume-based minimum distance d(Vc) per IGC/IGF Code. `vc` is the total tank volume (m^3).
-pub fn distance_d_vc(vc: f64) -> f64 {
-    if vc <= 1000.0 {
-        0.8
-    } else if vc <= 5000.0 {
-        1.0
-    } else {
-        2.0
-    }
-}
-
-/// IGC 2.4.1.1 / IGF 5.3.3.4.2 d(Vc), exactly: the gross volume of ONE tank (m^3).
+/// The minimum distance d(Vc) of IGC Code 2.4.1.1 (IGF 5.3.3.4.2), from `vc_individual_m3`: Vc of
+/// ONE cargo tank, 100 % of its gross design volume at 20 C, including domes and appendages (m^3).
+///
+/// - Vc <= 1,000: 0.8 m
+/// - 1,000 < Vc < 5,000: 0.75 + Vc x 0.2 / 4,000 m
+/// - 5,000 <= Vc < 30,000: 0.8 + Vc / 25,000 m
+/// - Vc >= 30,000: 2 m
+///
+/// IGC 2.4.2: d is measured plate to plate, from the moulded line to the moulded line, excluding
+/// insulation. So the insulation lies inside d: the clear gap needed is d less the insulation.
 pub fn d_vc_exact(vc_individual_m3: f64) -> f64 {
     let v = vc_individual_m3;
     if v <= 1000.0 {
@@ -152,7 +148,6 @@ pub fn required_side_protection(
         Some(VesselType::Igf | VesselType::Igc1g) => Ok(py_max(py_min(beam / 5.0, 11.5), d_vc)),
         Some(VesselType::Igc2g) => Ok(d_vc),
         Some(VesselType::Igc3g) => Ok(0.8),
-        Some(VesselType::Igc2gExact) => Ok(d_vc),
         None => Err("Unknown vessel type: None".to_string()),
     }
 }
@@ -188,7 +183,8 @@ pub fn check_protective_location(
     tank_support_height: f64,
 ) -> Result<ProtectiveLocationResult, String> {
     let vessel_type = VesselType::from_value(vessel_type_str)?;
-    let d_vc = distance_d_vc(total_tank_volume);
+    // IGC 2.4.1.1: d from the gross volume of one tank (the argument keeps its name).
+    let d_vc = d_vc_exact(total_tank_volume);
     let cs_required = required_side_protection(Some(vessel_type), beam, d_vc)?;
     let cb_required = required_bottom_protection(beam, d_vc, Some(vessel_type));
     let cb_actual = double_bottom_height + tank_support_height;

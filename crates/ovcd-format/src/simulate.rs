@@ -666,7 +666,7 @@ fn simulate_gas(
     self_propelled: bool,
 ) -> R<Value> {
     let ruleset = match p.get("ruleset") {
-        None => "IGC_2G_EXACT",
+        None => "IGC_2G",
         Some(Value::String(s)) => s.as_str(),
         // Python tests `ruleset not in RULESETS`, so any other value is an unknown ruleset.
         Some(other) => {
@@ -764,6 +764,11 @@ fn simulate_gas(
             p,
             "tank_dome_height_m",
             ovcd_core::barge_capacity::DEFAULT_TANK_DOME_HEIGHT_M,
+        )?,
+        tank_dome_diameter_m: get_or(
+            p,
+            "tank_dome_diameter_m",
+            ovcd_core::barge_capacity::DEFAULT_TANK_DOME_DIAMETER_M,
         )?,
         wing_tank_gap_m: get_or(
             p,

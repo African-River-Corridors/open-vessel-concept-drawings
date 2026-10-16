@@ -1,5 +1,7 @@
 //! Seam: the public `ovcd_core::gas_arrangement` API. Expected values are printed by the original
-//! Python (`core/gas_arrangement.py`), not worked out by hand.
+//! Python (`core/gas_arrangement.py`), not worked out by hand, except the ones marked re-pinned
+//! (issue #237: the rule set changed, so they are what the current code prints; the old values are
+//! in the history and the before/after table is in `CHANGELOG.md`).
 
 use ovcd_core::gas_arrangement::{
     DEFAULT_DEPTHS_M, FitOptions, RULESETS, fit, required_side_clearance, smallest_viable_loa,
@@ -19,9 +21,11 @@ fn the_cn_ii_benchmark_is_reproduced() {
         ..FitOptions::default()
     };
     let f = fit(90.0, 14.8, "LPG_propane", 4.4, &o).unwrap();
-    assert_eq!(f.payload_t, 2058.228164213275);
+    // Re-pinned (issue #237); was 2058.228164213275 under the stepped IGC_2G.
+    assert_eq!(f.payload_t, 2943.4407266060916);
     assert_eq!((f.n_tanks, f.n_tanks_wide, f.n_tanks_long), (2, 1, 2));
-    assert_eq!(f.binding, "volume");
+    // Re-pinned (issue #237); was "volume": the hull now carries more than the draught allows.
+    assert_eq!(f.binding, "draft");
     assert_eq!(f.candidates_tried, 15);
     assert!(f.feasible);
 }
@@ -47,26 +51,20 @@ fn an_unknown_ruleset_is_a_value_error() {
     };
     let e = fit(90.0, 14.8, "LNG", 3.0, &o).unwrap_err();
     assert_eq!(e.kind, "ValueError");
-    assert_eq!(
-        e.message,
-        "ruleset must be one of ('IGC_2G', 'IGC_2G_EXACT')"
-    );
+    assert_eq!(e.message, "ruleset must be one of ('IGC_2G',)");
 }
 
 #[test]
 fn adn_g_is_no_longer_a_ruleset() {
-    // Issue #175: only the two IGC rulesets are left.
+    // Issue #175: only IGC rule sets are left; issue #237: one, IGC_2G (the per-tank rule).
     let o = FitOptions {
         ruleset: "ADN_G".to_string(),
         ..FitOptions::default()
     };
     let e = fit(90.0, 14.8, "LNG", 3.0, &o).unwrap_err();
     assert_eq!(e.kind, "ValueError");
-    assert_eq!(
-        e.message,
-        "ruleset must be one of ('IGC_2G', 'IGC_2G_EXACT')"
-    );
-    assert_eq!(RULESETS, ["IGC_2G", "IGC_2G_EXACT"]);
+    assert_eq!(e.message, "ruleset must be one of ('IGC_2G',)");
+    assert_eq!(RULESETS, ["IGC_2G"]);
 }
 
 #[test]
@@ -84,7 +82,8 @@ fn the_smallest_viable_loa_is_found_to_a_tenth_of_a_metre() {
     let o = FitOptions::for_smallest_viable_loa();
     assert_eq!(
         smallest_viable_loa(12.0, "LNG", 3.0, 20.0, 120.0, &o).unwrap(),
-        35.6
+        // Re-pinned (issue #237); was 35.6 under the stepped IGC_2G.
+        36.1
     );
 }
 
@@ -97,10 +96,23 @@ fn a_beam_that_never_gets_cargo_area_gives_infinity() {
     );
 }
 
+/// sourced - IGC Code 2.4.1.1 and 2.4.2 (MSC.370(93)): d per tank, measured plate to plate,
+/// excluding insulation, so the clear gap is d less the insulation. A 1,000 m3 tank: d = 0.8 m,
+/// less 0.35 m of insulation, is 0.45 m (the total volume, 2,000 m3 here, is not used).
 #[test]
-fn the_exact_rule_measures_to_steel_so_insulation_sits_inside() {
-    let c = required_side_clearance("IGC_2G_EXACT", 14.8, 2000.0, 1000.0, 350.0).unwrap();
+fn the_rule_measures_to_steel_so_insulation_sits_inside() {
+    let c = required_side_clearance("IGC_2G", 14.8, 2000.0, 1000.0, 350.0).unwrap();
     assert_eq!(c, 0.45000000000000007);
+    // A 3,232 m3 tank: d = 0.75 + 3,232 x 0.2 / 4,000 = 0.9116 m; less 0.35 m is 0.5616 m.
+    let c = required_side_clearance("IGC_2G", 14.8, 99999.0, 3232.0, 350.0).unwrap();
+    assert!((c - 0.5616).abs() < 1e-12, "{c}");
+}
+
+#[test]
+fn the_old_exact_name_is_not_a_rule_set_of_the_core() {
+    let e = required_side_clearance("IGC_2G_EXACT", 14.8, 2000.0, 1000.0, 350.0).unwrap_err();
+    assert_eq!(e.kind, "ValueError");
+    assert_eq!(e.message, "'IGC_2G_EXACT' is not a valid VesselType");
 }
 
 #[test]
@@ -148,7 +160,7 @@ fn a_cap_clearance_a_hair_under_the_rule_is_accepted_not_refused() {
 //
 // Label: property. These tests state a rule (OD <= cap, L/D <= 7), not a printed number.
 
-const IGC_RULESETS: [&str; 2] = ["IGC_2G", "IGC_2G_EXACT"];
+const IGC_RULESETS: [&str; 1] = ["IGC_2G"];
 
 /// Overall length of one tank over its outer diameter, from the engine's own tank result.
 fn slenderness(f: &ovcd_core::gas_arrangement::ArrangementFit) -> f64 {
@@ -231,8 +243,10 @@ fn no_feasible_fit_has_a_tank_longer_than_seven_diameters() {
     // sweep proves nothing; every one that is accepted must hold the limit.
     let (mut accepted, mut refused_for_slenderness) = (0, 0);
     for ruleset in IGC_RULESETS {
-        for loa in [40.0, 60.0, 80.0, 100.0, 120.0, 150.0, 180.0] {
-            for beam in [8.0, 10.0, 12.0, 14.0, 18.0, 24.0, 30.0] {
+        for loa in [
+            40.0, 60.0, 80.0, 100.0, 120.0, 150.0, 180.0, 210.0, 240.0, 280.0,
+        ] {
+            for beam in [6.0, 8.0, 10.0, 12.0, 14.0, 18.0, 24.0, 30.0] {
                 let o = FitOptions {
                     depths: vec![5.0],
                     ruleset: ruleset.to_string(),
@@ -342,9 +356,9 @@ fn a_hull_too_narrow_for_tanks_at_the_cap_gets_no_candidate() {
     assert_eq!(f.binding, "no cargo area");
 }
 
-// Worked out: IGC_2G needs the d(V) of the rule, at least 0.8 m; IGC_2G_EXACT needs d(V) less the
-// insulation, 0.8 m less 0.35 m = 0.45 m at least (the insulation is fixed at 350 mm). Either is
-// above any negative clearance.
+// Worked out: IGC_2G needs d(V) less the insulation, 0.8 m less 0.35 m = 0.45 m at least (IGC
+// 2.4.1.1: d is at least 0.8 m; 2.4.2: the insulation is inside d; the insulation is fixed at
+// 350 mm). That is above any negative clearance.
 #[test]
 fn the_side_clearance_rule_is_never_below_0_45_m() {
     for ruleset in RULESETS {
@@ -364,7 +378,7 @@ fn the_side_clearance_rule_is_never_below_0_45_m() {
 #[test]
 fn a_design_that_failed_only_the_type_g_floor_now_passes() {
     let o = FitOptions {
-        ruleset: "IGC_2G_EXACT".to_string(),
+        ruleset: "IGC_2G".to_string(),
         fill_ratio: 0.98,
         depths: vec![5.75],
         tanks_wide: vec![2],

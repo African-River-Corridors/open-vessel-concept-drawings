@@ -4,36 +4,66 @@
 
 use ovcd_core::protective_location::*;
 
-#[test]
-fn d_vc_steps_at_1000_and_5000_inclusive_below() {
-    assert_eq!(distance_d_vc(0.0), 0.8);
-    assert_eq!(distance_d_vc(1000.0), 0.8);
-    assert_eq!(distance_d_vc(1000.0001), 1.0);
-    assert_eq!(distance_d_vc(5000.0), 1.0);
-    assert_eq!(distance_d_vc(5000.1), 2.0);
+// The d(Vc) tests below are labelled `sourced - IGC Code 2.4.1.1 (MSC.370(93))`: the expected
+// numbers are worked by hand from the text of the rule, not printed by the code. Vc is the gross
+// design volume of ONE cargo tank (domes and appendages included):
+//   Vc <= 1,000 m3:            d = 0.8 m
+//   1,000 < Vc < 5,000 m3:     d = 0.75 + Vc x 0.2 / 4,000 m
+//   5,000 <= Vc < 30,000 m3:   d = 0.8 + Vc / 25,000 m
+//   Vc >= 30,000 m3:           d = 2 m
+// The three joins are continuous (0.8 at 1,000; 1.0 at 5,000; 2.0 at 30,000).
+
+fn close(a: f64, b: f64) -> bool {
+    (a - b).abs() < 1e-12
 }
 
+/// sourced - IGC Code 2.4.1.1 (MSC.370(93)): the 1,000 m3 boundary and either side of it.
 #[test]
-fn d_vc_of_nan_is_the_last_branch_as_in_python() {
-    assert_eq!(distance_d_vc(f64::NAN), 2.0);
-}
-
-#[test]
-fn d_vc_exact_is_linear_in_bands() {
+fn d_vc_at_1000_and_either_side() {
     assert_eq!(d_vc_exact(0.0), 0.8);
+    assert_eq!(d_vc_exact(999.999), 0.8);
     assert_eq!(d_vc_exact(1000.0), 0.8);
-    assert_eq!(d_vc_exact(1000.5), 0.800025);
-    assert_eq!(d_vc_exact(2500.0), 0.875);
-    assert_eq!(d_vc_exact(4999.999), 0.9999999500000001);
-    assert_eq!(d_vc_exact(5000.0), 1.0);
-    assert_eq!(d_vc_exact(12345.6), 1.293824);
-    assert_eq!(d_vc_exact(29999.9), 1.999996);
+    // 0.75 + 1,000.001 x 0.2 / 4,000 = 0.75 + 0.05000005 = 0.80000005
+    assert!(close(d_vc_exact(1000.001), 0.80000005));
+    // 0.75 + 3,232 x 0.2 / 4,000 = 0.75 + 0.1616 = 0.9116
+    assert!(close(d_vc_exact(3232.0), 0.9116));
+}
+
+/// sourced - IGC Code 2.4.1.1 (MSC.370(93)): the 5,000 m3 boundary and either side of it.
+#[test]
+fn d_vc_at_5000_and_either_side() {
+    // 0.75 + 4,999.999 x 0.2 / 4,000 = 0.75 + 0.24999995 = 0.99999995
+    assert!(close(d_vc_exact(4999.999), 0.99999995));
+    // 0.8 + 5,000 / 25,000 = 1.0
+    assert!(close(d_vc_exact(5000.0), 1.0));
+    // 0.8 + 5,000.001 / 25,000 = 0.8 + 0.20000004 = 1.00000004
+    assert!(close(d_vc_exact(5000.001), 1.00000004));
+    // 0.8 + 12,345.6 / 25,000 = 0.8 + 0.493824 = 1.293824
+    assert!(close(d_vc_exact(12345.6), 1.293824));
+}
+
+/// sourced - IGC Code 2.4.1.1 (MSC.370(93)): the 30,000 m3 boundary and either side of it.
+#[test]
+fn d_vc_at_30000_and_either_side() {
+    // 0.8 + 29,999.9 / 25,000 = 0.8 + 1.199996 = 1.999996
+    assert!(close(d_vc_exact(29999.9), 1.999996));
+    // At 30,000 the rule gives 2 m (and 0.8 + 30,000 / 25,000 = 2.0 too).
     assert_eq!(d_vc_exact(30000.0), 2.0);
+    assert_eq!(d_vc_exact(30000.1), 2.0);
+    assert_eq!(d_vc_exact(100000.0), 2.0);
+}
+
+/// sourced - IGC Code 2.4.2: d is measured plate to plate, excluding insulation, so the clear gap
+/// needed from the outer face of the insulation is d less the insulation. For a 2,000 m3 tank with
+/// 350 mm of insulation: d = 0.75 + 2,000 x 0.2 / 4,000 = 0.85 m, so 0.85 - 0.35 = 0.50 m.
+#[test]
+fn the_clear_gap_is_d_less_the_insulation() {
+    assert!(close(d_vc_exact(2000.0) - 350.0 / 1000.0, 0.5));
 }
 
 #[test]
 fn vessel_type_round_trips_and_rejects_unknown_text_with_pythons_message() {
-    for t in ["IGF", "IGC_1G", "IGC_2G", "IGC_3G", "IGC_2G_EXACT"] {
+    for t in ["IGF", "IGC_1G", "IGC_2G", "IGC_3G"] {
         assert_eq!(VesselType::from_value(t).unwrap().value(), t);
     }
     assert_eq!(
@@ -72,8 +102,6 @@ fn side_protection_per_vessel_type() {
     assert_eq!(side(Igc2g, 300.0, 0.5), 0.5);
     assert_eq!(side(Igc3g, 14.8, 1.0), 0.8);
     assert_eq!(side(Igc3g, 3.0, 2.0), 0.8);
-    assert_eq!(side(Igc2gExact, 80.0, 0.8), 0.8);
-    assert_eq!(side(Igc2gExact, 3.0, 2.0), 2.0);
 }
 
 #[test]
@@ -90,7 +118,7 @@ fn bottom_protection_is_beam_over_15_capped_at_2_but_not_below_d_vc() {
     assert_eq!(bottom(Igf, 14.8, 1.0), 1.0);
     assert_eq!(bottom(Igc2g, 18.0, 1.0), 1.2);
     assert_eq!(bottom(Igc3g, 80.0, 0.8), 2.0);
-    assert_eq!(bottom(Igc2gExact, 3.0, 2.0), 2.0);
+    assert_eq!(bottom(Igc2g, 3.0, 2.0), 2.0);
     assert_eq!(required_bottom_protection(14.8, 1.0, None), 1.0);
     assert_eq!(required_bottom_protection(60.0, 0.8, None), 2.0);
     // beam/15 == 1.0 and d_vc == 1.0: either way 1.0; beam/15 > 2 caps at 2.0.
@@ -138,12 +166,14 @@ fn check_fails_side_and_passes_bottom() {
         r,
         ProtectiveLocationResult {
             vessel_type: "IGC_1G".into(),
-            d_vc: 1.0,
+            // sourced - IGC Code 2.4.1.1: d = 0.75 + 2,000 x 0.2 / 4,000 = 0.85 m; the bottom rule
+            // is the larger of min(beam / 15, 2) = 0.98666.. and d.
+            d_vc: 0.85,
             total_tank_volume: 2000.0,
             cs_required: 2.96,
             cs_actual: 1.0,
             cs_ok: false,
-            cb_required: 1.0,
+            cb_required: 14.8 / 15.0,
             cb_actual: 1.0,
             cb_ok: true,
         }
@@ -153,11 +183,20 @@ fn check_fails_side_and_passes_bottom() {
 #[test]
 fn check_passes_exactly_at_the_limit_and_fails_just_below() {
     // cs_actual == cs_required passes (>=), as does cb_actual == cb_required.
-    let r = check_protective_location("IGC_3G", 14.8, 6000.0, 0.8, 1.0, 1.0).unwrap();
+    let r = check_protective_location("IGC_3G", 14.8, 30000.0, 0.8, 1.0, 1.0).unwrap();
     assert!(r.cs_ok && r.cb_ok);
     assert_eq!((r.d_vc, r.cb_required, r.cb_actual), (2.0, 2.0, 2.0));
-    let r = check_protective_location("IGC_3G", 14.8, 6000.0, 0.7999, 1.0, 0.9999).unwrap();
+    let r = check_protective_location("IGC_3G", 14.8, 30000.0, 0.7999, 1.0, 0.9999).unwrap();
     assert!(!r.cs_ok && !r.cb_ok);
+}
+
+#[test]
+fn igc_2g_exact_is_no_longer_a_vessel_type() {
+    // Issue #237: the one rule set is IGC_2G; the file layer reads IGC_2G_EXACT as IGC_2G.
+    assert_eq!(
+        VesselType::from_value("IGC_2G_EXACT"),
+        Err("'IGC_2G_EXACT' is not a valid VesselType".to_string())
+    );
 }
 
 #[test]

@@ -11,12 +11,8 @@ class VesselType(Enum):
     IGC_1G = "IGC_1G"
     IGC_2G = "IGC_2G"
     IGC_3G = "IGC_3G"
-    # IGC type 2G with d(Vc) applied EXACTLY as written (2.4.1.1, 2.4.2): linear bands, on
-    # the INDIVIDUAL tank's gross volume, measured to the tank STEEL (insulation excluded).
-    # "IGC_2G" keeps the engine's older conservative reading
-    # so existing results do not move unless a caller opts in.
     # (The ADN tank vessel type G member was removed: the engine applies IGC rules only to gas tanks; issue #175.)
-    IGC_2G_EXACT = "IGC_2G_EXACT"
+    # (IGC_2G_EXACT was removed in issue #237: IGC_2G is the per-tank rule of 2.4.1.1, measured plate to plate per 2.4.2.)
 
 
 @dataclass
@@ -33,22 +29,11 @@ class ProtectiveLocationResult:
     cb_ok: bool
 
 
-def distance_d_vc(vc: float) -> float:
-    """Volume-based minimum distance d(Vc) per IGC/IGF Code.
-
-    Args:
-        vc: Total tank volume in m³.
-
-    Returns:
-        Minimum distance in metres.
-    """
-    return _call("protective_location", "distance_d_vc", {"vc": vc}, float)
-
-
 def d_vc_exact(vc_individual_m3: float) -> float:
-    """IGC 2.4.1.1 / IGF 5.3.3.4.2 d(Vc), exactly: Vc = gross volume of ONE tank (m3).
+    """IGC 2.4.1.1 / IGF 5.3.3.4.2 d(Vc): Vc = gross volume of ONE tank (m3), domes and appendages included.
 
-    Distance to the tank steel, excluding insulation (IGC 2.4.2).
+    Distance plate to plate, from the moulded line to the moulded line, excluding insulation
+    (IGC 2.4.2): the clear gap from the outer face of the insulation is d less the insulation.
     """
     return _call("protective_location", "d_vc_exact", {"vc_individual_m3": vc_individual_m3}, float)
 
@@ -122,7 +107,8 @@ def check_protective_location(
     Args:
         vessel_type_str: One of "IGF", "IGC_1G", "IGC_2G", "IGC_3G".
         beam: Moulded beam (m).
-        total_tank_volume: Total interior volume of all tanks Vc (m³).
+        total_tank_volume: Vc of ONE tank (m³), its gross volume including dome (IGC 2.4.1.1).
+            The name is kept from before issue #237, when the total of all tanks was read.
         side_clearance: Actual distance from tank to hull side (m).
         double_bottom_height: Double bottom height (m).
         tank_support_height: Tank saddle/support height above inner bottom (m).
