@@ -305,9 +305,9 @@ The regulation and class items, by set (paragraphs as read in the free texts; se
   keel clears the bed, air draft), method validity ranges (squat Froude depth number below 0.7, blockage
   at most 0.35), the hopper GM warning, and the other checks of the ten modules.
 
-The four remaining "value differs" items are filed as findings under #121: the cofferdam clause, the
-end-bulkhead condition, the 0–40° area without a down-flooding angle, and the 1.0 m "standard IGC-2G
-spacing" of `design_grid` (no such value in IGC 2.4.1.2).
+The four remaining "value differs" items are filed as findings under #121: the cofferdam clause (#280),
+the end-bulkhead condition (#281), the 0–40° area without a down-flooding angle (#282), and the 1.0 m
+"standard IGC-2G spacing" of `design_grid` (#283; no such value in IGC 2.4.1.2).
 
 ### File format (ADR 0007): version 3
 
@@ -386,22 +386,21 @@ spacing" of `design_grid` (no such value in IGC 2.4.1.2).
 
 ## Further Notes
 
-**Tickets, in order** (each a sub-issue of the parent "Spec 0004: Rules engine"; native blocked-by
-links):
+**Tickets, in order** (sub-issues of #267, "Spec 0004: Rules engine", with native blocked-by links):
 
-1. Rule Set file format, schema and loader. No engine change.
-2. Measure registry, evaluator and Rule Trace in the results (outside the hash). Needs 1.
-3. `is2008-a` 1.0.0 as data. Needs 2.
-4. `igc-2g` 1.0.0 as data. Needs 2.
-5. `ovcd` and `lr-inland-gas` 1.0.0: the remaining checks, with honest origins; uncited Rules marked
+1. #268 Rule Set file format, schema and loader. No engine change.
+2. #269 Measure registry, evaluator and Rule Trace in the results (outside the hash). Needs 1.
+3. #270 `is2008-a` 1.0.0 as data. Needs 2.
+4. #271 `igc-2g` 1.0.0 as data. Needs 2.
+5. #272 `ovcd` and `lr-inland-gas` 1.0.0: the remaining checks, with honest origins; uncited Rules marked
    unverified; findings filed. Needs 2.
-6. Released versions kept and the provenance gate in CI. Needs 3, 4, 5.
-7. `.vdesign` version 3: `service_area` and `rule_sets`, migration from `ruleset`. Needs 3, 4, 5.
-8. Service Area input and default stacks; scope wording. Needs 7.
-9. The Rule check calculations tab shows the trace. Needs 3, 4, 5 and #252.
-10. `fit` keeps only candidates that meet every blocking Rule. Needs 4, 5 and #264.
-11. Harness keyed by rule id, with automatic triage. Needs 3.
-12. Harness rule mutation. Needs 11 and 1.
+6. #273 Released versions kept and the provenance gate in CI. Needs 3, 4, 5.
+7. #274 `.vdesign` version 3: `service_area` and `rule_sets`, migration from `ruleset`. Needs 3, 4, 5.
+8. #275 Service Area input and default stacks; scope wording. Needs 7.
+9. #276 The Rule check calculations tab shows the trace. Needs 3, 4, 5 and #252.
+10. #277 `fit` keeps only candidates that meet every blocking Rule. Needs 4, 5 and #264.
+11. #278 Harness keyed by rule id, with automatic triage. Needs 3.
+12. #279 Harness rule mutation. Needs 11 and 1.
 
 Tickets 1 to 6 and 11 change no result. Tickets 3, 4 and 5 can run in any order after 2. Ticket 10
 moves results only through #264.
