@@ -125,6 +125,9 @@ pub const WATER_DENSITY_T_PER_M3: f64 = 1.0;
 /// The under-keel clearance kept below the squatted keel, in m (`resistance` default).
 pub const SQUAT_SAFETY_MARGIN_M: f64 = 0.15;
 
+/// What the cost rates are, shown with the group and in the capital budget.
+pub const COST_RATES_BASIS: &str = "Example rates \u{2014} replace with yours.";
+
 /// Both dry-bulk holds.
 const DRY_HOLDS: &[&str] = &["box_hold", "sloped_hopper_hold"];
 
@@ -279,6 +282,90 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
         formations: None,
         value: SQUAT_SAFETY_MARGIN_M,
     },
+    LegacyFixed {
+        name: "hull_steel_rate",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 2500.0,
+    },
+    LegacyFixed {
+        name: "tank_shell_rate",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 10000.0,
+    },
+    LegacyFixed {
+        name: "tank_supports_rate",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 2000.0,
+    },
+    LegacyFixed {
+        name: "insulation_rate",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 4000.0,
+    },
+    LegacyFixed {
+        name: "piping_rate",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 4500.0,
+    },
+    LegacyFixed {
+        name: "outfitting_rate",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 4000.0,
+    },
+    LegacyFixed {
+        name: "cargo_system_lump",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 500000.0,
+    },
+    LegacyFixed {
+        name: "paint_anodes_misc",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 100000.0,
+    },
+    LegacyFixed {
+        name: "battery_rate_per_kwh",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 250.0,
+    },
+    LegacyFixed {
+        name: "propulsion_rate_per_kw",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 1000.0,
+    },
+    LegacyFixed {
+        name: "wheelhouse_accom_lump",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 450000.0,
+    },
+    LegacyFixed {
+        name: "tug_outfitting_lump",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 200000.0,
+    },
+    LegacyFixed {
+        name: "yard_margin_fraction",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 0.1,
+    },
+    LegacyFixed {
+        name: "delivery_lump",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 200000.0,
+    },
 ];
 
 /// Gas tank rulesets.
@@ -361,11 +448,12 @@ pub enum Group {
     DryBulkHold,
     WaterwayLimits,
     SpeedAndPower,
+    CostRates,
 }
 
 impl Group {
     /// Every group, in the order a form shows them.
-    pub const ALL: [Group; 7] = [
+    pub const ALL: [Group; 8] = [
         Group::Required,
         Group::VesselClass,
         Group::HullAndContainment,
@@ -373,6 +461,7 @@ impl Group {
         Group::DryBulkHold,
         Group::WaterwayLimits,
         Group::SpeedAndPower,
+        Group::CostRates,
     ];
 
     /// The group's display name.
@@ -385,6 +474,15 @@ impl Group {
             Group::DryBulkHold => "Dry-bulk hold",
             Group::WaterwayLimits => "Waterway Limits",
             Group::SpeedAndPower => "Speed and power",
+            Group::CostRates => "Cost rates",
+        }
+    }
+
+    /// A note on the group's values that a form shows under its name, if it has one.
+    pub fn note(self) -> Option<&'static str> {
+        match self {
+            Group::CostRates => Some(COST_RATES_BASIS),
+            _ => None,
         }
     }
 }
@@ -818,6 +916,98 @@ pub const INPUTS: &[InputSpec] = &[
         false,
         Group::WaterwayLimits,
     ),
+    spec(
+        "hull_steel_rate",
+        "Hull steel rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "tank_shell_rate",
+        "Tank shell rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "tank_supports_rate",
+        "Tank supports rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "insulation_rate",
+        "Insulation rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "piping_rate",
+        "Piping and machinery rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "outfitting_rate",
+        "Outfitting rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "cargo_system_lump",
+        "Cargo system",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "paint_anodes_misc",
+        "Paint, anodes and miscellaneous",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "battery_rate_per_kwh",
+        "Battery rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "propulsion_rate_per_kw",
+        "Propulsion rate",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "wheelhouse_accom_lump",
+        "Wheelhouse and accommodation",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "tug_outfitting_lump",
+        "Tug outfitting",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec(
+        "yard_margin_fraction",
+        "Yard margin",
+        NUM,
+        false,
+        Group::CostRates,
+    ),
+    spec("delivery_lump", "Delivery", NUM, false, Group::CostRates),
 ];
 
 /// Where a stored input came from.

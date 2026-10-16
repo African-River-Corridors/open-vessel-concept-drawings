@@ -58,7 +58,7 @@ save writes the current version.
   class that disagrees is replaced, with a warning. Picking a class sets length, beam and Formation
   (and a convoy's counts), marked `class`; its draught (top of the range) and air draft (bottom of the
   range) fill the two limits, marked `class`, unless a limit was typed. Depth stays typed.
-- **Inputs added after the first files** (issue #4: the dry-bulk hold, the bow rake over depth, the stern void of a pushed barge, the end bulkhead allowance, the gas tank arrangement values, the water density, the squat safety margin): a file that lacks one of these
+- **Inputs added after the first files** (issue #4: the dry-bulk hold, the bow rake over depth, the stern void of a pushed barge, the end bulkhead allowance, the gas tank arrangement values, the water density, the squat safety margin, the 14 cost rates): a file that lacks one of these
   inputs, in version 1 or in a version 2 file from a test build, is read with the fixed value the engine
   used before the input existed (a table in `vdesign.rs`, not the Defaults Profile), marked `default`, with
   one warning per Option. Results cannot change. Every other left-out input is still refused. A Defaults

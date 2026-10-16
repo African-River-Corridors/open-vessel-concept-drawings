@@ -1,12 +1,38 @@
-# vessel_designer
+# Open Vessel Concept Design (OVCD)
 
-Concept design of inland and coastal cargo vessels for feasibility studies. Give it a hull and a
-cargo; it gives you capacity, draught, weights, tank arrangement, stability, resistance and power —
-checked against real vessels.
+An open instrument for the concept and preliminary design of inland and coastal vessels and
+tug-barge systems. Give it a hull and a cargo; it gives you capacity, draught, weights, tank
+arrangement, stability, resistance and power, and general-arrangement drawings — each result with
+its checks, checked against real vessels.
 
-It is a Python library over a compiled Rust calculation core (pure calculation, no I/O): the Python
-imports, names and result types are unchanged, and the numbers come from `ovcd-core`. A desktop app
-is planned; see the [roadmap](ROADMAP.md).
+**Website and docs:** [africanrivercorridors.com/ovcd](https://www.africanrivercorridors.com/ovcd) ·
+**Roadmap:** [ROADMAP.md](ROADMAP.md) · **Decisions:** [architecture decision records](docs/adr/0011-scope-concept-and-preliminary-design-never-approval.md)
+
+## Ways to use it
+
+- **Desktop app** (Windows and macOS): live results as you type, drawings to the Drawing Format
+  Standard (SVG, PDF and DXF), stability curves, rule checks and a capital budget. See
+  [Run the desktop app](#run-the-desktop-app).
+- **Web version — coming.** The same Rust core compiled to WebAssembly, running in your browser
+  with nothing to install; your designs stay on your computer. Planned on the [roadmap](ROADMAP.md).
+- **Command line** (`ovcd`): create, check, run and draw `.vdesign` files.
+- **Python library** (`vessel_designer`): the calculation core from Python.
+
+All of them use one compiled Rust calculation core (`ovcd-core`: pure calculation, no I/O), so they
+give the same numbers.
+
+## What it is, and what it is not
+
+**It is** a concept and preliminary design tool for inland and coastal vessels and tug-barge
+systems; a calculation core you can read, where results name their checks and sources; calibrated
+against real barges and published design points, with the cases in the open; free, with open
+formats and documented methods.
+
+**It is not** class approval, a stability booklet or construction approval, and it never will be
+([ADR 0011](docs/adr/0011-scope-concept-and-preliminary-design-never-approval.md)). It is not a
+substitute for a naval architect, a yard design office or a class surveyor. It is not yet verified:
+known engineering findings are under review in the open
+([#121](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/121)).
 
 ## What it does
 
@@ -26,8 +52,6 @@ is planned; see the [roadmap](ROADMAP.md).
 - **Resistance, squat, waves and power** in deep and confined shallow water (`core.resistance`,
   `core.squat`, `core.waves`, `core.electric_energy`).
 - **Calibration** against real barges and published design points (`calibration/`).
-
-Concept stage only. It does not replace class approval, a stability booklet or a yard design.
 
 ## Install
 
@@ -113,6 +137,9 @@ large tank, so a real design must raise the eye or accept a smaller tank.
 | `src/vessel_designer/simulate.py` | one-call JSON-in, JSON-out simulation |
 | `catalogue/` | standard vessel classes and reference vessels, with sources |
 | `calibration/` | calibration cases, fitted factors and results |
+| `crates/` | the Rust core (`ovcd-core`), file format and Design session (`ovcd-format`), drawings (`ovcd-draw`) and CLI |
+| `app/` | the desktop app (Tauri) |
+| `website/` | the website and docs ([africanrivercorridors.com/ovcd](https://www.africanrivercorridors.com/ovcd)) |
 | `docs/adr/` | architecture decisions |
 | `GLOSSARY.md` | the domain language |
 

@@ -5,6 +5,7 @@
   import SpeedPower from "./views/SpeedPower.svelte";
   import Stability from "./views/Stability.svelte";
   import RuleChecks from "./views/RuleChecks.svelte";
+  import CapitalBudget from "./views/CapitalBudget.svelte";
 
   // The hull views are SVG drawn in Rust to the Drawing Format Standard (ADR 0009, spec 0003); the
   // panel only places and zooms them.
@@ -49,7 +50,7 @@
   ];
   const HULL = ["side", "plan", "midship"];
   /** Views that show results of the Option, and so can be out of date. */
-  const FROM_RESULTS = [...HULL, "stability", "speed-power", "rules"];
+  const FROM_RESULTS = [...HULL, "stability", "speed-power", "rules", "capital"];
   type HullKey = "side" | "plan" | "midship";
 
   let groupId = $state(GROUPS[0].id);
@@ -153,9 +154,18 @@
         <RuleChecks checks={(results as { checks?: { name: string; ok: boolean; message: string }[] }).checks ?? []} />
       {/if}
     {:else if current === "boq"}
-      <p class="note" data-testid="placeholder-boq">The bill of quantities comes in a later phase.</p>
+      <div data-testid="placeholder-boq">
+        <h3 class="wip">Coming in a later phase</h3>
+        <p class="note">The bill of quantities is planned for phase 4 of the roadmap.</p>
+      </div>
     {:else if current === "capital"}
-      <p class="note" data-testid="placeholder-capital">The capital budget is coming soon.</p>
+      {#if message}
+        <p class="note">{message}</p>
+      {:else if !results}
+        <p class="note">No results to show.</p>
+      {:else}
+        <CapitalBudget cost={(results as { cost?: never }).cost} phase={(results as { phase?: string }).phase} />
+      {/if}
     {/if}
   </div>
 </div>
@@ -175,5 +185,6 @@
   .slot { height: 100%; }
   .charts { height: 100%; display: flex; flex-direction: column; gap: 10px; }
   .note { color: var(--dim); }
+  .wip { font-family: var(--serif); color: var(--navy); font-size: 16px; margin: 0 0 4px; }
   .stale { margin-left: auto; align-self: center; background: #fdf1d3; color: #6b4a00; font: 11px var(--sans); padding: 1px 6px; border-radius: 3px; }
 </style>
