@@ -7,7 +7,7 @@
 
 {#if blockers.length > 0}
   <p class="why" data-testid="stale-why">
-    Not recalculated: fix the error under
+    <span aria-hidden="true">▲</span> Not recalculated: fix the error under
     {#each blockers as b, i (b.name)}{i > 0 ? (i === blockers.length - 1 ? " and " : ", ") : " "}<a
         href={"#" + b.name}
         onclick={(e) => { e.preventDefault(); focusInput(b.name); }}>{b.label}</a>{/each}
@@ -15,6 +15,6 @@
 {/if}
 
 <style>
-  .why { margin: 4px 0; font-size: 12px; color: var(--warn); }
+  .why { margin: 4px 0; font-size: var(--fs-12); color: var(--warn); }
   a { color: inherit; text-decoration: underline; cursor: pointer; }
 </style>

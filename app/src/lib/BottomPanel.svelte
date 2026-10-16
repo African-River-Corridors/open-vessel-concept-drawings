@@ -72,7 +72,7 @@
         </h2>
         {#if current?.stale}<StaleWhy {blockers} />{/if}
         {#each current?.errors ?? [] as e}
-          <div class="err">{e}</div>
+          <div class="err"><span aria-hidden="true">✕</span> {e}</div>
         {/each}
         {#if current?.message}
           <p class="note" data-testid="engine-message">{current.message}</p>
@@ -84,7 +84,7 @@
                 {#if !(m.path[0] === "arrangement" && !hasTanks(current.results))}
                   <tr>
                     <th>{m.label}</th>
-                    <td class="num" class:text={m.quantity === "text"} title={exact(m, v)}>{show(m, v)}{#if v !== null && v !== undefined && m.unit}<span class="unit">&nbsp;{m.unit}</span>{/if}</td>
+                    <td class="num" class:text={m.quantity === "text"} title={exact(m, v)}><span class:old={current.stale}>{show(m, v)}</span>{#if v !== null && v !== undefined && m.unit}<span class="unit">&nbsp;{m.unit}</span>{/if}</td>
                   </tr>
                 {/if}
               {/each}
@@ -108,7 +108,7 @@
         <ul class="checks" data-testid="checks">
           {#each checks as c (c.name)}
             <li class={c.ok ? "ok" : "fail"}>
-              <span class="tag">{c.ok ? "PASS" : "FAIL"}</span>
+              <span class="tag"><span aria-hidden="true">{c.ok ? "✓" : "✕"}</span> {c.ok ? "PASS" : "FAIL"}</span>
               <strong>{c.name}</strong>
               {#if c.message && c.message !== "OK"}<span class="msg">{c.message}</span>{/if}
             </li>
@@ -117,8 +117,8 @@
         {#if warnings.length > 0 || softWarnings.length > 0}
           <h2>Warnings</h2>
           <ul class="warnings" data-testid="warnings">
-            {#each softWarnings as w}<li>{w.text}</li>{/each}
-            {#each warnings as w}<li>{w}</li>{/each}
+            {#each softWarnings as w}<li><span aria-hidden="true">▲</span> {w.text}</li>{/each}
+            {#each warnings as w}<li><span aria-hidden="true">▲</span> {w}</li>{/each}
           </ul>
         {/if}
       </section>
@@ -143,7 +143,7 @@
                 <th>{m.label}{#if m.unit}<span class="unit">&nbsp;({m.unit})</span>{/if}</th>
                 {#each columns as c (c.name)}
                   {@const v = valueAt(c.results, m.path)}
-                  <td class="num" class:text={m.quantity === "text"} class:differs={differs(m, c)} class:active={c.name === active} title={c.results ? exact(m, v) : (c.message ?? "")}>
+                  <td class="num" class:text={m.quantity === "text"} class:differs={differs(m, c)} class:active={c.name === active} class:old={c.stale} title={c.results ? exact(m, v) : (c.message ?? "")}>
                     {c.results ? show(m, v) : c.message ? "" : "–"}
                   </td>
                 {/each}
@@ -163,30 +163,34 @@
 </div>
 
 <style>
-  .panel { padding: 8px 14px; }
-  .cols { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(240px, 1.2fr) minmax(300px, 2fr); gap: 20px; align-items: start; }
-  h2 { font-family: var(--serif); font-size: 14px; margin: 0 0 6px; }
-  .dim { color: var(--dim); }
-  table { border-collapse: collapse; font-size: 12px; }
-  th { text-align: left; font-weight: normal; color: var(--dim); padding: 2px 10px 2px 0; white-space: nowrap; }
-  td { padding: 2px 8px; }
+  .panel { padding: var(--sp-2) var(--sp-3); font-size: var(--fs-13); line-height: var(--lh-ui); }
+  .cols { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(240px, 1.2fr) minmax(300px, 2fr); gap: var(--sp-5); align-items: start; }
+  h2 { font: 600 var(--fs-12) var(--font-ui); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-2); background: var(--surface-2); border-bottom: var(--lw-thin) solid var(--rule); margin: 0 0 var(--sp-2); padding: var(--sp-1) var(--sp-2); }
+  .dim { color: var(--ink-3); }
+  table { border-collapse: collapse; font-size: var(--fs-13); }
+  th { text-align: left; font-weight: 400; color: var(--ink-2); padding: 2px 10px 2px 0; white-space: nowrap; }
+  td { padding: 2px var(--sp-2); }
   td.num { text-align: right; font-variant-numeric: tabular-nums; }
-  td.text { text-align: left; white-space: normal; max-width: 170px; font-size: 11px; }
-  .unit { color: var(--dim); }
-  thead th { color: var(--ink); text-align: right; }
-  thead th.active { border-bottom: 2px solid var(--gold); }
-  td.active { background: #f7f3e6; }
-  td.differs { background: #fdf1d3; font-weight: 600; }
-  .col { background: none; border: none; font: inherit; font-weight: 600; cursor: pointer; color: var(--navy); padding: 0; text-decoration: underline; }
-  .stale { background: #fdf1d3; color: #6b4a00; font: 11px var(--sans); padding: 1px 6px; border-radius: 3px; margin-left: 6px; }
-  .err { color: #a02a1a; font-size: 12px; margin-bottom: 4px; }
-  .note { font-size: 12px; color: var(--ink); }
-  .checks, .warnings { list-style: none; margin: 0 0 10px; padding: 0; font-size: 12px; }
-  .checks li, .warnings li { margin: 3px 0; }
-  .tag { font-size: 10px; padding: 0 5px; border-radius: 3px; margin-right: 4px; }
-  .ok .tag { background: #e1f0e1; color: #245c24; }
-  .fail .tag { background: #fbe4e1; color: #a02a1a; }
-  .fail { color: #7a1d12; }
-  .msg { color: var(--dim); margin-left: 4px; }
-  .fail .msg { color: #7a1d12; }
+  td.text { text-align: left; white-space: normal; max-width: 170px; font-size: var(--fs-12); }
+  .old { color: var(--stale); text-decoration: line-through; }
+  .unit { color: var(--ink-3); }
+  [data-testid="outputs"] tr { border-bottom: var(--lw-thin) solid var(--rule); }
+  [data-testid="outputs"] th { padding-left: var(--sp-1); }
+  thead th { color: var(--ink); text-align: right; background: var(--surface-2); border-bottom: var(--lw-thick) solid var(--ink); padding: var(--sp-1) var(--sp-2); font-weight: 600; }
+  tbody tr { border-bottom: var(--lw-thin) solid var(--rule); }
+  th.active, td.active { background: var(--accent-soft); }
+  td.differs { background: var(--warn-soft); color: var(--ink); font-weight: 700; }
+  .col { background: none; border: none; font: inherit; font-weight: 600; cursor: pointer; color: var(--accent); padding: 0; text-decoration: underline; }
+  .stale { background: var(--warn-soft); color: var(--warn); border: var(--lw-thin) solid var(--warn); font: var(--fs-11) var(--font-ui); padding: 1px 6px; border-radius: var(--radius); margin-left: 6px; text-transform: none; letter-spacing: 0; }
+  .err { color: var(--fail); background: var(--fail-soft); font-size: var(--fs-12); margin-bottom: var(--sp-1); padding: var(--sp-1) var(--sp-2); }
+  .note { font-size: var(--fs-12); color: var(--ink); }
+  .checks, .warnings { list-style: none; margin: 0 0 var(--sp-3); padding: 0; font-size: var(--fs-12); }
+  .checks li { margin: 0; padding: 3px 0; border-bottom: var(--lw-thin) solid var(--rule); }
+  .warnings li { margin: 3px 0; color: var(--warn); }
+  .tag { font: 600 var(--fs-11) var(--font-ui); padding: 1px 6px; border-radius: var(--radius); margin-right: var(--sp-1); white-space: nowrap; }
+  .ok .tag { background: var(--pass-soft); color: var(--pass); }
+  .fail .tag { background: var(--fail-soft); color: var(--fail); }
+  .fail { color: var(--fail); }
+  .msg { color: var(--ink-3); margin-left: var(--sp-1); }
+  .fail .msg { color: var(--fail); }
 </style>

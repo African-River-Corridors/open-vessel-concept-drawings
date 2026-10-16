@@ -96,7 +96,7 @@
     {#if failing.length > 0}
       <ul class="checks" data-testid="cost-checks">
         {#each failing as c (c.name)}
-          <li class:warn={c.severity !== "error"}><strong>{c.severity === "error" ? "Check failed" : "Note"}: {words(c.name)}.</strong> {c.message}</li>
+          <li class:warn={c.severity !== "error"}><span class="chip" aria-hidden="true">{c.severity === "error" ? "✕" : "▲"}</span> <strong>{c.severity === "error" ? "Check failed" : "Note"}: {words(c.name)}.</strong> {c.message}</li>
         {/each}
       </ul>
     {/if}
@@ -104,18 +104,19 @@
 </div>
 
 <style>
-  .budget { height: 100%; overflow: auto; font-size: 12px; }
-  .note { color: var(--dim); font-size: 14px; }
-  .wip { font-family: var(--serif); color: var(--navy); font-size: 16px; margin: 0 0 4px; }
-  .basis { margin: 0 0 8px; }
-  .tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; align-items: start; }
+  .budget { height: 100%; overflow: auto; font-size: var(--fs-13); }
+  .note { color: var(--ink-3); font-size: var(--fs-14); }
+  .wip { font-family: var(--font-serif); color: var(--ink); font-size: var(--fs-16); margin: 0 0 var(--sp-1); }
+  .basis { margin: 0 0 var(--sp-2); }
+  .tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--sp-4); align-items: start; }
   table { border-collapse: collapse; width: 100%; }
-  caption { text-align: left; font-family: var(--serif); color: var(--navy); font-size: 14px; padding-bottom: 2px; }
-  th, td { padding: 2px 6px; border-bottom: 1px solid #eee; text-align: left; font-weight: normal; }
+  caption { text-align: left; font: 600 var(--fs-12) var(--font-ui); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-2); background: var(--surface-2); border-bottom: var(--lw-thick) solid var(--ink); padding: var(--sp-1) 6px; }
+  th, td { padding: 2px 6px; border-bottom: var(--lw-thin) solid var(--rule); text-align: left; font-weight: 400; }
   td.num { text-align: right; font-variant-numeric: tabular-nums; }
-  tr.sub th, tr.sub td { font-weight: 600; border-top: 1px solid var(--line); }
-  tr.total th, tr.total td { background: var(--cream); }
-  .masses { margin: 10px 0 6px; color: var(--dim); }
-  .checks { margin: 4px 0 0; padding-left: 18px; color: #7a1d12; }
-  .checks li.warn { color: #6b4a00; }
+  tr.sub th, tr.sub td { font-weight: 600; border-top: var(--lw-thin) solid var(--rule-strong); }
+  tr.total th, tr.total td { background: var(--surface-2); }
+  .masses { margin: var(--sp-3) 0 6px; color: var(--ink-3); }
+  .checks { margin: var(--sp-1) 0 0; padding: 0; list-style: none; }
+  .checks li { color: var(--fail); background: var(--fail-soft); padding: var(--sp-1) var(--sp-2); margin-bottom: 2px; }
+  .checks li.warn { color: var(--warn); background: var(--warn-soft); }
 </style>
