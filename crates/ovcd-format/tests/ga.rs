@@ -188,8 +188,10 @@ fn dry_bulk_shows_its_own_containment() {
     for file in DRY {
         for (_, r) in computed(file) {
             let g = &r["geometry"];
-            let (hold_h, top_w, bottom_w) = (
-                g["hold_height_m"].as_f64().unwrap(),
+            // The hold floor is the inner bottom (#193), not `depth - hold_height_m`: the core's hold
+            // height runs on up to the top of the coaming.
+            let (inner_bottom, top_w, bottom_w) = (
+                r["drawing"]["double_bottom_m"].as_f64().unwrap(),
                 g["hold_top_width_m"].as_f64().unwrap(),
                 g["hold_bottom_width_m"].as_f64().unwrap(),
             );
@@ -205,8 +207,8 @@ fn dry_bulk_shows_its_own_containment() {
                 .map(|p| p[1].as_f64().unwrap())
                 .collect();
             assert!(
-                ys.iter().any(|y| close(*y, depth - hold_h)) && ys.iter().any(|y| close(*y, depth)),
-                "{file}: the hold spans the hold height"
+                ys.iter().any(|y| close(*y, inner_bottom)) && ys.iter().any(|y| close(*y, depth)),
+                "{file}: the hold spans the inner bottom to the deck"
             );
             let hx = xs(&hidden[0]["points_m"]);
             assert!(close(
@@ -266,7 +268,20 @@ fn gas_shows_its_tank_arrangement() {
                     .iter()
                     .all(|c| close(c["radius_m"].as_f64().unwrap(), od / 2.0))
             );
-            let hidden_arcs = |d: &Value| of_layer(d, "HIDDEN", "arc").len();
+            // A head is one arc centre. Its arc may be split between HIDDEN and OBJECT where the
+            // tank stands through the deck (#195), and the plan may draw a head twice (its widest
+            // outline and the part above the deck), so heads are counted by distinct centre and
+            // radius.
+            let hidden_arcs = |d: &Value| {
+                let mut heads: Vec<String> = ["HIDDEN", "OBJECT"]
+                    .iter()
+                    .flat_map(|layer| of_layer(d, layer, "arc"))
+                    .map(|e| e["centre_m"].to_string())
+                    .collect();
+                heads.sort();
+                heads.dedup();
+                heads.len()
+            };
             assert_eq!(
                 hidden_arcs(&v.side_elevation),
                 2 * n_long,
@@ -277,8 +292,12 @@ fn gas_shows_its_tank_arrangement() {
                 2 * n_long * n_wide,
                 "{file}: two heads for each tank of the plan"
             );
-            assert!(
-                of_layer(&v.side_elevation, "HIDDEN", "polyline").is_empty(),
+            // No hold in a gas barge. The one hidden polyline there may be is the wing ballast
+            // tank band (#196), which is there only when the results give a wing tank width.
+            let wing = r["drawing"]["wing_tank_width_m"].as_f64().unwrap_or(0.0) > 0.0;
+            assert_eq!(
+                of_layer(&v.side_elevation, "HIDDEN", "polyline").len(),
+                usize::from(wing),
                 "no hold in a gas barge"
             );
         }

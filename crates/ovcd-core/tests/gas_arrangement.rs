@@ -261,3 +261,97 @@ fn no_feasible_fit_has_a_tank_longer_than_seven_diameters() {
         "only {refused_for_slenderness} refused"
     );
 }
+
+// Label: property. This test states a rule of the bisection, with the lengths it relies on checked
+// in the test itself, not a printed number.
+//
+// Issue #57: `smallest_viable_loa` must treat a length with exactly zero capacity as NOT viable
+// (`volume_capacity_t > 0.0`). The mutant `>=` would treat it as viable.
+//
+// Worked out. Beam 12 m, LNG, draught cap 3 m, search range 10 m to 60 m:
+//  - the first midpoint is 0.5 * (10 + 60) = 35 m;
+//  - at 35 m the hull has no cargo area, so the capacity is exactly 0.0 (asserted below);
+//  - at 60 m the capacity is positive (asserted below), so the search does not return infinity;
+//  - the real code therefore moves `lo` up to 35 and can only return a length above 35 m;
+//  - the mutant would move `hi` down to 35 and keep halving towards 10 m, so it could only return
+//    a length at most 35 m (it would stop at 10.1 m).
+// The answer must lie above the last length known to have zero capacity (35 m) and at most the
+// first length known to have capacity (40 m, asserted below).
+#[test]
+fn the_bisection_treats_a_zero_capacity_midpoint_as_not_viable() {
+    let o = FitOptions::for_smallest_viable_loa();
+    let cap = |loa: f64| fit(loa, 12.0, "LNG", 3.0, &o).unwrap().volume_capacity_t;
+    assert_eq!(
+        cap(35.0),
+        0.0,
+        "35 m (the first midpoint) must have exactly zero capacity"
+    );
+    assert!(cap(40.0) > 0.0);
+    assert!(cap(60.0) > 0.0);
+    let loa = smallest_viable_loa(12.0, "LNG", 3.0, 10.0, 60.0, &o).unwrap();
+    assert!(loa > 35.0 && loa <= 40.0, "got {loa}");
+    assert!(cap(loa) > 0.0);
+}
+
+// Label: property. States the two facts that make the `&&` and `>` in the extra-clearance loop of
+// `fit` equivalent mutants (issue #58; the reasoning is in the comment at that line).
+//
+// With a fill ratio of 0 every candidate has a tank (diameter above zero) but exactly zero
+// capacity: the case the mutants `||` and `>=` would let into the search. Worked out: the cargo
+// volume is the tank volume times the fill ratio, so it is 0.0 and the payload is 0.0 (it is
+// capped by the capacity). The `feasible_geometry` check needs a positive cargo volume, so it
+// fails and the result is infeasible.
+#[test]
+fn a_zero_capacity_arrangement_is_infeasible_and_carries_nothing() {
+    let o = FitOptions {
+        fill_ratio: 0.0,
+        ..FitOptions::default()
+    };
+    let f = fit(90.0, 14.8, "LNG", 3.0, &o).unwrap();
+    assert!(f.tank_od_m > 0.0, "the hull must have tanks for this case");
+    assert_eq!(f.volume_capacity_t, 0.0);
+    assert_eq!(f.payload_t, 0.0);
+    assert!(!f.feasible);
+    assert!(
+        f.failed_checks
+            .iter()
+            .any(|c| c.starts_with("feasible_geometry")),
+        "{:?}",
+        f.failed_checks
+    );
+}
+
+// Label: property. These two tests state the facts that make the guard `cs < 0.0` in `fit` (issue
+// #59) an equivalent mutant; the reasoning is in the comment at that line.
+//
+// Worked out for the first: with a cap of 5 m and two tanks across, `cs` is
+// (6 - 2 * 5) / 2 = -2 m, below zero. A 15 m hull has no room for tank heads, so the full-beam
+// tank has no usable diameter and the guard is reached. No arrangement can be made, so the hull is
+// reported infeasible with no capacity and no tank.
+#[test]
+fn a_hull_too_narrow_for_tanks_at_the_cap_gets_no_candidate() {
+    let o = FitOptions {
+        max_tank_od_m: 5.0,
+        tanks_wide: vec![2],
+        ..FitOptions::default()
+    };
+    let f = fit(15.0, 6.0, "LNG", 3.0, &o).unwrap();
+    assert!(!f.feasible);
+    assert_eq!(f.volume_capacity_t, 0.0);
+    assert_eq!(f.tank_od_m, 0.0);
+    assert_eq!(f.binding, "no cargo area");
+}
+
+// Worked out: IGC_2G needs the d(V) of the rule, at least 0.8 m; IGC_2G_EXACT needs d(V) less the
+// insulation, 0.8 m less 0.35 m = 0.45 m at least (the insulation is fixed at 350 mm). Either is
+// above any negative clearance.
+#[test]
+fn the_side_clearance_rule_is_never_below_0_45_m() {
+    for ruleset in RULESETS {
+        for total_m3 in [0.0, 1.0, 500.0, 2_000.0, 10_000.0, 100_000.0] {
+            let per_tank = total_m3 / 2.0;
+            let need = required_side_clearance(ruleset, 6.0, total_m3, per_tank, 350.0).unwrap();
+            assert!(need >= 0.45 - 1e-12, "{ruleset} {total_m3}: {need}");
+        }
+    }
+}

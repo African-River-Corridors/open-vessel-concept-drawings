@@ -11,9 +11,28 @@ lightship ±15 / 20 / 30 % and deadweight ±7.5 / 10 / 15 % at high / medium / l
 basis are therefore its figure plus its confidence. `results.md` shows each calibrated result against
 its band and marks cases outside it. `python -m vessel_designer.calibration --check` prints one
 `::warning` annotation per case outside its band; CI runs it. **A band miss is a warning, never a
-failure**, while the model is in development; a crash still fails. The errors are **in-sample**: the
-factors in `factors.yaml` were fitted to the same cases (the container factor to one case).
+failure**, while the model is in development; a crash still fails. The errors of the first 12 cases
+are **in-sample**: the factors in `factors.yaml` were fitted to the same cases (the container factor to
+one case). The errors of held-out cases are **out of sample** (next section).
 To add a case, give it a `confidence`; it is banded from then on.
+
+## Held-out cases (issue #3)
+
+A case with a `held_out` marker (a one-line reason) is run and banded but **never used to fit** k or Cb:
+`fit_factors` drops it, so `factors.yaml` does not move when held-out cases are added. The 62 cases
+added for issue #3 are all held out. Each carries the source text as printed (`published`), a `source`
+that starts with an id in `sources.yaml` (`web_sources`), and what the research note suggested
+(`note_suggests`).
+
+- **Deck barges** have `hold_type: deck` and `run_as: box`. The core has no deck model, so they run
+  with the box k and box Cb. This tests whether the box model carries over. There is no deck factor.
+- **`water_density_t_m3`** (1.025 for sea-going or saltwater figures) sets the density of the predicted
+  DWT. Left out, it is 1.000.
+- **`not_yet_runnable_cases`** (tank, gas and the motor container point) have no hull model in the
+  calibration path. `results.md` lists their figures and the reason; they are never run.
+- **`cross_check_only`** and **`exclude_from_fit_cb`** cases are shown in section 4 of `results.md`
+  but left out of its summary. A cross-check has no band.
+- A figure the source does not give is left out of the case. Nothing is estimated or filled in.
 
 ## Pass 1 findings (core as first ported)
 

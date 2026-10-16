@@ -12,12 +12,13 @@
 //! `simulate` (every `ValueError` from the gas path) is a recorded error.
 
 use crate::EvalError;
-use crate::eval::{checks_json, num, ok, raised};
+use crate::eval::{aft_json, checks_json, gas_separation_json, num, ok, raised};
 use crate::gas_stability::condition_json;
 use ovcd_core::barge_capacity::{self, BargeCapacityInputs, BargeCapacityResult};
 use ovcd_core::cargo::{CARGO_DATABASE, CargoProperties};
 use ovcd_core::checks::Check;
 use ovcd_core::gas_arrangement::{self as ga, DEFAULT_DEPTHS_M, FitOptions, RULESETS};
+use ovcd_core::gas_separation::GasSeparationInputs;
 use ovcd_core::gas_stability::{self as gs, GasCapacityResult};
 use ovcd_core::pyfmt::{fixed, py_str};
 use ovcd_core::pystr::{parse_float, repr_str};
@@ -146,6 +147,9 @@ fn py_div(a: f64, b: f64) -> R<f64> {
     Ok(a / b)
 }
 
+// Mutation survivors (#64), `>` to `>=` in `py_max` and `<` to `<=` in `py_min`: equivalent. They
+// differ only on a tie, and on a tie both arguments are the same number, so either is returned.
+// (A tie of 0.0 and -0.0 would differ in sign only; neither caller can make a -0.0.)
 fn py_max(a: f64, b: f64) -> f64 {
     if b > a { b } else { a }
 }
@@ -207,6 +211,11 @@ fn env(
     deep: bool,
 ) -> EnvironmentInputs {
     let surface = bottom_w + 2.0 * slope * depth;
+    // Mutation survivors (#64), in the struct below: deleting `bank_slope` and deleting
+    // `apply_squat_limit` are equivalent. The core never reads `bank_slope` (the surface width,
+    // set above, carries the slope), and `apply_squat_limit` defaults to `true`, which is what the
+    // channel gets; deep water gets `false`, and the core does not apply squat in deep water
+    // whatever this flag says (`squat_applies` also tests `is_deep_water`).
     EnvironmentInputs {
         name: name.to_string(),
         water_depth: depth,
@@ -245,6 +254,10 @@ fn channel_limit(ch: &Map<String, Value>) -> R<Option<f64>> {
 
 fn h_over_t(ch: &Map<String, Value>, t: f64) -> R<Value> {
     match ch.get("depth_m") {
+        // Mutation survivor (#64), `t > 0.0` to `t >= 0.0`: equivalent. `t` is the loaded draught,
+        // which is above zero for every hull: displacement over `cb * l * b` for a barge, and the
+        // light draught the hydrostatics gives (never zero, even for a 0.5 m hull) for a hull
+        // that carries nothing.
         Some(v) if truthy(v) && t > 0.0 => Ok(num(py_float(v, "params.channel.depth_m")? / t)),
         _ => Ok(Value::Null),
     }
@@ -273,6 +286,12 @@ fn curves(p: &Map<String, Value>, l: f64, b: f64, t: f64, cb: f64, disp: f64) ->
     if t <= 0.0 {
         return Ok(json!([]));
     }
+    // Mutation survivors (#64), deleting one of these fields below: equivalent, each for its own
+    // reason. `loa` and `displacement_tonnes` are never read by the resistance code (it uses `lwl`,
+    // set to the same length, and works out the displacement itself). `speed_step_knots` is 0.5,
+    // which is also the default. `engine_power_kw` (1e6 here, 2400 by default) only sets whether a
+    // speed is "power available", which feeds the service speed; `simulate` lists neither, and the
+    // curve is not cut by it.
     let inputs = ResistanceInputs {
         loa: l,
         lwl: l,
@@ -351,6 +370,92 @@ fn opt_num(x: Option<f64>) -> Value {
 }
 
 /// `simulate(params)`.
+/// The structural values the core already computes, for the GA view (#192). Nothing is worked out
+/// here: each key is read from the core's result or inputs, and is `null` where the core has no
+/// such value on this path.
+///
+/// - Gas: the double bottom, support, dome and wing tank values come from the converged
+///   arrangement (`gas_basis`); `null` for a hull too small to hold one.
+/// - `separation` is the core's gas separation result (gas only). `opening_setback_m` and
+///   `fwd_end_bulkhead_m` are the separation inputs it was computed from.
+/// - `aft_arrangement` is the core's aft block: `null` for a pushed barge, which has none.
+/// - Dry bulk: `double_bottom_m` is the inner bottom height, `hatch_coaming_height_m` the coaming.
+fn structure_json(
+    r: &BargeCapacityResult,
+    separation_inputs: Option<&GasSeparationInputs>,
+    dry: Option<&BargeCapacityInputs>,
+) -> Vec<(&'static str, Value)> {
+    let basis = r.gas_basis.as_ref().map(|b| &b.inputs);
+    let sep_in = separation_inputs.cloned().unwrap_or_default();
+    let is_gas = r.separation.is_some();
+    vec![
+        (
+            "double_bottom_m",
+            match (basis, dry) {
+                (Some(b), _) => opt_num(b.double_bottom_height),
+                (None, Some(i)) => num(i.double_bottom_height_bulk),
+                _ => Value::Null,
+            },
+        ),
+        (
+            "hatch_coaming_height_m",
+            dry.map_or(Value::Null, |i| num(i.coaming_height)),
+        ),
+        (
+            "tank_support_height_m",
+            basis.map_or(Value::Null, |b| num(b.tank_support_height)),
+        ),
+        (
+            "dome_height_m",
+            basis.map_or(Value::Null, |b| num(b.dome_height)),
+        ),
+        (
+            "wing_tank_width_m",
+            basis.map_or(Value::Null, |b| opt_num(b.wing_tank_width)),
+        ),
+        (
+            "wing_tank_gap_m",
+            basis.map_or(Value::Null, |b| num(b.wing_tank_gap)),
+        ),
+        (
+            "wing_tank_height_ratio",
+            basis.map_or(Value::Null, |b| num(b.wing_tank_height_ratio)),
+        ),
+        (
+            "opening_setback_m",
+            if is_gas {
+                num(sep_in.opening_setback_m)
+            } else {
+                Value::Null
+            },
+        ),
+        (
+            "fwd_end_bulkhead_m",
+            if is_gas {
+                num(sep_in.fwd_end_bulkhead_m)
+            } else {
+                Value::Null
+            },
+        ),
+        (
+            "separation",
+            r.separation
+                .as_ref()
+                .map_or(Value::Null, gas_separation_json),
+        ),
+        (
+            "aft_arrangement",
+            r.aft_arrangement.as_ref().map_or(Value::Null, aft_json),
+        ),
+    ]
+}
+
+/// The `drawing` object: the structural values as an object, kept out of `geometry` and out of the
+/// results hash.
+fn drawing_json(extra: Vec<(&'static str, Value)>) -> Value {
+    Value::Object(extra.into_iter().map(|(k, v)| (k.to_string(), v)).collect())
+}
+
 fn simulate(p: &Map<String, Value>) -> R<Value> {
     let vessel_id = match p.get("vessel") {
         None => "box_barge",
@@ -450,6 +555,7 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
         "hold_bottom_width_m": opt_num(r.hold_bottom_width_m),
         "insulation_thickness_mm": opt_num(r.insulation_thickness_mm),
     });
+    let drawing = drawing_json(structure_json(&r, inp.separation.as_ref(), Some(&inp)));
     Ok(json!({
         "vessel": label,
         "cargo": cargo.name,
@@ -458,6 +564,7 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
         "arrangement": Value::Null,
         "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(cb) },
         "geometry": geo,
+        "drawing": drawing,
         "results": {
             "cargo_t": num(cargo_t),
             "cargo_volume_bound_t": num(cargo_volume_bound),
@@ -576,6 +683,8 @@ fn simulate_gas(
     let t = if f.payload_t > 0.0 {
         f.draft_at_payload_m
     } else {
+        // Mutation survivor (#64), the guard `x != 0.0` to `true` or `false`: equivalent. When `x`
+        // is 0.0 both arms give 0.0, and the guard only chooses between `x` and 0.0.
         match r.light_draft_m {
             Some(x) if x != 0.0 => x,
             _ => 0.0,
@@ -679,6 +788,7 @@ fn simulate_gas(
         "bottom_clearance_m": opt_num(r.bottom_clearance_m),
         "insulation_thickness_mm": opt_num(r.insulation_thickness_mm),
     });
+    let drawing = drawing_json(structure_json(r, f.engine_inputs.separation.as_ref(), None));
     let air_loaded = r.air_draft_top_above_keel_m - t;
     Ok(json!({
         "vessel": label,
@@ -687,6 +797,7 @@ fn simulate_gas(
         "self_propelled": self_propelled,
         "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(cb) },
         "geometry": geo,
+        "drawing": drawing,
         "arrangement": {
             "ruleset": ruleset,
             "fill_ratio": num(fill),

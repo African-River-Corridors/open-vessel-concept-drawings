@@ -1,4 +1,4 @@
-//! JSON adapter for the `gas_stability` entry point: `box_gz`, `segment_fill`,
+//! JSON adapter for the `gas_stability` entry point: `box_gz`, `box_condition`, `segment_fill`,
 //! `criteria_set_for` and `assess`. It copies the output shapes of the Python functions,
 //! including which numbers are ints.
 //!
@@ -222,6 +222,23 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
             )
             .map(float),
         ),
+        "box_condition" => {
+            let criteria_set = args
+                .get("criteria_set")
+                .and_then(Value::as_str)
+                .unwrap_or(gs::DEFAULT_CRITERIA_SET);
+            py_result(
+                gs::box_condition(
+                    num_arg(args, "beam")?,
+                    num_arg(args, "depth")?,
+                    num_arg(args, "draught")?,
+                    num_arg(args, "kg")?,
+                    opt_num_arg(args, "free_surface_m", 0.0)?,
+                    criteria_set,
+                )
+                .map(|c| condition_json(&c)),
+            )
+        }
         "segment_fill" => {
             let fraction = num_arg(args, "volume_fraction")?;
             if let Some((negative, magnitude)) = args.get("radius").and_then(int_literal) {

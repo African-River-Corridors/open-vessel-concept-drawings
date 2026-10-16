@@ -3,7 +3,7 @@
 //! and convoy classes are separate ladders; past the largest class there is a flag; the scheme never
 //! changes by itself.
 //!
-//! Label: property.
+//! Label: property
 
 use ovcd_core::vessel_classes::{CLASSES, find, formation_kind, ladder, place, schemes};
 

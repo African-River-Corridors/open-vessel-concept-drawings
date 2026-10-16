@@ -7,6 +7,27 @@
 
 # hold_type: box (vertical inner sides) | container. All cases below are pushed barges.
 # exclude_from_fit: a reason, when the published figures cannot all describe one condition.
+#
+# Held-out cases (issue #3): a case with a truthy `held_out` (a one-line reason) is run and banded but
+# NEVER used to fit k or Cb (fit_factors drops it). The 12 first cases are in-sample; every case added
+# for issue #3 is held out, so its error is out of sample.
+# Fields only the held-out cases use:
+#   hold_type: deck  a flat deck barge. The core has no deck model, so `run_as: box` says the case is
+#                    run as a box barge (box k, box Cb): does the box model carry over to deck barges?
+#   run_as           the hold type the core runs (deck -> box).
+#   water_density_t_m3  density for the predicted DWT: 1.025 for sea-going or saltwater figures.
+#                    Omitted (1.000, fresh) for river figures.
+#   published        the observed figures as the source prints them (units and wording kept).
+#   note_suggests    what the research note suggested (fit | hold out | cross-check | exclude). Kept so
+#                    it is not lost; it decides nothing.
+#   cross_check_only a reason: shown in the report, never banded.
+#   flags, note      conflicts and cautions, as the research recorded them.
+#   observed.cargo_capacity_t   a published cargo capacity that is not a DWT: shown, never banded.
+#   observed.tank_capacity_m3, observed.lng_capacity_m3   capacities: shown, never banded.
+# A missing figure is absent (no key). Nothing is estimated, rounded or filled in.
+# Web sources are listed in sources.yaml under `web_sources`; each case `source` starts with its id.
+# `not_yet_runnable_cases` (at the end) are listed in the report with their figures and the reason;
+# they are never run.
 dry_barge:
   - id: para-mississippi-2200
     hold_type: box
@@ -133,7 +154,955 @@ dry_barge:
     source: "Practitioner statements (eng-tips / proz.com answers via search summary): lightship 280-310 st; light draft 1 ft 6 in - 1 ft 10 in. Not a primary source."
     confidence: low
 
+  - id: cbc-1951-deck-195x35
+    hold_type: deck
+    run_as: box
+    what: "Canal Barge CBC 1951–1954, inland deck barge, 4 sisters, 2017"
+    loa_m: 59.44
+    beam_m: 10.67
+    depth_m: 3.20
+    draught_m: 2.59
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 301, dwt_t: 1297}
+    published: "lightship 332 ST; DWT 1,430 ST saltwater at 8 ft 6 in"
+    source: "S1 — Canal Barge Company, spec sheet CBC 1951-1954 (Wayback copy), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+  - id: cbc-2762-deck-276x55
+    hold_type: deck
+    run_as: box
+    what: "Canal Barge CBC 2762, ABS deck barge, 1981"
+    loa_m: 84.12
+    beam_m: 16.76
+    depth_m: 4.67
+    draught_m: 3.58
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 898, dwt_t: 3690}
+    published: "lightship 990 ST; DWT 4,068 ST; max draft 11 ft 9 in"
+    source: "S2 — Canal Barge Company, spec sheet CBC 2762 (Wayback copy), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "sheet does not tie DWT to max draft"
+  - id: cbc-4508-deck-200x50
+    hold_type: deck
+    run_as: box
+    what: "Canal Barge CBC 4508, ABS deck barge, 2010"
+    loa_m: 60.96
+    beam_m: 15.24
+    depth_m: 4.27
+    draught_m: 3.66
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 443, dwt_t: 2546}
+    published: "lightship 488 ST; DWT 2,807 ST saltwater; max draft 12.0 ft"
+    source: "S3 — Canal Barge Company, spec sheet CBC 4508 (Wayback copy), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+  - id: cbc-4509-deck-260x54
+    hold_type: deck
+    run_as: box
+    what: "Canal Barge CBC 4509–4512, inland deck barge, 4 sisters, 2014–16"
+    loa_m: 79.25
+    beam_m: 16.46
+    depth_m: 3.66
+    draught_m: null
+    observed: {lightship_t: 591}
+    published: "lightship 652 ST; DWT 3,895 LT (no draught given — DWT not usable)"
+    source: "S4 — Canal Barge Company, spec sheet CBC 4509-4512 (Wayback copy), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "mixed units on one sheet (ST and LT)"
+    note: "Units mixed on one sheet: lightship printed in ST, DWT in LT. Each converted as printed."
+  - id: cbc-miami-deck-250x80
+    hold_type: deck
+    run_as: box
+    what: "Canal Barge MIAMI, ABS deck barge, 1993"
+    loa_m: 76.20
+    beam_m: 24.38
+    depth_m: 4.88
+    draught_m: 3.51
+    observed: {lightship_t: 1106}
+    published: "lightship 1,089 LT; max draft 11.5 ft; DWT blank"
+    source: "S5 — Canal Barge Company, spec sheet CBC MIAMI (Wayback copy), accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "same lightship as SAVANNAH (260 ft): copy error likely"
+    note: "MIAMI vs SAVANNAH (Canal Barge): both sheets print lightship 1,089 LT, but one barge is 250 ft and one is 260 ft long. One value is likely copied. Both kept at low confidence."
+  - id: cbc-savannah-deck-260x80
+    hold_type: deck
+    run_as: box
+    what: "Canal Barge SAVANNAH, ABS deck barge, 1994"
+    loa_m: 79.25
+    beam_m: 24.38
+    depth_m: 4.88
+    draught_m: 3.51
+    observed: {lightship_t: 1106}
+    published: "lightship 1,089 LT; max draft 11.5 ft; DWT blank"
+    source: "S6 — Canal Barge Company, spec sheet CBC SAVANNAH (Wayback copy), accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "same lightship as MIAMI (250 ft): copy error likely"
+    note: "MIAMI vs SAVANNAH (Canal Barge): both sheets print lightship 1,089 LT, but one barge is 250 ft and one is 260 ft long. One value is likely copied. Both kept at low confidence."
+  - id: cbc-cordie-deck-260x72
+    hold_type: deck
+    run_as: box
+    what: "Canal Barge CORDIE (2013) and GWENDOLYN (2012), ABS deck barges, sisters"
+    loa_m: 79.25
+    beam_m: 21.95
+    depth_m: 4.88
+    draught_m: 3.86
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 1112, dwt_t: 5690}
+    published: "lightship 1,094.69 LT; DWT 5,600 LT; max draft 12.68 ft summer load line"
+    source: "S7 — Canal Barge Company, spec sheets CORDIE and GWENDOLYN (Wayback copy), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+  - id: cbc-julius-deck-300x100
+    hold_type: deck
+    run_as: box
+    what: "Canal Barge JULIUS, ABS deck barge, 2013"
+    loa_m: 91.44
+    beam_m: 30.48
+    depth_m: 5.79
+    draught_m: 4.82
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 1997, dwt_t: 10000}
+    published: "lightship 1,965 LT; DWT 9,842 LT; max draft 15.8 ft summer load line"
+    source: "S8 — Canal Barge Company, spec sheet JULIUS (Wayback copy), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+  - id: cbc-oceanus-deck-400x105
+    hold_type: deck
+    run_as: box
+    what: "Canal Barge OCEANUS, ABS deck barge, 2010"
+    loa_m: 121.92
+    beam_m: 32.00
+    depth_m: 7.62
+    draught_m: 6.40
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 3551, dwt_t: 19678}
+    published: "lightship 3,495 LT; DWT 21,691 ST saltwater; max draft 21 ft"
+    source: "S9 — Canal Barge Company, spec sheet OCEANUS (Wayback copy), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "mixed units (LT and ST)"
+    note: "Units mixed on one sheet: lightship printed in LT, DWT in ST. Each converted as printed. The sheet is an image-only PDF, read from the rendered page."
+  - id: cbc-761-deck-180x54
+    hold_type: deck
+    run_as: box
+    what: "Canal Barge CBC 761/762, ABS deck barges, 1998"
+    loa_m: 54.86
+    beam_m: 16.46
+    depth_m: 3.66
+    draught_m: 2.90
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 345, dwt_t: 2585}
+    published: "lightship 340 LT; DWT 2,544 LT; max draft 9.5 ft"
+    source: "S10 — Canal Barge Company, spec sheet CBC 761/762 (Wayback copy), accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "exclude"
+    flags: "EXCLUDE: implied Cb > 1"
+    note: "Lightship 340 LT + DWT 2,544 LT at 9.5 ft gives Cb 1.09 (saltwater) or 1.12 (fresh). The figures cannot all be at 9.5 ft. Same pattern as para-mississippi-2200."
+    exclude_from_fit_cb: "lightship 340 LT + DWT 2,544 LT at 9.5 ft gives Cb 1.09 (saltwater) or 1.12 (fresh): the figures cannot all be at 9.5 ft"
+  - id: cbc-758-spud-180x54
+    hold_type: deck
+    run_as: box
+    what: "Canal Barge CBC 758 (1990) / CMS 751 (1977), inland spud barges"
+    loa_m: 54.86
+    beam_m: 16.46
+    depth_m: 3.66
+    draught_m: null
+    observed: {light_draught_m: 0.52}
+    published: "light draft 1 ft 8.5 in (0.52 m); DWT 2,367 ST (no draught given)"
+    source: "S11 — Canal Barge Company, spec sheet CBC 758 / CMS 751 (Wayback copy), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "cross-check"
+    flags: "light draught only, like stretch-hopper-light"
+    cross_check_only: "light draught only, like stretch-hopper-light"
+  - id: lm3004-deck-288ft
+    hold_type: deck
+    run_as: box
+    what: "Barge LM 3004, sea-going deck barge, 2007, IBS class"
+    loa_m: 87.86
+    beam_m: 24.40
+    depth_m: 5.50
+    draught_m: 4.30
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 1450, dwt_t: 7388}
+    published: "lightship 1,450 MT; DWT 7,388 MT; draft 4.3 m"
+    source: "S12 — Barge LM 3004 technical sheet, 1 page, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+  - id: itk-cargo-barge-330ft
+    hold_type: deck
+    run_as: box
+    what: "330 × 90 × 21 ft cargo barge (crane-carrying), Indonesia; unnamed"
+    loa_m: 100.58
+    beam_m: 27.43
+    depth_m: 6.40
+    draught_m: null
+    observed: {lightship_t: 1802.99}
+    published: "lightship 1,802.99 t (metric stated); full-load deck cargo 10,600 t; no draught"
+    source: "S13 — Santoso et al., Indonesian Journal of Maritime Technology 4(1), 2026, pp. 51-53 (general particulars, Fig. 2, equilibrium data), accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "crawler crane on deck; unclear if inside lightship"
+    note: "The paper's figure shows a crawler crane on deck. The paper does not say whether the crane is inside the 1,802.99 t lightship. Lightship is metric as stated."
+  - id: vl-deck-365ft
+    hold_type: deck
+    run_as: box
+    what: "365 ft deck cargo barge, 2009, China, ABS (broker, unnamed)"
+    loa_m: 111.25
+    beam_m: 28.04
+    depth_m: 6.93
+    draught_m: 5.42
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 2330, dwt_t: 12040}
+    published: "lightship approx. 2,330 t; DWT approx. 12,040 t; displacement approx. 14,370 t; max draft 5.42 m"
+    source: "S14 — VL Maritime Services, Barges (all types), specification tables, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "brief says 111.25 × 28.00 × 6.95"
+    note: "The broker's brief and its spec table give slightly different dimensions and DWT. The case uses the spec table."
+  - id: vl-deck-345ft
+    hold_type: deck
+    run_as: box
+    what: "345 ft deck cargo barge, 2008, China, BV (broker, unnamed)"
+    loa_m: 105.16
+    beam_m: 27.43
+    depth_m: 6.40
+    draught_m: 5.02
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 1780, dwt_t: 10165}
+    published: "lightship approx. 1,780 t; DWT approx. 10,165 t; max draft 5.02 m"
+    source: "S14 — VL Maritime Services, Barges (all types), specification tables, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "brief says 105 × 27.50 × 6.40, DWT approx. 10,000"
+    note: "The broker's brief and its spec table give slightly different dimensions and DWT. The case uses the spec table."
+  - id: vl-deck-300ft
+    hold_type: deck
+    run_as: box
+    what: "300 ft deck barges, 2 sisters, 2007/08, ABS (broker, unnamed)"
+    loa_m: 91.44
+    beam_m: 27.43
+    depth_m: 5.48
+    draught_m: 4.29
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 1300, dwt_t: 8154}
+    published: "lightweight approx. 1,300 t; DWT approx. 8,154 t; draft max approx. 4.29 m"
+    source: "S14 — VL Maritime Services, Barges (all types), specification tables, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+  - id: vl-deck-250ft
+    hold_type: deck
+    run_as: box
+    what: "250 ft deck cargo barges, 3 sisters, 1998, ABS (broker, unnamed)"
+    loa_m: 76.20
+    beam_m: 21.95
+    depth_m: 4.88
+    draught_m: 3.88
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 952, cargo_capacity_t: 4989}
+    published: "lightship 937.5 LT approx. = 952 t; cargo capacity at max load line 4,989 t; draft max 3.88 m"
+    source: "S14 — VL Maritime Services, Barges (all types), specification tables, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "cargo capacity, not DWT"
+  - id: jml5019-pontoon
+    hold_type: deck
+    run_as: box
+    what: "JML 5019 flat-top pontoon barge, 2 spuds, BV (Jenkins Marine)"
+    loa_m: 50.00
+    beam_m: 18.80
+    depth_m: 3.00
+    draught_m: 2.32
+    water_density_t_m3: 1.025
+    observed: {cargo_capacity_t: 1734, light_draught_m: 0.49}
+    published: "light draft 0.49 m; loaded draft 2.32 m; cargo capacity 1,734 t"
+    source: "S15 — Jenkins Marine, JML 5019 spec sheet, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "cross-check"
+    flags: "cargo capacity, not DWT"
+    cross_check_only: "cargo capacity, not DWT"
+  - id: touax-193-194-2021
+    hold_type: box
+    what: "Touax 193 / 194, 2021 — pushed dry-cargo barge (Touax listing)"
+    loa_m: 79.00
+    beam_m: 11.40
+    depth_m: 3.80
+    draught_m: 3.50
+    observed: {dwt_t: 2528.264}
+    published: "DWT 2,528.264 t at draft 3.5 m"
+    source: "T1 — Touax River Barges listing, Touax 193 / 194, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+  - id: touax-seine-2020
+    hold_type: box
+    what: "Touax Seine 2020, Seine — pushed dry-cargo barge (Touax listing)"
+    loa_m: 79.00
+    beam_m: 11.40
+    depth_m: 3.80
+    draught_m: 3.50
+    observed: {dwt_t: 2553.427}
+    published: "DWT 2,553.427 t at draft 3.5 m"
+    source: "T2 — Touax River Barges listing, Touax Seine 2020, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+  - id: taf-seine-2008
+    hold_type: box
+    what: "TAF Seine 2008, Seine — pushed dry-cargo barge (Touax listing)"
+    loa_m: 79.20
+    beam_m: 11.40
+    depth_m: 3.70
+    draught_m: 3.55
+    observed: {dwt_t: 2516}
+    published: "DWT 2,516 t at draft 3.55 m"
+    source: "T3 — Touax River Barges listing, TAF Seine 2008, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+  - id: taf-seine-2000
+    hold_type: box
+    what: "TAF Seine 2000, Seine — pushed dry-cargo barge (Touax listing)"
+    loa_m: 79.00
+    beam_m: 11.40
+    depth_m: 3.80
+    draught_m: 3.65
+    observed: {dwt_t: 2664}
+    published: "DWT 2,664 t at draft 3.65 m"
+    source: "T4 — Touax River Barges listing, TAF Seine 2000, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+  - id: taf-seine-1997
+    hold_type: box
+    what: "TAF Seine 1997, Seine — pushed dry-cargo barge (Touax listing)"
+    loa_m: 76.50
+    beam_m: 11.44
+    depth_m: 4.00
+    draught_m: 3.80
+    observed: {dwt_t: 2700}
+    published: "DWT 2,700 t at draft 3.8 m"
+    source: "T5 — Touax River Barges listing, TAF Seine 1997, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+  - id: taf-seine-1996
+    hold_type: box
+    what: "TAF Seine 1996, Seine — pushed dry-cargo barge (Touax listing)"
+    loa_m: 76.50
+    beam_m: 10.96
+    depth_m: 5.10
+    draught_m: 3.10
+    observed: {dwt_t: 2016.06}
+    published: "DWT 2,016.06 t at draft 3.1 m"
+    source: "T6 — Touax River Barges listing, TAF Seine 1996, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "'Height' 5.05–5.7 m may include coaming/covers, not moulded depth"
+    note: "Touax 'Height' for these barges may include coamings or covers, not moulded depth. Do not use this case for anything depth-based."
+  - id: taf-seine-1993
+    hold_type: box
+    what: "TAF Seine 1993, Seine — pushed dry-cargo barge (Touax listing)"
+    loa_m: 79.00
+    beam_m: 11.40
+    depth_m: 3.70
+    draught_m: 3.50
+    observed: {dwt_t: 2482}
+    published: "DWT 2,482 t at draft 3.5 m"
+    source: "T7 — Touax River Barges listing, TAF Seine 1993, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+  - id: taf-seine-1981
+    hold_type: box
+    what: "TAF Seine 1981, Seine — pushed dry-cargo barge (Touax listing)"
+    loa_m: 54.13
+    beam_m: 11.44
+    depth_m: 3.70
+    draught_m: 3.35
+    observed: {dwt_t: 1699}
+    published: "DWT 1,699 t at draft 3.35 m"
+    source: "T8 — Touax River Barges listing, TAF Seine 1981, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+  - id: taf-seine-1973
+    hold_type: box
+    what: "TAF Seine 1973, Seine — pushed dry-cargo barge (Touax listing)"
+    loa_m: 70.80
+    beam_m: 11.44
+    depth_m: 3.91
+    draught_m: 3.74
+    observed: {dwt_t: 2546}
+    published: "DWT 2,546 t at draft 3.74 m"
+    source: "T9 — Touax River Barges listing, TAF Seine 1973, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+  - id: taf-rhin-2019-covered
+    hold_type: box
+    what: "TAF Rhin covered 2019 — pushed dry-cargo barge (Touax listing)"
+    loa_m: 90.00
+    beam_m: 11.40
+    depth_m: 4.30
+    draught_m: 4.20
+    observed: {dwt_t: 3557}
+    published: "DWT 3,557 t at draft 4.2 m"
+    source: "T10 — Touax River Barges listing, TAF Rhin covered 2019, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+  - id: taf-rhin-2008-covered
+    hold_type: box
+    what: "TAF Rhin 2008 covered, Danube/Rhine — pushed dry-cargo barge (Touax listing)"
+    loa_m: 88.50
+    beam_m: 11.40
+    depth_m: 5.05
+    draught_m: 4.50
+    observed: {dwt_t: 3599}
+    published: "DWT 3,599 t at draft 4.5 m"
+    source: "T11 — Touax River Barges listing, TAF Rhin 2008 covered, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "'Height' 5.05–5.7 m may include coaming/covers, not moulded depth"
+    note: "Touax 'Height' for these barges may include coamings or covers, not moulded depth. Do not use this case for anything depth-based."
+  - id: taf-rhin-2000
+    hold_type: box
+    what: "TAF Rhin 2000 — pushed dry-cargo barge (Touax listing)"
+    loa_m: 76.42
+    beam_m: 11.36
+    depth_m: 5.70
+    draught_m: 3.98
+    observed: {dwt_t: 2793}
+    published: "DWT 2,793 t at draft 3.98 m"
+    source: "T12 — Touax River Barges listing, TAF Rhin 2000, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "'Height' 5.05–5.7 m may include coaming/covers, not moulded depth"
+    note: "Touax 'Height' for these barges may include coamings or covers, not moulded depth. Do not use this case for anything depth-based."
+  - id: taf-rhin-2001
+    hold_type: box
+    what: "TAF Rhin 2001, Rhine — pushed dry-cargo barge (Touax listing)"
+    loa_m: 76.50
+    beam_m: 11.40
+    depth_m: 5.70
+    draught_m: 3.98
+    observed: {dwt_t: 2793}
+    published: "DWT 2,793 t at draft 3.98 m"
+    source: "T13 — Touax River Barges listing, TAF Rhin 2001, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "'Height' 5.05–5.7 m may include coaming/covers, not moulded depth"
+    note: "Touax 'Height' for these barges may include coamings or covers, not moulded depth. Do not use this case for anything depth-based."
+  - id: taf-rhin-1980-covered
+    hold_type: box
+    what: "TAF Rhin 1980 covered, Rhine — pushed dry-cargo barge (Touax listing)"
+    loa_m: 76.50
+    beam_m: 11.40
+    depth_m: 5.70
+    draught_m: 4.09
+    observed: {dwt_t: 2841}
+    published: "DWT 2,841 t at draft 4.09 m"
+    source: "T14 — Touax River Barges listing, TAF Rhin 1980 covered, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "'Height' 5.05–5.7 m may include coaming/covers, not moulded depth"
+    note: "Touax 'Height' for these barges may include coamings or covers, not moulded depth. Do not use this case for anything depth-based."
+  - id: taf-danube-2008
+    hold_type: box
+    what: "TAF Danube 2008, Danube (Romania) — pushed dry-cargo barge (Touax listing)"
+    loa_m: 88.50
+    beam_m: 11.40
+    depth_m: 3.70
+    draught_m: 2.70
+    observed: {dwt_t: 2026}
+    published: "DWT 2,026 t at draft 2.7 m"
+    source: "T15 — Touax River Barges listing, TAF Danube 2008, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+  - id: taf-parana-2013
+    hold_type: box
+    what: "TAF Parana 2013 (covered and non-covered), Paraná — pushed dry-cargo barge (Touax listing)"
+    loa_m: 59.48
+    beam_m: 16.00
+    depth_m: 3.66
+    draught_m: 3.35
+    observed: {dwt_t: 2500}
+    published: "DWT 2,500 t at draft 3.35 m"
+    source: "T16 — Touax River Barges listing, TAF Parana 2013, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "new-build listings give height 3.65 m and year 2012/2013"
+    note: "The 'new' and 'used' listings give height 3.65 vs 3.66 m and build year 2012 vs 2013. Trivial; kept."
+  - id: taf-mississippi-2011
+    hold_type: box
+    what: "TAF Mississippi 2011, Mississippi — pushed dry-cargo barge (Touax listing)"
+    loa_m: 60.96
+    beam_m: 10.66
+    depth_m: 4.26
+    draught_m: 3.66
+    observed: {dwt_t: 2500}
+    published: "DWT 2,500 t at draft 3.66 m"
+    source: "T17 — Touax River Barges listing, TAF Mississippi 2011, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "exclude"
+    flags: "EXCLUDE: DWT alone implies Cb > 1 (short tons or nominal rating?)"
+    note: "DWT 2,500 t at 3.66 m on 60.96 x 10.66 m gives DWT/(rho L B T) = 1.05 before any lightship. The 't' may be short tons or a nominal rating. Same pattern as hidrovia-lhg-3200."
+    exclude_from_fit_cb: "DWT 2,500 t at 3.66 m gives DWT/(rho L B T) = 1.05 before any lightship: the 't' may be short tons or a nominal rating"
+  - id: meb-dcb23-ptich
+    hold_type: box
+    what: "Ptich / Svisloch, project DCB23, 2012, Western Baltija (sea-river, 4 holds)"
+    loa_m: 99.98
+    beam_m: 16.71
+    depth_m: 8.00
+    draught_m: 5.00
+    water_density_t_m3: 1.025
+    observed: {dwt_t: 6222}
+    published: "DWT 6,222 t at DWL 5.00 m; holds 9,766 m³"
+    source: "M1 — MEB project page, Project DCB23 (Ptich, Svisloch), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "sea-river, deep (D 8.0 m)"
+  - id: meb-dcb24-pola
+    hold_type: box
+    what: "Pola 1 / Pola 2, project DCB24, 2021, Nantong Chang Qing Sha"
+    loa_m: 123.80
+    beam_m: 24.20
+    depth_m: 5.00
+    draught_m: 2.90
+    observed: {dwt_t: 6688}
+    published: "DWT 6,896 t (γ 1.025) / 6,688 t (γ 1.000) at 2.90 m; hold 5,227 m³"
+    source: "M2 — MEB project page, Project DCB24 (Pola 1, Pola 2), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    note: "DWT is given at the same draught in salt and fresh water (6,896 / 6,688 t). That pair implies a lightship by arithmetic, but it is very sensitive to rounding (+-1 t in either value moves it by about +-40 t), so no lightship is recorded. dwt_t is the fresh-water figure."
+  - id: meb-rdb12-samarskaya
+    hold_type: box
+    what: "Samarskaya-1/-2/-3, project RDB12, 2019–20, Nefteflot"
+    loa_m: 95.20
+    beam_m: 16.90
+    depth_m: 5.50
+    draught_m: 3.60
+    observed: {dwt_t: 4121}
+    published: "DWT 4,121 t in river at 3.60 m (4,885 t at sea, 4.00 m); holds 7,463 m³"
+    source: "M3 — MEB project page, Project RDB12 (Samarskaya-1/-2/-3), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+  - id: meb-rdb20-belmax9
+    hold_type: box
+    what: "Belmax 9 / Belmax 10, project RDB20, 2020, Oka SY (6 holds)"
+    loa_m: 118.94
+    beam_m: 22.80
+    depth_m: 4.00
+    draught_m: 2.85
+    observed: {dwt_t: 6000}
+    published: "DWT 6,000 t at 2.85 m (γ 1.00); holds 9,130 m³"
+    source: "M4 — MEB project page, Project RDB20 (Belmax 9, Belmax 10), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "page's L×B×H line uses H = 2.60; depth row 4.00"
+    note: "The page prints an L x B x H product with H = 2.60 that differs from its depth row (4.00). The case uses the depth row."
+
 motor_point:
   # GB 38030.1 draft explanatory note (2018), Tables 3-3/3-4: design-study points.
   # Columns: loa, boa, T, displacement t, cargo t, main power kW. Speed per table.
   source: "calibration/cn_yangtze_gb38030_draft_2018.yaml"
+
+# Held-out cases the dry-barge path cannot run yet: reported with their figures and the reason.
+not_yet_runnable_cases:
+  - id: meb-rob20-belmax
+    hold_type: tank
+    what: "Belmax 1–8, project ROB20 non-self-propelled oil tanker, 2018–19, Oka SY"
+    loa_m: 118.79
+    beam_m: 22.80
+    depth_m: 4.00
+    draught_m: 2.75
+    observed: {dwt_t: 6000, tank_capacity_m3: 6870}
+    published: "DWT 6,000 t in river at 2.75 m; tanks 6,870 m³ (6,530 cargo + 340 slop)"
+    source: "M6 — MEB project page, Project ROB20 (Belmax 1-8), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "depth 4.00 incl. 1.00 m trunk; main deck 3.00 m"
+    note: "Conflict between sources: Baird Maritime (Belmax 3) gives DWT 6,013 t and tanks 6,860 m3; both sources give LOA 118.79 m. The case uses MEB, the designer. Baird page: https://www.bairdmaritime.com/ship-world/okskaya-sudoverf-launches-third-barge-of-project-rob20 (accessed 2026-10-16)."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: meb-rob07-mh4001
+    hold_type: tank
+    what: "MH-4001 / MH-4002, project ROB07 sea-river tank barge, 2017–18, Nobel Bros yard"
+    loa_m: 95.23
+    beam_m: 16.80
+    depth_m: 5.00
+    draught_m: 3.50
+    observed: {dwt_t: 4244, tank_capacity_m3: 4670}
+    published: "DWT 4,244 t at DWL 3.50 m; 4,403 t at SWL 3.60 m; tanks 4,670 m³"
+    source: "M7 — MEB project page, Project ROB07 (MH-4001, MH-4002), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "page's L×B×H line uses H = 5.80; depth row 5.00"
+    note: "The page prints an L x B x H product with H = 5.80 that differs from its depth row (5.00). The case uses the depth row."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: meb-rob05-paloil
+    hold_type: tank
+    what: "Paloil-1 … -5, project 004ROB05 tank barge, 2003–04, Volgograd SY"
+    loa_m: 93.00
+    beam_m: 16.70
+    depth_m: 5.00
+    draught_m: 3.60
+    water_density_t_m3: 1.025
+    observed: {cargo_capacity_t: 4324, tank_capacity_m3: 4620}
+    published: "cargo carrying capacity 4,324 t at 3.60 m; tanks 4,620 m³"
+    source: "M8 — MEB project page, Project 004ROB05 (Paloil-1 to -5), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "cargo capacity, not DWT"
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: meb-rob17-nerida
+    hold_type: tank
+    what: "Nerida, project ROB17 methanol tank barge, 2012"
+    loa_m: 71.70
+    beam_m: 14.30
+    depth_m: 2.00
+    draught_m: 1.85
+    water_density_t_m3: 1.025
+    observed: {dwt_t: 1267, tank_capacity_m3: 1481}
+    published: "DWT 1,267 t at SWL 1.85 m; tanks 1,481 m³"
+    source: "M9 — MEB project page, Project ROB17 (Nerida), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "very shallow (D 2.0 m)"
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: meb-1635tm-fng
+    hold_type: tank
+    what: "NFS-22, FNG-2 … FNG-10 (10 hulls), project 1635TM river tank barge, 2000, Kiliya"
+    loa_m: 73.20
+    beam_m: 11.00
+    depth_m: 3.90
+    draught_m: 3.24
+    observed: {cargo_capacity_t: 2059, light_draught_m: 0.61, tank_capacity_m3: 2581}
+    published: "cargo capacity about 2,059 t at 3.24 m; light draught 0.61 m; tanks 2,581 m³"
+    source: "M10 — MEB project page, Project 1635TM (NFS-22, FNG-2 to FNG-10), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "cargo capacity, not DWT"
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: meb-1635t-udp-slt
+    hold_type: tank
+    what: "UDP-SLT-001 / -002, project 1635T Danube tank barge, 2000, Kiliya"
+    loa_m: 76.50
+    beam_m: 11.02
+    depth_m: 3.90
+    draught_m: 3.00
+    observed: {cargo_capacity_t: 1907, light_draught_m: 0.77, tank_capacity_m3: 2022.4}
+    published: "cargo capacity about 1,907 t at 3.00 m; light draught 0.77 m; tanks 2,022.4 m³"
+    source: "M11 — MEB project page, Project 1635T (UDP-SLT-001, -002), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "cargo capacity, not DWT"
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: kirby-10071-200x35
+    hold_type: tank
+    what: "KIRBY 10070, 10071, 10073, Tres Palacios 2007–09 — US inland double-skin tank barge (Kirby database, archived)"
+    loa_m: 60.96
+    beam_m: 10.67
+    depth_m: 3.66
+    draught_m: 2.74
+    observed: {dwt_t: 1361, tank_capacity_m3: 1644}
+    published: "DWT 1,500 ST at 9 ft 0 in; capacity 10,338 bbl (1,644 m³)"
+    source: "K1 — Kirby Corporation barge database, KIRBY 10071 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "table 7–11 ft (1,091–1,926 ST)"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: kirby-10201-200x35
+    hold_type: tank
+    what: "KIRBY 10201–10208, Southwest Shipyard 2008–09 — US inland double-skin tank barge (Kirby database, archived)"
+    loa_m: 60.96
+    beam_m: 10.67
+    depth_m: 3.66
+    draught_m: 2.74
+    observed: {dwt_t: 1302, tank_capacity_m3: 1737}
+    published: "DWT 1,435 ST at 9 ft 0 in; capacity 10,926 bbl (1,737 m³)"
+    source: "K2 — Kirby Corporation barge database, KIRBY 10201 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "table 6 ft – 10 ft 6 in"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: kirby-10083-200x35
+    hold_type: tank
+    what: "KIRBY 10080–10088, 10210–10213, Trinity 2010 — US inland double-skin tank barge (Kirby database, archived)"
+    loa_m: 60.96
+    beam_m: 10.67
+    depth_m: 3.66
+    draught_m: 2.74
+    observed: {dwt_t: 1330, tank_capacity_m3: 1706}
+    published: "DWT 1,466 ST at 9 ft 0 in; capacity 10,732 bbl (1,706 m³)"
+    source: "K3 — Kirby Corporation barge database, KIRBY 10083 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "table 6–11 ft; 10210–13 read 1,471 at 9 ft"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: kirby-10074-195x35
+    hold_type: tank
+    what: "KIRBY 10074–10079, Trinity 2010 — US inland double-skin tank barge (Kirby database, archived)"
+    loa_m: 59.44
+    beam_m: 10.67
+    depth_m: 3.66
+    draught_m: 2.74
+    observed: {dwt_t: 1288, tank_capacity_m3: 1595}
+    published: "DWT 1,420 ST at 9 ft 0 in; capacity 10,032 bbl (1,595 m³)"
+    source: "K4 — Kirby Corporation barge database, KIRBY 10074 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "table 6–11 ft"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: cgbm-102-200x35
+    hold_type: tank
+    what: "CGBM 102–107, 10mb chemical, 2007–08 — US inland double-skin tank barge (Kirby database, archived)"
+    loa_m: 60.96
+    beam_m: 10.67
+    depth_m: 3.81
+    draught_m: 2.74
+    observed: {dwt_t: 1350, tank_capacity_m3: 1789}
+    published: "DWT 1,488 ST at 9 ft 0 in; capacity 11,253 bbl (1,789 m³)"
+    source: "K5 — Kirby Corporation barge database, CGBM 102 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "table 8–10 ft"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: mer-13-200x35
+    hold_type: tank
+    what: "MER 12 / MER 13, Kennedy Construction 2009 — US inland double-skin tank barge (Kirby database, archived)"
+    loa_m: 60.96
+    beam_m: 10.67
+    depth_m: 3.96
+    draught_m: 2.74
+    observed: {dwt_t: 1348, tank_capacity_m3: 1402}
+    published: "DWT 1,486 ST at 9 ft 0 in; capacity 8,816 bbl (1,402 m³)"
+    source: "K6 — Kirby Corporation barge database, MER 13 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "table 6 ft – 11 ft 6 in"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: kirby-301-250x50
+    hold_type: tank
+    what: "Barge 301, Trinity 2002 — US inland double-skin tank barge (Kirby database, archived)"
+    loa_m: 76.20
+    beam_m: 15.24
+    depth_m: 3.66
+    draught_m: 2.74
+    observed: {dwt_t: 2437, tank_capacity_m3: 2453}
+    published: "DWT 2,686 ST at 9 ft 0 in; capacity 15,428 bbl (2,453 m³)"
+    source: "K7 — Kirby Corporation barge database, Barge 301 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "table 7–12 ft"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: kirby-407-263x54
+    hold_type: tank
+    what: "Barge 407 (bunker), Southwest Shipyard 2008 — US inland double-skin tank barge (Kirby database, archived)"
+    loa_m: 80.16
+    beam_m: 16.46
+    depth_m: 4.57
+    draught_m: 2.74
+    observed: {dwt_t: 2718, tank_capacity_m3: 3640}
+    published: "DWT 2,996 ST at 9 ft 0 in; capacity 22,892 bbl (3,640 m³)"
+    source: "K8 — Kirby Corporation barge database, Barge 407 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "table 2 ft 6 in (90 ST) to 12 ft (4,369 ST)"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: hfl-406-297x54
+    hold_type: tank
+    what: "HFL 404 / 406 / 408, Jeffboat 2008 — US inland double-skin tank barge (Kirby database, archived)"
+    loa_m: 90.53
+    beam_m: 16.46
+    depth_m: 3.66
+    draught_m: 2.74
+    observed: {dwt_t: 3006, tank_capacity_m3: 4675}
+    published: "DWT 3,313 ST at 9 ft 0 in; capacity 29,404 bbl (4,675 m³)"
+    source: "K9 — Kirby Corporation barge database, HFL 406 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "HFL 408 reads 3,343"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: kirby-27773-297x54
+    hold_type: tank
+    what: "KIRBY 27773, Trinity 2009 — US inland double-skin tank barge (Kirby database, archived)"
+    loa_m: 90.65
+    beam_m: 16.46
+    depth_m: 3.66
+    draught_m: 2.74
+    observed: {dwt_t: 3098, tank_capacity_m3: 4343}
+    published: "DWT 3,415 ST at 9 ft 0 in; capacity 27,319 bbl (4,343 m³)"
+    source: "K10 — Kirby Corporation barge database, KIRBY 27773 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "table 7–11 ft"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: kirby-32300b-297x54
+    hold_type: tank
+    what: "KIRBY 32300B, Jeffboat 2007 — US inland double-skin tank barge (Kirby database, archived)"
+    loa_m: 90.53
+    beam_m: 16.46
+    depth_m: 3.66
+    draught_m: 2.74
+    observed: {dwt_t: 3267, tank_capacity_m3: 5097}
+    published: "DWT 3,601 ST at 9 ft 0 in; capacity 32,058 bbl (5,097 m³)"
+    source: "K11 — Kirby Corporation barge database, KIRBY 32300B (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: ctco-358-297x54
+    hold_type: tank
+    what: "CTCO 356 / 358 / 359, 2014 — US inland double-skin tank barge (Kirby database, archived)"
+    loa_m: 90.65
+    beam_m: 16.46
+    depth_m: 3.66
+    draught_m: 2.74
+    observed: {dwt_t: 2947, tank_capacity_m3: 4379}
+    published: "DWT 3,248 ST at 9 ft 0 in; capacity 27,544 bbl (4,379 m³)"
+    source: "K12 — Kirby Corporation barge database, CTCO 358 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: htco-3064-320x50
+    hold_type: tank
+    what: "HTCO 3062–3065, 3070, 3071, 2008–09 — US inland double-skin tank barge (Kirby database, archived)"
+    loa_m: 97.54
+    beam_m: 15.24
+    depth_m: 3.96
+    draught_m: 2.74
+    observed: {dwt_t: 2950, tank_capacity_m3: 4118}
+    published: "DWT 3,252 ST at 9 ft 0 in; capacity 25,900 bbl (4,118 m³)"
+    source: "K13 — Kirby Corporation barge database, HTCO 3064 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "3070/3071 list 26,628 / 26,431 bbl"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: cms-1601-222x54
+    hold_type: tank
+    what: "CMS 1601 / 1602, 2010–11 (type blank) — US inland double-skin tank barge (Kirby database, archived)"
+    loa_m: 67.67
+    beam_m: 16.46
+    depth_m: 3.66
+    draught_m: 2.74
+    observed: {dwt_t: 1905, tank_capacity_m3: 2601}
+    published: "DWT 2,100 ST at 9 ft 0 in; capacity 16,360 bbl (2,601 m³)"
+    source: "K14 — Kirby Corporation barge database, CMS 1601 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "fit"
+    flags: "DWT/LBT 0.62 is low: heavy tanks? possibly LPG, unconfirmed"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: crowley-180-2-tank
+    hold_type: tank
+    what: "Crowley Barge 180-2, single-hull tank barge, Dillingham AK"
+    loa_m: 54.86
+    beam_m: 16.46
+    draught_m: 3.05
+    water_density_t_m3: 1.025
+    observed: {dwt_t: 2057}
+    published: "DWT 2,025 LT at summer draft 10 ft 1/8 in; TPI 19.67; light draft 1.771 fwd / 2.85 aft; lightship printed '554-99 lT'; 16,660 bbl at 100 %"
+    source: "S16 — Crowley, Barge 180-2 sheet, page 2, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "cross-check"
+    flags: "no depth; lightship garbled; TPI vs light draft disagree"
+    note: "The lightship prints as '554-99 lT'. It may mean 554.99 LT; that was not assumed, so no lightship is recorded. No depth is given. TPI (19.67 LT/in) and light draft (1.771 fwd / 2.85 aft, units not printed) do not agree with DWT 2,025 LT at 10 ft 1/8 in. 16,660 bbl at 100 % is in the published text only. Cross-check only."
+    cross_check_only: "no depth; lightship garbled; TPI vs light draft disagree"
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: zhongyi-001-lng
+    hold_type: gas
+    what: "Zhongyi 001, LNG bunker barge, Three Gorges Reservoir, Damen Yichang, CCS"
+    loa_m: 90.00
+    beam_m: 16.00
+    depth_m: 3.00
+    draught_m: 1.20
+    observed: {lng_capacity_m3: 500}
+    published: "LNG capacity 500 m³; design draught 1.2 m"
+    source: "S17 — Baird Maritime, vessel review of Zhongyi 001, 4 Aug 2022, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "tank type not stated; no DWT"
+    not_yet_runnable: "gas barge: no gas hull model; capacity only"
+  - id: hz-255teu-container-deck
+    hold_type: "container (motor)"
+    what: "107 m self-propelled container deck barge, 2018, China, ZC class (broker)"
+    loa_m: 107.00
+    beam_m: 21.00
+    depth_m: 5.20
+    draught_m: 3.80
+    observed: {cargo_capacity_t: 5020}
+    published: "DWCC 5,020 t; 255 TEU; main engines 2 × 882 kW; LOA incl. removable ramp, hull length 97.8 m"
+    source: "S18 — Horizon Ship Brokers listing, 107m self-propelled container deck barge, 255 TEU, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    note_suggests: "hold out"
+    flags: "self-propelled (motor point); DWCC not DWT; LOA includes ramp"
+    not_yet_runnable: "self-propelled; DWCC not DWT; LOA includes ramp"

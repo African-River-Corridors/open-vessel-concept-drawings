@@ -449,7 +449,7 @@ fn aft_inputs(args: &Value) -> Result<AftArrangementInputs, EvalError> {
     Ok(i)
 }
 
-fn aft_json(r: &AftArrangementResult) -> Value {
+pub(crate) fn aft_json(r: &AftArrangementResult) -> Value {
     wide_object!({
         "length_m": num(r.length_m),
         "zones": r.zones.iter().map(|(l, a, f)| json!([l, num(*a), num(*f)])).collect::<Vec<_>>(),
@@ -567,7 +567,7 @@ fn gas_separation_inputs(args: &Value) -> Result<GasSeparationInputs, EvalError>
     Ok(i)
 }
 
-fn gas_separation_json(r: &GasSeparationResult) -> Value {
+pub(crate) fn gas_separation_json(r: &GasSeparationResult) -> Value {
     json!({
         "aft_separation_m": num(r.aft_separation_m),
         "fwd_separation_m": num(r.fwd_separation_m),

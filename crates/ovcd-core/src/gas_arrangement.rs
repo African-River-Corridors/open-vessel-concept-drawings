@@ -284,6 +284,19 @@ impl Search<'_> {
             // Full-beam tank infeasible or over the cap: put the tank ON the cap and widen the
             // clearance: a legitimate design only if that clearance meets the rule.
             let cs = (self.beam - nw as f64 * self.o.max_tank_od_m) / 2.0;
+            // Mutation survivor (#59), `cs < 0.0` to `cs == 0.0`: equivalent. `cs` is negative only
+            // when the beam is under `nw` tank diameters at the cap. A full-beam tank over the cap
+            // needs a beam over `nw` caps, so a negative `cs` is reached only with an unusable
+            // full-beam tank of zero diameter (the tanks do not fit the hull). Under the mutant
+            // the negative clearance goes on to `capacity`, which cannot make a tank over the cap
+            // (the diameter is then at most the cap) and a candidate with it is turned down by
+            // the rule check below: the rule needs at least 0.45 m (`d(V)` is at least 0.8 m, the
+            // insulation is the fixed 350 mm), and `cs + 1e-9 < need` holds for every negative
+            // `cs`. So `None` comes back either way. Searched with the mutant built in: 15 000
+            // random inputs (both rulesets, caps 0.2 to 8.2 m, beams 0.3 to 14.3 m, 1 to 5 tanks
+            // wide), the branch reached in at least 10 068 of them, no difference in any field.
+            // `a_hull_too_narrow_for_tanks_at_the_cap_gets_no_candidate` and
+            // `the_side_clearance_rule_is_never_below_0_45_m` guard the two facts this rests on.
             if cs < 0.0 {
                 return Ok(None);
             }
@@ -366,6 +379,19 @@ pub fn fit(
                     let mut i2 = inp0.clone();
                     i2.side_clearance_override_m = Some(side + extra);
                     let r2 = capacity(&i2)?;
+                    // Mutation survivors (#58), `&&` to `||` and `>` to `>=` below: equivalent. The
+                    // two differ from the real test only for a candidate with a tank but zero
+                    // capacity (a fill ratio of 0, or a product that underflows to 0); a tank
+                    // diameter of 0 comes with zero capacity, so `||` adds nothing else. Such a
+                    // candidate joins the search under the mutants and can never win: its payload is
+                    // 0.0 (never above the 1e-6 margin over a payload that is 0.0 or more), and
+                    // its `feasible_geometry` check fails (cargo volume must be positive), so it
+                    // is never the best passing candidate either. It is also built last, after
+                    // the base candidate, so it cannot win a tie. Searched with each mutant built
+                    // in: 12 000 random inputs (rulesets, fill ratios from 0, tank caps, depths,
+                    // clearances, 9 969 infeasible), and 175 824 direct capacity runs, none differ
+                    // in any field. `a_zero_capacity_arrangement_is_infeasible_and_carries_nothing`
+                    // guards the two facts this rests on. Not a gap in the tests.
                     if opt_or_zero(r2.tank_outer_diameter_m) != 0.0 && r2.cargo_capacity_t > 0.0 {
                         more.push((i2, r2));
                     }

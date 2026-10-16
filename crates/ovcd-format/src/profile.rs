@@ -142,15 +142,19 @@ impl Profile {
         for key in self.inputs.keys() {
             let known = INPUTS.iter().any(|s| s.name == key)
                 || key == "formation_abreast"
-                || key == "formation_in_line";
+                || key == "formation_in_line"
+                || key == "depth_to_beam_ratio"
+                || key == "length_to_depth_ratio";
             if !known {
                 return Err(format!("profile has an unknown input `{key}`"));
             }
         }
-        for spec in INPUTS
-            .iter()
-            .filter(|s| !s.required && !crate::class_input::UNSET_WHEN_ABSENT.contains(&s.name))
-        {
+        for spec in INPUTS.iter().filter(|s| {
+            !s.required
+                    && !crate::class_input::UNSET_WHEN_ABSENT.contains(&s.name)
+                    // A rule, not a value: the depth is the ratio of the Cargo times the beam.
+                    && s.name != crate::vdesign::DEPTH_INPUT
+        }) {
             let entry = self
                 .inputs
                 .get(spec.name)
@@ -188,7 +192,12 @@ impl Profile {
             .iter()
             .filter(|s| matches!(s.kind, InputKind::Number { .. }))
             .map(|s| s.name)
-            .chain(["formation_abreast", "formation_in_line"]);
+            .chain([
+                "formation_abreast",
+                "formation_in_line",
+                "depth_to_beam_ratio",
+                "length_to_depth_ratio",
+            ]);
         for name in numbers {
             let (hard, base_hard) = (self.hard(name)?, base.hard(name)?);
             if !hard.within(&base_hard) {

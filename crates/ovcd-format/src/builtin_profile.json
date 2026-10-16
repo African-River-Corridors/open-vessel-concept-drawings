@@ -19,7 +19,20 @@
       "unit": "m",
       "hard": { "ge": 0.1, "le": 100 },
       "soft": { "min": 1.0, "max": 15.0 },
-      "basis": "the catalogue holds no depths; inland barge practice is about 1.5 to 12 m"
+      "basis": "moulded depth is keel to main deck at the side. Left out, it is the depth-to-beam ratio of the Cargo times the beam (see depth_to_beam_ratio); the 41 reference vessels with a published depth span 2.2 to 12.5 m"
+    },
+    "depth_to_beam_ratio": {
+      "default_by_cargo_group": { "dry_bulk": 0.33, "liquid": 0.30, "gas": 0.55 },
+      "unit": "-",
+      "hard": { "gt": 0, "le": 2 },
+      "soft": { "min": 0.2, "max": 0.7 },
+      "basis": "the default moulded depth is this ratio times the beam, at the midpoint of the range in the reference vessels with a published depth: dry bulk and container 0.22 to 0.44 (inland and pushed), liquid 0.22 to 0.38 (inland and pushed), gas 0.44 to 0.66 (nearly all sea-going). Only dry bulk and gas Cargo exist so far; liquid has no Cargo yet. catalogue/depth_rule.md lists every vessel against the rule"
+    },
+    "length_to_depth_ratio": {
+      "unit": "-",
+      "hard": { "gt": 0 },
+      "soft": { "min": 0.0, "max": 25.0 },
+      "basis": "length over moulded depth above about 25 is a very slender hull for its depth; the reference vessels with a published depth are below it"
     },
     "formation_abreast": {
       "unit": "barges",

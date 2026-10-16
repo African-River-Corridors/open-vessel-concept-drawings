@@ -62,6 +62,11 @@ _Avoid_: project, model
 One complete set of inputs within a Design, giving one set of results.
 _Avoid_: variant, scenario, case
 
+**Moulded Depth**:
+Keel to main deck at the side (not hold depth). Left out, it is the depth-to-beam ratio of the Cargo
+times the beam, a rule in the Defaults Profile.
+_Avoid_: hold depth, draught (a result, not an input)
+
 **Defaults Profile**:
 The named set of default input values and allowed input ranges used when an Option leaves an input
 out. Each range is hard (the input is refused) or soft (the input is accepted with a warning).

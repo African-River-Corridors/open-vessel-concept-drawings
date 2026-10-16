@@ -180,9 +180,15 @@ fn write_canonical(v: &Value, out: &mut String) {
     }
 }
 
-/// SHA-256 of the canonical JSON of `results`, as 64 lower-case hex digits.
+/// SHA-256 of the canonical JSON of `results`, as 64 lower-case hex digits. The top-level `drawing`
+/// object (drawing geometry from the core, not a result) is left out, so adding to it never changes
+/// a saved hash.
 pub fn results_hash(results: &Value) -> String {
-    let digest = Sha256::digest(canonical_json(results).as_bytes());
+    let mut hashed = results.clone();
+    if let Some(o) = hashed.as_object_mut() {
+        o.remove("drawing");
+    }
+    let digest = Sha256::digest(canonical_json(&hashed).as_bytes());
     digest.iter().map(|b| format!("{b:02x}")).collect()
 }
 

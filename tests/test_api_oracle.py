@@ -72,7 +72,7 @@ def same(actual, expected, path="result"):
         ok = actual == expected or math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-9)
         return None if ok else f"{path}: {actual!r} != {expected!r}"
     if isinstance(expected, dict) and isinstance(actual, dict):
-        if list(expected) != list(actual):
+        if list(expected) != [k for k in actual if k != "drawing"]:  # `drawing` is new in #192, not a result
             return f"{path}: keys {list(actual)} != {list(expected)}"
         for key in expected:
             found = same(actual[key], expected[key], f"{path}.{key}")

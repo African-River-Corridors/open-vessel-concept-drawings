@@ -16,9 +16,11 @@ ovcd - Open Vessel Concept Drawings
 
 Usage:
   ovcd new [--profile <profile.json>] [--class <class id>] [<file.vdesign>]
-      Write a starter Design with one Option. Its six required inputs (Cargo, Hull Form,
-      Formation, length, beam, moulded depth) are examples to edit; every other input comes
-      from the Defaults Profile and is marked \"default\". Prints to stdout when no file is given.
+      Write a starter Design with one Option. Its five required inputs (Cargo, Hull Form,
+      Formation, length, beam) are examples to edit, and so is its moulded depth, which you may
+      delete: a left-out depth is the beam times the depth-to-beam ratio of the Cargo, from the
+      Defaults Profile. Every other input comes from the Defaults Profile and is marked \"default\".
+      Prints to stdout when no file is given.
       --class defines the Option by a standard Vessel Class (see `ovcd schema`, input
       `vessel_class`): length, beam and Formation come from the class and are marked \"class\".
   ovcd fill [--profile <profile.json>] <in.vdesign> [<out.vdesign>]
@@ -182,6 +184,8 @@ fn new(args: &[&str]) -> Result<(), String> {
         None => ovcd_format::new_design(&profile)?.to_text(),
         Some(id) => {
             let mut session = ovcd_format::DesignSession::new_design(profile)?;
+            // The starter's example depth is for the starter hull; the class's beam gets the rule's.
+            session.reset_input("Option 1", "moulded_depth_m")?;
             session.set_input("Option 1", "vessel_class", serde_json::json!(id))?;
             session.save()?
         }
