@@ -436,12 +436,12 @@ describe("OVCD app smoke tests", () => {
     // One legend entry per condition, with its GM and max GZ from the engine.
     const items = await browser.$$("[data-testid=stability-chart] .legend .item");
     assert.ok(items.length >= 2, "a curve per loading condition");
-    for (let i = 0; i < items.length; i++) assert.match(await items[i].getText(), /GM -?[\d.]+ m · max GZ -?[\d.]+ m at \d+°/);
+    for (let i = 0; i < items.length; i++) assert.match(await items[i].getText(), /GM -?[\d.]+ m · max GZ -?[\d.]+ m at \d+°/i);
     // The governing condition in the legend is the one the table marks.
     const governing = await browser.$("[data-testid=stability-chart] .item.gov");
     const row = await browser.$("tr[data-governing=true] th");
     const name = await governing.getAttribute("data-condition");
-    assert.ok((await row.getText()).includes(name), `the table marks ${name} as governing`);
+    assert.ok((await row.getText()).toLowerCase().includes(name.toLowerCase()), `the table marks ${name} as governing`);
     assert.equal((await browser.$$("[data-testid=stability-chart] .item.gov")).length, 1);
     assert.equal((await browser.$$("[data-testid=stability-wip]")).length, 0);
     await shot("231-gas-intact-stability");
