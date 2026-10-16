@@ -14,7 +14,7 @@
 Each observed figure has a band, set per figure and per confidence of the case (`bands.yaml`): lightship ±15 / 20 / 30 % and deadweight ±7.5 / 10 / 15 % at high / medium / low confidence. The band applies to the *Calibrated* result. **The errors in sections 1 and 2 are in-sample:** the fitted factors (k per hold type, box-barge Cb) were fitted to the same cases, and the container factor rests on one case, so a result inside its band is not a validation. **The errors in section 4 are out of sample:** those cases were never used in a fit. A case outside its band is marked **OUTSIDE** and raises a CI warning annotation: **warning only, it never fails the build.** A lightship given only as an upper bound has no band. Section 3 compares the core with a design note, not a published figure, and has no band.
 
 13 of 14 in-sample calibrated results are inside their band.
-40 of 45 held-out calibrated results are inside their band (section 4; cases excluded for an impossible figure are not counted).
+67 of 87 held-out calibrated results are inside their band (section 4; cases excluded for an impossible figure are not counted).
 
 ## 1. Push barges — lightship
 
@@ -128,6 +128,54 @@ These cases were never used to fit k or Cb (issue #3). The calibrated model meet
 | meb-dcb24-pola | box | medium | DWT | 6,688 | 6,425 | -3.9 | ±10 (medium) | inside |
 | meb-rdb12-samarskaya | box | medium | DWT | 4,121 | 4,408 | 7.0 | ±10 (medium) | inside |
 | meb-rdb20-belmax9 | box | medium | DWT | 6,000 | 5,987 | -0.2 | ±10 (medium) | inside |
+| vl-pontoon-33.7x7.8x2.0 | pontoon / box | low | lightship | 105 | 57 | -45.3 | ±30 (low) | **OUTSIDE** ⚠ |
+| vl-pontoon-30.0x11.2x2.5 | pontoon / box | low | lightship | 162 | 92 | -43.3 | ±30 (low) | **OUTSIDE** ⚠ |
+| vl-pontoon-40.0x12.5x3.0 | pontoon / box | low | lightship | 222 | 164 | -26.1 | ±30 (low) | inside |
+| vl-pontoon-50.0x12.0x2.8 | pontoon / box | low | lightship | 328 | 184 | -44.0 | ±30 (low) | **OUTSIDE** ⚠ |
+| vl-pontoon-50.0x14.0x3.0 | pontoon / box | low | lightship | 300 | 230 | -23.5 | ±30 (low) | inside |
+| vl-pontoon-50.0x18.8x3.0 | pontoon / box | low | lightship | 375 | 308 | -17.8 | ±30 (low) | inside |
+| vl-pontoon-50.0x20.0x3.0 | pontoon / box | low | lightship | 400 | 328 | -18.0 | ±30 (low) | inside |
+| vl-pontoon-60.0x16.5x3.5 | pontoon / box | low | lightship | 475 | 379 | -20.3 | ±30 (low) | inside |
+| vl-pontoon-60.0x20.0x4.0 | pontoon / box | low | lightship | 560 | 525 | -6.3 | ±30 (low) | inside |
+| vl-pontoon-60.0x22.0x4.0-lw740 | pontoon / box | low | lightship | 740 | 577 | -22.0 | ±30 (low) | inside |
+| vl-pontoon-60.0x22.0x4.0-lw600-dwt3350 | pontoon / box | low | lightship | 600 | 577 | -3.8 | ±30 (low) | inside |
+| vl-pontoon-60.0x22.0x4.0-lw600-dwt3400 | pontoon / box | low | lightship | 600 | 577 | -3.8 | ±30 (low) | inside |
+| vl-pontoon-70.0x22.0x4.0 | pontoon / box | low | lightship | 760 | 673 | -11.4 | ±30 (low) | inside |
+| vl-pontoon-80.0x22.0x4.5 | pontoon / box | low | lightship | 900 | 866 | -3.8 | ±30 (low) | inside |
+| vl-pontoon-80.0x24.0x5.0 | pontoon / box | low | lightship | 1,550 | 1,049 | -32.3 | ±30 (low) | **OUTSIDE** ⚠ |
+| wilcarry-250-45x8 | pontoon / box | medium | lightship | 130 | 79 | -39.3 | ±20 (medium) | **OUTSIDE** ⚠ |
+| wilcarry-250-45x8 | pontoon / box | medium | DWT | 255 | 378 | 48.1 | ±10 (medium) | **OUTSIDE** ⚠ |
+| wilcarry-300-36x8 | pontoon / box | medium | lightship | 114 | 63 | -45.0 | ±20 (medium) | **OUTSIDE** ⚠ |
+| wilcarry-300-36x8 | pontoon / box | medium | DWT | 282 | 329 | 16.4 | ±10 (medium) | **OUTSIDE** ⚠ |
+| wilcarry-350-33x9.5 | pontoon / box | low | lightship | 180 | 69 | -61.6 | ±30 (low) | **OUTSIDE** ⚠ |
+| wilcarry-350-33x9.5 | pontoon / box | low | DWT | 152 | 268 | 76.1 | ±15 (low) | **OUTSIDE** ⚠ |
+| wilcarry-501-30x11.2 | pontoon / box | medium | lightship | 138 | 92 | -33.5 | ±20 (medium) | **OUTSIDE** ⚠ |
+| wilcarry-501-30x11.2 | pontoon / box | medium | DWT | 491 | 535 | 8.9 | ±10 (medium) | inside |
+| wilcarry-1500-50x14 | pontoon / box | medium | lightship | 280 | 230 | -17.9 | ±20 (medium) | inside |
+| wilcarry-1500-50x14 | pontoon / box | medium | DWT | 1,280 | 1,315 | 2.8 | ±10 (medium) | inside |
+| wilcarry-1711-50x18.8 | pontoon / box | medium | lightship | 431 | 308 | -28.5 | ±20 (medium) | **OUTSIDE** ⚠ |
+| wilcarry-1711-50x18.8 | pontoon / box | medium | DWT | 1,680 | 1,759 | 4.7 | ±10 (medium) | inside |
+| wilcarry-1750-45x20 | pontoon / box | medium | lightship | 665 | 354 | -46.7 | ±20 (medium) | **OUTSIDE** ⚠ |
+| wilcarry-1750-45x20 | pontoon / box | medium | DWT | 1,750 | 2,163 | 23.6 | ±10 (medium) | **OUTSIDE** ⚠ |
+| wilcarry-22-12x4.8 | pontoon / box | low | lightship | 23 | 8 | -67.1 | ±30 (low) | **OUTSIDE** ⚠ (excluded) |
+| wilcarry-22-12x4.8 | pontoon / box | low | DWT | 20 | 32 | 59.3 | ±15 (low) | **OUTSIDE** ⚠ (excluded) |
+| wilcarry-2508-24.7x17.8 | pontoon / box | low | lightship | 88 | 96 | 9.3 | ±30 (low) | inside (excluded) |
+| wilcarry-2508-24.7x17.8 | pontoon / box | low | DWT | 101 | 411 | 307.0 | ±15 (low) | **OUTSIDE** ⚠ (excluded) |
+| meb-rdb15-96x16.7 | deck / box | medium | DWT | 3,866 | 3,988 | 3.2 | ±10 (medium) | inside |
+| meb-rdb21-85x17.2 | deck / box | medium | DWT | 1,896 | 2,027 | 6.9 | ±10 (medium) | inside |
+| meb-dcb26-78x16.5 | deck / box | medium | DWT | 1,564 | 1,826 | 16.8 | ±10 (medium) | **OUTSIDE** ⚠ |
+| canal-box-200x35x12-cby222 | box | low | DWT | 1,530 | 1,396 | -8.8 | ±15 (low) | inside |
+| canal-box-200x35x13-cby252 | box | low | DWT | 1,488 | 1,374 | -7.7 | ±15 (low) | inside |
+| canal-box-200x35x13-cby400 | box | low | DWT | 1,498 | 1,374 | -8.3 | ±15 (low) | inside |
+| canal-box-200x35x13-cby433 | box | low | DWT | 1,497 | 1,374 | -8.2 | ±15 (low) | inside |
+| canal-box-200x35x12-imt201 | box | low | DWT | 1,509 | 1,396 | -7.5 | ±15 (low) | inside |
+| canal-box-200x35x12-imt205 | box | low | DWT | 1,507 | 1,396 | -7.4 | ±15 (low) | inside |
+| canal-box-200x35x12-pb2012 | box | low | DWT | 1,462 | 1,396 | -4.6 | ±15 (low) | inside |
+| canal-box-200x25x12-pb2230 | box | low | DWT | 1,462 | 997 | -31.8 | ±15 (low) | **OUTSIDE** ⚠ (excluded) |
+| canal-box-200x35x13-pb2352 | box | low | DWT | 1,475 | 1,374 | -6.9 | ±15 (low) | inside |
+| canal-box-200x35x12-rci250 | box | low | DWT | 1,517 | 1,396 | -8.0 | ±15 (low) | inside |
+| dsb-holdbarge-1997-76.5 | box | low | DWT | 2,737 | 2,775 | 1.4 | ±15 (low) | inside |
+| jml50-pontoon | pontoon / box | medium | cargo capacity (not DWT) | 1,300 | 1,335 | 2.7 | – | cross-check, no band |
 
 ### Held-out cases the dry-barge path cannot run yet
 
@@ -158,6 +206,31 @@ Listed with their published figures and the reason. They are never run.
 | crowley-180-2-tank | tank | low | 54.86×16.46, T 3.05 | DWT 2,057 t | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel. Cross-check only: no depth; lightship garbled; TPI vs light draft disagree |
 | zhongyi-001-lng | gas | low | 90×16×3, T 1.2 | LNG 500 m³ | gas barge: no gas hull model; capacity only |
 | hz-255teu-container-deck | container (motor) | low | 107×21×5.2, T 3.8 | cargo capacity 5,020 t | self-propelled; DWCC not DWT; LOA includes ramp |
+| usl-147-192x52 | gas | medium | 58.5216×15.8496×3.6576, T 2.7432 | DWT 1,705.51 t; tanks 2,271.29 m³ | Kirby barge type 'Pressure': no gas hull model; capacity and DWT only |
+| usl-148-193x52 | gas | medium | 58.8264×15.8496×3.6576, T 2.7432 | DWT 1,725.47 t; tanks 2,263.98 m³ | Kirby barge type 'Pressure': no gas hull model; capacity and DWT only |
+| dbl-709-245x48 | gas | medium | 74.676×14.6304×3.6576, T 2.7432 | DWT 1,700.97 t; tanks 2,538.23 m³ | Kirby barge type 'Pressure': no gas hull model; capacity and DWT only |
+| cheyenne-256x53 | gas | medium | 78.0288×16.1544×4.1402, T 2.7432 | DWT 1,426.09 t; tanks 2,646.34 m³ | Kirby barge type 'Pressure': no gas hull model; capacity and DWT only |
+| arrowhead-266-260x48 | gas | medium | 79.248×14.6304×3.6576, T 2.7432 | DWT 1,492.32 t; tanks 2,648.41 m³ | Kirby barge type 'Pressure': no gas hull model; capacity and DWT only |
+| creek-175x42 | tank | medium | 53.34×12.8016×3.5052, T 2.7432 | DWT 1,083.18 t; tanks 1,689.88 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| cherokee-bg-175x42 | tank | medium | 53.34×12.827×3.5052, T 2.7432 | DWT 1,083.18 t; tanks 1,700.53 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| cc-133-184x52 | tank | medium | 56.0832×15.8496×3.6576, T 2.7432 | DWT 1,762.66 t; tanks 2,271.29 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| cc-132-184x52 | tank | medium | 56.0832×15.8496×3.6576, T 2.7432 | DWT 1,805.3 t; tanks 2,271.29 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| usl-146-192x52 | tank | medium | 58.5216×15.8496×3.6576, T 2.7432 | DWT 1,725.47 t; tanks 2,271.29 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| city-of-galveston-210x44 | tank | medium | 64.0334×13.4366×3.5306, T 2.7432 | DWT 1,083.18 t; tanks 1,608.95 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| ci-1609-239x52 | tank | medium | 72.9742×15.8496×3.9624, T 2.7432 | DWT 1,905.09 t; tanks 2,601.03 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| karankawa-245x48 | tank | medium | 74.676×14.6304×3.6576, T 2.7432 | DWT 1,678.29 t; tanks 2,559.85 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| fmt-2054-245x48 | tank | medium | 74.676×14.6304×3.6576, T 2.7432 | DWT 1,699.16 t; tanks 2,564.15 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| fmt-2068-245x48 | tank | medium | 74.676×14.6304×3.6576, T 2.7432 | DWT 1,718.21 t; tanks 2,555.72 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| dbl-703-250x52 | tank | medium | 76.2×15.8496×3.9624, T 2.7432 | DWT 1,592.11 t; tanks 2,700.08 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| 401-270x54 | tank | medium | 82.296×16.4592×3.9624, T 2.7432 | DWT 3,117.99 t; tanks 3,233.48 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| kirby-27730-290x54 | tank | medium | 88.519×16.4592×3.6576, T 2.7432 | DWT 3,020.93 t; tanks 4,379.15 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| kirby-21853-295x50 | tank | medium | 89.916×15.24×4.2672, T 2.7432 | DWT 3,004.6 t; tanks 3,469.1 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| kirby-29173-297x52 | tank | medium | 90.5256×15.8496×3.6576, T 2.7432 | DWT 3,002.78 t; tanks 4,654.04 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| ctco-251-297x50 | tank | medium | 90.6526×15.24×3.9624, T 2.7432 | DWT 2,794.13 t; tanks 4,727.01 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| ctco-3000-308x54 | tank | medium | 93.8784×16.4592×5.7912, T 2.7432 | DWT 2,794.13 t; tanks 4,792.83 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| comanche-380x54 | tank | medium | 115.824×16.4592×4.2672, T 2.7432 | DWT 2,617.23 t; tanks 4,839.26 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| winna-wilson-461x90 | tank | low | 140.513×27.432×10.9728, T 2.7432 | DWT 15,422.1 t; tanks 23,848.1 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| miss-dott-o-463x82 | tank | low | 141.122×24.9936×9.144, T 2.7432 | DWT 7,587.69 t; tanks 23,848.1 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
 
 ### Summary: out of sample against in-sample
 
@@ -167,6 +240,8 @@ Error is (calibrated − published) ÷ published. Cross-check cases and cases ex
 |---|---|---|---|---|---|---|---|
 | Lightship | in-sample | all in-sample cases | 3 | -3.9 | 3.9 | -10.6 to +0.0 | 3 of 3 |
 | Lightship | out of sample | deck (run as box) | 15 | -6.3 | 11.2 | -26.3 to +15.6 | 14 of 15 |
+| Lightship | out of sample | pontoon (run as box) | 22 | -27.0 | 27.0 | -61.6 to -3.8 | 12 of 22 |
 | Deadweight at the stated draught | in-sample | all in-sample cases | 8 | -0.4 | 4.5 | -7.7 to +5.8 | 8 of 8 |
-| Deadweight at the stated draught | out of sample | box | 20 | +0.2 | 2.7 | -4.6 to +7.0 | 20 of 20 |
-| Deadweight at the stated draught | out of sample | deck (run as box) | 10 | +7.2 | 8.0 | -4.1 to +15.7 | 6 of 10 |
+| Deadweight at the stated draught | out of sample | box | 30 | -2.1 | 4.1 | -8.8 to +7.0 | 30 of 30 |
+| Deadweight at the stated draught | out of sample | deck (run as box) | 13 | +7.6 | 8.2 | -4.1 to +16.8 | 8 of 13 |
+| Deadweight at the stated draught | out of sample | pontoon (run as box) | 7 | +25.8 | 25.8 | +2.8 to +76.1 | 3 of 7 |

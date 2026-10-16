@@ -11,13 +11,18 @@
 # Held-out cases (issue #3): a case with a truthy `held_out` (a one-line reason) is run and banded but
 # NEVER used to fit k or Cb (fit_factors drops it). The 12 first cases are in-sample; every case added
 # for issue #3 is held out, so its error is out of sample.
+# Two batches are held out: the 62 cases from the research note carry `note_suggests`; the later ones from
+# follow-up research (2026-10-16) carry `found_by` and no `note_suggests`.
 # Fields only the held-out cases use:
 #   hold_type: deck  a flat deck barge. The core has no deck model, so `run_as: box` says the case is
 #                    run as a box barge (box k, box Cb): does the box model carry over to deck barges?
-#   run_as           the hold type the core runs (deck -> box).
+#   hold_type: pontoon  a flat-top pontoon barge (follow-up batch), run as box in its own summary group.
+#   run_as           the hold type the core runs (deck or pontoon -> box).
 #   water_density_t_m3  density for the predicted DWT: 1.025 for sea-going or saltwater figures.
 #                    Omitted (1.000, fresh) for river figures.
 #   published        the observed figures as the source prints them (units and wording kept).
+#   found_by         set on the follow-up cases: they are not from the research note, so no note_suggests.
+#   observed.dwt_t_draught_not_stated  a published DWT with no draught: shown in `published`, never banded.
 #   note_suggests    what the research note suggested (fit | hold out | cross-check | exclude). Kept so
 #                    it is not lost; it decides nothing.
 #   cross_check_only a reason: shown in the report, never banded.
@@ -735,6 +740,577 @@ dry_barge:
     note_suggests: "fit"
     flags: "page's L×B×H line uses H = 2.60; depth row 4.00"
     note: "The page prints an L x B x H product with H = 2.60 that differs from its depth row (4.00). The case uses the depth row."
+  - id: vl-pontoon-33.7x7.8x2.0
+    hold_type: pontoon
+    run_as: box
+    what: "flat-top pontoon barge, North Sea area (VL Maritime broker listing, unnamed)"
+    loa_m: 33.7
+    beam_m: 7.8
+    depth_m: 2.0
+    observed: {lightship_t: 105, dwt_t_draught_not_stated: 265}
+    published: "33,7 x 7,8 x 2,0 (m); lightweight 105; deadweight 265; deck capacity 4 t/m²"
+    source: "S14 — VL Maritime Services, Barges (all types), 'Pontoons, various sizes' table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "'ton' is not defined on the page (read as tonne); 3 unit row(s) on the page with these figures; no draught, name, year or class printed, so DWT is kept unbanded; remark: Connectable with sister"
+  - id: vl-pontoon-30.0x11.2x2.5
+    hold_type: pontoon
+    run_as: box
+    what: "flat-top pontoon barge, North Sea area (VL Maritime broker listing, unnamed)"
+    loa_m: 30.0
+    beam_m: 11.2
+    depth_m: 2.5
+    observed: {lightship_t: 162, dwt_t_draught_not_stated: 500}
+    published: "30,0 x 11,2 x 2,5 (m); lightweight 162; deadweight 500; deck capacity 6 t/m²; spudwell 2 x ø609 mm"
+    source: "S14 — VL Maritime Services, Barges (all types), 'Pontoons, various sizes' table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "'ton' is not defined on the page (read as tonne); 2 unit row(s) on the page with these figures; no draught, name, year or class printed, so DWT is kept unbanded"
+  - id: vl-pontoon-40.0x12.5x3.0
+    hold_type: pontoon
+    run_as: box
+    what: "flat-top pontoon barge, North Sea area (VL Maritime broker listing, unnamed)"
+    loa_m: 40.0
+    beam_m: 12.5
+    depth_m: 3.0
+    observed: {lightship_t: 222, dwt_t_draught_not_stated: 850}
+    published: "40,0 x 12,5 x 3,0 (m); lightweight 222; deadweight 850; deck capacity 6 t/m²; spudwell 2 x ø609 mm"
+    source: "S14 — VL Maritime Services, Barges (all types), 'Pontoons, various sizes' table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "'ton' is not defined on the page (read as tonne); 2 unit row(s) on the page with these figures; no draught, name, year or class printed, so DWT is kept unbanded"
+  - id: vl-pontoon-50.0x12.0x2.8
+    hold_type: pontoon
+    run_as: box
+    what: "flat-top pontoon barge, North Sea area (VL Maritime broker listing, unnamed)"
+    loa_m: 50.0
+    beam_m: 12.0
+    depth_m: 2.8
+    observed: {lightship_t: 328, dwt_t_draught_not_stated: 850}
+    published: "50,0 x 12,0 x 2,8 (m); lightweight 328; deadweight 850; deck capacity 10 t/m²; spudwell 2 x ø609 mm"
+    source: "S14 — VL Maritime Services, Barges (all types), 'Pontoons, various sizes' table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "'ton' is not defined on the page (read as tonne); 1 unit row(s) on the page with these figures; no draught, name, year or class printed, so DWT is kept unbanded"
+  - id: vl-pontoon-50.0x14.0x3.0
+    hold_type: pontoon
+    run_as: box
+    what: "flat-top pontoon barge, North Sea area (VL Maritime broker listing, unnamed)"
+    loa_m: 50.0
+    beam_m: 14.0
+    depth_m: 3.0
+    observed: {lightship_t: 300, dwt_t_draught_not_stated: 1300}
+    published: "50,0 x 14,0 x 3,0 (m); lightweight 300; deadweight 1.300; deck capacity 10 (1 unit, 2 x ø609 mm + 2 x ø914 mm); 6 (2 units, 2 x ø609 mm); 6 (1 unit, 2 x ø609 mm + 2 x ø914 mm) t/m²"
+    source: "S14 — VL Maritime Services, Barges (all types), 'Pontoons, various sizes' table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "'ton' is not defined on the page (read as tonne); 4 unit row(s) on the page with these figures; no draught, name, year or class printed, so DWT is kept unbanded; deck capacity differs by unit: 10 on one unit, 6 on three (the note printed 6–10); the page prints a dot as the thousands separator, read as such (its own range text says 500 to 5,000 tons DWT)"
+  - id: vl-pontoon-50.0x18.8x3.0
+    hold_type: pontoon
+    run_as: box
+    what: "flat-top pontoon barge, North Sea area (VL Maritime broker listing, unnamed)"
+    loa_m: 50.0
+    beam_m: 18.8
+    depth_m: 3.0
+    observed: {lightship_t: 375, dwt_t_draught_not_stated: 1800}
+    published: "50,0 x 18,8 x 3,0 (m); lightweight 375; deadweight 1.800; deck capacity 6 t/m²; spudwell 2 x ø609 mm"
+    source: "S14 — VL Maritime Services, Barges (all types), 'Pontoons, various sizes' table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "'ton' is not defined on the page (read as tonne); 2 unit row(s) on the page with these figures; no draught, name, year or class printed, so DWT is kept unbanded; the page prints a dot as the thousands separator, read as such (its own range text says 500 to 5,000 tons DWT)"
+  - id: vl-pontoon-50.0x20.0x3.0
+    hold_type: pontoon
+    run_as: box
+    what: "flat-top pontoon barge, North Sea area (VL Maritime broker listing, unnamed)"
+    loa_m: 50.0
+    beam_m: 20.0
+    depth_m: 3.0
+    observed: {lightship_t: 400, dwt_t_draught_not_stated: 1900}
+    published: "50,0 x 20,0 x 3,0 (m); lightweight 400; deadweight 1.900; deck capacity 6 t/m²; spudwell 2 x ø609 mm"
+    source: "S14 — VL Maritime Services, Barges (all types), 'Pontoons, various sizes' table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "'ton' is not defined on the page (read as tonne); 2 unit row(s) on the page with these figures; no draught, name, year or class printed, so DWT is kept unbanded; the page prints a dot as the thousands separator, read as such (its own range text says 500 to 5,000 tons DWT)"
+  - id: vl-pontoon-60.0x16.5x3.5
+    hold_type: pontoon
+    run_as: box
+    what: "flat-top pontoon barge, North Sea area (VL Maritime broker listing, unnamed)"
+    loa_m: 60.0
+    beam_m: 16.5
+    depth_m: 3.5
+    observed: {lightship_t: 475, dwt_t_draught_not_stated: 2100}
+    published: "60,0 x 16,5 x 3,5 (m); lightweight 475; deadweight 2.100; deck capacity 11 t/m²; spudwell 2 x ø914 mm"
+    source: "S14 — VL Maritime Services, Barges (all types), 'Pontoons, various sizes' table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "'ton' is not defined on the page (read as tonne); 1 unit row(s) on the page with these figures; no draught, name, year or class printed, so DWT is kept unbanded; the page prints a dot as the thousands separator, read as such (its own range text says 500 to 5,000 tons DWT)"
+  - id: vl-pontoon-60.0x20.0x4.0
+    hold_type: pontoon
+    run_as: box
+    what: "flat-top pontoon barge, North Sea area (VL Maritime broker listing, unnamed)"
+    loa_m: 60.0
+    beam_m: 20.0
+    depth_m: 4.0
+    observed: {lightship_t: 560, dwt_t_draught_not_stated: 3050}
+    published: "60,0 x 20,0 x 4,0 (m); lightweight 560; deadweight 3.050; deck capacity 10 t/m²; spudwell 2 x ø914 mm"
+    source: "S14 — VL Maritime Services, Barges (all types), 'Pontoons, various sizes' table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "'ton' is not defined on the page (read as tonne); 2 unit row(s) on the page with these figures; no draught, name, year or class printed, so DWT is kept unbanded; remark: one of the 2 unit rows says 'fuel transfer capability'; the page prints a dot as the thousands separator, read as such (its own range text says 500 to 5,000 tons DWT)"
+  - id: vl-pontoon-60.0x22.0x4.0-lw740
+    hold_type: pontoon
+    run_as: box
+    what: "flat-top pontoon barge, North Sea area (VL Maritime broker listing, unnamed)"
+    loa_m: 60.0
+    beam_m: 22.0
+    depth_m: 4.0
+    observed: {lightship_t: 740, dwt_t_draught_not_stated: 3250}
+    published: "60,0 x 22,0 x 4,0 (m); lightweight 740; deadweight 3.250; deck capacity 10 t/m²; spudwell 4 x ø609 mm"
+    source: "S14 — VL Maritime Services, Barges (all types), 'Pontoons, various sizes' table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "'ton' is not defined on the page (read as tonne); 1 unit row(s) on the page with these figures; no draught, name, year or class printed, so DWT is kept unbanded; shares L × B × D with the other 60 × 22 × 4 rows, so the id carries the lightweight (and the DWT where the lightweight also matches); the page prints a dot as the thousands separator, read as such (its own range text says 500 to 5,000 tons DWT)"
+  - id: vl-pontoon-60.0x22.0x4.0-lw600-dwt3350
+    hold_type: pontoon
+    run_as: box
+    what: "flat-top pontoon barge, North Sea area (VL Maritime broker listing, unnamed)"
+    loa_m: 60.0
+    beam_m: 22.0
+    depth_m: 4.0
+    observed: {lightship_t: 600, dwt_t_draught_not_stated: 3350}
+    published: "60,0 x 22,0 x 4,0 (m); lightweight 600; deadweight 3.350; deck capacity 10 t/m²; spudwell 2 x ø914 mm"
+    source: "S14 — VL Maritime Services, Barges (all types), 'Pontoons, various sizes' table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "'ton' is not defined on the page (read as tonne); 1 unit row(s) on the page with these figures; no draught, name, year or class printed, so DWT is kept unbanded; shares L × B × D with the other 60 × 22 × 4 rows, so the id carries the lightweight (and the DWT where the lightweight also matches); the page prints a dot as the thousands separator, read as such (its own range text says 500 to 5,000 tons DWT)"
+  - id: vl-pontoon-60.0x22.0x4.0-lw600-dwt3400
+    hold_type: pontoon
+    run_as: box
+    what: "flat-top pontoon barge, North Sea area (VL Maritime broker listing, unnamed)"
+    loa_m: 60.0
+    beam_m: 22.0
+    depth_m: 4.0
+    observed: {lightship_t: 600, dwt_t_draught_not_stated: 3400}
+    published: "60,0 x 22,0 x 4,0 (m); lightweight 600; deadweight 3.400; deck capacity 10 t/m²; spudwell 3 x ø914 mm"
+    source: "S14 — VL Maritime Services, Barges (all types), 'Pontoons, various sizes' table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "'ton' is not defined on the page (read as tonne); 1 unit row(s) on the page with these figures; no draught, name, year or class printed, so DWT is kept unbanded; shares L × B × D with the other 60 × 22 × 4 rows, so the id carries the lightweight (and the DWT where the lightweight also matches); the page prints a dot as the thousands separator, read as such (its own range text says 500 to 5,000 tons DWT)"
+  - id: vl-pontoon-70.0x22.0x4.0
+    hold_type: pontoon
+    run_as: box
+    what: "flat-top pontoon barge, North Sea area (VL Maritime broker listing, unnamed)"
+    loa_m: 70.0
+    beam_m: 22.0
+    depth_m: 4.0
+    observed: {lightship_t: 760, dwt_t_draught_not_stated: 3800}
+    published: "70,0 x 22,0 x 4,0 (m); lightweight 760; deadweight 3.800; deck capacity 10 t/m²; spudwell 3 x ø914 mm"
+    source: "S14 — VL Maritime Services, Barges (all types), 'Pontoons, various sizes' table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "'ton' is not defined on the page (read as tonne); 1 unit row(s) on the page with these figures; no draught, name, year or class printed, so DWT is kept unbanded; the page prints a dot as the thousands separator, read as such (its own range text says 500 to 5,000 tons DWT)"
+  - id: vl-pontoon-80.0x22.0x4.5
+    hold_type: pontoon
+    run_as: box
+    what: "flat-top pontoon barge, North Sea area (VL Maritime broker listing, unnamed)"
+    loa_m: 80.0
+    beam_m: 22.0
+    depth_m: 4.5
+    observed: {lightship_t: 900, dwt_t_draught_not_stated: 4900}
+    published: "80,0 x 22,0 x 4,5 (m); lightweight 900; deadweight 4.900; deck capacity 12 t/m²; spudwell 2 x ø914 mm"
+    source: "S14 — VL Maritime Services, Barges (all types), 'Pontoons, various sizes' table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "'ton' is not defined on the page (read as tonne); 1 unit row(s) on the page with these figures; no draught, name, year or class printed, so DWT is kept unbanded; the page prints a dot as the thousands separator, read as such (its own range text says 500 to 5,000 tons DWT)"
+  - id: vl-pontoon-80.0x24.0x5.0
+    hold_type: pontoon
+    run_as: box
+    what: "flat-top pontoon barge, North Sea area (VL Maritime broker listing, unnamed)"
+    loa_m: 80.0
+    beam_m: 24.0
+    depth_m: 5.0
+    observed: {lightship_t: 1550, dwt_t_draught_not_stated: 5750}
+    published: "80,0 x 24,0 x 5,0 (m); lightweight 1.550; deadweight 5.750; deck capacity 15 t/m²; spudwell 2 x ø1,200 mm"
+    source: "S14 — VL Maritime Services, Barges (all types), 'Pontoons, various sizes' table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "'ton' is not defined on the page (read as tonne); 1 unit row(s) on the page with these figures; no draught, name, year or class printed, so DWT is kept unbanded; the page prints a dot as the thousands separator, read as such (its own range text says 500 to 5,000 tons DWT)"
+  - id: wilcarry-250-45x8
+    hold_type: pontoon
+    run_as: box
+    what: "Wilcarry 250, flat-top pontoon, N.A. Bernard (Amsterdam) 1971, MCA"
+    loa_m: 45.1
+    beam_m: 8.0
+    depth_m: 2.0
+    draught_m: 1.33
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 130, dwt_t: 255}
+    published: "Length O.A. 45.1m; Beam O.A. 8.0m; Moulded depth 2.0m; light draft 0.50m; loaded draft 1.33m; DWT 255t to summer load-line; lightship displacement 130t"
+    source: "W1 — Williams Shipping, spec sheet Wilcarry 250, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "density not printed; summer load line read as sea water; read as text from the PDF"
+  - id: wilcarry-300-36x8
+    hold_type: pontoon
+    run_as: box
+    what: "Wilcarry 300, flat-top pontoon, Neptune Marine Services (Arkhangelsk) 2003, BV"
+    loa_m: 36.00
+    beam_m: 8.0
+    depth_m: 2.0
+    draught_m: 1.43
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 114.46, dwt_t: 282.5}
+    published: "Length O.A. 36.00 m; Beam O.A. 8.0 m; Moulded depth 2.0 m; light draft 0.40m; loaded draft 1.43 m; deck load 6 tons/m2; DWT 282.5t to summer load-line; lightship displacement 114.46t"
+    source: "W2 — Williams Shipping, spec sheet Wilcarry 300, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "density not printed; summer load line read as sea water; sheet read from a page image (no text layer)"
+  - id: wilcarry-350-33x9.5
+    hold_type: pontoon
+    run_as: box
+    what: "Wilcarry 350, flat-top pontoon with 4-point mooring, UK, MCA"
+    loa_m: 33.2
+    beam_m: 9.5
+    depth_m: 2.0
+    draught_m: 1.15
+    observed: {lightship_t: 179.5, dwt_t: 152}
+    published: "Length O.A. 33.2 m; Beam O.A. 9.5 m; Moulded depth 2.0 m; loaded draft 1.15 m (with 50t crane); DWT 152t; lightship displacement 179.5t"
+    source: "W3 — Williams Shipping, spec sheet Wilcarry 350, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "loaded draft is 'with 50t crane': the crane is probably in the lightship, which is above the DWT; the sheet does not say; no light draft; density not printed (fresh assumed, no 'summer load-line' wording); sheet read from a page image"
+  - id: wilcarry-501-30x11.2
+    hold_type: pontoon
+    run_as: box
+    what: "Wilcarry 501 (Neptune, Arkhangelsk 2000), BV; sisters 503 (China 2007) and 504 (Ulyanovsk 2011) print the same figures"
+    loa_m: 30.00
+    beam_m: 11.20
+    depth_m: 2.50
+    draught_m: 1.96
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 138, dwt_t: 491}
+    published: "Length O.A. 30.00 m; Beam O.A. 11.20 m; Moulded depth 2.50 m; light draft 0.30 m; loaded draft 1.96 m; deck load 6 tons/m2; DWT 491 t to summer load-line; lightship displacement 138t"
+    source: "W4 — Williams Shipping, spec sheet Wilcarry 501; sisters W5 (503) and W6 (504) print the same figures, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "three sheets (501, 503, 504), identical figures: one design; density not printed; summer load line read as sea water; sheets read from page images"
+  - id: wilcarry-1500-50x14
+    hold_type: pontoon
+    run_as: box
+    what: "Wilcarry 1500, flat-top pontoon, Neptune Marine Services (Arkhangelsk) 2002, BV"
+    loa_m: 50.0
+    beam_m: 14.0
+    depth_m: 3.0
+    draught_m: 2.32
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 279.6, dwt_t: 1280}
+    published: "Length O.A. 50.0 m; Beam O.A. 14.0 m; Moulded depth 3.0 m; light draft 0.47 m; loaded draft 2.32 m; deck load 6 tons/m2; DWT 1280t to summer load-line; lightship displacement 279.6t"
+    source: "W7 — Williams Shipping, spec sheet Wilcarry 1500, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "same hull size as Jenkins JML 50 (cargo capacity 1,300 t, loaded draft 2.35 m); density not printed; summer load line read as sea water; sheet read from a page image"
+  - id: wilcarry-1711-50x18.8
+    hold_type: pontoon
+    run_as: box
+    what: "Wilcarry 1711 (Neptune Marine Services, Holland 2011), BV; sister 1717 (Neptune Marine Projects, Poland 2017) prints the same figures"
+    loa_m: 50.0
+    beam_m: 18.8
+    depth_m: 3.0
+    draught_m: 2.312
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 431, dwt_t: 1680}
+    published: "Length O.A. 50.0 m; Beam O.A. 18.8m; Moulded depth 3.0 m; light draft 0.5 m; loaded draft 2.312 m; deck load 12t ton/m2; DWT 1680t to summer loadline; lightship displacement 431t; max displacement 2110t"
+    source: "W8 — Williams Shipping, spec sheet Wilcarry 1711; sister W9 (1717) prints the same figures, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "431 + 1680 = 2,111 against 2,110 printed (rounding); two sheets (1711, 1717), identical figures; density not printed; summer load line read as sea water; sheets read from page images"
+  - id: wilcarry-1750-45x20
+    hold_type: pontoon
+    run_as: box
+    what: "Wilcarry 1750, flat-top pontoon, Kieler Howaldswerke (Germany), GL 100 A5"
+    loa_m: 45.0
+    beam_m: 20.0
+    depth_m: 3.6
+    draught_m: 2.94
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 665, dwt_t: 1750}
+    published: "Length O.A. 45.0 m; Beam O.A. 20.0m; Moulded depth 3.6 m; light draft 0.94 m; loaded draft 2.94 m; deck load 2t - 10t tons/m2; DWT 1750t to summer load-line; lightship displacement 665t"
+    source: "W10 — Williams Shipping, spec sheet Wilcarry 1750, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "the drawing on page 1 dimensions the depth as 3.70 m; the particulars give a moulded depth of 3.6 m, which the case uses; density not printed; summer load line read as sea water; sheet read from a page image"
+  - id: wilcarry-22-12x4.8
+    hold_type: pontoon
+    run_as: box
+    what: "Wilcarry 22, road-transportable flat-top pontoon, UK, MCA, Workboat Code Cat 3"
+    loa_m: 12.20
+    beam_m: 4.80
+    depth_m: 1.20
+    draught_m: 0.71
+    water_density_t_m3: 1.025
+    observed: {lightship_t: 23.35, dwt_t: 20.0}
+    published: "Length O.A. 12.20 m; Beam O.A. 4.80 m; Moulded depth 1.20 m; light draft 0.24 m; loaded draft 0.71 m; DWT 20.0t to summer load-line; lightship displacement 23.35tt"
+    source: "W11 — Williams Shipping, spec sheet Wilcarry 22, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "lightship prints '23.35tt' (double t), read as 23.35 t; density not printed; summer load line read as sea water; sheet read from a page image"
+    exclude_from_fit_cb: "implied Cb above 1 ((DWT + lightship) / (rho L B T) = 1.017): the printed figures cannot all describe one condition"
+  - id: wilcarry-2508-24.7x17.8
+    hold_type: pontoon
+    run_as: box
+    what: "Wilcarry 2508, spacer barge (dumb barge), British Army 1989 (UK), Lloyd's + AT Barge, Protected Waters Service"
+    loa_m: 24.72
+    beam_m: 17.84
+    depth_m: 2.0
+    draught_m: 1.24
+    observed: {lightship_t: 88.2, dwt_t: 101}
+    published: "Length O.A. 24.72m; Beam O.A. 17.84m; Moulded Depth 2.0m; Light Draft 0.67m; Loaded Draft 1.24m; DWT 101t; Lightship Displacement 88.2t"
+    source: "W12 — Williams Shipping, spec sheet Wilcarry 2508, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "density not printed (fresh assumed); read as text from the PDF"
+    exclude_from_fit_cb: "implied Cb 0.35: the figures do not describe one box condition (a spacer barge, not a cargo box)"
+  - id: meb-rdb15-96x16.7
+    hold_type: deck
+    run_as: box
+    what: "Project RDB15, non-self-propelled open-deck vessel for \"design\" cargoes (MEB)"
+    loa_m: 96.00
+    beam_m: 16.73
+    depth_m: 5.30
+    draught_m: 3.30
+    observed: {dwt_t: 3866}
+    published: "Length overall 96.00 (between PP 95.50); breadth overall 16.73 (scantlings 16.50); depth 5.30; draught (in sea by SWL / in river) 3.54 / 3.30 m; ballast draft 3.30; deadweight (in sea / in river) 4,272 / 3,866 t; ballast tanks 2,106 m³"
+    source: "M12 — MEB project page, Project RDB15, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "two DWT figures: 3,866 t in river at 3.30 m (the case, fresh water) and 4,272 t in sea at 3.54 m (not used); the page also prints 'Ballast draft 3.30', equal to the river draught, which is odd; no lightship"
+  - id: meb-rdb21-85x17.2
+    hold_type: deck
+    run_as: box
+    what: "Project RDB21, small-draught non-self-propelled open-deck multipurpose river vessel (MEB)"
+    loa_m: 85.0
+    beam_m: 17.20
+    depth_m: 2.60
+    draught_m: 1.80
+    observed: {dwt_t: 1896}
+    published: "Length overall by hull 85.0 (by DWL 84.40); breadth by hull 17.20 (by DWL 17.0); depth 2.60; draught at DWL 1.80 m; deadweight at d = 1.40 / 1.6 / 1.8 / 2.0 / 2.15 / 2.35 m in river (about): 1,348 / 1,622 / 1,896 / 2,170 / 2,375 / 2,650 t"
+    source: "M13 — MEB project page, Project RDB21, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "the case takes the page's own table value at the DWL draught 1.80 m (1,896 t); the 2,650 t in the project title is the table value at 2.35 m; the table says 'about'; no lightship"
+  - id: meb-dcb26-78x16.5
+    hold_type: deck
+    run_as: box
+    what: "Project DCB26, modernization non-self-propelled open-deck vessel of project 16800 (MEB)"
+    loa_m: 77.80
+    beam_m: 16.50
+    depth_m: 2.80
+    draught_m: 1.863
+    observed: {dwt_t: 1564}
+    published: "Length overall by hull 77.80 (on MC of plimsoll mark 73.43); breadth 16.50; depth to the main deck 2.80; draught 1.863 m; deadweight 1,564 t; cargo carrying capacity 1,484"
+    source: "M14 — MEB project page, Project DCB26, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "the page also prints a cargo carrying capacity of 1,484 (unit not printed), kept here, not as a DWT; water density not stated (fresh assumed); a modernization of an older design; no lightship"
+  - id: canal-box-200x35x12-cby222
+    hold_type: box
+    what: "Canal Barge open box hopper barges CBY 222 - CBY 251 and sisters, 200 ft box hull (Canal Barge Hopper Barge Draft Table)"
+    loa_m: 60.96
+    beam_m: 10.668
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1529.51347164, light_draught_m: 0.381}
+    published: "200X35X12, BOX, OPEN; light draft 1' 3\"; table value at 9' 0\" 1686 (row: 2' 0\" 156; 8' 0\" 1467; 8' 6\" 1576; 9' 0\" 1686; 9' 6\" 1795; 10' 0\" 1905; 10' 6\" 2014; 11' 0\" 2123)"
+    source: "C1 — Canal Barge Company, Hopper Barge Draft Table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "the page labels neither the quantity nor the unit; read as deadweight in short tons, fresh water, because the table counts up from the light draught and the 0.5 ft step (109 against 109.2) matches a fresh-water short-ton waterplane of 200 × 35 ft (arithmetic check, not a published figure); series on the page: CBY 222 - CBY 251 (1997); JG 1111 - JG 1120 (1997); hull type BOX, cover OPEN; the existing case stretch-hopper-light gives a light draught of 0.79 m for a 200 × 35 × 12 ft box, about twice the 0.38 to 0.50 m the Canal table and the Ingram register print for the same size"
+  - id: canal-box-200x35x13-cby252
+    hold_type: box
+    what: "Canal Barge open box hopper barges CBY 252 - CBY 289 and sisters, 200 ft box hull (Canal Barge Hopper Barge Draft Table)"
+    loa_m: 60.96
+    beam_m: 10.668
+    depth_m: 3.9624
+    draught_m: 2.7432
+    observed: {dwt_t: 1487.7829736, light_draught_m: 0.4318}
+    published: "200X35X13, BOX, OPEN; light draft 1' 5\"; table value at 9' 0\" 1640 (row: 2' 0\" 110; 8' 0\" 1421; 8' 6\" 1530; 9' 0\" 1640; 9' 6\" 1749; 10' 0\" 1858; 10' 6\" 1968; 11' 0\" 2077)"
+    source: "C1 — Canal Barge Company, Hopper Barge Draft Table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "the page labels neither the quantity nor the unit; read as deadweight in short tons, fresh water, because the table counts up from the light draught and the 0.5 ft step (109 against 109.2) matches a fresh-water short-ton waterplane of 200 × 35 ft (arithmetic check, not a published figure); series on the page: CBY 252 - CBY 289 (2003); hull type BOX, cover OPEN; the existing case stretch-hopper-light gives a light draught of 0.79 m for a 200 × 35 × 12 ft box, about twice the 0.38 to 0.50 m the Canal table and the Ingram register print for the same size"
+  - id: canal-box-200x35x13-cby400
+    hold_type: box
+    what: "Canal Barge open box hopper barges CBY 400 - CBY 427 and sisters, 200 ft box hull (Canal Barge Hopper Barge Draft Table)"
+    loa_m: 60.96
+    beam_m: 10.668
+    depth_m: 3.9624
+    draught_m: 2.7432
+    observed: {dwt_t: 1497.76200574, light_draught_m: 0.4318}
+    published: "200X35X13, BOX, OPEN; light draft 1' 5\"; table value at 9' 0\" 1651 (row: 2' 0\" 121; 8' 0\" 1432; 8' 6\" 1541; 9' 0\" 1651; 9' 6\" 1760; 10' 0\" 1869; 10' 6\" 1979; 11' 0\" 2088)"
+    source: "C1 — Canal Barge Company, Hopper Barge Draft Table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "the page labels neither the quantity nor the unit; read as deadweight in short tons, fresh water, because the table counts up from the light draught and the 0.5 ft step (109 against 109.2) matches a fresh-water short-ton waterplane of 200 × 35 ft (arithmetic check, not a published figure); series on the page: CBY 400 - CBY 427 (2006); CBY 428 - CBY 432 (2010); hull type BOX, cover OPEN; the existing case stretch-hopper-light gives a light draught of 0.79 m for a 200 × 35 × 12 ft box, about twice the 0.38 to 0.50 m the Canal table and the Ingram register print for the same size"
+  - id: canal-box-200x35x13-cby433
+    hold_type: box
+    what: "Canal Barge open box hopper barges CBY 433 - CBY 448 and sisters, 200 ft box hull (Canal Barge Hopper Barge Draft Table)"
+    loa_m: 60.96
+    beam_m: 10.668
+    depth_m: 3.9624
+    draught_m: 2.7432
+    observed: {dwt_t: 1496.854821, light_draught_m: 0.4318}
+    published: "200X35X13, BOX, OPEN; light draft 1' 5\"; table value at 9' 0\" 1650 (row: 2' 0\" 120; 8' 0\" 1431; 8' 6\" 1540; 9' 0\" 1650; 9' 6\" 1759; 10' 0\" 1868; 10' 6\" 1978; 11' 0\" 2087)"
+    source: "C1 — Canal Barge Company, Hopper Barge Draft Table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "the page labels neither the quantity nor the unit; read as deadweight in short tons, fresh water, because the table counts up from the light draught and the 0.5 ft step (109 against 109.2) matches a fresh-water short-ton waterplane of 200 × 35 ft (arithmetic check, not a published figure); series on the page: CBY 433 - CBY 448 (2011); CBY 449 - CBY 458 (2012); hull type BOX, cover OPEN; the existing case stretch-hopper-light gives a light draught of 0.79 m for a 200 × 35 × 12 ft box, about twice the 0.38 to 0.50 m the Canal table and the Ingram register print for the same size"
+  - id: canal-box-200x35x12-imt201
+    hold_type: box
+    what: "Canal Barge open box hopper barges IMT 201B - IMT 204B and sisters, 200 ft box hull (Canal Barge Hopper Barge Draft Table)"
+    loa_m: 60.96
+    beam_m: 10.668
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1508.64822262, light_draught_m: 0.4064}
+    published: "200X35X12, BOX, OPEN; light draft 1' 4\"; table value at 9' 0\" 1663 (row: 2' 0\" 133; 8' 0\" 1444; 8' 6\" 1553; 9' 0\" 1663; 9' 6\" 1772; 10' 0\" 1882; 10' 6\" 1991; 11' 0\" 2100)"
+    source: "C1 — Canal Barge Company, Hopper Barge Draft Table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "the page labels neither the quantity nor the unit; read as deadweight in short tons, fresh water, because the table counts up from the light draught and the 0.5 ft step (109 against 109.2) matches a fresh-water short-ton waterplane of 200 × 35 ft (arithmetic check, not a published figure); series on the page: IMT 201B - IMT 204B (2000); hull type BOX, cover OPEN; the existing case stretch-hopper-light gives a light draught of 0.79 m for a 200 × 35 × 12 ft box, about twice the 0.38 to 0.50 m the Canal table and the Ingram register print for the same size"
+  - id: canal-box-200x35x12-imt205
+    hold_type: box
+    what: "Canal Barge open box hopper barges IMT 205B - IMT 208B and sisters, 200 ft box hull (Canal Barge Hopper Barge Draft Table)"
+    loa_m: 60.96
+    beam_m: 10.668
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1506.83385314, light_draught_m: 0.4064}
+    published: "200X35X12, BOX, OPEN; light draft 1' 4\"; table value at 9' 0\" 1661 (row: 2' 0\" 131; 8' 0\" 1442; 8' 6\" 1551; 9' 0\" 1661; 9' 6\" 1770; 10' 0\" 1880; 10' 6\" 1989; 11' 0\" 2098)"
+    source: "C1 — Canal Barge Company, Hopper Barge Draft Table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "the page labels neither the quantity nor the unit; read as deadweight in short tons, fresh water, because the table counts up from the light draught and the 0.5 ft step (109 against 109.2) matches a fresh-water short-ton waterplane of 200 × 35 ft (arithmetic check, not a published figure); series on the page: IMT 205B - IMT 208B (2001); hull type BOX, cover OPEN; the existing case stretch-hopper-light gives a light draught of 0.79 m for a 200 × 35 × 12 ft box, about twice the 0.38 to 0.50 m the Canal table and the Ingram register print for the same size"
+  - id: canal-box-200x35x12-pb2012
+    hold_type: box
+    what: "Canal Barge open box hopper barges PB 2012 - PB 2017 and sisters, 200 ft box hull (Canal Barge Hopper Barge Draft Table)"
+    loa_m: 60.96
+    beam_m: 10.668
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1462.38180088, light_draught_m: 0.50165}
+    published: "200X35X12, BOX, OPEN; light draft 1' 7-3/4\"; table value at 9' 0\" 1612 (row: 2' 0\" 84; 8' 0\" 1393; 8' 6\" 1502; 9' 0\" 1612; 9' 6\" 1721; 10' 0\" 1831; 10' 6\" 1940; 11' 0\" 2049)"
+    source: "C1 — Canal Barge Company, Hopper Barge Draft Table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "the page labels neither the quantity nor the unit; read as deadweight in short tons, fresh water, because the table counts up from the light draught and the 0.5 ft step (109 against 109.2) matches a fresh-water short-ton waterplane of 200 × 35 ft (arithmetic check, not a published figure); series on the page: PB 2012 - PB 2017 (2000); hull type BOX, cover OPEN; the existing case stretch-hopper-light gives a light draught of 0.79 m for a 200 × 35 × 12 ft box, about twice the 0.38 to 0.50 m the Canal table and the Ingram register print for the same size"
+  - id: canal-box-200x25x12-pb2230
+    hold_type: box
+    what: "Canal Barge PB 2230 - PB 2237, box hull (Canal Barge Hopper Barge Draft Table)"
+    loa_m: 60.96
+    beam_m: 7.62
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1462.38180088, light_draught_m: 0.50165}
+    published: "200X25X12, BOX, OPEN; light draft 1' 7-3/4\"; table value at 9' 0\" 1612 (row: 2' 0\" 84; 8' 0\" 1393; 8' 6\" 1502; 9' 0\" 1612; 9' 6\" 1721; 10' 0\" 1831; 10' 6\" 1940; 11' 0\" 2049)"
+    source: "C1 — Canal Barge Company, Hopper Barge Draft Table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "the page labels neither the quantity nor the unit; read as deadweight in short tons, fresh water, because the table counts up from the light draught and the 0.5 ft step (109 against 109.2) matches a fresh-water short-ton waterplane of 200 × 35 ft (arithmetic check, not a published figure); series on the page: PB 2230 - PB 2237 (2002); hull type BOX, cover OPEN; the existing case stretch-hopper-light gives a light draught of 0.79 m for a 200 × 35 × 12 ft box, about twice the 0.38 to 0.50 m the Canal table and the Ingram register print for the same size; the page prints the beam as 25 (200X25X12), probably a typo for 35: the figures are identical to the PB 2012 - PB 2017 row (200X35X12)"
+    exclude_from_fit_cb: "the page prints a 25 ft beam but its figures equal those of the 35 ft PB 2012 design: the dimensions or the figures are wrong"
+  - id: canal-box-200x35x13-pb2352
+    hold_type: box
+    what: "Canal Barge open box hopper barges PB 2352 - PB 2357 and sisters, 200 ft box hull (Canal Barge Hopper Barge Draft Table)"
+    loa_m: 60.96
+    beam_m: 10.668
+    depth_m: 3.9624
+    draught_m: 2.7432
+    observed: {dwt_t: 1475.08238724, light_draught_m: 0.479552}
+    published: "200X35X13, BOX, OPEN; light draft 1' 6-22/25\"; table value at 9' 0\" 1626 (row: 2' 0\" 98; 8' 0\" 1407; 8' 6\" 1517; 9' 0\" 1626; 9' 6\" 1736; 10' 0\" 1845; 10' 6\" 1954; 11' 0\" 2064)"
+    source: "C1 — Canal Barge Company, Hopper Barge Draft Table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "the page labels neither the quantity nor the unit; read as deadweight in short tons, fresh water, because the table counts up from the light draught and the 0.5 ft step (109 against 109.2) matches a fresh-water short-ton waterplane of 200 × 35 ft (arithmetic check, not a published figure); series on the page: PB 2352 - PB 2357 (2003); hull type BOX, cover OPEN; the existing case stretch-hopper-light gives a light draught of 0.79 m for a 200 × 35 × 12 ft box, about twice the 0.38 to 0.50 m the Canal table and the Ingram register print for the same size"
+  - id: canal-box-200x35x12-rci250
+    hold_type: box
+    what: "Canal Barge open box hopper barges RCI 250B - RCI 259B and sisters, 200 ft box hull (Canal Barge Hopper Barge Draft Table)"
+    loa_m: 60.96
+    beam_m: 10.668
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1516.81288528, light_draught_m: 0.4064}
+    published: "200X35X12, BOX, OPEN; light draft 1' 4\"; table value at 9' 0\" 1672 (row: 2' 0\" 145; 8' 0\" 1454; 8' 6\" 1563; 9' 0\" 1672; 9' 6\" 1781; 10' 0\" 1890; 10' 6\" 2000; 11' 0\" 2109)"
+    source: "C1 — Canal Barge Company, Hopper Barge Draft Table, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "the page labels neither the quantity nor the unit; read as deadweight in short tons, fresh water, because the table counts up from the light draught and the 0.5 ft step (109 against 109.2) matches a fresh-water short-ton waterplane of 200 × 35 ft (arithmetic check, not a published figure); series on the page: RCI 250B - RCI 259B (1992); hull type BOX, cover OPEN; the existing case stretch-hopper-light gives a light draught of 0.79 m for a 200 × 35 × 12 ft box, about twice the 0.38 to 0.50 m the Canal table and the Ingram register print for the same size"
+  - id: dsb-holdbarge-1997-76.5
+    hold_type: box
+    what: "Hold barge, built 1997, NW Europe (DSB Offshore broker listing, folio BP027C)"
+    loa_m: 76.5
+    beam_m: 11.4
+    depth_m: 4.0
+    draught_m: 3.9
+    observed: {dwt_t: 2737}
+    published: "Build date 1997; LOA (m) 76.5; Beam (m) 11.4; Draft (m) 3.9; Depth (m) 4; DWT (t) 2,737; hopper capacity blank"
+    source: "D1 — DSB Offshore, hold barge listing BP027C, accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "the page title says 76.5 x 11.44 m; the case uses the 11.4 m field; the listing only says 'holdbarge' (hold type not stated); no lightship; no class; no hold volume"
+  - id: jml50-pontoon
+    hold_type: pontoon
+    run_as: box
+    what: "JML 50 flat-top pontoon barge, 2 spuds, MCA International Loadline (Jenkins Marine); JML 5014 prints the same figures"
+    loa_m: 50
+    beam_m: 14
+    depth_m: 3
+    draught_m: 2.35
+    water_density_t_m3: 1.025
+    observed: {cargo_capacity_t: 1300, light_draught_m: 0.47}
+    published: "Length 50m; Beam 14m; Depth 3m; draft (light) 0.47m; draft (loaded) 2.35m; gross tonnage 544t; deck strength 6 t/m²; cargo capacity 1300t"
+    source: "J1 — Jenkins Marine, JML 50 spec sheet, accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "cargo capacity, not DWT; density not printed (1.025 as the JML 5019 case, which has the same load line); same hull size as Wilcarry 1500 (DWT 1,280 t at 2.32 m)"
+    cross_check_only: "cargo capacity, not DWT"
 
 motor_point:
   # GB 38030.1 draft explanatory note (2018), Tables 3-3/3-4: design-study points.
@@ -1106,3 +1682,403 @@ not_yet_runnable_cases:
     note_suggests: "hold out"
     flags: "self-propelled (motor point); DWCC not DWT; LOA includes ramp"
     not_yet_runnable: "self-propelled; DWCC not DWT; LOA includes ramp"
+  - id: usl-147-192x52
+    hold_type: gas
+    what: "USL 147 — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 58.5216
+    beam_m: 15.8496
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1705.5073112, tank_capacity_m3: 2271.292495341408}
+    published: "DWT 1,880 ST at 9 ft 0 in; capacity 14,286 bbl; 192 ft × 52 ft × 12 ft"
+    source: "K15 — Kirby Corporation barge database, USL 147 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): USL 147; capacity range in the group 14,286 bbl; table 8 ft – 9 ft (3 rows); Kirby type: Pressure"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "Kirby barge type 'Pressure': no gas hull model; capacity and DWT only"
+  - id: usl-148-193x52
+    hold_type: gas
+    what: "USL 148 — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 58.8264
+    beam_m: 15.8496
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1725.46537548, tank_capacity_m3: 2263.97907977472}
+    published: "DWT 1,902 ST at 9 ft 0 in; capacity 14,240 bbl; 193 ft × 52 ft × 12 ft"
+    source: "K16 — Kirby Corporation barge database, USL 148 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): USL 148; capacity range in the group 14,240 bbl; table 7 ft 8 in – 9 ft (3 rows); Kirby type: Pressure"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "Kirby barge type 'Pressure': no gas hull model; capacity and DWT only"
+  - id: dbl-709-245x48
+    hold_type: gas
+    what: "DBL 709 and sisters — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 74.676
+    beam_m: 14.6304
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1700.9713875, tank_capacity_m3: 2538.23216352552}
+    published: "DWT 1,875 ST at 9 ft 0 in; capacity 15,965 bbl; 245 ft × 48 ft × 12 ft"
+    source: "K17 — Kirby Corporation barge database, DBL 709 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "2 page(s): DBL 709, DBL 710; capacity range in the group 15,965 to 16,097 bbl; table 6 ft – 9 ft (12 rows); Kirby type: PRESSURE"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "Kirby barge type 'Pressure': no gas hull model; capacity and DWT only"
+  - id: cheyenne-256x53
+    hold_type: gas
+    what: "CHEYENNE — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 78.0288
+    beam_m: 16.1544
+    depth_m: 4.1402
+    draught_m: 2.7432
+    observed: {dwt_t: 1426.09441128, tank_capacity_m3: 2646.34352407656}
+    published: "DWT 1,572 ST at 9 ft 0 in; capacity 16,645 bbl; 256 ft × 53 ft × 13 ft 7 in"
+    source: "K18 — Kirby Corporation barge database, CHEYENNE (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): CHEYENNE; capacity range in the group 16,645 bbl; table 9 ft – 9 ft (1 rows); Kirby type: Pressure"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "Kirby barge type 'Pressure': no gas hull model; capacity and DWT only"
+  - id: arrowhead-266-260x48
+    hold_type: gas
+    what: "ARROWHEAD 266 — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 79.248
+    beam_m: 14.6304
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1492.3188973, tank_capacity_m3: 2648.410358910624}
+    published: "DWT 1,645 ST at 9 ft 0 in; capacity 16,658 bbl; 260 ft × 48 ft × 12 ft"
+    source: "K19 — Kirby Corporation barge database, ARROWHEAD 266 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): ARROWHEAD 266; capacity range in the group 16,658 bbl; table 4 ft 3 in – 9 ft (20 rows); Kirby type: Pressure"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "Kirby barge type 'Pressure': no gas hull model; capacity and DWT only"
+  - id: creek-175x42
+    hold_type: tank
+    what: "CREEK — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 53.34
+    beam_m: 12.8016
+    depth_m: 3.5052
+    draught_m: 2.7432
+    observed: {dwt_t: 1083.17857956, tank_capacity_m3: 1689.875957789712}
+    published: "DWT 1,194 ST at 9 ft 0 in; capacity 10,629 bbl; 175 ft × 42 ft × 11 ft 6 in"
+    source: "K20 — Kirby Corporation barge database, CREEK (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): CREEK; capacity range in the group 10,629 bbl; table 9 ft – 9 ft (1 rows); Kirby type: blank; identical 1,194 ST table on three records with different dimensions (175 × 42, 175 × 42 ft 1 in, 210 ft 1 in × 44 ft 1 in): a copied table is likely"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: cherokee-bg-175x42
+    hold_type: tank
+    what: "CHEROKEE-BG and sisters — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 53.34
+    beam_m: 12.827
+    depth_m: 3.5052
+    draught_m: 2.7432
+    observed: {dwt_t: 1083.17857956, tank_capacity_m3: 1700.528106549888}
+    published: "DWT 1,194 ST at 9 ft 0 in; capacity 10,696 bbl; 175 ft × 42 ft 1 in × 11 ft 6 in"
+    source: "K21 — Kirby Corporation barge database, CHEROKEE-BG (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "3 page(s): CHEROKEE-BG, CHICKASAW, CHOCTAW; capacity range in the group 10,629 to 10,696 bbl; table 9 ft – 9 ft (1 rows); Kirby type: blank; identical 1,194 ST table on three records with different dimensions: a copied table is likely"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: cc-133-184x52
+    hold_type: tank
+    what: "CC 133 — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 56.0832
+    beam_m: 15.8496
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1762.65994982, tank_capacity_m3: 2271.292495341408}
+    published: "DWT 1,943 ST at 9 ft 0 in; capacity 14,286 bbl; 184 ft × 52 ft × 12 ft"
+    source: "K22 — Kirby Corporation barge database, CC 133 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): CC 133; capacity range in the group 14,286 bbl; table 3 ft – 11 ft 6 in (18 rows); Kirby type: blank"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: cc-132-184x52
+    hold_type: tank
+    what: "CC 132 and sisters — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 56.0832
+    beam_m: 15.8496
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1805.2976326, tank_capacity_m3: 2271.292495341408}
+    published: "DWT 1,990 ST at 9 ft 0 in; capacity 14,286 bbl; 184 ft × 52 ft × 12 ft"
+    source: "K23 — Kirby Corporation barge database, CC 132 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "2 page(s): CC 132, CC 134; capacity range in the group 14,286 bbl; table 3 ft – 11 ft 6 in (18 rows); Kirby type: blank, Pressure; one page in the group is typed 'Pressure', the rest are not"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: usl-146-192x52
+    hold_type: tank
+    what: "USL 146 — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 58.5216
+    beam_m: 15.8496
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1725.46537548, tank_capacity_m3: 2271.292495341408}
+    published: "DWT 1,902 ST at 9 ft 0 in; capacity 14,286 bbl; 192 ft × 52 ft × 12 ft"
+    source: "K24 — Kirby Corporation barge database, USL 146 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): USL 146; capacity range in the group 14,286 bbl; table 7 ft 8 in – 9 ft (3 rows); Kirby type: Tank"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: city-of-galveston-210x44
+    hold_type: tank
+    what: "CITY OF GALVESTON — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 64.0334
+    beam_m: 13.4366
+    depth_m: 3.5306
+    draught_m: 2.7432
+    observed: {dwt_t: 1083.17857956, tank_capacity_m3: 1608.95142467136}
+    published: "DWT 1,194 ST at 9 ft 0 in; capacity 10,120 bbl; 210 ft 1 in × 44 ft 1 in × 11 ft 7 in"
+    source: "K25 — Kirby Corporation barge database, CITY OF GALVESTON (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): CITY OF GALVESTON; capacity range in the group 10,120 bbl; table 9 ft – 9 ft (1 rows); Kirby type: blank; identical 1,194 ST table on three records with different dimensions: a copied table is likely"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: ci-1609-239x52
+    hold_type: tank
+    what: "CI 1609 and sisters — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 72.9742
+    beam_m: 15.8496
+    depth_m: 3.9624
+    draught_m: 2.7432
+    observed: {dwt_t: 1905.087954, tank_capacity_m3: 2601.03214502208}
+    published: "DWT 2,100 ST at 9 ft 0 in; capacity 16,360 bbl; 239 ft 5 in × 52 ft × 13 ft"
+    source: "K26 — Kirby Corporation barge database, CI 1609 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "2 page(s): CI 1609, CI 1608; capacity range in the group 16,360 bbl; table 9 ft – 9 ft (1 rows); Kirby type: blank; the same 2,100 ST table as CMS 1601 (222 ft × 54 ft × 12 ft), which has other dimensions"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: karankawa-245x48
+    hold_type: tank
+    what: "KARANKAWA — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 74.676
+    beam_m: 14.6304
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1678.291769, tank_capacity_m3: 2559.854435635728}
+    published: "DWT 1,850 ST at 9 ft 0 in; capacity 16,101 bbl; 245 ft × 48 ft × 12 ft"
+    source: "K27 — Kirby Corporation barge database, KARANKAWA (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): KARANKAWA; capacity range in the group 16,101 bbl; table 9 ft – 9 ft (1 rows); Kirby type: TANK BARGE"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: fmt-2054-245x48
+    hold_type: tank
+    what: "FMT 2054 and sisters — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 74.676
+    beam_m: 14.6304
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1699.15701802, tank_capacity_m3: 2564.147092598784}
+    published: "DWT 1,873 ST at 9 ft 0 in; capacity 16,128 bbl; 245 ft × 48 ft × 12 ft"
+    source: "K28 — Kirby Corporation barge database, FMT 2054 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "5 page(s): FMT 2054, FMT 2060, FMT 2064, FMT 2066, FMT 2056; capacity range in the group 15,940 to 16,132 bbl; table 5 ft – 10 ft (11 rows); Kirby type: Specialty, Pressure; one page in the group is typed 'Pressure', the rest are not"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: fmt-2068-245x48
+    hold_type: tank
+    what: "FMT 2068 — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 74.676
+    beam_m: 14.6304
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 1718.20789756, tank_capacity_m3: 2555.7207659676}
+    published: "DWT 1,894 ST at 9 ft 0 in; capacity 16,075 bbl; 245 ft × 48 ft × 12 ft"
+    source: "K29 — Kirby Corporation barge database, FMT 2068 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): FMT 2068; capacity range in the group 16,075 bbl; table 5 ft – 11 ft (26 rows); Kirby type: Specialty"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: dbl-703-250x52
+    hold_type: tank
+    what: "DBL 703 — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 76.2
+    beam_m: 15.8496
+    depth_m: 3.9624
+    draught_m: 2.7432
+    observed: {dwt_t: 1592.1092187, tank_capacity_m3: 2700.081229762224}
+    published: "DWT 1,755 ST at 9 ft 0 in; capacity 16,983 bbl; 250 ft × 52 ft × 13 ft"
+    source: "K30 — Kirby Corporation barge database, DBL 703 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): DBL 703; capacity range in the group 16,983 bbl; table 9 ft – 9 ft (1 rows); Kirby type: blank"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: 401-270x54
+    hold_type: tank
+    what: "401 — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 82.296
+    beam_m: 16.4592
+    depth_m: 3.9624
+    draught_m: 2.7432
+    observed: {dwt_t: 3117.99395138, tank_capacity_m3: 3233.483604245664}
+    published: "DWT 3,437 ST at 9 ft 0 in; capacity 20,338 bbl; 270 ft × 54 ft × 13 ft"
+    source: "K31 — Kirby Corporation barge database, 401 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): 401; capacity range in the group 20,338 bbl; table 9 ft – 9 ft (1 rows); Kirby type: blank; 3,437 ST is also printed for barge 403, which has other dimensions (263 ft 2 in × 54 ft × 15 ft)"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: kirby-27730-290x54
+    hold_type: tank
+    what: "KIRBY 27730 — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 88.519
+    beam_m: 16.4592
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 3020.9251842, tank_capacity_m3: 4379.146051496832}
+    published: "DWT 3,330 ST at 9 ft 0 in; capacity 27,544 bbl; 290 ft 5 in × 54 ft × 12 ft"
+    source: "K32 — Kirby Corporation barge database, KIRBY 27730 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): KIRBY 27730; capacity range in the group 27,544 bbl; table 8 ft – 10 ft (3 rows); Kirby type: Black Oil"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: kirby-21853-295x50
+    hold_type: tank
+    what: "KIRBY 21853 — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 89.916
+    beam_m: 15.24
+    depth_m: 4.2672
+    draught_m: 2.7432
+    observed: {dwt_t: 3004.59585888, tank_capacity_m3: 3469.10277532896}
+    published: "DWT 3,312 ST at 9 ft 0 in; capacity 21,820 bbl; 295 ft × 50 ft × 14 ft"
+    source: "K33 — Kirby Corporation barge database, KIRBY 21853 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): KIRBY 21853; capacity range in the group 21,820 bbl; table 7 ft – 12 ft (11 rows); Kirby type: Specialty"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: kirby-29173-297x52
+    hold_type: tank
+    what: "KIRBY 29173 — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 90.5256
+    beam_m: 15.8496
+    depth_m: 3.6576
+    draught_m: 2.7432
+    observed: {dwt_t: 3002.7814894, tank_capacity_m3: 4654.035084427344}
+    published: "DWT 3,310 ST at 9 ft 0 in; capacity 29,273 bbl; 297 ft × 52 ft × 12 ft"
+    source: "K34 — Kirby Corporation barge database, KIRBY 29173 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): KIRBY 29173; capacity range in the group 29,273 bbl; table 9 ft – 11 ft 6 in (3 rows); Kirby type: blank"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: ctco-251-297x50
+    hold_type: tank
+    what: "CTCO 251 and sisters — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 90.6526
+    beam_m: 15.24
+    depth_m: 3.9624
+    draught_m: 2.7432
+    observed: {dwt_t: 2794.1289992, tank_capacity_m3: 4727.010252799296}
+    published: "DWT 3,080 ST at 9 ft 0 in; capacity 29,732 bbl; 297 ft 5 in × 50 ft × 13 ft"
+    source: "K35 — Kirby Corporation barge database, CTCO 251 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "6 page(s): CTCO 251, CTCO 250, CTCO 254, CTCO 255, CTCO 252, CTCO 253; capacity range in the group 29,506 to 29,732 bbl; table 8 ft – 10 ft (3 rows); Kirby type: Clean; 3,080 ST is printed on three hulls with different dimensions (here, ACT 101, CTCO 3000)"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: ctco-3000-308x54
+    hold_type: tank
+    what: "CTCO 3000 — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 93.8784
+    beam_m: 16.4592
+    depth_m: 5.7912
+    draught_m: 2.7432
+    observed: {dwt_t: 2794.1289992, tank_capacity_m3: 4792.830992899488}
+    published: "DWT 3,080 ST at 9 ft 0 in; capacity 30,146 bbl; 308 ft × 54 ft × 19 ft"
+    source: "K36 — Kirby Corporation barge database, CTCO 3000 (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): CTCO 3000; capacity range in the group 30,146 bbl; table 8 ft – 10 ft (3 rows); Kirby type: Clean; 3,080 ST is printed on three hulls with different dimensions (here, CTCO 251, ACT 101); height 19 ft"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: comanche-380x54
+    hold_type: tank
+    what: "COMANCHE — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 115.824
+    beam_m: 16.4592
+    depth_m: 4.2672
+    draught_m: 2.7432
+    observed: {dwt_t: 2617.2279749, tank_capacity_m3: 4839.255283018464}
+    published: "DWT 2,885 ST at 9 ft 0 in; capacity 30,438 bbl; 380 ft × 54 ft × 14 ft"
+    source: "K37 — Kirby Corporation barge database, COMANCHE (Wayback capture), accessed 2026-10-16"
+    confidence: medium
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): COMANCHE; capacity range in the group 30,438 bbl; table 4 ft 6 in – 10 ft (23 rows); Kirby type: blank"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: winna-wilson-461x90
+    hold_type: tank
+    what: "WINNA WILSON — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 140.5128
+    beam_m: 27.432
+    depth_m: 10.9728
+    draught_m: 2.7432
+    observed: {dwt_t: 15422.14058, tank_capacity_m3: 23848.0942392}
+    published: "DWT 17,000 ST at 9 ft 0 in; capacity 150,000 bbl; 461 ft × 90 ft × 36 ft"
+    source: "K38 — Kirby Corporation barge database, WINNA WILSON (Wayback capture), accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "implied Cb 1.459 on the 9 ft row, which is impossible: the 9 ft row does not belong with the table's other draughts; 1 page(s): WINNA WILSON; capacity range in the group 150,000 bbl; table 9 ft – 21 ft (2 rows); Kirby type: Dry Bulk; Kirby type 'Dry Bulk' with a capacity of 150,000 bbl and a 9 ft row far below the table's other draughts: hull type unclear"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+  - id: miss-dott-o-463x82
+    hold_type: tank
+    what: "MISS DOTT O — US inland double-skin barge (Kirby database, archived)"
+    loa_m: 141.1224
+    beam_m: 24.9936
+    depth_m: 9.144
+    draught_m: 2.7432
+    observed: {dwt_t: 7587.69316536, tank_capacity_m3: 23848.0942392}
+    published: "DWT 8,364 ST at 9 ft 0 in; capacity 150,000 bbl; 463 ft × 82 ft × 30 ft"
+    source: "K39 — Kirby Corporation barge database, MISS DOTT O (Wayback capture), accessed 2026-10-16"
+    confidence: low
+    held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
+    found_by: "follow-up research 2026-10-16 (not from the research note)"
+    flags: "1 page(s): MISS DOTT O; capacity range in the group 150,000 bbl; table 9 ft – 23 ft (18 rows); Kirby type: Dry Bulk; Kirby type 'Dry Bulk' with a capacity of 150,000 bbl and a 9 ft row far below the table's other draughts: hull type unclear"
+    note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
+    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
