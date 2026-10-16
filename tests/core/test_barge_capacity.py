@@ -43,16 +43,21 @@ def test_gas_golden_example():
     `max_tank_od_m` since issue #175 and is 16 m by default; this snapshot is of the 12 m case, so
     it sets it.
 
+    Re-pinned in issue #237 (the one rule set, IGC_2G, is the per-tank d(Vc) of IGC 2.4.1.1 with
+    the datum of 2.4.2, dome in Vc): the values are what the code prints now. They were OD 6.50 m,
+    1,497 t, draught 2.37 m and air draft 7.19 m under the stepped reading, which asked for a larger
+    side clearance.
+
     Label: snapshot
     """
     r = _gas(max_tank_od_m=12.0)
     assert r.phase == "liquid_gas"
     assert r.n_tanks_wide == 2
-    assert abs(r.tank_outer_diameter_m - 6.50) < 0.05
+    assert abs(r.tank_outer_diameter_m - 7.05) < 0.05
     assert r.tank_outer_diameter_m <= 12.0 + 1e-9          # the rule itself
-    assert abs(r.cargo_capacity_t - 1497) < 5
-    assert abs(r.full_load_draft_m - 2.37) < 0.02
-    assert abs(r.air_draft_m - 7.19) < 0.05
+    assert abs(r.cargo_capacity_t - 1786) < 5
+    assert abs(r.full_load_draft_m - 2.64) < 0.02
+    assert abs(r.air_draft_m - 7.13) < 0.05
     assert abs(r.cargo_zone_length_m - 68.01) < 0.05
     assert r.ok and not r.overloaded
 
@@ -160,8 +165,11 @@ def test_gas_capacity_falls_slightly_with_depth():
     shallow, deep = _gas(depth=5.0), _gas(depth=6.0)
     assert deep.cargo_capacity_t < shallow.cargo_capacity_t
     assert abs(deep.bow_rake_length_m - shallow.bow_rake_length_m - 1.6) < 1e-9
-    # the ONLY channel is the rake: same OD, same tank count
-    assert deep.tank_outer_diameter_m == shallow.tank_outer_diameter_m
+    # the rake is the ONLY direct channel: same tank count. Since issue #237 it also moves the tank
+    # OD a little, through the per-tank d(Vc) of IGC 2.4.1.1: a shorter cargo zone gives shorter
+    # tanks, a smaller Vc, a smaller d, so a smaller clearance and a (very slightly) wider tank.
+    assert abs(deep.tank_outer_diameter_m - shallow.tank_outer_diameter_m) < 0.01 * shallow.tank_outer_diameter_m
+    assert deep.n_tanks_wide == shallow.n_tanks_wide
     assert (shallow.cargo_capacity_t - deep.cargo_capacity_t) / shallow.cargo_capacity_t < 0.05
 
 

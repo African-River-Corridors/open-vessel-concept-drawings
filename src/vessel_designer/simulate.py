@@ -22,8 +22,8 @@ from .core.resistance import (  # noqa: F401
     EnvironmentInputs, ResistanceInputs, TugInputs, compute as resistance)
 
 RHO = 1.0  # fresh water, t/m3
-# Tank filling limit by ruleset (defect 7): IGC 15.3 default 98 %, for both IGC rulesets.
-FILL_BY_RULESET = {"IGC_2G": 0.98, "IGC_2G_EXACT": 0.98}
+# Tank filling limit by ruleset (defect 7): IGC 15.3 default 98 %, for the IGC rule set.
+FILL_BY_RULESET = {"IGC_2G": 0.98}
 
 VESSELS = {
     # id: (label, hold_type for the core, allowed cargo phases)

@@ -282,14 +282,13 @@ fn convoy_to_self_propelled_and_back_restores_the_counts() {
 fn a_default_that_follows_another_input_follows_it_when_that_input_changes() {
     let mut s = open("gas_igc_2g_exact");
     assert_eq!(input(&s, "Option 1", "fill_ratio").value, json!(0.98));
-    // Both IGC rulesets give 0.98, so the default stays and is still a default.
+    // IGC_2G gives 0.98 (the one rule set, issue #237), so the default stays and is still a default.
     s.set_input("Option 1", "ruleset", json!("IGC_2G")).unwrap();
     assert_eq!(input(&s, "Option 1", "fill_ratio").value, json!(0.98));
     assert_eq!(input(&s, "Option 1", "fill_ratio").source, Source::Default);
     // A typed value stays.
     s.set_input("Option 1", "fill_ratio", json!(0.9)).unwrap();
-    s.set_input("Option 1", "ruleset", json!("IGC_2G_EXACT"))
-        .unwrap();
+    s.set_input("Option 1", "ruleset", json!("IGC_2G")).unwrap();
     assert_eq!(input(&s, "Option 1", "fill_ratio").value, json!(0.9));
 }
 
@@ -698,7 +697,7 @@ fn the_schema_names_cargo_and_gives_keyed_defaults_and_containments() {
     assert_eq!(get("fill_ratio")["default_by"]["by"], json!("ruleset"));
     assert_eq!(
         get("fill_ratio")["default_by"]["values"],
-        json!({ "IGC_2G": 0.98, "IGC_2G_EXACT": 0.98 })
+        json!({ "IGC_2G": 0.98 })
     );
     // Issue #175: the ADN ruleset and its tank cap are gone; the diameter cap is an input.
     let ruleset = get("ruleset");
@@ -708,7 +707,7 @@ fn the_schema_names_cargo_and_gives_keyed_defaults_and_containments() {
         .iter()
         .map(|c| c["value"].as_str().unwrap())
         .collect();
-    assert_eq!(choices, ["IGC_2G", "IGC_2G_EXACT"]);
+    assert_eq!(choices, ["IGC_2G"]);
     assert!(
         schema["inputs"]
             .as_array()

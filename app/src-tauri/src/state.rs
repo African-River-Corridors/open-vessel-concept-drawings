@@ -335,9 +335,10 @@ mod tests {
         let mut state = AppState::open(Path::new("old.vdesign"), &text).unwrap();
         let notes = state.snapshot()["migration_notes"].clone();
         let notes = notes.as_array().unwrap();
-        // Three for the version 1 changes, and one for the hull end input a version 1 file lacks
-        // (issue #4): it gets the fixed value the engine used.
-        assert_eq!(notes.len(), 4, "{notes:?}");
+        // Three for the version 1 changes, one for the dome diameter (issue #237: the dome now
+        // counts in Vc, so results may change), and one for the hull end input a version 1 file
+        // lacks (issue #4): it gets the fixed value the engine used.
+        assert_eq!(notes.len(), 5, "{notes:?}");
         assert!(
             notes[0]
                 .as_str()
@@ -356,7 +357,14 @@ mod tests {
                 .unwrap()
                 .contains("has no `max_tank_od_m`; it now uses the default 16 m")
         );
-        let last = notes[3].as_str().unwrap();
+        assert!(
+            notes[3]
+                .as_str()
+                .unwrap()
+                .contains("has no `tank_dome_diameter_m`; it now holds 2.0 m"),
+            "{notes:?}"
+        );
+        let last = notes[4].as_str().unwrap();
         assert!(
             last.contains("has no `bow_rake_length_to_depth_ratio`"),
             "{last}"

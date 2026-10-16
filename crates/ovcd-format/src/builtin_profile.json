@@ -85,10 +85,10 @@
       "basis": "calibrated box barges span 0.095 to 0.1223 t/m3 (calibration/factors.yaml)"
     },
     "ruleset": {
-      "default": "IGC_2G_EXACT"
+      "default": "IGC_2G"
     },
     "fill_ratio": {
-      "default_by_ruleset": { "IGC_2G": 0.98, "IGC_2G_EXACT": 0.98 },
+      "default_by_ruleset": { "IGC_2G": 0.98 },
       "unit": "-",
       "hard": { "ge": 0.1, "le": 1 },
       "soft": { "min": 0.8, "max": 0.99 },
@@ -198,6 +198,13 @@
       "hard": { "ge": 0, "le": 10 },
       "soft": { "min": 0.5, "max": 3.0 },
       "basis": "carried over from the original engine: the dome above the tank top. It raises the air draft"
+    },
+    "tank_dome_diameter_m": {
+      "default": 2.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.5, "max": 3.0 },
+      "basis": "nominal cylindrical dome as wide as it is high; no published source yet. Counts in Vc only (IGC 2.4.1.1: Vc includes domes and appendages)"
     },
     "wing_tank_gap_m": {
       "default": 0.6,

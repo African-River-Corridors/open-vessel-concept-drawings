@@ -115,6 +115,7 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
         "tanks_in_line",
         "tank_support_height_m",
         "tank_dome_height_m",
+        "tank_dome_diameter_m",
         "wing_tank_gap_m",
         "wing_tank_height_ratio",
         "tank_wall_thickness_mm",

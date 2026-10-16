@@ -15,8 +15,8 @@ is planned; see the [roadmap](ROADMAP.md).
   `vessel_designer.core.vessel_standards`.
 - **Capacity.** Volume-bound cargo for dry-bulk holds (sloped hopper, box, container) and for
   liquefied-gas barges with IMO Type C tanks (`core.barge_capacity`).
-- **Gas tank arrangement.** Protective-location clearances under IGC type 2G (stepped, or exactly as
-  written), a tank outer diameter cap (an input, 16 m by default) and tank length at most 7
+- **Gas tank arrangement.** Protective-location clearances under IGC type 2G (the distance d(Vc) of
+  IGC 2.4.1.1 per tank, dome included in Vc, measured plate to plate per 2.4.2), a tank outer diameter cap (an input, 16 m by default) and tank length at most 7
   diameters, and a search over depth and tanks abreast for the most cargo at a draught limit
   (`core.gas_arrangement`). Only IGC rules apply to gas tanks.
 - **Hydrostatics and stability.** Equilibrium draught, freeboard, air draught, and intact stability
@@ -93,15 +93,17 @@ best = fit(loa, beam, "LPG_propane", 4.4, ruleset="IGC_2G", depths=(6.5,))
 Output:
 
 ```
-Class CN II: 90 m x 14.8 m, 2,000 t class deadweight
-Single run : 2 tanks abreast, OD 5.90 m, 1,156 t, laden draught 2.31 m
-Searched   : 1 tank(s) abreast, OD 10.80 m, 2,058 t (volume-bound), draught 3.42 m
-  check failed: wheelhouse_sees_over_cargo: raised eye 14.00 m >= obstruction 14.80 m + 0.50 m margin (lift used 6.00 m of 6.00 m)
+Class CN-GB50139 CN-II-MOTOR: 90 m x 14.8 m, 2,000 t class deadweight
+Single run : 1 tanks abreast, OD 13.70 m, 3,278 t, laden draught 4.70 m
+Searched   : 1 tank(s) abreast, OD 13.70 m, 2,943 t (draft-bound), draught 4.40 m
+  check failed: wheelhouse_sees_over_cargo: raised eye 14.00 m >= obstruction 16.34 m + 0.50 m margin (lift used 6.00 m of 6.00 m)
 ```
 
-The single run settles on two small tanks; the search finds one large tank carries 78 % more. Every
-result carries its checks. Here the wheelhouse cannot see over the large tank, so a real design must
-raise the eye or accept a smaller tank.
+The single run fills the tank volume and ignores the draught cap: its laden draught, 4.70 m, is over
+the 4.4 m cap. The search respects the cap and carries 2,943 t. Tank side clearance follows IGC Code
+2.4.1.1 (the distance d(Vc), per tank, dome included in Vc), measured plate to plate with the
+insulation inside d (2.4.2). Every result carries its checks. Here the wheelhouse cannot see over the
+large tank, so a real design must raise the eye or accept a smaller tank.
 
 ## Layout
 

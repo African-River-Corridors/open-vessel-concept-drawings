@@ -11,10 +11,14 @@ from vessel_designer.core.gas_arrangement import fit, required_side_clearance, s
 def test_cn_ii_benchmark_is_reproduced():
     """Example CN II gas figure: 90 x 14.8 x 6.5 m, propane, T 4.4 m, IGC 2G, fill 0.95.
 
+    Re-pinned in issue #237 (the per-tank d(Vc) of IGC 2.4.1.1, datum of 2.4.2, dome in Vc): the
+    value is what the code prints now, 2,943.44 t. It was 2,058 t under the stepped reading, which
+    asked for 2.0 m of side clearance at this tank volume. See the before/after table in CHANGELOG.md.
+
     Label: snapshot
     """
     f = fit(90.0, 14.8, "LPG_propane", 4.4, depths=[6.5], ruleset="IGC_2G", fill_ratio=0.95)
-    assert abs(f.payload_t - 2058) < 1.0
+    assert abs(f.payload_t - 2943) < 1.0
     assert f.n_tanks_wide == 1
 
 
@@ -61,7 +65,8 @@ def test_payload_never_exceeds_the_draught_cap():
     assert f.draft_at_payload_m <= 3.0 + 1e-6
 
 
-# Regression snapshot: IGC_2G_EXACT, fill 0.98, T 3.0 m, self-propelled, LNG.
+# Regression snapshot: IGC_2G (before issue #237 named IGC_2G_EXACT; the dome in Vc moves these by
+# less than 1 t, within the tolerance below), fill 0.98, T 3.0 m, self-propelled, LNG.
 # 120 x 18 was re-pinned from 2,922 t (2 x 8.0 m tanks) to 2,813 t (1 x 11.0 m) by the
 # pass-first fix (issue #6): the old design had 0.48 m side clearance, below an inland 0.80 m
 # floor. Issue #215 removed that floor, so it is 2,922 t (2 x 8.0 m) again, the value of 0.1.0.
@@ -75,7 +80,7 @@ def test_regression_snapshot(dims, expected):
     """Label: snapshot
     """
     L, B = dims
-    f = fit(float(L), B, "LNG", 3.0, ruleset="IGC_2G_EXACT", fill_ratio=0.98, max_tank_od_m=12.0)
+    f = fit(float(L), B, "LNG", 3.0, ruleset="IGC_2G", fill_ratio=0.98, max_tank_od_m=12.0)
     assert abs(f.payload_t - expected) < 1.0, f.payload_t
 
 
@@ -85,7 +90,7 @@ def test_snapshot_120x18_is_two_8m_tanks_abreast():
 
     Label: snapshot
     """
-    f = fit(120.0, 18.0, "LNG", 3.0, ruleset="IGC_2G_EXACT", fill_ratio=0.98, max_tank_od_m=12.0)
+    f = fit(120.0, 18.0, "LNG", 3.0, ruleset="IGC_2G", fill_ratio=0.98, max_tank_od_m=12.0)
     assert f.feasible
     assert f.n_tanks_wide == 2 and abs(f.tank_od_m - 8.017) < 0.001
 
@@ -93,7 +98,9 @@ def test_snapshot_120x18_is_two_8m_tanks_abreast():
 # The same hulls under the default 16 m cap. Values printed by this code when the cap moved
 # (issue #175), not by the frozen Python; the before/after table is in CHANGELOG.md. The 120 x 18
 # value moved again with issue #215 (the inland type-G side floor went); the printed value is pinned.
-SNAPSHOT_16 = [((90, 14.8), 1755.1158212773869), ((120, 18.0), 2921.7916111312247)]
+# Issue #237 (the dome now counts in Vc) moved both again, by under 0.1 t: re-pinned to the printed
+# values; they were 1755.1158212773869 and 2921.7916111312247.
+SNAPSHOT_16 = [((90, 14.8), 1755.2051149886904), ((120, 18.0), 2921.887266646023)]
 
 
 @pytest.mark.parametrize("dims,expected", SNAPSHOT_16)
@@ -101,7 +108,7 @@ def test_regression_snapshot_with_the_default_16_m_cap(dims, expected):
     """Label: snapshot
     """
     L, B = dims
-    f = fit(float(L), B, "LNG", 3.0, ruleset="IGC_2G_EXACT", fill_ratio=0.98)
+    f = fit(float(L), B, "LNG", 3.0, ruleset="IGC_2G", fill_ratio=0.98)
     assert f.engine_inputs.max_tank_od_m == 16.0
     assert abs(f.payload_t - expected) < 1e-9, f.payload_t
 
@@ -126,7 +133,7 @@ def test_the_design_that_failed_only_the_type_g_floor_now_passes():
 
     Label: property
     """
-    f = fit(120.0, 18.0, "LNG", 3.0, ruleset="IGC_2G_EXACT", fill_ratio=0.98,
+    f = fit(120.0, 18.0, "LNG", 3.0, ruleset="IGC_2G", fill_ratio=0.98,
             depths=[5.75], tanks_wide=(2,), extra_clearance_m=())
     assert f.feasible
     assert f.failed_checks == []
@@ -138,15 +145,18 @@ def test_nothing_fits_is_infeasible():
     assert not fit(22.0, 12.0, "LNG", 3.0).feasible
 
 
-def test_adn_g_is_gone_and_only_the_two_igc_rulesets_are_left():
-    """Issue #175: the engine applies IGC rules only to gas tanks.
+def test_adn_g_is_gone_and_only_igc_2g_is_left():
+    """Issue #175: the engine applies IGC rules only to gas tanks. Issue #237: one rule set, IGC_2G
+    (the per-tank d(Vc) of IGC 2.4.1.1); IGC_2G_EXACT is not offered.
 
     Label: property
     """
     from vessel_designer.core import gas_arrangement
-    assert gas_arrangement.RULESETS == ("IGC_2G", "IGC_2G_EXACT")
-    with pytest.raises(ValueError, match=r"ruleset must be one of \('IGC_2G', 'IGC_2G_EXACT'\)"):
+    assert gas_arrangement.RULESETS == ("IGC_2G",)
+    with pytest.raises(ValueError, match=r"ruleset must be one of \('IGC_2G',\)"):
         fit(110.0, 11.4, "LNG", 3.0, ruleset="ADN_G")
+    with pytest.raises(ValueError, match=r"ruleset must be one of \('IGC_2G',\)"):
+        fit(110.0, 11.4, "LNG", 3.0, ruleset="IGC_2G_EXACT")
     with pytest.raises(TypeError):
         fit(110.0, 11.4, "LNG", 3.0, adn_tank_cap_m3=380.0)
 
@@ -156,7 +166,7 @@ def test_the_tank_diameter_cap_is_an_argument_16_m_by_default():
     """
     import inspect
     assert inspect.signature(fit).parameters["max_tank_od_m"].default == 16.0
-    for ruleset in ("IGC_2G", "IGC_2G_EXACT"):
+    for ruleset in ("IGC_2G",):
         wide = {cap: fit(110.0, 26.0, "LNG", 4.0, depths=[5.0], tanks_wide=(1,), ruleset=ruleset,
                          max_tank_od_m=cap)
                 for cap in (12.0, 16.0)}
@@ -166,14 +176,16 @@ def test_the_tank_diameter_cap_is_an_argument_16_m_by_default():
 
 
 def test_no_feasible_fit_has_a_tank_longer_than_seven_diameters():
-    """A fit with L/D > 7 is not accepted, under either ruleset. The sweep must refuse some hulls
+    """A fit with L/D > 7 is not accepted, under the rule set. The sweep must refuse some hulls
     for it, or it proves nothing.
 
     Label: property
     """
     accepted = refused = 0
-    for ruleset in ("IGC_2G", "IGC_2G_EXACT"):
-        for loa in (60.0, 100.0, 150.0, 180.0):
+    for ruleset in ("IGC_2G",):
+        # Two lengths more than before issue #237, which had two rule sets in this sweep and so
+        # twice the cases; the thresholds below are unchanged.
+        for loa in (60.0, 100.0, 150.0, 180.0, 210.0, 240.0):
             for beam in (8.0, 12.0, 18.0, 26.0):
                 f = fit(loa, beam, "LNG", 4.0, depths=[5.0], ruleset=ruleset)
                 tank = f.engine_result.gas_basis["tanks"]
@@ -190,7 +202,7 @@ def test_no_feasible_fit_has_a_tank_longer_than_seven_diameters():
 def test_settings_are_arguments_not_globals():
     """Label: property
     """
-    a = fit(90.0, 14.8, "LNG", 3.0, ruleset="IGC_2G_EXACT", fill_ratio=0.98)
+    a = fit(90.0, 14.8, "LNG", 3.0, ruleset="IGC_2G", fill_ratio=0.98)
     b = fit(90.0, 14.8, "LNG", 3.0, ruleset="IGC_2G", fill_ratio=0.95)
-    c = fit(90.0, 14.8, "LNG", 3.0, ruleset="IGC_2G_EXACT", fill_ratio=0.98)
+    c = fit(90.0, 14.8, "LNG", 3.0, ruleset="IGC_2G", fill_ratio=0.98)
     assert a.payload_t == c.payload_t != b.payload_t

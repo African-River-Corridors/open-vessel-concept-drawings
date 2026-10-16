@@ -358,7 +358,7 @@ def _(c):
 @scenario("gas_arrangement.fit.exact", covers=["core.gas_arrangement.fit"])
 def _(c):
     ga = c.mod("core.gas_arrangement")
-    return ga.fit(c.n(80), c.n(12), "LNG", c.n(3), ruleset="IGC_2G_EXACT", fill_ratio=c.n(0.95),
+    return ga.fit(c.n(80), c.n(12), "LNG", c.n(3), ruleset="IGC_2G", fill_ratio=c.n(0.95),
                   self_propelled=False, depths=[c.n(5), c.n(6)], tanks_wide=[c.k(1)],
                   extra_clearance_m=[c.n(1)], block_coefficient=c.n(0.9),
                   max_tank_od_m=c.n(12))
@@ -369,7 +369,7 @@ def _(c):
 def _(c):
     f = c.mod("core.gas_arrangement").required_side_clearance
     return [f("IGC_2G", c.n(14.8), c.n(2000), c.n(1000), c.n(350)),
-            f("IGC_2G_EXACT", c.n(12), c.n(900), c.n(450), c.n(300))]
+            f("IGC_2G", c.n(12), c.n(900), c.n(450), c.n(300))]
 
 
 @scenario("gas_arrangement.smallest_viable_loa",
@@ -405,7 +405,7 @@ def _(c):
 
 
 @scenario("protective_location", covers=[
-    "core.protective_location.distance_d_vc", "core.protective_location.d_vc_exact",
+    "core.protective_location.d_vc_exact",
     "core.protective_location.required_side_protection",
     "core.protective_location.required_bottom_protection",
     "core.protective_location.compute_required_clearances",
@@ -414,7 +414,6 @@ def _(c):
     p = c.mod("core.protective_location")
     vt = p.VesselType
     return dict(
-        d=[p.distance_d_vc(c.n(v)) for v in (500, 3000, 8000)],
         exact=[p.d_vc_exact(c.n(v)) for v in (500, 2000, 10000, 40000)],
         side=[p.required_side_protection(t, c.n(15), c.n(1)) for t in vt if t.value != "ADN_G"],
         bottom=[p.required_bottom_protection(c.n(15), c.n(1)), p.required_bottom_protection(c.n(15), c.n(1), vt.IGC_2G)],
@@ -570,7 +569,7 @@ def _(c):
 
 @scenario("simulate.gas_optimise_depth", covers=["simulate.simulate"])
 def _(c):
-    return sim(c, cargo="LNG", ruleset="IGC_2G_EXACT", fill_ratio=None, draught_limit_m=c.n(3),
+    return sim(c, cargo="LNG", ruleset="IGC_2G", fill_ratio=None, draught_limit_m=c.n(3),
                optimise_depth=True)
 
 

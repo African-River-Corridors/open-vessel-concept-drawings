@@ -44,7 +44,7 @@ from .cargo import get_cargo  # noqa: F401
 from .gas_separation import compute as compute_gas_separation  # noqa: F401
 from .hull import HullGeometry  # noqa: F401
 from .hydrostatics import find_equilibrium_draft  # noqa: F401
-from .protective_location import compute_required_clearances, d_vc_exact, distance_d_vc  # noqa: F401
+from .protective_location import compute_required_clearances, d_vc_exact  # noqa: F401
 from .tanks import calculate_tank_arrangement  # noqa: F401
 from .weights import calculate_weights  # noqa: F401
 
@@ -113,6 +113,9 @@ class BargeCapacityInputs:
     tank_wall_thickness: Optional[float] = 25.0  # mm; None = auto pressure-vessel formula
     fill_ratio: float = 0.95
     dome_height: float = 2.0
+    # Dome diameter (m): with dome_height it gives the dome volume, which counts in Vc for d(Vc)
+    # only (IGC 2.4.1.1: Vc includes domes and appendages; appendages are not modelled).
+    dome_diameter: float = 2.0
     tank_support_height: float = 0.5
 
     # --- Bulk branch ---

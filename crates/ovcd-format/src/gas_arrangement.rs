@@ -88,6 +88,7 @@ const FIT_OPTION_KEYS: &[&str] = &[
     "tanks_in_line",
     "tank_support_height_m",
     "tank_dome_height_m",
+    "tank_dome_diameter_m",
     "wing_tank_gap_m",
     "wing_tank_height_ratio",
     "tank_wall_thickness_mm",
@@ -128,6 +129,7 @@ fn fit_options(o: &Map<String, Value>, base: FitOptions) -> Result<FitOptions, E
     }
     f.tank_support_height_m = float_or(o, "tank_support_height_m", f.tank_support_height_m)?;
     f.tank_dome_height_m = float_or(o, "tank_dome_height_m", f.tank_dome_height_m)?;
+    f.tank_dome_diameter_m = float_or(o, "tank_dome_diameter_m", f.tank_dome_diameter_m)?;
     f.wing_tank_gap_m = float_or(o, "wing_tank_gap_m", f.wing_tank_gap_m)?;
     f.wing_tank_height_ratio = float_or(o, "wing_tank_height_ratio", f.wing_tank_height_ratio)?;
     f.tank_wall_thickness_mm = float_or(o, "tank_wall_thickness_mm", f.tank_wall_thickness_mm)?;
@@ -166,6 +168,7 @@ fn engine_inputs_json(i: &BargeCapacityInputs) -> Value {
         ("tank_wall_thickness", opt_num(i.tank_wall_thickness)),
         ("fill_ratio", num(i.fill_ratio)),
         ("dome_height", num(i.dome_height)),
+        ("dome_diameter", num(i.dome_diameter)),
         ("tank_support_height", num(i.tank_support_height)),
         ("hold_type", json!(i.hold_type)),
         ("lightship_k_t_per_m3", opt_num(i.lightship_k_t_per_m3)),

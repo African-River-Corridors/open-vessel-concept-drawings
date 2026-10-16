@@ -144,7 +144,7 @@ def sweep_options(profile: dict) -> list:
                 inside, outside = cand[name]
                 inputs[name] = rng.choice(outside if outside and rng.random() < 0.03 else inside)
         if containment == "type_c_tanks":
-            inputs["ruleset"] = rng.choice(["IGC_2G", "IGC_2G_EXACT"])
+            inputs["ruleset"] = "IGC_2G"      # the one rule set since issue #237
             inputs["optimise_depth"] = rng.random() < 0.3
         # The cross-check boundaries, which a random pick would rarely hit.
         roll = rng.random()
@@ -168,7 +168,7 @@ def sweep_options(profile: dict) -> list:
 
 # The built-in defaults, written out so each boundary Option holds every input.
 TYPICAL = {"block_coefficient": 0.85, "min_freeboard_m": 0.3, "lightship_factor_t_per_m3": 0.1093,
-           "ruleset": "IGC_2G_EXACT", "fill_ratio": 0.98, "max_tank_od_m": 16.0,
+           "ruleset": "IGC_2G", "fill_ratio": 0.98, "max_tank_od_m": 16.0,
            "optimise_depth": False, "propulsive_efficiency": 0.45, "max_speed_kn": 10.0,
            "air_draft_limit_m": None, "draught_limit_m": None, "channel_depth_m": None,
            "channel_under_keel_clearance_m": 0.5, "channel_bank_slope": 3.0,

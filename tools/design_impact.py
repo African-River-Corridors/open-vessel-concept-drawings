@@ -140,6 +140,10 @@ OPTIONAL_INPUT_CASES = (
      {"tank_support_height_m": 0.5}),
     ("tank_dome_height_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"tank_dome_height_m": 2.0}),
+    # The dome diameter (issue #237) is new with the per-tank rule: a design that sets it to its
+    # default has the same results as one that leaves it out.
+    ("tank_dome_diameter_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tank_dome_diameter_m": 2.0}),
     ("wing_tank_gap_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"wing_tank_gap_m": 0.6}),
     ("wing_tank_height_ratio", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
@@ -206,6 +210,9 @@ def cases() -> dict[str, dict]:
         out[f"sweep hopper channel {tag}"] = _inputs(
             "bauxite", "sloped_hopper_hold", "self_propelled", loa, beam, 4.5, max_speed_kn=9.0,
             channel_current_kn=1.5, **_CHANNEL)
+        # `IGC_2G_EXACT` is not offered since issue #237: a file that names it is read as `IGC_2G`
+        # (with a warning). The cases keep that name so that a base from before #237 and this tree
+        # run the same designs and the table shows what moved (the stepped IGC_2G cases moved most).
         for ruleset in ("IGC_2G", "IGC_2G_EXACT"):
             out[f"sweep gas {ruleset} {tag}"] = _inputs(
                 "LPG_propane", "type_c_tanks", "self_propelled", loa, beam, 5.5, ruleset=ruleset)

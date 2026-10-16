@@ -51,6 +51,18 @@ KNOWN_DIFFERENCES: dict = {
     "edited.to_ga_with_other_draft": "issue #215: the inland type-G floors are removed",
     "edited.to_ga_with_rebuilt_result": "issue #215: the inland type-G floors are removed",
     "reuse.is_gas_and_to_ga_over_a_sweep": "issue #215: the inland type-G floors are removed",
+    # Issue #237: one gas rule set, `IGC_2G`, the per-tank d(Vc) of IGC 2.4.1.1 (the stepped
+    # `distance_d_vc` and the `IGC_2G_EXACT` name are gone; the dome now counts in Vc). A gas design
+    # has less side clearance, so its tanks, cargo, weights and stability move. The scenarios below
+    # hold a gas result or a rule call. The scenarios of #215 above moved again for the same reason.
+    "gas_stability.assess": "issue #237: the per-tank d(Vc) moves the gas designs",
+    "edited.assess_with_rebuilt_result": "issue #237: the per-tank d(Vc) moves the gas designs",
+    "edited.assess_with_edited_basis": "issue #237: the per-tank d(Vc) moves the gas designs",
+    "reuse.assess_over_a_sweep": "issue #237: the per-tank d(Vc) moves the gas designs",
+    "gas_arrangement.required_side_clearance": "issue #237: the one rule is the per-tank d(Vc); "
+                                               "IGC_2G_EXACT is not a rule set",
+    "protective_location": "issue #237: `distance_d_vc` and `VesselType.IGC_2G_EXACT` are removed; "
+                           "`check_protective_location` reads one tank's volume",
     # Issue #94: the class list is `catalogue/vessel_classes.yaml`, the one source. The ids are the
     # catalogue's (the 12 old ids still work for `get_standard`), `standards_for` returns every class
     # (Cargo is not a class property), the figures are the catalogue's (CEMT Va draught 2.5-2.8 m,

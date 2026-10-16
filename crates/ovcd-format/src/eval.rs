@@ -900,7 +900,6 @@ fn protective_location(function: &str, args: &Value) -> Result<Value, EvalError>
         })
     };
     match function {
-        "distance_d_vc" => ok(num(pl::distance_d_vc(f64_arg(args, "vc")?))),
         "d_vc_exact" => ok(num(pl::d_vc_exact(f64_arg(args, "vc_individual_m3")?))),
         "required_side_protection" => {
             let (beam, d_vc) = (f64_arg(args, "beam")?, f64_arg(args, "d_vc")?);
@@ -1577,6 +1576,7 @@ const CAPACITY_FIELDS: &[&str] = &[
     "tank_wall_thickness",
     "fill_ratio",
     "dome_height",
+    "dome_diameter",
     "tank_support_height",
     "hold_type",
     "lightship_k_t_per_m3",
@@ -1660,6 +1660,7 @@ pub(crate) fn capacity_inputs(args: &Value) -> Result<BargeCapacityInputs, EvalE
         bulk_end_bulkhead_m,
         fill_ratio,
         dome_height,
+        dome_diameter,
         tank_support_height,
         wing_void_width,
         double_bottom_height_bulk,

@@ -1,7 +1,8 @@
 //! Best gas-tank arrangement for a hull: search, do not trust the single AUTO answer.
 //! Port of `core/gas_arrangement.py`. The reasoning behind the search lives in the Python file.
 //!
-//! Only IGC rules apply to the gas tanks (issue #175): `IGC_2G` and `IGC_2G_EXACT`. Two tanks lie
+//! Only IGC rules apply to the gas tanks (issue #175): `IGC_2G`, the per-tank rule of IGC 2.4.1.1
+//! with the datum of 2.4.2 (issue #237). Two tanks lie
 //! along the hull. Every tank has to keep to the outer diameter cap (`FitOptions::max_tank_od_m`)
 //! and to length over diameter at most [`MAX_TANK_LENGTH_OVER_OD`]. A candidate over that is not
 //! feasible: it gets the failed check `tank_length_over_diameter`, so it can never win while a
@@ -23,20 +24,21 @@ use alloc::vec::Vec;
 
 use crate::barge_capacity::{
     BargeCapacityInputs, BargeCapacityResult, DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
-    DEFAULT_MAX_TANK_OD_M, DEFAULT_PUSHED_STERN_VOID_M, DEFAULT_TANK_DOME_HEIGHT_M,
-    DEFAULT_TANK_SUPPORT_HEIGHT_M, DEFAULT_TANK_WALL_THICKNESS_MM, DEFAULT_TANKS_IN_LINE,
-    DEFAULT_WING_TANK_GAP_M, DEFAULT_WING_TANK_HEIGHT_RATIO, compute as capacity,
+    DEFAULT_MAX_TANK_OD_M, DEFAULT_PUSHED_STERN_VOID_M, DEFAULT_TANK_DOME_DIAMETER_M,
+    DEFAULT_TANK_DOME_HEIGHT_M, DEFAULT_TANK_SUPPORT_HEIGHT_M, DEFAULT_TANK_WALL_THICKNESS_MM,
+    DEFAULT_TANKS_IN_LINE, DEFAULT_WING_TANK_GAP_M, DEFAULT_WING_TANK_HEIGHT_RATIO,
+    compute as capacity, dome_volume_m3,
 };
 use crate::checks::{Check, all_ok};
 use crate::gas_stability::DEFAULT_WATER_DENSITY;
 use crate::journey_derating::{JourneyDeratingInputs, JourneyDeratingResult, compute as derate};
 use crate::pressure_vessel::PyError;
-use crate::protective_location::{compute_required_clearances, d_vc_exact, distance_d_vc};
+use crate::protective_location::d_vc_exact;
 use crate::pyfmt::{fixed, py_str, round_to};
 use crate::tanks::INT_OVERFLOW_MESSAGE;
 
 /// The rulesets `fit` accepts.
-pub const RULESETS: [&str; 2] = ["IGC_2G", "IGC_2G_EXACT"];
+pub const RULESETS: [&str; 1] = ["IGC_2G"];
 /// Largest overall tank length (heads included) over outer diameter, for every pressure tank. A
 /// design limit of this tool, the same under both rulesets. The figure is the one the removed
 /// `ADN_G` ruleset used (the comments of that ruleset cite ADN 2025 9.3.1.11.1(b)); no IGC Code
@@ -60,7 +62,7 @@ pub struct FitOptions {
     pub tanks_wide: Vec<i64>,
     pub extra_clearance_m: Vec<f64>,
     pub block_coefficient: f64,
-    /// Cap on a tank's outer diameter (m), under both rulesets.
+    /// Cap on a tank's outer diameter (m).
     pub max_tank_od_m: f64,
     /// Bow rake as a multiple of the moulded depth of each candidate.
     pub bow_rake_to_depth_ratio: f64,
@@ -72,6 +74,9 @@ pub struct FitOptions {
     pub tank_support_height_m: f64,
     /// Dome height above the tank top (m).
     pub tank_dome_height_m: f64,
+    /// Dome diameter (m): with the dome height it gives the dome's volume, which counts in Vc
+    /// only (IGC 2.4.1.1). A nominal value; no published source yet.
+    pub tank_dome_diameter_m: f64,
     /// Gap between the wing tank and the cargo tank, per side (m).
     pub wing_tank_gap_m: f64,
     /// Wing tank height as a fraction of the cargo tank outer diameter.
@@ -98,6 +103,7 @@ impl Default for FitOptions {
             tanks_in_line: DEFAULT_TANKS_IN_LINE,
             tank_support_height_m: DEFAULT_TANK_SUPPORT_HEIGHT_M,
             tank_dome_height_m: DEFAULT_TANK_DOME_HEIGHT_M,
+            tank_dome_diameter_m: DEFAULT_TANK_DOME_DIAMETER_M,
             wing_tank_gap_m: DEFAULT_WING_TANK_GAP_M,
             wing_tank_height_ratio: DEFAULT_WING_TANK_HEIGHT_RATIO,
             tank_wall_thickness_mm: DEFAULT_TANK_WALL_THICKNESS_MM,
@@ -202,24 +208,32 @@ fn floor_div(a: i64, b: i64) -> Result<i64, PyError> {
 }
 
 /// The code minimum for the engine's clearance datum (outer face of the insulation): the d(Vc)
-/// distance of IGC Code 2.4.1.1 (see `protective_location::d_vc_exact`; `IGC_2G` uses the
-/// stepped reading of `distance_d_vc`).
+/// distance of IGC Code 2.4.1.1 (see `protective_location::d_vc_exact`) per individual tank, less
+/// the insulation, because IGC 2.4.2 measures d plate to plate, from the moulded line to the
+/// moulded line, excluding insulation.
+///
+/// `per_tank_m3` is Vc of one tank, dome included. `total_m3` is not used (the stepped reading,
+/// which took the total volume, is removed); it stays so the signature is unchanged.
 ///
 /// `Err` is the `ValueError` for a ruleset that is not a vessel type.
 pub fn required_side_clearance(
     ruleset: &str,
-    beam: f64,
-    total_m3: f64,
+    _beam: f64,
+    _total_m3: f64,
     per_tank_m3: f64,
     insulation_mm: f64,
 ) -> Result<f64, PyError> {
-    if ruleset == "IGC_2G_EXACT" {
-        // IGC Code 2.4.1.1, per tank, measured to the tank steel: the insulation sits inside d.
-        return Ok(d_vc_exact(per_tank_m3) - insulation_mm / 1000.0);
+    // An unknown name is the `ValueError` of the vessel types; of the known ones only the gas
+    // rule set applies here.
+    crate::protective_location::VesselType::from_value(ruleset).map_err(value_error)?;
+    if !RULESETS.contains(&ruleset) {
+        return Err(value_error(format!(
+            "ruleset must be one of ('IGC_2G',), not {}",
+            crate::pystr::repr_str(ruleset)
+        )));
     }
-    compute_required_clearances(ruleset, beam, distance_d_vc(total_m3))
-        .map(|c| c.cs_required)
-        .map_err(value_error)
+    // IGC Code 2.4.1.1, per tank; 2.4.2, measured to the tank steel: the insulation sits inside d.
+    Ok(d_vc_exact(per_tank_m3) - insulation_mm / 1000.0)
 }
 
 /// The length over diameter check of a candidate's tank. `None` when there is no tank (a bulk
@@ -305,6 +319,7 @@ impl Search<'_> {
         inp.pushed_stern_void_m = self.o.pushed_stern_void_m;
         inp.tank_support_height = self.o.tank_support_height_m;
         inp.dome_height = self.o.tank_dome_height_m;
+        inp.dome_diameter = self.o.tank_dome_diameter_m;
         inp.wing_tank_gap_m = self.o.wing_tank_gap_m;
         inp.wing_tank_height_ratio = self.o.wing_tank_height_ratio;
         inp.tank_wall_thickness = Some(self.o.tank_wall_thickness_mm);
@@ -334,7 +349,7 @@ impl Search<'_> {
             // the rule check below: the rule needs at least 0.45 m (`d(V)` is at least 0.8 m, the
             // insulation is the fixed 350 mm), and `cs + 1e-9 < need` holds for every negative
             // `cs`. So `None` comes back either way. Searched with the mutant built in: 15 000
-            // random inputs (both rulesets, caps 0.2 to 8.2 m, beams 0.3 to 14.3 m, 1 to 5 tanks
+            // random inputs (both rulesets of the time, caps 0.2 to 8.2 m, beams 0.3 to 14.3 m, 1 to 5 tanks
             // wide), the branch reached in at least 10 068 of them, no difference in any field.
             // `a_hull_too_narrow_for_tanks_at_the_cap_gets_no_candidate` and
             // `the_side_clearance_rule_is_never_below_0_45_m` guard the two facts this rests on.
@@ -348,8 +363,8 @@ impl Search<'_> {
             }
             let total = opt_or_zero(r.containment_inner_volume_m3);
             // Mutation survivor (#146), `total / n` to `total % n` below: equivalent. The per-tank
-            // volume matters only to IGC_2G_EXACT, whose rule d(V) - insulation is non-decreasing
-            // in V, and continuous, so the loop that sets the clearance settles. We are here only when the full-beam tank is over the cap by more than the
+            // volume matters only through the rule d(V) - insulation, which is non-decreasing
+            // in V (the dome adds the same volume to every tank), and continuous, so the loop that sets the clearance settles. We are here only when the full-beam tank is over the cap by more than the
             // 1e-6 of `od_unusable`, so the clearance `cs` is at least 5e-7 above the one the
             // full-beam attempt settled on, and that settled clearance is already at least the
             // rule for the full-beam tank. The cap tank is smaller, so its rule is smaller still,
@@ -362,7 +377,9 @@ impl Search<'_> {
                 &self.o.ruleset,
                 self.beam,
                 total,
-                total / tank_divisor(r.n_tanks_total),
+                // Vc of one tank: the tank plus its dome (IGC 2.4.1.1).
+                total / tank_divisor(r.n_tanks_total)
+                    + dome_volume_m3(self.o.tank_dome_diameter_m, self.o.tank_dome_height_m),
                 opt_or_zero(r.insulation_thickness_mm),
             )?;
             // Killed by `a_cap_clearance_a_hair_under_the_rule_is_accepted_not_refused` (`+` to `-`).
@@ -387,7 +404,7 @@ pub fn fit(
 ) -> Result<ArrangementFit, PyError> {
     if !RULESETS.contains(&o.ruleset.as_str()) {
         return Err(value_error(
-            "ruleset must be one of ('IGC_2G', 'IGC_2G_EXACT')".to_string(),
+            "ruleset must be one of ('IGC_2G',)".to_string(),
         ));
     }
     let mut s = Search {

@@ -54,7 +54,7 @@
           "source": "default"
         },
         "ruleset": {
-          "value": "IGC_2G_EXACT",
+          "value": "IGC_2G",
           "source": "typed"
         },
         "fill_ratio": {
@@ -74,6 +74,10 @@
           "source": "default"
         },
         "tank_dome_height_m": {
+          "value": 2.0,
+          "source": "default"
+        },
+        "tank_dome_diameter_m": {
           "value": 2.0,
           "source": "default"
         },
@@ -138,7 +142,7 @@
           "source": "default"
         }
       },
-      "results_hash": "de891089c8ceb381035363b5530f191fa452a526f79e2d64d0f4ddd326e8eb81"
+      "results_hash": "ab5994ced49504a632b1700a5a11c234eda0d8b7d245e591de11dd8eb8e9440c"
     }
   ],
   "defaults_profile": "built-in"

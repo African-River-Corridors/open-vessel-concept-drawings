@@ -92,7 +92,8 @@ def test_a_result_rebuilt_with_replace_still_works():
     d = derate(dataclasses.replace(B.compute(BULK)))
     assert (d.cargo_capacity_t, d.achievable_tonnage_t) == close((4710.765684, 4710.765684))
     gas = dataclasses.replace(B.compute(GAS))
-    assert gm_fluid(gas) == close((4.496070691510841, 6.706438965623047, 11.201087654316286))
+    # Re-pinned (issue #237); were (4.496070691510841, 6.706438965623047, 11.201087654316286) at ce96e66.
+    assert gm_fluid(gas) == close((4.447528112519484, 6.499494396532422, 10.72355412577273))
     assert ga_adapter.is_gas(gas) is True
 
 
@@ -100,6 +101,8 @@ def test_assess_uses_the_gas_basis_and_density_it_is_given():
     """Label: snapshot"""
     res = B.compute(GAS)
     res.gas_basis["weights"].steel_top_down += 100.0
-    assert gm_fluid(res) == close((4.329311723992825, 6.3607094944568106, 10.35664347102438))   # ce96e66
+    # Re-pinned (issue #237); were (4.329311723992825, 6.3607094944568106, 10.35664347102438) and
+    # (4.329311723992825, 6.416895514461225, 10.35664347102438) at ce96e66.
+    assert gm_fluid(res) == close((4.28684718522825, 6.172666462858952, 9.940701176338345))
     res.cargo_density_t_per_m3 = 0.45
-    assert gm_fluid(res) == close((4.329311723992825, 6.416895514461225, 10.35664347102438))     # ce96e66
+    assert gm_fluid(res) == close((4.28684718522825, 6.245181641069995, 9.940701176338345))
