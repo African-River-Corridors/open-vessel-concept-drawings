@@ -389,8 +389,11 @@ describe("OVCD app smoke tests", () => {
 
   it("shows one readout per channel environment, and the design speed follows the Maximum speed input", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
-    await type("Channel depth", "6");
-    await type("Channel bottom width", "40");
+    // These two inputs are "none" to start with: untick "none", then type the value.
+    for (const [name, label, value] of [["channel_depth_m", "Channel depth", "6"], ["channel_bottom_width_m", "Channel bottom width", "40"]]) {
+      await (await browser.$(`[data-input="${name}"] .none input`)).click();
+      await type(label, value);
+    }
     await show("Stability & Propulsion", "Power and speed curves");
     await until("two charts", async () => (await charts()).length === 2);
     await designSpeedSelected(2);
