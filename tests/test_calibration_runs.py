@@ -18,7 +18,11 @@ def test_report_covers_every_case():
     text = report()
     for c in yaml.safe_load((CAL / "cases.yaml").read_text())["dry_barge"]:
         assert c["id"] in text
-    assert "–" not in text.split("## 3.")[1].split("| Ratio |")[1].replace("|---", "")
+    section3 = text.split("## 3.")[1].split("## 4.")[0]     # section 4 (held-out cases) has its own dashes
+    assert "–" not in section3.split("| Ratio |")[1].replace("|---", "")
+    # Every held-out case that cannot run yet is reported too.
+    for c in yaml.safe_load((CAL / "cases.yaml").read_text())["not_yet_runnable_cases"]:
+        assert c["id"] in text
 
 
 def test_report_writes_nothing_into_the_repo():

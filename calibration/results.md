@@ -11,9 +11,10 @@
 
 ## Calibration Bands
 
-Each observed figure has a band, set per figure and per confidence of the case (`bands.yaml`): lightship ±15 / 20 / 30 % and deadweight ±7.5 / 10 / 15 % at high / medium / low confidence. The band applies to the *Calibrated* result. **The errors are in-sample:** the fitted factors (k per hold type, box-barge Cb) were fitted to the same cases, and the container factor rests on one case, so a result inside its band is not a validation. A case outside its band is marked **OUTSIDE** and raises a CI warning annotation: **warning only, it never fails the build.** A lightship given only as an upper bound has no band. Section 3 compares the core with a design note, not a published figure, and has no band.
+Each observed figure has a band, set per figure and per confidence of the case (`bands.yaml`): lightship ±15 / 20 / 30 % and deadweight ±7.5 / 10 / 15 % at high / medium / low confidence. The band applies to the *Calibrated* result. **The errors in sections 1 and 2 are in-sample:** the fitted factors (k per hold type, box-barge Cb) were fitted to the same cases, and the container factor rests on one case, so a result inside its band is not a validation. **The errors in section 4 are out of sample:** those cases were never used in a fit. A case outside its band is marked **OUTSIDE** and raises a CI warning annotation: **warning only, it never fails the build.** A lightship given only as an upper bound has no band. Section 3 compares the core with a design note, not a published figure, and has no band.
 
-13 of 14 calibrated results are inside their band.
+13 of 14 in-sample calibrated results are inside their band.
+40 of 45 held-out calibrated results are inside their band (section 4; cases excluded for an impossible figure are not counted).
 
 ## 1. Push barges — lightship
 
@@ -69,3 +70,103 @@ Design-study points, not built ships. Cb implied on LOA (a lower bound). Deliver
 | liquid | 130×22×4.2 | 10,032 | 7,706 | 2,326 | 0.835 | 20 | 2,491 | 1,376 | 1.81 |
 | liquid | 130×24×4.2 | 10,944 | 8,461 | 2,483 | 0.835 | 20 | 2,692 | 1,466 | 1.84 |
 | liquid | 130×26×4.2 | 11,856 | 9,220 | 2,636 | 0.835 | 20 | 2,856 | 1,557 | 1.83 |
+
+## 4. Held-out cases (out of sample)
+
+These cases were never used to fit k or Cb (issue #3). The calibrated model meets each one for the first time here, so these errors are out of sample. A deck barge has hold type `deck` and is run as a box barge (`run_as: box`): box k and box Cb, with no deck factor. The test is whether the box model carries over to deck barges. Predicted DWT uses the water density on the case: 1.025 for sea-going or saltwater figures, 1.000 otherwise. Cargo capacity is not DWT, so it is shown against the predicted DWT but has no band. Cases marked *excluded* are run and shown; their published figures cannot all describe one condition. Cases marked *cross-check* have no band.
+
+| Case | Hull (hold type / run as) | Conf. | Figure | Observed (t) | Calibrated (t) | err % | Band ± % | Calibrated vs band |
+|---|---|---|---|---|---|---|---|---|
+| cbc-1951-deck-195x35 | deck / box | medium | lightship | 301 | 222 | -26.3 | ±20 (medium) | **OUTSIDE** ⚠ |
+| cbc-1951-deck-195x35 | deck / box | medium | DWT | 1,297 | 1,341 | 3.4 | ±10 (medium) | inside |
+| cbc-2762-deck-276x55 | deck / box | medium | lightship | 898 | 720 | -19.9 | ±20 (medium) | inside |
+| cbc-2762-deck-276x55 | deck / box | medium | DWT | 3,690 | 4,081 | 10.6 | ±10 (medium) | **OUTSIDE** ⚠ |
+| cbc-4508-deck-200x50 | deck / box | medium | lightship | 443 | 434 | -2.1 | ±20 (medium) | inside |
+| cbc-4508-deck-200x50 | deck / box | medium | DWT | 2,546 | 2,801 | 10.0 | ±10 (medium) | **OUTSIDE** ⚠ |
+| cbc-4509-deck-260x54 | deck / box | medium | lightship | 591 | 522 | -11.7 | ±20 (medium) | inside |
+| cbc-miami-deck-250x80 | deck / box | low | lightship | 1,106 | 991 | -10.4 | ±30 (low) | inside |
+| cbc-savannah-deck-260x80 | deck / box | low | lightship | 1,106 | 1,031 | -6.8 | ±30 (low) | inside |
+| cbc-cordie-deck-260x72 | deck / box | medium | lightship | 1,112 | 928 | -16.6 | ±20 (medium) | inside |
+| cbc-cordie-deck-260x72 | deck / box | medium | DWT | 5,690 | 5,459 | -4.1 | ±10 (medium) | inside |
+| cbc-julius-deck-300x100 | deck / box | medium | lightship | 1,997 | 1,764 | -11.7 | ±20 (medium) | inside |
+| cbc-julius-deck-300x100 | deck / box | medium | DWT | 10,000 | 11,014 | 10.1 | ±10 (medium) | **OUTSIDE** ⚠ |
+| cbc-oceanus-deck-400x105 | deck / box | medium | lightship | 3,551 | 3,249 | -8.5 | ±20 (medium) | inside |
+| cbc-oceanus-deck-400x105 | deck / box | medium | DWT | 19,678 | 20,501 | 4.2 | ±10 (medium) | inside |
+| cbc-761-deck-180x54 | deck / box | low | lightship | 345 | 361 | 4.7 | ±30 (low) | inside (excluded) |
+| cbc-761-deck-180x54 | deck / box | low | DWT | 2,585 | 2,130 | -17.6 | ±15 (low) | **OUTSIDE** ⚠ (excluded) |
+| cbc-758-spud-180x54 | deck / box | medium | light draught 0.52 m only | – | – | – | – | cross-check, no band |
+| lm3004-deck-288ft | deck / box | medium | lightship | 1,450 | 1,289 | -11.1 | ±20 (medium) | inside |
+| lm3004-deck-288ft | deck / box | medium | DWT | 7,388 | 7,480 | 1.2 | ±10 (medium) | inside |
+| itk-cargo-barge-330ft | deck / box | low | lightship | 1,803 | 1,930 | 7.0 | ±30 (low) | inside |
+| vl-deck-365ft | deck / box | low | lightship | 2,330 | 2,363 | 1.4 | ±30 (low) | inside |
+| vl-deck-365ft | deck / box | low | DWT | 12,040 | 13,720 | 13.9 | ±15 (low) | inside |
+| vl-deck-345ft | deck / box | low | lightship | 1,780 | 2,018 | 13.4 | ±30 (low) | inside |
+| vl-deck-345ft | deck / box | low | DWT | 10,165 | 11,756 | 15.7 | ±15 (low) | **OUTSIDE** ⚠ |
+| vl-deck-300ft | deck / box | low | lightship | 1,300 | 1,502 | 15.6 | ±30 (low) | inside |
+| vl-deck-300ft | deck / box | low | DWT | 8,154 | 8,733 | 7.1 | ±15 (low) | inside |
+| vl-deck-250ft | deck / box | low | lightship | 952 | 892 | -6.3 | ±30 (low) | inside |
+| vl-deck-250ft | deck / box | low | cargo capacity (not DWT) | 4,989 | 5,281 | 5.8 | – | no band (not a DWT) |
+| jml5019-pontoon | deck / box | medium | cargo capacity (not DWT) | 1,734 | 1,766 | 1.9 | – | cross-check, no band |
+| touax-193-194-2021 | box | medium | DWT | 2,528 | 2,551 | 0.9 | ±10 (medium) | inside |
+| touax-seine-2020 | box | medium | DWT | 2,553 | 2,551 | -0.1 | ±10 (medium) | inside |
+| taf-seine-2008 | box | medium | DWT | 2,516 | 2,609 | 3.7 | ±10 (medium) | inside |
+| taf-seine-2000 | box | medium | DWT | 2,664 | 2,676 | 0.5 | ±10 (medium) | inside |
+| taf-seine-1997 | box | medium | DWT | 2,700 | 2,704 | 0.1 | ±10 (medium) | inside |
+| taf-seine-1996 | box | medium | DWT | 2,016 | 1,945 | -3.5 | ±10 (medium) | inside |
+| taf-seine-1993 | box | medium | DWT | 2,482 | 2,561 | 3.2 | ±10 (medium) | inside |
+| taf-seine-1981 | box | medium | DWT | 1,699 | 1,675 | -1.4 | ±10 (medium) | inside |
+| taf-seine-1973 | box | medium | DWT | 2,546 | 2,465 | -3.2 | ±10 (medium) | inside |
+| taf-rhin-2019-covered | box | medium | DWT | 3,557 | 3,517 | -1.1 | ±10 (medium) | inside |
+| taf-rhin-2008-covered | box | medium | DWT | 3,599 | 3,656 | 1.6 | ±10 (medium) | inside |
+| taf-rhin-2000 | box | medium | DWT | 2,793 | 2,666 | -4.6 | ±10 (medium) | inside |
+| taf-rhin-2001 | box | medium | DWT | 2,793 | 2,678 | -4.1 | ±10 (medium) | inside |
+| taf-rhin-1980-covered | box | medium | DWT | 2,841 | 2,767 | -2.6 | ±10 (medium) | inside |
+| taf-danube-2008 | box | medium | DWT | 2,026 | 2,120 | 4.6 | ±10 (medium) | inside |
+| taf-parana-2013 | box | medium | DWT | 2,500 | 2,578 | 3.1 | ±10 (medium) | inside |
+| taf-mississippi-2011 | box | low | DWT | 2,500 | 1,905 | -23.8 | ±15 (low) | **OUTSIDE** ⚠ (excluded) |
+| meb-dcb23-ptich | box | medium | DWT | 6,222 | 6,485 | 4.2 | ±10 (medium) | inside |
+| meb-dcb24-pola | box | medium | DWT | 6,688 | 6,425 | -3.9 | ±10 (medium) | inside |
+| meb-rdb12-samarskaya | box | medium | DWT | 4,121 | 4,408 | 7.0 | ±10 (medium) | inside |
+| meb-rdb20-belmax9 | box | medium | DWT | 6,000 | 5,987 | -0.2 | ±10 (medium) | inside |
+
+### Held-out cases the dry-barge path cannot run yet
+
+Listed with their published figures and the reason. They are never run.
+
+| Case | Hull | Conf. | LOA×B×D (m), T | Published figures | Why not run |
+|---|---|---|---|---|---|
+| meb-rob20-belmax | tank | medium | 118.79×22.8×4, T 2.75 | DWT 6,000 t; tanks 6,870 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| meb-rob07-mh4001 | tank | medium | 95.23×16.8×5, T 3.5 | DWT 4,244 t; tanks 4,670 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| meb-rob05-paloil | tank | medium | 93×16.7×5, T 3.6 | cargo capacity 4,324 t; tanks 4,620 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| meb-rob17-nerida | tank | medium | 71.7×14.3×2, T 1.85 | DWT 1,267 t; tanks 1,481 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| meb-1635tm-fng | tank | medium | 73.2×11×3.9, T 3.24 | cargo capacity 2,059 t; tanks 2,581 m³; light draught 0.61 m | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| meb-1635t-udp-slt | tank | medium | 76.5×11.02×3.9, T 3 | cargo capacity 1,907 t; tanks 2,022.4 m³; light draught 0.77 m | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| kirby-10071-200x35 | tank | medium | 60.96×10.67×3.66, T 2.74 | DWT 1,361 t; tanks 1,644 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| kirby-10201-200x35 | tank | medium | 60.96×10.67×3.66, T 2.74 | DWT 1,302 t; tanks 1,737 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| kirby-10083-200x35 | tank | medium | 60.96×10.67×3.66, T 2.74 | DWT 1,330 t; tanks 1,706 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| kirby-10074-195x35 | tank | medium | 59.44×10.67×3.66, T 2.74 | DWT 1,288 t; tanks 1,595 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| cgbm-102-200x35 | tank | medium | 60.96×10.67×3.81, T 2.74 | DWT 1,350 t; tanks 1,789 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| mer-13-200x35 | tank | medium | 60.96×10.67×3.96, T 2.74 | DWT 1,348 t; tanks 1,402 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| kirby-301-250x50 | tank | medium | 76.2×15.24×3.66, T 2.74 | DWT 2,437 t; tanks 2,453 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| kirby-407-263x54 | tank | medium | 80.16×16.46×4.57, T 2.74 | DWT 2,718 t; tanks 3,640 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| hfl-406-297x54 | tank | medium | 90.53×16.46×3.66, T 2.74 | DWT 3,006 t; tanks 4,675 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| kirby-27773-297x54 | tank | medium | 90.65×16.46×3.66, T 2.74 | DWT 3,098 t; tanks 4,343 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| kirby-32300b-297x54 | tank | medium | 90.53×16.46×3.66, T 2.74 | DWT 3,267 t; tanks 5,097 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| ctco-358-297x54 | tank | medium | 90.65×16.46×3.66, T 2.74 | DWT 2,947 t; tanks 4,379 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| htco-3064-320x50 | tank | medium | 97.54×15.24×3.96, T 2.74 | DWT 2,950 t; tanks 4,118 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| cms-1601-222x54 | tank | medium | 67.67×16.46×3.66, T 2.74 | DWT 1,905 t; tanks 2,601 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| crowley-180-2-tank | tank | low | 54.86×16.46, T 3.05 | DWT 2,057 t | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel. Cross-check only: no depth; lightship garbled; TPI vs light draft disagree |
+| zhongyi-001-lng | gas | low | 90×16×3, T 1.2 | LNG 500 m³ | gas barge: no gas hull model; capacity only |
+| hz-255teu-container-deck | container (motor) | low | 107×21×5.2, T 3.8 | cargo capacity 5,020 t | self-propelled; DWCC not DWT; LOA includes ramp |
+
+### Summary: out of sample against in-sample
+
+Error is (calibrated − published) ÷ published. Cross-check cases and cases excluded for an impossible figure are left out of every row. Band misses are warnings only (#119): they never fail the build.
+
+| Figure | Sample | Group | n | Mean err % | Mean abs err % | Range % | Inside band |
+|---|---|---|---|---|---|---|---|
+| Lightship | in-sample | all in-sample cases | 3 | -3.9 | 3.9 | -10.6 to +0.0 | 3 of 3 |
+| Lightship | out of sample | deck (run as box) | 15 | -6.3 | 11.2 | -26.3 to +15.6 | 14 of 15 |
+| Deadweight at the stated draught | in-sample | all in-sample cases | 8 | -0.4 | 4.5 | -7.7 to +5.8 | 8 of 8 |
+| Deadweight at the stated draught | out of sample | box | 20 | +0.2 | 2.7 | -4.6 to +7.0 | 20 of 20 |
+| Deadweight at the stated draught | out of sample | deck (run as box) | 10 | +7.2 | 8.0 | -4.1 to +15.7 | 6 of 10 |

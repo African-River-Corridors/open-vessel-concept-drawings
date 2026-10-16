@@ -79,3 +79,299 @@ sources:
   stored: '2026-10-06'
   licence: Public consultation document; copyright reserved — internal reference only
   note: Not yet read
+
+# Web pages the held-out cases cite (issue #3). Unlike the stored files above they are not kept in S3: the
+# url is the page as read on the accessed date. A case's  starts with its id here.
+web_sources:
+- id: S1
+  title: "Canal Barge Company, spec sheet CBC 1951-1954"
+  url: https://web.archive.org/web/20240519114143/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-1951-CBC-1952-CBC-1953-CBC-1954.pdf
+  accessed: '2026-10-16'
+  note: "Wayback copy, May 2024; the live link now returns 404"
+- id: S2
+  title: "Canal Barge Company, spec sheet CBC 2762"
+  url: https://web.archive.org/web/20240519113558/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-2762.pdf
+  accessed: '2026-10-16'
+  note: "Wayback copy, May 2024; the live link now returns 404"
+- id: S3
+  title: "Canal Barge Company, spec sheet CBC 4508"
+  url: https://web.archive.org/web/20240519103857/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-4508.pdf
+  accessed: '2026-10-16'
+  note: "Wayback copy, May 2024; the live link now returns 404"
+- id: S4
+  title: "Canal Barge Company, spec sheet CBC 4509-4512"
+  url: https://web.archive.org/web/20240519111229/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-4509-CBC-4510-CBC-4511-CBC-4512.pdf
+  accessed: '2026-10-16'
+  note: "Wayback copy, May 2024; the live link now returns 404"
+- id: S5
+  title: "Canal Barge Company, spec sheet CBC MIAMI"
+  url: https://web.archive.org/web/20240519113107/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-MIAMI.pdf
+  accessed: '2026-10-16'
+  note: "Wayback copy, May 2024; the live link now returns 404"
+- id: S6
+  title: "Canal Barge Company, spec sheet CBC SAVANNAH"
+  url: https://web.archive.org/web/20240519110011/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-SAVANNAH.pdf
+  accessed: '2026-10-16'
+  note: "Wayback copy, May 2024; the live link now returns 404"
+- id: S7
+  title: "Canal Barge Company, spec sheets CORDIE and GWENDOLYN"
+  url: https://web.archive.org/web/20240519111343/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-Cordie.pdf
+  accessed: '2026-10-16'
+  note: "Wayback copy, May 2024; the live link now returns 404. Second sheet (GWENDOLYN): https://web.archive.org/web/20240519103939/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-Gwendolyn.pdf"
+- id: S8
+  title: "Canal Barge Company, spec sheet JULIUS"
+  url: https://web.archive.org/web/20240519120803/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-Julius.pdf
+  accessed: '2026-10-16'
+  note: "Wayback copy, May 2024; the live link now returns 404"
+- id: S9
+  title: "Canal Barge Company, spec sheet OCEANUS"
+  url: https://web.archive.org/web/20240519111940/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-Oceanus.pdf
+  accessed: '2026-10-16'
+  note: "Wayback copy, May 2024; the live link now returns 404; image-only PDF, read from the rendered page"
+- id: S10
+  title: "Canal Barge Company, spec sheet CBC 761 and CBC 762"
+  url: https://web.archive.org/web/20240519104307/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-761-and-CBC-762.pdf
+  accessed: '2026-10-16'
+  note: "Wayback copy, May 2024; the live link now returns 404"
+- id: S11
+  title: "Canal Barge Company, spec sheet CBC 758 / CMS 751"
+  url: https://web.archive.org/web/20240519111530/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-758-CMS-751.pdf
+  accessed: '2026-10-16'
+  note: "Wayback copy, May 2024; the live link now returns 404"
+- id: S12
+  title: "Barge LM 3004 technical sheet (1 page, hosted by the Government of Mexico)"
+  url: https://www.gob.mx/cms/uploads/attachment/file/730399/Informaci_n_T_cnica_Barcaza_LM_3004.pdf
+  accessed: '2026-10-16'
+- id: S13
+  title: "Santoso et al., Evaluation of Longitudinal Strength of a Cargo Barge Based on Shear Force and Still Water Bending Moment under Various Loading Conditions, Indonesian Journal of Maritime Technology 4(1), 2026, pp. 51-53, DOI 10.35718/ismatech.v4i1.8481958"
+  url: https://journal.itk.ac.id/index.php/ismatech/article/download/8481958/1043
+  accessed: '2026-10-16'
+  note: "General particulars, Fig. 2, equilibrium data on pp. 51-53"
+- id: S14
+  title: "VL Maritime Services, Barges (all types), detailed specification tables"
+  url: https://www.vlmaritime.com/barges/
+  accessed: '2026-10-16'
+  note: "Broker page"
+- id: S15
+  title: "Jenkins Marine, JML 5019 flat-top pontoon barge spec sheet"
+  url: https://jenkinsmarine.co.uk/wp-content/uploads/2026/02/JML5019-50mx19m-flat-top-pontoon-barge-spec-sheet-1.pdf
+  accessed: '2026-10-16'
+- id: S16
+  title: "Crowley, Barge 180-2 sheet"
+  url: https://www.crowley.com/wp-content/uploads/2018/10/180-2.pdf
+  accessed: '2026-10-16'
+  note: "Figures are on page 2"
+- id: S17
+  title: "Baird Maritime, VESSEL REVIEW | Zhongyi 001 - LNG bunker barge to serve China's Three Gorges Reservoir, 4 Aug 2022"
+  url: https://www.bairdmaritime.com/shipping/tankers/gas/vessel-review-zhongyi-001-lng-bunker-barge-to-serve-chinas-three-gorges-reservoir
+  accessed: '2026-10-16'
+- id: S18
+  title: "Horizon Ship Brokers, 107m Self Propelled Container Deck Barge 2018 China - TEU 255"
+  url: https://horizonship.com/ship/107m-self-propelled-container-deck-barge-2018-china-teu-255/
+  accessed: '2026-10-16'
+  note: "Broker listing"
+- id: T1
+  title: "Touax River Barges, listing Touax 193 / 194"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-touax-193-sell-and-leasing-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing. Also used-barge-touax-194-sell-and-leasing- (same figures, sister barge)"
+- id: T2
+  title: "Touax River Barges, listing Touax Seine 2020"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-touax-seine-2020-sell-and-leasing-seine-france-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing."
+- id: T3
+  title: "Touax River Barges, listing TAF Seine 2008"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-seine-2008-sell-and-leasing-seine-france-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing."
+- id: T4
+  title: "Touax River Barges, listing TAF Seine 2000"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-seine-2000-sell-and-leasing-seine-france-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing."
+- id: T5
+  title: "Touax River Barges, listing TAF Seine 1997"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-seine-1997-sell-and-leasing-seine-france-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing."
+- id: T6
+  title: "Touax River Barges, listing TAF Seine 1996"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-seine-1996-sell-and-leasing-seine-france-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing."
+- id: T7
+  title: "Touax River Barges, listing TAF Seine 1993"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-seine-1993-sell-and-leasing-seine-france-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing."
+- id: T8
+  title: "Touax River Barges, listing TAF Seine 1981"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-seine-1981-sell-and-leasing-seine-france-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing."
+- id: T9
+  title: "Touax River Barges, listing TAF Seine 1973"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-seine-1973-sell-and-leasing-seine-france-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing."
+- id: T10
+  title: "Touax River Barges, listing TAF Rhin covered 2019"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-rhin-covered-2019-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing."
+- id: T11
+  title: "Touax River Barges, listing TAF Rhin 2008 covered"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-rhin-2008-covered-sell-and-leasing-danube-romania-and-rhine-the-netherlands-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing."
+- id: T12
+  title: "Touax River Barges, listing TAF Rhin 2000"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-rhin-2000-sell-and-leasing-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing."
+- id: T13
+  title: "Touax River Barges, listing TAF Rhin 2001"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-rhin-2001-sell-and-leasing-rhin-holland-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing."
+- id: T14
+  title: "Touax River Barges, listing TAF Rhin 1980 covered"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-rhin-1980-covered-sell-and-leasing-rhin-holland-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing."
+- id: T15
+  title: "Touax River Barges, listing TAF Danube 2008"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-danube-2008-sell-and-leasing-danube-romania-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing."
+- id: T16
+  title: "Touax River Barges, listing TAF Parana 2013"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-parana-2013-covered-sell-and-leasing-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing. Also the non-covered listing and the two new-barge-taf-parana pages (same figures except height and build year)"
+- id: T17
+  title: "Touax River Barges, listing TAF Mississippi 2011"
+  url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-mississippi-2011-sell-and-leasing-mississippi-usa-
+  accessed: '2026-10-16'
+  note: "Owner/lessor listing."
+- id: M1
+  title: "Marine Engineering Bureau (MEB), Project DCB23 (Ptich, Svisloch)"
+  url: https://mebspb.com/drye/DCB23e.html
+  accessed: '2026-10-16'
+  note: "Designer's project page listing built hulls"
+- id: M2
+  title: "Marine Engineering Bureau (MEB), Project DCB24 (Pola 1, Pola 2)"
+  url: https://mebspb.com/drye/DCB24e.html
+  accessed: '2026-10-16'
+  note: "Designer's project page listing built hulls"
+- id: M3
+  title: "Marine Engineering Bureau (MEB), Project RDB12 (Samarskaya-1/-2/-3)"
+  url: https://mebspb.com/drye/RDB12e.html
+  accessed: '2026-10-16'
+  note: "Designer's project page listing built hulls"
+- id: M4
+  title: "Marine Engineering Bureau (MEB), Project RDB20 (Belmax 9, Belmax 10)"
+  url: https://mebspb.com/drye/RDB20e.html
+  accessed: '2026-10-16'
+  note: "Designer's project page listing built hulls"
+- id: M6
+  title: "Marine Engineering Bureau (MEB), Project ROB20 (Belmax 1-8)"
+  url: https://mebspb.com/oile/ROB20e.html
+  accessed: '2026-10-16'
+  note: "Designer's project page listing built hulls"
+- id: M7
+  title: "Marine Engineering Bureau (MEB), Project ROB07 (MH-4001, MH-4002)"
+  url: https://mebspb.com/oile/ROB07e.html
+  accessed: '2026-10-16'
+  note: "Designer's project page listing built hulls"
+- id: M8
+  title: "Marine Engineering Bureau (MEB), Project 004ROB05 (Paloil-1 to -5)"
+  url: https://mebspb.com/oile/004ROB05e.html
+  accessed: '2026-10-16'
+  note: "Designer's project page listing built hulls"
+- id: M9
+  title: "Marine Engineering Bureau (MEB), Project ROB17 (Nerida)"
+  url: https://mebspb.com/oile/ROB17e.html
+  accessed: '2026-10-16'
+  note: "Designer's project page listing built hulls"
+- id: M10
+  title: "Marine Engineering Bureau (MEB), Project 1635TM (NFS-22, FNG-2 to FNG-10)"
+  url: https://mebspb.com/oile/1635TMe.html
+  accessed: '2026-10-16'
+  note: "Designer's project page listing built hulls"
+- id: M11
+  title: "Marine Engineering Bureau (MEB), Project 1635T (UDP-SLT-001, -002)"
+  url: https://mebspb.com/oile/1635Te.html
+  accessed: '2026-10-16'
+  note: "Designer's project page listing built hulls"
+- id: K1
+  title: "Kirby Corporation barge database, KIRBY 10071"
+  url: https://web.archive.org/web/20191216123055/http://vesselinfo.kirbycorp.com/BargeInfo/Details/112542
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K2
+  title: "Kirby Corporation barge database, KIRBY 10201"
+  url: https://web.archive.org/web/20200814051754/http://vesselinfo.kirbycorp.com/BargeInfo/Details/147012
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K3
+  title: "Kirby Corporation barge database, KIRBY 10083"
+  url: https://web.archive.org/web/20241105002630/https://vesselinfo.kirbycorp.com/BargeInfo/Details/171795
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K4
+  title: "Kirby Corporation barge database, KIRBY 10074"
+  url: https://web.archive.org/web/20191216133241/http://vesselinfo.kirbycorp.com/BargeInfo/Details/169494
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K5
+  title: "Kirby Corporation barge database, CGBM 102"
+  url: https://web.archive.org/web/20210927213519/https://vesselinfo.kirbycorp.com/BargeInfo/Details/125833
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K6
+  title: "Kirby Corporation barge database, MER 13"
+  url: https://web.archive.org/web/20190923132008/http://vesselinfo.kirbycorp.com/BargeInfo/Details/165938
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K7
+  title: "Kirby Corporation barge database, Barge 301"
+  url: https://web.archive.org/web/20190825205924/http://vesselinfo.kirbycorp.com/BargeInfo/Details/177625
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K8
+  title: "Kirby Corporation barge database, Barge 407"
+  url: https://web.archive.org/web/20171220192838/http://vesselinfo.kirbycorp.com/BargeInfo/Details/177641
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K9
+  title: "Kirby Corporation barge database, HFL 406"
+  url: https://web.archive.org/web/20210919100200/https://vesselinfo.kirbycorp.com/BargeInfo/Details/141650
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K10
+  title: "Kirby Corporation barge database, KIRBY 27773"
+  url: https://web.archive.org/web/20231119061500/https://vesselinfo.kirbycorp.com/BargeInfo/Details/164554
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K11
+  title: "Kirby Corporation barge database, KIRBY 32300B"
+  url: https://web.archive.org/web/20241209163613/https://vesselinfo.kirbycorp.com/BargeInfo/Details/155456
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K12
+  title: "Kirby Corporation barge database, CTCO 358"
+  url: https://web.archive.org/web/20190922121104/http://vesselinfo.kirbycorp.com/BargeInfo/Details/100134
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K13
+  title: "Kirby Corporation barge database, HTCO 3064"
+  url: https://web.archive.org/web/20190825204808/http://vesselinfo.kirbycorp.com/BargeInfo/Details/138250
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
+- id: K14
+  title: "Kirby Corporation barge database, CMS 1601"
+  url: https://web.archive.org/web/20190917063635/http://vesselinfo.kirbycorp.com/BargeInfo/Details/177933
+  accessed: '2026-10-16'
+  note: "Wayback capture; the live site is unreachable from the machine used for the research"
