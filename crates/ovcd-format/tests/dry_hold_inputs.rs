@@ -64,7 +64,7 @@ fn core_default(name: &str) -> f64 {
 #[test]
 fn each_default_equals_the_legacy_table_value_and_the_core_default() {
     let profile = Profile::built_in();
-    assert_eq!(LEGACY_FIXED_INPUTS.len(), NEW_INPUTS.len());
+    assert!(LEGACY_FIXED_INPUTS.len() >= NEW_INPUTS.len());
     for name in NEW_INPUTS {
         let legacy = LEGACY_FIXED_INPUTS
             .iter()

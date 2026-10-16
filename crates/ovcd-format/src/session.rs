@@ -26,7 +26,7 @@ use crate::run::{HashStatus, RunOutcome, results_hash, run_design, run_option};
 use crate::vdesign::{
     AppliesTo, CARGO_CONTAINMENTS, Design, DesignOption, ENGINE_VERSION, FORMATION_KINDS, Group,
     INPUTS, InputKind, KEYED_DEFAULTS, Report, Source, StoredInput, check, choice_label, fill,
-    new_design,
+    formation_includes, new_design,
 };
 use serde_json::{Map, Value, json};
 
@@ -37,6 +37,7 @@ use serde_json::{Map, Value, json};
 /// { "profile": name, "engine_version": v,
 ///   "groups": ["Required", ...],
 ///   "inputs": [ { "name", "group", "kind", "required", "applies_to": [containments],
+///                 "applies_to_formation": [Formation kinds],
 ///                 "unit", "nullable", "choices": [{ "value", "label", ... }],
 ///                 "default" | "default_by": { "by", "values" },
 ///                 "hard": { "gt"|"ge"|"lt"|"le" }, "soft": { "min", "max" }, "basis" } ] }
@@ -67,6 +68,14 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
     e.insert("required".into(), json!(spec.required));
     let applies: Vec<&str> = spec.applies_to.containments();
     e.insert("applies_to".into(), json!(applies));
+    // The Formation kinds the input is used for. A consumer that reads only `applies_to` still
+    // works: it just shows the input for every Formation of the containments.
+    let kinds: Vec<&str> = FORMATION_KINDS
+        .iter()
+        .copied()
+        .filter(|k| formation_includes(spec.formations, Some(k)))
+        .collect();
+    e.insert("applies_to_formation".into(), json!(kinds));
     match spec.kind {
         InputKind::Number { nullable } => {
             e.insert("kind".into(), json!("number"));
@@ -484,6 +493,12 @@ impl DesignSession {
                 "`{name}` is not used for a {current} Cargo Containment"
             ));
         }
+        if spec.formations.is_some()
+            && let Some(kind) = formation_kind_of(&self.design.options[i])
+            && !formation_includes(spec.formations, Some(kind))
+        {
+            return Err(format!("`{name}` is not used for a {kind} Formation"));
+        }
         match name {
             "vessel_class" => self.pick_class(i, &value)?,
             "vessel_scheme" => self.pick_scheme(i, value),
@@ -874,7 +889,7 @@ impl DesignSession {
     /// Write in the inputs the Design lacks (with `fill`), and drop those its Cargo Containment
     /// does not use. A hard-range breach stays as typed.
     fn normalise(&mut self) {
-        let filled = fill(&self.design.to_text(), &self.profile);
+        let filled = crate::vdesign::fill_from_profile(&self.design.to_text(), &self.profile);
         let Some(filled_design) = filled.design else {
             return;
         };
@@ -886,12 +901,13 @@ impl DesignSession {
             // The filled Option knows the containment, even when it was a default left out.
             let applicable = containment_of(from_fill)
                 .filter(|c| CARGO_CONTAINMENTS.iter().any(|(known, _)| known == c));
+            let kind = formation_kind_of(from_fill);
             let mut inputs: Vec<(String, StoredInput)> = Vec::new();
             for spec in INPUTS {
                 let applies = match (spec.applies_to, applicable) {
                     (AppliesTo::All, _) | (_, None) => true,
                     (scope, Some(current)) => scope.includes(current),
-                };
+                } && formation_includes(spec.formations, kind);
                 let held = self
                     .hidden
                     .iter()
@@ -942,6 +958,10 @@ fn sort_inputs(option: &mut DesignOption) {
             .position(|s| s.name == n)
             .unwrap_or(usize::MAX)
     });
+}
+
+fn formation_kind_of(option: &DesignOption) -> Option<&str> {
+    option.input("formation")?.value.get("kind")?.as_str()
 }
 
 fn containment_of(option: &DesignOption) -> Option<&str> {

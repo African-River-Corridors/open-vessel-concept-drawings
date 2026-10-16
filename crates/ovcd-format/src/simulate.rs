@@ -500,6 +500,14 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
     inp.block_coefficient = cb;
     inp.required_freeboard = freeboard;
     inp.air_draft_limit_m = air_draft_limit;
+    // The end spaces. A key left out keeps the core default, the value the engine always used.
+    inp.bow_rake_to_depth_ratio = get_or(
+        p,
+        "bow_rake_length_to_depth_ratio",
+        inp.bow_rake_to_depth_ratio,
+    )?;
+    inp.pushed_stern_void_m = get_or(p, "pushed_stern_void_m", inp.pushed_stern_void_m)?;
+    inp.bulk_end_bulkhead_m = get_or(p, "bulk_end_bulkhead_m", inp.bulk_end_bulkhead_m)?;
     // The hold design values. A key left out keeps the core default, which is the value the engine
     // used before these were inputs.
     inp.wing_void_width = get_or(p, "hold_wing_void_width_m", inp.wing_void_width)?;
@@ -694,6 +702,16 @@ fn simulate_gas(
             p,
             "max_tank_od_m",
             ovcd_core::barge_capacity::DEFAULT_MAX_TANK_OD_M,
+        )?,
+        bow_rake_to_depth_ratio: get_or(
+            p,
+            "bow_rake_length_to_depth_ratio",
+            ovcd_core::barge_capacity::DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
+        )?,
+        pushed_stern_void_m: get_or(
+            p,
+            "pushed_stern_void_m",
+            ovcd_core::barge_capacity::DEFAULT_PUSHED_STERN_VOID_M,
         )?,
         ..FitOptions::default()
     };

@@ -43,6 +43,11 @@ use crate::weights::calculate_weights;
 /// (`BargeCapacityInputs::max_tank_od_m`); issue #175 raised it from 12 m and made it one.
 pub const DEFAULT_MAX_TANK_OD_M: f64 = 16.0;
 
+/// Default bow rake length as a multiple of the moulded depth.
+pub const DEFAULT_BOW_RAKE_TO_DEPTH_RATIO: f64 = 1.6;
+/// Default aft void of a pushed barge (m).
+pub const DEFAULT_PUSHED_STERN_VOID_M: f64 = 3.0;
+
 /// Inputs for the unified barge capacity calculation. [`BargeCapacityInputs::new`] gives the
 /// Python dataclass defaults.
 #[derive(Debug, Clone, PartialEq)]
@@ -75,8 +80,10 @@ pub struct BargeCapacityInputs {
     pub self_propelled: bool,
     /// Aft void of a pushed barge (m)
     pub pushed_stern_void_m: f64,
-    /// Bow bottom rake (m). `None`: 1.6 x moulded depth.
+    /// Bow bottom rake (m). `None`: `bow_rake_to_depth_ratio` x moulded depth.
     pub bow_rake_length_m: Option<f64>,
+    /// The bow rake as a multiple of the moulded depth, when `bow_rake_length_m` is `None`.
+    pub bow_rake_to_depth_ratio: f64,
     /// Dry-bulk end-bulkhead allowance at each end of the hold (m)
     pub bulk_end_bulkhead_m: f64,
 
@@ -133,8 +140,9 @@ impl BargeCapacityInputs {
             aft: None,
             separation: None,
             self_propelled: true,
-            pushed_stern_void_m: 3.0,
+            pushed_stern_void_m: DEFAULT_PUSHED_STERN_VOID_M,
             bow_rake_length_m: None,
+            bow_rake_to_depth_ratio: DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
             bulk_end_bulkhead_m: 0.50,
             vessel_type: "IGC_2G".to_string(),
             side_clearance_override_m: None,
@@ -630,7 +638,7 @@ fn arrangement(inp: &BargeCapacityInputs, is_gas: bool) -> Result<Arrangement, P
 
     let rake = match inp.bow_rake_length_m {
         Some(r) => r,
-        None => 1.6 * inp.depth,
+        None => inp.bow_rake_to_depth_ratio * inp.depth,
     };
 
     let (aft_sep, fwd_sep, sep) = if is_gas {

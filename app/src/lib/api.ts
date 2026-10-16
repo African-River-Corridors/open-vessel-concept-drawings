@@ -66,6 +66,10 @@ export interface InputSpec extends Ranges {
   label: string;
   group: string;
   required: boolean;
+  /** The Cargo Containments the input is used for. */
+  applies_to?: string[];
+  /** The Formation kinds the input is used for. The panel needs neither: Rust sends only the inputs an Option uses. */
+  applies_to_formation?: string[];
   kind: "number" | "bool" | "choice" | "cargo" | "formation" | "vessel_scheme" | "vessel_class";
   nullable?: boolean;
   choices?: Choice[];

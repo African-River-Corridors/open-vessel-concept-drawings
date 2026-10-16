@@ -98,7 +98,7 @@ OPTIONAL_INPUT_CASES = (
     ("fill_ratio", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"fill_ratio": 0.85}),
     ("max_tank_od_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 20.0, 6.0,
      {"max_tank_od_m": 12.0}),
-    # The dry-bulk hold inputs (issue #4). Each is set to its default, which is the value the engine
+    # The dry-bulk hold inputs (issue #4, slice 1). Each is set to its default, which is the value the engine
     # used before it was an input. A base from before the input does not know it; `run_case` leaves
     # an input the base refuses out, so these show that the head, with the value typed, gives the
     # base's results.
@@ -121,6 +121,13 @@ OPTIONAL_INPUT_CASES = (
      {"hold_bulkhead_plate_mm": 11.0}),
     ("hatch_coaming_plate_mm", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
      {"hatch_coaming_plate_mm": 10.0}),
+    # The hull end shapes (issue #4, slice 2), set to their defaults in the same way.
+    ("bow_rake_length_to_depth_ratio", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
+     {"bow_rake_length_to_depth_ratio": 1.6}),
+    ("pushed_stern_void_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"pushed_stern_void_m": 3.0}),
+    ("bulk_end_bulkhead_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"bulk_end_bulkhead_m": 0.5}),
     # A Vessel Class (issue #94): the scheme places the vessel in a class, and the class fills the
     # draught and air-draft limits. The results of the same dimensions are those of typed ones.
     ("vessel_scheme", "bauxite", "box_hold", "self_propelled", 110.0, 11.4, 4.5,

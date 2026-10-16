@@ -63,6 +63,20 @@
       "soft": { "min": 0.15, "max": 1.5 },
       "basis": "must also be less than the moulded depth (hard)"
     },
+    "bow_rake_length_to_depth_ratio": {
+      "default": 1.6,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 1.0, "max": 2.5 },
+      "basis": "carried over from the original engine: the horizontal length of the bow rake as a multiple of the moulded depth. The bow void is this rake plus the forward separation or end bulkhead space"
+    },
+    "pushed_stern_void_m": {
+      "default": 3.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 1.0, "max": 6.0 },
+      "basis": "carried over from the original engine: the aft void of a pushed barge, which has no stern block (the crew, battery and propulsion are on the tug). Used for a pushed Formation only"
+    },
     "lightship_factor_t_per_m3": {
       "default_by_cargo_containment": { "box_hold": 0.1093 },
       "unit": "t/m3",
@@ -121,6 +135,13 @@
       "hard": { "ge": 1, "le": 50 },
       "soft": { "min": 1.0, "max": 8.0 },
       "basis": "carried over from the original engine: a whole number. It sets the number of transverse bulkheads (holds plus one) in the hopper steel weight"
+    },
+    "bulk_end_bulkhead_m": {
+      "default": 0.5,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 20 },
+      "soft": { "min": 0.2, "max": 2.0 },
+      "basis": "carried over from the original engine: the end bulkhead allowance at each end of a dry-bulk hold. It is taken off the cargo zone at the bow and the stern"
     },
     "hold_fill_ratio": {
       "default": 0.95,
