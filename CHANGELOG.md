@@ -139,7 +139,7 @@ a change can be traced later. Newest first.
 
 ### ticket/315-lpg-density-loading-limit (2026-10-20)
 
-Between `main 2a3233c` and `this branch fe84f3e`.
+Between `main 32f0184` and `this branch e585a6b`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
