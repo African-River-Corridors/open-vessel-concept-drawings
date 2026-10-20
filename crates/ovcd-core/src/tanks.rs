@@ -13,7 +13,7 @@ use alloc::format;
 use alloc::string::{String, ToString};
 use core::f64::consts::PI;
 
-use libm::{fabs, pow, sqrt};
+use libm::{fabs, log, pow, sqrt};
 
 use crate::models::{BargeInputs, TankResult};
 use crate::pressure_vessel::{PyError, calculate_wall_thicknesses_with};
@@ -61,6 +61,20 @@ fn opt_str(x: Option<f64>) -> String {
         Some(v) => py_str(v),
         None => "None".to_string(),
     }
+}
+
+/// The surface area of a 2:1 semi-ellipsoidal head of radius `radius` (m^2), straight flange left
+/// out (issue #314): half an oblate spheroid with semi-axes a = R and c = R/2. The whole spheroid
+/// has S = 2 pi a^2 + (pi c^2 / e) ln((1 + e) / (1 - e)), e = sqrt(1 - c^2 / a^2) (MathWorld,
+/// "Oblate Spheroid", eq. 11), so the head is 1.380173 pi R^2 = 4.335941 R^2 = 1.083985 D^2. The
+/// original engine took 1.084 pi R^2, the 1.084 D^2 rule with pi R^2 in place of D^2: a factor of
+/// pi/4, 21.5 % low. The caller picks the surface: the steel outer radius for the steel, the tank
+/// outer radius (outside of the insulation) for the insulation.
+pub fn ellipsoidal_2to1_head_area(radius: f64) -> f64 {
+    let a = radius;
+    let c = radius / 2.0;
+    let e = sqrt(1.0 - pow(c, 2.0) / pow(a, 2.0));
+    (2.0 * PI * pow(a, 2.0) + PI * pow(c, 2.0) / e * log((1.0 + e) / (1.0 - e))) / 2.0
 }
 
 /// Calculate tank dimensions, volumes, and weights for the given barge inputs.
@@ -170,7 +184,7 @@ pub fn calculate_tank_arrangement_wide(
     } else if inputs.tank_head_type == "ellipsoidal_2to1" {
         head_length_outer = outer_radius / 2.0;
         volume_one_head_inner = (1.0 / 3.0) * PI * pow(head_inner_radius, 3.0);
-        sa_one_head_shell = 1.084 * 2.0 * PI * pow(shell_outer_radius, 2.0) / 2.0;
+        sa_one_head_shell = ellipsoidal_2to1_head_area(shell_outer_radius);
     } else {
         return Err(value_error(format!(
             "Unknown tank head type: {}",
@@ -226,7 +240,7 @@ pub fn calculate_tank_arrangement_wide(
     let sa_one_head_od = if hemisphere {
         2.0 * PI * pow(outer_radius, 2.0)
     } else {
-        1.084 * PI * pow(outer_radius, 2.0)
+        ellipsoidal_2to1_head_area(outer_radius)
     };
     let total_od_sa_per_tank = cylinder_sa_od + 2.0 * sa_one_head_od;
     let insulation_volume_per_tank = total_od_sa_per_tank * insulation_m;

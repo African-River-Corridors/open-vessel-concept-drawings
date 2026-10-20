@@ -254,13 +254,13 @@ One cargo tank, run through the tank maths only (`tank_cases.yaml`, bands in `ta
 |---|---|---|---|---|---|---|---|
 | senjanovic-2006-river-lpg | medium | Gross tank volume (m³) | 351.4 | 351.1 | -0.1 | ±5 | inside |
 | senjanovic-2006-river-lpg | medium | Cylinder wall thickness (mm) | 13.1 | 15.5 | 18.3 | ±15 | **OUTSIDE** ⚠ (accepted: the paper designs to an inland basis (Rm/2.7) above the IGC limit, so a wall at the IGC stress is thicker than the published one (issue #313; accepted on issue #292)) |
-| senjanovic-2006-river-lpg | medium | Tank steel weight (t) | 34.4 | 36.2 | 5.2 | ±20 | inside (in-sample) |
+| senjanovic-2006-river-lpg | medium | Tank steel weight (t) | 34.4 | 37.4 | 8.7 | ±20 | inside (in-sample) |
 | seo-2026-lco2-5000 | low | Gross tank volume (m³) | 5,000.0 | 5,011.1 | 0.2 | ±10 | inside |
 | seo-2026-lco2-5000 | low | Cylinder wall thickness (mm) | 50.0 | 56.0 | 12.0 | ±25 | inside |
 
 | Case | Steel outer Ø (m) | Insulated outer Ø (m) | Insulated length (m) | Formula before allowance (mm) | Head wall (mm) | Steel at formula thickness (t) |
 |---|---|---|---|---|---|---|
-| senjanovic-2006-river-lpg | 4.730 | 4.730 | 21.000 | 14.52 | 15 | 42.8 |
+| senjanovic-2006-river-lpg | 4.730 | 4.730 | 21.000 | 14.52 | 15 | 44.2 |
 | seo-2026-lco2-5000 | 13.500 | 13.900 | 40.500 | 55.42 | 28.5 | – |
 
 ### Tank records that cannot run yet

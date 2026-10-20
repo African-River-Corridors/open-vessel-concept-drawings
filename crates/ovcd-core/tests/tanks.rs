@@ -62,7 +62,7 @@ fn an_automatic_wall_names_the_material_and_uses_the_pressure_vessel_formula() {
 }
 
 #[test]
-fn an_ellipsoidal_head_is_half_as_long_and_uses_its_own_area_constant() {
+fn an_ellipsoidal_head_is_half_as_long_and_uses_the_oblate_spheroid_area() {
     let mut i = quickstart();
     i.tank_head_type = "ellipsoidal_2to1".into();
     i.tank_wall_thickness = None;
@@ -71,8 +71,10 @@ fn an_ellipsoidal_head_is_half_as_long_and_uses_its_own_area_constant() {
     assert_eq!(t.head_length, 1.475);
     assert_eq!(t.cylinder_length, 24.653999999999996);
     assert_eq!(t.volume_heads, 36.49344885686704);
-    assert_eq!(t.tank_shell_weight, 105.55486138152804);
-    assert_eq!(t.insulation_weight, 43.36450948944139);
+    // Issue #314: re-pinned to what the code prints with the head area of tests/head_area.rs (it
+    // was 105.55486138152804 t and 43.36450948944139 t with the old 1.084 pi R^2).
+    assert_eq!(t.tank_shell_weight, 108.51739261326834);
+    assert_eq!(t.insulation_weight, 44.72485318453459);
 }
 
 #[test]
