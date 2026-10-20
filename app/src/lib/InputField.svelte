@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { InputSpec, Message, Ranges, StoredInput } from "./api";
+  import { t } from "./i18n.svelte";
 
   // One input, drawn from its schema entry. It shows what Rust sent and sends back what the user
   // typed or chose. The number the user types stays in the box while it is typed: the box is filled
@@ -31,31 +32,38 @@
     if (r.ge !== undefined) parts.push(`>= ${r.ge}`);
     if (r.lt !== undefined) parts.push(`< ${r.lt}`);
     if (r.le !== undefined) parts.push(`<= ${r.le}`);
-    return parts.join(" and ");
+    return parts.reduce((first, second) => t("app-range-and", { first, second }));
   }
 
   function show(v: unknown): string {
-    return v === null ? "none" : String(v);
+    return v === null ? t("app-none") : String(v);
   }
+
+  /** The Cargo groups of the moulded-depth rule, by the engine's group name. */
+  const GROUP_IDS: Record<string, string> = {
+    dry_bulk: "app-cargo-group-dry-bulk",
+    liquid: "app-cargo-group-liquid",
+    gas: "app-cargo-group-gas",
+  };
+  const SOURCE_IDS: Record<string, string> = { typed: "app-source-typed", default: "app-source-default", class: "app-source-class" };
 
   let help = $derived.by(() => {
     const lines: string[] = [];
-    if (spec.default !== undefined) lines.push(`Default: ${show(spec.default)}${spec.unit ? " " + spec.unit : ""}`);
+    if (spec.default !== undefined) lines.push(t("app-help-default", { value: `${show(spec.default)}${spec.unit ? " " + spec.unit : ""}` }));
     if (spec.default_by) {
       const by = Object.entries(spec.default_by.values).map(([k, v]) => `${k} ${show(v)}`).join(", ");
-      lines.push(`Default by ${spec.default_by.by}: ${by}`);
+      lines.push(t("app-help-default-by", { by: spec.default_by.by, values: by }));
     }
     if (spec.default_rule) {
       const r = spec.default_rule;
-      const NAMES: Record<string, string> = { dry_bulk: "dry bulk, container", liquid: "liquid", gas: "gas" };
-      const by = Object.entries(r.ratios).map(([g, v]) => `${NAMES[g] ?? g} ${v}`).join(", ");
-      lines.push(`Default when left out: the beam times a ratio by Cargo (${by}), to the millimetre`);
-      if (r.length_to_depth_warning_above !== null) lines.push(`Warns when length over depth is above ${r.length_to_depth_warning_above}`);
-      lines.push(`Rule basis: ${r.basis}`);
+      const by = Object.entries(r.ratios).map(([g, v]) => `${GROUP_IDS[g] ? t(GROUP_IDS[g]) : g} ${v}`).join(", ");
+      lines.push(t("app-help-default-rule", { ratios: by }));
+      if (r.length_to_depth_warning_above !== null) lines.push(t("app-help-depth-warning", { limit: String(r.length_to_depth_warning_above) }));
+      lines.push(t("app-help-rule-basis", { basis: r.basis }));
     }
-    if (spec.hard) lines.push(`Hard range: ${range(spec.hard)}`);
-    if (spec.soft) lines.push(`Soft range: ${spec.soft.min} to ${spec.soft.max}`);
-    if (spec.basis) lines.push(`Basis: ${spec.basis}`);
+    if (spec.hard) lines.push(t("app-help-hard-range", { range: range(spec.hard) }));
+    if (spec.soft) lines.push(t("app-help-soft-range", { min: String(spec.soft.min), max: String(spec.soft.max) }));
+    if (spec.basis) lines.push(t("app-help-basis", { basis: spec.basis }));
     return lines.join("\n");
   });
 
@@ -85,9 +93,9 @@
 <div class="field" data-input={spec.name} title={help}>
   <div class="head">
     <span class="label">{spec.label}</span>
-    <span class="badge {stored.source}"><span class="shape" aria-hidden="true">{SHAPES[stored.source] ?? ""} </span>{stored.source}</span>
+    <span class="badge {stored.source}"><span class="shape" aria-hidden="true">{SHAPES[stored.source] ?? ""} </span>{SOURCE_IDS[stored.source] ? t(SOURCE_IDS[stored.source]) : stored.source}</span>
     {#if !spec.required && stored.source === "typed"}
-      <button class="link" onclick={onReset} title="Go back to the default">reset</button>
+      <button class="link" onclick={onReset} title={t("app-reset-title")}>{t("app-reset")}</button>
     {/if}
   </div>
 
@@ -114,14 +122,14 @@
               if (e.currentTarget.checked) onEdit(null);
             }}
           />
-          none
+          {t("app-none")}
         </label>
       {/if}
     </div>
   {:else if spec.kind === "bool"}
     <label class="none">
       <input type="checkbox" aria-label={spec.label} checked={value === true} onchange={(e) => onEdit(e.currentTarget.checked)} />
-      {value === true ? "yes" : "no"}
+      {t(value === true ? "app-yes" : "app-no")}
     </label>
   {:else if spec.kind === "choice" || spec.kind === "cargo"}
     <select aria-label={spec.label} class:invalid={hasError} value={String(value)} onchange={(e) => onEdit(e.currentTarget.value)}>
@@ -143,21 +151,21 @@
     {#if formation.kind === "pushed_convoy"}
       <div class="row convoy">
         <label>
-          Abreast
+          {t("app-convoy-abreast")}
           <input
             type="text"
             inputmode="numeric"
-            aria-label="Abreast"
+            aria-label={t("app-convoy-abreast")}
             use:fill={abreast === null ? "" : String(abreast)}
             oninput={(e) => typed(e.currentTarget.value, (n) => { abreast = n; onFormation(formation.kind, abreast, inLine); })}
           />
         </label>
         <label>
-          In line
+          {t("app-convoy-in-line")}
           <input
             type="text"
             inputmode="numeric"
-            aria-label="In line"
+            aria-label={t("app-convoy-in-line")}
             use:fill={inLine === null ? "" : String(inLine)}
             oninput={(e) => typed(e.currentTarget.value, (n) => { inLine = n; onFormation(formation.kind, abreast, inLine); })}
           />

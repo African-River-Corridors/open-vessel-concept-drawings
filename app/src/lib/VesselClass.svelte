@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Choice, InputSpec, Message, StoredInput, VesselClassSummary } from "./api";
+  import { parts, t } from "./i18n.svelte";
 
   // How an Option is defined: by typed dimensions, or by a standard Vessel Class (issue #94). The
   // schemes, the classes and what picking a class sets all come from the schema, and the class the
@@ -25,19 +26,19 @@
     ((classSpec?.choices ?? []) as Choice[]).filter((c) => c.scheme === scheme && c.formation === kind),
   );
   const KINDS: Record<string, string> = {
-    self_propelled: "self-propelled",
-    pushed_barge: "pushed barge",
-    pushed_convoy: "pushed convoy",
+    self_propelled: "app-formation-self-propelled",
+    pushed_barge: "app-formation-pushed-barge",
+    pushed_convoy: "app-formation-pushed-convoy",
   };
 
   function range(r: [number, number] | null | undefined, unit: string): string {
-    if (!r) return "none";
-    return r[0] === r[1] ? `${r[0]} ${unit}` : `${r[0]} to ${r[1]} ${unit}`;
+    if (!r) return t("app-none");
+    return r[0] === r[1] ? `${r[0]} ${unit}` : `${t("app-range-to", { min: String(r[0]), max: String(r[1]) })} ${unit}`;
   }
 </script>
 
 <div class="vc" data-input="vessel_class">
-  <div class="modes" role="radiogroup" aria-label="How the vessel is defined">
+  <div class="modes" role="radiogroup" aria-label={t("app-vessel-mode")}>
     <label>
       <input
         type="radio"
@@ -46,7 +47,7 @@
         checked={!byClass}
         onchange={() => { asking = false; if (scheme !== null) onEdit("vessel_scheme", null); }}
       />
-      Typed dimensions
+      {t("app-vessel-mode-typed")}
     </label>
     <label>
       <input
@@ -56,20 +57,20 @@
         checked={byClass}
         onchange={() => (asking = true)}
       />
-      Standard class
+      {t("app-vessel-mode-class")}
     </label>
   </div>
 
   {#if byClass}
     <div class="field">
-      <span class="label">Class Scheme</span>
+      <span class="label">{t("app-class-scheme")}</span>
       <select
-        aria-label="Class Scheme"
+        aria-label={t("app-class-scheme")}
         data-testid="vessel-scheme"
         value={scheme ?? ""}
         onchange={(e) => { if (e.currentTarget.value) { asking = false; onEdit("vessel_scheme", e.currentTarget.value); } }}
       >
-        {#if scheme === null}<option value="">Choose a Class Scheme</option>{/if}
+        {#if scheme === null}<option value="">{t("app-class-scheme-choose")}</option>{/if}
         {#each schemeSpec?.choices ?? [] as s (s.value)}
           <option value={s.value}>{s.label}</option>
         {/each}
@@ -77,32 +78,32 @@
     </div>
     {#if scheme !== null}
       <div class="field">
-        <span class="label">Class</span>
+        <span class="label">{t("app-class")}</span>
         <select
-          aria-label="Vessel Class"
+          aria-label={t("app-vessel-class")}
           data-testid="vessel-class"
           value={current ?? ""}
           onchange={(e) => { if (e.currentTarget.value) onEdit("vessel_class", e.currentTarget.value); }}
         >
           {#if current === null || !classes.some((c) => c.value === current)}
-            <option value={current ?? ""}>{current ?? "Choose a class"}</option>
+            <option value={current ?? ""}>{current ?? t("app-class-choose")}</option>
           {/if}
           {#each classes as c (c.value)}
             <option value={c.value}>{c.label}</option>
           {/each}
         </select>
         {#if classes.length === 0}
-          <div class="msg note">No class of this scheme for a {KINDS[kind ?? ""] ?? kind} Formation.</div>
+          <div class="msg note">{t("app-class-none-for-kind", { kind: KINDS[kind ?? ""] ? t(KINDS[kind ?? ""]) : (kind ?? "") })}</div>
         {/if}
       </div>
     {/if}
     {#if summary}
       <div class="sits" data-testid="vessel-sits-in">
-        The vessel sits in <strong>{summary.id}</strong> <span class="badge"><span aria-hidden="true">◆ </span>class</span>
+        {#each parts("app-class-sits-in", ["class"]) as p}{#if typeof p === "string"}{p}{:else}<strong>{summary.id}</strong>{/if}{/each} <span class="badge"><span aria-hidden="true">◆ </span>{t("app-source-class")}</span>
         <div class="dim">
-          Up to {summary.length_max_m} m long and {summary.beam_max_m} m wide.
-          Draught {range(summary.draught_m, "m")}; air draft {range(summary.air_draft_m, "m")}.
-          Length and beam decide the class; the draught and air-draft limits are filled from it.
+          {t("app-class-dimensions", { length: String(summary.length_max_m), beam: String(summary.beam_max_m) })}
+          {t("app-class-draught", { draught: range(summary.draught_m, "m"), airDraft: range(summary.air_draft_m, "m") })}
+          {t("app-class-decides")}
         </div>
       </div>
     {/if}

@@ -3,6 +3,7 @@
   import "uplot/dist/uPlot.min.css";
   import { onMount } from "svelte";
   import { axisInkHooks, currentTokens, dashFor, uiFont, watchTheme, type ChartTokens } from "../chartTheme";
+  import { num, t } from "../i18n.svelte";
 
   // One speed-power chart for one channel environment: power and fuel against speed. It draws the
   // `curves` entry exactly as the engine gave it. The limiting speed is a dashed line; points where
@@ -64,7 +65,6 @@
   }
 
   const exact = (_u: uPlot, v: number | null) => (v === null ? "--" : String(v));
-  const num = (v: number, dp: number) => v.toLocaleString("en-GB", { minimumFractionDigits: dp, maximumFractionDigits: dp });
   let point = $derived<Point | undefined>(points[selected]);
 
   /** A hollow ring on each curve at the selected point, and a thin line down to the speed axis. */
@@ -112,7 +112,7 @@
     ctx.setLineDash([]);
     ctx.font = uiFont(tok, 11 * devicePixelRatio);
     ctx.textAlign = x > left + width / 2 ? "right" : "left";
-    ctx.fillText(`limit ${limitingSpeed.toFixed(2)} kn`, x + (x > left + width / 2 ? -4 : 4) * devicePixelRatio, top + 12 * devicePixelRatio);
+    ctx.fillText(t("app-sp-limit-line", { speed: num(limitingSpeed, 2) }), x + (x > left + width / 2 ? -4 : 4) * devicePixelRatio, top + 12 * devicePixelRatio);
     ctx.restore();
   }
 
@@ -154,9 +154,9 @@
     ctx.textBaseline = "bottom";
     const clamp = (y: number) => Math.min(Math.max(y, top + 14 * k), top + height - 4 * k);
     ctx.fillStyle = tok.ink;
-    ctx.fillText("Power", u.valToPos(power.kn, "x", true), clamp(u.valToPos(power.kw, "kw", true) - 8 * k));
+    ctx.fillText(t("app-sp-power"), u.valToPos(power.kn, "x", true), clamp(u.valToPos(power.kw, "kw", true) - 8 * k));
     ctx.fillStyle = tok.accent;
-    ctx.fillText("Fuel", u.valToPos(fuel.kn, "x", true), clamp(u.valToPos(fuel.fuel_lph, "fuel", true) - 8 * k));
+    ctx.fillText(t("app-sp-fuel"), u.valToPos(fuel.kn, "x", true), clamp(u.valToPos(fuel.fuel_lph, "fuel", true) - 8 * k));
     ctx.restore();
   }
 
@@ -185,16 +185,16 @@
         draw: [limitLine, squatMarks, curveNames, marker],
       },
       axes: [
-        { ...axis, label: "Speed (kn)" },
-        { ...axis, label: "Power (kW)", scale: "kw" },
-        { ...axis, label: "Fuel (l/h)", scale: "fuel", side: 1, grid: { show: false } },
+        { ...axis, label: t("app-sp-speed-axis") },
+        { ...axis, label: t("app-sp-power-axis"), scale: "kw" },
+        { ...axis, label: t("app-sp-fuel-axis"), scale: "fuel", side: 1, grid: { show: false } },
       ],
       series: [
-        { label: "Speed (kn)", value: exact },
-        { label: "Power (kW)", scale: "kw", stroke: () => tok.ink, width: 2, value: exact },
-        { label: "Fuel (l/h)", scale: "fuel", stroke: () => tok.accent, width: 2, dash: scaled(FUEL_DASH), value: exact },
+        { label: t("app-sp-speed-axis"), value: exact },
+        { label: t("app-sp-power-axis"), scale: "kw", stroke: () => tok.ink, width: 2, value: exact },
+        { label: t("app-sp-fuel-axis"), scale: "fuel", stroke: () => tok.accent, width: 2, dash: scaled(FUEL_DASH), value: exact },
         {
-          label: "Squat-limited (kW)",
+          label: t("app-sp-squat-series"),
           scale: "kw",
           paths: () => null,
           points: { show: false },
@@ -253,21 +253,21 @@
 <div class="chart" data-testid="speed-power-chart">
   <div class="head">
     <strong>{name}</strong>
-    <span class="dim" title={`limiting speed ${limitingSpeed ?? "none"}, blockage ${blockage}`}>
-      {#if limitingSpeed !== null}limiting speed {limitingSpeed.toFixed(2)} kn{:else}no speed limit from the channel{/if}
-      · blockage {blockage.toFixed(3)}
-      {#if squatCount > 0}· {squatCount} squat-limited point{squatCount === 1 ? "" : "s"}{/if}
+    <span class="dim" title={t("app-sp-head-title", { speed: limitingSpeed === null ? t("app-none") : String(limitingSpeed), blockage: String(blockage) })}>
+      {#if limitingSpeed !== null}{t("app-sp-limiting-speed", { speed: num(limitingSpeed, 2) })}{:else}{t("app-sp-no-limit")}{/if}
+      {t("app-sp-blockage", { blockage: num(blockage, 3) })}
+      {#if squatCount > 0}{t("app-sp-squat-points", { count: squatCount })}{/if}
     </span>
   </div>
   {#if point}
     <p class="readout" data-testid="speed-power-readout" data-kn={point.kn} data-design={selected === defaultIndex(points, designSpeed)}>
-      <span class="sel">Selected point</span>
-      <span>speed <strong>{num(point.kn, 2)} kn</strong></span>
-      <span>power <strong>{num(point.kw, 0)} kW</strong></span>
-      <span>fuel <strong>{num(point.fuel_lph, 1)} l/h</strong></span>
-      <span>squat <strong>{num(point.squat_m, 2)} m</strong></span>
-      <span>squat-limited <strong>{point.squat_limited ? "yes" : "no"}</strong></span>
-      {#if limitingSpeed !== null}<span>limiting speed <strong>{num(limitingSpeed, 2)} kn</strong></span>{/if}
+      <span class="sel">{t("app-sp-selected")}</span>
+      <span>{t("app-sp-r-speed")} <strong>{num(point.kn, 2)} kn</strong></span>
+      <span>{t("app-sp-r-power")} <strong>{num(point.kw, 0)} kW</strong></span>
+      <span>{t("app-sp-r-fuel")} <strong>{num(point.fuel_lph, 1)} l/h</strong></span>
+      <span>{t("app-sp-r-squat")} <strong>{num(point.squat_m, 2)} m</strong></span>
+      <span>{t("app-sp-r-squat-limited")} <strong>{t(point.squat_limited ? "app-yes" : "app-no")}</strong></span>
+      {#if limitingSpeed !== null}<span>{t("app-sp-r-limiting-speed")} <strong>{num(limitingSpeed, 2)} kn</strong></span>{/if}
     </p>
   {/if}
   <div bind:this={host} class="host"></div>
