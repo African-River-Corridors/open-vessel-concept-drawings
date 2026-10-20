@@ -176,6 +176,12 @@ contrast target. A border that marks a control (an input box, a toggle) uses `--
 --font-hand: "Architects Daughter", "Barlow Semi Condensed", sans-serif;
 ```
 
+- **Other languages (spec 0005).** The bundled fonts have the letters of English, Spanish and
+  Portuguese. Twi (ɛ, ɔ) and Chinese come from system fonts listed after them in each stack: Segoe
+  UI, Noto Sans and DejaVu Sans, then PingFang SC, Microsoft YaHei, Noto Sans CJK SC and Source Han
+  Sans SC (the serif stack has the serif forms). `<html lang>` follows the Display Language, so the
+  browser picks the Chinese glyphs. Tabs and table heads may break a long word
+  (`overflow-wrap: anywhere`); Chinese uses `line-break: strict`.
 - **The hand lettering is for display only.** It is never used for inputs, numbers, tables, messages
   or body text.
 - **The app bundles its fonts.** It runs offline, and never loads Google Fonts or any other web font

@@ -1,9 +1,9 @@
 <script lang="ts">
   import uPlot from "uplot";
   import "uplot/dist/uPlot.min.css";
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { axisInkHooks, currentTokens, dashFor, hatchPattern, uiFont, watchTheme, type ChartTokens } from "../chartTheme";
-  import { num, say, t, type TextIds } from "../i18n.svelte";
+  import { language, num, say, t, ticks, type TextIds } from "../i18n.svelte";
 
   // The stability results of a gas Cargo, exactly as the engine gives them: a GZ curve per loading
   // condition (the governing one drawn thick), the heel angles of the criteria and the angle of
@@ -170,6 +170,7 @@
       grid: { stroke: () => tok.rule, width: 1 },
       ticks: { stroke: () => tok.rule, width: 1 },
       border: { show: false },
+      values: (_u: uPlot, ts: number[]) => ticks(ts),
     };
     return {
       width,
@@ -186,7 +187,7 @@
       axes: [
         { ...axis, label: t("app-stab-heel-axis") },
         // A tick about every 28 pixels, written to two decimals, so GZ can be read off the axis.
-        { ...axis, label: t("app-stab-gz-axis"), space: 28, values: (_u, ticks) => ticks.map((v) => v.toFixed(2)), size: 56 },
+        { ...axis, label: t("app-stab-gz-axis"), space: 28, values: (_u, ts) => ts.map((v) => num(v, 2)), size: 56 },
       ],
       series: [
         {},
@@ -306,6 +307,17 @@
     { label: "app-stab-col-max-gz-angle", unit: "deg", dp: 0, get: (c) => c.max_gz_deg },
     { label: "app-stab-col-deck-edge", unit: "deg", dp: 1, get: (c) => c.deck_edge_deg },
   ];
+
+  // Another Display Language: the axis titles again, then a full draw (tick numbers, curve names).
+  // Only the language is tracked here; the data has its own effect.
+  $effect(() => {
+    language();
+    untrack(() => {
+      if (!plot) return;
+      [t("app-stab-heel-axis"), t("app-stab-gz-axis")].forEach((title, i) => (plot!.axes[i].label = title));
+      plot.redraw(false, true);
+    });
+  });
 </script>
 
 <div class="stab" data-testid="stability">

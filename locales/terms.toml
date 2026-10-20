@@ -1,0 +1,468 @@
+# The Term List (spec 0005): one controlled word per language for each naval-architecture term.
+#
+# A translator uses the listed term every time the English term appears in a message.
+# Each language entry is [term, status, note]:
+#   status "draft"         a first draft (by a person or a machine), not checked;
+#   status "reviewed"      checked by a native speaker with marine knowledge (add "@handle" to the note);
+#   status "needs-native"  no established term is known: the English term is kept, and a native
+#                          speaker with marine knowledge should decide. Never invent a word.
+# `glossary` names the GLOSSARY.md term where OVCD defines the word, if it does.
+# Twi (ak) keeps English for nearly every technical term: few established Twi terms exist for them.
+
+[draught]
+en = "draught"
+glossary = ""
+es = ["calado", "draft", ""]
+pt = ["calado", "draft", ""]
+zh-Hans = ["吃水", "draft", ""]
+ak = ["draught", "needs-native", "No established Twi term known; English kept."]
+
+[freeboard]
+en = "freeboard"
+glossary = ""
+es = ["francobordo", "draft", ""]
+pt = ["borda livre", "draft", ""]
+zh-Hans = ["干舷", "draft", ""]
+ak = ["freeboard", "needs-native", "No established Twi term known; English kept."]
+
+[heel]
+en = "heel (angle of heel)"
+glossary = ""
+es = ["escora", "draft", ""]
+pt = ["adernamento", "draft", "Also \"banda\"; choose one."]
+zh-Hans = ["横倾", "draft", ""]
+ak = ["heel", "needs-native", "No established Twi term known; English kept."]
+
+[cofferdam]
+en = "cofferdam"
+glossary = ""
+es = ["coferdán", "draft", ""]
+pt = ["coferdã", "draft", ""]
+zh-Hans = ["隔离空舱", "draft", ""]
+ak = ["cofferdam", "needs-native", "No established Twi term known; English kept."]
+
+[saddle]
+en = "saddle (tank support)"
+glossary = ""
+es = ["silleta", "draft", "Also \"cuna\"; choose one."]
+pt = ["berço", "draft", "Also \"sela\"; choose one."]
+zh-Hans = ["鞍座", "draft", ""]
+ak = ["saddle", "needs-native", "No established Twi term known; English kept."]
+
+[deadweight]
+en = "deadweight"
+glossary = ""
+es = ["peso muerto", "draft", ""]
+pt = ["porte bruto", "draft", ""]
+zh-Hans = ["载重量", "draft", ""]
+ak = ["deadweight", "needs-native", "No established Twi term known; English kept."]
+
+[lightship]
+en = "lightship"
+glossary = ""
+es = ["peso en rosca", "draft", ""]
+pt = ["peso leve", "draft", ""]
+zh-Hans = ["空船重量", "draft", ""]
+ak = ["lightship", "needs-native", "No established Twi term known; English kept."]
+
+[displacement]
+en = "displacement"
+glossary = ""
+es = ["desplazamiento", "draft", ""]
+pt = ["deslocamento", "draft", ""]
+zh-Hans = ["排水量", "draft", ""]
+ak = ["displacement", "needs-native", "No established Twi term known; English kept."]
+
+[beam]
+en = "beam"
+glossary = ""
+es = ["manga", "draft", ""]
+pt = ["boca", "draft", ""]
+zh-Hans = ["型宽", "draft", ""]
+ak = ["beam", "needs-native", "No established Twi term known; English kept."]
+
+[moulded-depth]
+en = "moulded depth"
+glossary = "Moulded Depth"
+es = ["puntal de trazado", "draft", "Often just \"puntal\"."]
+pt = ["pontal moldado", "draft", "Often just \"pontal\"."]
+zh-Hans = ["型深", "draft", ""]
+ak = ["moulded depth", "needs-native", "No established Twi term known; English kept."]
+
+[length-overall]
+en = "length overall"
+glossary = ""
+es = ["eslora total", "draft", ""]
+pt = ["comprimento total", "draft", ""]
+zh-Hans = ["总长", "draft", ""]
+ak = ["length overall", "needs-native", "No established Twi term known; English kept."]
+
+[hull]
+en = "hull"
+glossary = "Hull"
+es = ["casco", "draft", ""]
+pt = ["casco", "draft", ""]
+zh-Hans = ["船体", "draft", ""]
+ak = ["hull", "needs-native", "No established Twi term known; English kept."]
+
+[barge]
+en = "barge"
+glossary = ""
+es = ["barcaza", "draft", ""]
+pt = ["barcaça", "draft", ""]
+zh-Hans = ["驳船", "draft", ""]
+ak = ["barge", "needs-native", "No established Twi term known; English kept."]
+
+[pusher]
+en = "pusher (push tug)"
+glossary = ""
+es = ["empujador", "draft", ""]
+pt = ["empurrador", "draft", ""]
+zh-Hans = ["推轮", "draft", ""]
+ak = ["pusher", "needs-native", "No established Twi term known; English kept."]
+
+[formation]
+en = "Formation (convoy, tow)"
+glossary = "Formation"
+es = ["formación", "draft", "Spanish users may know \"convoy\"; keep \"formación\" for the OVCD term."]
+pt = ["formação", "draft", ""]
+zh-Hans = ["船队编组", "draft", ""]
+ak = ["Formation", "needs-native", "No established Twi term known; English kept."]
+
+[ballast]
+en = "ballast"
+glossary = ""
+es = ["lastre", "draft", ""]
+pt = ["lastro", "draft", ""]
+zh-Hans = ["压载", "draft", ""]
+ak = ["ballast", "needs-native", "No established Twi term known; English kept."]
+
+[stability]
+en = "stability"
+glossary = ""
+es = ["estabilidad", "draft", ""]
+pt = ["estabilidade", "draft", ""]
+zh-Hans = ["稳性", "draft", ""]
+ak = ["stability", "needs-native", "No established Twi term known; English kept."]
+
+[righting-lever]
+en = "righting lever (GZ)"
+glossary = ""
+es = ["brazo adrizante (GZ)", "draft", ""]
+pt = ["braço de endireitamento (GZ)", "draft", ""]
+zh-Hans = ["复原力臂 (GZ)", "draft", ""]
+ak = ["righting lever (GZ)", "needs-native", "No established Twi term known; English kept."]
+
+[metacentric-height]
+en = "metacentric height (GM)"
+glossary = ""
+es = ["altura metacéntrica (GM)", "draft", ""]
+pt = ["altura metacêntrica (GM)", "draft", ""]
+zh-Hans = ["初稳性高度 (GM)", "draft", ""]
+ak = ["metacentric height (GM)", "needs-native", "No established Twi term known; English kept."]
+
+[squat]
+en = "squat"
+glossary = ""
+es = ["asentamiento dinámico (squat)", "draft", "Many engineers use the English word."]
+pt = ["afundamento dinâmico (squat)", "draft", "Many engineers use the English word."]
+zh-Hans = ["航行下沉量", "draft", ""]
+ak = ["squat", "needs-native", "No established Twi term known; English kept."]
+
+[under-keel-clearance]
+en = "under-keel clearance (UKC)"
+glossary = ""
+es = ["resguardo bajo la quilla (UKC)", "draft", ""]
+pt = ["folga abaixo da quilha (UKC)", "draft", ""]
+zh-Hans = ["富余水深 (UKC)", "draft", ""]
+ak = ["under-keel clearance (UKC)", "needs-native", "No established Twi term known; English kept."]
+
+[blockage]
+en = "blockage (channel blockage ratio)"
+glossary = ""
+es = ["factor de bloqueo", "draft", ""]
+pt = ["fator de bloqueio", "draft", ""]
+zh-Hans = ["阻塞比", "draft", ""]
+ak = ["blockage", "needs-native", "No established Twi term known; English kept."]
+
+[air-draft]
+en = "air draft"
+glossary = ""
+es = ["calado aéreo", "draft", ""]
+pt = ["calado aéreo", "draft", ""]
+zh-Hans = ["水上高度", "draft", "Height above the waterline; check the usual inland term."]
+ak = ["air draft", "needs-native", "No established Twi term known; English kept."]
+
+[hold]
+en = "hold (cargo hold)"
+glossary = ""
+es = ["bodega", "draft", ""]
+pt = ["porão", "draft", ""]
+zh-Hans = ["货舱", "draft", ""]
+ak = ["hold", "needs-native", "No established Twi term known; English kept."]
+
+[hopper]
+en = "hopper (sloped hold)"
+glossary = "Cargo Containment"
+es = ["tolva", "draft", ""]
+pt = ["tremonha", "draft", ""]
+zh-Hans = ["斗式货舱", "draft", ""]
+ak = ["hopper", "needs-native", "No established Twi term known; English kept."]
+
+[type-c-tank]
+en = "IMO Type C tank"
+glossary = "Cargo Containment"
+es = ["tanque IMO tipo C", "draft", ""]
+pt = ["tanque IMO tipo C", "draft", ""]
+zh-Hans = ["IMO C型液货舱", "draft", ""]
+ak = ["IMO Type C tank", "needs-native", "No established Twi term known; English kept."]
+
+[wheelhouse]
+en = "wheelhouse"
+glossary = ""
+es = ["puente de gobierno", "draft", "Also \"timonera\"; choose one."]
+pt = ["casa do leme", "draft", ""]
+zh-Hans = ["驾驶室", "draft", ""]
+ak = ["wheelhouse", "needs-native", "No established Twi term known; English kept."]
+
+[double-bottom]
+en = "double bottom"
+glossary = ""
+es = ["doble fondo", "draft", ""]
+pt = ["fundo duplo", "draft", ""]
+zh-Hans = ["双层底", "draft", ""]
+ak = ["double bottom", "needs-native", "No established Twi term known; English kept."]
+
+[block-coefficient]
+en = "block coefficient (Cb)"
+glossary = "Hull Form"
+es = ["coeficiente de bloque (Cb)", "draft", ""]
+pt = ["coeficiente de bloco (Cb)", "draft", ""]
+zh-Hans = ["方形系数 (Cb)", "draft", ""]
+ak = ["block coefficient (Cb)", "needs-native", "No established Twi term known; English kept."]
+
+[cargo]
+en = "Cargo"
+glossary = "Cargo"
+es = ["carga", "draft", ""]
+pt = ["carga", "draft", ""]
+zh-Hans = ["货物", "draft", ""]
+ak = ["Cargo", "needs-native", "A general word for goods may exist; a native speaker should decide."]
+
+[vessel]
+en = "vessel"
+glossary = ""
+es = ["embarcación", "draft", ""]
+pt = ["embarcação", "draft", ""]
+zh-Hans = ["船舶", "draft", ""]
+ak = ["hyɛn", "draft", "The general word for a ship or boat (also used for vehicles); confirm it suits a vessel in a design tool."]
+
+[option]
+en = "Option (a design alternative)"
+glossary = "Option"
+es = ["opción", "draft", ""]
+pt = ["opção", "draft", ""]
+zh-Hans = ["方案", "draft", ""]
+ak = ["Option", "needs-native", "No established Twi term known; English kept."]
+
+[design]
+en = "Design (a set of Options)"
+glossary = "Design"
+es = ["diseño", "draft", ""]
+pt = ["projeto", "draft", ""]
+zh-Hans = ["设计", "draft", ""]
+ak = ["Design", "needs-native", "No established Twi term known; English kept."]
+
+[defaults-profile]
+en = "Defaults Profile"
+glossary = "Defaults Profile"
+es = ["perfil de valores por defecto", "draft", ""]
+pt = ["perfil de valores padrão", "draft", ""]
+zh-Hans = ["默认值配置", "draft", ""]
+ak = ["Defaults Profile", "needs-native", "No established Twi term known; English kept."]
+
+[vessel-class]
+en = "Vessel Class"
+glossary = "Vessel Class"
+es = ["clase de embarcación", "draft", ""]
+pt = ["classe de embarcação", "draft", ""]
+zh-Hans = ["船型等级", "draft", ""]
+ak = ["Vessel Class", "needs-native", "No established Twi term known; English kept."]
+
+# Terms added with the engine and input drafts (spec 0005). Each draft chose these; a reviewer confirms.
+
+[cargo-containment]
+en = "Cargo Containment"
+glossary = ""
+es = ["contención de la carga", "draft", ""]
+pt = ["contenção da carga", "draft", ""]
+zh-Hans = ["货物围护系统", "draft", ""]
+ak = ["Cargo Containment", "needs-native", "No established Twi term known; English kept."]
+
+[hull-form]
+en = "Hull Form"
+glossary = ""
+es = ["forma del casco", "draft", ""]
+pt = ["forma do casco", "draft", ""]
+zh-Hans = ["船体线型", "draft", ""]
+ak = ["Hull Form", "needs-native", "No established Twi term known; English kept."]
+
+[lng]
+en = "LNG (liquefied natural gas)"
+glossary = ""
+es = ["GNL", "draft", ""]
+pt = ["GNL", "draft", ""]
+zh-Hans = ["LNG", "draft", ""]
+ak = ["LNG", "needs-native", "No established Twi term known; English kept."]
+
+[lpg]
+en = "LPG (liquefied petroleum gas)"
+glossary = ""
+es = ["GLP", "draft", ""]
+pt = ["GLP", "draft", ""]
+zh-Hans = ["LPG", "draft", ""]
+ak = ["LPG", "needs-native", "No established Twi term known; English kept."]
+
+[carriage-condition]
+en = "carriage condition (LPG)"
+glossary = ""
+es = ["condición de transporte", "draft", ""]
+pt = ["condição de transporte", "draft", ""]
+zh-Hans = ["装运方式", "draft", ""]
+ak = ["carriage condition", "needs-native", "No established Twi term known; English kept."]
+
+[allowable-stress]
+en = "allowable stress"
+glossary = ""
+es = ["tensión admisible", "draft", ""]
+pt = ["tensão admissível", "draft", ""]
+zh-Hans = ["许用应力", "draft", ""]
+ak = ["allowable stress", "needs-native", "No established Twi term known; English kept."]
+
+[wing-tank]
+en = "wing tank"
+glossary = ""
+es = ["tanque lateral", "draft", ""]
+pt = ["tanque lateral", "draft", ""]
+zh-Hans = ["边舱", "draft", ""]
+ak = ["wing tank", "needs-native", "No established Twi term known; English kept."]
+
+[wing-void]
+en = "wing void"
+glossary = ""
+es = ["espacio vacío lateral", "draft", ""]
+pt = ["espaço vazio lateral", "draft", ""]
+zh-Hans = ["边空舱", "draft", ""]
+ak = ["wing void", "needs-native", "No established Twi term known; English kept."]
+
+[void]
+en = "void (bow or stern)"
+glossary = ""
+es = ["espacio vacío", "draft", ""]
+pt = ["espaço vazio", "draft", ""]
+zh-Hans = ["空舱", "draft", ""]
+ak = ["void", "needs-native", "No established Twi term known; English kept."]
+
+[hatch-coaming]
+en = "hatch coaming"
+glossary = ""
+es = ["brazola de escotilla", "draft", ""]
+pt = ["braçola da escotilha", "draft", ""]
+zh-Hans = ["舱口围板", "draft", ""]
+ak = ["hatch coaming", "needs-native", "No established Twi term known; English kept."]
+
+[bulkhead]
+en = "bulkhead"
+glossary = ""
+es = ["mamparo", "draft", ""]
+pt = ["antepara", "draft", ""]
+zh-Hans = ["舱壁", "draft", ""]
+ak = ["bulkhead", "needs-native", "No established Twi term known; English kept."]
+
+[thruster]
+en = "thruster"
+glossary = ""
+es = ["propulsor", "draft", ""]
+pt = ["propulsor", "draft", ""]
+zh-Hans = ["推进器", "draft", ""]
+ak = ["thruster", "needs-native", "No established Twi term known; English kept."]
+
+[genset]
+en = "genset"
+glossary = ""
+es = ["grupo electrógeno", "draft", ""]
+pt = ["gerador", "draft", ""]
+zh-Hans = ["发电机组", "draft", ""]
+ak = ["genset", "needs-native", "No established Twi term known; English kept."]
+
+[laden]
+en = "laden (condition)"
+glossary = ""
+es = ["cargada", "draft", ""]
+pt = ["carregado", "draft", ""]
+zh-Hans = ["满载", "draft", ""]
+ak = ["laden", "needs-native", "No established Twi term known; English kept."]
+
+[half-laden]
+en = "half laden (condition)"
+glossary = ""
+es = ["media carga", "draft", ""]
+pt = ["meia carga", "draft", ""]
+zh-Hans = ["半载", "draft", ""]
+ak = ["half laden", "needs-native", "No established Twi term known; English kept."]
+
+[light-condition]
+en = "light (condition)"
+glossary = ""
+es = ["en rosca", "draft", ""]
+pt = ["leve", "draft", ""]
+zh-Hans = ["空载", "draft", ""]
+ak = ["light", "needs-native", "No established Twi term known; English kept."]
+
+[governing]
+en = "governing (case)"
+glossary = ""
+es = ["determinante", "draft", ""]
+pt = ["governante", "draft", ""]
+zh-Hans = ["控制工况", "draft", ""]
+ak = ["governing", "needs-native", "No established Twi term known; English kept."]
+
+[hard-limit]
+en = "hard limit"
+glossary = ""
+es = ["límite estricto", "draft", ""]
+pt = ["limite rígido", "draft", ""]
+zh-Hans = ["硬性限值", "draft", ""]
+ak = ["hard limit", "needs-native", "No established Twi term known; English kept."]
+
+[soft-limit]
+en = "soft limit"
+glossary = ""
+es = ["límite recomendado", "draft", ""]
+pt = ["limite flexível", "draft", ""]
+zh-Hans = ["建议限值", "draft", ""]
+ak = ["soft limit", "needs-native", "No established Twi term known; English kept."]
+
+[bank-slope]
+en = "bank slope"
+glossary = ""
+es = ["pendiente del talud", "draft", ""]
+pt = ["inclinação da margem", "draft", ""]
+zh-Hans = ["岸坡坡度", "draft", ""]
+ak = ["bank slope", "needs-native", "No established Twi term known; English kept."]
+
+[bridge-clearance]
+en = "bridge clearance"
+glossary = ""
+es = ["gálibo de puente", "draft", ""]
+pt = ["altura livre sob ponte", "draft", ""]
+zh-Hans = ["桥梁净空", "draft", ""]
+ak = ["bridge clearance", "needs-native", "No established Twi term known; English kept."]
+
+[tank-dome]
+en = "tank dome"
+glossary = ""
+es = ["domo", "draft", ""]
+pt = ["domo", "draft", ""]
+zh-Hans = ["穹顶", "draft", ""]
+ak = ["tank dome", "needs-native", "No established Twi term known; English kept."]

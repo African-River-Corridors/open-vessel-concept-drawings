@@ -26,6 +26,14 @@ CALL = re.compile(r'\b(?:text|label)!\(\s*"([a-z0-9-]+)"\s*,\s*')
 FIXED = re.compile(r'\bText::fixed\(\s*"([a-z0-9-]+)"\s*,\s*')
 CONST = re.compile(r'\bconst\s+([A-Z_][A-Z0-9_]*)\s*:\s*&(?:\'static\s+)?str\s*=\s*')
 NAME = re.compile(r"\{([a-z_][a-z0-9_]*)\}")
+# A check's name is a key in the results, so it stays as the engine writes it. The app names a check
+# in another language by the derived id `check-name-<slug>`; its English here is the name as read.
+CHECK_NAME = re.compile(r'\bCheck::(?:new|with_severity)\(\s*')
+
+
+def slug(text: str) -> str:
+    """A Message Id piece from a name, as the app's `slug` makes it."""
+    return re.sub(r"^-+|-+$", "", re.sub(r"[^a-z0-9]+", "-", text.lower()))
 
 
 class ParseError(Exception):
@@ -123,7 +131,7 @@ def extract(root: Path = ROOT) -> tuple[list[tuple[str, str, str]], list[str]]:
         if "target" in path.parts or path.name == "text.rs":
             continue
         text = path.read_text(encoding="utf-8")
-        if "text!(" not in text and "label!(" not in text and "Text::fixed(" not in text:
+        if "text!(" not in text and "label!(" not in text and "Text::fixed(" not in text and "Check::" not in text:
             continue
         rel = str(path.relative_to(root))
         consts: dict[str, str] = {}
@@ -156,6 +164,11 @@ def extract(root: Path = ROOT) -> tuple[list[tuple[str, str, str]], list[str]]:
                 items.append((m.start(), m.group(1), fixed_value(english, rel)))
             except (ParseError, ValueError, IndexError) as e:
                 problems.append(f"{rel}: {m.group(1)}: {e}")
+        for m in CHECK_NAME.finditer(text) if "tests" not in path.parts else ():
+            if text[m.end()] != '"':
+                continue  # a name built at run time is not a fixed name
+            name = string_literal(text, m.end())[0]
+            items.append((m.start(), f"check-name-{slug(name)}", fixed_value(name.replace("_", " "), rel)))
         for _, ident, value in sorted(items):
             if ident in found:
                 if found[ident][0] != value:

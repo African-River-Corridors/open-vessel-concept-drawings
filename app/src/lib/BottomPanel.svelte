@@ -2,7 +2,7 @@
   import type { Evaluation, OptionEvaluation } from "./api";
   import StaleWhy from "./StaleWhy.svelte";
   import { MAIN, TANKS, exact, hasTanks, show, textIds, valueAt, type Metric } from "./metrics";
-  import { say, t } from "./i18n.svelte";
+  import { checkName, say, t } from "./i18n.svelte";
 
   // Outputs of the active Option, its checks and warnings, and a compare table of every Option.
   // The numbers are read from the engine's results object. While the active Option has a hard
@@ -111,7 +111,7 @@
           {#each checks as c (c.name)}
             <li class={c.ok ? "ok" : "fail"}>
               <span class="tag"><span aria-hidden="true">{c.ok ? "✓" : "✕"}</span> {t(c.ok ? "app-pass" : "app-fail")}</span>
-              <strong>{say(c.name, ids)}</strong>
+              <strong>{checkName(c.name, ids)}</strong>
               {#if c.message && c.message !== "OK"}<span class="msg">{say(c.message, ids)}</span>{/if}
             </li>
           {/each}

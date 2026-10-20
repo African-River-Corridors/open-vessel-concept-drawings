@@ -7,6 +7,7 @@
   import BottomPanel from "./lib/BottomPanel.svelte";
   import Notice from "./lib/Notice.svelte";
   import ThemeControl from "./lib/ThemeControl.svelte";
+  import LanguageControl from "./lib/LanguageControl.svelte";
   import { loadPanels, savePanels } from "./lib/panels";
   import { list, say, schemaText, setInputLabels, t } from "./lib/i18n.svelte";
 
@@ -209,6 +210,7 @@
     <span class="grow"></span>
     <button type="button" aria-label={t(showInput ? "app-input-panel-hide" : "app-input-panel-show")} aria-pressed={showInput} onclick={() => (showInput = !showInput)}>{t("app-input-panel")}</button>
     <button type="button" aria-label={t(showOutputs ? "app-outputs-panel-hide" : "app-outputs-panel-show")} aria-pressed={showOutputs} onclick={() => (showOutputs = !showOutputs)}>{t("app-outputs-panel")}</button>
+    <LanguageControl />
     <ThemeControl />
     {#if snap}
       <span class="meta file">{snap.dirty ? t("app-file-unsaved", { file: snap.file_name }) : snap.file_name}</span>

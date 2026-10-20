@@ -85,10 +85,13 @@
   --src-class: #5a3f86;       /* value set by the chosen Vessel Class */
 
   /* Type */
-  --font-ui: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
-  --font-serif: "Source Serif 4", "Source Serif Pro", Georgia, serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
-  --font-hand: "Architects Daughter", "Barlow Semi Condensed", sans-serif; /* display only, caps, slanted */
+  /* The bundled fonts have the Latin letters of English, Spanish and Portuguese. A character they lack
+     (Twi ɛ and ɔ, Chinese) comes from the system fonts after them: first those with ɛ and ɔ, then
+     those with Simplified Chinese (spec 0005). */
+  --font-ui: "Barlow Semi Condensed", "Barlow", system-ui, "Segoe UI", "Noto Sans", "DejaVu Sans", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", sans-serif;
+  --font-serif: "Source Serif 4", "Source Serif Pro", Georgia, "Noto Serif", "DejaVu Serif", "Songti SC", "SimSun", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, "DejaVu Sans Mono", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", monospace;
+  --font-hand: "Architects Daughter", "Barlow Semi Condensed", system-ui, "Segoe UI", "Noto Sans", "DejaVu Sans", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; /* display only, caps, slanted */
 
   --fs-11: 11px;  --fs-12: 12px;  --fs-13: 13px;  --fs-14: 14px;
   --fs-16: 16px;  --fs-20: 20px;  --fs-24: 24px;  --fs-32: 32px;  --fs-48: 48px;
@@ -179,6 +182,10 @@ select {
   background-size: 6px 6px, 6px 6px;
   background-repeat: no-repeat;
 }
+/* Translated words are often longer than the English: tabs and table heads may break a long word
+   rather than overflow. Chinese breaks by the strict rules of its punctuation. */
+[role="tab"], th { overflow-wrap: anywhere; }
+:lang(zh-Hans) body { line-break: strict; }
 :focus-visible { outline: var(--lw-thick) solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }

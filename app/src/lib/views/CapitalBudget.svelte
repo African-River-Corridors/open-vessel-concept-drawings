@@ -18,7 +18,7 @@
     from_design: string[];
     core_default: string[];
   }
-  import { list as join, num, say, t, type TextIds } from "../i18n.svelte";
+  import { checkName, list as join, num, say, t, type TextIds } from "../i18n.svelte";
 
   let { cost, phase, ids }: { cost: Cost | null | undefined; phase: string | undefined; ids: TextIds | null } = $props();
 
@@ -42,6 +42,11 @@
   const words = (id: string) => {
     const text = id.replace(/_t$|_kwh$|_kw$/, "").replace(/_/g, " ");
     return text.charAt(0).toUpperCase() + text.slice(1);
+  };
+  /** A cost check's name: translated where the Display Language has it, else as words. */
+  const costCheck = (name: string) => {
+    const said = checkName(name);
+    return said === name ? words(name) : said;
   };
   const money = (v: number) => num(v, 0);
   const list = (ids: string[]) => join(ids.map(words), "unit");
@@ -98,7 +103,7 @@
     {#if failing.length > 0}
       <ul class="checks" data-testid="cost-checks">
         {#each failing as c (c.name)}
-          <li class:warn={c.severity !== "error"}><span class="chip" aria-hidden="true">{c.severity === "error" ? "✕" : "▲"}</span> <strong>{t(c.severity === "error" ? "app-cost-check-failed" : "app-cost-note", { check: words(c.name) })}</strong> {say(c.message, ids)}</li>
+          <li class:warn={c.severity !== "error"}><span class="chip" aria-hidden="true">{c.severity === "error" ? "✕" : "▲"}</span> <strong>{t(c.severity === "error" ? "app-cost-check-failed" : "app-cost-note", { check: costCheck(c.name) })}</strong> {say(c.message, ids)}</li>
         {/each}
       </ul>
     {/if}
