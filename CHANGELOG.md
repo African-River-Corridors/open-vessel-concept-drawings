@@ -139,6 +139,54 @@ Each entry is a before/after table written by `python3 tools/design_impact.py ch
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
 
+### ticket/316-dome-rule (2026-10-20)
+
+Between `main 72c3e11` and `this branch 874aeb5`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 1 (88x16.3) | `checks[8].message` | raised eye 13.20 m >= obstruction 14.52 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.20 m >= obstruction 14.47 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `warnings[0]` | Sightline needs 7.82 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 7.77 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[8].message` | raised eye 13.20 m >= obstruction 13.25 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.20 m >= obstruction 12.97 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `warnings[0]` | Sightline needs 6.55 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 6.27 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[8].message` | raised eye 13.20 m >= obstruction 14.14 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.20 m >= obstruction 14.01 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `warnings[0]` | Sightline needs 7.44 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 7.31 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep default depth gas 90x14 | `checks[9].message` | raised eye 15.20 m >= obstruction 15.51 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 15.20 m >= obstruction 15.59 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep default depth gas 90x14 | `warnings[0]` | Sightline needs 6.81 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 6.89 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep gas IGC_2G 60x10 | `checks[9].message` | raised eye 7.00 m >= obstruction 6.50 m + 0.50 m margin (lift used 0.00 m of 6.00 m) | raised eye 7.00 m >= obstruction 5.70 m + 0.50 m margin (lift used 0.00 m of 6.00 m) | changed |
+| sweep gas IGC_2G 90x14 | `checks[8].message` | raised eye 13.00 m >= obstruction 13.15 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.00 m >= obstruction 12.89 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep gas IGC_2G 90x14 | `warnings[0]` | Sightline needs 6.65 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 6.39 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep gas IGC_2G_EXACT 60x10 | `checks[9].message` | raised eye 7.00 m >= obstruction 6.50 m + 0.50 m margin (lift used 0.00 m of 6.00 m) | raised eye 7.00 m >= obstruction 5.70 m + 0.50 m margin (lift used 0.00 m of 6.00 m) | changed |
+| sweep gas IGC_2G_EXACT 90x14 | `checks[8].message` | raised eye 13.00 m >= obstruction 13.15 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.00 m >= obstruction 12.89 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep gas IGC_2G_EXACT 90x14 | `warnings[0]` | Sightline needs 6.65 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 6.39 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep gas cargo LNG | `checks[8].message` | raised eye 13.00 m >= obstruction 14.49 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.00 m >= obstruction 14.39 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep gas cargo LNG | `warnings[0]` | Sightline needs 7.99 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 7.89 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep gas cargo LNG_ethane | `checks[8].message` | raised eye 13.00 m >= obstruction 14.49 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.00 m >= obstruction 14.39 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep gas cargo LNG_ethane | `warnings[0]` | Sightline needs 7.99 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 7.89 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep gas cargo LPG_butane | `checks[8].message` | raised eye 13.00 m >= obstruction 13.15 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.00 m >= obstruction 12.89 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep gas cargo LPG_butane | `warnings[0]` | Sightline needs 6.65 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 6.39 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep gas cargo LPG_mix | `checks[8].message` | raised eye 13.00 m >= obstruction 13.15 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.00 m >= obstruction 12.89 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep gas cargo LPG_mix | `warnings[0]` | Sightline needs 6.65 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 6.39 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep gas cargo LPG_propane | `checks[8].message` | raised eye 13.00 m >= obstruction 13.15 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.00 m >= obstruction 12.89 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep gas cargo LPG_propane | `warnings[0]` | Sightline needs 6.65 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 6.39 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep gas carriage LPG_butane fully_pressurised | `checks[8].message` | raised eye 13.02 m >= obstruction 12.52 m + 0.50 m margin (lift used 5.52 m of 6.00 m) | raised eye 12.66 m >= obstruction 12.16 m + 0.50 m margin (lift used 5.16 m of 6.00 m) | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[8].message` | raised eye 13.22 m >= obstruction 12.72 m + 0.50 m margin (lift used 5.72 m of 6.00 m) | raised eye 12.86 m >= obstruction 12.36 m + 0.50 m margin (lift used 5.36 m of 6.00 m) | changed |
+| sweep gas carriage LPG_butane semi_pressurised | `checks[14].message` | GM 5.51 m (fluid), max GZ 1.71 m at 25° | GM 5.50 m (fluid), max GZ 1.71 m at 25° | changed |
+| sweep gas carriage LPG_butane semi_pressurised | `checks[8].message` | raised eye 12.20 m >= obstruction 11.70 m + 0.50 m margin (lift used 4.70 m of 6.00 m) | raised eye 11.67 m >= obstruction 11.17 m + 0.50 m margin (lift used 4.17 m of 6.00 m) | changed |
+| sweep gas carriage LPG_mix fully_pressurised | `checks[8].message` | raised eye 13.02 m >= obstruction 12.52 m + 0.50 m margin (lift used 5.52 m of 6.00 m) | raised eye 12.66 m >= obstruction 12.16 m + 0.50 m margin (lift used 5.16 m of 6.00 m) | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[8].message` | raised eye 13.22 m >= obstruction 12.72 m + 0.50 m margin (lift used 5.72 m of 6.00 m) | raised eye 12.86 m >= obstruction 12.36 m + 0.50 m margin (lift used 5.36 m of 6.00 m) | changed |
+| sweep gas carriage LPG_mix semi_pressurised | `checks[14].message` | GM 5.51 m (fluid), max GZ 1.71 m at 25° | GM 5.50 m (fluid), max GZ 1.71 m at 25° | changed |
+| sweep gas carriage LPG_mix semi_pressurised | `checks[8].message` | raised eye 12.20 m >= obstruction 11.70 m + 0.50 m margin (lift used 4.70 m of 6.00 m) | raised eye 11.67 m >= obstruction 11.17 m + 0.50 m margin (lift used 4.17 m of 6.00 m) | changed |
+| sweep gas carriage LPG_propane fully_pressurised | `checks[8].message` | raised eye 13.02 m >= obstruction 12.52 m + 0.50 m margin (lift used 5.52 m of 6.00 m) | raised eye 12.66 m >= obstruction 12.16 m + 0.50 m margin (lift used 5.16 m of 6.00 m) | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[8].message` | raised eye 13.22 m >= obstruction 12.72 m + 0.50 m margin (lift used 5.72 m of 6.00 m) | raised eye 12.86 m >= obstruction 12.36 m + 0.50 m margin (lift used 5.36 m of 6.00 m) | changed |
+| sweep gas carriage LPG_propane semi_pressurised | `checks[8].message` | raised eye 13.23 m >= obstruction 12.73 m + 0.50 m margin (lift used 5.73 m of 6.00 m) | raised eye 12.87 m >= obstruction 12.37 m + 0.50 m margin (lift used 5.37 m of 6.00 m) | changed |
+| sweep gas carries nothing (draught limit) | `checks[9].message` | raised eye 13.00 m >= obstruction 15.15 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.00 m >= obstruction 15.23 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep gas carries nothing (draught limit) | `warnings[0]` | Sightline needs 8.65 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 8.73 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep gas passes all checks IGC_2G 110x11.4 | `checks[8].message` | raised eye 13.02 m >= obstruction 12.52 m + 0.50 m margin (lift used 5.52 m of 6.00 m) | raised eye 12.66 m >= obstruction 12.16 m + 0.50 m margin (lift used 5.16 m of 6.00 m) | changed |
+| sweep gas passes all checks IGC_2G_EXACT 80x14 | `checks[8].message` | raised eye 12.00 m >= obstruction 12.20 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 12.00 m >= obstruction 11.77 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep gas passes all checks IGC_2G_EXACT 80x14 | `warnings[0]` | Sightline needs 6.70 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 6.27 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| ... | 22853 more changed quantities | | | |
+
 ### ticket/315-lpg-density-loading-limit (2026-10-20)
 
 Between `main 32f0184` and `this branch e585a6b`.
