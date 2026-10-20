@@ -29,16 +29,25 @@ citation. The evaluation harness (#184) needs one row per rule to pin a disagree
 - **A Design selects its Rule Sets.** A new **Service Area** input (river only, or coastal and river)
   sets the default selection. Ocean only is not in the first release. Each Option stores the Rule Sets it
   used, with version and content hash, marked typed or default, like every input.
-- **Strictest governs.** When several selected Rule Sets cover one requirement, all of them apply. The
-  Option meets the requirement only if it meets every one, and the one with the smallest margin is
-  marked as governing. No Rule can loosen another.
+- **Strictest governs.** A Requirement is the set of Rules, from any selected Rule Set, that test the
+  same Measure (with the same arguments) on the same object in the same direction. All of them apply.
+  The Option meets the Requirement only if it meets every one. Criteria of one direction are totally
+  ordered by strictness, so the strictest always exists, and a value meets every Rule of the
+  Requirement exactly when it meets the strictest one. That Rule is marked as governing; it is chosen
+  from the Criteria, not from the value, with a fixed order for ties. No Rule can loosen another.
+- **A Rule is a Criterion on a Measure, with an Applicability.** A Criterion is a comparison, a limit and
+  a tolerance that keeps the code's own comparison. A design input that a rule book bounds (the weld
+  factor, the allowable stress) is an input Measure with a normal Criterion; there is no separate
+  "parameter" Rule. An Applicability is a list of conditions `input ∈ {values}` on a Rule or a Rule
+  Set, and never grows into an expression language.
 - **Every released version of every Rule Set is kept**, unchanged, so an old file reproduces exactly. A
   change makes a new version. The engine never moves a saved file to a newer version without a warning.
 - **Rule Sets load at run time.** The built-in sets are data files in the repo, built into every binary
   and the WebAssembly build. A user or an agent can also load a Rule Set file at run time, as a Defaults
   Profile is loaded today. Agents change rules by editing these files in a pull request.
-- **Only text-checked rules count as sourced.** A Rule is `verified` only when its paragraph has been
-  read in the actual text, with the document, edition and locator recorded. Every other Rule is
+- **Only text-checked rules count as sourced.** A Rule is `verified` only when a second reader, human or
+  agent, who did not write the Rule, has read its paragraph in the actual text, with the document,
+  edition and locator recorded. The process is `docs/rules/codification.md`. Every other Rule is
   `unverified`, and every output says so. OVCD's own checks (physical feasibility, method validity
   ranges, tool limits) carry an honest origin and are never shown as a published rule.
 - **Paywalled texts:** store the numbers and tables with the paragraph cited. Never copy the prose. A
@@ -85,7 +94,12 @@ The synthesis takes A's data and B's code: numbers and citations are data, arith
   is marked `unverified`, and becomes a finding (#121), decided one at a time.
 - The results show which Rule Sets were checked and which were not. A river-only result says that no
   statutory technical code was checked, only the named Rule Sets.
-- `fit` (#264) keeps only arrangements that meet every blocking Rule of the selected Rule Sets.
+- `fit` (#264) keeps only arrangements that meet every evaluated blocking Rule of the selected Rule
+  Sets. A Rule the engine cannot evaluate yet never counts as met: every passing verdict names the
+  blocking Rules not evaluated.
+- The coherence properties of the composition (strictest governs is well defined; adding a Rule never
+  turns a failing design into a passing one; `fit` never labels a failing design as passing) are stated
+  in the spec, tested as properties, and modelled in Lean in a separate job (ADR 0014).
 - The harness keys its expected verdicts by rule id, reads the Rule Trace row by row, and mutates rule
   data loaded at run time.
 - ADR 0007 gains format version 3 and the note that the Rule Trace is outside the results hash.

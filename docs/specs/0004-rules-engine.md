@@ -1,6 +1,7 @@
 # Spec 0004: The rules engine
 
-Status: **draft, for the maintainer's approval.** Decision record: ADR 0013. Issue: #176.
+Status: **draft, deepened 2026-10-20, for the maintainer's approval.** Decision records: ADR 0013 (rules as data), ADR 0014
+(formal proofs). Issue: #176.
 
 ## Problem Statement
 
@@ -85,72 +86,215 @@ edit. Physics stays **code**: **Measures** in `ovcd-core` compute the quantities
 
 ### Terms
 
-The glossary holds the terms: **Rule**, **Rule Set**, **Measure**, **Rule Trace**, **Margin**, **Service
-Area**, **Governing Rule**, **OVCD Check**. The IS Code calls its requirements "criteria"; titles may say
-criterion, but the term is Rule. The `Criterion` struct of `gas_stability` becomes a trace row in code.
+The glossary holds the terms: **Rule**, **Criterion**, **Requirement**, **Applicability**, **Blocking
+Rule**, **Verified**, **Rule Set**, **Measure**, **Rule Trace**, **Margin**, **Service Area**,
+**Governing Rule**, **OVCD Check**. The IS Code calls its requirements "criteria"; in OVCD a Criterion is
+only the test part of a Rule (comparison and limit). The `Criterion` struct of `gas_stability` becomes a
+trace row in code.
+
+### Domain model (precise)
+
+This section is the reference for the build tickets. Where a later section repeats a point, this one
+wins.
+
+**Objects.** A Measure is computed for one object of one **object type**: `option`, `hull`, `tank`,
+`loading-condition`. An Option has one `option` and one `hull`, zero or more `tank`s, and zero or more
+`loading-condition`s. Objects of one type are listed in a fixed order (tank 1, 2, …; loading conditions
+in the order the engine builds them), so a trace is the same on every run and platform.
+
+**Measure.** A Rust function with a stable id, a unit (or `bool`), an object type, named arguments
+(`gz.area` takes `from_deg` and `to_deg`), a **method** citation and a **method status**
+(`verified` / `unverified`). A **Measure instance** is a Measure id with its arguments bound
+(`gz.area(0, 30)`). Two kinds:
+
+- *Computed*: the engine works it out (`gz.area`, `tank.side_gap`).
+- *Input*: the value of a design input the engine uses (`input.weld_factor`,
+  `input.tank_allowable_stress`), whether typed or default. A Rule that bounds an input is a normal Rule
+  on an input Measure. This replaces the `parameter` kind of the first draft.
+
+A Measure either gives a finite value or fails with a reason. It never gives NaN or an infinity to a
+Rule: the evaluator turns a non-finite value into a failure.
+
+**Criterion.** `{compare, limit, tolerance}`.
+
+- `compare`: `ge`, `gt` (a *lower* bound) or `le`, `lt` (an *upper* bound). `eq` is not offered: an
+  equality in a rule book is two Criteria, or a design input.
+- `limit`: a constant with a unit; or a **table** row picked by a Measure value or an input (steps or
+  piecewise linear); or a **formula shape** coded in Rust with coefficients in the file. A table or
+  formula limit is worked out per object before the comparison.
+- `tolerance`: an absolute value in the limit's unit, default 0. It keeps the code's own comparison:
+  `gas_separation` compares `value >= limit - 1e-9`, `gas_stability` compares `value >= limit` with no
+  tolerance. The evaluator uses exactly the form `value >= limit - tolerance` (and the mirror forms), so
+  results stay bit-identical. The tolerance is in the content hash.
+
+The Criterion **holds** for a value v when: `ge`: v ≥ limit − tol; `gt`: v > limit − tol; `le`:
+v ≤ limit + tol; `lt`: v < limit + tol. The **Margin** is v − limit for a lower bound and limit − v for
+an upper bound, in the Measure's unit. So a Criterion that holds has Margin ≥ −tol (and > −tol for a
+strict one); with a zero tolerance, `ge` and `le` pass at Margin 0 and `gt` and `lt` fail there.
+
+**Strictness.** Of two Criteria in the same direction, the stricter is the one whose effective bound
+(limit − tol for a lower bound, limit + tol for an upper bound) lets fewer values pass: the larger
+effective bound for a lower bound, the smaller for an upper bound; at an equal effective bound, a strict
+comparison (`gt`, `lt`) is stricter than a non-strict one. This is a total preorder on the Criteria of
+one direction, for one object, once table and formula limits are worked out. So "the strictest" always
+exists for a non-empty Requirement, and a value meets every Criterion of the Requirement exactly when it
+meets the strictest one. (ADR 0014 records the proof of this property.)
+
+**Rule.** One requirement about one Measure instance. It has: an id; a title; an origin; a source
+citation; a verification record; an object type (the Measure's); an **applicability** (below); a Measure
+instance; a Criterion (none for a `check` Rule, whose Measure is `bool` and which holds when the Measure
+is true); a **consequence** (`block`, `warn` or `note`); a `sizes` flag; an `evaluated` flag with its gap
+text; an optional finding; and `since`. A `note` Rule has no Criterion and only reports a value with its
+citation.
+
+**Applicability.** A conjunction of conditions `input ∈ {values}` over the Option's inputs: `cargo`,
+`cargo_containment`, `service_area`, `lpg_carriage_condition`, `tank_head_type`, and any other enumerated
+input the schema names. It is the same form on a Rule Set (`applies_when`) and on a Rule
+(`applies_when`). There is no expression language: no `or` inside a condition list across inputs, no
+arithmetic, no thresholds. A rule-book condition on a number (a ship length of 24 m or more) is a
+`check` Rule or waits for the Applicability Rules that are out of scope.
+
+**Requirement.** The Rules of all selected Rule Sets with the same Measure instance, the same object and
+the same direction. `check` Rules on one Measure form one Requirement. `note` Rules form none.
+
+**Outcome of one Rule on one object** (a trace row):
+
+| Condition | Outcome |
+|---|---|
+| The Rule's set does not apply to the Option | (one `not applicable` row for the set) |
+| The Rule does not apply, or the Option has no object of its type | `not applicable` |
+| `evaluated: false` | `not evaluated` |
+| The Measure failed (error or non-finite value) | `fail` for a `block` Rule, `warn` for a `warn` Rule, with the reason as the gap |
+| The Criterion holds | `pass` |
+| The Criterion does not hold | `fail` (`block`), `warn` (`warn`) |
+| `note` Rule | `note` |
+
+A Measure that cannot be computed never passes. A Rule the engine lacks is `not evaluated`, which is
+never a pass either.
+
+**Governing Rule.** In each Requirement, the trace marks one row `governing`: the stricter of the
+`block` Rules, or of all Rules if none blocks; on a tie of strictness, the first in selection order
+(below), then by rule id. It is chosen from the Criteria, not from the value, so it does not change when
+the design changes. Because one Measure value meets every Criterion exactly when it meets the strictest
+one, the governing row has the smallest Margin of its Requirement whenever every row has the same
+tolerance. `check` Requirements have no governing row.
+
+**Option verdict.** The Option **passes** when no row has outcome `fail`. Rows with `not evaluated` do
+not stop it from passing, but every result that says "passes" or `feasible: true` also says how many
+Blocking Rules were not evaluated and names them ("meets every evaluated blocking Rule; 2 blocking Rules
+not evaluated: IGC 2.7 damage survival, IS Code A 2.3 weather criterion"). No output says "meets every
+rule" while a selected Blocking Rule is not evaluated. (Maintainer decision, 2026-10-20.)
+
+**Sizing.** A Rule with `sizes: true` lends its limit to the arrangement search: the search builds
+candidates with the governing limit of that Requirement (for example the clear side gap of each tank).
+The same Rule is still checked on the result, so a typed override that breaks it fails. Sizing is a
+property of how the search uses a Rule, not an outcome; the first draft's `size` outcome is gone.
+
+**Rule Set.** A named, versioned group of Rules from one source edition, or from OVCD itself for the
+`ovcd` set. It has an applicability, and it may `include` other sets at a pinned version.
+
+**Selection.** The Option's selected sets, closed under `includes`. The closure is refused when: an
+include cycle exists; two versions of one set id are in it (a typed `is2008-a@1.1.0` beside an
+`igc-2g@1.0.0` that includes `is2008-a@1.0.0` is refused, with a message naming both); or one rule id
+appears in two sets with different result-changing content. A rule id that appears in two sets with the
+same content is evaluated once, and its row names every set that holds it. **Selection order** is the
+order of the stored list, with each included set placed just after the set that includes it.
+
+**Coherence of one set.** A set must not hold two Rules that no value can meet together without saying
+so. For constant Criteria on the same Measure instance and object, the loader refuses a lower bound that
+is stricter than an upper bound can allow (lower effective bound > upper effective bound, or equal with
+a strict side) unless the set declares the pair in `known_conflicts` with a reason. Two selected sets
+that conflict in this way are not refused: the user chose them, and the trace shows both failing; the
+loader warns once. Conflicts through table or formula limits, or across different Measures, cannot be
+found from the data alone and are left to the harness.
+
+**Defaults coherence.** The defaults of the Defaults Profile must meet every Rule of the default stack
+that bounds an input Measure. A test runs every default combination of the profile tables through those
+Rules. A default that breaks one is a finding, not a silent pass (see the allowable stress finding under
+#292).
 
 ### Measure (code)
 
 - A named Rust function in `ovcd-core` that computes one quantity for one object. It has a stable id
   (`gz.area`, `gz.at_angle`, `gz.angle_of_max`, `gm0`, `tank.side_gap`, `tank.bottom_gap`,
-  `tank.vc`, `tank.wall_thickness`, `squat.froude_depth`, ...), a unit, the object it applies to
-  (Option, tank, loading condition, Hull), and its own tests.
+  `tank.vc`, `tank.wall_thickness`, `squat.froude_depth`, ...), a unit, the object type it applies to,
+  its arguments, and its own tests. Input Measures (`input.<name>`) echo the value of an input.
 - It cites a **method**, not a rule ("trapezoid area under the GZ curve on a 1° grid"). A method from a
   source not yet in the library is `unverified` (the ASME pressure-vessel formulas, the squat and
-  resistance methods), and the trace says so.
-- The core keeps a registry of Measure ids with unit and object. `ovcd rules --measures` prints it.
+  resistance methods), and the trace says so in `method_status`.
+- The core keeps a registry of Measure ids with unit, object type, arguments and method status.
+  `ovcd rules --measures` prints it.
 
 ### Rule (data)
 
 | Field | Meaning | Example |
 |---|---|---|
-| `id` | `<family>/<paragraph>/<slug>`, stable, never reused | `is2008/A.2.2.1/area-0-30` |
+| `id` | `<family>/<paragraph>/<slug>` (grammar below), stable, never reused for another requirement | `is2008/A.2.2.1/area-0-30` |
 | `title` | OVCD's own words, at most 15 words | "Area under the GZ curve, 0° to 30°" |
 | `origin` | `regulation`, `class`, `method-validity`, `physical`, `tool-limit` | `regulation` |
-| `source` | document, edition, paragraph (`locator`), page | MSC.267(85), IS Code 2008, Part A 2.2.1 |
-| `verified` | `{by, date, edition_held}` or `false` | `{by: "rule-source review", date: 2026-10-16, edition_held: "MSC.267(85)"}` |
-| `applies_to` | object and condition | each loading condition, gas Cargo |
-| `kind` | `limit`, `table`, `formula`, `check`, `parameter` | `limit` |
+| `source` | document, edition, paragraph (`locator`), page, `access` | MSC.267(85), IS Code 2008, Part A 2.2.1, p12 |
+| `codified` | `{by, date, review}`: who wrote the record (a role) and the pull request | `{by: "agent", date: 2026-10-21, review: "#n"}` |
+| `verified` | `{by, date, edition_held, locator_read, review}` or `false` | `{by: "maintainer", date: 2026-10-22, edition_held: "MSC.267(85)", locator_read: "Part A 2.2.1, p12", review: "#n"}` |
+| `applies_when` | the Applicability; empty means always | `{tank_head_type: [hemispherical, torispherical]}` |
+| `kind` | `limit`, `table`, `formula`, `check`, `note` | `limit` |
 | `measure` | Measure id and its arguments | `gz.area` from 0° to 30° |
-| `compare` | `ge`, `gt`, `le`, `lt` (none for `check` and `parameter`) | `ge` |
+| `compare` | `ge`, `gt`, `le`, `lt` (none for `check` and `note`) | `ge` |
 | `limit` | a constant with unit; a table id; or a formula shape id with coefficients | 0.055 m·rad |
-| `outcome` | `fail` (blocking), `warn`, `size`, `note` | `fail` |
+| `tolerance` | absolute, in the limit's unit; default 0 | 0 |
+| `consequence` | `block`, `warn`, `note` | `block` |
+| `sizes` | `true` when the arrangement search uses the limit | `false` |
 | `evaluated` | `true`, or `false` with a `gap` text naming what the engine lacks | `false`, "needs the wind heeling lever" |
-| `finding` | issue number, when the engine's value or measure differs from the source | `#n` |
+| `finding` | issue number, when the engine's value or measure differs from the source | `#282` |
 | `since` | the set version that added or last changed the Rule | `1.0.0` |
 
-- **Kinds.** `limit`: a Measure against a constant. `table`: the limit is looked up in a table of steps
-  or piecewise rows. `formula`: the limit comes from a formula shape coded in Rust with coefficients in
-  the file (d = a + Vc × b / c). `check`: a yes/no condition with no number. `parameter`: a cited number a
-  Measure or a sizing step uses (the weld factor E = 0.95 of IGC 4.23.2.1.3).
+- **Rule id grammar.** `^[a-z][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9.()-]*/[a-z0-9][a-z0-9-]*$`. The family is
+  the set's `family`. For a `regulation` or `class` Rule the paragraph segment is the source locator
+  with spaces removed (`A.2.2.1`, `9.3.1.11.1(b)`), and the loader checks that they agree. For an OVCD
+  Check it is a topic (`gas-arrangement`). The slug says which requirement of the paragraph. Ids are
+  unique within a set. An id keeps its Measure and direction in every later version of its set; a
+  change of either is a new id, and the old id is never used again.
+- **Kinds.** `limit`: a Measure against a constant. `table`: the limit is a row of a table of steps or
+  piecewise rows. `formula`: the limit comes from a formula shape coded in Rust with coefficients in the
+  file (d = a + Vc × b / c). `check`: a yes/no Measure. `note`: a cited value shown in the trace, with
+  no test.
 - **Formula shapes keep the code's arithmetic.** A shape evaluates in the same order of operations as
   the code it replaces (`a + v * b / c`, not a rewritten interpolation), so results stay bit-identical.
   Rewriting a shape is a later, declared design change.
-- **Who is named in `verified.by`.** A role ("maintainer", "rule-source review"), never a person's name:
-  the repo is public.
+- **Who is named in `codified.by` and `verified.by`.** A role (`maintainer`, `expert-reviewer`,
+  `agent`), never a person's name: the repo is public. The `review` link (the pull request) shows who.
+- **Who may verify.** Any second reader, human or agent, who did not codify the Rule and who reads the
+  cited paragraph in the cited edition (maintainer decision, 2026-10-20). The role in `verified.by`
+  shows which kind of reader it was. The codification process is in `docs/rules/codification.md`.
 - **Paywalled texts.** `source.access` is `free`, `paywalled` or `sign-up`. For a paywalled text the file
   holds numbers, tables and the paragraph, never the prose.
 - **Sourced** means `origin` is `regulation` or `class` **and** `verified` is filled. Nothing else is
-  ever shown as a published rule.
+  ever shown as a published rule. A sourced Rule whose Measure method is `unverified` is shown as
+  sourced with an unverified method: both statuses are in the trace.
 
 ### Rule Set (data)
 
 | Field | Meaning |
 |---|---|
 | `id`, `family`, `title` | `igc-2g`, `igc`, "IGC Code as amended, ship type 2G" |
-| `version` | semver of OVCD's encoding (`1.0.0`) |
+| `version` | semver of OVCD's encoding (`1.0.0`), rules below |
 | `edition` | the source edition: document, edition, amendments included, in-force date |
 | `sources` | each text read: document, edition, URL when free, access, SHA-256 of the file read |
 | `status` | `draft` or `stable` (stable needs full harness coverage, below) |
-| `applies_when` | the Options it can apply to (Cargo, Cargo Containment) |
+| `applies_when` | the Applicability of the whole set |
 | `includes` | other sets this one requires, with version (IGC 2.2.2 requires the IS Code: `igc-2g` includes `is2008-a`) |
+| `known_conflicts` | pairs of Rule ids that cannot both be met, each with a reason (normally empty) |
 | `tables` | the step and piecewise tables its Rules name |
-| `rules` | the Rules |
+| `rules` | the Rules, in display order |
 
 - **Content hash.** SHA-256 of the canonical JSON of the fields that change a result: rule ids,
-  `applies_to`, `kind`, `measure`, `compare`, `limit`, `outcome`, `evaluated`, `tables`, `includes`,
-  `applies_when`. Titles, citations and verification are left out, so recording a verification does not
-  trip the warning, and changing a limit does.
+  `applies_when` (set and Rule), `kind`, `measure`, `compare`, `limit`, `tolerance`, `consequence`,
+  `sizes`, `evaluated`, `tables`, `includes`. Titles, citations, `codified` and `verified` are left out,
+  so recording a verification does not trip the warning, and changing a limit does.
+- **Version numbers.** A new version with the same content hash is a **patch** (citations,
+  verification, titles). One that only adds Rules is a **minor** version. One that changes the
+  result-changing fields of an existing Rule, or removes one, is a **major** version. CI checks the
+  class against the hashes (#273). Two versions with the same content hash are equivalent: opening a
+  file stored with the older one gives no "newer version" warning.
 - **Files.** One file per set version: `crates/ovcd-format/rules/<set-id>/<version>.json`, with a JSON
   Schema beside them (`rules/rule-set.schema.json`). The built-in sets are embedded with `include_str!`,
   as `builtin_profile.json` is, so the WebAssembly build has them.
@@ -161,52 +305,63 @@ criterion, but the term is Rule. The `Criterion` struct of `gas_stability` becom
 ### Loading at run time
 
 - The loader in `ovcd-format` reads a set file, checks it against the schema, and refuses it with a clear
-  message when: a field is missing; a rule id is malformed or repeated; a Measure id is unknown or its
-  unit does not match the limit; a table or formula shape is unknown; an `includes` target is missing;
-  a `regulation` or `class` Rule has no paragraph. It warns (does not refuse) when a blocking Rule is
-  `unverified`.
+  message when: a field is missing; a rule id is malformed, repeated, or its paragraph segment does not
+  match its locator; a Measure id is unknown, its arguments are wrong, or its unit does not match the
+  limit; a table or formula shape is unknown; a limit or coefficient is not finite; a `check` Rule names
+  a non-`bool` Measure; an `includes` target is missing; a `regulation` or `class` Rule has no
+  paragraph; two constant Criteria of the set conflict and are not declared (Coherence, above). It warns
+  (does not refuse) when a blocking Rule is `unverified`.
+- After loading, the **selection** is checked as a whole (Selection, above): include cycles, two versions
+  of one set, and one rule id with two meanings are refused; conflicts across sets are warned.
 - The core gets plain typed structs, never JSON. The core stays `no_std` and parses nothing.
+- **Order of loading.** The built-in sets first, then each `--rule-set <file>` in the order given. A
+  loaded set with the id and version of a built-in set and the same hash is the same set; with a
+  different hash it is refused (a changed set needs a new version). A loaded set with a new version of a
+  built-in id is a separate version: it is used only where a Design or a flag selects that version.
+  Nothing loaded at run time replaces a built-in version silently.
 - `ovcd run`, `ovcd fill` and `ovcd validate` take `--rule-set <file>` (repeatable), as they take
-  `--profile`. A loaded set with the id and version of a built-in set but a different hash is refused:
-  a changed set needs a new version.
+  `--profile`. Until format version 3, a loaded set is added to the default stack of the run only (it is
+  not written to the file); `--rule-set` with the id of a set in the stack and a new version replaces
+  that set for the run, and the output says so.
 - `ovcd rules` lists the built-in sets and versions; `ovcd rules show <id>[@version]` prints one set
   with its Rules and verification status; `ovcd rules --measures` prints the Measure registry.
 - The Design session API (used by the app and, later, the web app) takes the same loaded sets.
 
 ### Composition: strictest governs
 
-- Every Rule of every selected set is evaluated. Sets pulled in by `includes` count as selected.
-- Two Rules cover **one requirement** when they compare the same Measure, on the same object, in the
-  same direction. All of them apply. The requirement is met only if every one is met. The Rule with the
-  smallest margin is marked `governing` in the trace. For `size` Rules (a required clearance), the
-  largest required value governs.
-- No Rule loosens another. There is no override field.
+- Every Rule of every selected set is evaluated, sets pulled in by `includes` too, in selection order.
+- Rules in one Requirement all apply. The Requirement is met only if every Rule in it is met. The
+  stricter Criterion governs (Domain model, above). No Rule loosens another. There is no override field.
 - A set whose `applies_when` does not match the Option gives one trace row, `not applicable`, for the
   set as a whole.
 
 ### Rule Trace (in every result)
 
-One row per Rule per object:
+One row per Rule per object, in selection order, then the set's rule order, then object order:
 
 | Field | Example |
 |---|---|
 | `rule` | `is2008/A.2.2.1/area-0-30` |
-| `rule_set` | `is2008-a@1.0.0` |
+| `rule_sets` | `["is2008-a@1.0.0"]` (more than one when sets share the Rule) |
 | `citation` | IS Code 2008, MSC.267(85), Part A 2.2.1 |
 | `origin` | `regulation` |
-| `verified` | `{by, date, edition_held}` or `false` |
+| `rule_status` | `verified` or `unverified` (the record is in the set) |
+| `method_status` | the Measure's method status |
 | `object` | loading condition "Laden" |
-| `inputs` | each input used: name, value, unit, and where it came from (`typed`, `default`, `class`, `computed`) |
+| `inputs` | each input used: name, value, unit, and where it came from (`typed`, `default`, `default-estimate`, `class`, `computed`) |
 | `value` | 0.071 m·rad |
-| `limit`, `compare` | 0.055 m·rad, `ge` |
-| `margin` | +0.016 m·rad (signed: positive always passes; for `le`, limit minus value) |
-| `outcome` | `pass`, `fail`, `warn`, `size`, `note`, `not applicable`, `not evaluated` |
-| `governing` | `true` when it governs its requirement |
-| `gap` | for `not evaluated`: what the engine lacks |
+| `limit`, `compare`, `tolerance` | 0.055 m·rad, `ge`, 0 |
+| `margin` | +0.016 m·rad (Domain model, above) |
+| `outcome` | `pass`, `fail`, `warn`, `note`, `not applicable`, `not evaluated` |
+| `governing` | `true` for the governing row of its Requirement |
+| `sizes` | `true` when the search used its limit |
+| `gap` | for `not evaluated`, and for a Measure that failed: the reason |
 | `finding` | the finding issue, when one is linked |
 
-- **Every Rule of a selected set appears**, including those not evaluated. The `limitations` text of
-  `StabilityAssessment` ("no wind heel, no damage stability") becomes `not evaluated` rows.
+- **Every Rule of a selected set appears**: exactly one row per object for each Rule of an applicable
+  set (one `not applicable` row when the Option has no object of its type), and one row for each set
+  that does not apply. The `limitations` text of `StabilityAssessment` ("no wind heel, no damage
+  stability") becomes `not evaluated` rows.
 - **The trace is outside the results hash**, as the `drawing` object is (ADR 0007). Every result number
   is already hashed in its own field, and the stored Rule Set hashes cover the rules. So adding the trace
   changes no hash, and a rule change is reported as a rule change, not as "results differ".
@@ -214,23 +369,28 @@ One row per Rule per object:
   the Rule it reports. Removing the duplicate list is a later change.
 - A blocking failure is a row with outcome `fail`. The Option's `ok` is unchanged in meaning: no
   blocking Rule fails.
+- **A row added in the migration may not change `ok`.** Where a new Rule would fail a design that passes
+  today (a Rule the code never checked), it enters version `1.0.0` with consequence `warn` and a linked
+  finding. Making it `block` is a design change, decided on the finding.
 
 ### Service Area and default stacks
 
 - New input `service_area`: `river-only` or `coastal-and-river`. `ocean-only` is not offered (ADR 0011;
   a new ADR is needed). Stored as used, marked typed or default. The Defaults Profile default is
-  `river-only`.
+  `river-only` (confirmed by the maintainer, 2026-10-16).
 - New input `rule_sets`: the list of selected sets, each `{id, version, hash, source}` where `source` is
   `default` (from the Service Area) or `typed` (added by the user). The `ovcd` set is always selected and
   cannot be removed. A set required by `includes` cannot be removed while the set that includes it is
   selected.
+- **Until format version 3** (#274, waiting for the ADR 0012 hull block) the engine uses the default
+  stack of `river-only` for every Option and writes no new field.
 - **Default stacks built in this spec.** The sets that exist after this spec are the same for both
   Service Areas. The input still goes in now, so files record where the vessel operates, and the stacks
   can diverge as sets land, with no further format change.
 
 | Cargo | `river-only` and `coastal-and-river` (this spec) |
 |---|---|
-| Gas | `igc-2g`, which includes `is2008-a`; `lr-inland-gas` (draft, see open question 1); `ovcd` |
+| Gas | `igc-2g`, which includes `is2008-a`; `lr-inland-gas` (draft, unverified, until the IGC chapter 3 rules replace it); `ovcd` |
 | Dry bulk and others | `is2008-a` (its rows are `not evaluated` until intact stability covers every Cargo, roadmap phase 1); `ovcd` |
 
 - **Target stacks (later specs, not built here).** River only adds an inland class stability set (BV
@@ -239,22 +399,41 @@ One row per Rule per object:
   2.2 (pontoons) for barges, which class points cargo barges of 24 m or more to (ABS Steel Barges
   3-6-1/3.1), and ICLL freeboard. ADN 2025 becomes an optional set for European inland service; when it
   is selected with IGC, both apply and the strictest governs.
-- **Scope wording.** Every result names its Service Area and its sets. A river-only result says that no
-  statutory technical code was checked, only the named Rule Sets (ADR 0011).
+- **Scope wording.** Every result names its Service Area and its sets, and the count of Blocking Rules
+  not evaluated. A river-only result says that no statutory technical code was checked, only the named
+  Rule Sets (ADR 0011).
 
 ### How `fit` uses it (#264)
 
-- #264 lands first, with its own list of checks. Then `fit`, `smallest_viable_loa` and the design sweep
-  evaluate each candidate's Rule Trace and keep only candidates with no blocking `fail`. `size` Rules give
-  the clearances the search uses. Among passing candidates the most cargo wins. If none passes, the
-  result is `feasible: false` with the best candidate's failing rows.
-- Cheap Rules (dimensions, clearances) are evaluated before expensive ones (stability) to prune.
+- #264 has landed with its own check list (one list in `gas_arrangement.rs`). #277 replaces that list:
+  `fit`, `smallest_viable_loa` and the design sweep evaluate each candidate's Rule Trace and keep only
+  candidates with no `fail` row. Among passing candidates the most cargo wins; on equal cargo, the first
+  in the search order wins (as today). If none passes, the result is `feasible: false` with the best
+  candidate's `fail` rows.
+- **The selected list.** `fit` uses the Rules of the Option's selection: the default stack, plus any set
+  loaded with `--rule-set`. `warn` and `note` Rules never remove a candidate. (Whether the wheelhouse
+  sightline should block is a separate maintainer question on #264.)
+- **Sizing Rules** give the search its clearances: the governing limit of each `sizes` Requirement, per
+  candidate (d(Vc) depends on the candidate's tank volume).
+- **Guarantees** (property tests, and ADR 0014): (1) `fit` never returns `feasible: true` for a
+  candidate with a `fail` row; (2) for a fixed list of candidates, adding a Rule never raises the cargo
+  of the answer and never turns `feasible: false` into `true`. When a new `sizes` Rule changes the
+  candidates themselves, (2) holds only through (1): the answer still meets every Rule.
+- Cheap Rules (dimensions, clearances) are evaluated before expensive ones (stability) to prune. The
+  order of evaluation never changes the answer: a test runs the search with and without pruning.
+- `feasible: true` carries the not-evaluated count, as every passing verdict does.
 
 ### How the evaluation harness uses it (#184, roadmap T5)
 
 - **Keyed by rule id.** A case's `expected` entries are keyed by rule id (today's keys `area_0_30` and
   so on map to `is2008/A.2.2.1/area-0-30` and so on). The runner reads the Rule Trace from the engine and
-  compares row by row. The first row whose outcome differs names the rule.
+  compares row by row, keyed by rule id and object. The first row whose outcome differs names the rule.
+- **What counts as a false pass.** A case expects `fail` on a Blocking Rule and the engine's row says
+  `pass`. A `not evaluated` row against an expected `fail` is not a pass: it goes to `model-gap`. A
+  Measure that failed gives `fail`, never `pass`, so it cannot be a false pass.
+- **Boundary cases per Rule.** Each new evaluated Rule comes with harness cases just inside and just
+  outside its limit (the codification process, `docs/rules/codification.md`), written by the oracle, not
+  by hand.
 - **Automatic triage.** Each disagreement is put in one bucket: `model-gap` (the expected Rule is `not
   evaluated`, or the case needs an input the engine lacks); `code-bug` (the independent oracle and the
   engine disagree); `rule-suspect` (oracle and engine agree with each other but not with a `published`
@@ -289,17 +468,29 @@ The regulation and class items, by set (paragraphs as read in the free texts; se
   30–40° Rules are verified, but the Measure runs to 40° always, while the text says "or the angle of
   down-flooding if less": linked to a finding. Weather criterion 2.3: `not evaluated` (needs the wind
   heeling lever).
-- **`igc-2g`** (MSC.370(93) as amended to MSC.566(109); no amendment changes 2.3 or 2.4): 2.4.1.1 d(Vc)
-  per tank, a `formula` table of four branches; 2.4.1.2 side clearance ≥ d, a `size` Rule on the clear gap
-  measured as in 2.4.2 (plate to plate, insulation inside d); 2.3.1.2.3 with 2.4.1.2 bottom clearance
-  max(min(B/15, 2 m), d); 4.23.2.1.2 minimum wall thickness by material; 4.23.2.1.3 weld factor 0.95
-  (`parameter`); 4.23.3.1 allowable stress factors A and B (`parameter`). Damage survival 2.7: `not
-  evaluated`. The filling limit of 15.3 stays the Defaults Profile basis of the `fill_ratio` input.
+- **`igc-2g`** (MSC.370(93) as amended to MSC.566(109); no amendment changes 2.3 or 2.4): d(Vc) of
+  2.4.1.1 per tank as the set's table `igc-d-vc` (four branches; a formula, not a Rule: for type 2G the
+  requirement is stated in 2.4.1.2); 2.4.1.2 side clearance ≥ d, a `sizes` Rule on the clear
+  gap measured as in 2.4.2 (plate to plate, insulation inside d); 2.3.1.2.3 with 2.4.1.2 bottom clearance
+  max(min(B/15, 2 m), d); 4.23.2.1.2 minimum wall thickness after forming (5 mm for carbon-manganese and
+  nickel steels, 3 mm for austenitic steels, 7 mm for aluminium alloys), a `table` limit on
+  `tank.wall_thickness` keyed by the steel class; 4.23.2.1.3 weld factor, an upper bound 0.95 on the
+  input Measure `input.weld_factor`; 4.23.3.1 allowable stress, an upper bound on
+  `input.tank_allowable_stress` by the formula shape "lesser of Rm/A and Re/B" with A and B per steel
+  class as data (A 3, B 1.5 for nickel and carbon-manganese steels; A 3.5, B 1.5 for austenitic steels;
+  A 4, B 1.5 for aluminium alloys). The material strengths Rm and Re stay unverified inputs. The S690QL1
+  default (285 MPa, Rm 770 / 2.7) is above Rm/3 = 256.7 MPa, so this Rule enters `1.0.0` as `warn` with
+  a new finding (see #292); 304L, 316L and 9Ni meet it with the engine's strengths. Damage survival 2.7:
+  `not evaluated`. The filling limit of 15.3 stays the Defaults Profile basis of the `fill_ratio` input;
+  the loading limit of 15.5.1 (LL = FL × ρR / ρL) is a later Rule, with the cargo densities by carriage
+  condition (#292 follow-up).
 - **`lr-inland-gas`** (Lloyd's Register, Rules and Regulations for the Classification of Inland
   Waterways Ships, Pt 4 Ch 4 Sec 3, July 2022 edition as cited by the code; draft): opening setback 2.00 m (3.3.7, 3.3.11; same value in ADN 9.3.1.17.4), cited and
   matching; cofferdam 0.60 m (3.6.13 is a type C clause, not a gas tank clause) and end-bulkhead space
   0.50 m / 0.20 m (the text's condition is plane or domed tank ends, not "standard" or "pressure"):
-  kept as they are, `unverified`, each linked to a finding.
+  kept as they are, `unverified`, each linked to a finding. These three Rules keep the code's tolerance
+  of 1e-9 m. The set stays in the default gas stack, marked unverified, until the IGC chapter 3 rules on
+  segregation of the cargo area replace it (maintainer, 2026-10-16).
 - **`ovcd`**: the tank length-over-diameter limit 7.0 (a tool limit; its origin is ADN 9.3.1.11.1(b),
   which applies only if an ADN set is selected later), physical feasibility checks (draught below depth,
   keel clears the bed, air draft), method validity ranges (squat Froude depth number below 0.7, blockage
@@ -321,8 +512,8 @@ the end-bulkhead condition (#281), the 0–40° area without a down-flooding ang
   warning that the rules differ from the file. A stored version the engine does not have and no
   `--rule-set` supplies: the Option is refused with a message naming the set.
 - **Shared with the ADR 0012 hull block.** Version 3 holds both. Whichever lands first opens version 3;
-  the second adds to it if no release has shipped version 3 yet. If one has, the maintainer decides
-  (see open question 3).
+  the rules-engine fields wait for the hull block (maintainer decision 3), so version 3 ships once,
+  with both.
 - `ovcd schema` lists the new inputs and the Rule Set schema.
 
 ### App
@@ -347,12 +538,22 @@ the end-bulkhead condition (#281), the 0–40° area without a down-flooding ang
 - **Loader:** each refusal reason has a test with a minimal bad file. The schema and the loader agree
   (every schema example loads; every refused example fails the schema or a named loader check).
 - **Evaluator:** sourced tests for every Rule from its paragraph (the limit and comparison at both sides
-  of the boundary, worked by hand and cited). Property tests: margin sign matches the outcome; every Rule
-  of a selected set appears exactly once per object; the trace is the same on every platform and in
-  WebAssembly.
+  of the boundary, worked by hand and cited). Property tests (`proptest`, in the fast gate, bounded
+  cases): the Margin and the outcome agree (Domain model); every Rule of a selected set appears exactly
+  once per object; the trace is the same on every platform and in WebAssembly; a Measure failure never
+  gives `pass`; the governing row does not change when only the Measure value changes.
 - **Strictest governs:** a test with two run-time-loaded fixture sets that cover one requirement with
-  different limits: the stricter governs, both rows appear, and loosening is impossible.
-- **Released versions:** CI fails if a file listed in `RELEASED.json` changes.
+  different limits: the stricter governs, both rows appear, and loosening is impossible. Property tests:
+  a value meets every Criterion of a Requirement exactly when it meets the governing one; adding a Rule
+  never turns a failing Option into a passing one.
+- **Selection and coherence:** tests for an include cycle, two versions of one set, one rule id with two
+  meanings, an undeclared in-set conflict (refused) and a cross-set conflict (warned). The defaults
+  coherence test runs every default combination of the profile through the input-bounding Rules.
+- **Formal model (ADR 0014):** the Lean model of the composition kernel is checked in a separate CI job,
+  never in the fast gate. A differential test feeds the same random cases to the Rust evaluator and to
+  the Lean oracle and compares the verdicts and the governing rows. It runs with the Lean job.
+- **Released versions:** CI fails if a file listed in `RELEASED.json` changes, or if a new version's
+  number does not match its class (patch, minor, major) by the content hashes.
 - **Provenance gate:** CI fails if a `regulation` or `class` Rule has no paragraph, and prints the count
   of unverified blocking Rules per set.
 - **Harness:** the runner tests of `tests/test_evaluation_runner.py` extend to rule-id keys, triage
@@ -373,16 +574,23 @@ the end-bulkhead condition (#281), the 0–40° area without a down-flooding ang
 - An expression language, and Rule overrides (ADR 0013).
 - The Ocean only Service Area.
 
-## Open questions for the maintainer
+## Decisions taken and open questions
 
-1. **The gas separation clauses.** They come from an inland class rule book whose current official text
-   needs an account, and two of them apply type C (liquid) clauses to gas tanks. For the migration they
-   move unchanged into the draft set `lr-inland-gas`, which stays in the default gas stack so no result
-   moves. Keep that set in the default stack, replace it with the IGC chapter 3 rules on segregation of
-   the cargo area, or remove it?
-2. **Default Service Area.** The spec defaults to `river-only`. Confirm.
-3. **Format version 3 timing.** If a release must ship version 3 before both blocks are ready, does the
-   second block take version 4, or wait?
+Answered by the maintainer:
+
+1. **The gas separation clauses** (2026-10-16): they move unchanged into the draft set `lr-inland-gas`,
+   marked unverified; a follow-up replaces them with the IGC chapter 3 rules on segregation of the cargo
+   area, cited against the text.
+2. **Default Service Area** (2026-10-16): `river-only`.
+3. **Format version** (2026-10-16): one shared `.vdesign` bump (version 3) carries the rules-engine fields
+   and the ADR 0012 hull block; the rules-engine format change waits for the hull block (#274). The
+   application stays on 0.2.x.
+4. **Who verifies** (2026-10-20): any second reader, human or agent, who did not codify the Rule.
+5. **Not-evaluated Blocking Rules** (2026-10-20): the Option and `fit` still pass, and every passing
+   verdict states the count and names of Blocking Rules not evaluated.
+
+Open: see "Decisions for the maintainer" in the pull request that deepened this spec, and the
+recommendations on #280 to #283 and #292.
 
 ## Further Notes
 
@@ -403,7 +611,44 @@ the end-bulkhead condition (#281), the 0–40° area without a down-flooding ang
 12. #279 Harness rule mutation. Needs 11 and 1.
 
 Tickets 1 to 6 and 11 change no result. Tickets 3, 4 and 5 can run in any order after 2. Ticket 10
-moves results only through #264.
+moves results only through #264. Tickets 7 and 8 wait for the hull geometry block (ADR 0012).
+
+**Related documents.** The rule codification process and the rule record template:
+`docs/rules/codification.md`. The decision on formal proofs: ADR 0014.
+
+**Design review, 2026-10-20.** The first draft left these points open or in conflict; the Domain model
+section now settles them:
+
+1. The comparison had no tolerance, but `gas_separation` compares with 1e-9 and `gas_stability` with
+   none. A Rule now has a `tolerance`, in the hash, so results stay bit-identical.
+2. "The same requirement" did not say whether `gz.area(0, 30)` and `gz.area(0, 40)` are one
+   requirement. A Requirement is now keyed by Measure instance (with its arguments), object and
+   direction.
+3. "Smallest margin governs" depends on the value, so the governing Rule could change as the design
+   changes, and ties had no rule. Governing is now the strictest Criterion, with a fixed tie order.
+4. `parameter` Rules (the weld factor) had no meaning under "strictest governs". They are now Rules on
+   input Measures with a normal Criterion.
+5. `size` was both an outcome and a use. It is now a `sizes` flag; the outcome is pass or fail.
+6. Applicability existed only on sets, but #281 needs a Rule keyed to the tank end shape. Rules now have
+   `applies_when`, in the same restricted form as sets.
+7. A Measure that cannot be computed had no outcome. It is now `fail` (or `warn`), never `pass` and
+   never `not evaluated`.
+8. The rule id form had no grammar, no link to the locator and no rule for one id in two sets (an IGC
+   Rule shared by 1G and 2G sets). All three are now defined.
+9. Selecting two versions of one set, an include cycle, and a conflict between two Rules had no rule.
+   They are now refused or warned (Selection, Coherence).
+10. Recording a verification needs a new file (released files never change), which would have raised
+    "newer version" warnings for no change. Versions with the same content hash are now equivalent, and
+    semver classes are defined by the hash.
+11. A Rule could be verified while its Measure's method is not. The trace now shows both statuses.
+12. The glossary said a Rule comes from a published source, while OVCD Checks are Rules in the `ovcd`
+    set. The glossary now says an OVCD Check is a Rule with OVCD's own origin.
+13. "`fit` must meet every selected rule" could not hold for `not evaluated` Rules. The verdict now
+    names them (maintainer decision 5).
+14. Defaults were never checked against the Rules that bound them. A defaults coherence test now does,
+    and it finds the S690QL1 allowable stress (see #292).
+15. The first draft named a Rule `igc/2.4.1.1/d-vc`. d(Vc) is a formula, not a requirement; for type 2G
+    the requirement is in 2.4.1.2. d(Vc) is now the set's table `igc-d-vc`, cited to 2.4.1.1.
 
 ## Appendix A: regulation and class items in today's code
 
@@ -413,7 +658,7 @@ clauses). "Fixed" means a merged change already did what the disposition asks.
 
 | Code item | Value | Target Rule | Disposition |
 |---|---|---|---|
-| `protective_location::d_vc_exact` | 0.8; 0.75 + V·0.2/4000; 0.8 + V/25000; 2.0 m (V of one tank) | `igc/2.4.1.1/d-vc` | Cited, matches |
+| `protective_location::d_vc_exact` | 0.8; 0.75 + V·0.2/4000; 0.8 + V/25000; 2.0 m (V of one tank) | table `igc-d-vc` (2.4.1.1), used by `igc/2.4.1.2/side-clearance` | Cited, matches |
 | stepped `distance_d_vc` (total volume) | 0.8 / 1.0 / 2.0 m | — | Value differed. Fixed: removed (#237) |
 | side clearance, 2G | d − insulation | `igc/2.4.1.2/side-clearance` | Cited, matches (2.4.2 datum) |
 | side clearance, 1G and IGF | max(min(B/5, 11.5), d) | later set `igc-1g` | Cited, matches; not reachable from a `.vdesign` today |
