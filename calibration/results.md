@@ -272,3 +272,14 @@ Listed with their published figures and the reason. They are never run.
 | kanrei-2007-22-pressurised-lpg | 3,757.967 m3 per tank at 100 %; diameter 12,000 mm (basis not printed); 17.65 barg, 0 to 45 C; no insulation; tank centre 7,350 mm above base | no tank length is printed and the diameter basis is not stated. A bottom-clearance check against the 7,350 mm centre needs the hull (arrangement block, not yet in the runner) |
 | alice-cosulich-lng-bunker | 4,100.0 and 4,371.2 m3 at 100 % (4,038.5 and 4,305.6 m3 at 98.5 %); MARVS 3.6 barg; -163 C; one pump per lobe | bilobe tanks are not modelled; which volume belongs to which tank is not stated |
 | kim-2025-lco2-bilobe-9800 | internal diameter about 15.6 m; length 36 m; two saddles; LTFH36; a dome on the top side and a sump on the bottom side | a bilobe tank is not modelled, and the paper prints no thickness or weight to compare |
+
+### Tank weight per m³ (published records, issue #317)
+
+Published empty weights of marine LNG Type C tanks over their gross volume. They are the check on the tank structure factor before it is tuned. A record runs only when its diameter and length have a stated basis; none has one yet, so none is run.
+
+| Record | Conf. | Gross volume (m³) | Published weight (t) | t per m³ | What the weight includes | Why not run |
+|---|---|---|---|---|---|---|
+| lng-bunker-barge-tank-1350 | low | 1,350 | 155 | 0.115 | empty tank: 300 mm insulation, internal piping, instruments, equipment and access structures (P6); 'empty' (P7) | no diameter or length with a stated basis: 25.2 x 9 x 12.2 m is a transport envelope |
+| lng-bunker-vessel-bilobe-2500 | low | 2,500 | 240 | 0.096 | 'light weight' of the tank, as printed; what it covers is not stated | bilobe tanks are not modelled, and no diameter is printed |
+
+Published range: 0.096 to 0.115 t per m³ of tank.

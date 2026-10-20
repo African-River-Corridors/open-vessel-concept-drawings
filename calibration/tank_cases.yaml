@@ -99,3 +99,34 @@ not_yet_runnable_tank_cases:
     confidence: low
     held_out: "first tank cases (issue #292)"
     not_yet_runnable: "a bilobe tank is not modelled, and the paper prints no thickness or weight to compare"
+
+# Published empty weights of marine LNG Type C tanks, per m3 of tank (issue #317). They are the check
+# on the tank structure factor before it is tuned: the engine's tank weight per m3 must come out in
+# their range. A record runs only when its diameter and length have a stated basis (as the cases
+# above); none of these has one yet, so none is run. `weight_includes` says what the published weight
+# covers, as printed. The weight per m3 is worked out from the two printed figures by the report.
+tank_weight_records:
+  - id: lng-bunker-barge-tank-1350
+    what: "One of four LNG cargo tanks of a 5,400 m3 LNG bunker barge (ship not named here), single cylindrical Type C"
+    cargo: LNG
+    gross_volume_m3: 1350.0
+    tank_weight_t: 155.0
+    weight_includes: "empty tank: 300 mm insulation, internal piping, instruments, equipment and access structures (P6); 'empty' (P7)"
+    published: "four LNG cargo tanks, each 1350 m3, 300mm insulation (P6); 4 empty LNG tanks, 25.2 x 9 x 12.2 m, 155 tonnes each (P7)"
+    source: "P6 — tank maker's news release, 8 September 2020; P7 — Breakbulk News, 23 November 2022, accessed 2026-10-20"
+    confidence: low
+    held_out: "tank weight records (issue #317); never used to fit the structure factor"
+    flags: "That P7's tanks are P6's is an inference (same maker, origin, destination and count; P7 is two years later). 25.2 x 9 x 12.2 m is a transport envelope: its datum is not stated, and it may include saddles or the dome"
+    not_yet_runnable: "no diameter or length with a stated basis: 25.2 x 9 x 12.2 m is a transport envelope"
+  - id: lng-bunker-vessel-bilobe-2500
+    what: "One of two 2,500 m3 bilobe LNG Type C tanks of a 5,000 m3 LNG bunkering vessel (ship not named here)"
+    cargo: LNG
+    gross_volume_m3: 2500.0
+    tank_weight_t: 240.0
+    weight_includes: "'light weight' of the tank, as printed; what it covers is not stated"
+    published: "two bilobe tanks of 2,500 m3 each; each tank 28.4 m in length, with a light weight of 240 metric tons and a cargo weight of 1,140 metric tons"
+    source: "P8 — FE software maker's customer story, accessed 2026-10-20"
+    confidence: low
+    held_out: "tank weight records (issue #317); never used to fit the structure factor"
+    flags: "A bilobe tank, which the engine does not model. The 2,500 m3 is the vessel's capacity split in two"
+    not_yet_runnable: "bilobe tanks are not modelled, and no diameter is printed"

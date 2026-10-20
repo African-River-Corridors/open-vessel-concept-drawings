@@ -7,6 +7,8 @@ that is listed, and that the report shows them out of sample.
 """
 import copy
 
+import re
+
 import pytest
 import yaml
 
@@ -305,7 +307,8 @@ def test_every_new_case_cites_a_listed_web_source():
     assert len(ids) == len(set(ids))
     for w in web:
         assert w["url"].startswith("https://"), w["id"]
-        assert w["accessed"] == "2026-10-16", w["id"]
+        # An ISO date: the first web sources were read on 2026-10-16, the tank weight ones later (#317).
+        assert re.fullmatch(r"2026-\d\d-\d\d", w["accessed"]) and w["accessed"] >= "2026-10-16", w["id"]
         assert w["title"].strip(), w["id"]
     for c in _held_out(_cases()):
         sid = c["source"].split(" ")[0]

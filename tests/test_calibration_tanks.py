@@ -5,6 +5,8 @@
 and a band miss is a warning, never a failure.
 """
 
+import re
+
 import pytest
 import yaml
 
@@ -31,7 +33,7 @@ def test_every_tank_case_is_held_out_and_states_its_datum_and_source():
         assert str(c["held_out"]).strip(), c["id"]
         sid = c["source"].split(" ")[0]
         assert sid in web, (c["id"], sid)
-        assert c["source"].startswith(f"{sid} — ") and c["source"].endswith("accessed 2026-10-16"), c["id"]
+        assert c["source"].startswith(f"{sid} — ") and re.search(r"accessed 2026-\d\d-\d\d$", c["source"]), c["id"]
         assert c["published"].strip() and c["confidence"] in CONFIDENCES, c["id"]
     for c in _cases():
         assert c["diameter_basis"] in BASES_D and c["length_basis"] in BASES_L, c["id"]
@@ -154,3 +156,37 @@ def test_a_tank_band_miss_is_a_warning_annotation_and_not_a_failure():
     lines = _tank_warnings_for(checks)
     assert any("senjanovic-2006-river-lpg" in x and "outside" in x for x in lines)
     assert all(x.startswith("::warning ") for x in lines)
+
+
+def test_every_tank_weight_record_cites_listed_sources_and_is_not_run_without_a_datum():
+    """Issue #317: a weight record names every source it uses, keeps the published text, says what the
+    weight includes, and is never run without a stated diameter and length basis.
+
+    Label: property
+    """
+    web = {w["id"]: w for w in yaml.safe_load((CAL / "sources.yaml").read_text(encoding="utf-8"))["web_sources"]}
+    records = _load_tank_cases()["tank_weight_records"]
+    assert len(records) >= 2
+    for c in records:
+        ids = re.findall(r"\b(P\d+) — ", c["source"])
+        assert ids and all(i in web for i in ids), c["id"]
+        assert c["published"].strip() and c["weight_includes"].strip() and str(c["held_out"]).strip(), c["id"]
+        assert c["confidence"] in CONFIDENCES, c["id"]
+        runnable = "diameter_basis" in c and "length_basis" in c
+        assert runnable or c["not_yet_runnable"].strip(), c["id"]
+        assert not runnable, "a runnable weight record needs the runner first"
+    ids_run = {r.case["id"] for r in map(_run_tank, _cases())}
+    assert not ids_run & {c["id"] for c in records}
+
+
+def test_the_weight_per_m3_is_the_published_weight_over_the_published_volume():
+    """155 t / 1,350 m3 = 0.1148 and 240 t / 2,500 m3 = 0.0960 t per m3, by hand.
+
+    Label: sourced - tank maker's news release 8 Sep 2020 and Breakbulk News 23 Nov 2022 (1,350 m3, 155 t); FE software maker's customer story (2,500 m3, 240 t); the ratios are hand calculations
+    """
+    by_id = {c["id"]: c for c in _load_tank_cases()["tank_weight_records"]}
+    assert calibration.tank_weight_per_m3(by_id["lng-bunker-barge-tank-1350"]) == pytest.approx(0.11481, abs=5e-6)
+    assert calibration.tank_weight_per_m3(by_id["lng-bunker-vessel-bilobe-2500"]) == pytest.approx(0.0960, abs=5e-6)
+    lo, hi = calibration.tank_weight_range()
+    assert (round(lo, 3), round(hi, 3)) == (0.096, 0.115)
+    assert "Tank weight per m³" in report()
