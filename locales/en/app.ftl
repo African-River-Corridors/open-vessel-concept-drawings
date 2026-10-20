@@ -19,6 +19,7 @@ app-outputs-panel-hide = Hide the Outputs panel
 app-file-unsaved = { $file } (unsaved)
 app-header-profile = Defaults: { $profile }
 app-engine-version = Engine { $version }
+app-language = Language
 app-theme = Theme
 app-theme-auto = Auto
 app-theme-light = Light

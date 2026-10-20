@@ -1,9 +1,9 @@
 <script lang="ts">
   import uPlot from "uplot";
   import "uplot/dist/uPlot.min.css";
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { axisInkHooks, currentTokens, dashFor, uiFont, watchTheme, type ChartTokens } from "../chartTheme";
-  import { num, t } from "../i18n.svelte";
+  import { language, num, t, ticks } from "../i18n.svelte";
 
   // One speed-power chart for one channel environment: power and fuel against speed. It draws the
   // `curves` entry exactly as the engine gave it. The limiting speed is a dashed line; points where
@@ -170,6 +170,7 @@
       grid: { stroke: () => tok.rule, width: 1 },
       ticks: { stroke: () => tok.rule, width: 1 },
       border: { show: false },
+      values: (_u: uPlot, ts: number[]) => ticks(ts),
     };
     return {
       width,
@@ -247,6 +248,17 @@
   $effect(() => {
     selected;
     plot?.redraw(false);
+  });
+
+  // Another Display Language: the axis titles again, then a full draw (tick numbers, curve names).
+  // Only the language is tracked here; the data has its own effect.
+  $effect(() => {
+    language();
+    untrack(() => {
+      if (!plot) return;
+      [t("app-sp-speed-axis"), t("app-sp-power-axis"), t("app-sp-fuel-axis")].forEach((title, i) => (plot!.axes[i].label = title));
+      plot.redraw(false, true);
+    });
   });
 </script>
 

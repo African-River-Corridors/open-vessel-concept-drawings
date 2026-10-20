@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { InputSpec, Message, Ranges, StoredInput } from "./api";
-  import { say, schemaText, t } from "./i18n.svelte";
+  import { inputText, parseInput, say, schemaText, t } from "./i18n.svelte";
 
   // One input, drawn from its schema entry. It shows what Rust sent and sends back what the user
   // typed or chose. The number the user types stays in the box while it is typed: the box is filled
@@ -68,8 +68,8 @@
   });
 
   function typed(text: string, send: (n: number) => void) {
-    const n = Number(text);
-    if (text.trim() !== "" && Number.isFinite(n)) send(n);
+    const n = parseInput(text);
+    if (Number.isFinite(n)) send(n);
   }
 
   // The shape tells the three sources apart without colour; the word stays the accessible text.
@@ -108,7 +108,7 @@
           inputmode="decimal"
           aria-label={label}
           class:invalid={hasError}
-          use:fill={value === null ? "" : String(value)}
+          use:fill={value === null ? "" : inputText(Number(value))}
           oninput={(e) => typed(e.currentTarget.value, (n) => onEdit(n))}
         />
         <span class="unit">{spec.unit && spec.unit !== "-" ? spec.unit : ""}</span>

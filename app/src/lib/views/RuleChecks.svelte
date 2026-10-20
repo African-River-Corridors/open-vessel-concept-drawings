@@ -8,7 +8,7 @@
     ok: boolean;
     message: string;
   }
-  import { say, t, type TextIds } from "../i18n.svelte";
+  import { checkName, say, t, type TextIds } from "../i18n.svelte";
 
   let { checks, ids }: { checks: Check[]; ids: TextIds | null } = $props();
 
@@ -43,7 +43,7 @@
                 {#if col.cell === "result"}
                   <td><span class="tag {c.ok ? 'ok' : 'fail'}"><span aria-hidden="true">{c.ok ? "✓" : "✕"}</span> {t(c.ok ? "app-pass" : "app-fail")}</span></td>
                 {:else if col.cell === "name"}
-                  <th scope="row">{say(c.name, ids)}</th>
+                  <th scope="row">{checkName(c.name, ids)}</th>
                 {:else}
                   <td class="message">{say(c.message, ids)}</td>
                 {/if}

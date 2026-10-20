@@ -12,8 +12,18 @@ export interface Language {
   numbers: string;
 }
 
-export const LANGUAGES: Language[] = [{ tag: "en", name: "English", numbers: "en-GB" }];
+/** English is the source. The others are drafts until a native speaker reviews them (locales/REVIEWING.md). */
+export const LANGUAGES: Language[] = [
+  { tag: "en", name: "English", numbers: "en-GB" },
+  { tag: "es", name: "Español", numbers: "es-419" },
+  { tag: "pt", name: "Português (Brasil)", numbers: "pt-BR" },
+  { tag: "zh-Hans", name: "简体中文", numbers: "zh-Hans-CN" },
+  { tag: "ak", name: "Twi (Akan)", numbers: "ak-GH" },
+];
 const SOURCE = LANGUAGES[0];
+
+/** Where the choice is kept, per user. It is never saved in a Design and never sent to Rust. */
+export const LANGUAGE_KEY = "ovcd.language";
 
 // Every .ftl file of the Text Library, built into the bundle: the web app needs no fetch.
 const FILES = import.meta.glob("../../../locales/*/*.ftl", { query: "?raw", import: "default", eager: true }) as Record<
@@ -41,7 +51,50 @@ export function language(): Language {
 
 export function setLanguage(tag: string) {
   state.language = LANGUAGES.find((l) => l.tag === tag) ?? SOURCE;
+  // The browser picks the right glyphs for the language (Chinese, say) from this.
   document.documentElement.lang = state.language.tag;
+}
+
+/**
+ * The language to start in: the user's kept choice, else the first system language that the app
+ * has, else English. Twi is filed under `ak` (CLDR maps `tw` to `ak`); any Chinese but the
+ * traditional script is Simplified Chinese.
+ */
+export function startLanguage(kept: string | null, system: readonly string[]): string {
+  if (kept && LANGUAGES.some((l) => l.tag === kept)) return kept;
+  for (const wanted of system) {
+    const w = wanted.toLowerCase();
+    const base = w.split("-")[0];
+    if (base === "zh") {
+      if (!/-(hant|tw|hk|mo)\b/.test(w)) return "zh-Hans";
+    } else if (base === "ak" || base === "tw" || base === "twi") {
+      return "ak";
+    } else if (LANGUAGES.some((l) => l.tag === base)) {
+      return base;
+    }
+  }
+  return SOURCE.tag;
+}
+
+/** At start: the kept choice or the system language. Storage can be missing (a private window). */
+export function initLanguage() {
+  let kept: string | null = null;
+  try {
+    kept = localStorage.getItem(LANGUAGE_KEY);
+  } catch {
+    // No storage: the system language applies.
+  }
+  setLanguage(startLanguage(kept, navigator.languages ?? [navigator.language]));
+}
+
+/** The user picked a language: show it now and keep the choice. */
+export function chooseLanguage(tag: string) {
+  setLanguage(tag);
+  try {
+    localStorage.setItem(LANGUAGE_KEY, state.language.tag);
+  } catch {
+    // Not kept; the language still applies for this run.
+  }
 }
 
 function format(b: FluentBundle | undefined, id: string, args?: Record<string, FluentVariable>): string | null {
@@ -81,6 +134,15 @@ export function say(text: string, ids?: TextIds | null, msg?: EngineMsg | null):
 export function engineLabel(id: string, english: string): string {
   if (state.language.tag === SOURCE.tag) return english;
   return format(BUNDLES.get(state.language.tag), id) ?? english;
+}
+
+/**
+ * A check's name in the Display Language. The name is a key of the result, so it is the engine's own
+ * text: its Message Id in `text_ids` where it has one, else the derived id `check-name-<slug>`.
+ */
+export function checkName(name: string, ids?: TextIds | null): string {
+  if (ids?.[name]) return say(name, ids);
+  return engineLabel(`check-name-${slug(name)}`, name);
 }
 
 /** A Message Id piece from an English name or a key, as `crates/ovcd-format/tests/i18n_inputs.rs` makes it. */
@@ -123,10 +185,30 @@ function engineArgs(args: Record<string, EngineArg>, ids?: TextIds | null): Reco
   return out;
 }
 
+/** The Display Language's decimal sign: a comma for Portuguese, a point for the others. */
+function decimal(): string {
+  return new Intl.NumberFormat(state.language.numbers).formatToParts(1.5).find((p) => p.type === "decimal")?.value ?? ".";
+}
+
 /** The engine's number text with the Display Language's decimal sign: the digits stay as computed. */
 function decimalSign(text: string): string {
-  const sign = new Intl.NumberFormat(state.language.numbers).formatToParts(1.5).find((p) => p.type === "decimal")?.value ?? ".";
+  const sign = decimal();
   return sign === "." ? text : text.replace(".", sign);
+}
+
+/** A stored number as an input box shows it: the same digits, with the Display Language's decimal sign. */
+export function inputText(value: number): string {
+  return decimalSign(String(value));
+}
+
+/**
+ * A number as typed in an input box: the Display Language's decimal sign or a point. The stored value
+ * is the same number in every language. Anything else is not a number (NaN).
+ */
+export function parseInput(text: string): number {
+  const t = text.trim();
+  if (t === "") return NaN;
+  return Number(decimal() === "," ? t.replace(",", ".") : t);
 }
 
 /** A piece of a formatted message: plain text, or the place of one argument. */
@@ -159,6 +241,13 @@ export function listParts(items: string[]): Part[] {
 
 function listFormat(kind: "and" | "unit") {
   return new Intl.ListFormat(state.language.numbers, { type: kind === "and" ? "conjunction" : "unit" });
+}
+
+/** Chart tick numbers in the Display Language: as many decimals as the step between ticks needs. */
+export function ticks(values: number[]): string[] {
+  const step = values.length > 1 ? Math.abs(values[1] - values[0]) : 1;
+  const digits = Math.min(6, (String(Number(step.toPrecision(6))).split(".")[1] ?? "").length);
+  return values.map((v) => num(v, 0, digits));
 }
 
 /** A number for reading, in the Display Language's locale: `digits` decimals, with thousands separators. */

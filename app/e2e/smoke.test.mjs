@@ -679,4 +679,17 @@ describe("OVCD app smoke tests", () => {
     await (await browser.$("button=Auto")).click();
     await until("the theme attribute to go", async () => (await theme()) === null);
   });
+
+  it("switches the language from the app bar, keeps the choice on reload, and back to English", async () => {
+    const lang = () => browser.execute(() => document.documentElement.lang);
+    await (await browser.$("[data-testid=language]")).selectByAttribute("value", "es");
+    await until("the header in Spanish", async () => (await browser.$("button=Abrir")).isExisting());
+    assert.equal(await lang(), "es");
+    await browser.refresh();
+    await until("Spanish after a reload", async () => (await browser.$("button=Abrir")).isExisting());
+    assert.equal(await lang(), "es");
+    await (await browser.$("[data-testid=language]")).selectByAttribute("value", "en");
+    await until("the header in English", async () => (await browser.$("button=Open")).isExisting());
+    assert.equal(await lang(), "en");
+  });
 });
