@@ -112,7 +112,17 @@ jobs:
           npm run build:web
       - name: Web smoke test (headless Chrome)
         working-directory: app
+        env:
+          # The smoke test saves each view in each language, light and dark, here (spec 0005).
+          OVCD_WEB_SHOTS: ${{ runner.temp }}/web-screenshots
         run: bash e2e/run-web.sh
+      - name: Upload the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-screenshots
+          path: ${{ runner.temp }}/web-screenshots
+          if-no-files-found: warn
 
   # The drawing crate against the Python implementation of the same standard (spec 0003): the views
   # of every fixture Design give equal normalised content in both. The Python tool is installed at

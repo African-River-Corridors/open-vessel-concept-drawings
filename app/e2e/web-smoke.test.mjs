@@ -143,6 +143,34 @@ describe("OVCD web smoke tests", () => {
     await b.url(`${origin}/ovcd/app`);
     await until(b, "the app in Portuguese again", async () => (await b.$("button=Abrir")).isExisting());
     assert.equal(await b.execute(() => document.documentElement.lang), "pt");
+    if (!SHOTS) return;
+    // For review (spec 0005): each view in each language, light and dark, and any text that is wider
+    // than its box (a tab, a table head, a button).
+    const overflow = [];
+    fs.mkdirSync(SHOTS, { recursive: true });
+    const tabs = (sub) => b.$$(`[data-testid=views-panel] [role=tablist]${sub ? ".sub" : ":not(.sub)"} button`);
+    for (const tag of ["en", "es", "pt", "zh-Hans", "ak"]) {
+      await (await b.$("[data-testid=language]")).selectByAttribute("value", tag);
+      for (const [i, theme] of [[1, "light"], [2, "dark"]]) {
+        await (await b.$$(".theme button"))[i].click();
+        for (let g = 0; g < (await tabs(false)).length; g++) {
+          await (await tabs(false))[g].click();
+          for (let v = 0; v < (await tabs(true)).length; v++) {
+            await (await tabs(true))[v].click();
+            await new Promise((r) => setTimeout(r, 600));
+            const name = `311-${tag}-${theme}-${g}-${v}`;
+            await b.saveScreenshot(path.join(SHOTS, `${name}.png`));
+            const wide = await b.execute(() =>
+              [...document.querySelectorAll("button, th, [role=tab], label, h2, h3, h4, td")]
+                .filter((e) => e.offsetParent && e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).overflowX !== "auto")
+                .map((e) => `${e.tagName}: ${e.textContent.trim().slice(0, 60)}`),
+            );
+            overflow.push(...wide.map((w) => `${name} | ${w}`));
+          }
+        }
+      }
+    }
+    fs.writeFileSync(path.join(SHOTS, "311-overflow.txt"), `${[...new Set(overflow)].join("\n")}\n`);
   });
 
   it("still loads when browser storage is blocked", async () => {
