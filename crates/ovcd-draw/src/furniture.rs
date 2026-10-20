@@ -39,8 +39,14 @@ pub struct Plan {
 /// Clause 14.9: the text of the status line. `issued` has none.
 fn status_text(status: &str) -> Option<&'static str> {
     match status {
-        "draft" => Some("DRAFT \u{2013} NOT FOR CONSTRUCTION"),
-        "concept" => Some("CONCEPT \u{2013} NOT FOR CONSTRUCTION"),
+        "draft" => Some(label!(
+            "draw-status-draft",
+            "DRAFT \u{2013} NOT FOR CONSTRUCTION"
+        )),
+        "concept" => Some(label!(
+            "draw-status-concept",
+            "CONCEPT \u{2013} NOT FOR CONSTRUCTION"
+        )),
         _ => None,
     }
 }
@@ -304,9 +310,10 @@ fn register_rows(entries: &[Value], max_rows: usize) -> Vec<RegisterRow> {
             &entries[start..],
             vec![vec![(
                 "description",
-                format!(
-                    "{} EARLIER REVISIONS NOT SHOWN",
-                    entries.len() - (max_rows - 1)
+                label!(
+                    "draw-earlier-revisions",
+                    "{count} EARLIER REVISIONS NOT SHOWN",
+                    count = entries.len() - (max_rows - 1)
                 ),
             )]],
         )
@@ -490,7 +497,7 @@ fn field_value(
             } else if scales.iter().all(|s| *s == scales[0]) {
                 format!("1:{}", scales[0].unwrap_or(1))
             } else {
-                "AS SHOWN".to_string()
+                label!("draw-scale-as-shown", "AS SHOWN").to_string()
             }
         }
         "sheet" => {
@@ -825,7 +832,11 @@ fn strip_entities(doc: &Value, strip: &Value, r: Rect, group: &LineGroup, out: &
         &origin,
         lay,
         [r.x + STRIP_PAD, r.y + STRIP_PAD + STRIP_HEADING],
-        &kind.to_uppercase(),
+        if kind == "notes" {
+            label!("draw-heading-notes", "NOTES")
+        } else {
+            label!("draw-heading-references", "REFERENCES")
+        },
         STRIP_HEADING,
         0.0,
         AlignH::Left,
