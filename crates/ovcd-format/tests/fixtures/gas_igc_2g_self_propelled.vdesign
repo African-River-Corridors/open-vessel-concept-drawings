@@ -57,6 +57,14 @@
           "value": "fully_pressurised",
           "source": "default"
         },
+        "lpg_loading_limit_basis": {
+          "value": "refrigerated_density",
+          "source": "default"
+        },
+        "lpg_loading_temperature_c": {
+          "value": 15.0,
+          "source": "default"
+        },
         "fill_ratio": {
           "value": 0.98,
           "source": "default"

@@ -92,6 +92,59 @@
       "default": "fully_pressurised",
       "basis": "How an LPG Cargo is carried: fully pressurised (ambient temperature, the vapour pressure of the cargo), semi-pressurised or semi-refrigerated (cooled, at a middle pressure), or fully refrigerated or cryogenic (cooled to near atmospheric pressure). The input is for LPG Cargos only, and the tank design defaults below follow it. A file that names none is read as fully pressurised"
     },
+    "lpg_loading_limit_basis": {
+      "default": "igc_15_1_3",
+      "basis": "How the density and the loading limit of an LPG Cargo are worked out. igc_15_1_3: the cargo is loaded at the loading temperature, at the saturated liquid density there (NIST Chemistry WebBook, propane and n-butane; the 60/40 mix as an ideal solution of the two, an estimate), to the loading limit of IGC 15.5.1, LL = FL x rhoR / rhoL, FL the fill ratio. The reference temperature is that of IGC 15.1.3: for a fully pressurised tank (no temperature control) the temperature at which the vapour pressure equals the MARVS (15.1.3.1, from the tank design pressure); for semi-pressurised and fully refrigerated tanks (with temperature control) the loading temperature (15.1.3.2), so LL = FL. igc_15_5_2: the same, but a fully pressurised tank takes 45 C, the air temperature of the ambient design conditions of 15.1.4, as its reference (IGC 15.5.2, which the Administration may allow for Type C tanks with an approved vent system). refrigerated_density: what the engine did before, the fully refrigerated density of the cargo data, loaded to the fill ratio in every carriage condition; a file saved before the input existed keeps it. The cargo mass is the tank volume x LL x rhoL = tank volume x FL x rhoR"
+    },
+    "lpg_loading_temperature_c": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": 15.0,
+            "status": "estimate",
+            "basis": "No source gives the loading temperature of a fully pressurised LPG barge. 15 C is an estimate of ambient loading. With the reference temperature set by the MARVS (IGC 15.1.3.1) the loading temperature moves the loading limit, not the cargo mass"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "semi_pressurised" },
+            "value": -10.0,
+            "status": "estimate",
+            "basis": "No source gives the carriage temperature of a semi-pressurised LPG tank. -10 C is an estimate between fully refrigerated (about -42 C for propane) and ambient; the propane vapour pressure there is 3.5 bar (NIST)"
+          },
+          {
+            "when": { "cargo": ["LPG_propane"], "lpg_carriage_condition": "fully_refrigerated" },
+            "value": -42.1,
+            "status": "sourced",
+            "source": "NIST Chemistry WebBook, saturation properties of propane: vapour pressure 0.97424 bar at -43 C and 1.0183 bar at -42 C, so 1.01325 bar (one atmosphere) at -42.1 C",
+            "basis": "Fully refrigerated propane is carried at its boiling point at atmospheric pressure"
+          },
+          {
+            "when": { "cargo": ["LPG_butane"], "lpg_carriage_condition": "fully_refrigerated" },
+            "value": -0.5,
+            "status": "sourced",
+            "source": "NIST Chemistry WebBook, saturation properties of n-butane: vapour pressure 0.99377 bar at -1 C and 1.0323 bar at 0 C, so 1.01325 bar (one atmosphere) at -0.5 C",
+            "basis": "Fully refrigerated butane is carried at its boiling point at atmospheric pressure"
+          },
+          {
+            "when": { "cargo": ["LPG_mix"], "lpg_carriage_condition": "fully_refrigerated" },
+            "value": -34.3,
+            "status": "estimate",
+            "basis": "The bubble point at atmospheric pressure of the 60/40 propane/butane mix by mass, from the NIST vapour pressures of propane and n-butane by Raoult's law (an ideal solution, 66.4 % propane by moles)"
+          },
+          {
+            "when": {},
+            "value": 15.0,
+            "status": "estimate",
+            "basis": "Not used: the loading temperature is an input of the LPG Cargos only"
+          }
+        ]
+      },
+      "unit": "C",
+      "hard": { "ge": -50, "le": 80 },
+      "soft": { "min": -45, "max": 50 },
+      "basis": "The temperature at which an LPG Cargo is loaded. It gives the loaded density (rhoL) and, for a tank with temperature control, the reference temperature too. The default depends on the Cargo and the carriage condition. The range is that of the NIST saturation tables the engine holds"
+    },
     "fill_ratio": {
       "default_by_table": {
         "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
@@ -101,14 +154,14 @@
             "value": 0.98,
             "status": "sourced",
             "source": "IMO IGC Code, resolution MSC.370(93), paragraph 15.3 (default filling limit 98 %)",
-            "basis": "The limit is 98 % of the tank volume at the reference temperature. Owners' sheets agree: 98 % on 16 pressurised LPG carriers and 98.5 % on one 2022 LNG bunker vessel. The real limit changes with the cargo density at the loading and reference temperatures; one value is used for every Cargo and carriage condition"
+            "basis": "The limit is 98 % of the tank volume at the reference temperature. Owners' sheets agree: 98 % on 16 pressurised LPG carriers and 98.5 % on one 2022 LNG bunker vessel. For an LPG Cargo the tank is loaded to the loading limit of IGC 15.5.1, worked out from this filling limit (see lpg_loading_limit_basis)"
           }
         ]
       },
       "unit": "-",
       "hard": { "ge": 0.1, "le": 1 },
       "soft": { "min": 0.8, "max": 0.99 },
-      "basis": "The part of the gross tank volume that cargo fills (the filling limit). The default is the IGC Code 15.3 limit, 98 %. The original engine used 0.95 in its tank inputs; a Design never uses that value"
+      "basis": "The filling limit FL: the part of the gross tank volume that cargo fills at the reference temperature. The default is the IGC Code 15.3 limit, 98 %. An LPG Cargo is loaded to the loading limit LL = FL x rhoR / rhoL (IGC 15.5.1) unless lpg_loading_limit_basis is refrigerated_density. The original engine used 0.95 in its tank inputs; a Design never uses that value"
     },
     "max_tank_od_m": {
       "default": 16.0,
