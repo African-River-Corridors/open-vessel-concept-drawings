@@ -4,6 +4,7 @@ import init, { Session } from "../../../wasm-pkg/ovcd_web.js";
 import wasmUrl from "../../../wasm-pkg/ovcd_web_bg.wasm?url";
 import type { Evaluation, Schema, Snapshot } from "../api";
 import type { DrawingFormat, DrawingView, Platform } from "./types";
+import { t } from "../i18n.svelte";
 
 const LAST_DESIGN = "ovcd.lastDesign";
 const NOTICE = "ovcd.noticeSeen";
@@ -96,7 +97,7 @@ function pickFile(accept: string): Promise<File | null> {
 }
 
 function confirmDiscard(): boolean {
-  return !session.is_dirty() || window.confirm("The Design has unsaved changes. Discard them?");
+  return !session.is_dirty() || window.confirm(t("app-unsaved-discard"));
 }
 
 async function currentSnapshot(): Promise<Snapshot> {
@@ -154,7 +155,7 @@ export async function createWebPlatform(): Promise<Platform> {
     },
     save: async () => saveNamed(fileNameOf(await currentSnapshot())),
     saveAs: async () => {
-      const name = window.prompt("File name", fileNameOf(await currentSnapshot()));
+      const name = window.prompt(t("app-file-name"), fileNameOf(await currentSnapshot()));
       if (name === null || name.trim() === "") return null;
       const clean = name.trim();
       return saveNamed(clean.endsWith(".vdesign") ? clean : `${clean}.vdesign`);

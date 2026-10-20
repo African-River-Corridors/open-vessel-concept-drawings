@@ -1,11 +1,12 @@
 <script lang="ts">
   import { applyTheme, loadTheme, saveTheme, type ThemeChoice } from "./theme";
+  import { t } from "./i18n.svelte";
 
   // Auto follows the operating system; Light and Dark override it. The choice is kept between runs.
   const CHOICES: { id: ThemeChoice; label: string }[] = [
-    { id: "auto", label: "Auto" },
-    { id: "light", label: "Light" },
-    { id: "dark", label: "Dark" },
+    { id: "auto", label: "app-theme-auto" },
+    { id: "light", label: "app-theme-light" },
+    { id: "dark", label: "app-theme-dark" },
   ];
 
   let choice = $state<ThemeChoice>(loadTheme());
@@ -17,9 +18,9 @@
   }
 </script>
 
-<div class="theme" role="group" aria-label="Theme">
+<div class="theme" role="group" aria-label={t("app-theme")}>
   {#each CHOICES as c (c.id)}
-    <button type="button" aria-pressed={choice === c.id} onclick={() => pick(c.id)}>{c.label}</button>
+    <button type="button" aria-pressed={choice === c.id} onclick={() => pick(c.id)}>{t(c.label)}</button>
   {/each}
 </div>
 

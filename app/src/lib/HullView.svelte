@@ -2,6 +2,8 @@
   // One hull view. The SVG is made in Rust (the drawing crate, to the Drawing Format Standard); this
   // component only places it, fitted to the space it has, and lets the user zoom and move it. It holds
   // no geometry and no scale. When the space changes size, the view returns to the fitted extent.
+  import { t } from "./i18n.svelte";
+
   let { svg, label }: { svg: string; label: string } = $props();
 
   const MIN = 1;
@@ -84,10 +86,10 @@
 
 <div class="wrap">
   <div class="mat">
-    <div class="tools" role="group" aria-label="Zoom {label}">
-      <button type="button" aria-label="Zoom out" onclick={() => step(1 / 1.5)} disabled={zoom <= MIN}>−</button>
-      <button type="button" aria-label="Zoom in" onclick={() => step(1.5)} disabled={zoom >= MAX}>+</button>
-      <button type="button" aria-label="Fit to the panel" onclick={fit} disabled={zoom === 1}>Fit</button>
+    <div class="tools" role="group" aria-label={t("app-zoom-view", { view: label })}>
+      <button type="button" aria-label={t("app-zoom-out")} onclick={() => step(1 / 1.5)} disabled={zoom <= MIN}>−</button>
+      <button type="button" aria-label={t("app-zoom-in")} onclick={() => step(1.5)} disabled={zoom >= MAX}>+</button>
+      <button type="button" aria-label={t("app-fit-panel")} onclick={fit} disabled={zoom === 1}>{t("app-fit")}</button>
     </div>
     <div
       class="frame"
@@ -109,7 +111,7 @@
       </div>
     </div>
   </div>
-  <div class="state" data-testid="zoom-state">{zoom === 1 ? "fitted" : "zoomed"}</div>
+  <div class="state" data-testid="zoom-state">{t(zoom === 1 ? "app-zoom-fitted" : "app-zoom-zoomed")}</div>
 </div>
 
 <style>

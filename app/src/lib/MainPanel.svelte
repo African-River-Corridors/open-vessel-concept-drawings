@@ -6,6 +6,7 @@
   import Stability from "./views/Stability.svelte";
   import RuleChecks from "./views/RuleChecks.svelte";
   import CapitalBudget from "./views/CapitalBudget.svelte";
+  import { t } from "./i18n.svelte";
 
   // The hull views are SVG drawn in Rust to the Drawing Format Standard (ADR 0009, spec 0003); the
   // panel only places and zooms them.
@@ -18,33 +19,33 @@
     designSpeed: number | null;
   } = $props();
 
-  // Two levels of tabs: a group, then a view of that group. The panel never scrolls: a drawing is
+  // Two levels of tabs: a group, then a view of that group. Each label is a Message Id. The panel never scrolls: a drawing is
   // fitted to the space it has. Switching a tab starts the new view fitted again.
   const GROUPS = [
     {
       id: "drawings",
-      label: "Drawings",
+      label: "app-group-drawings",
       views: [
-        { id: "side", label: "Side elevation" },
-        { id: "plan", label: "Plan" },
-        { id: "midship", label: "Cross-section" },
+        { id: "side", label: "app-view-side" },
+        { id: "plan", label: "app-view-plan" },
+        { id: "midship", label: "app-view-midship" },
       ],
     },
     {
       id: "stability-propulsion",
-      label: "Stability & Propulsion",
+      label: "app-group-stability-propulsion",
       views: [
-        { id: "stability", label: "Intact stability" },
-        { id: "speed-power", label: "Power and speed curves" },
-        { id: "rules", label: "Rule check calculations" },
+        { id: "stability", label: "app-view-stability" },
+        { id: "speed-power", label: "app-view-speed-power" },
+        { id: "rules", label: "app-view-rules" },
       ],
     },
     {
       id: "boq-finance",
-      label: "BOQ & Finance",
+      label: "app-group-boq-finance",
       views: [
-        { id: "boq", label: "BOQ" },
-        { id: "capital", label: "Capital budget" },
+        { id: "boq", label: "app-view-boq" },
+        { id: "capital", label: "app-view-capital" },
       ],
     },
   ];
@@ -56,7 +57,7 @@
   let groupId = $state(GROUPS[0].id);
   let current = $state(GROUPS[0].views[0].id);
   let group = $derived(GROUPS.find((g) => g.id === groupId) ?? GROUPS[0]);
-  let currentLabel = $derived(group.views.find((v) => v.id === current)?.label ?? "");
+  let currentLabel = $derived(t(group.views.find((v) => v.id === current)?.label ?? ""));
 
   function pickGroup(id: string) {
     groupId = id;
@@ -91,17 +92,17 @@
 
 <div class="panel" data-testid="views-panel">
   <header>
-    <h2>Views</h2>
-    <div class="tabs" role="tablist" aria-label="View groups">
+    <h2>{t("app-views")}</h2>
+    <div class="tabs" role="tablist" aria-label={t("app-view-groups")}>
       {#each GROUPS as g (g.id)}
-        <button type="button" role="tab" aria-selected={g.id === groupId} class:on={g.id === groupId} onclick={() => pickGroup(g.id)}>{g.label}</button>
+        <button type="button" role="tab" aria-selected={g.id === groupId} class:on={g.id === groupId} onclick={() => pickGroup(g.id)}>{t(g.label)}</button>
       {/each}
     </div>
-    {#if stale && FROM_RESULTS.includes(current)}<span class="stale">out of date</span>{/if}
+    {#if stale && FROM_RESULTS.includes(current)}<span class="stale">{t("app-out-of-date")}</span>{/if}
   </header>
-  <div class="tabs sub" role="tablist" aria-label="Views of {group.label}">
+  <div class="tabs sub" role="tablist" aria-label={t("app-views-of", { group: t(group.label) })}>
     {#each group.views as v (v.id)}
-      <button type="button" role="tab" aria-selected={v.id === current} class:on={v.id === current} onclick={() => (current = v.id)}>{v.label}</button>
+      <button type="button" role="tab" aria-selected={v.id === current} class:on={v.id === current} onclick={() => (current = v.id)}>{t(v.label)}</button>
     {/each}
   </div>
   {#if stale}<div class="whyrow"><StaleWhy {blockers} /></div>{/if}
@@ -123,7 +124,7 @@
         {:else if views && "message" in views}
           <p class="note">{views.message}</p>
         {:else}
-          <p class="note">No results to draw.</p>
+          <p class="note">{t("app-no-results-draw")}</p>
         {/if}
       </div>
     {:else if current === "speed-power"}
@@ -131,7 +132,7 @@
         {#if message}
           <p class="note">{message}</p>
         {:else if curves.length === 0}
-          <p class="note">No results to chart.</p>
+          <p class="note">{t("app-no-results-chart")}</p>
         {:else}
           {#each curves as c (c.name)}
             <SpeedPower name={c.name} limitingSpeed={c.limiting_speed_kn} blockage={c.blockage} points={c.points} {designSpeed} option={active} />
@@ -142,7 +143,7 @@
       {#if message}
         <p class="note">{message}</p>
       {:else if !results}
-        <p class="note">No results to show.</p>
+        <p class="note">{t("app-no-results-show")}</p>
       {:else}
         <!-- New results build a new chart, fitted. -->
         {#key JSON.stringify([active, stabilityOf(results)])}
@@ -153,19 +154,19 @@
       {#if message}
         <p class="note">{message}</p>
       {:else if !results}
-        <p class="note">No results to show.</p>
+        <p class="note">{t("app-no-results-show")}</p>
       {:else}
         <RuleChecks checks={(results as { checks?: { name: string; ok: boolean; message: string }[] }).checks ?? []} />
       {/if}
     {:else if current === "boq"}
       <div data-testid="placeholder-boq">
-        <p class="note">The bill of quantities comes in a later phase. See the roadmap.</p>
+        <p class="note">{t("app-boq-later")}</p>
       </div>
     {:else if current === "capital"}
       {#if message}
         <p class="note">{message}</p>
       {:else if !results}
-        <p class="note">No results to show.</p>
+        <p class="note">{t("app-no-results-show")}</p>
       {:else}
         <CapitalBudget cost={(results as { cost?: never }).cost} phase={(results as { phase?: string }).phase} />
       {/if}

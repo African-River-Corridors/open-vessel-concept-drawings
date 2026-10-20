@@ -3,6 +3,7 @@
   import "uplot/dist/uPlot.min.css";
   import { onMount } from "svelte";
   import { axisInkHooks, currentTokens, dashFor, hatchPattern, uiFont, watchTheme, type ChartTokens } from "../chartTheme";
+  import { num, t } from "../i18n.svelte";
 
   // The stability results of a gas Cargo, exactly as the engine gives them: a GZ curve per loading
   // condition (the governing one drawn thick), the heel angles of the criteria and the angle of
@@ -181,9 +182,9 @@
         setScale: [() => (zoomed = isZoomed())],
       },
       axes: [
-        { ...axis, label: "Heel angle (deg)" },
+        { ...axis, label: t("app-stab-heel-axis") },
         // A tick about every 28 pixels, written to two decimals, so GZ can be read off the axis.
-        { ...axis, label: "GZ (m)", space: 28, values: (_u, ticks) => ticks.map((v) => v.toFixed(2)), size: 56 },
+        { ...axis, label: t("app-stab-gz-axis"), space: 28, values: (_u, ticks) => ticks.map((v) => v.toFixed(2)), size: 56 },
       ],
       series: [
         {},
@@ -288,28 +289,28 @@
   });
 
   const r = (v: number | null, dp: number) =>
-    v === null || v === undefined ? "–" : v.toLocaleString("en-GB", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+    v === null || v === undefined ? "–" : num(v, dp);
 
   const COLUMNS: { label: string; unit: string; dp: number; get: (c: Condition) => number | null }[] = [
-    { label: "Cargo", unit: "t", dp: 1, get: (c) => c.cargo_t },
-    { label: "Fill", unit: "", dp: 2, get: (c) => c.fill },
-    { label: "Displacement", unit: "t", dp: 1, get: (c) => c.displacement_t },
-    { label: "Draught", unit: "m", dp: 2, get: (c) => c.draught_m },
-    { label: "KG", unit: "m", dp: 2, get: (c) => c.kg_m },
-    { label: "GM solid", unit: "m", dp: 2, get: (c) => c.gm_solid_m },
-    { label: "Free surface", unit: "m", dp: 2, get: (c) => c.free_surface_m },
-    { label: "GM fluid", unit: "m", dp: 2, get: (c) => c.gm_fluid_m },
-    { label: "Max GZ", unit: "m", dp: 2, get: (c) => c.max_gz_m },
-    { label: "Angle of max GZ", unit: "deg", dp: 0, get: (c) => c.max_gz_deg },
-    { label: "Deck-edge angle", unit: "deg", dp: 1, get: (c) => c.deck_edge_deg },
+    { label: "app-stab-col-cargo", unit: "t", dp: 1, get: (c) => c.cargo_t },
+    { label: "app-stab-col-fill", unit: "", dp: 2, get: (c) => c.fill },
+    { label: "app-stab-col-displacement", unit: "t", dp: 1, get: (c) => c.displacement_t },
+    { label: "app-stab-col-draught", unit: "m", dp: 2, get: (c) => c.draught_m },
+    { label: "app-stab-col-kg", unit: "m", dp: 2, get: (c) => c.kg_m },
+    { label: "app-stab-col-gm-solid", unit: "m", dp: 2, get: (c) => c.gm_solid_m },
+    { label: "app-stab-col-free-surface", unit: "m", dp: 2, get: (c) => c.free_surface_m },
+    { label: "app-stab-col-gm-fluid", unit: "m", dp: 2, get: (c) => c.gm_fluid_m },
+    { label: "app-stab-col-max-gz", unit: "m", dp: 2, get: (c) => c.max_gz_m },
+    { label: "app-stab-col-max-gz-angle", unit: "deg", dp: 0, get: (c) => c.max_gz_deg },
+    { label: "app-stab-col-deck-edge", unit: "deg", dp: 1, get: (c) => c.deck_edge_deg },
   ];
 </script>
 
 <div class="stab" data-testid="stability">
   {#if !stability}
     <div data-testid="stability-wip">
-      <h3 class="wip">Work in development</h3>
-      <p class="note">Stability is computed for gas cargo only. Dry-bulk stability is work in development.</p>
+      <h3 class="wip">{t("app-work-in-development")}</h3>
+      <p class="note">{t("app-stab-wip")}</p>
     </div>
   {:else}
     <div class="chartbox" data-testid="stability-chart">
@@ -319,14 +320,14 @@
             <svg class="swatch" class:gov-swatch={c.name === stability.governing} width="28" height="8" viewBox="0 0 28 8" aria-hidden="true">
               <line x1="0" y1="4" x2="28" y2="4" stroke-width={c.name === stability.governing ? 2 : 1.5} stroke-dasharray={dash(c, i).join(" ") || undefined} />
             </svg>
-            <strong>{c.name}</strong>{#if c.name === stability.governing}<span class="govtag">governs</span>{/if}
-            GM {r(c.gm_fluid_m, 2)} m · max GZ {r(c.max_gz_m, 2)} m at {r(c.max_gz_deg, 0)}°
+            <strong>{c.name}</strong>{#if c.name === stability.governing}<span class="govtag">{t("app-stab-governs")}</span>{/if}
+            {t("app-stab-legend", { gm: r(c.gm_fluid_m, 2), gz: r(c.max_gz_m, 2), angle: r(c.max_gz_deg, 0) })}
           </span>
         {/each}
-        <span class="tools" role="group" aria-label="Zoom the GZ curves">
-          <button type="button" aria-label="Zoom out" onclick={() => zoomAt(1.5, 0.5, 0.5)}>−</button>
-          <button type="button" aria-label="Zoom in" onclick={() => zoomAt(1 / 1.5, 0.5, 0.5)}>+</button>
-          <button type="button" aria-label="Fit to the panel" onclick={fit} disabled={!zoomed}>Fit</button>
+        <span class="tools" role="group" aria-label={t("app-stab-zoom")}>
+          <button type="button" aria-label={t("app-zoom-out")} onclick={() => zoomAt(1.5, 0.5, 0.5)}>−</button>
+          <button type="button" aria-label={t("app-zoom-in")} onclick={() => zoomAt(1 / 1.5, 0.5, 0.5)}>+</button>
+          <button type="button" aria-label={t("app-fit-panel")} onclick={fit} disabled={!zoomed}>{t("app-fit")}</button>
         </span>
       </div>
       <div class="host" bind:this={host} class:movable={zoomed}></div>
@@ -334,17 +335,17 @@
 
     <div class="details">
       <p class="summary">
-        <span class="tag {stability.ok ? 'ok' : 'fail'}">{stability.ok ? "PASS" : "FAIL"}</span>
+        <span class="tag {stability.ok ? 'ok' : 'fail'}">{t(stability.ok ? "app-pass" : "app-fail")}</span>
         <strong>{stability.criteria_set}</strong>
-        <span class="dim">Governing condition: <strong>{stability.governing}</strong></span>
+        <span class="dim">{t("app-stab-governing")} <strong>{stability.governing}</strong></span>
       </p>
 
       <table class="conditions">
         <thead>
           <tr>
-            <th>Condition</th>
+            <th>{t("app-stab-condition")}</th>
             {#each COLUMNS as col (col.label)}
-              <th class="num">{col.label}{#if col.unit}<span class="unit">&nbsp;({col.unit})</span>{/if}</th>
+              <th class="num">{t(col.label)}{#if col.unit}<span class="unit">&nbsp;({col.unit})</span>{/if}</th>
             {/each}
           </tr>
         </thead>
@@ -353,11 +354,11 @@
             <tr class:governing={c.name === stability.governing} data-governing={c.name === stability.governing}>
               <th>
                 {c.name}
-                {#if c.name === stability.governing}<span class="gov">governs</span>{/if}
+                {#if c.name === stability.governing}<span class="gov">{t("app-stab-governs")}</span>{/if}
               </th>
               {#each COLUMNS as col (col.label)}
                 {@const v = col.get(c)}
-                <td class="num" title={v === null ? "not applicable" : String(v)}>{r(v, col.dp)}</td>
+                <td class="num" title={v === null ? t("app-not-applicable") : String(v)}>{r(v, col.dp)}</td>
               {/each}
             </tr>
           {/each}
@@ -365,15 +366,15 @@
       </table>
 
       {#each stability.conditions as c (c.name)}
-        <h4>{c.name}: criteria</h4>
+        <h4>{t("app-stab-criteria-of", { condition: c.name })}</h4>
         <table class="criteria">
           <tbody>
             {#each c.criteria as k (k.name)}
               <tr class:failed={!k.ok}>
-                <td><span class="tag {k.ok ? 'ok' : 'fail'}">{k.ok ? "PASS" : "FAIL"}</span></td>
+                <td><span class="tag {k.ok ? 'ok' : 'fail'}">{t(k.ok ? "app-pass" : "app-fail")}</span></td>
                 <th>{k.name}</th>
                 <td class="num" title={String(k.value)}>{r(k.value, 3)}</td>
-                <td class="dim">needs at least</td>
+                <td class="dim">{t("app-stab-needs-at-least")}</td>
                 <td class="num" title={String(k.limit)}>{r(k.limit, 3)}</td>
                 <td class="dim">{k.source}</td>
               </tr>
@@ -383,7 +384,7 @@
       {/each}
 
       {#if stability.limitations.length > 0}
-        <h4>Limitations</h4>
+        <h4>{t("app-stab-limitations")}</h4>
         <ul>
           {#each stability.limitations as l}<li>{l}</li>{/each}
         </ul>
