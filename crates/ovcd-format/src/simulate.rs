@@ -16,7 +16,7 @@ use crate::eval::{aft_json, checks_json, gas_separation_json, num, ok, raised};
 use crate::gas_stability::condition_json;
 use crate::text_ids::TextIds;
 use ovcd_core::barge_capacity::{self, BargeCapacityInputs, BargeCapacityResult};
-use ovcd_core::cargo::{CARGO_DATABASE, CargoProperties};
+use ovcd_core::cargo::{CARGO_DATABASE, CargoClass, CargoProperties};
 use ovcd_core::checks::Check;
 use ovcd_core::gas_arrangement::{self as ga, DEFAULT_DEPTHS_M, FitOptions, RULESETS};
 use ovcd_core::gas_separation::GasSeparationInputs;
@@ -183,7 +183,7 @@ fn cargo_options() -> Value {
                 json!({
                     "id": k,
                     "name": c.name,
-                    "phase": c.phase,
+                    "phase": c.phase.key(),
                     "density_kg_m3": num(c.density),
                 })
             })
@@ -191,16 +191,16 @@ fn cargo_options() -> Value {
     )
 }
 
-/// The `VESSELS` table: (label, hold type for the core, allowed phase).
-fn vessel(id: &str) -> R<(&'static str, Option<&'static str>, &'static str)> {
+/// The `VESSELS` table: (label, hold type for the core, allowed Cargo Class).
+fn vessel(id: &str) -> R<(&'static str, Option<&'static str>, CargoClass)> {
     Ok(match id {
-        "box_barge" => ("Box-hold dry bulk barge", Some("box"), "dry_bulk"),
+        "box_barge" => ("Box-hold dry bulk barge", Some("box"), CargoClass::DryBulk),
         "hopper_barge" => (
             "Sloped-hopper dry bulk barge",
             Some("sloped_hopper"),
-            "dry_bulk",
+            CargoClass::DryBulk,
         ),
-        "gas_barge" => ("Gas barge, IMO Type C tanks", None, "liquid_gas"),
+        "gas_barge" => ("Gas barge, IMO Type C tanks", None, CargoClass::Gas),
         other => return bad(format!("unknown vessel `{other}`")),
     })
 }
@@ -947,7 +947,7 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
         json!({
             "vessel": label,
             "cargo": cargo.name,
-            "phase": cargo.phase,
+            "phase": cargo.phase.key(),
             "self_propelled": self_propelled,
             "arrangement": Value::Null,
             "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(cb) },
@@ -1251,7 +1251,7 @@ fn simulate_gas(
         json!({
             "vessel": label,
             "cargo": cargo.name,
-            "phase": cargo.phase,
+            "phase": cargo.phase.key(),
             "self_propelled": self_propelled,
             "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(cb) },
             "geometry": geo,

@@ -361,6 +361,22 @@ fn results_that_lack_a_value_are_refused_with_a_message() {
     assert!(ovcd_format::ga_views(&zero).unwrap_err().contains("loa"));
 }
 
+#[test]
+fn results_of_an_unsupported_or_unknown_cargo_class_are_refused() {
+    // Issue #328: a class with no drawing is an error, never drawn as gas tanks or a dry hold.
+    for name in ["dry_bulk_box_hold.vdesign", "gas_igc_2g_exact.vdesign"] {
+        let (_, r) = computed(name).remove(0);
+        for phase in ["liquid_bulk", "crude_oil", ""] {
+            let mut other = r.clone();
+            other["phase"] = serde_json::json!(phase);
+            assert!(ovcd_format::ga_views(&other).is_err(), "{name} {phase:?}");
+        }
+        let mut missing = r;
+        missing.as_object_mut().unwrap().remove("phase");
+        assert!(ovcd_format::ga_views(&missing).is_err(), "{name}");
+    }
+}
+
 /// The `simulate` params of a fixture's first Option.
 fn base_params(file: &str) -> serde_json::Map<String, Value> {
     let checked = check(&fixture(file), &Profile::built_in());

@@ -491,10 +491,10 @@ fn a_profile_with_only_a_keyed_default_for_a_plain_input_is_refused() {
 fn every_cargo_phase_has_a_keyed_default_lookup() {
     use ovcd_format::vdesign::{CARGO_CONTAINMENTS, CARGO_PHASES};
     for (_, props) in ovcd_core::cargo::CARGO_DATABASE.iter() {
-        assert!(CARGO_PHASES.contains(&props.phase), "{}", props.phase);
+        assert!(CARGO_PHASES.contains(&props.phase.key()), "{}", props.phase);
     }
     for (_, phase) in CARGO_CONTAINMENTS {
-        assert!(CARGO_PHASES.contains(phase), "{phase}");
+        assert!(CARGO_PHASES.contains(&phase.key()), "{phase}");
     }
 }
 

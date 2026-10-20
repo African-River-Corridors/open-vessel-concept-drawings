@@ -223,7 +223,7 @@ fn cargo_json(c: &CargoProperties) -> Value {
         "temperature": c.temperature,
         "pressure": c.pressure,
         "description": c.description,
-        "phase": c.phase,
+        "phase": c.phase.key(),
     })
 }
 
@@ -1816,7 +1816,7 @@ pub(crate) fn capacity_inputs(args: &Value) -> Result<BargeCapacityInputs, EvalE
 pub(crate) fn capacity_json(r: &BargeCapacityResult) -> Value {
     wide_object!({
         "cargo_type": r.cargo_type,
-        "phase": r.phase,
+        "phase": r.phase.key(),
         "cargo_density_t_per_m3": num(r.cargo_density_t_per_m3),
         "cargo_capacity_t": num(r.cargo_capacity_t),
         "full_load_draft_m": num(r.full_load_draft_m),

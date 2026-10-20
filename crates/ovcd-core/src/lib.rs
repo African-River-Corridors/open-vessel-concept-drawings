@@ -14,6 +14,7 @@ extern crate std;
 pub mod aft_arrangement;
 pub mod barge_capacity;
 pub mod barge_cost;
+pub mod box_stability;
 pub mod cargo;
 pub mod checks;
 pub mod design_grid;

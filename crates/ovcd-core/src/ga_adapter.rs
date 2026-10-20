@@ -99,7 +99,7 @@ fn py_pow(x: f64, y: f64) -> Result<f64, PyError> {
 
 /// Whether the capacity result is a liquefied-gas one.
 pub fn is_gas(res: &BargeCapacityResult) -> bool {
-    res.phase == "liquid_gas"
+    res.phase == crate::cargo::CargoClass::Gas
 }
 
 fn type_error(message: &str) -> PyError {
