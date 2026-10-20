@@ -1,6 +1,6 @@
 # Research note: stern blocks, propulsion, tugs, pushers and ATBs
 
-Retrieved 2026-10-20. For spec 0006 and ADR 0015. Concept and preliminary design only; never approval.
+Retrieved 2026-10-20. For spec 0007 and ADR 0017. Concept and preliminary design only; never approval.
 
 ## How to read this note
 
@@ -381,7 +381,7 @@ barge bow), x_b the distance to the bow (the convoy bow for a pusher), B_max the
 ## 10. Reference vessels (calibration candidates)
 
 43 vessels with published particulars are in `stern-tug/vessels/` (full table in the library notes).
-These 24 have power and dimensions on a stated basis and go to `calibration/` (spec 0006):
+These 24 have power and dimensions on a stated basis and go to `calibration/` (spec 0007):
 
 | Group | Vessel or design | L × B × T (m) | Power | Propulsion | Use |
 |---|---|---|---|---|---|

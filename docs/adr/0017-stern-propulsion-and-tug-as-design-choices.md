@@ -51,7 +51,7 @@ and weigh like built ones, in 0.2.x, for self-propelled vessels, pushers and ATB
 
 ## Consequences
 
-- The `.vdesign` input table grows (spec 0006); the inputs land in format version 3.
+- The `.vdesign` input table grows (spec 0007); the inputs land in format version 3.
 - `aft_arrangement` becomes the layout of the deck and accommodation items. The machinery, the
   propulsor and the stern geometry move into their own modules, each with a small interface.
 - New Rules enter the rules engine (spec 0004): ES-TRIN 2025/1 wheelhouse visibility, forward speed

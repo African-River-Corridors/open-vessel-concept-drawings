@@ -1,6 +1,6 @@
-# Spec 0006: Stern block, propulsion, tugs, pushers and ATBs
+# Spec 0007: Stern block, propulsion, tugs, pushers and ATBs
 
-Status: **agreed with the maintainer, 2026-10-20.** Decision record: ADR 0015. Issue: #346. Research:
+Status: **agreed with the maintainer, 2026-10-20.** Decision record: ADR 0017. Issue: #346. Research:
 `docs/research/stern-and-tugs.md`. Parent issue: see "Build tickets".
 
 ## Problem Statement
