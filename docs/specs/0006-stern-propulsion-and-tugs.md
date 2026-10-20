@@ -1,6 +1,6 @@
 # Spec 0006: Stern block, propulsion, tugs, pushers and ATBs
 
-Status: **agreed with the maintainer, 2026-10-20.** Decision record: ADR 0015. Research:
+Status: **agreed with the maintainer, 2026-10-20.** Decision record: ADR 0015. Issue: #346. Research:
 `docs/research/stern-and-tugs.md`. Parent issue: see "Build tickets".
 
 ## Problem Statement
@@ -466,5 +466,36 @@ Open (for the build, not blocking):
 
 ## Build tickets
 
-Filed after this spec is agreed; the list and order are in the parent issue. Wave 1 is the
-self-propelled stern, wave 2 the pusher, convoy and tow, wave 3 the ATB.
+Parent issue #346. Each ticket carries native blocked-by links; a builder takes the next ticket whose
+blockers are all closed (`docs/agents/build-process.md`).
+
+**Wave 1: self-propelled stern**
+
+1. #347 stern and propulsion inputs in format version 3, with legacy values
+2. #348 stern block mass and centres in the lightship (blocked by #347)
+3. #349 LCG and trim for each loading condition (blocked by #348)
+4. #350 Stern Form geometry (transom, pram, tunnel) with closed-form corrections (blocked by #347)
+5. #351 propulsor model (actuator disc), bollard pull and its calibration (blocked by #347)
+6. #352 machinery space and stern block layout by Power Source (blocked by #348, #350, #351)
+7. #353 installed power, transmission and service speed in the app (blocked by #351, #352)
+8. #354 wheelhouse Blind Distance and lift; the sightline blocks fit (blocked by #349)
+9. #355 Rule Sets es-trin-2025, solas-v22, rheinschpv and the new OVCD Checks (blocked by #353, #354, #269, #272, #275)
+10. #356 drawings of the stern: form, propulsors, rudders, engine room, raised wheelhouse, stern section (blocked by #350, #352, #354)
+
+**Wave 2: pusher, convoy and tow**
+
+11. #357 Formation kinds atb and towed_barge, tug inputs and Reference Vessel presets (blocked by #347)
+12. #358 convoy totals: results for a pushed convoy
+13. #359 Formation powering: tug sizing, Equivalent Hull, convoy speed and power (blocked by #357, #358, #353)
+14. #360 pusher wheelhouse over the convoy, pusher GA and the arrangement plan (blocked by #359, #354, #356)
+15. #361 towed barges: hawser tow powering (blocked by #359)
+
+**Wave 3: ATB**
+
+16. #362 barge Notch, ATB tug from the barge, and ATB powering (blocked by #359, #350)
+17. #363 ATB rule notes and ATB drawings (blocked by #362, #355, #356)
+
+**Later (after the waves; not needed for 0.2.x)**
+
+18. #364 Convoy resistance: Zhang et al. (2023) shallow-water and bank method (blocked by #359)
+19. #365 Engine-room and stern-block length of built ships, from scaled general arrangements (blocked by #352)
