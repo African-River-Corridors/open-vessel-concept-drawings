@@ -526,3 +526,8 @@ check-name-stawave1-short-wave-validity = stawave1 短波适用性
 check-name-wave-height-within-screening-range = 波高在筛选范围内
 # status: draft
 check-name-bow-length-supplied = 已给出首部长度
+
+## Added after the first draft
+
+# status: draft
+msg-loading-above-marvs = “{ $input }” = { $value }：{ $cargo } 在该温度下的蒸气压为 { $pressure } bar，高于 { $marvs } bar（绝对压力）的 MARVS；液货舱装至充装限值，不超过该限值（建议性校核）；已接受

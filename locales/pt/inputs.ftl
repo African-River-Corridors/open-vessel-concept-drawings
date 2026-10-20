@@ -363,3 +363,23 @@ input-yard-margin-fraction = Margem do estaleiro
 
 # status: draft
 input-delivery-lump = Entrega
+
+## Added after the first draft
+
+# status: draft
+input-lpg-loading-limit-basis = Base da densidade do GLP e do limite de carregamento
+
+# status: draft
+choice-lpg-loading-limit-basis-igc-15-1-3 = Temperatura de referência IGC 15.1.3 (padrão)
+
+# status: draft
+choice-lpg-loading-limit-basis-igc-15-5-2 = IGC 15.5.2: referência de 45 C quando pressurizado
+
+# status: draft
+choice-lpg-loading-limit-basis-refrigerated-density = Anterior: densidade refrigerada, grau de enchimento no carregamento
+
+# status: draft
+input-lpg-loading-temperature-c = Temperatura de carregamento do GLP
+
+# status: draft
+input-lpg-loading-temperature-c-default-by = Carga, condição de transporte do GLP

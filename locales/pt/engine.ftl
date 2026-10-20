@@ -527,3 +527,8 @@ check-name-stawave1-short-wave-validity = validade do stawave1 para ondas curtas
 check-name-wave-height-within-screening-range = altura de onda dentro da faixa de triagem
 # status: draft
 check-name-bow-length-supplied = comprimento da proa informado
+
+## Added after the first draft
+
+# status: draft
+msg-loading-above-marvs = { $input } = { $value }: a pressão de vapor de { $cargo } nessa temperatura é { $pressure } bar, acima do MARVS de { $marvs } bar absolutos; o tanque é carregado até o limite de enchimento, não acima (verificação flexível); aceito

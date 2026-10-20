@@ -277,3 +277,23 @@ input-tug-outfitting-lump = 拖轮舾装
 input-yard-margin-fraction = 船厂利润
 # status: draft
 input-delivery-lump = 交付
+
+## Added after the first draft
+
+# status: draft
+input-lpg-loading-limit-basis = LPG 密度与装载限值依据
+
+# status: draft
+choice-lpg-loading-limit-basis-igc-15-1-3 = IGC 15.1.3 参考温度（默认）
+
+# status: draft
+choice-lpg-loading-limit-basis-igc-15-5-2 = IGC 15.5.2：带压时以 45 C 为参考
+
+# status: draft
+choice-lpg-loading-limit-basis-refrigerated-density = 旧法：冷冻密度，按装载时充装率
+
+# status: draft
+input-lpg-loading-temperature-c = LPG 装载温度
+
+# status: draft
+input-lpg-loading-temperature-c-default-by = 货物、LPG 装运方式
