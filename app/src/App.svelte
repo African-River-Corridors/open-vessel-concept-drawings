@@ -8,7 +8,7 @@
   import Notice from "./lib/Notice.svelte";
   import ThemeControl from "./lib/ThemeControl.svelte";
   import { loadPanels, savePanels } from "./lib/panels";
-  import { list, t } from "./lib/i18n.svelte";
+  import { list, say, schemaText, setInputLabels, t } from "./lib/i18n.svelte";
 
   // Display state only: the Design, its checks and its results all come from Rust.
   let snap = $state<Snapshot | null>(null);
@@ -101,6 +101,7 @@
       const next = await run();
       if (!next) return;
       if (refetchSchema) schema = await api.inputSchema();
+      if (schema) setInputLabels(Object.fromEntries(schema.inputs.map((i) => [i.name, i.label])));
       await adopt(next, false, true);
     });
   }
@@ -143,6 +144,7 @@
         noticeOpen = true;
       }
       schema = await api.inputSchema();
+      setInputLabels(Object.fromEntries(schema.inputs.map((i) => [i.name, i.label])));
       await adopt(await api.snapshot(), true);
     });
   });
@@ -175,7 +177,10 @@
   let blockers = $derived.by(() => {
     const names = new Set<string>();
     for (const m of activeEval?.messages ?? []) if (m.severity === "error") m.inputs.forEach((n) => names.add(n));
-    return [...names].map((name) => ({ name, label: schema?.inputs.find((i) => i.name === name)?.label ?? name }));
+    return [...names].map((name) => {
+      const label = schema?.inputs.find((i) => i.name === name)?.label;
+      return { name, label: label ? schemaText.input(name, label) : name };
+    });
   });
 </script>
 
@@ -219,10 +224,10 @@
     </div>
   {/if}
   {#each evaluation?.file_messages ?? [] as m}
-    <div class="banner {m.severity === 'error' ? 'error' : 'warn'}" role="status">{m.text}</div>
+    <div class="banner {m.severity === 'error' ? 'error' : 'warn'}" role="status">{say(m.text, null, m.msg)}</div>
   {/each}
-  {#each snap?.migration_notes ?? [] as note}
-    <div class="banner warn" role="status" data-testid="migration-note">{note}</div>
+  {#each snap?.migration_notes ?? [] as note, i}
+    <div class="banner warn" role="status" data-testid="migration-note">{say(note, null, snap?.migration_note_msgs?.[i])}</div>
   {/each}
   {#if snap && snap.hash_changed.length > 0 && !bannerDismissed}
     <div class="banner warn" role="status">

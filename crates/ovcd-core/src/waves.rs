@@ -8,7 +8,8 @@
 //! change may port it. See the PR for issue #19.
 
 use crate::checks::{Check, all_ok};
-use crate::pyfmt::fixed;
+use crate::text;
+use crate::text::{Arg, Text};
 use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
@@ -81,7 +82,7 @@ pub struct WaveResistanceResult {
     /// At the quoted speed, effective (thrust) power.
     pub added_power_kw: f64,
     pub checks: Vec<Check>,
-    pub warnings: Vec<String>,
+    pub warnings: Vec<Text>,
 }
 
 impl WaveResistanceResult {
@@ -141,54 +142,58 @@ pub fn compute(inp: &WaveResistanceInputs) -> Result<WaveResistanceResult, Strin
     let added_kw = r * v_ms; // kN * m/s = kW, effective (thrust) power
 
     let mut checks: Vec<Check> = Vec::new();
-    let mut warns: Vec<String> = Vec::new();
+    let mut warns: Vec<Text> = Vec::new();
 
     checks.push(Check::with_severity(
         "stawave1_short_wave_validity",
         0.0 < lol && lol < LAMBDA_OVER_LPP_MAX,
-        format!(
-            "lambda/Lpp = {} (lambda {} m on Lpp {} m). STAwave-1 assumes short waves, \
+        text!(
+            "check-stawave1-short-wave-validity",
+            "lambda/Lpp = {ratio} (lambda {wavelength} m on Lpp {lpp} m). STAwave-1 assumes short waves, \
              lambda/Lpp < 0.5; outside that it UNDER-predicts, and near lambda/Lpp = 1 it can \
              do so by more than 2x",
-            fixed(lol, 2),
-            fixed(lam, 0),
-            fixed(inp.lpp_m, 0)
+            ratio = Arg::fixed(lol, 2),
+            wavelength = Arg::fixed(lam, 0),
+            lpp = Arg::fixed(inp.lpp_m, 0),
         ),
         "warning",
     ));
     checks.push(Check::with_severity(
         "wave_height_within_screening_range",
         hs <= 3.0,
-        format!(
-            "H_s {} m; above about 3 m a screening formula is not the right tool and voluntary \
+        text!(
+            "check-wave-height-within-screening-range",
+            "H_s {hs} m; above about 3 m a screening formula is not the right tool and voluntary \
              speed reduction usually governs anyway",
-            fixed(hs, 2)
+            hs = Arg::fixed(hs, 2),
         ),
         "warning",
     ));
     checks.push(Check::with_severity(
         "bow_length_supplied",
         inp.bow_waterline_length_m > 0.0,
-        format!(
-            "L_BWL not given, assumed {} m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces \
+        text!(
+            "check-bow-length-supplied",
+            "L_BWL not given, assumed {bow_length} m = 0.2 x Lpp (a blunt barge bow). A finer bow reduces \
              added resistance, so this is the conservative assumption",
-            fixed(lbwl, 1)
+            bow_length = Arg::fixed(lbwl, 1),
         ),
         "warning",
     ));
     if inp.peak_wave_period_s <= 0.0 && hs > 0.0 {
-        warns.push(format!(
-            "no wave period given; T_p estimated at {} s from H_s, which sets only the validity \
+        warns.push(text!(
+            "warn-waves-period-estimated",
+            "no wave period given; T_p estimated at {tp} s from H_s, which sets only the validity \
              check, not the resistance",
-            fixed(tp, 1)
+            tp = Arg::fixed(tp, 1),
         ));
     }
     if inp.heading_deg_off_bow > 60.0 {
-        warns.push(
+        warns.push(text!(
+            "warn-waves-beam-seas-floor",
             "beam-ish seas: this module returns a FLOOR, because drift, rudder and \
              course-keeping loss is not modelled and it dominates off the bow"
-                .to_string(),
-        );
+        ));
     }
 
     Ok(WaveResistanceResult {

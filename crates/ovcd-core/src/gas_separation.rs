@@ -1,12 +1,12 @@
 //! Longitudinal separation between the gas cargo area and the rest of the vessel.
 //! Port of `core/gas_separation.py`. The rule text and clause numbers live in the Python file.
 
-use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
 use crate::checks::{Check, all_ok};
-use crate::pyfmt::fixed;
+use crate::text;
+use crate::text::{Arg, Text};
 
 // Rule constants, each with its clause in the Python file.
 pub const COFFERDAM_MIN_M: f64 = 0.60;
@@ -64,7 +64,7 @@ pub struct GasSeparationResult {
     pub service_space_m: f64,
     pub total_length_taken_m: f64,
     pub checks: Vec<Check>,
-    pub warnings: Vec<String>,
+    pub warnings: Vec<Text>,
 }
 
 impl GasSeparationResult {
@@ -96,34 +96,40 @@ pub fn compute(inp: &GasSeparationInputs) -> Result<GasSeparationResult, String>
         Check::new(
             "cofferdam_min_width",
             inp.cofferdam_m >= COFFERDAM_MIN_M - 1e-9,
-            format!(
-                "cofferdam {} m >= {} m (cl. 3.6.13)",
-                fixed(inp.cofferdam_m, 2),
-                fixed(COFFERDAM_MIN_M, 2)
+            text!(
+                "check-cofferdam-min-width",
+                "cofferdam {cofferdam} m >= {min} m (cl. 3.6.13)",
+                cofferdam = Arg::fixed(inp.cofferdam_m, 2),
+                min = Arg::fixed(COFFERDAM_MIN_M, 2),
             ),
         ),
         Check::new(
             "opening_setback",
             aft >= OPENING_SETBACK_M - 1e-9,
-            format!(
-                "aft separation {} m >= {} m from the cargo area to any entrance or openable \
+            text!(
+                "check-opening-setback",
+                "aft separation {aft} m >= {min} m from the cargo area to any entrance or openable \
                  window (cl. 3.3.7 / 3.3.11)",
-                fixed(aft, 2),
-                fixed(OPENING_SETBACK_M, 2)
+                aft = Arg::fixed(aft, 2),
+                min = Arg::fixed(OPENING_SETBACK_M, 2),
             ),
         ),
         Check::new(
             "fwd_end_bulkhead_space",
             fwd >= floor - 1e-9,
-            format!(
-                "forward end-bulkhead space {} m >= {} m ({}, cl. 3.5.3 / 3.6.3)",
-                fixed(fwd, 2),
-                fixed(floor, 2),
-                if inp.is_pressure_tank {
-                    "pressure tank"
+            text!(
+                "check-fwd-end-bulkhead-space",
+                "forward end-bulkhead space {fwd} m >= {min} m ({tank_kind}, cl. 3.5.3 / 3.6.3)",
+                fwd = Arg::fixed(fwd, 2),
+                min = Arg::fixed(floor, 2),
+                tank_kind = if inp.is_pressure_tank {
+                    Text::fixed(
+                        "check-fwd-end-bulkhead-space-pressure-tank",
+                        "pressure tank",
+                    )
                 } else {
-                    "standard"
-                }
+                    Text::fixed("check-fwd-end-bulkhead-space-standard", "standard")
+                },
             ),
         ),
     ];
@@ -135,6 +141,6 @@ pub fn compute(inp: &GasSeparationInputs) -> Result<GasSeparationResult, String>
         service_space_m: service,
         total_length_taken_m: aft + fwd,
         checks,
-        warnings: alloc::vec![CLAUSE_WARNING.to_string()],
+        warnings: alloc::vec![Text::fixed("warn-separation-clauses", CLAUSE_WARNING)],
     })
 }

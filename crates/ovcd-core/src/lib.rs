@@ -35,6 +35,7 @@ mod pystr_tables;
 pub mod resistance;
 pub mod squat;
 pub mod tanks;
+pub mod text;
 mod unprintable;
 pub mod vessel_classes;
 pub mod vessel_standards;

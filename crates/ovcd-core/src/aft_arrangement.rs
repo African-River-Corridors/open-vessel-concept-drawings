@@ -7,6 +7,8 @@ use alloc::vec::Vec;
 
 use crate::checks::{Check, all_ok};
 use crate::pyfmt::fixed;
+use crate::text;
+use crate::text::{Arg, Text};
 
 // ISO 40 ft container envelope (ISO 668 series 1, 1AAA high-cube).
 pub const ISO40_LENGTH_M: f64 = 12.192;
@@ -411,7 +413,7 @@ pub struct AftArrangementResult {
     pub wheelhouse_height_m: f64,
     pub block_top_lowered_m: f64,
     pub checks: Vec<Check>,
-    pub warnings: Vec<String>,
+    pub warnings: Vec<Text>,
 
     // --- Issue #180: gas-fuelled stern (zeros, empty or "rows" for battery_electric) ---
     pub propulsion: String,
@@ -831,72 +833,86 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, PyExc
         Check::new(
             "thrusters_fit_beam",
             thruster_beam_needed <= inp.beam,
-            format!(
-                "{} x {} m thrusters need {} m across a {} m beam",
-                n_thr,
-                fixed(inp.thruster_envelope_m, 2),
-                fixed(thruster_beam_needed, 2),
-                fixed(inp.beam, 2)
+            text!(
+                "check-thrusters-fit-beam",
+                "{count} x {envelope} m thrusters need {needed} m across a {beam} m beam",
+                count = n_thr,
+                envelope = Arg::fixed(inp.thruster_envelope_m, 2),
+                needed = Arg::fixed(thruster_beam_needed, 2),
+                beam = Arg::fixed(inp.beam, 2),
             ),
         ),
         Check::with_severity(
             "requested_thruster_count_fits",
             n_thr >= inp.n_thrusters,
-            format!(
-                "{} of {} requested thrusters fit; {} would need {} m of {} m beam",
-                n_thr,
-                inp.n_thrusters,
-                inp.n_thrusters,
-                fixed(requested_beam_needed, 2),
-                fixed(inp.beam, 2)
+            text!(
+                "check-requested-thruster-count-fits",
+                "{fit} of {requested} requested thrusters fit; {requested} would need {needed} m of {beam} m beam",
+                fit = n_thr,
+                requested = inp.n_thrusters,
+                needed = Arg::fixed(requested_beam_needed, 2),
+                beam = Arg::fixed(inp.beam, 2),
             ),
             "warning",
         ),
         Check::new(
             "containers_fit_beam",
             cont_w <= inp.beam,
-            format!(
-                "{} x 40 ft units abreast need {} m across a {} m beam",
-                n_per_row,
-                fixed(cont_w, 2),
-                fixed(inp.beam, 2)
+            text!(
+                "check-containers-fit-beam",
+                "{count} x 40 ft units abreast need {needed} m across a {beam} m beam",
+                count = n_per_row,
+                needed = Arg::fixed(cont_w, 2),
+                beam = Arg::fixed(inp.beam, 2),
             ),
         ),
         Check::with_severity(
             "units_fit_in_one_row",
             n_rows == 1,
-            format!(
-                "{} units in {} row(s) of {}; a second row adds {} m to the stern block and \
+            text!(
+                "check-units-fit-in-one-row",
+                "{units} units in {rows} row(s) of {per_row}; a second row adds {added} m to the stern block and \
                  comes straight off the cargo zone",
-                n_units,
-                n_rows,
-                n_per_row,
-                fixed(inp.container_length_m + inp.container_gap_m, 2)
+                units = n_units,
+                rows = n_rows,
+                per_row = n_per_row,
+                added = Arg::fixed(inp.container_length_m + inp.container_gap_m, 2),
             ),
             "warning",
         ),
         Check::new(
             "wheelhouse_fits_beam",
             inp.wheelhouse_width_m <= inp.beam,
-            format!(
-                "wheelhouse {} m wide on a {} m beam",
-                fixed(inp.wheelhouse_width_m, 2),
-                fixed(inp.beam, 2)
+            text!(
+                "check-wheelhouse-fits-beam",
+                "wheelhouse {width} m wide on a {beam} m beam",
+                width = Arg::fixed(inp.wheelhouse_width_m, 2),
+                beam = Arg::fixed(inp.beam, 2),
             ),
         ),
     ];
-    let mut warnings: Vec<String> = Vec::new();
+    let mut warnings: Vec<Text> = Vec::new();
     if gas {
-        let mut msg = format!(
-            "{} x 40 ft units beside a {} m wheelhouse need {} m of {} m beam",
-            n_units,
-            fixed(inp.wheelhouse_width_m, 2),
-            fixed(beside_w, 2),
-            fixed(inp.beam, 2)
-        );
-        if !beside {
-            msg.push_str("; they go in a row aft of the cab instead, which lengthens the block");
-        }
+        let msg = if beside {
+            text!(
+                "check-accom-beside-wheelhouse",
+                "{units} x 40 ft units beside a {wheelhouse} m wheelhouse need {needed} m of {beam} m beam",
+                units = n_units,
+                wheelhouse = Arg::fixed(inp.wheelhouse_width_m, 2),
+                needed = Arg::fixed(beside_w, 2),
+                beam = Arg::fixed(inp.beam, 2),
+            )
+        } else {
+            text!(
+                "check-accom-beside-wheelhouse-rows",
+                "{units} x 40 ft units beside a {wheelhouse} m wheelhouse need {needed} m of {beam} m beam\
+                 ; they go in a row aft of the cab instead, which lengthens the block",
+                units = n_units,
+                wheelhouse = Arg::fixed(inp.wheelhouse_width_m, 2),
+                needed = Arg::fixed(beside_w, 2),
+                beam = Arg::fixed(inp.beam, 2),
+            )
+        };
         checks.push(Check::with_severity(
             "accom_beside_wheelhouse",
             beside,
@@ -906,21 +922,23 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, PyExc
         checks.push(Check::new(
             "gensets_fit_beam",
             g_beam_needed <= inp.beam + 1e-9,
-            format!(
-                "{} x {} m gensets abreast need {} m across a {} m beam",
-                n_gen,
-                fixed(g_wid, 2),
-                fixed(g_beam_needed, 2),
-                fixed(inp.beam, 2)
+            text!(
+                "check-gensets-fit-beam",
+                "{count} x {width} m gensets abreast need {needed} m across a {beam} m beam",
+                count = n_gen,
+                width = Arg::fixed(g_wid, 2),
+                needed = Arg::fixed(g_beam_needed, 2),
+                beam = Arg::fixed(inp.beam, 2),
             ),
         ));
         checks.push(Check::with_severity(
             "gensets_fit_under_deck",
             g_hgt + 1.0 <= inp.depth,
-            format!(
-                "genset {} m + 1.00 m double bottom and deck structure (ESTIMATE) <= moulded depth {} m",
-                fixed(g_hgt, 2),
-                fixed(inp.depth, 2)
+            text!(
+                "check-gensets-fit-under-deck",
+                "genset {height} m + 1.00 m double bottom and deck structure (ESTIMATE) <= moulded depth {depth} m",
+                height = Arg::fixed(g_hgt, 2),
+                depth = Arg::fixed(inp.depth, 2),
             ),
             "warning",
         ));
@@ -928,23 +946,24 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, PyExc
             checks.push(Check::new(
                 "gensets_carry_load_with_one_in_reserve",
                 wide_f64(n_gen, -1) * g_kwe + 1e-9 >= l,
-                format!(
-                    "{} of {} x {} kWe sets carry {} kWe",
-                    n_gen - 1,
-                    n_gen,
-                    fixed(g_kwe, 0),
-                    fixed(l, 1)
+                text!(
+                    "check-gensets-carry-load-with-one-in-reserve",
+                    "{running} of {count} x {set_kwe} kWe sets carry {load} kWe",
+                    running = n_gen - 1,
+                    count = n_gen,
+                    set_kwe = Arg::fixed(g_kwe, 0),
+                    load = Arg::fixed(l, 1),
                 ),
             ));
         }
-        warnings.push(
+        warnings.push(Text::fixed(
+            "warn-aft-gas-stern-estimates",
             "Gas-fuelled stern block: the genset envelopes beyond the published engine (alternator, \
              base frame) and the engine-room and GVU-room clearances are ESTIMATES (no vendor GA). \
              The exhaust uptake and the fuel vent mast are not in the air draft (assumed lowerable). \
              Fuel is taken from the cargo boil-off (IGC Code chapter 16); no separate fuel tank is in \
-             the block."
-                .to_string(),
-        );
+             the block.",
+        ));
     }
     if let Some(obstruction) = inp.sightline_obstruction_m {
         let cleared = (wh_floor_hi + inp.wheelhouse_eye_above_floor_m)
@@ -953,22 +972,24 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, PyExc
         checks.push(Check::with_severity(
             "wheelhouse_sees_over_cargo",
             cleared,
-            format!(
-                "raised eye {} m >= obstruction {} m + {} m margin (lift used {} m of {} m)",
-                fixed(wh_floor_hi + inp.wheelhouse_eye_above_floor_m, 2),
-                fixed(obstruction, 2),
-                fixed(inp.sightline_margin_m, 2),
-                fixed(lift_used, 2),
-                fixed(inp.wheelhouse_max_lift_m, 2)
+            text!(
+                "check-wheelhouse-sees-over-cargo",
+                "raised eye {eye} m >= obstruction {obstruction} m + {margin} m margin (lift used {lift} m of {max_lift} m)",
+                eye = Arg::fixed(wh_floor_hi + inp.wheelhouse_eye_above_floor_m, 2),
+                obstruction = Arg::fixed(obstruction, 2),
+                margin = Arg::fixed(inp.sightline_margin_m, 2),
+                lift = Arg::fixed(lift_used, 2),
+                max_lift = Arg::fixed(inp.wheelhouse_max_lift_m, 2),
             ),
             "warning",
         ));
         if lift > inp.wheelhouse_max_lift_m + 1e-9 {
-            warnings.push(format!(
-                "Sightline needs {} m of lift; the column gives {} m. Raise the column or \
+            warnings.push(text!(
+                "warn-aft-sightline-lift",
+                "Sightline needs {lift} m of lift; the column gives {max_lift} m. Raise the column or \
                  lower the cargo top.",
-                fixed(lift, 2),
-                fixed(inp.wheelhouse_max_lift_m, 2)
+                lift = Arg::fixed(lift, 2),
+                max_lift = Arg::fixed(inp.wheelhouse_max_lift_m, 2),
             ));
         }
     }

@@ -6,7 +6,7 @@
 //! validation or default logic: every answer comes from [`DesignSession`].
 
 use crate::views;
-use ovcd_format::{DesignSession, HashStatus, Profile, RunOutcome};
+use ovcd_format::{DesignSession, HashStatus, Profile, RunOutcome, msg_json};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 
@@ -19,6 +19,8 @@ pub struct AppState {
     hash_changed: Vec<String>,
     /// What changed when an old (version 1) file was read as the current inputs, at open.
     migration_notes: Vec<String>,
+    /// The Message Id of each migration note, where it has one (ADR 0014).
+    migration_note_msgs: Vec<Value>,
 }
 
 fn first_option(session: &DesignSession) -> String {
@@ -42,6 +44,7 @@ impl AppState {
             active_option,
             hash_changed: Vec::new(),
             migration_notes: Vec::new(),
+            migration_note_msgs: Vec::new(),
         })
     }
 
@@ -61,6 +64,12 @@ impl AppState {
             dirty: false,
             active_option,
             hash_changed,
+            migration_note_msgs: report
+                .report
+                .migration_note_msgs
+                .iter()
+                .map(|m| m.as_ref().map_or(Value::Null, |m| msg_json(m, false)))
+                .collect(),
             migration_notes: report.report.migration_notes,
         })
     }
@@ -185,6 +194,7 @@ impl AppState {
         // A saved file carries fresh hashes and the current inputs, so the open-time warnings are over.
         self.hash_changed.clear();
         self.migration_notes.clear();
+        self.migration_note_msgs.clear();
     }
 
     pub fn file_name(&self) -> String {
@@ -220,6 +230,7 @@ impl AppState {
             "active_option": self.active_option,
             "hash_changed": self.hash_changed,
             "migration_notes": self.migration_notes,
+            "migration_note_msgs": self.migration_note_msgs,
         })
     }
 }

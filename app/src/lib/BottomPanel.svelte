@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { Evaluation, OptionEvaluation } from "./api";
   import StaleWhy from "./StaleWhy.svelte";
-  import { MAIN, TANKS, exact, hasTanks, show, valueAt, type Metric } from "./metrics";
-  import { t } from "./i18n.svelte";
+  import { MAIN, TANKS, exact, hasTanks, show, textIds, valueAt, type Metric } from "./metrics";
+  import { say, t } from "./i18n.svelte";
 
   // Outputs of the active Option, its checks and warnings, and a compare table of every Option.
   // The numbers are read from the engine's results object. While the active Option has a hard
@@ -25,7 +25,7 @@
 
   /** What to show for one Option: its fresh results, else its last good ones (out of date). */
   function column(o: OptionEvaluation): Column {
-    const errors = o.messages.filter((m) => m.severity === "error").map((m) => m.text);
+    const errors = o.messages.filter((m) => m.severity === "error").map((m) => say(m.text, null, m.msg));
     if (o.outcome.status === "results") {
       return { name: o.name, stale: false, results: o.outcome.results, message: null, errors };
     }
@@ -39,7 +39,7 @@
         errors,
       };
     }
-    return { name: o.name, stale: false, results: null, message: o.outcome.message, errors };
+    return { name: o.name, stale: false, results: null, message: say(o.outcome.message, null, o.outcome.msg), errors };
   }
 
   let columns = $derived((evaluation?.options ?? []).map(column));
@@ -53,6 +53,7 @@
     return [...list.filter((c) => !c.ok), ...list.filter((c) => c.ok)];
   });
   let warnings = $derived((valueAt(current?.results, ["warnings"]) as string[] | undefined) ?? []);
+  let ids = $derived(textIds(current?.results));
   let softWarnings = $derived((activeEval?.messages ?? []).filter((m) => m.severity === "warning"));
 
   function differs(m: Metric, c: Column): boolean {
@@ -85,7 +86,7 @@
                 {#if !(m.path[0] === "arrangement" && !hasTanks(current.results))}
                   <tr>
                     <th>{t(m.label)}</th>
-                    <td class="num" class:text={m.quantity === "text"} title={exact(m, v)}><span class:old={current.stale}>{show(m, v)}</span>{#if v !== null && v !== undefined && m.unit}<span class="unit">&nbsp;{m.unit}</span>{/if}</td>
+                    <td class="num" class:text={m.quantity === "text"} title={exact(m, v)}><span class:old={current.stale}>{show(m, v, ids)}</span>{#if v !== null && v !== undefined && m.unit}<span class="unit">&nbsp;{m.unit}</span>{/if}</td>
                   </tr>
                 {/if}
               {/each}
@@ -110,16 +111,16 @@
           {#each checks as c (c.name)}
             <li class={c.ok ? "ok" : "fail"}>
               <span class="tag"><span aria-hidden="true">{c.ok ? "✓" : "✕"}</span> {t(c.ok ? "app-pass" : "app-fail")}</span>
-              <strong>{c.name}</strong>
-              {#if c.message && c.message !== "OK"}<span class="msg">{c.message}</span>{/if}
+              <strong>{say(c.name, ids)}</strong>
+              {#if c.message && c.message !== "OK"}<span class="msg">{say(c.message, ids)}</span>{/if}
             </li>
           {/each}
         </ul>
         {#if warnings.length > 0 || softWarnings.length > 0}
           <h2>{t("app-warnings")}</h2>
           <ul class="warnings" data-testid="warnings">
-            {#each softWarnings as w}<li><span aria-hidden="true">▲</span> {w.text}</li>{/each}
-            {#each warnings as w}<li><span aria-hidden="true">▲</span> {w}</li>{/each}
+            {#each softWarnings as w}<li><span aria-hidden="true">▲</span> {say(w.text, null, w.msg)}</li>{/each}
+            {#each warnings as w}<li><span aria-hidden="true">▲</span> {say(w, ids)}</li>{/each}
           </ul>
         {/if}
       </section>
@@ -145,7 +146,7 @@
                 {#each columns as c (c.name)}
                   {@const v = valueAt(c.results, m.path)}
                   <td class="num" class:text={m.quantity === "text"} class:differs={differs(m, c)} class:active={c.name === active} class:old={c.stale} title={c.results ? exact(m, v) : (c.message ?? "")}>
-                    {c.results ? show(m, v) : c.message ? "" : "–"}
+                    {c.results ? show(m, v, textIds(c.results)) : c.message ? "" : "–"}
                   </td>
                 {/each}
               </tr>

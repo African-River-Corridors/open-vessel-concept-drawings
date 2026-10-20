@@ -8,9 +8,9 @@
     ok: boolean;
     message: string;
   }
-  import { t } from "../i18n.svelte";
+  import { say, t, type TextIds } from "../i18n.svelte";
 
-  let { checks }: { checks: Check[] } = $props();
+  let { checks, ids }: { checks: Check[]; ids: TextIds | null } = $props();
 
   const COLUMNS: { label: string; cell: "result" | "name" | "message" }[] = [
     { label: "app-rules-result", cell: "result" },
@@ -43,9 +43,9 @@
                 {#if col.cell === "result"}
                   <td><span class="tag {c.ok ? 'ok' : 'fail'}"><span aria-hidden="true">{c.ok ? "✓" : "✕"}</span> {t(c.ok ? "app-pass" : "app-fail")}</span></td>
                 {:else if col.cell === "name"}
-                  <th scope="row">{c.name}</th>
+                  <th scope="row">{say(c.name, ids)}</th>
                 {:else}
-                  <td class="message">{c.message}</td>
+                  <td class="message">{say(c.message, ids)}</td>
                 {/if}
               {/each}
             </tr>

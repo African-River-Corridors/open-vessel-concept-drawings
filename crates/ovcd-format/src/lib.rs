@@ -12,6 +12,7 @@ pub mod profile;
 mod run;
 pub mod session;
 mod simulate;
+mod text_ids;
 pub mod vdesign;
 
 pub use eval::{ENTRY_POINTS, EvalError, eval, parse_case};
@@ -24,6 +25,7 @@ pub use run::{
 pub use session::{
     DesignSession, Evaluation, Message, OpenReport, OptionEvaluation, Scope, Severity, input_schema,
 };
+pub use text_ids::msg_json;
 pub use vdesign::{
     Checked, Design, DesignOption, Report, Source, StoredInput, check, fill, fill_as_new,
     new_design,

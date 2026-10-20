@@ -18,9 +18,9 @@
     from_design: string[];
     core_default: string[];
   }
-  import { list as join, num, t } from "../i18n.svelte";
+  import { list as join, num, say, t, type TextIds } from "../i18n.svelte";
 
-  let { cost, phase }: { cost: Cost | null | undefined; phase: string | undefined } = $props();
+  let { cost, phase, ids }: { cost: Cost | null | undefined; phase: string | undefined; ids: TextIds | null } = $props();
 
   /** The core's budget items, by id (Message Ids `app-cost-item-…`). An item not listed shows under the core's name. */
   const ITEMS = [
@@ -65,7 +65,7 @@
   {:else if !cost}
     <p class="note" data-testid="capital-budget-none">{t("app-cost-none")}</p>
   {:else}
-    <p class="basis" data-testid="capital-budget-basis"><strong>{cost.basis}</strong> {t("app-cost-currency", { currency: cost.currency })}</p>
+    <p class="basis" data-testid="capital-budget-basis"><strong>{say(cost.basis, ids)}</strong> {t("app-cost-currency", { currency: cost.currency })}</p>
     <div class="tables">
       {#each sections as { key, caption, total, rows, subtotal } (key)}
         <table data-testid="cost-{key}">
@@ -98,7 +98,7 @@
     {#if failing.length > 0}
       <ul class="checks" data-testid="cost-checks">
         {#each failing as c (c.name)}
-          <li class:warn={c.severity !== "error"}><span class="chip" aria-hidden="true">{c.severity === "error" ? "✕" : "▲"}</span> <strong>{t(c.severity === "error" ? "app-cost-check-failed" : "app-cost-note", { check: words(c.name) })}</strong> {c.message}</li>
+          <li class:warn={c.severity !== "error"}><span class="chip" aria-hidden="true">{c.severity === "error" ? "✕" : "▲"}</span> <strong>{t(c.severity === "error" ? "app-cost-check-failed" : "app-cost-note", { check: words(c.name) })}</strong> {say(c.message, ids)}</li>
         {/each}
       </ul>
     {/if}

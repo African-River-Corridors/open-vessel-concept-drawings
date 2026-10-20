@@ -24,6 +24,8 @@
 //! result (see [`DRY_BULK_WING_VOID_M`]).
 
 use crate::profile::Profile;
+use ovcd_core::text;
+use ovcd_core::text::{Arg, Msg, Text};
 use serde::de::{DeserializeSeed, Deserializer, MapAccess, SeqAccess, Visitor};
 use serde_json::{Map, Value, json};
 use std::collections::HashSet;
@@ -1651,21 +1653,46 @@ pub struct Report {
     /// The warnings that say a version 1 file was changed to the current inputs as it was read
     /// (also in `warnings`), so a front end can show them on their own.
     pub migration_notes: Vec<String>,
+    /// The Message Id of each entry of `errors`, `warnings` and `migration_notes`, where the
+    /// message has one (ADR 0014). A message of an Option is `msg-option`, with the message
+    /// itself as its argument.
+    pub error_msgs: Vec<Option<Msg>>,
+    pub warning_msgs: Vec<Option<Msg>>,
+    pub migration_note_msgs: Vec<Option<Msg>>,
 }
 
 impl Report {
     /// Add a hard error and the inputs it is about.
     pub fn error(&mut self, text: String, inputs: &[&str]) {
-        self.errors.push(text);
-        self.error_inputs
-            .push(inputs.iter().map(|n| n.to_string()).collect());
+        self.error_text(Text::plain(text), inputs);
     }
 
     /// Add a soft warning and the inputs it is about.
     pub fn warning(&mut self, text: String, inputs: &[&str]) {
-        self.warnings.push(text);
+        self.warning_text(Text::plain(text), inputs);
+    }
+
+    /// Add a hard error, with its Message Id where it has one.
+    pub fn error_text(&mut self, text: Text, inputs: &[&str]) {
+        self.errors.push(text.en);
+        self.error_msgs.push(text.msg);
+        self.error_inputs
+            .push(inputs.iter().map(|n| n.to_string()).collect());
+    }
+
+    /// Add a soft warning, with its Message Id where it has one.
+    pub fn warning_text(&mut self, text: Text, inputs: &[&str]) {
+        self.warnings.push(text.en);
+        self.warning_msgs.push(text.msg);
         self.warning_inputs
             .push(inputs.iter().map(|n| n.to_string()).collect());
+    }
+
+    /// Add a warning that says how a file was changed as it was read: also a migration note.
+    pub fn migration_note(&mut self, text: Text, inputs: &[&str]) {
+        self.migration_notes.push(text.en.clone());
+        self.migration_note_msgs.push(text.msg.clone());
+        self.warning_text(text, inputs);
     }
 
     pub fn is_ok(&self) -> bool {
@@ -1800,7 +1827,14 @@ fn read_text(text: &str, profile: &Profile, missing: Missing) -> Checked {
     let root: Value = match serde_json::from_str(text) {
         Ok(v) => v,
         Err(e) => {
-            report.error(format!("the file is not JSON: {e}"), &[]);
+            report.error_text(
+                text!(
+                    "msg-file-not-json",
+                    "the file is not JSON: {error}",
+                    error = e.to_string()
+                ),
+                &[],
+            );
             return Checked {
                 design: None,
                 report,
@@ -1809,12 +1843,17 @@ fn read_text(text: &str, profile: &Profile, missing: Missing) -> Checked {
     };
     for (path, key) in duplicate_keys(text) {
         let place = if path.is_empty() {
-            "the file".to_string()
+            Text::fixed("msg-file-the-file", "the file")
         } else {
-            path
+            Text::plain(path)
         };
-        report.error(
-            format!("`{key}` appears twice in {place}; a key may appear once"),
+        report.error_text(
+            text!(
+                "msg-file-duplicate-key",
+                "`{key}` appears twice in {place}; a key may appear once",
+                key = key,
+                place = place
+            ),
             &[],
         );
     }
@@ -1911,29 +1950,51 @@ fn read_design(
     report: &mut Report,
 ) -> Option<Design> {
     let Some(root) = root.as_object() else {
-        report.error("the file must hold a JSON object".into(), &[]);
+        report.error_text(
+            Text::fixed("msg-file-not-object", "the file must hold a JSON object"),
+            &[],
+        );
         return None;
     };
     if root.get("format").and_then(Value::as_str) != Some("vdesign") {
-        report.error("the file needs `\"format\": \"vdesign\"`".into(), &[]);
+        report.error_text(
+            Text::fixed(
+                "msg-file-format",
+                "the file needs `\"format\": \"vdesign\"`",
+            ),
+            &[],
+        );
     }
     let version = root.get("format_version").and_then(Value::as_u64);
     match version {
         Some(OLDEST_FORMAT_VERSION..=FORMAT_VERSION) => {}
-        Some(v) => report.error(
-            format!(
-                "format_version {v} is not supported; this tool reads versions \
-                 {OLDEST_FORMAT_VERSION} to {FORMAT_VERSION}"
+        Some(v) => report.error_text(
+            text!(
+                "msg-file-version-unsupported",
+                "format_version {version} is not supported; this tool reads versions \
+                 {oldest} to {newest}",
+                version = v as i64,
+                oldest = OLDEST_FORMAT_VERSION as i64,
+                newest = FORMAT_VERSION as i64
             ),
             &[],
         ),
-        None => report.error("the file needs an integer `format_version`".into(), &[]),
+        None => report.error_text(
+            Text::fixed(
+                "msg-file-version-missing",
+                "the file needs an integer `format_version`",
+            ),
+            &[],
+        ),
     }
     let engine_version = match root.get("engine_version").and_then(Value::as_str) {
         Some(v) if !v.trim().is_empty() => v.to_string(),
         _ => {
-            report.error(
-                "the file needs a non-empty string `engine_version`".into(),
+            report.error_text(
+                Text::fixed(
+                    "msg-file-engine-version",
+                    "the file needs a non-empty string `engine_version`",
+                ),
                 &[],
             );
             String::new()
@@ -1942,7 +2003,14 @@ fn read_design(
     if let Some(units) = root.get("units")
         && units != "SI"
     {
-        report.error(format!("`units` must be \"SI\", not {units}"), &[]);
+        report.error_text(
+            text!(
+                "msg-file-units",
+                "`units` must be \"SI\", not {units}",
+                units = units.to_string()
+            ),
+            &[],
+        );
     }
     let defaults_profile = root
         .get("defaults_profile")
@@ -1958,15 +2026,28 @@ fn read_design(
             "options",
         ];
         if !known.contains(&key.as_str()) {
-            report.warning(format!("unknown top-level key `{key}` is ignored"), &[]);
+            report.warning_text(
+                text!(
+                    "msg-file-unknown-key",
+                    "unknown top-level key `{key}` is ignored",
+                    key = key
+                ),
+                &[],
+            );
         }
     }
     let Some(raw_options) = root.get("options").and_then(Value::as_array) else {
-        report.error("the file needs an `options` list".into(), &[]);
+        report.error_text(
+            Text::fixed("msg-file-no-options", "the file needs an `options` list"),
+            &[],
+        );
         return None;
     };
     if raw_options.is_empty() {
-        report.error("a Design needs at least one Option".into(), &[]);
+        report.error_text(
+            Text::fixed("msg-file-empty", "a Design needs at least one Option"),
+            &[],
+        );
     }
     let mut options = Vec::new();
     for (i, raw) in raw_options.iter().enumerate() {
@@ -1975,26 +2056,47 @@ fn read_design(
             .and_then(Value::as_str)
             .filter(|n| !n.trim().is_empty());
         let Some(name) = name else {
-            report.error(
-                format!("Option {} needs a non-empty string `name`", i + 1),
+            report.error_text(
+                text!(
+                    "msg-option-no-name",
+                    "Option {number} needs a non-empty string `name`",
+                    number = (i + 1) as i64
+                ),
                 &[],
             );
             continue;
         };
         if options.iter().any(|o: &DesignOption| o.name == name) {
-            report.error(
-                format!("two Options are named '{name}'; names must differ"),
+            report.error_text(
+                text!(
+                    "msg-option-names-differ",
+                    "two Options are named '{option}'; names must differ",
+                    option = name
+                ),
                 &[],
             );
         }
         let Some(inputs) = raw.get("inputs").and_then(Value::as_object) else {
-            report.error(format!("Option '{name}': needs an `inputs` object"), &[]);
+            report.error_text(
+                of_option(
+                    name,
+                    Text::fixed("msg-option-no-inputs", "needs an `inputs` object"),
+                ),
+                &[],
+            );
             continue;
         };
         for key in raw.as_object().into_iter().flat_map(|o| o.keys()) {
             if !["name", "inputs", "results_hash"].contains(&key.as_str()) {
-                report.warning(
-                    format!("Option '{name}': unknown key `{key}` is ignored"),
+                report.warning_text(
+                    of_option(
+                        name,
+                        text!(
+                            "msg-option-unknown-key",
+                            "unknown key `{key}` is ignored",
+                            key = key
+                        ),
+                    ),
                     &[],
                 );
             }
@@ -2011,11 +2113,23 @@ fn read_design(
             Some(Value::String(h)) if crate::run::is_hash_shape(h) => {
                 option.results_hash = Some(h.clone());
             }
-            Some(Value::String(_)) => report.error(
-                format!("Option '{name}': `results_hash` must be 64 hex digits"),
+            Some(Value::String(_)) => report.error_text(
+                of_option(
+                    name,
+                    Text::fixed(
+                        "msg-results-hash-shape",
+                        "`results_hash` must be 64 hex digits",
+                    ),
+                ),
                 &[],
             ),
-            Some(_) => report.error(format!("Option '{name}': `results_hash` must be text"), &[]),
+            Some(_) => report.error_text(
+                of_option(
+                    name,
+                    Text::fixed("msg-results-hash-text", "`results_hash` must be text"),
+                ),
+                &[],
+            ),
         }
         options.push(option);
     }
@@ -2055,17 +2169,25 @@ fn migrate_ruleset(
                 Some(v) => *v = json!("IGC_2G"),
                 None => {}
             }
-            "IGC_2G_EXACT is now IGC_2G: the same per-tank rule of IGC 2.4.1.1"
+            Text::fixed(
+                "msg-ruleset-exact-renamed",
+                "IGC_2G_EXACT is now IGC_2G: the same per-tank rule of IGC 2.4.1.1",
+            )
         }
-        (Some("IGC_2G"), Some(1)) => {
+        (Some("IGC_2G"), Some(1)) => Text::fixed(
+            "msg-ruleset-per-tank",
             "IGC_2G now uses the per-tank rule of IGC 2.4.1.1 (d(Vc) from the gross volume of \
-             each tank, dome included, measured plate to plate per 2.4.2), so results may change"
-        }
+             each tank, dome included, measured plate to plate per 2.4.2), so results may change",
+        ),
         _ => return,
     };
-    let text = format!("Option '{name}': `ruleset`: {text}");
-    report.migration_notes.push(text.clone());
-    report.warning(text, &["ruleset"]);
+    let text = text!(
+        "msg-input-note",
+        "`{input}`: {note}",
+        input = Arg::input("ruleset"),
+        note = text
+    );
+    report.migration_note(of_option(name, text), &["ruleset"]);
 }
 
 /// Change one Option of a version 1 file to the current inputs, with a warning for each change.
@@ -2083,10 +2205,9 @@ fn migrate_v1_option(
     profile: &Profile,
     report: &mut Report,
 ) {
-    let at = |msg: String| format!("Option '{name}': {msg}");
-    let note = |report: &mut Report, text: String, inputs: &[&str]| {
-        report.migration_notes.push(text.clone());
-        report.warning(text, inputs);
+    let at = |t: Text| of_option(name, t);
+    let note = |report: &mut Report, text: Text, inputs: &[&str]| {
+        report.migration_note(text, inputs);
     };
     let ruleset_is_adn = match inputs.get("ruleset") {
         Some(Value::String(s)) => s == "ADN_G",
@@ -2103,22 +2224,23 @@ fn migrate_v1_option(
         }
         note(
             report,
-            at(
-                "`ruleset` ADN_G is no longer offered (the engine applies IGC rules only to gas \
-                 tanks); this version 1 file was opened as IGC_2G"
-                    .into(),
-            ),
+            at(text!(
+                "msg-v1-adn-g",
+                "`{input}` ADN_G is no longer offered (the engine applies IGC rules only to gas \
+                 tanks); this version 1 file was opened as IGC_2G",
+                input = Arg::input("ruleset")
+            )),
             &["ruleset"],
         );
     }
     if inputs.remove("adn_tank_cap_m3").is_some() {
         note(
             report,
-            at(
-                "`adn_tank_cap_m3` is no longer an input (there is no tank volume cap); it was \
-                 dropped"
-                    .into(),
-            ),
+            at(text!(
+                "msg-v1-tank-cap",
+                "`{input}` is no longer an input (there is no tank volume cap); it was dropped",
+                input = Arg::input("adn_tank_cap_m3")
+            )),
             &["adn_tank_cap_m3"],
         );
     }
@@ -2138,10 +2260,12 @@ fn migrate_v1_option(
         );
         note(
             report,
-            at(format!(
-                "this version 1 file has no `max_tank_od_m`; it now uses the default {} m \
+            at(text!(
+                "msg-v1-max-tank-od",
+                "this version 1 file has no `{input}`; it now uses the default {value} m \
                  (version 1 used a fixed 12 m cap, so results may change)",
-                show(default)
+                input = Arg::input("max_tank_od_m"),
+                value = shown(default)
             )),
             &["max_tank_od_m"],
         );
@@ -2149,7 +2273,7 @@ fn migrate_v1_option(
 }
 
 /// Split a stored input into its value and marker. A bare value counts as typed.
-pub(crate) fn unmark(raw: &Value) -> Result<StoredInput, String> {
+pub(crate) fn unmark(raw: &Value) -> Result<StoredInput, Text> {
     if let Some(o) = raw.as_object()
         && o.contains_key("source")
     {
@@ -2157,11 +2281,21 @@ pub(crate) fn unmark(raw: &Value) -> Result<StoredInput, String> {
             Some("typed") => Source::Typed,
             Some("default") => Source::Default,
             Some("class") => Source::Class,
-            _ => return Err("`source` must be \"typed\", \"default\" or \"class\"".into()),
+            _ => {
+                return Err(Text::fixed(
+                    "msg-marker-source",
+                    "`source` must be \"typed\", \"default\" or \"class\"",
+                ));
+            }
         };
-        let value = o.get("value").ok_or("a marked input needs a `value`")?;
+        let value = o
+            .get("value")
+            .ok_or_else(|| Text::fixed("msg-marker-value", "a marked input needs a `value`"))?;
         if o.len() != 2 {
-            return Err("a marked input holds only `value` and `source`".into());
+            return Err(Text::fixed(
+                "msg-marker-only",
+                "a marked input holds only `value` and `source`",
+            ));
         }
         return Ok(StoredInput {
             value: value.clone(),
@@ -2181,7 +2315,7 @@ fn read_option(
     missing: Missing,
     report: &mut Report,
 ) -> DesignOption {
-    let at = |msg: String| format!("Option '{name}': {msg}");
+    let at = |t: Text| of_option(name, t);
     let mut left_out: Vec<&str> = Vec::new();
     let mut legacy_added: Vec<&'static str> = Vec::new();
     // A class named with no length, beam or Formation gives them; `fill` writes them in.
@@ -2194,7 +2328,14 @@ fn read_option(
     };
     for key in raw.keys() {
         if !INPUTS.iter().any(|s| s.name == key) {
-            report.error(at(format!("unknown input `{key}`")), &[]);
+            report.error_text(
+                at(text!(
+                    "msg-unknown-input",
+                    "unknown input `{key}`",
+                    key = key
+                )),
+                &[],
+            );
         }
     }
     let mut inputs: Vec<(String, StoredInput)> = Vec::new();
@@ -2225,7 +2366,7 @@ fn read_option(
             let stored = match unmark(raw_input) {
                 Ok(s) => s,
                 Err(e) => {
-                    report.error(at(format!("`{}`: {e}", spec.name)), &[spec.name]);
+                    report.error_text(at(input_error(spec.name, e)), &[spec.name]);
                     continue;
                 }
             };
@@ -2234,31 +2375,36 @@ fn read_option(
                     .as_ref()
                     .and_then(Value::as_str)
                     .unwrap_or("unknown");
+                let input = Arg::input(spec.name);
                 let text = if !cargo_includes(spec.cargos, cargo) {
-                    format!(
-                        "`{}` is not used for the Cargo {}; ignored",
-                        spec.name,
-                        cargo.unwrap_or("unknown")
+                    text!(
+                        "msg-input-unused-cargo",
+                        "`{input}` is not used for the Cargo {cargo}; ignored",
+                        input = input,
+                        cargo = cargo.unwrap_or("unknown")
                     )
                 } else if formation_includes(spec.formations, kind) {
-                    format!(
-                        "`{}` is not used for a {c} Cargo Containment; ignored",
-                        spec.name
+                    text!(
+                        "msg-input-unused-containment",
+                        "`{input}` is not used for a {containment} Cargo Containment; ignored",
+                        input = input,
+                        containment = c
                     )
                 } else {
-                    format!(
-                        "`{}` is not used for a {} Formation; ignored",
-                        spec.name,
-                        kind.unwrap_or("unknown")
+                    text!(
+                        "msg-input-unused-formation",
+                        "`{input}` is not used for a {formation} Formation; ignored",
+                        input = input,
+                        formation = kind.unwrap_or("unknown")
                     )
                 };
-                report.warning(at(text), &[spec.name]);
+                report.warning_text(at(text), &[spec.name]);
                 continue;
             }
             match check_value(spec, &stored.value, profile) {
                 Ok((value, warnings)) => {
                     for w in warnings.into_iter().map(&at) {
-                        report.warning(w, &[spec.name]);
+                        report.warning_text(w, &[spec.name]);
                     }
                     inputs.push((
                         spec.name.into(),
@@ -2268,13 +2414,17 @@ fn read_option(
                         },
                     ));
                 }
-                Err(e) => report.error(at(e), &[spec.name]),
+                Err(e) => report.error_text(at(e), &[spec.name]),
             }
             continue;
         }
         if spec.required {
-            report.error(
-                at(format!("missing required input `{}`", spec.name)),
+            report.error_text(
+                at(text!(
+                    "msg-input-required",
+                    "missing required input `{input}`",
+                    input = Arg::input(spec.name)
+                )),
                 &[spec.name],
             );
             continue;
@@ -2303,17 +2453,19 @@ fn read_option(
             // The input it depends on is missing or wrong; that error is already reported.
             Ok(None) => continue,
             Err(e) => {
-                report.error(at(e), &[spec.name]);
+                report.error_text(at(e), &[spec.name]);
                 continue;
             }
         };
         match missing {
             Missing::Refuse => left_out.push(spec.name),
-            Missing::Fill | Missing::FillProfile => report.warning(
-                at(format!(
-                    "`{}` {FILLED} {}, marked default",
-                    spec.name,
-                    show(&default)
+            Missing::Fill | Missing::FillProfile => report.warning_text(
+                at(text!(
+                    "msg-input-filled",
+                    "`{input}` was not stored in the file; wrote in the Defaults Profile value \
+                     {value}, marked default",
+                    input = Arg::input(spec.name),
+                    value = shown(&default)
                 )),
                 &[spec.name],
             ),
@@ -2333,14 +2485,17 @@ fn read_option(
         .position(|n| *n == "tank_dome_diameter_m")
     {
         legacy_added.remove(at_i);
-        let text = format!(
-            "Option '{name}': this file has no `tank_dome_diameter_m`; it now holds {:.1} m (marked \
-             default). The dome now counts in Vc for d(Vc) (IGC 2.4.1.1), so the results may \
-             change",
-            GAS_TANK_DOME_DIAMETER_M
+        let text = text!(
+            "msg-legacy-dome",
+            "this file has no `{input}`; it now holds {value} m (marked default). The dome now \
+             counts in Vc for d(Vc) (IGC 2.4.1.1), so the results may change",
+            input = Arg::input("tank_dome_diameter_m"),
+            value = Arg::num(
+                GAS_TANK_DOME_DIAMETER_M,
+                format!("{GAS_TANK_DOME_DIAMETER_M:.1}")
+            )
         );
-        report.migration_notes.push(text.clone());
-        report.warning(text, &["tank_dome_diameter_m"]);
+        report.migration_note(of_option(name, text), &["tank_dome_diameter_m"]);
     }
     // An LPG Cargo that names no carriage condition is read as fully pressurised, and the file says
     // so. The tank values it lacks keep what the engine used before, so the results are unchanged.
@@ -2354,41 +2509,49 @@ fn read_option(
             .find(|(k, _)| k == "cargo")
             .and_then(|(_, i)| i.value.as_str())
             .unwrap_or("LPG");
-        let text = format!(
-            "Option '{name}': this file has no `lpg_carriage_condition` for the LPG Cargo {cargo}; \
-             it is read as {DEFAULT_CARRIAGE_CONDITION} (marked default). The tank values the file \
-             lacks keep what the engine used before (design pressure, material, insulation, \
-             structure factor), so the results are unchanged; set the carriage condition and reset \
-             those inputs to take the defaults of that condition"
+        let text = text!(
+            "msg-legacy-carriage",
+            "this file has no `{input}` for the LPG Cargo {cargo}; it is read as {condition} \
+             (marked default). The tank values the file lacks keep what the engine used before \
+             (design pressure, material, insulation, structure factor), so the results are \
+             unchanged; set the carriage condition and reset those inputs to take the defaults of \
+             that condition",
+            input = Arg::input("lpg_carriage_condition"),
+            cargo = cargo,
+            condition = DEFAULT_CARRIAGE_CONDITION
         );
-        report.migration_notes.push(text.clone());
-        report.warning(text, &["lpg_carriage_condition"]);
+        report.migration_note(of_option(name, text), &["lpg_carriage_condition"]);
     }
-    if !legacy_added.is_empty() {
+    if let [one] = legacy_added.as_slice() {
+        let text = text!(
+            "msg-legacy-fixed-one",
+            "this file has no `{input}`; it now holds the fixed value the engine used before it \
+             was an input (marked default), so the results are unchanged",
+            input = Arg::input(*one)
+        );
+        report.migration_note(of_option(name, text), &legacy_added);
+    } else if !legacy_added.is_empty() {
         let list = legacy_added
             .iter()
             .map(|n| format!("`{n}`"))
             .collect::<Vec<_>>()
             .join(", ");
-        let text = format!(
-            "Option '{name}': this file has no {list}; {} the fixed value the engine \
-             used before it was an input (marked default), so the results are unchanged",
-            if legacy_added.len() == 1 {
-                "it now holds"
-            } else {
-                "each now holds"
-            }
+        let text = text!(
+            "msg-legacy-fixed-many",
+            "this file has no {inputs}; each now holds the fixed value the engine used before it \
+             was an input (marked default), so the results are unchanged",
+            inputs = list
         );
-        report.migration_notes.push(text.clone());
-        report.warning(text, &legacy_added);
+        report.migration_note(of_option(name, text), &legacy_added);
     }
     if !left_out.is_empty() {
-        report.error(
-            at(format!(
-                "inputs not stored in the file: {}. A saved Design holds every input as used, so a \
-             Defaults Profile edit cannot change it; run `ovcd fill` to write them in from the \
-             Defaults Profile, marked default",
-                left_out.join(", ")
+        report.error_text(
+            at(text!(
+                "msg-inputs-not-stored",
+                "inputs not stored in the file: {inputs}. A saved Design holds every input as used, \
+                 so a Defaults Profile edit cannot change it; run `ovcd fill` to write them in from \
+                 the Defaults Profile, marked default",
+                inputs = left_out.join(", ")
             )),
             &left_out,
         );
@@ -2410,7 +2573,7 @@ fn default_for(
     name: &str,
     inputs: &[(String, StoredInput)],
     profile: &Profile,
-) -> Result<Option<Value>, String> {
+) -> Result<Option<Value>, Text> {
     let got = |n: &str| {
         inputs
             .iter()
@@ -2442,16 +2605,27 @@ fn default_for(
             };
             (
                 profile.default_by(name, by, &key),
-                format!("`default_by_{by}` for {key}"),
+                text!(
+                    "msg-profile-case-keyed",
+                    "`default_by_{by}` for {key}",
+                    by = *by,
+                    key = key
+                ),
             )
         }
-        None => (profile.default(name), "a `default`".to_string()),
+        None => (
+            profile.default(name),
+            Text::fixed("msg-profile-case-default", "a `default`"),
+        ),
     };
     match value {
         Some(v) => Ok(Some(normalise(v.clone()))),
-        None => Err(format!(
-            "the Defaults Profile '{}' gives no default for `{name}` ({case} is missing)",
-            profile.name()
+        None => Err(text!(
+            "msg-profile-no-default",
+            "the Defaults Profile '{profile}' gives no default for `{input}` ({case} is missing)",
+            profile = profile.name(),
+            input = Arg::input(name),
+            case = case
         )),
     }
 }
@@ -2463,7 +2637,7 @@ fn table_default_for(
     name: &str,
     inputs: &[(String, StoredInput)],
     profile: &Profile,
-) -> Result<Option<Value>, String> {
+) -> Result<Option<Value>, Text> {
     let got = |n: &str| {
         inputs
             .iter()
@@ -2485,14 +2659,31 @@ fn table_default_for(
     ];
     match profile.table_default(name, &context) {
         Some(hit) => Ok(Some(normalise(hit.value.clone()))),
-        None => Err(format!(
-            "the Defaults Profile '{}' gives no default for `{name}` when the Cargo Containment is \
-             {containment}, the Cargo {cargo}{} (no row of `{name}.default_by_table` fits)",
-            profile.name(),
-            carriage.map_or(String::new(), |c| format!(
-                " and the carriage condition {c}"
-            ))
-        )),
+        None => Err(match carriage {
+            Some(c) => text!(
+                "msg-profile-no-table-default-carriage",
+                "the Defaults Profile '{profile}' gives no default for `{input}` when the Cargo \
+                 Containment is {containment}, the Cargo {cargo} and the carriage condition \
+                 {condition} (no row of `{key}.default_by_table` fits)",
+                profile = profile.name(),
+                input = Arg::input(name),
+                containment = containment,
+                cargo = cargo,
+                condition = c,
+                key = name
+            ),
+            None => text!(
+                "msg-profile-no-table-default",
+                "the Defaults Profile '{profile}' gives no default for `{input}` when the Cargo \
+                 Containment is {containment}, the Cargo {cargo} (no row of `{key}.default_by_table` \
+                 fits)",
+                profile = profile.name(),
+                input = Arg::input(name),
+                containment = containment,
+                cargo = cargo,
+                key = name
+            ),
+        }),
     }
 }
 
@@ -2502,7 +2693,7 @@ fn table_default_for(
 fn depth_default(
     inputs: &[(String, StoredInput)],
     profile: &Profile,
-) -> Result<Option<Value>, String> {
+) -> Result<Option<Value>, Text> {
     let get = |n: &str| inputs.iter().find(|(k, _)| k == n).map(|(_, i)| &i.value);
     let Some(group) = get("cargo").and_then(Value::as_str).and_then(depth_group) else {
         return Ok(None);
@@ -2517,10 +2708,12 @@ fn depth_default(
         .default_by("depth_to_beam_ratio", "cargo_group", group)
         .and_then(Value::as_f64)
         .ok_or_else(|| {
-            format!(
-                "the Defaults Profile '{}' gives no depth-to-beam ratio for {group} Cargo \
+            text!(
+                "msg-profile-no-depth-ratio",
+                "the Defaults Profile '{profile}' gives no depth-to-beam ratio for {group} Cargo \
                  (`depth_to_beam_ratio.default_by_cargo_group.{group}` is missing)",
-                profile.name()
+                profile = profile.name(),
+                group = group
             )
         })?;
     Ok(Some(json!(((ratio * beam) * 1000.0).round() / 1000.0)))
@@ -2536,26 +2729,27 @@ fn normalise(v: Value) -> Value {
 
 /// Check one value against its type and ranges. Returns the value as stored and any soft
 /// warnings, or the hard error.
-fn check_value(
-    spec: &InputSpec,
-    v: &Value,
-    profile: &Profile,
-) -> Result<(Value, Vec<String>), String> {
+fn check_value(spec: &InputSpec, v: &Value, profile: &Profile) -> Result<(Value, Vec<Text>), Text> {
     let name = spec.name;
+    let input = || Arg::input(name);
     match spec.kind {
         InputKind::Number { nullable } => {
             if v.is_null() {
                 return if nullable {
                     Ok((Value::Null, vec![]))
                 } else {
-                    Err(format!("`{name}` must be a number"))
+                    Err(must_be_number(name))
                 };
             }
             let x = v.as_f64().ok_or_else(|| {
                 if nullable {
-                    format!("`{name}` must be a number or null (none)")
+                    text!(
+                        "msg-number-or-null",
+                        "`{input}` must be a number or null (none)",
+                        input = input()
+                    )
                 } else {
-                    format!("`{name}` must be a number")
+                    must_be_number(name)
                 }
             })?;
             let warnings = number_ranges(name, name, x, profile)?;
@@ -2563,26 +2757,38 @@ fn check_value(
         }
         InputKind::Bool => match v {
             Value::Bool(_) => Ok((v.clone(), vec![])),
-            _ => Err(format!("`{name}` must be true or false")),
+            _ => Err(text!(
+                "msg-bool",
+                "`{input}` must be true or false",
+                input = input()
+            )),
         },
         InputKind::Choice(choices) => {
             let s = v.as_str().unwrap_or("");
             if choices.contains(&s) {
                 Ok((v.clone(), vec![]))
             } else if name == "hull_form" {
-                Err(format!(
-                    "`hull_form` = {v} is not supported; only raked_box exists for now"
+                Err(text!(
+                    "msg-hull-form",
+                    "`{input}` = {value} is not supported; only raked_box exists for now",
+                    input = input(),
+                    value = v.to_string()
                 ))
             } else {
-                Err(format!(
-                    "`{name}` = {v} must be one of: {}",
-                    choices.join(", ")
+                Err(text!(
+                    "msg-choice",
+                    "`{input}` = {value} must be one of: {choices}",
+                    input = input(),
+                    value = v.to_string(),
+                    choices = choices.join(", ")
                 ))
             }
         }
         InputKind::Cargo => {
-            let s = v.as_str().ok_or("`cargo` must be a string")?;
-            ovcd_core::cargo::get_cargo(s).map_err(|e| format!("`cargo`: {e}"))?;
+            let s = v.as_str().ok_or_else(|| {
+                text!("msg-string", "`{input}` must be a string", input = input())
+            })?;
+            ovcd_core::cargo::get_cargo(s).map_err(|e| input_error(name, Text::plain(e)))?;
             Ok((v.clone(), vec![]))
         }
         InputKind::Formation => check_formation(v, profile),
@@ -2591,46 +2797,70 @@ fn check_value(
             Value::String(s) if ovcd_core::vessel_classes::schemes().contains(&s.as_str()) => {
                 Ok((v.clone(), vec![]))
             }
-            _ => Err(format!(
-                "`{name}` = {v} is not a scheme with a Vessel Class that can define a vessel \
-                 (see `ovcd schema`)"
+            _ => Err(text!(
+                "msg-scheme",
+                "`{input}` = {value} is not a scheme with a Vessel Class that can define a vessel \
+                 (see `ovcd schema`)",
+                input = input(),
+                value = v.to_string()
             )),
         },
         InputKind::VesselClass => match v {
             Value::Null => Ok((Value::Null, vec![])),
             Value::String(s) => match ovcd_core::vessel_classes::find(s) {
                 Some(c) if c.pickable() => Ok((json!(c.id), vec![])),
-                Some(c) => Err(format!(
-                    "`{name}` = {v} cannot define a vessel: class {} gives no length or beam, or \
-                     its Formation ({}) is not one a Design has",
-                    c.id, c.formation
+                Some(c) => Err(text!(
+                    "msg-class-cannot-define",
+                    "`{input}` = {value} cannot define a vessel: class {class} gives no length or \
+                     beam, or its Formation ({formation}) is not one a Design has",
+                    input = input(),
+                    value = v.to_string(),
+                    class = c.id,
+                    formation = c.formation
                 )),
-                None => Err(format!(
-                    "`{name}` = {v} is not a Vessel Class (see `ovcd schema`)"
+                None => Err(text!(
+                    "msg-class-unknown",
+                    "`{input}` = {value} is not a Vessel Class (see `ovcd schema`)",
+                    input = input(),
+                    value = v.to_string()
                 )),
             },
-            _ => Err(format!("`{name}` must be a class id or null")),
+            _ => Err(text!(
+                "msg-class-id",
+                "`{input}` must be a class id or null",
+                input = input()
+            )),
         },
     }
 }
 
-fn check_formation(v: &Value, profile: &Profile) -> Result<(Value, Vec<String>), String> {
-    let o = v
-        .as_object()
-        .ok_or("`formation` must be an object with a `kind`")?;
+fn check_formation(v: &Value, profile: &Profile) -> Result<(Value, Vec<Text>), Text> {
+    let formation = || Arg::input("formation");
+    let o = v.as_object().ok_or_else(|| {
+        text!(
+            "msg-formation-object",
+            "`{input}` must be an object with a `kind`",
+            input = formation()
+        )
+    })?;
     let kind = o.get("kind").and_then(Value::as_str).unwrap_or("");
     if !FORMATION_KINDS.contains(&kind) {
-        return Err(format!(
-            "`formation.kind` must be one of: {}",
-            FORMATION_KINDS.join(", ")
+        return Err(text!(
+            "msg-formation-kind",
+            "`{input}` must be one of: {choices}",
+            input = Arg::input("formation.kind"),
+            choices = FORMATION_KINDS.join(", ")
         ));
     }
     let mut warnings = Vec::new();
     if kind != "pushed_convoy" {
         if o.len() != 1 {
-            return Err(format!(
-                "`formation`: a {kind} holds only `kind`; `abreast` and `in_line` are for a \
-                 pushed_convoy"
+            return Err(text!(
+                "msg-formation-only-kind",
+                "`{input}`: a {kind} holds only `kind`; `abreast` and `in_line` are for a \
+                 pushed_convoy",
+                input = formation(),
+                kind = kind
             ));
         }
         return Ok((json!({ "kind": kind }), warnings));
@@ -2641,28 +2871,28 @@ fn check_formation(v: &Value, profile: &Profile) -> Result<(Value, Vec<String>),
         ("in_line", "formation_in_line"),
     ] {
         let label = format!("formation.{key}");
-        let n = o
-            .get(key)
-            .and_then(Value::as_u64)
-            .ok_or_else(|| format!("`{label}` must be a whole number for a pushed_convoy"))?;
+        let n = o.get(key).and_then(Value::as_u64).ok_or_else(|| {
+            text!(
+                "msg-formation-count",
+                "`{input}` must be a whole number for a pushed_convoy",
+                input = Arg::input(label.as_str())
+            )
+        })?;
         warnings.extend(number_ranges(&label, profile_name, n as f64, profile)?);
         out[key] = json!(n);
     }
     if o.len() != 3 {
-        return Err(
-            "`formation`: a pushed_convoy holds only `kind`, `abreast` and `in_line`".into(),
-        );
+        return Err(text!(
+            "msg-formation-convoy-only",
+            "`{input}`: a pushed_convoy holds only `kind`, `abreast` and `in_line`",
+            input = formation()
+        ));
     }
     Ok((out, warnings))
 }
 
 /// Hard range (error) and soft range (warning) of a number.
-fn number_ranges(
-    label: &str,
-    name: &str,
-    x: f64,
-    profile: &Profile,
-) -> Result<Vec<String>, String> {
+fn number_ranges(label: &str, name: &str, x: f64, profile: &Profile) -> Result<Vec<Text>, Text> {
     let unit = profile.unit(name);
     let with_unit = |n: f64| {
         if unit.is_empty() || unit == "-" {
@@ -2672,19 +2902,25 @@ fn number_ranges(
         }
     };
     if let Some(bound) = profile.hard(name)?.breach(x) {
-        return Err(format!(
-            "`{label}` = {x} is out of range: must be {bound} (hard limit)"
+        return Err(text!(
+            "msg-hard-range",
+            "`{input}` = {value} is out of range: must be {bound} (hard limit)",
+            input = Arg::input(label),
+            value = number(x),
+            bound = bound
         ));
     }
     let mut warnings = Vec::new();
     if let Some(s) = profile.soft(name)?
         && (x < s.min || x > s.max)
     {
-        warnings.push(format!(
-            "`{label}` = {} is outside the usual range {} to {} (soft limit); accepted",
-            with_unit(x),
-            s.min,
-            with_unit(s.max)
+        warnings.push(text!(
+            "msg-soft-range",
+            "`{input}` = {value} is outside the usual range {min} to {max} (soft limit); accepted",
+            input = Arg::input(label),
+            value = Arg::num(x, with_unit(x)),
+            min = number(s.min),
+            max = Arg::num(s.max, with_unit(s.max))
         ));
     }
     Ok(warnings)
@@ -2695,7 +2931,7 @@ fn cross_checks(
     inputs: &[(String, StoredInput)],
     profile: &Profile,
     report: &mut Report,
-    at: &dyn Fn(String) -> String,
+    at: &dyn Fn(Text) -> Text,
 ) {
     let get = |n: &str| inputs.iter().find(|(k, _)| k == n).map(|(_, i)| &i.value);
     // A hull very long for its depth: a soft limit of the Defaults Profile (about 25).
@@ -2706,14 +2942,17 @@ fn cross_checks(
     ) && depth > 0.0
         && loa / depth > soft.max
     {
-        report.warning(
-            at(format!(
-                "`length_overall_m` = {} is {:.1} times `moulded_depth_m` = {}, over about {}: a \
-                 very slender hull for its depth (soft limit); accepted",
-                show(&json!(loa)),
-                loa / depth,
-                show(&json!(depth)),
-                show(&json!(soft.max))
+        report.warning_text(
+            at(text!(
+                "msg-slender-hull",
+                "`{input}` = {length} is {ratio} times `{depth_input}` = {depth}, over about \
+                 {limit}: a very slender hull for its depth (soft limit); accepted",
+                input = Arg::input("length_overall_m"),
+                length = shown(&json!(loa)),
+                ratio = Arg::num(loa / depth, format!("{:.1}", loa / depth)),
+                depth_input = Arg::input("moulded_depth_m"),
+                depth = shown(&json!(depth)),
+                limit = shown(&json!(soft.max))
             )),
             &["length_overall_m", "moulded_depth_m"],
         );
@@ -2732,11 +2971,15 @@ fn cross_checks(
                 .filter(|(_, phase)| *phase == props.phase)
                 .map(|(c, _)| *c)
                 .collect();
-            report.error(
-                at(format!(
-                    "`cargo_containment` = {containment} cannot carry {cargo} ({}); use {}",
-                    props.phase,
-                    fits.join(" or ")
+            report.error_text(
+                at(text!(
+                    "msg-containment-cargo",
+                    "`{input}` = {containment} cannot carry {cargo} ({phase}); use {fits}",
+                    input = Arg::input("cargo_containment"),
+                    containment = containment,
+                    cargo = cargo,
+                    phase = props.phase.to_string(),
+                    fits = fits.join(" or ")
                 )),
                 &["cargo_containment", "cargo"],
             );
@@ -2747,9 +2990,14 @@ fn cross_checks(
         get("moulded_depth_m").and_then(Value::as_f64),
     ) && fb >= d
     {
-        report.error(
-            at(format!(
-                "`min_freeboard_m` = {fb} must be less than `moulded_depth_m` = {d} (hard limit)"
+        report.error_text(
+            at(text!(
+                "msg-freeboard-depth",
+                "`{input}` = {freeboard} must be less than `{depth_input}` = {depth} (hard limit)",
+                input = Arg::input("min_freeboard_m"),
+                freeboard = number(fb),
+                depth_input = Arg::input("moulded_depth_m"),
+                depth = number(d)
             )),
             &["min_freeboard_m", "moulded_depth_m"],
         );
@@ -2765,9 +3013,12 @@ fn cross_checks(
         if let Some(n) = get(name).and_then(Value::as_f64)
             && n.fract() != 0.0
         {
-            report.error(
-                at(format!(
-                    "`{name}` = {n} must be a whole number (hard limit)"
+            report.error_text(
+                at(text!(
+                    "msg-whole-number",
+                    "`{input}` = {value} must be a whole number (hard limit)",
+                    input = Arg::input(name),
+                    value = number(n)
                 )),
                 &[name],
             );
@@ -2780,10 +3031,15 @@ fn cross_checks(
     ) && ((kind == "none") != (thickness == 0.0))
         && kind != "unspecified"
     {
-        report.warning(
-            at(format!(
-                "`tank_insulation_type` is {kind} but `tank_insulation_thickness_mm` is {thickness}: \
-                 the type and the thickness disagree (soft check); accepted"
+        report.warning_text(
+            at(text!(
+                "msg-insulation-disagree",
+                "`{input}` is {kind} but `{thickness_input}` is {thickness}: the type and the \
+                 thickness disagree (soft check); accepted",
+                input = Arg::input("tank_insulation_type"),
+                kind = kind,
+                thickness_input = Arg::input("tank_insulation_thickness_mm"),
+                thickness = number(thickness)
             )),
             &["tank_insulation_type", "tank_insulation_thickness_mm"],
         );
@@ -2831,10 +3087,15 @@ fn cross_checks(
         && let Some(fb) = get("min_freeboard_m").and_then(Value::as_f64)
         && fb > DEPTH_SEARCH_MAX_M
     {
-        report.error(
-            at(format!(
-                "`min_freeboard_m` = {fb} must be at most {DEPTH_SEARCH_MAX_M}, the deepest hull \
-             `optimise_depth` searches (hard limit)"
+        report.error_text(
+            at(text!(
+                "msg-freeboard-search",
+                "`{input}` = {freeboard} must be at most {limit}, the deepest hull `{search_input}` \
+                 searches (hard limit)",
+                input = Arg::input("min_freeboard_m"),
+                freeboard = number(fb),
+                limit = number(DEPTH_SEARCH_MAX_M),
+                search_input = Arg::input("optimise_depth")
             )),
             &["min_freeboard_m", "optimise_depth"],
         );
@@ -2845,10 +3106,14 @@ fn cross_checks(
         get("channel_under_keel_clearance_m").and_then(Value::as_f64),
     ) && depth < ukc
     {
-        report.error(
-            at(format!(
-                "`channel_depth_m` = {depth} must be at least `channel_under_keel_clearance_m` = \
-             {ukc} (hard limit)"
+        report.error_text(
+            at(text!(
+                "msg-channel-ukc",
+                "`{input}` = {depth} must be at least `{ukc_input}` = {ukc} (hard limit)",
+                input = Arg::input("channel_depth_m"),
+                depth = number(depth),
+                ukc_input = Arg::input("channel_under_keel_clearance_m"),
+                ukc = number(ukc)
             )),
             &["channel_depth_m", "channel_under_keel_clearance_m"],
         );
@@ -2867,7 +3132,7 @@ fn show_m(x: f64) -> String {
 fn impossible_results(
     inputs: &[(String, StoredInput)],
     report: &mut Report,
-    at: &dyn Fn(String) -> String,
+    at: &dyn Fn(Text) -> Text,
 ) {
     let get = |n: &str| inputs.iter().find(|(k, _)| k == n).map(|(_, i)| &i.value);
     let containment = get("cargo_containment").and_then(Value::as_str);
@@ -2881,11 +3146,16 @@ fn impossible_results(
             .unwrap_or(DRY_BULK_WING_VOID_M);
         let width = beam - 2.0 * void;
         if width < 0.0 {
-            report.error(
-                at(format!(
-                    "`beam_m` = {beam} leaves a hold width of {} m after the two \
-                 {void} m wing voids; {NEGATIVE}",
-                    show_m(width)
+            report.error_text(
+                at(text!(
+                    "msg-hold-width",
+                    "`{input}` = {beam} leaves a hold width of {width} m after the two {void} m \
+                     wing voids; {reason}",
+                    input = Arg::input("beam_m"),
+                    beam = number(beam),
+                    width = Arg::num(width, show_m(width)),
+                    void = number(void),
+                    reason = Text::fixed("msg-negative-hold", NEGATIVE)
                 )),
                 &["beam_m", "hold_wing_void_width_m"],
             );
@@ -2900,12 +3170,17 @@ fn impossible_results(
             .unwrap_or(DRY_BULK_COAMING_M);
         let height = (depth - double_bottom) + coaming;
         if height < 0.0 {
-            report.error(
-                at(format!(
-                    "`moulded_depth_m` = {depth} leaves a hold height of {} m (depth less the \
-                 {double_bottom} m double bottom, plus the {coaming} m \
-                 coaming); {NEGATIVE}",
-                    show_m(height)
+            report.error_text(
+                at(text!(
+                    "msg-hold-height",
+                    "`{input}` = {depth} leaves a hold height of {height} m (depth less the \
+                     {double_bottom} m double bottom, plus the {coaming} m coaming); {reason}",
+                    input = Arg::input("moulded_depth_m"),
+                    depth = number(depth),
+                    height = Arg::num(height, show_m(height)),
+                    double_bottom = number(double_bottom),
+                    coaming = number(coaming),
+                    reason = Text::fixed("msg-negative-hold", NEGATIVE)
                 )),
                 &[
                     "moulded_depth_m",
@@ -2945,10 +3220,53 @@ pub(crate) fn check_profile_defaults(profile: &Profile) -> Result<(), String> {
         defaults.extend(profile.table_values(spec.name));
         for d in defaults {
             check_value(spec, &d, profile)
-                .map_err(|e| format!("profile default is invalid: {e}"))?;
+                .map_err(|e| format!("profile default is invalid: {}", e.en))?;
         }
     }
     Ok(())
+}
+
+/// A number as a message writes it (Rust `{x}`).
+fn number(x: f64) -> Arg {
+    Arg::num(x, format!("{x}"))
+}
+
+/// An input value as a message writes it ([`show`]): a number keeps its value beside the text.
+fn shown(v: &Value) -> Arg {
+    match v.as_f64() {
+        Some(x) if v.is_number() => Arg::num(x, show(v)),
+        _ => Arg::Text(show(v)),
+    }
+}
+
+fn must_be_number(name: &str) -> Text {
+    text!(
+        "msg-number",
+        "`{input}` must be a number",
+        input = Arg::input(name)
+    )
+}
+
+/// A message about the stored value of one input: "`input`: what is wrong".
+fn input_error(name: &str, error: Text) -> Text {
+    text!(
+        "msg-input-error",
+        "`{input}`: {error}",
+        input = Arg::input(name),
+        error = error
+    )
+}
+
+/// A message about one Option: its English starts with "Option '<name>': ". The Message Id is
+/// `msg-option`, with the message itself as its argument, so a front end that shows the Option
+/// apart can take the message alone (see [`Report`]).
+pub(crate) fn of_option(name: &str, message: Text) -> Text {
+    text!(
+        "msg-option",
+        "Option '{option}': {message}",
+        option = name,
+        message = message
+    )
 }
 
 /// An input value as a person reads it.

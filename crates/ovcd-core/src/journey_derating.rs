@@ -6,7 +6,6 @@
 //! evaluation order so the rounding is the same. Python raises `ValueError` in the inputs'
 //! `__post_init__`; here [`compute`] runs the same check first and returns the message.
 
-use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec;
 use alloc::vec::Vec;
@@ -14,7 +13,9 @@ use alloc::vec::Vec;
 use crate::barge_capacity::BargeCapacityResult;
 use crate::checks::{Check, all_ok};
 use crate::hull::HullGeometry;
-use crate::pyfmt::{fixed, percent};
+use crate::pyfmt::percent;
+use crate::text;
+use crate::text::{Arg, Text};
 
 /// A volume-bound barge design and a channel, to be de-rated to a per-journey load.
 /// [`JourneyDeratingInputs::new`] gives the Python dataclass defaults.
@@ -81,7 +82,7 @@ pub struct JourneyDeratingResult {
     pub draft_at_achievable_m: f64,
     pub shed_tonnage_t: f64,
     pub checks: Vec<Check>,
-    pub warnings: Vec<String>,
+    pub warnings: Vec<Text>,
 }
 
 impl JourneyDeratingResult {
@@ -142,40 +143,49 @@ pub fn compute(inp: &JourneyDeratingInputs<'_>) -> Result<JourneyDeratingResult,
         Check::new(
             "capacity_is_volume_bound",
             !cap.overloaded,
-            "input capacity must be a feasible volume-bound design (not overloaded)",
+            text!(
+                "check-capacity-is-volume-bound",
+                "input capacity must be a feasible volume-bound design (not overloaded)"
+            ),
         ),
         Check::new(
             "floats",
             achievable > 0.0,
-            format!(
-                "channel must float some cargo (T_max {} m vs lightship draft)",
-                fixed(t_max, 2)
+            text!(
+                "check-floats",
+                "channel must float some cargo (T_max {t_max} m vs lightship draft)",
+                t_max = Arg::fixed(t_max, 2),
             ),
         ),
         Check::new(
             "ukc_consistent",
             inp.design_depth_m >= inp.ukc_m,
-            "design depth must be >= UKC (pass depth + UKC, never a pre-reduced T_max)",
+            text!(
+                "check-ukc-consistent",
+                "design depth must be >= UKC (pass depth + UKC, never a pre-reduced T_max)"
+            ),
         ),
         Check::with_severity(
             "utilisation_reasonable",
             utilisation >= inp.utilisation_floor,
-            format!(
-                "volume utilisation {} >= floor {}",
-                percent(utilisation, 0),
-                percent(inp.utilisation_floor, 0)
+            text!(
+                "check-utilisation-reasonable",
+                "volume utilisation {utilisation} >= floor {floor}",
+                utilisation = Arg::num(utilisation, percent(utilisation, 0)),
+                floor = Arg::num(inp.utilisation_floor, percent(inp.utilisation_floor, 0)),
             ),
             "warning",
         ),
     ];
     let mut warnings = Vec::new();
     if binding == "draft" {
-        warnings.push(format!(
-            "Draft-bound: shed {} t of {} t volume capacity to float at T_max = {} m (full-load draft {} m).",
-            fixed(shed, 0),
-            fixed(cargo_capacity, 0),
-            fixed(t_max, 2),
-            fixed(full_load_draft, 2)
+        warnings.push(text!(
+            "warn-journey-draft-bound",
+            "Draft-bound: shed {shed} t of {capacity} t volume capacity to float at T_max = {t_max} m (full-load draft {full_load_draft} m).",
+            shed = Arg::fixed(shed, 0),
+            capacity = Arg::fixed(cargo_capacity, 0),
+            t_max = Arg::fixed(t_max, 2),
+            full_load_draft = Arg::fixed(full_load_draft, 2),
         ));
     }
 

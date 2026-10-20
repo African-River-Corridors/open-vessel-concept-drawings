@@ -19,6 +19,8 @@
 
 use crate::profile::Profile;
 use crate::vdesign::{DesignOption, Report, Source, StoredInput, show};
+use ovcd_core::text;
+use ovcd_core::text::{Arg, Text};
 use ovcd_core::vessel_classes::{self, ClassRow};
 use serde_json::{Map, Value, json};
 
@@ -111,7 +113,7 @@ pub fn resolve(
     inputs: &mut Vec<(String, StoredInput)>,
     profile: &Profile,
     report: &mut Report,
-    at: &dyn Fn(String) -> String,
+    at: &dyn Fn(Text) -> Text,
 ) {
     let class_in = get(inputs, "vessel_class").cloned();
     let class_row = class_in
@@ -137,10 +139,14 @@ pub fn resolve(
     if let Some(c) = class_row
         && c.family != scheme
     {
-        report.error(
-            at(format!(
-                "`vessel_class` {} belongs to the scheme {}, not {scheme}",
-                c.id, c.family
+        report.error_text(
+            at(text!(
+                "msg-class-scheme",
+                "`{input}` {class} belongs to the scheme {family}, not {scheme}",
+                input = Arg::input("vessel_class"),
+                class = c.id,
+                family = c.family,
+                scheme = scheme.as_str()
             )),
             &["vessel_scheme", "vessel_class"],
         );
@@ -160,9 +166,12 @@ pub fn resolve(
         for name in LIMIT_NAMES {
             restore_default(inputs, name, profile);
         }
-        report.warning(
-            at(format!(
-                "the scheme {scheme} has no class for a {kind} Formation, so no class applies"
+        report.warning_text(
+            at(text!(
+                "msg-class-none",
+                "the scheme {scheme} has no class for a {kind} Formation, so no class applies",
+                scheme = scheme.as_str(),
+                kind = kind.as_str()
             )),
             &["vessel_scheme", "formation"],
         );
@@ -173,20 +182,25 @@ pub fn resolve(
         && typed.source == Source::Typed
         && row.id != class.id
     {
-        report.warning(
-            at(format!(
-                "`vessel_class` {} does not hold this length and beam; the vessel sits in {}",
-                row.id, class.id
+        report.warning_text(
+            at(text!(
+                "msg-class-moved",
+                "`{input}` {typed} does not hold this length and beam; the vessel sits in {class}",
+                input = Arg::input("vessel_class"),
+                typed = row.id,
+                class = class.id
             )),
             &["vessel_class", "length_overall_m", "beam_m"],
         );
     }
     set(inputs, "vessel_class", json!(class.id), Source::Class);
     if p.beyond_largest {
-        report.warning(
-            at(format!(
-                "this length and beam are beyond the largest {scheme} class ({})",
-                class.id
+        report.warning_text(
+            at(text!(
+                "msg-class-beyond",
+                "this length and beam are beyond the largest {scheme} class ({class})",
+                scheme = scheme.as_str(),
+                class = class.id
             )),
             &["length_overall_m", "beam_m", "vessel_scheme"],
         );
@@ -198,23 +212,31 @@ pub fn resolve(
             if let (Some(v), Some(limit)) = (typed.value.as_f64(), class_value)
                 && v > limit
             {
-                let what = if name == "draught_limit_m" {
-                    format!(
-                        "the draught of class {} ({} m, the top of its range)",
-                        class.id,
-                        show(&json!(limit))
+                let input = Arg::input(name);
+                let value = Arg::num(v, show(&typed.value));
+                let limit = Arg::num(limit, show(&json!(limit)));
+                let text = if name == "draught_limit_m" {
+                    text!(
+                        "msg-class-draught-above",
+                        "`{input}` = {value} is above the draught of class {class} ({limit} m, the \
+                         top of its range)",
+                        input = input,
+                        value = value,
+                        class = class.id,
+                        limit = limit
                     )
                 } else {
-                    format!(
-                        "the lowest bridge clearance of class {} ({} m)",
-                        class.id,
-                        show(&json!(limit))
+                    text!(
+                        "msg-class-clearance-above",
+                        "`{input}` = {value} is above the lowest bridge clearance of class {class} \
+                         ({limit} m)",
+                        input = input,
+                        value = value,
+                        class = class.id,
+                        limit = limit
                     )
                 };
-                report.warning(
-                    at(format!("`{name}` = {} is above {what}", show(&typed.value))),
-                    &[name],
-                );
+                report.warning_text(at(text), &[name]);
             }
         } else if let Some(limit) = class_value {
             set(inputs, name, json!(limit), Source::Class);
