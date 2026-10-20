@@ -1,6 +1,6 @@
 # Liquid bulk containment as typed Spaces; the ADN vessel type comes from the crude grade
 
-Status: **proposed**, for the maintainer's decision with spec 0006.
+Status: **accepted**, 2026-10-20, with spec 0006.
 
 ## Context
 

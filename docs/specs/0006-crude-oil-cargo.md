@@ -1,6 +1,6 @@
 # Spec 0006: Crude oil cargo (tank barges and small coastal tankers)
 
-Status: **draft, for the maintainer's decisions** (see "Decisions for the maintainer"). Decision record: ADR 0016.
+Status: **agreed with the maintainer, 2026-10-20** (D1–D7 accepted as recommended). Decision record: ADR 0016.
 Research: `docs/research/crude-oil/` (01 sea-going rules, 02 inland rules, 03 design practice, 04 codebase fit).
 
 Concept and preliminary design only, never approval (ADR 0011).
@@ -163,7 +163,7 @@ data only from two US contracts (03 §7).
 
 ## 8. Order of work
 
-Tickets to file after the decisions. "None" in the result column means the results hash does not move.
+Filed as #328 to #342, in the order of this table (ticket n = #327 + n). "None" in the result column means the results hash does not move.
 
 | # | Ticket | Result change | Depends on |
 |---|---|---|---|
@@ -186,7 +186,7 @@ Tickets to file after the decisions. "None" in the result column means the resul
 Tank fix tickets #313, #314, #316 and #317 do not block this. #315 shares files and the density model: land it first
 or agree its shape.
 
-## 9. Decisions for the maintainer
+## 9. Decisions (accepted 2026-10-20, all as recommended)
 
 - **D1 Scope.** First release up to 5,000 dwt and ADN type N and C tank vessels; larger-tanker rules as
   `not evaluated`. *Recommendation: yes.* Small coastal tankers sit inside ADR 0011; above 5,000 dwt they near the
