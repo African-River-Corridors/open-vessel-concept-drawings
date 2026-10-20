@@ -184,9 +184,14 @@ fn the_profile_basis_of_the_dome_diameter_says_what_it_is_and_cites_the_rule() {
     let basis = Profile::built_in()
         .basis("tank_dome_diameter_m")
         .to_string();
-    assert!(basis.contains("no published source yet"), "{basis}");
+    // Issue #316: the dome rule, an estimate with its two published points.
+    assert!(basis.contains("0.17 x the steel outer diameter"), "{basis}");
+    assert!(
+        basis.contains("an estimate on two published points"),
+        "{basis}"
+    );
     assert!(basis.contains("IGC 2.4.1.1"), "{basis}");
-    assert!(basis.contains("Counts in Vc only"), "{basis}");
+    assert!(basis.contains("counts in Vc only"), "{basis}");
 }
 
 fn clearance(dome_diameter_m: f64) -> f64 {

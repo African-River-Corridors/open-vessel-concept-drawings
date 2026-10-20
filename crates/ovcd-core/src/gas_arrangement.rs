@@ -28,7 +28,7 @@ use crate::barge_capacity::{
     DEFAULT_MAX_TANK_OD_M, DEFAULT_PUSHED_STERN_VOID_M, DEFAULT_TANK_DOME_DIAMETER_M,
     DEFAULT_TANK_DOME_HEIGHT_M, DEFAULT_TANK_SUPPORT_HEIGHT_M, DEFAULT_TANK_WALL_THICKNESS_MM,
     DEFAULT_TANKS_IN_LINE, DEFAULT_WING_TANK_GAP_M, DEFAULT_WING_TANK_HEIGHT_RATIO, TankDesign,
-    compute as capacity, dome_volume_m3,
+    compute as capacity, dome_dimensions, dome_volume_m3,
 };
 use crate::checks::{Check, all_ok};
 use crate::gas_stability::{self as gs, DEFAULT_WATER_DENSITY, GasCapacityResult};
@@ -84,6 +84,10 @@ pub struct FitOptions {
     /// Dome diameter (m): with the dome height it gives the dome's volume, which counts in Vc
     /// only (IGC 2.4.1.1). A nominal value; no published source yet.
     pub tank_dome_diameter_m: f64,
+    /// Issue #316: `true` takes the dome diameter, or height, from the dome rule of each tank
+    /// (`barge_capacity::dome_dimensions`) instead of the value above.
+    pub tank_dome_diameter_by_rule: bool,
+    pub tank_dome_height_by_rule: bool,
     /// Gap between the wing tank and the cargo tank, per side (m).
     pub wing_tank_gap_m: f64,
     /// Wing tank height as a fraction of the cargo tank outer diameter.
@@ -121,6 +125,8 @@ impl Default for FitOptions {
             tank_support_height_m: DEFAULT_TANK_SUPPORT_HEIGHT_M,
             tank_dome_height_m: DEFAULT_TANK_DOME_HEIGHT_M,
             tank_dome_diameter_m: DEFAULT_TANK_DOME_DIAMETER_M,
+            tank_dome_diameter_by_rule: false,
+            tank_dome_height_by_rule: false,
             wing_tank_gap_m: DEFAULT_WING_TANK_GAP_M,
             wing_tank_height_ratio: DEFAULT_WING_TANK_HEIGHT_RATIO,
             tank_wall_thickness_mm: Some(DEFAULT_TANK_WALL_THICKNESS_MM),
@@ -470,6 +476,8 @@ impl Search<'_> {
         inp.tank_support_height = self.o.tank_support_height_m;
         inp.dome_height = self.o.tank_dome_height_m;
         inp.dome_diameter = self.o.tank_dome_diameter_m;
+        inp.dome_diameter_by_rule = self.o.tank_dome_diameter_by_rule;
+        inp.dome_height_by_rule = self.o.tank_dome_height_by_rule;
         inp.wing_tank_gap_m = self.o.wing_tank_gap_m;
         inp.wing_tank_height_ratio = self.o.wing_tank_height_ratio;
         inp.tank_wall_thickness = self.o.tank_wall_thickness_mm;
@@ -531,8 +539,15 @@ impl Search<'_> {
                 self.beam,
                 total,
                 // Vc of one tank: the tank plus its dome (IGC 2.4.1.1).
-                total / tank_divisor(r.n_tanks_total)
-                    + dome_volume_m3(self.o.tank_dome_diameter_m, self.o.tank_dome_height_m),
+                total / tank_divisor(r.n_tanks_total) + {
+                    let (d, h) = dome_dimensions(
+                        opt_or_zero(r.tank_outer_diameter_m)
+                            - 2.0 * opt_or_zero(r.insulation_thickness_mm) / 1000.0,
+                        (!self.o.tank_dome_diameter_by_rule).then_some(self.o.tank_dome_diameter_m),
+                        (!self.o.tank_dome_height_by_rule).then_some(self.o.tank_dome_height_m),
+                    );
+                    dome_volume_m3(d, h)
+                },
                 opt_or_zero(r.insulation_thickness_mm),
             )?;
             // Killed by `a_cap_clearance_a_hair_under_the_rule_is_accepted_not_refused` (`+` to `-`).

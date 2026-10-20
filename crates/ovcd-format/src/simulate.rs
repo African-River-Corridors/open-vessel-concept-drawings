@@ -546,6 +546,20 @@ fn tank_wall_of(p: &Map<String, Value>) -> R<Option<f64>> {
     }
 }
 
+/// A dome size of the params (issue #316). A key left out keeps the fixed 2.0 m the engine used
+/// before; `null` (`None` here) asks for the dome rule, which is what a Design takes from the
+/// Defaults Profile.
+fn dome_of(p: &Map<String, Value>, key: &str) -> R<Option<f64>> {
+    match p.get(key) {
+        None => Ok(Some(match key {
+            "tank_dome_height_m" => ovcd_core::barge_capacity::DEFAULT_TANK_DOME_HEIGHT_M,
+            _ => ovcd_core::barge_capacity::DEFAULT_TANK_DOME_DIAMETER_M,
+        })),
+        Some(Value::Null) => Ok(None),
+        Some(v) => Ok(Some(py_float(v, &format!("params.{key}"))?)),
+    }
+}
+
 /// The Cargo-dependent tank design values from the params (issue #292). A key left out keeps what
 /// the engine used before these were inputs; `tank_allowable_stress_mpa` null or left out means the
 /// material's own.
@@ -752,6 +766,27 @@ fn tank_report(
             / 1000.0
     });
     let head = r.gas_basis.as_ref().map(|b| b.tanks.head_wall_thickness);
+    // The dome in force (issue #316): the rule of `dome_dimensions` on the steel diameter, or the
+    // typed size.
+    let dome = steel.map(|sd| {
+        ovcd_core::barge_capacity::dome_dimensions(
+            sd,
+            p.get("tank_dome_diameter_m").and_then(Value::as_f64).or(
+                if p.contains_key("tank_dome_diameter_m") {
+                    None
+                } else {
+                    Some(ovcd_core::barge_capacity::DEFAULT_TANK_DOME_DIAMETER_M)
+                },
+            ),
+            p.get("tank_dome_height_m").and_then(Value::as_f64).or(
+                if p.contains_key("tank_dome_height_m") {
+                    None
+                } else {
+                    Some(ovcd_core::barge_capacity::DEFAULT_TANK_DOME_HEIGHT_M)
+                },
+            ),
+        )
+    });
     let allowable = design.allowable_stress_mpa.or_else(|| {
         ovcd_core::pressure_vessel::get_tank_material(&design.material)
             .ok()
@@ -791,6 +826,19 @@ fn tank_report(
             ("tank_outer_diameter_m", opt_num(r.tank_outer_diameter_m)),
             ("tank_steel_outer_diameter_m", opt_num(steel)),
             ("tank_inner_diameter_m", opt_num(r.tank_inner_diameter_m)),
+            ("dome_diameter_m", opt_num(dome.map(|d| d.0))),
+            ("dome_height_m", opt_num(dome.map(|d| d.1))),
+            (
+                "dome_source",
+                json!(match (
+                    p.get("tank_dome_diameter_m").is_some_and(Value::is_null),
+                    p.get("tank_dome_height_m").is_some_and(Value::is_null),
+                ) {
+                    (true, true) => "rule",
+                    (false, false) => "override",
+                    _ => "rule and override",
+                }),
+            ),
             (
                 "diameter_datum",
                 json!(
@@ -1105,16 +1153,10 @@ fn simulate_gas(
             "tank_support_height_m",
             ovcd_core::barge_capacity::DEFAULT_TANK_SUPPORT_HEIGHT_M,
         )?,
-        tank_dome_height_m: get_or(
-            p,
-            "tank_dome_height_m",
-            ovcd_core::barge_capacity::DEFAULT_TANK_DOME_HEIGHT_M,
-        )?,
-        tank_dome_diameter_m: get_or(
-            p,
-            "tank_dome_diameter_m",
-            ovcd_core::barge_capacity::DEFAULT_TANK_DOME_DIAMETER_M,
-        )?,
+        tank_dome_height_m: dome_of(p, "tank_dome_height_m")?.unwrap_or(0.0),
+        tank_dome_diameter_m: dome_of(p, "tank_dome_diameter_m")?.unwrap_or(0.0),
+        tank_dome_height_by_rule: dome_of(p, "tank_dome_height_m")?.is_none(),
+        tank_dome_diameter_by_rule: dome_of(p, "tank_dome_diameter_m")?.is_none(),
         wing_tank_gap_m: get_or(
             p,
             "wing_tank_gap_m",
