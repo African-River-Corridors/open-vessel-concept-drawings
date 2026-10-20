@@ -118,9 +118,11 @@ input-tanks-in-line = Tanks in line
 
 input-tank-support-height-m = Tank support height
 
-input-tank-dome-height-m = Tank dome height
+input-tank-dome-height-m = Tank dome height (override)
+input-tank-dome-height-m-default-by = Cargo, LPG carriage condition
 
-input-tank-dome-diameter-m = Tank dome diameter
+input-tank-dome-diameter-m = Tank dome diameter (override)
+input-tank-dome-diameter-m-default-by = Cargo, LPG carriage condition
 
 input-wing-tank-gap-m = Wing tank gap
 
