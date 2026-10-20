@@ -478,12 +478,15 @@ The regulation and class items, by set (paragraphs as read in the free texts; se
   input Measure `input.weld_factor`; 4.23.3.1 allowable stress, an upper bound on
   `input.tank_allowable_stress` by the formula shape "lesser of Rm/A and Re/B" with A and B per steel
   class as data (A 3, B 1.5 for nickel and carbon-manganese steels; A 3.5, B 1.5 for austenitic steels;
-  A 4, B 1.5 for aluminium alloys). The material strengths Rm and Re stay unverified inputs. The S690QL1
-  default (285 MPa, Rm 770 / 2.7) is above Rm/3 = 256.7 MPa, so this Rule enters `1.0.0` as `warn` with
-  a new finding (see #292); 304L, 316L and 9Ni meet it with the engine's strengths. Damage survival 2.7:
-  `not evaluated`. The filling limit of 15.3 stays the Defaults Profile basis of the `fill_ratio` input;
-  the loading limit of 15.5.1 (LL = FL × ρR / ρL) is a later Rule, with the cargo densities by carriage
-  condition (#292 follow-up).
+  A 4, B 1.5 for aluminium alloys). The material strengths Rm and Re are now cited in the material data
+  (#313; the Rule still marks them unverified until a second reader checks them). The S690QL1 default was
+  285 MPa (Rm 770 / 2.7), above Rm/3 = 256.7 MPa (the finding of #292); since #313 a new Design takes
+  256.7 MPa, and only a file saved before keeps 285 MPa (`tank_allowable_stress_basis` =
+  `published_design`), so this Rule enters `1.0.0` as `warn` for those files. 304L, 316L and 9Ni meet it.
+  Damage survival 2.7: `not evaluated`. The filling limit of 15.3 stays the Defaults Profile basis of the
+  `fill_ratio` input. Since #315 the engine loads an LPG Cargo to the loading limit of 15.5.1 (LL = FL ×
+  ρR / ρL) with the cargo densities by carriage condition; `igc/15.5.1/loading-limit` as a Rule that
+  checks it is later.
 - **`lr-inland-gas`** (Lloyd's Register, Rules and Regulations for the Classification of Inland
   Waterways Ships, Pt 4 Ch 4 Sec 3, July 2022 edition as cited by the code; draft): opening setback 2.00 m (3.3.7, 3.3.11; same value in ADN 9.3.1.17.4), cited and
   matching; cofferdam 0.60 m (3.6.13 is a type C clause, not a gas tank clause) and end-bulkhead space
@@ -646,7 +649,7 @@ section now settles them:
 13. "`fit` must meet every selected rule" could not hold for `not evaluated` Rules. The verdict now
     names them (maintainer decision 5).
 14. Defaults were never checked against the Rules that bound them. A defaults coherence test now does,
-    and it finds the S690QL1 allowable stress (see #292).
+    and it finds the S690QL1 allowable stress (see #292; the default is fixed by #313).
 15. The first draft named a Rule `igc/2.4.1.1/d-vc`. d(Vc) is a formula, not a requirement; for type 2G
     the requirement is in 2.4.1.2. d(Vc) is now the set's table `igc-d-vc`, cited to 2.4.1.1.
 
@@ -667,7 +670,7 @@ clauses). "Fixed" means a merged change already did what the disposition asks.
 | Vc includes the dome | per-tank gross volume | Measure `tank.vc` | Cited, matches. Fixed: dome added (#237) |
 | `pressure_vessel` minimum thickness | 3 / 3 / 5 mm by material | `igc/4.23.2.1.2/min-thickness` | Cited, matches |
 | `DEFAULT_WELD_EFFICIENCY` | 0.95 | `igc/4.23.2.1.3/weld-factor` | Cited, matches |
-| allowable stress f | lesser of Rm/A, Re/B | `igc/4.23.3.1/allowable-stress` | Formula verified; material strengths unverified |
+| allowable stress f | lesser of Rm/A, Re/B | `igc/4.23.3.1/allowable-stress` | Formula verified; material strengths cited (#313), unverified by a second reader. Fixed: S690QL1 default 256.7 MPa (#313) |
 | shell and head thickness formulas | t = PR/(fE − 0.6P) and two head forms | Measure `tank.wall_thickness` | No checkable source (paywalled pressure-vessel code): unverified |
 | `gas_stability` area 0–30° | ≥ 0.055 m·rad | `is2008/A.2.2.1/area-0-30` | Cited, matches |
 | `gas_stability` area 0–40° | ≥ 0.090 m·rad, always to 40° | `is2008/A.2.2.1/area-0-40` | Cited, measure differs (no down-flooding angle): finding |

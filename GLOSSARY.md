@@ -61,6 +61,34 @@ refrigerated or cryogenic (cooled, near atmospheric pressure). An input for LPG 
 design defaults follow the Cargo Containment, the Cargo and this condition.
 _Avoid_: LPG type, LPG mode
 
+**Allowable Stress Basis**:
+Where the allowable stress of a tank steel comes from when no stress is typed. The IGC basis is the
+limit of IGC 4.23.3.1 for Type C tanks: the lesser of Rm/A and Re/B, with the steel's specified minimum
+tensile strength Rm and yield stress Re, and A and B by steel class (3 and 1.5 for nickel and
+carbon-manganese steels, 3.5 and 1.5 for austenitic steels). The old basis keeps the stress a file was
+saved with (S690QL1 at 285 MPa, an inland basis above the IGC limit).
+_Avoid_: safety factor (on its own), design stress
+
+**Filling Limit**:
+The largest share of a cargo tank's volume that liquid may fill when the cargo has reached the
+reference temperature (IGC 15.1.1). 98 % by default (IGC 15.3). The fill ratio input holds it.
+_Avoid_: fill level, ullage
+
+**Loading Limit**:
+The largest share of a cargo tank's volume to which it may be loaded (IGC 15.1.2): the Filling Limit
+times the cargo density at the reference temperature over the density at the loading temperature
+(IGC 15.5.1). The reference temperature is the one at which the vapour pressure equals the relief
+valve setting when the cargo has no temperature control, and the loading temperature when it has. An
+LPG Cargo is loaded to it; it is never above the Filling Limit.
+_Avoid_: fill ratio (it is the Filling Limit), loading level
+
+**Dome Rule**:
+The default size of a Type C tank's dome: diameter the larger of 1.2 m and 0.17 times the steel outer
+diameter, height above the tank equal to the diameter. An estimate on two published tanks. The dome
+counts in the tank's gross volume Vc (IGC 2.4.1.1) and raises the tank top and the air draft. A typed
+diameter or height replaces it.
+_Avoid_: dome height default, standard dome
+
 **Tank Outer Diameter**:
 The diameter of a Type C tank measured to the outside of its insulation. The steel outer diameter is
 that less twice the insulation thickness. The side and bottom clearances, the tank top and the drawing
