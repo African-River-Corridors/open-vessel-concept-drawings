@@ -179,9 +179,9 @@ contrast target. A border that marks a control (an input box, a toggle) uses `--
 - **The hand lettering is for display only.** It is never used for inputs, numbers, tables, messages
   or body text.
 - **The app bundles its fonts.** It runs offline, and never loads Google Fonts or any other web font
-  service at run time. The font files live in `app/src/fonts/`, each with its SIL Open Font License in
-  `app/public/licenses/`. The drawing font stays where the drawing crate vendors it
-  (`crates/ovcd-draw/standard/fonts/`).
+  service at run time. The font files live in `app/src/fonts/` as woff2, each with its SIL Open Font
+  License in `app/public/licenses/`. The drawing font stays where the drawing crate vendors it
+  (`crates/ovcd-draw/standard/fonts/`, TTF); the app uses a woff2 copy of it.
 - **Scale (px):** 11 tags and captions · 12 panel heads · 13 UI body · 14 tabs and buttons · 16 group
   titles (serif) · 20 dialog titles (serif) · 24, 32, 48 splash.
 - **Line height:** 1.35 in the UI, 1.6 for reading text.
@@ -240,6 +240,8 @@ Primary (one per dialog): `--accent` ground, `--accent-ink` text. Hover: 120 ms 
 A typed value shows "reset", as now. Number boxes are right-aligned and tabular, with the unit after the
 box. Box: `--surface` ground, 1 px `--rule-strong` border. Focus: 2 px `--accent` ring. Error: 2 px
 `--fail` border, then `✕` and one sentence with the limit. Warning: `▲` and one sentence in `--warn`.
+Dropdowns use the same box with `appearance: none` and a drawn arrow in `currentColor`, so they look
+the same on every system.
 Help text and tooltips keep their words.
 
 **Outputs.** The name at the left, the number at the right, the unit after it in `--ink-3`. Out of date:

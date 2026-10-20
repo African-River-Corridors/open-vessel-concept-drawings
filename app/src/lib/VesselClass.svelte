@@ -119,7 +119,8 @@
   .modes label { display: flex; gap: 4px; align-items: center; }
   .field { margin: 6px 0; }
   .label { display: block; font-size: var(--fs-12); color: var(--ink-2); }
-  select { width: 100%; padding: 3px 5px; font: inherit; color: var(--ink); background: var(--surface); border: var(--lw-thin) solid var(--rule-strong); border-radius: var(--radius); box-sizing: border-box; }
+  select { width: 100%; padding: 3px 5px; font: inherit; color: var(--ink); background-color: var(--surface); border: var(--lw-thin) solid var(--rule-strong); border-radius: var(--radius); box-sizing: border-box; }
+  select { padding-right: var(--sp-5); }
   select:focus-visible { outline-offset: 0; }
   .sits { margin-top: 6px; font-size: var(--fs-13); }
   .dim { font-size: var(--fs-12); color: var(--ink-3); margin-top: 2px; }

@@ -183,10 +183,12 @@
   .link:hover:not(:disabled) { background: none; }
   .row { display: flex; gap: 6px; align-items: center; }
   .row.convoy label { display: flex; flex-direction: column; font-size: var(--fs-11); color: var(--ink-3); }
-  input[type="text"], select { width: 100%; padding: 3px 5px; font: inherit; color: var(--ink); background: var(--surface); border: var(--lw-thin) solid var(--rule-strong); border-radius: var(--radius); box-sizing: border-box; }
+  input[type="text"], select { width: 100%; padding: 3px 5px; font: inherit; color: var(--ink); background-color: var(--surface); border: var(--lw-thin) solid var(--rule-strong); border-radius: var(--radius); box-sizing: border-box; }
+  select { padding-right: var(--sp-5); }
   input[type="text"] { text-align: right; font-variant-numeric: tabular-nums; }
   input:focus-visible, select:focus-visible { outline-offset: 0; }
   input.invalid, select.invalid { border-width: var(--lw-thick); border-color: var(--fail); padding: 2px 4px; }
+  select.invalid { padding-right: calc(var(--sp-5) - 1px); }
   .unit { min-width: 2.2em; font-size: var(--fs-12); color: var(--ink-3); }
   .none { font-size: var(--fs-12); display: flex; gap: 4px; align-items: center; white-space: nowrap; }
   .msg { font-size: var(--fs-12); margin-top: 2px; }

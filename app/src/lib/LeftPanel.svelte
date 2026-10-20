@@ -132,7 +132,8 @@
 <style>
   .panel { padding: 10px var(--sp-3); }
   h2 { font-family: var(--font-serif); font-size: var(--fs-16); font-weight: 600; color: var(--ink); margin: 10px 0 4px; }
-  select, input[type="text"] { width: 100%; padding: 3px 5px; font: inherit; color: var(--ink); background: var(--surface); border: var(--lw-thin) solid var(--rule-strong); border-radius: var(--radius); box-sizing: border-box; }
+  select, input[type="text"] { width: 100%; padding: 3px 5px; font: inherit; color: var(--ink); background-color: var(--surface); border: var(--lw-thin) solid var(--rule-strong); border-radius: var(--radius); box-sizing: border-box; }
+  select { padding-right: var(--sp-5); }
   select:focus-visible, input[type="text"]:focus-visible { outline-offset: 0; }
   .buttons { display: flex; gap: var(--sp-1); margin-top: 6px; flex-wrap: wrap; }
   .buttons button, .inline button { font-size: var(--fs-13); }
