@@ -1,5 +1,7 @@
 <script lang="ts">
   // The first-run notice (a click-through, no warranty). It shows once per user and from About.
+  import { t } from "./i18n.svelte";
+
   let { onClose }: { onClose: () => void } = $props();
   let button: HTMLButtonElement;
   $effect(() => button?.focus());
@@ -7,16 +9,16 @@
 
 <div class="veil">
   <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="notice-title" data-testid="notice">
-    <h2 id="notice-title">Before you start</h2>
+    <h2 id="notice-title">{t("app-notice-title")}</h2>
     <div class="tb">
-      <div><span class="k">Version</span><span class="v">{__APP_VERSION__}</span></div>
-      <div><span class="k">Licence</span><span class="v">Apache 2.0</span></div>
+      <div><span class="k">{t("app-notice-version")}</span><span class="v">{__APP_VERSION__}</span></div>
+      <div><span class="k">{t("app-notice-licence")}</span><span class="v">Apache 2.0</span></div>
     </div>
-    <p class="scope">▲ Concept design. Results are not verified.</p>
-    <p>OVCD is a concept design tool.</p>
-    <p>Its results are not verified. Known engineering findings are under review.</p>
-    <p>There is no warranty. OVCD is open source under the Apache License 2.0.</p>
-    <button bind:this={button} onclick={onClose}>I understand</button>
+    <p class="scope">▲ {t("app-notice-scope")}</p>
+    <p>{t("app-notice-tool")}</p>
+    <p>{t("app-notice-unverified")}</p>
+    <p>{t("app-notice-warranty")}</p>
+    <button bind:this={button} onclick={onClose}>{t("app-notice-accept")}</button>
   </div>
 </div>
 

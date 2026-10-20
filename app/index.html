@@ -8,22 +8,22 @@
   </head>
   <body>
     <div id="app"></div>
-    <div id="splash" role="dialog" aria-label="OVCD is starting">
+    <div id="splash" role="dialog" aria-label="OVCD is starting" data-i18n-aria="app-splash-starting">
       <div class="frame">
         <div class="bp">
           <div class="brand">
             <img src="/src/assets/ovcd-lockup-reversed-clear.svg" alt="OVCD, Open Vessel Concept Design" />
-            <p class="tagline">An open instrument for the <em>concept and preliminary design</em> of inland and coastal vessels.</p>
+            <p class="tagline" data-i18n-tagline>An open instrument for the <em>concept and preliminary design</em> of inland and coastal vessels.</p>
           </div>
           <div class="drawing" aria-hidden="true"><img src="/src/assets/splash-midship-section.svg" alt="" /></div>
           <div class="tb">
-            <div><span class="k">Version</span><span class="v" id="splash-version"></span></div>
-            <div aria-live="polite"><span class="k">State</span><span class="v">Starting the engine</span></div>
+            <div><span class="k" data-i18n="app-notice-version">Version</span><span class="v" id="splash-version"></span></div>
+            <div aria-live="polite"><span class="k" data-i18n="app-splash-state">State</span><span class="v" data-i18n="app-splash-starting-engine">Starting the engine</span></div>
             <div class="notice">
-              <span class="k">Before you start</span>
-              <span class="v"><b>OVCD is a concept design tool.</b> Its results are not verified. Known engineering findings are under review. There is no warranty.</span>
+              <span class="k" data-i18n="app-notice-title">Before you start</span>
+              <span class="v"><b data-i18n="app-notice-tool">OVCD is a concept design tool.</b> <span data-i18n="app-splash-notice">Its results are not verified. Known engineering findings are under review. There is no warranty.</span></span>
             </div>
-            <div><span class="k">Licence</span><span class="v">Apache 2.0</span></div>
+            <div><span class="k" data-i18n="app-notice-licence">Licence</span><span class="v">Apache 2.0</span></div>
           </div>
         </div>
       </div>

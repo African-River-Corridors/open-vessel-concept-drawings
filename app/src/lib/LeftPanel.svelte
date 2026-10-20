@@ -2,6 +2,7 @@
   import type { OptionEvaluation, Schema, Snapshot } from "./api";
   import InputField from "./InputField.svelte";
   import VesselClass from "./VesselClass.svelte";
+  import { t } from "./i18n.svelte";
 
   // The left panel. The groups, their order, the labels, the choices and the ranges all come from
   // the schema. An input is drawn when the Option holds it, so the panel needs no rule for which
@@ -58,45 +59,45 @@
 <div class="panel">
   {#if snap}
     <section class="options">
-      <h2>Option</h2>
-      <select aria-label="Active Option" value={snap.active_option} onchange={(e) => onPick(e.currentTarget.value)}>
+      <h2>{t("app-option")}</h2>
+      <select aria-label={t("app-option-active")} value={snap.active_option} onchange={(e) => onPick(e.currentTarget.value)}>
         {#each snap.design.options as o (o.name)}
           <option value={o.name}>{o.name}</option>
         {/each}
       </select>
       <div class="buttons">
-        <button onclick={() => onOption("add")}>Add</button>
-        <button onclick={() => onOption("duplicate")}>Duplicate</button>
-        <button onclick={startRename}>Rename</button>
-        <button onclick={() => (confirmDelete = true)} disabled={only} title={only ? "A Design needs at least one Option" : ""}>Delete</button>
+        <button onclick={() => onOption("add")}>{t("app-option-add")}</button>
+        <button onclick={() => onOption("duplicate")}>{t("app-option-duplicate")}</button>
+        <button onclick={startRename}>{t("app-option-rename")}</button>
+        <button onclick={() => (confirmDelete = true)} disabled={only} title={only ? t("app-option-delete-last") : ""}>{t("app-option-delete")}</button>
       </div>
       {#if renaming}
         <div class="inline">
           <input
             type="text"
-            aria-label="New Option name"
+            aria-label={t("app-option-new-name")}
             bind:value={renameText}
             onkeydown={(e) => { if (e.key === "Enter") endRename(true); if (e.key === "Escape") endRename(false); }}
           />
-          <button onclick={() => endRename(true)}>OK</button>
-          <button onclick={() => endRename(false)}>Cancel</button>
+          <button onclick={() => endRename(true)}>{t("app-ok")}</button>
+          <button onclick={() => endRename(false)}>{t("app-cancel")}</button>
         </div>
       {/if}
       {#if confirmDelete}
         <div class="inline confirm" role="alert">
-          Delete "{snap.active_option}"?
-          <button onclick={() => { confirmDelete = false; onOption("delete"); }}>Delete</button>
-          <button onclick={() => (confirmDelete = false)}>Cancel</button>
+          {t("app-option-delete-confirm", { option: snap.active_option })}
+          <button onclick={() => { confirmDelete = false; onOption("delete"); }}>{t("app-option-delete")}</button>
+          <button onclick={() => (confirmDelete = false)}>{t("app-cancel")}</button>
         </div>
       {/if}
     </section>
 
     <section class="profile">
-      <h2>Defaults Profile</h2>
+      <h2>{t("app-profile")}</h2>
       <div class="pname">{snap.profile}</div>
       <div class="buttons">
-        <button onclick={() => onProfile("load")}>Load from file</button>
-        <button onclick={() => onProfile("builtin")} disabled={snap.profile === "built-in"}>Built-in</button>
+        <button onclick={() => onProfile("load")}>{t("app-profile-load")}</button>
+        <button onclick={() => onProfile("builtin")} disabled={snap.profile === "built-in"}>{t("app-profile-builtin")}</button>
       </div>
     </section>
 

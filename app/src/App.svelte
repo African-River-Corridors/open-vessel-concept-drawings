@@ -8,6 +8,7 @@
   import Notice from "./lib/Notice.svelte";
   import ThemeControl from "./lib/ThemeControl.svelte";
   import { loadPanels, savePanels } from "./lib/panels";
+  import { list, t } from "./lib/i18n.svelte";
 
   // Display state only: the Design, its checks and its results all come from Rust.
   let snap = $state<Snapshot | null>(null);
@@ -194,27 +195,27 @@
       </g>
     </svg>
     <span class="brand">OVCD</span>
-    <button onclick={() => fileAction(api.newFile, true)}>New</button>
-    <button onclick={() => fileAction(api.openFile, true)}>Open</button>
-    <button onclick={() => fileAction(api.save, false)}>Save</button>
-    <button onclick={() => fileAction(api.saveAs, false)}>Save as</button>
-    <button onclick={() => (noticeOpen = true)}>About</button>
-    {#if web}<span class="web-badge" data-testid="web-label">Web version</span> <a href="/ovcd#install">Download the desktop app</a>{/if}
+    <button onclick={() => fileAction(api.newFile, true)}>{t("app-new")}</button>
+    <button onclick={() => fileAction(api.openFile, true)}>{t("app-open")}</button>
+    <button onclick={() => fileAction(api.save, false)}>{t("app-save")}</button>
+    <button onclick={() => fileAction(api.saveAs, false)}>{t("app-save-as")}</button>
+    <button onclick={() => (noticeOpen = true)}>{t("app-about")}</button>
+    {#if web}<span class="web-badge" data-testid="web-label">{t("app-web-version")}</span> <a href="/ovcd#install">{t("app-download-desktop")}</a>{/if}
     <span class="grow"></span>
-    <button type="button" aria-label={showInput ? "Hide the Input panel" : "Show the Input panel"} aria-pressed={showInput} onclick={() => (showInput = !showInput)}>Input panel</button>
-    <button type="button" aria-label={showOutputs ? "Hide the Outputs panel" : "Show the Outputs panel"} aria-pressed={showOutputs} onclick={() => (showOutputs = !showOutputs)}>Outputs panel</button>
+    <button type="button" aria-label={t(showInput ? "app-input-panel-hide" : "app-input-panel-show")} aria-pressed={showInput} onclick={() => (showInput = !showInput)}>{t("app-input-panel")}</button>
+    <button type="button" aria-label={t(showOutputs ? "app-outputs-panel-hide" : "app-outputs-panel-show")} aria-pressed={showOutputs} onclick={() => (showOutputs = !showOutputs)}>{t("app-outputs-panel")}</button>
     <ThemeControl />
     {#if snap}
-      <span class="meta file">{snap.file_name}{snap.dirty ? " (unsaved)" : ""}</span>
-      <span class="meta">Defaults: {snap.profile}</span>
-      <span class="meta" data-testid="engine-version">Engine {snap.engine_version}</span>
+      <span class="meta file">{snap.dirty ? t("app-file-unsaved", { file: snap.file_name }) : snap.file_name}</span>
+      <span class="meta">{t("app-header-profile", { profile: snap.profile })}</span>
+      <span class="meta" data-testid="engine-version">{t("app-engine-version", { version: snap.engine_version })}</span>
     {/if}
   </header>
 
   {#if error}
     <div class="banner error" role="alert">
       <span class="msg">{error}</span>
-      <button onclick={() => (error = null)}>Dismiss</button>
+      <button onclick={() => (error = null)}>{t("app-dismiss")}</button>
     </div>
   {/if}
   {#each evaluation?.file_messages ?? [] as m}
@@ -225,8 +226,8 @@
   {/each}
   {#if snap && snap.hash_changed.length > 0 && !bannerDismissed}
     <div class="banner warn" role="status">
-      Results changed since this file was saved. Options affected: {snap.hash_changed.join(", ")}.
-      <button onclick={() => (bannerDismissed = true)}>Dismiss</button>
+      {t("app-hash-changed", { options: list(snap.hash_changed, "unit") })}
+      <button onclick={() => (bannerDismissed = true)}>{t("app-dismiss")}</button>
     </div>
   {/if}
 

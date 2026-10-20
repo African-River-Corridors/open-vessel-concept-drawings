@@ -2,6 +2,7 @@
   import type { Evaluation, OptionEvaluation } from "./api";
   import StaleWhy from "./StaleWhy.svelte";
   import { MAIN, TANKS, exact, hasTanks, show, valueAt, type Metric } from "./metrics";
+  import { t } from "./i18n.svelte";
 
   // Outputs of the active Option, its checks and warnings, and a compare table of every Option.
   // The numbers are read from the engine's results object. While the active Option has a hard
@@ -62,13 +63,13 @@
 
 <div class="panel">
   {#if !evaluation}
-    <p class="dim">Evaluating...</p>
+    <p class="dim">{t("app-evaluating")}</p>
   {:else}
     <div class="cols">
       <section>
         <h2>
-          Outputs
-          {#if current?.stale}<span class="stale">out of date</span>{/if}
+          {t("app-outputs")}
+          {#if current?.stale}<span class="stale">{t("app-out-of-date")}</span>{/if}
         </h2>
         {#if current?.stale}<StaleWhy {blockers} />{/if}
         {#each current?.errors ?? [] as e}
@@ -83,7 +84,7 @@
                 {@const v = valueAt(current.results, m.path)}
                 {#if !(m.path[0] === "arrangement" && !hasTanks(current.results))}
                   <tr>
-                    <th>{m.label}</th>
+                    <th>{t(m.label)}</th>
                     <td class="num" class:text={m.quantity === "text"} title={exact(m, v)}><span class:old={current.stale}>{show(m, v)}</span>{#if v !== null && v !== undefined && m.unit}<span class="unit">&nbsp;{m.unit}</span>{/if}</td>
                   </tr>
                 {/if}
@@ -91,8 +92,8 @@
               {#if activeEval?.vessel_class?.reference_dwt_t}
                 {@const r = activeEval.vessel_class.reference_dwt_t}
                 <tr data-testid="class-reference-dwt">
-                  <th title="The class's published figure, for comparison. It is never an input.">Class reference deadweight ({activeEval.vessel_class.id})</th>
-                  <td class="num text">{r[0] === r[1] ? r[0] : `${r[0]} to ${r[1]}`}<span class="unit">&nbsp;t</span></td>
+                  <th title={t("app-class-reference-dwt-title")}>{t("app-class-reference-dwt", { class: activeEval.vessel_class.id })}</th>
+                  <td class="num text">{r[0] === r[1] ? r[0] : t("app-range-to", { min: String(r[0]), max: String(r[1]) })}<span class="unit">&nbsp;t</span></td>
                 </tr>
               {/if}
             </tbody>
@@ -101,21 +102,21 @@
       </section>
 
       <section>
-        <h2>Checks</h2>
+        <h2>{t("app-checks")}</h2>
         {#if checks.length === 0 && !current?.results}
-          <p class="dim">No checks without results.</p>
+          <p class="dim">{t("app-no-checks")}</p>
         {/if}
         <ul class="checks" data-testid="checks">
           {#each checks as c (c.name)}
             <li class={c.ok ? "ok" : "fail"}>
-              <span class="tag"><span aria-hidden="true">{c.ok ? "✓" : "✕"}</span> {c.ok ? "PASS" : "FAIL"}</span>
+              <span class="tag"><span aria-hidden="true">{c.ok ? "✓" : "✕"}</span> {t(c.ok ? "app-pass" : "app-fail")}</span>
               <strong>{c.name}</strong>
               {#if c.message && c.message !== "OK"}<span class="msg">{c.message}</span>{/if}
             </li>
           {/each}
         </ul>
         {#if warnings.length > 0 || softWarnings.length > 0}
-          <h2>Warnings</h2>
+          <h2>{t("app-warnings")}</h2>
           <ul class="warnings" data-testid="warnings">
             {#each softWarnings as w}<li><span aria-hidden="true">▲</span> {w.text}</li>{/each}
             {#each warnings as w}<li><span aria-hidden="true">▲</span> {w}</li>{/each}
@@ -124,15 +125,15 @@
       </section>
 
       <section class="compare">
-        <h2>Compare</h2>
+        <h2>{t("app-compare")}</h2>
         <table data-testid="compare">
           <thead>
             <tr>
               <th></th>
               {#each columns as c (c.name)}
                 <th class:active={c.name === active}>
-                  <button class="col" onclick={() => onActivate(c.name)} title="Make this the active Option">{c.name}</button>
-                  {#if c.stale}<span class="stale">out of date</span>{/if}
+                  <button class="col" onclick={() => onActivate(c.name)} title={t("app-make-active")}>{c.name}</button>
+                  {#if c.stale}<span class="stale">{t("app-out-of-date")}</span>{/if}
                 </th>
               {/each}
             </tr>
@@ -140,7 +141,7 @@
           <tbody>
             {#each rows as m (m.label)}
               <tr>
-                <th>{m.label}{#if m.unit}<span class="unit">&nbsp;({m.unit})</span>{/if}</th>
+                <th>{t(m.label)}{#if m.unit}<span class="unit">&nbsp;({m.unit})</span>{/if}</th>
                 {#each columns as c (c.name)}
                   {@const v = valueAt(c.results, m.path)}
                   <td class="num" class:text={m.quantity === "text"} class:differs={differs(m, c)} class:active={c.name === active} class:old={c.stale} title={c.results ? exact(m, v) : (c.message ?? "")}>
@@ -151,7 +152,7 @@
             {/each}
             {#if columns.some((c) => c.message)}
               <tr>
-                <th>Status</th>
+                <th>{t("app-status")}</th>
                 {#each columns as c (c.name)}<td class="note">{c.message ?? ""}</td>{/each}
               </tr>
             {/if}

@@ -8,12 +8,14 @@
     ok: boolean;
     message: string;
   }
+  import { t } from "../i18n.svelte";
+
   let { checks }: { checks: Check[] } = $props();
 
   const COLUMNS: { label: string; cell: "result" | "name" | "message" }[] = [
-    { label: "Result", cell: "result" },
-    { label: "Check", cell: "name" },
-    { label: "Message", cell: "message" },
+    { label: "app-rules-result", cell: "result" },
+    { label: "app-rules-check", cell: "name" },
+    { label: "app-rules-message", cell: "message" },
   ];
 
   let ordered = $derived([...checks.filter((c) => !c.ok), ...checks.filter((c) => c.ok)]);
@@ -22,16 +24,16 @@
 
 <div class="rules" data-testid="rule-checks">
   {#if checks.length === 0}
-    <p class="note">The engine reported no checks for this Option.</p>
+    <p class="note">{t("app-rules-none")}</p>
   {:else}
     <p class="count" data-testid="rule-check-count">
-      {failing} of {checks.length} check{checks.length === 1 ? "" : "s"} {failing === 1 ? "fails" : "fail"}
+      {t("app-rules-count", { failing, total: checks.length })}
     </p>
     <div class="body">
       <table>
         <thead>
           <tr>
-            {#each COLUMNS as col (col.cell)}<th>{col.label}</th>{/each}
+            {#each COLUMNS as col (col.cell)}<th>{t(col.label)}</th>{/each}
           </tr>
         </thead>
         <tbody>
@@ -39,7 +41,7 @@
             <tr class:failed={!c.ok} data-testid="rule-check-row" data-ok={c.ok}>
               {#each COLUMNS as col (col.cell)}
                 {#if col.cell === "result"}
-                  <td><span class="tag {c.ok ? 'ok' : 'fail'}"><span aria-hidden="true">{c.ok ? "✓" : "✕"}</span> {c.ok ? "PASS" : "FAIL"}</span></td>
+                  <td><span class="tag {c.ok ? 'ok' : 'fail'}"><span aria-hidden="true">{c.ok ? "✓" : "✕"}</span> {t(c.ok ? "app-pass" : "app-fail")}</span></td>
                 {:else if col.cell === "name"}
                   <th scope="row">{c.name}</th>
                 {:else}

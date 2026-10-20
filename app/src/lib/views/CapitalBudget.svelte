@@ -18,36 +18,38 @@
     from_design: string[];
     core_default: string[];
   }
+  import { list as join, num, t } from "../i18n.svelte";
+
   let { cost, phase }: { cost: Cost | null | undefined; phase: string | undefined } = $props();
 
-  /** The names of the core's budget items, as the input labels have them. An item not listed shows under the core's name. */
-  const ITEM_LABELS: Record<string, string> = {
-    hull_steel: "Hull steel",
-    type_c_tanks: "Type C tanks",
-    tank_supports: "Tank supports",
-    insulation: "Insulation",
-    cargo_system: "Cargo system",
-    piping_machinery: "Piping and machinery",
-    outfitting: "Outfitting",
-    paint_anodes_misc: "Paint, anodes and miscellaneous",
-    battery: "Battery",
-    propulsion: "Propulsion",
-    wheelhouse_accommodation: "Wheelhouse and accommodation",
-  };
-  const item = (id: string) => ITEM_LABELS[id] ?? id;
+  /** The core's budget items, by id (Message Ids `app-cost-item-…`). An item not listed shows under the core's name. */
+  const ITEMS = [
+    "hull_steel",
+    "type_c_tanks",
+    "tank_supports",
+    "insulation",
+    "cargo_system",
+    "piping_machinery",
+    "outfitting",
+    "paint_anodes_misc",
+    "battery",
+    "propulsion",
+    "wheelhouse_accommodation",
+  ];
+  const item = (id: string) => (ITEMS.includes(id) ? t(`app-cost-item-${id.replaceAll("_", "-")}`) : id);
 
   /** An identifier as words for reading ("tank_shell_t" as "Tank shell"). */
   const words = (id: string) => {
     const text = id.replace(/_t$|_kwh$|_kw$/, "").replace(/_/g, " ");
     return text.charAt(0).toUpperCase() + text.slice(1);
   };
-  const money = (v: number) => v.toLocaleString("en-GB", { maximumFractionDigits: 0 });
-  const list = (ids: string[]) => ids.map(words).join(", ");
+  const money = (v: number) => num(v, 0);
+  const list = (ids: string[]) => join(ids.map(words), "unit");
   let sections = $derived(
     cost
       ? [
-          { title: "Barge", rows: cost.barge, subtotal: cost.barge_subtotal },
-          { title: "Tug", rows: cost.tug, subtotal: cost.tug_subtotal },
+          { key: "barge", caption: "app-cost-barge", total: "app-cost-barge-subtotal", rows: cost.barge, subtotal: cost.barge_subtotal },
+          { key: "tug", caption: "app-cost-tug", total: "app-cost-tug-subtotal", rows: cost.tug, subtotal: cost.tug_subtotal },
         ]
       : [],
   );
@@ -57,46 +59,46 @@
 <div class="budget" data-testid="capital-budget">
   {#if phase !== "liquid_gas"}
     <div data-testid="capital-budget-wip">
-      <h3 class="wip">Work in development</h3>
-      <p class="note">The capital budget is computed for gas cargo only. A dry-bulk budget is work in development.</p>
+      <h3 class="wip">{t("app-work-in-development")}</h3>
+      <p class="note">{t("app-cost-wip")}</p>
     </div>
   {:else if !cost}
-    <p class="note" data-testid="capital-budget-none">There is no capital budget for this Option, because the hull holds no tank arrangement to cost.</p>
+    <p class="note" data-testid="capital-budget-none">{t("app-cost-none")}</p>
   {:else}
-    <p class="basis" data-testid="capital-budget-basis"><strong>{cost.basis}</strong> All amounts are in {cost.currency}.</p>
+    <p class="basis" data-testid="capital-budget-basis"><strong>{cost.basis}</strong> {t("app-cost-currency", { currency: cost.currency })}</p>
     <div class="tables">
-      {#each sections as { title, rows, subtotal } (title)}
-        <table data-testid="cost-{title.toLowerCase()}">
-          <caption>{title}</caption>
+      {#each sections as { key, caption, total, rows, subtotal } (key)}
+        <table data-testid="cost-{key}">
+          <caption>{t(caption)}</caption>
           <tbody>
             {#each rows as r (r.item)}
               <tr><th scope="row">{item(r.item)}</th><td class="num">{money(r.amount)}</td></tr>
             {/each}
-            <tr class="sub"><th scope="row">{title} subtotal</th><td class="num">{money(subtotal)}</td></tr>
+            <tr class="sub"><th scope="row">{t(total)}</th><td class="num">{money(subtotal)}</td></tr>
           </tbody>
         </table>
       {/each}
       <table data-testid="cost-total">
-        <caption>Unit</caption>
+        <caption>{t("app-cost-unit")}</caption>
         <tbody>
-          <tr><th scope="row">Barge subtotal</th><td class="num">{money(cost.barge_subtotal)}</td></tr>
-          <tr><th scope="row">Tug subtotal</th><td class="num">{money(cost.tug_subtotal)}</td></tr>
-          <tr><th scope="row">Yard margin ({(cost.yard_margin_fraction * 100).toLocaleString("en-GB", { maximumFractionDigits: 1 })}%)</th><td class="num">{money(cost.yard_margin)}</td></tr>
-          <tr><th scope="row">Delivery</th><td class="num">{money(cost.delivery)}</td></tr>
-          <tr class="sub total"><th scope="row">Unit total</th><td class="num" data-testid="cost-unit-total">{money(cost.unit_total)}</td></tr>
+          <tr><th scope="row">{t("app-cost-barge-subtotal")}</th><td class="num">{money(cost.barge_subtotal)}</td></tr>
+          <tr><th scope="row">{t("app-cost-tug-subtotal")}</th><td class="num">{money(cost.tug_subtotal)}</td></tr>
+          <tr><th scope="row">{t("app-cost-yard-margin", { percent: num(cost.yard_margin_fraction * 100, 0, 1) })}</th><td class="num">{money(cost.yard_margin)}</td></tr>
+          <tr><th scope="row">{t("app-cost-delivery")}</th><td class="num">{money(cost.delivery)}</td></tr>
+          <tr class="sub total"><th scope="row">{t("app-cost-unit-total")}</th><td class="num" data-testid="cost-unit-total">{money(cost.unit_total)}</td></tr>
         </tbody>
       </table>
     </div>
 
     <p class="masses" data-testid="cost-masses">
-      Mass from this design: {cost.from_design.length > 0 ? list(cost.from_design) : "none"}.
-      {#if cost.core_default.length > 0}Core defaults, not from this design: {list(cost.core_default)}.{/if}
+      {t("app-cost-from-design", { masses: cost.from_design.length > 0 ? list(cost.from_design) : t("app-none") })}
+      {#if cost.core_default.length > 0}{t("app-cost-core-defaults", { masses: list(cost.core_default) })}{/if}
     </p>
 
     {#if failing.length > 0}
       <ul class="checks" data-testid="cost-checks">
         {#each failing as c (c.name)}
-          <li class:warn={c.severity !== "error"}><span class="chip" aria-hidden="true">{c.severity === "error" ? "✕" : "▲"}</span> <strong>{c.severity === "error" ? "Check failed" : "Note"}: {words(c.name)}.</strong> {c.message}</li>
+          <li class:warn={c.severity !== "error"}><span class="chip" aria-hidden="true">{c.severity === "error" ? "✕" : "▲"}</span> <strong>{t(c.severity === "error" ? "app-cost-check-failed" : "app-cost-note", { check: words(c.name) })}</strong> {c.message}</li>
         {/each}
       </ul>
     {/if}
