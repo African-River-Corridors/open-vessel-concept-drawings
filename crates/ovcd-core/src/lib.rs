@@ -35,6 +35,7 @@ pub mod pyint;
 pub mod pystr;
 mod pystr_tables;
 pub mod resistance;
+pub mod rules;
 pub mod squat;
 pub mod tanks;
 pub mod text;
