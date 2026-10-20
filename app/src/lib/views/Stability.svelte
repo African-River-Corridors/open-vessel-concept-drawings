@@ -113,6 +113,8 @@
     }
     ctx.setLineDash([]);
     // Each angle is written on a ground of the chart surface, so that a curve under it does not cross it.
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
     for (const a of angles) {
       const x = u.valToPos(a, "x", true);
       if (x < left || x > left + width) continue;
