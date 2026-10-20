@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Type C tanks: codes, rules, drawing</title>
+<style>
+:root {
+  --paper: #f6edd8; --surface: #fbf6ea; --surface-2: #efe4c9;
+  --sheet: #ffffff; --sheet-ink: #1c2326; --sheet-ink-2: #4f585d;
+  --ink: #1c3550; --ink-2: #3c5268; --ink-3: #56687a;
+  --rule: #dccfae; --rule-strong: #8c7b56;
+  --accent: #24496c; --accent-soft: #dfe6ea; --gilt: #a78654; --gilt-ink: #765825;
+  --pass: #2a6339; --pass-soft: #e3eedc; --fail: #9e2a1c; --fail-soft: #f7e0d6;
+  --warn: #73500b; --warn-soft: #f2e2bd;
+  --font-ui: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
+  --font-serif: "Source Serif 4", "Source Serif Pro", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1a3753; --surface: #24496c; --surface-2: #2c5478;
+    --ink: #eef6f6; --ink-2: #c9d8dc; --ink-3: #a9bcc4;
+    --rule: #3f6488; --rule-strong: #8fa9bd; --accent: #e3c58f; --accent-soft: #2f5a80;
+    --gilt-ink: #e3c58f; --pass: #bfe3b4; --pass-soft: #284f3a; --fail: #ffb4a3; --fail-soft: #5a2f2a;
+    --warn: #f5d58b; --warn-soft: #574522; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.5 var(--font-ui); }
+main { max-width: 1080px; margin: 0 auto; padding: 24px 16px 64px; }
+h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; line-height: 1.2; }
+h1 { font-size: 2rem; margin: 0 0 4px; }
+h2 { font-size: 1.4rem; margin: 40px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--gilt); }
+h3 { font-size: 1.1rem; margin: 24px 0 6px; }
+p, li { max-width: 72ch; }
+.sub { color: var(--ink-2); margin: 0 0 16px; }
+.wip { border: 2px solid var(--warn); background: var(--warn-soft); color: var(--warn); padding: 10px 14px; border-radius: 4px; font-weight: 600; }
+.wip::before { content: "▲ "; }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; padding: 12px 16px; margin: 12px 0; }
+.scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; vertical-align: top; padding: 6px 8px; border-bottom: 1px solid var(--rule); }
+th { background: var(--surface-2); font-weight: 600; white-space: nowrap; }
+code, .mono { font-family: var(--font-mono); font-size: 0.82rem; }
+.tag { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 0 6px; border-radius: 3px; border: 1px solid currentColor; white-space: nowrap; }
+.yes { color: var(--pass); background: var(--pass-soft); }
+.yes::before { content: "● "; }
+.part { color: var(--warn); background: var(--warn-soft); }
+.part::before { content: "◐ "; }
+.no { color: var(--ink-3); }
+.no::before { content: "○ "; }
+.est { color: var(--warn); background: var(--warn-soft); }
+.est::before { content: "≈ "; }
+.fix { color: var(--fail); background: var(--fail-soft); }
+.fix::before { content: "✕ "; }
+nav ol { columns: 2; max-width: 600px; padding-left: 20px; }
+@media (max-width: 640px) { nav ol { columns: 1; } h1 { font-size: 1.6rem; } }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+figure { margin: 0; }
+figure svg { width: 100%; height: auto; display: block; border: 1px solid var(--rule); border-radius: 4px; }
+figcaption { font-size: 0.85rem; color: var(--ink-2); margin-top: 4px; }
+/* drawing sheet: black on white in both themes */
+svg .sheet { fill: var(--sheet); }
+svg .t { fill: var(--sheet-ink); font: 11px var(--font-ui); }
+svg .small { font-size: 9.5px; fill: var(--sheet-ink-2); }
+svg .shell { fill: none; stroke: var(--sheet-ink); stroke-width: 2; }
+svg .ins { fill: #f1f1f1; stroke: var(--sheet-ink-2); stroke-width: 0.8; stroke-dasharray: 3 2; }
+svg .ring { fill: none; stroke: var(--sheet-ink); stroke-width: 1; stroke-dasharray: 6 3; }
+svg .saddle { fill: #d9d9d9; stroke: var(--sheet-ink); stroke-width: 1.2; }
+svg .wood { fill: #bdbdbd; stroke: var(--sheet-ink); stroke-width: 0.8; }
+svg .bracket { fill: var(--sheet-ink); }
+svg .stopper { fill: #ffffff; stroke: var(--sheet-ink); stroke-width: 1.2; }
+svg .insert { fill: none; stroke: var(--sheet-ink-2); stroke-width: 1; stroke-dasharray: 2 2; }
+svg .hull { fill: none; stroke: var(--sheet-ink); stroke-width: 2.2; }
+svg .thin { fill: none; stroke: var(--sheet-ink-2); stroke-width: 0.7; }
+svg .cl { fill: none; stroke: var(--sheet-ink-2); stroke-width: 0.7; stroke-dasharray: 12 3 2 3; }
+svg .dim { fill: none; stroke: var(--sheet-ink-2); stroke-width: 0.7; }
+svg .lead { fill: none; stroke: var(--sheet-ink-2); stroke-width: 0.6; }
+footer { margin-top: 48px; color: var(--ink-3); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>IMO Type C tanks: codes, rules and drawing</h1>
+<p class="sub">How OVCD reads the codes for independent pressure tanks, turns them into Rules for the rules engine (spec 0004), and draws the tank.</p>
+
+<p class="wip">Work in progress. This page is a research summary, not a design decision. Nothing here is in the code yet. Values marked “estimate” have no published source.</p>
+
+<nav class="card">
+<strong>Contents</strong>
+<ol>
+<li><a href="#today">What OVCD does today</a></li>
+<li><a href="#codes">The codes</a></li>
+<li><a href="#rules">From code to Rule</a></li>
+<li><a href="#drawing">How we draw the tank</a></li>
+<li><a href="#weight">Weight and bill of quantities</a></li>
+<li><a href="#defaults">Inputs and defaults</a></li>
+<li><a href="#open">Open items</a></li>
+<li><a href="#sources">Sources</a></li>
+</ol>
+</nav>
+
+<h2 id="today">1 What OVCD does today</h2>
+<ul>
+<li><strong>Geometry:</strong> horizontal cylinders with hemispherical or 2:1 ellipsoidal heads, sized from the hull. The outer diameter includes the insulation.</li>
+<li><strong>Wall:</strong> the pressure-vessel formula (ASME UG-27 form) on the steel diameter, with IGC minimum thickness and E = 0.95 (since #292).</li>
+<li><strong>Arrangement:</strong> protective distance d(Vc) per tank, with the dome in Vc (IGC 2.4.1.1, 2.4.2); L/D ≤ 7.</li>
+<li><strong>Weight:</strong> shell plate × <code>tank_structure_factor</code> (1.30), plus insulation.</li>
+<li><strong>Drawing:</strong> in section only: the shell, a dome curve and a 120° cradle.</li>
+</ul>
+<div class="card">
+<strong>Two defects found during this research (not fixed yet):</strong>
+<ul>
+<li><span class="tag fix">fix</span> <strong>2:1 head area is 27 % low.</strong> <code>tanks.rs</code> uses 1.084·π·R² (3.405 R²) per head for the steel and the insulation. The exact half-area of a 2:1 oblate spheroid is 4.336 R² = 1.084·D².</li>
+<li><span class="tag fix">fix</span> <strong>S690QL1 allowable stress is 285 MPa</strong> (Rm/2.7, from an inland design). IGC 4.23.3.1 gives f = min(Rm/3, Re/1.5) = min(770/3, 690/1.5) = <strong>256.7 MPa</strong> for C-Mn steel at sea.</li>
+</ul>
+</div>
+
+<h2 id="codes">2 The codes</h2>
+<p>Every text below is in the rule-source library (<code>ovcd-rule-sources/</code>), with its SHA-256 in <code>SOURCES.md</code>, unless marked otherwise.</p>
+<div class="scroll"><table>
+<thead><tr><th>Code</th><th>Edition held</th><th>Access</th><th>What OVCD takes from it</th></tr></thead>
+<tbody>
+<tr><td><strong>IGC Code</strong> ch. 4, 6</td><td>MSC.370(93) 2014, amendments to MSC.566(109); Table 6.3 per MSC.523(106)</td><td>free</td><td>The Type C rule set: design pressure, thickness, allowable stress, liquid head, external pressure, supports, load cases, testing, NDT, PWHT, materials.</td></tr>
+<tr><td><strong>IGF Code</strong> 6.4.15.3</td><td>MSC.391(95); 6.4.15.3.1.2 replaced by MSC.551(108), in force 1 Jan 2026</td><td>free</td><td>LNG fuel tanks. Same Type C criteria, but collision load up to 2 g for L ≤ 60 m and anti-flotation for a fully submerged tank.</td></tr>
+<tr><td><strong>IACS UR G1, G2; UI GC6, GC7, GC8, GC16</strong></td><td>G1 Rev.3 Corr.2; G2 Rev.3 (2023); GC8 Rev.1 (2016)</td><td>free</td><td>The common class reading: support load cases (G1.6), Type C checklist (G2), ring stress at saddles (GC8), access openings (GC16).</td></tr>
+<tr><td><strong>ABS</strong> GN 327 Type C tanks; Guide 144</td><td>Jan 2022; May 2023</td><td>free</td><td>Two supports, one fixed, one sliding. Load cases, buckling safety factors, wood and chock safety factors.</td></tr>
+<tr><td><strong>BV</strong> NR467 Pt D Ch 9; NR529</td><td>Jul 2026; Jan 2026</td><td>free</td><td>Support rules in detail: type-approved support wood, 30° heel, ring stress, 600 mm manholes, 450 mm clearance.</td></tr>
+<tr><td><strong>ADN</strong> 9.3.1.11, 9.3.1.21, 9.3.1.22</td><td>ADN 2025</td><td>free</td><td>Inland type G: L/D ≤ 7, design at +40 °C, saddles ≥ 20° below the centreline, suction well, opening heights, tank equipment.</td></tr>
+<tr><td>DNV Pt.5 Ch.7; LR LR-RU-008</td><td>current</td><td>sign-up</td><td>Not read.</td></tr>
+<tr><td>ASME VIII-1; EN 13445-3; PD 5500 Annex G; Zick 1951</td><td>—</td><td>paywalled</td><td>The “recognized standards” the IGC points to: shell, heads, external pressure, saddle stresses. Not held. OVCD’s formulas from these stay <code>unverified</code> until bought.</td></tr>
+</tbody></table></div>
+
+<h3>How the codes fit together</h3>
+<p>The IGC sets the criteria: minimum pressure, allowable stress, load cases. For the actual sizing of shells, heads and saddles it points to “accepted pressure vessel design theory” and “a recognized standard” (4.23.2.4, 4.23.2.5.2). The class societies agree a common reading through IACS. The IGF repeats the IGC for fuel tanks, with stronger collision loads on small ships. ADN adds inland arrangement limits.</p>
+
+<h2 id="rules">3 From code to Rule</h2>
+<p>Each Rule follows spec 0004: an id <code>&lt;family&gt;/&lt;paragraph&gt;/&lt;slug&gt;</code>, a <code>kind</code>, a Measure, a comparison and an outcome. “Engine” says whether OVCD can evaluate it now. When it cannot, the Rule is still listed, with <code>evaluated: false</code> and a gap. Proposed Measure ids are marked new.</p>
+
+<h3>3.1 Rules</h3>
+<div class="scroll"><table>
+<thead><tr><th>Rule id (proposed)</th><th>Source</th><th>Kind</th><th>Measure → limit</th><th>Outcome</th><th>Engine</th></tr></thead>
+<tbody>
+<tr><td class="mono">igc/4.23.1.2/po-min</td><td>IGC 4.23.1.2; IGF 6.4.15.3.1.2</td><td>formula</td><td><code>tank.design_pressure</code> ≥ 0.2 + A·C·ρr<sup>1.5</sup> MPa; A = 0.00185(σm/ΔσA)²; C = max(h, 0.75b, 0.45ℓ)</td><td>fail</td><td><span class="tag yes">now</span> needs ρr per Cargo</td></tr>
+<tr><td class="mono">igc/4.23.2.1.2/t-min</td><td>IGC 4.23.2.1.2; UR G2.3.6</td><td>table</td><td><code>tank.wall_thickness</code> ≥ 5 mm (C-Mn, Ni) / 3 mm (austenitic) / 7 mm (Al)</td><td>size</td><td><span class="tag yes">now</span> (exists)</td></tr>
+<tr><td class="mono">igc/4.23.3.1/allowable</td><td>IGC 4.23.3.1</td><td>formula</td><td>f = min(Rm/A, Re/B), A = 3 / 3.5 / 4, B = 1.5 → used by the wall Measure</td><td>size</td><td><span class="tag yes">now</span> needs Rm, Re per material</td></tr>
+<tr><td class="mono">igc/4.28.1.2/dome-in-z</td><td>IGC 4.28.1.2</td><td>check</td><td>Domes count in Zβ unless Vd ≤ Vt·(100 − FL)/FL (new <code>tank.dome_volume</code>)</td><td>note</td><td><span class="tag yes">now</span></td></tr>
+<tr><td class="mono">igc/table-6.3/material-temp</td><td>IGC Tables 6.2, 6.3</td><td>table</td><td>Material key allowed at the tank design temperature</td><td>fail</td><td><span class="tag yes">now</span></td></tr>
+<tr><td class="mono">adn/9.3.1.11.1/l-over-d</td><td>ADN 9.3.1.11.1(b)</td><td>limit</td><td><code>tank.l_over_d</code> ≤ 7</td><td>fail</td><td><span class="tag yes">now</span> (exists)</td></tr>
+<tr><td class="mono">adn/9.3.1.11.2/saddle-embrace</td><td>ADN 9.3.1.11.2(a)</td><td>limit</td><td>Saddle reaches ≥ 20° below the tank centreline (embrace ≥ 140°)</td><td>fail</td><td><span class="tag part">with input</span> new saddle input</td></tr>
+<tr><td class="mono">igc/4.23.2.2/liquid-head</td><td>IGC 4.23.2.2, 4.13.2.4, 4.28.1.2</td><td>formula</td><td>Peq = Po + (Pgd)max; Pgd = aβ·Zβ·ρ / (1.02×10⁵) MPa</td><td>size</td><td><span class="tag part">partly</span> accelerations 4.28.2.1 apply to ships &gt; 50 m</td></tr>
+<tr><td class="mono">igc/4.23.2.3/pe</td><td>IGC 4.23.2.3</td><td>parameter</td><td>Pe = P1+P2+P3+P4; P1 ≥ 0.025 MPa without vacuum valves</td><td>note</td><td><span class="tag part">input only</span> buckling formula paywalled</td></tr>
+<tr><td class="mono">igc/4.15.1/collision</td><td>IGC 4.15.1; IGF 6.4.9.5.1</td><td>parameter</td><td>Chock load = 0.5 g fwd / 0.25 g aft × (tank + cargo); IGF: up to 2 g for L ≤ 60 m</td><td>size</td><td><span class="tag yes">now</span> as a load for BOQ</td></tr>
+<tr><td class="mono">igc/4.15.2/flooding</td><td>IGC 4.15.2; IGF 6.4.9.5.2</td><td>parameter</td><td>Anti-flotation uplift = buoyancy of the empty tank − its weight</td><td>size</td><td><span class="tag yes">now</span> as a load for BOQ</td></tr>
+<tr><td class="mono">igc/4.23.6.1/test</td><td>IGC 4.23.6.1–.3; UR G2.10</td><td>parameter</td><td>Test pressure ≥ 1.5 Po; hold 2 h per 25 mm, at least 2 h</td><td>note</td><td><span class="tag yes">now</span> output</td></tr>
+<tr><td class="mono">igc/6.6.2.2/pwht</td><td>IGC 6.6.2.2</td><td>check</td><td>PWHT needed if C-Mn and design temperature &lt; −10 °C</td><td>note</td><td><span class="tag yes">now</span> output</td></tr>
+<tr><td class="mono">igc/4.8/supports</td><td>IGC 4.8.1–4.8.3</td><td>check</td><td>Two saddles (one fixed, one sliding), anti-flotation chocks, longitudinal stop are present</td><td>warn</td><td><span class="tag part">with input</span></td></tr>
+<tr><td class="mono">iacs/gc8/ring-stress</td><td>UI GC8; BV [10.3.4]</td><td>limit</td><td>Ring stress at saddles ≤ min(0.57 Rm, 0.85 Re)</td><td>note</td><td><span class="tag no">not evaluated</span> needs Zick or FE</td></tr>
+<tr><td class="mono">igc/4.13.9/heel</td><td>IGC 4.13.9; BV [7.6.2]</td><td>check</td><td>Supports for the worst static heel, 0° to 30°</td><td>note</td><td><span class="tag no">not evaluated</span> FE</td></tr>
+<tr><td class="mono">igc/4.23.3.2/buckling</td><td>IGC 4.23.3.2; ABS GN 4/3</td><td>check</td><td>Buckling to accepted pressure-vessel theory</td><td>note</td><td><span class="tag no">not evaluated</span> paywalled method</td></tr>
+</tbody></table></div>
+
+<h3>3.2 Parameters (cited numbers the Measures use)</h3>
+<div class="scroll"><table>
+<thead><tr><th>Parameter</th><th>Value</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Weld efficiency E</td><td>0.95 (full NDT); up to 1.0 by agreement; ≤ 0.85 partial NDT on process vessels</td><td>IGC 4.23.2.1.3</td></tr>
+<tr><td>A, B for f</td><td>Ni and C-Mn: 3 / 1.5; austenitic: 3.5 / 1.5; aluminium: 4 / 1.5</td><td>IGC 4.23.3.1</td></tr>
+<tr><td>ΔσA</td><td>55 N/mm² (steels); 25 N/mm² (Al 5083-O)</td><td>IGC 4.23.1.2</td></tr>
+<tr><td>Rm / Re minimums</td><td>304L, 316L: 485 / 170 → f 113.3. 9 % Ni A553: 690 / 585 → f 230. S690QL: 770 / 690 → f 256.7. P355NL1: 490 / 355 → f 163.3</td><td>Outokumpu; ThyssenKrupp; Macsteel; SSAB (maker sheets; ASTM/EN to buy)</td></tr>
+<tr><td>Default filling limit</td><td>98 %</td><td>IGC 15.3</td></tr>
+</tbody></table></div>
+
+<h3>3.3 Rule-set placement</h3>
+<ul>
+<li><code>igc-2g</code>: every <code>igc/*</code> and <code>iacs/*</code> Rule above.</li>
+<li><code>adn-g</code> or the inland stack: the <code>adn/*</code> Rules, plus the ADN opening and relief-valve heights (9.3.1.22.1(b), 9.3.1.22.3).</li>
+<li>A future <code>igf</code> set: the same Type C Rules with the IGF collision table, when OVCD sizes fuel tanks.</li>
+</ul>
+
+<h2 id="drawing">4 How we draw the tank</h2>
+<p>The drawing follows the parts a published Type C support patent draws and names (US 8,245,658 Figs 5A, 5B), with proportions from published tanks. The sheet stays black on white, as the Drawing Format Standard prints it. These are schematic: OVCD would draw them to scale from the design.</p>
+<div class="grid">
+<figure>
+<svg viewBox="-120 0 700 330" role="img" aria-label="Section at a saddle"><rect x="-120" y="0" width="700" height="330" class="sheet"/>
+<path d="M40 300 H420" class="hull"/><path d="M40 300 V40 M420 300 V40" class="hull"/>
+<path d="M40 310 H420" class="thin"/><text x="425" y="322" class="t">inner bottom</text>
+<polygon points="113.5,207.4 116.3,214.4 119.5,221.3 123.2,227.9 127.2,234.3 131.6,240.5 136.4,246.4 141.6,251.9 147.0,257.1 152.8,262.0 158.9,266.6 165.2,270.7 171.8,274.5 178.6,277.8 185.6,280.8 192.7,283.3 200.0,285.3 207.4,286.9 214.9,288.1 222.4,288.8 230.0,289.0 237.6,288.8 245.1,288.1 252.6,286.9 260.0,285.3 267.3,283.3 274.4,280.8 281.4,277.8 288.2,274.5 294.8,270.7 301.1,266.6 307.2,262.0 313.0,257.1 318.4,251.9 323.6,246.4 328.4,240.5 332.8,234.3 336.8,227.9 340.5,221.3 343.7,214.4 346.5,207.4 346.5,300 113.5,300" class="saddle"/>
+<polygon points="117.2,206.0 120.0,212.8 123.1,219.5 126.6,225.9 130.5,232.1 134.8,238.1 139.4,243.7 144.4,249.1 149.7,254.2 155.3,258.9 161.2,263.3 167.3,267.3 173.7,271.0 180.2,274.2 187.0,277.0 193.9,279.4 201.0,281.4 208.1,283.0 215.4,284.1 222.7,284.8 230.0,285.0 237.3,284.8 244.6,284.1 251.9,283.0 259.0,281.4 266.1,279.4 273.0,277.0 279.8,274.2 286.3,271.0 292.7,267.3 298.8,263.3 304.7,258.9 310.3,254.2 315.6,249.1 320.6,243.7 325.2,238.1 329.5,232.1 333.4,225.9 336.9,219.5 340.0,212.8 342.8,206.0 333.4,202.6 330.9,208.9 328.0,214.9 324.8,220.8 321.2,226.5 317.3,232.0 313.0,237.2 308.5,242.1 303.6,246.7 298.5,251.1 293.1,255.1 287.5,258.8 281.6,262.1 275.6,265.1 269.4,267.7 263.1,269.9 256.6,271.7 250.0,273.2 243.4,274.2 236.7,274.8 230.0,275.0 223.3,274.8 216.6,274.2 210.0,273.2 203.4,271.7 196.9,269.9 190.6,267.7 184.4,265.1 178.4,262.1 172.5,258.8 166.9,255.1 161.5,251.1 156.4,246.7 151.5,242.1 147.0,237.2 142.7,232.0 138.8,226.5 135.2,220.8 132.0,214.9 129.1,208.9 126.6,202.6" class="wood"/>
+<circle cx="230" cy="165" r="110" class="ins"/>
+<circle cx="230" cy="165" r="100" class="shell"/>
+<circle cx="230" cy="165" r="86" class="ring"/>
+<path d="M230 30 V312" class="cl"/><text x="234" y="28" class="t">CL tank</text>
+<rect x="213.0" y="31.0" width="34.0" height="37.0" class="shell"/>
+<rect x="96.0" y="118.8" width="32.0" height="10" class="bracket"/>
+<rect x="70.0" y="109.8" width="26" height="28" class="stopper"/>
+<path d="M70.0 123.8 H40" class="thin"/>
+<rect x="332.0" y="118.8" width="32.0" height="10" class="bracket"/>
+<rect x="364.0" y="109.8" width="26" height="28" class="stopper"/>
+<path d="M390.0 123.8 H420" class="thin"/>
+<rect x="223" y="289" width="14" height="11" class="stopper"/>
+<path d="M230 165 L98.4 212.9" class="dim"/>
+<path d="M230 165 L361.6 212.9" class="dim"/>
+<path d="M-100 165 H380" class="dim"/>
+<path d="M270.0 278.0 L420.0 250.0" class="lead"/><text x="423.0" y="253.0" class="t" text-anchor="start">wood 350 + resin 20 mm</text>
+<path d="M170.0 260.0 L20.0 262.0" class="lead"/><text x="17.0" y="265.0" class="t" text-anchor="end">saddle (steel)</text>
+<path d="M316.0 135.0 L420.0 96.0" class="lead"/><text x="423.0" y="99.0" class="t" text-anchor="start">ring frame</text>
+<path d="M338.0 115.0 L420.0 70.0" class="lead"/><text x="423.0" y="73.0" class="t" text-anchor="start">insulation</text>
+<path d="M90.0 203.0 L20.0 120.0" class="lead"/><text x="17.0" y="123.0" class="t" text-anchor="end">anti-flotation bracket</text>
+<path d="M70.0 213.0 L20.0 92.0" class="lead"/><text x="17.0" y="95.0" class="t" text-anchor="end">hull stopper</text>
+<path d="M237.0 315.0 L420.0 290.0" class="lead"/><text x="423.0" y="293.0" class="t" text-anchor="start">long. stop (fixed)</text>
+<path d="M247.0 48.0 L300.0 40.0" class="lead"/><text x="303.0" y="43.0" class="t" text-anchor="start">dome</text>
+<text x="238" y="189" class="t">140° embrace</text>
+<text x="-100" y="161" class="t">tank centreline</text>
+<text x="-100" y="177" class="t small">saddle tips 20° below (ADN)</text></svg>
+<figcaption><strong>Section at a saddle.</strong> Saddle with a 140° embrace (ADN 9.3.1.11.2(a)); wood on resin (Park 2024; 350 mm from a built bunker vessel); ring frame inside the shell at the saddle (UI GC8); anti-flotation bracket and hull stopper P&amp;S (IGC 4.8.2); longitudinal stop on the centreline at the fixed saddle.</figcaption>
+</figure>
+<figure>
+<svg viewBox="0 0 560 300" role="img" aria-label="Dome detail"><rect x="0" y="0" width="560" height="300" class="sheet"/>
+<path d="M30 264.3 A600 600 0 0 1 430 264.3" class="shell"/>
+<path d="M155.0 230 V100 Q155.0 80 230 80 Q305.0 80 305.0 100 V230" class="shell"/>
+<path d="M20 166 H141.0 M319.0 166 H440" class="hull"/>
+<path d="M141.0 166 V150 M319.0 166 V150" class="hull"/>
+<rect x="147.0" y="224" width="166" height="22" class="insert"/>
+<path d="M230 66 V260" class="cl"/>
+<path d="M155.0 54 H305.0" class="dim"/><text x="230" y="50" class="t" text-anchor="middle">Ø d = max(1.2 m, 0.17·D)  (STX: Ø2,500)</text>
+<path d="M345.0 230 V80" class="dim"/><text x="351.0" y="94" class="t">h = d  (STX: 2,500 from</text><text x="351.0" y="107" class="t">inside of shell to top)</text>
+<text x="24" y="160" class="t">deck, coaming + seal</text>
+<text x="24" y="282" class="t">tank shell</text>
+<path d="M147.0 246 L120 262" class="lead"/><text x="24" y="266" class="t small">thickened insert ≈700 mm deep</text></svg>
+<figcaption><strong>Dome detail.</strong> Proportions of the only dimensioned Type C dome found (Heo 2017, STX, Fig 19): Ø2,500 on an R7,300 lobe, 2,500 mm from the inside of the shell to the top, deck 1,070 mm above the inside of the shell. Proposed rule: Ø = max(1.2 m, 0.17·D), height = Ø. <span class="tag est">estimate</span></figcaption>
+</figure>
+</div>
+<figure style="margin-top:16px">
+<svg viewBox="0 0 680 270" role="img" aria-label="Elevation"><rect x="0" y="0" width="680" height="270" class="sheet"/>
+<path d="M20 225 H660" class="hull"/><text x="560" y="240" class="t">inner bottom</text>
+<path d="M110 60 H510 A30.0 60 0 0 1 510 180 H110 A30.0 60 0 0 1 110 60 Z" class="shell"/>
+<path d="M110 60 V180 M510 60 V180" class="thin"/>
+<rect x="162" y="186" width="36" height="39" class="saddle"/>
+<rect x="162" y="180" width="36" height="6" class="wood"/>
+<path d="M180 60 V180" class="ring"/>
+<text x="180" y="252" class="t" text-anchor="middle">FIXED saddle</text>
+<rect x="422" y="186" width="36" height="39" class="saddle"/>
+<rect x="422" y="180" width="36" height="6" class="wood"/>
+<path d="M440 60 V180" class="ring"/>
+<text x="440" y="252" class="t" text-anchor="middle">SLIDING saddle</text>
+<rect x="174" y="198" width="12" height="10" class="stopper"/>
+<rect x="120.0" y="39.6" width="20.4" height="22.4" class="shell"/>
+<text x="130.2" y="33.6" class="t" text-anchor="middle">dome</text>
+<path d="M70.0 120 H550.0" class="cl"/>
+<text x="310.0" y="125" class="t small" text-anchor="middle" dy="-12">ring frames at saddles (dashed)</text>
+<text x="50.0" y="124" class="t">AFT</text><text x="540.0" y="52" class="t" text-anchor="end">FWD</text>
+<text x="546.0" y="124" class="t small">2:1 head, R/2 deep</text>
+<path d="M180 14 V64 M80.0 14 V114 M80.0 20 H180" class="dim"/><text x="186" y="24" class="t small">A: head to saddle (input; no free rule)</text></svg>
+<figcaption><strong>Elevation.</strong> Two saddles, FIXED and SLIDING (ABS GN 327 2/2.1.4), ring frames at the saddles, dome near the aft end (US 8,245,658 Fig 5A; STX at the aft head tangent line), the true head shape. Saddle position A stays an input: no free rule found (it drives collapse load, Tooth et al. 2003).</figcaption>
+</figure>
+<figure style="margin-top:16px">
+<svg viewBox="0 0 680 220" role="img" aria-label="Plan"><rect x="0" y="0" width="680" height="220" class="sheet"/>
+<path d="M110 50 H510 A30.0 60 0 0 1 510 170 H110 A30.0 60 0 0 1 110 50 Z" class="shell"/>
+<path d="M70.0 110 H550.0" class="cl"/>
+<circle cx="130.2" cy="110" r="10.2" class="shell"/>
+<path d="M180 50 V170" class="ring"/>
+<rect x="172" y="38" width="16" height="8" class="bracket"/>
+<rect x="170" y="24" width="20" height="10" class="stopper"/>
+<rect x="172" y="174" width="16" height="8" class="bracket"/>
+<rect x="170" y="184" width="20" height="10" class="stopper"/>
+<path d="M440 50 V170" class="ring"/>
+<rect x="432" y="38" width="16" height="8" class="bracket"/>
+<rect x="430" y="24" width="20" height="10" class="stopper"/>
+<rect x="432" y="174" width="16" height="8" class="bracket"/>
+<rect x="430" y="184" width="20" height="10" class="stopper"/>
+<rect x="174" y="104" width="12" height="12" class="stopper"/>
+<text x="200" y="20" class="t">anti-flotation chocks P&amp;S at each saddle</text>
+<text x="196" y="132" class="t small">longitudinal stop (fixed end)</text>
+<text x="130.2" y="210" class="t" text-anchor="middle">dome</text>
+<path d="M130.2 200 V120.2" class="lead"/></svg>
+<figcaption><strong>Plan.</strong> Dome, ring frames, anti-flotation chocks port and starboard at each saddle, longitudinal stop at the fixed end (US 8,245,658 Fig 5A).</figcaption>
+</figure>
+
+<h3>What changes from today</h3>
+<div class="scroll"><table>
+<thead><tr><th>Item</th><th>Today</th><th>Proposed</th><th>Basis</th></tr></thead>
+<tbody>
+<tr><td>Views</td><td>section only</td><td>section, elevation, plan, dome detail</td><td>US 8,245,658</td></tr>
+<tr><td>Saddle</td><td>120° cradle</td><td>140° saddle with wood layer; FIXED / SLIDING</td><td>ADN 9.3.1.11.2(a); ABS GN 327</td></tr>
+<tr><td>Ring frames</td><td>none</td><td>one at each saddle</td><td>UI GC8; US 8,245,658</td></tr>
+<tr><td>Chocks and stops</td><td>none</td><td>anti-flotation P&amp;S; longitudinal stop at fixed end</td><td>IGC 4.8.2, 4.15</td></tr>
+<tr><td>Dome</td><td>curve 0.3·D wide; height 2.0 m</td><td>cylinder Ø = max(1.2 m, 0.17·D), height = Ø, near one end</td><td>STX Fig 19; Senjanović 2006 <span class="tag est">estimate</span></td></tr>
+<tr><td>Head</td><td>as modelled</td><td>true hemisphere or 2:1 ellipse (R/2 deep)</td><td>geometry</td></tr>
+</tbody></table></div>
+
+<h2 id="weight">5 Weight and bill of quantities</h2>
+<p>The Rules and the drawing feed a component weight model that replaces the single 1.30 factor. Published marine LNG tanks weigh 0.096–0.115 t per m³ (240 t for a 2,500 m³ bilobe; 155 t for a 1,350 m³ tank). A rough hand check with OVCD’s formulas gives about 0.05 t/m³, so the parts below need calibrating before any default changes.</p>
+<div class="scroll"><table>
+<thead><tr><th>Part / BOQ line</th><th>Quantity rule</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Shell and head plate</td><td>m² × t × density; 2:1 head 1.084·D² each</td><td>IGC 4.23.2; geometry</td></tr>
+<tr><td>Ring frames</td><td>≥ 1 per saddle; size <span class="tag est">estimate</span></td><td>UI GC8</td></tr>
+<tr><td>Saddles</td><td>2 per tank; steel <span class="tag est">estimate</span></td><td>ABS GN 327</td></tr>
+<tr><td>Wood and resin</td><td>arc × width × 350 mm wood + 20 mm resin</td><td>bunker vessel case study; Park 2024</td></tr>
+<tr><td>Chocks and stops</td><td>count; load from collision and flooding Rules</td><td>IGC 4.15</td></tr>
+<tr><td>Dome and insert</td><td>Ø, height, 20 mm wall, insert ≈700 mm</td><td>STX Fig 19</td></tr>
+<tr><td>Insulation</td><td>m² and m³; 300–350 mm PUR typical; density <span class="tag est">estimate</span></td><td>Wärtsilä</td></tr>
+<tr><td>Fittings set</td><td>level gauge, 86 % alarm, 97.5 % high-level sensor, pressure and temperature instruments, sampling connection</td><td>ADN 9.3.1.21.1; IGC 4.9.1</td></tr>
+<tr><td>Manholes</td><td>Ø ≥ 600 mm</td><td>BV NR467 Ch 9 Sec 3</td></tr>
+<tr><td>NDT, PWHT, hydrotest</td><td>100 % RT of butt welds; PWHT rule; 1.5 Po test</td><td>IGC 6.5.6.5, 6.6.2.2, 4.23.6</td></tr>
+</tbody></table></div>
+
+<h2 id="defaults">6 Inputs and defaults</h2>
+<div class="scroll"><table>
+<thead><tr><th>Input</th><th>Proposed default</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>Dome diameter</td><td>max(1.2 m, 0.17·D)</td><td><span class="tag est">estimate</span> two published points (STX; Senjanović)</td></tr>
+<tr><td>Dome height above shell</td><td>= dome diameter (today 2.0 m)</td><td><span class="tag est">estimate</span> one published point (STX)</td></tr>
+<tr><td>Fittings above dome (new)</td><td>0; 1–2 m with a deepwell pump</td><td>sourced range (Wärtsilä patent)</td></tr>
+<tr><td>Saddle embrace</td><td>140°</td><td>sourced (ADN); inside 120°–150° (PD 5500 via Tooth 2003)</td></tr>
+<tr><td>Saddles</td><td>2: fixed + sliding</td><td>sourced (ABS GN 327)</td></tr>
+<tr><td>Support wood</td><td>350 mm refrigerated; 90 mm pressurised</td><td>one ship each; 90 mm <span class="tag est">estimate</span></td></tr>
+<tr><td>Resin layer</td><td>20 mm</td><td>sourced (Park 2024)</td></tr>
+<tr><td>S690QL1 allowable</td><td>256.7 MPa</td><td>IGC 4.23.3.1 <span class="tag fix">fix</span></td></tr>
+<tr><td>P1 (vacuum)</td><td>0.025 MPa</td><td>IGC 4.23.2.3</td></tr>
+</tbody></table></div>
+
+<h2 id="open">7 Open items</h2>
+<ul>
+<li><strong>Saddle stresses:</strong> Zick 1951 and PD 5500 Annex G are paywalled, so ring sizing and saddle position stay inputs.</li>
+<li><strong>Shell and head formulas:</strong> ASME VIII-1 and EN 13445-3 are not held, so the wall Measure stays <code>unverified</code>.</li>
+<li><strong>External pressure / buckling:</strong> no free method held.</li>
+<li><strong>Dome rule:</strong> based on only two tanks; no dome height for tanks under 1,000 m³.</li>
+<li><strong>Weight:</strong> no published breakdown by part for any marine tank.</li>
+<li><strong>Insulation:</strong> no installed PUF density published.</li>
+<li><strong>Class rules:</strong> DNV and LR gas rules not read (sign-up needed).</li>
+<li><strong>To check:</strong> IACS UR G1 App. 1 prints its scope as “L &lt; 50 m”, likely a misprint. IGF amendments after MSC 108 not checked.</li>
+</ul>
+
+<h2 id="sources">8 Sources</h2>
+<p>All in <code>~/Dev/ovcd-rule-sources/</code>; hashes in <code>SOURCES.md</code>; extract notes with page numbers in <code>type-c/NOTES-*.md</code>.</p>
+<ul>
+<li>IMO: MSC.370(93) and amendments (IGC); MSC.391(95), MSC.551(108) (IGF).</li>
+<li>IACS: UR G1 Rev.3 Corr.2; UR G2 Rev.3; UI GC6, GC7, GC8, GC16.</li>
+<li>ABS: GN 327 Strength Assessment of Independent Type C Tanks (2022); Guide 144 (2023).</li>
+<li>BV: NR467 Part D (Jul 2026); NR529 (Jan 2026).</li>
+<li>UNECE: ADN 2025.</li>
+<li>Heo, Kang, Park, “Consideration for IMO Type C Independent Tank Rule Scantling Process and Evaluation Methods”, SNAK special issue, Oct 2017, pp. 93–104.</li>
+<li>US Patent 8,245,658 B2, “Systems and methods for supporting tanks in a cargo ship” (2012).</li>
+<li>Park et al., JMSE 12 (2024) 2161 — Type C fuel tank supports.</li>
+<li>Tooth, Chan, Spence, Nash (2003) — saddle-supported vessels, plastic collapse loads.</li>
+<li>Salarkia, Golabi, Amirsalari, JACM 6(4) (2020) — bilobe tank design.</li>
+<li>Senjanović et al., DESIGN 2006 — river LPG cargo tanks.</li>
+<li>Maker data: Outokumpu, ThyssenKrupp, Nippon Steel, voestalpine, Macsteel, SSAB, Röchling, Wärtsilä.</li>
+</ul>
+
+<footer>Work in progress · research of 2026-10-20 · OVCD documentation</footer>
+</main>
+</body>
+</html>
