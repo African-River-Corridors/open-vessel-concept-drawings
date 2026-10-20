@@ -21,6 +21,7 @@
 //!   clearance, waterlines, dimensions beam, depth, draught and freeboard.
 
 use crate::run::RunOutcome;
+use ovcd_core::cargo::CargoClass;
 use ovcd_core::models::BargeInputs;
 use ovcd_core::pyfmt::fixed;
 use serde_json::{Value, json};
@@ -304,31 +305,40 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
     let depth = need(results, &["dims", "depth_m"])?;
     let draught = need(results, &["results", "draught_m"])?;
     let geo = |key: &str| need(results, &["geometry", key]);
-    let containment = if results.get("phase").and_then(Value::as_str) == Some("liquid_gas") {
-        let defaults = BargeInputs::new(loa, beam, depth, draught, 0.0);
-        let arrangement = |key: &str| need(results, &["arrangement", key]);
-        Containment::Tanks {
-            od: geo("tank_outer_diameter_m")?,
-            n_wide: arrangement("n_wide")? as usize,
-            n_long: arrangement("n_long")? as usize,
-            side_clearance: geo("side_clearance_m")?,
-            bottom_clearance: geo("bottom_clearance_m")?,
-            double_bottom: need(results, &["drawing", "double_bottom_m"])?,
-            support_height: need(results, &["drawing", "tank_support_height_m"])?,
-            dome: num_at(results, &["drawing", "dome_height_m"]),
-            wing_width: num_at(results, &["drawing", "wing_tank_width_m"]),
-            wing_gap: num_at(results, &["drawing", "wing_tank_gap_m"]),
-            wing_ratio: num_at(results, &["drawing", "wing_tank_height_ratio"]),
-            gap_long: defaults.tank_gap_longitudinal,
-            gap_across: defaults.tank_gap_transverse,
+    let phase = text_at(results, "phase");
+    let class = CargoClass::from_key(&phase)
+        .map_err(|_| format!("the results give an unknown Cargo Class `{phase}`"))?;
+    let containment = match class {
+        CargoClass::Gas => {
+            let defaults = BargeInputs::new(loa, beam, depth, draught, 0.0);
+            let arrangement = |key: &str| need(results, &["arrangement", key]);
+            Containment::Tanks {
+                od: geo("tank_outer_diameter_m")?,
+                n_wide: arrangement("n_wide")? as usize,
+                n_long: arrangement("n_long")? as usize,
+                side_clearance: geo("side_clearance_m")?,
+                bottom_clearance: geo("bottom_clearance_m")?,
+                double_bottom: need(results, &["drawing", "double_bottom_m"])?,
+                support_height: need(results, &["drawing", "tank_support_height_m"])?,
+                dome: num_at(results, &["drawing", "dome_height_m"]),
+                wing_width: num_at(results, &["drawing", "wing_tank_width_m"]),
+                wing_gap: num_at(results, &["drawing", "wing_tank_gap_m"]),
+                wing_ratio: num_at(results, &["drawing", "wing_tank_height_ratio"]),
+                gap_long: defaults.tank_gap_longitudinal,
+                gap_across: defaults.tank_gap_transverse,
+            }
         }
-    } else {
-        let drawing = |key: &str| need(results, &["drawing", key]);
-        Containment::Hold {
-            top_width: geo("hold_top_width_m")?,
-            bottom_width: geo("hold_bottom_width_m")?,
-            inner_bottom: drawing("double_bottom_m")?,
-            coaming: drawing("hatch_coaming_height_m")?,
+        CargoClass::DryBulk => {
+            let drawing = |key: &str| need(results, &["drawing", key]);
+            Containment::Hold {
+                top_width: geo("hold_top_width_m")?,
+                bottom_width: geo("hold_bottom_width_m")?,
+                inner_bottom: drawing("double_bottom_m")?,
+                coaming: drawing("hatch_coaming_height_m")?,
+            }
+        }
+        CargoClass::LiquidBulk => {
+            return Err("a liquid bulk Cargo has no drawing yet".to_string());
         }
     };
     for (name, value) in [

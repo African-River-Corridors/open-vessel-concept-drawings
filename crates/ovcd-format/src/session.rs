@@ -119,7 +119,7 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
                     json!({
                         "value": key,
                         "label": p.name,
-                        "phase": p.phase,
+                        "phase": p.phase.key(),
                         "description": p.description,
                     })
                 })

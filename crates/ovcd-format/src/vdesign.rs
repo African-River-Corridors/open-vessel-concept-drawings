@@ -24,6 +24,7 @@
 //! result (see [`DRY_BULK_WING_VOID_M`]).
 
 use crate::profile::Profile;
+use ovcd_core::cargo::CargoClass;
 use ovcd_core::text;
 use ovcd_core::text::{Arg, Msg, Text};
 use serde::de::{DeserializeSeed, Deserializer, MapAccess, SeqAccess, Visitor};
@@ -44,14 +45,15 @@ pub const OLDEST_FORMAT_VERSION: u64 = 1;
 /// The engine version written into every new Design. One version covers every `ovcd-*` crate.
 pub const ENGINE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// Cargo Containments, and the Cargo phases each can carry (as in the Python `simulate`).
-pub const CARGO_CONTAINMENTS: &[(&str, &str)] = &[
-    ("box_hold", "dry_bulk"),
-    ("sloped_hopper_hold", "dry_bulk"),
-    ("type_c_tanks", "liquid_gas"),
+/// Cargo Containments, and the Cargo Class each can carry (as in the Python `simulate`).
+pub const CARGO_CONTAINMENTS: &[(&str, CargoClass)] = &[
+    ("box_hold", CargoClass::DryBulk),
+    ("sloped_hopper_hold", CargoClass::DryBulk),
+    ("type_c_tanks", CargoClass::Gas),
 ];
 
-/// Cargo phases, as the Python cargo database names them.
+/// Cargo phases (the keys of the Cargo Classes that have a containment), as the Defaults Profile
+/// names them.
 pub const CARGO_PHASES: &[&str] = &["dry_bulk", "liquid_gas"];
 
 /// Inputs whose default is chosen by another value: `(input, by, keys)`. The Defaults Profile
@@ -1803,9 +1805,9 @@ pub const DEPTH_GROUPS: &[&str] = &["dry_bulk", "liquid", "gas"];
 /// the database does not have.
 pub fn depth_group(cargo: &str) -> Option<&'static str> {
     match ovcd_core::cargo::get_cargo(cargo).ok()?.phase {
-        "dry_bulk" => Some("dry_bulk"),
-        "liquid_gas" => Some("gas"),
-        _ => None,
+        CargoClass::DryBulk => Some("dry_bulk"),
+        CargoClass::Gas => Some("gas"),
+        CargoClass::LiquidBulk => Some("liquid"),
     }
 }
 
@@ -2642,7 +2644,7 @@ fn default_for(
                     let Ok(props) = ovcd_core::cargo::get_cargo(&cargo) else {
                         return Ok(None);
                     };
-                    props.phase.to_string()
+                    props.phase.key().to_string()
                 }
                 other => match got(other) {
                     Some(k) => k,
@@ -3024,7 +3026,7 @@ fn cross_checks(
                     input = Arg::input("cargo_containment"),
                     containment = containment,
                     cargo = cargo,
-                    phase = props.phase.to_string(),
+                    phase = props.phase.key(),
                     fits = fits.join(" or ")
                 )),
                 &["cargo_containment", "cargo"],

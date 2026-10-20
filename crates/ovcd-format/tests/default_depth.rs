@@ -104,7 +104,7 @@ fn every_cargo_of_the_format_has_a_group_and_liquid_has_none_yet() {
         let g = depth_group(key).unwrap_or_else(|| panic!("{key} has no depth group"));
         assert_eq!(
             g,
-            if props.phase == "dry_bulk" {
+            if props.phase == ovcd_core::cargo::CargoClass::DryBulk {
                 "dry_bulk"
             } else {
                 "gas"

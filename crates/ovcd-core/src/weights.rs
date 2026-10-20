@@ -37,23 +37,39 @@ fn tank_zone_length(inputs: &BargeInputs) -> Result<f64, PyError> {
     Ok(inputs.loa - bow - stern)
 }
 
-/// Calculate the component weight breakdown, in tonnes.
-///
-/// Hull steel is estimated from plating areas and thicknesses, plus a structure factor for
-/// internal framing (floors, frames, longitudinals, bulkheads).
-pub fn calculate_weights(
-    inputs: &BargeInputs,
+/// The outer hull plate thicknesses, in mm.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PlateThicknesses {
+    pub bottom_mm: f64,
+    pub side_mm: f64,
+    pub deck_mm: f64,
+}
+
+/// The outer hull steel, in tonnes: plating by part, the internal structure and the total.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct HullPlating {
+    pub bottom: f64,
+    pub side: f64,
+    pub deck: f64,
+    pub rake: f64,
+    /// Frames, floors, longitudinals and bulkheads: the plating times `structure_factor - 1`.
+    pub structure: f64,
+    pub total: f64,
+}
+
+/// The outer hull steel from the plating areas and thicknesses, plus a structure factor for the
+/// internal framing. Any hull with plating (the gas barge today, a tank barge later) uses it.
+pub fn hull_plating(
     hull: &HullGeometry,
-    tanks: &TankResult,
-) -> Result<WeightBreakdown, PyError> {
-    let steel_density = inputs.hull_steel_density; // t/m^3
-
+    plates: &PlateThicknesses,
+    steel_density: f64,
+    structure_factor: f64,
+) -> HullPlating {
     // Convert plate thicknesses from mm to m.
-    let t_bottom = inputs.bottom_plate_thickness / 1000.0;
-    let t_side = inputs.side_plate_thickness / 1000.0;
-    let t_deck = inputs.deck_plate_thickness / 1000.0;
+    let t_bottom = plates.bottom_mm / 1000.0;
+    let t_side = plates.side_mm / 1000.0;
+    let t_deck = plates.deck_mm / 1000.0;
 
-    // --- Hull plating weights ---
     let w_bottom = hull.bottom_area() * t_bottom * steel_density;
     let w_side = hull.side_area() * t_side * steel_density;
     let w_deck = hull.deck_area() * t_deck * steel_density;
@@ -66,10 +82,48 @@ pub fn calculate_weights(
     let w_plating = w_bottom + w_side + w_deck + w_rake;
 
     // Internal structure (frames, floors, longitudinals, bulkheads).
-    let w_structure = w_plating * (inputs.structure_factor - 1.0);
+    let w_structure = w_plating * (structure_factor - 1.0);
 
-    // Total hull steel.
-    let w_hull_total = w_plating + w_structure;
+    HullPlating {
+        bottom: w_bottom,
+        side: w_side,
+        deck: w_deck,
+        rake: w_rake,
+        structure: w_structure,
+        total: w_plating + w_structure,
+    }
+}
+
+/// Calculate the component weight breakdown, in tonnes.
+///
+/// Hull steel is estimated from plating areas and thicknesses, plus a structure factor for
+/// internal framing (floors, frames, longitudinals, bulkheads).
+pub fn calculate_weights(
+    inputs: &BargeInputs,
+    hull: &HullGeometry,
+    tanks: &TankResult,
+) -> Result<WeightBreakdown, PyError> {
+    let steel_density = inputs.hull_steel_density; // t/m^3
+    let t_side = inputs.side_plate_thickness / 1000.0;
+
+    // --- Hull plating weights ---
+    let HullPlating {
+        bottom: w_bottom,
+        side: w_side,
+        deck: w_deck,
+        rake: w_rake,
+        structure: w_structure,
+        total: w_hull_total,
+    } = hull_plating(
+        hull,
+        &PlateThicknesses {
+            bottom_mm: inputs.bottom_plate_thickness,
+            side_mm: inputs.side_plate_thickness,
+            deck_mm: inputs.deck_plate_thickness,
+        },
+        steel_density,
+        inputs.structure_factor,
+    );
 
     // --- Tank weights (from tank calculation) ---
     let w_tank_shells = tanks.tank_shell_weight;

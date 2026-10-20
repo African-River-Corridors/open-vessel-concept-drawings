@@ -13,6 +13,7 @@ use crate::EvalError;
 use crate::eval::{barge_inputs_from, tagged_f64};
 use ovcd_core::aft_arrangement::AftArrangementResult;
 use ovcd_core::barge_capacity::{BargeCapacityResult, GasBasis};
+use ovcd_core::cargo::CargoClass;
 use ovcd_core::checks::Check;
 use ovcd_core::gas_separation::GasSeparationResult;
 use ovcd_core::models::{TankResult, WeightBreakdown};
@@ -346,7 +347,7 @@ pub(crate) fn capacity_result_from_json(
     };
     Ok(BargeCapacityResult {
         cargo_type: o.string("cargo_type")?,
-        phase: o.string("phase")?,
+        phase: CargoClass::from_key(&o.string("phase")?).map_err(EvalError::BadInput)?,
         cargo_density_t_per_m3: o.f64("cargo_density_t_per_m3")?,
         cargo_capacity_t: o.f64("cargo_capacity_t")?,
         full_load_draft_m: o.f64("full_load_draft_m")?,

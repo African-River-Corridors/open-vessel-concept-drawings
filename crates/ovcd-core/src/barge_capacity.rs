@@ -25,7 +25,7 @@ use crate::aft_arrangement::{
     DEFAULT_ACCOM_UNITS_GAS, DEFAULT_BATTERY_UNITS_DRY, DEFAULT_BATTERY_UNITS_GAS, PyException,
     compute as compute_aft_arrangement,
 };
-use crate::cargo::get_cargo;
+use crate::cargo::{CargoClass, get_cargo};
 use crate::checks::{Check, all_ok};
 use crate::gas_separation::{
     GasSeparationInputs, GasSeparationResult, compute as compute_gas_separation,
@@ -274,8 +274,8 @@ pub struct GasBasis {
 #[derive(Debug, Clone, PartialEq)]
 pub struct BargeCapacityResult {
     pub cargo_type: String,
-    /// "liquid_gas" or "dry_bulk"
-    pub phase: String,
+    /// The Cargo Class (`liquid_gas` or `dry_bulk` in the results).
+    pub phase: CargoClass,
     pub cargo_density_t_per_m3: f64,
 
     // Headline outputs
@@ -820,6 +820,18 @@ costed and air-draft-gated separately.";
 const BULK_GM_WARNING: &str = "Bulk GM is first-order (assumed lightship KG); \
 cargo-shift/angle-of-repose not modelled \u{2014} confirm with a full intact-stability booklet.";
 
+/// Whether a Cargo Class takes the gas path (Type C tanks) or the dry path (a hold). Liquid bulk
+/// has no path yet, so it is an error, never the gas path.
+pub fn takes_gas_path(class: CargoClass) -> Result<bool, PyError> {
+    match class {
+        CargoClass::Gas => Ok(true),
+        CargoClass::DryBulk => Ok(false),
+        CargoClass::LiquidBulk => Err(value_error(format!(
+            "Cargo class '{class}' is not supported yet: there is no liquid bulk capacity path"
+        ))),
+    }
+}
+
 /// Run the unified barge capacity chain (volume-bound).
 pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError> {
     // Python builds the nested inputs, and so runs their `__post_init__` checks, before
@@ -832,14 +844,14 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     }
     let props = get_cargo(&inp.cargo_type).map_err(value_error)?;
     let density_t = inp.cargo_density_kg_m3.unwrap_or(props.density) / 1000.0;
-    let is_gas = props.phase != "dry_bulk";
+    let is_gas = takes_gas_path(props.phase)?;
 
     let arr = arrangement(inp, is_gas)?;
     let (bow_void, stern_void, rake) = (arr.bow_void_m, arr.stern_void_m, arr.rake_m);
     let cargo_zone = inp.loa - bow_void - stern_void;
 
     let mut geometry_error: Option<String> = None;
-    let vol = if props.phase == "dry_bulk" {
+    let vol = if !is_gas {
         bulk_volumetric(inp, bow_void, stern_void)?
     } else {
         match gas_volumetric(inp, bow_void, stern_void) {
@@ -1019,7 +1031,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         warnings.extend(s.warnings.iter().cloned());
     }
     let mut gm = None;
-    if props.phase == "dry_bulk" && draft > 0.0 && !overloaded {
+    if props.phase == CargoClass::DryBulk && draft > 0.0 && !overloaded {
         let g = bulk_gm(inp, &detail, draft, lightship, cargo_capacity, &hull);
         checks.push(Check::with_severity(
             "gm_positive",
@@ -1043,7 +1055,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
 
     Ok(BargeCapacityResult {
         cargo_type: props.name.to_string(),
-        phase: props.phase.to_string(),
+        phase: props.phase,
         cargo_density_t_per_m3: density_t,
         cargo_capacity_t: cargo_capacity,
         full_load_draft_m: draft,
