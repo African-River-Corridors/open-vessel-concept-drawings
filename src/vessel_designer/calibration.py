@@ -462,22 +462,22 @@ def _tank_section() -> list[str]:
                 "Why not run |", "|---|---|---|---|---|---|---|"]
         for c in records:
             out.append(f"| {c['id']} | {c['confidence']} | {fmt(c['gross_volume_m3'], 0)} | "
-                       f"{fmt(c['tank_weight_t'], 0)} | {tank_weight_per_m3(c):.3f} | {c['weight_includes']} | "
+                       f"{fmt(c['tank_weight_t'], 0)} | {_tank_weight_per_m3(c):.3f} | {c['weight_includes']} | "
                        f"{c['not_yet_runnable']} |")
-        lo, hi = tank_weight_range()
+        lo, hi = _tank_weight_range()
         out += ["", f"Published range: {lo:.3f} to {hi:.3f} t per m³ of tank."]
     return out
 
 
-def tank_weight_per_m3(record: dict) -> float:
+def _tank_weight_per_m3(record: dict) -> float:
     """The published tank weight over the published gross volume (t per m³), arithmetic on two printed
     figures (issue #317)."""
     return record["tank_weight_t"] / record["gross_volume_m3"]
 
 
-def tank_weight_range() -> tuple[float, float]:
+def _tank_weight_range() -> tuple[float, float]:
     """The lowest and highest published tank weight per m³ of the tank weight records."""
-    values = [tank_weight_per_m3(c) for c in _load_tank_cases().get("tank_weight_records", [])]
+    values = [_tank_weight_per_m3(c) for c in _load_tank_cases().get("tank_weight_records", [])]
     return min(values), max(values)
 
 

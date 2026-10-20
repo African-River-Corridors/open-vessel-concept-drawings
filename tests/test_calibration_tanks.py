@@ -185,8 +185,8 @@ def test_the_weight_per_m3_is_the_published_weight_over_the_published_volume():
     Label: sourced - tank maker's news release 8 Sep 2020 and Breakbulk News 23 Nov 2022 (1,350 m3, 155 t); FE software maker's customer story (2,500 m3, 240 t); the ratios are hand calculations
     """
     by_id = {c["id"]: c for c in _load_tank_cases()["tank_weight_records"]}
-    assert calibration.tank_weight_per_m3(by_id["lng-bunker-barge-tank-1350"]) == pytest.approx(0.11481, abs=5e-6)
-    assert calibration.tank_weight_per_m3(by_id["lng-bunker-vessel-bilobe-2500"]) == pytest.approx(0.0960, abs=5e-6)
-    lo, hi = calibration.tank_weight_range()
+    assert calibration._tank_weight_per_m3(by_id["lng-bunker-barge-tank-1350"]) == pytest.approx(0.11481, abs=5e-6)
+    assert calibration._tank_weight_per_m3(by_id["lng-bunker-vessel-bilobe-2500"]) == pytest.approx(0.0960, abs=5e-6)
+    lo, hi = calibration._tank_weight_range()
     assert (round(lo, 3), round(hi, 3)) == (0.096, 0.115)
     assert "Tank weight per m³" in report()
