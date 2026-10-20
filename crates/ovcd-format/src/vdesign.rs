@@ -122,6 +122,8 @@ pub const TABLE_DEFAULTS: &[&str] = &[
     "tank_insulation_type",
     "tank_insulation_thickness_mm",
     "tank_structure_factor",
+    "tank_dome_height_m",
+    "tank_dome_diameter_m",
 ];
 
 /// The keys of a default table, in the order the schema names them. The carriage condition is

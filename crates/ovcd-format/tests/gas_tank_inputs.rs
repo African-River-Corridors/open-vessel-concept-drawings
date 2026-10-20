@@ -84,10 +84,20 @@ fn each_default_equals_the_legacy_table_value_and_the_core_default() {
         // formula gives the thickness); a file that lacks it keeps the 25 mm the engine used.
         // Issue #316: the dome sizes are optional overrides too; none is the dome rule, and a file
         // that lacks them keeps the 2.0 m the engine used.
-        if matches!(
-            name,
-            "tank_wall_thickness_mm" | "tank_dome_height_m" | "tank_dome_diameter_m"
-        ) {
+        if matches!(name, "tank_dome_height_m" | "tank_dome_diameter_m") {
+            let row = profile
+                .table_default(
+                    name,
+                    &[("cargo_containment", "type_c_tanks"), ("cargo", "LNG")],
+                )
+                .unwrap_or_else(|| panic!("{name} has a default table"));
+            assert_eq!(row.value, &Value::Null, "{name}");
+            assert_eq!(row.status, "estimate", "{name}");
+            assert!(row.basis.contains("dome rule"), "{name}");
+            assert_eq!(legacy.value, core_default(name), "{name}: table vs core");
+            continue;
+        }
+        if name == "tank_wall_thickness_mm" {
             assert_eq!(profile.default(name), Some(&Value::Null), "{name}");
             assert_eq!(legacy.value, core_default(name), "{name}: table vs core");
             continue;

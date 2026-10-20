@@ -473,14 +473,34 @@
       "basis": "carried over from the original engine: the height of the tank saddles above the inner bottom. The double bottom is the bottom clearance less this, and not less than zero"
     },
     "tank_dome_height_m": {
-      "default": null,
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": {},
+            "value": null,
+            "status": "estimate",
+            "basis": "The dome rule, an estimate on one published point: height above the tank = the dome diameter. A dome 2,500 mm in diameter whose top is 2,500 mm above the inside of the shell (Heo, Kang and Park 2017, Fig. 19)"
+          }
+        ]
+      },
       "unit": "m",
       "hard": { "ge": 0, "le": 10 },
       "soft": { "min": 0.5, "max": 3.0 },
       "basis": "A dome height of your own, in m, above the tank top. none: the dome rule, height = the dome diameter (an estimate on one published point: a dome 2,500 mm in diameter whose top is 2,500 mm above the inside of the shell, Heo, Kang and Park 2017, Fig. 19). The dome raises the tank top and the air draft, and its volume counts in Vc (IGC 2.4.1.1). A saved file that stores a value keeps it (the original engine used 2.0 m)"
     },
     "tank_dome_diameter_m": {
-      "default": null,
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": {},
+            "value": null,
+            "status": "estimate",
+            "basis": "The dome rule, an estimate on two published points: diameter = the larger of 1.2 m and 0.17 x the steel outer diameter. A 2,500 mm dome on a 14.6 m lobe (R7300; Heo, Kang and Park 2017, Fig. 19; 2.5 / 14.6 = 0.171), and the 1,200 mm valve dome of a 4.73 m river LPG tank (Senjanovic et al., DESIGN 2006)"
+          }
+        ]
+      },
       "unit": "m",
       "hard": { "ge": 0, "le": 10 },
       "soft": { "min": 0.5, "max": 3.0 },
