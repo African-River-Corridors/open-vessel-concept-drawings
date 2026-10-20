@@ -11,6 +11,7 @@
 use crate::checks::Check;
 use crate::pyint::{self, PyInt, RoundError};
 use crate::pystr;
+use crate::text;
 use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
@@ -380,20 +381,26 @@ pub fn compute(
         Check::new(
             "masses_positive",
             lightest > 0.0,
-            "mass-model inputs present"
+            text!("check-masses-positive", "mass-model inputs present")
         ),
         Check::with_severity(
             "no_reliquefaction_in_scope",
             true,
-            "cargo system excludes reliquefaction and nitrogen plant per the \
-             pressure-accumulation operating concept",
+            text!(
+                "check-no-reliquefaction-in-scope",
+                "cargo system excludes reliquefaction and nitrogen plant per the \
+                 pressure-accumulation operating concept"
+            ),
             "warning",
         ),
         Check::with_severity(
             "fabrication_rates_are_estimates",
             false,
-            "fabrication/supply rates are user-supplied estimates; replace them with \
-             yard quotes before relying on the total",
+            text!(
+                "check-fabrication-rates-are-estimates",
+                "fabrication/supply rates are user-supplied estimates; replace them with \
+                 yard quotes before relying on the total"
+            ),
             "warning",
         ),
     ];

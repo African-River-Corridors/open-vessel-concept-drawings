@@ -8,7 +8,9 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-ovcd-core.workspace = true
+# `serde` writes the engine's English messages (`Text`) into the results.
+ovcd-core = { workspace = true, features = ["serde"] }
+
 # The GA views take the width of a label from the standard's text-width table (clause 11.7). The tests
 # also check the views against the standard itself (spec 0003).
 ovcd-draw.workspace = true
@@ -18,3 +20,7 @@ serde = "1"
 serde_json.workspace = true
 sha2 = "0.11.1"
 
+
+[dev-dependencies]
+# The English test formats the Text Library with the Fluent reference implementation (spec 0005).
+fluent-bundle = "0.16"

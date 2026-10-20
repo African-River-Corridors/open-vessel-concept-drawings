@@ -23,11 +23,13 @@
 
 use crate::profile::Profile;
 use crate::run::{HashStatus, RunOutcome, results_hash, run_design, run_option};
+use crate::text_ids::msg_json;
 use crate::vdesign::{
     AppliesTo, CARGO_CONTAINMENTS, Design, DesignOption, ENGINE_VERSION, FORMATION_KINDS, Group,
     INPUTS, InputKind, KEYED_DEFAULTS, Report, Source, StoredInput, TABLE_DEFAULTS, TABLE_KEYS,
     cargo_includes, check, choice_label, fill, formation_includes, new_design,
 };
+use ovcd_core::text::{Arg, Msg};
 use serde_json::{Map, Value, json};
 
 /// The input schema for a Defaults Profile, as JSON. Built from the input table and the profile,
@@ -340,6 +342,8 @@ pub struct Message {
     pub severity: Severity,
     pub scope: Scope,
     pub text: String,
+    /// The Message Id of `text`, where it has one (ADR 0014). Not part of any result.
+    pub msg: Option<Msg>,
 }
 
 /// One Option, validated and (when it has no hard error) run.
@@ -376,6 +380,7 @@ fn message_json(m: &Message) -> Value {
         "scope": scope,
         "inputs": inputs,
         "text": plain_text(&m.text),
+        "msg": m.msg.as_ref().map(|m| msg_json(m, false)),
     })
 }
 
@@ -424,7 +429,10 @@ impl Evaluation {
                         json!({ "status": "results", "results": results, "results_hash": hash })
                     }
                     Some(RunOutcome::NotAvailable(m)) => {
-                        json!({ "status": "not_available", "message": m })
+                        let msg = crate::run::outcome_text(m)
+                            .and_then(|t| t.msg)
+                            .map(|m| msg_json(&m, false));
+                        json!({ "status": "not_available", "message": m, "msg": msg })
                     }
                     Some(RunOutcome::Failed(m)) => json!({ "status": "failed", "message": m }),
                     None => json!({ "status": "not_run" }),
@@ -1062,24 +1070,40 @@ fn containment_of(option: &DesignOption) -> Option<&str> {
     option.input("cargo_containment")?.value.as_str()
 }
 
+/// The message inside a `msg-option` message (see `vdesign::of_option`): the Option is shown apart.
+fn option_body(m: Msg) -> Option<Msg> {
+    if m.id != "msg-option" {
+        return Some(m);
+    }
+    m.args
+        .into_iter()
+        .find_map(|(name, arg)| match (name, arg) {
+            ("message", Arg::Msg(inner)) => Some(inner),
+            _ => None,
+        })
+}
+
 /// Sort a report's messages into the Options they belong to. The inputs a message is about come
 /// from the report as data, never from the wording of the text.
 fn attach(report: &Report, names: &[&str]) -> (Vec<Vec<Message>>, Vec<Message>) {
     let mut file_level: Vec<Message> = Vec::new();
     let mut by_option: Vec<Vec<Message>> = names.iter().map(|_| Vec::new()).collect();
+    let msg_of = |msgs: &[Option<Msg>], i: usize| msgs.get(i).cloned().flatten();
     let tagged = report
         .errors
         .iter()
         .zip(&report.error_inputs)
-        .map(|(t, n)| (Severity::Error, t, n))
+        .enumerate()
+        .map(|(i, (t, n))| (Severity::Error, t, n, msg_of(&report.error_msgs, i)))
         .chain(
             report
                 .warnings
                 .iter()
                 .zip(&report.warning_inputs)
-                .map(|(t, n)| (Severity::Warning, t, n)),
+                .enumerate()
+                .map(|(i, (t, n))| (Severity::Warning, t, n, msg_of(&report.warning_msgs, i))),
         );
-    for (severity, text, inputs) in tagged {
+    for (severity, text, inputs, msg) in tagged {
         // The longest name first, so "A" does not claim a message of "A: B".
         let owner = (0..names.len())
             .filter(|&i| text.starts_with(&format!("Option '{}': ", names[i])))
@@ -1096,6 +1120,7 @@ fn attach(report: &Report, names: &[&str]) -> (Vec<Vec<Message>>, Vec<Message>) 
                     severity,
                     scope,
                     text: body.to_string(),
+                    msg: msg.and_then(option_body),
                 });
             }
             // No Option owns it: it is about the file.
@@ -1103,6 +1128,7 @@ fn attach(report: &Report, names: &[&str]) -> (Vec<Vec<Message>>, Vec<Message>) 
                 severity,
                 scope,
                 text: text.clone(),
+                msg,
             }),
         }
     }

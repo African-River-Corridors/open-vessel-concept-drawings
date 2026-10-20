@@ -22,8 +22,10 @@
 
 use crate::aft_arrangement::PyException;
 use crate::checks::{Check, all_ok};
-use crate::pyfmt::{fixed, round_to};
+use crate::pyfmt::round_to;
 use crate::squat::{self, SquatInputs};
+use crate::text;
+use crate::text::{Arg, Text};
 use crate::waves::{self, WaveResistanceInputs};
 use alloc::format;
 use alloc::string::{String, ToString};
@@ -237,7 +239,7 @@ pub struct ResistanceResults {
     pub wetted_surface_area: f64,
     pub environments: Vec<EnvironmentResult>,
     pub checks: Vec<Check>,
-    pub warnings: Vec<String>,
+    pub warnings: Vec<Text>,
 }
 
 impl ResistanceResults {
@@ -689,11 +691,12 @@ fn build_checks(inputs: &ResistanceInputs, environments: &[EnvironmentResult]) -
             checks.push(Check::new(
                 format!("service_speed_below_limiting[{}]", env.name),
                 ok,
-                format!(
-                    "{}: service {} kn <= 0.95 x Schijf limit {} kn",
-                    env.name,
-                    fixed(env.service_speed_knots, 1),
-                    fixed(l, 2)
+                text!(
+                    "check-service-speed-below-limiting",
+                    "{environment}: service {service} kn <= 0.95 x Schijf limit {limit} kn",
+                    environment = &env.name,
+                    service = Arg::fixed(env.service_speed_knots, 1),
+                    limit = Arg::fixed(l, 2),
                 ),
             ));
         }
@@ -703,11 +706,12 @@ fn build_checks(inputs: &ResistanceInputs, environments: &[EnvironmentResult]) -
         checks.push(Check::new(
             format!("power_within_installed[{}]", env.name),
             ok_pwr,
-            format!(
-                "{}: power {} kW <= installed {} kW",
-                env.name,
-                fixed(env.power_at_service_kw, 0),
-                fixed(inputs.tug.engine_power_kw, 0)
+            text!(
+                "check-power-within-installed",
+                "{environment}: power {power} kW <= installed {installed} kW",
+                environment = &env.name,
+                power = Arg::fixed(env.power_at_service_kw, 0),
+                installed = Arg::fixed(inputs.tug.engine_power_kw, 0),
             ),
         ));
 
@@ -717,10 +721,11 @@ fn build_checks(inputs: &ResistanceInputs, environments: &[EnvironmentResult]) -
             checks.push(Check::new(
                 format!("blockage_in_range[{}]", env.name),
                 ok_block,
-                format!(
-                    "{}: blockage n = {} must be in (0, 1)",
-                    env.name,
-                    fixed(env.blockage_ratio, 3)
+                text!(
+                    "check-blockage-in-range",
+                    "{environment}: blockage n = {blockage} must be in (0, 1)",
+                    environment = &env.name,
+                    blockage = Arg::fixed(env.blockage_ratio, 3),
                 ),
             ));
         }
@@ -730,8 +735,11 @@ fn build_checks(inputs: &ResistanceInputs, environments: &[EnvironmentResult]) -
     checks.push(Check::with_severity(
         "coefficients_are_first_order",
         true,
-        "Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor \
-         are uncalibrated first-order estimates (RS1) \u{2014} ITTC-1957 friction is standard.",
+        text!(
+            "check-coefficients-are-first-order",
+            "Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor \
+             are uncalibrated first-order estimates (RS1) \u{2014} ITTC-1957 friction is standard."
+        ),
         "warning",
     ));
 

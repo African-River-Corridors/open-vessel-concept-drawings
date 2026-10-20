@@ -2,6 +2,7 @@
 
     python3 tools/i18n_check.py          # report; exit 1 on any problem
     python3 tools/i18n_check.py --fix    # also set lapsed reviews back to draft
+    python3 tools/i18n_check.py --hashes es   # print the "reviewed" status line of each English message
 
 It checks:
   - every id the code uses is in English (missing keys);
@@ -29,7 +30,7 @@ ENGLISH_ONLY = {"drawing.ftl"}
 DERIVED = ("input-", "choice-", "group-")
 CODE = [("app/src", (".ts", ".svelte")), ("app/index.html", ()), ("crates", (".rs",))]
 # In Rust only the id of a `text!` call counts: other quoted kebab strings there are not Message Ids.
-RUST_USED = re.compile(r'\btext!\(\s*"([a-z0-9-]+)"')
+RUST_USED = re.compile(r'\b(?:text!|Text::fixed)\(\s*"([a-z0-9-]+)"')
 
 MESSAGE = re.compile(r"^([a-zA-Z][a-zA-Z0-9_-]*)\s*=(.*)$")
 PLACEHOLDER = re.compile(r"\{\s*\$([a-zA-Z][a-zA-Z0-9_-]*)")
@@ -96,7 +97,8 @@ def code_ids(root: Path) -> tuple[set[str], set[str]]:
         for p in files:
             text = p.read_text(encoding="utf-8", errors="replace")
             if p.suffix == ".rs":
-                used.update(RUST_USED.findall(text))
+                if p.name != "text.rs":  # the macro's own example
+                    used.update(RUST_USED.findall(text))
                 continue
             used.update(USED.findall(text))
             used.update(re.findall(r'data-i18n(?:-aria)?="([a-z0-9-]+)"', text))
@@ -118,6 +120,10 @@ def check(root: Path = ROOT, fix: bool = False) -> list[str]:
                 problems.append(f"{p.relative_to(root)}:{v.line}: id {k} is also in another English file")
             english[k] = v
 
+    import i18n_extract  # the engine's English comes from the Rust source; engine.ftl must match it
+
+    problems += i18n_extract.problems(root)
+    problems += check_input_labels(root, english)
     used, built = code_ids(root)
     for k in sorted(used - english.keys()):
         problems.append(f"missing: {k} is used in the code but not in locales/{SOURCE}")
@@ -154,10 +160,81 @@ def check(root: Path = ROOT, fix: bool = False) -> list[str]:
                 p.write_text("".join(text), encoding="utf-8")
             elif lapsed:
                 problems += [f"{rel}:{m.line}: lapsed review: the English of {m.id} changed (run with --fix)" for m in lapsed]
+    languages = sorted(d.name for d in locales.iterdir() if d.is_dir() and d.name != SOURCE)
+    problems += check_terms(root, languages)
     return problems
 
 
+# The input table: each `spec(…)`-style constructor call gives an input's key and its English label.
+INPUT_SPEC = re.compile(r'\b(?:spec|only|only_in|pushed|self_propelled|lpg)\(\s*"([a-z0-9_]+)",\s*"((?:[^"\\]|\\.)*)"')
+
+
+def check_input_labels(root: Path, english: dict[str, "Message"]) -> list[str]:
+    """`inputs.ftl` holds each input of the input table with its label: a stale file fails here, fast.
+    The Rust test `crates/ovcd-format/tests/i18n_inputs.rs` checks the rest (choices, groups, notes)."""
+    path = root / "crates/ovcd-format/src/vdesign.rs"
+    if not path.exists():
+        return []
+    src = path.read_text(encoding="utf-8")
+    start = src.find("pub const INPUTS")
+    if start < 0:
+        return ["crates/ovcd-format/src/vdesign.rs: no input table (`pub const INPUTS`) found"]
+    table = {f"input-{k.replace('_', '-')}": label for k, label in INPUT_SPEC.findall(src[start:src.index("];", start)])}
+    rerun = "run OVCD_WRITE_TEXT=1 cargo test -p ovcd-format --test i18n_inputs"
+    out = []
+    for k, label in table.items():
+        value = english[k].source.split("=", 1)[1].strip() if k in english else None
+        if value is None:
+            out.append(f"locales/en/inputs.ftl is stale: {k} is not in it ({rerun})")
+        elif value != label:
+            out.append(f"locales/en/inputs.ftl is stale: {k} is {value!r}, the code says {label!r} ({rerun})")
+    for k in english:
+        if k.startswith("input-") and not k.endswith("-default-by") and k not in table:
+            out.append(f"locales/en/inputs.ftl is stale: {k} is not an input ({rerun})")
+    return out
+
+
+TERM_STATUSES = {"draft", "reviewed", "needs-native"}
+
+
+def check_terms(root: Path, languages: list[str]) -> list[str]:
+    """The Term List's shape: each term has its English and, per language, [term, status, note]."""
+    path = root / "locales" / "terms.toml"
+    if not path.exists():
+        return []
+    import tomllib
+
+    try:
+        terms = tomllib.loads(path.read_text(encoding="utf-8"))
+    except tomllib.TOMLDecodeError as e:
+        return [f"locales/terms.toml: {e}"]
+    out: list[str] = []
+    for key, entry in terms.items():
+        if not isinstance(entry, dict) or not isinstance(entry.get("en"), str):
+            out.append(f"locales/terms.toml: [{key}] needs an `en` term")
+            continue
+        for tag in languages:
+            v = entry.get(tag)
+            if not (isinstance(v, list) and len(v) == 3 and all(isinstance(x, str) for x in v) and v[0] and v[1] in TERM_STATUSES):
+                out.append(f"locales/terms.toml: [{key}] {tag} must be [term, status, note], status one of {sorted(TERM_STATUSES)}")
+    return out
+
+
+def hashes(tag: str, root: Path = ROOT) -> list[str]:
+    """For a reviewer: the status line that marks each English message reviewed, by id."""
+    out = []
+    for p in sorted((root / "locales" / SOURCE).glob("*.ftl")):
+        if p.name in ENGLISH_ONLY:
+            continue
+        for k, msg in parse(p).messages.items():
+            out.append(f"{k}: # status: reviewed @your-handle {english_hash(msg.source)}")
+    return out
+
+
 def main(argv: list[str]) -> int:
+    if "--hashes" in argv:
+        print("\n".join(hashes(argv[argv.index("--hashes") + 1] if len(argv) > argv.index("--hashes") + 1 else "")))
+        return 0
     problems = check(fix="--fix" in argv)
     for p in problems:
         print(p)

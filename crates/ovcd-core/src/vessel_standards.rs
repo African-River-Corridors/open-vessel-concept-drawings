@@ -9,6 +9,8 @@
 
 use crate::checks::Check;
 use crate::pystr::{repr_str, repr_str_list};
+use crate::text;
+use crate::text::Arg;
 use crate::vessel_classes::{CLASSES, ClassRow};
 use alloc::format;
 use alloc::string::{String, ToString};
@@ -167,9 +169,13 @@ pub fn validate_catalogue(catalogue: &[(String, VesselStandard)]) -> Vec<Check> 
         "unique_ids",
         bad.is_empty(),
         if bad.is_empty() {
-            "every key matches its standard_id".into()
+            text!("check-unique-ids", "every key matches its standard_id")
         } else {
-            format!("key/standard_id mismatch: {}", repr_str_list(&bad))
+            text!(
+                "check-unique-ids-mismatch",
+                "key/standard_id mismatch: {keys}",
+                keys = Arg::cite(repr_str_list(&bad)),
+            )
         },
     ));
 
@@ -179,9 +185,13 @@ pub fn validate_catalogue(catalogue: &[(String, VesselStandard)]) -> Vec<Check> 
         "ranges_ordered",
         bad.is_empty(),
         if bad.is_empty() {
-            "every (min, max) range is ordered".into()
+            text!("check-ranges-ordered", "every (min, max) range is ordered")
         } else {
-            format!("inverted range: {}", repr_str_list(&bad))
+            text!(
+                "check-ranges-ordered-inverted",
+                "inverted range: {keys}",
+                keys = Arg::cite(repr_str_list(&bad)),
+            )
         },
     ));
 
@@ -192,9 +202,16 @@ pub fn validate_catalogue(catalogue: &[(String, VesselStandard)]) -> Vec<Check> 
         "positive_dimensions",
         bad.is_empty(),
         if bad.is_empty() {
-            "all beams and lengths positive".into()
+            text!(
+                "check-positive-dimensions",
+                "all beams and lengths positive"
+            )
         } else {
-            format!("non-positive dimension: {}", repr_str_list(&bad))
+            text!(
+                "check-positive-dimensions-bad",
+                "non-positive dimension: {keys}",
+                keys = Arg::cite(repr_str_list(&bad)),
+            )
         },
     ));
 
@@ -210,11 +227,15 @@ pub fn validate_catalogue(catalogue: &[(String, VesselStandard)]) -> Vec<Check> 
         "convoy_beam_consistent",
         bad.is_empty(),
         if bad.is_empty() {
-            "convoy beam = unit beam x n_abreast".into()
+            text!(
+                "check-convoy-beam-consistent",
+                "convoy beam = unit beam x n_abreast"
+            )
         } else {
-            format!(
-                "beam does not reconcile with n_abreast: {}",
-                repr_str_list(&bad)
+            text!(
+                "check-convoy-beam-consistent-bad",
+                "beam does not reconcile with n_abreast: {keys}",
+                keys = Arg::cite(repr_str_list(&bad)),
             )
         },
     ));
@@ -224,9 +245,13 @@ pub fn validate_catalogue(catalogue: &[(String, VesselStandard)]) -> Vec<Check> 
         "source_cited",
         bad.is_empty(),
         if bad.is_empty() {
-            "every class cites its table".into()
+            text!("check-source-cited", "every class cites its table")
         } else {
-            format!("no source: {}", repr_str_list(&bad))
+            text!(
+                "check-source-cited-missing",
+                "no source: {keys}",
+                keys = Arg::cite(repr_str_list(&bad)),
+            )
         },
         "warning",
     ));

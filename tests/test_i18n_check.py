@@ -78,3 +78,23 @@ def test_a_multiline_message_keeps_its_placeholders(tmp_path):
     en = "app-n = { $n ->\n        [one] one { $what }\n       *[other] { $n } { $what }\n    }\n"
     es = "# status: draft\napp-n = { $n ->\n       *[other] { $n } { $what }\n    }\n"
     assert i18n_check.check(tree(tmp_path, en, 't("app-n")', es=es)) == []
+
+
+def test_a_stale_engine_file_is_caught(tmp_path):
+    """Label: property"""
+    root = tree(tmp_path, EN, CODE)
+    (root / "crates" / "a.rs").write_text('let t = text!("check-low", "too low: {x} m", x = Arg::py(x));\n', encoding="utf-8")
+    problems = i18n_check.check(root)
+    assert any("engine.ftl is not what the code gives" in p for p in problems)
+
+
+def test_a_stale_input_label_is_caught(tmp_path):
+    """Label: property"""
+    root = tree(tmp_path, EN, CODE)
+    src = root / "crates" / "ovcd-format" / "src"
+    src.mkdir(parents=True)
+    (src / "vdesign.rs").write_text('pub const INPUTS: &[InputSpec] = &[\n    spec("beam_m", "Beam", InputKind::Number, true, Group::Required),\n];\n', encoding="utf-8")
+    (root / "locales" / "en" / "inputs.ftl").write_text("input-beam-m = Breadth\ninput-old = Old\n", encoding="utf-8")
+    problems = i18n_check.check(root)
+    assert any("input-beam-m is 'Breadth', the code says 'Beam'" in p for p in problems)
+    assert any("input-old is not an input" in p for p in problems)

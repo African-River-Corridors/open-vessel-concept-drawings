@@ -19,6 +19,7 @@ use crate::barge_capacity::{BargeCapacityInputs, BargeCapacityResult};
 use crate::models::{BargeInputs, StabilityResult, TankResult, WeightBreakdown};
 use crate::pressure_vessel::PyError;
 use crate::protective_location::ProtectiveLocationResult;
+use crate::text::Text;
 
 /// `BargeInputs` as the drawing carries it.
 ///
@@ -64,7 +65,7 @@ pub struct GaResults {
     /// Always `None`.
     pub protective_location: Option<ProtectiveLocationResult>,
     pub binding_constraints: Vec<String>,
-    pub warnings: Vec<String>,
+    pub warnings: Vec<Text>,
 }
 
 /// Python `x or default` for a float: a zero (and so a `-0.0`) takes the default.

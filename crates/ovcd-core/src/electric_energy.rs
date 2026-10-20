@@ -12,9 +12,10 @@
 
 use crate::aft_arrangement::PyException;
 use crate::checks::{Check, all_ok};
-use crate::pyfmt::{fixed, round_to};
+use crate::pyfmt::round_to;
 use crate::resistance::{self, EnvironmentInputs, ResistanceInputs, TugInputs};
-use alloc::format;
+use crate::text;
+use crate::text::Arg;
 use alloc::string::{String, ToString};
 use alloc::vec;
 use alloc::vec::Vec;
@@ -281,12 +282,16 @@ pub fn compute(inp: &EnergyInputs) -> Result<EnergyResult, PyException> {
     if let Some(b) = binding {
         // `if limiting:` is false for None and for 0.0.
         let message = match b.limiting_speed_knots {
-            Some(l) if l != 0.0 => format!(
-                "service {} kn stays below the Schijf limit {} kn",
-                fixed(b.service_speed_knots, 1),
-                fixed(l, 1)
+            Some(l) if l != 0.0 => text!(
+                "check-service-below-schijf",
+                "service {service} kn stays below the Schijf limit {limit} kn",
+                service = Arg::fixed(b.service_speed_knots, 1),
+                limit = Arg::fixed(l, 1),
             ),
-            _ => "no confined limit (open water)".to_string(),
+            _ => text!(
+                "check-service-below-schijf-open-water",
+                "no confined limit (open water)"
+            ),
         };
         checks.push(Check::new(
             "service_below_schijf",
@@ -297,17 +302,22 @@ pub fn compute(inp: &EnergyInputs) -> Result<EnergyResult, PyException> {
         checks.push(Check::new(
             "energy_positive",
             b.energy_kwh_per_km > 0.0,
-            format!(
-                "energy {} kWh/km at service speed",
-                fixed(b.energy_kwh_per_km, 1)
+            text!(
+                "check-energy-positive",
+                "energy {energy} kWh/km at service speed",
+                energy = Arg::fixed(b.energy_kwh_per_km, 1),
             ),
         ));
     }
     checks.push(Check::with_severity(
         "resistance_coeffs_first_order",
         true,
-        "confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate \
-         (RS1) \u{2014} ITTC-1957 friction is standard; anchor with a model test/CFD before class use.",
+        text!(
+            "check-resistance-coeffs-first-order",
+            "confined-water resistance (residuary/Lackenby/blockage) is a first-order estimate \
+             (RS1) \u{2014} ITTC-1957 friction is standard; anchor with a model test/CFD before class use."
+        ),
+
         "warning",
     ));
 

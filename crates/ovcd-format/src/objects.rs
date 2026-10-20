@@ -16,6 +16,8 @@ use ovcd_core::barge_capacity::{BargeCapacityResult, GasBasis};
 use ovcd_core::checks::Check;
 use ovcd_core::gas_separation::GasSeparationResult;
 use ovcd_core::models::{TankResult, WeightBreakdown};
+use ovcd_core::text::Text;
+
 use serde_json::{Map, Value};
 
 /// One JSON object with the name it is known by, for the error messages.
@@ -111,6 +113,15 @@ impl<'a> Obj<'a> {
             .collect()
     }
 
+    /// A list of text read back from a result: English with no Message Id.
+    fn text_list(&self, name: &str) -> Result<Vec<Text>, EvalError> {
+        Ok(self
+            .string_list(name)?
+            .into_iter()
+            .map(Text::plain)
+            .collect())
+    }
+
     fn checks(&self, name: &str) -> Result<Vec<Check>, EvalError> {
         self.array(name)?
             .iter()
@@ -122,6 +133,7 @@ impl<'a> Obj<'a> {
                     ok: c.bool("ok")?,
                     message: c.string("message")?,
                     severity: c.string("severity")?,
+                    msg: None,
                 })
             })
             .collect()
@@ -228,7 +240,7 @@ fn aft_from_json(value: &Value, ctx: &str) -> Result<AftArrangementResult, EvalE
         wheelhouse_height_m: o.f64("wheelhouse_height_m")?,
         block_top_lowered_m: o.f64("block_top_lowered_m")?,
         checks: o.checks("checks")?,
-        warnings: o.string_list("warnings")?,
+        warnings: o.text_list("warnings")?,
         // Issue #180 fields. A result saved before them is a battery-electric block.
         propulsion: opt_str(value, "propulsion", "battery_electric"),
         container_layout: opt_str(value, "container_layout", "rows"),
@@ -303,7 +315,7 @@ fn separation_from_json(value: &Value, ctx: &str) -> Result<GasSeparationResult,
         service_space_m: o.f64("service_space_m")?,
         total_length_taken_m: o.f64("total_length_taken_m")?,
         checks: o.checks("checks")?,
-        warnings: o.string_list("warnings")?,
+        warnings: o.text_list("warnings")?,
     })
 }
 
@@ -380,7 +392,7 @@ pub(crate) fn capacity_result_from_json(
         navigating_top_above_keel_m: o.opt_f64("navigating_top_above_keel_m")?,
         gas_basis,
         checks: o.checks("checks")?,
-        warnings: o.string_list("warnings")?,
+        warnings: o.text_list("warnings")?,
     })
 }
 

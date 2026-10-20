@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Choice, InputSpec, Message, StoredInput, VesselClassSummary } from "./api";
-  import { parts, t } from "./i18n.svelte";
+  import { parts, say, t } from "./i18n.svelte";
 
   // How an Option is defined: by typed dimensions, or by a standard Vessel Class (issue #94). The
   // schemes, the classes and what picking a class sets all come from the schema, and the class the
@@ -110,7 +110,7 @@
   {/if}
 
   {#each messages as m}
-    <div class="msg {m.severity}" data-severity={m.severity}>{m.text}</div>
+    <div class="msg {m.severity}" data-severity={m.severity}>{say(m.text, null, m.msg)}</div>
   {/each}
 </div>
 

@@ -3,7 +3,7 @@
   import "uplot/dist/uPlot.min.css";
   import { onMount } from "svelte";
   import { axisInkHooks, currentTokens, dashFor, hatchPattern, uiFont, watchTheme, type ChartTokens } from "../chartTheme";
-  import { num, t } from "../i18n.svelte";
+  import { num, say, t, type TextIds } from "../i18n.svelte";
 
   // The stability results of a gas Cargo, exactly as the engine gives them: a GZ curve per loading
   // condition (the governing one drawn thick), the heel angles of the criteria and the angle of
@@ -48,7 +48,9 @@
   interface Marks {
     criteria_angles_deg: number[];
   }
-  let { stability, marks }: { stability: StabilityResults | null | undefined; marks: Marks | null | undefined } = $props();
+  let { stability, marks, ids }: { stability: StabilityResults | null | undefined; marks: Marks | null | undefined; ids: TextIds | null } = $props();
+  /** Engine text (a condition or criterion name, a limitation) in the Display Language. */
+  const tr = (text: string) => say(text, ids);
 
   /** The tokens now in force; read again at the start of every draw. */
   let tok: ChartTokens = currentTokens();
@@ -146,7 +148,7 @@
       if (!last) continue;
       const y = u.valToPos(last[1], "y", true);
       if (y < top || y > top + height) continue;
-      names.push({ name: c.name, x: Math.min(u.valToPos(last[0], "x", true), left + width) - 4 * k, y: y - 5 * k, ink: colour(c) });
+      names.push({ name: tr(c.name), x: Math.min(u.valToPos(last[0], "x", true), left + width) - 4 * k, y: y - 5 * k, ink: colour(c) });
     }
     // Names that would meet are moved apart, upwards, so that each stays readable.
     names.sort((p, q) => q.y - p.y);
@@ -189,7 +191,7 @@
       series: [
         {},
         ...(stability?.conditions ?? []).map((c, i) => ({
-          label: c.name,
+          label: tr(c.name),
           stroke: () => colour(c),
           width: governing(c) ? 2 : 1.5,
           dash: scaled(dash(c, i)),
@@ -320,7 +322,7 @@
             <svg class="swatch" class:gov-swatch={c.name === stability.governing} width="28" height="8" viewBox="0 0 28 8" aria-hidden="true">
               <line x1="0" y1="4" x2="28" y2="4" stroke-width={c.name === stability.governing ? 2 : 1.5} stroke-dasharray={dash(c, i).join(" ") || undefined} />
             </svg>
-            <strong>{c.name}</strong>{#if c.name === stability.governing}<span class="govtag">{t("app-stab-governs")}</span>{/if}
+            <strong>{tr(c.name)}</strong>{#if c.name === stability.governing}<span class="govtag">{t("app-stab-governs")}</span>{/if}
             {t("app-stab-legend", { gm: r(c.gm_fluid_m, 2), gz: r(c.max_gz_m, 2), angle: r(c.max_gz_deg, 0) })}
           </span>
         {/each}
@@ -336,8 +338,8 @@
     <div class="details">
       <p class="summary">
         <span class="tag {stability.ok ? 'ok' : 'fail'}">{t(stability.ok ? "app-pass" : "app-fail")}</span>
-        <strong>{stability.criteria_set}</strong>
-        <span class="dim">{t("app-stab-governing")} <strong>{stability.governing}</strong></span>
+        <strong>{tr(stability.criteria_set)}</strong>
+        <span class="dim">{t("app-stab-governing")} <strong>{tr(stability.governing)}</strong></span>
       </p>
 
       <table class="conditions">
@@ -353,7 +355,7 @@
           {#each stability.conditions as c (c.name)}
             <tr class:governing={c.name === stability.governing} data-governing={c.name === stability.governing}>
               <th>
-                {c.name}
+                {tr(c.name)}
                 {#if c.name === stability.governing}<span class="gov">{t("app-stab-governs")}</span>{/if}
               </th>
               {#each COLUMNS as col (col.label)}
@@ -366,13 +368,13 @@
       </table>
 
       {#each stability.conditions as c (c.name)}
-        <h4>{t("app-stab-criteria-of", { condition: c.name })}</h4>
+        <h4>{t("app-stab-criteria-of", { condition: tr(c.name) })}</h4>
         <table class="criteria">
           <tbody>
             {#each c.criteria as k (k.name)}
               <tr class:failed={!k.ok}>
                 <td><span class="tag {k.ok ? 'ok' : 'fail'}">{t(k.ok ? "app-pass" : "app-fail")}</span></td>
-                <th>{k.name}</th>
+                <th>{tr(k.name)}</th>
                 <td class="num" title={String(k.value)}>{r(k.value, 3)}</td>
                 <td class="dim">{t("app-stab-needs-at-least")}</td>
                 <td class="num" title={String(k.limit)}>{r(k.limit, 3)}</td>
@@ -386,7 +388,7 @@
       {#if stability.limitations.length > 0}
         <h4>{t("app-stab-limitations")}</h4>
         <ul>
-          {#each stability.limitations as l}<li>{l}</li>{/each}
+          {#each stability.limitations as l}<li>{tr(l)}</li>{/each}
         </ul>
       {/if}
     </div>

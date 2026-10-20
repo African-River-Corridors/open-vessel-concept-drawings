@@ -35,9 +35,11 @@ use crate::hydrostatics::find_equilibrium_draft;
 use crate::models::{BargeInputs, TankResult, WeightBreakdown};
 use crate::pressure_vessel::{PyError, get_tank_material};
 use crate::protective_location::{compute_required_clearances, d_vc_exact};
-use crate::pyfmt::{fixed, py_str};
 use crate::pystr::repr_str;
 use crate::tanks::{INT_OVERFLOW_MESSAGE, calculate_tank_arrangement_wide};
+use crate::text;
+use crate::text::{Arg, Text};
+
 use crate::weights::calculate_weights;
 
 /// Default cap on a gas tank's outer diameter (m). It is a design limit of this tool, not a rule of
@@ -330,7 +332,7 @@ pub struct BargeCapacityResult {
     pub gas_basis: Option<GasBasis>,
 
     pub checks: Vec<Check>,
-    pub warnings: Vec<String>,
+    pub warnings: Vec<Text>,
 }
 
 impl BargeCapacityResult {
@@ -926,35 +928,44 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     let air_draft_ballast = h_top - ballast_draft;
     let air_draft_navigating_light = h_top_navigating - light_draft;
 
+    // A geometry error is error text: it stays English, with no Message Id.
     let feasible_message = match &geometry_error {
-        Some(m) if !m.is_empty() => m.clone(),
-        _ => "cargo volume must be positive (tank/hold fits)".to_string(),
+        Some(m) if !m.is_empty() => Text::plain(m.clone()),
+        _ => text!(
+            "check-feasible-geometry",
+            "cargo volume must be positive (tank/hold fits)"
+        ),
     };
     let mut checks = vec![
         Check::new("feasible_geometry", cargo_volume > 0.0, feasible_message),
         Check::new(
             "not_overloaded",
             !overloaded,
-            "volume-bound load must float within the moulded depth",
+            text!(
+                "check-not-overloaded",
+                "volume-bound load must float within the moulded depth"
+            ),
         ),
         Check::new(
             "freeboard_ok",
             freeboard >= inp.required_freeboard,
-            format!(
-                "freeboard {} m >= required {} m",
-                fixed(freeboard, 2),
-                py_str(inp.required_freeboard)
+            text!(
+                "check-freeboard-ok",
+                "freeboard {freeboard} m >= required {required} m",
+                freeboard = Arg::fixed(freeboard, 2),
+                required = Arg::py(inp.required_freeboard),
             ),
         ),
         Check::new(
             "cargo_zone_positive",
             cargo_zone > 0.0,
-            format!(
-                "cargo zone {} m = LOA {} - bow void {} m - stern void {} m",
-                fixed(cargo_zone, 2),
-                fixed(inp.loa, 1),
-                fixed(bow_void, 2),
-                fixed(stern_void, 2)
+            text!(
+                "check-cargo-zone-positive",
+                "cargo zone {zone} m = LOA {loa} - bow void {bow_void} m - stern void {stern_void} m",
+                zone = Arg::fixed(cargo_zone, 2),
+                loa = Arg::fixed(inp.loa, 1),
+                bow_void = Arg::fixed(bow_void, 2),
+                stern_void = Arg::fixed(stern_void, 2),
             ),
         ),
     ];
@@ -976,24 +987,29 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
             air_draft_light
         };
         let label = if ballasted {
-            "ballasted light"
+            Text::fixed(
+                "check-air-draft-condition-ballasted-light",
+                "ballasted light",
+            )
         } else {
-            "light"
+            Text::fixed("check-air-draft-condition-light", "light")
         };
         checks.push(Check::new(
             "air_draft_within_limit",
             governing <= limit,
-            format!(
-                "{label} air draft {} m <= limit {} m (laden is {} m and is NOT the governing case)",
-                fixed(governing, 2),
-                fixed(limit, 2),
-                fixed(air_draft, 2)
+            text!(
+                "check-air-draft-within-limit",
+                "{condition} air draft {governing} m <= limit {limit} m (laden is {laden} m and is NOT the governing case)",
+                condition = label,
+                governing = Arg::fixed(governing, 2),
+                limit = Arg::fixed(limit, 2),
+                laden = Arg::fixed(air_draft, 2),
             ),
         ));
     }
-    let mut warnings: Vec<String> = match &aft {
+    let mut warnings: Vec<Text> = match &aft {
         Some(a) => a.warnings.clone(),
-        None => vec![PUSHED_WARNING.to_string()],
+        None => vec![Text::fixed("warn-barge-pushed", PUSHED_WARNING)],
     };
     if let Some(s) = &sep {
         warnings.extend(s.warnings.iter().cloned());
@@ -1004,13 +1020,15 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         checks.push(Check::with_severity(
             "gm_positive",
             g >= 0.15,
-            format!(
-                "hopper intact GM {} m >= 0.15 m (first-order; KG_light @0.5D)",
-                fixed(g, 2)
+            text!(
+                "check-gm-positive",
+                "hopper intact GM {gm} m >= 0.15 m (first-order; KG_light @0.5D)",
+                gm = Arg::fixed(g, 2),
             ),
             "warning",
         ));
-        warnings.push(BULK_GM_WARNING.to_string());
+        warnings.push(Text::fixed("warn-barge-bulk-gm", BULK_GM_WARNING));
+
         gm = Some(g);
     }
 

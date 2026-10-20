@@ -37,6 +37,8 @@ use crate::pressure_vessel::PyError;
 use crate::protective_location::d_vc_exact;
 use crate::pyfmt::{fixed, py_str, round_to};
 use crate::tanks::INT_OVERFLOW_MESSAGE;
+use crate::text;
+use crate::text::Arg;
 
 /// The rulesets `fit` accepts.
 pub const RULESETS: [&str; 1] = ["IGC_2G"];
@@ -263,12 +265,13 @@ pub fn length_over_diameter_check(r: &BargeCapacityResult) -> Option<Check> {
     Some(Check::new(
         "tank_length_over_diameter",
         ratio <= MAX_TANK_LENGTH_OVER_OD,
-        format!(
-            "tank length {} m / outer diameter {} m = {} <= {}",
-            fixed(tanks.overall_tank_length, 2),
-            fixed(tanks.outer_diameter, 2),
-            fixed(ratio, 2),
-            py_str(MAX_TANK_LENGTH_OVER_OD)
+        text!(
+            "check-tank-length-over-diameter",
+            "tank length {length} m / outer diameter {diameter} m = {ratio} <= {max}",
+            length = Arg::fixed(tanks.overall_tank_length, 2),
+            diameter = Arg::fixed(tanks.outer_diameter, 2),
+            ratio = Arg::fixed(ratio, 2),
+            max = Arg::py(MAX_TANK_LENGTH_OVER_OD),
         ),
     ))
 }
@@ -304,11 +307,12 @@ fn cheap_checks(
     all.push(Check::new(
         "freeboard_at_payload",
         freeboard + 1e-9 >= o.required_freeboard_m,
-        format!(
-            "freeboard {} m at the carried draught {} m >= required {} m",
-            fixed(freeboard, 2),
-            fixed(j.draft_at_achievable_m, 2),
-            py_str(o.required_freeboard_m)
+        text!(
+            "check-freeboard-at-payload",
+            "freeboard {freeboard} m at the carried draught {draught} m >= required {required} m",
+            freeboard = Arg::fixed(freeboard, 2),
+            draught = Arg::fixed(j.draft_at_achievable_m, 2),
+            required = Arg::py(o.required_freeboard_m),
         ),
     ));
     all
@@ -317,13 +321,18 @@ fn cheap_checks(
 /// One stability condition as a check, named and worded as the simulation lists it.
 pub fn stability_check(c: &gs::Condition) -> Check {
     let bad: Vec<&gs::Criterion> = c.criteria.iter().filter(|x| !x.ok).collect();
-    let mut message = format!(
-        "GM {} m (fluid), max GZ {} m at {}\u{b0}",
-        fixed(c.gm_fluid_m, 2),
-        fixed(c.max_gz_m, 2),
-        fixed(f64::from(c.max_gz_deg), 0)
-    );
-    if !bad.is_empty() {
+    let gm = Arg::fixed(c.gm_fluid_m, 2);
+    let max_gz = Arg::fixed(c.max_gz_m, 2);
+    let angle = Arg::fixed(f64::from(c.max_gz_deg), 0);
+    let message = if bad.is_empty() {
+        text!(
+            "check-stability",
+            "GM {gm} m (fluid), max GZ {max_gz} m at {angle}\u{b0}",
+            gm = gm,
+            max_gz = max_gz,
+            angle = angle,
+        )
+    } else {
         let parts: Vec<String> = bad
             .iter()
             .map(|x| {
@@ -334,9 +343,16 @@ pub fn stability_check(c: &gs::Condition) -> Check {
                 format!("{} {} < {}", x.name, fixed(v, 3), py_str(x.limit))
             })
             .collect();
-        message.push_str(" \u{2014} fails: ");
-        message.push_str(&parts.join(", "));
-    }
+        // The failed criteria are one English list (criterion names, values and limits).
+        text!(
+            "check-stability-fails",
+            "GM {gm} m (fluid), max GZ {max_gz} m at {angle}\u{b0} \u{2014} fails: {fails}",
+            gm = gm,
+            max_gz = max_gz,
+            angle = angle,
+            fails = parts.join(", "),
+        )
+    };
     Check::new(
         format!("Stability \u{2014} {}", c.name.to_lowercase()),
         bad.is_empty(),
@@ -372,7 +388,11 @@ fn stability_checks(
         Err(m) => vec![Check::new(
             "Stability \u{2014} not assessed",
             false,
-            format!("stability could not be assessed: {m}"),
+            text!(
+                "check-stability-not-assessed",
+                "stability could not be assessed: {reason}",
+                reason = m,
+            ),
         )],
     }
 }
