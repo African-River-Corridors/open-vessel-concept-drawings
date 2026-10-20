@@ -178,3 +178,30 @@ A Rule that OVCD makes but no published rule book requires: physical feasibility
 the depth), a method's validity range, or a limit of the tool. Shown in the Rule Trace with its origin,
 never as a published Rule.
 _Avoid_: design rule
+
+### Languages
+
+**Display Language**:
+The language a user reads OVCD in. It is a choice of the person, never of the Design: it changes no
+input, no result and no saved file.
+_Avoid_: locale (in user text), Design language
+
+**Text Library**:
+The set of message files, one folder per language, that holds every string a user reads. English is
+the source; each other language holds translations of English messages.
+_Avoid_: catalogue (that is the vessel Catalogue), string table, dictionary
+
+**Message Id**:
+The stable name of one message in the Text Library, with named arguments for its numbers and texts.
+The engine gives a Message Id beside its English; the app formats it in the Display Language.
+_Avoid_: key, string id, translation key
+
+**Translation Status**:
+The state of one translated message: draft (written by a person or a machine, not checked) or
+reviewed (checked by a named native speaker against the English it was written for).
+_Avoid_: approved, verified (those words are for engineering results)
+
+**Term List**:
+The controlled list of naval-architecture terms and the one word each language uses for each. Where a
+language has no established term, the English term is kept and marked for a native reviewer.
+_Avoid_: glossary (that is this file), vocabulary
