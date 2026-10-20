@@ -83,6 +83,12 @@ pub const DEFAULT_CARRIAGE_CONDITION: &str = "fully_pressurised";
 /// the two lists equal).
 pub const TANK_MATERIALS: &[&str] = &["304L", "316L", "9Ni", "S690QL1"];
 
+/// The bases of the material's allowable stress (issue #313): the IGC 4.23.3.1 limit, the lesser of
+/// Rm/A and Re/B, or the stress the engine used before that check (S690QL1 at 285 MPa, Rm/2.7, the
+/// inland basis of a published river LPG tank; the other steels are the same on both). A file that
+/// names no basis keeps the old stress, so its results do not change.
+pub const ALLOWABLE_STRESS_BASES: &[&str] = &["igc_4_23_3_1", "published_design"];
+
 /// The tank insulation types. `unspecified` is the generic insulation the engine used before the
 /// type was an input; the density is the one value (60 kg/m3) for every type.
 pub const INSULATION_TYPES: &[&str] = &["unspecified", "none", "pu_foam", "panel"];
@@ -651,6 +657,12 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::Only("type_c_tanks"),
         value: "null",
     },
+    // Issue #313: a file saved before the IGC allowable stress keeps the stress it was worked with.
+    LegacyFixedJson {
+        name: "tank_allowable_stress_basis",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        value: "\"published_design\"",
+    },
 ];
 
 /// The value an input took before it was an input, for a file that lacks it (a number from
@@ -820,6 +832,11 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("316L", "316L stainless steel"),
     ("9Ni", "9 % nickel steel"),
     ("S690QL1", "S690QL1 quenched and tempered steel"),
+    ("igc_4_23_3_1", "IGC 4.23.3.1: lesser of Rm/A and Re/B"),
+    (
+        "published_design",
+        "Before the IGC check (S690QL1 at 285 MPa)",
+    ),
     ("unspecified", "Unspecified"),
     ("none", "None"),
     ("pu_foam", "Polyurethane foam"),
@@ -1104,6 +1121,13 @@ pub const INPUTS: &[InputSpec] = &[
         "tank_material",
         "Tank material",
         InputKind::Choice(TANK_MATERIALS),
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_allowable_stress_basis",
+        "Tank allowable stress basis",
+        InputKind::Choice(ALLOWABLE_STRESS_BASES),
         "type_c_tanks",
         Group::GasTanks,
     ),
@@ -2763,6 +2787,43 @@ fn cross_checks(
             )),
             &["tank_insulation_type", "tank_insulation_thickness_mm"],
         );
+    }
+    // The allowable stress in force is not above the IGC 4.23.3.1 limit (issue #313; soft check).
+    if let Some(Ok(mat)) = get("tank_material")
+        .and_then(Value::as_str)
+        .map(ovcd_core::pressure_vessel::get_tank_material)
+    {
+        let limit = ovcd_core::pressure_vessel::igc_allowable_stress(mat);
+        let typed = get("tank_allowable_stress_mpa").and_then(Value::as_f64);
+        let old_basis =
+            get("tank_allowable_stress_basis").and_then(Value::as_str) == Some("published_design");
+        let (stress, from) = match typed {
+            Some(f) => (f, "`tank_allowable_stress_mpa`"),
+            None if old_basis => (
+                mat.published_design_stress,
+                "the `published_design` allowable stress basis",
+            ),
+            None => (mat.allowable_stress, "the material"),
+        };
+        if stress > limit {
+            report.warning(
+                at(format!(
+                    "{from} gives an allowable stress of {stress} MPa, above the IGC 4.23.3.1 \
+                     limit for {} of {limit:.1} MPa, the lesser of Rm/A = {} / {} and Re/B = {} / {} \
+                     (soft check); accepted",
+                    mat.name,
+                    mat.tensile_strength,
+                    mat.factor_a,
+                    mat.yield_strength,
+                    mat.factor_b
+                )),
+                &[
+                    "tank_material",
+                    "tank_allowable_stress_basis",
+                    "tank_allowable_stress_mpa",
+                ],
+            );
+        }
     }
     // The depth search tries hulls up to a fixed depth; above it no searched hull keeps the
     // freeboard, and the core raises when no waterway limit caps the draught.

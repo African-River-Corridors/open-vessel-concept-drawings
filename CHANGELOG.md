@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Design change (issue #313): the allowable stress of each tank steel is the IGC 4.23.3.1 limit, the lesser of Rm/A and Re/B, with cited Rm and Re. S690QL1, the fully pressurised LPG steel, moves from 285 MPa (Rm/2.7, an inland basis) to 256.7 MPa (Rm/3). 304L, 316L (113 MPa) and 9Ni (230 MPa) do not move. Fully pressurised LPG walls get about 10 % thicker (29.0 to 32.0 mm on a 110 x 11.4 m hull, 40.5 to 45.0 mm on 90 x 14 m), tank steel and lightship rise (+52 t and +69 t), and cargo falls a little. A new input, `tank_allowable_stress_basis`, keeps 285 MPa for a file saved before, so its results do not change; a stress above the IGC limit is a soft warning. The river LPG tank calibration wall is now outside its band (15.5 mm against 13.1 mm printed), recorded as an accepted miss: the paper designs to the inland basis. Sourced tests changed: `tank_wall_formula.rs` (the paper's 285 MPa is now typed; new hand calculation at 256.7 MPa) and `test_the_published_river_tank_gives_the_published_wall_by_the_formula`. The before/after table is under "Design changes" below.
 - App and web app (issue #300): dropdowns draw their own arrow and look the same on Linux as on macOS and Windows. The 30° and 40° labels on the stability chart have a ground, so a curve does not cross them. The bundled fonts are woff2 (0.95 MB, was 2.56 MB), with no change to the glyphs.
 
 ## 0.2.3 (2026-10-16)
@@ -133,6 +134,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/313-s690-allowable-stress (2026-10-20)
+
+Between `main f6d446c` and `this branch 1e49b1a`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 1 (88x16.3) | `checks[12].message` | GM 3.93 m (fluid), max GZ 1.60 m at 26° | GM 3.85 m (fluid), max GZ 1.55 m at 26° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[13].message` | GM 6.04 m (fluid), max GZ 2.43 m at 27° | GM 5.88 m (fluid), max GZ 2.39 m at 27° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[14].message` | GM 12.62 m (fluid), max GZ 3.41 m at 27° | GM 12.13 m (fluid), max GZ 3.35 m at 27° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `arrangement.feasible` | True | False | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[10].message` | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | cofferdam 0.60 m >= 0.60 m (cl. 3.6.13) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[10].name` | opening setback | cofferdam min width | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[11].message` | forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3) | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[11].name` | fwd end bulkhead space | opening setback | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].message` | GM 3.20 m (fluid), max GZ 1.05 m at 25° | forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].name` | Stability — laden | fwd end bulkhead space | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].severity` | absent | error | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[13].message` | GM 4.97 m (fluid), max GZ 2.10 m at 27° | GM 2.40 m (fluid), max GZ 0.56 m at 16° — fails: Area 30–40° 0.028 < 0.03, Angle of max GZ 16.000 < 25.0 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[13].name` | Stability — half laden | Stability — laden | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[13].ok` | True | False | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | GM 11.70 m (fluid), max GZ 3.30 m at 28° | GM 3.83 m (fluid), max GZ 1.63 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].name` | Stability — light | Stability — half laden | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[15].message` | absent | GM 9.45 m (fluid), max GZ 3.00 m at 29° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[15].name` | absent | Stability — light | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[15].ok` | absent | True | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[1].message` | cargo volume must be positive (tank/hold fits) | No arrangement passes every check on this hull. The closest one is shown. It fails: Stability — laden. | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[1].name` | feasible geometry | Feasible arrangement | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[1].ok` | True | False | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[1].severity` | error | absent | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[2].message` | cargo zone 98.49 m = LOA 130.0 - bow void 9.62 m - stern void 21.89 m | cargo volume must be positive (tank/hold fits) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[2].name` | cargo zone positive | feasible geometry | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[3].message` | 3 x 2.60 m thrusters need 10.20 m across a 16.30 m beam | cargo zone 98.49 m = LOA 130.0 - bow void 9.62 m - stern void 21.89 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[3].name` | thrusters fit beam | cargo zone positive | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[4].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 16.30 m beam | 3 x 2.60 m thrusters need 10.20 m across a 16.30 m beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[4].name` | requested thruster count fits | thrusters fit beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[4].severity` | warning | error | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[5].message` | 3 x 40 ft units abreast need 10.91 m across a 16.30 m beam | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 16.30 m beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[5].name` | containers fit beam | requested thruster count fits | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[5].severity` | error | warning | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[6].message` | 3 units in 1 row(s) of 3; a second row adds 12.99 m to the stern block and comes straight off the cargo zone | 3 x 40 ft units abreast need 10.91 m across a 16.30 m beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[6].name` | units fit in one row | containers fit beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[6].severity` | warning | error | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[7].message` | wheelhouse 6.40 m wide on a 16.30 m beam | 3 units in 1 row(s) of 3; a second row adds 12.99 m to the stern block and comes straight off the cargo zone | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[7].name` | wheelhouse fits beam | units fit in one row | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[7].severity` | error | warning | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[8].message` | raised eye 13.20 m >= obstruction 13.24 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | wheelhouse 6.40 m wide on a 16.30 m beam | changed |
+| ... | 17531 more changed quantities | | | |
 
 ### ticket/292-typec-defaults (2026-10-16)
 

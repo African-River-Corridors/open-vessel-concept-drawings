@@ -95,6 +95,13 @@ save writes the current version.
   thickness formula and the volume start from the steel diameter, the outer diameter less twice the
   insulation. The results show both (`drawing.tank`).
 
+- **Allowable stress basis** (issue #313): a new input `tank_allowable_stress_basis` says where the
+  material's allowable stress comes from when no stress is typed. `igc_4_23_3_1` (the Defaults Profile value)
+  is the IGC 4.23.3.1 limit, the lesser of Rm/A and Re/B; `published_design` is the stress the engine used
+  before that check. Only S690QL1 differs (256.7 MPa against 285 MPa). A file that lacks the input gets
+  `published_design` (a table in `vdesign.rs`, marked `default`), so its results do not change; a stress
+  above the IGC limit is a soft warning. The format version is not changed.
+
 ## Consequences
 
 - A saved file gives the same results when opened again, on Windows and macOS.

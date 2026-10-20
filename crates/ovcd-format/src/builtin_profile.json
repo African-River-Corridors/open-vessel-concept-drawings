@@ -209,14 +209,14 @@
             "value": "9Ni",
             "status": "sourced",
             "source": "TGE Marine, general presentation, 2018 (a Type C tank maker): design pressure 3 to 5 barg, tank steel 9 % Ni or 304L for LNG",
-            "basis": "9 % nickel steel (allowable stress 230 MPa, carried over from the original engine with no source cited). The maker lists 9 % Ni steel or 304L for LNG; 9 % Ni is the engine's existing choice"
+            "basis": "9 % nickel steel (allowable stress 230 MPa, IGC 4.23.3.1: Rm 690 MPa over 3, ASTM A553 Type I). The maker lists 9 % Ni steel or 304L for LNG; 9 % Ni is the engine's existing choice"
           },
           {
             "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
             "value": "S690QL1",
             "status": "sourced",
             "source": "Senjanovic et al., Structure design of cargo tanks in river liquefied gas carriers, DESIGN 2006 (Design Society): S690QL1 steel, Re 690 and Rm 770 MPa, allowable stress Rm/2.7 = 285 MPa, design pressure 15.8 bar, cylinder shell 13.1 mm, about 34.4 t of tank steel",
-            "basis": "Quenched and tempered high-strength steel, allowable stress 285 MPa (Rm 770 MPa over 2.7). It is the steel of the one published pressurised LPG tank with a thickness and a weight"
+            "basis": "Quenched and tempered high-strength steel, allowable stress 256.7 MPa (IGC 4.23.3.1: Rm 770 MPa over 3; Re 690 MPa over 1.5 is higher). It is the steel of the one published pressurised LPG tank with a thickness and a weight; that design used Rm/2.7 = 285 MPa, an inland basis above the IGC limit"
           },
           {
             "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "semi_pressurised" },
@@ -232,7 +232,11 @@
           }
         ]
       },
-      "basis": "The tank steel. It gives the density, the least thickness after forming, the corrosion allowance and the allowable stress, unless a stress is typed. Allowable stress: 304L 113 MPa, 316L 113 MPa and 9Ni 230 MPa are carried over from the original engine with no source cited; S690QL1 is 285 MPa, Rm 770 MPa over 2.7, from the published river LPG tank design (Senjanovic et al., DESIGN 2006). The default depends on the Cargo and the carriage condition"
+      "basis": "The tank steel. It gives the density, the least thickness after forming, the corrosion allowance and the allowable stress, unless a stress is typed. Allowable stress, IGC 4.23.3.1: the lesser of Rm/A and Re/B, A and B at least 3 and 1.5 for nickel and carbon-manganese steels, 3.5 and 1.5 for austenitic steels. 304L and 316L: min(485 / 3.5, 170 / 1.5) = 113.3, held as 113 MPa (ASTM minimums, Outokumpu steel grades table). 9Ni: min(690 / 3, 585 / 1.5) = 230 MPa (ASTM A553 Type I, ThyssenKrupp 9 % Ni plates paper). S690QL1: min(770 / 3, 690 / 1.5) = 256.7 MPa (Re 690 and Rm 770 MPa: Senjanovic et al., DESIGN 2006, and an EN 10025-6 S690QL data sheet). The default depends on the Cargo and the carriage condition"
+    },
+    "tank_allowable_stress_basis": {
+      "default": "igc_4_23_3_1",
+      "basis": "Where the allowable stress of the tank material comes from, when no stress is typed. igc_4_23_3_1: the IGC 4.23.3.1 limit for Type C tanks, the lesser of Rm/A and Re/B (MSC.370(93)). published_design: the stress the engine used before that check; only S690QL1 differs, at 285 MPa (Rm 770 MPa over 2.7, the inland basis of the published river LPG tank, Senjanovic et al., DESIGN 2006), which is above the IGC limit of 256.7 MPa. A file saved before the basis was an input keeps published_design, so its results do not change"
     },
     "tank_allowable_stress_mpa": {
       "default": null,

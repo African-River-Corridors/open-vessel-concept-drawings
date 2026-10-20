@@ -28,8 +28,24 @@ impl PyError {
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TankMaterialProperties {
     pub name: &'static str,
-    /// f, allowable stress (MPa)
+    /// f, allowable stress (MPa): not more than [`igc_allowable_stress`], the lesser of Rm/A and
+    /// Re/B (IGC 4.23.3.1).
     pub allowable_stress: f64,
+    /// Rm, the specified minimum tensile strength at room temperature (MPa; IGC 4.18.1.3).
+    pub tensile_strength: f64,
+    /// Re, the specified minimum yield stress at room temperature, or the 0.2 % proof stress where
+    /// the steel has no defined yield (MPa; IGC 4.18.1.3).
+    pub yield_strength: f64,
+    /// A and B, the least stress factors of IGC 4.23.3.1 for the steel's class: 3 and 1.5 for
+    /// nickel and carbon-manganese steels, 3.5 and 1.5 for austenitic steels.
+    pub factor_a: f64,
+    pub factor_b: f64,
+    /// Where Rm and Re come from.
+    pub strength_source: &'static str,
+    /// The allowable stress the engine used before the IGC check (issue #313), for a saved file
+    /// that keeps it. Only S690QL1 differs: 285 MPa, Rm/2.7, the inland basis of the published
+    /// river LPG tank.
+    pub published_design_stress: f64,
     /// Material density (t/m^3)
     pub density: f64,
     /// IGC Code minimum thickness after forming (mm)
@@ -40,14 +56,20 @@ pub struct TankMaterialProperties {
 }
 
 /// `TANK_MATERIAL_DATABASE`: (key, properties). The first three are in the Python dict's insertion
-/// order, with the values of the original engine (their allowable stresses carry no cited basis).
-/// `S690QL1` was added for the Type C tank defaults by cargo (issue #292).
+/// order, with the values of the original engine; issue #313 added the cited Rm and Re behind their
+/// allowable stresses. `S690QL1` was added for the Type C tank defaults by cargo (issue #292).
 pub static TANK_MATERIAL_DATABASE: [(&str, TankMaterialProperties); 4] = [
     (
         "304L",
         TankMaterialProperties {
             name: "304L Stainless Steel",
             allowable_stress: 113.0,
+            tensile_strength: 485.0,
+            yield_strength: 170.0,
+            factor_a: 3.5,
+            factor_b: 1.5,
+            strength_source: OUTOKUMPU_ASTM,
+            published_design_stress: 113.0,
             density: 7.93,
             min_thickness: 3.0,
             corrosion_allowance: 0.0,
@@ -59,6 +81,12 @@ pub static TANK_MATERIAL_DATABASE: [(&str, TankMaterialProperties); 4] = [
         TankMaterialProperties {
             name: "316L Stainless Steel",
             allowable_stress: 113.0,
+            tensile_strength: 485.0,
+            yield_strength: 170.0,
+            factor_a: 3.5,
+            factor_b: 1.5,
+            strength_source: OUTOKUMPU_ASTM,
+            published_design_stress: 113.0,
             density: 7.98,
             min_thickness: 3.0,
             corrosion_allowance: 0.0,
@@ -70,22 +98,37 @@ pub static TANK_MATERIAL_DATABASE: [(&str, TankMaterialProperties); 4] = [
         TankMaterialProperties {
             name: "9% Nickel Steel",
             allowable_stress: 230.0,
+            tensile_strength: 690.0,
+            yield_strength: 585.0,
+            factor_a: 3.0,
+            factor_b: 1.5,
+            strength_source: "ThyssenKrupp, 5 % and 9 % Ni steel plates (Cambridge LINK archive, item 95), \
+                table of international standards: ASTM A 553 Type I, under 50 mm, Re over 585 MPa, Rm 690 to 825 MPa",
+            published_design_stress: 230.0,
             density: 7.85,
             min_thickness: 5.0,
             corrosion_allowance: 0.5,
             description: "ASTM A553 Type I, LNG service to -196\u{b0}C",
         },
     ),
-    // Issue #292. The allowable stress is the one a published river LPG tank design uses for this
-    // steel: Rm 770 MPa over 2.7 = 285 MPa (Senjanovic et al., "Structure design of cargo tanks in
-    // river liquefied gas carriers", DESIGN 2006). Density, minimum thickness and corrosion
-    // allowance are not in that paper: they take the values of the other carbon and nickel steels
-    // above (7.85 t/m3, 5 mm, 0.5 mm), an estimate.
+    // Issue #292. Density, minimum thickness and corrosion allowance are not in the published river
+    // LPG tank paper: they take the values of the other carbon and nickel steels above (7.85 t/m3,
+    // 5 mm, 0.5 mm), an estimate. Issue #313: the allowable stress is the IGC 4.23.3.1 limit, Rm/3
+    // = 256.7 MPa (Re/1.5 = 460 MPa is higher). The paper's Rm/2.7 = 285 MPa, an inland basis, is
+    // above that limit; it stays only as the stress of a file saved before.
     (
         "S690QL1",
         TankMaterialProperties {
             name: "S690QL1 quenched and tempered steel",
-            allowable_stress: 285.0,
+            allowable_stress: 770.0 / 3.0,
+            tensile_strength: 770.0,
+            yield_strength: 690.0,
+            factor_a: 3.0,
+            factor_b: 1.5,
+            strength_source: "Senjanovic et al., Structure design of cargo tanks in river liquefied gas \
+                carriers, DESIGN 2006: S690QL1, Re 690 and Rm 770 MPa. Macsteel S690QL data sheet (EN 10025-6): \
+                3 to 50 mm, minimum yield 690 MPa, tensile 770 to 940 MPa",
+            published_design_stress: 285.0,
             density: 7.85,
             min_thickness: 5.0,
             corrosion_allowance: 0.5,
@@ -93,6 +136,23 @@ pub static TANK_MATERIAL_DATABASE: [(&str, TankMaterialProperties); 4] = [
         },
     ),
 ];
+
+/// Rm and Re of the austenitic steels: the ASTM minimums at room temperature.
+const OUTOKUMPU_ASTM: &str = "Outokumpu, Steel grades, properties and global standards: ASTM minimum \
+    values at room temperature, S30403 (304L) and S31603 (316L), Rp0.2 170 MPa, Rm 485 MPa";
+
+/// The IGC 4.23.3.1 limit on the allowable stress of a Type C tank: f = the lesser of Rm/A and
+/// Re/B (MPa). The database stress of each steel is not more than this; 304L and 316L hold 113 MPa,
+/// the 113.3 MPa of Re/1.5 rounded down, as the original engine had it.
+pub fn igc_allowable_stress(m: &TankMaterialProperties) -> f64 {
+    let by_tensile = m.tensile_strength / m.factor_a;
+    let by_yield = m.yield_strength / m.factor_b;
+    if by_yield < by_tensile {
+        by_yield
+    } else {
+        by_tensile
+    }
+}
 
 /// Default weld joint efficiency E in Python's signatures.
 pub const DEFAULT_WELD_EFFICIENCY: f64 = 0.95;
