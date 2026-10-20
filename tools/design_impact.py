@@ -206,6 +206,9 @@ OPTIONAL_INPUT_CASES = (
      {"tank_material": "304L"}),
     ("tank_allowable_stress_mpa", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"tank_allowable_stress_mpa": 200.0}),
+    # Issue #313: the old basis gives S690QL1 its 285 MPa back.
+    ("tank_allowable_stress_basis", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tank_allowable_stress_basis": "published_design"}),
     ("tank_insulation_type", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"tank_insulation_type": "pu_foam"}),
     ("tank_insulation_thickness_mm", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
