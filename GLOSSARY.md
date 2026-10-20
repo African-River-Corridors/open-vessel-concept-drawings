@@ -34,8 +34,8 @@ such as block coefficient and rake lengths.
 _Avoid_: hull type, hull shape
 
 **Formation**:
-An arrangement of Hulls that moves as one — a pushed convoy, a tow, a coupled unit — described by its
-Hulls and how they are placed (abreast, in line). It has no General Arrangement of its own, only an
+An arrangement of Hulls that moves as one — a pushed convoy, a tow, a coupled unit, an ATB — described
+by its Hulls, its Tug and how they are placed (abreast, in line). It has no General Arrangement of its own, only an
 arrangement plan.
 _Avoid_: convoy (when the general term is meant), fleet
 
@@ -106,6 +106,71 @@ _Avoid_: tolerance, error margin
 A concept drawing set for one Hull — plan, elevation and cross-section — for feasibility studies, not
 for construction or class approval.
 _Avoid_: layout, drawing (on its own)
+
+### Stern, propulsion and tugs
+
+**Stern Block**:
+The aft part of a self-propelled Hull or a Tug that holds its propulsion, machinery, accommodation and
+wheelhouse. Its length comes off the cargo zone.
+_Avoid_: aft block, aft arrangement (in user text), engine block
+
+**Stern Form**:
+The shape family of the aft body of a Hull (transom, pram, tunnel, or a barge stern with a Notch) and
+the few parameters that set it, such as the run length and the transom height.
+_Avoid_: stern type, stern shape, aft body (on its own)
+
+**Propulsor**:
+The device that turns power into thrust: a propeller on a shaft (open or in a nozzle), an azimuth
+thruster (open or ducted), a Voith Schneider unit or a pump jet. A Hull has one type of Propulsor, one
+or more of them.
+_Avoid_: thruster (for every type), drive, screw (on its own)
+
+**Power Source**:
+What makes the power the Propulsors use: diesel-mechanical, diesel-electric, battery-electric,
+battery-hybrid or gas-fuelled generating sets.
+_Avoid_: propulsion (on its own), engine type, fuel type
+
+**Installed Power**:
+The total rated power of the prime movers (or, for battery-electric, the drive motors) that drive the
+Propulsors, in kW.
+_Avoid_: engine power (on its own), MCR (in user text), rated power
+
+**Design Speed**:
+The speed through still deep water at the laden draught that the Installed Power is sized for.
+_Avoid_: service speed (that is a result per waterway), trial speed
+
+**Bollard Pull**:
+The thrust a Hull gives at zero speed with its full Installed Power, in tonnes.
+_Avoid_: static thrust, towing force
+
+**Tug**:
+The Hull that propels a Formation: a pusher (pushed barges and convoys), an ATB tug, or a towing tug
+(barges on a hawser).
+_Avoid_: towboat (except as the US name for a pusher), push boat, tractor
+
+**Articulated Tug-Barge (ATB)**:
+A Formation of one barge and one Tug whose bow sits in a Notch in the barge stern, joined by a coupler
+that lets the Tug pitch relative to the barge.
+_Avoid_: ITB (that is a rigid connection), coupled unit (that is a motor vessel and a pushed barge)
+
+**Notch**:
+The cut in the stern of an ATB barge that the Tug's bow sits in, set by its depth and width.
+_Avoid_: slot, recess, dock
+
+**Equivalent Hull**:
+One hull with the overall length, beam and draught of a Formation, used to estimate the Formation's
+resistance.
+_Avoid_: combined hull, convoy hull
+
+**Blind Distance**:
+How far ahead of the bow (of the Formation's lead craft, for a pusher) the water cannot be seen from the
+steering position, in a stated loading condition.
+_Avoid_: blind zone (on its own), dead zone, obstructed view
+
+**Fixed Height**:
+The height from the waterline to the highest point of a Hull with the wheelhouse and every other mobile
+part lowered. It sets the air draft.
+_Avoid_: air draft (that is the waterway's limit compared with it), clearance height
 
 ### Rules
 
