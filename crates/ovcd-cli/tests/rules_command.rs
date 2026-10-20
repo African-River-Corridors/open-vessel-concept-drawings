@@ -63,7 +63,7 @@ fn rules_show_prints_every_rule() {
         assert!(out.status.success(), "{}", stderr(&out));
         let text = stdout(&out);
         assert!(text.starts_with("example 1.0.0: "), "{text}");
-        assert!(text.contains("example/2.1/side-gap"));
+        assert!(text.contains("example/2.1/gm-table"));
         assert!(text.contains("verified by agent on 2026-10-20"));
     }
     let out = ovcd(&["rules", "show", "example@9.9.9", "--rule-set", &example()]);
@@ -108,12 +108,45 @@ fn the_same_id_and_version_with_other_content_is_refused() {
 }
 
 #[test]
-fn a_rule_set_changes_no_result() {
+fn a_rule_set_changes_no_result_and_shows_in_the_trace() {
     let design = fixture("gas_igc_2g_exact.vdesign");
     let plain = ovcd(&["run", "--json", &design]);
     let with = ovcd(&["run", "--json", "--rule-set", &example(), &design]);
     assert!(plain.status.success() && with.status.success());
-    assert_eq!(stdout(&plain), stdout(&with));
+    let (p, w): (Value, Value) = (
+        serde_json::from_str(&stdout(&plain)).unwrap(),
+        serde_json::from_str(&stdout(&with)).unwrap(),
+    );
+    let (po, wo) = (&p["options"][0], &w["options"][0]);
+    assert_eq!(po["results_hash"], wo["results_hash"]);
+    assert_eq!(wo["hash_status"], "matches");
+    let mut pr = po["results"].clone();
+    let mut wr = wo["results"].clone();
+    pr.as_object_mut().unwrap().remove("rule_trace");
+    wr.as_object_mut().unwrap().remove("rule_trace");
+    assert_eq!(pr, wr);
+    let trace = &wo["results"]["rule_trace"];
+    assert_eq!(trace["rule_sets"], json!(["example@1.0.0"]));
+    assert_eq!(
+        trace["verdict"]["blocking_not_evaluated"][0]["rule"],
+        "example/1.3/weather"
+    );
+}
+
+#[test]
+fn rules_measures_prints_the_registry() {
+    let out = ovcd(&["rules", "--measures"]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let text = stdout(&out);
+    for id in [
+        "gz.area",
+        "gz.max_from",
+        "gz.angle_of_max",
+        "gm0",
+        "input.fill_ratio",
+    ] {
+        assert!(text.contains(id), "{id}");
+    }
 }
 
 #[test]

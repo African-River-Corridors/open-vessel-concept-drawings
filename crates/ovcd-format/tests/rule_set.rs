@@ -166,9 +166,9 @@ fn a_non_finite_limit_or_coefficient_is_refused() {
     let bad = EXAMPLE.replacen("\"value\": 0.055", "\"value\": 1e999", 1);
     let e = load(&bad).unwrap_err();
     assert!(e.contains("value` must be a finite number"), "{e}");
-    let bad = EXAMPLE.replacen("\"b\": 0.2", "\"b\": -1e999", 1);
+    let bad = EXAMPLE.replacen("\"c\": 200", "\"c\": -1e999", 1);
     let e = load(&bad).unwrap_err();
-    assert!(e.contains("b` must be a finite number"), "{e}");
+    assert!(e.contains("c` must be a finite number"), "{e}");
     refused(
         |v| v["rules"][0]["limit"]["value"] = json!("0.055"),
         "must be a number",
@@ -221,8 +221,8 @@ fn a_person_is_never_named() {
 
 #[test]
 fn an_undeclared_conflict_of_two_constant_criteria_is_refused() {
-    let low = limit_rule("c/x/low", "hull.depth", "ge", 2.0);
-    let high = limit_rule("c/x/high", "hull.depth", "le", 1.0);
+    let low = limit_rule("c/x/low", "input.draught_limit_m", "ge", 2.0);
+    let high = limit_rule("c/x/high", "input.draught_limit_m", "le", 1.0);
     let set = small_set("c", "1.0.0", json!([]), json!([low, high]));
     assert!(load(&set).unwrap_err().contains("cannot both be met"));
     // Equal bounds: met by exactly the limit when both are non-strict, never when one is strict.
@@ -231,8 +231,8 @@ fn an_undeclared_conflict_of_two_constant_criteria_is_refused() {
         "1.0.0",
         json!([]),
         json!([
-            limit_rule("c/x/low", "hull.depth", "ge", 1.0),
-            limit_rule("c/x/high", "hull.depth", "le", 1.0)
+            limit_rule("c/x/low", "input.draught_limit_m", "ge", 1.0),
+            limit_rule("c/x/high", "input.draught_limit_m", "le", 1.0)
         ]),
     );
     assert!(load(&eq).is_ok());
@@ -241,8 +241,8 @@ fn an_undeclared_conflict_of_two_constant_criteria_is_refused() {
         "1.0.0",
         json!([]),
         json!([
-            limit_rule("c/x/low", "hull.depth", "gt", 1.0),
-            limit_rule("c/x/high", "hull.depth", "le", 1.0)
+            limit_rule("c/x/low", "input.draught_limit_m", "gt", 1.0),
+            limit_rule("c/x/high", "input.draught_limit_m", "le", 1.0)
         ]),
     );
     assert!(load(&strict).unwrap_err().contains("cannot both be met"));
@@ -251,7 +251,10 @@ fn an_undeclared_conflict_of_two_constant_criteria_is_refused() {
         "c",
         "1.0.0",
         json!([]),
-        json!([low.clone(), limit_rule("c/x/high", "hull.beam", "le", 1.0)]),
+        json!([
+            low.clone(),
+            limit_rule("c/x/high", "input.tank_support_height_m", "le", 1.0)
+        ]),
     );
     assert!(load(&other).is_ok());
     let mut apart = high.clone();
@@ -275,9 +278,9 @@ fn an_undeclared_conflict_of_two_constant_criteria_is_refused() {
 
 #[test]
 fn the_tolerance_is_part_of_the_conflict_check() {
-    let mut low = limit_rule("c/x/low", "hull.depth", "ge", 1.0 + 1e-9);
+    let mut low = limit_rule("c/x/low", "input.draught_limit_m", "ge", 1.0 + 1e-9);
     low["tolerance"] = json!(1e-9);
-    let high = limit_rule("c/x/high", "hull.depth", "le", 1.0);
+    let high = limit_rule("c/x/high", "input.draught_limit_m", "le", 1.0);
     // Effective lower bound (1 + 1e-9) - 1e-9 is not above 1.0.
     assert!(load(&small_set("c", "1.0.0", json!([]), json!([low, high]))).is_ok());
     refused(
@@ -320,10 +323,10 @@ fn the_content_hash_changes_with_a_result_changing_field() {
         |v: &mut Value| v["rules"][0]["id"] = json!("example/1.1/area-0-30b"),
         |v: &mut Value| v["applies_when"] = json!({}),
         |v: &mut Value| v["tables"][0]["rows"][0]["a"] = json!(0.81),
-        |v: &mut Value| v["rules"][2]["limit"]["less"] = json!("input.other"),
+        |v: &mut Value| v["rules"][2]["limit"]["less"] = json!("input.tank_support_height_m"),
         |v: &mut Value| {
-            v["rules"][4]["evaluated"] = json!(true);
-            v["rules"][4].as_object_mut().unwrap().remove("gap");
+            v["rules"][0]["evaluated"] = json!(false);
+            v["rules"][0]["gap"] = json!("a gap");
         },
     ] {
         let mut v = example();
@@ -466,7 +469,7 @@ fn two_versions_of_one_set_are_refused() {
 #[test]
 fn one_rule_id_with_two_meanings_is_refused_and_with_one_is_shared() {
     let r = |v: f64| {
-        let mut r = limit_rule("x/p/r", "hull.depth", "ge", v);
+        let mut r = limit_rule("x/p/r", "input.draught_limit_m", "ge", v);
         r["id"] = json!("x/p/r");
         r
     };
@@ -492,14 +495,14 @@ fn a_conflict_across_two_sets_is_a_warning() {
         "a",
         "1.0.0",
         json!([]),
-        json!([limit_rule("a/x/low", "hull.depth", "ge", 2.0)]),
+        json!([limit_rule("a/x/low", "input.draught_limit_m", "ge", 2.0)]),
     ))
     .unwrap();
     lib.add_text(&small_set(
         "b",
         "1.0.0",
         json!([]),
-        json!([limit_rule("b/x/high", "hull.depth", "le", 1.0)]),
+        json!([limit_rule("b/x/high", "input.draught_limit_m", "le", 1.0)]),
     ))
     .unwrap();
     let sel = lib.select(&[("a", "1.0.0"), ("b", "1.0.0")]).unwrap();
@@ -526,4 +529,98 @@ fn the_built_in_sets_load() {
     for s in lib.sets() {
         lib.select(&[(&s.id, &s.version)]).unwrap();
     }
+}
+
+#[test]
+fn an_unknown_measure_is_refused_unless_the_rule_is_not_evaluated() {
+    refused(
+        |v| v["rules"][0]["measure"]["id"] = json!("gz.nope"),
+        "unknown Measure `gz.nope`",
+    );
+    refused(
+        |v| v["rules"][3]["measure"]["id"] = json!("input.nope"),
+        "unknown Measure `input.nope`",
+    );
+    // The weather Rule names a Measure the engine lacks; it is not evaluated, so it loads.
+    assert!(load(EXAMPLE).is_ok());
+}
+
+#[test]
+fn wrong_measure_arguments_are_refused() {
+    refused(
+        |v| {
+            drop(
+                v["rules"][0]["measure"]["args"]
+                    .as_object_mut()
+                    .unwrap()
+                    .remove("to_deg"),
+            )
+        },
+        "takes the arguments",
+    );
+    refused(
+        |v| v["rules"][0]["measure"]["args"]["extra"] = json!(1),
+        "takes the arguments",
+    );
+    refused(
+        |v| v["rules"][0]["measure"]["args"]["to_deg"] = json!("thirty"),
+        "must be a number",
+    );
+}
+
+#[test]
+fn a_limit_unit_that_is_not_the_measure_unit_is_refused() {
+    refused(
+        |v| v["rules"][0]["limit"]["unit"] = json!("m"),
+        "is in `m.rad`",
+    );
+    refused(|v| v["rules"][3]["limit"]["unit"] = json!("m"), "is in `-`");
+}
+
+#[test]
+fn a_check_rule_needs_a_yes_no_measure() {
+    refused(
+        |v| {
+            v["rules"][4]["measure"]["id"] = json!("gm0");
+            v["rules"][4]["evaluated"] = json!(true);
+            v["rules"][4].as_object_mut().unwrap().remove("gap");
+        },
+        "needs a yes/no Measure",
+    );
+}
+
+#[test]
+fn unknown_shapes_and_operands_are_refused() {
+    refused(
+        |v| v["tables"][0]["rows"][0]["shape"] = json!("a*v"),
+        "unknown row shape `a*v`",
+    );
+    refused(
+        |v| {
+            drop(
+                v["tables"][0]["rows"][1]
+                    .as_object_mut()
+                    .unwrap()
+                    .remove("c"),
+            )
+        },
+        "takes the coefficients a, b, c",
+    );
+    refused(
+        |v| v["rules"][2]["limit"]["shape"] = json!("lesser"),
+        "unknown formula shape `lesser`",
+    );
+    refused(
+        |v| v["rules"][2]["limit"]["k"] = json!(1.0),
+        "takes the operands",
+    );
+    // An operand in another unit, or of another object.
+    refused(
+        |v| v["rules"][2]["limit"]["less"] = json!("input.fill_ratio"),
+        "where `m` is needed",
+    );
+    refused(
+        |v| v["rules"][1]["limit"]["at"] = json!("gm0"),
+        "where `deg` is needed",
+    );
 }

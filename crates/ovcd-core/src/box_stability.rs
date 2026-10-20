@@ -305,7 +305,7 @@ impl Condition {
 }
 
 /// Trapezoid area under the GZ curve between `a0` and `a1` degrees.
-pub(crate) fn area(gz: &[(i32, f64)], a0: i32, a1: i32) -> f64 {
+pub fn area(gz: &[(i32, f64)], a0: i32, a1: i32) -> f64 {
     let pts: Vec<(i32, f64)> = gz
         .iter()
         .copied()

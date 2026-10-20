@@ -854,7 +854,20 @@ fn tank_report(
     )
 }
 
+/// The typed values of one run that the Rule Trace reads (spec 0004): never JSON, so a Measure gives
+/// exactly the number the engine worked with.
+#[derive(Debug, Clone, Default)]
+pub struct Measured {
+    /// The gas stability loading conditions, in the order the engine builds them. Empty for a dry
+    /// bulk barge (its stability is first-order only) and for a gas barge that carries nothing.
+    pub conditions: Vec<gs::Condition>,
+}
+
 fn simulate(p: &Map<String, Value>) -> R<Value> {
+    simulate_measured(p, &mut Measured::default())
+}
+
+fn simulate_measured(p: &Map<String, Value>, measured: &mut Measured) -> R<Value> {
     let vessel_id = match p.get("vessel") {
         None => "box_barge",
         Some(Value::String(s)) => s.as_str(),
@@ -887,7 +900,11 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
             (l, b, d),
             (cb, rho),
             self_propelled,
-        );
+        )
+        .map(|(v, conditions)| {
+            measured.conditions = conditions;
+            v
+        });
     }
     let freeboard = get_or(p, "freeboard_min_m", 0.3)?;
     let air_draft_limit = match p.get("air_draft_limit_m") {
@@ -1055,20 +1072,23 @@ fn simulate_gas(
     (l, b, d0): (f64, f64, f64),
     (cb, rho): (f64, f64),
     self_propelled: bool,
-) -> R<Value> {
+) -> R<(Value, Vec<gs::Condition>)> {
     let ruleset = match p.get("ruleset") {
         None => "IGC_2G",
         Some(Value::String(s)) => s.as_str(),
         // Python tests `ruleset not in RULESETS`, so any other value is an unknown ruleset.
         Some(other) => {
-            return Ok(error_result(format!("Unknown ruleset {}.", py_repr(other))));
+            return Ok((
+                error_result(format!("Unknown ruleset {}.", py_repr(other))),
+                Vec::new(),
+            ));
         }
     };
     if !RULESETS.contains(&ruleset) {
-        return Ok(error_result(format!(
-            "Unknown ruleset {}.",
-            repr_str(ruleset)
-        )));
+        return Ok((
+            error_result(format!("Unknown ruleset {}.", repr_str(ruleset))),
+            Vec::new(),
+        ));
     }
     let fill = match truthy_float(p, "fill_ratio")? {
         Some(v) => v,
@@ -1241,6 +1261,8 @@ fn simulate_gas(
     let mut stability = Value::Null;
     // What a view marks on the GZ curves. Not a result: it is left out of the results hash.
     let mut stability_marks = Value::Null;
+    // The loading conditions, typed, for the Rule Trace.
+    let mut conditions = Vec::new();
     if f.payload_t > 0.0 && r.gas_basis.is_some() {
         let basis = GasCapacityResult::try_from(r)
             .map_err(|m| Stop::Eval(EvalError::BadInput(m.into())))?;
@@ -1261,6 +1283,7 @@ fn simulate_gas(
         };
         stability_marks = json!({ "criteria_angles_deg": gs::CRITERIA_ANGLES_DEG });
         ids.texts(&a.limitations);
+        conditions = a.conditions.clone();
         stability = json!({
             "criteria_set": set_label,
             "ok": a.ok(),
@@ -1337,6 +1360,7 @@ fn simulate_gas(
         }),
         ids,
     )
+    .map(|v| (v, conditions))
 }
 
 /// One stability condition as the simulator lists it: the fields it keeps, `fill` for the fill
@@ -1373,13 +1397,16 @@ pub enum Outcome {
     Refused(String),
 }
 
-/// `simulate(params)` as the app calls it: params in, an [`Outcome`] out.
-pub fn simulate_params(params: &Map<String, Value>) -> Outcome {
-    match simulate(params) {
+/// `simulate(params)` as the app calls it: params in, an [`Outcome`] out, with the typed values the
+/// Rule Trace reads.
+pub(crate) fn simulate_params_measured(params: &Map<String, Value>) -> (Outcome, Measured) {
+    let mut measured = Measured::default();
+    let outcome = match simulate_measured(params, &mut measured) {
         Ok(v) => Outcome::Result(v),
         Err(Stop::Raised(kind, message)) => Outcome::Raised(kind, message),
         Err(Stop::Eval(e)) => Outcome::Refused(e.to_string()),
-    }
+    };
+    (outcome, measured)
 }
 
 /// Run one `simulate` function on case-shaped arguments.
