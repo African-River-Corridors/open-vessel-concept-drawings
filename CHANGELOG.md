@@ -141,7 +141,7 @@ a change can be traced later. Newest first.
 
 ### ticket/316-dome-rule (2026-10-20)
 
-Between `main 72c3e11` and `this branch 874aeb5`.
+Between `main 2800268` and `this branch 56ae7a8`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
