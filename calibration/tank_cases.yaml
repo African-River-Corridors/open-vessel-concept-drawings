@@ -14,6 +14,8 @@
 # `run_as_head` is the nearest head the engine has (hemisphere or ellipsoidal_2to1); the gap is part of
 # the result. `run_as_material` is the engine's key for the steel; where the published steel is not in
 # the engine, the nearest key is used and the gap is part of the result.
+# `accepted_miss` maps a figure to the reason its band miss is accepted: the report and the warning
+# still show the miss, with the reason. A reason for a figure that is inside its band is refused.
 # `structure_factor` is the value the built-in Defaults Profile gives for the case's carriage
 # condition (a test keeps the two equal). `steel_in_sample` says a figure of the case was used to work
 # out a default, so its error is in-sample.
@@ -47,7 +49,9 @@ type_c_tank:
     confidence: medium
     held_out: "first tank cases (issue #292); the maintainer decides fitting"
     flags: "The paper does not say whether the 21000 mm total length is outer or inner, or whether the ship was built. The 4730 mm is the outer diameter. Test pressure is printed 237 bar (likely 23.7). The 13.1 mm is the paper's own figure; the formula before the allowance gives 13.08 mm."
-    note: "The weld efficiency is 1.0 and the stress 285 MPa, as the paper uses. The engine's cylinder wall adds the 0.5 mm allowance and rounds up to 0.5 mm, so the model wall is 14.0 mm against 13.1 mm printed."
+    note: "The weld efficiency is 1.0, as the paper uses. The engine's cylinder wall adds the 0.5 mm allowance and rounds up to 0.5 mm. Since issue #313 the stress is the engine's S690QL1 stress, the IGC 4.23.3.1 limit Rm/3 = 256.7 MPa, not the paper's Rm/2.7 = 285 MPa, so the model wall is 15.5 mm against 13.1 mm printed (it was 14.0 mm at 285 MPa)."
+    accepted_miss:
+      tank_wall_mm: "the paper designs to an inland basis (Rm/2.7) above the IGC limit, so a wall at the IGC stress is thicker than the published one (issue #313; accepted on issue #292)"
   - id: seo-2026-lco2-5000
     what: "5,000 m3 liquid CO2 Type C cargo tank, design study (not built)"
     built: design_study

@@ -394,6 +394,12 @@ def _assess_tanks(cases: dict | None = None) -> list[BandCheck]:
     return out
 
 
+def _accepted_misses() -> dict[tuple[str, str], str]:
+    """(case, figure) -> the reason a tank band miss is accepted (`accepted_miss` of a case)."""
+    return {(c["id"], fig): why for c in _load_tank_cases()["type_c_tank"]
+            for fig, why in c.get("accepted_miss", {}).items()}
+
+
 def _tank_warnings_for(checks: list[BandCheck]) -> list[str]:
     """One annotation per tank result outside its band."""
     bands = _load_tank_bands()
@@ -402,9 +408,11 @@ def _tank_warnings_for(checks: list[BandCheck]) -> list[str]:
         if b.inside:
             continue
         label = bands[b.figure]["label"].lower()
+        accepted = _accepted_misses().get((b.case, b.figure))
         lines.append(github_warning(
             f"{b.case}: modelled {label} is {b.err_pct:+.1f} % from the published {b.observed:g} "
-            f"(model {b.model:,.1f}), outside ±{b.band_pct:g} % ({b.confidence} confidence, held-out)",
+            f"(model {b.model:,.1f}), outside ±{b.band_pct:g} % ({b.confidence} confidence, held-out)"
+            + (f"; accepted: {accepted}" if accepted else ""),
             title="Calibration band", file="calibration/tank_cases.yaml"))
     return lines
 
@@ -429,6 +437,8 @@ def _tank_section() -> list[str]:
         for b in (x for x in checks if x.case == c["id"]):
             unit = "m³" if b.figure == "tank_volume_m3" else ("mm" if b.figure == "tank_wall_mm" else "t")
             note = " (in-sample)" if b.figure == "tank_steel_t" and c.get("steel_in_sample") else ""
+            if b.figure in c.get("accepted_miss", {}):
+                note += f" (accepted: {c['accepted_miss'][b.figure]})"
             out.append(f"| {c['id']} | {c['confidence']} | {bands[b.figure]['label']} ({unit}) | "
                        f"{fmt(b.observed, 1)} | {fmt(b.model, 1)} | {fmt(b.err_pct, 1)} | ±{b.band_pct:g} | "
                        f"{'inside' if b.inside else '**OUTSIDE** ⚠'}{note} |")

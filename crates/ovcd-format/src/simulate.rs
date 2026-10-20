@@ -556,6 +556,23 @@ fn tank_design_of(p: &Map<String, Value>) -> R<ovcd_core::barge_capacity::TankDe
         None | Some(Value::Null) => None,
         Some(v) => Some(py_float(v, "params.tank_allowable_stress_mpa")?),
     };
+    // Issue #313: with no typed stress, the basis picks the material's IGC 4.23.3.1 stress or the
+    // stress of a file saved before that check (left out: the old one).
+    let allowable = match (allowable, p.get("tank_allowable_stress_basis")) {
+        (Some(f), _) => Some(f),
+        (None, Some(Value::String(s))) if s == "igc_4_23_3_1" => None,
+        (None, None) => published_design_stress(&material),
+        (None, Some(Value::String(s))) if s == "published_design" => {
+            published_design_stress(&material)
+        }
+        (None, Some(other)) => {
+            return bad(format!(
+                "`params.tank_allowable_stress_basis` must be one of igc_4_23_3_1, \
+                 published_design, not {}",
+                py_repr(other)
+            ));
+        }
+    };
     Ok(b::TankDesign {
         design_pressure_mpa: get_or(
             p,
@@ -571,6 +588,15 @@ fn tank_design_of(p: &Map<String, Value>) -> R<ovcd_core::barge_capacity::TankDe
         )?,
         structure_factor: get_or(p, "tank_structure_factor", b::DEFAULT_TANK_STRUCTURE_FACTOR)?,
     })
+}
+
+/// The stress the engine used for `material` before the IGC check (issue #313), when it differs from
+/// the material's own; an unknown material is left for the core to refuse.
+fn published_design_stress(material: &str) -> Option<f64> {
+    ovcd_core::pressure_vessel::get_tank_material(material)
+        .ok()
+        .filter(|m| m.published_design_stress != m.allowable_stress)
+        .map(|m| m.published_design_stress)
 }
 
 /// What the tank was designed to, for the `drawing.tank` object (not a result, not hashed): the
@@ -607,6 +633,10 @@ fn tank_report(
             ("design_temperature_c", text("tank_design_temperature_c")),
             ("material", json!(design.material)),
             ("allowable_stress_mpa", opt_num(allowable)),
+            (
+                "allowable_stress_basis",
+                text("tank_allowable_stress_basis"),
+            ),
             ("insulation_type", text("tank_insulation_type")),
             (
                 "insulation_thickness_mm",

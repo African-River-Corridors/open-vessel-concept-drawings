@@ -72,15 +72,36 @@ def test_the_diameter_and_the_length_are_brought_to_the_outside_of_the_insulatio
 def test_the_published_river_tank_gives_the_published_wall_by_the_formula():
     """The formula before the allowance and the rounding is 13.08 mm by hand (two passes of the ASME UG-27
     shell formula at 1.58 MPa, 285 MPa, E = 1.0, on the 4.73 m outer diameter); the paper prints 13.1 mm to
-    the tenth of a millimetre.
+    the tenth of a millimetre. The run uses the engine's S690QL1 stress, the IGC 4.23.3.1 limit Rm/3 =
+    256.67 MPa since issue #313: 14.52 mm by hand (first pass 1.58 x 2365 / 255.719 = 14.613 mm, second
+    1.58 x 2350.387 / 255.719 = 14.522 mm), 15.5 mm with the allowance, rounded up to 0.5 mm.
 
-    Label: sourced - Senjanovic et al., DESIGN 2006, river LPG tank: 4730 mm outer diameter, 15.8 bar, S690QL1 285 MPa, cylinder 13.1 mm; 13.08 mm is a hand calculation
+    Label: sourced - Senjanovic et al., DESIGN 2006, river LPG tank: 4730 mm outer diameter, 15.8 bar, S690QL1 285 MPa, cylinder 13.1 mm; IGC 4.23.3.1 (Rm 770 MPa over 3); 13.08 mm and 14.52 mm are hand calculations
     """
+    from vessel_designer.core import pressure_vessel as pv
+    r, p = 4730.0 / 2.0, 1.58
+    at_paper = pv.cylinder_wall_thickness(p, r - pv.cylinder_wall_thickness(p, r, 285.0, 1.0), 285.0, 1.0)
+    assert at_paper == pytest.approx(13.08, abs=0.005)
+    assert abs(at_paper - 13.1) <= 0.05
     row = _run_tank(next(c for c in _cases() if c["id"] == "senjanovic-2006-river-lpg"))
-    assert row.required_mm == pytest.approx(13.08, abs=0.005)
-    assert abs(row.required_mm - 13.1) <= 0.05
+    assert row.required_mm == pytest.approx(14.522, abs=0.0005)
     # The engine's wall adds the allowance and rounds up to 0.5 mm.
-    assert row.wall_mm == 14.0
+    assert row.wall_mm == 15.5
+
+
+def test_an_accepted_miss_is_on_a_figure_outside_its_band_and_the_warning_gives_the_reason():
+    """Label: property
+    """
+    checks = {(b.case, b.figure): b for b in _assess_tanks()}
+    accepted = [(c["id"], fig, why) for c in _cases() for fig, why in c.get("accepted_miss", {}).items()]
+    assert accepted, "the river LPG wall miss of issue #313 is recorded"
+    for case, fig, why in accepted:
+        assert why.strip(), (case, fig)
+        assert not checks[(case, fig)].inside, f"{case} {fig}: inside its band, so nothing to accept"
+    lines = _tank_warnings_for(list(checks.values()))
+    for case, fig, why in accepted:
+        assert any(case in x and f"accepted: {why}" in x for x in lines), (case, fig)
+    assert "accepted: " in report()
 
 
 def test_a_tank_run_uses_the_datum_it_states_and_the_volume_follows_the_geometry():

@@ -14,11 +14,14 @@
 //! The paper prints 13.1 mm (to the tenth of a millimetre), so the formula agrees with it to the
 //! rounding of the printed figure.
 //!
-//! Label: sourced - Senjanovic et al., "Structure design of cargo tanks in river liquefied gas carriers", DESIGN 2006: 4,730 mm outer diameter, 15.8 bar, S690QL1 (Rm 770 MPa, allowable stress 285 MPa), cylinder shell 13.1 mm; the 13.08 mm of the formula is a hand calculation (above).
+//! Since issue #313 the material's own stress is the IGC 4.23.3.1 limit, Rm/3 = 256.7 MPa, so the
+//! paper's 285 MPa is typed here; the IGC stress gives a thicker shell (worked below).
+//!
+//! Label: sourced - Senjanovic et al., "Structure design of cargo tanks in river liquefied gas carriers", DESIGN 2006: 4,730 mm outer diameter, 15.8 bar, S690QL1 (Rm 770 MPa, allowable stress 285 MPa), cylinder shell 13.1 mm; the 13.08 mm of the formula and the 14.52 mm at the IGC stress are hand calculations (above and below).
 
 use ovcd_core::pressure_vessel::{
-    TANK_MATERIAL_DATABASE, calculate_wall_thicknesses, calculate_wall_thicknesses_with,
-    get_tank_material, required_cylinder_thickness_mm,
+    TANK_MATERIAL_DATABASE, calculate_wall_thicknesses_with, get_tank_material,
+    required_cylinder_thickness_mm,
 };
 
 /// The published tank: steel outer diameter (m), design pressure (MPa), allowable stress (MPa).
@@ -43,14 +46,16 @@ fn the_formula_gives_the_published_cylinder_thickness() {
 }
 
 #[test]
-fn the_database_holds_the_papers_steel_and_stress() {
+fn the_database_holds_the_papers_steel_and_its_stress_for_saved_files() {
     let (_, steel) = TANK_MATERIAL_DATABASE
         .iter()
         .find(|(key, _)| *key == "S690QL1")
         .expect("S690QL1 is in the database");
-    // Rm 770 MPa over 2.7 is 285.19 MPa; the paper prints 285.
-    assert!((steel.allowable_stress - 770.0 / 2.7).abs() < 0.5);
-    assert_eq!(steel.allowable_stress, ALLOWABLE_STRESS_MPA);
+    // Rm 770 MPa over 2.7 is 285.19 MPa; the paper prints 285. Since issue #313 it is the stress
+    // of a file saved before; the material's own stress is the IGC limit (tests/allowable_stress.rs).
+    assert_eq!(steel.tensile_strength, 770.0);
+    assert!((steel.published_design_stress - 770.0 / 2.7).abs() < 0.5);
+    assert_eq!(steel.published_design_stress, ALLOWABLE_STRESS_MPA);
 }
 
 #[test]
@@ -62,21 +67,30 @@ fn the_full_chain_adds_the_allowance_and_rounds_up_to_half_a_millimetre() {
         "S690QL1",
         "hemisphere",
         1.0,
-        None,
+        Some(ALLOWABLE_STRESS_MPA),
     )
     .unwrap();
     assert_eq!(cyl, 14.0);
-    // The material gives the same stress as typing it.
-    let typed = calculate_wall_thicknesses_with(
+}
+
+#[test]
+fn the_igc_stress_of_the_material_gives_a_thicker_shell_than_the_paper() {
+    // Issue #313, by hand at f = 770/3 = 256.667 MPa, E = 1.0, R = 2,365 mm: first pass
+    // 1.58 x 2365 / (256.667 - 0.948) = 14.613 mm; second pass 1.58 x 2350.387 / 255.719 =
+    // 14.522 mm; plus 0.5 mm allowance (15.022), rounded up to 0.5 mm: 15.5 mm.
+    let t = required_cylinder_thickness_mm(OUTER_DIAMETER_M, DESIGN_PRESSURE_MPA, 770.0 / 3.0, 1.0)
+        .unwrap();
+    assert!((t - 14.522).abs() < 0.0005, "{t}");
+    let (cyl, _) = calculate_wall_thicknesses_with(
         OUTER_DIAMETER_M,
         DESIGN_PRESSURE_MPA,
         "S690QL1",
         "hemisphere",
         1.0,
-        Some(ALLOWABLE_STRESS_MPA),
+        None,
     )
     .unwrap();
-    assert_eq!(typed.0, cyl);
+    assert_eq!(cyl, 15.5);
 }
 
 #[test]
@@ -91,12 +105,13 @@ fn a_typed_stress_replaces_the_materials_and_keeps_its_allowance_and_minimum() {
         Some(ALLOWABLE_STRESS_MPA),
     )
     .unwrap();
-    let s690 = calculate_wall_thicknesses(
+    let s690 = calculate_wall_thicknesses_with(
         OUTER_DIAMETER_M,
         DESIGN_PRESSURE_MPA,
         "S690QL1",
         "hemisphere",
         1.0,
+        Some(ALLOWABLE_STRESS_MPA),
     )
     .unwrap();
     assert_eq!(nine_ni, s690);
