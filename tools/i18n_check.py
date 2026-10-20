@@ -30,7 +30,7 @@ ENGLISH_ONLY = {"drawing.ftl"}
 DERIVED = ("input-", "choice-", "group-")
 CODE = [("app/src", (".ts", ".svelte")), ("app/index.html", ()), ("crates", (".rs",))]
 # In Rust only the id of a `text!` call counts: other quoted kebab strings there are not Message Ids.
-RUST_USED = re.compile(r'\b(?:text!|Text::fixed)\(\s*"([a-z0-9-]+)"')
+RUST_USED = re.compile(r'\b(?:text!|label!|Text::fixed)\(\s*"([a-z0-9-]+)"')
 
 MESSAGE = re.compile(r"^([a-zA-Z][a-zA-Z0-9_-]*)\s*=(.*)$")
 PLACEHOLDER = re.compile(r"\{\s*\$([a-zA-Z][a-zA-Z0-9_-]*)")

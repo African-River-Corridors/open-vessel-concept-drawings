@@ -25,6 +25,15 @@ use ovcd_core::models::BargeInputs;
 use ovcd_core::pyfmt::fixed;
 use serde_json::{Value, json};
 
+/// A drawing label with its Message Id in `locales/en/drawing.ftl` (spec 0005). Drawings stay
+/// English for now: the Drawing Format Standard allows printable ASCII only (clause 11.6.2), so
+/// only the English is used.
+macro_rules! label {
+    ($id:literal, $($rest:tt)*) => {
+        ovcd_core::text!($id, $($rest)*).en
+    };
+}
+
 /// The three views of one Option, as drawing documents.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GaViews {
@@ -833,11 +842,14 @@ fn elevation_gas_detail(c: &mut Canvas, h: &Hull, labels: &mut Vec<(String, [f64
     if db > 0.0 {
         let x_fwd = h.x_at_height(db);
         c.line("HIDDEN", [h.stern_x_at_height(db), db], [x_fwd, db], None);
-        labels.push(("DOUBLE BOTTOM".to_string(), [x_fwd, db]));
+        labels.push((label!("draw-double-bottom", "DOUBLE BOTTOM"), [x_fwd, db]));
     }
     if let Some((_, _, top)) = h.wing_tank() {
         c.polyline("HIDDEN", &[[x0, db], [x0, top], [x1, top], [x1, db]], false);
-        labels.push(("WBT (BOTH SIDES)".to_string(), [x1, (db + top) / 2.0]));
+        labels.push((
+            label!("draw-wbt-both-sides", "WBT (BOTH SIDES)"),
+            [x1, (db + top) / 2.0],
+        ));
     }
     if let (Some(rise), Some((length, starts, _))) = (h.dome(), h.tank_layout()) {
         let r = od / 2.0;
@@ -857,7 +869,10 @@ fn elevation_gas_detail(c: &mut Canvas, h: &Hull, labels: &mut Vec<(String, [f64
         }
         // named at the last dome, nearest the label column
         if let Some(x) = starts.last() {
-            labels.push(("DOME".to_string(), [x + length / 2.0, yc + r + rise]));
+            labels.push((
+                label!("draw-dome", "DOME"),
+                [x + length / 2.0, yc + r + rise],
+            ));
         }
     }
 }
@@ -896,12 +911,16 @@ fn zones(c: &mut Canvas, h: &Hull, view: View, labels: &mut Vec<(String, [f64; 2
         // The label stands under the hull, its text to the right of the label point, so that it
         // keeps clear of the aft block and the first tank above the deck, and of the thrusters'
         // label, whose text stands to the left of the stern.
-        c.leader("COFFERDAM", [mid, lo], [mid + 2.0 * c.k, lo - 6.0 * c.k]);
+        c.leader(
+            &label!("draw-cofferdam", "COFFERDAM"),
+            [mid, lo],
+            [mid + 2.0 * c.k, lo - 6.0 * c.k],
+        );
     }
     if h.bow_void > 0.0 {
         let mid = h.loa - h.bow_void / 2.0;
         // named in the column of the bow labels, with the others, so that the texts keep apart
-        labels.push(("FWD EQUIP.".to_string(), [mid, hi]));
+        labels.push((label!("draw-fwd-equip", "FWD EQUIP."), [mid, hi]));
     }
 }
 
@@ -963,7 +982,11 @@ fn aft_block(c: &mut Canvas, h: &Hull, view: View) {
             if !a.thruster_offsets.is_empty() && r > 0.0 {
                 c.circle("EQUIP", [room_mid, r + THRUSTER_LIFT_M], r);
                 c.leader(
-                    &format!("THRUSTERS ({})", a.thruster_offsets.len()),
+                    &label!(
+                        "draw-thrusters",
+                        "THRUSTERS ({count})",
+                        count = a.thruster_offsets.len()
+                    ),
                     [room_mid, THRUSTER_LIFT_M],
                     [room_mid + 2.0 * k, -6.0 * k],
                 );
@@ -971,15 +994,28 @@ fn aft_block(c: &mut Canvas, h: &Hull, view: View) {
             // Labels above the block; the lower one is the one further from the stern end. The
             // block top, a height above the keel, is named on the label of the part that makes it.
             let top = a.block_top.max(h.depth);
-            let block_top = format!("BLOCK TOP {}", metres(a.block_top));
-            let wheelhouse_is_top = (a.wheelhouse_top - a.block_top).abs() < 1e-9;
-            let mut units = container_label(a);
-            let mut cab = "WHEELHOUSE".to_string();
-            if wheelhouse_is_top {
-                cab = format!("{cab}, {block_top}");
+            let block_top = metres(a.block_top);
+            let (units, cab) = if (a.wheelhouse_top - a.block_top).abs() < 1e-9 {
+                (
+                    container_label(a),
+                    label!(
+                        "draw-wheelhouse-block-top",
+                        "WHEELHOUSE, BLOCK TOP {height}",
+                        height = block_top
+                    ),
+                )
             } else {
-                units = format!("{units}, {block_top}");
-            }
+                (
+                    label!(
+                        "draw-containers-block-top",
+                        "CONTAINERS ({abreast} x {rows}), BLOCK TOP {height}",
+                        abreast = a.per_row,
+                        rows = a.rows,
+                        height = block_top
+                    ),
+                    label!("draw-wheelhouse", "WHEELHOUSE"),
+                )
+            };
             c.leader(
                 &units,
                 [unit_row_mid, a.container_top.max(h.depth)],
@@ -1030,7 +1066,11 @@ fn aft_block(c: &mut Canvas, h: &Hull, view: View) {
                 }
                 if let Some(low) = a.thruster_offsets.iter().copied().reduce(f64::min) {
                     c.leader(
-                        &format!("THRUSTERS ({})", a.thruster_offsets.len()),
+                        &label!(
+                            "draw-thrusters",
+                            "THRUSTERS ({count})",
+                            count = a.thruster_offsets.len()
+                        ),
                         [room_mid, low - r],
                         [room_mid + 2.0 * k, -h.beam / 2.0 - 6.0 * k],
                     );
@@ -1043,7 +1083,7 @@ fn aft_block(c: &mut Canvas, h: &Hull, view: View) {
                 [unit_row_mid - 5.0 * k, top + 6.0 * k],
             );
             c.leader(
-                "WHEELHOUSE",
+                &label!("draw-wheelhouse", "WHEELHOUSE"),
                 [wh_mid, hw],
                 [wh_mid - 5.0 * k, top + 12.0 * k],
             );
@@ -1053,7 +1093,12 @@ fn aft_block(c: &mut Canvas, h: &Hull, view: View) {
 
 /// The label of the container units: how many abreast and how many rows, from the arrangement.
 fn container_label(a: &Aft) -> String {
-    format!("CONTAINERS ({} x {})", a.per_row, a.rows)
+    label!(
+        "draw-containers",
+        "CONTAINERS ({abreast} x {rows})",
+        abreast = a.per_row,
+        rows = a.rows
+    )
 }
 
 fn side_elevation(h: &Hull, n: u32) -> Canvas {
@@ -1130,24 +1175,42 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
     aft_block(&mut c, h, View::Elevation);
     zones(&mut c, h, View::Elevation, &mut labels);
     if !c.try_dim_horizontal([0.0, 0.0], [h.loa, 0.0], -DIM_OFFSET_MM) {
-        labels.push((format!("LOA {}", metres(h.loa)), [h.loa, 0.0]));
+        labels.push((
+            label!("draw-loa", "LOA {length}", length = metres(h.loa)),
+            [h.loa, 0.0],
+        ));
     }
     if !c.try_dim_vertical([0.0, 0.0], [0.0, h.depth], DIM_OFFSET_MM) {
-        labels.push((format!("DEPTH {}", metres(h.depth)), [h.loa, h.depth]));
+        labels.push((
+            label!("draw-depth", "DEPTH {depth}", depth = metres(h.depth)),
+            [h.loa, h.depth],
+        ));
     }
     // labels for draught and freeboard, to the right of the bow
     let mid_free = (h.draught + h.depth) / 2.0;
     labels.push((
-        format!("FREEBOARD {}", metres(h.freeboard())),
+        label!(
+            "draw-freeboard",
+            "FREEBOARD {freeboard}",
+            freeboard = metres(h.freeboard())
+        ),
         [h.x_at_height(mid_free), mid_free],
     ));
     labels.push((
-        format!("DRAUGHT {}", metres(h.draught)),
+        label!(
+            "draw-draught",
+            "DRAUGHT {draught}",
+            draught = metres(h.draught)
+        ),
         [h.x_at_height(h.draught), h.draught],
     ));
     if let Some(t) = h.light_draught {
         labels.push((
-            format!("LIGHT DRAUGHT {}", metres(t)),
+            label!(
+                "draw-light-draught",
+                "LIGHT DRAUGHT {draught}",
+                draught = metres(t)
+            ),
             [h.x_at_height(t), t],
         ));
     }
@@ -1235,10 +1298,16 @@ fn plan(h: &Hull, n: u32) -> Canvas {
     let overshoot = 4.0 * c.k;
     c.centre_line([-overshoot, 0.0], [h.loa + overshoot, 0.0]);
     if !c.try_dim_horizontal([0.0, y0], [h.loa, y0], -DIM_OFFSET_MM) {
-        labels.push((format!("LOA {}", metres(h.loa)), [h.loa, y0]));
+        labels.push((
+            label!("draw-loa", "LOA {length}", length = metres(h.loa)),
+            [h.loa, y0],
+        ));
     }
     if !c.try_dim_vertical([0.0, y0], [0.0, y1], DIM_OFFSET_MM) {
-        labels.push((format!("BEAM {}", metres(h.beam)), [h.loa, y1]));
+        labels.push((
+            label!("draw-beam", "BEAM {beam}", beam = metres(h.beam)),
+            [h.loa, y1],
+        ));
     }
     let column = h.loa + 6.0 * c.k;
     c.label_column(column, &mut labels);
@@ -1282,7 +1351,10 @@ fn section_gas_detail(
             &[[-half, 0.0], [half, 0.0], [half, db], [-half, db]],
             "lines",
         );
-        labels.push(("DOUBLE BOTTOM".to_string(), [-half + 0.15 * half, db / 2.0]));
+        labels.push((
+            label!("draw-double-bottom", "DOUBLE BOTTOM"),
+            [-half + 0.15 * half, db / 2.0],
+        ));
     }
     // wing ballast tanks (the wall inboard and the top) and the void between each and the cargo tank
     if let Some((w, gap, top)) = h.wing_tank() {
@@ -1294,10 +1366,13 @@ fn section_gas_detail(
             }
         }
         let mid = (db + top) / 2.0;
-        labels.push(("WBT (BOTH SIDES)".to_string(), [-half + w / 2.0, mid]));
+        labels.push((
+            label!("draw-wbt-both-sides", "WBT (BOTH SIDES)"),
+            [-half + w / 2.0, mid],
+        ));
         if gap > 0.0 {
             labels.push((
-                "VOID (BOTH SIDES)".to_string(),
+                label!("draw-void-both-sides", "VOID (BOTH SIDES)"),
                 [-half + w + gap / 2.0, mid],
             ));
         }
@@ -1317,7 +1392,10 @@ fn section_gas_detail(
         c.line("OBJECT", left, [left[0], db], None);
         c.line("OBJECT", right, [right[0], db], None);
         if i == 0 {
-            labels.push(("CRADLE".to_string(), [left[0], (left[1] + db) / 2.0]));
+            labels.push((
+                label!("draw-cradle", "CRADLE"),
+                [left[0], (left[1] + db) / 2.0],
+            ));
         }
     }
     // a dome on top of each tank
@@ -1328,7 +1406,7 @@ fn section_gas_detail(
         for (i, x) in centres.iter().enumerate() {
             c.dome("OBJECT", *x, base, half_base, sag);
             if i == 0 {
-                labels.push(("DOME".to_string(), [*x, base + sag]));
+                labels.push((label!("draw-dome", "DOME"), [*x, base + sag]));
             }
         }
     }
@@ -1390,9 +1468,20 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
                     None,
                 );
             }
-            labels.push((format!("INNER BOTTOM {}", metres(bottom)), [-half, bottom]));
             labels.push((
-                format!("COAMING {}", metres(*coaming)),
+                label!(
+                    "draw-inner-bottom",
+                    "INNER BOTTOM {height}",
+                    height = metres(bottom)
+                ),
+                [-half, bottom],
+            ));
+            labels.push((
+                label!(
+                    "draw-coaming",
+                    "COAMING {height}",
+                    height = metres(*coaming)
+                ),
                 [-top_width / 2.0, h.depth + coaming],
             ));
             c.polyline(
@@ -1424,19 +1513,28 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
                 let y = yc.min(h.depth) - 1.5 * c.k;
                 let edge = circle_left_edge(centres[0], yc, od / 2.0, y);
                 labels.push((
-                    format!("SIDE CLEARANCE {}", metres(*side_clearance)),
+                    label!(
+                        "draw-side-clearance",
+                        "SIDE CLEARANCE {clearance}",
+                        clearance = metres(*side_clearance)
+                    ),
                     [(-half + edge.max(-half)) / 2.0, y],
                 ));
                 // Bottom clearance: the gap between the keel and the tank bottom, under the
                 // nearest tank. The core stands the tank on double bottom + support height, which
                 // is not always the clearance it asks for; both are given when they differ.
                 let text = if (bottom - bottom_clearance).abs() < 1e-9 {
-                    format!("BOTTOM CLEARANCE {}", metres(*bottom_clearance))
+                    label!(
+                        "draw-bottom-clearance",
+                        "BOTTOM CLEARANCE {clearance}",
+                        clearance = metres(*bottom_clearance)
+                    )
                 } else {
-                    format!(
-                        "TANK BOTTOM {} (CLEARANCE {})",
-                        metres(bottom),
-                        metres(*bottom_clearance)
+                    label!(
+                        "draw-tank-bottom",
+                        "TANK BOTTOM {height} (CLEARANCE {clearance})",
+                        height = metres(bottom),
+                        clearance = metres(*bottom_clearance)
                     )
                 };
                 labels.push((text, [centres[0], bottom / 2.0]));
@@ -1446,23 +1544,47 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
     let overshoot = 4.0 * c.k;
     c.centre_line([0.0, -overshoot], [0.0, h.depth + overshoot]);
     if !c.try_dim_horizontal([-half, 0.0], [half, 0.0], -DIM_OFFSET_MM) {
-        labels.push((format!("BEAM {}", metres(h.beam)), [-half, 0.0]));
+        labels.push((
+            label!("draw-beam", "BEAM {beam}", beam = metres(h.beam)),
+            [-half, 0.0],
+        ));
     }
     // depth on the right, with draught and freeboard where there is room, otherwise as labels
     if !c.try_dim_vertical([half, 0.0], [half, h.depth], -2.0 * DIM_OFFSET_MM) {
-        labels.push((format!("DEPTH {}", metres(h.depth)), [-half, h.depth]));
+        labels.push((
+            label!("draw-depth", "DEPTH {depth}", depth = metres(h.depth)),
+            [-half, h.depth],
+        ));
     }
     if !c.try_dim_vertical([half, 0.0], [half, h.draught], -DIM_OFFSET_MM) {
-        labels.push((format!("DRAUGHT {}", metres(h.draught)), [-half, h.draught]));
+        labels.push((
+            label!(
+                "draw-draught",
+                "DRAUGHT {draught}",
+                draught = metres(h.draught)
+            ),
+            [-half, h.draught],
+        ));
     }
     if !c.try_dim_vertical([half, h.draught], [half, h.depth], -DIM_OFFSET_MM) {
         labels.push((
-            format!("FREEBOARD {}", metres(h.freeboard())),
+            label!(
+                "draw-freeboard",
+                "FREEBOARD {freeboard}",
+                freeboard = metres(h.freeboard())
+            ),
             [-half, (h.draught + h.depth) / 2.0],
         ));
     }
     if let Some(t) = h.light_draught {
-        labels.push((format!("LIGHT DRAUGHT {}", metres(t)), [-half, t]));
+        labels.push((
+            label!(
+                "draw-light-draught",
+                "LIGHT DRAUGHT {draught}",
+                draught = metres(t)
+            ),
+            [-half, t],
+        ));
     }
     // The labels stand in one column to the left of the hull. The right side holds the dimensions,
     // and a leader from beyond them would run through their lines and figures.
@@ -1494,18 +1616,46 @@ fn failed_notes(failed: &[String]) -> Vec<String> {
         return Vec::new();
     }
     let count = failed.len();
-    let plural = if count == 1 { "CHECK" } else { "CHECKS" };
-    let head = format!("DESIGN FAILS {count} {plural}");
     for shown in (1..=count).rev() {
-        let mut note = format!("{head}: {}", failed[..shown].join(", "));
-        if shown < count {
-            note.push_str(&format!(" AND {} MORE", count - shown));
-        }
+        let checks = failed[..shown].join(", ");
+        let note = match (count, count - shown) {
+            (1, _) => label!(
+                "draw-fails-one",
+                "DESIGN FAILS {count} CHECK: {checks}",
+                count = count,
+                checks = checks
+            ),
+            (_, 0) => label!(
+                "draw-fails",
+                "DESIGN FAILS {count} CHECKS: {checks}",
+                count = count,
+                checks = checks
+            ),
+            (_, more) => label!(
+                "draw-fails-more",
+                "DESIGN FAILS {count} CHECKS: {checks} AND {more} MORE",
+                count = count,
+                checks = checks,
+                more = more
+            ),
+        };
         if note_fits(&note) {
             return vec![note];
         }
     }
-    vec![head]
+    if count == 1 {
+        vec![label!(
+            "draw-fails-one-count",
+            "DESIGN FAILS {count} CHECK",
+            count = count
+        )]
+    } else {
+        vec![label!(
+            "draw-fails-count",
+            "DESIGN FAILS {count} CHECKS",
+            count = count
+        )]
+    }
 }
 
 /// Does a note fit its line in the strip? At most `NOTE_MAX_CHARS` characters, and a width, after
@@ -1536,7 +1686,11 @@ fn fits(window: [f64; 4], n: u32, strip: f64) -> bool {
 
 /// Build one view at the largest scale at which everything fits.
 fn document(h: &Hull, title: &str, build: fn(&Hull, u32) -> Canvas) -> Result<Value, String> {
-    let mut notes = vec![format!("{title}. DIMENSIONS IN METRES.")];
+    let mut notes = vec![label!(
+        "draw-note-dimensions",
+        "{view}. DIMENSIONS IN METRES.",
+        view = title
+    )];
     let what = format!("{}; {}", h.vessel, h.cargo);
     if what.len() > 2
         && what.chars().all(|c| (' '..='~').contains(&c))
@@ -1593,9 +1747,17 @@ fn document(h: &Hull, title: &str, build: fn(&Hull, u32) -> Canvas) -> Result<Va
 pub fn ga_views(results: &Value) -> Result<GaViews, String> {
     let hull = read_hull(results)?;
     Ok(GaViews {
-        side_elevation: document(&hull, "SIDE ELEVATION", side_elevation)?,
-        plan: document(&hull, "PLAN", plan)?,
-        midship_section: document(&hull, "MIDSHIP SECTION", midship_section)?,
+        side_elevation: document(
+            &hull,
+            &label!("draw-view-side-elevation", "SIDE ELEVATION"),
+            side_elevation,
+        )?,
+        plan: document(&hull, &label!("draw-view-plan", "PLAN"), plan)?,
+        midship_section: document(
+            &hull,
+            &label!("draw-view-midship-section", "MIDSHIP SECTION"),
+            midship_section,
+        )?,
     })
 }
 

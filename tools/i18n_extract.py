@@ -21,7 +21,8 @@ HEADER = """\
 # `text!` call and run the tool again. A number argument arrives as text, already rounded.
 """
 
-CALL = re.compile(r'\btext!\(\s*"([a-z0-9-]+)"\s*,\s*')
+# `label!` is the drawing crates' form of `text!`: the same id and English, the English only used.
+CALL = re.compile(r'\b(?:text|label)!\(\s*"([a-z0-9-]+)"\s*,\s*')
 FIXED = re.compile(r'\bText::fixed\(\s*"([a-z0-9-]+)"\s*,\s*')
 CONST = re.compile(r'\bconst\s+([A-Z_][A-Z0-9_]*)\s*:\s*&(?:\'static\s+)?str\s*=\s*')
 NAME = re.compile(r"\{([a-z_][a-z0-9_]*)\}")
@@ -122,7 +123,7 @@ def extract(root: Path = ROOT) -> tuple[list[tuple[str, str, str]], list[str]]:
         if "target" in path.parts or path.name == "text.rs":
             continue
         text = path.read_text(encoding="utf-8")
-        if "text!(" not in text and "Text::fixed(" not in text:
+        if "text!(" not in text and "label!(" not in text and "Text::fixed(" not in text:
             continue
         rel = str(path.relative_to(root))
         consts: dict[str, str] = {}
