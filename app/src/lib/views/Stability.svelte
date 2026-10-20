@@ -110,9 +110,18 @@
       ctx.moveTo(x, top);
       ctx.lineTo(x, top + height);
       ctx.stroke();
-      ctx.fillText(`${a}\u00b0`, x + 3 * k, top + 12 * k);
     }
     ctx.setLineDash([]);
+    // Each angle is written on a ground of the chart surface, so that a curve under it does not cross it.
+    for (const a of angles) {
+      const x = u.valToPos(a, "x", true);
+      if (x < left || x > left + width) continue;
+      const text = `${a}\u00b0`;
+      ctx.fillStyle = tok.surface;
+      ctx.fillRect(x + 1 * k, top + 1 * k, ctx.measureText(text).width + 4 * k, 14 * k);
+      ctx.fillStyle = tok.ink2;
+      ctx.fillText(text, x + 3 * k, top + 12 * k);
+    }
     (stability?.conditions ?? []).forEach((c) => {
       const x = u.valToPos(c.max_gz_deg, "x", true);
       const y = u.valToPos(c.max_gz_m, "y", true);

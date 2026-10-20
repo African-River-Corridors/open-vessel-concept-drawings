@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- App and web app (issue #300): dropdowns draw their own arrow and look the same on Linux as on macOS and Windows. The 30° and 40° labels on the stability chart have a ground, so a curve does not cross them. The bundled fonts are woff2 (0.95 MB, was 2.56 MB), with no change to the glyphs.
+
 ## 0.2.3 (2026-10-16)
 
 Highlights, since 0.2.2:
