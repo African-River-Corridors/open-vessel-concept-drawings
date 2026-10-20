@@ -232,6 +232,10 @@ msg-containment-cargo = `{ $input }` = { $containment } cannot carry { $cargo } 
 msg-freeboard-depth = `{ $input }` = { $freeboard } must be less than `{ $depth_input }` = { $depth } (hard limit)
 msg-whole-number = `{ $input }` = { $value } must be a whole number (hard limit)
 msg-insulation-disagree = `{ $input }` is { $kind } but `{ $thickness_input }` is { $thickness }: the type and the thickness disagree (soft check); accepted
+msg-stress-from-input = `{ $input }`
+msg-stress-from-basis = the `published_design` allowable stress basis
+msg-stress-from-material = the material
+msg-stress-above-igc = { $from } gives an allowable stress of { $stress } MPa, above the IGC 4.23.3.1 limit for { $material } of { $limit } MPa, the lesser of Rm/A = { $rm } / { $a } and Re/B = { $re } / { $b } (soft check); accepted
 msg-freeboard-search = `{ $input }` = { $freeboard } must be at most { $limit }, the deepest hull `{ $search_input }` searches (hard limit)
 msg-channel-ukc = `{ $input }` = { $depth } must be at least `{ $ukc_input }` = { $ukc } (hard limit)
 msg-hold-width = `{ $input }` = { $beam } leaves a hold width of { $width } m after the two { $void } m wing voids; { $reason }

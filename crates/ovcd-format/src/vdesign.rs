@@ -3054,24 +3054,41 @@ fn cross_checks(
         let old_basis =
             get("tank_allowable_stress_basis").and_then(Value::as_str) == Some("published_design");
         let (stress, from) = match typed {
-            Some(f) => (f, "`tank_allowable_stress_mpa`"),
+            Some(f) => (
+                f,
+                text!(
+                    "msg-stress-from-input",
+                    "`{input}`",
+                    input = Arg::input("tank_allowable_stress_mpa")
+                ),
+            ),
             None if old_basis => (
                 mat.published_design_stress,
-                "the `published_design` allowable stress basis",
+                Text::fixed(
+                    "msg-stress-from-basis",
+                    "the `published_design` allowable stress basis",
+                ),
             ),
-            None => (mat.allowable_stress, "the material"),
+            None => (
+                mat.allowable_stress,
+                Text::fixed("msg-stress-from-material", "the material"),
+            ),
         };
         if stress > limit {
-            report.warning(
-                at(format!(
+            report.warning_text(
+                at(text!(
+                    "msg-stress-above-igc",
                     "{from} gives an allowable stress of {stress} MPa, above the IGC 4.23.3.1 \
-                     limit for {} of {limit:.1} MPa, the lesser of Rm/A = {} / {} and Re/B = {} / {} \
-                     (soft check); accepted",
-                    mat.name,
-                    mat.tensile_strength,
-                    mat.factor_a,
-                    mat.yield_strength,
-                    mat.factor_b
+                     limit for {material} of {limit} MPa, the lesser of Rm/A = {rm} / {a} and \
+                     Re/B = {re} / {b} (soft check); accepted",
+                    from = from,
+                    stress = number(stress),
+                    material = mat.name,
+                    limit = Arg::num(limit, format!("{limit:.1}")),
+                    rm = number(mat.tensile_strength),
+                    a = number(mat.factor_a),
+                    re = number(mat.yield_strength),
+                    b = number(mat.factor_b)
                 )),
                 &[
                     "tank_material",

@@ -345,6 +345,9 @@ fn faulty_files() -> Vec<(String, String)> {
         ("hold input", |d| {
             d["options"][0]["inputs"]["hold_fill_ratio"] = json!(0.9)
         }),
+        ("stress", |d| {
+            d["options"][0]["inputs"]["tank_allowable_stress_mpa"] = json!(300.0)
+        }),
     ];
     for (name, fault) in gas_faults {
         let mut d = gas.clone();

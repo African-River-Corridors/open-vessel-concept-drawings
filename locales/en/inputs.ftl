@@ -87,6 +87,10 @@ choice-tank-material-316l = 316L stainless steel
 choice-tank-material-9ni = 9 % nickel steel
 choice-tank-material-s690ql1 = S690QL1 quenched and tempered steel
 
+input-tank-allowable-stress-basis = Tank allowable stress basis
+choice-tank-allowable-stress-basis-igc-4-23-3-1 = IGC 4.23.3.1: lesser of Rm/A and Re/B
+choice-tank-allowable-stress-basis-published-design = Before the IGC check (S690QL1 at 285 MPa)
+
 input-tank-allowable-stress-mpa = Tank allowable stress (override)
 
 input-tank-insulation-type = Tank insulation type
