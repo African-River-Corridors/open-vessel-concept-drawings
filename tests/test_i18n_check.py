@@ -12,7 +12,7 @@ def test_the_text_library_is_whole_and_the_check_is_fast():
     """Label: property"""
     start = time.perf_counter()
     assert i18n_check.check() == []
-    assert time.perf_counter() - start < 2.0
+    assert time.perf_counter() - start < 1.0
 
 
 def tree(tmp_path: Path, english: str, code: str, **translations: str) -> Path:
@@ -98,3 +98,51 @@ def test_a_stale_input_label_is_caught(tmp_path):
     problems = i18n_check.check(root)
     assert any("input-beam-m is 'Breadth', the code says 'Beam'" in p for p in problems)
     assert any("input-old is not an input" in p for p in problems)
+
+
+def test_a_text_call_whose_arguments_differ_from_its_english_is_caught(tmp_path):
+    """Label: property"""
+    root = tree(tmp_path, EN, CODE)
+    (root / "crates" / "a.rs").write_text('let t = text!("check-low", "too low: {x} m", y = Arg::py(y));\n', encoding="utf-8")
+    problems = i18n_check.check(root)
+    assert any("check-low: the English names ['x'] but the call gives ['y']" in p for p in problems)
+
+
+def test_a_stale_drawing_file_is_caught_and_drawings_stay_english(tmp_path):
+    """Label: property"""
+    root = tree(tmp_path, EN, CODE)
+    (root / "crates" / "a.rs").write_text('let t = label!("draw-loa", "LOA {length}", length = metres(loa));\n', encoding="utf-8")
+    (root / "locales" / "en" / "drawing.ftl").write_text("draw-loa = LENGTH { $length }\n", encoding="utf-8")
+    (root / "locales" / "es").mkdir()
+    (root / "locales" / "es" / "drawing.ftl").write_text("# status: draft\ndraw-loa = ESLORA { $length }\n", encoding="utf-8")
+    problems = i18n_check.check(root)
+    assert any("drawing.ftl is not what the code gives" in p for p in problems)
+    assert any("locales/es/drawing.ftl: drawing messages are English only" in p for p in problems)
+
+
+def test_a_malformed_term_list_is_caught(tmp_path):
+    """Label: property"""
+    root = tree(tmp_path, EN, CODE, es="# status: draft\napp-bye = Adiós\n")
+    (root / "locales" / "terms.toml").write_text(
+        '[draught]\nen = "draught"\nes = ["calado", "draft", "Calado de trazado."]\n'
+        '[heel]\nes = ["escora", "draft", ""]\n'
+        '[beam]\nen = "beam"\nes = ["manga", "approved", ""]\n'
+        '[hull]\nen = "hull"\n',
+        encoding="utf-8",
+    )
+    problems = i18n_check.check(root)
+    assert not any("[draught]" in p for p in problems)
+    assert any("[heel] needs an `en` term" in p for p in problems)
+    assert any("[beam] es must be [term, status, note]" in p for p in problems)
+    assert any("[hull] es must be [term, status, note]" in p for p in problems)
+
+
+def test_hashes_prints_the_reviewed_line_of_each_english_message(tmp_path):
+    """Label: property"""
+    root = tree(tmp_path, EN, CODE)
+    (root / "locales" / "en" / "drawing.ftl").write_text("draw-loa = LOA\n", encoding="utf-8")
+    lines = i18n_check.hashes("es", root)
+    assert lines == [
+        f"app-hello: # status: reviewed @your-handle {i18n_check.english_hash('app-hello = Hello { $name }')}",
+        f"app-bye: # status: reviewed @your-handle {i18n_check.english_hash('app-bye = Bye')}",
+    ]
