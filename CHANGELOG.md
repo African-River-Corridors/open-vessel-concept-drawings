@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Design change (issue #315): an LPG Cargo is loaded at its loading temperature, at the saturated liquid density there (NIST Chemistry WebBook tables of propane and n-butane, `catalogue/lpg_saturation/`; the 60/40 mix as an ideal solution of the two, an estimate), to the loading limit of IGC 15.5.1, LL = FL x rhoR / rhoL. `fill_ratio` is the filling limit FL (98 %). The reference temperature follows IGC 15.1.3: a fully pressurised tank (no temperature control) takes the temperature at which the vapour pressure is the MARVS (15.1.3.1, the maintainer's choice); semi-pressurised and fully refrigerated tanks (with temperature control) take the loading temperature (15.1.3.2), so LL = FL. Two new LPG inputs: `lpg_loading_limit_basis` (`igc_15_1_3` default; `igc_15_5_2`, a 45 C reference for a pressurised tank, which IGC 15.5.2 lets an Administration allow; `refrigerated_density`, the old way) and `lpg_loading_temperature_c` (by carriage condition: 15 C pressurised and -10 C semi-pressurised, both estimates; the boiling point at one atmosphere when fully refrigerated). Cargo per m3 of tank: propane fully pressurised 569 to 432 kg (LL 85.1 %, reference 54.1 C), semi-pressurised 569 to 531 kg, fully refrigerated 569 kg (no change); butane fully pressurised 588 to 437 kg (LL 74.9 %, reference 110.7 C), semi-pressurised 588 to 599 kg, fully refrigerated 588 to 589 kg; mix fully pressurised 577 to 440 kg, semi-pressurised 556 kg, fully refrigerated 584 kg. On a 110 x 11.4 m hull, fully pressurised propane carries 2,166 t (was 2,316 t); the search now takes a wider tank because a lighter cargo frees displacement. LNG does not move. A file saved before keeps `refrigerated_density`, so its results do not change. Loading warmer than the MARVS allows is a soft warning. No sourced test changed; one new sourced test, `crates/ovcd-core/tests/lpg_saturation.rs` (the IGC worked case on the NIST rows). The before/after table is under "Design changes" below.
 - Engine fix (issue #314): the surface area of a 2:1 semi-ellipsoidal tank head is the closed-form area of half an oblate spheroid, 4.336 R^2 = 1.084 D^2 (MathWorld, "Oblate Spheroid", eq. 11). The engine took 1.084 pi R^2, the 1.084 D^2 rule with pi R^2 in place of D^2, so the head steel and head insulation were 21.5 % low (the true area is 27.3 % above the old one: the 21 % and 27 % of the two reviews are the same error, measured from different bases). The steel area is at the steel outer surface and the insulation area at the tank outer diameter, as before. Hemispherical heads (2 pi R^2) were right and do not move; the engine has no torispherical head. No design of the fixed set moves: every Design uses hemispherical heads. The Python API and the tank calibration move: the river LPG tank (run with 2:1 heads) has 37.4 t of steel against 36.2 t (34.4 t published, inside its band). Snapshot re-pinned: `crates/ovcd-core/tests/tanks.rs::an_ellipsoidal_head_is_half_as_long_and_uses_the_oblate_spheroid_area` (shell 105.55 to 108.52 t, insulation 43.36 to 44.72 t). No sourced test changed; one new sourced test, `crates/ovcd-core/tests/head_area.rs`.
 - Design change (issue #313): the allowable stress of each tank steel is the IGC 4.23.3.1 limit, the lesser of Rm/A and Re/B, with cited Rm and Re. S690QL1, the fully pressurised LPG steel, moves from 285 MPa (Rm/2.7, an inland basis) to 256.7 MPa (Rm/3). 304L, 316L (113 MPa) and 9Ni (230 MPa) do not move. Fully pressurised LPG walls get about 10 % thicker (29.0 to 32.0 mm on a 110 x 11.4 m hull, 40.5 to 45.0 mm on 90 x 14 m), tank steel and lightship rise (+52 t and +69 t), and cargo falls a little. A new input, `tank_allowable_stress_basis`, keeps 285 MPa for a file saved before, so its results do not change; a stress above the IGC limit is a soft warning. The river LPG tank calibration wall is now outside its band (15.5 mm against 13.1 mm printed), recorded as an accepted miss: the paper designs to the inland basis. Sourced tests changed: `tank_wall_formula.rs` (the paper's 285 MPa is now typed; new hand calculation at 256.7 MPa) and `test_the_published_river_tank_gives_the_published_wall_by_the_formula`. The before/after table is under "Design changes" below.
 - App and web app (issue #300): dropdowns draw their own arrow and look the same on Linux as on macOS and Windows. The 30° and 40° labels on the stability chart have a ground, so a curve does not cross them. The bundled fonts are woff2 (0.95 MB, was 2.56 MB), with no change to the glyphs.
@@ -135,6 +136,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/315-lpg-density-loading-limit (2026-10-20)
+
+Between `main 32f0184` and `this branch e585a6b`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 1 (88x16.3) | `checks[12].message` | GM 3.85 m (fluid), max GZ 1.55 m at 26° | GM 3.62 m (fluid), max GZ 1.46 m at 26° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[13].message` | GM 5.88 m (fluid), max GZ 2.39 m at 27° | GM 5.53 m (fluid), max GZ 2.27 m at 27° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[14].message` | GM 12.13 m (fluid), max GZ 3.35 m at 27° | GM 10.49 m (fluid), max GZ 3.15 m at 28° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[8].message` | raised eye 13.20 m >= obstruction 13.52 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.20 m >= obstruction 14.52 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `warnings[0]` | Sightline needs 6.82 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 7.82 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `arrangement.feasible` | False | True | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[10].message` | cofferdam 0.60 m >= 0.60 m (cl. 3.6.13) | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[10].name` | cofferdam min width | opening setback | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[11].message` | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[11].name` | opening setback | fwd end bulkhead space | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].message` | forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3) | GM 3.82 m (fluid), max GZ 1.56 m at 26° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].name` | fwd end bulkhead space | Stability — laden | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].severity` | error | absent | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[13].message` | GM 2.40 m (fluid), max GZ 0.56 m at 16° — fails: Area 30–40° 0.028 < 0.03, Angle of max GZ 16.000 < 25.0 | GM 5.77 m (fluid), max GZ 2.34 m at 27° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[13].name` | Stability — laden | Stability — half laden | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[13].ok` | False | True | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | GM 3.83 m (fluid), max GZ 1.63 m at 25° | GM 11.17 m (fluid), max GZ 3.23 m at 28° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].name` | Stability — half laden | Stability — light | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[15].message` | GM 9.45 m (fluid), max GZ 3.00 m at 29° | absent | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[15].name` | Stability — light | absent | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[15].ok` | True | absent | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[1].message` | No arrangement passes every check on this hull. The closest one is shown. It fails: Stability — laden. | cargo volume must be positive (tank/hold fits) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[1].name` | Feasible arrangement | feasible geometry | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[1].ok` | False | True | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[1].severity` | absent | error | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[2].message` | cargo volume must be positive (tank/hold fits) | cargo zone 98.49 m = LOA 130.0 - bow void 9.62 m - stern void 21.89 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[2].name` | feasible geometry | cargo zone positive | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[3].message` | cargo zone 98.49 m = LOA 130.0 - bow void 9.62 m - stern void 21.89 m | 3 x 2.60 m thrusters need 10.20 m across a 16.30 m beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[3].name` | cargo zone positive | thrusters fit beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[4].message` | 3 x 2.60 m thrusters need 10.20 m across a 16.30 m beam | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 16.30 m beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[4].name` | thrusters fit beam | requested thruster count fits | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[4].severity` | error | warning | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[5].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 16.30 m beam | 3 x 40 ft units abreast need 10.91 m across a 16.30 m beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[5].name` | requested thruster count fits | containers fit beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[5].severity` | warning | error | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[6].message` | 3 x 40 ft units abreast need 10.91 m across a 16.30 m beam | 3 units in 1 row(s) of 3; a second row adds 12.99 m to the stern block and comes straight off the cargo zone | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[6].name` | containers fit beam | units fit in one row | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[6].severity` | error | warning | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[7].message` | 3 units in 1 row(s) of 3; a second row adds 12.99 m to the stern block and comes straight off the cargo zone | wheelhouse 6.40 m wide on a 16.30 m beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[7].name` | units fit in one row | wheelhouse fits beam | changed |
+| ... | 20729 more changed quantities | | | |
 
 ### ticket/313-s690-allowable-stress (2026-10-20)
 

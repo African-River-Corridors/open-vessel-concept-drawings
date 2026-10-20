@@ -179,6 +179,11 @@ fn a_new_design_takes_the_table_row_of_every_combination_and_marks_it_default() 
         let carriage = combination[2].1.clone();
         let s = new_session(&cargo, &carriage);
         for name in TABLE_DEFAULTS {
+            // The loading temperature is an input of the LPG Cargos only (issue #315).
+            if *name == "lpg_loading_temperature_c" && !LPG_CARGOS.contains(&cargo.as_str()) {
+                assert!(stored(&s, name).is_none(), "{name}: {cargo}");
+                continue;
+            }
             let want = profile
                 .table_default(name, &context(&cargo, &carriage))
                 .unwrap_or_else(|| panic!("{name}: {cargo} {carriage}"))

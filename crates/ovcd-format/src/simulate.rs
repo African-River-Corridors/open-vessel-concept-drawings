@@ -608,6 +608,129 @@ fn published_design_stress(material: &str) -> Option<f64> {
         .map(|m| m.published_design_stress)
 }
 
+/// How an LPG Cargo is loaded (issue #315): the fill handed to the engine (the loading limit), the
+/// density at the loading temperature, and what they came from, for `drawing.cargo_loading` (not a
+/// result, not hashed).
+struct Loading {
+    fill: f64,
+    density_kg_m3: Option<f64>,
+    report: Option<Value>,
+}
+
+/// The IGC 15.1.4 air temperature of the ambient design conditions (C): the reference temperature
+/// of a fully pressurised tank under IGC 15.5.2.
+const AMBIENT_DESIGN_AIR_C: f64 = 45.0;
+
+/// The loading of an LPG Cargo (issue #315). `lpg_loading_limit_basis` left out, or
+/// `refrigerated_density`, keeps what the engine did before: the cargo data's density, loaded to the
+/// fill ratio. Otherwise the density is the saturated liquid density at the loading temperature,
+/// and the tank is loaded to LL = FL x rho_R / rho_L (IGC 15.5.1), not above FL. The reference
+/// temperature is IGC 15.1.3: fully pressurised, the temperature at which the vapour pressure is the
+/// MARVS (15.1.3.1) or, on `igc_15_5_2`, 45 C; otherwise the loading temperature (15.1.3.2).
+fn lpg_loading(p: &Map<String, Value>, cargo: &str, fill: f64) -> R<Loading> {
+    use ovcd_core::lpg_saturation as sat;
+    let old = Loading {
+        fill,
+        density_kg_m3: None,
+        report: None,
+    };
+    let basis = match p.get("lpg_loading_limit_basis") {
+        None | Some(Value::Null) => return Ok(old),
+        Some(Value::String(s)) if crate::vdesign::LOADING_LIMIT_BASES.contains(&s.as_str()) => {
+            s.as_str()
+        }
+        Some(other) => {
+            return bad(format!(
+                "`params.lpg_loading_limit_basis` must be one of {}, not {}",
+                crate::vdesign::LOADING_LIMIT_BASES.join(", "),
+                py_repr(other)
+            ));
+        }
+    };
+    if basis == "refrigerated_density" || !sat_cargo(cargo) {
+        return Ok(old);
+    }
+    let carriage = match p.get("lpg_carriage_condition") {
+        Some(Value::String(s)) => s.as_str(),
+        _ => "fully_pressurised",
+    };
+    let t_load = get_or(p, "lpg_loading_temperature_c", 15.0)?;
+    let rho_l = match sat::liquid_density_kg_m3(cargo, t_load) {
+        Some(v) => v,
+        None => {
+            return bad(format!(
+                "`params.lpg_loading_temperature_c` = {} is outside the saturation table (-50 to \
+                 80 C)",
+                py_str(t_load)
+            ));
+        }
+    };
+    let (t_ref, rule) = if carriage != "fully_pressurised" {
+        (
+            t_load,
+            "IGC 15.1.3.2: the loading temperature (temperature control)",
+        )
+    } else if basis == "igc_15_5_2" {
+        (
+            AMBIENT_DESIGN_AIR_C,
+            "IGC 15.5.2: 45 C, the air temperature of the ambient design conditions (15.1.4)",
+        )
+    } else {
+        let marvs_bar = get_or(
+            p,
+            "tank_design_pressure_mpa",
+            ovcd_core::barge_capacity::DEFAULT_TANK_DESIGN_PRESSURE_MPA,
+        )? * 10.0
+            + sat::ATMOSPHERE_BAR;
+        match sat::saturation_temperature_c(cargo, marvs_bar) {
+            Some(t) => (
+                t,
+                "IGC 15.1.3.1: the temperature at which the vapour pressure is the MARVS",
+            ),
+            None => {
+                return bad(format!(
+                    "the MARVS of {} bar absolute is outside the saturation table of {cargo}",
+                    py_str(marvs_bar)
+                ));
+            }
+        }
+    };
+    let rho_r = sat::liquid_density_kg_m3(cargo, t_ref).ok_or_else(|| {
+        Stop::Eval(EvalError::BadInput(format!(
+            "the reference temperature {} C is outside the saturation table of {cargo}",
+            py_str(t_ref)
+        )))
+    })?;
+    // With temperature control rho_R is rho_L, so LL is FL; it is taken as FL, not worked out.
+    let formula = sat::loading_limit(fill, rho_r, rho_l);
+    let ll = if t_ref == t_load || formula > fill {
+        fill
+    } else {
+        formula
+    };
+    Ok(Loading {
+        fill: ll,
+        density_kg_m3: Some(rho_l),
+        report: Some(json!({
+            "basis": basis,
+            "filling_limit": num(fill),
+            "loading_temperature_c": num(t_load),
+            "loading_density_kg_m3": num(rho_l),
+            "reference_temperature_c": num(t_ref),
+            "reference_rule": rule,
+            "reference_density_kg_m3": num(rho_r),
+            "loading_limit": num(ll),
+            "loading_limit_formula": "LL = FL x rhoR / rhoL (IGC 15.5.1), not above FL",
+            "cargo_kg_per_m3_of_tank": num(ll * rho_l),
+        })),
+    })
+}
+
+/// Whether the saturation tables hold `cargo` (the LPG Cargos).
+fn sat_cargo(cargo: &str) -> bool {
+    ovcd_core::lpg_saturation::liquid_density_kg_m3(cargo, 0.0).is_some()
+}
+
 /// What the tank was designed to, for the `drawing.tank` object (not a result, not hashed): the
 /// values in force, where the wall thickness came from, and the diameter datum.
 ///
@@ -903,6 +1026,7 @@ fn simulate_gas(
         Some(v) => v,
         None => fill_by_ruleset(ruleset),
     };
+    let loading = lpg_loading(p, cargo_key, fill)?;
     let fb = get_or(p, "freeboard_min_m", 0.3)?;
     let ch = channel(p)?;
     let channel_name = format!("Channel (depth {MINUS} under-keel clearance)");
@@ -948,7 +1072,8 @@ fn simulate_gas(
     let (lim_name, t_max) = min_item(&limits);
     let options = FitOptions {
         ruleset: ruleset.to_string(),
-        fill_ratio: fill,
+        fill_ratio: loading.fill,
+        cargo_density_kg_m3: loading.density_kg_m3,
         self_propelled,
         depths: depths.clone(),
         block_coefficient: cb,
@@ -1117,6 +1242,9 @@ fn simulate_gas(
     });
     let mut drawing_parts = structure_json(r, f.engine_inputs.separation.as_ref(), None);
     drawing_parts.push(("tank", tank_report(p, &f.engine_inputs, r)));
+    if let Some(report) = loading.report {
+        drawing_parts.push(("cargo_loading", report));
+    }
     let drawing = drawing_json(drawing_parts);
     let air_loaded = r.air_draft_top_above_keel_m - t;
     with_text_ids(

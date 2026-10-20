@@ -102,6 +102,14 @@ save writes the current version.
   `published_design` (a table in `vdesign.rs`, marked `default`), so its results do not change; a stress
   above the IGC limit is a soft warning. The format version is not changed.
 
+- **LPG density and loading limit** (issue #315): two new inputs of the LPG Cargos only.
+  `lpg_loading_limit_basis` is `igc_15_1_3` (the Defaults Profile value), `igc_15_5_2` or
+  `refrigerated_density`; `lpg_loading_temperature_c` takes its default from a table by Cargo and carriage
+  condition. On an IGC basis the cargo density is the saturated liquid density at the loading temperature and
+  the tank is loaded to the loading limit of IGC 15.5.1; `fill_ratio` is the filling limit. A file that lacks
+  the inputs gets `refrigerated_density` and 15 C (tables in `vdesign.rs`, marked `default`): the cargo data's
+  density and the fill ratio as loaded, so its results do not change. The format version is not changed.
+
 ## Consequences
 
 - A saved file gives the same results when opened again, on Windows and macOS.

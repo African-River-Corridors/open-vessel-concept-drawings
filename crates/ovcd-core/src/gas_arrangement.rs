@@ -62,6 +62,8 @@ pub const DEFAULT_REQUIRED_FREEBOARD_M: f64 = 0.3;
 pub struct FitOptions {
     pub ruleset: String,
     pub fill_ratio: f64,
+    /// Cargo density (kg/m^3) in place of the cargo data's (issue #315); `None`: the cargo data's.
+    pub cargo_density_kg_m3: Option<f64>,
     pub self_propelled: bool,
     pub depths: Vec<f64>,
     pub tanks_wide: Vec<i64>,
@@ -106,6 +108,7 @@ impl Default for FitOptions {
         Self {
             ruleset: "IGC_2G".to_string(),
             fill_ratio: 0.95,
+            cargo_density_kg_m3: None,
             self_propelled: true,
             depths: DEFAULT_DEPTHS_M.to_vec(),
             tanks_wide: DEFAULT_TANKS_WIDE.to_vec(),
@@ -457,6 +460,7 @@ impl Search<'_> {
         inp.self_propelled = self.o.self_propelled;
         inp.vessel_type = self.o.ruleset.clone();
         inp.fill_ratio = self.o.fill_ratio;
+        inp.cargo_density_kg_m3 = self.o.cargo_density_kg_m3;
         inp.block_coefficient = self.o.block_coefficient;
         inp.n_tanks_wide = Some(nw);
         inp.n_tanks_long = nl;

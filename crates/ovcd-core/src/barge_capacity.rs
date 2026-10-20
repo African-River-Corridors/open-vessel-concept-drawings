@@ -165,6 +165,9 @@ pub struct BargeCapacityInputs {
     /// The Cargo-dependent tank design values (issue #292).
     pub tank_design: TankDesign,
     pub fill_ratio: f64,
+    /// Cargo density (kg/m^3) in place of the cargo data's (issue #315: an LPG Cargo at its loading
+    /// temperature); `None`: the cargo data's.
+    pub cargo_density_kg_m3: Option<f64>,
     pub dome_height: f64,
     /// Diameter of the cylindrical dome (m). With `dome_height` it gives the dome's volume, which
     /// counts in Vc for d(Vc) only (IGC 2.4.1.1: Vc includes domes and appendages), not in the
@@ -230,6 +233,7 @@ impl BargeCapacityInputs {
             tank_wall_thickness: Some(DEFAULT_TANK_WALL_THICKNESS_MM),
             tank_design: TankDesign::default(),
             fill_ratio: 0.95,
+            cargo_density_kg_m3: None,
             dome_height: DEFAULT_TANK_DOME_HEIGHT_M,
             dome_diameter: DEFAULT_TANK_DOME_DIAMETER_M,
             tank_support_height: DEFAULT_TANK_SUPPORT_HEIGHT_M,
@@ -827,7 +831,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         sep.validate().map_err(value_error)?;
     }
     let props = get_cargo(&inp.cargo_type).map_err(value_error)?;
-    let density_t = props.density / 1000.0;
+    let density_t = inp.cargo_density_kg_m3.unwrap_or(props.density) / 1000.0;
     let is_gas = props.phase != "dry_bulk";
 
     let arr = arrangement(inp, is_gas)?;

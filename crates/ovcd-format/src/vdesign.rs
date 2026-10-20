@@ -91,6 +91,17 @@ pub const TANK_MATERIALS: &[&str] = &["304L", "316L", "9Ni", "S690QL1"];
 /// names no basis keeps the old stress, so its results do not change.
 pub const ALLOWABLE_STRESS_BASES: &[&str] = &["igc_4_23_3_1", "published_design"];
 
+/// How an LPG Cargo's density and loading limit are worked out (issue #315). `igc_15_1_3`: the
+/// density at the loading temperature, and the loading limit of IGC 15.5.1, LL = FL x rho_R /
+/// rho_L, with the reference temperature of IGC 15.1.3 (fully pressurised: the temperature at which
+/// the vapour pressure is the MARVS, 15.1.3.1; semi-pressurised and fully refrigerated, with
+/// temperature control: the loading temperature, 15.1.3.2). `igc_15_5_2`: the same, but a fully
+/// pressurised tank takes the highest temperature under the ambient design conditions (45 C,
+/// 15.1.4) as its reference, as IGC 15.5.2 lets an Administration allow. `refrigerated_density`:
+/// what the engine did before, the fully refrigerated density of the cargo data, loaded to the
+/// fill ratio, in every carriage condition; a file that names no basis keeps it.
+pub const LOADING_LIMIT_BASES: &[&str] = &["igc_15_1_3", "igc_15_5_2", "refrigerated_density"];
+
 /// The tank insulation types. `unspecified` is the generic insulation the engine used before the
 /// type was an input; the density is the one value (60 kg/m3) for every type.
 pub const INSULATION_TYPES: &[&str] = &["unspecified", "none", "pu_foam", "panel"];
@@ -102,6 +113,7 @@ pub const INSULATION_TYPES: &[&str] = &["unspecified", "none", "pu_foam", "panel
 /// profile must have a row for every combination the schema can make.
 pub const TABLE_DEFAULTS: &[&str] = &[
     "fill_ratio",
+    "lpg_loading_temperature_c",
     "tank_design_pressure_mpa",
     "tank_design_temperature_c",
     "tank_material",
@@ -408,6 +420,14 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
         formations: None,
         value: GAS_TANK_STRUCTURE_FACTOR,
     },
+    // Issue #315: an old LPG file keeps the `refrigerated_density` basis, which uses no loading
+    // temperature; it holds the fully pressurised default, 15 C.
+    LegacyFixed {
+        name: "lpg_loading_temperature_c",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: 15.0,
+    },
     LegacyFixed {
         name: "water_density_t_per_m3",
         applies_to: AppliesTo::All,
@@ -659,6 +679,12 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::Only("type_c_tanks"),
         value: "null",
     },
+    // Issue #315: a file saved before the loading limit keeps the refrigerated density and the fill.
+    LegacyFixedJson {
+        name: "lpg_loading_limit_basis",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        value: "\"refrigerated_density\"",
+    },
     // Issue #313: a file saved before the IGC allowable stress keeps the stress it was worked with.
     LegacyFixedJson {
         name: "tank_allowable_stress_basis",
@@ -835,6 +861,12 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("9Ni", "9 % nickel steel"),
     ("S690QL1", "S690QL1 quenched and tempered steel"),
     ("igc_4_23_3_1", "IGC 4.23.3.1: lesser of Rm/A and Re/B"),
+    ("igc_15_1_3", "IGC 15.1.3 reference temperature (default)"),
+    ("igc_15_5_2", "IGC 15.5.2: 45 C reference when pressurised"),
+    (
+        "refrigerated_density",
+        "Before: refrigerated density, fill ratio as loaded",
+    ),
     (
         "published_design",
         "Before the IGC check (S690QL1 at 285 MPa)",
@@ -1088,6 +1120,20 @@ pub const INPUTS: &[InputSpec] = &[
         "lpg_carriage_condition",
         "LPG carriage condition",
         InputKind::Choice(CARRIAGE_CONDITIONS),
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    lpg(
+        "lpg_loading_limit_basis",
+        "LPG density and loading limit basis",
+        InputKind::Choice(LOADING_LIMIT_BASES),
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    lpg(
+        "lpg_loading_temperature_c",
+        "LPG loading temperature",
+        NUM,
         "type_c_tanks",
         Group::GasTanks,
     ),
@@ -3043,6 +3089,34 @@ fn cross_checks(
             )),
             &["tank_insulation_type", "tank_insulation_thickness_mm"],
         );
+    }
+    // An LPG Cargo is not loaded warmer than the temperature at which its vapour pressure is the
+    // MARVS (issue #315; soft check): there the loading limit would pass the filling limit.
+    if let (Some(cargo), Some(t), Some(mpa)) = (
+        get("cargo").and_then(Value::as_str),
+        get("lpg_loading_temperature_c").and_then(Value::as_f64),
+        get("tank_design_pressure_mpa").and_then(Value::as_f64),
+    ) && LPG_CARGOS.contains(&cargo)
+        && get("lpg_loading_limit_basis").and_then(Value::as_str) != Some("refrigerated_density")
+        && let Some(p) = ovcd_core::lpg_saturation::vapour_pressure_bar(cargo, t)
+    {
+        let marvs = mpa * 10.0 + ovcd_core::lpg_saturation::ATMOSPHERE_BAR;
+        if p > marvs {
+            report.warning_text(
+                at(text!(
+                    "msg-loading-above-marvs",
+                    "`{input}` = {value}: the vapour pressure of {cargo} there is {pressure} bar, \
+                     above the MARVS of {marvs} bar absolute; the tank is loaded to the filling \
+                     limit, not above (soft check); accepted",
+                    input = Arg::input("lpg_loading_temperature_c"),
+                    value = number(t),
+                    cargo = cargo,
+                    pressure = Arg::num(p, format!("{p:.2}")),
+                    marvs = Arg::num(marvs, format!("{marvs:.2}"))
+                )),
+                &["lpg_loading_temperature_c", "tank_design_pressure_mpa"],
+            );
+        }
     }
     // The allowable stress in force is not above the IGC 4.23.3.1 limit (issue #313; soft check).
     if let Some(Ok(mat)) = get("tank_material")

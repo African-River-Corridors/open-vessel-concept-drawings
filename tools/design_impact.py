@@ -200,6 +200,11 @@ OPTIONAL_INPUT_CASES = (
      {"lpg_carriage_condition": "semi_pressurised"}),
     ("tank_design_pressure_mpa", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"tank_design_pressure_mpa": 1.0}),
+    # Issue #315: the loading limit basis and the loading temperature.
+    ("lpg_loading_limit_basis", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"lpg_loading_limit_basis": "igc_15_5_2"}),
+    ("lpg_loading_temperature_c", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"lpg_loading_temperature_c": 30.0}),
     ("tank_design_temperature_c", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"tank_design_temperature_c": -48.0}),
     ("tank_material", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,

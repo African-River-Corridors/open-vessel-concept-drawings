@@ -69,6 +69,14 @@ choice-lpg-carriage-condition-fully-pressurised = Fully pressurised
 choice-lpg-carriage-condition-semi-pressurised = Semi-pressurised (semi-refrigerated)
 choice-lpg-carriage-condition-fully-refrigerated = Fully refrigerated (cryogenic)
 
+input-lpg-loading-limit-basis = LPG density and loading limit basis
+choice-lpg-loading-limit-basis-igc-15-1-3 = IGC 15.1.3 reference temperature (default)
+choice-lpg-loading-limit-basis-igc-15-5-2 = IGC 15.5.2: 45 C reference when pressurised
+choice-lpg-loading-limit-basis-refrigerated-density = Before: refrigerated density, fill ratio as loaded
+
+input-lpg-loading-temperature-c = LPG loading temperature
+input-lpg-loading-temperature-c-default-by = Cargo, LPG carriage condition
+
 input-fill-ratio = Fill ratio
 input-fill-ratio-default-by = Cargo, LPG carriage condition
 
