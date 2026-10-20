@@ -615,3 +615,18 @@ web_sources:
   url: https://mdpi-res.com/d_attachment/jmse/jmse-13-02185/article_deploy/jmse-13-02185.pdf
   accessed: '2026-10-16'
   note: "Tank record that cannot run yet (bilobe)"
+- id: P6
+  title: "Tank maker's news release, 8 September 2020: four 1,350 m3 LNG cargo tanks delivered for a 5,400 m3 LNG bunker barge"
+  url: https://www.wartsila.com/media/news/08-09-2020-major-milestone-achieved-delivery-of-tanks-for-wartsila-supplied-cargo-handling-system
+  accessed: '2026-10-20'
+  note: "Volume (1,350 m3 each), 300 mm insulation, internal piping, instruments, equipment and access structures. No weight. Tank weight record, issue #317"
+- id: P7
+  title: "Breakbulk News, 23 November 2022: transport of four empty LNG tanks, 25.2 x 9 x 12.2 m, 155 t each"
+  url: https://breakbulk.news/drewes-logistics-plans-the-transportation-of-four-tanks-from-china/
+  accessed: '2026-10-20'
+  note: "Same tank maker, origin, destination and count as P6; that they are the same tanks is an inference, and the dates differ. Tank weight record, issue #317"
+- id: P8
+  title: "FE software maker's customer story: tank support verification of a 5,000 m3 LNG bunkering vessel with two 2,500 m3 bilobe Type C tanks"
+  url: https://sdcverifier.com/customer-stories/lng-tank-support-verification-for-spains-first-lng-bunkering-vessel/
+  accessed: '2026-10-20'
+  note: "Each tank 28.4 m long, light weight 240 t, cargo weight 1,140 t. Tank weight record, issue #317"
