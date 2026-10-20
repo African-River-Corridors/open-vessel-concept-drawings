@@ -3102,11 +3102,17 @@ fn cross_checks(
     {
         let marvs = mpa * 10.0 + ovcd_core::lpg_saturation::ATMOSPHERE_BAR;
         if p > marvs {
-            report.warning(
-                at(format!(
-                    "`lpg_loading_temperature_c` = {t}: the vapour pressure of {cargo} there is \
-                     {p:.2} bar, above the MARVS of {marvs:.2} bar absolute; the tank is loaded to \
-                     the filling limit, not above (soft check); accepted"
+            report.warning_text(
+                at(text!(
+                    "msg-loading-above-marvs",
+                    "`{input}` = {value}: the vapour pressure of {cargo} there is {pressure} bar, \
+                     above the MARVS of {marvs} bar absolute; the tank is loaded to the filling \
+                     limit, not above (soft check); accepted",
+                    input = Arg::input("lpg_loading_temperature_c"),
+                    value = number(t),
+                    cargo = cargo,
+                    pressure = Arg::num(p, format!("{p:.2}")),
+                    marvs = Arg::num(marvs, format!("{marvs:.2}"))
                 )),
                 &["lpg_loading_temperature_c", "tank_design_pressure_mpa"],
             );
