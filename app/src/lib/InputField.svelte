@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { InputSpec, Message, Ranges, StoredInput } from "./api";
-  import { t } from "./i18n.svelte";
+  import { say, schemaText, t } from "./i18n.svelte";
 
   // One input, drawn from its schema entry. It shows what Rust sent and sends back what the user
   // typed or chose. The number the user types stays in the box while it is typed: the box is filled
@@ -52,7 +52,7 @@
     if (spec.default !== undefined) lines.push(t("app-help-default", { value: `${show(spec.default)}${spec.unit ? " " + spec.unit : ""}` }));
     if (spec.default_by) {
       const by = Object.entries(spec.default_by.values).map(([k, v]) => `${k} ${show(v)}`).join(", ");
-      lines.push(t("app-help-default-by", { by: spec.default_by.by, values: by }));
+      lines.push(t("app-help-default-by", { by: schemaText.defaultBy(spec.name, spec.default_by.by), values: by }));
     }
     if (spec.default_rule) {
       const r = spec.default_rule;
@@ -75,6 +75,7 @@
   // The shape tells the three sources apart without colour; the word stays the accessible text.
   const SHAPES: Record<string, string> = { typed: "●", default: "○", class: "◆" };
   let hasError = $derived(messages.some((m) => m.severity === "error"));
+  let label = $derived(schemaText.input(spec.name, spec.label));
 
   let value = $derived(stored.value);
   // Local display state, taken once: the field is drawn afresh (new key) when Rust changes a value.
@@ -92,7 +93,7 @@
 
 <div class="field" data-input={spec.name} title={help}>
   <div class="head">
-    <span class="label">{spec.label}</span>
+    <span class="label">{label}</span>
     <span class="badge {stored.source}"><span class="shape" aria-hidden="true">{SHAPES[stored.source] ?? ""} </span>{SOURCE_IDS[stored.source] ? t(SOURCE_IDS[stored.source]) : stored.source}</span>
     {#if !spec.required && stored.source === "typed"}
       <button class="link" onclick={onReset} title={t("app-reset-title")}>{t("app-reset")}</button>
@@ -105,7 +106,7 @@
         <input
           type="text"
           inputmode="decimal"
-          aria-label={spec.label}
+          aria-label={label}
           class:invalid={hasError}
           use:fill={value === null ? "" : String(value)}
           oninput={(e) => typed(e.currentTarget.value, (n) => onEdit(n))}
@@ -128,24 +129,24 @@
     </div>
   {:else if spec.kind === "bool"}
     <label class="none">
-      <input type="checkbox" aria-label={spec.label} checked={value === true} onchange={(e) => onEdit(e.currentTarget.checked)} />
+      <input type="checkbox" aria-label={label} checked={value === true} onchange={(e) => onEdit(e.currentTarget.checked)} />
       {t(value === true ? "app-yes" : "app-no")}
     </label>
   {:else if spec.kind === "choice" || spec.kind === "cargo"}
-    <select aria-label={spec.label} class:invalid={hasError} value={String(value)} onchange={(e) => onEdit(e.currentTarget.value)}>
+    <select aria-label={label} class:invalid={hasError} value={String(value)} onchange={(e) => onEdit(e.currentTarget.value)}>
       {#each spec.choices ?? [] as c (c.value)}
-        <option value={c.value}>{c.label}</option>
+        <option value={c.value}>{schemaText.choice(spec.name, c.value, c.label)}</option>
       {/each}
     </select>
   {:else if spec.kind === "formation"}
     <select
-      aria-label={spec.label}
+      aria-label={label}
       class:invalid={hasError}
       value={formation.kind}
       onchange={(e) => onFormation(e.currentTarget.value, e.currentTarget.value === "pushed_convoy" ? abreast : null, e.currentTarget.value === "pushed_convoy" ? inLine : null)}
     >
       {#each spec.choices ?? [] as c (c.value)}
-        <option value={c.value}>{c.label}</option>
+        <option value={c.value}>{schemaText.choice(spec.name, c.value, c.label)}</option>
       {/each}
     </select>
     {#if formation.kind === "pushed_convoy"}
@@ -175,7 +176,7 @@
   {/if}
 
   {#each messages as m}
-    <div class="msg {m.severity}" data-severity={m.severity}>{m.text}</div>
+    <div class="msg {m.severity}" data-severity={m.severity}>{say(m.text, null, m.msg)}</div>
   {/each}
 </div>
 

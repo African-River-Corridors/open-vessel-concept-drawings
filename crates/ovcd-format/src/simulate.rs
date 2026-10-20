@@ -22,10 +22,12 @@ use ovcd_core::gas_separation::GasSeparationInputs;
 use ovcd_core::gas_stability::{self as gs, GasCapacityResult};
 use ovcd_core::pyfmt::{fixed, py_str};
 use ovcd_core::pystr::{parse_float, repr_str};
+use crate::text_ids::TextIds;
 use ovcd_core::resistance::{self, EnvironmentInputs, ResistanceInputs, TugInputs};
+use ovcd_core::text;
+use ovcd_core::text::{Arg, Text};
 use serde_json::{Map, Value, json};
 
-const EM_DASH: &str = "\u{2014}";
 const MINUS: &str = "\u{2212}";
 
 /// Why a simulation stopped before it had a result.
@@ -380,14 +382,21 @@ fn capacity_checks(r: &BargeCapacityResult, out: &mut Vec<Value>) {
     }
 }
 
-fn air_draft_check(r: &BargeCapacityResult, limit: f64) -> R<Value> {
+fn air_draft_check(r: &BargeCapacityResult, limit: f64, ids: &mut TextIds) -> R<Value> {
     let Some(light) = r.air_draft_light_m else {
         return bad("the capacity result has no light air draft");
     };
+    let message = text!(
+        "check-air-draft-limit",
+        "{air_draft} m vs limit {limit} m",
+        air_draft = Arg::fixed(light, 2),
+        limit = Arg::fixed(limit, 2),
+    );
+    ids.text(&message);
     Ok(json!({
         "name": "Air draft (empty, governing)",
         "ok": light <= limit,
-        "message": format!("{} m vs limit {} m", fixed(light, 2), fixed(limit, 2)),
+        "message": message,
     }))
 }
 
@@ -742,11 +751,13 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
     let cargo_weight_bound = py_max(0.0, disp_max - ls);
     let cargo_volume_bound = r.cargo_capacity_t;
     let cargo_t = py_min(cargo_volume_bound, cargo_weight_bound);
+    let mut ids = TextIds::default();
     let governs = if cargo_volume_bound <= cargo_weight_bound {
-        "hold volume".to_string()
+        Text::plain("hold volume")
     } else {
-        format!("draught {EM_DASH} {lim_name}")
+        governs_draught(&lim_name)
     };
+    ids.text(&governs);
     let disp = ls + cargo_t;
     let t = py_div(disp, cb * l * b * rho)?;
     let h_top = r.air_draft_top_above_keel_m;
@@ -757,8 +768,10 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
         "message": if cargo_t <= 0.0 { "Lightship alone exceeds the allowed draught." } else { "OK" },
     })];
     capacity_checks(&r, &mut checks);
+    ids.checks(&r.checks);
+    ids.texts(&r.warnings);
     if let Some(limit) = truthy_float(p, "air_draft_limit_m")? {
-        checks.push(air_draft_check(&r, limit)?);
+        checks.push(air_draft_check(&r, limit, &mut ids)?);
     }
     let curve_list = curves(p, l, b, t, cb, disp, rho)?;
     let geo = json!({
@@ -777,7 +790,7 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
         "insulation_thickness_mm": opt_num(r.insulation_thickness_mm),
     });
     let drawing = drawing_json(structure_json(&r, inp.separation.as_ref(), Some(&inp)));
-    Ok(json!({
+    with_text_ids(json!({
         "vessel": label,
         "cargo": cargo.name,
         "phase": cargo.phase,
@@ -807,7 +820,18 @@ fn simulate(p: &Map<String, Value>) -> R<Value> {
         "warnings": r.warnings,
         "curves": curve_list,
         "cost_masses": Value::Null,
-    }))
+    }), ids)
+}
+
+/// "draught — <limit>": the draught governs the cargo, and the limit sets the draught.
+fn governs_draught(limit: &str) -> Text {
+    text!("name-governs-draught", "draught \u{2014} {limit}", limit = limit)
+}
+
+/// The result with its `text_ids` (ADR 0014): a reading aid, outside the results hash.
+fn with_text_ids(mut result: Value, ids: TextIds) -> R<Value> {
+    result["text_ids"] = ids.finish(&result);
+    Ok(result)
 }
 
 /// Tank filling limit by ruleset: IGC 15.3 default 98 %, for both IGC rulesets.
@@ -962,12 +986,14 @@ fn simulate_gas(
         }
     };
     let disp = r.lightship_t + f.payload_t;
+    let mut ids = TextIds::default();
     let governs = match f.binding.as_str() {
-        "volume" => "tank volume".to_string(),
-        "draft" => format!("draught {EM_DASH} {lim_name}"),
-        "no cargo area" => "no cargo area (hull shorter than its fixed end spaces)".to_string(),
+        "volume" => Text::plain("tank volume"),
+        "draft" => governs_draught(&lim_name),
+        "no cargo area" => Text::plain("no cargo area (hull shorter than its fixed end spaces)"),
         other => return bad(format!("unknown binding `{other}`")),
     };
+    ids.text(&governs);
     let mut checks = vec![json!({
         "name": "Cargo > 0",
         "ok": f.payload_t > 0.0,
@@ -980,16 +1006,21 @@ fn simulate_gas(
             .iter()
             .map(|m| m.split_once(": ").map_or(m.as_str(), |(name, _)| name))
             .collect();
+        let message = text!(
+            "check-feasible-arrangement",
+            "No arrangement passes every check on this hull. The closest one is shown. It fails: {fails}.",
+            fails = names.join("; "),
+        );
+        ids.text(&message);
         checks.push(json!({
             "name": "Feasible arrangement",
             "ok": false,
-            "message": format!(
-                "No arrangement passes every check on this hull. The closest one is shown. It fails: {}.",
-                names.join("; ")
-            ),
+            "message": message,
         }));
     }
     capacity_checks(r, &mut checks);
+    ids.checks(&r.checks);
+    ids.texts(&r.warnings);
     // A tank longer than 7 outer diameters is listed when it fails, as the search names it.
     for msg in &f.failed_checks {
         if let Some(rest) = msg.strip_prefix("tank_length_over_diameter: ") {
@@ -1001,7 +1032,7 @@ fn simulate_gas(
         }
     }
     if let Some(limit) = truthy_float(p, "air_draft_limit_m")? {
-        checks.push(air_draft_check(r, limit)?);
+        checks.push(air_draft_check(r, limit, &mut ids)?);
     }
     let mut stability = Value::Null;
     // What a view marks on the GZ curves. Not a result: it is left out of the results hash.
@@ -1013,6 +1044,7 @@ fn simulate_gas(
             .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))?;
         for c in &a.conditions {
             let k = ga::stability_check(c);
+            ids.checks(core::slice::from_ref(&k));
             checks.push(json!({
                 "name": k.name,
                 "ok": k.ok,
@@ -1024,6 +1056,7 @@ fn simulate_gas(
             other => return bad(format!("unknown criteria set `{other}`")),
         };
         stability_marks = json!({ "criteria_angles_deg": gs::CRITERIA_ANGLES_DEG });
+        ids.texts(&a.limitations);
         stability = json!({
             "criteria_set": set_label,
             "ok": a.ok(),
@@ -1049,7 +1082,7 @@ fn simulate_gas(
     drawing_parts.push(("tank", tank_report(p, &f.engine_inputs, r)));
     let drawing = drawing_json(drawing_parts);
     let air_loaded = r.air_draft_top_above_keel_m - t;
-    Ok(json!({
+    with_text_ids(json!({
         "vessel": label,
         "cargo": cargo.name,
         "phase": cargo.phase,
@@ -1093,7 +1126,7 @@ fn simulate_gas(
         "stability": stability,
         "stability_marks": stability_marks,
         "cost_masses": r.gas_basis.as_ref().map_or(Value::Null, |b| crate::cost::gas_masses(&b.weights)),
-    }))
+    }), ids)
 }
 
 /// One stability condition as the simulator lists it: the fields it keeps, `fill` for the fill

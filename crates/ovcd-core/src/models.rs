@@ -13,6 +13,7 @@ use crate::aft_arrangement::AftArrangementResult;
 use crate::gas_separation::GasSeparationResult;
 use crate::pressure_vessel::{PyError, get_tank_material};
 use crate::protective_location::ProtectiveLocationResult;
+use crate::text::Text;
 
 /// All user-provided inputs for ATB LNG/LPG barge design.
 #[derive(Debug, Clone, PartialEq)]
@@ -419,5 +420,5 @@ pub struct BargeResults {
     /// Which constraints limit cargo capacity (Python `list`, default empty)
     pub binding_constraints: Vec<String>,
     /// Python `list`, default empty
-    pub warnings: Vec<String>,
+    pub warnings: Vec<Text>,
 }

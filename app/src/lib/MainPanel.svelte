@@ -6,7 +6,7 @@
   import Stability from "./views/Stability.svelte";
   import RuleChecks from "./views/RuleChecks.svelte";
   import CapitalBudget from "./views/CapitalBudget.svelte";
-  import { t } from "./i18n.svelte";
+  import { say, t, type TextIds } from "./i18n.svelte";
 
   // The hull views are SVG drawn in Rust to the Drawing Format Standard (ADR 0009, spec 0003); the
   // panel only places and zooms them.
@@ -79,7 +79,9 @@
     return outcome?.status === "not_run" && prior?.status === "results" ? (prior.views ?? null) : null;
   });
   const drawing = (key: HullKey): string | null => (views && key in views ? (views as Record<HullKey, string>)[key] : null);
-  let message = $derived(outcome && (outcome.status === "not_available" || outcome.status === "failed") ? outcome.message : null);
+  let message = $derived(outcome && (outcome.status === "not_available" || outcome.status === "failed") ? say(outcome.message, null, outcome.msg) : null);
+  /** The engine's Message Ids of the shown results (ADR 0014). */
+  let ids = $derived(((results as { text_ids?: TextIds } | null)?.text_ids ?? null));
 
   interface Curve {
     name: string;
@@ -122,7 +124,7 @@
         {:else if message}
           <p class="note">{message}</p>
         {:else if views && "message" in views}
-          <p class="note">{views.message}</p>
+          <p class="note">{say(views.message, ids)}</p>
         {:else}
           <p class="note">{t("app-no-results-draw")}</p>
         {/if}
@@ -135,7 +137,7 @@
           <p class="note">{t("app-no-results-chart")}</p>
         {:else}
           {#each curves as c (c.name)}
-            <SpeedPower name={c.name} limitingSpeed={c.limiting_speed_kn} blockage={c.blockage} points={c.points} {designSpeed} option={active} />
+            <SpeedPower name={say(c.name, ids)} limitingSpeed={c.limiting_speed_kn} blockage={c.blockage} points={c.points} {designSpeed} option={active} />
           {/each}
         {/if}
       </div>
@@ -147,7 +149,7 @@
       {:else}
         <!-- New results build a new chart, fitted. -->
         {#key JSON.stringify([active, stabilityOf(results)])}
-          <Stability stability={stabilityOf(results)} marks={(results as { stability_marks?: never }).stability_marks} />
+          <Stability {ids} stability={stabilityOf(results)} marks={(results as { stability_marks?: never }).stability_marks} />
         {/key}
       {/if}
     {:else if current === "rules"}
@@ -156,7 +158,7 @@
       {:else if !results}
         <p class="note">{t("app-no-results-show")}</p>
       {:else}
-        <RuleChecks checks={(results as { checks?: { name: string; ok: boolean; message: string }[] }).checks ?? []} />
+        <RuleChecks {ids} checks={(results as { checks?: { name: string; ok: boolean; message: string }[] }).checks ?? []} />
       {/if}
     {:else if current === "boq"}
       <div data-testid="placeholder-boq">
@@ -168,7 +170,7 @@
       {:else if !results}
         <p class="note">{t("app-no-results-show")}</p>
       {:else}
-        <CapitalBudget cost={(results as { cost?: never }).cost} phase={(results as { phase?: string }).phase} />
+        <CapitalBudget {ids} cost={(results as { cost?: never }).cost} phase={(results as { phase?: string }).phase} />
       {/if}
     {/if}
     </div>

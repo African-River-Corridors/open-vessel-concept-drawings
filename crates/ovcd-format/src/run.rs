@@ -19,6 +19,13 @@ use sha2::{Digest, Sha256};
 /// What a convoy Formation gets in place of results.
 pub const CONVOY_NOT_AVAILABLE: &str = "convoy results not yet available";
 
+/// The Message Id of an outcome's fixed text, where it has one (ADR 0014). A refusal's text
+/// (`Failed`) is an error and stays English.
+pub fn outcome_text(message: &str) -> Option<ovcd_core::text::Text> {
+    (message == CONVOY_NOT_AVAILABLE)
+        .then(|| ovcd_core::text::Text::fixed("msg-convoy-not-available", CONVOY_NOT_AVAILABLE))
+}
+
 /// The outcome of running one Option.
 #[derive(Debug, Clone, PartialEq)]
 pub enum RunOutcome {
@@ -236,12 +243,12 @@ fn write_canonical(v: &Value, out: &mut String) {
     }
 }
 
-/// Top-level results keys that are not results: drawing geometry, what a view marks, and the capital
-/// budget with the masses it was worked from. They are left
+/// Top-level results keys that are not results: drawing geometry, what a view marks, the capital
+/// budget with the masses it was worked from, and the Message Ids of the result's English (ADR 0014). They are left
 /// out of the results hash, so adding to one never changes a saved hash, and `tools/design_impact.py`
 /// leaves them out of its comparison (it holds the same list; `tests/test_design_impact_unhashed_keys.py` checks
 /// that the two lists agree).
-pub const UNHASHED_KEYS: [&str; 4] = ["drawing", "stability_marks", "cost_masses", "cost"];
+pub const UNHASHED_KEYS: [&str; 5] = ["drawing", "stability_marks", "cost_masses", "cost", "text_ids"];
 
 /// SHA-256 of the canonical JSON of `results`, without the [`UNHASHED_KEYS`].
 pub fn results_hash(results: &Value) -> String {

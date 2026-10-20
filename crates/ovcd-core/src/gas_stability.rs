@@ -18,7 +18,8 @@
 //! - A float `**` that overflows is Python's `OverflowError(34, 'Numerical result out of range')` (`py_pow`).
 
 use crate::barge_capacity::BargeCapacityResult;
-use crate::pyfmt;
+use crate::text;
+use crate::text::{Arg, Text};
 use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec;
@@ -384,7 +385,7 @@ impl Condition {
 pub struct StabilityAssessment {
     pub criteria_set: String,
     pub conditions: Vec<Condition>,
-    pub limitations: Vec<String>,
+    pub limitations: Vec<Text>,
 }
 
 impl StabilityAssessment {
@@ -790,25 +791,31 @@ pub fn assess_num(
     }
 
     let mut limitations = vec![
-        "Concept-stage: prismatic box section, first-order weight heights, no downflooding openings."
-            .to_string(),
-        "No wind heel and no damage stability (ADN 9.3.1.15 / IGC 2.7 need both before approval)."
-            .to_string(),
+        text!(
+            "stab-limit-concept-stage",
+            "Concept-stage: prismatic box section, first-order weight heights, no downflooding openings."
+        ),
+        text!(
+            "stab-limit-no-wind-or-damage",
+            "No wind heel and no damage stability (ADN 9.3.1.15 / IGC 2.7 need both before approval)."
+        ),
     ];
     if result.has_aft_arrangement {
-        limitations.push(
+        limitations.push(text!(
+            "stab-limit-stern-block-mass",
             "The self-propelled stern block's mass is not in the gas lightship, so KG and \
              displacement leave it out; the true GM could be lower."
-                .to_string(),
-        );
-    }
-    if (lightship - result.lightship_t).abs() > 1.0 {
-        limitations.push(format!(
-            "Weight split sums to {} t vs lightship {} t.",
-            pyfmt::fixed(lightship, 0),
-            pyfmt::fixed(result.lightship_t, 0)
         ));
     }
+    if (lightship - result.lightship_t).abs() > 1.0 {
+        limitations.push(text!(
+            "stab-limit-weight-split",
+            "Weight split sums to {split} t vs lightship {lightship} t.",
+            split = Arg::fixed(lightship, 0),
+            lightship = Arg::fixed(result.lightship_t, 0),
+        ));
+    }
+
     Ok(StabilityAssessment {
         criteria_set: criteria_set.to_string(),
         conditions: conds,

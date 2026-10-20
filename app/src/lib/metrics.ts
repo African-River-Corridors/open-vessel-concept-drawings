@@ -1,7 +1,7 @@
 // What the bottom panel shows and how it rounds. Each value is read straight from the results
 // object that `ovcd run --json` gives; nothing here computes a result. Rounding is one rule per
 // quantity type, and the full value is always on hover.
-import { num, t } from "./i18n.svelte";
+import { num, say, t, type TextIds } from "./i18n.svelte";
 
 export type Quantity = "tonnes" | "volume" | "length" | "ratio" | "fraction" | "count" | "text" | "flag";
 
@@ -62,13 +62,18 @@ export function valueAt(results: unknown, path: string[]): unknown {
 }
 
 /** The value as a person reads it: rounded by quantity type, with thousands separators. */
-export function show(m: Metric, v: unknown): string {
+export function show(m: Metric, v: unknown, ids?: TextIds | null): string {
   if (v === null || v === undefined) return "–";
   if (typeof v === "boolean") return t(v ? "app-yes" : "app-no");
   if (typeof v === "number") {
     return num(v, DECIMALS[m.quantity]);
   }
-  return String(v);
+  return typeof v === "string" ? say(v, ids) : String(v);
+}
+
+/** The engine's `text_ids` of a results object: its English texts with their Message Ids. */
+export function textIds(results: unknown): TextIds | null {
+  return (valueAt(results, ["text_ids"]) as TextIds | undefined) ?? null;
 }
 
 /** The value at full precision, for the hover text. */

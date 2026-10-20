@@ -11,7 +11,8 @@
 //! format can carry these errors now, so a later change may port them.
 
 use crate::checks::{Check, all_ok};
-use crate::pyfmt::fixed;
+use crate::text;
+use crate::text::{Arg, Text};
 use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec;
@@ -94,7 +95,7 @@ pub struct SquatResult {
     pub dynamic_ukc_m: f64,
     pub grounds: bool,
     pub checks: Vec<Check>,
-    pub warnings: Vec<String>,
+    pub warnings: Vec<Text>,
 }
 
 impl SquatResult {
@@ -179,43 +180,48 @@ pub fn compute(inp: &SquatInputs) -> Result<SquatResult, String> {
         Check::new(
             "keel_clears_bed",
             dynamic > 0.0,
-            format!(
-                "dynamic UKC {} m = static {} m - squat {} m ({method}) at {} kn",
-                fixed(dynamic, 2),
-                fixed(static_ukc, 2),
-                fixed(squat, 2),
-                fixed(speed, 2)
+            text!(
+                "check-keel-clears-bed",
+                "dynamic UKC {ukc} m = static {static_ukc} m - squat {squat} m ({method}) at {speed} kn",
+                ukc = Arg::fixed(dynamic, 2),
+                static_ukc = Arg::fixed(static_ukc, 2),
+                squat = Arg::fixed(squat, 2),
+                method = method,
+                speed = Arg::fixed(speed, 2),
             ),
         ),
         Check::with_severity(
             "keel_clears_bed_with_margin",
             dynamic >= inp.safety_margin_m,
-            format!(
-                "dynamic UKC {} m against a {} m working margin",
-                fixed(dynamic, 2),
-                fixed(inp.safety_margin_m, 2)
+            text!(
+                "check-keel-clears-bed-with-margin",
+                "dynamic UKC {ukc} m against a {margin} m working margin",
+                ukc = Arg::fixed(dynamic, 2),
+                margin = Arg::fixed(inp.safety_margin_m, 2),
             ),
             "warning",
         ),
         Check::with_severity(
             "froude_depth_subcritical",
             fnh < FNH_VALID_MAX,
-            format!(
-                "depth Froude {}; above 0.7 the flow approaches critical and both squat forms \
+            text!(
+                "check-froude-depth-subcritical",
+                "depth Froude {froude}; above 0.7 the flow approaches critical and both squat forms \
                  lose validity",
-                fixed(fnh, 2)
+                froude = Arg::fixed(fnh, 2),
             ),
             "warning",
         ),
     ];
-    let mut warns: Vec<String> = Vec::new();
+    let mut warns: Vec<Text> = Vec::new();
     if blockage > 0.0 {
         checks.push(Check::with_severity(
             "blockage_within_barrass_range",
             blockage <= 0.35,
-            format!(
-                "blockage {}; Barrass is fitted below about 0.35 and extrapolates above it",
-                fixed(blockage, 3)
+            text!(
+                "check-blockage-within-barrass-range",
+                "blockage {blockage}; Barrass is fitted below about 0.35 and extrapolates above it",
+                blockage = Arg::fixed(blockage, 3),
             ),
             "warning",
         ));
@@ -227,27 +233,29 @@ pub fn compute(inp: &SquatInputs) -> Result<SquatResult, String> {
         checks.push(Check::with_severity(
             "methods_agree_within_50pct",
             spread <= 0.5,
-            format!(
-                "Barrass {} m vs ICORELS {} m, {}% apart",
-                fixed(s_b, 2),
-                fixed(i, 2),
-                fixed(spread * 100.0, 0)
+            text!(
+                "check-methods-agree-within-50pct",
+                "Barrass {barrass} m vs ICORELS {icorels} m, {spread}% apart",
+                barrass = Arg::fixed(s_b, 2),
+                icorels = Arg::fixed(i, 2),
+                spread = Arg::fixed(spread * 100.0, 0),
             ),
             "warning",
         ));
     }
     if s_i.is_none() && fnh > 0.0 {
-        warns.push(format!(
-            "ICORELS not evaluated: depth Froude {} at or above 0.99",
-            fixed(fnh, 2)
+        warns.push(text!(
+            "warn-squat-icorels-not-evaluated",
+            "ICORELS not evaluated: depth Froude {froude} at or above 0.99",
+            froude = Arg::fixed(fnh, 2),
         ));
     }
     if inp.channel_area_m2 <= 0.0 {
-        warns.push(
+        warns.push(text!(
+            "warn-squat-open-water",
             "no channel area given, so blockage is 0 and Barrass returns 0 \u{2014} this is the \
              OPEN-WATER case and squat is then ICORELS only"
-                .to_string(),
-        );
+        ));
     }
 
     Ok(SquatResult {

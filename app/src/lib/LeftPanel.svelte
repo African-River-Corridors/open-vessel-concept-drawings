@@ -2,7 +2,7 @@
   import type { OptionEvaluation, Schema, Snapshot } from "./api";
   import InputField from "./InputField.svelte";
   import VesselClass from "./VesselClass.svelte";
-  import { t } from "./i18n.svelte";
+  import { schemaText, t } from "./i18n.svelte";
 
   // The left panel. The groups, their order, the labels, the choices and the ranges all come from
   // the schema. An input is drawn when the Option holds it, so the panel needs no rule for which
@@ -103,8 +103,8 @@
 
     {#each groups as g (g.name)}
       <details open={!closed[g.name]} ontoggle={(e) => (closed[g.name] = !e.currentTarget.open)}>
-        <summary>{g.name}</summary>
-        {#if schema?.group_notes?.[g.name]}<p class="gnote" data-testid="group-note">{schema.group_notes[g.name]}</p>{/if}
+        <summary>{schemaText.group(g.name)}</summary>
+        {#if schema?.group_notes?.[g.name]}<p class="gnote" data-testid="group-note">{schemaText.note(g.name, schema.group_notes[g.name])}</p>{/if}
         {#if g.name === VESSEL_CLASS_GROUP}
           <VesselClass
             schemeSpec={specOf("vessel_scheme")}

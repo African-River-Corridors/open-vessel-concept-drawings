@@ -12,6 +12,7 @@ pub mod profile;
 mod run;
 pub mod session;
 mod simulate;
+mod text_ids;
 pub mod vdesign;
 
 pub use eval::{ENTRY_POINTS, EvalError, eval, parse_case};

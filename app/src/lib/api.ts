@@ -3,6 +3,7 @@
 import { platform } from "./platform";
 export type { DrawingFormat, DrawingView } from "./platform";
 import type { DrawingFormat, DrawingView } from "./platform";
+import type { EngineMsg } from "./i18n.svelte";
 
 /** Where an input came from: the designer, the Defaults Profile, or the Vessel Class. */
 export type Source = "typed" | "default" | "class";
@@ -104,12 +105,14 @@ export interface Message {
   scope: "input" | "cross_check" | "option";
   inputs: string[];
   text: string;
+  /** The Message Id of `text`, where the engine gives one (ADR 0014). */
+  msg?: EngineMsg | null;
 }
 /** The hull views of a computed Option, drawn in Rust to the Drawing Format Standard, as SVG text. */
 export type HullViews = { side: string; plan: string; midship: string } | { message: string };
 export type Outcome =
   | { status: "results"; results: Record<string, unknown>; results_hash: string; views?: HullViews }
-  | { status: "not_available" | "failed"; message: string }
+  | { status: "not_available" | "failed"; message: string; msg?: EngineMsg | null }
   | { status: "not_run" };
 export interface OptionEvaluation {
   name: string;
