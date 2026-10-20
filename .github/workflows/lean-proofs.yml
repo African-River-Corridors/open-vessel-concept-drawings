@@ -1,0 +1,53 @@
+name: Lean proofs
+
+# The Lean model of the rules engine's composition kernel (proofs/lean, ADR 0014). A separate
+# pass, like mutation testing: it never runs in the fast gate (tools/gates.sh) and is not a
+# required check. It runs when proofs/lean changes, once a week, and by hand.
+#
+# Steps: build every proof (a `sorry` fails the axiom check), then run the oracle on the example
+# cases and compare with the expected output.
+
+on:
+  pull_request:
+    paths: ["proofs/lean/**", ".github/workflows/lean-proofs.yml"]
+  push:
+    branches: ["main"]
+    paths: ["proofs/lean/**", ".github/workflows/lean-proofs.yml"]
+  schedule:
+    - cron: "17 4 * * 1" # Mondays 04:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lean:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: proofs/lean
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lean toolchain (cached)
+        id: elan
+        uses: actions/cache@v4
+        with:
+          path: ~/.elan
+          key: elan-${{ runner.os }}-${{ hashFiles('proofs/lean/lean-toolchain') }}
+      - name: Install elan and the pinned toolchain (lean-toolchain)
+        if: steps.elan.outputs.cache-hit != 'true'
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o elan-init.sh
+          sh elan-init.sh -y --no-modify-path --default-toolchain "$(cat lean-toolchain)"
+          rm elan-init.sh
+      - name: Build the proofs and the oracle
+        run: ~/.elan/bin/lake build
+      - name: No proof uses sorry
+        run: |
+          ~/.elan/bin/lake env lean AxiomCheck.lean | tee axioms.txt
+          if grep -q sorryAx axioms.txt; then echo "a proof uses sorry"; exit 1; fi
+      - name: The oracle gives the expected output on the example cases
+        run: |
+          ./.lake/build/bin/ovcd-rules-oracle examples/cases.json > out.json
+          diff -u examples/expected.json out.json

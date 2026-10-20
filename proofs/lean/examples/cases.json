@@ -1,0 +1,36 @@
+{
+  "cases": [
+    {
+      "name": "two sets cover one requirement; the stricter governs and passes",
+      "rules": [
+        {"id": "is2008/A.2.2.1/area-0-30", "key": "gz.area(0,30)@laden", "dir": "lower", "limit": 0.055, "strict": false, "blocking": true},
+        {"id": "fixture/1.1/area-0-30-tight", "key": "gz.area(0,30)@laden", "dir": "lower", "limit": 0.065, "strict": false, "blocking": true}
+      ],
+      "values": {"gz.area(0,30)@laden": 0.071}
+    },
+    {
+      "name": "the stricter rule fails, so the Option fails",
+      "rules": [
+        {"id": "is2008/A.2.2.1/area-0-30", "key": "gz.area(0,30)@laden", "dir": "lower", "limit": 0.055, "strict": false, "blocking": true},
+        {"id": "fixture/1.1/area-0-30-tight", "key": "gz.area(0,30)@laden", "dir": "lower", "limit": 0.075, "strict": false, "blocking": true}
+      ],
+      "values": {"gz.area(0,30)@laden": 0.071}
+    },
+    {
+      "name": "a value equal to a ge limit passes; a gt limit at the same value fails but is advisory",
+      "rules": [
+        {"id": "is2008/A.2.2.4/gm0", "key": "gm0@laden", "dir": "lower", "limit": 0.15, "strict": false, "blocking": true},
+        {"id": "fixture/2.1/gm0-advisory", "key": "gm0@laden", "dir": "lower", "limit": 0.15, "strict": true, "blocking": false}
+      ],
+      "values": {"gm0@laden": 0.15}
+    },
+    {
+      "name": "a not evaluated blocking rule does not fail the Option",
+      "rules": [
+        {"id": "is2008/A.2.3/weather", "key": "weather.ratio@laden", "dir": "lower", "limit": 1.0, "strict": false, "blocking": true},
+        {"id": "ovcd/gas-arrangement/tank-l-over-d", "key": "tank.l_over_d@tank1", "dir": "upper", "limit": 7.0, "strict": false, "blocking": true}
+      ],
+      "values": {"weather.ratio@laden": null, "tank.l_over_d@tank1": 6.2}
+    }
+  ]
+}

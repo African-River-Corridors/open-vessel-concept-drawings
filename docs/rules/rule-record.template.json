@@ -1,0 +1,25 @@
+{
+  "id": "<family>/<paragraph>/<slug>",
+  "title": "<your own words, at most 15 words>",
+  "origin": "regulation",
+  "source": {
+    "document": "<document and adopting resolution>",
+    "edition": "<base edition and amendments checked>",
+    "locator": "<paragraph, as printed>",
+    "page": "<file and page you read>",
+    "access": "free"
+  },
+  "codified": { "by": "agent", "date": "YYYY-MM-DD", "review": "#<pull request>" },
+  "verified": false,
+  "applies_when": {},
+  "kind": "limit",
+  "measure": { "id": "<measure id>", "args": {} },
+  "compare": "ge",
+  "limit": { "value": 0.0, "unit": "<unit>" },
+  "tolerance": 0,
+  "consequence": "block",
+  "sizes": false,
+  "evaluated": true,
+  "finding": null,
+  "since": "<set version>"
+}

@@ -110,10 +110,35 @@ _Avoid_: layout, drawing (on its own)
 ### Rules
 
 **Rule**:
-One requirement from one published source about one Measure: what is compared, against which limit,
-and what happens if it is not met. A Rule is sourced only when its paragraph has been checked against
-the actual text; otherwise it is unverified, and every result says so.
-_Avoid_: criterion, check (on its own), regulation
+One requirement about one Measure: its Criterion, the objects and Options it applies to, what happens
+if it is not met, and where it comes from. A Rule from a published rule book is sourced only when it is
+verified; an OVCD Check is a Rule with OVCD's own origin.
+_Avoid_: check (on its own), regulation
+
+**Criterion**:
+The test part of a Rule: a comparison (at least, more than, at most, less than) and a limit, which is a
+constant, a table value or a formula of the Design's inputs. Two Criteria in the same direction can
+always be ranked: one is at least as strict as the other.
+_Avoid_: rule (for the test part only), condition
+
+**Requirement**:
+The Rules that test the same Measure on the same object in the same direction, from any selected Rule
+Set. The Design meets a Requirement only if it meets every Rule in it.
+_Avoid_: constraint, clause
+
+**Applicability**:
+The condition on an Option's inputs (Cargo, Cargo Containment, Service Area, and similar) under which a
+Rule or a Rule Set applies. A Rule that does not apply is listed as not applicable, never dropped.
+_Avoid_: scope, filter
+
+**Blocking Rule**:
+A Rule whose failure makes the Option fail. Other Rules only warn or inform.
+_Avoid_: hard rule, error check
+
+**Verified**:
+The status of a Rule that a second reader, not the one who wrote it, has checked against the text of
+the source edition it cites, at the paragraph it cites. Every other Rule is unverified.
+_Avoid_: checked, approved, validated
 
 **Rule Set**:
 A named, versioned group of Rules from one source edition (e.g. the IS Code 2008 Part A, or the IGC
@@ -124,7 +149,8 @@ _Avoid_: ruleset (one word), criteria set, code (on its own)
 
 **Measure**:
 A quantity the engine computes from a Design for one object, such as the GZ area from 0° to 30° of a
-loading condition or the clear side gap of a tank. Rules compare Measures against limits.
+loading condition or the clear side gap of a tank. A design input the engine uses, such as the weld
+factor, is also a Measure when a Rule bounds it. Rules compare Measures against limits.
 _Avoid_: metric, parameter
 
 **Service Area**:
@@ -134,8 +160,8 @@ _Avoid_: route, zone, trade
 
 **Rule Trace**:
 The list, in every result, of each Rule of each selected Rule Set: its citation, the inputs used, the
-value, the limit, the Margin and the outcome. A Rule the engine cannot evaluate yet is listed as not
-evaluated, never left out.
+value, the limit, the Margin, the outcome and the verification status. A Rule the engine cannot evaluate
+yet is listed as not evaluated, never left out.
 _Avoid_: log, audit (on its own)
 
 **Margin**:
@@ -143,12 +169,12 @@ How far a value is from its Rule's limit, signed so that a positive Margin passe
 _Avoid_: tolerance, slack
 
 **Governing Rule**:
-Of several Rules that cover the same requirement, the one with the smallest Margin. All of them apply;
-the strictest governs.
+Of the Rules in one Requirement, the one with the strictest Criterion. All of them apply; the strictest
+governs, and no Rule loosens another.
 _Avoid_: controlling rule, binding rule
 
 **OVCD Check**:
-A check that OVCD makes but no published rule requires: physical feasibility (the draught is below the
-depth), a method's validity range, or a limit of the tool. Shown in the Rule Trace with its origin, never
-as a published Rule.
-_Avoid_: rule (for these), design rule
+A Rule that OVCD makes but no published rule book requires: physical feasibility (the draught is below
+the depth), a method's validity range, or a limit of the tool. Shown in the Rule Trace with its origin,
+never as a published Rule.
+_Avoid_: design rule
