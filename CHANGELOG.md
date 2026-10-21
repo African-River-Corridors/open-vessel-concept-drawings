@@ -216,6 +216,54 @@ Each entry is a before/after table written by `python3 tools/design_impact.py ch
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
 
+### ticket/419-severity-everywhere (2026-10-21)
+
+Between `main 66589b9` and `this branch 353bef4`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration amaggi-box-2000 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x12-imt201 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x12-imt205 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x12-pb2012 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x12-rci250 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x13-cby252 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x13-cby400 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x13-cby433 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x13-pb2352 | `checks[0].severity` | absent | error | changed |
+| calibration cargill-amazon-jumbo | `checks[0].severity` | absent | error | changed |
+| calibration danube-barge-77 | `checks[0].severity` | absent | error | changed |
+| calibration dsb-holdbarge-1997-76.5 | `checks[0].severity` | absent | error | changed |
+| calibration europa-iib-1635ou | `checks[0].severity` | absent | error | changed |
+| calibration europa-iib-rdb06 | `checks[0].severity` | absent | error | changed |
+| calibration hidrovia-lhg-3200 | `checks[0].severity` | absent | error | changed |
+| calibration jeffboat-am2100 | `checks[0].severity` | absent | error | changed |
+| calibration mcdonough-195x35x12 | `checks[0].severity` | absent | error | changed |
+| calibration meb-dcb23-ptich | `checks[0].severity` | absent | error | changed |
+| calibration meb-dcb24-pola | `checks[0].severity` | absent | error | changed |
+| calibration meb-rdb12-samarskaya | `checks[0].severity` | absent | error | changed |
+| calibration meb-rdb20-belmax9 | `checks[0].severity` | absent | error | changed |
+| calibration para-mississippi-2200 | `checks[0].severity` | absent | error | changed |
+| calibration stretch-hopper-light | `checks[0].severity` | absent | error | changed |
+| calibration taf-danube-2008 | `checks[0].severity` | absent | error | changed |
+| calibration taf-mississippi-2011 | `checks[0].severity` | absent | error | changed |
+| calibration taf-parana-2013 | `checks[0].severity` | absent | error | changed |
+| calibration taf-rhin-1980-covered | `checks[0].severity` | absent | error | changed |
+| calibration taf-rhin-2000 | `checks[0].severity` | absent | error | changed |
+| calibration taf-rhin-2001 | `checks[0].severity` | absent | error | changed |
+| calibration taf-rhin-2008-covered | `checks[0].severity` | absent | error | changed |
+| calibration taf-rhin-2019-covered | `checks[0].severity` | absent | error | changed |
+| calibration taf-seine-1973 | `checks[0].severity` | absent | error | changed |
+| calibration taf-seine-1981 | `checks[0].severity` | absent | error | changed |
+| calibration taf-seine-1993 | `checks[0].severity` | absent | error | changed |
+| calibration taf-seine-1996 | `checks[0].severity` | absent | error | changed |
+| calibration taf-seine-1997 | `checks[0].severity` | absent | error | changed |
+| calibration taf-seine-2000 | `checks[0].severity` | absent | error | changed |
+| calibration taf-seine-2008 | `checks[0].severity` | absent | error | changed |
+| ... | 162 more changed quantities | | | |
+
 ### ticket/411-head-insulation (2026-10-21)
 
 Between `main e8e5589` and `this branch a4a089f`.
@@ -359,53 +407,6 @@ Between `main aa5fe5a` and `this branch ff3cea1`.
 | sweep optional vessel_class | `checks[23].name` | Air draft | absent | changed |
 | sweep optional vessel_class | `checks[23].ok` | False | absent | changed |
 | ... | 26 more changed quantities | | | |
-### ticket/419-severity-everywhere (2026-10-21)
-
-Between `main aa5fe5a` and `this branch d2750ff`.
-
-| Case | Quantity | Before | After | Change |
-|---|---|---|---|---|
-| calibration amaggi-box-2000 | `checks[0].severity` | absent | error | changed |
-| calibration canal-box-200x25x12-pb2230 | `checks[0].severity` | absent | error | changed |
-| calibration canal-box-200x35x12-cby222 | `checks[0].severity` | absent | error | changed |
-| calibration canal-box-200x35x12-imt201 | `checks[0].severity` | absent | error | changed |
-| calibration canal-box-200x35x12-imt205 | `checks[0].severity` | absent | error | changed |
-| calibration canal-box-200x35x12-pb2012 | `checks[0].severity` | absent | error | changed |
-| calibration canal-box-200x35x12-rci250 | `checks[0].severity` | absent | error | changed |
-| calibration canal-box-200x35x13-cby252 | `checks[0].severity` | absent | error | changed |
-| calibration canal-box-200x35x13-cby400 | `checks[0].severity` | absent | error | changed |
-| calibration canal-box-200x35x13-cby433 | `checks[0].severity` | absent | error | changed |
-| calibration canal-box-200x35x13-pb2352 | `checks[0].severity` | absent | error | changed |
-| calibration cargill-amazon-jumbo | `checks[0].severity` | absent | error | changed |
-| calibration danube-barge-77 | `checks[0].severity` | absent | error | changed |
-| calibration dsb-holdbarge-1997-76.5 | `checks[0].severity` | absent | error | changed |
-| calibration europa-iib-1635ou | `checks[0].severity` | absent | error | changed |
-| calibration europa-iib-rdb06 | `checks[0].severity` | absent | error | changed |
-| calibration hidrovia-lhg-3200 | `checks[0].severity` | absent | error | changed |
-| calibration jeffboat-am2100 | `checks[0].severity` | absent | error | changed |
-| calibration mcdonough-195x35x12 | `checks[0].severity` | absent | error | changed |
-| calibration meb-dcb23-ptich | `checks[0].severity` | absent | error | changed |
-| calibration meb-dcb24-pola | `checks[0].severity` | absent | error | changed |
-| calibration meb-rdb12-samarskaya | `checks[0].severity` | absent | error | changed |
-| calibration meb-rdb20-belmax9 | `checks[0].severity` | absent | error | changed |
-| calibration para-mississippi-2200 | `checks[0].severity` | absent | error | changed |
-| calibration stretch-hopper-light | `checks[0].severity` | absent | error | changed |
-| calibration taf-danube-2008 | `checks[0].severity` | absent | error | changed |
-| calibration taf-mississippi-2011 | `checks[0].severity` | absent | error | changed |
-| calibration taf-parana-2013 | `checks[0].severity` | absent | error | changed |
-| calibration taf-rhin-1980-covered | `checks[0].severity` | absent | error | changed |
-| calibration taf-rhin-2000 | `checks[0].severity` | absent | error | changed |
-| calibration taf-rhin-2001 | `checks[0].severity` | absent | error | changed |
-| calibration taf-rhin-2008-covered | `checks[0].severity` | absent | error | changed |
-| calibration taf-rhin-2019-covered | `checks[0].severity` | absent | error | changed |
-| calibration taf-seine-1973 | `checks[0].severity` | absent | error | changed |
-| calibration taf-seine-1981 | `checks[0].severity` | absent | error | changed |
-| calibration taf-seine-1993 | `checks[0].severity` | absent | error | changed |
-| calibration taf-seine-1996 | `checks[0].severity` | absent | error | changed |
-| calibration taf-seine-1997 | `checks[0].severity` | absent | error | changed |
-| calibration taf-seine-2000 | `checks[0].severity` | absent | error | changed |
-| calibration taf-seine-2008 | `checks[0].severity` | absent | error | changed |
-| ... | 158 more changed quantities | | | |
 
 ### ticket/415-dry-bulk-gm (2026-10-21)
 
