@@ -47,7 +47,9 @@ def gm_fluid(result, payload=1500.0):
 def test_stability_uses_the_hull_it_is_given():
     """Label: snapshot"""
     s = HY.calculate_stability(RAKED, BI, TANKS, WEIGHTS, 2000.0, 0.58, 3.5)
-    assert s.GM_fluid == close(0.05969187822861491)                        # ce96e66
+    # Re-pinned (issue #413: the free surface takes the fill as a volume ratio); was
+    # 0.05969187822861491 at ce96e66.
+    assert s.GM_fluid == close(-0.7603459744139444)
 
 
 def test_trim_uses_the_hull_it_is_given():

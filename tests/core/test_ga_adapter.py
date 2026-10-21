@@ -36,7 +36,10 @@ def test_tank_volume_reconciles_with_capacity():
     assert t.outer_diameter == res.tank_outer_diameter_m
     assert t.total_tank_volume == pytest.approx(res.cargo_volume_m3 / inp.fill_ratio)
     r = t.inner_diameter / 2
-    assert t.volume_per_tank == pytest.approx(math.pi * r * r * t.cylinder_length)
+    # Issue #413: the cylinder holds what the two hemispherical heads do not (it held it all).
+    heads = 4.0 / 3.0 * math.pi * r ** 3
+    assert t.volume_per_tank == pytest.approx(math.pi * r * r * t.cylinder_length + heads)
+    assert t.volume_heads == pytest.approx(heads)
     assert math.isnan(t.tank_shell_weight)            # never invents a weight
 
 
