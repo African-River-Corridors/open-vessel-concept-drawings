@@ -19,6 +19,7 @@
 - Design change (issue #374): the Type C tank wall takes the design liquid pressure on top of the design vapour pressure: Peq = Po + Pgd (IGC 4.13.2.4, 4.23.2.2), Pgd = a x Z x rho / 1.02e5 MPa (IGC 4.28.1.2), with Z the steel outer diameter and rho the largest cargo density at the design temperature. A new input, `tank_liquid_pressure`: `static` (a = 1, gravity only, the default, an estimate for inland and sheltered service: the maintainer's choice), `igc_4_28_2` (a = 1 + az, the IGC 4.28.2 guidance vertical acceleration for the North Atlantic, at the tank farthest from amidships) or `none` (the vapour pressure only, what the engine did before). On a 110 x 11.4 m hull the LNG wall goes from 9.5 to 10.5 mm (lightship +22 t), fully refrigerated propane 9.5 to 11.0 mm, fully pressurised propane 35.5 to 36.5 mm; cargo falls by under 0.1 %. A file saved before keeps `none` and its results. No sourced test changed; new sourced test `crates/ovcd-core/tests/liquid_pressure.rs`. The before/after table is under "Design changes" below.
 - Design change (issue #375): the tank head type is an input, `tank_head_type` (`hemisphere`, `ellipsoidal_2to1`), with a Defaults Profile table by Cargo and carriage condition (the maintainer's choice): the LPG Cargos take 2:1 semi-ellipsoidal heads (estimates: the published river LPG tank has dished ends with a toroidal connection, a published 22,000 m3 LPG/NH3 carrier tank torispherical heads; 2:1 is the engine's nearest head) and LNG keeps hemispherical heads (estimate: the old value). The head type reaches the wall, the volume, the steel and the drawings (2:1 ends are drawn as half-ellipses, R/2 long), so the head-area fix of #314 now reaches Designs. Where stability does not govern, LPG cargo rises: fully refrigerated propane on a 110 x 11.4 m hull 2,850 to 2,992 t, fully pressurised propane on 90 x 14 m 2,260 to 2,450 t. Where it governs, cargo falls: fully pressurised propane on 110 x 11.4 m moves from a 9.65 m to an 8.64 m tank and from 2,165 t to 1,821 t, because the 2:1 heads put more cargo in a tank of the same length, the 9.65 m tank then fails laden stability, and the search takes the smaller one. LNG designs do not move. A file saved before keeps hemispherical heads and its results. No sourced test changed. The before/after table is under "Design changes" below.
 - Format version 3 and the stern inputs (issue #347, spec 0007 stern 1): 18 inputs for the stern and propulsion of a self-propelled hull, in a new group "Stern and propulsion" (`stern_form`, `stern_run_length_m`, `stern_transom_height_m`, `tunnel_crown_height_m`, `propulsor_type`, `propulsor_count`, `propeller_diameter_m`, `power_source`, `installed_power_kw`, `design_speed_kn`, `installed_power_margin`, `bow_thruster`, `bow_thruster_power_kw`, `battery_energy_kwh`, `battery_unit_energy_kwh`, `wheelhouse_type`, `sightline_method`, `stern_block_mass_included`). Inputs only: the engine reads none of them yet; later spec 0007 tickets give them effect. A file of version 1 or 2 gets the values that reproduce today's stern block, with one warning per Option, and keeps its results; a new Option takes the Defaults Profile values (by Cargo phase: gas a transom stern, ducted azimuth thrusters and gas-fuelled gensets, dry bulk a tunnel stern, shafts in nozzles and diesel-mechanical), each `sourced` or `estimate` in the profile and the schema (`default_status`). `thruster_count` and `propulsive_efficiency` now apply only with an `unspecified` propulsor (`applies_when` in the schema). The one result that moves: a new Option's wheelhouse eye height is 1.65 m (ES-TRIN 7.02; was 1.50 m), so the sightline check of every new self-propelled Design reads 0.15 m higher (104 of 177 case designs, the sightline message only; no feasibility changes). Saving writes format version 3. The stern block API takes `power_source` as the new name of `propulsion`. No sourced test changed. The before/after table is under "Design changes" below.
+- Design change (issue #348, spec 0007 stern 2): the stern block of a self-propelled hull has mass and centres, at the rates of spec 0007 (Hekkenberg 2013, Appendix B): ducted azimuth units 1.5 x D^3 t (D the thruster envelope / 1.35), batteries 6 kg/kWh, accommodation 0.17 t per m3 of unit, wheelhouse 8 t and its column 5 t, gas gensets (the published engine mass plus an alternator at 9 kg/kVA less the engine's 4.9 kg/kW), small items 1 kg/kW and piping and cabling 3 t + 2.5 kg/kW. Until the installed power is sized (#353) the per-kW items take a typed installed power, else the installed genset power, else none. The items enter the lightship and the KG of the gas and dry branches when `stern_block_mass_included` is true (a new Option), and the results show the breakdown (`stern_block_mass`); the stability limitation "the stern block's mass is not in the gas lightship" goes. On a 110 x 11.4 m hull today's battery-electric block weighs 107.4 t (three thrusters 32.1 t, one battery unit 30 t, two accommodation units 29.3 t, wheelhouse and column 13 t, piping 3 t): the lightship of every new self-propelled Design rises by about that much and its draught follows. One case changes feasibility: fully refrigerated propane on 110 x 11.4 m is now feasible with a 9.04 m tank (2,414 t), as the low block lowers the laden KG. A file saved before keeps the switch off and its results. No sourced test changed; new sourced test `crates/ovcd-core/tests/stern_block_mass.rs`. The before/after table is under "Design changes" below.
 
 ## 0.2.3 (2026-10-16)
 
@@ -149,6 +150,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/348-stern-block-mass (2026-10-21)
+
+Between `main c5361a0` and `this branch 4a10aa4`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived bulk 1 (88x16.3) | `checks[9].message` | hopper intact GM 3.07 m >= 0.15 m (first-order; KG_light @0.5D) | hopper intact GM 2.97 m >= 0.15 m (first-order; KG_light @0.5D) | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[0].kcg_m` | absent | 1.92592592593 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[0].label` | absent | thrusters | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[0].lcg_m` | absent | 1.75 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[0].mass_t` | absent | 32.1463191587 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[1].kcg_m` | absent | 7.548 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[1].label` | absent | battery unit | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[1].lcg_m` | absent | 9.896 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[1].mass_t` | absent | 30 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[2].kcg_m` | absent | 7.548 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[2].label` | absent | battery unit | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[2].lcg_m` | absent | 9.896 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[2].mass_t` | absent | 30 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[3].kcg_m` | absent | 7.548 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[3].label` | absent | accommodation unit | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[3].lcg_m` | absent | 9.896 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[3].mass_t` | absent | 14.6337669427 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[4].kcg_m` | absent | 7.5 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[4].label` | absent | wheelhouse | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[4].lcg_m` | absent | 18.092 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[4].mass_t` | absent | 8 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[5].kcg_m` | absent | 5.8 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[5].label` | absent | lift column | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[5].lcg_m` | absent | 18.092 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[5].mass_t` | absent | 5 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[6].kcg_m` | absent | 1.2 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[6].label` | absent | small items | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[6].lcg_m` | absent | 9.946 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[6].mass_t` | absent | 0 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[7].kcg_m` | absent | 1.2 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[7].label` | absent | piping and cabling | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[7].lcg_m` | absent | 9.946 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.items[7].mass_t` | absent | 3 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `stern_block_mass.total_t` | absent | 122.780086101 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `checks[9].message` | hopper intact GM 2.72 m >= 0.15 m (first-order; KG_light @0.5D) | hopper intact GM 2.67 m >= 0.15 m (first-order; KG_light @0.5D) | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `stern_block_mass.items[0].kcg_m` | absent | 1.92592592593 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `stern_block_mass.items[0].label` | absent | thrusters | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `stern_block_mass.items[0].lcg_m` | absent | 1.75 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `stern_block_mass.items[0].mass_t` | absent | 32.1463191587 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `stern_block_mass.items[1].kcg_m` | absent | 7.548 | changed |
+| ... | 26252 more changed quantities | | | |
 
 ### ticket/347-stern-inputs (2026-10-21)
 
