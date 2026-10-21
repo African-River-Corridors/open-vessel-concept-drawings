@@ -7,6 +7,7 @@
 group-required = Required
 group-vessel-class = Vessel Class
 group-hull-and-containment = Hull and containment
+group-hull-form = Hull Form
 group-gas-tanks = Gas tanks
 group-note-gas-tanks = The tank outer diameter (the cap below and the result) is measured to the outside of the insulation; the clearances and the drawing use that face. The steel diameter is that less twice the insulation thickness. The wall thickness is worked out from the pressure-vessel formula unless a thickness is typed. The design values below depend on the Cargo and, for LPG, on the carriage condition; each shows its source or marks an estimate.
 group-dry-bulk-hold = Dry-bulk hold
@@ -30,7 +31,12 @@ choice-cargo-lpg-mix = LPG (60/40 Propane/Butane)
 choice-cargo-bauxite = Bauxite
 
 input-hull-form = Hull Form
+choice-hull-form-box = Box
 choice-hull-form-raked-box = Raked box
+choice-hull-form-v-bottom = V-bottom
+choice-hull-form-chine = Chine
+choice-hull-form-shipd = ShipD-style
+choice-hull-form-offsets = Offsets table
 
 input-formation = Formation
 choice-formation-self-propelled = Self-propelled
@@ -56,6 +62,30 @@ choice-cargo-containment-sloped-hopper-hold = Sloped hopper hold
 choice-cargo-containment-type-c-tanks = Type C tanks
 
 input-block-coefficient = Block coefficient
+
+input-bow-rake-length-m = Bow rake length
+
+input-bow-rake-rise-m = Bow rake rise
+
+input-bilge-radius-m = Bilge radius
+
+input-sheer-aft-m = Sheer at the aft end
+
+input-sheer-fwd-m = Sheer at the forward end
+
+input-camber-m = Deck camber
+
+input-deadrise-deg = Deadrise
+
+input-keel-half-width-m = Keel half-width
+
+input-chine-half-breadth-m = Chine half-breadth
+
+input-chine-height-m = Chine height above base
+
+input-shipd-parameters = ShipD parameters
+
+input-hull-offsets = Offsets table
 
 input-min-freeboard-m = Minimum freeboard
 

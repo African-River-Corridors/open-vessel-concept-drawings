@@ -57,6 +57,96 @@
       "status": "estimate",
       "basis": "none: for a self-propelled hull whose Stern Form is not today's square stern, the volume of the raked box (today's bow rake and the Stern Form) at the design draught over L x B x T (spec 0007, issue #350); otherwise 0.85, the value the engine always used. A typed value is used as typed, and a saved file keeps its own. Calibrated box barges span 0.883 to 0.995; the soft range is widened down for shaped gas hulls; 0.3 is the squat method's validity floor (hard)"
     },
+    "bow_rake_length_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 0.0, "max": 20.0 },
+      "status": "estimate",
+      "basis": "The horizontal length of the bow rake: the keel rises in a straight line from the base at L - this length to the bow rake rise at the bow (spec 0008, \"Hull Forms\"). none: today's rule, bow_rake_length_to_depth_ratio x moulded depth. A file saved before keeps none. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+    },
+    "bow_rake_rise_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 30 },
+      "soft": { "min": 0.0, "max": 10.0 },
+      "status": "estimate",
+      "basis": "The height of the keel above base at the bow. none: the moulded depth, the rake the drawings show today (a straight line from the base up to the deck at the bow). A file saved before keeps none. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+    },
+    "bilge_radius_m": {
+      "default": 0.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 15 },
+      "soft": { "min": 0.0, "max": 1.5 },
+      "status": "estimate",
+      "basis": "The radius of the bilge, from 0 (a square bilge) to half the beam. 0: the square bilge of today's box; a starting value, not from a source (spec 0008 leaves the default to the bilge radius ticket, #449). A file saved before keeps 0. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+    },
+    "sheer_aft_m": {
+      "default": 0.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.0, "max": 2.0 },
+      "status": "estimate",
+      "basis": "The rise of the deck edge above the moulded depth at the aft end: a parabola, zero at mid-length (spec 0008, \"Hull Forms\"). 0: a straight deck edge, today's box. A file saved before keeps 0. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+    },
+    "sheer_fwd_m": {
+      "default": 0.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.0, "max": 2.0 },
+      "status": "estimate",
+      "basis": "The rise of the deck edge above the moulded depth at the forward end: a parabola, zero at mid-length (spec 0008, \"Hull Forms\"). 0: a straight deck edge, today's box. A file saved before keeps 0. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+    },
+    "camber_m": {
+      "default": 0.0,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 5 },
+      "soft": { "min": 0.0, "max": 0.5 },
+      "status": "estimate",
+      "basis": "The rise of the deck at the centre line above the deck edge: a parabola across the deck (spec 0008, \"Hull Forms\"). 0: a flat deck, today's box. A file saved before keeps 0. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+    },
+    "deadrise_deg": {
+      "default": 5.0,
+      "unit": "deg",
+      "hard": { "ge": 0, "le": 45 },
+      "soft": { "min": 0.0, "max": 25.0 },
+      "status": "estimate",
+      "basis": "For a V-bottom or chine hull: the angle of the bottom to the horizontal. 5 degrees: a starting value for a shallow-draught hull, not from a source; the V-bottom and chine ticket (#450) proposes the value with its basis (spec 0008, \"Decisions taken and open questions\"). Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+    },
+    "keel_half_width_m": {
+      "default": 0.5,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 15 },
+      "soft": { "min": 0.0, "max": 2.0 },
+      "status": "estimate",
+      "basis": "For a V-bottom or chine hull: half the width of the flat keel on the centre line, from which the bottom rises at the deadrise. 0.5 m: a starting value, not from a source; the V-bottom and chine ticket (#450) proposes the value with its basis. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+    },
+    "chine_half_breadth_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 15 },
+      "soft": { "min": 0.0, "max": 12.0 },
+      "status": "estimate",
+      "basis": "For a chine hull: the distance of the chine from the centre line. none: half the beam, a hard chine at the side. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+    },
+    "chine_height_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 30 },
+      "soft": { "min": 0.0, "max": 5.0 },
+      "status": "estimate",
+      "basis": "For a chine hull: the height of the chine above base. none: where the bottom at the deadrise meets the chine half-breadth. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+    },
+    "shipd_parameters": {
+      "default": null,
+      "status": "estimate",
+      "basis": "For a ShipD-style hull: the 45 parameters of the Ship-D dataset (its sources are cited in spec 0008 and NOTICE), under the dataset's header names. none until the ShipD ticket (#452), which commits the dataset's rows and takes its first hull as the default (spec 0008, \"ShipD-style hull\")."
+    },
+    "hull_offsets": {
+      "default": null,
+      "status": "estimate",
+      "basis": "For an offsets hull: the typed or imported offsets table, one row per point (station_x_m, y_m, z_m), keel to deck centre line at each station (spec 0008, \"Offsets table\"). none: no table; the import comes with #451."
+    },
     "min_freeboard_m": {
       "default": 0.3,
       "unit": "m",

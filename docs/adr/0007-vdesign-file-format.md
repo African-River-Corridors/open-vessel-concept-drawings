@@ -95,6 +95,17 @@ save writes the current version.
   propulsion inputs prefixed `tug_`, `formation_resistance_allowance`, and for an ATB `notch_depth_m` and
   `notch_width_m`), with defaults by Formation kind, and a fourth source marker, `reference`, for a value
   a tug preset gave. A file without them reads `tug_included: false`, the barge alone, as before.
+  Issue #446 (spec 0008, ADR 0012) adds the hull block, a "Hull Form" group: `hull_form` (`box`,
+  `raked_box`, `v_bottom`, `chine`, `shipd`, `offsets`), `bow_rake_length_m`, `bow_rake_rise_m`,
+  `bilge_radius_m`, `sheer_aft_m`, `sheer_fwd_m`, `camber_m`, `deadrise_deg`, `keel_half_width_m`,
+  `chine_half_breadth_m`, `chine_height_m`, and two object-valued inputs: `shipd_parameters` (an object of
+  named numbers) and `hull_offsets` (a table of rows `station_x_m`, `y_m`, `z_m`). The schema gives the
+  shape of each object-valued input. Each parameter applies only to the Hull Forms that use it
+  (`applies_when`). A file of version 1 or 2 gets `hull_form = raked_box`, its own bow rake (none: the
+  bow rake over depth rule, rising to the deck), a square bilge, no sheer and no camber, with one warning
+  per Option, so its results do not change. Until a Hull Form's generator ticket lands, the engine refuses
+  any `hull_form` but `raked_box` with a "not built yet" message. `shipd_parameters` defaults to none
+  until the ShipD ticket (#452) brings the dataset rows.
 - **Inputs added after the first files** (issue #4: the dry-bulk hold, the bow rake over depth, the stern void of a pushed barge, the end bulkhead allowance, the gas tank arrangement values, the water density, the squat safety margin, the 14 cost rates, the 17 aft block values of a self-propelled hull): a file that lacks one of these
   inputs, in version 1 or in a version 2 file from a test build, is read with the fixed value the engine
   used before the input existed (a table in `vdesign.rs`, not the Defaults Profile), marked `default`, with

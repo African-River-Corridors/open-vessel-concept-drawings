@@ -275,9 +275,11 @@ msg-profile-no-table-default = the Defaults Profile '{ $profile }' gives no defa
 msg-profile-no-depth-ratio = the Defaults Profile '{ $profile }' gives no depth-to-beam ratio for { $group } Cargo (`depth_to_beam_ratio.default_by_cargo_group.{ $group }` is missing)
 msg-number-or-null = `{ $input }` must be a number or null (none)
 msg-bool = `{ $input }` must be true or false
-msg-hull-form = `{ $input }` = { $value } is not supported; only raked_box exists for now
+msg-hull-form-not-built = `{ $input }` = { $value } is not built yet: the engine computes only raked_box for now (spec 0008)
 msg-choice = `{ $input }` = { $value } must be one of: { $choices }
 msg-string = `{ $input }` must be a string
+msg-parameter-set = `{ $input }` must be an object of named numbers, or null
+msg-offsets-table = `{ $input }` must be a list of rows with `station_x_m`, `y_m` and `z_m` in metres, or null
 msg-scheme = `{ $input }` = { $value } is not a scheme with a Vessel Class that can define a vessel (see `ovcd schema`)
 msg-class-cannot-define = `{ $input }` = { $value } cannot define a vessel: class { $class } gives no length or beam, or its Formation ({ $formation }) is not one a Design has
 msg-class-unknown = `{ $input }` = { $value } is not a Vessel Class (see `ovcd schema`)

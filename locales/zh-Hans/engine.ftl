@@ -371,8 +371,6 @@ msg-number-or-null = “{ $input }”必须为数字或 null（无）
 # status: draft
 msg-bool = “{ $input }”必须为 true 或 false
 # status: draft
-msg-hull-form = “{ $input }” = { $value }不受支持；目前只有 raked_box
-# status: draft
 msg-choice = “{ $input }” = { $value }必须为以下之一：{ $choices }
 # status: draft
 msg-string = “{ $input }”必须为字符串

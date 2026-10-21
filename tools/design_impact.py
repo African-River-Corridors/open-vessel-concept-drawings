@@ -269,6 +269,15 @@ OPTIONAL_INPUT_CASES = (
       "ballast_departure_double_bottom_fill": 0.5, "ballast_departure_peak_fill": 1.0,
       "ballast_departure_wing_fill": 0.0, "ballast_arrival_double_bottom_fill": 1.0,
       "ballast_arrival_peak_fill": 0.0, "ballast_arrival_wing_fill": 0.98}),
+    # The Hull Form parameters (issue #446), set to their defaults on a raked box. Inputs only until
+    # the hydrostatics switch-over (#448): each shows no change. A base from before them refuses the
+    # input and leaves it out.
+    *((name, "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5, {name: value})
+      for name, value in (("bow_rake_length_m", None), ("bow_rake_rise_m", None), ("bilge_radius_m", 0.0),
+                          ("sheer_aft_m", 0.0), ("sheer_fwd_m", 0.0), ("camber_m", 0.0),
+                          ("deadrise_deg", 5.0), ("keel_half_width_m", 0.5),
+                          ("chine_half_breadth_m", None), ("chine_height_m", None),
+                          ("shipd_parameters", None), ("hull_offsets", None))),
 )
 
 

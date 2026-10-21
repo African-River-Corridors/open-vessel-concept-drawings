@@ -568,6 +568,7 @@ fn the_schema_lists_every_input_in_table_order_with_its_group() {
             "Required",
             "Vessel Class",
             "Hull and containment",
+            "Hull Form",
             "Gas tanks",
             "Dry-bulk hold",
             "Aft block",

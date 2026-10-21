@@ -301,9 +301,14 @@ fn an_optional_limit_takes_null_for_none_but_not_zero() {
 }
 
 #[test]
-fn only_the_raked_box_hull_form_exists() {
-    let e = errors(with(required("bauxite"), "hull_form", json!("v_bottom")));
-    assert!(has(&e, "only raked_box exists for now"), "{e:?}");
+fn a_hull_form_with_no_generator_yet_is_refused_as_not_built() {
+    // Issue #446: every Hull Form of spec 0008 is a choice; only raked_box is computed for now.
+    for form in ["box", "v_bottom", "chine", "shipd", "offsets"] {
+        let e = errors(with(required("bauxite"), "hull_form", json!(form)));
+        assert!(has(&e, "is not built yet"), "{form}: {e:?}");
+    }
+    let e = errors(with(required("bauxite"), "hull_form", json!("catamaran")));
+    assert!(has(&e, "must be one of"), "{e:?}");
 }
 
 #[test]

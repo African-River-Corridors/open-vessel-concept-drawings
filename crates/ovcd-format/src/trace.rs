@@ -29,7 +29,11 @@ pub fn measure_info(id: &str) -> Option<MeasureInfo> {
         InputKind::Number { .. } => ValueKind::Number,
         InputKind::Bool => ValueKind::Bool,
         InputKind::Choice(_) | InputKind::Cargo => ValueKind::Text,
-        InputKind::Formation | InputKind::VesselScheme | InputKind::VesselClass => return None,
+        InputKind::Formation
+        | InputKind::VesselScheme
+        | InputKind::VesselClass
+        | InputKind::ParameterSet
+        | InputKind::OffsetsTable => return None,
     };
     // Parsed once: a run asks this for every input.
     static PROFILE: std::sync::OnceLock<Profile> = std::sync::OnceLock::new();
