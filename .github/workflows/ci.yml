@@ -22,7 +22,8 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Fast gate (spec 0001): one fail-closed script, tools/gates.sh. Target under 5 minutes.
+  # Fast gate (spec 0001): one fail-closed script, tools/gates.sh. Target under 5 minutes. It runs
+  # the `pr` profile; the tests it leaves out run in nightly.yml (docs/agents/slow-tests.md).
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -36,6 +37,10 @@ jobs:
       - name: Install the pinned Rust toolchain (rust-toolchain.toml)
         run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
+      - name: Install cargo-nextest (pinned)
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest@0.9.100
       - name: Install the Python package (maturin builds the extension, so Rust comes first)
         run: |
           python -m pip install --upgrade pip
@@ -52,6 +57,19 @@ jobs:
       # evaluation/results.md also fails. It takes a few seconds.
       - name: Evaluation harness (a false pass fails the build)
         run: python evaluation/run.py --check
+      # The boundary mutants are generated (issue #184) and take about 3 minutes to generate again.
+      # They change only with evaluation/, so a PR that changes nothing there skips the check; every
+      # other run, and the nightly run, does it (issue #481, docs/agents/slow-tests.md).
+      - name: The mutants file is what the generator writes (when evaluation/ changes)
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.base_ref }}
+        run: |
+          if [ "$EVENT" = pull_request ] && git diff --quiet "origin/$BASE...HEAD" -- evaluation/; then
+            echo "No change under evaluation/: the check runs nightly."
+          else
+            python evaluation/oracle/mutants.py --check
+          fi
 
   # The web build (issue #245): the wasm Design session gives the same results hash as native
   # `ovcd run --json` for every fixture. The wasm-bindgen CLI is the version the crate pins.

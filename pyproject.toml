@@ -13,7 +13,7 @@ dependencies = ["pyyaml>=6"]
 Repository = "https://github.com/African-River-Corridors/open-vessel-concept-drawings"
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "numpy>=1.26", "jsonschema>=4.18"]
+dev = ["pytest>=8", "pytest-xdist>=3.6", "numpy>=1.26", "jsonschema>=4.18"]
 
 [build-system]
 requires = ["maturin>=1.7,<2"]
@@ -32,3 +32,5 @@ include = ["src/vessel_designer/data/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# `slow`: left out of the PR gate, run nightly (issue #481, docs/agents/slow-tests.md).
+markers = ["slow: left out of the PR gate and run nightly; listed in docs/agents/slow-tests.md"]
