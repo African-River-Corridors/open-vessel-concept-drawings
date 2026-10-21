@@ -227,7 +227,9 @@ pub fn cylinder_wall_thickness(
     div(p * r, f * e - 0.6 * p)
 }
 
-/// ASME UG-27 formula for hemispherical heads: t = P R / (2 f E - 0.2 P).
+/// Hemispherical head thickness: t = P R / (2 f E - 0.2 P). Not UG-27, which is the cylindrical
+/// shell paragraph (issue #433); the ASME head paragraph is not in the rule-source library, so
+/// none is cited.
 pub fn hemisphere_head_thickness(
     design_pressure_mpa: f64,
     inner_radius_mm: f64,
@@ -243,7 +245,9 @@ pub fn hemisphere_head_thickness(
     div(p * r, 2.0 * f * e - 0.2 * p)
 }
 
-/// ASME UG-27 formula for 2:1 ellipsoidal heads: t = P D / (2 f E - 0.2 P).
+/// 2:1 ellipsoidal head thickness: t = P D / (2 f E - 0.2 P). Not UG-27, which is the cylindrical
+/// shell paragraph (issue #433); the ASME head paragraph is not in the rule-source library, so
+/// none is cited.
 pub fn ellipsoidal_head_thickness(
     design_pressure_mpa: f64,
     inner_diameter_mm: f64,

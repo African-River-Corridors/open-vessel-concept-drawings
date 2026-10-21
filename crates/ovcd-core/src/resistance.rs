@@ -4,7 +4,13 @@
 //! ITTC 1957 friction, a residuary fit for bluff bodies, Schijf's limiting speed and the Lackenby
 //! shallow-water increase for a confined channel, plus the added resistance in waves
 //! ([`crate::waves`]) and the squat limit ([`crate::squat`]). The Python file holds the
-//! engineering notes. Nothing is fixed in the port.
+//! engineering notes. The port has been changed since, each change with its issue: one midship
+//! section and the Schijf limit (#396, #397), a residuary fit continuous at Fn 0.20 (#399), the
+//! speed governing labels (#400).
+//!
+//! This module keeps the Python constants, g = 9.81 m/s^2 and 1 kn = 0.5144 m/s. [`crate::squat`]
+//! and [`crate::waves`] use g = 9.80665 m/s^2 and 1 kn = 0.514444 m/s, so a speed point mixes the
+//! two (issue #433). Making them one would move results; it is not done here.
 //!
 //! Python behaviours copied exactly:
 //! - the speed grid is built by repeated addition, then `round(s, 1)` (half to even, on the exact

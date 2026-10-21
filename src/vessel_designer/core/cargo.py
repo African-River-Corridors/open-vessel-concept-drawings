@@ -63,9 +63,10 @@ CARGO_DATABASE: Dict[str, CargoProperties] = {
     "LPG_mix": CargoProperties(
         name="LPG (60/40 Propane/Butane)",
         # 588.4 = harmonic (volume-additive) blend of 60% propane at 581 and 40% butane at
-        # 601, by mass: 1/rho = 0.6/581 + 0.4/601. Was 530.0, which was the same
-        # ambient-temperature error as LPG_propane carried. LPG_butane (600) was already
-        # right. Confirm the actual cargo and composition with the shipper.
+        # 600 (LPG_butane above), by mass: 1/rho = 0.6/581 + 0.4/600 = 1/588.45.
+        # Was 530.0, which was the same ambient-temperature error as LPG_propane carried.
+        # LPG_butane (600) was already right. Confirm the actual cargo and composition with
+        # the shipper.
         density=588.4,
         temperature=-42.1,
         pressure=0.0,
