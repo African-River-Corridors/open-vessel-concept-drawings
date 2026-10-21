@@ -133,6 +133,27 @@ fn a_tunnel_adds_wetted_surface_and_cuts_the_waterplane_below_its_crown() {
 }
 
 #[test]
+fn each_drawn_tunnel_outline_ends_on_the_base_at_its_half_width() {
+    // The default crown (1.1 D, the centre above the base) and a typed low crown (below it).
+    let mut low = inputs(SternForm::Tunnel);
+    low.tunnel_crown_height_m = Some(0.8);
+    for i in [inputs(SternForm::Tunnel), low] {
+        let g = geometry(&i, &HULL);
+        let half = tunnel_width(g.propeller_diameter_m, g.tunnel_crown_height_m, 0.0) / 2.0;
+        for (outline, y0) in g.tunnel_sections().iter().zip(&g.tunnel_offsets_m) {
+            let (first, last) = (outline[0], outline[outline.len() - 1]);
+            for (p, y) in [(first, y0 - half), (last, y0 + half)] {
+                assert!(p[1].abs() < 1e-12, "{p:?}");
+                assert!((p[0] - y).abs() < 1e-12, "{p:?} {y}");
+            }
+            // The crown is the highest point.
+            let top = outline.iter().map(|p| p[1]).fold(f64::MIN, f64::max);
+            assert!((top - g.tunnel_crown_height_m).abs() < 1e-12);
+        }
+    }
+}
+
+#[test]
 fn d_max_under_a_tunnel_is_capped_so_the_tunnels_meet_but_do_not_overlap_or_leave_the_beam() {
     // 110 x 11.4 m at 3.5 m: 0.80 T = 2.8 m, but twin parallel tunnels 0.45 B apart fit only
     // 0.225 B / sqrt(0.99) = 2.578 m.

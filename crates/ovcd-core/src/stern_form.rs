@@ -347,9 +347,10 @@ impl SternGeometry {
         }
         let r = self.propeller_diameter_m;
         let zc = self.tunnel_crown_height_m - r;
-        let half = tunnel_width(r, self.tunnel_crown_height_m, 0.0) / 2.0;
+        // The half-angle about the top of the circle to where it meets the base: more than a
+        // quarter turn when the centre is above the base (issue #486).
         let a0 = if r > 0.0 {
-            libm::asin((half / r).min(1.0))
+            acos((-zc / r).clamp(-1.0, 1.0))
         } else {
             0.0
         };
