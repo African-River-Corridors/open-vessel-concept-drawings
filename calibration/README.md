@@ -91,8 +91,9 @@ A band miss is a warning, never a failure; `--check` prints one annotation per t
 - Result on the cases: box-barge lightship within −11 % to +15 %; deadweight within −8 % to +6 %
   on the fitted cases. These are **in-sample** errors. The next real lightship is the first
   out-of-sample test.
-- Kirby's barge database (draft/tonnage tables from 0 t) is unreachable from this machine
-  (host times out; kirbycorp.com itself answers). Still the best source of more lightships.
+- Kirby's barge database (draft/tonnage tables from 0 t): the live site did not answer, so sources
+  K1 to K39 in `sources.yaml` cite archived copies of its pages. Still the best source of more
+  lightships.
 
 ## Proposed corrections — original list
 
