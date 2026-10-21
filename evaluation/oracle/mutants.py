@@ -125,7 +125,7 @@ def mutant_document(base: dict, criterion: str, side: str, magnitude: str) -> di
     for name in oracle.CRITERIA:
         rule, what, unit = write_cases.RULES[name]
         e = r[name]
-        expected[name] = {
+        expected[write_cases.RULE_IDS[name]] = {
             "rule": rule, "what": what, "unit": unit,
             "verdict": "pass" if e["ok"] else "fail",
             "value": write_cases.sig(e["value"]), "limit": e["limit"], "margin": write_cases.sig(e["margin"]),
@@ -140,7 +140,8 @@ def mutant_document(base: dict, criterion: str, side: str, magnitude: str) -> di
         "inputs": inputs,
         "expected": expected,
         "mutant": {
-            "parent": base["id"], "criterion": criterion, "side": side, "magnitude": magnitude,
+            "parent": base["id"], "criterion": write_cases.RULE_IDS[criterion], "side": side,
+            "magnitude": magnitude,
             "moved": variable, "target_value": write_cases.sig(target, 10), "grid": grid,
         },
         "provenance": {
@@ -166,7 +167,8 @@ def generate() -> tuple[list[dict], list[dict]]:
                     try:
                         docs.append(mutant_document(base, criterion, side, magnitude))
                     except Unreachable as e:
-                        skipped.append({"parent": base["id"], "criterion": criterion, "side": side,
+                        skipped.append({"parent": base["id"], "criterion": write_cases.RULE_IDS[criterion],
+                                        "side": side,
                                         "magnitude": magnitude, "reason": str(e)})
     return docs, skipped
 

@@ -458,3 +458,57 @@ pub fn rule_of_check(name: &str) -> Option<&'static str> {
         .find(|(n, _)| *n == name)
         .map(|(_, id)| *id)
 }
+
+/// What a box section gives the Rule Trace (the evaluation harness, issue #278): one loading
+/// condition and its stability check, nothing else. It has no inputs, so a set or Rule that applies
+/// only for some input value does not apply.
+struct BoxMeasures<'a> {
+    measured: &'a Measured,
+}
+
+impl MeasureSource for BoxMeasures<'_> {
+    fn def(&self, id: &str) -> Option<MeasureInfo> {
+        measure_info(id)
+    }
+
+    fn objects(&self, object: ObjectType) -> Vec<String> {
+        self.measured.objects(object, "Box")
+    }
+
+    fn value(&self, m: &MeasureRef, index: usize) -> Result<MeasureValue, String> {
+        self.measured.value(m, index)
+    }
+
+    fn input(&self, _name: &str) -> Option<String> {
+        None
+    }
+
+    fn has(&self, measure: &MeasureRef) -> bool {
+        self.measured.has(measure)
+    }
+}
+
+/// The Rule Trace of one box loading condition under the sets `chosen` (`(id, version)`, in
+/// selection order) of `library`, as `trace_json` writes it. The condition is named "Box". The
+/// harness compares its rows with a case's expected verdicts, keyed by rule id.
+pub fn box_trace(
+    mut condition: ovcd_core::gas_stability::Condition,
+    library: &Library,
+    chosen: &[(&str, &str)],
+) -> Result<Value, String> {
+    condition.name = "Box".to_string();
+    let check = ovcd_core::gas_arrangement::stability_check(&condition);
+    let measured = Measured {
+        checks: vec![(check.name, check.ok)],
+        conditions: vec![condition],
+        ..Measured::default()
+    };
+    let selection = library.select(chosen)?;
+    let trace = evaluate(
+        &selection.sets,
+        &BoxMeasures {
+            measured: &measured,
+        },
+    );
+    Ok(trace_json(&trace, &[]))
+}

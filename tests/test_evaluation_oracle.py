@@ -23,7 +23,10 @@ sys.path.insert(0, str(ROOT / "evaluation"))
 from engine import box_condition  # noqa: E402
 
 CASES = sorted((ROOT / "evaluation" / "cases").glob("*.yaml"))
-KEYS = ["area_0_30", "area_0_40", "area_30_40", "gz_30_plus", "angle_max_gz", "gm"]
+SHORT = ["area_0_30", "area_0_40", "area_30_40", "gz_30_plus", "angle_max_gz", "gm"]
+#: The case files key `expected` by rule id (issue #278).
+KEYS = ["is2008/A.2.2.1/area-0-30", "is2008/A.2.2.1/area-0-40", "is2008/A.2.2.1/area-30-40",
+        "is2008/A.2.2.2/gz-30", "is2008/A.2.2.3/angle-max-gz", "is2008/A.2.2.4/gm0"]
 ENGINE_NAMES = ["Area 0–30°", "Area 0–40°", "Area 30–40°",
                 "GZ at ≥ 30°", "Angle of max GZ", "Initial GM (fluid)"]
 
@@ -103,11 +106,11 @@ def test_the_engine_agrees_with_the_oracle_on_the_base_cases(path):
     case = yaml.safe_load(path.read_text(encoding="utf-8"))
     i = case["inputs"]
     c = box_condition(i["beam_m"], i["depth_m"], i["draught_m"], i["kg_m"], free_surface_m=i["free_surface_m"])
-    for key, engine_name in zip(KEYS, ENGINE_NAMES):
+    for short, key, engine_name in zip(SHORT, KEYS, ENGINE_NAMES):
         crit = next(x for x in c.criteria if x.name == engine_name)
         exp = case["expected"][key]
         assert crit.ok == (exp["verdict"] == "pass"), key
-        tol = {"angle_max_gz": 1.0, "gm": 1e-9, "gz_30_plus": 0.002}.get(key, 0.002)
+        tol = {"angle_max_gz": 1.0, "gm": 1e-9, "gz_30_plus": 0.002}.get(short, 0.002)
         assert crit.value == pytest.approx(exp["value"], abs=tol), key
 
 
@@ -200,4 +203,4 @@ def test_the_lcu_loaded_inputs_follow_from_the_printed_numbers():
     assert 20.0 < km < 22.9
     assert oracle.gm(i["beam_m"], i["draught_m"], i["kg_m"]) / FT == pytest.approx(km - kg_ft, abs=1e-9)
     # The verdict is the oracle's, whatever it is: this hull fails the angle of maximum GZ.
-    assert loaded["expected"]["angle_max_gz"]["verdict"] == "fail"
+    assert loaded["expected"]["is2008/A.2.2.3/angle-max-gz"]["verdict"] == "fail"

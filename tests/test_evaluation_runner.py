@@ -1,7 +1,9 @@
-"""The evaluation runner, the generated boundary mutants and the CI gate (issue #184, phase 0, part 2).
+"""The evaluation runner, the generated boundary mutants and the CI gate (issue #184, phase 0, part 2;
+keyed by rule id, with triage, since issue #278).
 
-A false pass (the engine passes a criterion a case expects to fail) must turn the runner red; a false
-fail and a coverage gap are warnings. These tests run the real runner as CI does.
+A false pass (the engine passes a blocking Rule a case expects to fail) must turn the runner red; a
+false fail and a coverage gap are warnings. Each disagreement goes in one triage bucket. These tests
+run the real runner as CI does.
 """
 import shutil
 import subprocess
@@ -17,8 +19,14 @@ sys.path.insert(0, str(EVAL))
 sys.path.insert(0, str(EVAL / "oracle"))
 import run as runner  # noqa: E402
 import mutants as gen  # noqa: E402
+import write_cases  # noqa: E402
 
-CRITERIA = list(runner.ENGINE_NAMES)
+#: The oracle's criterion names, and the rule id each one is keyed by in the case files.
+SHORT = list(write_cases.RULE_IDS)
+CRITERIA = list(write_cases.RULE_IDS.values())
+SHORT_OF = {v: k for k, v in write_cases.RULE_IDS.items()}
+AREA_0_30, AREA_0_40, GM = CRITERIA[0], CRITERIA[1], CRITERIA[5]
+WEATHER = "is2008/A.2.3/weather"
 
 
 def run_runner(*args):
@@ -45,8 +53,8 @@ def test_a_deliberately_wrong_expected_verdict_turns_the_runner_red(tmp_path):
     cases, mutants, results = corpus_copy(tmp_path)
     path = cases / "box_a.yaml"
     doc = yaml.safe_load(path.read_text(encoding="utf-8"))
-    assert doc["expected"]["area_0_30"]["verdict"] == "pass"
-    doc["expected"]["area_0_30"]["verdict"] = "fail"          # deliberately wrong
+    assert doc["expected"][AREA_0_30]["verdict"] == "pass"
+    doc["expected"][AREA_0_30]["verdict"] = "fail"            # deliberately wrong
     path.write_text(yaml.safe_dump(doc, sort_keys=False), encoding="utf-8")
     r = run_runner("--cases", str(cases), "--mutants", str(mutants), "--results", str(results))
     assert r.returncode == 1, r.stdout
@@ -77,7 +85,8 @@ def test_a_coverage_gap_is_only_a_warning(tmp_path):
     r = run_runner("--cases", str(cases), "--mutants", str(tmp_path / "none.yaml"), "--results", str(results))
     assert r.returncode == 0, r.stdout
     assert r.stdout.count("::warning title=Evaluation coverage gap") == 5
-    assert "Angle of max GZ (2.2.3) has no" not in r.stdout
+    gaps = [line for line in r.stdout.splitlines() if "coverage gap" in line]
+    assert not any("angle-max-gz" in line for line in gaps)
 
 
 def test_a_stale_results_file_fails_the_check(tmp_path):
@@ -112,11 +121,12 @@ def test_a_mutant_moves_one_input_across_the_limit_by_its_step():
         parent = parents[m["parent"]]
         changed = [k for k in parent["inputs"] if parent["inputs"][k] != d["inputs"][k]]
         assert changed == [m["moved"]], (d["id"], changed)
-        big, small = gen.STEPS[m["criterion"]]
+        short = SHORT_OF[m["criterion"]]
+        big, small = gen.STEPS[short]
         step = big if m["magnitude"] == "big" else small
         margin = d["expected"][m["criterion"]]["margin"]
         assert abs(margin - (step if m["side"] == "pass" else -step)) <= 1e-3 * step + 1e-9, (d["id"], margin)
-        assert m["grid"] == (m["magnitude"] == "small" and step < gen.GRID_TOL[m["criterion"]] * 4)
+        assert m["grid"] == (m["magnitude"] == "small" and step < gen.GRID_TOL[short] * 4)
 
 
 def test_the_grid_error_tolerances_are_above_what_the_engine_shows():
@@ -124,11 +134,11 @@ def test_the_grid_error_tolerances_are_above_what_the_engine_shows():
     the oracle's, so a verdict outside the tolerance is one the engine must get right."""
     worst = {k: 0.0 for k in CRITERIA}
     for case in runner.load_cases():
-        for k, r in runner.run_case(case).items():
+        for k, r in runner.run_case(case)["rows"].items():
             worst[k] = max(worst[k], abs(r["engine_value"] - r["expected_value"]))
     for k, w in worst.items():
-        assert w <= gen.GRID_TOL[k], (k, w)
-    for k in CRITERIA:
+        assert w <= gen.GRID_TOL[SHORT_OF[k]], (k, w)
+    for k in SHORT:
         assert gen.STEPS[k][0] >= gen.GRID_TOL[k], k
 
 
@@ -137,3 +147,82 @@ def test_the_mutants_file_is_what_the_generator_writes():
     r = subprocess.run([sys.executable, str(EVAL / "oracle" / "mutants.py"), "--check"],
                        capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
+
+
+# --- triage (issue #278): one fixture per bucket ----------------------------------------------------
+
+def _case(name="box_b"):
+    return yaml.safe_load((EVAL / "cases" / f"{name}.yaml").read_text(encoding="utf-8"))
+
+
+def _disagreements(case):
+    return runner.evaluate([case])["disagreements"]
+
+
+def test_triage_a_derived_case_that_disagrees_with_the_engine_is_a_code_bug():
+    """Label: property - box B's expected verdicts are the oracle's: a wrong one is the oracle and the
+    engine disagreeing, so `code-bug`, and a false pass."""
+    case = _case()
+    case["expected"][AREA_0_30]["verdict"] = "fail"
+    r = runner.evaluate([case])
+    assert r["disagreements"] == [{"case": "box_b", "rule": AREA_0_30, "expected": "fail",
+                                   "engine": "pass", "bucket": "code-bug"}]
+    assert r["per"][AREA_0_30]["false_passes"] == ["box_b"]
+
+
+def test_triage_a_rule_that_is_not_evaluated_is_a_model_gap_and_never_a_false_pass():
+    """Label: property - the weather criterion is `not evaluated`: a case that expects it to fail is a
+    `model-gap`, and the run has no false pass."""
+    case = _case()
+    case["expected"][WEATHER] = dict(case["expected"][GM], verdict="fail")
+    r = runner.evaluate([case])
+    assert [d["bucket"] for d in r["disagreements"]] == ["model-gap"]
+    assert runner.totals(r)["false_passes"] == 0
+
+
+def test_triage_a_case_that_needs_an_input_the_engine_lacks_is_a_model_gap():
+    """Label: property - a box case with an input the box trace does not read is a `model-gap`."""
+    case = _case()
+    case["inputs"]["wind_pressure_pa"] = 504.0
+    case["expected"][AREA_0_30]["verdict"] = "fail"
+    assert [d["bucket"] for d in _disagreements(case)] == ["model-gap"]
+
+
+def test_triage_a_rule_that_links_a_finding_is_a_known_limitation():
+    """Label: property - the 0 to 40 degree area links finding #282: a disagreement there is a
+    `known-limitation`, and still a false pass."""
+    case = _case()
+    case["expected"][AREA_0_40]["verdict"] = "fail"
+    r = runner.evaluate([case])
+    assert [d["bucket"] for d in r["disagreements"]] == ["known-limitation"]
+    assert r["per"][AREA_0_40]["false_passes"] == ["box_b"]
+
+
+def test_triage_oracle_and_engine_agree_against_a_published_verdict_is_a_rule_suspect():
+    """Label: property - a published verdict that the oracle and the engine both contradict is a
+    `rule-suspect`: the Rule as written may not be what the source applied."""
+    case = _case()
+    case["provenance"]["verdict_basis"] = "published"
+    case["expected"][GM]["verdict"] = "fail"
+    case["expected"][GM]["oracle"] = "pass"
+    assert [d["bucket"] for d in _disagreements(case)] == ["rule-suspect"]
+
+
+def test_triage_a_published_verdict_with_no_oracle_verdict_needs_an_expert():
+    """Label: property - a published verdict the engine contradicts, with no oracle verdict to break
+    the tie, `needs-expert`."""
+    case = _case()
+    case["provenance"]["verdict_basis"] = "published"
+    case["expected"][GM]["verdict"] = "fail"
+    assert [d["bucket"] for d in _disagreements(case)] == ["needs-expert"]
+
+
+def test_results_list_coverage_by_rule_id_and_every_bucket():
+    """Label: property - results.md has a row per Rule of each selected set, by rule id, and a count
+    per triage bucket."""
+    text = (EVAL / "results.md").read_text(encoding="utf-8")
+    assert "### is2008-a@1.0.0" in text
+    for rule_id in CRITERIA + [WEATHER, "is2008/A.2.2/condition"]:
+        assert f"| `{rule_id}` " in text, rule_id
+    for bucket in runner.BUCKETS:
+        assert f"| {bucket} | " in text, bucket

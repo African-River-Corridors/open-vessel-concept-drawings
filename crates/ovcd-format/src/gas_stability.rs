@@ -1,6 +1,7 @@
-//! JSON adapter for the `gas_stability` entry point: `box_gz`, `box_condition`, `segment_fill`,
-//! `criteria_set_for` and `assess`. It copies the output shapes of the Python functions,
-//! including which numbers are ints.
+//! JSON adapter for the `gas_stability` entry point: `box_gz`, `box_condition`, `box_trace`,
+//! `segment_fill`, `criteria_set_for` and `assess`. It copies the output shapes of the Python
+//! functions, including which numbers are ints. `box_trace` (the evaluation harness, issue #278) is
+//! the Rule Trace of one box loading condition; it has no Python twin.
 //!
 //! `eval("gas_stability", ..)` routes here.
 //!
@@ -238,6 +239,58 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
                 )
                 .map(|c| condition_json(&c)),
             )
+        }
+        "box_trace" => {
+            // The Rule Trace of a box loading condition (the evaluation harness, issue #278).
+            // `rule_sets`: Rule Set texts to load at run time; `select`: "id@version" keys, in
+            // selection order (is2008-a 1.0.0 when left out).
+            let condition = match gs::box_condition(
+                num_arg(args, "beam")?,
+                num_arg(args, "depth")?,
+                num_arg(args, "draught")?,
+                num_arg(args, "kg")?,
+                opt_num_arg(args, "free_surface_m", 0.0)?,
+                gs::DEFAULT_CRITERIA_SET,
+            ) {
+                Ok(c) => c,
+                Err(e) => return py_result(Err(e)),
+            };
+            let texts = |name: &str| -> Result<Vec<String>, EvalError> {
+                match args.get(name) {
+                    None | Some(Value::Null) => Ok(Vec::new()),
+                    Some(Value::Array(items)) => items
+                        .iter()
+                        .map(|v| {
+                            v.as_str().map(str::to_string).ok_or_else(|| {
+                                EvalError::BadInput(format!("`args.{name}` must be strings"))
+                            })
+                        })
+                        .collect(),
+                    Some(_) => Err(EvalError::BadInput(format!("`args.{name}` must be a list"))),
+                }
+            };
+            let mut library = crate::rule_set::Library::built_in();
+            for text in texts("rule_sets")? {
+                if let Err(e) = library.add_text(&text) {
+                    return py_result(Err(PyError::Value(e)));
+                }
+            }
+            let mut keys = texts("select")?;
+            if keys.is_empty() {
+                keys.push("is2008-a@1.0.0".to_string());
+            }
+            let mut chosen: Vec<(&str, &str)> = Vec::new();
+            for k in &keys {
+                match k.split_once('@') {
+                    Some(pair) => chosen.push(pair),
+                    None => {
+                        return Err(EvalError::BadInput(format!(
+                            "`{k}` is not an id@version key"
+                        )));
+                    }
+                }
+            }
+            py_result(crate::trace::box_trace(condition, &library, &chosen).map_err(PyError::Value))
         }
         "segment_fill" => {
             let fraction = num_arg(args, "volume_fraction")?;

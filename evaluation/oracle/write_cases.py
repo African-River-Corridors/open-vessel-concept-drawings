@@ -28,6 +28,17 @@ RULES = {
     "gm": ("IS Code 2008 Part A 2.2.4", "initial metacentric height", "m"),
 }
 
+#: The oracle's criterion -> the id of the Rule of the built-in set `is2008-a` that states it. A case's
+#: `expected` entries are keyed by these ids (issue #278); the oracle keeps its own short names.
+RULE_IDS = {
+    "area_0_30": "is2008/A.2.2.1/area-0-30",
+    "area_0_40": "is2008/A.2.2.1/area-0-40",
+    "area_30_40": "is2008/A.2.2.1/area-30-40",
+    "gz_30_plus": "is2008/A.2.2.2/gz-30",
+    "angle_max_gz": "is2008/A.2.2.3/angle-max-gz",
+    "gm": "is2008/A.2.2.4/gm0",
+}
+
 SOURCE_RULES = (
     "IMO resolution MSC.267(85), annex, International Code on Intact Stability, 2008, Part A 2.2.1 "
     "to 2.2.4 (printed pages 11 and 12): the limits."
@@ -204,7 +215,7 @@ def case_document(c: dict) -> dict:
     for name in oracle.CRITERIA:
         rule, what, unit = RULES[name]
         e = r[name]
-        expected[name] = {
+        expected[RULE_IDS[name]] = {
             "rule": rule, "what": what, "unit": unit,
             "verdict": "pass" if e["ok"] else "fail",
             "value": sig(e["value"]), "limit": e["limit"], "margin": sig(e["margin"]),
