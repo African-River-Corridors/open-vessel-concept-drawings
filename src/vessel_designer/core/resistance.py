@@ -9,7 +9,7 @@ References:
 - ITTC 1957 friction line
 - Schijf (1949) limiting speed in confined waterways
 - Lackenby (1963) shallow water resistance increase
-- Guldhammer-Harvald residuary resistance charts
+- Residuary Cr/Cf: a fitted OVCD Estimate, continuous at Fn 0.20 (issue #399); no source method
 """
 
 from dataclasses import dataclass, field

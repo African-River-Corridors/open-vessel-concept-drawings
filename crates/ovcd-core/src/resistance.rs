@@ -301,6 +301,22 @@ fn squat_applies(env: &EnvironmentInputs) -> bool {
     env.apply_squat_limit && env.water_depth > 0.0 && !env.is_deep_water
 }
 
+/// The residuary to frictional resistance ratio Cr/Cf of a bluff-body barge at Froude number
+/// `fn_`: an Estimate, fitted, not from a source. 0.10 below Fn 0.10, rising as (Fn - 0.10)^1.5 to
+/// Fn 0.20, then as (Fn - 0.20)^2. The last part starts where the middle one ends, so the fit is
+/// continuous (issue #399): it began at 0.15, a step down from about 0.179. The higher start is
+/// the conservative one of the two ways to close the step.
+pub fn residuary_ratio(fn_: f64) -> f64 {
+    let at_0_20 = 0.10 + 2.5 * libm::pow(0.10, 1.5);
+    if fn_ < 0.10 {
+        0.10
+    } else if fn_ < 0.20 {
+        0.10 + 2.5 * libm::pow(fn_ - 0.10, 1.5)
+    } else {
+        at_0_20 + 8.0 * libm::pow(fn_ - 0.20, 2.0)
+    }
+}
+
 /// Hull resistance, power and fuel consumption calculator.
 pub struct ResistanceCalculator<'a> {
     pub inputs: &'a ResistanceInputs,
@@ -352,14 +368,7 @@ impl<'a> ResistanceCalculator<'a> {
     /// Residuary resistance for a bluff-body barge (kN): Cr/Cf as an empirical function of Fn.
     fn residuary_resistance(&self, speed_ms: f64, frictional_kn: f64) -> Result<f64, PyException> {
         let fn_ = py_div(speed_ms, py_sqrt(GRAVITY * self.inputs.lwl)?)?;
-        let ratio = if fn_ < 0.10 {
-            0.10
-        } else if fn_ < 0.20 {
-            0.10 + 2.5 * libm::pow(fn_ - 0.10, 1.5)
-        } else {
-            0.15 + 8.0 * libm::pow(fn_ - 0.20, 2.0)
-        };
-        Ok(frictional_kn * ratio)
+        Ok(frictional_kn * residuary_ratio(fn_))
     }
 
     /// Trapezoidal channel cross-section area (m^2).
@@ -633,7 +642,8 @@ impl<'a> ResistanceCalculator<'a> {
         } else {
             None
         };
-        // Ask why the next step up was refused.
+        // Ask why the next step up was refused. With no next step the sweep ended: at the channel
+        // cap, or at the top of the speed grid (issue #400; it was labelled "power").
         let mut governed = "power";
         let next = curve.iter().find(|p| p.speed_knots > service_speed + 1e-9);
         if let Some(n0) = next {
@@ -641,9 +651,11 @@ impl<'a> ResistanceCalculator<'a> {
                 governed = "squat";
             }
         } else if let Some(l) = limiting
-            && service_speed >= l * LIMITING_SPEED_MARGIN - 0.05
+            && (service_speed >= l * LIMITING_SPEED_MARGIN - 0.05 || max_eval < inp.speed_max_knots)
         {
             governed = "channel";
+        } else {
+            governed = "speed grid";
         }
 
         if service_point.is_none() && !curve.is_empty() {
@@ -739,6 +751,27 @@ fn build_checks(inputs: &ResistanceInputs, environments: &[EnvironmentResult]) -
                     environment = &env.name,
                     blockage = Arg::fixed(env.blockage_ratio, 3),
                 ),
+            ));
+        }
+
+        // Issue #400: a service speed the vessel cannot run without touching the bed is flagged.
+        // It happens when no speed point is free of squat, and the first point stands in.
+        if env
+            .speed_curve
+            .iter()
+            .any(|p| p.speed_knots == env.service_speed_knots && p.squat_limited)
+        {
+            checks.push(Check::with_severity(
+                format!("service_speed_clears_squat[{}]", env.name),
+                false,
+                text!(
+                    "check-service-speed-fails-squat",
+                    "{environment}: at the service speed {service} kn the squat leaves less than \
+                     the under-keel clearance",
+                    environment = &env.name,
+                    service = Arg::fixed(env.service_speed_knots, 1),
+                ),
+                "warning",
             ));
         }
     }

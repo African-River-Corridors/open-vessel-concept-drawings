@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Design change (issue #399): the residuary resistance fit is continuous at Fn 0.20. Cr/Cf rose to about 0.179 just below Fn 0.20 and stepped down to 0.150 at Fn 0.20; the part above Fn 0.20 now starts at 0.179 (0.10 + 2.5 x 0.10^1.5), the higher and so conservative of the two ways to close the step. The fit is an OVCD Estimate, not from a source: the Python module no longer names the Guldhammer-Harvald charts, which the code does not use. At Fn 0.20 and above the residuary resistance rises by 0.029 x the frictional resistance (19.4 % of the residuary part at Fn 0.20, less above), and power and fuel follow; points below Fn 0.20 do not move. Tests re-pinned to what the code prints. No sourced test changed.
+- Change (issue #400): speed governing labels. A service speed at the top of the speed grid is governed by `speed grid` (it was `power`). A sweep that stops at the channel cap is `channel` even when the grid step stops it more than 0.05 kn below the cap (it was `power`). A new warning check, `service_speed_clears_squat[<environment>]`, flags a service speed whose point fails the under-keel clearance (no speed point clears it, so the first point stands in); new message `check-service-speed-fails-squat`. No number moves.
 - Design change (issues #396, #397, #398): confined water. One midship section, B x T, for squat and resistance (resistance used B x T x Cb, so its blockage ratio was low by Cb). The Schijf limiting speed is the first critical speed proved by Delefortrie, Verwilligen, Vantorre and Lataire (35th PIANC World Congress, 2024, Paper 8): Fr_h = [2 sin(arcsin(1 - m) / 3)]^(3/2) on the water depth, which is 1 in open water (the old sqrt(2/3)(1 - m)^(1/3) gave 0.816). One margin, 0.95 of the limit (an OVCD choice), in the resistance sweep, its check and the electric check (which used 1.0). The electric installed power follows the environment with the highest battery power (it followed the lowest service speed). The open-water environment reports a blockage of 0 (maintainer decision on #396), so every results hash moves once; numbers move only with a channel. In the 10 design-impact cases with a channel the limit falls by 9 % to 53 % (box 90 x 14 m: 10.60 to 7.24 kn; the narrowest sweep channel: 7.73 to 3.61 kn) and the speed curves stop lower. Python, known differences from 0.1.0: the `resistance`, `electric_energy.compute`, `simulate.box` and `simulate.hopper_channel` scenarios. Tests re-pinned to what the code prints; three knife-edge inputs solved again; fixture and legacy hashes re-stamped from `ovcd run`. No sourced test changed.
 - Feature (issue #426, part 2): the IS Code 2008 loading conditions, opt-in by the new format v3 input `loading_conditions` (`legacy` stays the default until the gas arrangement search uses the new conditions; a file saved before reads `legacy`). With `is_code_2008`, gas and dry bulk Options are checked in the four standard conditions of Part B 3.4.1.2 (full load and ballast, departure and arrival), and in "Lightship, no ballast" where `may_sail_without_ballast` (default: barges yes, self-propelled no). Stores and fuel (self-propelled only: `fixed_stores_t` plus fuel for `endurance_h` at the service speed; none for battery-electric) are 100 % at departure and 10 % at arrival, with their largest free surface (3.1.3.2, 3.1.4); the full load carries them, so a draught-bound cargo is that much less and the deadweight holds them. Each ballast condition has a ballast plan, the least ballast that meets every criterion or user fills, stated per tank (3.4.2.3), with the free surface of slack tanks. Dry bulk condition checks are warnings and stay out of the Rule Trace until a dry bulk Rule Set exists. New results blocks `loading_conditions` and (for dry bulk too) `stability`, only when opted in. Five design-impact sweep cases opt in; their table is under "Design changes".
 - Design change (issue #423), design grid only: each cell fills its tanks to the Filling Limit, 98 % (IGC 15.3; `tanks::DEFAULT_FILLING_LIMIT`, which `simulate` now also uses), not the 0.95 default of the capacity inputs. The grid has no loading-limit inputs, so it fills as a `.vdesign` run does when none is typed. A cell's cargo rises by 0.98 / 0.95 (60 x 11 m propane: 692.6 t to 714.4 t). The spacing part of the issue was already built: #391 (#277) took the 1.0 m override out, so the side clearance is IGC 2.4.1.2 per tank. Single-Design results do not move (177 designs, no change).
@@ -170,6 +172,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/399-400-resistance-labels (2026-10-21)
+
+Between `main 9980d3c` and `this branch 83ea31a`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep box self-propelled 60x10 | `checks[10].message` | 2 x 1.31 m engines abreast need 5.62 m across a 10.00 m beam | 2 x 1.32 m engines abreast need 5.65 m across a 10.00 m beam | changed |
+| sweep box self-propelled 60x10 | `checks[11].message` | engine 1.23 m + 1.00 m double bottom and deck structure (ESTIMATE) <= moulded depth 4.50 m | engine 1.24 m + 1.00 m double bottom and deck structure (ESTIMATE) <= moulded depth 4.50 m | changed |
+| sweep box self-propelled 60x10 | `checks[3].message` | freeboard 2.14 m >= required 0.3 m | freeboard 2.13 m >= required 0.3 m | changed |
+| sweep hopper 60x10 | `checks[10].message` | 2 x 1.31 m engines abreast need 5.62 m across a 10.00 m beam | 2 x 1.32 m engines abreast need 5.65 m across a 10.00 m beam | changed |
+| sweep hopper 60x10 | `checks[11].message` | engine 1.23 m + 1.00 m double bottom and deck structure (ESTIMATE) <= moulded depth 4.50 m | engine 1.24 m + 1.00 m double bottom and deck structure (ESTIMATE) <= moulded depth 4.50 m | changed |
+| sweep box self-propelled 60x10 | `stern_block_mass.items[10].mass_t` | 0.508848855467 | 0.523200836184 | +2.82 % |
+| sweep box self-propelled 60x10 | `stern_block_mass.items[8].mass_t` | 1.01769771093 | 1.04640167237 | +2.82 % |
+| sweep hopper 60x10 | `stern_block_mass.items[10].mass_t` | 0.508848855467 | 0.523200836184 | +2.82 % |
+| sweep hopper 60x10 | `stern_block_mass.items[8].mass_t` | 1.01769771093 | 1.04640167237 | +2.82 % |
+| sweep box self-propelled 60x10 | `powering.installed_power_kw` | 508.848855467 | 523.200836184 | +2.82 % |
+| sweep hopper 60x10 | `powering.installed_power_kw` | 508.848855467 | 523.200836184 | +2.82 % |
+| sweep box self-propelled 60x10 | `stern_block_mass.items[7].mass_t` | 2.49335939179 | 2.5636840973 | +2.82 % |
+| sweep hopper 60x10 | `stern_block_mass.items[7].mass_t` | 2.49335939179 | 2.5636840973 | +2.82 % |
+| sweep box self-propelled 60x10 | `powering.environments[0].fuel_kg_per_h` | 71.5188254959 | 73.5086501428 | +2.78 % |
+| sweep box self-propelled 60x10 | `powering.environments[0].power_at_service_kw` | 366.763207671 | 376.96743663 | +2.78 % |
+| sweep hopper 60x10 | `powering.environments[0].power_at_service_kw` | 340.766331966 | 350.206876415 | +2.77 % |
+| sweep hopper 60x10 | `powering.environments[0].fuel_kg_per_h` | 66.4494347334 | 68.2903409009 | +2.77 % |
+| sweep gas IGC_2G 60x10 | `stern_block_mass.items[8].mass_t` | 1.97774040955 | 2.03008023023 | +2.65 % |
+| sweep gas IGC_2G_EXACT 60x10 | `stern_block_mass.items[8].mass_t` | 1.97774040955 | 2.03008023023 | +2.65 % |
+| sweep gas IGC_2G 60x10 | `stern_block_mass.items[6].mass_t` | 0.41202925199 | 0.422933381298 | +2.65 % |
+| sweep gas IGC_2G_EXACT 60x10 | `stern_block_mass.items[6].mass_t` | 0.41202925199 | 0.422933381298 | +2.65 % |
+| sweep gas IGC_2G 60x10 | `stern_block_mass.items[10].mass_t` | 0.329623401592 | 0.338346705038 | +2.65 % |
+| sweep gas IGC_2G_EXACT 60x10 | `stern_block_mass.items[10].mass_t` | 0.329623401592 | 0.338346705038 | +2.65 % |
+| sweep gas IGC_2G 60x10 | `powering.installed_power_kw` | 329.623401592 | 338.346705038 | +2.65 % |
+| sweep gas IGC_2G_EXACT 60x10 | `powering.installed_power_kw` | 329.623401592 | 338.346705038 | +2.65 % |
+| sweep gas IGC_2G 60x10 | `powering.environments[0].power_at_service_kw` | 218.405808977 | 224.127182331 | +2.62 % |
+| sweep gas IGC_2G_EXACT 60x10 | `powering.environments[0].power_at_service_kw` | 218.405808977 | 224.127182331 | +2.62 % |
+| sweep hopper 60x10 | `curves[0].points[17].kw` | 246.341894586 | 252.576008101 | +2.53 % |
+| sweep hopper 60x10 | `curves[0].points[17].fuel_lph` | 56.8481295199 | 58.2867711003 | +2.53 % |
+| sweep box self-propelled 60x10 | `curves[0].points[17].fuel_lph` | 60.7923600013 | 62.3306586724 | +2.53 % |
+| sweep box self-propelled 60x10 | `curves[0].points[17].kw` | 263.433560006 | 270.099520914 | +2.53 % |
+| sweep gas IGC_2G 60x10 | `curves[0].points[17].fuel_lph` | 58.8875771528 | 60.3772602403 | +2.53 % |
+| sweep gas IGC_2G_EXACT 60x10 | `curves[0].points[17].fuel_lph` | 58.8875771528 | 60.3772602403 | +2.53 % |
+| sweep gas IGC_2G 60x10 | `curves[0].points[17].kw` | 255.179500995 | 261.634794374 | +2.53 % |
+| sweep gas IGC_2G_EXACT 60x10 | `curves[0].points[17].kw` | 255.179500995 | 261.634794374 | +2.53 % |
+| sweep hopper 60x10 | `curves[0].points[18].kw` | 285.617550949 | 292.838451244 | +2.53 % |
+| sweep hopper 60x10 | `curves[0].points[18].fuel_lph` | 65.9117425268 | 67.5781041333 | +2.53 % |
+| sweep box self-propelled 60x10 | `curves[0].points[18].kw` | 305.434235509 | 313.155338786 | +2.53 % |
+| sweep box self-propelled 60x10 | `curves[0].points[18].fuel_lph` | 70.4848235789 | 72.266616643 | +2.53 % |
+| sweep gas IGC_2G 60x10 | `curves[0].points[18].kw` | 295.86418603 | 303.341273592 | +2.53 % |
+| ... | 799 more changed quantities | | | |
 
 ### ticket/396-397-confined-water (2026-10-21)
 

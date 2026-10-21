@@ -3,7 +3,7 @@
 
 use ovcd_core::aft_arrangement::PyException;
 use ovcd_core::pyfmt::round_to;
-use ovcd_core::resistance::{ResistanceInputs, TugInputs, compute};
+use ovcd_core::resistance::{ResistanceInputs, TugInputs, compute, residuary_ratio};
 
 fn close(a: f64, b: f64) {
     assert!((a - b).abs() <= 1e-9 * b.abs().max(1.0), "{a} vs {b}");
@@ -34,7 +34,8 @@ fn service_speed_and_what_governs_it() {
     };
     assert_eq!(sea.limiting_speed_knots, None);
     assert_eq!(sea.service_speed_knots, 12.0);
-    assert_eq!(sea.service_speed_governed_by, "power");
+    // Issue #400: the open sea runs to the top of the speed grid (12 kn); it was labelled "power".
+    assert_eq!(sea.service_speed_governed_by, "speed grid");
     assert_eq!(sea.squat_limited_speed_knots, None);
     assert_eq!(sea.speed_curve.len(), 21);
     // Re-pinned (issues #396, #397); was 10.827543883575197.
@@ -436,8 +437,10 @@ fn froude_number_exactly_0_2_uses_the_residuary_fit_above_the_bound() {
     let r = compute(&inp).unwrap();
     let p = &r.environments[0].speed_curve[0];
     assert_eq!(p.froude_number, 0.2);
-    close(p.resistance_residuary_kn, 27.529869204463804);
-    close(p.resistance_total_kn, 211.06233056755585);
+    // Re-pinned (issue #399); was 27.529869204463804.
+    close(p.resistance_residuary_kn, 32.86276119841476);
+    // Re-pinned (issue #399); was 211.06233056755585.
+    close(p.resistance_total_kn, 216.39522256150678);
     assert!(!r.checks[0].ok);
 }
 
@@ -457,7 +460,8 @@ fn depth_froude_number_exactly_0_95_keeps_the_subcritical_factor() {
     // Re-pinned (issues #396, #397); was 6.106217307692308.
     close(p.resistance_shallow_factor, 6.124961538461538);
     // Re-pinned (issues #396, #397); was 1499.7916759260709.
-    close(p.resistance_total_kn, 1504.3955804159937);
+    // Re-pinned (issue #399); was 1504.3955804159937.
+    close(p.resistance_total_kn, 1542.3339836642363);
 }
 
 #[test]
@@ -556,7 +560,8 @@ fn ittc_friction_is_turbulent_at_reynolds_exactly_1e5() {
     let r = compute(&inp).unwrap();
     let p = &r.environments[0].speed_curve[0];
     assert_eq!(p.resistance_frictional_kn, 4.984536e-05);
-    assert_eq!(p.resistance_total_kn, 6.615974179695845e-05);
+    // Re-pinned (issue #399); was 6.615974179695845e-05.
+    assert_eq!(p.resistance_total_kn, 6.760809550673473e-05);
 }
 
 #[test]
@@ -577,4 +582,78 @@ fn the_shallow_water_factor_is_one_when_the_draft_is_zero() {
     let p = &r.environments[0].speed_curve[0];
     assert_eq!(p.resistance_shallow_factor, 1.0);
     assert_eq!(p.resistance_total_kn, 38.784599026937556);
+}
+
+// --- Issue #399: the residuary fit is continuous at Fn 0.20. ---
+
+#[test]
+fn the_residuary_ratio_from_the_left_and_the_right_of_fn_0_20_agree() {
+    let left = residuary_ratio(0.20 - 1e-12);
+    let right = residuary_ratio(0.20);
+    assert!((left - right).abs() <= 1e-9 * right, "{left} vs {right}");
+    // It was 0.15 at Fn 0.20, a step down from 0.179 just below.
+    assert!((right - 0.17905694150420949).abs() < 1e-15);
+}
+
+#[test]
+fn the_residuary_ratio_never_falls_as_the_froude_number_grows() {
+    let mut last = residuary_ratio(0.0);
+    for i in 1..=400 {
+        let r = residuary_ratio(f64::from(i) / 1000.0);
+        assert!(r >= last, "Fn {}", f64::from(i) / 1000.0);
+        last = r;
+    }
+}
+
+// --- Issue #400: the speed governing labels. ---
+
+#[test]
+fn a_service_speed_at_the_top_of_the_speed_grid_is_labelled_speed_grid() {
+    let inp = ResistanceInputs {
+        speed_max_knots: 6.0,
+        ..with_envs(vec![deep("Deep")])
+    };
+    let r = compute(&inp).unwrap();
+    let e = &r.environments[0];
+    assert_eq!(e.service_speed_knots, 6.0);
+    assert_eq!(e.service_speed_governed_by, "speed grid");
+}
+
+#[test]
+fn a_sweep_cut_by_the_channel_cap_is_labelled_channel_even_off_the_grid_step() {
+    // 60 m wide: 0.95 x the limit is about 3.48 kn, so the 0.1 kn grid stops at 3.4 kn, more than
+    // 0.05 kn below the cap. It was labelled "power".
+    let mut e = env("Cut", 5.0, 60.0, 80.0);
+    e.apply_squat_limit = false;
+    let inp = ResistanceInputs {
+        speed_step_knots: 0.1,
+        ..with_envs(vec![e])
+    };
+    let r = compute(&inp).unwrap();
+    let c = &r.environments[0];
+    assert_eq!(c.service_speed_knots, 3.4);
+    assert_eq!(c.service_speed_governed_by, "channel");
+}
+
+#[test]
+fn a_service_speed_that_fails_squat_is_flagged() {
+    // The default river: no speed point keeps the under-keel clearance at its depth, so the first
+    // point stands in, and the flag says so.
+    let mut e = env("Shoal", 6.3, 40.0, 60.0);
+    e.squat_safety_margin_m = 0.5;
+    let r = compute(&with_envs(vec![e])).unwrap();
+    let flag = r
+        .checks
+        .iter()
+        .find(|c| c.name == "service_speed_clears_squat[Shoal]")
+        .expect("the flag");
+    assert!(!flag.ok);
+    assert_eq!(flag.severity, "warning");
+    let e = &r.environments[0];
+    let p = e
+        .speed_curve
+        .iter()
+        .find(|p| p.speed_knots == e.service_speed_knots)
+        .unwrap();
+    assert!(p.squat_limited);
 }
