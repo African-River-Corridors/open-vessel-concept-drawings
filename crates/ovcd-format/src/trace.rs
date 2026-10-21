@@ -53,7 +53,9 @@ pub fn default_stack(option: &DesignOption) -> Vec<&'static str> {
         .and_then(|i| i.value.as_str())
         == Some("type_c_tanks");
     if gas {
-        vec!["igc-2g", "lr-inland-gas", "ovcd"]
+        // `igc-2g` includes `is2008-a` (IGC 2.2.2); naming it here too keeps the IS Code rows in the
+        // stack whatever the gas sets hold. A set selected twice is checked once.
+        vec!["igc-2g", "is2008-a", "lr-inland-gas", "ovcd"]
     } else {
         vec!["is2008-a", "ovcd"]
     }
@@ -243,6 +245,23 @@ impl MeasureSource for OptionMeasures<'_> {
             "gm0" => Ok(MeasureValue::Number(c.gm_fluid_m)),
             other => Err(format!("no value for Measure `{other}`")),
         }
+    }
+
+    fn missing(&self, object: ObjectType) -> Option<String> {
+        if object != ObjectType::LoadingCondition || !self.measured.conditions.is_empty() {
+            return None;
+        }
+        let gas = self
+            .option
+            .input("cargo_containment")
+            .and_then(|i| i.value.as_str())
+            == Some("type_c_tanks");
+        Some(if gas {
+            "no stability loading conditions: the barge carries no cargo".to_string()
+        } else {
+            "intact stability is not computed for this Cargo yet (a first-order GM only)"
+                .to_string()
+        })
     }
 
     fn input(&self, name: &str) -> Option<String> {

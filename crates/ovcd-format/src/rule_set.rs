@@ -24,8 +24,11 @@ use sha2::{Digest, Sha256};
 pub const SCHEMA: &str = include_str!("../rules/rule-set.schema.json");
 
 /// The built-in Rule Sets: `(path, text)`, one file per set version, embedded so that every binary
-/// and the WebAssembly build carry them. The first sets come with the migration tickets.
-const BUILT_IN: &[(&str, &str)] = &[];
+/// and the WebAssembly build carry them.
+const BUILT_IN: &[(&str, &str)] = &[(
+    "rules/is2008-a/1.0.0.json",
+    include_str!("../rules/is2008-a/1.0.0.json"),
+)];
 
 /// The roles that may write or verify a Rule. A person's name never goes in a Rule Set: the
 /// repository is public.

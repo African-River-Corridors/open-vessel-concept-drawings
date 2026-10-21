@@ -126,10 +126,18 @@ fn a_rule_set_changes_no_result_and_shows_in_the_trace() {
     wr.as_object_mut().unwrap().remove("rule_trace");
     assert_eq!(pr, wr);
     let trace = &wo["results"]["rule_trace"];
-    assert_eq!(trace["rule_sets"], json!(["example@1.0.0"]));
+    // The default stack of a gas Option, then the loaded set.
     assert_eq!(
-        trace["verdict"]["blocking_not_evaluated"][0]["rule"],
-        "example/1.3/weather"
+        trace["rule_sets"],
+        json!(["is2008-a@1.0.0", "example@1.0.0"])
+    );
+    let not_evaluated = trace["verdict"]["blocking_not_evaluated"]
+        .as_array()
+        .unwrap();
+    assert!(
+        not_evaluated
+            .iter()
+            .any(|r| r["rule"] == "example/1.3/weather")
     );
 }
 

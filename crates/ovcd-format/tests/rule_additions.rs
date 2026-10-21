@@ -263,6 +263,9 @@ fn cargo_class_and_deadweight_band_are_worked_out_for_each_option() {
         assert!((600.0..5000.0).contains(&dw), "{file}: {dw} t");
         for row in results["rule_trace"]["rows"].as_array().unwrap() {
             let set = row["rule_sets"][0].as_str().unwrap();
+            if set.starts_with("is2008-a@") {
+                continue; // the default stack, not a set of this test
+            }
             let applies_here = applies.contains(&set);
             assert_eq!(
                 row["outcome"] != "not applicable",

@@ -372,9 +372,10 @@ fn every_run_has_a_rule_trace_outside_the_results_hash() {
             };
             assert_eq!(hp, hw, "{name}: a Rule Set moved the results hash");
             assert!(rp["rule_trace"].is_object(), "{name}");
+            // The default stack first, then the loaded set.
             assert_eq!(
-                rw["rule_trace"]["rule_sets"],
-                json!(["example@1.0.0"]),
+                rw["rule_trace"]["rule_sets"].as_array().unwrap().last(),
+                Some(&json!("example@1.0.0")),
                 "{name}"
             );
         }
@@ -418,7 +419,12 @@ fn a_set_that_does_not_apply_to_a_dry_option_gives_one_row() {
     let ovcd_format::RunOutcome::Results { results, .. } = &run.outcome else {
         panic!("not computed");
     };
-    let rows = results["rule_trace"]["rows"].as_array().unwrap();
+    let rows: Vec<&Value> = results["rule_trace"]["rows"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|r| r["rule_sets"][0] == "example@1.0.0")
+        .collect();
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0]["outcome"], "not applicable");
     assert_eq!(rows[0]["rule"], Value::Null);

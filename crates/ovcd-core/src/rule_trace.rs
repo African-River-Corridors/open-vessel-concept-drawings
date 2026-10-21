@@ -180,6 +180,12 @@ pub trait MeasureSource {
     fn value(&self, measure: &MeasureRef, index: usize) -> Result<MeasureValue, String>;
     /// The text value of an enumerated input, for Applicability. `None` when the Option lacks it.
     fn input(&self, name: &str) -> Option<String>;
+    /// Why the Option has no objects of a type the engine should have computed (a dry bulk barge has
+    /// no stability loading conditions yet). A Rule on such a type is `not evaluated` with this as
+    /// its gap, never `not applicable`. `None`: the Option really has none of them.
+    fn missing(&self, _object: ObjectType) -> Option<String> {
+        None
+    }
 }
 
 /// The outcome of one Rule on one object.
@@ -645,7 +651,12 @@ fn rule_rows(
     };
     let objects = source.objects(def.object);
     if objects.is_empty() {
-        return vec![base];
+        let mut row = base;
+        if let Some(reason) = source.missing(def.object) {
+            row.outcome = Outcome::NotEvaluated;
+            row.gap = Some(reason);
+        }
+        return vec![row];
     }
     let mut out = Vec::new();
     for (index, label) in objects.into_iter().enumerate() {
