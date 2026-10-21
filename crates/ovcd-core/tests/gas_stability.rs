@@ -38,6 +38,7 @@ fn narrow_deep() -> GasCapacityResult {
         lightship_t: 480.59038275062665,
         has_aft_arrangement: false,
         stern_block_items: Vec::new(),
+        stern_geometry: None,
     }
 }
 

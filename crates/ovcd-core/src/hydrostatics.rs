@@ -162,7 +162,25 @@ pub fn calculate_stability(
 /// BM_L / L_wp, as [`calculate_trim`] has it; positive trim is bow deeper. No mass, or no
 /// waterplane, gives no trim.
 pub fn trim(hull: &HullGeometry, draft: f64, items: &[(f64, f64)]) -> TrimResult {
-    let lcb = hull.LCB(draft);
+    trim_with_stern(hull, draft, items, None)
+}
+
+/// [`trim`] with the Stern Form's correction (issue #350): the volume the stern removes moves the
+/// LCB forward, LCB = (V x LCB_box - M_removed) / (V - V_removed).
+pub fn trim_with_stern(
+    hull: &HullGeometry,
+    draft: f64,
+    items: &[(f64, f64)],
+    stern: Option<&crate::stern_form::SternGeometry>,
+) -> TrimResult {
+    let mut lcb = hull.LCB(draft);
+    if let Some(g) = stern {
+        let (v_cut, m_cut) = g.removed(draft);
+        let v = hull.displaced_volume(draft);
+        if v - v_cut > 0.0 {
+            lcb = (v * lcb - m_cut) / (v - v_cut);
+        }
+    }
     let total: f64 = items.iter().map(|(m, _)| m).sum();
     let lcg = if total > 0.0 {
         items.iter().map(|(m, x)| m * x).sum::<f64>() / total

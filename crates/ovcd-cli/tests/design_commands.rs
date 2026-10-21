@@ -149,9 +149,10 @@ fn defaulted_inputs_are_marked_and_distinguishable_from_typed_ones() {
         assert_eq!(inputs[name]["source"], "typed", "{name}: {}", inputs[name]);
     }
     // Everything else came from the built-in Defaults Profile, at its stated values.
+    // Issue #350: the block coefficient's default is none (the rule of the hull and its stern).
     assert_eq!(
         inputs["block_coefficient"],
-        json!({ "value": 0.85, "source": "default" })
+        json!({ "value": null, "source": "default" })
     );
     assert_eq!(
         inputs["min_freeboard_m"],
@@ -175,10 +176,7 @@ fn defaulted_inputs_are_marked_and_distinguishable_from_typed_ones() {
     let out = ovcd(&["validate", "--inputs", path_str(&file)]);
     let text = stdout(&out);
     assert!(text.contains("beam_m = 11.4 (typed)"), "{text}");
-    assert!(
-        text.contains("block_coefficient = 0.85 (default)"),
-        "{text}"
-    );
+    assert!(text.contains("max_speed_kn = 10 (default)"), "{text}");
 }
 
 #[test]
@@ -301,12 +299,12 @@ fn editing_the_defaults_profile_does_not_change_a_saved_files_inputs() {
     let before = ovcd(&["validate", "--inputs", path_str(&file)]);
     assert!(before.status.success());
 
-    // A user copies the built-in profile and changes the block coefficient default.
+    // A user copies the built-in profile and changes the maximum speed default.
     let out = ovcd(&["profile"]);
     assert!(out.status.success(), "{}", stderr(&out));
     let mut profile: Value = serde_json::from_slice(&out.stdout).unwrap();
-    assert_eq!(profile["inputs"]["block_coefficient"]["default"], 0.85);
-    profile["inputs"]["block_coefficient"]["default"] = json!(0.9);
+    assert_eq!(profile["inputs"]["max_speed_kn"]["default"], 10.0);
+    profile["inputs"]["max_speed_kn"]["default"] = json!(12.0);
     let edited = dir.join("edited.profile.json");
     write_json(&edited, &profile);
 
@@ -320,7 +318,11 @@ fn editing_the_defaults_profile_does_not_change_a_saved_files_inputs() {
     ]);
     assert!(after.status.success(), "{}", stdout(&after));
     assert_eq!(stdout(&before), stdout(&after));
-    assert!(stdout(&after).contains("block_coefficient = 0.85 (default)"));
+    assert!(
+        stdout(&after).contains("max_speed_kn = 10 (default)"),
+        "{}",
+        stdout(&after)
+    );
     assert_eq!(read_json(&file), saved);
 
     // A new Design made with the edited profile does take the new default.
@@ -328,8 +330,8 @@ fn editing_the_defaults_profile_does_not_change_a_saved_files_inputs() {
     let out = ovcd(&["new", "--profile", path_str(&edited), path_str(&fresh)]);
     assert!(out.status.success(), "{}", stderr(&out));
     assert_eq!(
-        read_json(&fresh)["options"][0]["inputs"]["block_coefficient"]["value"],
-        0.9
+        read_json(&fresh)["options"][0]["inputs"]["max_speed_kn"]["value"],
+        12.0
     );
 }
 
@@ -690,16 +692,16 @@ fn fill_writes_left_out_inputs_in_and_a_profile_edit_then_changes_nothing() {
     assert!(out.status.success(), "{}", stderr(&out));
     assert!(
         stderr(&out).contains(
-            "`block_coefficient` was not stored in the file; wrote in the Defaults Profile value \
-             0.85, marked default"
+            "`max_speed_kn` was not stored in the file; wrote in the Defaults Profile value \
+             10, marked default"
         ),
         "{}",
         stderr(&out)
     );
     let design = read_json(&filled);
     assert_eq!(
-        design["options"][0]["inputs"]["block_coefficient"],
-        json!({ "value": 0.85, "source": "default" })
+        design["options"][0]["inputs"]["max_speed_kn"],
+        json!({ "value": 10.0, "source": "default" })
     );
     assert_eq!(
         design["options"][0]["inputs"]["beam_m"],

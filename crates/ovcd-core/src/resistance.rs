@@ -153,6 +153,8 @@ pub struct ResistanceInputs {
     pub block_coefficient: f64,
     /// m^2; 0 = auto-calculate.
     pub wetted_surface_area: f64,
+    /// Issue #350: wetted surface the Stern Form adds over the box (m^2), added to the computed one.
+    pub wetted_surface_extra_m2: f64,
     /// Tonnes; 0 = auto from Cb. Carried, not used.
     pub displacement_tonnes: f64,
     pub tug: TugInputs,
@@ -171,6 +173,7 @@ impl Default for ResistanceInputs {
             draft: 6.0,
             block_coefficient: 0.85,
             wetted_surface_area: 0.0,
+            wetted_surface_extra_m2: 0.0,
             displacement_tonnes: 0.0,
             tug: TugInputs::default(),
             environments: default_environments(),
@@ -661,6 +664,8 @@ impl<'a> ResistanceCalculator<'a> {
     pub fn calculate(&self) -> Result<ResistanceResults, PyException> {
         let ws = if self.inputs.wetted_surface_area > 0.0 {
             self.inputs.wetted_surface_area
+        } else if self.inputs.wetted_surface_extra_m2 != 0.0 {
+            self.compute_wetted_surface() + self.inputs.wetted_surface_extra_m2
         } else {
             self.compute_wetted_surface()
         };

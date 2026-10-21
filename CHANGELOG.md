@@ -22,6 +22,7 @@
 - Format version 3 and the stern inputs (issue #347, spec 0007 stern 1): 18 inputs for the stern and propulsion of a self-propelled hull, in a new group "Stern and propulsion" (`stern_form`, `stern_run_length_m`, `stern_transom_height_m`, `tunnel_crown_height_m`, `propulsor_type`, `propulsor_count`, `propeller_diameter_m`, `power_source`, `installed_power_kw`, `design_speed_kn`, `installed_power_margin`, `bow_thruster`, `bow_thruster_power_kw`, `battery_energy_kwh`, `battery_unit_energy_kwh`, `wheelhouse_type`, `sightline_method`, `stern_block_mass_included`). Inputs only: the engine reads none of them yet; later spec 0007 tickets give them effect. A file of version 1 or 2 gets the values that reproduce today's stern block, with one warning per Option, and keeps its results; a new Option takes the Defaults Profile values (by Cargo phase: gas a transom stern, ducted azimuth thrusters and gas-fuelled gensets, dry bulk a tunnel stern, shafts in nozzles and diesel-mechanical), each `sourced` or `estimate` in the profile and the schema (`default_status`). `thruster_count` and `propulsive_efficiency` now apply only with an `unspecified` propulsor (`applies_when` in the schema). The one result that moves: a new Option's wheelhouse eye height is 1.65 m (ES-TRIN 7.02; was 1.50 m), so the sightline check of every new self-propelled Design reads 0.15 m higher (104 of 177 case designs, the sightline message only; no feasibility changes). Saving writes format version 3. The stern block API takes `power_source` as the new name of `propulsion`. No sourced test changed. The before/after table is under "Design changes" below.
 - Design change (issue #348, spec 0007 stern 2): the stern block of a self-propelled hull has mass and centres, at the rates of spec 0007 (Hekkenberg 2013, Appendix B): ducted azimuth units 1.5 x D^3 t (D the thruster envelope / 1.35), batteries 6 kg/kWh, accommodation 0.17 t per m3 of unit, wheelhouse 8 t and its column 5 t, gas gensets (the published engine mass plus an alternator at 9 kg/kVA less the engine's 4.9 kg/kW), small items 1 kg/kW and piping and cabling 3 t + 2.5 kg/kW. Until the installed power is sized (#353) the per-kW items take a typed installed power, else the installed genset power, else none. The items enter the lightship and the KG of the gas and dry branches when `stern_block_mass_included` is true (a new Option), and the results show the breakdown (`stern_block_mass`); the stability limitation "the stern block's mass is not in the gas lightship" goes. On a 110 x 11.4 m hull today's battery-electric block weighs 107.4 t (three thrusters 32.1 t, one battery unit 30 t, two accommodation units 29.3 t, wheelhouse and column 13 t, piping 3 t): the lightship of every new self-propelled Design rises by about that much and its draught follows. One case changes feasibility: fully refrigerated propane on 110 x 11.4 m is now feasible with a 9.04 m tank (2,414 t), as the low block lowers the laden KG. A file saved before keeps the switch off and its results. No sourced test changed; new sourced test `crates/ovcd-core/tests/stern_block_mass.rs`. The before/after table is under "Design changes" below.
 - Design change (issue #349, spec 0007 stern 3): trim for each loading condition. Every lightship item and the cargo get an LCG (the hull steel and the piping at the middle of the length, the tanks and the cargo at the middle of their zone, the outfitting in the stern zone, the stern block items at their zones). `hydrostatics::trim` gives the trim and the aft and forward draughts from the LCG, the LCB and the MTC, as the legacy `calculate_trim` does; positive trim is bow deeper. Each gas stability condition, and a dry bulk hull laden and light, gains `trim_m`, `draught_aft_m` and `draught_fwd_m`, only when the stern block mass is in the lightship (a new self-propelled Option). No other number moves. On a 110 x 11.4 m hull: LNG laden 0.79 m by the bow, light 0.53 m by the stern; bauxite on a 4.0 m depth laden 2.03 m by the bow. The hull is still the raked box with no Stern Form cut (#350), so the laden trims are by the bow. A file saved before gets no new field and keeps its results. No sourced test changed. The before/after table is under "Design changes" below.
+- Design change (issue #350, spec 0007 stern 4): the Stern Form of a self-propelled hull has a shape. A new module, `stern_form`, gives in closed form the volume each form removes below a waterline and its moment, the waterplane cut, the extra wetted surface of the tunnels, the outlines for the drawings and the largest propeller D_max. Transom: the stern rake of the raked box, run 1.0 x depth up to the design draught (estimates). Pram: a parabolic bottom rise, run 1.6 x depth (estimate). Tunnel: a flat bottom with one tunnel per propulsor, a circular segment of radius D with its crown 0.10 D above the tip (estimate), tapering over the Heuser run (Rotteveel 2019 sec. 2.3.1), twin shafts 0.45 B apart (parallel) or 0.28 B (converging). D_max is 0.80 x the design draught under a tunnel (estimate) and 0.65 x at a transom or pram stern (sourced: MAN); under a tunnel it is also capped so the tunnels meet but do not overlap and stay inside the beam (the maintainer's decision on this issue; 2.58 m in place of 2.80 m on a 110 x 11.4 m hull at 3.5 m). A typed D is used as typed. The block coefficient default is now none, the rule: the raked box with its bow rake and Stern Form at the design draught over L x B x T, or 0.85 with no Stern Form. The trim takes the Stern Form's LCB, and the resistance its extra wetted surface. The results gain `geometry.stern_form`, `stern_run_length_m`, `stern_transom_height_m`, `propeller_diameter_m` and `propeller_d_max_m`, and `stern_rake_length_m` for a transom or pram stern, which the drawings read (finding G15); the drawing data gains the stern outlines. 106 of 177 case designs move, every new self-propelled one. On a 110 x 11.4 m hull: a gas hull (transom) takes Cb 0.927 (was 0.85); fully pressurised propane then carries 2,257 t (was 1,821 t) in a 9.64 m tank (was 8.64 m), which now passes stability; LNG keeps its cargo but fails light-condition stability (angle of max GZ 24 degrees, under 25), so no arrangement passes and the closest is shown; bauxite on a 4.0 m depth (tunnel) takes Cb 0.906 and carries 3,532 t (was 3,273 t), laden trim 0.77 m by the bow (was 2.03 m). In the case set two designs turn infeasible, both on light-condition stability: gas on 90 x 14 m and one tank liquid pressure sweep. A barge and a file saved before keep 0.85 and their results. No sourced test changed; new sourced test `crates/ovcd-core/tests/stern_form.rs`. The before/after table is under "Design changes" below.
 
 ## 0.2.3 (2026-10-16)
 
@@ -152,6 +153,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/350-stern-form (2026-10-21)
+
+Between `main b2e943f` and `this branch 3a9a9aa`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived bulk 1 (88x16.3) | `checks[9].message` | hopper intact GM 2.97 m >= 0.15 m (first-order; KG_light @0.5D) | hopper intact GM 2.86 m >= 0.15 m (first-order; KG_light @0.5D) | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `geometry.propeller_d_max_m` | absent | 3.44 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `geometry.propeller_diameter_m` | absent | 3.44 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `geometry.stern_form` | absent | tunnel | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `geometry.stern_run_length_m` | absent | 34.643 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `geometry.stern_transom_height_m` | absent | 0 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `checks[9].message` | hopper intact GM 2.67 m >= 0.15 m (first-order; KG_light @0.5D) | hopper intact GM 2.73 m >= 0.15 m (first-order; KG_light @0.5D) | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `geometry.propeller_d_max_m` | absent | 3.44 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `geometry.propeller_diameter_m` | absent | 3.44 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `geometry.stern_form` | absent | tunnel | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `geometry.stern_run_length_m` | absent | 34.643 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `geometry.stern_transom_height_m` | absent | 0 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `checks[9].message` | hopper intact GM 3.13 m >= 0.15 m (first-order; KG_light @0.5D) | hopper intact GM 3.20 m >= 0.15 m (first-order; KG_light @0.5D) | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `geometry.propeller_d_max_m` | absent | 3.44 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `geometry.propeller_diameter_m` | absent | 3.44 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `geometry.stern_form` | absent | tunnel | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `geometry.stern_run_length_m` | absent | 35.948 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `geometry.stern_transom_height_m` | absent | 0 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[12].message` | GM 3.84 m (fluid), max GZ 1.59 m at 26° | GM 3.08 m (fluid), max GZ 1.15 m at 25° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[13].message` | GM 5.55 m (fluid), max GZ 2.27 m at 27° | GM 4.65 m (fluid), max GZ 1.96 m at 26° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[14].message` | GM 9.80 m (fluid), max GZ 3.06 m at 29° | GM 8.87 m (fluid), max GZ 2.89 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[8].message` | raised eye 13.35 m >= obstruction 13.26 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.35 m >= obstruction 14.43 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `geometry.propeller_d_max_m` | absent | 2.73 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `geometry.propeller_diameter_m` | absent | 2.73 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `geometry.stern_form` | absent | transom | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `geometry.stern_rake_length_m` | absent | 5.7 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `geometry.stern_run_length_m` | absent | 5.7 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `geometry.stern_transom_height_m` | absent | 4.2 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `warnings[0]` | Sightline needs 6.41 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 7.58 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].message` | GM 3.40 m (fluid), max GZ 1.29 m at 26° | GM 3.87 m (fluid), max GZ 1.62 m at 26° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[13].message` | GM 5.04 m (fluid), max GZ 2.12 m at 27° | GM 5.77 m (fluid), max GZ 2.32 m at 27° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | GM 9.71 m (fluid), max GZ 3.05 m at 29° | GM 10.93 m (fluid), max GZ 3.15 m at 27° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `geometry.propeller_d_max_m` | absent | 2.73 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `geometry.propeller_diameter_m` | absent | 2.73 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `geometry.stern_form` | absent | transom | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `geometry.stern_rake_length_m` | absent | 5.7 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `geometry.stern_run_length_m` | absent | 5.7 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `geometry.stern_transom_height_m` | absent | 4.2 | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[12].message` | GM 5.38 m (fluid), max GZ 2.15 m at 27° | GM 6.00 m (fluid), max GZ 2.46 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[13].message` | GM 7.71 m (fluid), max GZ 2.96 m at 28° | GM 8.67 m (fluid), max GZ 3.14 m at 28° | changed |
+| ... | 25172 more changed quantities | | | |
 
 ### ticket/349-trim (2026-10-21)
 

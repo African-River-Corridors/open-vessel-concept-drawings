@@ -137,8 +137,8 @@ fn fill_writes_a_left_out_input_in_with_a_warning() {
     assert!(
         has(
             &w,
-            "`block_coefficient` was not stored in the file; wrote in the Defaults Profile value \
-             0.85, marked default"
+            "`max_speed_kn` was not stored in the file; wrote in the Defaults Profile value \
+             10, marked default"
         ),
         "{w:?}"
     );
@@ -185,7 +185,7 @@ fn a_profile_edit_never_changes_the_inputs_of_a_filled_file() {
         .unwrap()
         .to_text();
     let edited = edited_profile(|p| {
-        p["inputs"]["block_coefficient"]["default"] = json!(0.9);
+        p["inputs"]["max_speed_kn"]["default"] = json!(12.0);
         p["inputs"]["min_freeboard_m"]["default"] = json!(0.5);
     })
     .unwrap();
@@ -194,8 +194,8 @@ fn a_profile_edit_never_changes_the_inputs_of_a_filled_file() {
     assert!(after.report.is_ok(), "{:?}", after.report);
     assert_eq!(after.design.unwrap(), before);
     assert_eq!(
-        before.options[0].input("block_coefficient").unwrap().value,
-        json!(0.85)
+        before.options[0].input("max_speed_kn").unwrap().value,
+        json!(10.0)
     );
 }
 
@@ -429,16 +429,20 @@ fn an_edited_profile_range_changes_warnings_but_never_the_stored_inputs() {
     let profile = Profile::built_in();
     let saved = new_design(&profile).unwrap().to_text();
     let mut p: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
-    p["inputs"]["block_coefficient"]["default"] = json!(0.9);
-    p["inputs"]["block_coefficient"]["soft"] = json!({ "min": 0.88, "max": 1.0 });
+    p["inputs"]["max_speed_kn"]["default"] = json!(12.0);
+    p["inputs"]["max_speed_kn"]["soft"] = json!({ "min": 11.0, "max": 14.0 });
     let edited = Profile::from_json(&p.to_string()).unwrap();
     let a = check(&saved, &profile).design.unwrap();
     let checked = check(&saved, &edited);
     assert_eq!(checked.design.unwrap(), a);
-    assert!(has(
-        &checked.report.warnings,
-        "`block_coefficient` = 0.85 is outside"
-    ));
+    assert!(
+        has(
+            &checked.report.warnings,
+            "`max_speed_kn` = 10 kn is outside"
+        ),
+        "{:?}",
+        checked.report.warnings
+    );
 }
 
 #[test]

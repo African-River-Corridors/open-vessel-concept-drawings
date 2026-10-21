@@ -38,6 +38,7 @@ pub mod resistance;
 pub mod rule_trace;
 pub mod rules;
 pub mod squat;
+pub mod stern_form;
 pub mod tanks;
 pub mod text;
 mod unprintable;
