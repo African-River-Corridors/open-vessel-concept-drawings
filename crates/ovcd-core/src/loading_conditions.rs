@@ -153,7 +153,12 @@ impl GroupFills {
                         SpaceKind::DoubleBottomBallast => self.double_bottom,
                         SpaceKind::PeakBallast => self.peak,
                         SpaceKind::WingBallast => self.wing,
-                        SpaceKind::Consumables => 0.0,
+                        // Not ballast: a ballast plan never fills them.
+                        SpaceKind::Consumables
+                        | SpaceKind::CargoTank
+                        | SpaceKind::Slop
+                        | SpaceKind::Cofferdam
+                        | SpaceKind::PumpRoom => 0.0,
                     };
                     (t.name.clone(), f)
                 })

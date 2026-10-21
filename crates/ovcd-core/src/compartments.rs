@@ -16,7 +16,7 @@ use crate::barge_capacity::{BargeCapacityInputs, BargeCapacityResult};
 use crate::box_stability::{area_centroid, clip_below};
 use crate::cargo::CargoClass;
 
-/// What a Space holds. The crude oil module adds its own kinds (#330).
+/// What a Space holds. The liquid bulk module adds the cargo kinds (#330).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SpaceKind {
     /// A double-bottom water ballast tank.
@@ -28,6 +28,14 @@ pub enum SpaceKind {
     PeakBallast,
     /// A tank of stores and fuel (consumable liquids).
     Consumables,
+    /// A cargo tank (the liquid bulk module).
+    CargoTank,
+    /// A slop tank: tank washings and oily residues, not cargo.
+    Slop,
+    /// A cofferdam: an empty space that separates the cargo tanks from the rest of the hull.
+    Cofferdam,
+    /// A pump room: the cargo pumps below deck.
+    PumpRoom,
 }
 
 impl SpaceKind {
@@ -37,6 +45,10 @@ impl SpaceKind {
             SpaceKind::WingBallast => "wing_ballast",
             SpaceKind::PeakBallast => "peak_ballast",
             SpaceKind::Consumables => "consumables",
+            SpaceKind::CargoTank => "cargo_tank",
+            SpaceKind::Slop => "slop",
+            SpaceKind::Cofferdam => "cofferdam",
+            SpaceKind::PumpRoom => "pump_room",
         }
     }
 
@@ -66,14 +78,14 @@ impl Side {
         }
     }
 
-    fn sign(self) -> f64 {
+    pub(crate) fn sign(self) -> f64 {
         match self {
             Side::Port => -1.0,
             Side::Starboard | Side::Centre => 1.0,
         }
     }
 
-    fn letter(self) -> &'static str {
+    pub(crate) fn letter(self) -> &'static str {
         match self {
             Side::Port => "P",
             Side::Starboard => "S",
@@ -219,12 +231,12 @@ fn chord_inertia(poly: &[(f64, f64)], level: f64) -> f64 {
 }
 
 /// A rectangle section from `y0` to `y1` (|y|, outboard positive) and `z0` to `z1`, on `side`.
-fn rect(side: Side, y0: f64, y1: f64, z0: f64, z1: f64) -> Vec<(f64, f64)> {
+pub(crate) fn rect(side: Side, y0: f64, y1: f64, z0: f64, z1: f64) -> Vec<(f64, f64)> {
     poly(side, &[(y0, z0), (y1, z0), (y1, z1), (y0, z1)])
 }
 
 /// Mirror |y| corners to `side`, keeping the corners counter-clockwise in the (y, z) plane.
-fn poly(side: Side, corners: &[(f64, f64)]) -> Vec<(f64, f64)> {
+pub(crate) fn poly(side: Side, corners: &[(f64, f64)]) -> Vec<(f64, f64)> {
     let mut out: Vec<(f64, f64)> = corners.iter().map(|&(y, z)| (side.sign() * y, z)).collect();
     if side == Side::Port {
         out.reverse();
