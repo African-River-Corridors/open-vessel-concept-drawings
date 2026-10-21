@@ -209,6 +209,22 @@ describe("OVCD web smoke tests", () => {
     assert.equal((await b.$$("[data-testid=message-list] li")).length, total, "the list shows them all");
     await (await b.$("button=Less")).click();
     assert.equal(await (await b.$("[data-testid=message-list]")).isExisting(), false);
+    if (SHOTS) {
+      // For review (issue #436): the bar and its open list, light and dark, desktop and phone width.
+      fs.mkdirSync(SHOTS, { recursive: true });
+      for (const [w, h, size] of [[1500, 950, "desktop"], [390, 844, "phone"]]) {
+        await b.setWindowSize(w, h);
+        for (const [i, theme] of [[1, "light"], [2, "dark"]]) {
+          await (await b.$$(".theme button"))[i].click();
+          await new Promise((r) => setTimeout(r, 300));
+          await b.saveScreenshot(path.join(SHOTS, `436-${size}-${theme}-bar.png`));
+          await (await b.$("button=All")).click();
+          await b.saveScreenshot(path.join(SHOTS, `436-${size}-${theme}-list.png`));
+          await (await b.$("button=Less")).click();
+        }
+      }
+      await b.setWindowSize(1500, 950);
+    }
     // Keep a copy, then delete the Option the notes are about: its notes go with it.
     await (await b.$("button=Duplicate")).click();
     await until(b, "two Options", async () => (await b.$$('select[aria-label="Active Option"] option')).length === 2);
