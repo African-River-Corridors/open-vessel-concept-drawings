@@ -5,7 +5,7 @@
 //! the Option's cost-rate inputs. Nothing here feeds `simulate`: the budget is an output, kept out of the results hash
 //! (`UNHASHED_KEYS`), so saved Designs keep their hashes.
 
-use crate::vdesign::{COST_RATES_BASIS, DesignOption};
+use crate::vdesign::{COST_RATES_BASIS, COST_RATES_BASIS_USER, DesignOption, Source};
 use ovcd_core::barge_cost::{BargeCostInputs, BargeCostRates, BargeCostResult, compute_for};
 use ovcd_core::models::WeightBreakdown;
 use serde_json::{Value, json};
@@ -162,7 +162,18 @@ fn rows(list: &[(&str, ovcd_core::pyint::PyInt)]) -> Value {
     )
 }
 
-fn result_json(r: &BargeCostResult, masses: &Value, tug: bool) -> Value {
+/// Which rates the budget uses (issue #404): `example` while every rate is the Defaults Profile's
+/// (the example file's), `user` once any rate is typed.
+fn rates_kind(option: &DesignOption) -> &'static str {
+    let typed = RATE_INPUTS.iter().any(|(name, _)| {
+        option
+            .input(name)
+            .is_some_and(|i| i.source != Source::Default)
+    });
+    if typed { "user" } else { "example" }
+}
+
+fn result_json(r: &BargeCostResult, masses: &Value, tug: bool, rates: &str) -> Value {
     // With no tug its hull steel is not costed, so it is not listed (issue #403).
     let mut masses = masses.clone();
     if !tug {
@@ -175,7 +186,8 @@ fn result_json(r: &BargeCostResult, masses: &Value, tug: bool) -> Value {
     }
     json!({
         "currency": r.rates.currency,
-        "basis": COST_RATES_BASIS,
+        "rates": rates,
+        "basis": if rates == "user" { COST_RATES_BASIS_USER } else { COST_RATES_BASIS },
         "barge": rows(&r.barge_breakdown),
         "tug": rows(&r.tug_breakdown),
         "barge_subtotal": money(&r.barge_subtotal),
@@ -202,7 +214,7 @@ pub fn cost_of(option: &DesignOption, results: &Value) -> Value {
     // Only a Formation with a tug costs one (issue #403): a self-propelled vessel has none.
     let tug = has_tug(option);
     match compute_for(&inputs, &rates, tug) {
-        Ok(r) => result_json(&r, masses, tug),
+        Ok(r) => result_json(&r, masses, tug, rates_kind(option)),
         Err(_) => Value::Null,
     }
 }

@@ -253,3 +253,65 @@ fn round_is_half_to_even_and_exact_at_any_size() {
     assert_eq!(round(f64::INFINITY), Err(RoundError::Infinity));
     assert_eq!(round(f64::NEG_INFINITY), Err(RoundError::Infinity));
 }
+
+// --- Issue #404: the mass check covers every priced mass. ---
+
+fn masses_ok(inp: &BargeCostInputs) -> bool {
+    let r = compute(inp, &example_rates().unwrap()).unwrap();
+    r.checks
+        .iter()
+        .find(|c| c.name == "masses_positive")
+        .unwrap()
+        .ok
+}
+
+#[test]
+fn the_mass_check_fails_when_any_required_mass_is_missing() {
+    assert!(masses_ok(&BargeCostInputs::default()));
+    let zero: [fn(&mut BargeCostInputs); 6] = [
+        |m| m.hull_steel_t = 0.0,
+        |m| m.tank_shell_t = 0.0,
+        |m| m.tank_supports_t = 0.0,
+        |m| m.insulation_t = 0.0,
+        |m| m.piping_machinery_t = 0.0,
+        |m| m.outfitting_t = 0.0,
+    ];
+    for (i, set) in zero.iter().enumerate() {
+        let mut m = BargeCostInputs::default();
+        set(&mut m);
+        assert!(!masses_ok(&m), "required mass {i} at 0 passed");
+    }
+}
+
+#[test]
+fn the_mass_check_allows_a_design_without_the_optional_masses_but_not_a_negative_or_nan_one() {
+    let none = BargeCostInputs {
+        wing_plate_t: 0.0,
+        weather_shield_t: 0.0,
+        tug_hull_steel_t: 0.0,
+        battery_kwh: 0.0,
+        propulsion_kw: 0.0,
+        ..BargeCostInputs::default()
+    };
+    assert!(masses_ok(&none));
+    let bad: [fn(&mut BargeCostInputs); 3] = [
+        |m| m.weather_shield_t = -1.0,
+        |m| m.battery_kwh = f64::NAN,
+        |m| m.insulation_t = f64::NAN,
+    ];
+    for (i, set) in bad.iter().enumerate() {
+        let mut m = BargeCostInputs::default();
+        set(&mut m);
+        // A NaN mass cannot be rounded, so the budget fails before its checks; either way no pass.
+        let passed = compute(&m, &example_rates().unwrap())
+            .map(|r| {
+                r.checks
+                    .iter()
+                    .find(|c| c.name == "masses_positive")
+                    .unwrap()
+                    .ok
+            })
+            .unwrap_or(false);
+        assert!(!passed, "bad mass {i} passed");
+    }
+}

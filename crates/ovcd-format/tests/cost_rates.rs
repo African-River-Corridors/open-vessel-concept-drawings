@@ -7,7 +7,7 @@
 //! of its parts, a hash does not move). No number here is a printed result.
 
 use ovcd_core::barge_cost::example_rates;
-use ovcd_format::vdesign::{INPUTS, LEGACY_FIXED_INPUTS};
+use ovcd_format::vdesign::{COST_RATES_BASIS, COST_RATES_BASIS_USER, INPUTS, LEGACY_FIXED_INPUTS};
 use ovcd_format::{
     DesignSession, HashStatus, Profile, RunOutcome, UNHASHED_KEYS, check, input_schema,
     results_hash,
@@ -392,4 +392,22 @@ fn a_pushed_gas_option_keeps_the_tug_line() {
     );
     assert!(cost["tug_subtotal"].as_f64().unwrap() > 0.0);
     assert!(!items(&cost, "barge").contains(&"battery".to_string()));
+}
+
+#[test]
+fn typed_rates_change_the_basis_line() {
+    // Issue #404: "Example rates" only while every rate is the example file's.
+    let mut s = open(&raw_fixture("gas_igc_2g_exact"));
+    let cost = results(&s, 0)["cost"].clone();
+    assert_eq!(cost["rates"], json!("example"));
+    assert_eq!(cost["basis"], json!(COST_RATES_BASIS));
+    let first = s.design().options[0].name.clone();
+    s.set_input(&first, "piping_rate", json!(4500.0)).unwrap();
+    let cost = results(&s, 0)["cost"].clone();
+    assert_eq!(
+        cost["rates"],
+        json!("user"),
+        "a typed rate, even at the example value"
+    );
+    assert_eq!(cost["basis"], json!(COST_RATES_BASIS_USER));
 }

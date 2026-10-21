@@ -334,6 +334,28 @@ impl ComputeError {
     }
 }
 
+/// Every priced mass is there (issue #404; it tested only the tank shell and the hull steel): the
+/// masses every gas barge has are positive, and the ones a design may lack (a wing plate, a weather
+/// shield, a battery, propulsion, a tug hull) are zero or more. A NaN fails.
+fn masses_present(inp: &BargeCostInputs) -> bool {
+    let required = [
+        inp.hull_steel_t,
+        inp.tank_shell_t,
+        inp.tank_supports_t,
+        inp.insulation_t,
+        inp.piping_machinery_t,
+        inp.outfitting_t,
+    ];
+    let optional = [
+        inp.wing_plate_t,
+        inp.weather_shield_t,
+        inp.tug_hull_steel_t,
+        inp.battery_kwh,
+        inp.propulsion_kw,
+    ];
+    required.iter().all(|m| *m > 0.0) && optional.iter().all(|m| *m >= 0.0)
+}
+
 fn py_round(x: f64) -> Result<PyInt, ComputeError> {
     pyint::round(x).map_err(ComputeError)
 }
@@ -389,16 +411,10 @@ pub fn compute_for(
     let margin = rt.yard_margin_fraction * (b_sub + t_sub);
     let total = b_sub + t_sub + margin + rt.delivery_lump;
 
-    // Python `min(a, b)` returns `a` unless `b < a`.
-    let lightest = if inp.tank_shell_t < inp.hull_steel_t {
-        inp.tank_shell_t
-    } else {
-        inp.hull_steel_t
-    };
     let checks = alloc::vec![
         Check::new(
             "masses_positive",
-            lightest > 0.0,
+            masses_present(inp),
             text!("check-masses-positive", "mass-model inputs present")
         ),
         Check::with_severity(
