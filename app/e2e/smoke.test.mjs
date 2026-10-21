@@ -603,12 +603,12 @@ describe("OVCD app smoke tests", () => {
     });
   }
 
-  it("has a Cost rates group with its basis, 14 inputs and the example values", async () => {
+  it("has a Cost rates group with its basis, 16 inputs and the example values", async () => {
     await open(path.join(FIXTURES, "gas_igc_2g_exact.vdesign"), "gas_igc_2g_exact.vdesign");
     const group = await browser.$("//details[summary[normalize-space()='Cost rates']]");
     assert.ok(await group.isExisting(), "the group is in the left panel");
     assert.match(await group.$("[data-testid=group-note]").getText(), /^Example rates . replace with yours\.$/);
-    assert.equal((await group.$$(".field")).length, 14);
+    assert.equal((await group.$$(".field")).length, 16);
     await until("the example rate", async () => (await (await field("Hull steel rate")).getValue()) === "2500");
     assert.equal(await (await field("Yard margin")).getValue(), "0.1");
     await browser.execute(() => document.querySelector("[data-testid=group-note]").scrollIntoView({ block: "start" }));
