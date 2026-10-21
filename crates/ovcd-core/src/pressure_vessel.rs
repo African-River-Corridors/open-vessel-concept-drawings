@@ -211,6 +211,26 @@ fn py_ceil(x: f64) -> Result<f64, PyError> {
     Ok(libm::ceil(x))
 }
 
+/// The allowable dynamic membrane stress of IGC 4.23.1.2 for ferritic-perlitic, martensitic and
+/// austenitic steel, double amplitude at Q = 10^-8 (MPa).
+pub const IGC_DYNAMIC_STRESS_STEEL_MPA: f64 = 55.0;
+
+/// The second term of the IGC 4.23.1.2 minimum design vapour pressure, `A C (rho_r)^1.5` in MPa, so
+/// that `Po = 0.2 + this`. `A = 0.00185 (sigma_m / 55)^2` for a steel tank, `C` the greatest of
+/// `h`, `0.75 b` and `0.45 l` (a horizontal cylinder: `h` and `b` are the diameter, `l` the overall
+/// length), `rho_r` the relative density of the cargo at the design temperature.
+pub fn igc_dynamic_pressure_term_mpa(
+    sigma_m_mpa: f64,
+    diameter_m: f64,
+    length_m: f64,
+    relative_density: f64,
+) -> f64 {
+    let ratio = sigma_m_mpa / IGC_DYNAMIC_STRESS_STEEL_MPA;
+    let a = 0.00185 * ratio * ratio;
+    let c = py_max(py_max(diameter_m, 0.75 * diameter_m), 0.45 * length_m);
+    a * c * libm::pow(relative_density, 1.5)
+}
+
 /// ASME UG-27 circumferential stress formula for cylindrical shells: t = P R / (f E - 0.6 P).
 pub fn cylinder_wall_thickness(
     design_pressure_mpa: f64,

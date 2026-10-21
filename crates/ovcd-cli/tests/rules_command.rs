@@ -127,10 +127,12 @@ fn a_rule_set_changes_no_result_and_shows_in_the_trace() {
     assert_eq!(pr, wr);
     let trace = &wo["results"]["rule_trace"];
     // The default stack of a gas Option, then the loaded set.
+    // (the igc-2g version is the one the file stores)
+    let sets = trace["rule_sets"].as_array().unwrap();
+    assert!(sets[0].as_str().unwrap().starts_with("igc-2g@1."));
     assert_eq!(
-        trace["rule_sets"],
+        json!(sets[1..]),
         json!([
-            "igc-2g@1.0.0",
             "is2008-a@1.0.0",
             "lr-inland-gas@1.1.0",
             "ovcd@2.1.0",

@@ -1,7 +1,8 @@
 //! Seam: the built-in Rule Set `igc-2g` 1.0.0 (spec 0004, issue #271).
 //!
 //! Label: sourced - IGC Code, resolution MSC.370(93) as amended, 2.3.1.2.3, 2.4.1.1, 2.4.1.2, 2.4.2,
-//! 4.23.2.1.2, 4.23.2.1.3 and 4.23.3.1 (MSC.370-93.pdf, annex pp. 20-21, 64 and 66)
+//! 4.23.1.2, 4.23.2.1.2, 4.23.2.1.3, 4.23.3.1 and Table 6.3 (MSC.370-93.pdf, annex pp. 20-21, 63, 64,
+//! 66 and 98)
 
 use ovcd_core::pressure_vessel::{DEFAULT_WELD_EFFICIENCY, TANK_MATERIAL_DATABASE};
 use ovcd_core::protective_location::d_vc_exact;
@@ -224,14 +225,12 @@ fn every_gas_option_has_the_igc_rows_of_each_tank_and_the_is_code_rows() {
     ] {
         for results in results_of(file) {
             let trace = &results["rule_trace"];
+            // The igc-2g version is the one the file stores; the others are fixed here.
+            let sets = trace["rule_sets"].as_array().unwrap();
+            assert!(sets[0].as_str().unwrap().starts_with("igc-2g@1."), "{file}");
             assert_eq!(
-                trace["rule_sets"],
-                serde_json::json!([
-                    "igc-2g@1.0.0",
-                    "is2008-a@1.0.0",
-                    "lr-inland-gas@1.1.0",
-                    "ovcd@2.1.0"
-                ]),
+                serde_json::json!(sets[1..]),
+                serde_json::json!(["is2008-a@1.0.0", "lr-inland-gas@1.1.0", "ovcd@2.1.0"]),
                 "{file}"
             );
             let rows = trace["rows"].as_array().unwrap();
@@ -279,4 +278,177 @@ fn a_dry_bulk_option_does_not_get_the_igc_rows() {
                 .all(|r| !r["rule_sets"][0].as_str().unwrap().starts_with("igc-2g"))
         );
     }
+}
+
+// --- igc-2g 1.1.0: the minimum design pressure and the steel by design temperature (#317) ------------
+
+fn set_1_1() -> RuleSet {
+    Library::built_in()
+        .find("igc-2g", "1.1.0")
+        .expect("built in")
+        .clone()
+}
+
+#[test]
+fn version_1_1_0_adds_two_unverified_warn_rules_and_changes_none_of_1_0_0() {
+    let (old, new) = (set(), set_1_1());
+    for r in &old.rules {
+        let n = new.rule(&r.id).expect("kept");
+        assert_eq!(
+            ovcd_format::rule_set::rule_content_json(n),
+            ovcd_format::rule_set::rule_content_json(r),
+            "{}",
+            r.id
+        );
+    }
+    for id in [
+        "igc/4.23.1.2/min-design-pressure",
+        "igc/6.4.1.1/steel-design-temperature",
+        "igc/6.4.1.1/steel-by-approval",
+    ] {
+        let r = new.rule(id).unwrap();
+        assert_eq!(r.consequence, ovcd_core::rules::Consequence::Warn, "{id}");
+        assert_eq!(r.since, "1.1.0", "{id}");
+        assert!(
+            r.verified.is_none(),
+            "{id}: unverified until a second reader"
+        );
+    }
+    assert!(!new.rule("igc/6.4.1.1/steel-by-approval").unwrap().evaluated);
+}
+
+#[test]
+fn the_design_pressure_term_by_hand_and_at_both_sides_of_the_limit() {
+    // IGC 4.23.1.2, by hand: 9Ni, sigma_m = f = 230 MPa, a tank 10 m in diameter and 30 m long
+    // (C = max(10, 7.5, 13.5) = 13.5 m), LNG at 0.45 t/m3: A = 0.00185 (230 / 55)^2 = 0.032352,
+    // A C rho^1.5 = 0.131842 MPa, so Po = 0.331842 MPa.
+    let term = ovcd_core::pressure_vessel::igc_dynamic_pressure_term_mpa(230.0, 10.0, 30.0, 0.45);
+    assert!((term - 0.131_842_236_213_664_66).abs() < 1e-12, "{term}");
+    // The longer tank sets C: 12 m long gives 0.45 x 12 = 5.4 m, below the 8 m diameter.
+    let term =
+        ovcd_core::pressure_vessel::igc_dynamic_pressure_term_mpa(770.0 / 3.0, 8.0, 12.0, 0.58);
+    assert!((term - 0.142_369_600_919_824_65).abs() < 1e-12, "{term}");
+    // The Rule: at-least 0.2 + term, compared ge.
+    let s = set_1_1();
+    let rule = s.rule("igc/4.23.1.2/min-design-pressure").unwrap();
+    let Some(Limit::Formula {
+        shape,
+        coefficients,
+        ..
+    }) = &rule.limit
+    else {
+        panic!("a formula");
+    };
+    let po = formula_value(shape, coefficients, |_| Ok(0.131_842_236_213_664_66)).unwrap();
+    assert!((po - 0.331_842_236_213_664_6).abs() < 1e-12, "{po}");
+    assert!(holds(Compare::Ge, po, po, 0.0));
+    assert!(!holds(Compare::Ge, po - 1e-6, po, 0.0));
+    // A tank with no dynamic term still needs 0.2 MPa.
+    assert_eq!(
+        formula_value(shape, coefficients, |_| Ok(0.0)).unwrap(),
+        0.2
+    );
+}
+
+#[test]
+fn the_steel_rule_covers_the_tabled_steels_and_names_the_one_that_is_by_approval() {
+    // Table 6.3: 9 % Ni and austenitic steels down to -165 C. S690QL1 has a yield stress of 690
+    // N/mm2, above the 410 N/mm2 of Tables 6.1 and 6.2 (note 5: by approval).
+    let s = set_1_1();
+    let rule = s.rule("igc/6.4.1.1/steel-design-temperature").unwrap();
+    let Some(Limit::Constant { value, .. }) = &rule.limit else {
+        panic!("a constant");
+    };
+    assert_eq!(*value, -165.0);
+    assert!(holds(Compare::Ge, -165.0, *value, 0.0));
+    assert!(!holds(Compare::Ge, -165.1, *value, 0.0));
+    assert_eq!(
+        rule.applies_when.conditions,
+        vec![(
+            "tank_material".to_string(),
+            vec!["9Ni".into(), "304L".into(), "316L".into()]
+        )]
+    );
+    let approval = s.rule("igc/6.4.1.1/steel-by-approval").unwrap();
+    assert_eq!(
+        approval.applies_when.conditions,
+        vec![("tank_material".to_string(), vec!["S690QL1".to_string()])]
+    );
+    assert!(approval.gap.as_deref().unwrap().contains("410"));
+    // Every material the engine has is covered by exactly one of the two.
+    for (key, _) in TANK_MATERIAL_DATABASE.iter() {
+        let n = [rule, approval]
+            .iter()
+            .filter(|r| r.applies_when.conditions[0].1.iter().any(|m| m == key))
+            .count();
+        assert_eq!(n, 1, "{key}");
+    }
+}
+
+/// A new gas Option on `cargo` (with `carriage` for an LPG Cargo), run on the default stack.
+fn new_gas_results(cargo: &str, carriage: &str) -> Value {
+    let mut inputs = serde_json::json!({
+        "cargo": { "value": cargo, "source": "typed" },
+        "hull_form": { "value": "raked_box", "source": "typed" },
+        "formation": { "value": { "kind": "self_propelled" }, "source": "typed" },
+        "length_overall_m": { "value": 110.0, "source": "typed" },
+        "beam_m": { "value": 11.4, "source": "typed" },
+        "moulded_depth_m": { "value": 6.0, "source": "typed" }
+    });
+    if !carriage.is_empty() {
+        inputs["lpg_carriage_condition"] =
+            serde_json::json!({ "value": carriage, "source": "typed" });
+    }
+    let file = serde_json::json!({
+        "format": "vdesign", "format_version": 3, "engine_version": "0.2.4", "units": "SI",
+        "options": [{ "name": "Option 1", "inputs": inputs }]
+    });
+    let filled = ovcd_format::fill_as_new(&file.to_string(), &ovcd_format::Profile::built_in());
+    assert_eq!(
+        filled.report.errors,
+        Vec::<String>::new(),
+        "{cargo} {carriage}"
+    );
+    let design = filled.design.unwrap();
+    match ovcd_format::run_option(&design.options[0]) {
+        ovcd_format::RunOutcome::Results { results, .. } => results,
+        other => panic!("{cargo} {carriage}: {other:?}"),
+    }
+}
+
+#[test]
+fn every_default_gas_design_meets_the_new_rules_or_says_why_it_does_not() {
+    // Defaults coherence (spec 0004): a default that breaks a Rule is a finding, never a silent pass.
+    // The steel Rule passes for 9Ni, 304L and 316L; S690QL1 (fully pressurised LPG) is `not
+    // evaluated`. The pressure Rule passes for every default but the fully refrigerated LPG ones:
+    // their default design pressure, 0.4 MPa, is an estimate (the profile says so) and is below
+    // Po = 0.2 + A C (rho_r)^1.5 for a large tank, with sigma_m taken as the allowable stress (#317).
+    let mut below: Vec<String> = Vec::new();
+    for [(_, _), (_, cargo), (_, carriage)] in ovcd_format::vdesign::table_combinations() {
+        let results = new_gas_results(&cargo, &carriage);
+        let rows = results["rule_trace"]["rows"].as_array().unwrap();
+        let outcomes = |id: &str| -> Vec<String> {
+            rows.iter()
+                .filter(|r| r["rule"] == id && r["outcome"] != "not applicable")
+                .map(|r| r["outcome"].as_str().unwrap().to_string())
+                .collect()
+        };
+        let pressure = outcomes("igc/4.23.1.2/min-design-pressure");
+        assert!(!pressure.is_empty(), "{cargo} {carriage}: no pressure rows");
+        if pressure.iter().any(|o| o != "pass") {
+            below.push(format!("{cargo} {carriage}"));
+        }
+        let steel = outcomes("igc/6.4.1.1/steel-design-temperature");
+        let approval = outcomes("igc/6.4.1.1/steel-by-approval");
+        assert!(
+            steel.iter().all(|o| o == "pass") && approval.iter().all(|o| o == "not evaluated"),
+            "{cargo} {carriage}: {steel:?} {approval:?}"
+        );
+        assert!(steel.len() + approval.len() >= 1, "{cargo} {carriage}");
+    }
+    eprintln!("below the IGC 4.23.1.2 minimum: {below:?}");
+    assert!(
+        below.iter().all(|b| b.ends_with("fully_refrigerated")),
+        "{below:?}"
+    );
 }
