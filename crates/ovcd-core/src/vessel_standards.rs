@@ -229,7 +229,8 @@ pub fn validate_catalogue(catalogue: &[(String, VesselStandard)]) -> Vec<Check> 
         if bad.is_empty() {
             text!(
                 "check-convoy-beam-consistent",
-                "convoy beam = unit beam x n_abreast"
+                "convoy beam = unit beam x n_abreast (an identity for the built-in catalogue, which \
+                 has no independent unit beam)"
             )
         } else {
             text!(

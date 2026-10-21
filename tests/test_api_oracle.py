@@ -29,6 +29,9 @@ API = json.loads((DATA / "public_api.json").read_text(encoding="utf-8"))
 # Scenarios whose answer is allowed to differ from 0.1.0, with the reason. Each is listed as a
 # known change in CHANGELOG.md.
 KNOWN_DIFFERENCES: dict = {
+    # Issue #432: the convoy beam check says it is an identity for the built-in catalogue.
+    "vessel_standards": "issue #432: the convoy beam check message names the identity",
+    "vessel_standards.custom_catalogue": "issue #432: the convoy beam check message names the identity",
     # Issue #414: the stern rake's LCB was mirrored (integrated from x = 0 forward); 0.1.0 gave the
     # mirror value. Only a hull with a stern rake moves; no Design has one.
     "hull.methods": "issue #414: the stern rake LCB is no longer mirrored",
