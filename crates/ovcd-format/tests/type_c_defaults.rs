@@ -270,10 +270,15 @@ fn the_table_values_reach_the_results_and_the_wall_is_the_formula_on_the_steel_d
             (inner - (steel - 2.0 * wall / 1000.0)).abs() < 1e-9,
             "{cargo} {carriage}"
         );
-        // The wall is the formula on the steel diameter, with the material's allowance and stress.
+        // The wall is the formula on the steel diameter, with the material's allowance and stress,
+        // at the design pressure plus the liquid pressure (issue #374).
+        assert!(
+            num(&tank["liquid_pressure_mpa"]) > 0.0,
+            "{cargo} {carriage}"
+        );
         let (cyl, head) = calculate_wall_thicknesses_with(
             steel,
-            num(&tank["design_pressure_mpa"]),
+            num(&tank["internal_pressure_mpa"]),
             tank["material"].as_str().unwrap(),
             "hemisphere",
             0.95,

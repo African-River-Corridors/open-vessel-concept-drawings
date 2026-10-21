@@ -104,6 +104,12 @@ pub const ALLOWABLE_STRESS_BASES: &[&str] = &["igc_4_23_3_1", "published_design"
 /// fill ratio, in every carriage condition; a file that names no basis keeps it.
 pub const LOADING_LIMIT_BASES: &[&str] = &["igc_15_1_3", "igc_15_5_2", "refrigerated_density"];
 
+/// How the design liquid pressure joins the wall formula (issue #374): `static`, gravity only
+/// (a = 1; the default); `igc_4_28_2`, the IGC 4.28.2 guidance vertical acceleration (North
+/// Atlantic, ships over 50 m, at `max_speed_kn`); `none`, the vapour pressure only, what the
+/// engine did before. A file that names none keeps `none`, so its results do not change.
+pub const LIQUID_PRESSURE_BASES: &[&str] = &["static", "igc_4_28_2", "none"];
+
 /// The tank insulation types. `unspecified` is the generic insulation the engine used before the
 /// type was an input; the density is the one value (60 kg/m3) for every type.
 pub const INSULATION_TYPES: &[&str] = &["unspecified", "none", "pu_foam", "panel"];
@@ -689,6 +695,12 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::Only("type_c_tanks"),
         value: "\"refrigerated_density\"",
     },
+    // Issue #374: a file saved before the liquid pressure keeps the vapour pressure only.
+    LegacyFixedJson {
+        name: "tank_liquid_pressure",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        value: "\"none\"",
+    },
     // Issue #313: a file saved before the IGC allowable stress keeps the stress it was worked with.
     LegacyFixedJson {
         name: "tank_allowable_stress_basis",
@@ -864,6 +876,8 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("316L", "316L stainless steel"),
     ("9Ni", "9 % nickel steel"),
     ("S690QL1", "S690QL1 quenched and tempered steel"),
+    ("static", "Static (a = 1), IGC 4.28.1.2"),
+    ("igc_4_28_2", "IGC 4.28.2 sea-going accelerations"),
     ("igc_4_23_3_1", "IGC 4.23.3.1: lesser of Rm/A and Re/B"),
     ("igc_15_1_3", "IGC 15.1.3 reference temperature (default)"),
     ("igc_15_5_2", "IGC 15.5.2: 45 C reference when pressurised"),
@@ -1173,6 +1187,13 @@ pub const INPUTS: &[InputSpec] = &[
         "tank_material",
         "Tank material",
         InputKind::Choice(TANK_MATERIALS),
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_liquid_pressure",
+        "Tank liquid pressure",
+        InputKind::Choice(LIQUID_PRESSURE_BASES),
         "type_c_tanks",
         Group::GasTanks,
     ),

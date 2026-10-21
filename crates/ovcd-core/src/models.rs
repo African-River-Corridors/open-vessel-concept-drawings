@@ -93,6 +93,12 @@ pub struct BargeInputs {
     pub tank_material_density: f64,
     /// Design pressure (MPa)
     pub design_pressure: f64,
+    /// Issue #374: the dimensionless acceleration a of the IGC 4.28.1.2 liquid pressure, Pgd =
+    /// a x Z x rho / 1.02e5 MPa, added to the design pressure in the wall formula (IGC 4.23.2.2,
+    /// 4.13.2.4). `None`: the vapour pressure only, as the original engine did.
+    pub liquid_pressure_accel: Option<f64>,
+    /// The cargo density rho of the liquid pressure (kg/m^3): the largest at the design temperature.
+    pub liquid_pressure_density: f64,
     /// Weld joint efficiency (0.85-1.0)
     pub weld_efficiency: f64,
     /// Internal stiffeners, supports, saddles as multiple of shell weight
@@ -196,6 +202,8 @@ impl BargeInputs {
             tank_material: "9Ni".to_string(),
             tank_allowable_stress: None,
             wall_formula_on_steel_diameter: false,
+            liquid_pressure_accel: None,
+            liquid_pressure_density: 0.0,
             tank_material_density: 7.85,
             design_pressure: 0.5,
             weld_efficiency: 0.95,
