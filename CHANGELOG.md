@@ -212,7 +212,7 @@ a change can be traced later. Newest first.
 
 ### ticket/410-covering-lightship (2026-10-21)
 
-Between `main aa5fe5a` and `this branch 864f699`.
+Between `main c4c4d03` and `this branch cdf92bd`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -257,6 +257,7 @@ Between `main aa5fe5a` and `this branch 864f699`.
 | calibration taf-seine-2000 | `stability.limitations[1]` | No wind heel and no damage stability (ADN 9.3.1.15 / IGC 2.7 need both before approval). | No wind heel and no damage stability. Both are needed before approval: damage stability by ADN 9.3.1.15 and IGC 2.7, wind heel by the IS Code 2008 weather criterion (Part A 2.3). | changed |
 | calibration taf-seine-2008 | `stability.limitations[1]` | No wind heel and no damage stability (ADN 9.3.1.15 / IGC 2.7 need both before approval). | No wind heel and no damage stability. Both are needed before approval: damage stability by ADN 9.3.1.15 and IGC 2.7, wind heel by the IS Code 2008 weather criterion (Part A 2.3). | changed |
 | ... | 61617 more changed quantities | | | |
+
 ### ticket/421-one-air-draft-check (2026-10-21)
 
 Between `main aa5fe5a` and `this branch ff3cea1`.
