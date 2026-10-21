@@ -340,10 +340,11 @@ fn the_content_hash_changes_with_a_result_changing_field() {
 #[test]
 fn the_same_version_with_other_content_is_refused() {
     let mut lib = Library::built_in();
+    let built_in = lib.sets().len();
     assert_eq!(lib.add_text(EXAMPLE).unwrap(), "example@1.0.0");
     // The same file again is the same set.
     lib.add_text(EXAMPLE).unwrap();
-    assert_eq!(lib.sets().len(), 1);
+    assert_eq!(lib.sets().len(), built_in + 1);
     // A patch with only a new title is the same set too.
     let mut v = example();
     v["title"] = json!("Retitled");
