@@ -440,9 +440,11 @@ pub fn length_over_diameter_check(r: &BargeCapacityResult) -> Option<Check> {
 // cargo. When the rules engine (#176) lands, it replaces this list with the Design's selected rules.
 //
 // Cheap checks (run first, from numbers the search has already computed):
-//   - the capacity result's own checks: feasible geometry, not overloaded, freeboard, cargo zone,
-//     the aft arrangement (thrusters, containers, wheelhouse), the gas separation (protective
-//     location clearances), and the air draft limit of the light condition when one is set;
+//   - the capacity result's own checks: feasible geometry, cargo zone, the aft arrangement
+//     (thrusters, containers, wheelhouse), the gas separation (protective location clearances),
+//     and the air draft limit of the light condition when one is set. Not `not_overloaded` or
+//     `freeboard_ok` (`FULL_VOLUME_CHECKS`): they test the full tank volume, and a candidate is
+//     de-rated to its payload, so they do not gate (maintainer decision on issue #418);
 //   - the journey checks: the channel draught limit leaves a payload that floats;
 //   - `tank_length_over_diameter`: overall tank length over outer diameter, at most 7;
 //   - `freeboard_at_payload`: the hull depth less the carried draught, at least the required freeboard.
@@ -451,6 +453,11 @@ pub fn length_over_diameter_check(r: &BargeCapacityResult) -> Option<Check> {
 // A check of warning severity is advisory: it never gates (`all_ok`), as everywhere else.
 // ---------------------------------------------------------------------------------------------
 
+/// The capacity checks that test the full tank volume, not the carried payload. They are
+/// information: the search does not gate on them (issue #418). The carried draught is gated by
+/// `freeboard_at_payload` and the journey's `floats` check.
+pub const FULL_VOLUME_CHECKS: &[&str] = &["not_overloaded", "freeboard_ok"];
+
 /// The cheap checks of a candidate: see the list above.
 fn cheap_checks(
     r: &BargeCapacityResult,
@@ -458,7 +465,12 @@ fn cheap_checks(
     depth: f64,
     o: &FitOptions,
 ) -> Vec<Check> {
-    let mut all = r.checks.clone();
+    let mut all: Vec<Check> = r
+        .checks
+        .iter()
+        .filter(|c| !FULL_VOLUME_CHECKS.contains(&c.name.as_str()))
+        .cloned()
+        .collect();
     all.extend(j.checks.iter().cloned());
     all.extend(length_over_diameter_check(r));
     let freeboard = depth - j.draft_at_achievable_m;
@@ -671,6 +683,8 @@ impl Search<'_> {
         inp.water_density = self.o.water_density_t_per_m3;
         inp.air_draft_limit_m = self.o.air_draft_limit_m;
         inp.aft_design = self.o.aft_design.clone();
+        // The user's freeboard, so the full-volume `freeboard_ok` the result shows uses it (#418).
+        inp.required_freeboard = self.o.required_freeboard_m;
         inp
     }
 
