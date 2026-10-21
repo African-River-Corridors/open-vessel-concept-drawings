@@ -157,6 +157,33 @@ pub fn calculate_stability(
     })
 }
 
+/// Trim from mass items (issue #349): `items` are (mass t, LCG m from the stern). The LCG is the
+/// mass-weighted centre; trim = (LCG - LCB) x L_wp / BM_L, the moment over MTC with MTC = Delta x
+/// BM_L / L_wp, as [`calculate_trim`] has it; positive trim is bow deeper. No mass, or no
+/// waterplane, gives no trim.
+pub fn trim(hull: &HullGeometry, draft: f64, items: &[(f64, f64)]) -> TrimResult {
+    let lcb = hull.LCB(draft);
+    let total: f64 = items.iter().map(|(m, _)| m).sum();
+    let lcg = if total > 0.0 {
+        items.iter().map(|(m, x)| m * x).sum::<f64>() / total
+    } else {
+        lcb
+    };
+    let bm_l = hull.BM_longitudinal(draft);
+    let trim = if bm_l > 0.0 && total > 0.0 {
+        (lcg - lcb) * hull.waterplane_length(draft) / bm_l
+    } else {
+        0.0
+    };
+    TrimResult {
+        LCG: lcg,
+        LCB: lcb,
+        trim,
+        draft_aft: draft - trim / 2.0,
+        draft_fwd: draft + trim / 2.0,
+    }
+}
+
 /// Longitudinal trim. x is measured from the stern (AP); positive trim is bow deeper.
 ///
 /// `TypeError` when a non-tank length is unset, as Python raises it.

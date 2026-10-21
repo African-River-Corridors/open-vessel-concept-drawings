@@ -1107,7 +1107,7 @@ fn simulate_measured(p: &Map<String, Value>, measured: &mut Measured) -> R<Value
                 "curves": curve_list,
                 "cost_masses": Value::Null,
             }),
-            &r.stern_block_items,
+            (&r.stern_block_items, &r.trim_conditions),
         ),
         ids,
     )
@@ -1123,6 +1123,17 @@ fn governs_draught(limit: &str) -> Text {
 }
 
 /// The result with its `text_ids` (ADR 0014): a reading aid, outside the results hash.
+/// A condition with its trim (issue #349), only when the trim was worked out: a file without the
+/// stern block mass gets no new field.
+fn with_trim(mut c: Value, trim: Option<&ovcd_core::models::TrimResult>) -> Value {
+    if let Some(t) = trim {
+        c["trim_m"] = num(t.trim);
+        c["draught_aft_m"] = num(t.draft_aft);
+        c["draught_fwd_m"] = num(t.draft_fwd);
+    }
+    c
+}
+
 /// Whether the stern block's mass is in the lightship (issue #348), and what it needs. A key left
 /// out keeps it out, as before.
 fn stern_mass_of(p: &Map<String, Value>) -> R<Option<ovcd_core::aft_arrangement::SternMassInputs>> {
@@ -1137,7 +1148,27 @@ fn stern_mass_of(p: &Map<String, Value>) -> R<Option<ovcd_core::aft_arrangement:
 
 /// The stern block's mass items in the results (issue #348), only when they are in the lightship:
 /// a file without the stern mass gets no new field, so its results hash is unchanged.
-fn with_stern_mass(mut result: Value, items: &[ovcd_core::weights::MassItem]) -> Value {
+fn with_stern_mass(
+    mut result: Value,
+    (items, trims): (
+        &[ovcd_core::weights::MassItem],
+        &[(&str, ovcd_core::models::TrimResult)],
+    ),
+) -> Value {
+    // Issue #349: a dry-bulk hull's trim, laden and light, beside the block.
+    if !trims.is_empty() {
+        result["trim"] = Value::Array(
+            trims
+                .iter()
+                .map(|(name, t)| {
+                    with_trim(
+                        json!({ "name": name, "draught_m": num(t.draft_aft + t.trim / 2.0) }),
+                        Some(t),
+                    )
+                })
+                .collect(),
+        );
+    }
     if !items.is_empty() {
         result["stern_block_mass"] = json!({
             "total_t": num(ovcd_core::weights::total_mass(items)),
@@ -1388,7 +1419,12 @@ fn simulate_gas(
             "ok": a.ok(),
             "governing": a.governing().name,
             "limitations": a.limitations,
-            "conditions": a.conditions.iter().map(simulate_condition).collect::<Vec<_>>(),
+            "conditions": a
+                .conditions
+                .iter()
+                .enumerate()
+                .map(|(i, c)| with_trim(simulate_condition(c), a.trims.get(i)))
+                .collect::<Vec<_>>(),
         });
     }
     let curve_list = curves(p, l, b, t, cb, disp, rho)?;
@@ -1458,7 +1494,7 @@ fn simulate_gas(
             "stability_marks": stability_marks,
             "cost_masses": r.gas_basis.as_ref().map_or(Value::Null, |b| crate::cost::gas_masses(&b.weights)),
         }),
-            &r.stern_block_items,
+            (&r.stern_block_items, &r.trim_conditions),
         ),
         ids,
     )

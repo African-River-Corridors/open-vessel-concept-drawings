@@ -423,6 +423,9 @@ pub struct BargeCapacityResult {
     /// Gas only: the converged arrangement, for gas stability.
     /// Issue #348: the stern block's mass items when they are in the lightship (empty otherwise).
     pub stern_block_items: Vec<crate::weights::MassItem>,
+    /// Issue #349: the trim of a dry-bulk hull, laden and light, when the stern block is in the
+    /// lightship (empty otherwise; a gas hull has it per stability condition).
+    pub trim_conditions: Vec<(&'static str, crate::models::TrimResult)>,
     pub gas_basis: Option<GasBasis>,
 
     pub checks: Vec<Check>,
@@ -1156,6 +1159,27 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     let air_draft_ballast = h_top - ballast_draft;
     let air_draft_navigating_light = h_top_navigating - light_draft;
 
+    // Issue #349: the trim of a dry-bulk hull when the stern block is in the lightship: the rest of
+    // the lightship at the middle of the hull, the block items at their zones, the cargo at the
+    // middle of the hold zone.
+    let trim_conditions = if !is_gas && !stern_block_items.is_empty() {
+        let block = crate::weights::total_mass(&stern_block_items);
+        let hold_centre = (stern_void + (inp.loa - bow_void)) / 2.0;
+        let mut light: Vec<(f64, f64)> = vec![(lightship - block, inp.loa / 2.0)];
+        light.extend(stern_block_items.iter().map(|i| (i.mass_t, i.lcg_m)));
+        let mut laden = light.clone();
+        laden.push((cargo_capacity, hold_centre));
+        vec![
+            ("Laden", crate::hydrostatics::trim(&hull, draft, &laden)),
+            (
+                "Light",
+                crate::hydrostatics::trim(&hull, light_draft, &light),
+            ),
+        ]
+    } else {
+        Vec::new()
+    };
+
     // A geometry error is error text: it stays English, with no Message Id.
     let feasible_message = match &geometry_error {
         Some(m) if !m.is_empty() => Text::plain(m.clone()),
@@ -1316,6 +1340,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         navigating_top_above_keel_m: Some(h_top_navigating),
         gas_basis: detail.gas_basis,
         stern_block_items: stern_block_items.clone(),
+        trim_conditions,
         tank_rules: detail.tank_rules,
         checks,
         warnings,
