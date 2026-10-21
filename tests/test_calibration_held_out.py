@@ -180,7 +180,8 @@ def test_the_fit_ignores_held_out_cases():
     assert any(_is_held_out(c) for c in cases) and any(not _is_held_out(c) for c in cases)
     in_sample = [c for c in cases if not _is_held_out(c)]
     assert fit_factors(in_sample) == fit_factors(cases)
-    assert factors_yaml(fit_factors(cases)) == (CAL / "factors.yaml").read_text(encoding="utf-8")
+    from vessel_designer.calibration import _all_factors
+    assert factors_yaml(_all_factors(cases)) == (CAL / "factors.yaml").read_text(encoding="utf-8")
 
 
 def test_the_fit_filter_is_live():

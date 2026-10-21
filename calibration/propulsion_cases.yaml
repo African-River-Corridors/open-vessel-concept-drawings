@@ -1,0 +1,315 @@
+# Propulsion calibration cases (issue #351, spec 0007 "Calibration and evaluation"): tugs and pushers
+# with a published bollard pull, run through the Propulsor model only (no hull), with the published
+# figure they are compared against. The vessels are those of docs/research/stern-and-tugs.md sec. 10.
+#
+# Every figure is as the source prints it. A figure the source does not give is absent; nothing is
+# estimated or filled in. Each case names the file it was read from in the rule-source library
+# (`source_file`, relative to stern-tug/, outside the repo, ADR 0001), the SHA-256 of that download as
+# stern-tug/SOURCES-vessels.md lists it, the URL and the date it was retrieved, and keeps the source
+# text in `published`.
+#
+# The run:
+#   run_as_type      the engine's Propulsor type. `type_basis` says why, where the source does not name
+#                    a duct or a nozzle.
+#   count            the number of units; `count_basis` where the source names the units without a count.
+#   diameter_m       the propeller diameter; `diameter_basis` is `propeller` (printed as the propeller
+#                    diameter) or `nozzle` (only the nozzle size is printed; run as the propeller).
+#   power_per_unit_kw  the published power of one unit (a total over the count where the source gives
+#                    only the total; hp at 0.7457 kW). `power_basis` is `engine` (brake power) or
+#                    `motor` (an electric motor at the shaft).
+#   drive            `shaft` (a shaft line, 0.99) or `azimuth` (an azimuth or L-drive, 0.95), the shaft
+#                    efficiency of spec 0007 "Power and transmission". Engine power also passes the
+#                    diesel-mechanical gearbox (0.97, spec 0007). P_D = power x gearbox x shaft.
+#   water_density_kg_m3  1,025 for a seagoing tug, 1,000 for a river pusher.
+# observed:
+#   bollard_pull_t   the published bollard pull in tonnes (short tons at 0.90718 t; kN over the spec's
+#                    g of 9.81). The direction is the one printed; a reversed stern drive pulls astern.
+#
+# In-sample cases fit the bollard pull factor kappa_b of their type (factors.yaml, `bollard_pull_factor`);
+# a case with `held_out` (a one-line reason) is run and banded, never used in the fit. `accepted_miss`
+# maps a figure to the reason its band miss is accepted: the report and the warning still show it.
+propulsion_case:
+  - id: stan-tug-1606
+    vessel: "Stan Tug 1606"
+    kind: tug
+    propulsor_published: "2x Kaplan II fixed-pitch propellers in 2x 1350 mm nozzles"
+    run_as_type: shaft_nozzle
+    count: 2
+    diameter_m: 1.35
+    diameter_basis: nozzle
+    power_per_unit_kw: 447.0
+    power_basis: engine
+    drive: shaft
+    water_density_kg_m3: 1025.0
+    observed: {bollard_pull_t: 16.0}
+    published: "Bollard pull 16.0 t; total power 894 bkW at 1800 rpm; 2x Caterpillar C18; nozzles 2x 1350 mm"
+    source_file: vessels/damen-stan-tug-1606/Stan-Tug-1606.pdf
+    sha256: 5930ea53f8453e6833e50f027da66e8c50587a5c3f0bb10fd52d5fa55a3fed3f
+    url: https://medialibrary.damen.com/m/6f16341d89af7432/original/Stan-Tug-1606.pdf
+    retrieved: 2026-10-20
+    confidence: high
+
+  - id: stan-tug-1907
+    vessel: "Stan Tug 1907"
+    kind: tug
+    propulsor_published: "2x Kaplan II fixed-pitch propellers in 2x 1800 mm nozzles"
+    run_as_type: shaft_nozzle
+    count: 2
+    diameter_m: 1.80
+    diameter_basis: nozzle
+    power_per_unit_kw: 895.0
+    power_basis: engine
+    drive: shaft
+    water_density_kg_m3: 1025.0
+    observed: {bollard_pull_t: 30.0}
+    published: "Bollard pull 30.0 t; total power 1790 bkW at 1800 rpm; 2x Caterpillar C32; nozzles 2x 1800 mm"
+    source_file: vessels/damen-stan-tug-1907/Stan-Tug-1907.pdf
+    sha256: 74972a934d0533aaad43d761f9a5c1e1f5d467f224737a5134b793655f29ac81
+    url: https://medialibrary.damen.com/m/7dde9d62914b385a/original/Stan-Tug-1907.pdf
+    retrieved: 2026-10-20
+    confidence: high
+
+  - id: demi-k
+    vessel: "Demi-K (pusher tug)"
+    kind: pusher
+    propulsor_published: "two fixed-pitch propellers in 1,600mm (63-inch) nozzles"
+    run_as_type: shaft_nozzle
+    count: 2
+    diameter_m: 1.60
+    diameter_basis: nozzle
+    power_per_unit_kw: 646.0
+    power_basis: engine
+    drive: shaft
+    water_density_kg_m3: 1000.0
+    observed: {bollard_pull_t: 22.0}
+    published: "bollard pull of 22 tonnes; 2 x Green Power Engine GPC32, each 866 hp (646 kW); 1,600 mm nozzles"
+    source_file: vessels/baird-demi-k-pusher/baird-demi-k.html
+    sha256: b3923aabe7ff0132ac8ccb15cd0e23fd4a24846bb17624792a1fd70dafd18e0d
+    url: https://www.bairdmaritime.com/tugs/inland-tug-operations/demi-k-pusher-tug-review
+    retrieved: 2026-10-20
+    confidence: medium
+    held_out: "a river pusher, kept out of the tug fit to test it on a pusher"
+
+  - id: cds-4115
+    vessel: "CDS 4115 River Pusher"
+    kind: pusher
+    propulsor_published: "3x direct drive; propellers 3x 1850 mm in 3x 1870 mm HR nozzles; 6 rudders and 4 flanking rudders"
+    run_as_type: shaft_nozzle
+    count: 3
+    diameter_m: 1.85
+    diameter_basis: propeller
+    power_per_unit_kw: 1330.0
+    power_basis: engine
+    drive: shaft
+    water_density_kg_m3: 1000.0
+    observed: {bollard_pull_t: 45.87}
+    published: "Bollard pull approx. 450 kN; power main engines 3x 1330 kW @ 900 rpm; propellers 3x 1850 mm; draught 1.83 to 2.29 m (the headline says 5,400 brake horsepower)"
+    source_file: vessels/cd-4115-sd-pusher-brochure/CDS-4115-SD-River-Pusher-vouwvel-2405-plano.pdf
+    sha256: 508c05bfeb65069186c96b78a119d101f5c75f667de971776682cf2aafc390d0
+    url: https://concordiadamen.com/wp-content/uploads/2024/05/CDS-4115-SD-River-Pusher-vouwvel-2405-plano.pdf
+    retrieved: 2026-10-20
+    confidence: medium
+    held_out: "a shallow-draught river pusher, kept out of the tug fit"
+    accepted_miss:
+      bollard_pull_t: "a shallow-draught pusher pulls less per kW than a tug (about 1.15 t per 100 kW, research note sec. 3.5): the rudders and the tunnel behind a nozzle cut the nozzle thrust of a pusher (research note sec. 3.2, from MARIN Report 128, p.14), which the open-water disc does not model"
+
+  - id: asd-tug-3212
+    vessel: "Azimuth Stern Drive Tug 3212"
+    kind: tug
+    propulsor_published: "Kongsberg Maritime US 255 P30 FP azimuth thrusters; propeller diameter 3000 mm"
+    run_as_type: azimuth_ducted
+    type_basis: "no duct is printed; run as ducted, the ASD group of the research note (sec. 3.5)"
+    count: 2
+    count_basis: "two main engines, one drive each (research note sec. 10); the sheet names the thrusters without a count"
+    diameter_m: 3.0
+    diameter_basis: propeller
+    power_per_unit_kw: 2525.0
+    power_basis: engine
+    drive: azimuth
+    water_density_kg_m3: 1025.0
+    observed: {bollard_pull_t: 82.4}
+    published: "Bollard pull ahead 82.4 t, astern 77.4 t (class notation 85 t); total power 5050 bkW at 1800 rpm; 2x Caterpillar 3516C; propeller diameter 3000 mm"
+    source_file: vessels/damen-asd-tug-3212/product-sheet-asd-tug-3212.pdf
+    sha256: a1dff4dcad62383dedac990954af455539970a4ab9890cc408ad8d606a8cd759
+    url: https://medialibrary.damen.com/m/7e9a03d1101991f8/original/product-sheet-asd-tug-3212.pdf
+    retrieved: 2026-10-20
+    confidence: high
+
+  - id: rsd-tug-2513
+    vessel: "Reversed Stern Drive Tug 2513"
+    kind: tug
+    propulsor_published: "Thrusters Kongsberg Maritime US 255 P30 FP; propeller diameter 3000 mm"
+    run_as_type: azimuth_ducted
+    type_basis: "no duct is printed; run as ducted, the ASD group of the research note (sec. 3.5)"
+    count: 2
+    count_basis: "two main engines, one drive each; the sheet names the thrusters without a count"
+    diameter_m: 3.0
+    diameter_basis: propeller
+    power_per_unit_kw: 2525.0
+    power_basis: engine
+    drive: azimuth
+    water_density_kg_m3: 1025.0
+    observed: {bollard_pull_t: 80.0}
+    published: "Bollard pull astern 80.0 t (class notation 80 t); total power 5050 bkW at 1800 rpm; 2x Caterpillar 3516C; propeller diameter 3000 mm"
+    source_file: vessels/damen-rsd-tug-2513/product-sheet-rsd-tug-2513.pdf
+    sha256: 7ede9a8965daa67f16e9ee990cfa8d2b7fecea3a9f49de214609efd831e193ad
+    url: https://medialibrary.damen.com/m/242dfd92d3a4c088/original/product-sheet-rsd-tug-2513.pdf
+    retrieved: 2026-10-20
+    confidence: high
+
+  - id: aveogan
+    vessel: "Aveogan (ATB tug of AT-12842 B-40085)"
+    kind: atb_tug
+    propulsor_published: "2: Schottel SRP-560 Z-drives; propellers 2: 2800 mm Dia. stainless steel"
+    run_as_type: azimuth_ducted
+    type_basis: "no nozzle is printed; run as ducted, the ASD group of the research note (sec. 3.5)"
+    count: 2
+    diameter_m: 2.8
+    diameter_basis: propeller
+    power_per_unit_kw: 2498.1
+    power_basis: engine
+    drive: azimuth
+    water_density_kg_m3: 1025.0
+    observed: {bollard_pull_t: 88.0}
+    published: "Bollard Pull: 97 Short Tons; Installed Power: 6,700 HP; Main Engine: 2: GE 8L250MDC; propellers 2: 2800 mm (not guaranteed, subject to change)"
+    source_file: vessels/crowley-atb-12842-40085/AT-12842-B-40085.pdf
+    sha256: 7549baca475c2e989df72d51ddd7cc2a127336a83615376634ff1b97415a8b3c
+    url: https://www.crowley.com/wp-content/uploads/sites/7/2021/02/AT-12842-B-40085.pdf
+    retrieved: 2026-10-20
+    confidence: medium
+
+  - id: asd-tug-2312
+    vessel: "Azimuth Stern Drive Tug 2312"
+    kind: tug
+    propulsor_published: "Kongsberg Maritime US 205S FP azimuth thrusters; propeller diameter 2800 mm"
+    run_as_type: azimuth_ducted
+    type_basis: "no duct is printed; run as ducted, the ASD group of the research note (sec. 3.5)"
+    count: 2
+    count_basis: "two main engines, one drive each (research note sec. 10); the sheet names the thrusters without a count"
+    diameter_m: 2.8
+    diameter_basis: propeller
+    power_per_unit_kw: 1902.0
+    power_basis: engine
+    drive: azimuth
+    water_density_kg_m3: 1025.0
+    observed: {bollard_pull_t: 70.0}
+    published: "Bollard pull ahead 70.0 t, astern 65.0 t; total power 3804 bkW at 1800 rpm; 2x Caterpillar 3512C; propeller diameter 2800 mm"
+    source_file: vessels/damen-asd-tug-2312/product-sheet-asd-tug-2312.pdf
+    sha256: 723df006e1b6d67aae87bcb4bda1a6c5bac728b3301675deb9f884aef0f4a843
+    url: https://medialibrary.damen.com/m/3af6181ffda336e0/original/product-sheet-asd-tug-2312.pdf
+    retrieved: 2026-10-20
+    confidence: high
+    held_out: "the diameter pair with the ASD 2811 (same power, 2.8 against 2.4 m), kept out of the fit to test the diameter effect"
+
+  - id: asd-tug-2811
+    vessel: "Azimuth Stern Drive Tug 2811"
+    kind: tug
+    propulsor_published: "Azimuth thrusters 2x Rolls Royce US 205S; propeller diameter 2400 mm"
+    run_as_type: azimuth_ducted
+    type_basis: "no duct is printed; run as ducted, the ASD group of the research note (sec. 3.5)"
+    count: 2
+    diameter_m: 2.4
+    diameter_basis: propeller
+    power_per_unit_kw: 1903.0
+    power_basis: engine
+    drive: azimuth
+    water_density_kg_m3: 1025.0
+    observed: {bollard_pull_t: 60.0}
+    published: "Bollard pull ahead 60.0 t, astern 55.0 t; total power 3806 bkW at 1800 rpm; 2x Caterpillar 3512C; propeller diameter 2400 mm"
+    source_file: vessels/damen-asd-tug-2811/product-sheet-asd-tug-2811.pdf
+    sha256: 4c84eb656e84750093d15c4628a845ee573afa06977ea574ab8b0d9cf2621cf8
+    url: https://medialibrary.damen.com/m/30d0cbcb260b6e57/original/product-sheet-asd-tug-2811.pdf
+    retrieved: 2026-10-20
+    confidence: high
+    held_out: "the diameter pair with the ASD 2312, kept out of the fit to test the diameter effect"
+
+  - id: rsd-tug-2513-electric
+    vessel: "Reversed Stern Drive Tug 2513 Electric"
+    kind: tug
+    propulsor_published: "Kongsberg Maritime US 255 L-drive; propeller diameter 3000 mm"
+    run_as_type: azimuth_ducted
+    type_basis: "no duct is printed; run as ducted, the ASD group of the research note (sec. 3.5)"
+    count: 2
+    diameter_m: 3.0
+    diameter_basis: propeller
+    power_per_unit_kw: 1850.0
+    power_basis: motor
+    drive: azimuth
+    water_density_kg_m3: 1025.0
+    observed: {bollard_pull_t: 70.0}
+    published: "Bollard pull astern 70.0 t in full electric mode (battery powered); main engines (electric) 2x Ramme TW 1400r_L, total power 3700 bkW; propeller diameter 3000 mm"
+    source_file: vessels/damen-rsd-tug-2513-electric/product-sheet-rsd-tug-2513-electric.pdf
+    sha256: 13f44354f0f786b97929a3e386521c9b94d720070131eb5cf422e3ab0ec019cb
+    url: https://medialibrary.damen.com/m/77f42872a6013e58/original/product-sheet-rsd-tug-2513-electric.pdf
+    retrieved: 2026-10-20
+    confidence: medium
+    held_out: "an electric drive, kept out of the fit to test the motor power basis"
+
+  - id: capt-joseph-bisso
+    vessel: "Capt. Joseph Bisso (ASD tractor tug)"
+    kind: tug
+    propulsor_published: "2 Schottel SRP 460 FP Z-drives; 2500 mm four-blade propellers in stainless steel nozzles"
+    run_as_type: azimuth_ducted
+    count: 2
+    diameter_m: 2.5
+    diameter_basis: propeller
+    power_per_unit_kw: 2240.1
+    power_basis: engine
+    drive: azimuth
+    water_density_kg_m3: 1025.0
+    observed: {bollard_pull_t: 68.04}
+    published: "Estimated Bollard Pull is 75 Tons; 2 Caterpillar 3516E generating 3004 BHP each at 1800 RPM; 2500 mm propellers in nozzles"
+    source_file: vessels/mex-capt-joseph-bisso/mex-capt-joseph-bisso.html
+    sha256: 8ee1d894344bc66a76d7b7f9e1b30050d8e62d0c6d3b902faf7f78e8c83eff55
+    url: https://maritime-executive.com/corporate/bisso-towboat-co-announces-newest-ship-assist-tug
+    retrieved: 2026-10-20
+    confidence: low
+    held_out: "an estimated bollard pull, in tons the source does not define (run as short tons, the US use)"
+
+# Published vessels that cannot run yet, with the reason. They are never run.
+not_yet_runnable_propulsion_cases:
+  - id: asd-tug-2111-electric
+    published: "Bollard pull ahead 70.0 t in full electric mode; 2x POD incl. electric motor, approx. 4394 kW; propeller 2800 mm (a concept)"
+    source_file: vessels/damen-asd-tug-2111-electric/product-sheet-asd-tug-2111-electric.pdf
+    sha256: e767055d9012bf47b496c97ffa53d342f681ae150e88605945cb47514358cc3e
+    not_yet_runnable: "a pod is not one of the engine's Propulsor types, and the sheet does not say whether it has a duct"
+  - id: ewolf
+    published: "Bollard Pull 70 short-tons (estimated); 2 x 2100 kW motors; 2x azimuthing thruster"
+    source_file: vessels/crowley-ewolf-spec/eWolf-Spec-Sheet-V3.pdf
+    sha256: b3dfec69084643207b8206d50d375885a5f01485041e9a153048fe886be2a6dc
+    not_yet_runnable: "no propeller diameter is printed"
+  - id: asd-tug-2810-07413
+    published: "Bollard pull ahead about 60.7 tons; output 4935 bhp total; propulsion 2x Rolls Royce US205"
+    source_file: vessels/damen-trading-asd2810-07413/asd-tug-2810-damen-trading-07413-1.pdf
+    sha256: 7ea12a7750196b871a9619ca016ffa4ff6c2b0b18b0bc2d58a72284a4d10727f
+    not_yet_runnable: "no propeller diameter is printed"
+  - id: ramparts-2500
+    published: "Bollard pull @ 100% MCR 60 to 70 t; main engines 2 x 1900 to 2240 kW; 2 ASD propellers"
+    source_file: vessels/piriou-ramparts2500/piriou-ramparts-2500_leaflet_eng.pdf
+    sha256: 679fbe3439f3e866fa4562e8d90298e3c32c06ec1bd7510e06320d5b81a8c487
+    not_yet_runnable: "the bollard pull and the power are ranges, and no propeller diameter is printed"
+  - id: bess
+    published: "Bollard pull at MCR: 52 tonnes; 2x Ulstein Bergen KRMB9, 5.450 bhp in total; 2 x Voith 32G II/200"
+    source_file: vessels/bube-bess-spec/Specification_Bess.pdf
+    sha256: a6843990acb67229fd3b50e5203e2c113e094d9fc706e9bcedaee32df4f50c42
+    not_yet_runnable: "a Voith Schneider rotor has no disc diameter printed"
+  - id: baut
+    published: "Bollard pull at MCR 92 TBP; 2x Deutz SBV 16 M 628, 6.880 kW in total; 2 x Voith 36R6/255-2"
+    source_file: vessels/bube-baut-spec/Specification_Baut.pdf
+    sha256: 81e4effeb48dc1c01a1386706f2949c7d36bf14a1be5271e13dd5ff61a1ae1b1
+    not_yet_runnable: "a Voith Schneider rotor has no disc diameter printed"
+  - id: rapide-4600-z3
+    published: "Bollard Pull of 65 tonnes ahead; three gensets each 1,670 ekW; Schottel SRP 430 FP L-drives in nozzles"
+    source_file: vessels/ral-hidrovias-rapide-4600-z3/ral-hidrovias-pusher-2023.html
+    sha256: 5c0e2da409dcc6002c3a006d228cee443b2d8c73da5f787592695ad75b06ffbd
+    not_yet_runnable: "no propeller diameter and no motor power are printed (genset power only)"
+  - id: sdp-4600
+    published: "max bollard pull of 69 tons; 7200 bHP diesel-electric; three azimuthing Schottel fixed pitch propellers in nozzles"
+    source_file: vessels/mex-hidrovias-pushboats-2014/mex-worlds-most-powerful-push-boats.html
+    sha256: a48f67624b967eea4954edbc45a3422b596319631f394a3db27272e83c42f8bf
+    not_yet_runnable: "no propeller diameter and no power per unit are printed"
+  - id: riverbuster-1909
+    published: "Bollard pull ahead 25 tonnes; 2x Volvo T16, total 1,500 kW; propulsion 2x Veth VL-400si"
+    source_file: vessels/cd-riverbuster-1909-brochure/CDS-Riverbuster-1909-vouwvel-2405-plano.pdf
+    sha256: ce7bf693b4a7b285e56019565aa4464b483df3d67d7b5dabd24ffeb42c01f96f
+    not_yet_runnable: "no propeller diameter is printed, and the drive type is not named"

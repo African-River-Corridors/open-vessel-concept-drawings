@@ -111,6 +111,7 @@ pub fn eval(entry_point: &str, input: &Value) -> Result<Value, EvalError> {
         "vessel_standards" => vessel_standards(function, args),
         "protective_location" => protective_location(function, args),
         "pressure_vessel" => pressure_vessel(function, args),
+        "propulsor" => propulsor(function, args),
         ep if ENTRY_POINTS.contains(&ep) => Err(EvalError::NotPorted(ep.into())),
         ep => Err(EvalError::UnknownEntryPoint(ep.into())),
     }
@@ -1954,6 +1955,49 @@ fn squat_inputs(args: &Value) -> Result<core_squat::SquatInputs, EvalError> {
         safety_margin_m: field_or(o, "safety_margin_m", Some(base.safety_margin_m))?,
         ..base
     })
+}
+
+/// The Propulsor inputs of a case (issue #351): `type`, `count`, `diameter_m`, and optionally
+/// `wake`, `kappa`, `kappa_b` and `rho_kg_m3`.
+fn propulsor_inputs(args: &Value) -> Result<ovcd_core::propulsor::PropulsorInputs, EvalError> {
+    use ovcd_core::propulsor::{PropulsorInputs, PropulsorType};
+    let o = args
+        .get("inputs")
+        .ok_or_else(|| EvalError::BadInput("`args.inputs` is required".into()))?;
+    let key = o.get("type").and_then(Value::as_str).unwrap_or_default();
+    let propulsor_type = PropulsorType::from_key(key)
+        .ok_or_else(|| EvalError::BadInput(format!("`{key}` is not a Propulsor type")))?;
+    let count = o
+        .get("count")
+        .and_then(Value::as_u64)
+        .and_then(|n| u32::try_from(n).ok())
+        .ok_or_else(|| EvalError::BadInput("`count` must be a whole number".into()))?;
+    Ok(PropulsorInputs {
+        propulsor_type,
+        count,
+        diameter_m: field_or(o, "diameter_m", None)?,
+        wake: field_or(o, "wake", Some(0.0))?,
+        kappa: field_or(o, "kappa", Some(1.0))?,
+        kappa_b: field_or(o, "kappa_b", Some(1.0))?,
+        rho_kg_m3: field_or(o, "rho_kg_m3", Some(1025.0))?,
+    })
+}
+
+/// The Propulsor model (issue #351): the bollard pull and the blade load at a delivered power per
+/// unit, for the calibration.
+fn propulsor(function: &str, args: &Value) -> Result<Value, EvalError> {
+    let inp = propulsor_inputs(args)?;
+    let pd_kw = f64_arg(args, "pd_kw")?;
+    match function {
+        "bollard_pull" => ok(num(ovcd_core::propulsor::bollard_pull(&inp, pd_kw))),
+        "blade_load" => {
+            let (load, limit) = ovcd_core::propulsor::blade_load(&inp, pd_kw);
+            ok(json!({ "load_kw_m2": num(load), "limit_kw_m2": num(limit) }))
+        }
+        other => Err(EvalError::BadInput(format!(
+            "propulsor has no function `{other}`"
+        ))),
+    }
 }
 
 fn squat(function: &str, args: &Value) -> Result<Value, EvalError> {

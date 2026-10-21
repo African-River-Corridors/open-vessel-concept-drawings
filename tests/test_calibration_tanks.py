@@ -51,8 +51,8 @@ def test_the_tank_bands_have_every_figure_for_every_confidence_with_a_basis():
     for figure, band in bands.items():
         assert set(band["pct"]) == set(CONFIDENCES), figure
         assert band["basis"].strip() and band["label"].strip(), figure
-    # The existing barge bands are not touched.
-    assert set(calibration.BANDS["bands"]) == {"lightship_t", "dwt_t"}
+    # The barge bands are not touched; bands.yaml also holds the bollard pull band (issue #351).
+    assert set(calibration.BANDS["bands"]) == {"lightship_t", "dwt_t", "bollard_pull_t"}
 
 
 def test_the_diameter_and_the_length_are_brought_to_the_outside_of_the_insulation():

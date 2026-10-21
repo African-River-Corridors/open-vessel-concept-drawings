@@ -790,6 +790,22 @@
       "status": "estimate",
       "basis": "For a Propulsor type other than unspecified. none: the largest diameter the stern allows, D_max: 0.80 x the design draught under a tunnel (estimate), capped so the tunnels fit side by side inside the beam, and 0.65 x the design draught at a transom or pram stern (sourced: MAN); spec 0007 and docs/research/stern-and-tugs.md"
     },
+    "propulsor_efficiency_factor": {
+      "default_by_propulsor_type": { "azimuth_open": 0.8, "azimuth_ducted": 0.8, "shaft_open": 0.8, "shaft_nozzle": 0.8, "voith_schneider": 0.8, "pump_jet": 0.8 },
+      "unit": "-",
+      "hard": { "gt": 0, "le": 1 },
+      "soft": { "min": 0.5, "max": 1.0 },
+      "status": "estimate",
+      "basis": "kappa, the factor of the Propulsor type on the ideal disc efficiency: eta_D = kappa x eta_i x eta_R x eta_H (spec 0007). 0.80 for every type is a starting estimate below the ideal disc, which no real propeller reaches (MAN gives open-water efficiencies of 0.35 to 0.75); the installed power ticket (#353) fits it per type on the installed power of the reference ships. Unverified for a pump jet"
+    },
+    "bollard_pull_factor": {
+      "default_by_propulsor_type": { "azimuth_open": 0.77, "azimuth_ducted": 0.975, "shaft_open": 0.77, "shaft_nozzle": 0.951, "voith_schneider": 0.77, "pump_jet": 0.77 },
+      "unit": "-",
+      "hard": { "gt": 0, "le": 2 },
+      "soft": { "min": 0.6, "max": 1.2 },
+      "status": "estimate",
+      "basis": "kappa_b, the factor of the Propulsor type on the disc's momentum limit at the bollard, T0 = kappa_b x (2 rho A)^(1/3) x P_D^(2/3) per unit (spec 0007). Ducted azimuth and shafts in nozzles: fitted to the in-sample tugs of calibration/propulsion_cases.yaml (calibration/factors.yaml, bollard_pull_factor). Every other type: 0.77, the open-propeller Wartsila estimate 0.9 x (D P_D)^(2/3) kN (k2 = 1) over the disc limit at 1,025 kg/m3 (derived); no reference vessel of those types prints a diameter. Unverified for a pump jet"
+    },
     "power_source": {
       "default_by_cargo_phase": { "dry_bulk": "diesel_mechanical", "liquid_gas": "gas_fuelled" },
       "status": "estimate",
