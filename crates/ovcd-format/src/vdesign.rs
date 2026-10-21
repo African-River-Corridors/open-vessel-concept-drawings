@@ -339,8 +339,12 @@ pub const GAS_TANKS_NOTE: &str = "The tank outer diameter (the cap below and the
     on the Cargo and, for LPG, on the carriage condition; each shows its source or marks an \
     estimate.";
 
-/// What the cost rates are, shown with the group and in the capital budget.
+/// What the cost rates are, shown with the group and in the capital budget while every rate is the
+/// example file's.
 pub const COST_RATES_BASIS: &str = "Example rates \u{2014} replace with yours.";
+
+/// The capital budget's basis once any rate is typed (issue #404).
+pub const COST_RATES_BASIS_USER: &str = "Your rates.";
 
 /// Both dry-bulk holds.
 const DRY_HOLDS: &[&str] = &["box_hold", "sloped_hopper_hold"];
