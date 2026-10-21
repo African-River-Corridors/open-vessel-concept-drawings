@@ -184,6 +184,7 @@ fn cargo_options() -> Value {
                     "id": k,
                     "name": c.name,
                     "phase": c.phase.key(),
+                    "status": c.status.key(),
                     "density_kg_m3": num(c.density),
                 })
             })

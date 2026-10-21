@@ -30,6 +30,7 @@ choice-cargo-lpg-propane = LPG (Propane)
 choice-cargo-lpg-butane = LPG (Butane)
 choice-cargo-lpg-mix = LPG (60/40 Propane/Butane)
 choice-cargo-bauxite = Bauxite
+choice-cargo-crude-oil = Crude oil
 
 input-hull-form = Hull Form
 choice-hull-form-box = Box

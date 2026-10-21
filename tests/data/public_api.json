@@ -650,6 +650,9 @@
   "CARGO_DATABASE": {
    "kind": "constant"
   },
+  "CRUDE_GRADES": {
+   "kind": "constant"
+  },
   "CargoProperties": {
    "fields": [
     "name",
@@ -657,7 +660,38 @@
     "temperature",
     "pressure",
     "description",
-    "phase"
+    "phase",
+    "status"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "CrudeGrade": {
+   "fields": [
+    "name",
+    "density_kg_m3",
+    "density_reference_c",
+    "design_density_kg_m3",
+    "sour",
+    "cmr",
+    "benzene_over_10_percent",
+    "aquatic",
+    "flash_point_below_23c",
+    "vapour_pressure_50c_at_least_1kpa",
+    "pour_point_c",
+    "carriage_temperature_c",
+    "vapour_pressure_class"
+   ],
+   "frozen": false,
+   "kind": "class",
+   "methods": []
+  },
+  "Graded": {
+   "fields": [
+    "value",
+    "status",
+    "basis"
    ],
    "frozen": false,
    "kind": "class",

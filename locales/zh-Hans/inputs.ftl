@@ -42,6 +42,8 @@ choice-cargo-lpg-mix = LPG（60/40 丙烷/丁烷）
 # status: draft
 choice-cargo-bauxite = 铝土矿
 # status: draft
+choice-cargo-crude-oil = 原油
+# status: draft
 input-hull-form = 船体线型
 # status: draft
 choice-hull-form-raked-box = 斜首箱形

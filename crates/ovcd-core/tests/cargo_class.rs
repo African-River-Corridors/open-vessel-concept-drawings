@@ -32,8 +32,12 @@ fn liquid_bulk_is_refused_never_sent_down_the_gas_path() {
 }
 
 #[test]
-fn every_cargo_today_is_gas_or_dry_bulk() {
+fn every_cargo_but_crude_oil_is_gas_or_dry_bulk() {
     for (key, props) in CARGO_DATABASE.iter() {
+        if *key == "crude_oil" {
+            assert_eq!(props.phase, CargoClass::LiquidBulk);
+            continue;
+        }
         assert!(
             matches!(props.phase, CargoClass::Gas | CargoClass::DryBulk),
             "{key}"

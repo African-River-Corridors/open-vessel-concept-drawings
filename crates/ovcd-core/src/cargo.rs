@@ -19,8 +19,8 @@ pub enum CargoClass {
     /// Dry bulk in a box or hopper hold. Key `dry_bulk`.
     #[cfg_attr(feature = "serde", serde(rename = "dry_bulk"))]
     DryBulk,
-    /// Liquid bulk (crude oil) in cargo tanks. Key `liquid_bulk`. No Cargo has it yet: every path
-    /// refuses it with a clear error until the liquid bulk module exists (crude oil ticket 4).
+    /// Liquid bulk (crude oil) in cargo tanks. Key `liquid_bulk`. Crude oil has it: every path
+    /// that has no liquid bulk code refuses it with a clear error until crude oil ticket 4.
     #[cfg_attr(feature = "serde", serde(rename = "liquid_bulk"))]
     LiquidBulk,
 }
@@ -55,6 +55,27 @@ impl core::fmt::Display for CargoClass {
     }
 }
 
+/// How far a Cargo is built (spec 0006 §4): the app shows a tag for `development`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+pub enum CargoStatus {
+    /// Complete: every check the Cargo needs exists.
+    Released,
+    /// Work in development: results are shown, and some checks do not exist yet.
+    Development,
+}
+
+impl CargoStatus {
+    /// The text key in the app data.
+    pub const fn key(self) -> &'static str {
+        match self {
+            CargoStatus::Released => "released",
+            CargoStatus::Development => "development",
+        }
+    }
+}
+
 /// Physical properties of a Cargo.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -67,12 +88,14 @@ pub struct CargoProperties {
     /// Storage pressure (barg)
     pub pressure: f64,
     pub description: &'static str,
-    /// The Cargo Class (`liquid_gas` or `dry_bulk` today).
+    /// The Cargo Class (`liquid_gas`, `dry_bulk` or `liquid_bulk`).
     pub phase: CargoClass,
+    /// `Released` or `Development`.
+    pub status: CargoStatus,
 }
 
 /// `CARGO_DATABASE`: (type key, properties), in the Python dict's insertion order.
-pub static CARGO_DATABASE: [(&str, CargoProperties); 6] = [
+pub static CARGO_DATABASE: [(&str, CargoProperties); 7] = [
     (
         "LNG",
         CargoProperties {
@@ -82,6 +105,7 @@ pub static CARGO_DATABASE: [(&str, CargoProperties); 6] = [
             pressure: 0.25,
             description: "Liquefied Natural Gas (methane-rich)",
             phase: CargoClass::Gas,
+            status: CargoStatus::Released,
         },
     ),
     (
@@ -93,6 +117,7 @@ pub static CARGO_DATABASE: [(&str, CargoProperties); 6] = [
             pressure: 0.25,
             description: "LNG\u{2013}ethane blend at cryogenic temperature",
             phase: CargoClass::Gas,
+            status: CargoStatus::Released,
         },
     ),
     (
@@ -104,6 +129,7 @@ pub static CARGO_DATABASE: [(&str, CargoProperties); 6] = [
             pressure: 0.0,
             description: "Fully refrigerated liquefied propane (-42.1 C, near-atmospheric)",
             phase: CargoClass::Gas,
+            status: CargoStatus::Released,
         },
     ),
     (
@@ -115,6 +141,7 @@ pub static CARGO_DATABASE: [(&str, CargoProperties); 6] = [
             pressure: 0.0,
             description: "Cryogenic liquefied butane",
             phase: CargoClass::Gas,
+            status: CargoStatus::Released,
         },
     ),
     (
@@ -126,6 +153,7 @@ pub static CARGO_DATABASE: [(&str, CargoProperties); 6] = [
             pressure: 0.0,
             description: "Fully refrigerated LPG mix (60% propane / 40% butane by mass)",
             phase: CargoClass::Gas,
+            status: CargoStatus::Released,
         },
     ),
     (
@@ -137,6 +165,19 @@ pub static CARGO_DATABASE: [(&str, CargoProperties); 6] = [
             pressure: 0.0,
             description: "Dry bulk bauxite ore (stowage density, ~0.67 m3/t)",
             phase: CargoClass::DryBulk,
+            status: CargoStatus::Released,
+        },
+    ),
+    (
+        "crude_oil",
+        CargoProperties {
+            name: "Crude oil",
+            density: 870.0,
+            temperature: 15.0,
+            pressure: 0.0,
+            description: "Crude oil, default grade (density at 15 C; see liquid_bulk::crude_grade)",
+            phase: CargoClass::LiquidBulk,
+            status: CargoStatus::Development,
         },
     ),
 ];

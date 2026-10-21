@@ -29,6 +29,10 @@ API = json.loads((DATA / "public_api.json").read_text(encoding="utf-8"))
 # Scenarios whose answer is allowed to differ from 0.1.0, with the reason. Each is listed as a
 # known change in CHANGELOG.md.
 KNOWN_DIFFERENCES: dict = {
+    # Crude oil (spec 0006) is a seventh Cargo, so the list of Cargos and the "Valid types" text of
+    # an unknown-cargo error name it. The six Cargos of 0.1.0 are unchanged.
+    "cargo.get_cargo": "crude oil is a new Cargo: the unknown-cargo error lists it",
+    "simulate.cargo_options": "crude oil is a new Cargo: the cargo list holds it",
     # Issue #432: the convoy beam check says it is an identity for the built-in catalogue.
     "vessel_standards": "issue #432: the convoy beam check message names the identity",
     "vessel_standards.custom_catalogue": "issue #432: the convoy beam check message names the identity",
