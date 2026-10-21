@@ -1,9 +1,10 @@
-"""The tank-barge lightship fit (issue #330): the generated file is current, and the Rust constants
-equal it.
+"""The tank-barge lightship fit (issue #330): the generated file is current and holds the declared
+subset. The Rust constants equal the file: `the_lightship_constants_equal_the_generated_fit` in
+`crates/ovcd-core/tests/liquid_bulk.rs` (this file may not read `crates/`: the wheel check does not
+copy it).
 
 Label: property
 """
-import re
 import sys
 from pathlib import Path
 
@@ -13,28 +14,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import fit_tank_lightship as fit  # noqa: E402
 
-RUST = (ROOT / "crates/ovcd-core/src/liquid_bulk/lightship.rs").read_text(encoding="utf-8")
-
-
-def _const(name: str) -> float:
-    m = re.search(rf"pub const {name}: f64 = ([0-9.]+);", RUST)
-    assert m, name
-    return float(m.group(1))
-
-
 def test_the_generated_file_is_what_the_fit_writes():
     """Label: property"""
     assert fit.OUT.read_text(encoding="utf-8") == fit.text()
-
-
-def test_the_rust_constants_equal_the_fit():
-    """Label: property"""
-    got = yaml.safe_load(fit.OUT.read_text(encoding="utf-8"))
-    assert _const("TANK_LIGHTSHIP_K_T_PER_M3") == got["tank_lightship_k_t_per_m3"]["value"]
-    assert _const("PUMPS_T_PER_M3") == got["outfit"]["pumps_t_per_m3"]["value"]
-    assert _const("PIPING_T_PER_M3") == got["outfit"]["piping_t_per_m3"]["value"]
-    assert _const("VENTS_GAUGING_T_PER_M3") == got["outfit"]["vents_gauging_t_per_m3"]["value"]
-    assert _const("HEATING_T_PER_KW") == got["outfit"]["heating_t_per_kw"]["value"]
 
 
 def test_the_fit_uses_only_the_declared_subset_and_the_rest_are_held_out():
