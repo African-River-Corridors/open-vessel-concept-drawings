@@ -259,9 +259,12 @@ fn a_none_side_clearance_prints_none_in_the_beam_message() {
 
 #[test]
 fn free_surface_moment_matches_python() {
+    // Re-pinned (issue #413: the fill is a volume ratio, so the liquid height is the segment's,
+    // not fill x 2r): 0.95 was 11.887396690482028 and 0.2 was 26.666666666666664, printed by the
+    // original Python. Half full is the same either way.
     assert_eq!(
         free_surface_moment_cylindrical(2.575, 21.703999999999994, 0.95, 0.581),
-        11.887396690482028
+        143.53451766091666
     );
     assert_eq!(
         free_surface_moment_cylindrical(2.5, 10.0, 0.5, 0.5),
@@ -269,8 +272,27 @@ fn free_surface_moment_matches_python() {
     );
     assert_eq!(
         free_surface_moment_cylindrical(2.5, 10.0, 0.2, 0.5),
-        26.666666666666664
+        34.376717200259726
     );
+}
+
+#[test]
+fn at_98_percent_fill_the_free_surface_is_the_one_of_the_segment_that_holds_98_percent() {
+    // Issue #413: the gas stability's own height for a volume fraction (`segment_fill`), then the
+    // chord there and I = L c^3 / 12. The old height 0.98 x 2r gave about a quarter of this.
+    let (r, l, rho, fill) = (2.575, 21.704, 0.581, 0.98);
+    let (h, _) = ovcd_core::gas_stability::segment_fill(r, fill).unwrap();
+    let chord = 2.0 * libm::sqrt(r * r - (r - h) * (r - h));
+    let expected = rho * l * chord * chord * chord / 12.0;
+    let got = free_surface_moment_cylindrical(r, l, fill, rho);
+    assert!(
+        (got - expected).abs() <= 1e-9 * expected,
+        "{got} vs {expected}"
+    );
+    let old_height = fill * 2.0 * r;
+    let old_chord = 2.0 * libm::sqrt(r * r - (r - old_height) * (r - old_height));
+    let old = rho * l * old_chord * old_chord * old_chord / 12.0;
+    assert!(got > 3.0 * old, "{got} vs the old {old}");
 }
 
 #[test]

@@ -57,6 +57,11 @@ def calculate_stability(
 ) -> StabilityResult:
     """Calculate intact stability (GM) at the equilibrium draft.
 
+    Legacy chain (issue #413): no Design uses it. For a gas design use
+    `gas_stability.assess`. The block coefficient is applied to the raked hull volume, so
+    the hull form counts twice, and the KG items do not sum to the lightship. The free
+    surface takes `inputs.fill_ratio` as a volume ratio.
+
     Args:
         hull: Hull geometry
         inputs: Barge inputs
@@ -83,6 +88,9 @@ def calculate_trim(
     draft: float,
 ) -> TrimResult:
     """Calculate longitudinal trim.
+
+    Legacy chain (issue #413): no Design uses it. The block coefficient is applied to the
+    raked hull volume, so the hull form counts twice.
 
     Convention: x measured from stern (AP). x=0 at stern, x=LOA at bow.
     Positive trim = bow deeper than stern.

@@ -118,8 +118,10 @@ fn the_quickstart_stability_matches_python() {
     assert_eq!(s.BM_transverse, 7.917934509246827);
     assert_eq!(s.KG, 3.8835187629638415);
     assert_eq!(s.GM_solid, 5.1870732551330825);
-    assert_eq!(s.free_surface_correction, 0.01821769039107572);
-    assert_eq!(s.GM_fluid, 5.168855564742007);
+    // Re-pinned (issue #413: the fill is a volume ratio, so the liquid height is the segment's);
+    // were 0.01821769039107572 and 5.168855564742007, printed by the original Python.
+    assert_eq!(s.free_surface_correction, 0.2199697268681742);
+    assert_eq!(s.GM_fluid, 4.967103528264908);
     assert_eq!(s.BM_longitudinal, 292.8016322356615);
 }
 
@@ -140,7 +142,8 @@ fn a_zero_double_bottom_puts_the_stores_at_a_quarter_of_the_depth() {
     .unwrap();
     assert_eq!(s.KG, 3.514763862574179);
     assert_eq!(s.GM_solid, 5.555828155522745);
-    assert_eq!(s.GM_fluid, 5.537610465131669);
+    // Re-pinned (issue #413); was 5.537610465131669.
+    assert_eq!(s.GM_fluid, 5.3358584286545705);
 }
 
 #[test]

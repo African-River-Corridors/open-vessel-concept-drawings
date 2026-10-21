@@ -50,11 +50,14 @@ pub struct GaResults {
     pub deadweight: f64,
     pub draft: f64,
     pub freeboard: f64,
+    /// Freeboard (depth less the draft drawn) >= the required freeboard (issue #413).
     pub min_freeboard_ok: bool,
     pub air_draft: f64,
+    /// Air draft <= the air draft limit; true when the inputs set no limit (issue #413).
     pub air_draft_ok: bool,
     /// Always `None`.
     pub stability: Option<StabilityResult>,
+    /// See `stability_ok` below: the gas stability criteria, or a dry GM of at least 0.15 m.
     pub stability_ok: bool,
     /// Python passes the float `0.0` here, not a trim result.
     pub trim: f64,
@@ -146,13 +149,14 @@ fn tank_result(
     let v_tank = res.cargo_volume_m3 / inp.fill_ratio / (n_for_volume as f64);
     let half = idia / 2.0;
     let area = core::f64::consts::PI * py_pow(half, 2.0)?;
-    let cyl = v_tank / area;
-    // Hemispherical heads.
+    // Hemispherical heads. Issue #413: the two heads hold part of the tank volume, so the
+    // cylinder holds the rest (it held the whole volume, so the heads counted twice).
     let head = idia / 2.0;
     let n_wide = res.n_tanks_wide.ok_or_else(|| {
         type_error("a gas result always carries a tank count across (barge_capacity)")
     })?;
     let volume_heads = (4.0 / 3.0) * core::f64::consts::PI * py_pow(half, 3.0)?;
+    let cyl = py_max(v_tank - volume_heads, 0.0) / area;
     let bottom = res
         .bottom_clearance_m
         .ok_or_else(|| type_error("unsupported operand type(s) for +: 'NoneType' and 'float'"))?;
@@ -180,6 +184,30 @@ fn tank_result(
         design_pressure: 0.0,
         tank_material: String::new(),
     })
+}
+
+/// `stability_ok` of the drawing results (issue #413). A gas result: every IS Code 2008 criterion
+/// of the gas stability (`gas_stability::assess`) passes in the Laden, Half laden and Light
+/// conditions at the result's cargo. A dry result: its GM is at least 0.15 m (IS Code 2008 Part A
+/// 2.2.4). False when the result carries no stability figure or the assessment cannot run, as
+/// nothing then shows that it passes.
+fn stability_ok(res: &BargeCapacityResult, inp: &BargeCapacityInputs) -> bool {
+    if res.gas_basis.is_some() {
+        return crate::gas_stability::GasCapacityResult::try_from(res)
+            .ok()
+            .and_then(|gas| {
+                crate::gas_stability::assess(
+                    &gas,
+                    res.cargo_capacity_t,
+                    inp.block_coefficient,
+                    inp.water_density,
+                    crate::gas_stability::DEFAULT_CRITERIA_SET,
+                )
+                .ok()
+            })
+            .is_some_and(|a| a.ok());
+    }
+    res.gm_m.is_some_and(|gm| gm >= 0.15)
 }
 
 /// The drawing inputs and results for `svg_drawings`, built from a capacity result.
@@ -244,11 +272,14 @@ pub fn to_ga(
         deadweight: res.deadweight_t,
         draft,
         freeboard: inp.depth - draft,
-        min_freeboard_ok: true,
+        // Issue #413: the three flags are worked out, not fixed at true.
+        min_freeboard_ok: inp.depth - draft >= inp.required_freeboard,
         air_draft: res.air_draft_m,
-        air_draft_ok: true,
+        air_draft_ok: inp
+            .air_draft_limit_m
+            .is_none_or(|limit| res.air_draft_m <= limit),
         stability: None,
-        stability_ok: true,
+        stability_ok: stability_ok(res, inp),
         trim: 0.0,
         total_depth_required: inp.depth,
         air_draft_unladen: opt_truthy_or(res.air_draft_light_m, 0.0),

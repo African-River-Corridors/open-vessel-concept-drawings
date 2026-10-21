@@ -412,14 +412,17 @@ pub struct BargeResults {
     pub draft: f64,
     /// m
     pub freeboard: f64,
-    /// True if freeboard >= 0.3 m
+    /// A flag of the legacy result type: no engine code sets it (issue #413). `ga_adapter::to_ga`
+    /// sets its own: freeboard >= the required freeboard.
     pub min_freeboard_ok: bool,
     /// Height above waterline to tank top, laden (m)
     pub air_draft: f64,
-    /// True if air_draft <= vertical_clearance
+    /// A flag of the legacy result type: no engine code sets it (issue #413). `ga_adapter::to_ga`
+    /// sets its own: air draft <= the air draft limit, when there is one.
     pub air_draft_ok: bool,
     pub stability: StabilityResult,
-    /// True if GM_fluid > 0.15 m
+    /// A flag of the legacy result type: no engine code sets it (issue #413). `ga_adapter::to_ga`
+    /// sets its own from the gas stability or the dry GM.
     pub stability_ok: bool,
     pub trim: TrimResult,
     /// draft + underkeel clearance (m)
