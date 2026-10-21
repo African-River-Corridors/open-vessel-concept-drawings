@@ -2,6 +2,8 @@
 //! calculation itself is tested in `ovcd-core/tests/gas_stability.rs`; this file holds the checks
 //! that need an input only the seam can carry (a whole number that stays an int, integers of any
 //! size).
+//! Label: snapshot
+//! The expected values are what the original Python printed.
 
 use serde_json::{Value, json};
 

@@ -1,5 +1,6 @@
 //! Seam: the public `ovcd_core::squat` API. Expected values are what the original Python printed
 //! for the same inputs.
+//! Label: snapshot
 
 use ovcd_core::squat::{DEFAULT_SAFETY_MARGIN_M, SquatInputs, compute, max_speed_for_ukc};
 

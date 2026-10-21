@@ -2,6 +2,7 @@
 //! Python (`core/gas_arrangement.py`), not worked out by hand, except the ones marked re-pinned
 //! (issue #237: the rule set changed, so they are what the current code prints; the old values are
 //! in the history and the before/after table is in `CHANGELOG.md`).
+//! Label: snapshot
 
 use ovcd_core::gas_arrangement::{
     DEFAULT_DEPTHS_M, FitOptions, RULESETS, fit, required_side_clearance, smallest_viable_loa,

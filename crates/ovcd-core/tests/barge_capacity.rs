@@ -1,6 +1,8 @@
 //! Seam: the public `ovcd_core::barge_capacity` API. Expected values are printed by the original
 //! Python (`core/barge_capacity.py`), not worked out by hand. JSON cannot carry a NaN or an
 //! infinity as an input, so these tests, not the JSON seam, reach those paths.
+//! Label: snapshot
+//! A value re-pinned after an agreed change is what the code printed then; the old value is named next to it.
 
 use ovcd_core::barge_capacity::{BargeCapacityInputs, compute, tanks_wide_for_beam};
 

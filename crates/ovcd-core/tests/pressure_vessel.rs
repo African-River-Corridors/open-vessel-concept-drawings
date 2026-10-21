@@ -1,5 +1,7 @@
 //! Seam: the public `ovcd_core::pressure_vessel` API. Expected numbers are what CPython 3.12
 //! printed for the `core/pressure_vessel.py`.
+//! Label: snapshot
+//! The formula is ASME UG-27, but the expected numbers are what the code printed, not worked out from the paragraph.
 
 use ovcd_core::pressure_vessel::*;
 

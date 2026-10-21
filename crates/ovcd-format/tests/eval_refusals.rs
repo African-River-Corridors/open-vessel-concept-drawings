@@ -1,5 +1,7 @@
 //! `ovcd_format::eval` refuses an input the core cannot hold exactly, instead of returning a different
 //! answer from Python's.
+//! Label: property
+//! Each test states a rule (a refusal, or a value kept exactly); where a result is pinned it is from the frozen Python.
 
 use ovcd_format::eval;
 use serde_json::Value;
