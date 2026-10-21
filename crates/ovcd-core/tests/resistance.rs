@@ -77,7 +77,8 @@ fn the_check_texts_match_python() {
         .iter()
         .map(|c| (c.name.as_str(), c.ok, c.message.as_str()))
         .collect();
-    assert_eq!(texts.len(), 8);
+    // Re-pinned (issue #420: the squat and fit checks at each service speed); was 8.
+    assert_eq!(texts.len(), 20);
     assert_eq!(
         texts[0],
         (
@@ -96,8 +97,8 @@ fn the_check_texts_match_python() {
         // Re-pinned (issue #396, Am = B x T); was n = 0.377.
         "Confined shallow river: blockage n = 0.443 must be in (0, 1)"
     );
-    assert_eq!(texts[7].0, "coefficients_are_first_order");
-    assert_eq!(r.checks[7].severity, "warning");
+    assert_eq!(texts[19].0, "coefficients_are_first_order");
+    assert_eq!(r.checks[19].severity, "warning");
 }
 
 #[test]
@@ -656,4 +657,92 @@ fn a_service_speed_that_fails_squat_is_flagged() {
         .find(|p| p.speed_knots == e.service_speed_knots)
         .unwrap();
     assert!(p.squat_limited);
+}
+
+// --- Issue #420: the method checks at the service speed reach the results. ---
+
+#[test]
+fn each_channel_gets_the_squat_and_fit_checks_at_its_service_speed() {
+    let r = compute(&ResistanceInputs::default()).unwrap();
+    let names: Vec<&str> = r.checks.iter().map(|c| c.name.as_str()).collect();
+    for env in ["Confined shallow river", "Confined creek"] {
+        for check in [
+            "keel_clears_bed",
+            "keel_clears_bed_with_margin",
+            "froude_depth_subcritical",
+            "lackenby_fit_subcritical",
+        ] {
+            let name = format!("{check}[{env}]");
+            assert!(names.contains(&name.as_str()), "{name}: {names:?}");
+        }
+    }
+    // Deep water has no squat and no shallow-water fit.
+    assert!(
+        !names
+            .iter()
+            .any(|n| n.ends_with("[Open Sea]") && n.starts_with("keel_clears_bed"))
+    );
+    assert!(!names.contains(&"lackenby_fit_subcritical[Open Sea]"));
+    // The squat checks are the ones squat.rs gives at the service speed through the water.
+    let river = &r.environments[1];
+    let point = river
+        .speed_curve
+        .iter()
+        .find(|p| p.speed_knots == river.service_speed_knots)
+        .unwrap();
+    let keel = r
+        .checks
+        .iter()
+        .find(|c| c.name == "keel_clears_bed[Confined shallow river]")
+        .unwrap();
+    assert!(
+        keel.message
+            .ends_with(&format!("at {:.2} kn", point.speed_through_water_knots)),
+        "{}",
+        keel.message
+    );
+    // The fit check is a warning: the method loses validity, the design does not fail.
+    let fit = r
+        .checks
+        .iter()
+        .find(|c| c.name == "lackenby_fit_subcritical[Confined creek]")
+        .unwrap();
+    assert_eq!(fit.severity, "warning");
+    assert!(fit.ok);
+}
+
+#[test]
+fn waves_give_the_stawave1_checks_at_the_service_speed() {
+    let mut inp = ResistanceInputs::default();
+    inp.environments[0].significant_wave_height_m = 1.0;
+    let r = compute(&inp).unwrap();
+    let name = format!("stawave1_short_wave_validity[{}]", inp.environments[0].name);
+    let c = r
+        .checks
+        .iter()
+        .find(|c| c.name == name)
+        .expect("the wave check");
+    assert_eq!(c.severity, "warning");
+}
+
+#[test]
+fn the_lackenby_fit_check_fails_above_its_depth_froude_limit() {
+    // Shallow open water (no channel width, so no Schijf cap) and a high speed: the service speed
+    // sits above Fnh 0.95. In a channel the cap of 0.95 x the Schijf limit keeps it below.
+    let mut inp = ResistanceInputs::default();
+    let env = &mut inp.environments[1];
+    env.water_depth = 3.0;
+    env.channel_width_bottom = 0.0;
+    env.channel_width_surface = 0.0;
+    env.apply_squat_limit = false;
+    inp.speed_min_knots = 10.0;
+    inp.speed_max_knots = 10.0;
+    let r = compute(&inp).unwrap();
+    let name = format!("lackenby_fit_subcritical[{}]", inp.environments[1].name);
+    let c = r
+        .checks
+        .iter()
+        .find(|c| c.name == name)
+        .expect("the fit check");
+    assert!(!c.ok, "{}", c.message);
 }

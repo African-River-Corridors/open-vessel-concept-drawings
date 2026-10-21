@@ -944,7 +944,7 @@ def report() -> str:
         mrows += [run_motor(cargo, r, dp["speed_kmh"]) for r in dp["rows"]]
     out += ["", "## 3. Yangtze motor vessels — GB 38030 draft design points (2018)", "",
             "Design-study points, not built ships. Cb implied on LOA (a lower bound). "
-            "Delivered power = core `resistance`, deep water, Lwl = 0.97·LOA. "
+            "Delivered power = core `resistance`, deep water, Lwl = 0.97·LOA (the app uses Lwl = LOA). "
             "Ratio = installed main power ÷ delivered power.", "",
             "| Cargo | LOA×B×T | Δ (t) | Cargo (t) | Δ − cargo (t) | Implied Cb | Speed (km/h) | "
             "Installed (kW) | Delivered (kW) | Ratio |",

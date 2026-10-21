@@ -155,3 +155,19 @@ def test_the_ci_runs_the_check_without_letting_a_band_miss_fail_the_build():
     from pathlib import Path
     ci = (Path(__file__).resolve().parents[1] / ".github/workflows/ci.yml").read_text(encoding="utf-8")
     assert "python -m vessel_designer.calibration --check" in ci
+
+
+def test_the_committed_results_and_factors_are_what_the_harness_writes(tmp_path, capsys):
+    """calibration/results.md and factors.yaml are generated: a change to a case, a band or the
+    engine that moves them must commit them again (issue #431). Run
+    `python -m vessel_designer.calibration` to write them.
+
+    Label: property
+    """
+    calibration.main(tmp_path)
+    capsys.readouterr()
+    for name in ("results.md", "factors.yaml"):
+        fresh = (tmp_path / name).read_text(encoding="utf-8")
+        committed = (CAL / name).read_text(encoding="utf-8")
+        assert fresh == committed, (
+            f"calibration/{name} is stale: run `python -m vessel_designer.calibration` and commit it")

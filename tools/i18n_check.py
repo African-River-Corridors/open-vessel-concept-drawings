@@ -67,7 +67,7 @@ def parse(path: Path) -> File:
         if m:
             current = Message(m.group(1), line.rstrip(), set(), comment, n)
             if current.id in out.messages:
-                out.problems.append(f"{path.relative_to(ROOT)}:{n}: duplicate id {current.id}")
+                out.problems.append(f"{path.relative_to(ROOT).as_posix()}:{n}: duplicate id {current.id}")
             out.messages[current.id] = current
             comment = None
         elif line.startswith((" ", "\t")) and current and line.strip():
@@ -77,7 +77,7 @@ def parse(path: Path) -> File:
             if line.startswith("# status:"):
                 comment = line.rstrip()
             elif line.strip() and not line.startswith("#"):
-                out.problems.append(f"{path.relative_to(ROOT)}:{n}: not a message or a comment: {line[:60]}")
+                out.problems.append(f"{path.relative_to(ROOT).as_posix()}:{n}: not a message or a comment: {line[:60]}")
     for msg in out.messages.values():
         msg.placeholders = set(PLACEHOLDER.findall(msg.source.split("=", 1)[1]))
     return out
@@ -122,7 +122,7 @@ def check(root: Path = ROOT, fix: bool = False) -> list[str]:
         english_files[p.name] = f
         for k, v in f.messages.items():
             if k in english:
-                problems.append(f"{p.relative_to(root)}:{v.line}: id {k} is also in another English file")
+                problems.append(f"{p.relative_to(root).as_posix()}:{v.line}: id {k} is also in another English file")
             english[k] = v
 
     import i18n_extract  # the engine's English comes from the Rust source; engine.ftl must match it
@@ -139,7 +139,7 @@ def check(root: Path = ROOT, fix: bool = False) -> list[str]:
 
     for folder in sorted(d for d in locales.iterdir() if d.is_dir() and d.name != SOURCE):
         for p in sorted(folder.glob("*.ftl")):
-            rel = p.relative_to(root)
+            rel = p.relative_to(root).as_posix()
             if p.name in ENGLISH_ONLY:
                 problems.append(f"{rel}: drawing messages are English only for now")
                 continue
