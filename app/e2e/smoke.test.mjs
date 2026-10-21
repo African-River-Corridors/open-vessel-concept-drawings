@@ -435,7 +435,9 @@ describe("OVCD app smoke tests", () => {
   it("shows one readout per channel environment, and the design speed follows the Maximum speed input", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
     // These two inputs are "none" to start with: untick "none", then type the value.
-    for (const [name, label, value] of [["channel_depth_m", "Channel depth", "6"], ["channel_bottom_width_m", "Channel bottom width", "40"]]) {
+    // 120 m wide, so the Schijf limit (about 12 kn, issue #397) lets the channel curve reach the 10 kn
+    // design speed. It was 40 m, where the limit now stops the curve below it.
+    for (const [name, label, value] of [["channel_depth_m", "Channel depth", "6"], ["channel_bottom_width_m", "Channel bottom width", "120"]]) {
       await untickNone(name, label);
       await type(label, value);
     }

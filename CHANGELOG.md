@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Design change (issues #396, #397, #398): confined water. One midship section, B x T, for squat and resistance (resistance used B x T x Cb, so its blockage ratio was low by Cb). The Schijf limiting speed is the first critical speed proved by Delefortrie, Verwilligen, Vantorre and Lataire (35th PIANC World Congress, 2024, Paper 8): Fr_h = [2 sin(arcsin(1 - m) / 3)]^(3/2) on the water depth, which is 1 in open water (the old sqrt(2/3)(1 - m)^(1/3) gave 0.816). One margin, 0.95 of the limit (an OVCD choice), in the resistance sweep, its check and the electric check (which used 1.0). The electric installed power follows the environment with the highest battery power (it followed the lowest service speed). The open-water environment reports a blockage of 0 (maintainer decision on #396), so every results hash moves once; numbers move only with a channel. In the 10 design-impact cases with a channel the limit falls by 9 % to 53 % (box 90 x 14 m: 10.60 to 7.24 kn; the narrowest sweep channel: 7.73 to 3.61 kn) and the speed curves stop lower. Python, known differences from 0.1.0: the `resistance`, `electric_energy.compute`, `simulate.box` and `simulate.hopper_channel` scenarios. Tests re-pinned to what the code prints; three knife-edge inputs solved again; fixture and legacy hashes re-stamped from `ovcd run`. No sourced test changed.
 - Feature (issue #426, part 2): the IS Code 2008 loading conditions, opt-in by the new format v3 input `loading_conditions` (`legacy` stays the default until the gas arrangement search uses the new conditions; a file saved before reads `legacy`). With `is_code_2008`, gas and dry bulk Options are checked in the four standard conditions of Part B 3.4.1.2 (full load and ballast, departure and arrival), and in "Lightship, no ballast" where `may_sail_without_ballast` (default: barges yes, self-propelled no). Stores and fuel (self-propelled only: `fixed_stores_t` plus fuel for `endurance_h` at the service speed; none for battery-electric) are 100 % at departure and 10 % at arrival, with their largest free surface (3.1.3.2, 3.1.4); the full load carries them, so a draught-bound cargo is that much less and the deadweight holds them. Each ballast condition has a ballast plan, the least ballast that meets every criterion or user fills, stated per tank (3.4.2.3), with the free surface of slack tanks. Dry bulk condition checks are warnings and stay out of the Rule Trace until a dry bulk Rule Set exists. New results blocks `loading_conditions` and (for dry bulk too) `stability`, only when opted in. Five design-impact sweep cases opt in; their table is under "Design changes".
 - Design change (issue #423), design grid only: each cell fills its tanks to the Filling Limit, 98 % (IGC 15.3; `tanks::DEFAULT_FILLING_LIMIT`, which `simulate` now also uses), not the 0.95 default of the capacity inputs. The grid has no loading-limit inputs, so it fills as a `.vdesign` run does when none is typed. A cell's cargo rises by 0.98 / 0.95 (60 x 11 m propane: 692.6 t to 714.4 t). The spacing part of the issue was already built: #391 (#277) took the 1.0 m override out, so the side clearance is IGC 2.4.1.2 per tank. Single-Design results do not move (177 designs, no change).
 - Design change (issue #422): two small fixes in the gas arrangement search. (1) A tank put on the diameter cap now leaves the n - 1 transverse gaps (1.0 m each, `DEFAULT_TANK_GAP_TRANSVERSE_M`) between n tanks across; the side clearance took all the spare beam before, so two or more capped tanks came out below the cap (for example 7.5 m on an 8 m cap, 22 m beam, two across). (2) `smallest_viable_loa` returns only a length it has tested: the rounded length when it passes, else the length rounded up to 0.1 m when that passes, else the tested length itself. Rounding to nearest could return an untested length below the one the search found. No case of the design-impact set moves (177 designs); results move only for capped hulls with two or more tanks across.
@@ -169,6 +170,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/396-397-confined-water (2026-10-21)
+
+Between `main 2a763b5` and `this branch ff452b9`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep box channel 60x10 | `curves[0].points[14].fuel_lph` | 58.2057232944 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[14].kn` | 8 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[14].kw` | 252.224800942 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[14].squat_limited` | False | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[14].squat_m` | 0.609701277408 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[15].fuel_lph` | 72.7498621271 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[15].kn` | 8.5 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[15].kw` | 315.249402551 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[15].squat_limited` | True | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[15].squat_m` | 0.712973679425 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[16].fuel_lph` | 90.2406511809 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[16].kn` | 9 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[16].kw` | 391.042821784 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[16].squat_limited` | True | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[16].squat_m` | 0.832181363152 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[17].fuel_lph` | 108.287106709 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[17].kn` | 9.5 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[17].kw` | 469.24412907 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[17].squat_limited` | True | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[17].squat_m` | 0.971295867379 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[18].fuel_lph` | 131.291188892 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[18].kn` | 10 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[18].kw` | 568.928485197 | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[18].squat_limited` | True | absent | changed |
+| sweep box channel 60x10 | `curves[0].points[18].squat_m` | 1.13608981891 | absent | changed |
+| sweep box channel 90x14 | `curves[0].points[12].fuel_lph` | 62.5910933648 | absent | changed |
+| sweep box channel 90x14 | `curves[0].points[12].kn` | 7 | absent | changed |
+| sweep box channel 90x14 | `curves[0].points[12].kw` | 271.228071247 | absent | changed |
+| sweep box channel 90x14 | `curves[0].points[12].squat_limited` | False | absent | changed |
+| sweep box channel 90x14 | `curves[0].points[12].squat_m` | 0.542529253467 | absent | changed |
+| sweep box channel 90x14 | `curves[0].points[13].fuel_lph` | 79.5695628641 | absent | changed |
+| sweep box channel 90x14 | `curves[0].points[13].kn` | 7.5 | absent | changed |
+| sweep box channel 90x14 | `curves[0].points[13].kw` | 344.801439078 | absent | changed |
+| sweep box channel 90x14 | `curves[0].points[13].squat_limited` | False | absent | changed |
+| sweep box channel 90x14 | `curves[0].points[13].squat_m` | 0.626248451721 | absent | changed |
+| sweep box channel 90x14 | `curves[0].points[14].fuel_lph` | 100.155490398 | absent | changed |
+| sweep box channel 90x14 | `curves[0].points[14].kn` | 8 | absent | changed |
+| sweep box channel 90x14 | `curves[0].points[14].kw` | 434.007125058 | absent | changed |
+| sweep box channel 90x14 | `curves[0].points[14].squat_limited` | True | absent | changed |
+| sweep box channel 90x14 | `curves[0].points[14].squat_m` | 0.716219943939 | absent | changed |
+| ... | 649 more changed quantities | | | |
 
 ### ticket/354-blind-distance (2026-10-21)
 

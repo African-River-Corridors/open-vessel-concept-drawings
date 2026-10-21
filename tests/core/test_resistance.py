@@ -34,13 +34,16 @@ def test_resistance_golden_confined_shallow():
     r = compute(ResistanceInputs())
     assert abs(r.wetted_surface_area - 4590.0) < 1.0
     a = _shallow(r)
-    assert abs(a.limiting_speed_knots - 10.828) < 0.01     # Schijf limit, unchanged
+    # Re-pinned (issues #396, #397): the Schijf first critical speed on B x T; was 10.828.
+    assert abs(a.limiting_speed_knots - 3.799) < 0.01
     assert a.service_speed_knots == 2.5
     assert a.service_speed_governed_by == "squat"
-    assert abs(a.power_at_service_kw - 66.2) < 1.0         # delivered power -> battery feed
-    assert abs(a.resistance_at_service_kn - 16.54) < 0.1
-    assert abs(a.fuel_at_service_lph - 15.27) < 0.5
-    assert abs(a.fuel_at_service_lpnm - 6.109) < 0.05
+    # Re-pinned (issues #396, #397, the blockage term on B x T): 66.6, 16.65, 15.37 and 6.148; were
+    # 66.2, 16.54, 15.27 and 6.109.
+    assert abs(a.power_at_service_kw - 66.6) < 1.0         # delivered power -> battery feed
+    assert abs(a.resistance_at_service_kn - 16.65) < 0.1
+    assert abs(a.fuel_at_service_lph - 15.37) < 0.5
+    assert abs(a.fuel_at_service_lpnm - 6.148) < 0.05
 
 
 def test_feasibility_the_default_case_is_outside_barrass_validity():

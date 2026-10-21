@@ -140,12 +140,9 @@ pub fn compute(inp: &SquatInputs) -> Result<SquatResult, String> {
     } else {
         inp.block_coefficient * inp.lpp_m * inp.beam_m * inp.draft_m
     };
-    let midship = inp.beam_m * inp.draft_m;
-    let blockage = if inp.channel_area_m2 > 0.0 {
-        midship / inp.channel_area_m2
-    } else {
-        0.0
-    };
+    // Issue #396: the same midship section and blockage ratio as the resistance.
+    let midship = crate::confined_water::midship_section_area(inp.beam_m, inp.draft_m);
+    let blockage = crate::confined_water::blockage_ratio(midship, inp.channel_area_m2);
     let fnh = if inp.water_depth_m > 0.0 {
         v_ms / libm::sqrt(GRAVITY * inp.water_depth_m)
     } else {

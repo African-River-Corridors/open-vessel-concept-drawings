@@ -144,7 +144,8 @@ fn the_bank_slope_widens_the_channel_section_in_the_blockage_ratio() {
             "channel": { "depth_m": depth, "bottom_width_m": bottom, "bank_slope": slope }
         })));
         let t = num(&v["results"]["draught_m"]);
-        let expected = 11.0 * t * 0.9 / (depth * (bottom + slope * depth));
+        // The midship section is B x T (issue #396; it was B x T x Cb).
+        let expected = 11.0 * t / (depth * (bottom + slope * depth));
         close(
             num(&channel_env(&v)["blockage"]),
             expected,
@@ -236,7 +237,9 @@ fn the_top_speed_ends_the_deep_water_curve() {
 fn squat_applies_in_the_channel_and_never_in_deep_water() {
     let v = sim(hopper(json!({
         "speed_max_kn": 15,
-        "channel": { "depth_m": 3.0, "bottom_width_m": 40.0 }
+        // Wide enough that squat limits the speed before 0.95 x the Schijf limit (issue #397;
+        // it was 40 m).
+        "channel": { "depth_m": 3.0, "bottom_width_m": 120.0 }
     })));
     let limit = num(&channel_env(&v)["limiting_speed_kn"]);
     let ch = points(&v, CHANNEL);
