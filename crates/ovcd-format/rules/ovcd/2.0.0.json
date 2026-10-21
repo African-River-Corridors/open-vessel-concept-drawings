@@ -112,30 +112,6 @@
       "since": "1.0.0"
     },
     {
-      "id": "ovcd/capacity/air-draft-empty",
-      "title": "Empty air draft within the typed limit",
-      "origin": "physical",
-      "source": {},
-      "codified": {
-        "by": "agent",
-        "date": "2026-10-21",
-        "review": "#272"
-      },
-      "verified": false,
-      "kind": "check",
-      "measure": {
-        "id": "check.ok",
-        "args": {
-          "name": "Air draft (empty, governing)"
-        }
-      },
-      "consequence": "block",
-      "sizes": false,
-      "evaluated": true,
-      "finding": null,
-      "since": "1.0.0"
-    },
-    {
       "id": "ovcd/capacity/intact-gm",
       "title": "First-order hold GM at the reported cargo at least 0.15 m (an estimate, not a stability check)",
       "origin": "tool-limit",

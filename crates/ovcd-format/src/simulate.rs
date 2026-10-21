@@ -407,24 +407,6 @@ fn capacity_checks(checks: &[Check], out: &mut Vec<Value>) {
     }
 }
 
-fn air_draft_check(r: &BargeCapacityResult, limit: f64, ids: &mut TextIds) -> R<Value> {
-    let Some(light) = r.air_draft_light_m else {
-        return bad("the capacity result has no light air draft");
-    };
-    let message = text!(
-        "check-air-draft-limit",
-        "{air_draft} m vs limit {limit} m",
-        air_draft = Arg::fixed(light, 2),
-        limit = Arg::fixed(limit, 2),
-    );
-    ids.text(&message);
-    Ok(json!({
-        "name": "Air draft (empty, governing)",
-        "ok": light <= limit,
-        "message": message,
-    }))
-}
-
 fn opt_int(x: Option<i64>) -> Value {
     x.map_or(Value::Null, |i| json!(i))
 }
@@ -1150,9 +1132,6 @@ fn simulate_measured(
     capacity_checks(&capacity, &mut checks);
     ids.checks(&capacity);
     ids.texts(&warnings);
-    if let Some(limit) = truthy_float(p, "air_draft_limit_m")? {
-        checks.push(air_draft_check(&r, limit, &mut ids)?);
-    }
     let (curve_list, resistance) = curves(
         p,
         l,
@@ -2031,9 +2010,6 @@ fn simulate_gas(
         .collect();
     if let Value::Array(items) = checks_json(&search) {
         checks.extend(items);
-    }
-    if let Some(limit) = truthy_float(p, "air_draft_limit_m")? {
-        checks.push(air_draft_check(r, limit, &mut ids)?);
     }
     let mut stability = Value::Null;
     // What a view marks on the GZ curves. Not a result: it is left out of the results hash.

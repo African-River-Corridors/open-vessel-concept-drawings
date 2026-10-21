@@ -214,8 +214,6 @@ msg-convoy-not-available = resultados do comboio ainda não disponíveis
 ## crates/ovcd-format/src/simulate.rs
 
 # status: draft
-check-air-draft-limit = { $air_draft } m contra limite { $limit } m
-# status: draft
 name-governs-draught = calado — { $limit }
 # status: draft
 check-feasible-arrangement = Nenhum arranjo passa em todas as verificações neste casco. O mais próximo é mostrado. Ele reprova em: { $fails }.
@@ -254,8 +252,6 @@ name-check-stability-not-assessed = Estabilidade — não avaliada
 name-check-cargo = Carga > 0
 # status: draft
 name-check-feasible-arrangement = Arranjo viável
-# status: draft
-name-check-air-draft = Calado aéreo (vazio, governante)
 # status: draft
 name-check-tank-length = comprimento do tanque sobre o diâmetro
 # status: draft
