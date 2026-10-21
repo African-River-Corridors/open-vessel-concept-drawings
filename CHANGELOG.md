@@ -15,7 +15,7 @@
 - Design change (issue #313): the allowable stress of each tank steel is the IGC 4.23.3.1 limit, the lesser of Rm/A and Re/B, with cited Rm and Re. S690QL1, the fully pressurised LPG steel, moves from 285 MPa (Rm/2.7, an inland basis) to 256.7 MPa (Rm/3). 304L, 316L (113 MPa) and 9Ni (230 MPa) do not move. Fully pressurised LPG walls get about 10 % thicker (29.0 to 32.0 mm on a 110 x 11.4 m hull, 40.5 to 45.0 mm on 90 x 14 m), tank steel and lightship rise (+52 t and +69 t), and cargo falls a little. A new input, `tank_allowable_stress_basis`, keeps 285 MPa for a file saved before, so its results do not change; a stress above the IGC limit is a soft warning. The river LPG tank calibration wall is now outside its band (15.5 mm against 13.1 mm printed), recorded as an accepted miss: the paper designs to the inland basis. Sourced tests changed: `tank_wall_formula.rs` (the paper's 285 MPa is now typed; new hand calculation at 256.7 MPa) and `test_the_published_river_tank_gives_the_published_wall_by_the_formula`. The before/after table is under "Design changes" below.
 - App and web app (issue #300): dropdowns draw their own arrow and look the same on Linux as on macOS and Windows. The 30° and 40° labels on the stability chart have a ground, so a curve does not cross them. The bundled fonts are woff2 (0.95 MB, was 2.56 MB), with no change to the glyphs.
 - Design change (issue #374): the Type C tank wall takes the design liquid pressure on top of the design vapour pressure: Peq = Po + Pgd (IGC 4.13.2.4, 4.23.2.2), Pgd = a x Z x rho / 1.02e5 MPa (IGC 4.28.1.2), with Z the steel outer diameter and rho the largest cargo density at the design temperature. A new input, `tank_liquid_pressure`: `static` (a = 1, gravity only, the default, an estimate for inland and sheltered service: the maintainer's choice), `igc_4_28_2` (a = 1 + az, the IGC 4.28.2 guidance vertical acceleration for the North Atlantic, at the tank farthest from amidships) or `none` (the vapour pressure only, what the engine did before). On a 110 x 11.4 m hull the LNG wall goes from 9.5 to 10.5 mm (lightship +22 t), fully refrigerated propane 9.5 to 11.0 mm, fully pressurised propane 35.5 to 36.5 mm; cargo falls by under 0.1 %. A file saved before keeps `none` and its results. No sourced test changed; new sourced test `crates/ovcd-core/tests/liquid_pressure.rs`. The before/after table is under "Design changes" below.
-- Design change (issue #375): the tank head type is an input, `tank_head_type` (`hemisphere`, `ellipsoidal_2to1`), with a Defaults Profile table by Cargo and carriage condition (the maintainer's choice): the LPG Cargos take 2:1 semi-ellipsoidal heads (estimates: the published river LPG tank has dished ends with a toroidal connection, a published 22,000 m3 LPG/NH3 carrier tank torispherical heads; 2:1 is the engine's nearest head) and LNG keeps hemispherical heads (estimate: the old value). The head type reaches the wall, the volume, the steel and the drawings (2:1 ends are drawn as half-ellipses, R/2 long), so the head-area fix of #314 now reaches Designs. On a 110 x 11.4 m hull, fully pressurised propane moves from a 9.65 m to an 8.64 m tank and its cargo from 2,165 t to 1,821 t: the 2:1 heads put more cargo in a tank of the same length, the 9.65 m tank then fails laden stability, and the search takes the smaller one. LNG designs do not move. A file saved before keeps hemispherical heads and its results. No sourced test changed. The before/after table is under "Design changes" below.
+- Design change (issue #375): the tank head type is an input, `tank_head_type` (`hemisphere`, `ellipsoidal_2to1`), with a Defaults Profile table by Cargo and carriage condition (the maintainer's choice): the LPG Cargos take 2:1 semi-ellipsoidal heads (estimates: the published river LPG tank has dished ends with a toroidal connection, a published 22,000 m3 LPG/NH3 carrier tank torispherical heads; 2:1 is the engine's nearest head) and LNG keeps hemispherical heads (estimate: the old value). The head type reaches the wall, the volume, the steel and the drawings (2:1 ends are drawn as half-ellipses, R/2 long), so the head-area fix of #314 now reaches Designs. Where stability does not govern, LPG cargo rises: fully refrigerated propane on a 110 x 11.4 m hull 2,850 to 2,992 t, fully pressurised propane on 90 x 14 m 2,260 to 2,450 t. Where it governs, cargo falls: fully pressurised propane on 110 x 11.4 m moves from a 9.65 m to an 8.64 m tank and from 2,165 t to 1,821 t, because the 2:1 heads put more cargo in a tank of the same length, the 9.65 m tank then fails laden stability, and the search takes the smaller one. LNG designs do not move. A file saved before keeps hemispherical heads and its results. No sourced test changed. The before/after table is under "Design changes" below.
 
 ## 0.2.3 (2026-10-16)
 
@@ -146,6 +146,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/375-head-type (2026-10-21)
+
+Between `main db9e179` and `this branch ff8158d`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 1 (88x16.3) | `checks[12].message` | GM 3.58 m (fluid), max GZ 1.44 m at 26° | GM 4.01 m (fluid), max GZ 1.69 m at 26° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[13].message` | GM 5.47 m (fluid), max GZ 2.25 m at 27° | GM 5.87 m (fluid), max GZ 2.36 m at 27° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[14].message` | GM 10.33 m (fluid), max GZ 3.13 m at 29° | GM 10.56 m (fluid), max GZ 3.15 m at 28° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[8].message` | raised eye 13.20 m >= obstruction 14.47 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.20 m >= obstruction 13.26 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `warnings[0]` | Sightline needs 7.77 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 6.56 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].message` | GM 3.79 m (fluid), max GZ 1.55 m at 26° | GM 3.49 m (fluid), max GZ 1.36 m at 26° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[13].message` | GM 5.71 m (fluid), max GZ 2.33 m at 27° | GM 5.23 m (fluid), max GZ 2.18 m at 27° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | GM 11.02 m (fluid), max GZ 3.21 m at 28° | GM 10.21 m (fluid), max GZ 3.11 m at 29° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[8].message` | raised eye 13.20 m >= obstruction 12.97 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.20 m >= obstruction 12.94 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `warnings[0]` | Sightline needs 6.27 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 6.24 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[12].message` | GM 3.77 m (fluid), max GZ 1.28 m at 25° | GM 5.52 m (fluid), max GZ 2.22 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[13].message` | GM 5.72 m (fluid), max GZ 2.28 m at 26° | GM 7.99 m (fluid), max GZ 3.02 m at 28° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[14].message` | GM 11.24 m (fluid), max GZ 3.38 m at 29° | GM 14.91 m (fluid), max GZ 3.82 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[8].message` | raised eye 13.20 m >= obstruction 14.01 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 10.13 m >= obstruction 9.63 m + 0.50 m margin (lift used 2.93 m of 6.00 m) | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[8].ok` | False | True | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `warnings[0]` | Sightline needs 7.31 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release. | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `warnings[1]` | Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release. | absent | changed |
+| sweep gas IGC_2G 60x10 | `arrangement.feasible` | False | True | changed |
+| sweep gas IGC_2G 60x10 | `checks[10].message` | cofferdam 0.60 m >= 0.60 m (cl. 3.6.13) | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | changed |
+| sweep gas IGC_2G 60x10 | `checks[10].name` | cofferdam min width | opening setback | changed |
+| sweep gas IGC_2G 60x10 | `checks[11].message` | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3) | changed |
+| sweep gas IGC_2G 60x10 | `checks[11].name` | opening setback | fwd end bulkhead space | changed |
+| sweep gas IGC_2G 60x10 | `checks[12].message` | forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3) | GM 2.55 m (fluid), max GZ 1.15 m at 32° | changed |
+| sweep gas IGC_2G 60x10 | `checks[12].name` | fwd end bulkhead space | Stability — laden | changed |
+| sweep gas IGC_2G 60x10 | `checks[12].severity` | error | absent | changed |
+| sweep gas IGC_2G 60x10 | `checks[13].message` | GM 6.41 m (fluid), max GZ 1.86 m at 27° | GM 3.44 m (fluid), max GZ 1.27 m at 28° | changed |
+| sweep gas IGC_2G 60x10 | `checks[13].name` | Stability — laden | Stability — half laden | changed |
+| sweep gas IGC_2G 60x10 | `checks[14].message` | GM 7.29 m (fluid), max GZ 1.91 m at 25° | GM 4.92 m (fluid), max GZ 1.49 m at 25° | changed |
+| sweep gas IGC_2G 60x10 | `checks[14].name` | Stability — half laden | Stability — light | changed |
+| sweep gas IGC_2G 60x10 | `checks[15].message` | GM 8.46 m (fluid), max GZ 1.97 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | absent | changed |
+| sweep gas IGC_2G 60x10 | `checks[15].name` | Stability — light | absent | changed |
+| sweep gas IGC_2G 60x10 | `checks[15].ok` | False | absent | changed |
+| sweep gas IGC_2G 60x10 | `checks[1].message` | No arrangement passes every check on this hull. The closest one is shown. It fails: Stability — light. | cargo volume must be positive (tank/hold fits) | changed |
+| sweep gas IGC_2G 60x10 | `checks[1].name` | Feasible arrangement | feasible geometry | changed |
+| sweep gas IGC_2G 60x10 | `checks[1].ok` | False | True | changed |
+| sweep gas IGC_2G 60x10 | `checks[1].severity` | absent | error | changed |
+| sweep gas IGC_2G 60x10 | `checks[2].message` | cargo volume must be positive (tank/hold fits) | cargo zone 15.82 m = LOA 60.0 - bow void 9.30 m - stern void 34.88 m | changed |
+| sweep gas IGC_2G 60x10 | `checks[2].name` | feasible geometry | cargo zone positive | changed |
+| sweep gas IGC_2G 60x10 | `checks[3].message` | cargo zone 15.82 m = LOA 60.0 - bow void 9.30 m - stern void 34.88 m | 2 x 2.60 m thrusters need 7.00 m across a 10.00 m beam | changed |
+| sweep gas IGC_2G 60x10 | `checks[3].name` | cargo zone positive | thrusters fit beam | changed |
+| ... | 21856 more changed quantities | | | |
 
 ### ticket/374-liquid-pressure (2026-10-21)
 
