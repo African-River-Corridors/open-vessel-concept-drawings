@@ -17,6 +17,7 @@ pub mod barge_cost;
 pub mod box_stability;
 pub mod cargo;
 pub mod checks;
+pub mod compartments;
 pub mod design_grid;
 pub mod electric_energy;
 pub mod ga_adapter;
