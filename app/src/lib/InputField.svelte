@@ -188,6 +188,9 @@
   {:else if spec.kind === "parameter_set"}
     <!-- Issue #446: shown, not edited here; its editor comes with the ShipD Hull Form (#452). -->
     <span class="summary">{value === null ? t("app-none") : t("app-parameter-count", { count: Object.keys(value as object).length })}</span>
+  {:else if spec.kind === "rule_sets"}
+    <!-- Issue #274: shown, not edited here; the Rule Set commands come with #275. -->
+    <span class="summary">{Array.isArray(value) ? value.map((s: { id: string; version: string }) => `${s.id}@${s.version}`).join(", ") : t("app-none")}</span>
   {:else if spec.kind === "offsets_table"}
     <!-- Issue #446: shown, not edited here; the import comes with the offsets Hull Form (#451). -->
     <span class="summary">{value === null ? t("app-none") : t("app-offset-station-count", { count: new Set((value as { station_x_m: number }[]).map((r) => r.station_x_m)).size })}</span>

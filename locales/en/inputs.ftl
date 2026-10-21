@@ -15,6 +15,7 @@ group-aft-block = Aft block
 group-stern-and-propulsion = Stern and propulsion
 group-tug = Tug
 group-waterway-limits = Waterway Limits
+group-rules = Rules
 group-loading-conditions = Loading conditions
 group-speed-and-power = Speed and power
 group-cost-rates = Cost rates
@@ -97,9 +98,6 @@ input-pushed-stern-void-m = Stern void of a pushed barge
 
 input-lightship-factor-t-per-m3 = Lightship factor
 input-lightship-factor-t-per-m3-default-by = cargo_containment
-
-input-ruleset = Ruleset
-choice-ruleset-igc-2g = IGC_2G
 
 input-lpg-carriage-condition = LPG carriage condition
 choice-lpg-carriage-condition-fully-pressurised = Fully pressurised
@@ -483,3 +481,9 @@ input-delivery-lump = Delivery
 input-currency = Currency
 
 input-price-base-date = Price base date
+
+input-service-area = Service Area
+choice-service-area-river-only = River only
+choice-service-area-coastal-and-river = Coastal and river
+
+input-rule-sets = Rule Sets

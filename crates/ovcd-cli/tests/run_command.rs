@@ -553,3 +553,51 @@ fn fill_names_this_engine_in_the_file_it_writes_a_hash_into() {
         "{err}"
     );
 }
+
+/// Issue #274: the stored Rule Sets are the ones a run checks. A stored version the engine lacks
+/// refuses the Option and names the set; a stored hash that differs from the built-in one is a
+/// warning, and the run still computes.
+#[test]
+fn a_run_checks_the_stored_rule_sets_and_names_a_missing_or_changed_one() {
+    let dir = temp_dir("stored-rule-sets");
+    let file = starter(&dir);
+    let design = read_json(&file);
+    let sets = |version: &str, hash: &str| {
+        json!([
+            {"id": "ovcd", "version": version, "hash": hash, "source": "typed"}
+        ])
+    };
+    let built_in = design["options"][0]["inputs"]["rule_sets"]["value"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["id"] == "ovcd")
+        .unwrap()
+        .clone();
+    let version = built_in["version"].as_str().unwrap();
+    let hash = built_in["hash"].as_str().unwrap();
+
+    let mut missing = design.clone();
+    missing["options"][0]["inputs"]["rule_sets"]["value"] = sets("99.0.0", hash);
+    let file_missing = dir.join("missing.vdesign");
+    write_json(&file_missing, &missing);
+    let out = ovcd(&["run", p(&file_missing)]);
+    assert!(
+        stdout(&out).contains("Rule Set ovcd@99.0.0 is not in this engine"),
+        "{}",
+        stdout(&out)
+    );
+
+    let mut changed = design.clone();
+    changed["options"][0]["inputs"]["rule_sets"]["value"] = sets(version, &"0".repeat(64));
+    let file_changed = dir.join("changed.vdesign");
+    write_json(&file_changed, &changed);
+    let out = ovcd(&["run", p(&file_changed)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert!(
+        stdout(&out).contains("the rules differ from the file"),
+        "{}",
+        stdout(&out)
+    );
+    assert!(stdout(&out).contains("Results hash"), "{}", stdout(&out));
+}

@@ -473,8 +473,9 @@ mod tests {
             last.contains("fixed value the engine used before it was an input"),
             "{last}"
         );
+        // Issue #274: the ruleset is no longer an input; the name is read and dropped.
         let ruleset = &state.snapshot()["design"]["options"][0]["inputs"]["ruleset"];
-        assert_eq!(ruleset["value"], "IGC_2G");
+        assert!(ruleset.is_null());
         // The saved file is the current format and needs no notes.
         state.saved(Path::new("old.vdesign"));
         assert_eq!(state.snapshot()["migration_notes"], json!([]));

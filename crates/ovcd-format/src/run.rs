@@ -114,7 +114,6 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     put("cb", "block_coefficient");
     put("freeboard_min_m", "min_freeboard_m");
     put("lightship_k_t_per_m3", "lightship_factor_t_per_m3");
-    put("ruleset", "ruleset");
     put("fill_ratio", "fill_ratio");
     put("max_tank_od_m", "max_tank_od_m");
     put("optimise_depth", "optimise_depth");
@@ -346,6 +345,7 @@ pub fn run_option_with(
                     .unwrap_or_default();
                 let rule_trace = trace_json(
                     &trace_of(&selection, option, &measured),
+                    crate::trace::service_area_of(option),
                     &selection.warnings,
                 );
                 if let Some(o) = v.as_object_mut() {

@@ -155,8 +155,8 @@ input the schema names. It is the same form on a Rule Set (`applies_when`) and o
 (`applies_when`). Three **derived inputs** are read-only: the engine works them out and a user never
 types them (spec 0006 §5.2, #336):
 
-- `service_area`: `river-only` or `coastal-and-river`; until format version 3 every Option is
-  `river-only`.
+- `service_area`: `river-only` or `coastal-and-river`. Since format version 3 (#274) it is an input of
+  the Option, not derived; a file saved before reads `river-only`.
 - `cargo_class`: `gas`, `dry_bulk` or `liquid_bulk`, from the Cargo, so a new Cargo of a class needs no
   Rule Set edit. An oil category for liquid bulk Cargos comes with the Crude Grade data (spec 0006,
   ticket 2).
@@ -361,9 +361,9 @@ a domain-free crate, `arc-rules`, that a second tool shares. OVCD registers its 
   built-in id is a separate version: it is used only where a Design or a flag selects that version.
   Nothing loaded at run time replaces a built-in version silently.
 - `ovcd run`, `ovcd fill` and `ovcd validate` take `--rule-set <file>` (repeatable), as they take
-  `--profile`. Until format version 3, a loaded set is added to the default stack of the run only (it is
-  not written to the file); `--rule-set` with the id of a set in the stack and a new version replaces
-  that set for the run, and the output says so.
+  `--profile`. A loaded set is added to the stack of the run only (it is not written to the file);
+  `--rule-set` with the id of a set in the stack and a new version replaces that set for the run, and the
+  output says so. A loaded file also supplies a stored version the engine lacks.
 - `ovcd rules` lists the built-in sets and versions; `ovcd rules show <id>[@version]` prints one set
   with its Rules and verification status; `ovcd rules --measures` prints the Measure registry.
 - The Design session API (used by the app and, later, the web app) takes the same loaded sets.
@@ -426,8 +426,8 @@ One row per Rule per object, in selection order, then the set's rule order, then
   `default` (from the Service Area) or `typed` (added by the user). The `ovcd` set is always selected and
   cannot be removed. A set required by `includes` cannot be removed while the set that includes it is
   selected.
-- **Until format version 3** (#274, waiting for the ADR 0012 hull block) the engine uses the default
-  stack of `river-only` for every Option and writes no new field.
+- **Since format version 3** (#274, with the ADR 0012 hull block) an Option stores `service_area` and
+  `rule_sets`, and the run checks the stored sets at the stored versions.
 - **Default stacks built in this spec.** The sets that exist after this spec are the same for both
   Service Areas. The input still goes in now, so files record where the vessel operates, and the stacks
   can diverge as sets land, with no further format change.
@@ -553,9 +553,11 @@ the end-bulkhead condition (#281), the 0–40° area without a down-flooding ang
 
 - An Option gains `service_area` and `rule_sets` (above). The `ruleset` input is removed.
 - Reading version 1 or 2: `ruleset: IGC_2G` (and the names #175 and #237 already map to it) becomes the
-  default stack for the Option's Cargo at version `1.0.0`, marked `default`; `service_area` becomes
-  `river-only`, marked `default`. One warning per Option. Results cannot change, because the `1.0.0` sets
-  hold today's values.
+  default stack for the Option's Cargo, each set at its highest built-in version, marked `default`;
+  `service_area` becomes `river-only`, marked `default`. One warning per Option. Results cannot change,
+  because that is the stack the engine checked every Option against. (The first draft said version
+  `1.0.0`; `ovcd` and `lr-inland-gas` have since moved past it, and a stack at `1.0.0` would not be today's
+  rules.) Both new inputs join the one "fixed value the engine used before" warning of the Option.
 - Opening a file whose stored set version is built in: that version is used. A newer version exists: a
   warning, never a silent swap. A stored hash that differs from the built-in hash of the same version: a
   warning that the rules differ from the file. A stored version the engine does not have and no

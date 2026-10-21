@@ -890,7 +890,7 @@ fn fill_writes_a_version_1_adn_g_file_as_a_version_2_igc_2g_file_and_warns() {
     let design = read_json(&out_file);
     assert_eq!(design["format_version"], 3);
     let inputs = &design["options"][0]["inputs"];
-    assert_eq!(inputs["ruleset"]["value"], "IGC_2G");
+    assert!(inputs.get("ruleset").is_none());
     assert!(inputs.get("adn_tank_cap_m3").is_none());
     // The written file needs no more help.
     let again = ovcd(&["validate", path_str(&out_file)]);

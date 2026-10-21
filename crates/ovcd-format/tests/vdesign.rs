@@ -70,15 +70,18 @@ fn a_new_design_round_trips_through_its_own_text_unchanged() {
 }
 
 #[test]
-fn gas_cargo_defaults_to_type_c_tanks_with_ruleset_and_fill_ratio() {
+fn gas_cargo_defaults_to_type_c_tanks_with_its_rule_sets_and_fill_ratio() {
     let inputs = required("LNG");
     assert_eq!(
         used(inputs.clone(), "cargo_containment"),
         (json!("type_c_tanks"), Source::Default)
     );
+    let (sets, source) = used(inputs.clone(), "rule_sets");
+    assert_eq!(source, Source::Default);
+    assert_eq!(sets[0]["id"], "igc-2g");
     assert_eq!(
-        used(inputs.clone(), "ruleset"),
-        (json!("IGC_2G"), Source::Default)
+        used(inputs.clone(), "service_area"),
+        (json!("river-only"), Source::Default)
     );
     assert_eq!(
         used(inputs.clone(), "fill_ratio"),
@@ -88,13 +91,6 @@ fn gas_cargo_defaults_to_type_c_tanks_with_ruleset_and_fill_ratio() {
         used(inputs.clone(), "max_tank_od_m"),
         (json!(16.0), Source::Default)
     );
-    // The fill ratio default follows a typed ruleset: 98 % under both IGC rulesets.
-    let igc = with(inputs, "ruleset", json!("IGC_2G"));
-    assert_eq!(
-        used(igc.clone(), "ruleset"),
-        (json!("IGC_2G"), Source::Typed)
-    );
-    assert_eq!(used(igc, "fill_ratio"), (json!(0.98), Source::Default));
 }
 
 #[test]
@@ -107,7 +103,7 @@ fn a_box_hold_has_no_gas_inputs_and_a_tank_barge_has_no_lightship_factor() {
             .input("lightship_factor_t_per_m3")
             .is_some()
     );
-    assert!(design.options[0].input("ruleset").is_none());
+    assert!(design.options[0].input("max_tank_od_m").is_none());
     let design = check(&design_with(required("LNG")), &Profile::built_in())
         .design
         .unwrap();
@@ -116,16 +112,16 @@ fn a_box_hold_has_no_gas_inputs_and_a_tank_barge_has_no_lightship_factor() {
             .input("lightship_factor_t_per_m3")
             .is_none()
     );
-    assert!(design.options[0].input("ruleset").is_some());
+    assert!(design.options[0].input("max_tank_od_m").is_some());
 }
 
 #[test]
 fn an_input_not_used_by_the_cargo_containment_is_ignored_with_a_warning() {
-    let w = warnings(with(required("bauxite"), "ruleset", json!("IGC_2G")));
+    let w = warnings(with(required("bauxite"), "max_tank_od_m", json!(12.0)));
     assert!(
         has(
             &w,
-            "`ruleset` is not used for a box_hold Cargo Containment; ignored"
+            "`max_tank_od_m` is not used for a box_hold Cargo Containment; ignored"
         ),
         "{w:?}"
     );

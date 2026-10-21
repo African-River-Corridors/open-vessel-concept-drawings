@@ -106,6 +106,19 @@ save writes the current version.
   per Option, so its results do not change. Until a Hull Form's generator ticket lands, the engine refuses
   any `hull_form` but `raked_box` with a "not built yet" message. `shipd_parameters` defaults to none
   until the ShipD ticket (#452) brings the dataset rows.
+  Issue #274 (spec 0004) adds the rules block, a "Rules" group: `service_area` (`river-only` or
+  `coastal-and-river`) and `rule_sets`, the list of Rule Sets the Option is checked against, each
+  `{id, version, hash, source}` with `source` `default` (from the Service Area and the Cargo) or `typed`
+  (added by the user). The `ruleset` input is removed: its one value, `IGC_2G`, is the per-tank rule the
+  gas search always used, so a file that names it is read with the name dropped (a version 1 file keeps its
+  notes about `ADN_G` and the stepped reading). A file of version 1 or 2, or a version 3 file saved before
+  this block, gets `service_area = river-only` and the default stack of its Cargo Containment, each set at
+  its highest built-in version with its content hash, marked `default`, with one warning per Option, so its
+  results do not change (the `1.0.0` sets of the spec are not the stack the engine checked: `ovcd` is at
+  2.1.0 and `lr-inland-gas` at 1.1.0). Opening a stored set: a stored version that is built in is used; a
+  newer built-in version with other content gives a warning, never a swap; a stored hash that differs from
+  the built-in hash of that version gives a warning that the rules differ from the file; a stored version
+  the engine lacks, with no `--rule-set` supplying it, refuses the Option with a message naming the set.
 - **Inputs added after the first files** (issue #4: the dry-bulk hold, the bow rake over depth, the stern void of a pushed barge, the end bulkhead allowance, the gas tank arrangement values, the water density, the squat safety margin, the 14 cost rates, the 17 aft block values of a self-propelled hull): a file that lacks one of these
   inputs, in version 1 or in a version 2 file from a test build, is read with the fixed value the engine
   used before the input existed (a table in `vdesign.rs`, not the Defaults Profile), marked `default`, with

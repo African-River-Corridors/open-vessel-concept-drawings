@@ -183,9 +183,10 @@
       "soft": { "min": 0.08, "max": 0.15 },
       "basis": "calibrated box barges span 0.095 to 0.1223 t/m3 (calibration/factors.yaml)"
     },
-    "ruleset": {
-      "default": "IGC_2G",
-      "basis": "IGC Code 2.4.1.1: the distance d(Vc) of each individual cargo tank (Vc the gross design volume of one tank at 20 C, domes and appendages included): 0.8 m up to 1,000 m3; 0.75 + Vc x 0.2 / 4,000 m up to 5,000 m3; 0.8 + Vc / 25,000 m up to 30,000 m3; 2 m above. IGC 2.4.2: d is measured plate to plate, from the moulded line to the moulded line, excluding insulation, so the clear gap needed is d less the insulation thickness"
+    "service_area": {
+      "default": "river-only",
+      "status": "estimate",
+      "basis": "Where the vessel operates: river-only or coastal-and-river (ADR 0011; spec 0004, \"Service Area and default stacks\"). river-only was confirmed as the default by the maintainer on 2026-10-16. Both give the same Rule Set stacks for now. A file saved before holds none and is read as river-only"
     },
     "lpg_carriage_condition": {
       "default": "fully_pressurised",

@@ -283,6 +283,17 @@ OPTIONAL_INPUT_CASES = (
     # The midship coefficient (issue #425), set to its default: the same results as leaving it out.
     ("midship_coefficient", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
      {"midship_coefficient": 1.0}),
+    # The rules block (issue #274): the Service Area, and the Rule Sets stored with their content
+    # hashes. Both are checked, not computed: the results do not move. A stale hash only warns. A base
+    # from before them refuses the input and leaves it out.
+    ("service_area", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
+     {"service_area": "coastal-and-river"}),
+    ("rule_sets", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
+     {"rule_sets": [
+         {"id": "is2008-a", "version": "1.0.0", "source": "default",
+          "hash": "cfab2d1cda90d0cfda8edbf0955082345cd30ef2d102c9840e8d4feab5297e37"},
+         {"id": "ovcd", "version": "2.1.0", "source": "default",
+          "hash": "7a4b82e2b709ae694076787156efe9ad57b4916829085128330e4366e6e5295a"}]}),
     # The Hull Form parameters (issue #446), set to their defaults on a raked box. Inputs only until
     # the hydrostatics switch-over (#448): each shows no change. A base from before them refuses the
     # input and leaves it out.

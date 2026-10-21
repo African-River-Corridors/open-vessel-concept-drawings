@@ -343,6 +343,10 @@ impl Profile {
                     && !crate::class_input::UNSET_WHEN_ABSENT.contains(&s.name)
                     // A rule, not a value: the depth is the ratio of the Cargo times the beam.
                     && s.name != crate::vdesign::DEPTH_INPUT
+                    // A rule, not a value: the default stack of the Cargo Containment, each set at
+                    // its highest built-in version (issue #274; the stacks per Service Area come
+                    // with #275).
+                    && s.name != "rule_sets"
         }) {
             let entry = self
                 .inputs

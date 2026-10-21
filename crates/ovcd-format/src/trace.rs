@@ -13,7 +13,7 @@ use ovcd_core::rule_trace::{
 use ovcd_core::rules::{ArgValue, MeasureRef};
 use serde_json::{Value, json};
 
-/// The Service Area every Option has until `.vdesign` format version 3 (#274) stores one.
+/// The Service Area of an Option that stores none (spec 0004, "Service Area and default stacks").
 pub const DEFAULT_SERVICE_AREA: &str = "river-only";
 
 /// The registry entry of a Measure: a computed Measure of the core, or `input.<name>` for an input
@@ -33,7 +33,8 @@ pub fn measure_info(id: &str) -> Option<MeasureInfo> {
         | InputKind::VesselScheme
         | InputKind::VesselClass
         | InputKind::ParameterSet
-        | InputKind::OffsetsTable => return None,
+        | InputKind::OffsetsTable
+        | InputKind::RuleSets => return None,
     };
     // Parsed once: a run asks this for every input.
     static PROFILE: std::sync::OnceLock<Profile> = std::sync::OnceLock::new();
@@ -51,14 +52,11 @@ pub fn measure_info(id: &str) -> Option<MeasureInfo> {
     })
 }
 
-/// The default stack of Rule Set ids of an Option, before format version 3 (spec 0004, "Service
-/// Area and default stacks", `river-only`). Only the ids the library holds are used.
-pub fn default_stack(option: &DesignOption) -> Vec<&'static str> {
-    let gas = option
-        .input("cargo_containment")
-        .and_then(|i| i.value.as_str())
-        == Some("type_c_tanks");
-    if gas {
+/// The default stack of Rule Set ids for a Cargo Containment (spec 0004, "Service Area and default
+/// stacks"). Both Service Areas have the same stacks until more sets land. Only the ids the library
+/// holds are used.
+pub fn default_stack_ids(containment: Option<&str>) -> Vec<&'static str> {
+    if containment == Some("type_c_tanks") {
         // `igc-2g` includes `is2008-a` (IGC 2.2.2); naming it here too keeps the IS Code rows in the
         // stack whatever the gas sets hold. A set selected twice is checked once.
         vec!["igc-2g", "is2008-a", "lr-inland-gas", "ovcd"]
@@ -67,18 +65,108 @@ pub fn default_stack(option: &DesignOption) -> Vec<&'static str> {
     }
 }
 
-/// The sets a run of one Option checks: the default stack at its highest built-in version, then
-/// each extra set (loaded with `--rule-set`). An extra set with the id of a set in the stack
-/// replaces it for the run.
+/// The default `rule_sets` input for a Cargo Containment: the default stack at the highest built-in
+/// version of each set, each marked `default`, with the content hash of that version.
+pub fn default_rule_sets(containment: Option<&str>) -> Value {
+    let library = crate::rule_set::built_in();
+    let sets: Vec<Value> = default_stack_ids(containment)
+        .into_iter()
+        .filter_map(|id| library.latest(id))
+        .map(|set| {
+            json!({
+                "id": set.id,
+                "version": set.version,
+                "hash": set.hash,
+                "source": "default",
+            })
+        })
+        .collect();
+    Value::Array(sets)
+}
+
+/// The Service Area of an Option: its input, or the default.
+pub fn service_area_of(option: &DesignOption) -> &str {
+    option
+        .input("service_area")
+        .and_then(|i| i.value.as_str())
+        .unwrap_or(DEFAULT_SERVICE_AREA)
+}
+
+/// The sets an Option stores: `(id, version, hash)` of each entry of its `rule_sets` input. `None`
+/// when the Option has none (an Option built by hand, not read from a file).
+fn stored_rule_sets(option: &DesignOption) -> Option<Vec<(String, String, String)>> {
+    let list = option.input("rule_sets")?.value.as_array()?;
+    Some(
+        list.iter()
+            .filter_map(|e| {
+                let text = |k: &str| e.get(k).and_then(Value::as_str).map(str::to_string);
+                Some((text("id")?, text("version")?, text("hash")?))
+            })
+            .collect(),
+    )
+}
+
+/// The sets a run of one Option checks: the sets the Option stores (`rule_sets`, at the stored
+/// versions), then each extra set (loaded with `--rule-set`). An extra set with the id of a set in
+/// the stack replaces it for the run.
+///
+/// A stored version the library lacks is refused with a message naming the set. A stored hash that
+/// differs from the hash of that version in the library, and a newer version with other content,
+/// each give a warning, never a swap.
 pub fn stack_for<'a>(
     library: &'a Library,
     option: &DesignOption,
     extra: &[(String, String)],
 ) -> Result<Selection<'a>, String> {
     let mut chosen: Vec<(String, String)> = Vec::new();
-    for id in default_stack(option) {
-        if let Some(set) = library.latest(id) {
-            chosen.push((set.id.clone(), set.version.clone()));
+    let mut warnings: Vec<String> = Vec::new();
+    match stored_rule_sets(option) {
+        Some(stored) => {
+            for (id, version, hash) in stored {
+                let replaced = extra.iter().any(|(i, _)| *i == id);
+                match library.find(&id, &version) {
+                    Some(set) => {
+                        if !replaced && set.hash != hash {
+                            warnings.push(format!(
+                                "the file stores Rule Set {id}@{version} with hash {}, but the rules \
+                                 of that version in this engine have hash {}: the rules differ from \
+                                 the file",
+                                short_hash(&hash),
+                                short_hash(&set.hash)
+                            ));
+                        }
+                    }
+                    None if replaced => {}
+                    None => {
+                        return Err(format!(
+                            "Rule Set {id}@{version} is not in this engine: pass the file with \
+                             --rule-set, or pick another version"
+                        ));
+                    }
+                }
+                if let Some(newer) = library.latest(&id)
+                    && crate::rule_set::is_newer(&newer.version, &version)
+                    && newer.hash != hash
+                {
+                    warnings.push(format!(
+                        "Rule Set {id}@{version} is used as the file stores it; {} is also built in \
+                         with other content",
+                        newer.version
+                    ));
+                }
+                chosen.push((id, version));
+            }
+        }
+        None => {
+            for id in default_stack_ids(
+                option
+                    .input("cargo_containment")
+                    .and_then(|i| i.value.as_str()),
+            ) {
+                if let Some(set) = library.latest(id) {
+                    chosen.push((set.id.clone(), set.version.clone()));
+                }
+            }
         }
     }
     for (id, version) in extra {
@@ -89,14 +177,19 @@ pub fn stack_for<'a>(
         .iter()
         .map(|(i, v)| (i.as_str(), v.as_str()))
         .collect();
-    library.select(&pairs)
+    let mut selection = library.select(&pairs)?;
+    warnings.extend(std::mem::take(&mut selection.warnings));
+    selection.warnings = warnings;
+    Ok(selection)
+}
+
+fn short_hash(hash: &str) -> &str {
+    &hash[..hash.len().min(12)]
 }
 
 /// The derived, read-only inputs an Applicability can name (spec 0004 additions of spec 0006
 /// §5.2), with their values. The engine works them out; a user never types them.
 pub const DERIVED_INPUTS: &[(&str, &[&str])] = &[
-    // Until `.vdesign` format version 3 stores one, every Option is `river-only`.
-    ("service_area", &["river-only", "coastal-and-river"]),
     ("cargo_class", &["gas", "dry_bulk", "liquid_bulk"]),
     ("deadweight_band", DEADWEIGHT_BANDS),
 ];
@@ -192,7 +285,6 @@ impl MeasureSource for OptionMeasures<'_> {
 
     fn input(&self, name: &str) -> Option<String> {
         match name {
-            "service_area" => return Some(DEFAULT_SERVICE_AREA.to_string()),
             "cargo_class" => {
                 let cargo = self.option.input("cargo")?.value.as_str()?;
                 let props = ovcd_core::cargo::get_cargo(cargo).ok()?;
@@ -210,6 +302,7 @@ impl MeasureSource for OptionMeasures<'_> {
             .input(name)
             .and_then(|i| i.value.as_str())
             .map(str::to_string)
+            .or_else(|| (name == "service_area").then(|| DEFAULT_SERVICE_AREA.to_string()))
     }
 }
 
@@ -227,10 +320,8 @@ pub fn rule_inputs(option: &DesignOption) -> RuleInputs {
             applicability.push((spec.name.to_string(), v));
         }
     }
-    for name in ["service_area", "cargo_class"] {
-        if let Some(v) = source.input(name) {
-            applicability.push((name.to_string(), v));
-        }
+    if let Some(v) = source.input("cargo_class") {
+        applicability.push(("cargo_class".to_string(), v));
     }
     let mut measures = Vec::new();
     for spec in INPUTS {
@@ -311,7 +402,7 @@ fn row_json(r: &TraceRow) -> Value {
 
 /// The trace as JSON: the selected sets, every row, and the verdict. A pass with blocking Rules
 /// not evaluated names them; nothing here says "meets every rule" while one is not evaluated.
-pub fn trace_json(t: &Trace, warnings: &[String]) -> Value {
+pub fn trace_json(t: &Trace, service_area: &str, warnings: &[String]) -> Value {
     let not_evaluated: Vec<Value> = t
         .blocking_not_evaluated()
         .iter()
@@ -336,7 +427,7 @@ pub fn trace_json(t: &Trace, warnings: &[String]) -> Value {
     };
     json!({
         "rule_sets": t.sets,
-        "service_area": DEFAULT_SERVICE_AREA,
+        "service_area": service_area,
         "warnings": warnings,
         "rows": t.rows.iter().map(row_json).collect::<Vec<_>>(),
         "verdict": {
@@ -571,5 +662,5 @@ pub fn box_trace(
             measured: &measured,
         },
     );
-    Ok(trace_json(&trace, &[]))
+    Ok(trace_json(&trace, DEFAULT_SERVICE_AREA, &[]))
 }

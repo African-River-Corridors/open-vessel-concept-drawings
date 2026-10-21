@@ -81,10 +81,6 @@
           "value": 3.0,
           "source": "default"
         },
-        "ruleset": {
-          "value": "IGC_2G",
-          "source": "typed"
-        },
         "fill_ratio": {
           "value": 0.98,
           "source": "default"
@@ -363,6 +359,39 @@
         },
         "price_base_date": {
           "value": null,
+          "source": "default"
+        },
+        "service_area": {
+          "value": "river-only",
+          "source": "default"
+        },
+        "rule_sets": {
+          "value": [
+            {
+              "id": "igc-2g",
+              "version": "1.1.0",
+              "hash": "c37ea4f62da5d1f920c595449770804fbad506c51d466f5e0b6de12e758337d1",
+              "source": "default"
+            },
+            {
+              "id": "is2008-a",
+              "version": "1.0.0",
+              "hash": "cfab2d1cda90d0cfda8edbf0955082345cd30ef2d102c9840e8d4feab5297e37",
+              "source": "default"
+            },
+            {
+              "id": "lr-inland-gas",
+              "version": "1.1.0",
+              "hash": "78652a0f9187ba0c5e83b1983cdf6a188d0277928ccb49fd36eaf98d406e7e0a",
+              "source": "default"
+            },
+            {
+              "id": "ovcd",
+              "version": "2.1.0",
+              "hash": "7a4b82e2b709ae694076787156efe9ad57b4916829085128330e4366e6e5295a",
+              "source": "default"
+            }
+          ],
           "source": "default"
         }
       },
