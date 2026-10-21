@@ -1,5 +1,7 @@
 //! Seam: the public `ovcd_core::weights` API. Expected values are printed by the original Python
 //! (`core/weights.py`), not worked out by hand.
+//! Label: snapshot
+//! A value re-pinned after an agreed change is what the code printed then; the reason is named next to it.
 
 use ovcd_core::hull::HullGeometry;
 use ovcd_core::models::{BargeInputs, WeightBreakdown};

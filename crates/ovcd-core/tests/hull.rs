@@ -1,5 +1,6 @@
 //! Seam: the public `ovcd_core::hull` API. Behaviour copied from `core/hull.py`, values taken
 //! from what the original Python printed.
+//! Label: snapshot
 
 use ovcd_core::hull::HullGeometry;
 use ovcd_core::hull::hull_form::RakedBox;

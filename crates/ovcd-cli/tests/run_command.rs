@@ -1,5 +1,7 @@
 //! Seam 2: `ovcd run`, end to end through the real binary: the summary, `--json`, the results hash
 //! and its warning, and the convoy message (issue #25).
+//! Label: snapshot
+//! The pinned numbers are what the code printed: the original Python, then each re-pinning named at its value.
 
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};

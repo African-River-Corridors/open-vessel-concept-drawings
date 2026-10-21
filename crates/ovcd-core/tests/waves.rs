@@ -1,4 +1,5 @@
 //! Seam: the public `ovcd_core::waves` API. Expected values are what the original Python printed.
+//! Label: snapshot
 
 use ovcd_core::waves::{WaveResistanceInputs, compute};
 

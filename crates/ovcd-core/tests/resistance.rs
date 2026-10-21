@@ -1,5 +1,7 @@
 //! Seam: the public `ovcd_core::resistance` API. Expected values are what the original Python
 //! printed for the same inputs.
+//! Label: snapshot
+//! A value re-pinned after an agreed change is what the code printed then; the old value is named next to it.
 
 use ovcd_core::aft_arrangement::PyException;
 use ovcd_core::pyfmt::round_to;

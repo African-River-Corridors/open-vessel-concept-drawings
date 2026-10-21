@@ -1,6 +1,8 @@
 //! Seam: the public `ovcd_core::design_grid` and `ovcd_core::ga_adapter` API. Expected values are
 //! the original Python's, not worked out by hand. JSON cannot carry a NaN or an infinity as an
 //! input, so these tests, not the JSON seam, reach those paths.
+//! Label: snapshot
+//! A value re-pinned after an agreed change is what the code printed then; the reason is named next to it.
 
 use ovcd_core::barge_capacity::{BargeCapacityInputs, compute};
 use ovcd_core::design_grid::sweep;

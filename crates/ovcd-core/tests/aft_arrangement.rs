@@ -1,5 +1,6 @@
 //! Seam: the public `ovcd_core::aft_arrangement` API. Expected values are printed by the original
 //! Python (`core/aft_arrangement.py`), not worked out by hand.
+//! Label: snapshot
 
 use ovcd_core::aft_arrangement::{AftArrangementInputs, PyException, compute};
 

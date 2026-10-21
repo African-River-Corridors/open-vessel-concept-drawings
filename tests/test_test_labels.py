@@ -50,29 +50,7 @@ INFRASTRUCTURE = {
 
 # Rust test files that held a long float literal before the rule began and have no `Label:` line.
 # Add a `//! Label: ...` line to a file and delete it from here. Never add a file.
-RUST_UNLABELLED = {
-    "crates/ovcd-cli/tests/design_commands.rs",
-    "crates/ovcd-cli/tests/run_command.rs",
-    "crates/ovcd-core/tests/aft_arrangement.rs",
-    "crates/ovcd-core/tests/barge_capacity.rs",
-    "crates/ovcd-core/tests/design_grid.rs",
-    "crates/ovcd-core/tests/electric_energy.rs",
-    "crates/ovcd-core/tests/gas_arrangement.rs",
-    "crates/ovcd-core/tests/gas_stability.rs",
-    "crates/ovcd-core/tests/hull.rs",
-    "crates/ovcd-core/tests/hydrostatics.rs",
-    "crates/ovcd-core/tests/journey_derating.rs",
-    "crates/ovcd-core/tests/pressure_vessel.rs",
-    "crates/ovcd-core/tests/protective_location.rs",
-    "crates/ovcd-core/tests/pyfmt.rs",
-    "crates/ovcd-core/tests/resistance.rs",
-    "crates/ovcd-core/tests/squat.rs",
-    "crates/ovcd-core/tests/tanks.rs",
-    "crates/ovcd-core/tests/waves.rs",
-    "crates/ovcd-core/tests/weights.rs",
-    "crates/ovcd-format/tests/eval_refusals.rs",
-    "crates/ovcd-format/tests/gas_stability.rs",
-}
+RUST_UNLABELLED: set[str] = set()
 
 LABEL = re.compile(r"^Label:\s*(sourced|snapshot|property)\b(?:\s+-\s+(.*))?$")
 LONG_FLOAT = re.compile(r"\b\d+\.\d{8,}")

@@ -1,5 +1,7 @@
 //! Seam 2: the `ovcd` binary's design commands, end to end: `new`, `validate` and `profile`.
 //! Each test runs the real binary on real files in a temporary folder.
+//! Label: property
+//! Each test states a rule of a command (an exit code, a message, a value kept exactly); the one long number is a refusal at one ulp, not a result.
 
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};

@@ -2,6 +2,8 @@
 //! prints for the same input (`str(x)`, `f"{x:.2f}"`, `f"{x:g}"`, `f"{x:.0%}"`, `f"{x:,.2f}"`).
 //! They are literals from Python, never recomputed here, so the tests cannot agree with a wrong
 //! implementation by construction.
+//! Label: snapshot
+//! The expected strings are what CPython 3.12 printed.
 
 use ovcd_core::pyfmt::{comma_fixed, fixed, general, percent, py_str};
 

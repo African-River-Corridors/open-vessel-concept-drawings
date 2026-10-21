@@ -1,6 +1,8 @@
 //! Seam: the public `ovcd_core::protective_location` API. Every expected number is what CPython
 //! 3.12 printed for the `core/protective_location.py`. These pin the branch edges and the
 //! Python behaviours the port must copy.
+//! Label: snapshot
+//! The d(Vc) tests are the exception: each is marked `sourced` in its own doc comment, with its IGC Code citation.
 
 use ovcd_core::protective_location::*;
 

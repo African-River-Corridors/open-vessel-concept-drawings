@@ -1,6 +1,7 @@
 //! Seam: the public `ovcd_core::journey_derating` API. Expected values are printed by the original
 //! Python (`core/journey_derating.py`), not worked out by hand. JSON cannot carry a NaN or an
 //! infinity, so these tests, not the JSON seam, reach those paths.
+//! Label: snapshot
 
 use ovcd_core::barge_capacity::{BargeCapacityInputs, compute as capacity};
 use ovcd_core::journey_derating::{JourneyDeratingInputs, compute};

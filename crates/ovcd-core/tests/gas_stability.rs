@@ -1,6 +1,7 @@
 //! Branches of `gas_stability`, with expected values printed by the original Python and its
 //! messages as Python 3.12 words them. The JSON seam is tested in
 //! `crates/ovcd-format/tests/gas_stability.rs`.
+//! Label: snapshot
 
 use ovcd_core::gas_stability::{
     DEFAULT_BLOCK_COEFFICIENT, DEFAULT_CRITERIA_SET, DEFAULT_WATER_DENSITY, GasBasis,
