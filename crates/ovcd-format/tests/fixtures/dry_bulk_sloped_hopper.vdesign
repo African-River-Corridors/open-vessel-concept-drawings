@@ -316,6 +316,27 @@
         "price_base_date": {
           "value": null,
           "source": "default"
+        },
+        "service_area": {
+          "value": "river-only",
+          "source": "default"
+        },
+        "rule_sets": {
+          "value": [
+            {
+              "id": "is2008-a",
+              "version": "1.0.0",
+              "hash": "cfab2d1cda90d0cfda8edbf0955082345cd30ef2d102c9840e8d4feab5297e37",
+              "source": "default"
+            },
+            {
+              "id": "ovcd",
+              "version": "2.1.0",
+              "hash": "7a4b82e2b709ae694076787156efe9ad57b4916829085128330e4366e6e5295a",
+              "source": "default"
+            }
+          ],
+          "source": "default"
         }
       },
       "results_hash": "138c94275d637b7ab105cca00bf691c91867dba0dae99cfcc9155719b41424ee"
