@@ -167,12 +167,13 @@ fn a_budget_is_the_sum_of_its_parts() {
                 .sum()
         };
         // Each part is rounded to whole currency units, so the sums agree to within one unit per item.
+        let items = |key: &str| cost[key].as_array().unwrap().len() as f64;
         assert!(
-            (sum("barge") - cost["barge_subtotal"].as_f64().unwrap()).abs() <= 8.0,
+            (sum("barge") - cost["barge_subtotal"].as_f64().unwrap()).abs() <= items("barge"),
             "{file}"
         );
         assert!(
-            (sum("tug") - cost["tug_subtotal"].as_f64().unwrap()).abs() <= 5.0,
+            (sum("tug") - cost["tug_subtotal"].as_f64().unwrap()).abs() <= items("tug"),
             "{file}"
         );
         let total = cost["barge_subtotal"].as_f64().unwrap()
@@ -344,4 +345,51 @@ fn the_budget_shows_the_steel_difference_between_lightship_and_cost() {
     );
     assert!(top_down > 0.0);
     assert_eq!(steel["delta_t"].as_f64().unwrap(), top_down - bottom_up);
+}
+
+fn items(cost: &Value, key: &str) -> Vec<String> {
+    cost[key]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|r| r["item"].as_str().unwrap().to_string())
+        .collect()
+}
+
+#[test]
+fn a_self_propelled_gas_option_has_no_tug_line() {
+    // Issue #403: a self-propelled vessel has no tug. Its own battery, propulsion and wheelhouse
+    // are barge items; the tug's hull steel and outfitting lump are not costed.
+    let cost = results(&open(&raw_fixture("gas_igc_2g_self_propelled")), 0)["cost"].clone();
+    assert!(items(&cost, "tug").is_empty());
+    assert_eq!(cost["tug_subtotal"], json!(0));
+    let barge = items(&cost, "barge");
+    for own in ["battery", "propulsion", "wheelhouse_accommodation"] {
+        assert!(barge.contains(&own.to_string()), "{own}: {barge:?}");
+    }
+    assert!(cost["masses"].get("tug_hull_steel_t").is_none());
+    let listed: Vec<&str> = cost["core_default"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_str().unwrap())
+        .collect();
+    assert!(!listed.contains(&"tug_hull_steel_t"), "{listed:?}");
+}
+
+#[test]
+fn a_pushed_gas_option_keeps_the_tug_line() {
+    let cost = results(&open(&raw_fixture("gas_igc_2g_exact")), 0)["cost"].clone();
+    assert_eq!(
+        items(&cost, "tug"),
+        [
+            "hull_steel",
+            "battery",
+            "propulsion",
+            "wheelhouse_accommodation",
+            "outfitting"
+        ]
+    );
+    assert!(cost["tug_subtotal"].as_f64().unwrap() > 0.0);
+    assert!(!items(&cost, "barge").contains(&"battery".to_string()));
 }
