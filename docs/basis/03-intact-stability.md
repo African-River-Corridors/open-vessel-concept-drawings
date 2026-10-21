@@ -85,6 +85,7 @@ For a **dry bulk Cargo** (work in development):
 4. Check `gm_positive`: GM ≥ 0.15 m, severity "warning" (does not gate), plus a warning that the method is first
    order and does not model cargo shift (`barge_capacity.rs:1004`, `barge_capacity.rs:814`). It runs only when the
    draught is above zero and the hull is not overloaded. *Fixed in code.*
+   Since #415 a Design's results carry the check `intact gm at reported cargo` instead: the same first-order GM at the cargo and draught the Design reports, in every dry bulk Option (Rule `ovcd/capacity/intact-gm`, `ovcd` 2.0.0).
 
 ### Legacy API (`hydrostatics::calculate_stability`, `hydrostatics.rs:61`)
 

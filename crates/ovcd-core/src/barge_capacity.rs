@@ -897,22 +897,19 @@ fn bulk_volumetric(
     })
 }
 
-/// First-order transverse intact GM for the bulk hopper at full load: `GM = KB + BM_t - KG`.
+/// First-order transverse intact GM for the bulk hopper: `GM = KB + BM_t - KG`.
 ///
 /// Solid bulk has no liquid free surface. KG combines lightship (at 0.5 x moulded depth) and
-/// cargo (the centroid of the filled trapezoidal hold above the double bottom).
+/// cargo (the centroid of the filled trapezoidal hold above the double bottom). `hold` is the
+/// hold's top width, bottom width and height.
 fn bulk_gm(
     inp: &BargeCapacityInputs,
-    detail: &Detail,
+    (w_top, w_bot, h): (f64, f64, f64),
     draft: f64,
     (lightship, stern): (f64, &[crate::weights::MassItem]),
     cargo_t: f64,
     hull: &HullGeometry,
 ) -> f64 {
-    // The bulk branch always sets these.
-    let w_top = detail.hold_top_width_m.unwrap_or(f64::NAN);
-    let w_bot = detail.hold_bottom_width_m.unwrap_or(f64::NAN);
-    let h = detail.hold_height_m.unwrap_or(f64::NAN);
     // Trapezoid centroid above its base: h/3 * (2*top + bot)/(top + bot).
     let zc = if (w_top + w_bot) > 0.0 {
         (h / 3.0) * (2.0 * w_top + w_bot) / (w_top + w_bot)
@@ -937,6 +934,37 @@ fn bulk_gm(
             / total
     };
     hull.KB(draft) + hull.BM_transverse(draft) - kg
+}
+
+/// The note that goes with the first-order dry bulk GM.
+pub fn bulk_gm_note() -> Text {
+    Text::fixed("warn-barge-bulk-gm", BULK_GM_WARNING)
+}
+
+/// The first-order GM of a dry bulk hold at `cargo_t` and `draft_m` (issue #415): the cargo and the
+/// draught the Design reports, which a draught limit can make less than the volume-bound load. The
+/// cargo stays at the centroid of the full hold: a smaller load sits lower, so this KG is on the
+/// safe side. `r` is the capacity result of `inp`.
+pub fn bulk_gm_at(
+    inp: &BargeCapacityInputs,
+    r: &BargeCapacityResult,
+    cargo_t: f64,
+    draft_m: f64,
+) -> f64 {
+    let hull = HullGeometry::new(inp.loa, inp.beam, inp.depth, 0.0, 0.0, 0.0, 0.0);
+    let hold = (
+        r.hold_top_width_m.unwrap_or(f64::NAN),
+        r.hold_bottom_width_m.unwrap_or(f64::NAN),
+        r.hold_height_m.unwrap_or(f64::NAN),
+    );
+    bulk_gm(
+        inp,
+        hold,
+        draft_m,
+        (r.lightship_t, &r.stern_block_items),
+        cargo_t,
+        &hull,
+    )
 }
 
 /// `replace(aft_in, sightline_obstruction_m=...)` and friends keep the other fields.
@@ -1378,9 +1406,15 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     }
     let mut gm = None;
     if props.phase == CargoClass::DryBulk && draft > 0.0 && !overloaded {
+        // The bulk branch always sets these.
+        let hold = (
+            detail.hold_top_width_m.unwrap_or(f64::NAN),
+            detail.hold_bottom_width_m.unwrap_or(f64::NAN),
+            detail.hold_height_m.unwrap_or(f64::NAN),
+        );
         let g = bulk_gm(
             inp,
-            &detail,
+            hold,
             draft,
             (lightship, &stern_block_items),
             cargo_capacity,
@@ -1396,7 +1430,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
             ),
             "warning",
         ));
-        warnings.push(Text::fixed("warn-barge-bulk-gm", BULK_GM_WARNING));
+        warnings.push(bulk_gm_note());
 
         gm = Some(g);
     }
