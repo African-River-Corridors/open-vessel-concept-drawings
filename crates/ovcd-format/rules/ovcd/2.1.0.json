@@ -1,0 +1,966 @@
+{
+  "$schema": "../rule-set.schema.json",
+  "id": "ovcd",
+  "family": "ovcd",
+  "title": "OVCD Checks: physical feasibility, tool limits and method validity",
+  "version": "2.1.0",
+  "edition": {
+    "document": "OVCD's own checks",
+    "edition": "the engine's checks as of this set"
+  },
+  "sources": [],
+  "status": "draft",
+  "applies_when": {},
+  "includes": [],
+  "known_conflicts": [],
+  "tables": [],
+  "rules": [
+    {
+      "id": "ovcd/capacity/cargo-positive",
+      "title": "The hull carries some cargo",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "Cargo > 0"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/capacity/feasible-geometry",
+      "title": "The cargo space has a positive volume",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "feasible geometry"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/capacity/cargo-zone-positive",
+      "title": "The cargo zone is longer than zero",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "cargo zone positive"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/capacity/air-draft-within-limit",
+      "title": "Light air draft (with ballast where carried) within the typed limit",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "air draft within limit"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/capacity/intact-gm",
+      "title": "First-order hold GM at the reported cargo at least 0.15 m (an estimate, not a stability check)",
+      "origin": "tool-limit",
+      "source": {
+        "document": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A",
+        "edition": "MSC.267(85), adopted 4 December 2008 (origin of the value only; OVCD applies it as a tool limit to a first-order estimate)",
+        "locator": "A.2.2.4",
+        "page": "MSC.267-85.pdf, annex p. 12",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#415"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "intact gm at reported cargo"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "2.0.0"
+    },
+    {
+      "id": "ovcd/gas-arrangement/feasible-arrangement",
+      "title": "Some tank arrangement passes every check on this hull",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "Feasible arrangement"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/gas-arrangement/tank-l-over-d",
+      "title": "Tank length at most 7 inner shell diameters",
+      "origin": "tool-limit",
+      "source": {
+        "document": "ADN 2025, ECE/TRANS/351",
+        "edition": "2025 (origin of the limit only; OVCD applies it as a tool limit)",
+        "locator": "9.3.1.11.1(b)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "tank length over diameter"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/aft-block/thrusters-fit-beam",
+      "title": "The thrusters fit within the beam",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "thrusters fit beam"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/aft-block/thruster-count",
+      "title": "The requested number of thrusters fits",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "requested thruster count fits"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/aft-block/containers-fit-beam",
+      "title": "The 40 ft units fit within the beam",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "containers fit beam"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/aft-block/units-in-one-row",
+      "title": "The 40 ft units fit in one row",
+      "origin": "tool-limit",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "units fit in one row"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/aft-block/wheelhouse-fits-beam",
+      "title": "The wheelhouse fits within the beam",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "wheelhouse fits beam"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/aft-block/accom-beside-wheelhouse",
+      "title": "The accommodation units fit beside the wheelhouse",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "accom beside wheelhouse"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/aft-block/gensets-fit-beam",
+      "title": "The gas gensets fit within the beam",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "gensets fit beam"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/aft-block/gensets-under-deck",
+      "title": "The gas gensets fit under the deck with 1.0 m allowance (an estimate)",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "gensets fit under deck"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/aft-block/gensets-reserve",
+      "title": "The gensets carry the load with one set in reserve",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "gensets carry load with one in reserve"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/aft-block/wheelhouse-sightline",
+      "title": "The wheelhouse eye sees over the cargo with the margin",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "wheelhouse sees over cargo"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/squat/froude-depth",
+      "title": "Depth Froude number below the squat method's range limit 0.7",
+      "origin": "method-validity",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "froude depth subcritical"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/squat/blockage",
+      "title": "Blockage at most 0.35, the squat method's range",
+      "origin": "method-validity",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "blockage within barrass range"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/squat/keel-clears-bed",
+      "title": "The keel clears the bed at speed",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "keel clears bed"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/squat/keel-margin",
+      "title": "The keel clears the bed at speed with the safety margin",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "keel clears bed with margin"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/squat/methods-agree",
+      "title": "The two squat methods agree within 50 %",
+      "origin": "method-validity",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "methods agree within 50pct"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/waves/short-wave-validity",
+      "title": "Wave length within the added-resistance method's range",
+      "origin": "method-validity",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "stawave1 short wave validity"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/waves/wave-height",
+      "title": "Significant wave height at most 3.0 m, the screening range",
+      "origin": "method-validity",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "wave height within screening range"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/energy/service-below-schijf",
+      "title": "Service speed within the Schijf limiting speed",
+      "origin": "method-validity",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "service below schijf"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/capacity/not-overloaded",
+      "title": "The full tank volume floats within the hull (information: it does not gate, #418)",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "not overloaded"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/capacity/freeboard",
+      "title": "Freeboard at the full-volume draught at least the required freeboard (information: it does not gate, #418)",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "freeboard ok"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/journey/volume-bound",
+      "title": "The cargo is bound by the tank volume, not overloaded",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "capacity is volume bound"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/journey/floats",
+      "title": "The payload the draught limit leaves is above zero",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "floats"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/journey/ukc-consistent",
+      "title": "The draught limit leaves room for the under-keel clearance",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "ukc consistent"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/journey/utilisation",
+      "title": "The payload uses a reasonable share of the tank volume",
+      "origin": "tool-limit",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "utilisation reasonable"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/gas-arrangement/freeboard-at-payload",
+      "title": "Freeboard at the carried draught at least the required freeboard",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "freeboard at payload"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/stability/assessed",
+      "title": "The engine could assess the stability of every loading condition",
+      "origin": "tool-limit",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "Stability — not assessed"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/waves/bow-length-supplied",
+      "title": "The bow length the wave method needs is given, not estimated",
+      "origin": "method-validity",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#420"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "bow length supplied"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "2.1.0"
+    },
+    {
+      "id": "ovcd/resistance/service-below-limiting",
+      "title": "Service speed at most 0.95 times the Schijf limiting speed, in each channel",
+      "origin": "tool-limit",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#420"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "service speed below limiting"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "2.1.0"
+    },
+    {
+      "id": "ovcd/resistance/blockage-in-range",
+      "title": "Channel blockage ratio between 0 and 1, in each channel",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#420"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "blockage in range"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "2.1.0"
+    },
+    {
+      "id": "ovcd/resistance/service-clears-squat",
+      "title": "At the service speed the squat leaves the under-keel clearance, in each channel",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#420"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "service speed clears squat"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "2.1.0"
+    },
+    {
+      "id": "ovcd/resistance/lackenby-fit",
+      "title": "Depth Froude number below 0.95, where the shallow-water correction is used",
+      "origin": "method-validity",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#420"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "lackenby fit subcritical"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "2.1.0"
+    },
+    {
+      "id": "ovcd/resistance/first-order-coefficients",
+      "title": "The resistance coefficients are uncalibrated first-order estimates",
+      "origin": "method-validity",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#420"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "coefficients are first order"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "2.1.0"
+    }
+  ]
+}

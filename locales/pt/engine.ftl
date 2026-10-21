@@ -214,6 +214,8 @@ msg-convoy-not-available = resultados do comboio ainda não disponíveis
 ## crates/ovcd-format/src/simulate.rs
 
 # status: draft
+warn-channel-no-bottom-width = O canal tem profundidade mas não tem largura de fundo, por isso o afundamento dinâmico (squat), a velocidade limite de Schijf e o fator de bloqueio não são verificados, e as curvas de velocidade são só para águas profundas. O limite de calado usa a profundidade. Indique a largura de fundo do canal para os verificar.
+# status: draft
 name-governs-draught = calado — { $limit }
 # status: draft
 check-feasible-arrangement = Nenhum arranjo passa em todas as verificações neste casco. O mais próximo é mostrado. Ele reprova em: { $fails }.

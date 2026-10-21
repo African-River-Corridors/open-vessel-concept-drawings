@@ -447,10 +447,70 @@ pub const CHECK_RULES: &[(&str, &str)] = &[
         "ovcd/gas-arrangement/freeboard-at-payload",
     ),
     ("Stability \u{2014} not assessed", "ovcd/stability/assessed"),
+    // The resistance method's checks at each service speed (issue #420).
+    ("keel clears bed", "ovcd/squat/keel-clears-bed"),
+    ("keel clears bed with margin", "ovcd/squat/keel-margin"),
+    ("froude depth subcritical", "ovcd/squat/froude-depth"),
+    ("blockage within barrass range", "ovcd/squat/blockage"),
+    ("methods agree within 50pct", "ovcd/squat/methods-agree"),
+    (
+        "stawave1 short wave validity",
+        "ovcd/waves/short-wave-validity",
+    ),
+    (
+        "wave height within screening range",
+        "ovcd/waves/wave-height",
+    ),
+    ("bow length supplied", "ovcd/waves/bow-length-supplied"),
+    (
+        "service speed below limiting",
+        "ovcd/resistance/service-below-limiting",
+    ),
+    ("blockage in range", "ovcd/resistance/blockage-in-range"),
+    (
+        "service speed clears squat",
+        "ovcd/resistance/service-clears-squat",
+    ),
+    ("lackenby fit subcritical", "ovcd/resistance/lackenby-fit"),
+    (
+        "coefficients are first order",
+        "ovcd/resistance/first-order-coefficients",
+    ),
 ];
 
-/// The id of the Rule a check reports, or `None` for a check no Rule reports.
+/// The check name without its environment: `keel clears bed[Channel ...]` is `keel clears bed`
+/// (issue #420: the resistance method's checks come once per environment).
+pub fn check_base_name(name: &str) -> &str {
+    match name.split_once('[') {
+        Some((base, rest)) if rest.ends_with(']') => base,
+        _ => name,
+    }
+}
+
+/// The checks as the Rule Trace reads them: each check of the result, then one verdict per check
+/// that comes once per environment, under its name without the environment. It passes when it
+/// passes in every environment, so a Rule on it fails when any environment fails.
+pub fn with_check_verdicts(checks: Vec<(String, bool)>) -> Vec<(String, bool)> {
+    let mut folded: Vec<(String, bool)> = Vec::new();
+    for (name, ok) in &checks {
+        let base = check_base_name(name);
+        if base == name || checks.iter().any(|(n, _)| n == base) {
+            continue;
+        }
+        match folded.iter_mut().find(|(n, _)| n == base) {
+            Some((_, all)) => *all = *all && *ok,
+            None => folded.push((base.to_string(), *ok)),
+        }
+    }
+    let mut out = checks;
+    out.extend(folded);
+    out
+}
+
+/// The id of the Rule a check reports, or `None` for a check no Rule reports. A check that comes
+/// once per environment reports the Rule of its name without the environment.
 pub fn rule_of_check(name: &str) -> Option<&'static str> {
+    let name = check_base_name(name);
     if name.starts_with("Stability \u{2014} ") && name != "Stability \u{2014} not assessed" {
         return Some("is2008/A.2.2/condition");
     }
