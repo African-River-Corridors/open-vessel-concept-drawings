@@ -173,6 +173,12 @@
         </label>
       </div>
     {/if}
+  {:else if spec.kind === "parameter_set"}
+    <!-- Issue #446: shown, not edited here; its editor comes with the ShipD Hull Form (#452). -->
+    <span class="summary">{value === null ? t("app-none") : t("app-parameter-count", { count: Object.keys(value as object).length })}</span>
+  {:else if spec.kind === "offsets_table"}
+    <!-- Issue #446: shown, not edited here; the import comes with the offsets Hull Form (#451). -->
+    <span class="summary">{value === null ? t("app-none") : t("app-offset-station-count", { count: new Set((value as { station_x_m: number }[]).map((r) => r.station_x_m)).size })}</span>
   {/if}
 
   {#each messages as m}
@@ -191,6 +197,7 @@
   .link { background: none; border: none; color: var(--accent); text-decoration: underline; padding: 0; cursor: pointer; font-size: var(--fs-11); }
   .link:hover:not(:disabled) { background: none; }
   .row { display: flex; gap: 6px; align-items: center; }
+  .summary { font-size: var(--fs-12); color: var(--ink-3); }
   .row.convoy label { display: flex; flex-direction: column; font-size: var(--fs-11); color: var(--ink-3); }
   input[type="text"], select { width: 100%; padding: 3px 5px; font: inherit; color: var(--ink); background-color: var(--surface); border: var(--lw-thin) solid var(--rule-strong); border-radius: var(--radius); box-sizing: border-box; }
   select { padding-right: var(--sp-5); }

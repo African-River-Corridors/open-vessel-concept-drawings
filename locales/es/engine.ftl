@@ -371,8 +371,6 @@ msg-number-or-null = { $input } debe ser un número o null (ninguno)
 # status: draft
 msg-bool = { $input } debe ser true o false
 # status: draft
-msg-hull-form = { $input } = { $value } no es compatible; por ahora solo existe raked_box
-# status: draft
 msg-choice = { $input } = { $value } debe ser uno de: { $choices }
 # status: draft
 msg-string = { $input } debe ser una cadena

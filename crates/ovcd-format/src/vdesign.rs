@@ -231,8 +231,19 @@ pub fn table_combinations() -> Vec<[(&'static str, String); 3]> {
     out
 }
 
-/// Hull Forms that exist today.
-pub const HULL_FORMS: &[&str] = &["raked_box"];
+/// The Hull Forms of spec 0008 (issue #446).
+pub const HULL_FORMS: &[&str] = &["box", "raked_box", "v_bottom", "chine", "shipd", "offsets"];
+/// The Hull Forms the engine computes today. The others are inputs only until their generator and
+/// the hydrostatics switch-over land (spec 0008, "Build tickets"); an Option with one is refused.
+pub const BUILT_HULL_FORMS: &[&str] = &["raked_box"];
+/// The Hull Forms with the raked-box bow (every form but `shipd` and `offsets`).
+pub const RAKED_BOW_FORMS: &[&str] = &["box", "raked_box", "v_bottom", "chine"];
+/// The Hull Forms that take a bilge radius.
+pub const BILGE_RADIUS_FORMS: &[&str] = &["box", "raked_box", "chine"];
+/// The Hull Forms that take sheer and camber (every form but `offsets`).
+pub const SHEER_FORMS: &[&str] = &["box", "raked_box", "v_bottom", "chine", "shipd"];
+/// The Hull Forms with a deadrise and a keel width.
+pub const DEADRISE_FORMS: &[&str] = &["v_bottom", "chine"];
 
 /// The deepest hull the gas depth search (`optimise_depth`) tries, in m. It is fixed in the core
 /// (`DEFAULT_DEPTHS_M`, 3.5 to 7.0 m).
@@ -353,6 +364,31 @@ pub struct LegacyFixed {
 ///
 /// A profile that has no entry for one of these inputs takes the built-in profile's entry.
 pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
+    // Issue #446 (spec 0008): a file saved before has a square bilge, no sheer and no camber.
+    LegacyFixed {
+        name: "bilge_radius_m",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 0.0,
+    },
+    LegacyFixed {
+        name: "sheer_aft_m",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 0.0,
+    },
+    LegacyFixed {
+        name: "sheer_fwd_m",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 0.0,
+    },
+    LegacyFixed {
+        name: "camber_m",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 0.0,
+    },
     LegacyFixed {
         name: "hold_wing_void_width_m",
         applies_to: AppliesTo::AnyOf(DRY_HOLDS),
@@ -745,6 +781,18 @@ pub struct LegacyFixedJson {
 
 /// See [`LegacyFixedJson`]. Read by a file that lacks the input, like [`LEGACY_FIXED_INPUTS`].
 pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
+    // Issue #446 (spec 0008): a file saved before keeps its own bow rake, from its bow rake over
+    // depth ratio, rising to the deck.
+    LegacyFixedJson {
+        name: "bow_rake_length_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "bow_rake_rise_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
     LegacyFixedJson {
         name: "lpg_carriage_condition",
         applies_to: AppliesTo::Only("type_c_tanks"),
@@ -1163,6 +1211,10 @@ pub enum InputKind {
     VesselScheme,
     /// A Vessel Class id (a pickable class; an old id of the core is read as its class), or null.
     VesselClass,
+    /// Issue #446: an object of named numbers (the ShipD parameters), or null.
+    ParameterSet,
+    /// Issue #446: an offsets table, rows of `station_x_m`, `y_m`, `z_m`, or null.
+    OffsetsTable,
 }
 
 /// Which Cargo Containments an input is used for.
@@ -1201,6 +1253,7 @@ pub enum Group {
     Required,
     VesselClass,
     HullAndContainment,
+    HullForm,
     GasTanks,
     DryBulkHold,
     AftBlock,
@@ -1214,10 +1267,11 @@ pub enum Group {
 
 impl Group {
     /// Every group, in the order a form shows them.
-    pub const ALL: [Group; 12] = [
+    pub const ALL: [Group; 13] = [
         Group::Required,
         Group::VesselClass,
         Group::HullAndContainment,
+        Group::HullForm,
         Group::GasTanks,
         Group::DryBulkHold,
         Group::AftBlock,
@@ -1235,6 +1289,7 @@ impl Group {
             Group::Required => "Required",
             Group::VesselClass => "Vessel Class",
             Group::HullAndContainment => "Hull and containment",
+            Group::HullForm => "Hull Form",
             Group::GasTanks => "Gas tanks",
             Group::DryBulkHold => "Dry-bulk hold",
             Group::AftBlock => "Aft block",
@@ -1262,7 +1317,12 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("box_hold", "Box hold"),
     ("sloped_hopper_hold", "Sloped hopper hold"),
     ("type_c_tanks", "Type C tanks"),
+    ("box", "Box"),
     ("raked_box", "Raked box"),
+    ("v_bottom", "V-bottom"),
+    ("chine", "Chine"),
+    ("shipd", "ShipD-style"),
+    ("offsets", "Offsets table"),
     ("self_propelled", "Self-propelled"),
     ("legacy", "Laden, half laden and light (as before)"),
     (
@@ -1544,7 +1604,7 @@ pub const INPUTS: &[InputSpec] = &[
         "Hull Form",
         InputKind::Choice(HULL_FORMS),
         true,
-        Group::Required,
+        Group::HullForm,
     ),
     spec(
         "formation",
@@ -1598,6 +1658,128 @@ pub const INPUTS: &[InputSpec] = &[
         NUM_OR_NONE,
         false,
         Group::HullAndContainment,
+    ),
+    // Issue #446 (spec 0008, "Inputs"): the parameters of the Hull Form. Inputs only: the engine
+    // reads none of them until the hydrostatics switch-over (#448) and the generator tickets.
+    when(
+        spec(
+            "bow_rake_length_m",
+            "Bow rake length",
+            NUM_OR_NONE,
+            false,
+            Group::HullForm,
+        ),
+        "hull_form",
+        RAKED_BOW_FORMS,
+    ),
+    when(
+        spec(
+            "bow_rake_rise_m",
+            "Bow rake rise",
+            NUM_OR_NONE,
+            false,
+            Group::HullForm,
+        ),
+        "hull_form",
+        RAKED_BOW_FORMS,
+    ),
+    when(
+        spec(
+            "bilge_radius_m",
+            "Bilge radius",
+            NUM,
+            false,
+            Group::HullForm,
+        ),
+        "hull_form",
+        BILGE_RADIUS_FORMS,
+    ),
+    when(
+        spec(
+            "sheer_aft_m",
+            "Sheer at the aft end",
+            NUM,
+            false,
+            Group::HullForm,
+        ),
+        "hull_form",
+        SHEER_FORMS,
+    ),
+    when(
+        spec(
+            "sheer_fwd_m",
+            "Sheer at the forward end",
+            NUM,
+            false,
+            Group::HullForm,
+        ),
+        "hull_form",
+        SHEER_FORMS,
+    ),
+    when(
+        spec("camber_m", "Deck camber", NUM, false, Group::HullForm),
+        "hull_form",
+        SHEER_FORMS,
+    ),
+    when(
+        spec("deadrise_deg", "Deadrise", NUM, false, Group::HullForm),
+        "hull_form",
+        DEADRISE_FORMS,
+    ),
+    when(
+        spec(
+            "keel_half_width_m",
+            "Keel half-width",
+            NUM,
+            false,
+            Group::HullForm,
+        ),
+        "hull_form",
+        DEADRISE_FORMS,
+    ),
+    when(
+        spec(
+            "chine_half_breadth_m",
+            "Chine half-breadth",
+            NUM_OR_NONE,
+            false,
+            Group::HullForm,
+        ),
+        "hull_form",
+        &["chine"],
+    ),
+    when(
+        spec(
+            "chine_height_m",
+            "Chine height above base",
+            NUM_OR_NONE,
+            false,
+            Group::HullForm,
+        ),
+        "hull_form",
+        &["chine"],
+    ),
+    when(
+        spec(
+            "shipd_parameters",
+            "ShipD parameters",
+            InputKind::ParameterSet,
+            false,
+            Group::HullForm,
+        ),
+        "hull_form",
+        &["shipd"],
+    ),
+    when(
+        spec(
+            "hull_offsets",
+            "Offsets table",
+            InputKind::OffsetsTable,
+            false,
+            Group::HullForm,
+        ),
+        "hull_form",
+        &["offsets"],
     ),
     spec(
         "min_freeboard_m",
@@ -3726,6 +3908,14 @@ fn normalise(v: Value) -> Value {
 
 /// Check one value against its type and ranges. Returns the value as stored and any soft
 /// warnings, or the hard error.
+/// Check one stored value against its input's kind and ranges: the value as used, or the error in
+/// English (issue #446: the tests of the object-valued inputs use it).
+pub fn check_input_value(spec: &InputSpec, v: &Value, profile: &Profile) -> Result<Value, String> {
+    check_value(spec, v, profile)
+        .map(|(v, _)| v)
+        .map_err(|t| t.en)
+}
+
 fn check_value(spec: &InputSpec, v: &Value, profile: &Profile) -> Result<(Value, Vec<Text>), Text> {
     let name = spec.name;
     let input = || Arg::input(name);
@@ -3762,15 +3952,16 @@ fn check_value(spec: &InputSpec, v: &Value, profile: &Profile) -> Result<(Value,
         },
         InputKind::Choice(choices) => {
             let s = v.as_str().unwrap_or("");
-            if choices.contains(&s) {
-                Ok((v.clone(), vec![]))
-            } else if name == "hull_form" {
+            if name == "hull_form" && choices.contains(&s) && !BUILT_HULL_FORMS.contains(&s) {
                 Err(text!(
-                    "msg-hull-form",
-                    "`{input}` = {value} is not supported; only raked_box exists for now",
+                    "msg-hull-form-not-built",
+                    "`{input}` = {value} is not built yet: the engine computes only raked_box for \
+                     now (spec 0008)",
                     input = input(),
                     value = v.to_string()
                 ))
+            } else if choices.contains(&s) {
+                Ok((v.clone(), vec![]))
             } else {
                 Err(text!(
                     "msg-choice",
@@ -3789,6 +3980,27 @@ fn check_value(spec: &InputSpec, v: &Value, profile: &Profile) -> Result<(Value,
             Ok((v.clone(), vec![]))
         }
         InputKind::Formation => check_formation(v, profile),
+        InputKind::ParameterSet => match v {
+            Value::Null => Ok((Value::Null, vec![])),
+            Value::Object(o) if o.values().all(|x| x.as_f64().is_some_and(f64::is_finite)) => {
+                Ok((v.clone(), vec![]))
+            }
+            _ => Err(text!(
+                "msg-parameter-set",
+                "`{input}` must be an object of named numbers, or null",
+                input = input()
+            )),
+        },
+        InputKind::OffsetsTable => match v {
+            Value::Null => Ok((Value::Null, vec![])),
+            Value::Array(rows) if rows.iter().all(is_offset_row) => Ok((v.clone(), vec![])),
+            _ => Err(text!(
+                "msg-offsets-table",
+                "`{input}` must be a list of rows with `station_x_m`, `y_m` and `z_m` in metres, or \
+                 null",
+                input = input()
+            )),
+        },
         InputKind::VesselScheme => match v {
             Value::Null => Ok((Value::Null, vec![])),
             Value::String(s) if ovcd_core::vessel_classes::schemes().contains(&s.as_str()) => {
@@ -3829,6 +4041,23 @@ fn check_value(spec: &InputSpec, v: &Value, profile: &Profile) -> Result<(Value,
             )),
         },
     }
+}
+
+/// The columns of one row of an offsets table (spec 0008, "Offsets table").
+pub const OFFSET_COLUMNS: [&str; 3] = ["station_x_m", "y_m", "z_m"];
+
+/// A row of an offsets table: an object with exactly the three columns, each a finite number. The
+/// table's own checks (stations ascending, the centre line, the point count) come with its import
+/// (#451).
+fn is_offset_row(row: &Value) -> bool {
+    row.as_object().is_some_and(|o| {
+        o.len() == OFFSET_COLUMNS.len()
+            && OFFSET_COLUMNS.iter().all(|c| {
+                o.get(*c)
+                    .and_then(Value::as_f64)
+                    .is_some_and(f64::is_finite)
+            })
+    })
 }
 
 fn check_formation(v: &Value, profile: &Profile) -> Result<(Value, Vec<Text>), Text> {

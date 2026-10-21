@@ -43,6 +43,30 @@
           "value": 0.85,
           "source": "default"
         },
+        "bow_rake_length_m": {
+          "value": null,
+          "source": "default"
+        },
+        "bow_rake_rise_m": {
+          "value": null,
+          "source": "default"
+        },
+        "bilge_radius_m": {
+          "value": 0.0,
+          "source": "default"
+        },
+        "sheer_aft_m": {
+          "value": 0.0,
+          "source": "default"
+        },
+        "sheer_fwd_m": {
+          "value": 0.0,
+          "source": "default"
+        },
+        "camber_m": {
+          "value": 0.0,
+          "source": "default"
+        },
         "min_freeboard_m": {
           "value": 0.3,
           "source": "default"

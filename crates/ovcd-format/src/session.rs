@@ -171,6 +171,22 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
                 .collect();
             e.insert("choices".into(), Value::Array(list));
         }
+        InputKind::ParameterSet => {
+            e.insert("kind".into(), json!("parameter_set"));
+            e.insert("nullable".into(), json!(true));
+            e.insert(
+                "shape".into(),
+                json!({ "type": "object", "values": "number" }),
+            );
+        }
+        InputKind::OffsetsTable => {
+            e.insert("kind".into(), json!("offsets_table"));
+            e.insert("nullable".into(), json!(true));
+            e.insert(
+                "shape".into(),
+                json!({ "type": "rows", "columns": crate::vdesign::OFFSET_COLUMNS, "unit": "m" }),
+            );
+        }
         InputKind::Formation => {
             e.insert("kind".into(), json!("formation"));
             let kinds: Vec<Value> = FORMATION_KINDS
