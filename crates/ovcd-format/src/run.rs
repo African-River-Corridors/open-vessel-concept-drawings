@@ -520,20 +520,35 @@ pub fn summary_lines(name: &str, results: &Value) -> Vec<String> {
             f(tank, &["design_pressure_mpa"], 2),
         ));
     }
+    // A failed warning is not a failure: it is listed apart (issue #418). A check with no severity
+    // is an error.
     let checks = results["checks"].as_array().cloned().unwrap_or_default();
-    let failed: Vec<String> = checks
-        .iter()
-        .filter(|c| c["ok"] == json!(false))
-        .map(|c| c["name"].as_str().unwrap_or("?").to_string())
-        .collect();
+    let failed_with = |warning: bool| -> Vec<String> {
+        checks
+            .iter()
+            .filter(|c| c["ok"] == json!(false) && (c["severity"] == json!("warning")) == warning)
+            .map(|c| c["name"].as_str().unwrap_or("?").to_string())
+            .collect()
+    };
+    let (failed, warned) = (failed_with(false), failed_with(true));
     if failed.is_empty() {
-        lines.push(format!("  Checks: all {} pass", checks.len()));
+        lines.push(format!(
+            "  Checks: all {} pass",
+            checks.len() - warned.len()
+        ));
     } else {
         lines.push(format!(
             "  Checks: {} of {} fail: {}",
             failed.len(),
-            checks.len(),
+            checks.len() - warned.len(),
             failed.join("; ")
+        ));
+    }
+    if !warned.is_empty() {
+        lines.push(format!(
+            "  Warning checks: {} not met: {}",
+            warned.len(),
+            warned.join("; ")
         ));
     }
     if let Some(w) = results["warnings"].as_array() {

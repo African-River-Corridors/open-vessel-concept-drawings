@@ -109,7 +109,8 @@ fn the_failed_checks_of_a_hull_where_nothing_passes_make_one_numbered_note() {
         .as_array()
         .unwrap()
         .iter()
-        .filter(|c| c["ok"] == false)
+        // A failed warning is not a failure (issue #418).
+        .filter(|c| c["ok"] == false && c["severity"] != "warning")
         .count();
     // "Feasible arrangement" says plainly that none passes; the failed light stability is listed too.
     assert!(failed >= 2, "{failed} failed checks");
@@ -127,7 +128,8 @@ fn the_lng_self_propelled_case_now_passes_and_makes_no_failed_checks_note() {
         .as_array()
         .unwrap()
         .iter()
-        .filter(|c| c["ok"] == false)
+        // A failed warning is not a failure (issue #418).
+        .filter(|c| c["ok"] == false && c["severity"] != "warning")
         .count();
     assert_eq!(failed, 0);
     for (view, doc) in views(&r).all() {
