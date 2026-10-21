@@ -9,6 +9,7 @@ mod gas_arrangement;
 pub mod gas_stability;
 mod objects;
 pub mod profile;
+pub mod rule_set;
 mod run;
 pub mod session;
 mod simulate;

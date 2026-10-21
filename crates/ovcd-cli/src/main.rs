@@ -9,6 +9,7 @@
 mod draw;
 
 use ovcd_format::Profile;
+use ovcd_format::rule_set::{Library, describe};
 use std::process::ExitCode;
 
 const HELP: &str = "\
@@ -23,18 +24,18 @@ Usage:
       Prints to stdout when no file is given.
       --class defines the Option by a standard Vessel Class (see `ovcd schema`, input
       `vessel_class`): length, beam and Formation come from the class and are marked \"class\".
-  ovcd fill [--profile <profile.json>] [--as-new] <in.vdesign> [<out.vdesign>]
+  ovcd fill [--profile <profile.json>] [--rule-set <file>]... [--as-new] <in.vdesign> [<out.vdesign>]
       Write every input a hand-written Design leaves out in, as used and marked \"default\",
       from the Defaults Profile. Prints to stdout when no output file is given; never
       overwrites a file. Writes nothing and exits 1 if there is any hard error.
       An input that was added after the first files (see ADR 0007) takes the fixed value the
       engine used before it existed, so an old file keeps its results. --as-new takes the
       Defaults Profile value instead, as a new Design does: use it for a file you write now.
-  ovcd validate [--profile <profile.json>] [--inputs] <file.vdesign>
+  ovcd validate [--profile <profile.json>] [--rule-set <file>]... [--inputs] <file.vdesign>
       List hard errors and soft warnings without running. --inputs also lists every input
       as used, typed or default. Exits 1 if there is any hard error. A file must store
       every input as used, so a left-out input is a hard error: run `ovcd fill` first.
-  ovcd run [--profile <profile.json>] [--json] <file.vdesign>
+  ovcd run [--profile <profile.json>] [--rule-set <file>]... [--json] <file.vdesign>
       Compute every Option of a Design and print a short summary. --json prints the full
       results instead. Each Option's results hash is compared with the one saved in the file;
       a difference is a warning that the results differ from the hash saved in the file (an
@@ -49,6 +50,12 @@ Usage:
       hard and soft ranges and basis, from the Defaults Profile. Use it to build valid Designs.
   ovcd profile
       Print the built-in Defaults Profile. Copy it, edit it, and pass it with --profile.
+  ovcd rules [--rule-set <file>]...
+      List the Rule Sets: the built-in sets, then each file loaded with --rule-set, with
+      version, status, number of Rules and content hash.
+  ovcd rules show <id>[@<version>] [--rule-set <file>]...
+      Print one Rule Set with each Rule, its test, its citation and its verification status.
+      With no version, the highest version.
   ovcd draw run <document.json>
       The conformance runner of the Drawing Format Standard (clause 17.3): read one drawing
       document and print the result as JSON, either the normalised content or the list of
@@ -63,6 +70,11 @@ Usage:
       Print the drawing documents only, as JSON, so that they can be built with another
       implementation of the standard.
   ovcd --help | --version
+
+--rule-set <file> (repeatable) loads a Rule Set file at run time, after the built-in sets
+and in the order given. A file is refused with a message when it is malformed, or when it has
+the id and version of a loaded set but other content: a changed Rule Set needs a new version.
+Until the Rule Trace lands, run, fill and validate only check the files they are given.
 
 All files and output are SI, except speeds, which are in knots.
 ";
@@ -91,6 +103,7 @@ fn main() -> ExitCode {
             ExitCode::SUCCESS
         }
         ["new", rest @ ..] => report(new(rest), "new"),
+        ["rules", rest @ ..] => report(rules(rest), "rules"),
         ["fill", rest @ ..] => report(fill(rest), "fill"),
         ["validate", rest @ ..] => match validate(rest) {
             Ok(ok) => {
@@ -127,6 +140,7 @@ fn usage_error(command: &str, msg: &str) -> ExitCode {
 /// Flags shared by the design commands.
 struct Flags<'a> {
     profile: Option<&'a str>,
+    rule_sets: Vec<&'a str>,
     inputs: bool,
     json: bool,
     as_new: bool,
@@ -141,6 +155,7 @@ fn parse_flags<'a>(
 ) -> Result<Flags<'a>, String> {
     let mut flags = Flags {
         profile: None,
+        rule_sets: Vec::new(),
         inputs: false,
         json: false,
         as_new: false,
@@ -151,6 +166,12 @@ fn parse_flags<'a>(
         match arg {
             "--profile" => {
                 flags.profile = Some(it.next().ok_or("--profile needs a file")?);
+            }
+            // The design commands that check a Design take Rule Sets: fill, validate and run.
+            "--rule-set" if allow_inputs || allow_json || allow_as_new => {
+                flags
+                    .rule_sets
+                    .push(it.next().ok_or("--rule-set needs a file")?);
             }
             "--inputs" if allow_inputs => flags.inputs = true,
             "--json" if allow_json => flags.json = true,
@@ -170,6 +191,64 @@ fn load_profile(path: Option<&str>) -> Result<Profile, String> {
                 std::fs::read_to_string(p).map_err(|e| format!("cannot read profile {p}: {e}"))?;
             Profile::from_json(&text).map_err(|e| format!("{p}: {e}"))
         }
+    }
+}
+
+/// The built-in Rule Sets, then each file in order. Every `includes` target must be loaded once all
+/// files are in. Loader warnings go to stderr.
+fn load_rule_sets(paths: &[&str]) -> Result<Library, String> {
+    let mut lib = Library::built_in();
+    for p in paths {
+        let text =
+            std::fs::read_to_string(p).map_err(|e| format!("cannot read Rule Set {p}: {e}"))?;
+        lib.add_text(&text)
+            .map_err(|e| format!("Rule Set {p}: {e}"))?;
+    }
+    lib.check()?;
+    for w in &lib.warnings {
+        eprintln!("warning: {w}");
+    }
+    Ok(lib)
+}
+
+fn rules(args: &[&str]) -> Result<(), String> {
+    let mut files: Vec<&str> = Vec::new();
+    let mut rest: Vec<&str> = Vec::new();
+    let mut it = args.iter();
+    while let Some(&arg) = it.next() {
+        match arg {
+            "--rule-set" => files.push(it.next().ok_or("--rule-set needs a file")?),
+            a if a.starts_with('-') => return Err(format!("unknown option `{a}`")),
+            a => rest.push(a),
+        }
+    }
+    let lib = load_rule_sets(&files)?;
+    match rest.as_slice() {
+        [] => {
+            if lib.sets().is_empty() {
+                println!("no Rule Sets");
+            }
+            for s in lib.sets() {
+                println!(
+                    "{}@{}  {}  {} Rules  {}  {}",
+                    s.id,
+                    s.version,
+                    s.status.key(),
+                    s.rules.len(),
+                    &s.hash[..12],
+                    s.title
+                );
+            }
+            Ok(())
+        }
+        ["show", spec] => {
+            let set = lib
+                .lookup(spec)
+                .ok_or_else(|| format!("no Rule Set `{spec}`; `ovcd rules` lists them"))?;
+            print!("{}", describe(set));
+            Ok(())
+        }
+        _ => Err("use `ovcd rules` or `ovcd rules show <id>[@<version>]`".into()),
     }
 }
 
@@ -245,6 +324,8 @@ fn fill(args: &[&str]) -> Result<(), String> {
         _ => return Err("give one .vdesign file, and optionally an output file".into()),
     };
     let profile = load_profile(flags.profile)?;
+    // Checked now; nothing reads the sets until the Rule Trace lands.
+    load_rule_sets(&flags.rule_sets)?;
     let text = std::fs::read_to_string(input).map_err(|e| format!("cannot read {input}: {e}"))?;
     let filled = if flags.as_new {
         ovcd_format::fill_as_new(&text, &profile)
@@ -284,6 +365,8 @@ fn validate(args: &[&str]) -> Result<bool, String> {
         return Err("give exactly one .vdesign file".into());
     };
     let profile = load_profile(flags.profile)?;
+    // Checked now; nothing reads the sets until the Rule Trace lands.
+    load_rule_sets(&flags.rule_sets)?;
     let checked = match std::fs::read_to_string(path) {
         Ok(text) => ovcd_format::check(&text, &profile),
         Err(e) => {
@@ -330,6 +413,8 @@ fn run(args: &[&str]) -> Result<bool, String> {
         return Err("give exactly one .vdesign file".into());
     };
     let profile = load_profile(flags.profile)?;
+    // Checked now; nothing reads the sets until the Rule Trace lands.
+    load_rule_sets(&flags.rule_sets)?;
     let text = match std::fs::read_to_string(path) {
         Ok(t) => t,
         Err(e) => {
