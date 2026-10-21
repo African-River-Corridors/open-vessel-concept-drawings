@@ -30,8 +30,28 @@ _Avoid_: ship type
 
 **Hull Form**:
 The shape family of a Hull (e.g. flat-bottom raked box, V-bottom) and the parameters that set it,
-such as block coefficient and rake lengths.
+such as rake lengths, bilge radius or deadrise. The block coefficient is a result of the shape, not a
+parameter.
 _Avoid_: hull type, hull shape
+
+**Sections Table**:
+The master hull geometry (ADR 0012): closed section polygons at Stations along the length. A Hull
+Form's Generator writes it; the Offsets Hull Form is one typed in.
+_Avoid_: lines plan, offsets (when the derived table is meant)
+
+**Station**:
+A position x along the hull where the Sections Table holds a section.
+
+**Generator**:
+The code of a Hull Form that writes a Sections Table from the Hull Form's parameters.
+
+**Vessel Model**:
+The hull, arrangement and structure layers of a Hull (ADR 0018), from which every analysis and every
+view reads its geometry.
+_Avoid_: digital twin, 3D model (when the engineering model is meant)
+
+**Waterplane**:
+The plane of the water surface relative to the hull, set by the draught, the heel and the trim.
 
 **Formation**:
 An arrangement of Hulls that moves as one — a pushed convoy, a tow, a coupled unit, an ATB — described
