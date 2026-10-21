@@ -65,7 +65,9 @@ fn the_curve_is_the_feasible_cells_of_one_length_in_beam_order() {
             .starts_with("raised eye 13.50 m >= obstruction 13.60 m")
     );
     assert!(g.cells[6].reason.starts_with("Cylinder length is -1.70m"));
-    assert_eq!(g.curve(60.0)[0].cargo_t, Some(692.5678145592659));
+    // Re-pinned (issue #423: the grid fills to the 98 % Filling Limit, not 0.95); was
+    // 692.5678145592659, which times 0.98 / 0.95 is this value.
+    assert_eq!(g.curve(60.0)[0].cargo_t, Some(714.4383771242954));
     assert!(g.curve(75.0).is_empty());
 }
 
@@ -110,4 +112,23 @@ fn a_range_rule_overflow_in_capacity_ends_the_sweep_loudly() {
     let e = sweep(&[100.0], &[1e300], 6.0, "LPG_propane").unwrap_err();
     assert_eq!(e.kind, "OverflowError");
     assert_eq!(e.message, "integer does not fit in 64 bits");
+}
+
+#[test]
+fn the_grid_fills_to_the_filling_limit() {
+    // Issue #423: the grid has no loading-limit inputs, so it fills as a `.vdesign` run does when
+    // none is typed: to the Filling Limit, 98 % (IGC 15.3), not the 0.95 default of the capacity
+    // inputs. The cargo of a cell is the engine's at that fill.
+    use ovcd_core::tanks::DEFAULT_FILLING_LIMIT;
+    assert_eq!(DEFAULT_FILLING_LIMIT, 0.98);
+    let g = sweep(&[90.0], &[11.0], 6.0, "LPG_propane").unwrap();
+    let c = &g.cells[0];
+    assert!(c.feasible, "{}", c.reason);
+    let mut i = BargeCapacityInputs::new(90.0, 11.0, 6.0);
+    i.cargo_type = "LPG_propane".to_string();
+    i.n_tanks_long = 2;
+    i.fill_ratio = DEFAULT_FILLING_LIMIT;
+    let r = compute(&i).unwrap();
+    assert_eq!(r.fill_ratio_applied, Some(0.98));
+    assert_eq!(c.cargo_t, Some(r.cargo_capacity_t));
 }

@@ -6,7 +6,8 @@ from vessel_designer.core.design_grid import sweep
 
 
 def test_base_point_regression_anchor():
-    """60 m barge x 11 m beam, side clearance per tank from IGC 2.4.1.2 = 693 t.
+    """60 m barge x 11 m beam, side clearance per tank from IGC 2.4.1.2, filled to the 98 % Filling
+    Limit = 714 t (issue #423; it was 693 t at the 0.95 fill).
 
     Re-pinned (issue #277): was 60 m x 12 m, 680 t, with the 1.0 m standard clearance. The
     12 m cell's tanks now hide the view from the raised wheelhouse, which blocks.
@@ -23,7 +24,7 @@ def test_base_point_regression_anchor():
     g = sweep([60], [11.0])
     c = g.curve(60)[0]
     assert c.n_tanks_long == 2
-    assert round(c.cargo_t) == 693
+    assert round(c.cargo_t) == 714
 
 
 def test_every_cell_has_two_tanks_along_the_hull():

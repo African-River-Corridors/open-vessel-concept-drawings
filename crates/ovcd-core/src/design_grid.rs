@@ -39,7 +39,7 @@ pub struct GridCell {
     pub beam_m: f64,
     pub n_tanks_long: i64,
     pub feasible: bool,
-    /// Volume-bound (1.0 m default side clearance)
+    /// Volume-bound, at the Filling Limit, with the IGC side clearance per tank
     pub cargo_t: Option<f64>,
     pub tank_outer_diameter_m: Option<f64>,
     pub tank_length_m: Option<f64>,
