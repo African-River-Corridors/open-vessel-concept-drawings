@@ -13,6 +13,7 @@ group-dry-bulk-hold = Dry-bulk hold
 group-aft-block = Aft block
 group-stern-and-propulsion = Stern and propulsion
 group-waterway-limits = Waterway Limits
+group-loading-conditions = Loading conditions
 group-speed-and-power = Speed and power
 group-cost-rates = Cost rates
 group-note-cost-rates = Example rates — replace with yours.
@@ -291,6 +292,33 @@ input-channel-current-kn = Current
 input-water-density-t-per-m3 = Water density
 
 input-squat-safety-margin-m = Squat safety margin
+
+input-loading-conditions = Loading conditions
+choice-loading-conditions-legacy = Laden, half laden and light (as before)
+choice-loading-conditions-is-code-2008 = IS Code 2008 standard conditions, with ballast
+
+input-may-sail-without-ballast = May sail without ballast
+input-may-sail-without-ballast-default-by = formation
+
+input-endurance-h = Endurance (running hours)
+
+input-fixed-stores-t = Fresh water and stores
+
+input-ballast-plan = Ballast plan
+choice-ballast-plan-least-ballast = The least ballast that meets every criterion
+choice-ballast-plan-user-set = Fills set by the user
+
+input-ballast-departure-double-bottom-fill = Ballast departure: double bottom fill
+
+input-ballast-departure-peak-fill = Ballast departure: peak tanks fill
+
+input-ballast-departure-wing-fill = Ballast departure: wing tanks fill
+
+input-ballast-arrival-double-bottom-fill = Ballast arrival: double bottom fill
+
+input-ballast-arrival-peak-fill = Ballast arrival: peak tanks fill
+
+input-ballast-arrival-wing-fill = Ballast arrival: wing tanks fill
 
 input-hull-steel-rate = Hull steel rate
 

@@ -26,6 +26,8 @@ pub enum SpaceKind {
     /// A peak (end) water ballast tank across the full beam: the fore peak, or the aft peak of a
     /// pushed barge.
     PeakBallast,
+    /// A tank of stores and fuel (consumable liquids).
+    Consumables,
 }
 
 impl SpaceKind {
@@ -34,6 +36,7 @@ impl SpaceKind {
             SpaceKind::DoubleBottomBallast => "double_bottom_ballast",
             SpaceKind::WingBallast => "wing_ballast",
             SpaceKind::PeakBallast => "peak_ballast",
+            SpaceKind::Consumables => "consumables",
         }
     }
 
@@ -344,10 +347,28 @@ fn peak(name: &str, (x_aft, x_fwd): (f64, f64), half_b: f64, depth: f64) -> Opti
 
 /// The water ballast tanks' total volume (m³).
 pub fn total_volume_m3(spaces: &[Space]) -> f64 {
-    spaces.iter().map(Space::volume_m3).sum()
+    spaces.iter().fold(0.0, |a, s| a + s.volume_m3())
 }
 
 /// A fill per Space, in order: every Space empty.
 pub fn empty_fills(spaces: &[Space]) -> Vec<f64> {
     vec![0.0; spaces.len()]
+}
+
+/// The height of the consumables tanks (m). An Estimate for concept layout, not from a source.
+pub const CONSUMABLES_TANK_HEIGHT_M: f64 = 1.0;
+
+/// The consumables tanks of a self-propelled hull: one transverse pair on the bottom of the stern
+/// zone, each half the beam wide and [`CONSUMABLES_TANK_HEIGHT_M`] high, as long as `volume_m3`
+/// needs, from `x_aft`. A pair is the case IS Code 2008 Part B 3.1.4 asks for: at least one
+/// transverse pair or one centreline tank with a free surface. Empty for no volume.
+pub fn consumables_tanks(beam: f64, x_aft: f64, volume_m3: f64) -> Vec<Space> {
+    let h = CONSUMABLES_TANK_HEIGHT_M;
+    if volume_m3 <= 0.0 || beam <= 0.0 {
+        return Vec::new();
+    }
+    let length = volume_m3 / (beam * h);
+    pair("CT", SpaceKind::Consumables, (x_aft, x_aft + length), |s| {
+        rect(s, 0.0, beam / 2.0, 0.0, h)
+    })
 }

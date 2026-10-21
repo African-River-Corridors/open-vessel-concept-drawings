@@ -891,6 +891,80 @@
       "status": "estimate",
       "basis": "Whether the stern block's mass (thrusters, machinery, units, wheelhouse) counts in the lightship (the WC-A29 finding; spec 0007). Inputs only until the stern block mass ticket (#348). A file saved before keeps false (0 t), as today"
     },
+    "loading_conditions": {
+      "default": "legacy",
+      "status": "estimate",
+      "basis": "The loading conditions the stability is checked in. is_code_2008: the four standard conditions of a cargo ship in IMO IS Code 2008 (MSC.267(85)) Part B 3.4.1.2 (fully loaded departure and arrival, in ballast departure and arrival), with stores and fuel and water ballast, as Part A 2.1.1 and 2.1.2 ask (issue #426). legacy: laden, half laden and light, with no consumables and no ballast. The default stays legacy until the gas arrangement search uses the IS Code conditions; then it becomes is_code_2008. A file saved before keeps legacy"
+    },
+    "may_sail_without_ballast": {
+      "default_by_formation": { "self_propelled": false, "pushed_barge": true, "pushed_convoy": true },
+      "status": "estimate",
+      "basis": "Whether the vessel may sail with no cargo, no consumables and no ballast; if so, the condition \"Lightship, no ballast\" is checked too. A barge may sail empty; a self-propelled vessel sails in ballast (maintainer decision on issue #426)"
+    },
+    "endurance_h": {
+      "default": 72.0,
+      "unit": "h",
+      "hard": { "ge": 0, "le": 10000 },
+      "soft": { "min": 12, "max": 720 },
+      "status": "estimate",
+      "basis": "The running hours of fuel carried at departure. The fuel is the fuel use at the service speed (the design speed, or the maximum speed) times these hours. A battery-electric vessel carries no fuel. An Estimate, not from a source: an expert question on issue #426"
+    },
+    "fixed_stores_t": {
+      "default": 10.0,
+      "unit": "t",
+      "hard": { "ge": 0, "le": 1000 },
+      "soft": { "min": 0, "max": 100 },
+      "status": "estimate",
+      "basis": "Fresh water and provisions at departure, carried in the consumables tanks with the fuel. An Estimate for a small inland crew, not from a source: an expert question on issue #426"
+    },
+    "ballast_plan": {
+      "default": "least_ballast",
+      "status": "sourced",
+      "source": "IMO IS Code 2008 (MSC.267(85)) Part B 3.4.2.3",
+      "basis": "How the ballast conditions are filled: the least ballast that meets every criterion (double bottom first, then the peaks, then the wing tanks, both sides alike, in 5 % steps), or fills set by the user. The result states the quantity and the disposition"
+    },
+    "ballast_departure_double_bottom_fill": {
+      "default": 0.0,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "status": "estimate",
+      "basis": "The fill of the double-bottom tanks in the ballast departure condition, when the ballast plan is set by the user: 0 empty, 1 pressed full. A fill of 0.98 or more is nominally full and has no free surface (IS Code 2008 Part B 3.1.2)"
+    },
+    "ballast_departure_peak_fill": {
+      "default": 0.0,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "status": "estimate",
+      "basis": "The fill of the peak tanks (fore peak, and aft peak of a pushed barge) in the ballast departure condition, when the ballast plan is set by the user: 0 empty, 1 pressed full. A fill of 0.98 or more is nominally full and has no free surface (IS Code 2008 Part B 3.1.2)"
+    },
+    "ballast_departure_wing_fill": {
+      "default": 0.0,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "status": "estimate",
+      "basis": "The fill of the wing tanks in the ballast departure condition, when the ballast plan is set by the user: 0 empty, 1 pressed full. A fill of 0.98 or more is nominally full and has no free surface (IS Code 2008 Part B 3.1.2)"
+    },
+    "ballast_arrival_double_bottom_fill": {
+      "default": 0.0,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "status": "estimate",
+      "basis": "The fill of the double-bottom tanks in the ballast arrival condition, when the ballast plan is set by the user: 0 empty, 1 pressed full. A fill of 0.98 or more is nominally full and has no free surface (IS Code 2008 Part B 3.1.2)"
+    },
+    "ballast_arrival_peak_fill": {
+      "default": 0.0,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "status": "estimate",
+      "basis": "The fill of the peak tanks (fore peak, and aft peak of a pushed barge) in the ballast arrival condition, when the ballast plan is set by the user: 0 empty, 1 pressed full. A fill of 0.98 or more is nominally full and has no free surface (IS Code 2008 Part B 3.1.2)"
+    },
+    "ballast_arrival_wing_fill": {
+      "default": 0.0,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "status": "estimate",
+      "basis": "The fill of the wing tanks in the ballast arrival condition, when the ballast plan is set by the user: 0 empty, 1 pressed full. A fill of 0.98 or more is nominally full and has no free surface (IS Code 2008 Part B 3.1.2)"
+    },
     "water_density_t_per_m3": {
       "default": 1.0,
       "unit": "t/m3",

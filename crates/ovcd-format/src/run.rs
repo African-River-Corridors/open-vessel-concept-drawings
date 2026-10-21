@@ -190,6 +190,19 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
         "wheelhouse_eye_height_m",
         "sightline_margin_m",
         "wheelhouse_max_lift_m",
+        "loading_conditions",
+        "may_sail_without_ballast",
+        "endurance_h",
+        "fixed_stores_t",
+        "design_speed_kn",
+        "power_source",
+        "ballast_plan",
+        "ballast_departure_double_bottom_fill",
+        "ballast_departure_peak_fill",
+        "ballast_departure_wing_fill",
+        "ballast_arrival_double_bottom_fill",
+        "ballast_arrival_peak_fill",
+        "ballast_arrival_wing_fill",
     ] {
         put(name, name);
     }
