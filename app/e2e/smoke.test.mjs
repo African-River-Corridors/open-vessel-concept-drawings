@@ -42,8 +42,17 @@ async function open(file, expectName) {
 }
 
 async function type(label, text) {
-  const input = await field(label);
-  await input.setValue(text);
+  // The panel can re-render a field between finding it and typing into it (a new snapshot replaces
+  // the node): find it again, at most twice, on a stale element.
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const input = await field(label);
+      await input.setValue(text);
+      return;
+    } catch (e) {
+      if (attempt >= 2 || !/stale element/i.test(String(e))) throw e;
+    }
+  }
 }
 
 describe("OVCD app smoke tests", () => {
