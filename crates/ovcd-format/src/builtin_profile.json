@@ -57,6 +57,14 @@
       "status": "estimate",
       "basis": "none: for a self-propelled hull whose Stern Form is not today's square stern, the volume of the raked box (today's bow rake and the Stern Form) at the design draught over L x B x T (spec 0007, issue #350); otherwise 0.85, the value the engine always used. A typed value is used as typed, and a saved file keeps its own. Calibrated box barges span 0.883 to 0.995; the soft range is widened down for shaped gas hulls; 0.3 is the squat method's validity floor (hard)"
     },
+    "midship_coefficient": {
+      "default": 1.0,
+      "unit": "-",
+      "hard": { "gt": 0, "le": 1 },
+      "soft": { "min": 0.9, "max": 1.0 },
+      "status": "estimate",
+      "basis": "The midship section area over B x T. The section area is B x T x Cm; it sets the blockage ratio in squat, the shallow-water resistance and the limiting speed. 1: a full rectangle, the section the engine always used; a barge midship section is close to it. A shaped hull may type a lower value. No source held gives a value of Cm"
+    },
     "bow_rake_length_m": {
       "default": null,
       "unit": "m",

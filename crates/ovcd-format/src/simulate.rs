@@ -367,6 +367,12 @@ fn resistance_of(
         beam: b,
         draft: t,
         block_coefficient: cb,
+        // Issue #425: Am = B x T x Cm.
+        midship_coefficient: get_or(
+            p,
+            "midship_coefficient",
+            ovcd_core::confined_water::DEFAULT_MIDSHIP_COEFFICIENT,
+        )?,
         displacement_tonnes: disp,
         tug: TugInputs {
             engine_power_kw: 1e6,

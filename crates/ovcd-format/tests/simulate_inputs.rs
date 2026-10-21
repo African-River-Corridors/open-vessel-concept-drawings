@@ -154,6 +154,29 @@ fn the_bank_slope_widens_the_channel_section_in_the_blockage_ratio() {
     }
 }
 
+/// Issue #425: the midship section is B x T x Cm. Cm = 1 is the default (the same results as
+/// leaving it out); a lower Cm gives a blockage ratio in the same proportion.
+#[test]
+fn the_midship_coefficient_scales_the_blockage_ratio_and_one_is_the_default() {
+    let channel = json!({ "depth_m": 6.0, "bottom_width_m": 60.0 });
+    let bare = sim(hopper(json!({ "channel": channel })));
+    let one = sim(hopper(
+        json!({ "channel": channel, "midship_coefficient": 1.0 }),
+    ));
+    assert_eq!(bare, one);
+    for cm in [0.5, 0.8, 0.95] {
+        let v = sim(hopper(
+            json!({ "channel": channel, "midship_coefficient": cm }),
+        ));
+        close(
+            num(&channel_env(&v)["blockage"]),
+            cm * num(&channel_env(&bare)["blockage"]),
+            &format!("Cm {cm}"),
+        );
+        assert_ne!(v, bare, "Cm {cm}");
+    }
+}
+
 /// An input left out takes its default. Giving the default explicitly must change nothing, and
 /// giving anything else must. Defaults: bank slope 3, current 0 kn, under-keel clearance 0.5 m,
 /// propulsive efficiency 0.45, top speed 10 kn, minimum freeboard 0.3 m.

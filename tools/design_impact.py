@@ -280,6 +280,9 @@ OPTIONAL_INPUT_CASES = (
      {"currency": "USD"}),
     ("price_base_date", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"price_base_date": None}),
+    # The midship coefficient (issue #425), set to its default: the same results as leaving it out.
+    ("midship_coefficient", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"midship_coefficient": 1.0}),
     # The Hull Form parameters (issue #446), set to their defaults on a raked box. Inputs only until
     # the hydrostatics switch-over (#448): each shows no change. A base from before them refuses the
     # input and leaves it out.

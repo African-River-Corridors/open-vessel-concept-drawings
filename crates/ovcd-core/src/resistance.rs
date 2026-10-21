@@ -162,6 +162,8 @@ pub struct ResistanceInputs {
     pub beam: f64,
     pub draft: f64,
     pub block_coefficient: f64,
+    /// Midship section coefficient Cm: the section area is B x T x Cm (issue #425).
+    pub midship_coefficient: f64,
     /// m^2; 0 = auto-calculate.
     pub wetted_surface_area: f64,
     /// Issue #350: wetted surface the Stern Form adds over the box (m^2), added to the computed one.
@@ -183,6 +185,7 @@ impl Default for ResistanceInputs {
             beam: 24.0,
             draft: 6.0,
             block_coefficient: 0.85,
+            midship_coefficient: crate::confined_water::DEFAULT_MIDSHIP_COEFFICIENT,
             wetted_surface_area: 0.0,
             wetted_surface_extra_m2: 0.0,
             displacement_tonnes: 0.0,
@@ -386,9 +389,13 @@ impl<'a> ResistanceCalculator<'a> {
         (env.channel_width_bottom + env.channel_width_surface) / 2.0 * env.water_depth
     }
 
-    /// Midship section area of the vessel (m^2): B x T, as squat has it (issue #396).
+    /// Midship section area of the vessel (m^2): B x T x Cm, as squat has it (issues #396, #425).
     fn midship_section_area(&self) -> f64 {
-        crate::confined_water::midship_section_area(self.inputs.beam, self.inputs.draft)
+        crate::confined_water::midship_section_area(
+            self.inputs.beam,
+            self.inputs.draft,
+            self.inputs.midship_coefficient,
+        )
     }
 
     /// Schijf (1949) critical speed in a confined waterway (knots); `None` for deep water.
@@ -583,6 +590,7 @@ impl<'a> ResistanceCalculator<'a> {
     fn squat_inputs(&self, env: &EnvironmentInputs, speed_through_water: f64) -> SquatInputs {
         SquatInputs {
             block_coefficient: self.inputs.block_coefficient,
+            midship_coefficient: self.inputs.midship_coefficient,
             water_depth_m: env.water_depth,
             channel_area_m2: self.channel_cross_section(env),
             safety_margin_m: env.squat_safety_margin_m,

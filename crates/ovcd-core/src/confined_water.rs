@@ -13,10 +13,14 @@
 /// sweep stops here, and the service speed must stay at or below it.
 pub const LIMITING_SPEED_MARGIN: f64 = 0.95;
 
-/// The midship section area (m²): B × T. The midship coefficient is taken as 1 until it is an
-/// input (#425); a barge midship section is close to a full rectangle.
-pub fn midship_section_area(beam: f64, draught: f64) -> f64 {
-    beam * draught
+/// The midship section coefficient Cm that a vessel has when none is typed: 1, a full rectangle.
+/// A barge midship section is close to it. An Estimate (issue #425).
+pub const DEFAULT_MIDSHIP_COEFFICIENT: f64 = 1.0;
+
+/// The midship section area (m²): B × T × Cm, Cm being the area over B × T (its definition). No
+/// source held gives a value of Cm.
+pub fn midship_section_area(beam: f64, draught: f64, midship_coefficient: f64) -> f64 {
+    beam * draught * midship_coefficient
 }
 
 /// The blockage ratio m = A_M / Ω; 0 for no channel section.

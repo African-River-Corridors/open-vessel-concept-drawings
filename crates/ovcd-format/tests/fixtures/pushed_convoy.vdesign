@@ -43,6 +43,10 @@
           "value": 0.85,
           "source": "default"
         },
+        "midship_coefficient": {
+          "value": 1.0,
+          "source": "default"
+        },
         "bow_rake_length_m": {
           "value": null,
           "source": "default"

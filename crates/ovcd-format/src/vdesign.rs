@@ -382,6 +382,13 @@ pub struct LegacyFixed {
 ///
 /// A profile that has no entry for one of these inputs takes the built-in profile's entry.
 pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
+    // Issue #425: a file saved before takes the midship section as B x T, so Cm = 1.
+    LegacyFixed {
+        name: "midship_coefficient",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: ovcd_core::confined_water::DEFAULT_MIDSHIP_COEFFICIENT,
+    },
     // Issue #446 (spec 0008): a file saved before has a square bilge, no sheer and no camber.
     LegacyFixed {
         name: "bilge_radius_m",
@@ -1704,6 +1711,14 @@ pub const INPUTS: &[InputSpec] = &[
         "block_coefficient",
         "Block coefficient",
         NUM_OR_NONE,
+        false,
+        Group::HullAndContainment,
+    ),
+    // Issue #425: the midship section area is B x T x Cm.
+    spec(
+        "midship_coefficient",
+        "Midship coefficient",
+        NUM,
         false,
         Group::HullAndContainment,
     ),

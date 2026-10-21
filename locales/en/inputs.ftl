@@ -63,6 +63,8 @@ choice-cargo-containment-type-c-tanks = Type C tanks
 
 input-block-coefficient = Block coefficient
 
+input-midship-coefficient = Midship coefficient
+
 input-bow-rake-length-m = Bow rake length
 
 input-bow-rake-rise-m = Bow rake rise
