@@ -60,8 +60,8 @@ arrangement plan.
 _Avoid_: convoy (when the general term is meant), fleet
 
 **Waterway Limit**:
-A dimension a waterway imposes on any Formation using it, such as a lock chamber's length and width.
-It belongs to the waterway, not to a vessel.
+A dimension a waterway imposes on any Formation using it: a lock chamber's length and width, a
+largest Draught, a largest Air Draft. It belongs to the waterway, not to a vessel.
 _Avoid_: lock class
 
 ### Design
@@ -102,6 +102,18 @@ valve setting when the cargo has no temperature control, and the loading tempera
 LPG Cargo is loaded to it; it is never above the Filling Limit.
 _Avoid_: fill ratio (it is the Filling Limit), loading level
 
+**Volume-bound Cargo**:
+Cargo limited by the space that holds it, before the Draught limit is reached.
+_Avoid_: cubed out
+
+**Weight-bound Cargo**:
+Cargo limited by the Draught (the displacement left), before the space is full.
+_Avoid_: draft-bound, deadweighted out
+
+**Stowage Factor**:
+The volume one tonne of a dry cargo takes in a hold, in m³ per t.
+_Avoid_: density (its inverse, for liquids)
+
 **Dome Rule**:
 The default size of a Type C tank's dome: diameter the larger of 1.2 m and 0.17 times the steel outer
 diameter, height above the tank equal to the diameter. An estimate on two published tanks. The dome
@@ -115,6 +127,23 @@ that less twice the insulation thickness. The side and bottom clearances, the ta
 use the insulated face; the wall thickness and the volume start from the steel diameter.
 _Avoid_: tank diameter (on its own), OD (on its own)
 
+**Steel Outer Diameter**:
+The outside diameter of a cargo tank's steel shell, without its insulation. Less than the Tank Outer
+Diameter by twice the insulation thickness.
+_Avoid_: shell diameter, OD (when the insulated one could be meant)
+
+**Tank Head**:
+The closed end of a cylindrical cargo tank: hemispherical, 2:1 ellipsoidal or torispherical.
+_Avoid_: end cap, dished end (on its own)
+
+**Design Vapour Pressure**:
+The highest gauge pressure in the vapour space of a cargo tank that the tank is designed for (P0).
+_Avoid_: tank pressure, MARVS (a different limit)
+
+**Tank Structure Factor**:
+A multiplier on a cargo tank's shell mass that stands for its stiffeners, ring frames and supports.
+_Avoid_: structure allowance
+
 **Design**:
 One study saved as a single file: one or more Options, compared side by side.
 _Avoid_: project, model
@@ -122,11 +151,6 @@ _Avoid_: project, model
 **Option**:
 One complete set of inputs within a Design, giving one set of results.
 _Avoid_: variant, scenario, case
-
-**Moulded Depth**:
-Keel to main deck at the side (not hold depth). Left out, it is the depth-to-beam ratio of the Cargo
-times the beam, a rule in the Defaults Profile.
-_Avoid_: hold depth, draught (a result, not an input)
 
 **Defaults Profile**:
 The named set of default input values and allowed input ranges used when an Option leaves an input
@@ -137,7 +161,7 @@ _Avoid_: settings, config (on its own)
 
 **Moulded Depth**:
 The depth of a Hull from the top of the keel to the main deck at the side, at mid-length. Not the hold
-depth, which is less by the double bottom.
+depth, which is less by the double bottom, and not the Draught.
 _Avoid_: depth (on its own), hold depth, hull height
 
 **Calibration**:
@@ -154,6 +178,204 @@ _Avoid_: tolerance, error margin
 A concept drawing set for one Hull — plan, elevation and cross-section — for feasibility studies, not
 for construction or class approval.
 _Avoid_: layout, drawing (on its own)
+
+### Hull and stability
+
+**Length Overall (LOA)**:
+The length of a Hull from its aftmost to its foremost point.
+_Avoid_: length (on its own)
+
+**Length of Waterline**:
+The length of a Hull at the waterline of a given Draught.
+_Avoid_: LWL alone in prose, waterline length
+
+**Draught**:
+The depth of the Hull below the waterline, from the keel. A result of a Loading Condition, not an input.
+_Avoid_: draft (in prose), depth
+
+**Freeboard**:
+The height of the main deck at the side above the waterline: Moulded Depth less Draught.
+_Avoid_: dry height
+
+**Minimum Freeboard**:
+The least Freeboard a Design accepts; it caps the Draught a Hull may load to.
+_Avoid_: freeboard margin
+
+**Block Coefficient (Cb)**:
+The displaced volume over the box of Length of Waterline × beam × Draught that holds it.
+_Avoid_: fullness, Cb without its length basis
+
+**Lightship**:
+The mass of the vessel ready for service, without cargo, consumables, stores or water ballast.
+_Avoid_: light weight, empty weight
+
+**Deadweight**:
+What a vessel carries on top of its Lightship: cargo, consumables and stores, and water ballast.
+_Avoid_: payload (use cargo for the cargo part), DWT in prose
+
+**Consumables**:
+The fuel, fresh water and stores a vessel carries for a voyage; part of the Deadweight, never the Lightship.
+_Avoid_: provisions, stores (for the whole)
+
+**Loading Condition**:
+One state of loading checked for stability: a cargo, consumables and water ballast at stated amounts,
+for example full load departure or ballast arrival.
+_Avoid_: load case, governing condition
+
+**Water Ballast**:
+Water taken into ballast tanks to bring a vessel to a safe Draught, trim or stability in a Loading Condition.
+_Avoid_: ballast (when the solid kind could be meant)
+
+**GZ Curve**:
+The righting lever of a vessel against heel angle, in one Loading Condition.
+_Avoid_: stability curve, righting arm curve
+
+**Free Surface Correction**:
+The loss of GM from liquid that can move in a part-filled tank, added to the height of the centre of gravity.
+_Avoid_: slack tank effect, FSE
+
+**Down-flooding Angle**:
+The heel angle at which water first enters the hull through an opening that cannot be closed weathertight.
+_Avoid_: flooding angle
+
+### Gas cargo arrangement
+
+**Cargo Zone**:
+The length of a Hull between its end spaces that holds the cargo tanks or holds.
+_Avoid_: cargo area, tank zone
+
+**End Space**:
+A space at one end of the Cargo Zone: the Stern Block aft, a bow void forward, and the Cofferdams beside them.
+_Avoid_: end void (for the whole)
+
+**Cofferdam**:
+An empty space between two other spaces, there to keep them apart.
+_Avoid_: void (when a cofferdam is meant), separation space
+
+**Protective Location**:
+The least distance a gas cargo tank must keep from the hull's side shell and bottom, which grows with the tank's volume.
+_Avoid_: protective distance, clearance rule
+
+**Side Clearance**:
+The clear distance from the moulded side of the Hull to the outer face of a cargo tank's insulation; the
+bottom clearance is the same, measured down to the inner bottom.
+_Avoid_: clear gap, side gap
+
+**Wing Ballast Tank**:
+A ballast tank along the side of the Cargo Zone, between the cargo tanks and the side shell.
+_Avoid_: side tank, wing tank (without "ballast")
+
+**Saddle**:
+The seat that carries a cylindrical cargo tank on the Hull's bottom structure.
+_Avoid_: cradle (in prose; a drawing may say cradle), stool
+
+**Candidate**:
+One arrangement of cargo tanks the arrangement search builds and judges on a Hull.
+_Avoid_: trial, variant
+
+### Waterway and powering
+
+**Environment**:
+One waterway section, with its depth and width, in which resistance, squat and speed are worked out.
+_Avoid_: Service Area (a different thing), scenario
+
+**Air Draft**:
+The height of the highest fixed point of a vessel above the waterline. The light Air Draft is the largest.
+_Avoid_: air clearance, governing air draft
+
+**Under-Keel Clearance**:
+The water depth under the keel: static at rest, dynamic with Squat at speed.
+_Avoid_: UKC in prose, keel clearance
+
+**Squat**:
+The sinkage of a moving vessel in shallow or confined water, which reduces the Under-Keel Clearance.
+_Avoid_: sinkage (on its own)
+
+**Blockage Ratio**:
+The vessel's midship section area over the waterway's cross-section area.
+_Avoid_: blockage (on its own), m (in prose)
+
+**Limiting Speed**:
+The highest speed a vessel can reach in a confined waterway by displacement, from the Blockage Ratio and the water depth.
+_Avoid_: critical speed (in prose), Schijf speed
+
+**Service Speed**:
+The speed a vessel holds in an Environment, as the power, the Limiting Speed, Squat or the speed range allow.
+_Avoid_: cruising speed, operating speed
+
+**Journey De-rating**:
+The cut in cargo so that the loaded Draught fits the shallowest point of a journey.
+_Avoid_: light loading, derating (unhyphenated)
+
+### Cost
+
+**Capital Budget**:
+The estimated cost of building one Unit, from the masses of the Design and the cost rates.
+_Avoid_: price, quotation, build cost
+
+**Bill of Quantities (BOQ)**:
+The list of what a Capital Budget prices, each line a quantity and its rate.
+_Avoid_: cost breakdown, takeoff
+
+**Cost Rate**:
+The price of one unit of a quantity, such as hull steel per tonne, an input of the Capital Budget.
+_Avoid_: unit cost, price
+
+**Lump Sum**:
+A fixed amount in the Capital Budget that does not scale with the Design.
+_Avoid_: allowance, provisional sum
+
+**Yard Margin**:
+A fraction of the subtotal added for engineering, class, trials and the yard's margin.
+_Avoid_: markup, contingency
+
+**Unit**:
+What one Capital Budget prices: one Hull, with its Tug where its Formation has one.
+_Avoid_: ATB unit (unless it is one), set
+
+### Drawings
+
+**Side Elevation**:
+The view of a Hull from the side, along its length.
+_Avoid_: profile (on its own), side view
+
+**Plan**:
+The view of a Hull from above.
+_Avoid_: top view, deck plan (unless only the deck is shown)
+
+**Midship Section**:
+The cross-section of a Hull at mid-length, or a typical section of the Cargo Zone when so labelled.
+_Avoid_: cross-section (on its own), section (on its own)
+
+**Light Waterline**:
+The waterline of the vessel at its Lightship with no cargo and no ballast.
+_Avoid_: lightship line
+
+### Evidence
+
+**Calibration Case**:
+One Reference Vessel run through the calculations and compared with its published particulars.
+_Avoid_: test case, benchmark
+
+**Held-out Case**:
+A Calibration Case kept out of the fit of a factor, so that it tests the factor; an in-sample case was used to fit it.
+_Avoid_: test point, validation point
+
+**Evaluation Harness**:
+The set of cases with known pass or fail verdicts that checks the Rule results.
+_Avoid_: test suite (on its own), validation set
+
+**False Pass**:
+A case the Evaluation Harness expects to fail that OVCD passes. The build allows none.
+_Avoid_: missed failure
+
+**Design-impact Check**:
+The comparison of a fixed set of Designs run before and after a change, which lists every result that moves.
+_Avoid_: regression test, golden test
+
+**Results Hash**:
+The fingerprint of an Option's results, saved in its file, so a later run shows whether they moved.
+_Avoid_: checksum (on its own)
 
 ### Stern, propulsion and tugs
 
@@ -284,8 +506,9 @@ _Avoid_: tolerance, slack
 
 **Governing Rule**:
 Of the Rules in one Requirement, the one with the strictest Criterion. All of them apply; the strictest
-governs, and no Rule loosens another.
-_Avoid_: controlling rule, binding rule
+governs, and no Rule loosens another. "Governing" is kept for this sense only.
+_Avoid_: controlling rule, binding rule; "governing condition" (say lowest-GM Loading Condition);
+"governing air draft" (say light Air Draft)
 
 **Rules Kernel**:
 The domain-free part of the rules engine, the `arc-rules` crate: the Rule Set format and loader, the
@@ -303,6 +526,36 @@ A Rule that OVCD makes but no published rule book requires: physical feasibility
 the depth), a method's validity range, or a limit of the tool. Shown in the Rule Trace with its origin,
 never as a published Rule.
 _Avoid_: design rule
+
+**Origin**:
+Where a Rule comes from: a regulation, a class rule, a physical limit, a limit of the tool, or the
+validity range of a method. It tells compliance apart from engineering judgement.
+_Avoid_: source (which is the citation), type
+
+**Consequence**:
+What a failed Rule does: block (the Option does not pass), warn (shown, not blocking) or note (a value
+reported with its citation).
+_Avoid_: severity (in prose about Rules), level
+
+**Sizing Rule**:
+A Rule whose limit sets a dimension of the design, such as a wall thickness, not only checks it.
+_Avoid_: design rule
+
+**Not Evaluated**:
+The outcome of a Rule the engine cannot check yet. It is never a pass.
+_Avoid_: skipped, n/a, unknown
+
+**Set Version**:
+The version number of one Rule Set's content, changed with every change of a Rule. Not the Edition.
+_Avoid_: release (of a Rule Set)
+
+**Edition**:
+The edition of the published document a Rule cites, such as a year or an amendment.
+_Avoid_: version (of a regulation)
+
+**Selection Order**:
+The order of the Rule Sets an Option selects; on equal strictness the first in this order governs.
+_Avoid_: priority
 
 ### Languages
 
