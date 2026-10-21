@@ -13,7 +13,10 @@ fn the_formation_words_map_to_the_kinds_a_design_has() {
     assert_eq!(formation_kind("pushed_barge"), Some("pushed_barge"));
     assert_eq!(formation_kind("pushed_convoy"), Some("pushed_convoy"));
     assert_eq!(formation_kind("coupled_unit"), Some("pushed_convoy"));
-    for word in ["towed_barge", "atb", "pusher", "towboat", "tug"] {
+    // Issue #357: the ATB and the towed barge are Formation kinds.
+    assert_eq!(formation_kind("atb"), Some("atb"));
+    assert_eq!(formation_kind("towed_barge"), Some("towed_barge"));
+    for word in ["pusher", "towboat", "tug"] {
         assert_eq!(formation_kind(word), None, "{word}");
     }
 }

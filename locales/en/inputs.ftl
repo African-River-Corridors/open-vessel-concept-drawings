@@ -12,6 +12,7 @@ group-note-gas-tanks = The tank outer diameter (the cap below and the result) is
 group-dry-bulk-hold = Dry-bulk hold
 group-aft-block = Aft block
 group-stern-and-propulsion = Stern and propulsion
+group-tug = Tug
 group-waterway-limits = Waterway Limits
 group-loading-conditions = Loading conditions
 group-speed-and-power = Speed and power
@@ -35,6 +36,8 @@ input-formation = Formation
 choice-formation-self-propelled = Self-propelled
 choice-formation-pushed-barge = Pushed barge
 choice-formation-pushed-convoy = Pushed convoy
+choice-formation-atb = Articulated tug-barge (ATB)
+choice-formation-towed-barge = Towed barge
 
 input-length-overall-m = Length overall
 
@@ -234,6 +237,99 @@ choice-sightline-method-margin = Margin over the obstruction
 choice-sightline-method-blind-distance = Blind distance (ES-TRIN 7.02)
 
 input-stern-block-mass-included = Stern block mass in the lightship
+
+input-tug-included = Tug included
+
+input-tug-preset = Tug preset
+choice-tug-preset-none = None
+choice-tug-preset-cds-4115 = CDS 4115 River Pusher
+choice-tug-preset-sdp-4600 = SDP 4600 pusher
+choice-tug-preset-rapide-4600-z3 = RApide 4600-Z3 pusher
+choice-tug-preset-riverbuster-1909 = CDS Riverbuster 1909
+choice-tug-preset-demi-k = Demi-K pusher tug
+choice-tug-preset-bowling-green = Bowling Green towboat
+choice-tug-preset-arne-christiansen = Arne Christiansen pusher
+choice-tug-preset-stan-tug-1606 = Stan Tug 1606
+choice-tug-preset-stan-tug-1907 = Stan Tug 1907
+choice-tug-preset-asd-tug-2312 = Azimuth Stern Drive Tug 2312
+choice-tug-preset-asd-tug-2811 = Azimuth Stern Drive Tug 2811
+choice-tug-preset-asd-tug-3212 = Azimuth Stern Drive Tug 3212
+choice-tug-preset-rsd-tug-2513-electric = Reversed Stern Drive Tug 2513 Electric
+choice-tug-preset-bess = Bess (Voith tractor)
+choice-tug-preset-baut = Baut (Voith tractor)
+choice-tug-preset-aveogan = Aveogan (ATB tug)
+choice-tug-preset-crowley-550-class = 550 Class ATB tug
+choice-tug-preset-kim-m-bouchard = Kim M. Bouchard (ATB tug)
+
+input-tug-length-m = Tug length
+
+input-tug-beam-m = Tug beam
+
+input-tug-draught-m = Tug draught
+
+input-tug-stern-form = Tug stern form
+input-tug-stern-form-default-by = formation
+choice-tug-stern-form-transom = Transom
+choice-tug-stern-form-pram = Pram
+choice-tug-stern-form-tunnel = Tunnel
+
+input-tug-stern-run-length-m = Tug stern run length
+
+input-tug-stern-transom-height-m = Tug transom height
+
+input-tug-tunnel-crown-height-m = Tug tunnel crown height
+
+input-tug-propulsor-type = Tug propulsor type
+input-tug-propulsor-type-default-by = formation
+choice-tug-propulsor-type-azimuth-open = Azimuth thruster, open
+choice-tug-propulsor-type-azimuth-ducted = Azimuth thruster, ducted
+choice-tug-propulsor-type-shaft-open = Shaft and open propeller
+choice-tug-propulsor-type-shaft-nozzle = Shaft and propeller in a nozzle
+choice-tug-propulsor-type-voith-schneider = Voith Schneider
+choice-tug-propulsor-type-pump-jet = Pump jet
+
+input-tug-propulsor-count = Tug propulsor count
+
+input-tug-propeller-diameter-m = Tug propeller diameter
+
+input-tug-power-source = Tug power source
+choice-tug-power-source-battery-electric = Battery-electric
+choice-tug-power-source-gas-fuelled = Gas-fuelled
+choice-tug-power-source-diesel-mechanical = Diesel-mechanical
+choice-tug-power-source-diesel-electric = Diesel-electric
+choice-tug-power-source-battery-hybrid = Battery hybrid
+
+input-tug-installed-power-kw = Tug installed power
+
+input-tug-design-speed-kn = Formation design speed
+
+input-tug-installed-power-margin = Tug installed power margin
+
+input-tug-bow-thruster = Tug bow thruster
+choice-tug-bow-thruster-none = None
+choice-tug-bow-thruster-channel-jet = Channel jet
+choice-tug-bow-thruster-tunnel = Tunnel
+
+input-tug-bow-thruster-power-kw = Tug bow thruster power
+
+input-tug-battery-energy-kwh = Tug battery energy
+
+input-tug-battery-unit-energy-kwh = Tug battery unit energy
+
+input-tug-wheelhouse-type = Tug wheelhouse type
+choice-tug-wheelhouse-type-elevating = Elevating
+choice-tug-wheelhouse-type-fixed = Fixed
+
+input-tug-sightline-method = Tug sightline method
+choice-tug-sightline-method-margin = Margin over the obstruction
+choice-tug-sightline-method-blind-distance = Blind distance (ES-TRIN 7.02)
+
+input-formation-resistance-allowance = Formation resistance allowance
+input-formation-resistance-allowance-default-by = formation
+
+input-notch-depth-m = Notch depth
+
+input-notch-width-m = Notch width
 
 input-propulsive-efficiency = Propulsive efficiency
 

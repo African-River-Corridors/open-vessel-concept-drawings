@@ -85,6 +85,10 @@ pub const KEYED_DEFAULTS: &[(&str, &str, &[&str])] = &[
     // Issue #426 (maintainer decision): a barge may sail empty without ballast; a self-propelled
     // vessel sails in ballast.
     ("may_sail_without_ballast", "formation", FORMATION_KINDS),
+    // Issue #357: the tug by the Formation kind (a pusher, an ATB tug or a towing tug).
+    ("tug_stern_form", "formation", PUSHED),
+    ("tug_propulsor_type", "formation", PUSHED),
+    ("formation_resistance_allowance", "formation", PUSHED),
 ];
 
 /// The LPG Cargos: the ones that are carried in one of three conditions (issue #292).
@@ -868,6 +872,132 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::All,
         value: "false",
     },
+    // Issue #357: a file saved before has no tug: the barge alone, as today.
+    LegacyFixedJson {
+        name: "tug_included",
+        applies_to: AppliesTo::All,
+        value: "false",
+    },
+    LegacyFixedJson {
+        name: "tug_preset",
+        applies_to: AppliesTo::All,
+        value: "\"none\"",
+    },
+    LegacyFixedJson {
+        name: "tug_length_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "tug_beam_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "tug_draught_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "tug_stern_form",
+        applies_to: AppliesTo::All,
+        value: "\"tunnel\"",
+    },
+    LegacyFixedJson {
+        name: "tug_stern_run_length_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "tug_stern_transom_height_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "tug_tunnel_crown_height_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "tug_propulsor_type",
+        applies_to: AppliesTo::All,
+        value: "\"shaft_nozzle\"",
+    },
+    LegacyFixedJson {
+        name: "tug_propulsor_count",
+        applies_to: AppliesTo::All,
+        value: "2.0",
+    },
+    LegacyFixedJson {
+        name: "tug_propeller_diameter_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "tug_power_source",
+        applies_to: AppliesTo::All,
+        value: "\"diesel_mechanical\"",
+    },
+    LegacyFixedJson {
+        name: "tug_installed_power_kw",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "tug_design_speed_kn",
+        applies_to: AppliesTo::All,
+        value: "9.7",
+    },
+    LegacyFixedJson {
+        name: "tug_installed_power_margin",
+        applies_to: AppliesTo::All,
+        value: "1.2",
+    },
+    LegacyFixedJson {
+        name: "tug_bow_thruster",
+        applies_to: AppliesTo::All,
+        value: "\"none\"",
+    },
+    LegacyFixedJson {
+        name: "tug_bow_thruster_power_kw",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "tug_battery_energy_kwh",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "tug_battery_unit_energy_kwh",
+        applies_to: AppliesTo::All,
+        value: "5000.0",
+    },
+    LegacyFixedJson {
+        name: "tug_wheelhouse_type",
+        applies_to: AppliesTo::All,
+        value: "\"elevating\"",
+    },
+    LegacyFixedJson {
+        name: "tug_sightline_method",
+        applies_to: AppliesTo::All,
+        value: "\"margin\"",
+    },
+    LegacyFixedJson {
+        name: "formation_resistance_allowance",
+        applies_to: AppliesTo::All,
+        value: "1.0",
+    },
+    LegacyFixedJson {
+        name: "notch_depth_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "notch_width_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
     // Issue #375: a file saved before the head type was an input keeps hemispherical heads.
     LegacyFixedJson {
         name: "tank_head_type",
@@ -916,8 +1046,11 @@ pub fn legacy_value(name: &str, containment: Option<&str>) -> Option<Value> {
 /// A file that names the old `IGC_2G_EXACT` is read as `IGC_2G` (see [`migrate_ruleset`]).
 pub const RULESETS: &[&str] = &["IGC_2G"];
 
-/// The Formation kinds of a pushed barge or convoy: the ones with no stern block of their own.
-pub const PUSHED: &[&str] = &["pushed_barge", "pushed_convoy"];
+/// The Formation kinds of a barge Formation: the ones with no stern block of their own (issue
+/// #357 adds the ATB barge and the towed barge).
+pub const PUSHED: &[&str] = &["pushed_barge", "pushed_convoy", "atb", "towed_barge"];
+/// The ATB Formation, whose barge has a Notch (issue #357).
+pub const ATB: &[&str] = &["atb"];
 
 /// The Formation kind that carries a stern block of its own.
 pub const SELF_PROPELLED: &[&str] = &["self_propelled"];
@@ -940,8 +1073,51 @@ pub fn cargo_includes(cargos: Option<&[&str]>, cargo: Option<&str>) -> bool {
     }
 }
 
-/// Formation kinds. Only the first two are computed in spec 0001.
-pub const FORMATION_KINDS: &[&str] = &["self_propelled", "pushed_barge", "pushed_convoy"];
+/// Formation kinds. Only the first two are computed in spec 0001; issue #357 adds `atb` (one barge
+/// with a Notch and its ATB tug) and `towed_barge` (barges on a hawser), computed as the barge alone
+/// until the Formation powering (#359).
+pub const FORMATION_KINDS: &[&str] = &[
+    "self_propelled",
+    "pushed_barge",
+    "pushed_convoy",
+    "atb",
+    "towed_barge",
+];
+
+/// The tug presets (issue #357): `none`, or a Reference Vessel of `ovcd_core::tug_presets`.
+pub const TUG_PRESET_CHOICES: &[&str] = &[
+    "none",
+    "cds-4115",
+    "sdp-4600",
+    "rapide-4600-z3",
+    "riverbuster-1909",
+    "demi-k",
+    "bowling-green",
+    "arne-christiansen",
+    "stan-tug-1606",
+    "stan-tug-1907",
+    "asd-tug-2312",
+    "asd-tug-2811",
+    "asd-tug-3212",
+    "rsd-tug-2513-electric",
+    "bess",
+    "baut",
+    "aveogan",
+    "crowley-550-class",
+    "kim-m-bouchard",
+];
+
+/// The tug inputs a preset fills (issue #357), marked `reference`.
+pub const TUG_PRESET_INPUTS: &[&str] = &[
+    "tug_length_m",
+    "tug_beam_m",
+    "tug_draught_m",
+    "tug_installed_power_kw",
+    "tug_propulsor_type",
+    "tug_propulsor_count",
+    "tug_propeller_diameter_m",
+    "tug_power_source",
+];
 
 /// The sets of loading conditions (issue #426): `legacy` is Laden, Half laden and Light, as before;
 /// `is_code_2008` is the four standard conditions of IS Code 2008 Part B 3.4.1.2, with consumables
@@ -1029,6 +1205,7 @@ pub enum Group {
     DryBulkHold,
     AftBlock,
     SternAndPropulsion,
+    Tug,
     WaterwayLimits,
     LoadingConditions,
     SpeedAndPower,
@@ -1037,7 +1214,7 @@ pub enum Group {
 
 impl Group {
     /// Every group, in the order a form shows them.
-    pub const ALL: [Group; 11] = [
+    pub const ALL: [Group; 12] = [
         Group::Required,
         Group::VesselClass,
         Group::HullAndContainment,
@@ -1045,6 +1222,7 @@ impl Group {
         Group::DryBulkHold,
         Group::AftBlock,
         Group::SternAndPropulsion,
+        Group::Tug,
         Group::WaterwayLimits,
         Group::LoadingConditions,
         Group::SpeedAndPower,
@@ -1061,6 +1239,7 @@ impl Group {
             Group::DryBulkHold => "Dry-bulk hold",
             Group::AftBlock => "Aft block",
             Group::SternAndPropulsion => "Stern and propulsion",
+            Group::Tug => "Tug",
             Group::WaterwayLimits => "Waterway Limits",
             Group::LoadingConditions => "Loading conditions",
             Group::SpeedAndPower => "Speed and power",
@@ -1097,6 +1276,30 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("user_set", "Fills set by the user"),
     ("pushed_barge", "Pushed barge"),
     ("pushed_convoy", "Pushed convoy"),
+    ("atb", "Articulated tug-barge (ATB)"),
+    ("towed_barge", "Towed barge"),
+    // Issue #357: the tug presets.
+    ("cds-4115", "CDS 4115 River Pusher"),
+    ("sdp-4600", "SDP 4600 pusher"),
+    ("rapide-4600-z3", "RApide 4600-Z3 pusher"),
+    ("riverbuster-1909", "CDS Riverbuster 1909"),
+    ("demi-k", "Demi-K pusher tug"),
+    ("bowling-green", "Bowling Green towboat"),
+    ("arne-christiansen", "Arne Christiansen pusher"),
+    ("stan-tug-1606", "Stan Tug 1606"),
+    ("stan-tug-1907", "Stan Tug 1907"),
+    ("asd-tug-2312", "Azimuth Stern Drive Tug 2312"),
+    ("asd-tug-2811", "Azimuth Stern Drive Tug 2811"),
+    ("asd-tug-3212", "Azimuth Stern Drive Tug 3212"),
+    (
+        "rsd-tug-2513-electric",
+        "Reversed Stern Drive Tug 2513 Electric",
+    ),
+    ("bess", "Bess (Voith tractor)"),
+    ("baut", "Baut (Voith tractor)"),
+    ("aveogan", "Aveogan (ATB tug)"),
+    ("crowley-550-class", "550 Class ATB tug"),
+    ("kim-m-bouchard", "Kim M. Bouchard (ATB tug)"),
     ("fully_pressurised", "Fully pressurised"),
     ("semi_pressurised", "Semi-pressurised (semi-refrigerated)"),
     ("fully_refrigerated", "Fully refrigerated (cryogenic)"),
@@ -1282,6 +1485,29 @@ const fn self_propelled(
         cargos: None,
         when: None,
         group,
+    }
+}
+
+/// An input of the tug of a barge Formation (issue #357).
+const fn tug(name: &'static str, label: &'static str, kind: InputKind) -> InputSpec {
+    InputSpec {
+        name,
+        label,
+        kind,
+        required: false,
+        applies_to: AppliesTo::All,
+        formations: Some(PUSHED),
+        cargos: None,
+        when: None,
+        group: Group::Tug,
+    }
+}
+
+/// An input of the Notch of an ATB barge (issue #357).
+const fn atb(name: &'static str, label: &'static str, kind: InputKind) -> InputSpec {
+    InputSpec {
+        formations: Some(ATB),
+        ..tug(name, label, kind)
     }
 }
 
@@ -1809,6 +2035,108 @@ pub const INPUTS: &[InputSpec] = &[
         InputKind::Bool,
         Group::SternAndPropulsion,
     ),
+    // Issue #357: the tug of a barge Formation (spec 0007 "Formation and Tug").
+    tug("tug_included", "Tug included", InputKind::Bool),
+    tug(
+        "tug_preset",
+        "Tug preset",
+        InputKind::Choice(TUG_PRESET_CHOICES),
+    ),
+    tug("tug_length_m", "Tug length", NUM_OR_NONE),
+    tug("tug_beam_m", "Tug beam", NUM_OR_NONE),
+    tug("tug_draught_m", "Tug draught", NUM_OR_NONE),
+    tug(
+        "tug_stern_form",
+        "Tug stern form",
+        InputKind::Choice(STERN_FORMS),
+    ),
+    tug(
+        "tug_stern_run_length_m",
+        "Tug stern run length",
+        NUM_OR_NONE,
+    ),
+    tug(
+        "tug_stern_transom_height_m",
+        "Tug transom height",
+        NUM_OR_NONE,
+    ),
+    when(
+        tug(
+            "tug_tunnel_crown_height_m",
+            "Tug tunnel crown height",
+            NUM_OR_NONE,
+        ),
+        "tug_stern_form",
+        &["tunnel"],
+    ),
+    tug(
+        "tug_propulsor_type",
+        "Tug propulsor type",
+        InputKind::Choice(SPECIFIED_PROPULSORS),
+    ),
+    tug("tug_propulsor_count", "Tug propulsor count", NUM),
+    tug(
+        "tug_propeller_diameter_m",
+        "Tug propeller diameter",
+        NUM_OR_NONE,
+    ),
+    tug(
+        "tug_power_source",
+        "Tug power source",
+        InputKind::Choice(POWER_SOURCES),
+    ),
+    tug("tug_installed_power_kw", "Tug installed power", NUM_OR_NONE),
+    tug("tug_design_speed_kn", "Formation design speed", NUM),
+    tug(
+        "tug_installed_power_margin",
+        "Tug installed power margin",
+        NUM,
+    ),
+    tug(
+        "tug_bow_thruster",
+        "Tug bow thruster",
+        InputKind::Choice(BOW_THRUSTERS),
+    ),
+    when(
+        tug(
+            "tug_bow_thruster_power_kw",
+            "Tug bow thruster power",
+            NUM_OR_NONE,
+        ),
+        "tug_bow_thruster",
+        BOW_THRUSTERS_FITTED,
+    ),
+    when(
+        tug("tug_battery_energy_kwh", "Tug battery energy", NUM_OR_NONE),
+        "tug_power_source",
+        BATTERY_POWER_SOURCES,
+    ),
+    when(
+        tug(
+            "tug_battery_unit_energy_kwh",
+            "Tug battery unit energy",
+            NUM,
+        ),
+        "tug_power_source",
+        BATTERY_POWER_SOURCES,
+    ),
+    tug(
+        "tug_wheelhouse_type",
+        "Tug wheelhouse type",
+        InputKind::Choice(WHEELHOUSE_TYPES),
+    ),
+    tug(
+        "tug_sightline_method",
+        "Tug sightline method",
+        InputKind::Choice(SIGHTLINE_METHODS),
+    ),
+    tug(
+        "formation_resistance_allowance",
+        "Formation resistance allowance",
+        NUM,
+    ),
+    atb("notch_depth_m", "Notch depth", NUM_OR_NONE),
+    atb("notch_width_m", "Notch width", NUM_OR_NONE),
     when(
         spec(
             "propulsive_efficiency",
@@ -2190,6 +2518,8 @@ pub enum Source {
     Default,
     /// The Vessel Class gave it (issue #94).
     Class,
+    /// A Reference Vessel preset gave it (issue #357: a tug preset).
+    Reference,
 }
 
 impl Source {
@@ -2198,6 +2528,7 @@ impl Source {
             Source::Typed => "typed",
             Source::Default => "default",
             Source::Class => "class",
+            Source::Reference => "reference",
         }
     }
 }
@@ -2920,10 +3251,11 @@ pub(crate) fn unmark(raw: &Value) -> Result<StoredInput, Text> {
             Some("typed") => Source::Typed,
             Some("default") => Source::Default,
             Some("class") => Source::Class,
+            Some("reference") => Source::Reference,
             _ => {
                 return Err(Text::fixed(
                     "msg-marker-source",
-                    "`source` must be \"typed\", \"default\" or \"class\"",
+                    "`source` must be \"typed\", \"default\", \"class\" or \"reference\"",
                 ));
             }
         };

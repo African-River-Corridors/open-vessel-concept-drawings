@@ -77,6 +77,86 @@
           "value": 0.95,
           "source": "default"
         },
+        "tug_included": {
+          "value": false,
+          "source": "default"
+        },
+        "tug_preset": {
+          "value": "none",
+          "source": "default"
+        },
+        "tug_length_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_beam_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_draught_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_stern_form": {
+          "value": "tunnel",
+          "source": "default"
+        },
+        "tug_stern_run_length_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_stern_transom_height_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_tunnel_crown_height_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_propulsor_type": {
+          "value": "shaft_nozzle",
+          "source": "default"
+        },
+        "tug_propulsor_count": {
+          "value": 2.0,
+          "source": "default"
+        },
+        "tug_propeller_diameter_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_power_source": {
+          "value": "diesel_mechanical",
+          "source": "default"
+        },
+        "tug_installed_power_kw": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_design_speed_kn": {
+          "value": 9.7,
+          "source": "default"
+        },
+        "tug_installed_power_margin": {
+          "value": 1.2,
+          "source": "default"
+        },
+        "tug_bow_thruster": {
+          "value": "none",
+          "source": "default"
+        },
+        "tug_wheelhouse_type": {
+          "value": "elevating",
+          "source": "default"
+        },
+        "tug_sightline_method": {
+          "value": "margin",
+          "source": "default"
+        },
+        "formation_resistance_allowance": {
+          "value": 1.0,
+          "source": "default"
+        },
         "propulsive_efficiency": {
           "value": 0.45,
           "source": "default"
@@ -255,6 +335,86 @@
         },
         "hold_fill_ratio": {
           "value": 0.95,
+          "source": "default"
+        },
+        "tug_included": {
+          "value": false,
+          "source": "default"
+        },
+        "tug_preset": {
+          "value": "none",
+          "source": "default"
+        },
+        "tug_length_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_beam_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_draught_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_stern_form": {
+          "value": "tunnel",
+          "source": "default"
+        },
+        "tug_stern_run_length_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_stern_transom_height_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_tunnel_crown_height_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_propulsor_type": {
+          "value": "shaft_nozzle",
+          "source": "default"
+        },
+        "tug_propulsor_count": {
+          "value": 2.0,
+          "source": "default"
+        },
+        "tug_propeller_diameter_m": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_power_source": {
+          "value": "diesel_mechanical",
+          "source": "default"
+        },
+        "tug_installed_power_kw": {
+          "value": null,
+          "source": "default"
+        },
+        "tug_design_speed_kn": {
+          "value": 9.7,
+          "source": "default"
+        },
+        "tug_installed_power_margin": {
+          "value": 1.2,
+          "source": "default"
+        },
+        "tug_bow_thruster": {
+          "value": "none",
+          "source": "default"
+        },
+        "tug_wheelhouse_type": {
+          "value": "elevating",
+          "source": "default"
+        },
+        "tug_sightline_method": {
+          "value": "margin",
+          "source": "default"
+        },
+        "formation_resistance_allowance": {
+          "value": 1.0,
           "source": "default"
         },
         "propulsive_efficiency": {

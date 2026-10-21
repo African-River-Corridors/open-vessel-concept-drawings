@@ -48,6 +48,7 @@ pub mod squat;
 pub mod stern_form;
 pub mod tanks;
 pub mod text;
+pub mod tug_presets;
 mod unprintable;
 pub mod vessel_classes;
 pub mod vessel_standards;
