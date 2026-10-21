@@ -492,26 +492,42 @@ describe("OVCD app smoke tests", () => {
     assert.equal((await browser.$$("[data-testid=stability-chart]")).length, 0, "no empty chart");
   });
 
+  // The Rule Trace (spec 0004, #276): one row per Rule per object, failures first. A low air-draft
+  // limit makes one Rule fail, so each table has a failing row to show.
+  const RANK = { fail: 0, warn: 1, pass: 2, note: 3, "not evaluated": 4, "not applicable": 5 };
   for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
-    it(`lists every check in the Rule check calculations table, failures first (${cargo})`, async () => {
+    it(`shows the Rule Trace in the Rule check calculations table, failures first (${cargo})`, async () => {
       await open(path.join(FIXTURES, fixture), fixture);
-      // The Outputs panel lists the same checks, in the engine's order.
-      const engine = await browser.execute(() =>
-        [...document.querySelectorAll("[data-testid=checks] li")].map((li) => ({ fail: li.classList.contains("fail"), text: li.textContent })),
-      );
+      await type("Air-draft limit", "3");
       await show("Stability & Propulsion", "Rule check calculations");
-      await until("the table", async () => (await browser.$$("[data-testid=rule-check-row]")).length > 0);
+      await until("a failing row", async () => (await browser.$$('[data-testid=rule-check-row][data-outcome="fail"]')).length > 0);
+      assert.deepEqual(await texts(await browser.$$("[data-testid=rule-checks] thead th")),
+        ["Result", "Rule", "Object", "Value", "Limit", "Margin", "Citation", "Status"]);
       const rows = await browser.execute(() =>
-        [...document.querySelectorAll("[data-testid=rule-check-row]")].map((tr) => ({ ok: tr.dataset.ok === "true", name: tr.querySelector("th").textContent })),
+        [...document.querySelectorAll("[data-testid=rule-check-row]")].map((tr) => ({
+          outcome: tr.dataset.outcome,
+          governing: tr.dataset.governing === "true",
+          gap: tr.querySelector("[data-testid=rule-cell-citation] .gap")?.textContent ?? "",
+        })),
       );
-      assert.equal(rows.length, engine.length, "every check appears once");
-      assert.equal(new Set(rows.map((r) => r.name)).size, rows.length, "no check twice");
-      const failing = rows.filter((r) => !r.ok).length;
-      assert.equal(failing, engine.filter((c) => c.fail).length);
-      // Failures first: no pass above a fail.
-      assert.deepEqual(rows.map((r) => r.ok), [...rows.map((r) => r.ok)].sort((a, b) => Number(a) - Number(b)));
-      assert.match(await browser.$("[data-testid=rule-check-count]").getText(), new RegExp(`^${failing} of ${rows.length} checks? fails?$`));
+      const ranks = rows.map((r) => RANK[r.outcome]);
+      assert.ok(ranks.every((r) => r !== undefined), "every outcome has a tag");
+      assert.deepEqual(ranks, [...ranks].sort((a, b) => a - b), "failures first, then warnings, passes, notes, not evaluated, not applicable");
+      const notEvaluated = rows.filter((r) => r.outcome === "not evaluated");
+      assert.ok(notEvaluated.length > 0, "a not evaluated row");
+      assert.ok(notEvaluated.every((r) => r.gap.length > 0), "a not evaluated row says what the engine lacks");
+      // Dry bulk evaluates no limit Rule yet (its stability is first-order), so only gas has one.
+      if (cargo === "gas") assert.ok(rows.some((r) => r.governing), "a governing row");
+      const failing = rows.filter((r) => r.outcome === "fail").length;
+      assert.match(await browser.$("[data-testid=rule-check-count]").getText(), new RegExp(`^${failing} of ${rows.length} rule checks? fails?$`));
+      assert.match(await browser.$("[data-testid=rule-trace-summary]").getText(), /fails \d+ blocking Rule check/);
       assert.ok((await overflow()) <= 0, "the panel does not scroll");
+      for (const theme of ["Light", "Dark"]) {
+        await setTheme(theme);
+        await settle();
+        await shot(`234-${cargo}-rule-trace-${theme.toLowerCase()}`);
+      }
+      await setTheme("Auto");
     });
   }
 

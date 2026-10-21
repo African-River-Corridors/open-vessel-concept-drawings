@@ -4,7 +4,7 @@
   import HullView from "./HullView.svelte";
   import SpeedPower from "./views/SpeedPower.svelte";
   import Stability from "./views/Stability.svelte";
-  import RuleChecks from "./views/RuleChecks.svelte";
+  import RuleChecks, { type RuleTrace } from "./views/RuleChecks.svelte";
   import CapitalBudget from "./views/CapitalBudget.svelte";
   import { say, t, type TextIds } from "./i18n.svelte";
 
@@ -158,7 +158,7 @@
       {:else if !results}
         <p class="note">{t("app-no-results-show")}</p>
       {:else}
-        <RuleChecks {ids} checks={(results as { checks?: { name: string; ok: boolean; message: string }[] }).checks ?? []} />
+        <RuleChecks trace={(results as { rule_trace?: RuleTrace }).rule_trace ?? null} />
       {/if}
     {:else if current === "boq"}
       <div data-testid="placeholder-boq">

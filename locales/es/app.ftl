@@ -322,20 +322,6 @@ app-metric-depth-optimised = Puntal optimizado
 
 # status: draft
 app-rules-none = El motor no informó verificaciones para esta opción.
-# status: draft
-app-rules-count = { $failing } de { $total ->
-        [one] { $total } verificación
-       *[other] { $total } verificaciones
-    } { $failing ->
-        [one] no cumple
-       *[other] no cumplen
-    }
-# status: draft
-app-rules-result = Resultado
-# status: draft
-app-rules-check = Verificación
-# status: draft
-app-rules-message = Mensaje
 
 ## Vista de velocidad y potencia
 

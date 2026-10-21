@@ -175,16 +175,35 @@ app-metric-depth-optimised = Depth optimised
 ## Rule checks view
 
 app-rules-none = The engine reported no checks for this Option.
-app-rules-count = { $failing } of { $total ->
-        [one] { $total } check
-       *[other] { $total } checks
+app-rules-trace-count = { $failing } of { $total ->
+        [one] { $total } rule check
+       *[other] { $total } rule checks
     } { $failing ->
         [one] fails
        *[other] fail
     }
-app-rules-result = Result
-app-rules-check = Check
-app-rules-message = Message
+app-rules-col-result = Result
+app-rules-col-rule = Rule
+app-rules-col-object = Object
+app-rules-col-value = Value
+app-rules-col-limit = Limit
+app-rules-col-margin = Margin
+app-rules-col-citation = Citation
+app-rules-col-status = Status
+app-rules-warn = WARN
+app-rules-note = NOTE
+app-rules-not-evaluated = NOT EVALUATED
+app-rules-not-applicable = NOT APPLICABLE
+app-rules-yes = yes
+app-rules-no = no
+app-rules-governing = Governing
+app-rules-governing-hint = The strictest Rule of its requirement: it decides whether the requirement is met.
+app-rules-sizes = Sizes the arrangement
+app-rules-finding = Finding { $finding }
+app-rules-ovcd-check = OVCD Check
+app-rules-verified = Verified
+app-rules-unverified = Unverified
+app-rules-method-unverified = Method unverified
 
 ## Speed and power view
 
