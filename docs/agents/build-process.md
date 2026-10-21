@@ -2,7 +2,8 @@
 
 How a spec that has been split into tickets is built, reviewed and merged. Agreed by the maintainer on
 2026-10-13. Since 2026-10-14 it runs in **single-agent mode**: one builder works the tickets one at a
-time, and adversarial review happens after the build, not on every ticket.
+time, and adversarial review happens after the build, not on every ticket. Since 2026-10-20 several builder **lanes** run in parallel. Each lane builds its own tickets one at a
+time, owns the files its brief names, and messages the owning lane before it touches another lane's file.
 
 ## The loop
 
@@ -12,24 +13,36 @@ ticket whose blockers are all closed, and no other. For each ticket:
 1. **Read.** Read the ticket and its comments (`gh issue view <n> --json body,comments`). Later comments
    may revise the acceptance criteria.
 2. **Build.** Work in its own git worktree under `.claude/worktrees/t<n>`, on a branch
-   `ticket/<n>-<slug>` cut from an up-to-date `origin/main`. Test first. One PR to `main` closes the
+   `ticket/<n>-<slug>` cut from an up-to-date `origin/main`. Set one shared build folder for all the
+   worktrees of your lane, `CARGO_TARGET_DIR=$HOME/Dev/_cargo-target/ovcd-<lane>`, so a new worktree
+   reuses the compiled dependencies and a merged worktree can be removed without losing the build. Use
+   one folder **per lane**, not one for all lanes: cargo locks its build folder, so lanes that share one
+   wait for each other. Do not use sccache: its cache keys hold the absolute source path, so it gets no
+   hits across worktrees. Test first. One PR to `main` closes the
    ticket. Every acceptance criterion ticked in the PR body links to its evidence. Evidence must be
    reachable from the PR: a test name or file in the diff, a command and its output pasted in the
    body, or a CI job. "Kept with the build notes" is not enough; a reviewer must not have to ask the
    builder for it.
-3. **Local gates.** `cargo fmt --check`, clippy with warnings as errors, `cargo test --workspace`, the
-   WebAssembly build, the Python tests, `python3 tools/release_guard.py --history`, and the embargo check
-   of the PR body (see `issue-tracker.md`). `bash tools/gates.sh` runs the fast gate in one go.
-4. **CI.** The `test` and `release-guard` jobs must be green on the head commit. The design-impact check
-   is part of `test`: it reports whether designs moved, and fails only when a change is missing from
-   `CHANGELOG.md` (run `python3 tools/design_impact.py changelog`).
-5. **Merge.** Squash-merge with the repo-local address, so the commit on `main` carries it and not
+3. **Local checks.** CI is the full gate, so before a push run only what the change can break:
+   `cargo fmt --all --check`; clippy with warnings as errors on the crates touched; the tests of the crates
+   or Python modules touched; `python3 tools/release_guard.py` and `--history`; and the embargo check of
+   the PR body (see `issue-tracker.md`). Run the full fast gate (`bash tools/gates.sh`) only for a change
+   across many crates, or to reproduce a red CI run.
+4. **Auto-merge, and do not wait.** As soon as the PR is open, turn on auto-merge:
+   `gh pr merge <pr> --squash --auto --delete-branch --author-email <repo-local address>` (see step 5 for
+   the address). Then start the next ticket's reading and tests. Do not watch CI. Branch protection
+   requires `test` and `release-guard` green on the head commit, so auto-merge cannot land red code. The
+   design-impact check is part of `test`: it reports whether designs moved, and fails only when a change
+   is missing from `CHANGELOG.md` (run `python3 tools/design_impact.py changelog`). Branch protection is
+   not strict, so a PR needs a rebase only for a real conflict, not each time `main` moves. If CI goes
+   red, auto-merge waits: fix it when you see it.
+5. **Merge.** Auto-merge (step 4) squash-merges with the repo-local address, so the commit on `main` carries it and not
    the account's personal address: `gh pr merge <pr> --squash --delete-branch --author-email <repo-local
    address>`. The repo-local address is the one in this clone's `git config user.email` (do not write
    it in a ticket, a PR or a doc). GitHub accepts `--author-email` only for an address verified on the merging account (account
    settings, Emails). Until the maintainer verifies it there, GitHub refuses the merge with "Invalid email
    address": merge without `--author-email` and note it in the build notes. A local "main is already used by worktree" message is harmless.
-   Check that the PR is merged, the issue is closed, `origin/main` holds the squash commit, and
+   When the merge lands, check that the PR is merged, the issue is closed, `origin/main` holds the squash commit, and
    `git log -1 --format=%ae origin/main` shows the repo-local address (once it is verified). Then write the **build notes**
    (below) and remove the worktree.
 
