@@ -42,6 +42,25 @@ Each disagreement outside the grid error goes in one bucket, in this order:
 A false pass on a blocking Rule fails the build whatever its bucket. `results.md` lists, per Rule Set
 and per Rule by id, the passing and failing case counts, the coverage, and the buckets.
 
+### Rule mutation
+
+`rule_mutation.py` (issue #279) tests the corpus, not the engine. For each numeric limit and coefficient
+of each evaluated Rule of a selected set, it writes a mutated copy of the set with that one number moved
+by a step to each side. The copy keeps the family, so its rule ids are the built-in ones, and takes the
+set id `<id>-mutant-<n>`. It is loaded at run time next to the built-in sets, as a `.vdesign` run loads
+one, and selected alone. The corpus runs on it. When no case changes its verdict on the mutated Rule,
+the corpus is **weak** there: no case sits close enough to the limit to notice. That is a warning
+annotation (`Evaluation weak corpus`), never a failure. `results.md` lists every mutant and the cases
+that notice it.
+
+The steps: a constant limit moves by the big step of its unit, above the engine's grid error (m rad
+0.002, m 0.01, degrees 2; GM, in metres, takes the GZ step, above its own 0.005 m). A formula
+coefficient, a table value, or a constant in another unit moves by 1 % of its value. A table's `when`
+bounds say where a row applies; they do not move.
+
+The whole harness, rule mutation included, runs in about a second, so it stays in the pull-request gate
+(`--check`, in the `test` job).
+
 ## Boundary mutants
 
 `oracle/mutants.py` makes the mutants; none is written by hand. For each base case and each of the six

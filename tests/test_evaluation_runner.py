@@ -226,3 +226,65 @@ def test_results_list_coverage_by_rule_id_and_every_bucket():
         assert f"| `{rule_id}` " in text, rule_id
     for bucket in runner.BUCKETS:
         assert f"| {bucket} | " in text, bucket
+
+
+# --- rule mutation (issue #279) ----------------------------------------------------------------------
+
+import json  # noqa: E402
+
+import rule_mutation  # noqa: E402
+
+
+def test_every_numeric_limit_of_is2008_a_has_a_mutant_on_each_side():
+    """Label: property - each evaluated limit Rule of `is2008-a` gets a mutant one step below and
+    one above its limit; a mutant differs from the set in that one number and its set id."""
+    text = rule_mutation.set_text("is2008-a@1.0.0")
+    base = json.loads(text)
+    limits = {r["id"]: r["limit"]["value"] for r in base["rules"]
+              if r.get("evaluated", True) and r["kind"] == "limit"}
+    ms = rule_mutation.mutants("is2008-a@1.0.0")
+    assert sorted((m["rule"], m["side"]) for m in ms) == sorted(
+        (r, s) for r in limits for s in ("below", "above"))
+    for m in ms:
+        doc = json.loads(m["text"])
+        assert doc["id"].startswith("is2008-a-mutant-") and doc["family"] == base["family"]
+        moved = [r["id"] for r, b in zip(doc["rules"], base["rules"]) if r != b]
+        assert moved == [m["rule"]]
+        assert m["moved"] == pytest.approx(limits[m["rule"]] + (m["step"] if m["side"] == "above" else -m["step"]))
+
+
+def test_the_real_corpus_notices_every_mutant_of_is2008_a():
+    """Label: property - every limit of `is2008-a`, moved one step either way, changes at least one
+    case's verdict: the corpus is not weak anywhere."""
+    text = (EVAL / "results.md").read_text(encoding="utf-8")
+    assert "- Mutants run: 12. Not noticed by any case: 0." in text
+
+
+def test_a_limit_no_case_comes_near_is_a_weak_corpus_warning(tmp_path):
+    """Label: property - a fixture set with a GM limit of 5 m, far from every case's GM: no case
+    changes its verdict when the limit moves, so both mutants are weak-corpus findings. The GM limit
+    of 0.15 m in the same set is noticed."""
+    fixture = json.dumps({
+        "id": "weak-fixture", "family": "weak", "title": "weak fixture", "version": "1.0.0",
+        "edition": {"document": "test"}, "sources": [], "status": "draft",
+        "known_conflicts": [{"rules": ["weak/x/gm-high", "weak/x/gm-low"], "reason": "test set"}],
+        "rules": [
+            {"id": f"weak/x/{slug}", "title": slug, "origin": "physical", "source": {},
+             "codified": {"by": "agent", "date": "2026-10-21", "review": "#279"}, "verified": False,
+             "kind": "limit", "measure": {"id": "gm0"}, "compare": "ge",
+             "limit": {"value": value, "unit": "m"}, "consequence": "block", "evaluated": True,
+             "since": "1.0.0"}
+            for slug, value in (("gm-low", 0.15), ("gm-high", 5.0))],
+    })
+    cases = runner.load_cases()
+    result = rule_mutation.run(cases, ["weak-fixture@1.0.0"], runner.trace_of, (fixture,))
+    weak = sorted((m["rule"], m["side"]) for m in result if not m["noticed_by"])
+    assert weak == [("weak/x/gm-high", "above"), ("weak/x/gm-high", "below")]
+    # The runner prints a warning annotation, and exits 0, for a weak corpus.
+    one = tmp_path / "cases"
+    one.mkdir()
+    shutil.copy(EVAL / "cases" / "box_a.yaml", one / "box_a.yaml")       # large margins only
+    r = run_runner("--cases", str(one), "--mutants", str(tmp_path / "none.yaml"),
+                   "--results", str(tmp_path / "results.md"))
+    assert r.returncode == 0, r.stdout
+    assert r.stdout.count("::warning title=Evaluation weak corpus") == 12
