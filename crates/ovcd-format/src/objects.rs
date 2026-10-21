@@ -394,6 +394,8 @@ pub(crate) fn capacity_result_from_json(
         air_draft_navigating_light_m: o.opt_f64("air_draft_navigating_light_m")?,
         navigating_top_above_keel_m: o.opt_f64("navigating_top_above_keel_m")?,
         gas_basis,
+        // The Python API result has no stern block mass (issue #348).
+        stern_block_items: Vec::new(),
         checks: o.checks("checks")?,
         warnings: o.text_list("warnings")?,
     })

@@ -64,6 +64,8 @@ pub struct FitOptions {
     pub fill_ratio: f64,
     /// Cargo density (kg/m^3) in place of the cargo data's (issue #315); `None`: the cargo data's.
     pub cargo_density_kg_m3: Option<f64>,
+    /// Issue #348: `Some` puts the stern block's mass into the lightship of a self-propelled hull.
+    pub stern_block_mass: Option<crate::aft_arrangement::SternMassInputs>,
     pub self_propelled: bool,
     pub depths: Vec<f64>,
     pub tanks_wide: Vec<i64>,
@@ -113,6 +115,7 @@ impl Default for FitOptions {
             ruleset: "IGC_2G".to_string(),
             fill_ratio: 0.95,
             cargo_density_kg_m3: None,
+            stern_block_mass: None,
             self_propelled: true,
             depths: DEFAULT_DEPTHS_M.to_vec(),
             tanks_wide: DEFAULT_TANKS_WIDE.to_vec(),
@@ -467,6 +470,7 @@ impl Search<'_> {
         inp.vessel_type = self.o.ruleset.clone();
         inp.fill_ratio = self.o.fill_ratio;
         inp.cargo_density_kg_m3 = self.o.cargo_density_kg_m3;
+        inp.stern_block_mass = self.o.stern_block_mass.clone();
         inp.block_coefficient = self.o.block_coefficient;
         inp.n_tanks_wide = Some(nw);
         inp.n_tanks_long = nl;

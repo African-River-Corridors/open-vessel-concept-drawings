@@ -35,6 +35,7 @@ fn narrow_deep() -> GasCapacityResult {
         cargo_density_t_per_m3: 0.581,
         lightship_t: 480.59038275062665,
         has_aft_arrangement: false,
+        stern_block_items: Vec::new(),
     }
 }
 

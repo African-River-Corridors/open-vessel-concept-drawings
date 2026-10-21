@@ -990,6 +990,7 @@ fn simulate_measured(p: &Map<String, Value>, measured: &mut Measured) -> R<Value
     inp.pushed_stern_void_m = get_or(p, "pushed_stern_void_m", inp.pushed_stern_void_m)?;
     inp.bulk_end_bulkhead_m = get_or(p, "bulk_end_bulkhead_m", inp.bulk_end_bulkhead_m)?;
     inp.aft_design = aft_design_of(p)?;
+    inp.stern_block_mass = stern_mass_of(p)?;
     // The hold design values. A key left out keeps the core default, which is the value the engine
     // used before these were inputs.
     inp.wing_void_width = get_or(p, "hold_wing_void_width_m", inp.wing_void_width)?;
@@ -1074,37 +1075,40 @@ fn simulate_measured(p: &Map<String, Value>, measured: &mut Measured) -> R<Value
     });
     let drawing = drawing_json(structure_json(&r, inp.separation.as_ref(), Some(&inp)));
     with_text_ids(
-        json!({
-            "vessel": label,
-            "cargo": cargo.name,
-            "phase": cargo.phase.key(),
-            "self_propelled": self_propelled,
-            "arrangement": Value::Null,
-            "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(cb) },
-            "geometry": geo,
-            "drawing": drawing,
-            "results": {
-                "cargo_t": num(cargo_t),
-                "cargo_volume_bound_t": num(cargo_volume_bound),
-                "cargo_weight_bound_t": num(cargo_weight_bound),
-                "governs": governs,
-                "cargo_volume_m3": num(r.cargo_volume_m3),
-                "lightship_t": num(ls),
-                "displacement_t": num(disp),
-                "deadweight_t": num(deadweight),
-                "draught_m": num(t),
-                "draught_max_m": num(t_max),
-                "freeboard_m": num(d - t),
-                "light_draught_m": opt_num(r.light_draft_m),
-                "air_draft_loaded_m": num(h_top - t),
-                "air_draft_light_m": opt_num(r.air_draft_light_m),
-                "h_over_T": h_over_t(&ch, t)?,
-            },
-            "checks": checks,
-            "warnings": r.warnings,
-            "curves": curve_list,
-            "cost_masses": Value::Null,
-        }),
+        with_stern_mass(
+            json!({
+                "vessel": label,
+                "cargo": cargo.name,
+                "phase": cargo.phase.key(),
+                "self_propelled": self_propelled,
+                "arrangement": Value::Null,
+                "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(cb) },
+                "geometry": geo,
+                "drawing": drawing,
+                "results": {
+                    "cargo_t": num(cargo_t),
+                    "cargo_volume_bound_t": num(cargo_volume_bound),
+                    "cargo_weight_bound_t": num(cargo_weight_bound),
+                    "governs": governs,
+                    "cargo_volume_m3": num(r.cargo_volume_m3),
+                    "lightship_t": num(ls),
+                    "displacement_t": num(disp),
+                    "deadweight_t": num(deadweight),
+                    "draught_m": num(t),
+                    "draught_max_m": num(t_max),
+                    "freeboard_m": num(d - t),
+                    "light_draught_m": opt_num(r.light_draft_m),
+                    "air_draft_loaded_m": num(h_top - t),
+                    "air_draft_light_m": opt_num(r.air_draft_light_m),
+                    "h_over_T": h_over_t(&ch, t)?,
+                },
+                "checks": checks,
+                "warnings": r.warnings,
+                "curves": curve_list,
+                "cost_masses": Value::Null,
+            }),
+            &r.stern_block_items,
+        ),
         ids,
     )
 }
@@ -1119,6 +1123,35 @@ fn governs_draught(limit: &str) -> Text {
 }
 
 /// The result with its `text_ids` (ADR 0014): a reading aid, outside the results hash.
+/// Whether the stern block's mass is in the lightship (issue #348), and what it needs. A key left
+/// out keeps it out, as before.
+fn stern_mass_of(p: &Map<String, Value>) -> R<Option<ovcd_core::aft_arrangement::SternMassInputs>> {
+    if !p.get("stern_block_mass_included").is_some_and(truthy) {
+        return Ok(None);
+    }
+    Ok(Some(ovcd_core::aft_arrangement::SternMassInputs {
+        battery_unit_energy_kwh: get_or(p, "battery_unit_energy_kwh", 5000.0)?,
+        installed_power_kw: truthy_float(p, "installed_power_kw")?,
+    }))
+}
+
+/// The stern block's mass items in the results (issue #348), only when they are in the lightship:
+/// a file without the stern mass gets no new field, so its results hash is unchanged.
+fn with_stern_mass(mut result: Value, items: &[ovcd_core::weights::MassItem]) -> Value {
+    if !items.is_empty() {
+        result["stern_block_mass"] = json!({
+            "total_t": num(ovcd_core::weights::total_mass(items)),
+            "items": items.iter().map(|i| json!({
+                "label": i.label,
+                "mass_t": num(i.mass_t),
+                "lcg_m": num(i.lcg_m),
+                "kcg_m": num(i.kcg_m),
+            })).collect::<Vec<_>>(),
+        });
+    }
+    result
+}
+
 fn with_text_ids(mut result: Value, ids: TextIds) -> R<Value> {
     result["text_ids"] = ids.finish(&result);
     Ok(result)
@@ -1258,6 +1291,7 @@ fn simulate_gas(
         required_freeboard_m: fb,
         air_draft_limit_m: truthy_float(p, "air_draft_limit_m")?,
         aft_design: aft_design_of(p)?,
+        stern_block_mass: stern_mass_of(p)?,
         ..FitOptions::default()
     };
     let f = ga::fit(l, b, cargo_key, t_max, &options)
@@ -1378,6 +1412,7 @@ fn simulate_gas(
     let drawing = drawing_json(drawing_parts);
     let air_loaded = r.air_draft_top_above_keel_m - t;
     with_text_ids(
+        with_stern_mass(
         json!({
             "vessel": label,
             "cargo": cargo.name,
@@ -1423,6 +1458,8 @@ fn simulate_gas(
             "stability_marks": stability_marks,
             "cost_masses": r.gas_basis.as_ref().map_or(Value::Null, |b| crate::cost::gas_masses(&b.weights)),
         }),
+            &r.stern_block_items,
+        ),
         ids,
     )
     .map(|v| {
