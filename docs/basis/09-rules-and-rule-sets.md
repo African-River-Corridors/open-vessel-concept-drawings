@@ -2,423 +2,399 @@
 
 > Concept and preliminary design only. Not for approval. Draft: needs expert review.
 >
-> Code state: written against `main` at commit `f6d446c` (2026-10-20). **Out of date:** since then the Rule Set loader (#268), the evaluator and Rule Trace (#269), `is2008-a` (#270), `igc-2g` (#271) and `ovcd` / `lr-inland-gas` (#272) have merged. A rewrite is ticketed.
+> Code state: written against `main` at commit `d60e5ec` (2026-10-21). This page replaces the first draft, which
+> was written before the rules engine existed.
 
-**For:** Classification and regulatory specialist  ·  **Code:** `crates/ovcd-core/src/checks.rs`,
-`gas_stability.rs`, `gas_separation.rs`, `protective_location.rs`, `gas_arrangement.rs`,
-`barge_capacity.rs`, `crates/ovcd-format/src/simulate.rs`  ·  **Rule Sets:** none in code today.
-Designed: `is2008-a`, `igc-2g`, `lr-inland-gas`, `ovcd` (spec 0004, tickets #268 to #279).
+**For:** Classification and regulatory specialist  ·  **Code:** `crates/arc-rules/` (the kernel: `model.rs`,
+`load.rs`, `eval.rs`), `crates/ovcd-format/src/trace.rs` (the Measures, the default stack, the Rule Trace),
+`run.rs`, `crates/ovcd-core/src/checks.rs`; **Data:** `crates/ovcd-format/rules/`  ·  **Rule Sets:** `is2008-a`,
+`igc-2g`, `lr-inland-gas`, `ovcd` (all `draft`).
 
-This page has two parts. The first part says how OVCD means to interpret and apply rules: the terms,
-codification, rule ids, editions, "the strictest rule governs", the Service Area, outcomes and the Rule
-Trace. Most of that is **designed, not built**. The second part is the inventory: every check the engine
-runs **today**, with its citation and its status. Each section says which part exists in code.
+This page says how OVCD interprets and applies rules, then lists every Rule in the built-in Rule Sets with its
+status. A reviewer can answer three questions here: which published rules does OVCD apply, which of them has a
+second reader checked against the text, and which requirements does OVCD say that it does not evaluate.
 
 ## What OVCD computes here
 
-Today (in code):
+- **Four built-in Rule Sets**, as data (JSON, one file per set version). `ovcd rules` lists them with version,
+  status, number of Rules and content hash. The highest built-in version of each set is the one a run uses.
 
-- A list `checks` in every Design result. Each item has `name`, `ok`, `message` and, for most items,
-  `severity` (`"error"` or `"warning"`). The app shows it in the **Rule checks** tab
-  (`app/src/lib/views/RuleChecks.svelte`). The CLI summary prints "Checks: all N pass" or the names of
-  the failing checks (`crates/ovcd-format/src/run.rs`).
-- For a gas Design, a `stability` object: the criteria set ("IMO IS Code 2008, Part A 2.2"), three
-  loading conditions, and per condition six criteria with value, limit, `ok` and a source text.
-- For a gas Design, `fit` selects the arrangement. It keeps a candidate only when every
-  error-severity check of that candidate passes (`gas_arrangement.rs`, "THE CHECKS THE SEARCH USES").
-- A `capital budget` object with its own three checks (`crates/ovcd-format/src/cost.rs`).
+| Set | Highest version | Rules | Source |
+|---|---|---|---|
+| `is2008-a` | 1.0.0 | 8 | IS Code 2008, Part A 2.2 and 2.3 (MSC.267(85)) |
+| `igc-2g` | 1.1.0 | 10 | IGC Code, ship type 2G: 2.4 tank location, 2.7, 4.23 Type C tank walls, 6.4 (MSC.370(93) as amended) |
+| `lr-inland-gas` | 1.1.0 | 6 | Inland class rules (Lloyd's Register), Pt 4 Ch 4 Sec 3, gas tank clauses |
+| `ovcd` | 2.1.0 | 39 | OVCD's own checks: physical feasibility, tool limits, method validity |
 
-Designed, not built (spec 0004):
+  Earlier versions are kept unchanged: `is2008-a` 1.0.0, `igc-2g` 1.0.0, `lr-inland-gas` 1.0.0 and 1.1.0, and
+  `ovcd` 1.0.0 are in `rules/RELEASED.json` with their content hashes. `igc-2g` 1.1.0, `ovcd` 2.0.0 and `ovcd`
+  2.1.0 are not released yet (`ovcd rules --provenance` is the gate).
+- **A Rule Trace in every result** (`rule_trace`): one row per Rule per object, for every selected Rule Set. It is
+  outside the results hash. The app shows it in the **Rule checks** tab (`RuleChecks.svelte`); `ovcd run --json`
+  gives it.
+- **A verdict.** The Option passes when no row fails. The verdict names every blocking Rule that the engine did
+  not evaluate, so a pass never hides a gap.
+- **The `checks` list** of the result still exists. Each check that a Rule reports is mapped to its Rule id
+  (`CHECK_RULES` in `trace.rs`).
+- **`fit` for gas Designs** keeps a tank arrangement only when it meets every blocking Rule (#277).
 
-- A **Rule Trace** in every result: one row per Rule, per object, of every selected Rule Set.
-- The Rule Sets and versions each Option used, with a content hash.
-- A count, in every passing verdict, of the Blocking Rules that the engine did not evaluate.
+Not built: the **Service Area** input and the `rule_sets` input of format version 3 (#274, #275). A user selects
+Rule Sets only with `--rule-set <file>`.
 
 ## How it works today
 
 ### 1. The terms (glossary)
 
-These terms come from `GLOSSARY.md` and spec 0004. They define the target design. Today the code has only
-the `Check` struct and, for stability, a `Criterion` struct.
+These terms come from `GLOSSARY.md` and spec 0004. They are in the code (`crates/arc-rules/src/model.rs`).
 
-- **Rule.** One requirement about one Measure: its Criterion, its Applicability, its consequence and its
-  source. An **OVCD Check** is a Rule whose origin is OVCD itself (physical feasibility, the validity
-  range of a method, or a limit of the tool). It is never shown as a published rule.
-- **Measure.** A quantity the engine computes for one object (an Option, the hull, a tank or a loading
-  condition), for example the GZ area from 0° to 30° of one loading condition. A Measure is Rust code with
-  its own tests. It cites a **method**, not a rule. A design input that a rule bounds (for example the
-  weld factor) is an *input Measure*.
-- **Criterion.** The test part of a Rule: a comparison (`ge`, `gt`, `le`, `lt`), a limit (a constant, a
-  table row, or a formula shape coded in Rust with its coefficients in data) and a tolerance (default 0).
-  The Criterion holds for value v when v ≥ limit − tolerance (`ge`), and so on for the other forms.
-- **Margin.** v − limit for a lower bound, limit − v for an upper bound. A positive Margin passes.
-- **Requirement.** The Rules, from all selected Rule Sets, on the same Measure instance (same arguments),
-  the same object and the same direction.
-- **Rule Set.** A named, versioned group of Rules from one source edition. It has two versions: the source
-  **edition** (what the rule maker published) and the **set version** (OVCD's encoding, semver).
-- **Applicability.** A list of conditions `input ∈ {values}` on the Option's enumerated inputs (Cargo,
-  Cargo Containment, Service Area, LPG Carriage Condition, tank head type). There is no expression
-  language. A condition on a number (for example "24 m in length and over") cannot be written as
-  Applicability.
+- **Rule.** One requirement about one Measure: its Criterion, its Applicability, its consequence and its source.
+  The **origin** of a Rule is one of `regulation`, `class`, `physical`, `tool-limit`, `method-validity`,
+  `guideline` or `national-practice`. An **OVCD Check** is a Rule whose origin is OVCD itself (`physical`,
+  `tool-limit` or `method-validity`). It is never shown as a published rule.
+- **Kind.** A Rule is a `limit` (a constant), a `table` (a row of one of the set's tables), a `formula` (a shape
+  that Rust codes, with its coefficients as data), a `check` (a yes/no Measure with no comparison) or a `note`
+  (a cited value shown in the trace with no test).
+- **Measure.** A quantity the engine computes for one object (an Option, the hull, a tank, a loading condition).
+  A Measure is Rust code with its own tests. It cites a **method**, not a rule. `ovcd rules --measures` prints the
+  registry, with the method status of each. A design input that a rule bounds is an *input Measure*
+  (`input.<name>`).
+- **Criterion.** The test part of a Rule: a comparison (`ge`, `gt`, `le`, `lt`), a limit and a tolerance (default
+  0). `ge` holds when value ≥ limit − tolerance, and so on (`holds` in `eval.rs`).
+- **Margin.** value − limit for a lower bound, limit − value for an upper bound. A positive Margin passes.
+- **Requirement.** The Rules, from all selected Rule Sets, on the same Measure instance, the same object and the
+  same direction.
+- **Rule Set.** A named, versioned group of Rules from one source edition, with two versions: the source
+  **edition** and the **set version** (OVCD's encoding, semver). Its `status` is `draft` or `stable`. All four
+  built-in sets are `draft`.
+- **Applicability.** A list of conditions `input ∈ {values}` on enumerated inputs (Cargo, Cargo Containment, tank
+  material, derived inputs such as `service_area`). There is no expression language. A condition on a number (for
+  example "24 m in length and over") cannot be written as Applicability.
+- **Consequence.** `block` (a failure stops a pass), `warn` (a failure is shown, and does not stop a pass) or
+  `note`.
 
-**In code today:** `Check` (`checks.rs`) has a name, a yes/no result, a message and a severity text. Only
-the exact text `"error"` gates a result (`all_ok`); every other text acts as a warning. A check has no
-value field, no limit field, no Margin, no citation field and no verification status. Where a citation
-exists, it is inside the message text. The stability `Criterion` (`gas_stability.rs`) has a name, a
-value, a limit, `ok` and a source text, but no comparison field and no Margin.
+### 2. How a rule text becomes a Rule (codification)
 
-### 2. How a rule text becomes a Rule (codification) — designed
+The process is in `docs/rules/codification.md`. A **codifier** (a person or an agent) gets the official text, fixes
+the edition and puts the file in the rule-source library with its SHA-256. The codifier splits the paragraph into
+one Rule per requirement, picks the Measure, records the comparison from the words ("not less than" is `ge`), the
+limit as printed, the Applicability and the citation, and adds tests at both sides of the limit. The Rule gets a
+`codified` record (role, date, review link).
 
-The process is in `docs/rules/codification.md`. A **codifier** (a person or an agent):
+A **second reader**, who did not codify the Rule, opens the cited edition at the cited page and works through a
+checklist. Only then is `verified` filled, with the role (never a person's name), the date, the edition held, the
+locator read and the review link. Spec 0004 calls a Rule **sourced** only when its origin is `regulation` or
+`class` **and** `verified` is filled.
 
-1. Gets the official text and fixes the edition. "As amended" means: list each amending resolution
-   checked, and say which ones change the paragraph. The file goes into the rule-source library with its
-   SHA-256.
-2. Splits the paragraph into one Rule per requirement, and gives each an id.
-3. Picks the Measure and checks that it measures what the text measures (object, datum, range, units).
-   If no Measure fits, the work stops and a new Measure is a Rust change.
-4. Records the comparison from the words ("not less than" is `ge`), the limit as printed, the units,
-   the Applicability and the citation (document, edition, paragraph, page, access).
-5. Sets `codified`, and `verified: false`.
-6. Adds sourced tests at both sides of the limit, and harness boundary cases from the oracle.
+**In code today:** every Rule of the four sets has a `codified` record. Fifteen Rules have a `verified` record,
+and every one of them is a published rule (`is2008-a`: 7 of 8, `igc-2g`: 7 of 10, `lr-inland-gas`: 1 of 6). None
+of the 39 `ovcd` Rules is verified: an OVCD Check has no text to check against. The codifiers and second readers
+recorded so far are all agents (`by: agent`). No Rule has a maintainer or expert-reviewer record yet.
 
-A **second reader**, human or agent, who did not codify the Rule, opens the cited edition at the cited
-page and works through a checklist. Only then is `verified` filled, with the role (never a person's name),
-the date, the edition held, the locator read and the review link. Spec 0004 calls a Rule **sourced** only
-when its origin is `regulation` or `class` **and** `verified` is filled.
+### 3. Rule ids and citations
 
-**In code today:** no Rule records exist. No check has been verified by this process. The code audit
-behind spec 0004 (205 rule-like items) is one reading, not a recorded second reading.
-
-### 3. Rule ids and citations — designed
-
-A rule id is `<family>/<paragraph>/<slug>`, for example `is2008/A.2.2.1/area-0-30`. For a `regulation`
-or `class` Rule, the paragraph segment is the source locator with spaces removed, and the loader checks
-that the two agree. For an OVCD Check, the paragraph segment is a topic (`ovcd/gas-arrangement/...`). An
-id keeps its Measure and direction in every later version. A change of either gives a new id. An id is
-never used again.
-
-A formula that a requirement uses, but that is not itself a requirement, is a table of the set, not a
-Rule. Example: d(Vc) of IGC 2.4.1.1 is the table `igc-d-vc`. The type 2G requirement that uses it is
+A rule id is `<family>/<paragraph>/<slug>`, for example `is2008/A.2.2.1/area-0-30`. For a `regulation` or `class`
+Rule the paragraph segment is the source locator with spaces removed, and the loader refuses a Rule whose two
+differ. For an OVCD Check the paragraph segment is a topic (`ovcd/gas-arrangement/...`). An id keeps its Measure
+and direction in every later version, and an id is never used again once dropped (`ovcd rules --provenance`
+checks both). A formula that a requirement uses but that is not itself a requirement is a table of the set, not a
+Rule. Example: d(Vc) of IGC 2.4.1.1 is the table `igc-d-vc`; the requirement that uses it is
 `igc/2.4.1.2/side-clearance`.
 
-**In code today:** a check is known by its `name` (for example `opening_setback`). The citation, where
-one exists, is free text in the message ("cl. 3.3.7 / 3.3.11") or the stability source text
-("IMO IS Code 2008, Part A 2.2.1"). The text names no edition, page or resolution.
+Every `regulation` or `class` Rule cites a paragraph (`source.locator`) and a page of the held copy. The loader
+refuses one that does not.
 
-### 4. Editions and amendments — designed
+### 4. Editions and amendments
 
-A Rule Set records its edition: the base document, each amendment, and the in-force date. Example
-(spec 0004): `igc-2g` is the IGC Code as adopted by MSC.370(93), as amended by MSC.411(97), MSC.441(99),
-MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109). The rule-source notes
-(`ovcd-rule-sources/igc/NOTES.md`) record that no amending resolution changes 2.3 or 2.4; only
-MSC.492(104) changes chapter 2, at 2.7.1.1.
+A Rule Set records its edition: the base document, each amendment read, and the in-force date.
 
-Every released set version is kept unchanged. A change of a limit is a new version. A verification that
-changes no result-changing field is a **patch** version with the same content hash. A saved file keeps
-the set version it used. The engine never moves a file to a newer version without a warning.
+- `igc-2g`: IGC Code, MSC.370(93), as adopted 22 May 2014, in force 1 January 2016. MSC.411(97), MSC.441(99),
+  MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109) were read. None changes 2.3, 2.4 or 4.23.
+  MSC.492(104) replaces 2.7.1.1.
+- `is2008-a`: 2008 IS Code, MSC.267(85), as adopted 4 December 2008. MSC.443(99) and MSC.444(99) were read; neither
+  changes Part A 2.2 or 2.3. MSC.413(97) and MSC.414(97) are not held.
+- `lr-inland-gas`: Lloyd's Register inland rules, Pt 4 Ch 4 Sec 3, "July 2022, as the code cites it". The
+  November 2015 edition was read (same clauses), and an unofficial copy of the July 2022 section.
 
-**In code today:** no edition is recorded anywhere a result shows. The only rule-set input is `ruleset`,
-with one accepted value, `IGC_2G`. A file that names `IGC_2G_EXACT` or `ADN_G` is read as `IGC_2G`, with
-a warning (`crates/ovcd-format/src/vdesign.rs`, `migrate_ruleset`).
+Every released set version is kept unchanged. A change of a limit is a new version. A verification that changes no
+result-changing field is a patch version with the same content hash. The Rule Trace names the set versions a run
+used (`rule_sets`, for example `igc-2g@1.1.0`) and its `service_area`. A Design file does not store the set
+versions yet: that is format version 3 (#274).
 
-### 5. The strictest rule governs — designed
+The `ruleset` input remains in the Design file with one accepted value, `IGC_2G`. A file that names `IGC_2G_EXACT`
+or `ADN_G` is read as `IGC_2G`, with a warning (`migrate_ruleset` in `vdesign.rs`).
 
-All Rules in a Requirement apply. The Option meets the Requirement only if it meets every one. Of two
-Criteria in one direction, the stricter one lets fewer values pass (larger effective bound for a lower
-bound, smaller for an upper bound; at an equal bound, a strict comparison is stricter). This order is
-total, so the strictest Rule always exists. It is marked **governing**. It is chosen from the Criteria,
-not from the design value, so it does not change when the design changes. Ties go to the first set in
-selection order, then to the rule id. There is no override field: no Rule can loosen another (ADR 0013).
-A Lean model proves these properties for a model of the kernel (ADR 0014, `proofs/lean/`). It is tied to
-Rust by a differential test that waits for the evaluator (#269).
+### 5. The strictest rule governs
 
-**In code today:** there is never more than one limit per quantity, so nothing chooses a governing rule.
-The word "governing" in today's results means something else: the stability loading condition with the
-lowest fluid GM (`StabilityAssessment::governing`), and the light air draft
-("Air draft (empty, governing)").
+All Rules in a Requirement apply. The Option meets the Requirement only if it meets every one. Of two Criteria in
+one direction, the stricter lets fewer values pass (a larger effective bound for a lower bound, a smaller one for an
+upper bound; at an equal bound, a strict comparison is stricter). The order is total, so the strictest Rule always
+exists. It is marked **governing** in the trace (`mark_governing` in `eval.rs`), chosen from the Criteria and not
+from the design value. Ties go to the first set in selection order, then to the rule id. There is no override
+field: no Rule can loosen another (ADR 0013).
 
-### 6. How the Service Area selects Rule Sets — designed
+A Lean model proves properties of this composition (ADR 0014, `proofs/lean/`), including that the sized value
+meets its Requirement and never falls when Rules are added (#482). A differential test compares the Rust
+evaluator with the Lean oracle (`crates/arc-rules/tests/lean_oracle.rs`). It runs in the weekly Lean job, when
+`ARC_RULES_LEAN_ORACLE` names the built oracle.
 
-A new input `service_area` (`river-only` or `coastal-and-river`; default `river-only`) sets the default
-stack. In the first release both Service Areas give the same stack:
+Do not confuse this with two older uses of the word "governing" in a result: the stability loading condition with
+the lowest fluid GM (`stability.governing`), and the light air draft ("Air draft (empty, governing)"). Both name
+a result, not a Rule. Renaming them moves results hashes and is not done (#430).
 
-| Cargo | Default stack (spec 0004) |
+### 6. Which Rule Sets a Design is checked against
+
+The default stack depends on the Cargo Containment (`default_stack` in `trace.rs`):
+
+| Cargo Containment | Stack, in selection order |
 |---|---|
-| Gas | `igc-2g` (which includes `is2008-a`), `lr-inland-gas` (draft, unverified), `ovcd` |
-| Dry bulk and others | `is2008-a` (all rows `not evaluated`), `ovcd` |
+| Type C tanks (gas) | `igc-2g`, `is2008-a`, `lr-inland-gas`, `ovcd` |
+| Box hold, sloped hopper hold | `is2008-a`, `ovcd` |
 
-The `ovcd` set is always selected. A river-only result must say that no statutory technical code was
-checked, only the named Rule Sets. **In code today:** there is no Service Area input and no stack. Gas
-Designs get the IS Code 2008 Part A 2.2 criteria and the gas checks. Dry bulk Designs get no stability
-criteria at all, only a first-order hopper GM warning.
+`igc-2g` includes `is2008-a` 1.0.0; a set that is selected twice is checked once. A set loaded with `--rule-set`
+is added after the stack, and a loaded set with the id of a stack set replaces it for the run. Every Option is
+`river-only` until format version 3 stores a Service Area (#274, #275), and the first release gives both Service
+Areas the same stack. A result does not yet say that no statutory technical code was checked, beyond naming the
+Rule Sets it used.
 
 ### 7. Pass, fail, warn and "not evaluated"
 
-Designed (spec 0004, "Outcome of one Rule on one object"):
+One row of the trace has one outcome (`Outcome` in `eval.rs`):
 
 | Condition | Outcome |
 |---|---|
 | The Rule's set does not apply | one `not applicable` row for the set |
-| The Rule does not apply, or no object of its type | `not applicable` |
-| The engine lacks the Measure (`evaluated: false`) | `not evaluated`, with a gap text |
-| The Measure failed, or gave NaN or infinity | `fail` (block) or `warn` (warn), never `pass` |
+| The Rule does not apply, or the design has no object of its type | `not applicable` |
+| The Rule is marked `evaluated: false` (the engine lacks the Measure) | `not evaluated` |
+| The design has no objects of the type because the engine did not compute them (no loading conditions, say) | `not evaluated`, with the reason as the gap text |
+| The Measure could not be computed, or gave NaN or infinity | `fail` (block) or `warn` (warn), never `pass` |
 | The Criterion holds | `pass` |
 | The Criterion does not hold | `fail` (block) or `warn` (warn) |
+| A `note` Rule with a value | `note` |
 
-An Option passes when no row is `fail`. A `not evaluated` row does not stop a pass, but every passing
-verdict names the Blocking Rules not evaluated (maintainer decision, 2026-10-20).
+An Option passes when no row is `fail`. A `not evaluated` row does not stop a pass, and the verdict names every
+blocking Rule not evaluated (a maintainer decision, 2026-10-20).
 
-In code today:
+What a reader sees:
 
-- An `"error"` check with `ok: false` makes the module result not `ok`, and makes a `fit` candidate
-  fail. A `"warning"` check never gates.
-- The app and the CLI summary ignore `severity`. A failed warning shows as **FAIL**, the same as a failed
-  error (`RuleChecks.svelte`; `run.rs`).
-- Five checks that `simulate.rs` adds ("Cargo > 0", "Feasible arrangement",
-  "Air draft (empty, governing)", "tank length over diameter", and the `Stability — <condition>` rows)
-  carry no `severity` field.
-- "Not evaluated" does not exist as an outcome. Two requirements the engine lacks are only plain text in
-  `stability.limitations`: "No wind heel and no damage stability".
-- When the stability assessment cannot run, `fit` adds one failed check, "Stability — not assessed".
-  So a candidate the engine cannot judge never passes (`gas_arrangement.rs`, `stability_checks`).
+- The `checks` list of a result carries a severity on every check (#419). Only the exact text `"error"` gates
+  (`all_ok` in `checks.rs`); any other text acts as a warning.
+- The CLI summary lists a failed warning apart from a failed error ("Warning checks: ... not met"), and the Rule
+  checks tab shows warnings as their own outcome (#418, #419).
+- When the stability assessment cannot run, `fit` adds one failed check, "Stability — not assessed"
+  (`ovcd/stability/assessed`): a candidate the engine cannot judge never passes.
 
-### 8. What the Rule Trace shows — designed
+**Seen in a run** (the fixtures of `crates/ovcd-format/tests/fixtures/` at the commit above, run with
+`ovcd run --json`):
 
-One row per Rule, per object, in selection order: rule id, Rule Sets that hold it, citation, origin,
-rule status and method status (both shown), object, inputs with their source (typed, default,
-default-estimate, class, computed), value, limit, comparison, tolerance, Margin, outcome, governing flag,
-`sizes` flag, gap text and linked finding. The trace is outside the results hash (as the `drawing` object
-is). The existing `checks` list stays, and each check gains the id of the Rule it reports.
+| Fixture | Rule Sets | Outcomes | Blocking Rules not evaluated |
+|---|---|---|---|
+| `dry_bulk_box_hold` | `is2008-a`, `ovcd` | 5 pass, 2 warn, 8 not evaluated, 32 not applicable | 7: every blocking IS Code row |
+| `dry_bulk_sloped_hopper` | `is2008-a`, `ovcd` | 6 pass, 1 warn, 8 not evaluated, 32 not applicable | 7: every blocking IS Code row |
+| `gas_igc_2g_exact` | all four | 48 pass, 3 note, 2 warn, 4 not evaluated, 28 not applicable | 4 (see below) |
+| `gas_igc_2g_self_propelled` | all four | 54 pass, 3 note, 2 warn, 4 not evaluated, 22 not applicable | 4 (see below) |
 
-**In code today:** no trace exists. The nearest things are the `checks` list and the `stability`
-conditions, which show value and limit but no Margin, no rule status and no edition.
+So a dry bulk Design is checked against none of the IS Code criteria: the engine computes no loading conditions
+with GZ curves for a dry bulk hull, so the Rules have no objects to test and the verdict says so. For the two gas Designs the four blocking Rules not evaluated are the damage
+survival Rule (`igc/2.7/damage-survival`), the weather criterion (`is2008/A.2.3/weather`), the tank capacity
+table (`lr-inland/3.2.1/tank-capacity`) and the cargo-area hull design (`lr-inland/3.5.2/hull-design`).
 
-### 9. Rules that size the design, not checks
+### 8. What the Rule Trace shows
 
-Some rule values never appear as a check. The search builds the arrangement with them, so the result
-meets them by construction. Spec 0004 calls these `sizes` Rules and says the same Rule must also be
-checked on the result. **In code today** they are only sizing: nothing checks the result against them.
-They are rows RS-A60 to RS-A66 in the inventory below.
+One row per Rule per object, in selection order: the rule id, the Rule Sets that hold it, the citation, the origin,
+the rule status (`verified` or `unverified`) and the method status of the Measure (both shown), the object, the
+value, the limit, the comparison, the tolerance, the Margin, the inputs used, the consequence, the outcome, the
+governing flag, the `sizes` flag, the gap text and the linked finding (`TraceRow` in `eval.rs`). Of the blocking
+rows of a Requirement (all rows when none blocks), the strictest is the governing one. The app tab sorts
+failures first, then warnings, passes, notes, not evaluated and not applicable. The trace is outside the results
+hash, so a rule change is reported as a rule change, not as "results differ" (ADR 0007).
+
+### 9. Rules that size the design, not only check it
+
+Some rule values build the design: the search sizes the arrangement with them, so the result meets them by
+construction. A Rule with `sizes: true` is both. The sized value is the limit of the governing Rule, and the same
+Rule is evaluated on the result. Five Rules size today: `igc/2.4.1.2/side-clearance`,
+`igc/2.4.1.2/bottom-clearance`, `lr-inland/3.6.13/cofferdam`, `lr-inland/3.3.7/opening-setback` and
+`lr-inland/3.5.3/end-space`.
 
 ## Assumptions, rules and estimates
 
-This table is the **check inventory**. It lists every check the engine emits today. "Where applied"
-says where the check shows:
+This table is the **inventory of the built-in Rules**, from the data files at the commit above. Labels follow
+`docs/basis/README.md`: a verified published Rule is **Rule (verified)**, an unverified one **Rule (unverified)**.
+An OVCD Check is not a published rule: its limit is **Fixed in code** or an **Estimate** as the page of its area says.
 
-- **Design**: in the `checks` list (or the `stability` or `capital budget` object) of `ovcd run` and the app.
-- **fit**: it gates a `fit` candidate. A fit-only check shows in a Design result only through the message
-  of "Feasible arrangement" when no candidate passes.
-- **API**: emitted by a core module, but only through the module call (`ovcd eval`, the Python bridge),
-  not in a Design result.
+"Status" is `verified` (a second reader checked the text), `unverified` (codified, no second reader), or
+`not evaluated` (the engine lacks the Measure: the Rule shows as `not evaluated` in every verdict). "If it fails"
+is the Rule's consequence: `blocks` stops a pass, `warns` does not. A Finding is a ticket that records a known
+difference between the Rule and its text, or a known limit of its Measure.
 
-Every row is today a **hard-coded check, not yet a Rule**. The target Rule Set is the one spec 0004
-names. "Matches the text" means the reading done for this page; it is not a recorded second reading. No
-check is verified in the spec 0004 sense. Labels follow `docs/basis/README.md`: a cited check is
-**Rule (unverified)**; an uncited hard-coded limit is **Fixed in code**; a limit from an input is
-**Estimate** or **Sourced default** as its input is.
+#### IS Code 2008, Part A (`is2008-a` 1.0.0)
 
-### Published-rule checks (cited)
+| Rule id | What it tests | Origin | If it fails | Status | Finding |
+|---|---|---|---|---|---|
+| `is2008/A.2.2.1/area-0-30` | Area under the GZ curve from 0 to 30 degrees, at least 0.055 m.rad | regulation | blocks | verified | – |
+| `is2008/A.2.2.1/area-0-40` | Area under the GZ curve from 0 to 40 degrees, at least 0.09 m.rad | regulation | blocks | verified | #282 |
+| `is2008/A.2.2.1/area-30-40` | Area under the GZ curve from 30 to 40 degrees, at least 0.03 m.rad | regulation | blocks | verified | #282 |
+| `is2008/A.2.2.2/gz-30` | Righting lever at least 0.2 m at a heel of 30 degrees or more | regulation | blocks | verified | – |
+| `is2008/A.2.2.3/angle-max-gz` | Maximum righting lever at a heel of at least 25 degrees | regulation | blocks | verified | – |
+| `is2008/A.2.2.4/gm0` | Initial metacentric height at least 0.15 m | regulation | blocks | verified | – |
+| `is2008/A.2.2/condition` | Each loading condition's stability check; false also if it does not float | regulation | note | unverified | – |
+| `is2008/A.2.3/weather` | Severe wind and rolling criterion (weather criterion) | regulation | blocks | not evaluated | – |
 
-| Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
-|---|---|---|---|---|---|---|
-| RS-A01 | Area under GZ, 0° to 30° | ≥ 0.055 m·rad, trapezoid on a 1° grid, per loading condition | Rule (unverified) | IS Code 2008, MSC.267(85), Part A 2.2.1 (PDF p. 12). Matches the text. | `gas_stability.rs` `criteria`; Design, fit. Target `is2008/A.2.2.1/area-0-30` in `is2008-a` (#270) | Unknown (the Measure is a prismatic box section) |
-| RS-A02 | Area under GZ, 0° to 40° | ≥ 0.090 m·rad, always to 40° | Rule (unverified) | Part A 2.2.1. Value matches. The text says "or the angle of down-flooding φf if this angle is less than 40°"; the engine has no φf. Finding #282 | As RS-A01. Target `is2008/A.2.2.1/area-0-40` | Non-conservative where openings immerse before 40° |
-| RS-A03 | Area under GZ, 30° to 40° | ≥ 0.030 m·rad, always 30° to 40° | Rule (unverified) | Part A 2.2.1. Value matches; same φf gap (#282) | As RS-A01. Target `is2008/A.2.2.1/area-30-40` | Non-conservative, as RS-A02 |
-| RS-A04 | GZ at 30° or more | max GZ on the 30° to 60° grid ≥ 0.20 m | Rule (unverified) | Part A 2.2.2. Matches the text | As RS-A01. Target `is2008/A.2.2.2/gz-30` | Unknown |
-| RS-A05 | Angle of maximum GZ | ≥ 25°, on the 0° to 60° grid (integer degrees) | Rule (unverified) | Part A 2.2.3. Matches. The text also allows alternative criteria with the Administration's approval; OVCD does not model that | As RS-A01. Target `is2008/A.2.2.3/angle-max-gz` | Conservative (no alternative route) |
-| RS-A06 | Initial GM (fluid) | GM0 less free surface of the cargo ≥ 0.15 m | Rule (unverified) | Part A 2.2.4. Matches. Free surface counts the cargo tanks only, not consumables (IGC 2.2.3 asks for those) | As RS-A01. Target `is2008/A.2.2.4/gm0` | Non-conservative by the consumables' free surface |
-| RS-A07 | Opening setback, aft | aft separation = max(cofferdam, setback) ≥ 2.00 m, tolerance 1e-9 m | Rule (unverified) | Inland class rule book (LR Inland Waterways Ships) Pt 4 Ch 4 Sec 3, 3.3.7 and 3.3.11; same 2.00 m in ADN 2025 9.3.1.17.4. Matches (2015 edition and the July 2022 mirror). Measure is a proxy: a length, not the position of each opening | `gas_separation.rs`; Design (always passes: a Design cannot change the inputs), fit; API can change them. Target `lr-inland/3.3.7/opening-setback` in `lr-inland-gas` (#272) | Unknown (proxy) |
-| RS-A08 | Cofferdam width | ≥ 0.60 m, tolerance 1e-9 m | Rule (unverified) | Cites 3.6.13. That clause is in the **type C** (liquid) part. No gas-tank source. Finding #280 (fix with the IGC chapter 3 replacement) | As RS-A07. Target `lr-inland/3.6.13/cofferdam` | No gas basis; with defaults no geometry moves |
-| RS-A09 | Forward end-bulkhead space | ≥ 0.20 m if `is_pressure_tank`, else ≥ 0.50 m; tolerance 1e-9 m | Rule (unverified) | Cites 3.5.3 / 3.6.3. 3.5.3 (type G) keys the 0.50 m to **plane tank ends**; the "pressure tank" wording is from 3.6.3 (type C). Finding #281 | As RS-A07. Target `lr-inland/3.5.3/end-space-domed` and `-plane` | With defaults (domed heads, 0.20 m) correct; wrong only if `is_pressure_tank: false` |
+#### IGC Code, ship type 2G (`igc-2g` 1.1.0)
 
-### OVCD checks with a known origin but no citation in the check
+| Rule id | What it tests | Origin | If it fails | Status | Finding |
+|---|---|---|---|---|---|
+| `igc/2.4.1.2/side-clearance` | Cargo tank side distance from the outer shell, at least d(Vc) less the insulation | regulation | blocks | verified (sizes) | – |
+| `igc/2.4.1.2/bottom-clearance` | Cargo tank bottom distance: the greater of B/15 (at most 2 m) and d(Vc), less the insulation | regulation | blocks | verified (sizes) | – |
+| `igc/4.23.2.1.2/min-thickness` | Minimum shell and head thickness after forming, by steel class | regulation | blocks | verified | – |
+| `igc/4.23.2.1.3/weld-factor` | Welded joint efficiency factor 0.95 (up to 1 on other considerations) | regulation | warns | verified | – |
+| `igc/4.23.2.1.3/weld-factor-max` | Welded joint efficiency factor never above 1 | regulation | blocks | verified | – |
+| `igc/4.23.3.1/allowable-stress` | Allowable stress at most the lesser of Rm/A and Re/B; warn: legacy 285 MPa files | regulation | warns | verified | #313 |
+| `igc/2.7/damage-survival` | Survival after the assumed damage | regulation | blocks | not evaluated | – |
+| `igc/4.23.1.2/min-design-pressure` | Design vapour pressure not less than Po = 0.2 + A C (rho_r)^1.5 MPa | regulation | warns | unverified | #317 |
+| `igc/6.4.1.1/steel-design-temperature` | The tank steel is one Table 6.3 permits down to -165 C (9 % Ni, austenitic): the design temperature is not lower | regulation | warns | unverified | #317 |
+| `igc/6.4.1.1/steel-by-approval` | A high-strength carbon-manganese steel (yield above 410 N/mm2) is by approval of the Administration, not by Table 6.1 to 6.3 | regulation | warns | not evaluated | #317 |
 
-| Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
-|---|---|---|---|---|---|---|
-| RS-A10 | Tank length over diameter | overall tank length (heads in) / Tank Outer Diameter (insulated) ≤ 7.0 | Fixed in code | Code comment: the figure of the removed `ADN_G` set, ADN 2025 9.3.1.11.1(b) ("ratio of length to diameter exceeds 7 are prohibited"). The same rule book family as RS-A07 also has it for type G: 3.5.1. The check message cites nothing | `gas_arrangement.rs` `length_over_diameter_check`; fit; Design (only when it fails). Target `ovcd/gas-arrangement/tank-l-over-d` (tool limit) | Unknown: the insulated diameter gives a smaller ratio than the steel diameter |
-| RS-A11 | Hopper intact GM | GM ≥ 0.15 m, warning, first-order (KG light at 0.5 D) | Fixed in code | Same number as IS Code Part A 2.2.4, not cited. Name `gm_positive` says "> 0" but the limit is 0.15 | `barge_capacity.rs`; Design (dry bulk). Target `ovcd` | Unknown |
+#### Inland class rules, gas tank clauses (`lr-inland-gas` 1.1.0)
 
-### OVCD Checks: physical feasibility and tool limits (gas and dry bulk)
+| Rule id | What it tests | Origin | If it fails | Status | Finding |
+|---|---|---|---|---|---|
+| `lr-inland/3.6.13/cofferdam` | Cofferdam at the aft end of the cargo area at least 0.60 m wide | class | blocks | unverified (sizes) | #280 |
+| `lr-inland/3.3.7/opening-setback` | Engine room and accommodation entrances at least 2.00 m from the cargo area | class | blocks | unverified (sizes) | #381 |
+| `lr-inland/3.5.3/end-space` | Space between the tanks and the hold end bulkhead: 0.20 m, or 0.50 m for plane ends | class | blocks | verified (sizes) | – |
+| `lr-inland/3.5.1/tank-l-over-d` | Cargo tank length at most seven diameters (Type G) | class | blocks | unverified | – |
+| `lr-inland/3.2.1/tank-capacity` | Capacity of each cargo tank within Table 4.3.1 | class | blocks | not evaluated | – |
+| `lr-inland/3.5.2/hull-design` | Hull in the cargo area: one of the three designs the clause allows (Type G) | class | blocks | not evaluated | – |
 
-| Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
-|---|---|---|---|---|---|---|
-| RS-A12 | Cargo > 0 | carried cargo > 0 t | Fixed in code | Physical | `simulate.rs`; Design. No severity field | — |
-| RS-A13 | Feasible arrangement | added only when no `fit` candidate passes; lists the failed check names | Fixed in code | Tool | `simulate.rs`; Design (gas) | — |
-| RS-A14 | `feasible_geometry` | cargo volume > 0 | Fixed in code | Physical | `barge_capacity.rs`; Design, fit | — |
-| RS-A15 | `cargo_zone_positive` | LOA − bow void − stern void > 0 | Fixed in code | Physical | `barge_capacity.rs`; Design, fit | — |
-| RS-A16 | `not_overloaded` | volume-bound load floats within the moulded depth | Fixed in code | Physical | `barge_capacity.rs`; fit. Removed from the Design list (`simulate.rs` `capacity_checks`) | — |
-| RS-A17 | `freeboard_ok` | freeboard at volume-bound load ≥ required freeboard | Estimate (`min_freeboard_m`, 0.3 m, no source) | No freeboard rule (ICLL, ES-TRIN) is applied | `barge_capacity.rs`; fit. Removed from the Design list; a dry bulk Design caps the draught at depth − freeboard instead | Unknown: not a rule value |
-| RS-A18 | `freeboard_at_payload` | depth − carried draught + 1e-9 ≥ required freeboard | Estimate (0.3 m) | As RS-A17 | `gas_arrangement.rs`; fit | As RS-A17 |
-| RS-A19 | `air_draft_within_limit` | light (or ballasted light) air draft ≤ limit | Estimate (user input `air_draft_limit_m`) | Waterway limit typed by the user | `barge_capacity.rs`; Design, fit, when a limit is set | — |
-| RS-A20 | Air draft (empty, governing) | light air draft ≤ limit (ignores ballast) | Estimate (as RS-A19) | Duplicate of RS-A19 | `simulate.rs`; Design. No severity field | Differs from RS-A19 when ballast is set |
-| RS-A21 | `capacity_is_volume_bound` | capacity input not overloaded | Fixed in code | Tool | `journey_derating.rs`; fit | — |
-| RS-A22 | `floats` | the channel draught cap leaves a cargo > 0 | Fixed in code | Physical | `journey_derating.rs`; fit | — |
-| RS-A23 | `ukc_consistent` | design depth ≥ UKC | Fixed in code | Tool (input consistency) | `journey_derating.rs`; fit | — |
-| RS-A24 | `utilisation_reasonable` | volume utilisation ≥ 0.5, warning | Fixed in code | Tool | `journey_derating.rs`; fit (never gates) | — |
-| RS-A25 | Floats with freeboard | draught < depth, else this one failed criterion replaces the six | Fixed in code | Physical; source text "draught ≥ depth" | `gas_stability.rs`; Design, fit | — |
-| RS-A26 | Stability — not assessed | one failed check when the assessment raises an error | Fixed in code | Tool; a candidate the engine cannot judge never passes | `gas_arrangement.rs`; fit | — |
+#### OVCD Checks (`ovcd` 2.1.0)
 
-### OVCD Checks: stern block (self-propelled hulls)
+| Rule id | What it tests | Origin | If it fails | Status | Finding |
+|---|---|---|---|---|---|
+| `ovcd/capacity/cargo-positive` | The hull carries some cargo | physical | blocks | unverified | – |
+| `ovcd/capacity/feasible-geometry` | The cargo space has a positive volume | physical | blocks | unverified | – |
+| `ovcd/capacity/cargo-zone-positive` | The cargo zone is longer than zero | physical | blocks | unverified | – |
+| `ovcd/capacity/air-draft-within-limit` | Light air draft (with ballast where carried) within the typed limit | physical | blocks | unverified | – |
+| `ovcd/capacity/intact-gm` | First-order hold GM at the reported cargo at least 0.15 m (an estimate, not a stability check) | tool-limit | warns | unverified | – |
+| `ovcd/gas-arrangement/feasible-arrangement` | Some tank arrangement passes every check on this hull | physical | blocks | unverified | – |
+| `ovcd/gas-arrangement/tank-l-over-d` | Tank length at most 7 inner shell diameters | tool-limit | blocks | unverified | – |
+| `ovcd/aft-block/thrusters-fit-beam` | The thrusters fit within the beam | physical | blocks | unverified | – |
+| `ovcd/aft-block/thruster-count` | The requested number of thrusters fits | physical | warns | unverified | – |
+| `ovcd/aft-block/containers-fit-beam` | The 40 ft units fit within the beam | physical | blocks | unverified | – |
+| `ovcd/aft-block/units-in-one-row` | The 40 ft units fit in one row | tool-limit | warns | unverified | – |
+| `ovcd/aft-block/wheelhouse-fits-beam` | The wheelhouse fits within the beam | physical | blocks | unverified | – |
+| `ovcd/aft-block/accom-beside-wheelhouse` | The accommodation units fit beside the wheelhouse | physical | warns | unverified | – |
+| `ovcd/aft-block/gensets-fit-beam` | The gas gensets fit within the beam | physical | blocks | unverified | – |
+| `ovcd/aft-block/gensets-under-deck` | The gas gensets fit under the deck with 1.0 m allowance (an estimate) | physical | warns | unverified | – |
+| `ovcd/aft-block/gensets-reserve` | The gensets carry the load with one set in reserve | physical | blocks | unverified | – |
+| `ovcd/aft-block/wheelhouse-sightline` | The wheelhouse eye sees over the cargo with the margin | physical | blocks | unverified | – |
+| `ovcd/squat/froude-depth` | Depth Froude number below the squat method's range limit 0.7 | method-validity | warns | unverified | – |
+| `ovcd/squat/blockage` | Blockage at most 0.35, the squat method's range | method-validity | warns | unverified | – |
+| `ovcd/squat/keel-clears-bed` | The keel clears the bed at speed | physical | blocks | unverified | – |
+| `ovcd/squat/keel-margin` | The keel clears the bed at speed with the safety margin | physical | warns | unverified | – |
+| `ovcd/squat/methods-agree` | The two squat methods agree within 50 % | method-validity | warns | unverified | – |
+| `ovcd/waves/short-wave-validity` | Wave length within the added-resistance method's range | method-validity | warns | unverified | – |
+| `ovcd/waves/wave-height` | Significant wave height at most 3.0 m, the screening range | method-validity | warns | unverified | – |
+| `ovcd/energy/service-below-schijf` | Service speed within the Schijf limiting speed | method-validity | blocks | unverified | – |
+| `ovcd/capacity/not-overloaded` | The full tank volume floats within the hull (information: it does not gate, #418) | physical | warns | unverified | – |
+| `ovcd/capacity/freeboard` | Freeboard at the full-volume draught at least the required freeboard (information: it does not gate, #418) | physical | warns | unverified | – |
+| `ovcd/journey/volume-bound` | The cargo is bound by the tank volume, not overloaded | physical | blocks | unverified | – |
+| `ovcd/journey/floats` | The payload the draught limit leaves is above zero | physical | blocks | unverified | – |
+| `ovcd/journey/ukc-consistent` | The draught limit leaves room for the under-keel clearance | physical | blocks | unverified | – |
+| `ovcd/journey/utilisation` | The payload uses a reasonable share of the tank volume | tool-limit | warns | unverified | – |
+| `ovcd/gas-arrangement/freeboard-at-payload` | Freeboard at the carried draught at least the required freeboard | physical | blocks | unverified | – |
+| `ovcd/stability/assessed` | The engine could assess the stability of every loading condition | tool-limit | blocks | unverified | – |
+| `ovcd/waves/bow-length-supplied` | The bow length the wave method needs is given, not estimated | method-validity | warns | unverified | – |
+| `ovcd/resistance/service-below-limiting` | Service speed at most 0.95 times the Schijf limiting speed, in each channel | tool-limit | blocks | unverified | – |
+| `ovcd/resistance/blockage-in-range` | Channel blockage ratio between 0 and 1, in each channel | physical | blocks | unverified | – |
+| `ovcd/resistance/service-clears-squat` | At the service speed the squat leaves the under-keel clearance, in each channel | physical | warns | unverified | – |
+| `ovcd/resistance/lackenby-fit` | Depth Froude number below 0.95, where the shallow-water correction is used | method-validity | warns | unverified | – |
+| `ovcd/resistance/first-order-coefficients` | The resistance coefficients are uncalibrated first-order estimates | method-validity | warns | unverified | – |
 
-All in `aft_arrangement.rs`; Design and fit. Target `ovcd` (#272). None is cited.
+### What the Rule Sets leave out
 
-| Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
-|---|---|---|---|---|---|---|
-| RS-A27 | `thrusters_fit_beam` | thrusters abreast fit the beam | Fixed in code | Physical | error | — |
-| RS-A28 | `requested_thruster_count_fits` | all requested thrusters fit | Fixed in code | Tool | warning | — |
-| RS-A29 | `containers_fit_beam` | 40 ft units abreast fit the beam | Fixed in code | Physical | error | — |
-| RS-A30 | `units_fit_in_one_row` | one row of units | Fixed in code | Tool | warning | — |
-| RS-A31 | `wheelhouse_fits_beam` | wheelhouse width ≤ beam | Fixed in code | Physical | error | — |
-| RS-A32 | `accom_beside_wheelhouse` | units fit beside the wheelhouse (gas) | Fixed in code | Tool | warning | — |
-| RS-A33 | `gensets_fit_beam` | gensets abreast fit the beam, tolerance 1e-9 m | Fixed in code | Physical | error | — |
-| RS-A34 | `gensets_fit_under_deck` | genset height + 1.00 m ≤ moulded depth | Estimate (1.00 m, marked ESTIMATE in the message) | Tool | warning | Unknown |
-| RS-A35 | `gensets_carry_load_with_one_in_reserve` | (n − 1) × set rating ≥ electrical load | Fixed in code | No rule cited; an N−1 redundancy criterion | error, when a load is given | Unknown |
-| RS-A36 | `wheelhouse_sees_over_cargo` | raised eye ≥ obstruction + margin | Estimate (margin input) | No visibility rule cited | warning (an open maintainer question on #264 is whether it should block) | Unknown |
+Checks that the engine still emits but that are not Rules of a Design:
 
-### OVCD Checks: capital budget
-
-`barge_cost.rs`; Design (`capital budget` object). Target `ovcd`.
-
-| Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
-|---|---|---|---|---|---|---|
-| RS-A37 | `masses_positive` | lightest mass input > 0 | Fixed in code | Tool | error | — |
-| RS-A38 | `no_reliquefaction_in_scope` | always `ok: true` | Fixed in code | A scope note, not a test | warning | — |
-| RS-A39 | `fabrication_rates_are_estimates` | always `ok: false` | Fixed in code | A scope note; it always reads as failed | warning | — |
-
-### OVCD Checks: method validity and tool limits, module API only
-
-These are not in a Design result. A Design run uses the squat limit only to cut the speed curve
-(`squat_limited`), not as a check.
-
-| Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
-|---|---|---|---|---|---|---|
-| RS-A40 | `service_speed_below_limiting[env]` | service speed ≤ 0.95 × Schijf limiting speed + 1e-6 | Fixed in code | Method validity; 0.95 not cited | `resistance.rs`; API | Unknown |
-| RS-A41 | `power_within_installed[env]` | power at service ≤ installed + 1e-6 | Fixed in code | Physical | `resistance.rs`; API | — |
-| RS-A42 | `blockage_in_range[env]` | 0 < blockage < 1 | Fixed in code | Method validity | `resistance.rs`; API | — |
-| RS-A43 | `coefficients_are_first_order` | always `ok: true`, warning | Fixed in code | A notice | `resistance.rs`; API | — |
-| RS-A44 | `service_below_schijf` | service speed ≤ Schijf limit + 1e-6 (no 0.95 factor) | Fixed in code | Method validity; differs from RS-A40 | `electric_energy.rs`; API | Non-conservative against RS-A40 |
-| RS-A45 | `energy_positive` | energy per km > 0 | Fixed in code | Physical | `electric_energy.rs`; API | — |
-| RS-A46 | `resistance_coeffs_first_order` | always `ok: true`, warning | Fixed in code | A notice | `electric_energy.rs`; API | — |
-| RS-A47 | `keel_clears_bed` | dynamic UKC > 0 | Fixed in code | Physical | `squat.rs`; API | — |
-| RS-A48 | `keel_clears_bed_with_margin` | dynamic UKC ≥ margin (default 0.15 m), warning | Estimate (`squat_safety_margin_m`) | Carried over from the original engine | `squat.rs`; API | Unknown |
-| RS-A49 | `froude_depth_subcritical` | depth Froude number < 0.70, warning | Fixed in code | Method validity, not cited | `squat.rs`; API | Unknown |
-| RS-A50 | `blockage_within_barrass_range` | blockage ≤ 0.35, warning | Fixed in code | Method validity, not cited | `squat.rs`; API | Unknown |
-| RS-A51 | `methods_agree_within_50pct` | two squat methods within 50 %, warning | Fixed in code | Tool | `squat.rs`; API | — |
-| RS-A52 | `stawave1_short_wave_validity` | 0 < λ/Lpp < 0.5, warning | Fixed in code | Method validity, not cited | `waves.rs`; API | Non-conservative outside the range (the message says so) |
-| RS-A53 | `wave_height_within_screening_range` | Hs ≤ 3.0 m, warning | Fixed in code | Tool | `waves.rs`; API | — |
-| RS-A54 | `bow_length_supplied` | bow waterline length given, warning | Fixed in code | Tool | `waves.rs`; API | — |
-
-### Catalogue data checks (not design checks)
-
-`vessel_standards.rs`; API. They test the Vessel Class data, not a Design. Not planned as Rules.
-
-| Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
-|---|---|---|---|---|---|---|
-| RS-A55 | `unique_ids` | each key matches its standard id | Fixed in code | Data integrity | API | — |
-| RS-A56 | `ranges_ordered` | every (min, max) ordered | Fixed in code | Data integrity | API | — |
-| RS-A57 | `positive_dimensions` | beams and lengths > 0 | Fixed in code | Data integrity | API | — |
-| RS-A58 | `convoy_beam_consistent` | convoy beam = unit beam × abreast | Fixed in code | Data integrity | API | — |
-| RS-A59 | `source_cited` | every class cites its table, warning | Fixed in code | Data integrity | API | — |
-
-### Rule values that size the design but are not checked
-
-| Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
-|---|---|---|---|---|---|---|
-| RS-A60 | Tank side clearance, type 2G | clear gap = max(d(Vc) − insulation, 0); d per tank, dome in Vc, four branches | Rule (unverified) | IGC MSC.370(93) 2.4.1.2 with 2.4.1.1 and 2.4.2 (PDF pp. 21–22). Matches the text. Sourced tests at each branch boundary (`tests/protective_location.rs`) | `barge_capacity.rs` `gas_volumetric` (sizing); no check. `side_clearance_override_m` replaces it with no check, and `design_grid` sets it to 1.0 m (RS-A66). Target `igc/2.4.1.2/side-clearance` (`sizes`) | Non-conservative on the override paths |
-| RS-A61 | Tank bottom clearance, type 2G | max(min(B/15, 2.0 m), d) − insulation | Rule (unverified) | IGC 2.4.1.2 with 2.3.1.2.3 and 2.4.2. Matches | As RS-A60; no check | As RS-A60 |
-| RS-A62 | Minimum wall thickness after forming | 3 mm (304L, 316L), 5 mm (9Ni, S690QL1), as a floor | Rule (unverified) | IGC 4.23.2.1.2 (5 mm C-Mn and nickel steels, 3 mm austenitic). Matches | `pressure_vessel.rs` (formula path only). A typed fixed thickness skips the floor, and no check reports it | Non-conservative for a typed thickness below the floor |
-| RS-A63 | Weld factor | 0.95 default (`DEFAULT_WELD_EFFICIENCY`) | Rule (unverified) | IGC 4.23.2.1.3: 0.95 with the stated NDT; "may be increased up to 1". No bound is checked | `pressure_vessel.rs`; input of the eval API | Unknown |
-| RS-A64 | Allowable stress | material table (113, 113, 230, 285 MPa) or a typed value; no check | Estimate | IGC 4.23.3.1: f = lesser of Rm/A, Re/B. S690QL1 285 MPa is above Rm/3 = 256.7 MPa (spec 0004, #292) | `pressure_vessel.rs`; no check | Non-conservative for S690QL1 |
-| RS-A65 | Filling limit | `fill_ratio` 0.98 | Sourced default | IGC 15.3 (Defaults Profile) | input, not a check | — |
-| RS-A66 | `design_grid` side clearance | 1.0 m "standard IGC-2G spacing" | Fixed in code | No such value in IGC 2.4.1.2. Finding #283 | `design_grid.rs` (override, no check) | Either way, by tank size |
-
-### Requirements the engine does not evaluate (text only today)
-
-| Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
-|---|---|---|---|---|---|---|
-| RS-A67 | Weather criterion | not computed | — | IS Code Part A 2.3. Only the `limitations` text | `gas_stability.rs`. Target `not evaluated` row | Non-conservative (silent today) |
-| RS-A68 | Damage survival | not computed | — | IGC 2.7 (and ADN 9.3.1.15 in the message). Only the `limitations` text | `gas_stability.rs`. Target `not evaluated` row | Non-conservative (silent today) |
-| RS-A69 | IS Code applicability by length | criteria applied to every gas Design | — | IS Code Part A 1.1.1: ships of 24 m in length and over. Not expressible as Applicability | `gas_stability.rs` | Conservative for hulls under 24 m |
-
-**Counts.** 59 emitted checks (RS-A01 to RS-A59; the six stability criteria counted one by one). 9 cite a
-paragraph in the check itself (RS-A01 to RS-A09). Of these, 5 match the text in value and Measure
-(RS-A01, -A04, -A05, -A06, -A07) and 4 differ (RS-A02, -A03 through #282; RS-A08 #280; RS-A09 #281).
-0 are verified. 50 carry no citation. A further 7 rule values size the design or bound an input with no
-check (RS-A60 to RS-A66), and 3 requirements are not evaluated (RS-A67 to RS-A69).
+- The three checks of the capital budget (`masses_positive`, `no_reliquefaction_in_scope` and
+  `fabrication_rates_are_estimates`) are in the `cost` object, not in the Rule Trace. The last two are warnings
+  that state a scope: `no_reliquefaction_in_scope` is always `ok`, and `fabrication_rates_are_estimates` is always
+  not `ok` (`barge_cost.rs`).
+- The checks of the Vessel Class catalogue (`vessel_standards.rs`: unique ids, ordered ranges, positive
+  dimensions, convoy beam, source cited) test data, not a Design. They are reached through the module API only.
+  See #432 on the convoy beam check.
 
 ## Inputs the user can change
 
 | Input | Default | Unit | Where the default comes from |
 |---|---|---|---|
-| `ruleset` | `IGC_2G` (the only value) | — | Defaults Profile; basis text cites IGC 2.4.1.1 and 2.4.2 |
-| `min_freeboard_m` | 0.3 | m | Defaults Profile; no rule source |
+| `ruleset` | `IGC_2G` (the only value) | – | Defaults Profile; basis text cites IGC 2.4.1.1 and 2.4.2 |
+| `min_freeboard_m` | 0.3 | m | Defaults Profile; no rule source (#428) |
 | `air_draft_limit_m` | none | m | Typed by the user (waterway) |
 | `draught_limit_m`, channel depth and UKC | none | m | Typed by the user (waterway) |
 | `squat_safety_margin_m` | 0.15 | m | Carried over from the original engine |
-| `fill_ratio` | 0.98 | — | IGC 15.3 (sourced) |
-| `tank_wall_thickness_mm` | none (formula) | mm | A typed value skips the IGC minimum floor |
-| `tank_allowable_stress_mpa` | none (material table) | MPa | No check against IGC 4.23.3.1 |
+| `fill_ratio` | 0.98 | – | IGC 15.3 (sourced) |
+| `tank_wall_thickness_mm` | none (formula) | mm | The wall of the result is checked against `igc/4.23.2.1.2/min-thickness`, typed or not |
+| `tank_allowable_stress_mpa` | none (material table) | MPa | The stress of the result is checked against `igc/4.23.3.1/allowable-stress` (a warning) |
 
-A Design cannot change the gas separation inputs (cofferdam, opening setback, forward end space,
-`is_pressure_tank`), so RS-A07 to RS-A09 always pass in a Design run. A user cannot select, add or
-remove a rule set, and cannot load one (`--rule-set` is designed, not built).
+A user cannot yet select, add or remove a built-in Rule Set in a Design file. `--rule-set <file>` loads a set at
+run time; a file with the id and version of a loaded set but other content is refused, because a changed set needs
+a new version.
 
 ## Limits and known findings
 
-- **No rules engine exists in code.** No Rule data, loader, evaluator, Measure registry, Rule Trace,
-  Service Area, `ovcd rules` command or `crates/ovcd-format/rules/` folder. Tickets #268 to #279 are
-  all open. The Lean model (`proofs/lean/`) exists; its tie to Rust waits for #269.
-- **Findings register (#121):** #280 (cofferdam cites a type C clause), #281 (end space keyed to tank
-  type, not end shape), #282 (areas to 40° ignore φf; decided: known limitation now, fix in phase 1),
-  #283 (1.0 m "standard IGC-2G spacing"). All open; decisions recorded 2026-10-20. #65 is a tank-size
-  limitation outside this page.
-- Side and bottom clearances are sizing only. An override path (`side_clearance_override_m`,
-  `design_grid`) can give a gap below d(Vc) − insulation with no failed check.
-- Warnings show as FAIL in the app and the CLI summary; `severity` is not shown.
-- The gas separation checks always pass in a Design run, because a Design cannot change their inputs.
-- No freeboard rule (ICLL, ES-TRIN), no inland stability rule (BV NR217, ADN 9.3.1.13) and no
-  ES-TRIN visibility rule is checked. A river-only result does not say this today.
-- The type G hull clauses of the inland rule book (3.5.2: 0.80 m side, 0.60 m double bottom; ADN
-  9.3.1.11.2(a)) were removed in #215 and are not in the designed `lr-inland-gas` set.
-- The comment block in `gas_arrangement.rs` calls the gas separation checks "protective location
-  clearances". They are longitudinal end spaces; protective location gives no check.
+- **Rule Sets are `draft`.** No set is `stable`. The 39 `ovcd` Rules, and 9 of the 24 published-rule Rules, have no
+  second reader recorded (see the inventory).
+- **Not evaluated, blocking:** the weather criterion (`is2008/A.2.3/weather`), damage survival
+  (`igc/2.7/damage-survival`), the tank capacity table and the cargo-area hull design (`lr-inland-gas`), and, for a
+  dry bulk Design, every IS Code row. The `stability.limitations` text says the same in words.
+- **Findings** (#121): #280 (the cofferdam 0.60 m cites a type C clause; fix with #417), #282 (the areas to 40°
+  ignore the down-flooding angle φf; a known limitation now), #381 (the opening setback is a length, not the
+  position of each opening), #313 (the S690QL1 allowable stress, closed: `igc/4.23.3.1/allowable-stress` warns on the legacy 285 MPa value) and
+  #317 (Type C tank checks; four Rules of `igc-2g` 1.1.0 are not verified). #281 (end space keyed to the tank end
+  shape) and #283 (the 1.0 m "standard IGC-2G spacing") are fixed. #65 is a tank-size limitation outside this page.
+- **No freeboard rule** (ICLL, ES-TRIN) is applied (#428). The freeboard checks are OVCD Checks on an estimated
+  0.3 m. No inland stability rule (BV NR217, ADN 9.3.1.13) and no ES-TRIN visibility rule is checked. A river-only
+  result names the Rule Sets used and does not say what no set covers.
+- The type G hull clauses of the inland rule book (3.5.2) are in `lr-inland-gas` 1.1.0 as a Rule that is not
+  evaluated. The numbers of the old clause (0.80 m side, 0.60 m double bottom) were removed in #215.
+- The IS Code applies to ships of 24 m in length and over (Part A 1.1.1). OVCD applies the Rules to every gas
+  Design: it cannot write a length condition as Applicability.
+- The word "governing" names a Rule in the trace and a result in two places (section 5).
 
 ## Evidence
 
-- `crates/ovcd-core/tests/protective_location.rs`: sourced tests of d(Vc) at 1,000, 5,000 and
-  30,000 m³ and either side, and of the clear gap d less the insulation (labelled
-  `sourced - IGC Code 2.4.1.1`).
-- `crates/ovcd-core/tests/gas_separation.rs`: the constants, the 1e-9 m slack, and failing cases for a
-  thin cofferdam and a short setback.
-- `crates/ovcd-core/src/gas_stability.rs` unit test: each of the six criteria passes exactly at its limit
-  and fails one floating-point step below.
-- `crates/ovcd-core/tests/tank_datum.rs`, `dome_in_vc.rs`, `tank_wall_formula.rs`: the clearance datum,
-  the dome in Vc, and the wall formula on the steel diameter.
-- Evaluation harness, phase 0 (`evaluation/results.md`, #184): IS Code Part A 2.2.1 to 2.2.4 on box
-  sections with a known KG. 5 base cases (3 with published inputs), 60 boundary mutants, 361 criterion
-  verdicts, 0 false passes, 0 false fails. Verdicts come from the independent oracle; no source gives a
-  published verdict. It covers RS-A01 to RS-A06 only.
-- No test or harness case covers RS-A10 against a cited source, or any check of the stern block,
-  capital budget or method validity against a source.
+- `crates/ovcd-format/tests/rule_set.rs`: the loader refuses a `regulation` Rule that cites no paragraph and a rule
+  id whose paragraph does not match its locator. `crates/arc-rules/tests/toy_domain.rs`: the kernel loads and
+  evaluates a set in a toy domain that is not a vessel (the evaluator gives the outcomes, the Margin and the
+  governing row).
+- `crates/arc-rules/tests/lean_oracle.rs`: the differential test against the Lean model, in the weekly Lean job.
+- `crates/ovcd-format/tests/is2008_a.rs`: the IS Code rows on box sections, including the verdict that names
+  the blocking Rules not evaluated.
+- `crates/ovcd-cli/tests/rules_command.rs`: `ovcd rules`, `ovcd rules show` and the trace in `ovcd run --json`.
+- `ovcd rules --provenance` (CI): every released version is built in with its hash, a later version goes up by its
+  class, a rule id keeps its Measure and direction, and every regulation or class Rule cites a paragraph.
+- `crates/ovcd-core/tests/protective_location.rs`: sourced tests of d(Vc) at 1,000, 5,000 and 30,000 m³ and either
+  side, and of the clear gap d less the insulation (labelled `sourced - IGC Code 2.4.1.1`).
+- Evaluation harness (`evaluation/`, #184, #278, #279): IS Code Part A 2.2.1 to 2.2.4 on box sections with a known
+  KG, 60 boundary mutants, 0 false passes; it also mutates rule data. Verdicts come from an independent oracle; no
+  source gives a published verdict. It covers the IS Code rows only.
+- No test or harness case checks an OVCD Check against a source: an OVCD Check has none.
 
 ## Questions for reviewers
 
-1. IGC 4.23.2.1.3 says the weld factor "shall be 0.95" with the stated NDT and "may be increased up to
-   1". Spec 0004 plans an upper bound of 0.95 (`igc/4.23.2.1.3/weld-factor`). Is 0.95 a bound, or is
-   1.0 the bound with 0.95 the default?
-2. For the length-over-diameter limit of 7 (ADN 9.3.1.11.1(b); inland rule book 3.5.1), is the diameter
-   the steel shell or the outside of the insulation? OVCD uses the insulated diameter.
-3. Should the limit of 7 be a class or regulation Rule in `lr-inland-gas` (3.5.1, type G), rather than an
-   OVCD tool limit, given that the set already holds 3.3.7 and 3.5.3 of the same section?
-4. Is the aft separation length a fair Measure for 3.3.7 and 3.3.11, which set 2.00 m from the cargo area
-   to each entrance and opening? Should 3.3.8 (engine room ventilation inlets) and 3.4.1 (funnel outlets),
-   also 2.00 m, be checked too?
-5. Should the IS Code Part A criteria apply to a gas barge under 24 m (Part A 1.1.1), and to a river-only
-   unmanned barge at all? Which inland stability set should replace them for river-only service?
-6. Is N−1 genset redundancy (RS-A35) a class requirement you would cite, and from which rule book?
-7. The hopper GM warning uses 0.15 m. Is that the right first check for a dry bulk barge, or should
-   dry bulk wait for the full `is2008-a` or an inland stability set?
-8. Should a failed `warn` Rule show differently from a failed `block` Rule in every output, as spec 0004
-   plans (`warn` outcome), and should the scope notes (RS-A38, -A39, -A43, -A46) be `note` Rules or
-   leave the check list?
+1. IGC 4.23.2.1.3 says the weld factor "shall be 0.95" with the stated NDT and "may be increased up to 1".
+   `igc-2g` holds two Rules: a warning above 0.95 and a block above 1. Is that the right reading?
+2. For the length-over-diameter limit of 7 (ADN 9.3.1.11.1(b); inland rule book 3.5.1), is the diameter the steel
+   shell or the outside of the insulation? OVCD uses the insulated diameter. The limit is both an `ovcd` tool limit
+   and an unverified Rule in `lr-inland-gas` 1.1.0 (3.5.1). Should only one stay?
+3. Is the aft separation length a fair Measure for 3.3.7 and 3.3.11, which set 2.00 m from the cargo area to each
+   entrance and opening (#381)? Should 3.3.8 (engine room ventilation inlets) and 3.4.1 (funnel outlets), also
+   2.00 m, be checked too?
+4. Should the IS Code Part A criteria apply to a gas barge under 24 m (Part A 1.1.1), and to a river-only unmanned
+   barge at all? Which inland stability set should replace them for river-only service?
+5. Is N−1 genset redundancy (`ovcd/aft-block/gensets-reserve`) a class requirement you would cite, and from which
+   rule book?
+6. The hopper GM check (`ovcd/capacity/intact-gm`) warns at 0.15 m, the number of IS Code Part A 2.2.4. Is that the
+   right first check for a dry bulk barge, or should dry bulk wait for the full `is2008-a` or an inland stability
+   set?
+7. Should the scope notes of the capital budget (`no_reliquefaction_in_scope`, `fabrication_rates_are_estimates`)
+   be `note` Rules in the trace?
