@@ -176,3 +176,18 @@ fn a_tunnel_stern_moves_the_lcb_of_a_dry_bulk_trim_forward() {
         assert!(b.trim < a.trim, "{name}");
     }
 }
+
+/// The ADR 0012 hook: the sections generator will take the same `SternFormInputs` and hull. The
+/// geometry is a pure function of them, so the same inputs always give the same outlines and
+/// volumes that the generator's sections must then match.
+#[test]
+fn the_same_inputs_give_the_same_geometry_for_the_sections_generator() {
+    for form in [SternForm::Transom, SternForm::Pram, SternForm::Tunnel] {
+        let i = inputs(form);
+        let (a, b) = (geometry(&i, &HULL), geometry(&i.clone(), &HULL));
+        assert_eq!(a, b);
+        assert_eq!(a.profile(), b.profile());
+        assert_eq!(a.tunnel_sections(), b.tunnel_sections());
+        assert_eq!(a.removed(3.0), b.removed(3.0));
+    }
+}
