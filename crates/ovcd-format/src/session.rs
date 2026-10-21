@@ -229,7 +229,7 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
     if name == "rule_sets" {
         // A rule, not a value: the default stack follows the Cargo Containment (issue #274).
         e.insert(
-            "default_rule".into(),
+            "default_stack".into(),
             json!({
                 "by": "cargo_containment",
                 "type_c_tanks": crate::trace::default_stack_ids(Some("type_c_tanks")),

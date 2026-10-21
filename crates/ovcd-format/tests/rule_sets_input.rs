@@ -104,6 +104,14 @@ fn the_schema_lists_the_two_new_inputs_and_not_the_ruleset() {
         sets["shape"]["columns"],
         json!(["id", "version", "hash", "source"])
     );
+    // The default stack is its own key: `default_rule` is the depth rule, which the app reads by its
+    // shape.
+    assert!(sets.get("default_rule").is_none());
+    assert_eq!(
+        sets["default_stack"]["type_c_tanks"],
+        json!(["igc-2g", "is2008-a", "lr-inland-gas", "ovcd"])
+    );
+    assert_eq!(sets["default_stack"]["other"], json!(["is2008-a", "ovcd"]));
     assert!(INPUTS.iter().all(|s| s.name != "ruleset"));
 }
 
