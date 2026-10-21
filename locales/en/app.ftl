@@ -290,6 +290,7 @@ app-cost-core-defaults = Core defaults, not from this design: { $masses }.
 app-cost-check-failed = Check failed: { $check }.
 app-cost-note = Note: { $check }.
 app-cost-item-hull-steel = Hull steel
+app-cost-steel-delta = Priced: { $bottom_up } t bottom-up. The lightship uses { $top_down } t top-down, a difference of { $delta } t.
 app-cost-item-type-c-tanks = Type C tanks
 app-cost-item-tank-supports = Tank supports
 app-cost-item-insulation = Insulation

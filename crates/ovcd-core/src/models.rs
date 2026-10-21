@@ -145,7 +145,8 @@ pub struct BargeInputs {
     pub underkeel_clearance: f64,
     /// Outfitting as fraction of (steel + tanks)
     pub outfitting_factor: f64,
-    /// Piping and machinery as fraction of (hull + tank weight)
+    /// Piping and machinery as a fraction of the top-down hull steel plus the tank weight (shells,
+    /// internals and supports), not of the bottom-up hull steel
     pub piping_factor: f64,
     /// Diesel, fresh water, provisions (tonnes)
     pub stores_weight: f64,
