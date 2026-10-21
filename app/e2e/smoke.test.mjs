@@ -33,12 +33,31 @@ const outputsText = async () => (await browser.$("[data-testid=outputs]")).getTe
 const cargoOutput = async () => (await browser.$("[data-testid=outputs] tr:first-child td")).getText();
 const field = (label) => browser.$(`input[aria-label="${label}"]`);
 
-/** Click Open on a fixture (or any path) and wait for it to load. */
+/**
+ * Click Open on a fixture (or any path) and wait for it to load. The file before may have the same
+ * name and outputs, so the name and the outputs alone do not show that this open is done. An open
+ * draws the form afresh (each field is keyed on the open), so mark the fields first and wait until
+ * none of the marked ones is left (issue #470: a click on the old form was lost).
+ */
 async function open(file, expectName) {
+  await browser.execute(() => document.querySelectorAll(".field[data-input]").forEach((e) => e.setAttribute("data-before-open", "")));
   answer("open.txt", file);
   await (await browser.$("button=Open")).click();
   await until(`${expectName} to open`, async () => (await fileLabel()).includes(expectName));
+  await until("the form of the opened file", () =>
+    browser.execute(() => document.querySelector(".field[data-input]") !== null && document.querySelector("[data-before-open]") === null),
+  );
   await until("outputs", async () => (await browser.$("[data-testid=outputs]")).isExisting());
+}
+
+/** Untick "none" on a number input, and wait until its box is there to type in. */
+async function untickNone(name, label) {
+  await until(`the ${label} box`, async () => {
+    if (await (await field(label)).isExisting()) return true;
+    const none = await browser.$(`[data-input="${name}"] .none input`);
+    if ((await none.isExisting()) && (await none.isSelected())) await none.click();
+    return false;
+  });
 }
 
 async function type(label, text) {
@@ -47,6 +66,7 @@ async function type(label, text) {
   for (let attempt = 0; ; attempt++) {
     try {
       const input = await field(label);
+      await input.waitForExist({ timeout: 15000, timeoutMsg: `the ${label} input to be there` });
       await input.setValue(text);
       return;
     } catch (e) {
@@ -416,7 +436,7 @@ describe("OVCD app smoke tests", () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
     // These two inputs are "none" to start with: untick "none", then type the value.
     for (const [name, label, value] of [["channel_depth_m", "Channel depth", "6"], ["channel_bottom_width_m", "Channel bottom width", "40"]]) {
-      await (await browser.$(`[data-input="${name}"] .none input`)).click();
+      await untickNone(name, label);
       await type(label, value);
     }
     await show("Stability & Propulsion", "Power and speed curves");
