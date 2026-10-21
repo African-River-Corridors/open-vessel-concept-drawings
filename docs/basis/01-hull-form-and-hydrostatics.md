@@ -221,7 +221,8 @@ are not inputs.
 ## Limits and known findings
 
 - No sections table. Every hull is a box for hydrostatics, with one `Cb` factor (ADR 0012, issue #274).
-- No midship, prismatic or waterplane coefficient. The waterplane is a full rectangle on the main path.
+- The midship coefficient Cm is an input (default 1.0, an Estimate; the midship section is B × T × Cm, used for the blockage ratio only). No prismatic or waterplane coefficient. The waterplane is a full rectangle on the main path.
+- The convoy beam check of the Vessel Class catalogue (`convoy_beam_consistent`) is an identity for the built-in catalogue: its unit beam is the convoy beam over the number abreast. It can fail only for a catalogue that supplies its own unit beam (#432).
 - No LCB, LCF, trim or draughts fore and aft on the main path. The hull floats level.
 - No hydrostatic table (TPC, MCT, KM against draught).
 - `Cb` is on the length overall. ES-TRIN 2025/1 Article 1.01, 4.9 defines the block coefficient on `Lwl × Bwl × T`.

@@ -117,3 +117,30 @@ fn an_unknown_id_names_the_known_ones() {
     );
     assert!(e.contains("CEMT-Va"));
 }
+
+#[test]
+fn the_convoy_beam_check_fails_for_a_supplied_wrong_unit_beam_and_says_it_is_an_identity_for_the_built_in_one()
+ {
+    use ovcd_core::vessel_standards::validate_catalogue;
+    let find = |checks: &[ovcd_core::checks::Check]| {
+        checks
+            .iter()
+            .find(|c| c.name == "convoy_beam_consistent")
+            .unwrap()
+            .clone()
+    };
+    // The built-in catalogue derives its unit beam from the convoy beam: the check passes, and its
+    // message says it is an identity there (issue #432).
+    let built_in = built_in_catalogue();
+    let ok = find(&validate_catalogue(&built_in));
+    assert!(ok.ok);
+    assert!(ok.message.contains("identity"), "{}", ok.message);
+    // A supplied unit beam is independent: a wrong one fails the check.
+    let mut bad = built_in.clone();
+    let (_, convoy) = bad
+        .iter_mut()
+        .find(|(_, v)| v.unit_beam_m.is_some() && v.n_abreast > 1)
+        .expect("a convoy class");
+    convoy.unit_beam_m = convoy.unit_beam_m.map(|u| u + 1.0);
+    assert!(!find(&validate_catalogue(&bad)).ok);
+}

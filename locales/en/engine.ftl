@@ -163,7 +163,7 @@ check-name-positive-dimensions = positive dimensions
 check-positive-dimensions = all beams and lengths positive
 check-positive-dimensions-bad = non-positive dimension: { $keys }
 check-name-convoy-beam-consistent = convoy beam consistent
-check-convoy-beam-consistent = convoy beam = unit beam x n_abreast
+check-convoy-beam-consistent = convoy beam = unit beam x n_abreast (an identity for the built-in catalogue, which has no independent unit beam)
 check-convoy-beam-consistent-bad = beam does not reconcile with n_abreast: { $keys }
 check-name-source-cited = source cited
 check-source-cited = every class cites its table
