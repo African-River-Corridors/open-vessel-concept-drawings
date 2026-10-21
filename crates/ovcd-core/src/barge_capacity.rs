@@ -222,6 +222,9 @@ pub struct BargeCapacityInputs {
     /// Issue #350: the Stern Form, when it is not today's square stern: it corrects the LCB of the
     /// trim. `None`: a square stern.
     pub stern_geometry: Option<crate::stern_form::SternGeometry>,
+    /// Issue #354: `Some(limit)` checks the sightline as a Blind Distance (ES-TRIN 7.02(2)) in the
+    /// light condition, and lifts the wheelhouse to meet it; `None`: today's margin over the cargo.
+    pub sightline_limit_m: Option<f64>,
     /// Issue #352: the machinery of a specified Propulsor; it sets the stern block's run below deck
     /// and its mass items. `None`: today's stern block.
     pub machinery: Option<crate::machinery::MachineryInputs>,
@@ -297,6 +300,7 @@ impl BargeCapacityInputs {
             cargo_density_kg_m3: None,
             stern_block_mass: None,
             stern_geometry: None,
+            sightline_limit_m: None,
             machinery: None,
             dome_height: DEFAULT_TANK_DOME_HEIGHT_M,
             dome_diameter: DEFAULT_TANK_DOME_DIAMETER_M,
@@ -436,6 +440,10 @@ pub struct BargeCapacityResult {
     pub trim_conditions: Vec<(&'static str, crate::models::TrimResult)>,
     /// Issue #350: the Stern Form the result was worked with (`None`: a square stern).
     pub stern_geometry: Option<crate::stern_form::SternGeometry>,
+    /// Issue #354: the sightline as a Blind Distance in the light condition, and the laden Blind
+    /// Distance at the same lift; `None` with the margin method or no wheelhouse.
+    pub sightline: Option<crate::wheelhouse::Sightline>,
+    pub blind_distance_laden_m: Option<f64>,
     pub gas_basis: Option<GasBasis>,
 
     pub checks: Vec<Check>,
@@ -1119,7 +1127,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
 
     // The tallest fixed point of the vessel with the wheelhouse lowered for transit. A pushed
     // barge carries none of it: the block is on the tug.
-    let (aft, h_top_navigating) = if inp.self_propelled {
+    let (mut aft, mut h_top_navigating) = if inp.self_propelled {
         h_top = py_max(h_top, aft.block_top_lowered_m);
         let nav = py_max(h_top, aft.wheelhouse_top_raised_m);
         (Some(aft), nav)
@@ -1182,7 +1190,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         ballast_draft = py_min(ballast_draft, inp.depth);
     }
     let air_draft_ballast = h_top - ballast_draft;
-    let air_draft_navigating_light = h_top_navigating - light_draft;
+    let mut air_draft_navigating_light = h_top_navigating - light_draft;
 
     // Issue #349: the trim of a dry-bulk hull when the stern block is in the lightship: the rest of
     // the lightship at the middle of the hull, the block items at their zones, the cargo at the
@@ -1209,6 +1217,78 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     } else {
         Vec::new()
     };
+
+    // Issue #354: the sightline as a Blind Distance, in the light condition (ES-TRIN 7.02(2):
+    // unladen), on the trimmed waterline where there is one. The wheelhouse lifts as far as the
+    // limit needs, up to its maximum; the check of the margin method gives way to it.
+    let mut sightline = None;
+    let mut blind_distance_laden_m = None;
+    if let (Some(limit), Some(a)) = (inp.sightline_limit_m, aft.as_mut()) {
+        let waterline = |name: &str, t: f64| match trim_conditions.iter().find(|(n, _)| *n == name)
+        {
+            Some((_, tr)) => crate::wheelhouse::Waterline {
+                draught_aft_m: tr.draft_aft,
+                draught_fwd_m: tr.draft_fwd,
+                length_m: inp.loa,
+            },
+            None => crate::wheelhouse::Waterline::even(t, inp.loa),
+        };
+        let units = (!a.container_units.is_empty())
+            .then_some((a.container_x1_m, a.container_top_above_keel_m));
+        let obstructions = crate::wheelhouse::obstructions(
+            units,
+            (inp.loa - bow_void, cargo_top_above_keel),
+            (inp.loa, inp.depth),
+        );
+        let eye_x = a.wheelhouse_x1_m;
+        let eye_height = aft_second.wheelhouse_eye_above_floor_m;
+        let s = crate::wheelhouse::assess(
+            eye_x,
+            a.wheelhouse_floor_lowered_m + eye_height,
+            eye_height,
+            aft_second.wheelhouse_max_lift_m,
+            &obstructions,
+            inp.loa,
+            &waterline("Light", light_draft),
+            limit,
+        );
+        blind_distance_laden_m = Some(crate::wheelhouse::blind_distance(
+            eye_x,
+            s.eye_raised_m,
+            &obstructions,
+            inp.loa,
+            &waterline("Laden", draft),
+        ));
+        a.wheelhouse_lift_m = s.lift_used_m;
+        a.wheelhouse_floor_raised_m = s.floor_raised_m;
+        a.wheelhouse_top_raised_m = s.floor_raised_m + a.wheelhouse_height_m;
+        a.checks.retain(|c| c.name != "wheelhouse_sees_over_cargo");
+        a.checks.push(Check::new(
+            "wheelhouse_sees_over_cargo",
+            s.enough,
+            text!(
+                "check-wheelhouse-blind-distance",
+                "blind distance ahead of the bow {blind} m <= {limit} m, light (ES-TRIN 7.02(2)); lift used {lift} m of {max_lift} m",
+                blind = Arg::fixed(s.blind_distance_m, 1),
+                limit = Arg::fixed(limit, 0),
+                lift = Arg::fixed(s.lift_used_m, 2),
+                max_lift = Arg::fixed(aft_second.wheelhouse_max_lift_m, 2),
+            ),
+        ));
+        a.warnings
+            .retain(|w| !alloc::string::ToString::to_string(w).starts_with("Sightline needs "));
+        if !s.enough {
+            a.warnings.push(text!(
+                "warn-aft-blind-distance-lift",
+                "The blind distance needs {needed} m of lift; the column gives {max_lift} m. Raise the column or lower the cargo top.",
+                needed = Arg::fixed(s.lift_needed_m, 2),
+                max_lift = Arg::fixed(aft_second.wheelhouse_max_lift_m, 2),
+            ));
+        }
+        h_top_navigating = py_max(h_top, a.wheelhouse_top_raised_m);
+        air_draft_navigating_light = h_top_navigating - light_draft;
+        sightline = Some(s);
+    }
 
     // A geometry error is error text: it stays English, with no Message Id.
     let feasible_message = match &geometry_error {
@@ -1371,6 +1451,8 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         gas_basis: detail.gas_basis,
         stern_block_items: stern_block_items.clone(),
         trim_conditions,
+        sightline,
+        blind_distance_laden_m,
         stern_geometry: inp.stern_geometry.clone(),
         tank_rules: detail.tank_rules,
         checks,

@@ -555,7 +555,13 @@ fn aft_design_of(p: &Map<String, Value>) -> R<ovcd_core::aft_arrangement::AftDes
             d.wheelhouse_eye_above_floor_m,
         )?,
         sightline_margin_m: get_or(p, "sightline_margin_m", d.sightline_margin_m)?,
-        wheelhouse_max_lift_m: get_or(p, "wheelhouse_max_lift_m", d.wheelhouse_max_lift_m)?,
+        // Issue #354: a fixed wheelhouse does not lift.
+        wheelhouse_max_lift_m: if p.get("wheelhouse_type").and_then(Value::as_str) == Some("fixed")
+        {
+            0.0
+        } else {
+            get_or(p, "wheelhouse_max_lift_m", d.wheelhouse_max_lift_m)?
+        },
     })
 }
 
@@ -1029,6 +1035,7 @@ fn simulate_measured(
         t_design,
         (cb, rho),
     )?;
+    inp.sightline_limit_m = sightline_limit_of(p, self_propelled);
     // The hold design values. A key left out keeps the core default, which is the value the engine
     // used before these were inputs.
     inp.wing_void_width = get_or(p, "hold_wing_void_width_m", inp.wing_void_width)?;
@@ -1194,8 +1201,9 @@ fn simulate_measured(
         dry_parts.push(("stern", stern_drawing(g)));
     }
     let drawing = drawing_json(dry_parts);
-    with_powering_and_text_ids(
+    with_blocks_and_text_ids(
         powering_block,
+        sightline_json(&r),
         with_loading_conditions(
             with_stern_mass(
                 json!({
@@ -1497,6 +1505,14 @@ fn powering_json(
     })))
 }
 
+/// Issue #354: the Blind Distance limit of a self-propelled hull whose sightline is checked as a
+/// distance (ES-TRIN 7.02(2), 250 m until the Rule Sets of #355); `None` for the margin method.
+fn sightline_limit_of(p: &Map<String, Value>, self_propelled: bool) -> Option<f64> {
+    let method = p.get("sightline_method").and_then(Value::as_str);
+    (self_propelled && method == Some("blind_distance"))
+        .then_some(ovcd_core::wheelhouse::ES_TRIN_BLIND_DISTANCE_M)
+}
+
 /// The machinery of a specified Propulsor (issue #352), or `None` for an `unspecified` one (today's
 /// stern block) and for a hull with no propulsion of its own.
 fn machinery_of(
@@ -1689,15 +1705,36 @@ fn with_stern_mass(
     result
 }
 
-/// Issue #353: the `powering` block joins a machinery's results only, so other results keep their
-/// hash; then the Message Ids.
-fn with_powering_and_text_ids(
+/// Issue #354: the sightline as a Blind Distance, in the results only with that method (other
+/// results keep their hash).
+fn sightline_json(r: &BargeCapacityResult) -> Option<Value> {
+    let s = r.sightline.as_ref()?;
+    Some(json!({
+        "method": "blind_distance",
+        "limit_m": num(s.limit_m),
+        "blind_distance_light_m": num(s.blind_distance_m),
+        "blind_distance_laden_m": r.blind_distance_laden_m.map_or(Value::Null, num),
+        "lift_needed_m": num(s.lift_needed_m),
+        "lift_used_m": num(s.lift_used_m),
+        "eye_raised_m": num(s.eye_raised_m),
+        "floor_raised_m": num(s.floor_raised_m),
+        "lift_enough": s.enough,
+    }))
+}
+
+/// The `powering` block (issue #353) joins a machinery's results only, and the `sightline` block
+/// (issue #354) a Blind Distance's only, so other results keep their hash; then the Message Ids.
+fn with_blocks_and_text_ids(
     powering: Option<Value>,
+    sightline: Option<Value>,
     mut result: Value,
     ids: TextIds,
 ) -> R<Value> {
     if let Some(block) = powering {
         result["powering"] = block;
+    }
+    if let Some(block) = sightline {
+        result["sightline"] = block;
     }
     with_text_ids(result, ids)
 }
@@ -1860,6 +1897,7 @@ fn simulate_gas(
         rules: rules.sets.clone(),
         rule_inputs: rules.inputs.clone(),
         machinery: gas_machinery,
+        sightline_limit_m: sightline_limit_of(p, self_propelled),
         ..FitOptions::default()
     };
     let f = ga::fit(l, b, cargo_key, t_max, &options)
@@ -2073,8 +2111,9 @@ fn simulate_gas(
     }
     let drawing = drawing_json(drawing_parts);
     let air_loaded = r.air_draft_top_above_keel_m - t;
-    with_powering_and_text_ids(
+    with_blocks_and_text_ids(
         powering_block.clone(),
+        sightline_json(r),
         with_loading_conditions(
         with_stern_mass(
         json!({

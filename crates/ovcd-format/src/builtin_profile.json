@@ -878,13 +878,13 @@
     "wheelhouse_type": {
       "default": "elevating",
       "status": "estimate",
-      "basis": "An elevating wheelhouse (as today) or a fixed one. A file saved before keeps elevating"
+      "basis": "An elevating wheelhouse (as today) or a fixed one, which does not lift (issue #354). A file saved before keeps elevating"
     },
     "sightline_method": {
       "default": "blind_distance",
       "status": "sourced",
       "source": "ES-TRIN 2025, Article 7.02(2): the blind distance ahead of the bow, a distance rather than a margin",
-      "basis": "How the wheelhouse sightline is checked: margin (today's check: the eye clears the cargo top by a margin) or blind_distance (the distance ahead hidden by the cargo, ES-TRIN 7.02(2)). Inputs only until the wheelhouse ticket (#354). A file saved before keeps margin"
+      "basis": "How the wheelhouse sightline is checked: margin (today's check: the eye clears the cargo top by a margin) or blind_distance (the distance ahead hidden by the cargo, the deck units and the bow, ES-TRIN 7.02(2): at most 250 m, unladen; the wheelhouse lifts as far as that needs, up to its maximum lift; issue #354). A file saved before keeps margin"
     },
     "stern_block_mass_included": {
       "default": true,
