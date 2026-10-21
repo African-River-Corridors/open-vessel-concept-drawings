@@ -57,6 +57,11 @@ pub fn find_equilibrium_draft(
 
 /// Intact stability (GM) at the equilibrium draft.
 ///
+/// Legacy chain, kept for the Python API (issue #413). No Design uses it: the gas designs use
+/// `gas_stability::assess` and the trim uses `trim`. Its limits: the block coefficient is applied
+/// to the raked hull volume, so the hull form counts twice; the KG items take the bottom-up hull
+/// steel, so they do not sum to the lightship; one KG for all hull steel at half the depth. The free surface takes the fill as a volume ratio (issue #413).
+///
 /// `TypeError` when `double_bottom_height` is unset: Python adds it to a float.
 pub fn calculate_stability(
     hull: &HullGeometry,
@@ -203,6 +208,10 @@ pub fn trim_with_stern(
 }
 
 /// Longitudinal trim. x is measured from the stern (AP); positive trim is bow deeper.
+///
+/// Legacy chain, kept for the Python API (issue #413). No Design uses it; the designs use `trim`
+/// with the gas stability's mass items. The block coefficient is applied to the raked hull
+/// volume, so the hull form counts twice.
 ///
 /// `TypeError` when a non-tank length is unset, as Python raises it.
 pub fn calculate_trim(

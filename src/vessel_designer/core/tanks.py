@@ -48,7 +48,9 @@ def free_surface_moment_cylindrical(
     Args:
         inner_radius: Tank inner radius (m)
         cylinder_length: Length of cylindrical section (m)
-        fill_ratio: Fill level as fraction (0-1)
+        fill_ratio: Fill as a volume fraction (0-1). The liquid height is the circular
+            segment that holds that share of the section (issue #413); it was read as a
+            height fraction.
         cargo_density: Cargo density (t/m^3)
 
     Returns:

@@ -37,6 +37,11 @@ def to_ga(inp: BargeCapacityInputs, res: BargeCapacityResult,
 
     ``motor_vessel=True`` sets ``tug_length=0``, which ``svg_drawings`` reads as
     self-propelled: aft machinery and accommodation inside the hull, no pushed tug.
+
+    The three flags are worked out (issue #413): ``min_freeboard_ok`` is the drawn freeboard
+    against the required one, ``air_draft_ok`` the air draft against its limit (true with no
+    limit), and ``stability_ok`` the gas stability criteria (or, for a dry result, a GM of at
+    least 0.15 m; false with no GM). The tank's cylinder holds the volume the two heads do not.
     """
     kwargs = {"motor_vessel": motor_vessel}
     if laden_draft_m is not None:

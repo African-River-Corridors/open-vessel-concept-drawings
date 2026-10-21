@@ -308,6 +308,12 @@ pub fn calculate_tank_arrangement_wide(
 ///
 /// The free surface is a rectangle as wide as the chord at the fill level and as long as the
 /// cylinder, so `I_fs = (1/12) * L * chord^3`. The caller divides by displacement.
+///
+/// `fill_ratio` is a volume ratio. Issue #413: the liquid height is the height of the circular
+/// segment that holds that share of the section (`gas_stability::segment_fill`, as the gas
+/// stability takes it), not `fill_ratio * 2r`, which read the volume ratio as a height ratio and
+/// gave about a quarter of the true moment at 0.98 fill. NaN when the segment cannot be formed
+/// (a radius whose square overflows).
 pub fn free_surface_moment_cylindrical(
     inner_radius: f64,
     cylinder_length: f64,
@@ -315,8 +321,11 @@ pub fn free_surface_moment_cylindrical(
     cargo_density: f64,
 ) -> f64 {
     let r = inner_radius;
-    // Fill height from bottom of cylinder.
-    let h = fill_ratio * 2.0 * r;
+    // Fill height from bottom of cylinder: the segment that holds `fill_ratio` of the section.
+    let h = match crate::gas_stability::segment_fill(r, fill_ratio) {
+        Ok((h, _)) => h,
+        Err(_) => return f64::NAN,
+    };
 
     // Distance from centre to liquid surface (negative if more than half full).
     let d = r - h;
