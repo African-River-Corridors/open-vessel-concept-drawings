@@ -84,6 +84,65 @@ pub fn stack_for<'a>(
     library.select(&pairs)
 }
 
+/// The derived, read-only inputs an Applicability can name (spec 0004 additions of spec 0006
+/// §5.2), with their values. The engine works them out; a user never types them.
+pub const DERIVED_INPUTS: &[(&str, &[&str])] = &[
+    // Until `.vdesign` format version 3 stores one, every Option is `river-only`.
+    ("service_area", &["river-only", "coastal-and-river"]),
+    ("cargo_class", &["gas", "dry_bulk", "liquid_bulk"]),
+    ("deadweight_band", DEADWEIGHT_BANDS),
+];
+
+/// The deadweight bands, at the thresholds of MARPOL Annex I Reg. 19 (MEPC.117(52)): 19.1, 600
+/// tonnes deadweight and above; 19.2 and 19.6, 5,000 tonnes; 19.3.4, 20,000 tonnes.
+pub const DEADWEIGHT_BANDS: &[&str] = &[
+    "under-600-t",
+    "600-to-5000-t",
+    "5000-to-20000-t",
+    "20000-t-and-above",
+];
+
+/// The band of a deadweight, t. "x tonnes deadweight and above" is in the band that starts at x.
+pub fn deadweight_band(dw_t: f64) -> &'static str {
+    if dw_t < 600.0 {
+        DEADWEIGHT_BANDS[0]
+    } else if dw_t < 5000.0 {
+        DEADWEIGHT_BANDS[1]
+    } else if dw_t < 20000.0 {
+        DEADWEIGHT_BANDS[2]
+    } else {
+        DEADWEIGHT_BANDS[3]
+    }
+}
+
+/// The `cargo_class` value of a Cargo Class.
+pub fn cargo_class_value(class: ovcd_core::cargo::CargoClass) -> &'static str {
+    match class {
+        ovcd_core::cargo::CargoClass::Gas => "gas",
+        ovcd_core::cargo::CargoClass::DryBulk => "dry_bulk",
+        ovcd_core::cargo::CargoClass::LiquidBulk => "liquid_bulk",
+    }
+}
+
+/// The values an Applicability may give for an input: a derived input, a choice input of the
+/// schema, or `cargo` (the Cargo keys). `None` for an input that cannot be named.
+pub fn applicability_values(input: &str) -> Option<Vec<String>> {
+    if let Some((_, values)) = DERIVED_INPUTS.iter().find(|(n, _)| *n == input) {
+        return Some(values.iter().map(|v| v.to_string()).collect());
+    }
+    let spec = INPUTS.iter().find(|s| s.name == input)?;
+    match spec.kind {
+        InputKind::Choice(values) => Some(values.iter().map(|v| v.to_string()).collect()),
+        InputKind::Cargo => Some(
+            ovcd_core::cargo::CARGO_DATABASE
+                .iter()
+                .map(|(k, _)| k.to_string())
+                .collect(),
+        ),
+        _ => None,
+    }
+}
+
 /// The Measures of one computed Option.
 pub struct OptionMeasures<'a> {
     pub option: &'a DesignOption,
@@ -124,7 +183,12 @@ impl MeasureSource for OptionMeasures<'_> {
                 .iter()
                 .map(|c| c.name.clone())
                 .collect(),
-            ObjectType::Hull | ObjectType::Tank => Vec::new(),
+            // No Measure on these objects is computed yet.
+            ObjectType::Hull
+            | ObjectType::Tank
+            | ObjectType::CargoTank
+            | ObjectType::BallastTank
+            | ObjectType::SlopTank => Vec::new(),
         }
     }
 
@@ -182,8 +246,20 @@ impl MeasureSource for OptionMeasures<'_> {
     }
 
     fn input(&self, name: &str) -> Option<String> {
-        if name == "service_area" {
-            return Some(DEFAULT_SERVICE_AREA.to_string());
+        match name {
+            "service_area" => return Some(DEFAULT_SERVICE_AREA.to_string()),
+            "cargo_class" => {
+                let cargo = self.option.input("cargo")?.value.as_str()?;
+                let props = ovcd_core::cargo::get_cargo(cargo).ok()?;
+                return Some(cargo_class_value(props.phase).to_string());
+            }
+            "deadweight_band" => {
+                return self
+                    .measured
+                    .deadweight_t
+                    .map(|dw| deadweight_band(dw).to_string());
+            }
+            _ => {}
         }
         self.option
             .input(name)

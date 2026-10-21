@@ -21,8 +21,14 @@ use crate::rules::{
 pub enum ObjectType {
     Option,
     Hull,
+    /// A Type C gas cargo tank.
     Tank,
     LoadingCondition,
+    /// A liquid bulk cargo tank (spec 0006): one object type per tank role, so a Rule on cargo tanks
+    /// never reaches a ballast or slop tank.
+    CargoTank,
+    BallastTank,
+    SlopTank,
 }
 
 impl ObjectType {
@@ -32,6 +38,9 @@ impl ObjectType {
             ObjectType::Hull => "hull",
             ObjectType::Tank => "tank",
             ObjectType::LoadingCondition => "loading-condition",
+            ObjectType::CargoTank => "cargo-tank",
+            ObjectType::BallastTank => "ballast-tank",
+            ObjectType::SlopTank => "slop-tank",
         }
     }
 }
@@ -335,7 +344,51 @@ pub const ROW_SHAPES: &[(&str, &[&str])] = &[
 pub const FORMULA_SHAPES: &[(&str, &[&str], &[&str])] = &[
     // `of - less`: a value less an input (IGC 2.4.1.2 side distance less the insulation).
     ("less-input", &["of", "less"], &[]),
+    // `max(lo, min(hi, a + x * b / c))`: "a + b·x, the lesser of that and hi, not less than lo"
+    // (MARPOL Annex I Reg. 19.3.1: w = 0.5 + DW/20,000 or 2.0 m, whichever is the lesser, at least
+    // 1.0 m).
+    ("clamp", &["x"], &["a", "b", "c", "lo", "hi"]),
+    // `max(lo, a + x * b / c)`: the same with no upper limit (MARPOL Annex I Reg. 19.6.2).
+    ("at-least", &["x"], &["a", "b", "c", "lo"]),
 ];
+
+/// The formula operands whose unit is not the limit's: the coefficients convert them.
+pub const FREE_UNIT_OPERANDS: &[(&str, &str)] = &[("clamp", "x"), ("at-least", "x")];
+
+/// The value of a formula shape. The order of operations is the text's (`a + x * b / c`, then the
+/// upper limit, then the lower), so a Rule written from the text stays bit-identical to a hand
+/// calculation of the same text.
+pub fn formula_value(
+    shape: &str,
+    coefficients: &[(String, f64)],
+    mut operand: impl FnMut(&str) -> Result<f64, String>,
+) -> Result<f64, String> {
+    let c = |name: &str| -> Result<f64, String> {
+        coefficients
+            .iter()
+            .find(|(k, _)| k == name)
+            .map(|(_, x)| *x)
+            .ok_or_else(|| format!("formula `{shape}` needs coefficient `{name}`"))
+    };
+    match shape {
+        "less-input" => {
+            let of = operand("of")?;
+            Ok(of - operand("less")?)
+        }
+        "clamp" => {
+            let v = c("a")? + operand("x")? * c("b")? / c("c")?;
+            let (lo, hi) = (c("lo")?, c("hi")?);
+            let v = if v < hi { v } else { hi };
+            Ok(if v > lo { v } else { lo })
+        }
+        "at-least" => {
+            let v = c("a")? + operand("x")? * c("b")? / c("c")?;
+            let lo = c("lo")?;
+            Ok(if v > lo { v } else { lo })
+        }
+        other => Err(format!("unknown formula shape `{other}`")),
+    }
+}
 
 /// The value of a table at a key: the first row whose condition holds.
 pub fn table_value(table: &Table, key: &MeasureValue) -> Result<f64, String> {
@@ -416,9 +469,12 @@ fn limit_of(
             table_value(table(t)?, &key)?
         }
         Some(Limit::Formula {
-            shape, operands, ..
+            shape,
+            operands,
+            coefficients,
+            ..
         }) => {
-            let mut get = |name: &str| -> Result<f64, String> {
+            let get = |name: &str| -> Result<f64, String> {
                 let (_, op) = operands
                     .iter()
                     .find(|(k, _)| k == name)
@@ -431,13 +487,7 @@ fn limit_of(
                     }
                 }
             };
-            match shape.as_str() {
-                "less-input" => {
-                    let of = get("of")?;
-                    of - get("less")?
-                }
-                other => return Err(format!("unknown formula shape `{other}`")),
-            }
+            formula_value(shape, coefficients, get)?
         }
         None => return Err("the Rule has no limit".to_string()),
     };

@@ -861,6 +861,9 @@ pub struct Measured {
     /// The gas stability loading conditions, in the order the engine builds them. Empty for a dry
     /// bulk barge (its stability is first-order only) and for a gas barge that carries nothing.
     pub conditions: Vec<gs::Condition>,
+    /// The deadweight of the result, t: for the derived input `deadweight_band`. `None` when the
+    /// result has none.
+    pub deadweight_t: Option<f64>,
 }
 
 fn simulate(p: &Map<String, Value>) -> R<Value> {
@@ -901,8 +904,8 @@ fn simulate_measured(p: &Map<String, Value>, measured: &mut Measured) -> R<Value
             (cb, rho),
             self_propelled,
         )
-        .map(|(v, conditions)| {
-            measured.conditions = conditions;
+        .map(|(v, gas)| {
+            *measured = gas;
             v
         });
     }
@@ -977,6 +980,8 @@ fn simulate_measured(p: &Map<String, Value>, measured: &mut Measured) -> R<Value
     };
     ids.text(&governs);
     let disp = ls + cargo_t;
+    let deadweight = disp - ls;
+    measured.deadweight_t = Some(deadweight);
     let t = py_div(disp, cb * l * b * rho)?;
     let h_top = r.air_draft_top_above_keel_m;
 
@@ -1026,7 +1031,7 @@ fn simulate_measured(p: &Map<String, Value>, measured: &mut Measured) -> R<Value
                 "cargo_volume_m3": num(r.cargo_volume_m3),
                 "lightship_t": num(ls),
                 "displacement_t": num(disp),
-                "deadweight_t": num(disp - ls),
+                "deadweight_t": num(deadweight),
                 "draught_m": num(t),
                 "draught_max_m": num(t_max),
                 "freeboard_m": num(d - t),
@@ -1072,7 +1077,7 @@ fn simulate_gas(
     (l, b, d0): (f64, f64, f64),
     (cb, rho): (f64, f64),
     self_propelled: bool,
-) -> R<(Value, Vec<gs::Condition>)> {
+) -> R<(Value, Measured)> {
     let ruleset = match p.get("ruleset") {
         None => "IGC_2G",
         Some(Value::String(s)) => s.as_str(),
@@ -1080,14 +1085,14 @@ fn simulate_gas(
         Some(other) => {
             return Ok((
                 error_result(format!("Unknown ruleset {}.", py_repr(other))),
-                Vec::new(),
+                Measured::default(),
             ));
         }
     };
     if !RULESETS.contains(&ruleset) {
         return Ok((
             error_result(format!("Unknown ruleset {}.", repr_str(ruleset))),
-            Vec::new(),
+            Measured::default(),
         ));
     }
     let fill = match truthy_float(p, "fill_ratio")? {
@@ -1360,7 +1365,15 @@ fn simulate_gas(
         }),
         ids,
     )
-    .map(|v| (v, conditions))
+    .map(|v| {
+        (
+            v,
+            Measured {
+                conditions,
+                deadweight_t: Some(f.payload_t),
+            },
+        )
+    })
 }
 
 /// One stability condition as the simulator lists it: the fields it keeps, `fill` for the fill

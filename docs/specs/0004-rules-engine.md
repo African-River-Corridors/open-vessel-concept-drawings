@@ -97,8 +97,10 @@ trace row in code.
 This section is the reference for the build tickets. Where a later section repeats a point, this one
 wins.
 
-**Objects.** A Measure is computed for one object of one **object type**: `option`, `hull`, `tank`,
-`loading-condition`. An Option has one `option` and one `hull`, zero or more `tank`s, and zero or more
+**Objects.** A Measure is computed for one object of one **object type**: `option`, `hull`, `tank`
+(a Type C gas cargo tank), `loading-condition`, and one type per liquid bulk tank role:
+`cargo-tank`, `ballast-tank`, `slop-tank` (spec 0006 §5.2, #336). A Rule on cargo tanks so never
+reaches a ballast or slop tank. An Option has one `option` and one `hull`, zero or more `tank`s, and zero or more
 `loading-condition`s. Objects of one type are listed in a fixed order (tank 1, 2, …; loading conditions
 in the order the engine builds them), so a trace is the same on every run and platform.
 
@@ -150,7 +152,21 @@ citation.
 **Applicability.** A conjunction of conditions `input ∈ {values}` over the Option's inputs: `cargo`,
 `cargo_containment`, `service_area`, `lpg_carriage_condition`, `tank_head_type`, and any other enumerated
 input the schema names. It is the same form on a Rule Set (`applies_when`) and on a Rule
-(`applies_when`). There is no expression language: no `or` inside a condition list across inputs, no
+(`applies_when`). Three **derived inputs** are read-only: the engine works them out and a user never
+types them (spec 0006 §5.2, #336):
+
+- `service_area`: `river-only` or `coastal-and-river`; until format version 3 every Option is
+  `river-only`.
+- `cargo_class`: `gas`, `dry_bulk` or `liquid_bulk`, from the Cargo, so a new Cargo of a class needs no
+  Rule Set edit. An oil category for liquid bulk Cargos comes with the Crude Grade data (spec 0006,
+  ticket 2).
+- `deadweight_band`: `under-600-t`, `600-to-5000-t`, `5000-to-20000-t`, `20000-t-and-above`, from the
+  result's deadweight, at the thresholds of MARPOL Annex I Reg. 19 ("x tonnes deadweight and above" is
+  in the band that starts at x). So the 5,000 t switch of the MARPOL construction rules stays
+  `input ∈ {values}`.
+
+The loader refuses an Applicability that names an input it cannot name (a number input, an unknown
+name) or a value the input does not have, so a typo never makes a Rule silently not apply. There is no expression language: no `or` inside a condition list across inputs, no
 arithmetic, no thresholds. A rule-book condition on a number (a ship length of 24 m or more) is a
 `check` Rule or waits for the Applicability Rules that are out of scope.
 
@@ -255,7 +271,10 @@ Rules. A default that breaks one is a finding, not a silent pass (see the allowa
   change of either is a new id, and the old id is never used again.
 - **Kinds.** `limit`: a Measure against a constant. `table`: the limit is a row of a table of steps or
   piecewise rows. `formula`: the limit comes from a formula shape coded in Rust with coefficients in the
-  file (d = a + Vc × b / c). `check`: a yes/no Measure. `note`: a cited value shown in the trace, with
+  file (d = a + Vc × b / c). The shapes are `less-input` (`of − less`), `clamp`
+  (`max(lo, min(hi, a + x × b / c))`, "a + b·x, the lesser of that and hi, not less than lo", as MARPOL
+  Annex I Reg. 19.3.1 and 19.3.2 write the double-hull widths) and `at-least` (`max(lo, a + x × b / c)`,
+  Reg. 19.6). The operand `x` of `clamp` and `at-least` may be in any unit: the coefficients convert it. `check`: a yes/no Measure. `note`: a cited value shown in the trace, with
   no test.
 - **Formula shapes keep the code's arithmetic.** A shape evaluates in the same order of operations as
   the code it replaces (`a + v * b / c`, not a rewritten interpolation), so results stay bit-identical.
