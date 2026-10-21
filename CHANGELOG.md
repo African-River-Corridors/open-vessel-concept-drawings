@@ -217,6 +217,54 @@ Each entry is a before/after table written by `python3 tools/design_impact.py ch
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
 
+### ticket/420-run-validity-checks-2 (2026-10-21)
+
+Between `main eb83dd9` and `this branch 72115f0`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration amaggi-box-2000 | `checks[10].message` | GM 15.42 m (fluid), max GZ 2.76 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | GM 6.02 m (fluid), max GZ 1.76 m at 25° | changed |
+| calibration amaggi-box-2000 | `checks[10].name` | Stability — lightship, no ballast | Stability — ballast, arrival | changed |
+| calibration amaggi-box-2000 | `checks[10].ok` | False | True | changed |
+| calibration amaggi-box-2000 | `checks[11].message` | absent | GM 15.42 m (fluid), max GZ 2.76 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | changed |
+| calibration amaggi-box-2000 | `checks[11].name` | absent | Stability — lightship, no ballast | changed |
+| calibration amaggi-box-2000 | `checks[11].ok` | absent | False | changed |
+| calibration amaggi-box-2000 | `checks[11].severity` | absent | warning | changed |
+| calibration amaggi-box-2000 | `checks[6].message` | GM 1.38 m (fluid), max GZ 0.23 m at 13° — fails: Area 0–40° 0.074 < 0.09, Area 30–40° -0.006 < 0.03, GZ at ≥ 30° 0.047 < 0.2, Angle of max GZ 13.000 < 25.0 | Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor are uncalibrated first-order estimates (RS1) — ITTC-1957 friction is standard. | changed |
+| calibration amaggi-box-2000 | `checks[6].name` | Stability — full load, departure | coefficients are first order | changed |
+| calibration amaggi-box-2000 | `checks[6].ok` | False | True | changed |
+| calibration amaggi-box-2000 | `checks[7].name` | Stability — full load, arrival | Stability — full load, departure | changed |
+| calibration amaggi-box-2000 | `checks[8].message` | GM 6.02 m (fluid), max GZ 1.76 m at 25° | GM 1.38 m (fluid), max GZ 0.23 m at 13° — fails: Area 0–40° 0.074 < 0.09, Area 30–40° -0.006 < 0.03, GZ at ≥ 30° 0.047 < 0.2, Angle of max GZ 13.000 < 25.0 | changed |
+| calibration amaggi-box-2000 | `checks[8].name` | Stability — ballast, departure | Stability — full load, arrival | changed |
+| calibration amaggi-box-2000 | `checks[8].ok` | True | False | changed |
+| calibration amaggi-box-2000 | `checks[9].name` | Stability — ballast, arrival | Stability — ballast, departure | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[10].message` | GM 8.69 m (fluid), max GZ 1.76 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | GM 3.71 m (fluid), max GZ 1.14 m at 25° | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[10].name` | Stability — lightship, no ballast | Stability — ballast, arrival | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[10].ok` | False | True | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[11].message` | absent | GM 8.69 m (fluid), max GZ 1.76 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[11].name` | absent | Stability — lightship, no ballast | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[11].ok` | absent | False | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[11].severity` | absent | warning | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[6].message` | GM 0.40 m (fluid), max GZ 0.12 m at 17° — fails: Area 0–30° 0.038 < 0.055, Area 0–40° 0.031 < 0.09, Area 30–40° -0.007 < 0.03, GZ at ≥ 30° 0.024 < 0.2, Angle of max GZ 17.000 < 25.0 | Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor are uncalibrated first-order estimates (RS1) — ITTC-1957 friction is standard. | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[6].name` | Stability — full load, departure | coefficients are first order | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[6].ok` | False | True | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[7].name` | Stability — full load, arrival | Stability — full load, departure | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[8].message` | GM 3.71 m (fluid), max GZ 1.14 m at 25° | GM 0.40 m (fluid), max GZ 0.12 m at 17° — fails: Area 0–30° 0.038 < 0.055, Area 0–40° 0.031 < 0.09, Area 30–40° -0.007 < 0.03, GZ at ≥ 30° 0.024 < 0.2, Angle of max GZ 17.000 < 25.0 | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[8].name` | Stability — ballast, departure | Stability — full load, arrival | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[8].ok` | True | False | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[9].name` | Stability — ballast, arrival | Stability — ballast, departure | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[10].message` | GM 18.57 m (fluid), max GZ 2.97 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | GM 6.28 m (fluid), max GZ 1.84 m at 26° | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[10].name` | Stability — lightship, no ballast | Stability — ballast, arrival | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[10].ok` | False | True | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[11].message` | absent | GM 18.57 m (fluid), max GZ 2.97 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[11].name` | absent | Stability — lightship, no ballast | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[11].ok` | absent | False | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[11].severity` | absent | warning | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[6].message` | GM 2.09 m (fluid), max GZ 0.49 m at 19° — fails: Angle of max GZ 19.000 < 25.0 | Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor are uncalibrated first-order estimates (RS1) — ITTC-1957 friction is standard. | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[6].name` | Stability — full load, departure | coefficients are first order | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[6].ok` | False | True | changed |
+| ... | 2182 more changed quantities | | | |
+
 ### ticket/419-severity-everywhere (2026-10-21)
 
 Between `main 66589b9` and `this branch 353bef4`.
