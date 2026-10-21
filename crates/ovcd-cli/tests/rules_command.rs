@@ -132,7 +132,7 @@ fn a_rule_set_changes_no_result_and_shows_in_the_trace() {
         json!([
             "igc-2g@1.0.0",
             "is2008-a@1.0.0",
-            "lr-inland-gas@1.0.0",
+            "lr-inland-gas@1.1.0",
             "ovcd@1.0.0",
             "example@1.0.0"
         ])

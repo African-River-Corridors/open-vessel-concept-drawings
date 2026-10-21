@@ -75,9 +75,15 @@ fn every_check_of_a_result_reports_exactly_one_rule() {
                 let id = rule_of_check(check_name)
                     .unwrap_or_else(|| panic!("{name}: no Rule for check `{check_name}`"));
                 seen.insert(check_name.to_string());
-                // The Rule exists in exactly one built-in set.
-                let holders = lib.sets().iter().filter(|s| s.rule(id).is_some()).count();
-                assert_eq!(holders, 1, "{name}: {id}");
+                // The Rule exists in exactly one built-in set (in any of its versions).
+                let mut holders: Vec<&str> = lib
+                    .sets()
+                    .iter()
+                    .filter(|s| s.rule(id).is_some())
+                    .map(|s| s.id.as_str())
+                    .collect();
+                holders.dedup();
+                assert_eq!(holders.len(), 1, "{name}: {id}");
                 // Its rows agree with the check: a pass when the check holds, else not a pass.
                 let ok = check["ok"].as_bool().unwrap();
                 let mine: Vec<&Value> = rows.iter().filter(|r| r["rule"] == id).collect();
