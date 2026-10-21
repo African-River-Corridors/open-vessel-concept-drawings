@@ -185,7 +185,7 @@
     },
     {
       "id": "ovcd/gas-arrangement/tank-l-over-d",
-      "title": "Tank length at most 7 outer diameters",
+      "title": "Tank length at most 7 inner shell diameters",
       "origin": "tool-limit",
       "source": {
         "document": "ADN 2025, ECE/TRANS/351",

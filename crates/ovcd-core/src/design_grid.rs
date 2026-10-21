@@ -159,7 +159,13 @@ fn cell(
         cargo_t: Some(r.cargo_capacity_t),
         tank_outer_diameter_m: Some(od),
         tank_length_m: Some(tank_len),
-        slenderness: if od != 0.0 { Some(tank_len / od) } else { None },
+        // Over the inner shell diameter, as the length over diameter check takes it (issue #416).
+        slenderness: match &r.gas_basis {
+            Some(b) if b.tanks.inner_diameter > 0.0 && od != 0.0 => {
+                Some(tank_len / b.tanks.inner_diameter)
+            }
+            _ => None,
+        },
         full_load_draft_m: Some(r.full_load_draft_m),
         air_draft_m: Some(r.air_draft_m),
         reason: String::new(),

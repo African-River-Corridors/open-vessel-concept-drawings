@@ -75,7 +75,7 @@ check-resistance-coeffs-first-order = 受限水域阻力（剩余阻力/Lackenby
 ## crates/ovcd-core/src/gas_arrangement.rs
 
 # status: draft
-check-tank-length-over-diameter = 液货舱长度{ $length } m / 外径{ $diameter } m = { $ratio } <= { $max }
+check-tank-length-over-inner-diameter = 液货舱长度{ $length } m / 内径{ $diameter } m = { $ratio } <= { $max }
 # status: draft
 check-freeboard-at-payload = 载货吃水{ $draught } m 时干舷{ $freeboard } m >= 要求值{ $required } m
 # status: draft
