@@ -21,7 +21,8 @@ use crate::tanks::INT_OVERFLOW_MESSAGE;
 
 /// Tanks along the hull in every cell.
 pub const TANKS_LONG: i64 = 2;
-/// Standard IGC-2G protective-location spacing per side (m).
+/// Side clearance per side (m): a design default with no published source, not an IGC value. IGC
+/// 2.4.1.2 sets the side distance by d(Vc) per tank (issue #283; #277 derives it from that Rule).
 pub const SIDE_CLEARANCE_M: f64 = 1.0;
 /// Kotug E-Pusher pattern, for the total-LOA note (m).
 pub const TUG_LOA_M: f64 = 16.0;
@@ -38,7 +39,7 @@ pub struct GridCell {
     pub beam_m: f64,
     pub n_tanks_long: i64,
     pub feasible: bool,
-    /// Volume-bound (1.0 m standard side clearance)
+    /// Volume-bound (1.0 m default side clearance)
     pub cargo_t: Option<f64>,
     pub tank_outer_diameter_m: Option<f64>,
     pub tank_length_m: Option<f64>,
@@ -173,8 +174,9 @@ pub fn sweep(
         beams_m: beams_m.to_vec(),
         depth_m,
         cargo_type: cargo_type.to_string(),
-        clearance_basis: "1.0 m standard side clearance per side (IGC-2G protective location)"
-            .to_string(),
+        clearance_basis:
+            "1.0 m side clearance per side: a design default with no published source, not an IGC value"
+                .to_string(),
         cells: Vec::new(),
     };
     for &loa in barge_lengths_m {

@@ -385,6 +385,8 @@ pub(crate) fn capacity_result_from_json(
         insulation_thickness_mm: o.opt_f64("insulation_thickness_mm")?,
         tank_wall_thickness_mm: o.opt_f64("tank_wall_thickness_mm")?,
         tank_inner_diameter_m: o.opt_f64("tank_inner_diameter_m")?,
+        // Not in the result JSON: only a run reads it, typed.
+        tank_rules: None,
         light_draft_m: o.opt_f64("light_draft_m")?,
         air_draft_light_m: o.opt_f64("air_draft_light_m")?,
         ballast_draft_m: o.opt_f64("ballast_draft_m")?,
@@ -411,7 +413,10 @@ mod tests {
             inputs.cargo_type = cargo.to_string();
             let result = compute(&inputs).expect("computes");
             let back = capacity_result_from_json(&capacity_json(&result), "result").expect("reads");
-            assert_eq!(back, result, "{cargo}");
+            // The tank values of the Rule Trace are not written to JSON (issue #271).
+            let mut written = result.clone();
+            written.tank_rules = None;
+            assert_eq!(back, written, "{cargo}");
         }
     }
 

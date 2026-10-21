@@ -293,6 +293,33 @@ impl BargeCapacityInputs {
     }
 }
 
+/// The values of one Type C tank that the IGC Rules read (spec 0004, `igc-2g`), exactly as the
+/// arrangement worked with them. Every tank of an arrangement is alike.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TankRuleValues {
+    /// Tanks in the arrangement.
+    pub n_tanks: i64,
+    /// Vc of one tank (IGC 2.4.1.1): its gross volume plus the dome, m^3.
+    pub vc_m3: f64,
+    /// The clear gap from the moulded side to the outer face of the insulation, m: the arrangement
+    /// sizes the tank diameter from it.
+    pub side_gap_m: f64,
+    /// The clear height from the moulded base to the outer face of the insulation, m: the double
+    /// bottom plus the support height.
+    pub bottom_gap_m: f64,
+    /// The insulation thickness, m.
+    pub insulation_m: f64,
+    pub cylinder_wall_mm: f64,
+    pub head_wall_mm: f64,
+    pub weld_factor: f64,
+    /// The allowable stress f the wall formula used, MPa.
+    pub allowable_stress_mpa: f64,
+    pub material: String,
+    /// Rm and Re of the material, MPa (IGC 4.18.1.3).
+    pub tensile_strength_mpa: f64,
+    pub yield_strength_mpa: f64,
+}
+
 /// The converged gas arrangement and its weight split, for the gas stability check.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GasBasis {
@@ -354,6 +381,9 @@ pub struct BargeCapacityResult {
     pub insulation_thickness_mm: Option<f64>,
     pub tank_wall_thickness_mm: Option<f64>,
     pub tank_inner_diameter_m: Option<f64>,
+    /// The tank values the IGC Rules of the Rule Trace read (gas only). Not in the result JSON:
+    /// the trace reads them typed.
+    pub tank_rules: Option<TankRuleValues>,
 
     // --- Light / ballast load conditions ---
     pub light_draft_m: Option<f64>,
@@ -487,6 +517,7 @@ struct Detail {
     tank_wall_thickness_mm: Option<f64>,
     tank_inner_diameter_m: Option<f64>,
     gas_basis: Option<GasBasis>,
+    tank_rules: Option<TankRuleValues>,
 }
 
 /// (cargo volume, lightship, top above keel, detail) of a volume branch. `n_total` is the exact
@@ -631,6 +662,25 @@ fn gas_volumetric(
         insulation_thickness_mm: Some(bi.insulation_thickness),
         tank_wall_thickness_mm: Some(tanks.cylinder_wall_thickness),
         tank_inner_diameter_m: Some(tanks.inner_diameter),
+        tank_rules: Some({
+            let mat = get_tank_material(&bi.tank_material)?;
+            let count = if n_total > 1 { n_total } else { 1 };
+            TankRuleValues {
+                n_tanks: tanks.n_tanks_total,
+                // The same expression as the last round of the clearance loop.
+                vc_m3: tanks.total_tank_volume / (count as f64) + dome_volume_m3(dome.0, dome.1),
+                side_gap_m: cs,
+                bottom_gap_m: db + inp.tank_support_height,
+                insulation_m: ins_m,
+                cylinder_wall_mm: tanks.cylinder_wall_thickness,
+                head_wall_mm: tanks.head_wall_thickness,
+                weld_factor: bi.weld_efficiency,
+                allowable_stress_mpa: bi.tank_allowable_stress.unwrap_or(mat.allowable_stress),
+                material: bi.tank_material.clone(),
+                tensile_strength_mpa: mat.tensile_strength,
+                yield_strength_mpa: mat.yield_strength,
+            }
+        }),
         gas_basis: Some(GasBasis {
             // The two calculation-only switches of issue #292 go back to their defaults: the stored
             // inputs are the ones the Python API's `BargeInputs` has, and a result written as JSON
@@ -1138,6 +1188,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         air_draft_navigating_light_m: Some(air_draft_navigating_light),
         navigating_top_above_keel_m: Some(h_top_navigating),
         gas_basis: detail.gas_basis,
+        tank_rules: detail.tank_rules,
         checks,
         warnings,
     })

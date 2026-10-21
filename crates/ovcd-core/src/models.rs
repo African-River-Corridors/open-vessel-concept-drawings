@@ -243,7 +243,8 @@ impl BargeInputs {
         if self.stern_non_tank_length.is_none() {
             self.stern_non_tank_length = Some(self.stern_non_tank_pct * self.loa);
         }
-        // Side clearance per side defaults to 1.0 m. The wing ballast tank fills the clearance
+        // Side clearance per side defaults to 1.0 m: a design default with no published source,
+        // not an IGC value (issue #283). The wing ballast tank fills the clearance
         // inboard of the cargo-tank gap.
         if self.side_clearance.is_none() {
             self.side_clearance = Some(1.0);

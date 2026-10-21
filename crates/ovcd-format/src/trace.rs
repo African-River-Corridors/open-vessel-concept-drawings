@@ -185,9 +185,14 @@ impl MeasureSource for OptionMeasures<'_> {
                 .iter()
                 .map(|c| c.name.clone())
                 .collect(),
+            ObjectType::Tank => match &self.measured.tank {
+                Some(t) => (1..=t.n_tanks.max(0))
+                    .map(|i| format!("Tank {i}"))
+                    .collect(),
+                None => Vec::new(),
+            },
             // No Measure on these objects is computed yet.
             ObjectType::Hull
-            | ObjectType::Tank
             | ObjectType::CargoTank
             | ObjectType::BallastTank
             | ObjectType::SlopTank => Vec::new(),
@@ -208,6 +213,32 @@ impl MeasureSource for OptionMeasures<'_> {
                 Value::Bool(b) => Ok(MeasureValue::Bool(*b)),
                 Value::String(s) => Ok(MeasureValue::Text(s.clone())),
                 _ => Err(format!("`{name}` has no value")),
+            };
+        }
+        if let Some(name) = m.id.strip_prefix("tank.") {
+            let t = self
+                .measured
+                .tank
+                .as_ref()
+                .ok_or_else(|| "the Option has no Type C tanks".to_string())?;
+            let number = |x: f64| Ok(MeasureValue::Number(x));
+            return match name {
+                "vc" => number(t.vc_m3),
+                "side_gap" => number(t.side_gap_m),
+                "bottom_gap" => number(t.bottom_gap_m),
+                "insulation" => number(t.insulation_m),
+                // The thinner wall; the first of equal, as Python's `min`.
+                "wall_thickness" => number(if t.head_wall_mm < t.cylinder_wall_mm {
+                    t.head_wall_mm
+                } else {
+                    t.cylinder_wall_mm
+                }),
+                "weld_factor" => number(t.weld_factor),
+                "allowable_stress" => number(t.allowable_stress_mpa),
+                "rm" => number(t.tensile_strength_mpa),
+                "re" => number(t.yield_strength_mpa),
+                "material" => Ok(MeasureValue::Text(t.material.clone())),
+                other => Err(format!("no value for Measure `tank.{other}`")),
             };
         }
         let c = self
@@ -248,14 +279,17 @@ impl MeasureSource for OptionMeasures<'_> {
     }
 
     fn missing(&self, object: ObjectType) -> Option<String> {
-        if object != ObjectType::LoadingCondition || !self.measured.conditions.is_empty() {
-            return None;
-        }
         let gas = self
             .option
             .input("cargo_containment")
             .and_then(|i| i.value.as_str())
             == Some("type_c_tanks");
+        if object == ObjectType::Tank && gas && self.measured.tank.is_none() {
+            return Some("no tank fits the hull, so there is no tank to check".to_string());
+        }
+        if object != ObjectType::LoadingCondition || !self.measured.conditions.is_empty() {
+            return None;
+        }
         Some(if gas {
             "no stability loading conditions: the barge carries no cargo".to_string()
         } else {

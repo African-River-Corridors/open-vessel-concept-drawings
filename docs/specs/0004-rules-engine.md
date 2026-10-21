@@ -493,9 +493,11 @@ The regulation and class items, by set (paragraphs as read in the free texts; se
   gap measured as in 2.4.2 (plate to plate, insulation inside d); 2.3.1.2.3 with 2.4.1.2 bottom clearance
   max(min(B/15, 2 m), d); 4.23.2.1.2 minimum wall thickness after forming (5 mm for carbon-manganese and
   nickel steels, 3 mm for austenitic steels, 7 mm for aluminium alloys), a `table` limit on
-  `tank.wall_thickness` keyed by the steel class; 4.23.2.1.3 weld factor, an upper bound 0.95 on the
-  input Measure `input.weld_factor`; 4.23.3.1 allowable stress, an upper bound on
-  `input.tank_allowable_stress` by the formula shape "lesser of Rm/A and Re/B" with A and B per steel
+  `tank.wall_thickness` keyed by the steel class; 4.23.2.1.3 weld factor, an upper bound 0.95 (`warn`:
+  the text lets it rise to 1 on other considerations) and an upper bound 1 (`block`) on
+  `tank.weld_factor` (the factor the wall formula used; it is not a design input); 4.23.3.1 allowable
+  stress, an upper bound on `tank.allowable_stress` (the f the wall formula used) by the formula shape
+  "lesser of Rm/A and Re/B" (`lesser-ratio`) with A and B per steel
   class as data (A 3, B 1.5 for nickel and carbon-manganese steels; A 3.5, B 1.5 for austenitic steels;
   A 4, B 1.5 for aluminium alloys). The material strengths Rm and Re are now cited in the material data
   (#313; the Rule still marks them unverified until a second reader checks them). The S690QL1 default was
@@ -685,7 +687,7 @@ clauses). "Fixed" means a merged change already did what the disposition asks.
 | side clearance, 2G | d − insulation | `igc/2.4.1.2/side-clearance` | Cited, matches (2.4.2 datum) |
 | side clearance, 1G and IGF | max(min(B/5, 11.5), d) | later set `igc-1g` | Cited, matches; not reachable from a `.vdesign` today |
 | side clearance, 3G | 0.8 m | later set `igc-3g` | Cited, matches; not reachable today |
-| bottom clearance, all types | max(min(B/15, 2.0), d) | `igc/2.3.1.2.3/bottom-clearance` | Cited, matches |
+| bottom clearance, all types | max(min(B/15, 2.0), d) | `igc/2.4.1.2/bottom-clearance` (2.4.1.2 states the 2G requirement; 2.3.1.2.3 gives the extent) | Cited, matches |
 | Vc includes the dome | per-tank gross volume | Measure `tank.vc` | Cited, matches. Fixed: dome added (#237) |
 | `pressure_vessel` minimum thickness | 3 / 3 / 5 mm by material | `igc/4.23.2.1.2/min-thickness` | Cited, matches |
 | `DEFAULT_WELD_EFFICIENCY` | 0.95 | `igc/4.23.2.1.3/weld-factor` | Cited, matches |
