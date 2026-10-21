@@ -49,7 +49,7 @@ def test_stability_uses_the_hull_it_is_given():
     s = HY.calculate_stability(RAKED, BI, TANKS, WEIGHTS, 2000.0, 0.58, 3.5)
     # Re-pinned (issue #413: the free surface takes the fill as a volume ratio; issue #410: hull
     # steel to D, the covering above D in the lightship); was 0.05969187822861491 at ce96e66.
-    assert s.GM_fluid == close(PLACEHOLDER)
+    assert s.GM_fluid == close(-0.7757945091720747)
 
 
 def test_trim_uses_the_hull_it_is_given():
