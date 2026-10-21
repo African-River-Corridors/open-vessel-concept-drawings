@@ -82,6 +82,9 @@ pub const KEYED_DEFAULTS: &[(&str, &str, &[&str])] = &[
         "propulsor_type",
         SPECIFIED_PROPULSORS,
     ),
+    // Issue #426 (maintainer decision): a barge may sail empty without ballast; a self-propelled
+    // vessel sails in ballast.
+    ("may_sail_without_ballast", "formation", FORMATION_KINDS),
 ];
 
 /// The LPG Cargos: the ones that are carried in one of three conditions (issue #292).
@@ -877,6 +880,12 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::Only("type_c_tanks"),
         value: "\"none\"",
     },
+    // Issue #426: a file saved before the IS Code conditions keeps Laden, Half laden and Light.
+    LegacyFixedJson {
+        name: "loading_conditions",
+        applies_to: AppliesTo::All,
+        value: "\"legacy\"",
+    },
     // Issue #313: a file saved before the IGC allowable stress keeps the stress it was worked with.
     LegacyFixedJson {
         name: "tank_allowable_stress_basis",
@@ -933,6 +942,33 @@ pub fn cargo_includes(cargos: Option<&[&str]>, cargo: Option<&str>) -> bool {
 
 /// Formation kinds. Only the first two are computed in spec 0001.
 pub const FORMATION_KINDS: &[&str] = &["self_propelled", "pushed_barge", "pushed_convoy"];
+
+/// The sets of loading conditions (issue #426): `legacy` is Laden, Half laden and Light, as before;
+/// `is_code_2008` is the four standard conditions of IS Code 2008 Part B 3.4.1.2, with consumables
+/// and water ballast, and "Lightship, no ballast" where the vessel may sail that way.
+pub const LOADING_CONDITION_SETS: &[&str] = &["legacy", "is_code_2008"];
+/// The set of loading conditions that the consumables and the ballast inputs are used for.
+pub const IS_CODE_CONDITIONS: &[&str] = &["is_code_2008"];
+/// How the ballast tanks of a ballast condition are filled: the least ballast that meets every
+/// criterion, or the fills the user sets.
+pub const BALLAST_PLANS: &[&str] = &["least_ballast", "user_set"];
+/// The ballast fill inputs: (condition, tank group, input).
+pub const BALLAST_FILL_INPUTS: &[(&str, &str, &str)] = &[
+    (
+        "departure",
+        "double_bottom",
+        "ballast_departure_double_bottom_fill",
+    ),
+    ("departure", "peak", "ballast_departure_peak_fill"),
+    ("departure", "wing", "ballast_departure_wing_fill"),
+    (
+        "arrival",
+        "double_bottom",
+        "ballast_arrival_double_bottom_fill",
+    ),
+    ("arrival", "peak", "ballast_arrival_peak_fill"),
+    ("arrival", "wing", "ballast_arrival_wing_fill"),
+];
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum InputKind {
@@ -994,13 +1030,14 @@ pub enum Group {
     AftBlock,
     SternAndPropulsion,
     WaterwayLimits,
+    LoadingConditions,
     SpeedAndPower,
     CostRates,
 }
 
 impl Group {
     /// Every group, in the order a form shows them.
-    pub const ALL: [Group; 10] = [
+    pub const ALL: [Group; 11] = [
         Group::Required,
         Group::VesselClass,
         Group::HullAndContainment,
@@ -1009,6 +1046,7 @@ impl Group {
         Group::AftBlock,
         Group::SternAndPropulsion,
         Group::WaterwayLimits,
+        Group::LoadingConditions,
         Group::SpeedAndPower,
         Group::CostRates,
     ];
@@ -1024,6 +1062,7 @@ impl Group {
             Group::AftBlock => "Aft block",
             Group::SternAndPropulsion => "Stern and propulsion",
             Group::WaterwayLimits => "Waterway Limits",
+            Group::LoadingConditions => "Loading conditions",
             Group::SpeedAndPower => "Speed and power",
             Group::CostRates => "Cost rates",
         }
@@ -1046,6 +1085,16 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("type_c_tanks", "Type C tanks"),
     ("raked_box", "Raked box"),
     ("self_propelled", "Self-propelled"),
+    ("legacy", "Laden, half laden and light (as before)"),
+    (
+        "is_code_2008",
+        "IS Code 2008 standard conditions, with ballast",
+    ),
+    (
+        "least_ballast",
+        "The least ballast that meets every criterion",
+    ),
+    ("user_set", "Fills set by the user"),
     ("pushed_barge", "Pushed barge"),
     ("pushed_convoy", "Pushed convoy"),
     ("fully_pressurised", "Fully pressurised"),
@@ -1921,6 +1970,122 @@ pub const INPUTS: &[InputSpec] = &[
         NUM,
         false,
         Group::WaterwayLimits,
+    ),
+    // Issue #426: the IS Code 2008 standard loading conditions, with consumables and water ballast.
+    spec(
+        "loading_conditions",
+        "Loading conditions",
+        InputKind::Choice(LOADING_CONDITION_SETS),
+        false,
+        Group::LoadingConditions,
+    ),
+    when(
+        spec(
+            "may_sail_without_ballast",
+            "May sail without ballast",
+            InputKind::Bool,
+            false,
+            Group::LoadingConditions,
+        ),
+        "loading_conditions",
+        IS_CODE_CONDITIONS,
+    ),
+    when(
+        self_propelled(
+            "endurance_h",
+            "Endurance (running hours)",
+            NUM,
+            Group::LoadingConditions,
+        ),
+        "loading_conditions",
+        IS_CODE_CONDITIONS,
+    ),
+    when(
+        self_propelled(
+            "fixed_stores_t",
+            "Fresh water and stores",
+            NUM,
+            Group::LoadingConditions,
+        ),
+        "loading_conditions",
+        IS_CODE_CONDITIONS,
+    ),
+    when(
+        spec(
+            "ballast_plan",
+            "Ballast plan",
+            InputKind::Choice(BALLAST_PLANS),
+            false,
+            Group::LoadingConditions,
+        ),
+        "loading_conditions",
+        IS_CODE_CONDITIONS,
+    ),
+    when(
+        spec(
+            "ballast_departure_double_bottom_fill",
+            "Ballast departure: double bottom fill",
+            NUM,
+            false,
+            Group::LoadingConditions,
+        ),
+        "loading_conditions",
+        IS_CODE_CONDITIONS,
+    ),
+    when(
+        spec(
+            "ballast_departure_peak_fill",
+            "Ballast departure: peak tanks fill",
+            NUM,
+            false,
+            Group::LoadingConditions,
+        ),
+        "loading_conditions",
+        IS_CODE_CONDITIONS,
+    ),
+    when(
+        spec(
+            "ballast_departure_wing_fill",
+            "Ballast departure: wing tanks fill",
+            NUM,
+            false,
+            Group::LoadingConditions,
+        ),
+        "loading_conditions",
+        IS_CODE_CONDITIONS,
+    ),
+    when(
+        spec(
+            "ballast_arrival_double_bottom_fill",
+            "Ballast arrival: double bottom fill",
+            NUM,
+            false,
+            Group::LoadingConditions,
+        ),
+        "loading_conditions",
+        IS_CODE_CONDITIONS,
+    ),
+    when(
+        spec(
+            "ballast_arrival_peak_fill",
+            "Ballast arrival: peak tanks fill",
+            NUM,
+            false,
+            Group::LoadingConditions,
+        ),
+        "loading_conditions",
+        IS_CODE_CONDITIONS,
+    ),
+    when(
+        spec(
+            "ballast_arrival_wing_fill",
+            "Ballast arrival: wing tanks fill",
+            NUM,
+            false,
+            Group::LoadingConditions,
+        ),
+        "loading_conditions",
+        IS_CODE_CONDITIONS,
     ),
     spec(
         "hull_steel_rate",
@@ -3079,6 +3244,16 @@ fn default_for(
     let (value, case) = match KEYED_DEFAULTS.iter().find(|(n, _, _)| *n == name) {
         Some((_, by, _)) => {
             let key = match *by {
+                // The Formation is an object: its `kind` is the key.
+                "formation" => match inputs
+                    .iter()
+                    .find(|(k, _)| k == "formation")
+                    .and_then(|(_, i)| i.value.get("kind"))
+                    .and_then(Value::as_str)
+                {
+                    Some(k) => k.to_string(),
+                    None => return Ok(None),
+                },
                 "cargo_phase" => {
                     let Some(cargo) = got("cargo") else {
                         return Ok(None);

@@ -121,6 +121,10 @@
           "value": 0.15,
           "source": "default"
         },
+        "loading_conditions": {
+          "value": "legacy",
+          "source": "default"
+        },
         "hull_steel_rate": {
           "value": 2500.0,
           "source": "default"
@@ -295,6 +299,10 @@
         },
         "squat_safety_margin_m": {
           "value": 0.15,
+          "source": "default"
+        },
+        "loading_conditions": {
+          "value": "legacy",
           "source": "default"
         },
         "hull_steel_rate": {

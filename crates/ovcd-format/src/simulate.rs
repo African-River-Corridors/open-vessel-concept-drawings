@@ -1068,8 +1068,27 @@ fn simulate_measured(
     let (lim_name, t_max) = min_item(&limits);
     let ls = r.lightship_t;
     let disp_max = cb * l * b * t_max * rho;
-    let cargo_weight_bound = py_max(0.0, disp_max - ls);
     let cargo_volume_bound = r.cargo_capacity_t;
+    // Issue #426: with the IS Code conditions the full load carries the stores and fuel, so the
+    // weight-bound cargo is that much less. The fuel is worked out at the full-load draught
+    // without them.
+    let consumables_t = if is_code(p) {
+        let disp0 = ls + py_min(cargo_volume_bound, py_max(0.0, disp_max - ls));
+        let t0 = py_div(disp0, cb * l * b * rho)?;
+        let extra = stern.map_or(0.0, |g| g.extra_wetted_surface(t0));
+        consumables_full_t(
+            p,
+            self_propelled,
+            &curves(p, l, b, t0, (cb, extra), disp0, rho)?.0,
+        )?
+    } else {
+        0.0
+    };
+    let cargo_weight_bound = if is_code(p) {
+        py_max(0.0, disp_max - ls - consumables_t)
+    } else {
+        py_max(0.0, disp_max - ls)
+    };
     let cargo_t = py_min(cargo_volume_bound, cargo_weight_bound);
     let mut ids = TextIds::default();
     let governs = if cargo_volume_bound <= cargo_weight_bound {
@@ -1078,7 +1097,11 @@ fn simulate_measured(
         governs_draught(&lim_name)
     };
     ids.text(&governs);
-    let disp = ls + cargo_t;
+    let disp = if is_code(p) {
+        ls + cargo_t + consumables_t
+    } else {
+        ls + cargo_t
+    };
     let deadweight = disp - ls;
     measured.deadweight_t = Some(deadweight);
     let t = py_div(disp, cb * l * b * rho)?;
@@ -1121,6 +1144,51 @@ fn simulate_measured(
         "insulation_thickness_mm": opt_num(r.insulation_thickness_mm),
     });
     let geo = with_stern_geometry(geo, stern);
+    // Issue #426: the IS Code conditions, with the ballast tanks of the hold arrangement.
+    let mut is_code_stability = Value::Null;
+    let mut loading_conditions = Value::Null;
+    if is_code(p) {
+        let (lightship, cargo_item) = ovcd_core::loading_conditions::dry_model(&inp, &r);
+        let cargo_at = |m: f64| {
+            Ok(ovcd_core::loading_conditions::CargoAt {
+                item: ovcd_core::loading_conditions::Item {
+                    mass_t: m,
+                    ..cargo_item
+                },
+                // The part of the volume-bound load: a draught-bound load fills the hold less.
+                fill_fraction: if r.cargo_capacity_t > 0.0 {
+                    py_min(1.0, m / r.cargo_capacity_t)
+                } else {
+                    0.0
+                },
+                free_surface_moment_tm: 0.0,
+            })
+        };
+        let tanks = ovcd_core::compartments::ballast_tanks(&inp, &r);
+        let conds = is_code_conditions(
+            p,
+            &IsCodeHull {
+                dims: (l, b, d),
+                cb,
+                rho,
+                criteria_set: gs::DEFAULT_CRITERIA_SET,
+                lightship: &lightship,
+                full_cargo_t: cargo_t,
+                cargo_at: &cargo_at,
+                ballast_tanks: &tanks,
+                consumables_t,
+                air_draft_top_m: h_top,
+                self_propelled,
+                stern,
+            },
+        )?;
+        loading_condition_checks(&conds, "warning", &mut checks, &mut ids);
+        is_code_stability = is_code_stability_json(&conds, &mut ids);
+        loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho);
+        // The dry bulk conditions stay out of the Rule Trace: the IS Code Rule Set would block a
+        // low-freeboard hold on seagoing criteria. That waits for a dry bulk Rule Set (triage
+        // item 2) and the `fit` seam (#277).
+    }
     let mut dry_parts = structure_json(&r, inp.separation.as_ref(), Some(&inp));
     if let Some(g) = stern {
         dry_parts.push(("stern", stern_drawing(g)));
@@ -1128,42 +1196,57 @@ fn simulate_measured(
     let drawing = drawing_json(dry_parts);
     with_powering_and_text_ids(
         powering_block,
-        with_stern_mass(
-            json!({
-                "vessel": label,
-                "cargo": cargo.name,
-                "phase": cargo.phase.key(),
-                "self_propelled": self_propelled,
-                "arrangement": Value::Null,
-                "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(cb) },
-                "geometry": geo,
-                "drawing": drawing,
-                "results": {
-                    "cargo_t": num(cargo_t),
-                    "cargo_volume_bound_t": num(cargo_volume_bound),
-                    "cargo_weight_bound_t": num(cargo_weight_bound),
-                    "governs": governs,
-                    "cargo_volume_m3": num(r.cargo_volume_m3),
-                    "lightship_t": num(ls),
-                    "displacement_t": num(disp),
-                    "deadweight_t": num(deadweight),
-                    "draught_m": num(t),
-                    "draught_max_m": num(t_max),
-                    "freeboard_m": num(d - t),
-                    "light_draught_m": opt_num(r.light_draft_m),
-                    "air_draft_loaded_m": num(h_top - t),
-                    "air_draft_light_m": opt_num(r.air_draft_light_m),
-                    "h_over_T": h_over_t(&ch, t)?,
-                },
-                "checks": checks,
-                "warnings": r.warnings,
-                "curves": curve_list,
-                "cost_masses": Value::Null,
-            }),
-            (&r.stern_block_items, &r.trim_conditions),
+        with_loading_conditions(
+            with_stern_mass(
+                json!({
+                    "vessel": label,
+                    "cargo": cargo.name,
+                    "phase": cargo.phase.key(),
+                    "self_propelled": self_propelled,
+                    "arrangement": Value::Null,
+                    "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(cb) },
+                    "geometry": geo,
+                    "drawing": drawing,
+                    "results": {
+                        "cargo_t": num(cargo_t),
+                        "cargo_volume_bound_t": num(cargo_volume_bound),
+                        "cargo_weight_bound_t": num(cargo_weight_bound),
+                        "governs": governs,
+                        "cargo_volume_m3": num(r.cargo_volume_m3),
+                        "lightship_t": num(ls),
+                        "displacement_t": num(disp),
+                        "deadweight_t": num(deadweight),
+                        "draught_m": num(t),
+                        "draught_max_m": num(t_max),
+                        "freeboard_m": num(d - t),
+                        "light_draught_m": opt_num(r.light_draft_m),
+                        "air_draft_loaded_m": num(h_top - t),
+                        "air_draft_light_m": opt_num(r.air_draft_light_m),
+                        "h_over_T": h_over_t(&ch, t)?,
+                    },
+                    "checks": checks,
+                    "warnings": r.warnings,
+                    "curves": curve_list,
+                    "cost_masses": Value::Null,
+                }),
+                (&r.stern_block_items, &r.trim_conditions),
+            ),
+            is_code_stability,
+            loading_conditions,
         ),
         ids,
     )
+}
+
+/// Issue #426: the IS Code `stability` and `loading_conditions` blocks, only when they were asked
+/// for, so an old file's results keep their keys and their hash.
+fn with_loading_conditions(mut v: Value, stability: Value, loading: Value) -> Value {
+    if !loading.is_null() {
+        v["stability"] = stability;
+        v["stability_marks"] = json!({ "criteria_angles_deg": gs::CRITERIA_ANGLES_DEG });
+        v["loading_conditions"] = loading;
+    }
+    v
 }
 
 /// "draught — <limit>": the draught governs the cargo, and the limit sets the draught.
@@ -1794,6 +1877,41 @@ fn simulate_gas(
         }
     };
     let disp = r.lightship_t + f.payload_t;
+    // Issue #426: with the IS Code conditions the full load carries the stores and fuel. The fuel
+    // is worked out at the arrangement's draught; a draught-bound cargo is that much less.
+    let consumables_t = if is_code(p) {
+        let extra = stern.map_or(0.0, |g| g.extra_wetted_surface(t));
+        consumables_full_t(
+            p,
+            self_propelled,
+            &curves(p, l, b, t, (cb, extra), disp, rho)?.0,
+        )?
+    } else {
+        0.0
+    };
+    let (cargo_t, disp, t) = if is_code(p) {
+        let cargo = py_min(
+            f.payload_t,
+            py_max(
+                0.0,
+                cb * l * b * t_max * rho - r.lightship_t - consumables_t,
+            ),
+        );
+        let disp = r.lightship_t + cargo + consumables_t;
+        let t = if cargo > 0.0 {
+            py_div(disp, cb * l * b * rho)?
+        } else {
+            t
+        };
+        (cargo, disp, t)
+    } else {
+        (f.payload_t, disp, t)
+    };
+    let deadweight = if is_code(p) {
+        cargo_t + consumables_t
+    } else {
+        f.payload_t
+    };
     let mut ids = TextIds::default();
     let governs = match f.binding.as_str() {
         "volume" => Text::plain("tank volume"),
@@ -1852,7 +1970,37 @@ fn simulate_gas(
     let mut stability_marks = Value::Null;
     // The loading conditions, typed, for the Rule Trace.
     let mut conditions = Vec::new();
-    if f.payload_t > 0.0 && r.gas_basis.is_some() {
+    let mut is_code_stability = Value::Null;
+    let mut loading_conditions = Value::Null;
+    if is_code(p) && r.gas_basis.is_some() {
+        let basis = GasCapacityResult::try_from(r)
+            .map_err(|m| Stop::Eval(EvalError::BadInput(m.into())))?;
+        let (lightship, cargo) = ovcd_core::loading_conditions::gas_model(&basis)
+            .ok_or_else(|| Stop::Eval(EvalError::BadInput("no gas basis".into())))?;
+        let cargo_at = |m: f64| cargo.at(m);
+        let tanks = ovcd_core::compartments::ballast_tanks(&f.engine_inputs, r);
+        let conds = is_code_conditions(
+            p,
+            &IsCodeHull {
+                dims: (l, b, d),
+                cb,
+                rho,
+                criteria_set: gs::criteria_set_for(ruleset),
+                lightship: &lightship,
+                full_cargo_t: cargo_t,
+                cargo_at: &cargo_at,
+                ballast_tanks: &tanks,
+                consumables_t,
+                air_draft_top_m: r.air_draft_top_above_keel_m,
+                self_propelled,
+                stern,
+            },
+        )?;
+        loading_condition_checks(&conds, "error", &mut checks, &mut ids);
+        is_code_stability = is_code_stability_json(&conds, &mut ids);
+        loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho);
+        conditions = conds.iter().map(|c| c.condition.clone()).collect();
+    } else if f.payload_t > 0.0 && r.gas_basis.is_some() {
         let basis = GasCapacityResult::try_from(r)
             .map_err(|m| Stop::Eval(EvalError::BadInput(m.into())))?;
         let a = gs::assess(&basis, f.payload_t, cb, rho, gs::criteria_set_for(ruleset))
@@ -1927,6 +2075,7 @@ fn simulate_gas(
     let air_loaded = r.air_draft_top_above_keel_m - t;
     with_powering_and_text_ids(
         powering_block.clone(),
+        with_loading_conditions(
         with_stern_mass(
         json!({
             "vessel": label,
@@ -1950,14 +2099,14 @@ fn simulate_gas(
                 "feasible": f.feasible,
             },
             "results": {
-                "cargo_t": num(f.payload_t),
+                "cargo_t": num(cargo_t),
                 "cargo_volume_bound_t": num(f.volume_capacity_t),
                 "cargo_weight_bound_t": num(py_max(0.0, cb * l * b * t_max * rho - r.lightship_t)),
                 "governs": governs,
                 "cargo_volume_m3": num(r.cargo_volume_m3),
                 "lightship_t": num(r.lightship_t),
                 "displacement_t": num(disp),
-                "deadweight_t": num(f.payload_t),
+                "deadweight_t": num(deadweight),
                 "draught_m": num(t),
                 "draught_max_m": num(t_max),
                 "freeboard_m": num(d - t),
@@ -1983,6 +2132,9 @@ fn simulate_gas(
         }),
             (&r.stern_block_items, &r.trim_conditions),
         ),
+            is_code_stability,
+            loading_conditions,
+        ),
         ids,
     )
     .map(|v| {
@@ -1990,7 +2142,7 @@ fn simulate_gas(
             v,
             Measured {
                 conditions,
-                deadweight_t: Some(f.payload_t),
+                deadweight_t: Some(deadweight),
                 tank: r.tank_rules.clone(),
                 separation: r.separation.clone().map(|s| {
                     let plane = f
@@ -2074,4 +2226,313 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
             "simulate has no function `{other}`"
         ))),
     }
+}
+
+// --- Issue #426: the IS Code 2008 loading conditions ----------------------------------------------
+
+/// Whether the Option asks for the IS Code 2008 loading conditions. A key left out keeps the
+/// legacy conditions, so an old file's results do not move.
+fn is_code(p: &Map<String, Value>) -> bool {
+    p.get("loading_conditions").and_then(Value::as_str) == Some("is_code_2008")
+}
+
+/// The fuel use (l/h) at the service speed on the deep-water curve: the design speed, or the
+/// maximum speed, interpolated between the curve's points (clamped to its ends).
+fn service_fuel_lph(p: &Map<String, Value>, curves: &Value) -> R<f64> {
+    let speed = match truthy_float(p, "design_speed_kn")? {
+        Some(v) => v,
+        None => get_or(p, "speed_max_kn", 10.0)?,
+    };
+    let Some(points) = curves
+        .as_array()
+        .and_then(|c| c.iter().find(|e| e["name"] == "Deep water"))
+        .and_then(|e| e["points"].as_array())
+    else {
+        return Ok(0.0);
+    };
+    let pts: Vec<(f64, f64)> = points
+        .iter()
+        .filter_map(|q| Some((q["kn"].as_f64()?, q["fuel_lph"].as_f64()?)))
+        .collect();
+    let Some(&(first_kn, first_lph)) = pts.first() else {
+        return Ok(0.0);
+    };
+    if speed <= first_kn {
+        return Ok(first_lph);
+    }
+    for w in pts.windows(2) {
+        let ((k0, f0), (k1, f1)) = (w[0], w[1]);
+        if speed <= k1 {
+            return Ok(f0 + (f1 - f0) * (speed - k0) / (k1 - k0));
+        }
+    }
+    Ok(pts[pts.len() - 1].1)
+}
+
+/// The full stores and fuel (t) of the departure conditions. A pushed barge carries none: the
+/// pusher carries them. A self-propelled vessel carries its fixed stores, and fuel for the
+/// endurance at the service speed, unless it is battery-electric (its energy is in the lightship).
+fn consumables_full_t(p: &Map<String, Value>, self_propelled: bool, curves: &Value) -> R<f64> {
+    if !self_propelled {
+        return Ok(0.0);
+    }
+    let stores = get_or(p, "fixed_stores_t", 0.0)?;
+    let burns_fuel = !matches!(
+        p.get("power_source").and_then(Value::as_str),
+        None | Some("battery_electric")
+    );
+    let fuel = if burns_fuel {
+        let density = TugInputs::default().fuel_density_kg_per_litre;
+        service_fuel_lph(p, curves)? * get_or(p, "endurance_h", 0.0)? * density / 1000.0
+    } else {
+        0.0
+    };
+    Ok(stores + fuel)
+}
+
+/// The ballast plans of the two ballast conditions: the least ballast, or the user's fills by tank
+/// group (the double bottom, the peaks, the wing tanks), both sides alike.
+fn ballast_plans(
+    p: &Map<String, Value>,
+    tanks: &[ovcd_core::compartments::Space],
+) -> R<[ovcd_core::loading_conditions::BallastPlan; 2]> {
+    use ovcd_core::compartments::SpaceKind;
+    use ovcd_core::loading_conditions::BallastPlan;
+    if p.get("ballast_plan").and_then(Value::as_str) != Some("user_set") {
+        return Ok([BallastPlan::Auto, BallastPlan::Auto]);
+    }
+    let plan = |condition: &str| -> R<BallastPlan> {
+        let fill = |group: &str| get_or(p, &format!("ballast_{condition}_{group}_fill"), 0.0);
+        let (db, peak, wing) = (fill("double_bottom")?, fill("peak")?, fill("wing")?);
+        Ok(BallastPlan::Fills(
+            tanks
+                .iter()
+                .map(|t| {
+                    let f = match t.kind {
+                        SpaceKind::DoubleBottomBallast => db,
+                        SpaceKind::PeakBallast => peak,
+                        SpaceKind::WingBallast => wing,
+                        SpaceKind::Consumables => 0.0,
+                    };
+                    (t.name.clone(), f)
+                })
+                .collect(),
+        ))
+    };
+    Ok([plan("departure")?, plan("arrival")?])
+}
+
+/// What the IS Code conditions of one Option need beyond its params.
+struct IsCodeHull<'a> {
+    dims: (f64, f64, f64),
+    cb: f64,
+    rho: f64,
+    criteria_set: &'a str,
+    lightship: &'a [ovcd_core::loading_conditions::Item],
+    full_cargo_t: f64,
+    cargo_at: &'a dyn Fn(f64) -> Result<ovcd_core::loading_conditions::CargoAt, gs::PyError>,
+    ballast_tanks: &'a [ovcd_core::compartments::Space],
+    consumables_t: f64,
+    air_draft_top_m: f64,
+    self_propelled: bool,
+    stern: Option<&'a ovcd_core::stern_form::SternGeometry>,
+}
+
+/// Assess the IS Code conditions.
+fn is_code_conditions(
+    p: &Map<String, Value>,
+    h: &IsCodeHull,
+) -> R<Vec<ovcd_core::loading_conditions::LoadedCondition>> {
+    use ovcd_core::loading_conditions as lc;
+    let (l, b, d) = h.dims;
+    // The consumables tanks sit on the bottom at the aft end, in the stern block.
+    let consumables = lc::Consumables {
+        full_t: h.consumables_t,
+        tanks: ovcd_core::compartments::consumables_tanks(b, 0.0, h.consumables_t),
+        density: 1.0,
+    };
+    let may_sail = match p.get("may_sail_without_ballast") {
+        Some(v) => truthy(v),
+        None => !h.self_propelled,
+    };
+    let inputs = lc::Inputs {
+        loa: l,
+        beam: b,
+        depth: d,
+        block_coefficient: h.cb,
+        water_density: h.rho,
+        criteria_set: h.criteria_set,
+        lightship: h.lightship,
+        full_cargo_t: h.full_cargo_t,
+        cargo_at: h.cargo_at,
+        consumables,
+        ballast_tanks: h.ballast_tanks,
+        ballast_density: h.rho,
+        ballast_plans: ballast_plans(p, h.ballast_tanks)?,
+        may_sail_without_ballast: may_sail,
+        air_draft_top_m: h.air_draft_top_m,
+        air_draft_limit_m: truthy_float(p, "air_draft_limit_m")?,
+        stern: h.stern,
+    };
+    lc::assess(&inputs)
+        .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))
+}
+
+/// The ballast tanks as the results list them: name, kind, side, capacity and centroid full.
+fn ballast_tanks_json(tanks: &[ovcd_core::compartments::Space], rho: f64) -> Value {
+    Value::Array(
+        tanks
+            .iter()
+            .map(|t| {
+                let f = t.fill(1.0);
+                json!({
+                    "name": t.name,
+                    "kind": t.kind.key(),
+                    "side": t.side.key(),
+                    "capacity_m3": num(t.volume_m3()),
+                    "capacity_t": num(t.capacity_t(rho)),
+                    "lcg_m": num(f.lcg_m),
+                    "tcg_m": num(f.tcg_m),
+                    "vcg_m": num(f.vcg_m),
+                })
+            })
+            .collect(),
+    )
+}
+
+/// One IS Code condition in the results: the stability fields of a legacy condition, and its role,
+/// consumables, ballast plan (quantity and disposition, IS Code 2008 Part B 3.4.2.3), freeboard,
+/// air draft and trim.
+fn loaded_condition_json(c: &ovcd_core::loading_conditions::LoadedCondition) -> Value {
+    let mut v = with_trim(simulate_condition(&c.condition), Some(&c.trim));
+    v["role"] = json!(c.role.key());
+    v["consumables_t"] = num(c.consumables_t);
+    v["ballast_t"] = num(c.ballast_t);
+    v["ballast"] = Value::Array(
+        c.ballast
+            .iter()
+            .map(|t| {
+                json!({
+                    "name": t.name,
+                    "fill": num(t.fill),
+                    "mass_t": num(t.mass_t),
+                    "lcg_m": num(t.lcg_m),
+                    "tcg_m": num(t.tcg_m),
+                    "vcg_m": num(t.vcg_m),
+                    "free_surface_moment_tm": num(t.free_surface_moment_tm),
+                })
+            })
+            .collect(),
+    );
+    v["plan_found"] = c.plan_found.map_or(Value::Null, Value::Bool);
+    v["freeboard_m"] = num(c.freeboard_m);
+    v["air_draft_m"] = num(c.air_draft_m);
+    v["air_draft_ok"] = c.air_draft_ok.map_or(Value::Null, Value::Bool);
+    v["ok"] = json!(c.ok());
+    v
+}
+
+/// The `loading_conditions` block of the results.
+fn loading_conditions_json(
+    conds: &[ovcd_core::loading_conditions::LoadedCondition],
+    tanks: &[ovcd_core::compartments::Space],
+    consumables_t: f64,
+    rho: f64,
+) -> Value {
+    let capacity_m3 = ovcd_core::compartments::total_volume_m3(tanks);
+    json!({
+        "set": "IMO IS Code 2008, Part B 3.4.1.2",
+        "ok": conds.iter().all(|c| c.ok()),
+        "consumables_t": num(consumables_t),
+        "ballast_tank_count": tanks.len(),
+        "ballast_capacity_m3": num(capacity_m3),
+        "ballast_capacity_t": num(capacity_m3 * rho),
+        "ballast_tanks": ballast_tanks_json(tanks, rho),
+        "conditions": conds.iter().map(loaded_condition_json).collect::<Vec<_>>(),
+    })
+}
+
+/// The checks of the IS Code conditions: the stability of each, a ballast plan that meets every
+/// criterion, and the air draft. `severity` is "error" for gas; "warning" for dry bulk, which has
+/// no Rule Set of its own yet and whose low freeboard the seagoing criteria of IS Code 2008 Part A
+/// 2.2 do not suit (as the hold GM check, engineering basis triage item 2).
+fn loading_condition_checks(
+    conds: &[ovcd_core::loading_conditions::LoadedCondition],
+    severity: &str,
+    checks: &mut Vec<Value>,
+    ids: &mut TextIds,
+) {
+    for c in conds {
+        let k = ga::stability_check(&c.condition);
+        ids.checks(core::slice::from_ref(&k));
+        checks.push(
+            json!({ "name": k.name, "ok": k.ok, "message": k.message, "severity": severity }),
+        );
+        if c.plan_found == Some(false) {
+            let message = text!(
+                "check-no-ballast-plan",
+                "{condition}: no ballast plan meets every criterion, even with every ballast tank full.",
+                condition = c.condition.name.clone(),
+            );
+            ids.text(&message);
+            checks.push(json!({
+                "name": "Ballast plan",
+                "ok": false,
+                "message": message,
+                "severity": severity,
+            }));
+        }
+        if c.air_draft_ok == Some(false) {
+            let message = text!(
+                "check-condition-air-draft",
+                "{condition}: air draft {air} m is above the limit.",
+                condition = c.condition.name.clone(),
+                air = Arg::fixed(c.air_draft_m, 2),
+            );
+            ids.text(&message);
+            checks.push(json!({
+                "name": "Air draft",
+                "ok": false,
+                "message": message,
+                "severity": severity,
+            }));
+        }
+    }
+}
+
+/// The `stability` block of the IS Code conditions, in the shape of the legacy gas one: the
+/// governing condition is the one with the lowest fluid GM, the first of equal.
+fn is_code_stability_json(
+    conds: &[ovcd_core::loading_conditions::LoadedCondition],
+    ids: &mut TextIds,
+) -> Value {
+    let mut governing = &conds[0].condition;
+    for c in &conds[1..] {
+        if c.condition.gm_fluid_m < governing.gm_fluid_m {
+            governing = &c.condition;
+        }
+    }
+    let limitations = vec![
+        text!(
+            "stab-limit-concept-stage",
+            "Concept-stage: prismatic box section, first-order weight heights, no downflooding openings."
+        ),
+        text!(
+            "stab-limit-no-wind-or-damage",
+            "No wind heel and no damage stability (ADN 9.3.1.15 / IGC 2.7 need both before approval)."
+        ),
+        text!(
+            "stab-limit-moulded-tanks",
+            "Ballast and consumables tanks are moulded volumes with no structure deduction; one tank \
+             per side and kind, and the consumables tank height is an estimate."
+        ),
+    ];
+    ids.texts(&limitations);
+    json!({
+        "criteria_set": "IMO IS Code 2008, Part A 2.2",
+        "ok": conds.iter().all(|c| c.ok()),
+        "governing": governing.name,
+        "limitations": limitations,
+        "conditions": conds.iter().map(loaded_condition_json).collect::<Vec<_>>(),
+    })
 }

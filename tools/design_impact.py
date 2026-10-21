@@ -254,6 +254,21 @@ OPTIONAL_INPUT_CASES = (
     ("tug_outfitting_lump", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"tug_outfitting_lump": 200000.0}),
     ("yard_margin_fraction", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"yard_margin_fraction": 0.1}),
     ("delivery_lump", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {"delivery_lump": 200000.0}),
+    # The IS Code 2008 loading conditions (issue #426), opted in. A base from before them refuses the
+    # inputs and runs the legacy conditions, so these cases show the change the opt-in makes.
+    ("loading_conditions", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"loading_conditions": "is_code_2008"}),
+    ("may_sail_without_ballast", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"loading_conditions": "is_code_2008", "may_sail_without_ballast": False}),
+    ("endurance_h", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
+     {"loading_conditions": "is_code_2008", "endurance_h": 120.0}),
+    ("fixed_stores_t", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
+     {"loading_conditions": "is_code_2008", "fixed_stores_t": 30.0}),
+    ("ballast_plan", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
+     {"loading_conditions": "is_code_2008", "ballast_plan": "user_set",
+      "ballast_departure_double_bottom_fill": 0.5, "ballast_departure_peak_fill": 1.0,
+      "ballast_departure_wing_fill": 0.0, "ballast_arrival_double_bottom_fill": 1.0,
+      "ballast_arrival_peak_fill": 0.0, "ballast_arrival_wing_fill": 0.98}),
 )
 
 

@@ -189,6 +189,9 @@ msg-convoy-not-available = convoy results not yet available
 check-air-draft-limit = { $air_draft } m vs limit { $limit } m
 name-governs-draught = draught — { $limit }
 check-feasible-arrangement = No arrangement passes every check on this hull. The closest one is shown. It fails: { $fails }.
+check-no-ballast-plan = { $condition }: no ballast plan meets every criterion, even with every ballast tank full.
+check-condition-air-draft = { $condition }: air draft { $air } m is above the limit.
+stab-limit-moulded-tanks = Ballast and consumables tanks are moulded volumes with no structure deduction; one tank per side and kind, and the consumables tank height is an estimate.
 
 ## crates/ovcd-format/src/text_ids.rs
 
