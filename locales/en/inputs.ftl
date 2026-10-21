@@ -173,6 +173,10 @@ input-wing-tank-gap-m = Wing tank gap
 
 input-wing-tank-height-ratio = Wing tank height over tank diameter
 
+input-weather-shield-thickness-mm = Weather shield plate thickness
+
+input-weather-shield-clearance-m = Weather shield clearance over the tanks
+
 input-tank-wall-thickness-mm = Tank wall thickness (override)
 
 input-optimise-depth = Optimise depth

@@ -163,6 +163,12 @@ input-tank-dome-diameter-m = 液货舱穹顶直径
 input-wing-tank-gap-m = 边舱间隙
 # status: draft
 input-wing-tank-height-ratio = 边舱高度与液货舱直径之比
+
+# status: draft
+input-weather-shield-thickness-mm = 防风雨罩板厚
+
+# status: draft
+input-weather-shield-clearance-m = 防风雨罩高出液舱顶的间隙
 # status: draft
 input-tank-wall-thickness-mm = 液货舱壁厚（覆盖值）
 # status: draft

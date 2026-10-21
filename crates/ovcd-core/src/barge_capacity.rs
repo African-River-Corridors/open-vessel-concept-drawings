@@ -97,6 +97,10 @@ pub const DEFAULT_TANK_STRUCTURE_FACTOR: f64 = 1.30;
 pub const DEFAULT_WING_TANK_GAP_M: f64 = 0.6;
 /// Default wing tank height as a fraction of the cargo tank outer diameter.
 pub const DEFAULT_WING_TANK_HEIGHT_RATIO: f64 = 0.66;
+/// Default plate thickness of the non-structural weather shield over the tanks (mm, issue #410).
+pub const DEFAULT_WEATHER_SHIELD_THICKNESS_MM: f64 = 6.0;
+/// Default clearance from the tank top to the weather shield top (m, issue #410).
+pub const DEFAULT_WEATHER_SHIELD_CLEARANCE_M: f64 = 1.5;
 /// Default aft void of a pushed barge (m).
 pub const DEFAULT_PUSHED_STERN_VOID_M: f64 = 3.0;
 
@@ -242,6 +246,10 @@ pub struct BargeCapacityInputs {
     pub wing_tank_gap_m: f64,
     /// Wing tank height as a fraction of the cargo tank outer diameter.
     pub wing_tank_height_ratio: f64,
+    /// Plate thickness of the weather shield over the tanks (mm); 0: no shield (issue #410).
+    pub weather_shield_thickness_mm: f64,
+    /// Clearance from the tank top to the weather shield top (m, issue #410).
+    pub weather_shield_clearance_m: f64,
 
     // --- Bulk branch ---
     /// "sloped_hopper", "box" or "container"
@@ -309,6 +317,8 @@ impl BargeCapacityInputs {
             tank_support_height: DEFAULT_TANK_SUPPORT_HEIGHT_M,
             wing_tank_gap_m: DEFAULT_WING_TANK_GAP_M,
             wing_tank_height_ratio: DEFAULT_WING_TANK_HEIGHT_RATIO,
+            weather_shield_thickness_mm: DEFAULT_WEATHER_SHIELD_THICKNESS_MM,
+            weather_shield_clearance_m: DEFAULT_WEATHER_SHIELD_CLEARANCE_M,
             hold_type: "sloped_hopper".to_string(),
             lightship_k_t_per_m3: None,
             wing_void_width: 1.0,
@@ -687,6 +697,8 @@ fn gas_volumetric(
     base.tank_support_height = inp.tank_support_height;
     base.wing_tank_gap = inp.wing_tank_gap_m;
     base.wing_tank_height_ratio = inp.wing_tank_height_ratio;
+    base.weather_shield_thickness = inp.weather_shield_thickness_mm;
+    base.weather_shield_clearance = inp.weather_shield_clearance_m;
     base.post_init()?;
 
     let mut d_vc = 1.0;

@@ -91,6 +91,8 @@ const FIT_OPTION_KEYS: &[&str] = &[
     "tank_dome_diameter_m",
     "wing_tank_gap_m",
     "wing_tank_height_ratio",
+    "weather_shield_thickness_mm",
+    "weather_shield_clearance_m",
     "tank_wall_thickness_mm",
     "tank_design_pressure_mpa",
     "tank_material",
@@ -154,6 +156,16 @@ fn fit_options(o: &Map<String, Value>, base: FitOptions) -> Result<FitOptions, E
     f.tank_dome_diameter_m = float_or(o, "tank_dome_diameter_m", f.tank_dome_diameter_m)?;
     f.wing_tank_gap_m = float_or(o, "wing_tank_gap_m", f.wing_tank_gap_m)?;
     f.wing_tank_height_ratio = float_or(o, "wing_tank_height_ratio", f.wing_tank_height_ratio)?;
+    f.weather_shield_thickness_mm = float_or(
+        o,
+        "weather_shield_thickness_mm",
+        f.weather_shield_thickness_mm,
+    )?;
+    f.weather_shield_clearance_m = float_or(
+        o,
+        "weather_shield_clearance_m",
+        f.weather_shield_clearance_m,
+    )?;
     // A key left out keeps the base; `null` asks for the pressure-vessel formula (issue #292).
     match o.get("tank_wall_thickness_mm") {
         None => {}

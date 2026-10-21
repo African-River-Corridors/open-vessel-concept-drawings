@@ -196,6 +196,12 @@ input-wing-tank-gap-m = Folga do tanque lateral
 input-wing-tank-height-ratio = Altura do tanque lateral sobre o diâmetro do tanque
 
 # status: draft
+input-weather-shield-thickness-mm = Espessura da chapa da cobertura de proteção
+
+# status: draft
+input-weather-shield-clearance-m = Folga da cobertura de proteção sobre os tanques
+
+# status: draft
 input-tank-wall-thickness-mm = Espessura da parede do tanque (substituição)
 
 # status: draft

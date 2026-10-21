@@ -1727,6 +1727,8 @@ const CAPACITY_FIELDS: &[&str] = &[
     "bow_rake_to_depth_ratio",
     "wing_tank_gap_m",
     "wing_tank_height_ratio",
+    "weather_shield_thickness_mm",
+    "weather_shield_clearance_m",
     "propulsion",
     "electrical_load_kwe",
 ];
@@ -1809,7 +1811,9 @@ pub(crate) fn capacity_inputs(args: &Value) -> Result<BargeCapacityInputs, EvalE
         max_tank_od_m,
         bow_rake_to_depth_ratio,
         wing_tank_gap_m,
-        wing_tank_height_ratio
+        wing_tank_height_ratio,
+        weather_shield_thickness_mm,
+        weather_shield_clearance_m
     );
     set_opt_f64!(
         air_draft_limit_m,
