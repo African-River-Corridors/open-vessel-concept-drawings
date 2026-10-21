@@ -43,7 +43,7 @@ pub fn measure_info(id: &str) -> Option<MeasureInfo> {
     };
     Some(MeasureInfo {
         unit,
-        object: ObjectType::Option,
+        object: ObjectType::Option.key().to_string(),
         value,
         args: Vec::new(),
         // An input Measure echoes the value used; there is no method to check.
@@ -142,8 +142,8 @@ impl MeasureSource for OptionMeasures<'_> {
         measure_info(id)
     }
 
-    fn objects(&self, object: ObjectType) -> Vec<String> {
-        self.measured.objects(object, &self.option.name)
+    fn objects(&self, object: &str) -> Vec<String> {
+        self.measured.objects_by_key(object, &self.option.name)
     }
 
     fn value(&self, m: &MeasureRef, index: usize) -> Result<MeasureValue, String> {
@@ -169,7 +169,8 @@ impl MeasureSource for OptionMeasures<'_> {
         self.measured.has(measure)
     }
 
-    fn missing(&self, object: ObjectType) -> Option<String> {
+    fn missing(&self, object: &str) -> Option<String> {
+        let object = ObjectType::from_key(object)?;
         let gas = self
             .option
             .input("cargo_containment")
@@ -290,7 +291,7 @@ fn row_json(r: &TraceRow) -> Value {
         "rule_status": if r.verified { "verified" } else { "unverified" },
         "method_status": r.method_status.map(MethodStatus::key),
         "measure": r.measure.as_ref().map(measure_json),
-        "object_type": r.object_type.map(ObjectType::key),
+        "object_type": r.object_type,
         "object": r.object,
         "inputs": r.inputs.iter().map(|u| json!({"measure": u.measure, "value": value_json(&u.value)})).collect::<Vec<_>>(),
         "value": r.value.as_ref().map(value_json),
@@ -475,8 +476,8 @@ impl MeasureSource for BoxMeasures<'_> {
         measure_info(id)
     }
 
-    fn objects(&self, object: ObjectType) -> Vec<String> {
-        self.measured.objects(object, "Box")
+    fn objects(&self, object: &str) -> Vec<String> {
+        self.measured.objects_by_key(object, "Box")
     }
 
     fn value(&self, m: &MeasureRef, index: usize) -> Result<MeasureValue, String> {

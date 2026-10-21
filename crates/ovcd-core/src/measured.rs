@@ -96,6 +96,12 @@ impl Measured {
         }
     }
 
+    /// The labels of the design's objects of the type with this key (as the kernel names it); none
+    /// for a key OVCD does not declare.
+    pub fn objects_by_key(&self, key: &str, option: &str) -> Vec<String> {
+        ObjectType::from_key(key).map_or_else(Vec::new, |o| self.objects(o, option))
+    }
+
     /// Whether the design has this Measure at all. A Rule on a Measure it lacks (a check the engine
     /// did not run for it) is `not applicable`, never a failure.
     pub fn has(&self, m: &MeasureRef) -> bool {

@@ -4,15 +4,16 @@ name: Lean proofs
 # pass, like mutation testing: it never runs in the fast gate (tools/gates.sh) and is not a
 # required check. It runs when proofs/lean changes, once a week, and by hand.
 #
-# Steps: build every proof (a `sorry` fails the axiom check), then run the oracle on the example
-# cases and compare with the expected output.
+# Steps: build every proof (a `sorry` fails the axiom check), run the oracle on the example cases
+# and compare with the expected output, then run the differential test of the rules kernel
+# (`arc-rules`, ADR 0019) against the oracle.
 
 on:
   pull_request:
-    paths: ["proofs/lean/**", ".github/workflows/lean-proofs.yml"]
+    paths: ["proofs/lean/**", "crates/arc-rules/**", ".github/workflows/lean-proofs.yml"]
   push:
     branches: ["main"]
-    paths: ["proofs/lean/**", ".github/workflows/lean-proofs.yml"]
+    paths: ["proofs/lean/**", "crates/arc-rules/**", ".github/workflows/lean-proofs.yml"]
   schedule:
     - cron: "17 4 * * 1" # Mondays 04:17 UTC
   workflow_dispatch:
@@ -51,3 +52,12 @@ jobs:
         run: |
           ./.lake/build/bin/ovcd-rules-oracle examples/cases.json > out.json
           diff -u examples/expected.json out.json
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        working-directory: .
+        run: rustup toolchain install
+      - name: The rules kernel agrees with the Lean model (arc-rules differential test)
+        working-directory: .
+        env:
+          ARC_RULES_LEAN_ORACLE: ${{ github.workspace }}/proofs/lean/.lake/build/bin/ovcd-rules-oracle
+          ARC_RULES_LEAN_CASES: "2000"
+        run: cargo test -p arc-rules --test lean_oracle -- --nocapture

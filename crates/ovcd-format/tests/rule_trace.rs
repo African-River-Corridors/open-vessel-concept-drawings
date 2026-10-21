@@ -25,8 +25,8 @@ impl MeasureSource for Fake {
     fn def(&self, id: &str) -> Option<MeasureInfo> {
         measure_info(id)
     }
-    fn objects(&self, object: ObjectType) -> Vec<String> {
-        match object {
+    fn objects(&self, object: &str) -> Vec<String> {
+        match ObjectType::from_key(object).expect("an OVCD object type") {
             ObjectType::LoadingCondition => self.conditions.clone(),
             ObjectType::Option => vec!["Option 1".into()],
             _ => Vec::new(),
