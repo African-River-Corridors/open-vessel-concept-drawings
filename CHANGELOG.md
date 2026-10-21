@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Design change (issue #421): one air draft verdict per Design. With an air draft limit, a run listed two checks of the hull's air draft: the capacity result's `air draft within limit`, which takes the ballasted light condition when the hull carries ballast, and the run's own `Air draft (empty, governing)`, which always took the empty light condition. The second is removed (its Message Ids `check-air-draft-limit` and `name-check-air-draft` too). The IS Code loading conditions keep their own air draft per condition. `ovcd` 2.0.0, still unreleased since #415, drops the Rule `ovcd/capacity/air-draft-empty`, so 2.0.0 is the one major version for both. Of the 194 design-impact cases, the 3 with an air draft limit move: one check fewer, and the checks after it move up one place; no value and no verdict moves.
 - Drawings (issue #407, part 1): the GA draws the wing tank top at the wing plate level the weights carry (tank bottom + wing tank height ratio x tank outer diameter), no longer clamped at the deck. Where it stands above the Moulded Depth, the midship section draws the side shell up to it, and the side elevation shows the wing plate in view (hidden below the deck). Both gas fixtures have the wing plate above the deck (6.05 m and 5.35 m on a 4.5 m depth), so their drawings change. The weather shield outline waits for its values in the `drawing` block. No result moves.
 - API change (issue #413), Python API only; no Design moves (the design-impact check gives no design change). The legacy chain `hydrostatics.calculate_stability` / `tanks.free_surface_moment_cylindrical` took the fill as a height ratio (h = fill x 2r); it now takes it as a volume ratio and finds the liquid height of the circular segment (`gas_stability.segment_fill`), as the gas stability does. At 0.95 to 0.98 fill the free surface moment is about 12 times larger, so the legacy GM_fluid is much lower. `to_ga` no longer sets three flags to a constant true: `min_freeboard_ok` is the drawn freeboard against the required freeboard, `air_draft_ok` the air draft against its limit (true with no limit), `stability_ok` the gas stability criteria (a dry result: GM at least 0.15 m; false with no GM). Its drawn tank cylinder holds the volume the two heads do not (the heads counted twice). The doc comments say what the legacy chain leaves out (Cb applied to the raked hull volume; KG items that do not sum to the lightship).
 - Design change (issue #415): the dry bulk hold GM is checked at the cargo and the draught the Design reports, in every dry bulk Option. It ran only at the volume-bound load, and only when that load floated, so a dense cargo that a draught limit cuts (bauxite in the default box hold) got no GM figure at all. The check is renamed `intact gm at reported cargo` (it tests GM >= 0.15 m; "gm positive" said less) and stays a warning. The first-order method is unchanged (`barge_capacity::bulk_gm_at`; the cargo KG of the full hold, on the safe side for a smaller load). The core `barge_capacity` result keeps its own `gm_positive` check (Python API unchanged). The `ovcd` Rule Set is 2.0.0, a major version: `ovcd/capacity/hopper-gm` is replaced by `ovcd/capacity/intact-gm`, which cites IS Code 2008 Part A 2.2.4 as the origin of the 0.15 m value (read in MSC.267(85), annex p. 12); it is a tool limit, not a sourced Rule. `ovcd` 1.0.0 is kept. New Message Ids `check-intact-gm-reported-cargo` and `check-name-intact-gm-at-reported-cargo` (draft `es`, `pt` and `zh-Hans`). Of the 194 design-impact cases, the 104 dry bulk ones move: only `checks` (the new check, and the checks after it move one place) and `warnings` (the first-order GM note, now in all 104); no cargo, draught or feasibility value moves, and no new check fails. Dry bulk fixture and legacy hashes re-stamped from `ovcd run`.
@@ -206,6 +207,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/421-one-air-draft-check (2026-10-21)
+
+Between `main aa5fe5a` and `this branch ff3cea1`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep optional air_draft_limit_m | `checks[10].name` | Stability — ballast, departure | Stability — ballast, arrival | changed |
+| sweep optional air_draft_limit_m | `checks[11].message` | GM 8.30 m (fluid), max GZ 2.41 m at 26° | GM 26.27 m (fluid), max GZ 4.01 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | changed |
+| sweep optional air_draft_limit_m | `checks[11].name` | Stability — ballast, arrival | Stability — lightship, no ballast | changed |
+| sweep optional air_draft_limit_m | `checks[11].ok` | True | False | changed |
+| sweep optional air_draft_limit_m | `checks[12].message` | GM 26.27 m (fluid), max GZ 4.01 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | absent | changed |
+| sweep optional air_draft_limit_m | `checks[12].name` | Stability — lightship, no ballast | absent | changed |
+| sweep optional air_draft_limit_m | `checks[12].ok` | False | absent | changed |
+| sweep optional air_draft_limit_m | `checks[12].severity` | warning | absent | changed |
+| sweep optional air_draft_limit_m | `checks[7].message` | 4.92 m vs limit 6.00 m | GM 2.79 m (fluid), max GZ 0.17 m at 6° — fails: Area 0–30° 0.021 < 0.055, Area 0–40° -0.024 < 0.09, Area 30–40° -0.046 < 0.03, GZ at ≥ 30° -0.174 < 0.2, Angle of max GZ 6.000 < 25.0 | changed |
+| sweep optional air_draft_limit_m | `checks[7].name` | Air draft (empty, governing) | Stability — full load, departure | changed |
+| sweep optional air_draft_limit_m | `checks[7].ok` | True | False | changed |
+| sweep optional air_draft_limit_m | `checks[7].severity` | absent | warning | changed |
+| sweep optional air_draft_limit_m | `checks[8].name` | Stability — full load, departure | Stability — full load, arrival | changed |
+| sweep optional air_draft_limit_m | `checks[9].message` | GM 2.79 m (fluid), max GZ 0.17 m at 6° — fails: Area 0–30° 0.021 < 0.055, Area 0–40° -0.024 < 0.09, Area 30–40° -0.046 < 0.03, GZ at ≥ 30° -0.174 < 0.2, Angle of max GZ 6.000 < 25.0 | GM 8.30 m (fluid), max GZ 2.41 m at 26° | changed |
+| sweep optional air_draft_limit_m | `checks[9].name` | Stability — full load, arrival | Stability — ballast, departure | changed |
+| sweep optional air_draft_limit_m | `checks[9].ok` | False | True | changed |
+| sweep optional vessel_class | `checks[15].message` | 7.23 m vs limit 5.25 m | GM 1.81 m (fluid), max GZ 0.79 m at 30° | changed |
+| sweep optional vessel_class | `checks[15].name` | Air draft (empty, governing) | Stability — full load, departure | changed |
+| sweep optional vessel_class | `checks[15].ok` | False | True | changed |
+| sweep optional vessel_class | `checks[15].severity` | absent | warning | changed |
+| sweep optional vessel_class | `checks[16].message` | GM 1.81 m (fluid), max GZ 0.79 m at 30° | GM 1.81 m (fluid), max GZ 0.80 m at 30° | changed |
+| sweep optional vessel_class | `checks[16].name` | Stability — full load, departure | Stability — full load, arrival | changed |
+| sweep optional vessel_class | `checks[17].message` | GM 1.81 m (fluid), max GZ 0.80 m at 30° | GM 3.70 m (fluid), max GZ 1.95 m at 37° | changed |
+| sweep optional vessel_class | `checks[17].name` | Stability — full load, arrival | Stability — ballast, departure | changed |
+| sweep optional vessel_class | `checks[18].message` | GM 3.70 m (fluid), max GZ 1.95 m at 37° | Ballast, departure: no ballast plan meets every criterion, even with every ballast tank full. | changed |
+| sweep optional vessel_class | `checks[18].name` | Stability — ballast, departure | Ballast plan | changed |
+| sweep optional vessel_class | `checks[18].ok` | True | False | changed |
+| sweep optional vessel_class | `checks[19].message` | Ballast, departure: no ballast plan meets every criterion, even with every ballast tank full. | Ballast, departure: air draft 5.59 m is above the limit. | changed |
+| sweep optional vessel_class | `checks[19].name` | Ballast plan | Air draft | changed |
+| sweep optional vessel_class | `checks[20].message` | Ballast, departure: air draft 5.59 m is above the limit. | GM 3.71 m (fluid), max GZ 1.95 m at 36° | changed |
+| sweep optional vessel_class | `checks[20].name` | Air draft | Stability — ballast, arrival | changed |
+| sweep optional vessel_class | `checks[20].ok` | False | True | changed |
+| sweep optional vessel_class | `checks[21].message` | GM 3.71 m (fluid), max GZ 1.95 m at 36° | Ballast, arrival: no ballast plan meets every criterion, even with every ballast tank full. | changed |
+| sweep optional vessel_class | `checks[21].name` | Stability — ballast, arrival | Ballast plan | changed |
+| sweep optional vessel_class | `checks[21].ok` | True | False | changed |
+| sweep optional vessel_class | `checks[22].message` | Ballast, arrival: no ballast plan meets every criterion, even with every ballast tank full. | Ballast, arrival: air draft 5.61 m is above the limit. | changed |
+| sweep optional vessel_class | `checks[22].name` | Ballast plan | Air draft | changed |
+| sweep optional vessel_class | `checks[23].message` | Ballast, arrival: air draft 5.61 m is above the limit. | absent | changed |
+| sweep optional vessel_class | `checks[23].name` | Air draft | absent | changed |
+| sweep optional vessel_class | `checks[23].ok` | False | absent | changed |
+| ... | 26 more changed quantities | | | |
 
 ### ticket/415-dry-bulk-gm (2026-10-21)
 
