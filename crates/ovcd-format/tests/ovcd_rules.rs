@@ -114,7 +114,6 @@ fn every_check_of_a_result_reports_exactly_one_rule() {
         "Cargo > 0",
         "feasible geometry",
         "air draft within limit",
-        "Air draft (empty, governing)",
         "intact gm at reported cargo",
         "cofferdam min width",
         "wheelhouse sees over cargo",

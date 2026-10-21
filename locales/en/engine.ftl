@@ -193,7 +193,6 @@ msg-convoy-not-available = convoy results not yet available
 
 ## crates/ovcd-format/src/simulate.rs
 
-check-air-draft-limit = { $air_draft } m vs limit { $limit } m
 check-name-intact-gm-at-reported-cargo = intact gm at reported cargo
 check-intact-gm-reported-cargo = intact GM { $gm } m >= 0.15 m at the reported cargo { $cargo } t, draught { $draught } m (first-order box; cargo KG of the full hold; KG_light @0.5D)
 name-governs-draught = draught — { $limit }
@@ -218,7 +217,6 @@ name-check-stability-light = Stability — light
 name-check-stability-not-assessed = Stability — not assessed
 name-check-cargo = Cargo > 0
 name-check-feasible-arrangement = Feasible arrangement
-name-check-air-draft = Air draft (empty, governing)
 name-check-tank-length = tank length over diameter
 name-check-ok = OK
 name-curve-deep-water = Deep water

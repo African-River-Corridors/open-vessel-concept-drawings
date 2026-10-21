@@ -213,8 +213,6 @@ msg-convoy-not-available = 船队结果尚不可用
 ## crates/ovcd-format/src/simulate.rs
 
 # status: draft
-check-air-draft-limit = { $air_draft } m，限值{ $limit } m
-# status: draft
 name-governs-draught = 吃水——{ $limit }
 # status: draft
 check-feasible-arrangement = 此船体上没有通过全部校核的布置。显示的是最接近的布置。它不通过：{ $fails }。
@@ -253,8 +251,6 @@ name-check-stability-not-assessed = 稳性——未评估
 name-check-cargo = 货物 > 0
 # status: draft
 name-check-feasible-arrangement = 可行布置
-# status: draft
-name-check-air-draft = 水上高度（空载，控制工况）
 # status: draft
 name-check-tank-length = 液货舱长度与直径之比
 # status: draft
