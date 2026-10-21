@@ -3,7 +3,7 @@ from pathlib import Path
 import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
-HOLDER = "Mobile Clipboard Limited (trading as African River Corridors)"
+HOLDER = "African River Corridors Limited"
 REPO = "open-vessel-concept-drawings"
 
 
@@ -28,7 +28,7 @@ def test_licence_holder():
     assert HOLDER in read("README.md")
     authors = tomllib.loads(read("pyproject.toml"))["project"]["authors"]
     assert [a["name"] for a in authors] == [HOLDER]
-    assert "African River Corridors Limited" not in read("NOTICE") + read("README.md") + read("pyproject.toml")
+    assert "Mobile Clipboard" not in read("NOTICE") + read("README.md") + read("pyproject.toml")
 
 
 def test_repo_name_in_urls():
