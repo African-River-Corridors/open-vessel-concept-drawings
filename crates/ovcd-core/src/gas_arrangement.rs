@@ -51,10 +51,11 @@ use crate::text::Arg;
 
 /// The rulesets `fit` accepts.
 pub const RULESETS: [&str; 1] = ["IGC_2G"];
-/// Largest overall tank length (heads included) over outer diameter, for every pressure tank. A
-/// design limit of this tool, the same under both rulesets. The figure is the one the removed
-/// `ADN_G` ruleset used (the comments of that ruleset cite ADN 2025 9.3.1.11.1(b)); no IGC Code
-/// paragraph is cited for it.
+/// Largest overall tank length (heads included) over the inner shell diameter (issue #416), for
+/// every pressure tank. A design limit of this tool. The figure has two sources, read in the
+/// library: ADN 2025 9.3.1.11.1(b) ("Pressure tanks whose ratio of length to diameter exceeds 7
+/// are prohibited") and the inland class rules Pt 4 Ch 4 3.5.1, now the class Rule
+/// `lr-inland/3.5.1/tank-l-over-d` (issue #424). No IGC Code paragraph gives it.
 pub const MAX_TANK_LENGTH_OVER_OD: f64 = 7.0;
 /// `round(3.5 + 0.25 * i, 2)` for `i` in `0..15`: every value is exact in binary, so the
 /// rounding changes nothing.
@@ -475,7 +476,9 @@ pub fn length_over_diameter_check(r: &BargeCapacityResult) -> Option<Check> {
 //
 // Cheap checks (run first, from numbers the search has already computed):
 //   - the capacity result's own checks: feasible geometry, cargo zone, the aft arrangement
-//     (thrusters, containers, wheelhouse), the gas separation (protective location clearances),
+//     (thrusters, containers, wheelhouse), the gas separation (the cofferdam, the opening
+//     setback and the hold end space of the inland class rules; the IGC protective location
+//     clearances are tank Rules, not checks of this list),
 //     and the air draft limit of the light condition when one is set. Not `not_overloaded` or
 //     `freeboard_ok` (`FULL_VOLUME_CHECKS`): they test the full tank volume, and a candidate is
 //     de-rated to its payload, so they do not gate (maintainer decision on issue #418);
