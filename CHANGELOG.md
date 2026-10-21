@@ -152,7 +152,7 @@ a change can be traced later. Newest first.
 
 ### ticket/347-stern-inputs (2026-10-21)
 
-Between `main dafe949` and `this branch f2022ee`.
+Between `main 0edcb52` and `this branch 5b06e82`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
