@@ -8,6 +8,8 @@
 //! table names, and conflicts between two constant Criteria.
 
 use crate::run::canonical_json;
+use crate::trace::measure_info;
+use ovcd_core::rule_trace::{FORMULA_SHAPES, ObjectType, ROW_SHAPES, ValueKind};
 use ovcd_core::rules::{
     Applicability, ArgValue, Bound, Citation, Codified, Compare, Consequence, Include, Kind,
     KnownConflict, Limit, MeasureRef, Operand, Origin, RowWhen, Rule, RuleSet, SetStatus, Source,
@@ -43,6 +45,7 @@ pub fn load(text: &str) -> Result<Loaded, String> {
         serde_json::from_str(text).map_err(|e| format!("not a valid JSON file: {e}"))?;
     let mut set = parse_set(&value)?;
     check_set(&set)?;
+    check_measures(&set)?;
     set.hash = content_hash(&set);
     let warnings = set
         .rules
@@ -811,6 +814,170 @@ fn check_set(set: &RuleSet) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+/// The Measure checks, against the registry (`ovcd rules --measures`): each Measure id is known
+/// (a Rule that is not evaluated may name one the engine lacks), its arguments are the ones it
+/// takes, a `check` Rule names a yes/no Measure, a limit's unit is the Measure's unit, and every
+/// table row shape and formula shape is a known one with its coefficients and operands.
+fn check_measures(set: &RuleSet) -> Result<(), String> {
+    for t in &set.tables {
+        for (i, row) in t.rows.iter().enumerate() {
+            let Some((_, coeffs)) = ROW_SHAPES.iter().find(|(s, _)| *s == row.shape) else {
+                return Err(format!(
+                    "table `{}` row {i}: unknown row shape `{}`",
+                    t.id, row.shape
+                ));
+            };
+            let got: Vec<&str> = row.coefficients.iter().map(|(k, _)| k.as_str()).collect();
+            if !same_names(&got, coeffs) {
+                return Err(format!(
+                    "table `{}` row {i}: shape `{}` takes the coefficients {}",
+                    t.id,
+                    row.shape,
+                    coeffs.join(", ")
+                ));
+            }
+        }
+    }
+    for r in &set.rules {
+        let Some(info) = measure_info(&r.measure.id) else {
+            if r.evaluated {
+                return Err(format!(
+                    "rule `{}`: unknown Measure `{}` (`ovcd rules --measures` lists them)",
+                    r.id, r.measure.id
+                ));
+            }
+            continue;
+        };
+        let names: Vec<&str> = r.measure.args.iter().map(|(k, _)| k.as_str()).collect();
+        let wanted: Vec<&str> = info.args.iter().map(|a| a.name).collect();
+        if !same_names(&names, &wanted) {
+            return Err(format!(
+                "rule `{}`: Measure `{}` takes the arguments [{}]",
+                r.id,
+                r.measure.id,
+                wanted.join(", ")
+            ));
+        }
+        for (name, value) in &r.measure.args {
+            let text = info.args.iter().any(|a| a.name == name && a.text);
+            if text != matches!(value, ArgValue::Text(_)) {
+                return Err(format!(
+                    "rule `{}`: argument `{name}` of `{}` must be {}",
+                    r.id,
+                    r.measure.id,
+                    if text { "text" } else { "a number" }
+                ));
+            }
+        }
+        match r.kind {
+            Kind::Check if info.value != ValueKind::Bool => {
+                return Err(format!(
+                    "rule `{}`: a `check` Rule needs a yes/no Measure; `{}` is not one",
+                    r.id, r.measure.id
+                ));
+            }
+            Kind::Limit | Kind::Table | Kind::Formula if info.value != ValueKind::Number => {
+                return Err(format!(
+                    "rule `{}`: a limit needs a number Measure; `{}` is not one",
+                    r.id, r.measure.id
+                ));
+            }
+            _ => {}
+        }
+        let Some(limit) = &r.limit else {
+            continue;
+        };
+        let unit = match limit {
+            Limit::Constant { unit, .. }
+            | Limit::Table { unit, .. }
+            | Limit::Formula { unit, .. } => unit,
+        };
+        if *unit != info.unit {
+            return Err(format!(
+                "rule `{}`: the limit is in `{unit}`, but `{}` is in `{}`",
+                r.id, r.measure.id, info.unit
+            ));
+        }
+        let table_at = |t: &str, at: &str| -> Result<(), String> {
+            let table = set.table(t).expect("checked in check_set");
+            if table.unit != *unit {
+                return Err(format!(
+                    "rule `{}`: table `{t}` is in `{}`, the limit in `{unit}`",
+                    r.id, table.unit
+                ));
+            }
+            operand(r, info.object, at, &table.input_unit)
+        };
+        match limit {
+            Limit::Constant { .. } => {}
+            Limit::Table { table, at, .. } => table_at(table, at)?,
+            Limit::Formula {
+                shape,
+                coefficients,
+                operands,
+                ..
+            } => {
+                let Some((_, ops, coeffs)) = FORMULA_SHAPES.iter().find(|(s, ..)| s == shape)
+                else {
+                    return Err(format!("rule `{}`: unknown formula shape `{shape}`", r.id));
+                };
+                let got: Vec<&str> = operands.iter().map(|(k, _)| k.as_str()).collect();
+                let got_c: Vec<&str> = coefficients.iter().map(|(k, _)| k.as_str()).collect();
+                if !same_names(&got, ops) || !same_names(&got_c, coeffs) {
+                    return Err(format!(
+                        "rule `{}`: formula `{shape}` takes the operands [{}] and the coefficients [{}]",
+                        r.id,
+                        ops.join(", "),
+                        coeffs.join(", ")
+                    ));
+                }
+                for (_, op) in operands {
+                    match op {
+                        Operand::Measure(id) => operand(r, info.object, id, unit)?,
+                        Operand::TableAt { table, at } => table_at(table, at)?,
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// A Measure a limit reads (a formula operand, a table key): known, with no arguments, in `unit`
+/// (empty: a text key), and on the Rule's object or on the Option.
+fn operand(r: &Rule, object: ObjectType, id: &str, unit: &str) -> Result<(), String> {
+    let info = measure_info(id)
+        .ok_or_else(|| format!("rule `{}`: its limit reads unknown Measure `{id}`", r.id))?;
+    if !info.args.is_empty() {
+        return Err(format!(
+            "rule `{}`: its limit reads `{id}`, which takes arguments",
+            r.id
+        ));
+    }
+    let unit_ok = if unit.is_empty() {
+        info.value == ValueKind::Text
+    } else {
+        info.value == ValueKind::Number && info.unit == unit
+    };
+    if !unit_ok {
+        return Err(format!(
+            "rule `{}`: its limit reads `{id}` in `{}`, where `{unit}` is needed",
+            r.id, info.unit
+        ));
+    }
+    if info.object != ObjectType::Option && info.object != object {
+        return Err(format!(
+            "rule `{}`: its limit reads `{id}`, a Measure of another object",
+            r.id
+        ));
+    }
+    Ok(())
+}
+
+fn same_names(got: &[&str], wanted: &[&str]) -> bool {
+    got.len() == wanted.len() && wanted.iter().all(|w| got.contains(w))
 }
 
 /// The effective bound of a constant Criterion: limit − tolerance for a lower bound, limit +

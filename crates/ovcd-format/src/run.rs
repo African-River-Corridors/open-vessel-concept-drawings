@@ -10,7 +10,9 @@
 //! [`CONVOY_NOT_AVAILABLE`] and no numbers. A single self-propelled Hull and a single pushed
 //! barge (without its pusher) are computed.
 
-use crate::simulate::{Outcome, simulate_params};
+use crate::rule_set::Library;
+use crate::simulate::{Outcome, simulate_params_measured};
+use crate::trace::{stack_for, trace_json, trace_of};
 use crate::vdesign::{Design, DesignOption};
 use ovcd_core::pyfmt::fixed;
 use serde_json::{Map, Value, json};
@@ -254,16 +256,18 @@ fn write_canonical(v: &Value, out: &mut String) {
 }
 
 /// Top-level results keys that are not results: drawing geometry, what a view marks, the capital
-/// budget with the masses it was worked from, and the Message Ids of the result's English (ADR 0014). They are left
+/// budget with the masses it was worked from, the Message Ids of the result's English (ADR 0014), and
+/// the Rule Trace (spec 0004: the stored Rule Set hashes cover the rules). They are left
 /// out of the results hash, so adding to one never changes a saved hash, and `tools/design_impact.py`
 /// leaves them out of its comparison (it holds the same list; `tests/test_design_impact_unhashed_keys.py` checks
 /// that the two lists agree).
-pub const UNHASHED_KEYS: [&str; 5] = [
+pub const UNHASHED_KEYS: [&str; 6] = [
     "drawing",
     "stability_marks",
     "cost_masses",
     "cost",
     "text_ids",
+    "rule_trace",
 ];
 
 /// SHA-256 of the canonical JSON of `results`, without the [`UNHASHED_KEYS`].
@@ -280,20 +284,40 @@ pub fn results_hash(results: &Value) -> String {
 
 /// Compute one Option.
 pub fn run_option(option: &DesignOption) -> RunOutcome {
+    run_option_with(option, &Library::built_in(), &[])
+}
+
+/// Compute one Option and check it against its default stack of Rule Sets from `library`, plus the
+/// `extra` sets (`id`, `version`) loaded at run time (spec 0004, "Loading at run time").
+pub fn run_option_with(
+    option: &DesignOption,
+    library: &Library,
+    extra: &[(String, String)],
+) -> RunOutcome {
     let params = match simulate_params_of(option) {
         Ok(p) => p,
         Err(m) if m == CONVOY_NOT_AVAILABLE => return RunOutcome::NotAvailable(m),
         Err(m) => return RunOutcome::Failed(m),
     };
-    match simulate_params(&params) {
+    let (outcome, measured) = simulate_params_measured(&params);
+    match outcome {
         Outcome::Result(v) => match v.get("error").and_then(Value::as_str) {
             Some(message) => RunOutcome::Failed(message.to_string()),
             None => {
                 // The capital budget: an output, not hashed, never fed back into the run.
                 let mut v = v;
                 let cost = crate::cost::cost_of(option, &v);
+                // The Rule Trace: not hashed either; the stored Rule Set hashes cover the rules.
+                let rule_trace = match stack_for(library, option, extra) {
+                    Ok(selection) => trace_json(
+                        &trace_of(&selection, option, &measured),
+                        &selection.warnings,
+                    ),
+                    Err(m) => return RunOutcome::Failed(m),
+                };
                 if let Some(o) = v.as_object_mut() {
                     o.insert("cost".to_string(), cost);
+                    o.insert("rule_trace".to_string(), rule_trace);
                 }
                 let hash = results_hash(&v);
                 RunOutcome::Results { results: v, hash }
@@ -306,11 +330,20 @@ pub fn run_option(option: &DesignOption) -> RunOutcome {
 
 /// Run every Option of a Design and compare each hash with the one stored in the file.
 pub fn run_design(design: &Design) -> Vec<RunOption> {
+    run_design_with(design, &Library::built_in(), &[])
+}
+
+/// [`run_design`], with Rule Sets loaded at run time (see [`run_option_with`]).
+pub fn run_design_with(
+    design: &Design,
+    library: &Library,
+    extra: &[(String, String)],
+) -> Vec<RunOption> {
     design
         .options
         .iter()
         .map(|o| {
-            let outcome = run_option(o);
+            let outcome = run_option_with(o, library, extra);
             let hash_status = match (&outcome, &o.results_hash) {
                 (RunOutcome::Results { hash, .. }, Some(stored))
                     if hash.eq_ignore_ascii_case(stored) =>

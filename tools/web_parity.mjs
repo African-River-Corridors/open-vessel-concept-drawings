@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Hash parity (issue #245): every Option of every .vdesign fixture gets the same results hash from
-// the wasm Design session as from native `ovcd run --json`. No npm dependencies.
+// the wasm Design session as from native `ovcd run --json`, and the same Rule Trace (issue #269).
+// No npm dependencies.
 //
 //   bash tools/build_web.sh && cargo build -p ovcd-cli && node tools/web_parity.mjs
 //
@@ -54,7 +55,11 @@ for (const f of files) {
     let verdict;
     if (nh !== undefined && wh !== undefined) {
       compared++;
-      verdict = nh === wh && n.name === w.name ? "equal" : "MISMATCH";
+      // The Rule Trace is outside the hash (spec 0004), so it is compared on its own.
+      const sameTrace =
+        JSON.stringify(n.results?.rule_trace) === JSON.stringify(w.outcome.results?.rule_trace) &&
+        n.results?.rule_trace !== undefined;
+      verdict = nh === wh && n.name === w.name && sameTrace ? "equal" : "MISMATCH";
     } else if (nh === undefined && wh === undefined && n.status === webStatus(w.outcome.status)) {
       verdict = `no hash (${n.status}) on both`;
     } else {

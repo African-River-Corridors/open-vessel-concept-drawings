@@ -14,6 +14,7 @@ mod run;
 pub mod session;
 mod simulate;
 mod text_ids;
+pub mod trace;
 pub mod vdesign;
 
 pub use eval::{ENTRY_POINTS, EvalError, eval, parse_case};
@@ -21,7 +22,8 @@ pub use ga::{GaViews, ga_views, ga_views_of};
 pub use profile::Profile;
 pub use run::{
     CONVOY_NOT_AVAILABLE, HashStatus, RunOption, RunOutcome, UNHASHED_KEYS, canonical_json,
-    hash_warning, results_hash, run_design, run_option, simulate_params_of, stamp, summary_lines,
+    hash_warning, results_hash, run_design, run_design_with, run_option, run_option_with,
+    simulate_params_of, stamp, summary_lines,
 };
 pub use session::{
     DesignSession, Evaluation, Message, OpenReport, OptionEvaluation, Scope, Severity, input_schema,

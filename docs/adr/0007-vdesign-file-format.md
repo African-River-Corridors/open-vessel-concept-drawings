@@ -24,6 +24,10 @@ A Design is saved as one file with the extension `.vdesign`.
   saved in the file. It cannot tell an engine change from a hand edit, so it does not blame either.
   The top-level `drawing` object of the results holds drawing geometry from the core (double
   bottom, wing tanks, separation, aft block). It is not a result, and the hash leaves it out.
+  The `rule_trace` object (spec 0004, the Rule Trace) is left out too: every number it compares is
+  already hashed in its own field, and the Rule Set versions and hashes cover the rules. So a rule
+  change is reported as a rule change, not as "results differ". `UNHASHED_KEYS` in
+  `crates/ovcd-format/src/run.rs` lists every top-level key the hash leaves out.
 
 ## Format versions
 

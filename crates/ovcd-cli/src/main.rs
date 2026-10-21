@@ -53,6 +53,9 @@ Usage:
   ovcd rules [--rule-set <file>]...
       List the Rule Sets: the built-in sets, then each file loaded with --rule-set, with
       version, status, number of Rules and content hash.
+  ovcd rules --measures
+      Print the Measure registry: each Measure id, its object, unit, arguments and method
+      status. Input Measures are `input.<name>` for an input of the schema.
   ovcd rules show <id>[@<version>] [--rule-set <file>]...
       Print one Rule Set with each Rule, its test, its citation and its verification status.
       With no version, the highest version.
@@ -74,7 +77,9 @@ Usage:
 --rule-set <file> (repeatable) loads a Rule Set file at run time, after the built-in sets
 and in the order given. A file is refused with a message when it is malformed, or when it has
 the id and version of a loaded set but other content: a changed Rule Set needs a new version.
-Until the Rule Trace lands, run, fill and validate only check the files they are given.
+`ovcd run` checks each Option against its default Rule Sets and each loaded set (a loaded
+set with the id of a default set replaces it for the run); --json gives the Rule Trace as
+`rule_trace` in the results. fill and validate only check the files they are given.
 
 All files and output are SI, except speeds, which are in knots.
 ";
@@ -196,33 +201,47 @@ fn load_profile(path: Option<&str>) -> Result<Profile, String> {
 
 /// The built-in Rule Sets, then each file in order. Every `includes` target must be loaded once all
 /// files are in. Loader warnings go to stderr.
-fn load_rule_sets(paths: &[&str]) -> Result<Library, String> {
+/// Returns the library and the `(id, version)` of each loaded file, in order.
+fn load_rule_sets(paths: &[&str]) -> Result<(Library, Vec<(String, String)>), String> {
     let mut lib = Library::built_in();
+    let mut loaded = Vec::new();
     for p in paths {
         let text =
             std::fs::read_to_string(p).map_err(|e| format!("cannot read Rule Set {p}: {e}"))?;
-        lib.add_text(&text)
+        let key = lib
+            .add_text(&text)
             .map_err(|e| format!("Rule Set {p}: {e}"))?;
+        let (id, version) = key.split_once('@').expect("a set key is id@version");
+        loaded.push((id.to_string(), version.to_string()));
     }
     lib.check()?;
     for w in &lib.warnings {
         eprintln!("warning: {w}");
     }
-    Ok(lib)
+    Ok((lib, loaded))
 }
 
 fn rules(args: &[&str]) -> Result<(), String> {
     let mut files: Vec<&str> = Vec::new();
     let mut rest: Vec<&str> = Vec::new();
+    let mut measures = false;
     let mut it = args.iter();
     while let Some(&arg) = it.next() {
         match arg {
             "--rule-set" => files.push(it.next().ok_or("--rule-set needs a file")?),
+            "--measures" => measures = true,
             a if a.starts_with('-') => return Err(format!("unknown option `{a}`")),
             a => rest.push(a),
         }
     }
-    let lib = load_rule_sets(&files)?;
+    if measures {
+        if !(files.is_empty() && rest.is_empty()) {
+            return Err("--measures takes nothing else".into());
+        }
+        print!("{}", ovcd_format::trace::measures_text());
+        return Ok(());
+    }
+    let (lib, _) = load_rule_sets(&files)?;
     match rest.as_slice() {
         [] => {
             if lib.sets().is_empty() {
@@ -324,7 +343,7 @@ fn fill(args: &[&str]) -> Result<(), String> {
         _ => return Err("give one .vdesign file, and optionally an output file".into()),
     };
     let profile = load_profile(flags.profile)?;
-    // Checked now; nothing reads the sets until the Rule Trace lands.
+    // Checked now; `fill` computes nothing, so nothing reads the sets.
     load_rule_sets(&flags.rule_sets)?;
     let text = std::fs::read_to_string(input).map_err(|e| format!("cannot read {input}: {e}"))?;
     let filled = if flags.as_new {
@@ -365,7 +384,7 @@ fn validate(args: &[&str]) -> Result<bool, String> {
         return Err("give exactly one .vdesign file".into());
     };
     let profile = load_profile(flags.profile)?;
-    // Checked now; nothing reads the sets until the Rule Trace lands.
+    // Checked now; `validate` computes nothing, so nothing reads the sets.
     load_rule_sets(&flags.rule_sets)?;
     let checked = match std::fs::read_to_string(path) {
         Ok(text) => ovcd_format::check(&text, &profile),
@@ -413,8 +432,7 @@ fn run(args: &[&str]) -> Result<bool, String> {
         return Err("give exactly one .vdesign file".into());
     };
     let profile = load_profile(flags.profile)?;
-    // Checked now; nothing reads the sets until the Rule Trace lands.
-    load_rule_sets(&flags.rule_sets)?;
+    let (rules, extra) = load_rule_sets(&flags.rule_sets)?;
     let text = match std::fs::read_to_string(path) {
         Ok(t) => t,
         Err(e) => {
@@ -439,7 +457,7 @@ fn run(args: &[&str]) -> Result<bool, String> {
             return Ok(false);
         }
     };
-    let runs = ovcd_format::run_design(design);
+    let runs = ovcd_format::run_design_with(design, &rules, &extra);
     for r in &runs {
         if let HashStatus::Differs { stored, computed } = &r.hash_status {
             eprintln!(
