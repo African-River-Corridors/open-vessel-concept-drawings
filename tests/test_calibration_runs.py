@@ -157,6 +157,12 @@ def test_the_ci_runs_the_check_without_letting_a_band_miss_fail_the_build():
     assert "python -m vessel_designer.calibration --check" in ci
 
 
+def _stale_files(fresh, committed):
+    """The generated files of `committed` that differ from what the harness wrote into `fresh`."""
+    return [n for n in ("results.md", "factors.yaml")
+            if (fresh / n).read_text(encoding="utf-8") != (committed / n).read_text(encoding="utf-8")]
+
+
 def test_the_committed_results_and_factors_are_what_the_harness_writes(tmp_path, capsys):
     """calibration/results.md and factors.yaml are generated: a change to a case, a band or the
     engine that moves them must commit them again (issue #431). Run
@@ -166,8 +172,39 @@ def test_the_committed_results_and_factors_are_what_the_harness_writes(tmp_path,
     """
     calibration.main(tmp_path)
     capsys.readouterr()
+    stale = _stale_files(tmp_path, CAL)
+    assert not stale, f"calibration/{stale} is stale: run `python -m vessel_designer.calibration` and commit it"
+
+
+def test_the_freshness_check_fails_on_a_stale_copy(tmp_path, capsys):
+    """The check is not vacuous: with a committed copy whose numbers are changed, `_stale_files` names the file
+    (issue #431).
+
+    Label: property
+    """
+    import shutil
+    fresh, old = tmp_path / "fresh", tmp_path / "old"
+    fresh.mkdir()
+    shutil.copytree(CAL, old)
+    calibration.main(fresh)
+    capsys.readouterr()
+    assert _stale_files(fresh, old) == []
     for name in ("results.md", "factors.yaml"):
-        fresh = (tmp_path / name).read_text(encoding="utf-8")
-        committed = (CAL / name).read_text(encoding="utf-8")
-        assert fresh == committed, (
-            f"calibration/{name} is stale: run `python -m vessel_designer.calibration` and commit it")
+        text = (old / name).read_text(encoding="utf-8")
+        i = next(i for i, ch in enumerate(text) if ch.isdigit() and i > 200)
+        (old / name).write_text(text[:i] + str((int(text[i]) + 1) % 10) + text[i + 1:], encoding="utf-8")
+        assert name in _stale_files(fresh, old), name
+
+
+def test_every_web_source_has_a_checksum_or_says_why_not():
+    """Label: property
+    """
+    import re
+    web = yaml.safe_load((CAL / "sources.yaml").read_text(encoding="utf-8"))["web_sources"]
+    assert len(web) >= 100
+    for s in web:
+        if "sha256" in s:
+            assert re.fullmatch(r"[0-9a-f]{64}", s["sha256"]), s["id"]
+            assert s.get("retrieved"), s["id"]
+        else:
+            assert s.get("checksum_note"), s["id"]

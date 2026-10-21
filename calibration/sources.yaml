@@ -82,551 +82,769 @@ sources:
 
 # Web pages the held-out cases cite (issue #3). Unlike the stored files above they are not kept in S3: the
 # url is the page as read on the accessed date. A case's  starts with its id here.
+# Each web source has `retrieved` and `sha256` (of the bytes served), or a `checksum_note` that says why not.
 web_sources:
 - id: S1
   title: "Canal Barge Company, spec sheet CBC 1951-1954"
   url: https://web.archive.org/web/20240519114143/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-1951-CBC-1952-CBC-1953-CBC-1954.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 774e1a1271668e49f02da53e96e970133c1742fdcb67667d878ce0d0a3408aa6
   note: "Wayback copy, May 2024; the live link now returns 404"
 - id: S2
   title: "Canal Barge Company, spec sheet CBC 2762"
   url: https://web.archive.org/web/20240519113558/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-2762.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 7e40714cb8b3048bc61dba06fb96ecaffbf7b1c70fed1c1427ea896108c3a2a1
   note: "Wayback copy, May 2024; the live link now returns 404"
 - id: S3
   title: "Canal Barge Company, spec sheet CBC 4508"
   url: https://web.archive.org/web/20240519103857/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-4508.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 7d00af3f2b4b30b5eb36f4ab34271bf862e182913ed28d563f6878dfbd5efae8
   note: "Wayback copy, May 2024; the live link now returns 404"
 - id: S4
   title: "Canal Barge Company, spec sheet CBC 4509-4512"
   url: https://web.archive.org/web/20240519111229/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-4509-CBC-4510-CBC-4511-CBC-4512.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: de55ea19586dc8cb1d3cdadb7ed8473936358cc4e13639303b1b5c09dfe1c358
   note: "Wayback copy, May 2024; the live link now returns 404"
 - id: S5
   title: "Canal Barge Company, spec sheet CBC MIAMI"
   url: https://web.archive.org/web/20240519113107/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-MIAMI.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 91c069f9c9406d4d12336a8fd5420b3463abdb6bade9ff6c42efcc3371ae73a6
   note: "Wayback copy, May 2024; the live link now returns 404"
 - id: S6
   title: "Canal Barge Company, spec sheet CBC SAVANNAH"
   url: https://web.archive.org/web/20240519110011/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-SAVANNAH.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 8f0fe8b6e09966c1a74662ec4f1adbefff17cd191e5ce58f0777ac172940e0a4
   note: "Wayback copy, May 2024; the live link now returns 404"
 - id: S7
   title: "Canal Barge Company, spec sheets CORDIE and GWENDOLYN"
   url: https://web.archive.org/web/20240519111343/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-Cordie.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 0bb8d4563dd05074949f513723b53df0a25261c61828280e9f407e9eed62ff29
   note: "Wayback copy, May 2024; the live link now returns 404. Second sheet (GWENDOLYN): https://web.archive.org/web/20240519103939/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-Gwendolyn.pdf"
 - id: S8
   title: "Canal Barge Company, spec sheet JULIUS"
   url: https://web.archive.org/web/20240519120803/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-Julius.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: d00431133afca0ce644f33fe7f73235b85f5b7b61fb7323fdf16eae384c73aba
   note: "Wayback copy, May 2024; the live link now returns 404"
 - id: S9
   title: "Canal Barge Company, spec sheet OCEANUS"
   url: https://web.archive.org/web/20240519111940/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-Oceanus.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 9983b0aff5cc6e84ccef381f004e316ff091d97829054f9fe296b46b008c5989
   note: "Wayback copy, May 2024; the live link now returns 404; image-only PDF, read from the rendered page"
 - id: S10
   title: "Canal Barge Company, spec sheet CBC 761 and CBC 762"
   url: https://web.archive.org/web/20240519104307/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-761-and-CBC-762.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 01171bac01ef9e1611eada40704b00b9e8e48a9b35a27c4c1b2a3791fe15b854
   note: "Wayback copy, May 2024; the live link now returns 404"
 - id: S11
   title: "Canal Barge Company, spec sheet CBC 758 / CMS 751"
   url: https://web.archive.org/web/20240519111530/https://www.canalbarge.com/pdfs/cb_Spec_sheets/Spec-Sheet-CBC-758-CMS-751.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 452fbbb073e8f4c6f7f451d4b8fc7b7a1f611e037cf9b262f7441821eeedb849
   note: "Wayback copy, May 2024; the live link now returns 404"
 - id: S12
   title: "Barge LM 3004 technical sheet (1 page, hosted by the Government of Mexico)"
   url: https://www.gob.mx/cms/uploads/attachment/file/730399/Informaci_n_T_cnica_Barcaza_LM_3004.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: d58fc56382f71f7b7dd647d38053a92e57fc3733aea930f8a810e8de0621badd
 - id: S13
   title: "Santoso et al., Evaluation of Longitudinal Strength of a Cargo Barge Based on Shear Force and Still Water Bending Moment under Various Loading Conditions, Indonesian Journal of Maritime Technology 4(1), 2026, pp. 51-53, DOI 10.35718/ismatech.v4i1.8481958"
   url: https://journal.itk.ac.id/index.php/ismatech/article/download/8481958/1043
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 03ac8e34786b2ffe1a8443d133a37e89e7daabc8d0a1aa82a68f5cca1940133d
   note: "General particulars, Fig. 2, equilibrium data on pp. 51-53"
 - id: S14
   title: "VL Maritime Services, Barges (all types), detailed specification tables"
   url: https://www.vlmaritime.com/barges/
   accessed: '2026-10-16'
+  checksum_note: "the server answered 503 on 2026-10-22 after three tries"
   note: "Broker page"
 - id: S15
   title: "Jenkins Marine, JML 5019 flat-top pontoon barge spec sheet"
   url: https://jenkinsmarine.co.uk/wp-content/uploads/2026/02/JML5019-50mx19m-flat-top-pontoon-barge-spec-sheet-1.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: c88b3be5857e9ed707186e27a8b86a9c4c78c44ff12ac3e3f10462551ac7a69a
 - id: S16
   title: "Crowley, Barge 180-2 sheet"
   url: https://www.crowley.com/wp-content/uploads/2018/10/180-2.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 1795ded847c85445a935045c4dd99529a6e805bb4ef1c5571fa375921074c89f
   note: "Figures are on page 2"
 - id: S17
   title: "Baird Maritime, VESSEL REVIEW | Zhongyi 001 - LNG bunker barge to serve China's Three Gorges Reservoir, 4 Aug 2022"
   url: https://www.bairdmaritime.com/shipping/tankers/gas/vessel-review-zhongyi-001-lng-bunker-barge-to-serve-chinas-three-gorges-reservoir
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 4b88a4beaf1868e28ecd09f7465529485185e014f873497f9d1221221f49565c
 - id: S18
   title: "Horizon Ship Brokers, 107m Self Propelled Container Deck Barge 2018 China - TEU 255"
   url: https://horizonship.com/ship/107m-self-propelled-container-deck-barge-2018-china-teu-255/
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: fbaaa24fd7e1b0e0e5bffff7fe64a71ea6bfc234f90459e74f3a524c46eb1474
   note: "Broker listing"
 - id: T1
   title: "Touax River Barges, listing Touax 193 / 194"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-touax-193-sell-and-leasing-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 283e4ca65ffd0f905d14ef7a8e2412268baa56d193f21590a5b9832eaa22f24b
   note: "Owner/lessor listing. Also used-barge-touax-194-sell-and-leasing- (same figures, sister barge)"
 - id: T2
   title: "Touax River Barges, listing Touax Seine 2020"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-touax-seine-2020-sell-and-leasing-seine-france-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: f2aebd0872f7ca3ddeef1db77b18a14dcf9ae7a6818d1f43c2c6a88254ea286d
   note: "Owner/lessor listing."
 - id: T3
   title: "Touax River Barges, listing TAF Seine 2008"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-seine-2008-sell-and-leasing-seine-france-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 021926c8f25d1284e25ff64f8d1fb8665b95b40d1ce98aca56836e99da23e54d
   note: "Owner/lessor listing."
 - id: T4
   title: "Touax River Barges, listing TAF Seine 2000"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-seine-2000-sell-and-leasing-seine-france-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 3b4f6d661e519f7bc4deda9cd7cd557de7d5750ef366af3fef0a7d2bfe73d5c5
   note: "Owner/lessor listing."
 - id: T5
   title: "Touax River Barges, listing TAF Seine 1997"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-seine-1997-sell-and-leasing-seine-france-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: e07e21301b116e39db187bfc3263a172a65e86032fb32a1e35333ff4cd8c1e23
   note: "Owner/lessor listing."
 - id: T6
   title: "Touax River Barges, listing TAF Seine 1996"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-seine-1996-sell-and-leasing-seine-france-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 84223f6bb8ac5326914d480132c9e9ff1050565e4a8139020fd51ece7d89ac1e
   note: "Owner/lessor listing."
 - id: T7
   title: "Touax River Barges, listing TAF Seine 1993"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-seine-1993-sell-and-leasing-seine-france-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 5e0e5f82a62924c436f62778dbe7a167bdd598e1174c1c82f2d2e819e9a7025d
   note: "Owner/lessor listing."
 - id: T8
   title: "Touax River Barges, listing TAF Seine 1981"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-seine-1981-sell-and-leasing-seine-france-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 0de0cbdb3a0e462da49c171a3f89a79df6dd9da9e5836cf0da3701920b529a0e
   note: "Owner/lessor listing."
 - id: T9
   title: "Touax River Barges, listing TAF Seine 1973"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-seine-1973-sell-and-leasing-seine-france-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 2d5dca6167d8f55ba8070fdd0303868407ebce2169112c914dd5b7532671e8c6
   note: "Owner/lessor listing."
 - id: T10
   title: "Touax River Barges, listing TAF Rhin covered 2019"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-rhin-covered-2019-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: fcd8fe6ab695c7de9e2c723edd4bcc6896cf351402688ed0d7c76fc774eff155
   note: "Owner/lessor listing."
 - id: T11
   title: "Touax River Barges, listing TAF Rhin 2008 covered"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-rhin-2008-covered-sell-and-leasing-danube-romania-and-rhine-the-netherlands-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 7271ac4bf649ecfec51b7b5f591a939d40de480a096bc4f5bb9a794dd18df54d
   note: "Owner/lessor listing."
 - id: T12
   title: "Touax River Barges, listing TAF Rhin 2000"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-rhin-2000-sell-and-leasing-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 074acd80f38f1ea9cc979f53756d076f2ebad90f1f29fc0da6c72ae7609bf3d2
   note: "Owner/lessor listing."
 - id: T13
   title: "Touax River Barges, listing TAF Rhin 2001"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-rhin-2001-sell-and-leasing-rhin-holland-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 9cdefbbc4e230b977b3b11dcdd8c27a35a571864054ab6aee50944e83725732c
   note: "Owner/lessor listing."
 - id: T14
   title: "Touax River Barges, listing TAF Rhin 1980 covered"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-rhin-1980-covered-sell-and-leasing-rhin-holland-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: bc1df281efdcd8a0fabc40f948d138ed7eda97a760dfbf8e3cfceeec5d7fc39b
   note: "Owner/lessor listing."
 - id: T15
   title: "Touax River Barges, listing TAF Danube 2008"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-danube-2008-sell-and-leasing-danube-romania-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: c25a8d692f48caec6206b494b4f85a91414e0985b1cb560cf469ba064baebbb6
   note: "Owner/lessor listing."
 - id: T16
   title: "Touax River Barges, listing TAF Parana 2013"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-parana-2013-covered-sell-and-leasing-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 0dcbc3c3210b7eb15f5d84e1eb3dbb27d0f1b5be93490b668e058a0b882394f3
   note: "Owner/lessor listing. Also the non-covered listing and the two new-barge-taf-parana pages (same figures except height and build year)"
 - id: T17
   title: "Touax River Barges, listing TAF Mississippi 2011"
   url: https://www.touax-river-barges.com/find-your-barge/leasing-sale-barges/used-barge-taf-mississippi-2011-sell-and-leasing-mississippi-usa-
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: c3b156ea94152f4c97a63d4173c3a773a91cee37405bc332ed4aebd6476cf7d1
   note: "Owner/lessor listing."
 - id: M1
   title: "Marine Engineering Bureau (MEB), Project DCB23 (Ptich, Svisloch)"
   url: https://mebspb.com/drye/DCB23e.html
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 49e864ad89bc5b5d9c1dea874a52cccb138ea38c39f822b67918ce371912e051
   note: "Designer's project page listing built hulls"
 - id: M2
   title: "Marine Engineering Bureau (MEB), Project DCB24 (Pola 1, Pola 2)"
   url: https://mebspb.com/drye/DCB24e.html
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: cfb09c3b23f10e5741537c1e1d2a9c6e3a48777db9076c1456e30c0361343503
   note: "Designer's project page listing built hulls"
 - id: M3
   title: "Marine Engineering Bureau (MEB), Project RDB12 (Samarskaya-1/-2/-3)"
   url: https://mebspb.com/drye/RDB12e.html
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 831f9c1da5dc34d9f9aeb4edf19b9039f299fffdda5547294849bcfeff4e173b
   note: "Designer's project page listing built hulls"
 - id: M4
   title: "Marine Engineering Bureau (MEB), Project RDB20 (Belmax 9, Belmax 10)"
   url: https://mebspb.com/drye/RDB20e.html
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 2afe1fb0fe033242a26ed6682f399dde66d5c784790b63c302ffd778461f1a86
   note: "Designer's project page listing built hulls"
 - id: M6
   title: "Marine Engineering Bureau (MEB), Project ROB20 (Belmax 1-8)"
   url: https://mebspb.com/oile/ROB20e.html
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 6b7e7ec356267e9376bc738846ca30d7973b1d6d4d85874fdb02225ee2e15d9c
   note: "Designer's project page listing built hulls"
 - id: M7
   title: "Marine Engineering Bureau (MEB), Project ROB07 (MH-4001, MH-4002)"
   url: https://mebspb.com/oile/ROB07e.html
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 07c487171d6e5c998d9fc4ed48f4295b89e05ee5041d1c20e2a8abdf67952de4
   note: "Designer's project page listing built hulls"
 - id: M8
   title: "Marine Engineering Bureau (MEB), Project 004ROB05 (Paloil-1 to -5)"
   url: https://mebspb.com/oile/004ROB05e.html
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 715ce250d95ccadead2d2e33e4b5a77d236d9ae3d7dd30e4547b591ae7f3dc11
   note: "Designer's project page listing built hulls"
 - id: M9
   title: "Marine Engineering Bureau (MEB), Project ROB17 (Nerida)"
   url: https://mebspb.com/oile/ROB17e.html
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 6913d09299e866a7958aa085066c06030345ddf82d8332a6c1c6d15166a2a0d0
   note: "Designer's project page listing built hulls"
 - id: M10
   title: "Marine Engineering Bureau (MEB), Project 1635TM (NFS-22, FNG-2 to FNG-10)"
   url: https://mebspb.com/oile/1635TMe.html
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 09d62d8b89fb36c42cd21e2acd03b021bce3069c492c390b4941ccecc3f5250a
   note: "Designer's project page listing built hulls"
 - id: M11
   title: "Marine Engineering Bureau (MEB), Project 1635T (UDP-SLT-001, -002)"
   url: https://mebspb.com/oile/1635Te.html
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 4b28fea9bba984048c21cee7943b74ad6c0921d3228cdc1b65496295bd12d6dd
   note: "Designer's project page listing built hulls"
 - id: K1
   title: "Kirby Corporation barge database, KIRBY 10071"
   url: https://web.archive.org/web/20191216123055/http://vesselinfo.kirbycorp.com/BargeInfo/Details/112542
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: ecaf90c665a2685d45d2c185014dbca9522d19afa90647150bda83e2dbcc5e29
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K2
   title: "Kirby Corporation barge database, KIRBY 10201"
   url: https://web.archive.org/web/20200814051754/http://vesselinfo.kirbycorp.com/BargeInfo/Details/147012
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 2b168f313355450e4c5af509ae311ae39513b275ff7d173da92e72b9bd5b6d46
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K3
   title: "Kirby Corporation barge database, KIRBY 10083"
   url: https://web.archive.org/web/20241105002630/https://vesselinfo.kirbycorp.com/BargeInfo/Details/171795
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 325559e19ed02be2b0b34c008980cf554fdfc58416c3b8aaa7319b40fc7b00ab
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K4
   title: "Kirby Corporation barge database, KIRBY 10074"
   url: https://web.archive.org/web/20191216133241/http://vesselinfo.kirbycorp.com/BargeInfo/Details/169494
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 0170a49fd52378888e945005de90a8eaa4d9d0acf26f49f6c5b5635f54b8b76e
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K5
   title: "Kirby Corporation barge database, CGBM 102"
   url: https://web.archive.org/web/20210927213519/https://vesselinfo.kirbycorp.com/BargeInfo/Details/125833
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 1c2b26f5f3d38d1476b081141f7310c681d1b13330851006520be4a7bc0bd0ee
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K6
   title: "Kirby Corporation barge database, MER 13"
   url: https://web.archive.org/web/20190923132008/http://vesselinfo.kirbycorp.com/BargeInfo/Details/165938
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: d86bfa314c66b96c40e05af3700bb900d6db0622c81d8ef02d223230cc557fd3
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K7
   title: "Kirby Corporation barge database, Barge 301"
   url: https://web.archive.org/web/20190825205924/http://vesselinfo.kirbycorp.com/BargeInfo/Details/177625
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 876a90af5f26495fd2a9f780ea16d0dde00f892fbdf47083f09aa2e461f9a8a4
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K8
   title: "Kirby Corporation barge database, Barge 407"
   url: https://web.archive.org/web/20171220192838/http://vesselinfo.kirbycorp.com/BargeInfo/Details/177641
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 222b34ea900ae01130d787ed23eeee406f6cad31b3fa8eda52cdc341ad377d0e
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K9
   title: "Kirby Corporation barge database, HFL 406"
   url: https://web.archive.org/web/20210919100200/https://vesselinfo.kirbycorp.com/BargeInfo/Details/141650
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 05ec8915f23d8779c25ae6493bdd2d9deac0adea6261b7d55a4d60dcc922a2ef
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K10
   title: "Kirby Corporation barge database, KIRBY 27773"
   url: https://web.archive.org/web/20231119061500/https://vesselinfo.kirbycorp.com/BargeInfo/Details/164554
   accessed: '2026-10-16'
+  checksum_note: "the connection was refused on 2026-10-22 after three tries"
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K11
   title: "Kirby Corporation barge database, KIRBY 32300B"
   url: https://web.archive.org/web/20241209163613/https://vesselinfo.kirbycorp.com/BargeInfo/Details/155456
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 6ce2617f4758a2950175d37cee6c6c036e4629bd8aa1560dea0f932090dca736
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K12
   title: "Kirby Corporation barge database, CTCO 358"
   url: https://web.archive.org/web/20190922121104/http://vesselinfo.kirbycorp.com/BargeInfo/Details/100134
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 1c754995eddc5e9dbead9a6badc76b4d272bf1fac9fc64b5dfca5c1ca0a77257
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K13
   title: "Kirby Corporation barge database, HTCO 3064"
   url: https://web.archive.org/web/20190825204808/http://vesselinfo.kirbycorp.com/BargeInfo/Details/138250
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 5a0b71e209c75691a03eee8d114bd24024fe1f314555a83f1bfa7be2488f9d9e
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K14
   title: "Kirby Corporation barge database, CMS 1601"
   url: https://web.archive.org/web/20190917063635/http://vesselinfo.kirbycorp.com/BargeInfo/Details/177933
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: cf90de82693926a1426666b138ce7897ada4d913887f0950e289f97f303b735d
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: W1
   title: "Williams Shipping, spec sheet Wilcarry 250"
   url: https://www.williams-shipping.co.uk/wp-content/uploads/2020/07/Wilcarry250.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 4ad1215182aab708b3e3d66dc8e946f2bca953e35a86fe18bf0e9813e2166a0f
   note: "Text layer; read as text"
 - id: W2
   title: "Williams Shipping, spec sheet Wilcarry 300"
   url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-300-0817.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 7fd4ec9f165921fd7b422848a5ca243e935a6638d7e02d1ea606e8e33c0b9800
   note: "No text layer; read from the rendered page"
 - id: W3
   title: "Williams Shipping, spec sheet Wilcarry 350"
   url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-350-0817.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 2fa637a2d9a1aa35dfbde400d3162554d3b56cf3e5bc4a011d131ac4434c79f1
   note: "No text layer; read from the rendered page"
 - id: W4
   title: "Williams Shipping, spec sheet Wilcarry 501"
   url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-501-0817.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: b783cd4c2e4fe886b58aac80936299dea6824831e383e5f40c68c1a80adc8b3c
   note: "No text layer; read from the rendered page"
 - id: W5
   title: "Williams Shipping, spec sheet Wilcarry 503"
   url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-503-0817.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: d7b2684f7c43746bf3ab83e4f8fd8e5836de5d941548d8db6a3a86837b7fa54a
   note: "No text layer; read from the rendered page; same figures as 501"
 - id: W6
   title: "Williams Shipping, spec sheet Wilcarry 504"
   url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-504-0817.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 54fc6e49f848fdddba6e3b8c90d813e8a7f06827a8c84a9b1cf0bc5afad45557
   note: "No text layer; read from the rendered page; same figures as 501"
 - id: W7
   title: "Williams Shipping, spec sheet Wilcarry 1500"
   url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-1500-0817.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 7d29c0913caf278818974b0b510717c0066447adaf599c6a0f8884edf162abfb
   note: "No text layer; read from the rendered page"
 - id: W8
   title: "Williams Shipping, spec sheet Wilcarry 1711"
   url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-1711-0817.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 39c9289803899f91ca629d350a7745657aa1d7c36125f05ed9bd2ad2032539a3
   note: "No text layer; read from the rendered page"
 - id: W9
   title: "Williams Shipping, spec sheet Wilcarry 1717"
   url: https://www.williams-shipping.co.uk/wp-content/uploads/2018/06/Willcarry_1717.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: cc0799e51169a1543de292c88f641f0a8bfc94c0f1fb4e2fb635f208ab0b89c6
   note: "No text layer; read from the rendered page; same figures as 1711"
 - id: W10
   title: "Williams Shipping, spec sheet Wilcarry 1750"
   url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-1750-0817.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 1c64cc0d012270a027973746eb1f4f19be9645a2151af5ccbea56a0580e41125
   note: "No text layer; read from the rendered page"
 - id: W11
   title: "Williams Shipping, spec sheet Wilcarry 22"
   url: https://www.williams-shipping.co.uk/wp-content/uploads/2017/09/Wilcarry-22-0817.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: f6b3d1257a455d729ae3252d3f9b46db45f91fb045de14aaf6772cf7eaa4b5e2
   note: "No text layer; read from the rendered page"
 - id: W12
   title: "Williams Shipping, spec sheet Wilcarry 2508"
   url: https://www.williams-shipping.co.uk/wp-content/uploads/2025/11/Wilcarry-2508.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 04a582641126f7b9cfec668d1589ad97b45b0c1a7189cc78c9eeecc8cd63f5f3
   note: "Text layer; read as text"
 - id: M12
   title: "Marine Engineering Bureau (MEB), Project RDB15"
   url: https://mebspb.com/drye/RDB15e.html
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 9542e245fa418fedd1bc2470d10e20a4ea014e53ae974ed72c214aaf8c8f78f1
   note: "Designer's project page"
 - id: M13
   title: "Marine Engineering Bureau (MEB), Project RDB21"
   url: https://mebspb.com/drye/RDB21e.html
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 42dbaaf7dc1931f48d371fe079153c85b47851b95c40d196ce78dc1600b228e1
   note: "Designer's project page"
 - id: M14
   title: "Marine Engineering Bureau (MEB), Project DCB26"
   url: https://mebspb.com/drye/DCB26e.html
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: d369cc41a251426c7ff3a10d4a8ba4f07d56e30c1e7c8b11357f48443f87a3e4
   note: "Designer's project page"
 - id: C1
   title: "Canal Barge Company, Hopper Barge Draft Table"
   url: https://www.canalbarge.com/resources/barges/hopper-barge-draft
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 4fe082bb95260bdd7e7f4448d1593d46ac3e2fc8df45b041a467b88f1079a78a
   note: "Live page; the table has no title row for the quantity or the unit"
 - id: D1
   title: "DSB Offshore, Holdbarge for sale or charter, built 1997, 76.5 x 11.44 m"
   url: https://www.dsboffshore.com/vessel/hold-barge-for-sale-built-1997-76-5-x-11-44/
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: e5497a04b6b5e563d41583476af0ce92eba2f4ceeaa7331f293a6a69c6b52d92
   note: "Broker listing, folio BP027C"
 - id: J1
   title: "Jenkins Marine, JML 50 spec sheet"
   url: https://www.jenkinsmarine.co.uk/sg_userfiles/jml50-50mx14m-flat-top-pontoon-barge-spec-sheet.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 1637c5c99a770575f2b4a58af68987ef04f969a78abcfe1ddd07d7fcf3234bf0
   note: "The JML 5014 web page lists the same light draught, gross tonnage and capacity"
 - id: K15
   title: "Kirby Corporation barge database, USL 147"
   url: https://web.archive.org/web/20190722202911/http://vesselinfo.kirbycorp.com/BargeInfo/Details/58779
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 7e2e5502f398cd28892a114acb4dd3709a168fbe2669d509f3ad3664625f94f1
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K16
   title: "Kirby Corporation barge database, USL 148"
   url: https://web.archive.org/web/20210927230007/https://vesselinfo.kirbycorp.com/BargeInfo/Details/56841
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 8ec243b67a6f709c2830395f01c68898fb46ff1348dd81b1fb54da5a5baca525
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K17
   title: "Kirby Corporation barge database, DBL 709"
   url: https://web.archive.org/web/20241108200707/https://vesselinfo.kirbycorp.com/BargeInfo/Details/259310
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 267d8c65d4a324b7567585b5cd42cae0a397dd89570de970aa270c2aa4e11b2b
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K18
   title: "Kirby Corporation barge database, CHEYENNE"
   url: https://web.archive.org/web/20210919101737/https://vesselinfo.kirbycorp.com/BargeInfo/Details/52919
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 8c7182ff42483d0800f7976eb728ff5cf5fd7865c049195d935889a0921b0d7f
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K19
   title: "Kirby Corporation barge database, ARROWHEAD 266"
   url: https://web.archive.org/web/20210919102536/https://vesselinfo.kirbycorp.com/BargeInfo/Details/61757
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: d93b68c4e7c009261f1b79c76083059abe716b55c36c9f9660dcf2a20a0a92d5
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K20
   title: "Kirby Corporation barge database, CREEK"
   url: https://web.archive.org/web/20190917063613/http://vesselinfo.kirbycorp.com/BargeInfo/Details/54225
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 2b3b361a04025b375aa78f16460423cea65841df126ad3262acda27d1419f158
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K21
   title: "Kirby Corporation barge database, CHEROKEE-BG"
   url: https://web.archive.org/web/20210919112759/https://vesselinfo.kirbycorp.com/BargeInfo/Details/213825
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: ee83191bd771990c2f23f8789487eb6bd6b23e786f24df0b08c8663f6e4cb7e5
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K22
   title: "Kirby Corporation barge database, CC 133"
   url: https://web.archive.org/web/20171220203926/http://vesselinfo.kirbycorp.com/BargeInfo/Details/52579
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 3d7ff6ee8e19d0258f0d83976893509d213e33dcddcf24f5af5d22aeffb7184e
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K23
   title: "Kirby Corporation barge database, CC 132"
   url: https://web.archive.org/web/20171220194100/http://vesselinfo.kirbycorp.com/BargeInfo/Details/50860
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 4c4a610393adca2e04c605557aa0f68880367ad0e5adcc95887abb12033edc39
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K24
   title: "Kirby Corporation barge database, USL 146"
   url: https://web.archive.org/web/20210927231905/https://vesselinfo.kirbycorp.com/BargeInfo/Details/51182
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: ff79319d1978b0d4ca040c180de8785121390e12409b67b3f0bdc5395753c21b
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K25
   title: "Kirby Corporation barge database, CITY OF GALVESTON"
   url: https://web.archive.org/web/20190922120816/http://vesselinfo.kirbycorp.com/BargeInfo/Details/213827
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: ea0638e14143878b852816845c4afc10dbfb41dde6bfd1462e49148492c56ba3
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K26
   title: "Kirby Corporation barge database, CI 1609"
   url: https://web.archive.org/web/20190923132307/http://vesselinfo.kirbycorp.com/BargeInfo/Details/187082
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 8fc42457d07060103f4cc5fe90e770a49c57ea7c409c1151b6e148067118f2a4
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K27
   title: "Kirby Corporation barge database, KARANKAWA"
   url: https://web.archive.org/web/20241104235328/https://vesselinfo.kirbycorp.com/BargeInfo/Details/210399
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: ea744cbb65cb4a4b3537f18af72428d06784705cf230fec978a759fac41af4f0
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K28
   title: "Kirby Corporation barge database, FMT 2054"
   url: https://web.archive.org/web/20210919113453/https://vesselinfo.kirbycorp.com/BargeInfo/Details/219881
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 28334aa41b5798c18ecd2166c722aabbdc004d26d0288323d490f30e4743cede
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K29
   title: "Kirby Corporation barge database, FMT 2068"
   url: https://web.archive.org/web/20210919105431/https://vesselinfo.kirbycorp.com/BargeInfo/Details/228470
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: aa0c41b7fddaa0de2a53d8bee6c17d293b60be6cdca465a14abd7be6edae361a
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K30
   title: "Kirby Corporation barge database, DBL 703"
   url: https://web.archive.org/web/20190917064247/http://vesselinfo.kirbycorp.com/BargeInfo/Details/187469
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: ab364cdb6cb743deb82e2d50210c1b15bce90a644f6a4548dffc0a8c550ed180
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K31
   title: "Kirby Corporation barge database, 401"
   url: https://web.archive.org/web/20171220204216/http://vesselinfo.kirbycorp.com/BargeInfo/Details/62329
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: eb0f7812654086d6a7769f9932b90733a8d0b082b0814274f78c1bc40407c1f1
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K32
   title: "Kirby Corporation barge database, KIRBY 27730"
   url: https://web.archive.org/web/20190722214140/http://vesselinfo.kirbycorp.com/BargeInfo/Details/53174
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: a4c9a5bebf906167c15916ecd384a8431cf6d4b02ce659e5a78c062411abfc2a
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K33
   title: "Kirby Corporation barge database, KIRBY 21853"
   url: https://web.archive.org/web/20230528182558/https://vesselinfo.kirbycorp.com/BargeInfo/Details/61306
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: b90474b0057f161db3cd940523dfe7e101b2228578af545c681fa1bf41c779c5
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K34
   title: "Kirby Corporation barge database, KIRBY 29173"
   url: https://web.archive.org/web/20241209173452/https://vesselinfo.kirbycorp.com/BargeInfo/Details/101618
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 517c51423be05dfda7caf5a1ce6418c83e7cd3e057b6df2cd874ee7e6266e096
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K35
   title: "Kirby Corporation barge database, CTCO 251"
   url: https://web.archive.org/web/20190923132338/http://vesselinfo.kirbycorp.com/BargeInfo/Details/189172
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 735f93fd2fa329bca734580c5635988e2f1fddf04a4df22afd650fd5afeee4fd
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K36
   title: "Kirby Corporation barge database, CTCO 3000"
   url: https://web.archive.org/web/20190922122924/http://vesselinfo.kirbycorp.com/BargeInfo/Details/216541
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: cfd6bfc607475b1f7cbb962e0bb09bfd5636440f926cf2889b738d32238c508d
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K37
   title: "Kirby Corporation barge database, COMANCHE"
   url: https://web.archive.org/web/20190923131953/http://vesselinfo.kirbycorp.com/BargeInfo/Details/213824
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: d76a9b1de61318d84f1678c5045d46dedf6ea9d9a28e1825636fd4b6746d2299
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K38
   title: "Kirby Corporation barge database, WINNA WILSON"
   url: https://web.archive.org/web/20210927223659/https://vesselinfo.kirbycorp.com/BargeInfo/Details/188654
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 993667a08850d0233c036c8fff7548f4441fac38b1effcd2c48e407d945f0afa
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K39
   title: "Kirby Corporation barge database, MISS DOTT O"
   url: https://web.archive.org/web/20190917063735/http://vesselinfo.kirbycorp.com/BargeInfo/Details/51933
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: c08d78a86227f8315af193ab555a284a0a44a9971023e7d2841df70a585d6cd5
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: P1
   title: "Senjanovic et al., Structure design of cargo tanks in river liquefied gas carriers, DESIGN 2006 (Design Society)"
   url: https://datainformed.designsociety.org/download-publication/19022/STRUCTURE+DESIGN+OF+CARGO+TANKS+IN+RIVER+LIQUEFIED+GAS+CARRIERS
   accessed: '2026-10-16'
+  checksum_note: "the TLS certificate of the site did not verify on 2026-10-22; the page was not fetched"
   note: "Read with curl; a TLS error stops some browsers. Used for the first tank case (issue #292)"
 - id: P2
   title: "Seo and Lee, J. Mar. Sci. Eng. 2026, 14, 821 (a 5,000 m3 liquid CO2 Type C tank design study)"
   url: https://mdpi-res.com/d_attachment/jmse/jmse-14-00821/article_deploy/jmse-14-00821.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 9d991edc76ade8550180f8d551944f42d54133c34d5ebaf5e3d652d8eb68ca68
   note: "Tank case, issue #292"
 - id: P3
   title: "Owner's published general arrangement and midship drawings of a pressurised LPG carrier built 2007 (hull 2007-22), and its Form C sheet"
   url: https://www.stealthgas.com/images/stories/files/INo.2007-22_GA-nb7500.PDF
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 9a5edb4b47e43ebcd148b3f149588cd60578599721d4d6cf69fc1491d0b4ffb3
   note: "Midship drawing: https://www.stealthgas.com/images/stories/files/INo.2007-22_MIDSHIP-nb7500.PDF. Listed in tank_cases.yaml as a tank record that cannot run yet"
 - id: P4
   title: "Owner's published Form B particulars of an LNG bunker vessel built 2022 (two bilobe tanks)"
   url: https://marine-energy.cosulich.com/pdf/ships/Marine%20Energy%20-%20Ship%20Management%20-%20M_V%20Alice%20Cosulich.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 56e800afe3370aa19a942433d9025a7b2c12672178538bc803fe34c703ea1d26
   note: "Tank record that cannot run yet (bilobe)"
 - id: P5
   title: "Kim et al., J. Mar. Sci. Eng. 2025, 13, 2185 (a bilobe liquid CO2 tank design study)"
   url: https://mdpi-res.com/d_attachment/jmse/jmse-13-02185/article_deploy/jmse-13-02185.pdf
   accessed: '2026-10-16'
+  retrieved: '2026-10-22'
+  sha256: 9bc89f6308f70977d97445c6af8dd1d6f752c523a617236ef3efceb236f5236b
   note: "Tank record that cannot run yet (bilobe)"
 - id: P6
   title: "Tank maker's news release, 8 September 2020: four 1,350 m3 LNG cargo tanks delivered for a 5,400 m3 LNG bunker barge"
   url: https://www.wartsila.com/media/news/08-09-2020-major-milestone-achieved-delivery-of-tanks-for-wartsila-supplied-cargo-handling-system
   accessed: '2026-10-20'
+  retrieved: '2026-10-22'
+  sha256: ee64e3e7fb998bf6e6557b0d3738c2387b956326c94db9c13c69ed2f40fc8640
   note: "Volume (1,350 m3 each), 300 mm insulation, internal piping, instruments, equipment and access structures. No weight. Tank weight record, issue #317"
 - id: P7
   title: "Breakbulk News, 23 November 2022: transport of four empty LNG tanks, 25.2 x 9 x 12.2 m, 155 t each"
   url: https://breakbulk.news/drewes-logistics-plans-the-transportation-of-four-tanks-from-china/
   accessed: '2026-10-20'
+  retrieved: '2026-10-22'
+  sha256: 2807d0237fa2e5a13102f667f4533e40ee1d4487248675307075a351e9557af2
   note: "Same tank maker, origin, destination and count as P6; that they are the same tanks is an inference, and the dates differ. Tank weight record, issue #317"
 - id: P8
   title: "FE software maker's customer story: tank support verification of a 5,000 m3 LNG bunkering vessel with two 2,500 m3 bilobe Type C tanks"
   url: https://sdcverifier.com/customer-stories/lng-tank-support-verification-for-spains-first-lng-bunkering-vessel/
   accessed: '2026-10-20'
+  retrieved: '2026-10-22'
+  sha256: 1e7aa5299a2cc3e5ee619adc1f24d21e1b4a32ee65e6f1acdee4053a0fa14372
   note: "Each tank 28.4 m long, light weight 240 t, cargo weight 1,140 t. Tank weight record, issue #317"
