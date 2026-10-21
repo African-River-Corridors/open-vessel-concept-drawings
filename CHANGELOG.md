@@ -20,6 +20,7 @@
 - Design change (issue #375): the tank head type is an input, `tank_head_type` (`hemisphere`, `ellipsoidal_2to1`), with a Defaults Profile table by Cargo and carriage condition (the maintainer's choice): the LPG Cargos take 2:1 semi-ellipsoidal heads (estimates: the published river LPG tank has dished ends with a toroidal connection, a published 22,000 m3 LPG/NH3 carrier tank torispherical heads; 2:1 is the engine's nearest head) and LNG keeps hemispherical heads (estimate: the old value). The head type reaches the wall, the volume, the steel and the drawings (2:1 ends are drawn as half-ellipses, R/2 long), so the head-area fix of #314 now reaches Designs. Where stability does not govern, LPG cargo rises: fully refrigerated propane on a 110 x 11.4 m hull 2,850 to 2,992 t, fully pressurised propane on 90 x 14 m 2,260 to 2,450 t. Where it governs, cargo falls: fully pressurised propane on 110 x 11.4 m moves from a 9.65 m to an 8.64 m tank and from 2,165 t to 1,821 t, because the 2:1 heads put more cargo in a tank of the same length, the 9.65 m tank then fails laden stability, and the search takes the smaller one. LNG designs do not move. A file saved before keeps hemispherical heads and its results. No sourced test changed. The before/after table is under "Design changes" below.
 - Format version 3 and the stern inputs (issue #347, spec 0007 stern 1): 18 inputs for the stern and propulsion of a self-propelled hull, in a new group "Stern and propulsion" (`stern_form`, `stern_run_length_m`, `stern_transom_height_m`, `tunnel_crown_height_m`, `propulsor_type`, `propulsor_count`, `propeller_diameter_m`, `power_source`, `installed_power_kw`, `design_speed_kn`, `installed_power_margin`, `bow_thruster`, `bow_thruster_power_kw`, `battery_energy_kwh`, `battery_unit_energy_kwh`, `wheelhouse_type`, `sightline_method`, `stern_block_mass_included`). Inputs only: the engine reads none of them yet; later spec 0007 tickets give them effect. A file of version 1 or 2 gets the values that reproduce today's stern block, with one warning per Option, and keeps its results; a new Option takes the Defaults Profile values (by Cargo phase: gas a transom stern, ducted azimuth thrusters and gas-fuelled gensets, dry bulk a tunnel stern, shafts in nozzles and diesel-mechanical), each `sourced` or `estimate` in the profile and the schema (`default_status`). `thruster_count` and `propulsive_efficiency` now apply only with an `unspecified` propulsor (`applies_when` in the schema). The one result that moves: a new Option's wheelhouse eye height is 1.65 m (ES-TRIN 7.02; was 1.50 m), so the sightline check of every new self-propelled Design reads 0.15 m higher (104 of 177 case designs, the sightline message only; no feasibility changes). Saving writes format version 3. The stern block API takes `power_source` as the new name of `propulsion`. No sourced test changed. The before/after table is under "Design changes" below.
 - Design change (issue #348, spec 0007 stern 2): the stern block of a self-propelled hull has mass and centres, at the rates of spec 0007 (Hekkenberg 2013, Appendix B): ducted azimuth units 1.5 x D^3 t (D the thruster envelope / 1.35), batteries 6 kg/kWh, accommodation 0.17 t per m3 of unit, wheelhouse 8 t and its column 5 t, gas gensets (the published engine mass plus an alternator at 9 kg/kVA less the engine's 4.9 kg/kW), small items 1 kg/kW and piping and cabling 3 t + 2.5 kg/kW. Until the installed power is sized (#353) the per-kW items take a typed installed power, else the installed genset power, else none. The items enter the lightship and the KG of the gas and dry branches when `stern_block_mass_included` is true (a new Option), and the results show the breakdown (`stern_block_mass`); the stability limitation "the stern block's mass is not in the gas lightship" goes. On a 110 x 11.4 m hull today's battery-electric block weighs 107.4 t (three thrusters 32.1 t, one battery unit 30 t, two accommodation units 29.3 t, wheelhouse and column 13 t, piping 3 t): the lightship of every new self-propelled Design rises by about that much and its draught follows. One case changes feasibility: fully refrigerated propane on 110 x 11.4 m is now feasible with a 9.04 m tank (2,414 t), as the low block lowers the laden KG. A file saved before keeps the switch off and its results. No sourced test changed; new sourced test `crates/ovcd-core/tests/stern_block_mass.rs`. The before/after table is under "Design changes" below.
+- Design change (issue #349, spec 0007 stern 3): trim for each loading condition. Every lightship item and the cargo get an LCG (the hull steel and the piping at the middle of the length, the tanks and the cargo at the middle of their zone, the outfitting in the stern zone, the stern block items at their zones). `hydrostatics::trim` gives the trim and the aft and forward draughts from the LCG, the LCB and the MTC, as the legacy `calculate_trim` does; positive trim is bow deeper. Each gas stability condition, and a dry bulk hull laden and light, gains `trim_m`, `draught_aft_m` and `draught_fwd_m`, only when the stern block mass is in the lightship (a new self-propelled Option). No other number moves. On a 110 x 11.4 m hull: LNG laden 0.79 m by the bow, light 0.53 m by the stern; bauxite on a 4.0 m depth laden 2.03 m by the bow. The hull is still the raked box with no Stern Form cut (#350), so the laden trims are by the bow. A file saved before gets no new field and keeps its results. No sourced test changed. The before/after table is under "Design changes" below.
 
 ## 0.2.3 (2026-10-16)
 
@@ -150,6 +151,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/349-trim (2026-10-21)
+
+Between `main f9475c8` and `this branch ba007ac`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived bulk 1 (88x16.3) | `trim[0].draught_aft_m` | absent | 3.53178909759 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `trim[0].draught_fwd_m` | absent | 5.42863608856 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `trim[0].draught_m` | absent | 4.48021259308 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `trim[0].name` | absent | Laden | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `trim[0].trim_m` | absent | 1.89684699097 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `trim[1].draught_aft_m` | absent | 1.43019756501 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `trim[1].draught_fwd_m` | absent | 0.944527013849 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `trim[1].draught_m` | absent | 1.18736228943 | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `trim[1].name` | absent | Light | changed |
+| sweep CN-derived bulk 1 (88x16.3) | `trim[1].trim_m` | absent | -0.48567055116 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `trim[0].draught_aft_m` | absent | 4.28707776911 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `trim[0].draught_fwd_m` | absent | 5.81703447454 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `trim[0].draught_m` | absent | 5.05205612183 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `trim[0].name` | absent | Laden | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `trim[0].trim_m` | absent | 1.52995670542 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `trim[1].draught_aft_m` | absent | 1.38150000601 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `trim[1].draught_fwd_m` | absent | 1.02681069345 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `trim[1].draught_m` | absent | 1.20415534973 | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `trim[1].name` | absent | Light | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `trim[1].trim_m` | absent | -0.354689312554 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `trim[0].draught_aft_m` | absent | 4.3951874033 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `trim[0].draught_fwd_m` | absent | 6.02985150661 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `trim[0].draught_m` | absent | 5.21251945496 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `trim[0].name` | absent | Laden | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `trim[0].trim_m` | absent | 1.63466410331 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `trim[1].draught_aft_m` | absent | 1.35678742518 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `trim[1].draught_fwd_m` | absent | 1.02065855871 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `trim[1].draught_m` | absent | 1.18872299194 | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `trim[1].name` | absent | Light | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `trim[1].trim_m` | absent | -0.336128866468 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `stability.conditions[0].draught_aft_m` | absent | 2.65848498747 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `stability.conditions[0].draught_fwd_m` | absent | 3.71594955805 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `stability.conditions[0].trim_m` | absent | 1.05746457057 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `stability.conditions[1].draught_aft_m` | absent | 2.21921463387 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `stability.conditions[1].draught_fwd_m` | absent | 2.64475605118 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `stability.conditions[1].trim_m` | absent | 0.425541417313 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `stability.conditions[2].draught_aft_m` | absent | 1.77994428027 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `stability.conditions[2].draught_fwd_m` | absent | 1.57356254432 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `stability.conditions[2].trim_m` | absent | -0.206381735949 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[0].draught_aft_m` | absent | 3.07426959839 | changed |
+| ... | 920 more changed quantities | | | |
 
 ### ticket/348-stern-block-mass (2026-10-21)
 
