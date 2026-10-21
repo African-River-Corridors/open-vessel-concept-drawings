@@ -216,6 +216,9 @@ pub struct BargeCapacityInputs {
     /// Cargo density (kg/m^3) in place of the cargo data's (issue #315: an LPG Cargo at its loading
     /// temperature); `None`: the cargo data's.
     pub cargo_density_kg_m3: Option<f64>,
+    /// Issue #348: `Some` puts the stern block's mass into the lightship of a self-propelled hull;
+    /// `None` leaves it out, as before.
+    pub stern_block_mass: Option<crate::aft_arrangement::SternMassInputs>,
     pub dome_height: f64,
     /// Diameter of the cylindrical dome (m). With `dome_height` it gives the dome's volume, which
     /// counts in Vc for d(Vc) only (IGC 2.4.1.1: Vc includes domes and appendages), not in the
@@ -286,6 +289,7 @@ impl BargeCapacityInputs {
             tank_design: TankDesign::default(),
             fill_ratio: 0.95,
             cargo_density_kg_m3: None,
+            stern_block_mass: None,
             dome_height: DEFAULT_TANK_DOME_HEIGHT_M,
             dome_diameter: DEFAULT_TANK_DOME_DIAMETER_M,
             dome_diameter_by_rule: false,
@@ -417,6 +421,8 @@ pub struct BargeCapacityResult {
     pub navigating_top_above_keel_m: Option<f64>,
 
     /// Gas only: the converged arrangement, for gas stability.
+    /// Issue #348: the stern block's mass items when they are in the lightship (empty otherwise).
+    pub stern_block_items: Vec<crate::weights::MassItem>,
     pub gas_basis: Option<GasBasis>,
 
     pub checks: Vec<Check>,
@@ -874,7 +880,7 @@ fn bulk_gm(
     inp: &BargeCapacityInputs,
     detail: &Detail,
     draft: f64,
-    lightship: f64,
+    (lightship, stern): (f64, &[crate::weights::MassItem]),
     cargo_t: f64,
     hull: &HullGeometry,
 ) -> f64 {
@@ -891,10 +897,19 @@ fn bulk_gm(
     let kg_cargo = inp.double_bottom_height_bulk + zc;
     let kg_light = 0.5 * inp.depth;
     let total = lightship + cargo_t;
-    let kg = if total > 0.0 {
-        (lightship * kg_light + cargo_t * kg_cargo) / total
+    // Issue #348: the stern block items (in `lightship`) at their own heights; none, as before.
+    let kg = if stern.is_empty() {
+        if total > 0.0 {
+            (lightship * kg_light + cargo_t * kg_cargo) / total
+        } else {
+            kg_light
+        }
     } else {
-        kg_light
+        let block = crate::weights::total_mass(stern);
+        ((lightship - block) * kg_light
+            + crate::weights::vertical_moment(stern)
+            + cargo_t * kg_cargo)
+            / total
     };
     hull.KB(draft) + hull.BM_transverse(draft) - kg
 }
@@ -1065,6 +1080,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         detail,
         n_total,
     } = vol;
+    let mut lightship = lightship;
 
     // Second pass on the aft block: the wheelhouse has to see over the cargo, and the cargo top
     // is only known now. The length is unchanged by the lift.
@@ -1082,6 +1098,20 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     } else {
         (None, h_top)
     };
+    // Issue #348: the stern block's mass, in the lightship only when asked for.
+    let stern_block_items = match (&aft, &inp.stern_block_mass) {
+        (Some(a), Some(m)) => {
+            let db = if is_gas {
+                detail.bottom_clearance_m.unwrap_or(0.0) - inp.tank_support_height
+            } else {
+                inp.double_bottom_height_bulk
+            };
+            let db = if db > 0.0 { db } else { 0.0 };
+            crate::aft_arrangement::stern_block_mass(&aft_second, a, m, db)
+        }
+        _ => Vec::new(),
+    };
+    lightship += crate::weights::total_mass(&stern_block_items);
 
     let cargo_capacity = cargo_volume * density_t;
 
@@ -1214,7 +1244,14 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     }
     let mut gm = None;
     if props.phase == CargoClass::DryBulk && draft > 0.0 && !overloaded {
-        let g = bulk_gm(inp, &detail, draft, lightship, cargo_capacity, &hull);
+        let g = bulk_gm(
+            inp,
+            &detail,
+            draft,
+            (lightship, &stern_block_items),
+            cargo_capacity,
+            &hull,
+        );
         checks.push(Check::with_severity(
             "gm_positive",
             g >= 0.15,
@@ -1278,6 +1315,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         air_draft_navigating_light_m: Some(air_draft_navigating_light),
         navigating_top_above_keel_m: Some(h_top_navigating),
         gas_basis: detail.gas_basis,
+        stern_block_items: stern_block_items.clone(),
         tank_rules: detail.tank_rules,
         checks,
         warnings,

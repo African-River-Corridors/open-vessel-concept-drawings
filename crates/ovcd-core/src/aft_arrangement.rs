@@ -441,6 +441,139 @@ pub struct AftArrangementResult {
     pub deck_length_m: f64,
 }
 
+/// The rates of the stern block mass (issue #348, spec 0007 "Machinery space and mass"; Hekkenberg
+/// 2013, Appendix B pp. 221-225, as the research note gives them).
+pub mod stern_mass {
+    /// Ducted azimuth unit: 1.5 x D^3 t per unit, D the propeller diameter (m).
+    pub const AZIMUTH_UNIT_T_PER_M3: f64 = 1.5;
+    /// The thruster envelope over the propeller diameter (spec 0007: nozzle and housing round the disc).
+    pub const ENVELOPE_OVER_DIAMETER: f64 = 1.35;
+    /// Batteries installed: 6 kg/kWh (the Corvus string figure 5.96, rounded up).
+    pub const BATTERY_T_PER_KWH: f64 = 0.006;
+    /// Accommodation, steel included: 0.17 t per m^3 of unit volume.
+    pub const ACCOMMODATION_T_PER_M3: f64 = 0.17;
+    /// The wheelhouse and its raising column (one reference ship).
+    pub const WHEELHOUSE_T: f64 = 8.0;
+    pub const LIFT_COLUMN_T: f64 = 5.0;
+    /// A genset: 9 kg/kVA, with kVA = kWe / 0.8 (the power factor an estimate).
+    pub const GENSET_T_PER_KVA: f64 = 0.009;
+    pub const POWER_FACTOR: f64 = 0.8;
+    /// A high-speed diesel engine, dry: 4.9 kg/kW (the engine share of a genset).
+    pub const ENGINE_T_PER_KW: f64 = 0.0049;
+    /// Small engine-room items: 1 kg/kW of propulsion power.
+    pub const SMALL_ITEMS_T_PER_KW: f64 = 0.001;
+    /// Piping, ducting and cabling: 3 t + 2.5 kg/kW.
+    pub const PIPING_T: f64 = 3.0;
+    pub const PIPING_T_PER_KW: f64 = 0.0025;
+}
+
+/// What the stern block mass needs beside the block itself (issue #348).
+#[derive(Debug, Clone, PartialEq)]
+pub struct SternMassInputs {
+    /// The energy of one 40 ft battery unit (kWh).
+    pub battery_unit_energy_kwh: f64,
+    /// A typed installed power (kW). The small items and the piping and cabling scale with the
+    /// propulsion power; until it is sized (#353) they take this, else the installed genset power,
+    /// else none (the piping keeps its 3 t).
+    pub installed_power_kw: Option<f64>,
+}
+
+impl SternMassInputs {
+    /// The power the small items and the piping take (kW).
+    pub fn power_kw(&self, res: &AftArrangementResult) -> f64 {
+        self.installed_power_kw.unwrap_or(res.installed_kwe)
+    }
+}
+
+/// The mass items of a stern block (issue #348), each with its centre: LCG at the centre of its
+/// zone from the aft end, KCG as spec 0007 gives it. Thrusters at the base + D, units at their
+/// centres, the wheelhouse at its lowered centre and its column at the deck, gensets at the double
+/// bottom + half their height, the small items and the piping at the double bottom.
+pub fn stern_block_mass(
+    inp: &AftArrangementInputs,
+    res: &AftArrangementResult,
+    m: &SternMassInputs,
+    double_bottom_m: f64,
+) -> Vec<crate::weights::MassItem> {
+    use crate::weights::MassItem;
+    use stern_mass::*;
+    let mut items = Vec::new();
+    let power_kw = m.power_kw(res);
+    let n_thrusters = res.thruster_offsets_m.len() as f64;
+    if n_thrusters > 0.0 {
+        let d = inp.thruster_envelope_m / ENVELOPE_OVER_DIAMETER;
+        items.push(MassItem {
+            label: "thrusters",
+            mass_t: n_thrusters * AZIMUTH_UNIT_T_PER_M3 * d * d * d,
+            lcg_m: res.thruster_room_length_m / 2.0,
+            kcg_m: d,
+        });
+    }
+    let unit_kcg = res.container_top_above_keel_m - inp.container_height_m / 2.0;
+    let unit_volume = inp.container_length_m * inp.container_width_m * inp.container_height_m;
+    for (label, x_aft, x_fwd, _) in &res.container_units {
+        let (name, mass) = if label.starts_with("BATTERY") {
+            (
+                "battery unit",
+                BATTERY_T_PER_KWH * m.battery_unit_energy_kwh,
+            )
+        } else {
+            ("accommodation unit", ACCOMMODATION_T_PER_M3 * unit_volume)
+        };
+        items.push(MassItem {
+            label: name,
+            mass_t: mass,
+            lcg_m: (x_aft + x_fwd) / 2.0,
+            kcg_m: unit_kcg,
+        });
+    }
+    let wheelhouse_lcg = (res.wheelhouse_x0_m + res.wheelhouse_x1_m) / 2.0;
+    items.push(MassItem {
+        label: "wheelhouse",
+        mass_t: WHEELHOUSE_T,
+        lcg_m: wheelhouse_lcg,
+        kcg_m: res.wheelhouse_floor_lowered_m + res.wheelhouse_height_m / 2.0,
+    });
+    items.push(MassItem {
+        label: "lift column",
+        mass_t: LIFT_COLUMN_T,
+        lcg_m: wheelhouse_lcg,
+        kcg_m: inp.depth,
+    });
+    if res.n_gensets > 0 {
+        // The published engine mass plus an alternator: the genset rate (9 kg/kVA) less the
+        // engine share of it (4.9 kg/kW).
+        let n = res.n_gensets as f64;
+        let alternator_t =
+            GENSET_T_PER_KVA * res.genset_kwe / POWER_FACTOR - ENGINE_T_PER_KW * res.genset_kwe;
+        let alternator_t = if alternator_t > 0.0 {
+            alternator_t
+        } else {
+            0.0
+        };
+        items.push(MassItem {
+            label: "gensets",
+            mass_t: res.genset_engine_mass_t + n * alternator_t,
+            lcg_m: res.genset_x0_m + res.genset_length_m / 2.0,
+            kcg_m: double_bottom_m + res.genset_height_m / 2.0,
+        });
+    }
+    let block_lcg = res.length_m / 2.0;
+    items.push(MassItem {
+        label: "small items",
+        mass_t: SMALL_ITEMS_T_PER_KW * power_kw,
+        lcg_m: block_lcg,
+        kcg_m: double_bottom_m,
+    });
+    items.push(MassItem {
+        label: "piping and cabling",
+        mass_t: PIPING_T + PIPING_T_PER_KW * power_kw,
+        lcg_m: block_lcg,
+        kcg_m: double_bottom_m,
+    });
+    items
+}
+
 impl AftArrangementResult {
     /// The Python `ok` property.
     pub fn ok(&self) -> bool {

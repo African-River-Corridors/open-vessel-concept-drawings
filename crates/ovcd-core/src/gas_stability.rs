@@ -150,6 +150,8 @@ pub struct GasCapacityResult {
     pub lightship_t: f64,
     /// `aft_arrangement is not None`.
     pub has_aft_arrangement: bool,
+    /// Issue #348: the stern block's mass items when they are in the lightship (empty otherwise).
+    pub stern_block_items: Vec<crate::weights::MassItem>,
 }
 
 impl TryFrom<&BargeCapacityResult> for GasCapacityResult {
@@ -187,6 +189,7 @@ impl TryFrom<&BargeCapacityResult> for GasCapacityResult {
             cargo_density_t_per_m3: r.cargo_density_t_per_m3,
             lightship_t: r.lightship_t,
             has_aft_arrangement: r.aft_arrangement.is_some(),
+            stern_block_items: r.stern_block_items.clone(),
         })
     }
 }
@@ -239,12 +242,14 @@ pub fn assess_num(
     let v_inner_total = basis.total_tank_volume;
 
     // (t, KG m)
-    let light_items: [(f64, f64); 4] = [
+    let mut light_items: Vec<(f64, f64)> = vec![
         (basis.steel_top_down, 0.5 * d),
         (basis.tank_total + basis.insulation, kg_tank),
         (basis.piping_machinery, d),
         (basis.outfitting, 0.75 * d),
     ];
+    // Issue #348: the stern block items at their own heights, when they are in the lightship.
+    light_items.extend(result.stern_block_items.iter().map(|i| (i.mass_t, i.kcg_m)));
     let lightship = py_sum(light_items.iter().map(|&(m, _)| m));
 
     let mut conds = Vec::new();
@@ -327,7 +332,7 @@ pub fn assess_num(
             "No wind heel and no damage stability (ADN 9.3.1.15 / IGC 2.7 need both before approval)."
         ),
     ];
-    if result.has_aft_arrangement {
+    if result.has_aft_arrangement && result.stern_block_items.is_empty() {
         limitations.push(text!(
             "stab-limit-stern-block-mass",
             "The self-propelled stern block's mass is not in the gas lightship, so KG and \

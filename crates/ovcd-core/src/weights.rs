@@ -94,6 +94,27 @@ pub fn hull_plating(
     }
 }
 
+/// One mass of the lightship with its centre (issue #348): `lcg_m` from the aft end of the hull,
+/// `kcg_m` above the keel.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct MassItem {
+    pub label: &'static str,
+    pub mass_t: f64,
+    pub lcg_m: f64,
+    pub kcg_m: f64,
+}
+
+/// The sum of the masses (t).
+pub fn total_mass(items: &[MassItem]) -> f64 {
+    items.iter().map(|i| i.mass_t).sum()
+}
+
+/// The sum of mass x KCG (t.m), for a KG.
+pub fn vertical_moment(items: &[MassItem]) -> f64 {
+    items.iter().map(|i| i.mass_t * i.kcg_m).sum()
+}
+
 /// Calculate the component weight breakdown, in tonnes.
 ///
 /// Hull steel is estimated from plating areas and thicknesses, plus a structure factor for
