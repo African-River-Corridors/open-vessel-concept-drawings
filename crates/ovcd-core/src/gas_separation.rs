@@ -11,7 +11,11 @@ use crate::text::{Arg, Text};
 // Rule constants, each with its clause in the Python file.
 pub const COFFERDAM_MIN_M: f64 = 0.60;
 pub const OPENING_SETBACK_M: f64 = 2.00;
+/// The space between the cargo tanks and the hold end bulkhead where the tanks have plane ends
+/// (inland class rules Pt 4 Ch 4 3.5.3; ADN 9.3.1.11.3(a)).
 pub const END_BULKHEAD_SPACE_M: f64 = 0.50;
+/// The same space for any other tank end, such as the domed heads of a Type C tank (3.5.3). The name
+/// is kept from when the code keyed it to pressure tanks (issue #281).
 pub const END_BULKHEAD_SPACE_PRESSURE_M: f64 = 0.20;
 
 const CLAUSE_WARNING: &str = "Separation clauses are cited from the classification rules for \
@@ -23,7 +27,12 @@ pub struct GasSeparationInputs {
     pub cofferdam_m: f64,
     pub opening_setback_m: f64,
     pub fwd_end_bulkhead_m: f64,
+    /// Kept so older callers still build. No check reads it: the end-bulkhead space is keyed to the
+    /// tank end shape, as 3.5.3 says, not to the tank kind (issue #281).
     pub is_pressure_tank: bool,
+    /// The tanks have plane ends. Every tank the engine models has domed heads (hemispherical or
+    /// 2:1 ellipsoidal), so no caller sets it yet.
+    pub plane_tank_ends: bool,
     /// Kept so older callers still build. No check reads it (the inland type-G floors went in
     /// issue #215).
     pub side_clearance_m: f64,
@@ -38,6 +47,7 @@ impl Default for GasSeparationInputs {
             opening_setback_m: OPENING_SETBACK_M,
             fwd_end_bulkhead_m: END_BULKHEAD_SPACE_M,
             is_pressure_tank: true,
+            plane_tank_ends: false,
             side_clearance_m: 0.0,
             double_bottom_m: 0.0,
         }
@@ -86,10 +96,10 @@ pub fn compute(inp: &GasSeparationInputs) -> Result<GasSeparationResult, String>
     let fwd = inp.fwd_end_bulkhead_m;
     let service = py_max(0.0, aft - inp.cofferdam_m);
 
-    let floor = if inp.is_pressure_tank {
-        END_BULKHEAD_SPACE_PRESSURE_M
-    } else {
+    let floor = if inp.plane_tank_ends {
         END_BULKHEAD_SPACE_M
+    } else {
+        END_BULKHEAD_SPACE_PRESSURE_M
     };
 
     let checks = alloc::vec![
@@ -119,16 +129,13 @@ pub fn compute(inp: &GasSeparationInputs) -> Result<GasSeparationResult, String>
             fwd >= floor - 1e-9,
             text!(
                 "check-fwd-end-bulkhead-space",
-                "forward end-bulkhead space {fwd} m >= {min} m ({tank_kind}, cl. 3.5.3 / 3.6.3)",
+                "forward end-bulkhead space {fwd} m >= {min} m ({tank_ends}, cl. 3.5.3)",
                 fwd = Arg::fixed(fwd, 2),
                 min = Arg::fixed(floor, 2),
-                tank_kind = if inp.is_pressure_tank {
-                    Text::fixed(
-                        "check-fwd-end-bulkhead-space-pressure-tank",
-                        "pressure tank",
-                    )
+                tank_ends = if inp.plane_tank_ends {
+                    Text::fixed("check-fwd-end-bulkhead-space-plane-ends", "plane tank ends")
                 } else {
-                    Text::fixed("check-fwd-end-bulkhead-space-standard", "standard")
+                    Text::fixed("check-fwd-end-bulkhead-space-domed-ends", "domed tank ends")
                 },
             ),
         ),

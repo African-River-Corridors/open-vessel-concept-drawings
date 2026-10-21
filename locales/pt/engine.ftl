@@ -93,11 +93,11 @@ check-cofferdam-min-width = coferdã { $cofferdam } m >= { $min } m (cl. 3.6.13)
 # status: draft
 check-opening-setback = separação a ré { $aft } m >= { $min } m da área de carga até qualquer entrada ou janela que abra (cl. 3.3.7 / 3.3.11)
 # status: draft
-check-fwd-end-bulkhead-space = espaço da antepara de extremidade de vante { $fwd } m >= { $min } m ({ $tank_kind }, cl. 3.5.3 / 3.6.3)
+check-fwd-end-bulkhead-space = espaço da antepara de extremidade de vante { $fwd } m >= { $min } m ({ $tank_ends }, cl. 3.5.3)
 # status: draft
-check-fwd-end-bulkhead-space-pressure-tank = tanque de pressão
+check-fwd-end-bulkhead-space-domed-ends = extremidades de tanque abauladas
 # status: draft
-check-fwd-end-bulkhead-space-standard = padrão
+check-fwd-end-bulkhead-space-plane-ends = extremidades de tanque planas
 # status: draft
 warn-separation-clauses = As cláusulas de separação são citadas das regras de classificação para embarcações de vias navegáveis interiores (Pt 4 Ch 4 Sec 3, Jul 2022). Confirme com o texto do ADN antes da liberação.
 

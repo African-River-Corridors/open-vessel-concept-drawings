@@ -229,7 +229,7 @@ impl MeasureSource for OptionMeasures<'_> {
                 .ok_or_else(|| format!("the result has no check `{name}`"));
         }
         if let Some(name) = m.id.strip_prefix("separation.") {
-            let (s, pressure) = self
+            let (s, plane) = self
                 .measured
                 .separation
                 .as_ref()
@@ -239,7 +239,7 @@ impl MeasureSource for OptionMeasures<'_> {
                 "aft" => Ok(MeasureValue::Number(s.aft_separation_m)),
                 "fwd" => Ok(MeasureValue::Number(s.fwd_separation_m)),
                 "tank_end" => Ok(MeasureValue::Text(
-                    if *pressure { "pressure" } else { "standard" }.to_string(),
+                    if *plane { "plane" } else { "domed" }.to_string(),
                 )),
                 other => Err(format!("no value for Measure `separation.{other}`")),
             };

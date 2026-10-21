@@ -92,11 +92,11 @@ check-cofferdam-min-width = 隔离空舱{ $cofferdam } m >= { $min } m（cl. 3.6
 # status: draft
 check-opening-setback = 尾部间隔{ $aft } m >= { $min } m，自货物区量至任何入口或可开启窗（cl. 3.3.7 / 3.3.11）
 # status: draft
-check-fwd-end-bulkhead-space = 首端舱壁处所{ $fwd } m >= { $min } m（{ $tank_kind }，cl. 3.5.3 / 3.6.3）
+check-fwd-end-bulkhead-space = 首端舱壁处所{ $fwd } m >= { $min } m（{ $tank_ends }，cl. 3.5.3）
 # status: draft
-check-fwd-end-bulkhead-space-pressure-tank = 压力液货舱
+check-fwd-end-bulkhead-space-domed-ends = 液货舱端部为凸形
 # status: draft
-check-fwd-end-bulkhead-space-standard = 标准
+check-fwd-end-bulkhead-space-plane-ends = 液货舱端部为平面
 # status: draft
 warn-separation-clauses = 间隔条款引自内河船舶入级规范（Pt 4 Ch 4 Sec 3，Jul 2022）。发布前请对照 ADN 文本确认。
 

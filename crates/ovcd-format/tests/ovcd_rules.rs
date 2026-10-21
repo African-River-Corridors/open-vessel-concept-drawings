@@ -192,13 +192,8 @@ fn the_separation_rules_keep_the_codes_tolerance_and_findings() {
             .as_deref(),
         Some("#280")
     );
-    assert_eq!(
-        lr.rule("lr-inland/3.5.3/end-space")
-            .unwrap()
-            .finding
-            .as_deref(),
-        Some("#281")
-    );
+    // #281 is fixed: the space follows the tank end shape, as 3.5.3 does.
+    assert_eq!(lr.rule("lr-inland/3.5.3/end-space").unwrap().finding, None);
     // The limits are the code's constants.
     use ovcd_core::gas_separation::{COFFERDAM_MIN_M, OPENING_SETBACK_M};
     let constant = |id: &str| match &lr.rule(id).unwrap().limit {
