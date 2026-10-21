@@ -267,7 +267,7 @@ pub static MEASURES: &[MeasureDef] = &[
         object: ObjectType::Option,
         value: ValueKind::Text,
         args: &[],
-        method: "The tank kind the separation check is keyed to: pressure or standard",
+        method: "The shape of the tank ends at the hold end bulkhead: plane or domed",
         method_status: MethodStatus::Unverified,
     },
     MeasureDef {

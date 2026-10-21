@@ -51,8 +51,8 @@ from .._bridge import call as _call
 # --- Rule constants, each with its clause. Do not retype these anywhere else. ---
 COFFERDAM_MIN_M = 0.60          # 3.6.13 / 3.7.4 (type C/N convention; IGC 3.1.2 either/or)
 OPENING_SETBACK_M = 2.00        # 3.3.7 + 3.3.11 — entrances/windows from the cargo area
-END_BULKHEAD_SPACE_M = 0.50     # 3.5.3 / 3.6.3
-END_BULKHEAD_SPACE_PRESSURE_M = 0.20    # same clause, pressure tanks
+END_BULKHEAD_SPACE_M = 0.50     # 3.5.3, tanks with plane ends
+END_BULKHEAD_SPACE_PRESSURE_M = 0.20    # 3.5.3, any other tank end (Type C domed heads); #281
 
 
 @dataclass
@@ -61,10 +61,12 @@ class GasSeparationInputs:
 
     cofferdam_m: float = COFFERDAM_MIN_M
     opening_setback_m: float = OPENING_SETBACK_M
-    # Type-C tanks are pressure vessels, so the clause permits 0,20 m forward. The default
-    # here is the UNREDUCED 0,50 m: the saving is immaterial and the reduction needs a
-    # designer's call, not a default.
+    # Type-C tanks have domed heads, so 3.5.3 asks 0,20 m forward (0,50 m only for plane tank
+    # ends). The default space here is 0,50 m: the saving is immaterial and the reduction needs
+    # a designer's call, not a default.
     fwd_end_bulkhead_m: float = END_BULKHEAD_SPACE_M
+    # Kept so older callers still build. No check reads it: the space is keyed to the tank end
+    # shape (issue #281), and every Type C tank has domed heads.
     is_pressure_tank: bool = True
     # Kept so older callers still build. No check reads them (the inland type-G floors went in
     # issue #215).

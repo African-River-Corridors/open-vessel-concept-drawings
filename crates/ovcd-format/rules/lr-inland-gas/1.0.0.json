@@ -42,14 +42,14 @@
         "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 255"
       },
       "input": {
-        "name": "tank kind (as the code keys it)"
+        "name": "tank end shape"
       },
       "unit": "m",
       "rows": [
         {
           "when": {
             "in": [
-              "pressure"
+              "domed"
             ]
           },
           "shape": "const",
@@ -58,7 +58,7 @@
         {
           "when": {
             "in": [
-              "standard"
+              "plane"
             ]
           },
           "shape": "const",
@@ -139,7 +139,7 @@
     },
     {
       "id": "lr-inland/3.5.3/end-space",
-      "title": "Space between the tanks and the hold end bulkhead, by tank kind",
+      "title": "Space between the tanks and the hold end bulkhead: 0.20 m, or 0.50 m for plane ends",
       "origin": "class",
       "source": {
         "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
@@ -151,9 +151,15 @@
       "codified": {
         "by": "agent",
         "date": "2026-10-21",
-        "review": "#272"
+        "review": "#281"
       },
-      "verified": false,
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "Inland Waterways Ships rules, November 2015 edition, and the July 2022 Pt 4 Ch 4 Sec 3 (same clause)",
+        "locator_read": "3.5.3(a), PDF p. 255",
+        "review": "#281"
+      },
       "kind": "table",
       "measure": {
         "id": "separation.fwd"
@@ -168,7 +174,7 @@
       "consequence": "block",
       "sizes": true,
       "evaluated": true,
-      "finding": "#281",
+      "finding": null,
       "since": "1.0.0"
     }
   ]

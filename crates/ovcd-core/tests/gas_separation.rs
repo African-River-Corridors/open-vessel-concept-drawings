@@ -58,7 +58,7 @@ fn golden_defaults() {
     );
     assert_eq!(
         r.checks[2].message,
-        "forward end-bulkhead space 0.50 m >= 0.20 m (pressure tank, cl. 3.5.3 / 3.6.3)"
+        "forward end-bulkhead space 0.50 m >= 0.20 m (domed tank ends, cl. 3.5.3)"
     );
 }
 
@@ -109,7 +109,7 @@ fn a_cofferdam_wider_than_the_setback_leaves_no_service_space() {
 fn as_designed_clearances_add_no_check() {
     let r = compute(&GasSeparationInputs {
         fwd_end_bulkhead_m: 0.3,
-        is_pressure_tank: false,
+        plane_tank_ends: true,
         side_clearance_m: 0.05,
         double_bottom_m: 0.05,
         ..Default::default()
@@ -128,9 +128,34 @@ fn as_designed_clearances_add_no_check() {
     );
     assert_eq!(
         r.checks[2].message,
-        "forward end-bulkhead space 0.30 m >= 0.50 m (standard, cl. 3.5.3 / 3.6.3)"
+        "forward end-bulkhead space 0.30 m >= 0.50 m (plane tank ends, cl. 3.5.3)"
     );
     assert!(r.checks.iter().all(|c| !c.name.contains("type_g")));
+}
+
+/// Issue #281: the space is keyed to the tank end shape (3.5.3), not to the tank kind. A tank that
+/// is not a pressure tank but has domed ends needs 0.20 m, as a pressure tank does.
+#[test]
+fn the_end_space_follows_the_tank_ends_not_the_tank_kind() {
+    for is_pressure_tank in [true, false] {
+        let r = compute(&GasSeparationInputs {
+            fwd_end_bulkhead_m: 0.3,
+            is_pressure_tank,
+            ..Default::default()
+        })
+        .unwrap();
+        assert!(
+            r.checks[2].ok,
+            "domed ends, pressure tank {is_pressure_tank}"
+        );
+    }
+    let plane = compute(&GasSeparationInputs {
+        fwd_end_bulkhead_m: 0.3,
+        plane_tank_ends: true,
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(!plane.checks[2].ok);
 }
 
 /// The checks allow a 1e-9 slack, so a value a hair under the floor still passes.

@@ -85,9 +85,9 @@ check-cofferdam-min-width = cofferdam { $cofferdam } m >= { $min } m (cl. 3.6.13
 check-name-opening-setback = opening setback
 check-opening-setback = aft separation { $aft } m >= { $min } m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)
 check-name-fwd-end-bulkhead-space = fwd end bulkhead space
-check-fwd-end-bulkhead-space = forward end-bulkhead space { $fwd } m >= { $min } m ({ $tank_kind }, cl. 3.5.3 / 3.6.3)
-check-fwd-end-bulkhead-space-pressure-tank = pressure tank
-check-fwd-end-bulkhead-space-standard = standard
+check-fwd-end-bulkhead-space = forward end-bulkhead space { $fwd } m >= { $min } m ({ $tank_ends }, cl. 3.5.3)
+check-fwd-end-bulkhead-space-plane-ends = plane tank ends
+check-fwd-end-bulkhead-space-domed-ends = domed tank ends
 warn-separation-clauses = Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release.
 
 ## crates/ovcd-core/src/gas_stability.rs
