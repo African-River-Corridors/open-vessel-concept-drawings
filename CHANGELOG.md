@@ -203,54 +203,6 @@ Between `main b2e943f` and `this branch 3a9a9aa`.
 | sweep CN-derived liquid 3 (130x17.2) | `checks[12].message` | GM 5.38 m (fluid), max GZ 2.15 m at 27° | GM 6.00 m (fluid), max GZ 2.46 m at 27° | changed |
 | sweep CN-derived liquid 3 (130x17.2) | `checks[13].message` | GM 7.71 m (fluid), max GZ 2.96 m at 28° | GM 8.67 m (fluid), max GZ 3.14 m at 28° | changed |
 | ... | 25172 more changed quantities | | | |
-### 277 (2026-10-21)
-
-Between `main 8cff651` and `this branch 3fdad84`.
-
-| Case | Quantity | Before | After | Change |
-|---|---|---|---|---|
-| sweep CN-derived bulk 1 (88x16.3) | `checks[8].severity` | warning | error | changed |
-| sweep CN-derived bulk 2 (130x16.3) | `checks[8].severity` | warning | error | changed |
-| sweep CN-derived bulk 3 (130x17.2) | `checks[8].severity` | warning | error | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `checks[12].message` | GM 3.84 m (fluid), max GZ 1.59 m at 26° | GM 5.89 m (fluid), max GZ 2.54 m at 29° | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `checks[13].message` | GM 5.55 m (fluid), max GZ 2.27 m at 27° | GM 8.24 m (fluid), max GZ 3.02 m at 30° | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `checks[14].message` | GM 9.80 m (fluid), max GZ 3.06 m at 29° | GM 13.89 m (fluid), max GZ 3.55 m at 27° | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `checks[8].message` | raised eye 13.35 m >= obstruction 13.26 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 9.64 m >= obstruction 9.14 m + 0.50 m margin (lift used 2.29 m of 6.00 m) | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `checks[8].ok` | False | True | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `checks[8].severity` | warning | error | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `warnings[0]` | Sightline needs 6.41 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release. | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `warnings[1]` | Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release. | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `arrangement.feasible` | True | False | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[10].message` | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | cofferdam 0.60 m >= 0.60 m (cl. 3.6.13) | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[10].name` | opening setback | cofferdam min width | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[11].message` | forward end-bulkhead space 0.50 m >= 0.20 m (domed tank ends, cl. 3.5.3) | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[11].name` | fwd end bulkhead space | opening setback | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[12].message` | GM 3.40 m (fluid), max GZ 1.29 m at 26° | forward end-bulkhead space 0.50 m >= 0.20 m (domed tank ends, cl. 3.5.3) | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[12].name` | Stability — laden | fwd end bulkhead space | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[12].severity` | absent | error | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[13].message` | GM 5.04 m (fluid), max GZ 2.12 m at 27° | GM 3.40 m (fluid), max GZ 1.29 m at 26° | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[13].name` | Stability — half laden | Stability — laden | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | GM 9.71 m (fluid), max GZ 3.05 m at 29° | GM 5.04 m (fluid), max GZ 2.12 m at 27° | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[14].name` | Stability — light | Stability — half laden | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[15].message` | absent | GM 9.71 m (fluid), max GZ 3.05 m at 29° | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[15].name` | absent | Stability — light | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[15].ok` | absent | True | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[1].message` | cargo volume must be positive (tank/hold fits) | No arrangement passes every check on this hull. The closest one is shown. It fails: wheelhouse_sees_over_cargo. | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[1].name` | feasible geometry | Feasible arrangement | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[1].ok` | True | False | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[1].severity` | error | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[2].message` | cargo zone 98.49 m = LOA 130.0 - bow void 9.62 m - stern void 21.89 m | cargo volume must be positive (tank/hold fits) | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[2].name` | cargo zone positive | feasible geometry | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[3].message` | 3 x 2.60 m thrusters need 10.20 m across a 16.30 m beam | cargo zone 98.49 m = LOA 130.0 - bow void 9.62 m - stern void 21.89 m | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[3].name` | thrusters fit beam | cargo zone positive | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[4].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 16.30 m beam | 3 x 2.60 m thrusters need 10.20 m across a 16.30 m beam | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[4].name` | requested thruster count fits | thrusters fit beam | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[4].severity` | warning | error | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[5].message` | 3 x 40 ft units abreast need 10.91 m across a 16.30 m beam | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 16.30 m beam | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[5].name` | containers fit beam | requested thruster count fits | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[5].severity` | error | warning | changed |
-| ... | 3812 more changed quantities | | | |
-
 ### ticket/349-trim (2026-10-21)
 
 Between `main f9475c8` and `this branch ba007ac`.
