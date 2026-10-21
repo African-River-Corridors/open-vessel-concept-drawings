@@ -1,0 +1,175 @@
+{
+  "$schema": "../rule-set.schema.json",
+  "id": "lr-inland-gas",
+  "family": "lr-inland",
+  "title": "Inland class rules, gas tank separation clauses (draft, until the IGC chapter 3 Rules)",
+  "version": "1.0.0",
+  "edition": {
+    "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+    "edition": "July 2022, as the code cites it",
+    "read": "November 2015 edition (same clauses); unofficial copy of the July 2022 Pt 4 Ch 4 Sec 3"
+  },
+  "sources": [
+    {
+      "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3, November 2015",
+      "edition": "November 2015",
+      "url": "https://archive.org/details/lloyds-register-rules-and-regulations-for-the-classification-of-inland-waterways-ships-november-2015",
+      "access": "free",
+      "sha256": "db7972754a860bf1cd21e310e499554ee7c6a4d06ed078f1804cd44d4f4ec0ea"
+    },
+    {
+      "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3, July 2022 (unofficial copy of the section)",
+      "edition": "July 2022",
+      "url": "https://www.imorules.com/IWW_PT4_CH4_3.html",
+      "access": "free",
+      "sha256": "c8ba02574a28f784129f03819c13aa5480d479b1269334586ce6b0f1f812ee83"
+    }
+  ],
+  "status": "draft",
+  "applies_when": {
+    "cargo_containment": [
+      "type_c_tanks"
+    ]
+  },
+  "includes": [],
+  "known_conflicts": [],
+  "tables": [
+    {
+      "id": "lr-end-space",
+      "source": {
+        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+        "locator": "3.5.3",
+        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 255"
+      },
+      "input": {
+        "name": "tank kind (as the code keys it)"
+      },
+      "unit": "m",
+      "rows": [
+        {
+          "when": {
+            "in": [
+              "pressure"
+            ]
+          },
+          "shape": "const",
+          "a": 0.2
+        },
+        {
+          "when": {
+            "in": [
+              "standard"
+            ]
+          },
+          "shape": "const",
+          "a": 0.5
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "lr-inland/3.6.13/cofferdam",
+      "title": "Cofferdam at the aft end of the cargo area at least 0.60 m wide",
+      "origin": "class",
+      "source": {
+        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+        "edition": "July 2022 as the code cites it; read in the November 2015 edition, and in an unofficial copy of the July 2022 section, which have the same clauses",
+        "locator": "3.6.13",
+        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 256",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "separation.cofferdam"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.6,
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "block",
+      "sizes": true,
+      "evaluated": true,
+      "finding": "#280",
+      "since": "1.0.0"
+    },
+    {
+      "id": "lr-inland/3.3.7/opening-setback",
+      "title": "Engine room and accommodation entrances at least 2.00 m from the cargo area",
+      "origin": "class",
+      "source": {
+        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+        "edition": "July 2022 as the code cites it; read in the November 2015 edition, and in an unofficial copy of the July 2022 section, which have the same clauses",
+        "locator": "3.3.7",
+        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 254",
+        "access": "free",
+        "also": [
+          "3.3.11"
+        ]
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "separation.aft"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 2.0,
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "block",
+      "sizes": true,
+      "evaluated": true,
+      "finding": "#381",
+      "since": "1.0.0"
+    },
+    {
+      "id": "lr-inland/3.5.3/end-space",
+      "title": "Space between the tanks and the hold end bulkhead, by tank kind",
+      "origin": "class",
+      "source": {
+        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+        "edition": "July 2022 as the code cites it; read in the November 2015 edition, and in an unofficial copy of the July 2022 section, which have the same clauses",
+        "locator": "3.5.3",
+        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 255",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "table",
+      "measure": {
+        "id": "separation.fwd"
+      },
+      "compare": "ge",
+      "limit": {
+        "table": "lr-end-space",
+        "at": "separation.tank_end",
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "block",
+      "sizes": true,
+      "evaluated": true,
+      "finding": "#281",
+      "since": "1.0.0"
+    }
+  ]
+}

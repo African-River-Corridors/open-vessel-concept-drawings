@@ -289,6 +289,33 @@
       "since": "1.0.0"
     },
     {
+      "id": "is2008/A.2.2/condition",
+      "title": "Each loading condition's stability check; false also if it does not float",
+      "origin": "regulation",
+      "source": {
+        "document": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A",
+        "edition": "MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only",
+        "access": "free",
+        "locator": "A.2.2",
+        "page": "MSC.267-85.pdf, annex pp. 11-12"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "note",
+      "measure": {
+        "id": "stability.condition_ok"
+      },
+      "consequence": "note",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
       "id": "is2008/A.2.3/weather",
       "title": "Severe wind and rolling criterion (weather criterion)",
       "origin": "regulation",

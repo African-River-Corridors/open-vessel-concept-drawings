@@ -214,6 +214,63 @@ pub static MEASURES: &[MeasureDef] = &[
         method_status: MethodStatus::Unverified,
     },
     MeasureDef {
+        id: "stability.condition_ok",
+        unit: "",
+        object: ObjectType::LoadingCondition,
+        value: ValueKind::Bool,
+        args: &[],
+        method: "The engine's stability check of this loading condition: every IS Code 2008 Part A 2.2 criterion holds",
+        method_status: MethodStatus::Verified,
+    },
+    MeasureDef {
+        id: "check.ok",
+        unit: "",
+        object: ObjectType::Option,
+        value: ValueKind::Bool,
+        args: &[ArgDef {
+            name: "name",
+            text: true,
+        }],
+        method: "The verdict of the engine's own check of this name, as the result's check list gives it",
+        method_status: MethodStatus::Verified,
+    },
+    MeasureDef {
+        id: "separation.cofferdam",
+        unit: "m",
+        object: ObjectType::Option,
+        value: ValueKind::Number,
+        args: &[],
+        method: "Cofferdam width at the aft end of the cargo area, as the gas separation used it",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
+        id: "separation.aft",
+        unit: "m",
+        object: ObjectType::Option,
+        value: ValueKind::Number,
+        args: &[],
+        method: "Aft separation from the cargo area: the greater of the cofferdam and the opening setback",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
+        id: "separation.fwd",
+        unit: "m",
+        object: ObjectType::Option,
+        value: ValueKind::Number,
+        args: &[],
+        method: "Space between the cargo tanks and the forward end bulkhead of the hold",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
+        id: "separation.tank_end",
+        unit: "",
+        object: ObjectType::Option,
+        value: ValueKind::Text,
+        args: &[],
+        method: "The tank kind the separation check is keyed to: pressure or standard",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
         id: "tank.material",
         unit: "",
         object: ObjectType::Tank,
@@ -275,6 +332,11 @@ pub trait MeasureSource {
     /// its gap, never `not applicable`. `None`: the Option really has none of them.
     fn missing(&self, _object: ObjectType) -> Option<String> {
         None
+    }
+    /// Whether the Option has this Measure at all. A Rule on a Measure the Option does not have (a
+    /// check the engine did not run for it) is `not applicable`, never a failure.
+    fn has(&self, _measure: &MeasureRef) -> bool {
+        true
     }
 }
 
@@ -759,7 +821,7 @@ fn rule_rows(
 ) -> Vec<TraceRow> {
     let def = source.def(&rule.measure.id);
     let base = row_of(rule, holders, def.as_ref());
-    if !applies(&rule.applies_when, source) {
+    if !applies(&rule.applies_when, source) || !source.has(&rule.measure) {
         return vec![base];
     }
     let Some(def) = def else {

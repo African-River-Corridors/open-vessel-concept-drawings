@@ -34,6 +34,14 @@ const BUILT_IN: &[(&str, &str)] = &[
         "rules/igc-2g/1.0.0.json",
         include_str!("../rules/igc-2g/1.0.0.json"),
     ),
+    (
+        "rules/lr-inland-gas/1.0.0.json",
+        include_str!("../rules/lr-inland-gas/1.0.0.json"),
+    ),
+    (
+        "rules/ovcd/1.0.0.json",
+        include_str!("../rules/ovcd/1.0.0.json"),
+    ),
 ];
 
 /// The roles that may write or verify a Rule. A person's name never goes in a Rule Set: the

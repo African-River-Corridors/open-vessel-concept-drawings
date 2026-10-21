@@ -215,6 +215,35 @@ impl MeasureSource for OptionMeasures<'_> {
                 _ => Err(format!("`{name}` has no value")),
             };
         }
+        if m.id == "check.ok" {
+            let name = match m.args.iter().find(|(k, _)| k == "name") {
+                Some((_, ArgValue::Text(n))) => n,
+                _ => return Err("`check.ok` needs the text argument `name`".to_string()),
+            };
+            return self
+                .measured
+                .checks
+                .iter()
+                .find(|(n, _)| n == name)
+                .map(|(_, ok)| MeasureValue::Bool(*ok))
+                .ok_or_else(|| format!("the result has no check `{name}`"));
+        }
+        if let Some(name) = m.id.strip_prefix("separation.") {
+            let (s, pressure) = self
+                .measured
+                .separation
+                .as_ref()
+                .ok_or_else(|| "the Option has no gas cargo-area separation".to_string())?;
+            return match name {
+                "cofferdam" => Ok(MeasureValue::Number(s.cofferdam_m)),
+                "aft" => Ok(MeasureValue::Number(s.aft_separation_m)),
+                "fwd" => Ok(MeasureValue::Number(s.fwd_separation_m)),
+                "tank_end" => Ok(MeasureValue::Text(
+                    if *pressure { "pressure" } else { "standard" }.to_string(),
+                )),
+                other => Err(format!("no value for Measure `separation.{other}`")),
+            };
+        }
         if let Some(name) = m.id.strip_prefix("tank.") {
             let t = self
                 .measured
@@ -273,8 +302,30 @@ impl MeasureSource for OptionMeasures<'_> {
                     .ok_or_else(|| format!("no GZ at {from} degrees or more"))
             }
             "gz.angle_of_max" => Ok(MeasureValue::Number(f64::from(c.max_gz_deg))),
+            "stability.condition_ok" => {
+                // The check `simulate` lists for the condition (`ga::stability_check`).
+                let name = format!("Stability \u{2014} {}", c.name.to_lowercase());
+                self.measured
+                    .checks
+                    .iter()
+                    .find(|(n, _)| *n == name)
+                    .map(|(_, ok)| MeasureValue::Bool(*ok))
+                    .ok_or_else(|| format!("the result has no check `{name}`"))
+            }
             "gm0" => Ok(MeasureValue::Number(c.gm_fluid_m)),
             other => Err(format!("no value for Measure `{other}`")),
+        }
+    }
+
+    fn has(&self, measure: &MeasureRef) -> bool {
+        match measure.id.as_str() {
+            // A check the engine did not run for this Option: the Rule does not apply to it.
+            "check.ok" => measure.args.iter().any(|(k, v)| {
+                k == "name"
+                    && matches!(v, ArgValue::Text(n) if self.measured.checks.iter().any(|(c, _)| c == n))
+            }),
+            id if id.starts_with("separation.") => self.measured.separation.is_some(),
+            _ => true,
         }
     }
 
@@ -450,4 +501,73 @@ pub fn measures_text() -> String {
         }
     }
     out
+}
+
+/// The Rule each check of a result reports (spec 0004, "Each check gains the id of the Rule it
+/// reports"). The `checks` list is in the results hash, so the id is not written into each check;
+/// this table holds the link instead, and a test keeps it complete. A name that starts with
+/// `Stability — ` is the stability check of one loading condition.
+pub const CHECK_RULES: &[(&str, &str)] = &[
+    ("Cargo > 0", "ovcd/capacity/cargo-positive"),
+    ("feasible geometry", "ovcd/capacity/feasible-geometry"),
+    ("cargo zone positive", "ovcd/capacity/cargo-zone-positive"),
+    (
+        "air draft within limit",
+        "ovcd/capacity/air-draft-within-limit",
+    ),
+    (
+        "Air draft (empty, governing)",
+        "ovcd/capacity/air-draft-empty",
+    ),
+    ("gm positive", "ovcd/capacity/hopper-gm"),
+    (
+        "Feasible arrangement",
+        "ovcd/gas-arrangement/feasible-arrangement",
+    ),
+    (
+        "tank length over diameter",
+        "ovcd/gas-arrangement/tank-l-over-d",
+    ),
+    ("thrusters fit beam", "ovcd/aft-block/thrusters-fit-beam"),
+    (
+        "requested thruster count fits",
+        "ovcd/aft-block/thruster-count",
+    ),
+    ("containers fit beam", "ovcd/aft-block/containers-fit-beam"),
+    ("units fit in one row", "ovcd/aft-block/units-in-one-row"),
+    (
+        "wheelhouse fits beam",
+        "ovcd/aft-block/wheelhouse-fits-beam",
+    ),
+    (
+        "accom beside wheelhouse",
+        "ovcd/aft-block/accom-beside-wheelhouse",
+    ),
+    ("gensets fit beam", "ovcd/aft-block/gensets-fit-beam"),
+    (
+        "gensets fit under deck",
+        "ovcd/aft-block/gensets-under-deck",
+    ),
+    (
+        "gensets carry load with one in reserve",
+        "ovcd/aft-block/gensets-reserve",
+    ),
+    (
+        "wheelhouse sees over cargo",
+        "ovcd/aft-block/wheelhouse-sightline",
+    ),
+    ("cofferdam min width", "lr-inland/3.6.13/cofferdam"),
+    ("opening setback", "lr-inland/3.3.7/opening-setback"),
+    ("fwd end bulkhead space", "lr-inland/3.5.3/end-space"),
+];
+
+/// The id of the Rule a check reports, or `None` for a check no Rule reports.
+pub fn rule_of_check(name: &str) -> Option<&'static str> {
+    if name.starts_with("Stability \u{2014} ") {
+        return Some("is2008/A.2.2/condition");
+    }
+    CHECK_RULES
+        .iter()
+        .find(|(n, _)| *n == name)
+        .map(|(_, id)| *id)
 }
