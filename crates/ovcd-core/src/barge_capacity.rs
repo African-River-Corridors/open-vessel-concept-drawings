@@ -219,6 +219,9 @@ pub struct BargeCapacityInputs {
     /// Issue #348: `Some` puts the stern block's mass into the lightship of a self-propelled hull;
     /// `None` leaves it out, as before.
     pub stern_block_mass: Option<crate::aft_arrangement::SternMassInputs>,
+    /// Issue #350: the Stern Form, when it is not today's square stern: it corrects the LCB of the
+    /// trim. `None`: a square stern.
+    pub stern_geometry: Option<crate::stern_form::SternGeometry>,
     pub dome_height: f64,
     /// Diameter of the cylindrical dome (m). With `dome_height` it gives the dome's volume, which
     /// counts in Vc for d(Vc) only (IGC 2.4.1.1: Vc includes domes and appendages), not in the
@@ -290,6 +293,7 @@ impl BargeCapacityInputs {
             fill_ratio: 0.95,
             cargo_density_kg_m3: None,
             stern_block_mass: None,
+            stern_geometry: None,
             dome_height: DEFAULT_TANK_DOME_HEIGHT_M,
             dome_diameter: DEFAULT_TANK_DOME_DIAMETER_M,
             dome_diameter_by_rule: false,
@@ -426,6 +430,8 @@ pub struct BargeCapacityResult {
     /// Issue #349: the trim of a dry-bulk hull, laden and light, when the stern block is in the
     /// lightship (empty otherwise; a gas hull has it per stability condition).
     pub trim_conditions: Vec<(&'static str, crate::models::TrimResult)>,
+    /// Issue #350: the Stern Form the result was worked with (`None`: a square stern).
+    pub stern_geometry: Option<crate::stern_form::SternGeometry>,
     pub gas_basis: Option<GasBasis>,
 
     pub checks: Vec<Check>,
@@ -1162,6 +1168,8 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     // Issue #349: the trim of a dry-bulk hull when the stern block is in the lightship: the rest of
     // the lightship at the middle of the hull, the block items at their zones, the cargo at the
     // middle of the hold zone.
+    // Issue #350: the Stern Form moves the LCB.
+    let stern = inp.stern_geometry.as_ref();
     let trim_conditions = if !is_gas && !stern_block_items.is_empty() {
         let block = crate::weights::total_mass(&stern_block_items);
         let hold_centre = (stern_void + (inp.loa - bow_void)) / 2.0;
@@ -1170,10 +1178,13 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         let mut laden = light.clone();
         laden.push((cargo_capacity, hold_centre));
         vec![
-            ("Laden", crate::hydrostatics::trim(&hull, draft, &laden)),
+            (
+                "Laden",
+                crate::hydrostatics::trim_with_stern(&hull, draft, &laden, stern),
+            ),
             (
                 "Light",
-                crate::hydrostatics::trim(&hull, light_draft, &light),
+                crate::hydrostatics::trim_with_stern(&hull, light_draft, &light, stern),
             ),
         ]
     } else {
@@ -1341,6 +1352,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         gas_basis: detail.gas_basis,
         stern_block_items: stern_block_items.clone(),
         trim_conditions,
+        stern_geometry: inp.stern_geometry.clone(),
         tank_rules: detail.tank_rules,
         checks,
         warnings,

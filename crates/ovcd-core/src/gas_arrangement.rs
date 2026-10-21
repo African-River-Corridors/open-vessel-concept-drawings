@@ -66,6 +66,8 @@ pub struct FitOptions {
     pub cargo_density_kg_m3: Option<f64>,
     /// Issue #348: `Some` puts the stern block's mass into the lightship of a self-propelled hull.
     pub stern_block_mass: Option<crate::aft_arrangement::SternMassInputs>,
+    /// Issue #350: the Stern Form, when it is not today's square stern.
+    pub stern_geometry: Option<crate::stern_form::SternGeometry>,
     pub self_propelled: bool,
     pub depths: Vec<f64>,
     pub tanks_wide: Vec<i64>,
@@ -116,6 +118,7 @@ impl Default for FitOptions {
             fill_ratio: 0.95,
             cargo_density_kg_m3: None,
             stern_block_mass: None,
+            stern_geometry: None,
             self_propelled: true,
             depths: DEFAULT_DEPTHS_M.to_vec(),
             tanks_wide: DEFAULT_TANKS_WIDE.to_vec(),
@@ -471,6 +474,7 @@ impl Search<'_> {
         inp.fill_ratio = self.o.fill_ratio;
         inp.cargo_density_kg_m3 = self.o.cargo_density_kg_m3;
         inp.stern_block_mass = self.o.stern_block_mass.clone();
+        inp.stern_geometry = self.o.stern_geometry.clone();
         inp.block_coefficient = self.o.block_coefficient;
         inp.n_tanks_wide = Some(nw);
         inp.n_tanks_long = nl;

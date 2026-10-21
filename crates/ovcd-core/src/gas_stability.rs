@@ -158,6 +158,8 @@ pub struct GasCapacityResult {
     pub has_aft_arrangement: bool,
     /// Issue #348: the stern block's mass items when they are in the lightship (empty otherwise).
     pub stern_block_items: Vec<crate::weights::MassItem>,
+    /// Issue #350: the Stern Form, for the LCB of the trim (`None`: a square stern).
+    pub stern_geometry: Option<crate::stern_form::SternGeometry>,
 }
 
 impl TryFrom<&BargeCapacityResult> for GasCapacityResult {
@@ -198,6 +200,7 @@ impl TryFrom<&BargeCapacityResult> for GasCapacityResult {
             lightship_t: r.lightship_t,
             has_aft_arrangement: r.aft_arrangement.is_some(),
             stern_block_items: r.stern_block_items.clone(),
+            stern_geometry: r.stern_geometry.clone(),
         })
     }
 }
@@ -301,7 +304,12 @@ pub fn assess_num(
             if cargo > 0.0 {
                 along.push((cargo, tank_zone_centre));
             }
-            trims.push(crate::hydrostatics::trim(&trim_hull, t, &along));
+            trims.push(crate::hydrostatics::trim_with_stern(
+                &trim_hull,
+                t,
+                &along,
+                result.stern_geometry.as_ref(),
+            ));
         }
         if t >= d {
             conds.push(Condition {

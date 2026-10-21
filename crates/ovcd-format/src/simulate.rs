@@ -279,7 +279,7 @@ fn curves(
     l: f64,
     b: f64,
     t: f64,
-    cb: f64,
+    (cb, extra_wetted_m2): (f64, f64),
     disp: f64,
     rho: f64,
 ) -> R<Value> {
@@ -340,6 +340,8 @@ fn curves(
         speed_min_knots: 1.0,
         speed_max_knots: get_or(p, "speed_max_kn", 10.0)?,
         speed_step_knots: 0.5,
+        // Issue #350: the wetted surface the Stern Form adds (a tunnel's roof, a run's slope).
+        wetted_surface_extra_m2: extra_wetted_m2,
         ..ResistanceInputs::default()
     };
     let rr = resistance::compute(&inputs)
@@ -950,10 +952,15 @@ fn simulate_measured(p: &Map<String, Value>, measured: &mut Measured) -> R<Value
         )));
     }
     let (l, b, d) = (need(p, "loa_m")?, need(p, "beam_m")?, need(p, "depth_m")?);
-    let cb = need(p, "cb")?;
     // One water density for the whole run: the draught, the stability and the resistance curves.
     let rho = get_or(p, "water_density_t_per_m3", gs::DEFAULT_WATER_DENSITY)?;
     let self_propelled = p.get("self_propelled").is_some_and(truthy);
+    // Issue #350: the Stern Form of a self-propelled hull, at the design draught, and the block
+    // coefficient: as given, or (null) the raked box with the Stern Form.
+    let t_design = design_draught(p, d)?;
+    let stern_geometry = stern_of(p, (l, b, d), t_design, self_propelled)?;
+    let stern = stern_geometry.as_ref();
+    let cb = cb_of(p, stern, (l, b, d), t_design)?;
     if vessel_id == "gas_barge" {
         return simulate_gas(
             p,
@@ -962,7 +969,7 @@ fn simulate_measured(p: &Map<String, Value>, measured: &mut Measured) -> R<Value
             cargo_key,
             (l, b, d),
             (cb, rho),
-            self_propelled,
+            (self_propelled, stern),
         )
         .map(|(v, gas)| {
             *measured = gas;
@@ -991,6 +998,7 @@ fn simulate_measured(p: &Map<String, Value>, measured: &mut Measured) -> R<Value
     inp.bulk_end_bulkhead_m = get_or(p, "bulk_end_bulkhead_m", inp.bulk_end_bulkhead_m)?;
     inp.aft_design = aft_design_of(p)?;
     inp.stern_block_mass = stern_mass_of(p)?;
+    inp.stern_geometry = stern.cloned();
     // The hold design values. A key left out keeps the core default, which is the value the engine
     // used before these were inputs.
     inp.wing_void_width = get_or(p, "hold_wing_void_width_m", inp.wing_void_width)?;
@@ -1057,7 +1065,15 @@ fn simulate_measured(p: &Map<String, Value>, measured: &mut Measured) -> R<Value
     if let Some(limit) = truthy_float(p, "air_draft_limit_m")? {
         checks.push(air_draft_check(&r, limit, &mut ids)?);
     }
-    let curve_list = curves(p, l, b, t, cb, disp, rho)?;
+    let curve_list = curves(
+        p,
+        l,
+        b,
+        t,
+        (cb, stern.map_or(0.0, |g| g.extra_wetted_surface(t))),
+        disp,
+        rho,
+    )?;
     let geo = json!({
         "bow_void_length_m": opt_num(r.bow_void_length_m),
         "stern_void_length_m": opt_num(r.stern_void_length_m),
@@ -1073,7 +1089,12 @@ fn simulate_measured(p: &Map<String, Value>, measured: &mut Measured) -> R<Value
         "hold_bottom_width_m": opt_num(r.hold_bottom_width_m),
         "insulation_thickness_mm": opt_num(r.insulation_thickness_mm),
     });
-    let drawing = drawing_json(structure_json(&r, inp.separation.as_ref(), Some(&inp)));
+    let geo = with_stern_geometry(geo, stern);
+    let mut dry_parts = structure_json(&r, inp.separation.as_ref(), Some(&inp));
+    if let Some(g) = stern {
+        dry_parts.push(("stern", stern_drawing(g)));
+    }
+    let drawing = drawing_json(dry_parts);
     with_text_ids(
         with_stern_mass(
             json!({
@@ -1132,6 +1153,157 @@ fn with_trim(mut c: Value, trim: Option<&ovcd_core::models::TrimResult>) -> Valu
         c["draught_fwd_m"] = num(t.draft_fwd);
     }
     c
+}
+
+/// The design draught (m): the least of the hull's depth less the freeboard, the draught limit and
+/// the channel's depth less its under-keel clearance, as the draught cap is worked out below.
+fn design_draught(p: &Map<String, Value>, d: f64) -> R<f64> {
+    let mut t = d - get_or(p, "freeboard_min_m", 0.3)?;
+    if let Some(v) = truthy_float(p, "draught_limit_m")?
+        && v < t
+    {
+        t = v;
+    }
+    if let Some(v) = channel_limit(&channel(p)?)?
+        && v < t
+    {
+        t = v;
+    }
+    Ok(t)
+}
+
+/// The Stern Form of a self-propelled hull (issue #350), `None` for any other hull, for params with
+/// no Stern Form, and for today's square stern (a run of 0).
+fn stern_of(
+    p: &Map<String, Value>,
+    (l, b, d): (f64, f64, f64),
+    t: f64,
+    self_propelled: bool,
+) -> R<Option<ovcd_core::stern_form::SternGeometry>> {
+    use ovcd_core::stern_form::{HullDims, SternForm, SternFormInputs, geometry};
+    if !self_propelled {
+        return Ok(None);
+    }
+    let form = match p.get("stern_form") {
+        None | Some(Value::Null) => return Ok(None),
+        Some(Value::String(s)) => match SternForm::from_key(s) {
+            Some(f) => f,
+            None => {
+                return bad(format!(
+                    "`params.stern_form` {} is not a Stern Form",
+                    py_repr(&json!(s))
+                ));
+            }
+        },
+        Some(other) => {
+            return bad(format!(
+                "`params.stern_form` must be text, not {}",
+                py_repr(other)
+            ));
+        }
+    };
+    let opt = |k: &str| -> R<Option<f64>> {
+        match p.get(k) {
+            None | Some(Value::Null) => Ok(None),
+            Some(v) => Ok(Some(py_float(v, &format!("params.{k}"))?)),
+        }
+    };
+    let propulsor = p
+        .get("propulsor_type")
+        .and_then(Value::as_str)
+        .unwrap_or("unspecified");
+    let count = if propulsor == "unspecified" {
+        get_or(p, "thruster_count", 3.0)?
+    } else {
+        get_or(p, "propulsor_count", 2.0)?
+    };
+    let g = geometry(
+        &SternFormInputs {
+            form,
+            run_length_m: opt("stern_run_length_m")?,
+            transom_height_m: opt("stern_transom_height_m")?,
+            tunnel_crown_height_m: opt("tunnel_crown_height_m")?,
+            propulsor_count: whole_number(count, "propulsor_count")?.max(1) as u32,
+            propeller_diameter_m: opt("propeller_diameter_m")?,
+            parallel_shafts: propulsor.starts_with("shaft"),
+        },
+        &HullDims {
+            loa: l,
+            beam: b,
+            depth: d,
+            design_draught: t,
+        },
+    );
+    Ok(if g.is_legacy() { None } else { Some(g) })
+}
+
+/// The block coefficient (issue #350): as the params give it; null asks for the rule, the volume
+/// of the raked box (today's bow rake and the Stern Form) at the design draught over L x B x T,
+/// or 0.85 with no Stern Form, the value the engine always used.
+fn cb_of(
+    p: &Map<String, Value>,
+    stern: Option<&ovcd_core::stern_form::SternGeometry>,
+    (l, b, d): (f64, f64, f64),
+    t: f64,
+) -> R<f64> {
+    match p.get("cb") {
+        Some(Value::Null) => match stern {
+            Some(g) if t > 0.0 => {
+                let rake = get_or(
+                    p,
+                    "bow_rake_length_to_depth_ratio",
+                    ovcd_core::barge_capacity::DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
+                )? * d;
+                let hull = ovcd_core::hull::HullGeometry::new(l, b, d, rake, d, 0.0, 0.0);
+                Ok((hull.displaced_volume(t) - g.removed(t).0) / (l * b * t))
+            }
+            _ => Ok(DEFAULT_BLOCK_COEFFICIENT),
+        },
+        _ => need(p, "cb"),
+    }
+}
+
+/// The block coefficient the engine used before it had a rule.
+const DEFAULT_BLOCK_COEFFICIENT: f64 = 0.85;
+
+/// The Stern Form in the results' `geometry` (issue #350), only when there is one: a square stern
+/// adds no field. `stern_rake_length_m` is the run of a transom or pram stern, which the drawings
+/// read; a tunnel stern keeps its bottom on the base, so it has none.
+fn with_stern_geometry(
+    mut geo: Value,
+    stern: Option<&ovcd_core::stern_form::SternGeometry>,
+) -> Value {
+    if let Some(g) = stern {
+        let form = match g.form {
+            ovcd_core::stern_form::SternForm::Transom => "transom",
+            ovcd_core::stern_form::SternForm::Pram => "pram",
+            ovcd_core::stern_form::SternForm::Tunnel => "tunnel",
+        };
+        geo["stern_form"] = json!(form);
+        if g.form != ovcd_core::stern_form::SternForm::Tunnel {
+            geo["stern_rake_length_m"] = num(g.run_m);
+        }
+        geo["stern_run_length_m"] = num(g.run_m);
+        geo["stern_transom_height_m"] = num(g.transom_height_m);
+        geo["propeller_diameter_m"] = num(g.propeller_diameter_m);
+        geo["propeller_d_max_m"] = num(g.d_max_m);
+    }
+    geo
+}
+
+/// The Stern Form's outlines for the drawings (not a result): the bottom profile and the tunnel
+/// sections at the transom.
+fn stern_drawing(g: &ovcd_core::stern_form::SternGeometry) -> Value {
+    let pts = |v: &[[f64; 2]]| {
+        v.iter()
+            .map(|p| json!([num(p[0]), num(p[1])]))
+            .collect::<Vec<_>>()
+    };
+    json!({
+        "profile": pts(&g.profile()),
+        "tunnel_sections": g.tunnel_sections().iter().map(|s| pts(s)).collect::<Vec<_>>(),
+        "tunnel_crown_height_m": num(g.tunnel_crown_height_m),
+    })
 }
 
 /// Whether the stern block's mass is in the lightship (issue #348), and what it needs. A key left
@@ -1200,7 +1372,7 @@ fn simulate_gas(
     cargo_key: &str,
     (l, b, d0): (f64, f64, f64),
     (cb, rho): (f64, f64),
-    self_propelled: bool,
+    (self_propelled, stern): (bool, Option<&ovcd_core::stern_form::SternGeometry>),
 ) -> R<(Value, Measured)> {
     let ruleset = match p.get("ruleset") {
         None => "IGC_2G",
@@ -1323,6 +1495,7 @@ fn simulate_gas(
         air_draft_limit_m: truthy_float(p, "air_draft_limit_m")?,
         aft_design: aft_design_of(p)?,
         stern_block_mass: stern_mass_of(p)?,
+        stern_geometry: stern.cloned(),
         ..FitOptions::default()
     };
     let f = ga::fit(l, b, cargo_key, t_max, &options)
@@ -1427,7 +1600,15 @@ fn simulate_gas(
                 .collect::<Vec<_>>(),
         });
     }
-    let curve_list = curves(p, l, b, t, cb, disp, rho)?;
+    let curve_list = curves(
+        p,
+        l,
+        b,
+        t,
+        (cb, stern.map_or(0.0, |g| g.extra_wetted_surface(t))),
+        disp,
+        rho,
+    )?;
     let geo = json!({
         "bow_void_length_m": opt_num(r.bow_void_length_m),
         "stern_void_length_m": opt_num(r.stern_void_length_m),
@@ -1440,10 +1621,14 @@ fn simulate_gas(
         "bottom_clearance_m": opt_num(r.bottom_clearance_m),
         "insulation_thickness_mm": opt_num(r.insulation_thickness_mm),
     });
+    let geo = with_stern_geometry(geo, stern);
     let mut drawing_parts = structure_json(r, f.engine_inputs.separation.as_ref(), None);
     drawing_parts.push(("tank", tank_report(p, &f.engine_inputs, r)));
     if let Some(report) = loading.report {
         drawing_parts.push(("cargo_loading", report));
+    }
+    if let Some(g) = stern {
+        drawing_parts.push(("stern", stern_drawing(g)));
     }
     let drawing = drawing_json(drawing_parts);
     let air_loaded = r.air_draft_top_above_keel_m - t;

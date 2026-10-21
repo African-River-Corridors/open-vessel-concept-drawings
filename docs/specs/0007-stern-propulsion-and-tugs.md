@@ -185,7 +185,10 @@ the `atb` and `towed_barge` Vessel Classes pickable (`vessel_classes.rs` `format
 - **Largest propeller:** D_max = `k_D` × design draught, with `k_D` 0.80 under a tunnel (estimate: the
   research's inland data run 0.57–0.93) and 0.65 at an open transom or pram stern (sourced: MAN, seagoing,
   "d/D < approximately 0.65"). An azimuth unit below a transom: D_max from the same 0.65 rule. A typed D
-  above D_max is used and fails the OVCD Check "propeller fits the stern".
+  above D_max is used and fails the OVCD Check "propeller fits the stern". Under a tunnel, D_max is also
+  capped so the tunnels fit (maintainer decision on #350): a tunnel of radius D with its crown 0.10 D above
+  the tip is 2D·√0.99 wide at the base, so side by side the tunnels may meet but not overlap, and the
+  outer ones stay inside the beam.
 - **The sections table** (ADR 0012) later replaces the closed forms with sections the generator writes
   from the same inputs. The closed forms stay as the test of the generator, as the raked box does.
 

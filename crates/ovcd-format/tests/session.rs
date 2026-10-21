@@ -193,21 +193,21 @@ fn save_is_refused_while_a_hard_error_stands() {
 fn set_input_marks_typed_and_reset_returns_to_default() {
     let mut s = starter();
     assert_eq!(
-        input(&s, "Option 1", "block_coefficient").source,
+        input(&s, "Option 1", "max_speed_kn").source,
         Source::Default
     );
-    s.set_input("Option 1", "block_coefficient", json!(0.9))
+    s.set_input("Option 1", "max_speed_kn", json!(12.0))
         .unwrap();
-    let typed = input(&s, "Option 1", "block_coefficient");
+    let typed = input(&s, "Option 1", "max_speed_kn");
     assert_eq!(
         (typed.value.clone(), typed.source),
-        (json!(0.9), Source::Typed)
+        (json!(12.0), Source::Typed)
     );
-    s.reset_input("Option 1", "block_coefficient").unwrap();
-    let back = input(&s, "Option 1", "block_coefficient");
+    s.reset_input("Option 1", "max_speed_kn").unwrap();
+    let back = input(&s, "Option 1", "max_speed_kn");
     assert_eq!(
         (back.value.clone(), back.source),
-        (json!(0.85), Source::Default)
+        (json!(10.0), Source::Default)
     );
 }
 

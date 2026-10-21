@@ -1291,7 +1291,7 @@ pub const INPUTS: &[InputSpec] = &[
     spec(
         "block_coefficient",
         "Block coefficient",
-        NUM,
+        NUM_OR_NONE,
         false,
         Group::HullAndContainment,
     ),

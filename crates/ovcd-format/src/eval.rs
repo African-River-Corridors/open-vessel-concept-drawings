@@ -2190,6 +2190,8 @@ fn resistance_inputs(args: &Value) -> Result<core_resistance::ResistanceInputs, 
             .collect::<Result<_, _>>()?,
     };
     Ok(core_resistance::ResistanceInputs {
+        // The Python API has no Stern Form (issue #350).
+        wetted_surface_extra_m2: 0.0,
         loa: f64_or(o, "loa", d.loa)?,
         lwl: f64_or(o, "lwl", d.lwl)?,
         beam: f64_or(o, "beam", d.beam)?,

@@ -50,11 +50,12 @@
       "default_by_cargo_phase": { "dry_bulk": "box_hold", "liquid_gas": "type_c_tanks" }
     },
     "block_coefficient": {
-      "default": 0.85,
+      "default": null,
       "unit": "-",
       "hard": { "ge": 0.3, "le": 1 },
       "soft": { "min": 0.7, "max": 1.0 },
-      "basis": "calibrated box barges span 0.883 to 0.995; widened down for shaped gas hulls; 0.3 is the squat method's validity floor (hard)"
+      "status": "estimate",
+      "basis": "none: for a self-propelled hull whose Stern Form is not today's square stern, the volume of the raked box (today's bow rake and the Stern Form) at the design draught over L x B x T (spec 0007, issue #350); otherwise 0.85, the value the engine always used. A typed value is used as typed, and a saved file keeps its own. Calibrated box barges span 0.883 to 0.995; the soft range is widened down for shaped gas hulls; 0.3 is the squat method's validity floor (hard)"
     },
     "min_freeboard_m": {
       "default": 0.3,
@@ -787,7 +788,7 @@
       "hard": { "gt": 0, "le": 10 },
       "soft": { "min": 0.8, "max": 3.5 },
       "status": "estimate",
-      "basis": "For a Propulsor type other than unspecified. none: the largest diameter the stern allows (the stern geometry and propulsor tickets, #350 and #351; spec 0007 and docs/research/stern-and-tugs.md)"
+      "basis": "For a Propulsor type other than unspecified. none: the largest diameter the stern allows, D_max: 0.80 x the design draught under a tunnel (estimate), capped so the tunnels fit side by side inside the beam, and 0.65 x the design draught at a transom or pram stern (sourced: MAN); spec 0007 and docs/research/stern-and-tugs.md"
     },
     "power_source": {
       "default_by_cargo_phase": { "dry_bulk": "diesel_mechanical", "liquid_gas": "gas_fuelled" },

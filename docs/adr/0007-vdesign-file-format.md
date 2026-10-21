@@ -81,7 +81,10 @@ save writes the current version.
   bow thruster, the battery energy only with a battery Power Source. The engine reads none of the new inputs
   yet: later tickets of spec 0007 give them effect. A profile entry may say `status` (`sourced` with its
   `source`, or `estimate`) beside its `basis`; the schema shows it as `default_status`. Saving writes
-  version 3.
+  version 3. Issue #350: `block_coefficient` may now be none, its new Defaults Profile value: the engine
+  then takes the rule, the volume of the raked box with its bow rake and Stern Form at the design draught
+  over L x B x T, or 0.85 when the hull has no Stern Form (a barge, or a square transom). A file stores the
+  value as used, so a file with 0.85 keeps 0.85 and its results; a typed value is used as typed.
 - **Inputs added after the first files** (issue #4: the dry-bulk hold, the bow rake over depth, the stern void of a pushed barge, the end bulkhead allowance, the gas tank arrangement values, the water density, the squat safety margin, the 14 cost rates, the 17 aft block values of a self-propelled hull): a file that lacks one of these
   inputs, in version 1 or in a version 2 file from a test build, is read with the fixed value the engine
   used before the input existed (a table in `vdesign.rs`, not the Defaults Profile), marked `default`, with

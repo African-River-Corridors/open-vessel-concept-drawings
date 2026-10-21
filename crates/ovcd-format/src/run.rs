@@ -134,6 +134,13 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
         "tank_design_pressure_mpa",
         "tank_design_temperature_c",
         "tank_material",
+        "stern_form",
+        "stern_run_length_m",
+        "stern_transom_height_m",
+        "tunnel_crown_height_m",
+        "propulsor_type",
+        "propulsor_count",
+        "propeller_diameter_m",
         "stern_block_mass_included",
         "battery_unit_energy_kwh",
         "installed_power_kw",
@@ -192,6 +199,10 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
         if get(name).is_some_and(|v| v.is_null()) {
             p.insert(name.to_string(), Value::Null);
         }
+    }
+    // Issue #350: a null block coefficient asks for the rule (the raked box with the Stern Form).
+    if get("block_coefficient").is_some_and(|v| v.is_null()) {
+        p.insert("cb".to_string(), Value::Null);
     }
     let vessel = match get("cargo_containment").as_ref().and_then(Value::as_str) {
         Some("box_hold") => "box_barge",
