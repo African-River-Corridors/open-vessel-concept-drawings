@@ -1,0 +1,49 @@
+# TEMPORARY (issue #470): run the whole app smoke suite 20 times in a row on one build, to show the
+# flaky test is fixed. Removed before the pull request merges.
+name: e2e repeat
+on:
+  pull_request:
+    paths: ["app/e2e/**", ".github/workflows/e2e-repeat.yml"]
+jobs:
+  smoke-20:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: Tauri system libraries, WebDriver and a virtual display
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential libxdo-dev libssl-dev \
+            libayatana-appindicator3-dev librsvg2-dev webkit2gtk-driver xvfb
+      - name: tauri-driver (cached)
+        id: driver
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/tauri-driver
+          key: tauri-driver-2.1.0-${{ runner.os }}
+      - name: Install tauri-driver
+        if: steps.driver.outputs.cache-hit != 'true'
+        run: cargo install tauri-driver --version 2.1.0 --locked
+      - name: Build the debug app
+        working-directory: app
+        run: |
+          npm ci
+          npx tauri build --debug --no-bundle
+      - name: Smoke tests, 20 runs in a row
+        working-directory: app
+        run: |
+          for i in $(seq 1 20); do
+            echo "::group::run $i"
+            xvfb-run -a bash e2e/run.sh > "$RUNNER_TEMP/run-$i.log" 2>&1 || { tail -80 "$RUNNER_TEMP/run-$i.log"; echo "run $i FAILED"; exit 1; }
+            grep -E "^ℹ (tests|pass|fail)" "$RUNNER_TEMP/run-$i.log"
+            echo "::endgroup::"
+            echo "run $i passed"
+          done
