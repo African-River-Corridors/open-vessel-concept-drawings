@@ -822,6 +822,21 @@ fn the_section_draws_the_double_bottom_wing_tanks_voids_cradles_and_domes_from_t
                 "{file}: dome height"
             );
             assert!(has_leader(ent, "DOME"));
+            // as wide as the dome diameter in force (issue #316)
+            let width = f(&d["tank"]["dome_diameter_m"]).min(0.95 * od);
+            let spans: Vec<f64> = of_layer(ent, "OBJECT", "polyline")
+                .iter()
+                .map(|e| points(e))
+                .filter(|p| p.len() == 17)
+                .map(|p| {
+                    let xs = p.iter().map(|q| q.0);
+                    xs.clone().fold(f64::NEG_INFINITY, f64::max) - xs.fold(f64::INFINITY, f64::min)
+                })
+                .collect();
+            assert!(
+                spans.iter().all(|w| close(*w, width)),
+                "{file}: dome width {spans:?} against {width}"
+            );
         }
     }
     assert!(with_double_bottom > 0);

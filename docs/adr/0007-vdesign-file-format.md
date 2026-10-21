@@ -110,6 +110,12 @@ save writes the current version.
   the inputs gets `refrigerated_density` and 15 C (tables in `vdesign.rs`, marked `default`): the cargo data's
   density and the fill ratio as loaded, so its results do not change. The format version is not changed.
 
+- **Dome rule** (issue #316): `tank_dome_diameter_m` and `tank_dome_height_m` are optional overrides. The
+  Defaults Profile value is none (an `estimate` row): the dome rule of each tank, diameter = the larger of
+  1.2 m and 0.17 x the steel outer diameter, height = the diameter in force. A file that stores a size keeps
+  it; a file that lacks the inputs gets the fixed 2.0 m, as before. The dome in force is in `drawing.tank`.
+  The format version is not changed.
+
 ## Consequences
 
 - A saved file gives the same results when opened again, on Windows and macOS.

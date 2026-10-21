@@ -58,6 +58,31 @@ pub const DEFAULT_TANK_DOME_HEIGHT_M: f64 = 2.0;
 /// Default dome diameter (m), used only for the dome's volume in Vc. A nominal cylindrical dome as
 /// wide as it is high (the default dome height is 2.0 m); there is no published source for it yet.
 pub const DEFAULT_TANK_DOME_DIAMETER_M: f64 = 2.0;
+/// The dome rule (issue #316, an estimate on two published tanks): dome diameter = the larger of
+/// 1.2 m and 0.17 x the steel outer diameter, and dome height above the shell = the dome diameter.
+/// Points: a dimensioned dome of 2,500 mm diameter, 2,500 mm from the inside of the shell to the
+/// top, on a 14.6 m lobe (R7300; Heo, Kang and Park 2017, Fig. 19; 2.5 / 14.6 = 0.171), and the
+/// 1,200 mm valve dome of a 4.73 m river LPG tank (Senjanovic et al., DESIGN 2006).
+pub const DOME_RULE_MIN_DIAMETER_M: f64 = 1.2;
+pub const DOME_RULE_DIAMETER_RATIO: f64 = 0.17;
+
+/// The dome of a tank of steel outer diameter `steel_od_m` (m): `(diameter, height)`. A dimension
+/// given as `Some` is used as it is; `None` takes the dome rule. The height by rule is the diameter
+/// in force (typed or by rule).
+pub fn dome_dimensions(
+    steel_od_m: f64,
+    diameter_m: Option<f64>,
+    height_m: Option<f64>,
+) -> (f64, f64) {
+    let by_rule = DOME_RULE_DIAMETER_RATIO * steel_od_m;
+    let d = diameter_m.unwrap_or(if by_rule > DOME_RULE_MIN_DIAMETER_M {
+        by_rule
+    } else {
+        DOME_RULE_MIN_DIAMETER_M
+    });
+    (d, height_m.unwrap_or(d))
+}
+
 /// Default fixed tank wall thickness (mm).
 pub const DEFAULT_TANK_WALL_THICKNESS_MM: f64 = 25.0;
 /// The tank design values the engine used before they were inputs (`models::BargeInputs`
@@ -173,6 +198,10 @@ pub struct BargeCapacityInputs {
     /// counts in Vc for d(Vc) only (IGC 2.4.1.1: Vc includes domes and appendages), not in the
     /// cargo volume, the fill or the weights.
     pub dome_diameter: f64,
+    /// Issue #316: `true` takes the dome diameter, or the dome height, from the dome rule
+    /// ([`dome_dimensions`]) of each tank instead of the fixed value above.
+    pub dome_diameter_by_rule: bool,
+    pub dome_height_by_rule: bool,
     pub tank_support_height: f64,
     /// Gap between the wing tank and the cargo tank, per side (m).
     pub wing_tank_gap_m: f64,
@@ -236,6 +265,8 @@ impl BargeCapacityInputs {
             cargo_density_kg_m3: None,
             dome_height: DEFAULT_TANK_DOME_HEIGHT_M,
             dome_diameter: DEFAULT_TANK_DOME_DIAMETER_M,
+            dome_diameter_by_rule: false,
+            dome_height_by_rule: false,
             tank_support_height: DEFAULT_TANK_SUPPORT_HEIGHT_M,
             wing_tank_gap_m: DEFAULT_WING_TANK_GAP_M,
             wing_tank_height_ratio: DEFAULT_WING_TANK_HEIGHT_RATIO,
@@ -525,8 +556,16 @@ fn gas_volumetric(
     // IGC 2.4.1.1: Vc is 100 % of the gross design volume of the individual cargo tank at 20 C,
     // including domes and appendages. The dome is a cylinder of `dome_diameter` and `dome_height`.
     // Appendages (nozzles, manways and the like) are not modelled: no volume is added for them.
-    // The dome counts in Vc only, not in the cargo volume, the fill or the weights.
-    let dome_volume_m3 = dome_volume_m3(inp.dome_diameter, inp.dome_height);
+    // The dome counts in Vc only, not in the cargo volume, the fill or the weights. By the dome rule
+    // (issue #316) its size follows the steel diameter of the tank, so it is set in the loop.
+    let dome_of = |outer_diameter: f64| {
+        dome_dimensions(
+            outer_diameter - 2.0 * ins_m,
+            (!inp.dome_diameter_by_rule).then_some(inp.dome_diameter),
+            (!inp.dome_height_by_rule).then_some(inp.dome_height),
+        )
+    };
+    let mut dome = (inp.dome_diameter, inp.dome_height);
     let is_2g = inp.vessel_type == "IGC_2G";
     // d(Vc) depends on the tank volume, which depends on the clearance: iterate. d is continuous
     // and piecewise linear in Vc with a slope of at most 5e-5 per m^3, and a larger d gives a
@@ -562,9 +601,12 @@ fn gas_volumetric(
         bi.n_tanks_wide = n_wide;
         bi.post_init()?;
         let (t, n_total) = calculate_tank_arrangement_wide(&bi)?;
+        dome = dome_of(t.outer_diameter);
+        bi.dome_height = dome.1;
         // Per-tank Vc (IGC 2.4.1.1), tank plus dome.
         let count = if n_total > 1 { n_total } else { 1 };
-        let new_d_vc = d_vc_exact(t.total_tank_volume / (count as f64) + dome_volume_m3);
+        let new_d_vc =
+            d_vc_exact(t.total_tank_volume / (count as f64) + dome_volume_m3(dome.0, dome.1));
         tanks = Some((t, n_total));
         if fabs(new_d_vc - d_vc) < 1e-9 {
             break;
@@ -576,7 +618,7 @@ fn gas_volumetric(
     let hull = HullGeometry::new(inp.loa, inp.beam, inp.depth, 0.0, 0.0, 0.0, 0.0);
     let weights = calculate_weights(&bi, &hull, &tanks)?;
     let lightship = weights.lightship;
-    let h_top = db + inp.tank_support_height + tanks.outer_diameter + inp.dome_height;
+    let h_top = db + inp.tank_support_height + tanks.outer_diameter + dome.1;
     let detail = Detail {
         tank_outer_diameter_m: Some(tanks.outer_diameter),
         n_tanks_wide: Some(tanks.n_tanks_wide),

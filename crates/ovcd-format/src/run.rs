@@ -176,8 +176,15 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     put("draught_limit_m", "draught_limit_m");
     // A null wall thickness asks for the pressure-vessel formula (issue #292); `put` leaves nulls
     // out, and a key left out means the engine's old fixed 25 mm.
-    if get("tank_wall_thickness_mm").is_some_and(|v| v.is_null()) {
-        p.insert("tank_wall_thickness_mm".to_string(), Value::Null);
+    // In the same way a null dome size asks for the dome rule (issue #316).
+    for name in [
+        "tank_wall_thickness_mm",
+        "tank_dome_height_m",
+        "tank_dome_diameter_m",
+    ] {
+        if get(name).is_some_and(|v| v.is_null()) {
+            p.insert(name.to_string(), Value::Null);
+        }
     }
     let vessel = match get("cargo_containment").as_ref().and_then(Value::as_str) {
         Some("box_hold") => "box_barge",

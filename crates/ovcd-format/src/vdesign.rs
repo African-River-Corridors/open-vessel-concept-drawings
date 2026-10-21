@@ -122,6 +122,8 @@ pub const TABLE_DEFAULTS: &[&str] = &[
     "tank_insulation_type",
     "tank_insulation_thickness_mm",
     "tank_structure_factor",
+    "tank_dome_height_m",
+    "tank_dome_diameter_m",
 ];
 
 /// The keys of a default table, in the order the schema names them. The carriage condition is
@@ -1225,15 +1227,15 @@ pub const INPUTS: &[InputSpec] = &[
     ),
     only(
         "tank_dome_height_m",
-        "Tank dome height",
-        NUM,
+        "Tank dome height (override)",
+        NUM_OR_NONE,
         "type_c_tanks",
         Group::GasTanks,
     ),
     only(
         "tank_dome_diameter_m",
-        "Tank dome diameter",
-        NUM,
+        "Tank dome diameter (override)",
+        NUM_OR_NONE,
         "type_c_tanks",
         Group::GasTanks,
     ),

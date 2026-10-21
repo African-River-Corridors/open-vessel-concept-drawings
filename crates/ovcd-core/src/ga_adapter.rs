@@ -209,7 +209,11 @@ pub fn to_ga(
     gi.n_tanks_long = inp.n_tanks_long;
     gi.tank_wall_thickness = Some(opt_truthy_or(inp.tank_wall_thickness, 25.0));
     gi.insulation_thickness = res.insulation_thickness_mm.unwrap_or(350.0);
-    gi.dome_height = inp.dome_height;
+    // The dome in force: by the dome rule (issue #316) it is the converged tank's.
+    gi.dome_height = res
+        .gas_basis
+        .as_ref()
+        .map_or(inp.dome_height, |b| b.inputs.dome_height);
     gi.tank_support_height = inp.tank_support_height;
     gi.side_clearance = res.side_clearance_m;
     gi.double_bottom_height = Some(opt_truthy_or(
