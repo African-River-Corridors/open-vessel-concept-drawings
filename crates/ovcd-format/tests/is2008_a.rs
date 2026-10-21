@@ -254,7 +254,7 @@ fn a_dry_bulk_option_lists_the_is_code_rules_as_not_evaluated() {
         let trace = &results["rule_trace"];
         assert_eq!(
             trace["rule_sets"],
-            serde_json::json!(["is2008-a@1.0.0", "ovcd@2.0.0"])
+            serde_json::json!(["is2008-a@1.0.0", "ovcd@2.1.0"])
         );
         let rows: Vec<&serde_json::Value> = trace["rows"]
             .as_array()

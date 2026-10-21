@@ -337,6 +337,7 @@ pub fn run_option_with(
                             })
                             .collect()
                     })
+                    .map(crate::trace::with_check_verdicts)
                     .unwrap_or_default();
                 let rule_trace = trace_json(
                     &trace_of(&selection, option, &measured),

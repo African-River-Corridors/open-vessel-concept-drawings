@@ -195,6 +195,7 @@ msg-convoy-not-available = convoy results not yet available
 
 ## crates/ovcd-format/src/simulate.rs
 
+warn-channel-no-bottom-width = The channel has a depth but no bottom width, so squat, the Schijf limiting speed and the blockage are not checked and the speed curves are for deep water only. The draught limit still uses the depth. Give the channel bottom width to check them.
 check-name-intact-gm-at-reported-cargo = intact gm at reported cargo
 check-intact-gm-reported-cargo = intact GM { $gm } m >= 0.15 m at the reported cargo { $cargo } t, draught { $draught } m (first-order box; cargo KG of the full hold; KG_light @0.5D)
 name-governs-draught = draught — { $limit }

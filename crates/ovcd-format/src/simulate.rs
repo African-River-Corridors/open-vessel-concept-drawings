@@ -386,6 +386,47 @@ fn resistance_of(
         .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))
 }
 
+/// Issue #420: the resistance method's checks at each service speed (squat, waves, the fits, the
+/// Schijf limit), named as the run lists checks: the name read with spaces, the environment in
+/// brackets.
+fn method_checks(
+    res: Option<&resistance::ResistanceResults>,
+    out: &mut Vec<Value>,
+    ids: &mut TextIds,
+) {
+    let Some(res) = res else {
+        return;
+    };
+    let kept: Vec<Check> = res
+        .checks
+        .iter()
+        // The run gives the resistance model a stand-in installed power (see `resistance_of`), so
+        // this check would test nothing.
+        .filter(|c| !c.name.starts_with("power_within_installed["))
+        .map(|c| Check {
+            name: c.name.replace('_', " "),
+            ..c.clone()
+        })
+        .collect();
+    ids.checks(&kept);
+    if let Value::Array(items) = checks_json(&kept) {
+        out.extend(items);
+    }
+}
+
+/// Issue #420: a channel with a depth but no bottom width is not a resistance environment (see
+/// `resistance_of`), so its squat, Schijf limit and blockage are not checked. Say so.
+fn channel_width_note(p: &Map<String, Value>) -> R<Option<Text>> {
+    let ch = channel(p)?;
+    let has = |k: &str| ch.get(k).is_some_and(truthy);
+    Ok((has("depth_m") && !has("bottom_width_m")).then(|| {
+        text!(
+            "warn-channel-no-bottom-width",
+            "The channel has a depth but no bottom width, so squat, the Schijf limiting speed and the blockage are not checked and the speed curves are for deep water only. The draught limit still uses the depth. Give the channel bottom width to check them."
+        )
+    }))
+}
+
 /// The capacity checks as the simulator lists them, the name read with spaces. The two that test
 /// the full tank volume (`FULL_VOLUME_CHECKS`) gate nothing, so they are listed as warnings: shown,
 /// as every check is, but not a failure (issue #418).
@@ -1142,6 +1183,11 @@ fn simulate_measured(
         disp,
         rho,
     )?;
+    method_checks(resistance.as_ref(), &mut checks, &mut ids);
+    if let Some(note) = channel_width_note(p)? {
+        ids.text(&note);
+        warnings.push(note);
+    }
     let powering_block = powering_json(p, inp.machinery.as_ref(), stern, rho, resistance.as_ref())?;
     let geo = json!({
         "bow_void_length_m": opt_num(r.bow_void_length_m),
@@ -2074,6 +2120,12 @@ fn simulate_gas(
         disp,
         rho,
     )?;
+    method_checks(resistance.as_ref(), &mut checks, &mut ids);
+    let mut warnings = r.warnings.clone();
+    if let Some(note) = channel_width_note(p)? {
+        ids.text(&note);
+        warnings.push(note);
+    }
     let powering_block = powering_json(
         p,
         options.machinery.as_ref(),
@@ -2148,7 +2200,7 @@ fn simulate_gas(
                 "h_over_T": h_over_t(&ch, t)?,
             },
             "checks": checks,
-            "warnings": r.warnings,
+            "warnings": warnings,
             "curves": curve_list,
             "stability": stability,
             "stability_marks": stability_marks,

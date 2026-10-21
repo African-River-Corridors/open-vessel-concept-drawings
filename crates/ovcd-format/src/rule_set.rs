@@ -43,6 +43,10 @@ const BUILT_IN: &[(&str, &str)] = &[
         "rules/ovcd/2.0.0.json",
         include_str!("../rules/ovcd/2.0.0.json"),
     ),
+    (
+        "rules/ovcd/2.1.0.json",
+        include_str!("../rules/ovcd/2.1.0.json"),
+    ),
 ];
 
 /// What OVCD declares to the kernel's loader: its Measure registry (`ovcd rules --measures`), the
