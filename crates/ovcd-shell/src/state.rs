@@ -464,7 +464,8 @@ mod tests {
         );
         let last = notes[5].as_str().unwrap();
         assert!(
-            last.contains("has no `bow_rake_length_m`")
+            last.contains("has no `")
+                && last.contains("`bow_rake_length_m`")
                 && last.contains("`bow_rake_length_to_depth_ratio`"),
             "{last}"
         );

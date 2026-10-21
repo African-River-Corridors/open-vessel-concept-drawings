@@ -34,9 +34,68 @@ fn the_critical_froude_depth_number_falls_as_the_blockage_grows() {
 
 #[test]
 fn the_midship_section_is_beam_times_draught() {
-    assert_eq!(midship_section_area(11.4, 3.0), 34.2);
+    assert_eq!(midship_section_area(11.4, 3.0, 1.0), 34.2);
     assert_eq!(blockage_ratio(34.2, 171.0), 0.2);
     assert_eq!(blockage_ratio(34.2, 0.0), 0.0);
+}
+
+#[test]
+fn the_midship_section_is_beam_times_draught_times_the_midship_coefficient() {
+    // Hand calculation: 11.4 x 3.0 x 0.5 = 17.1; over 171 m2 the blockage ratio is 0.1.
+    assert_eq!(midship_section_area(11.4, 3.0, 0.5), 17.1);
+    assert_eq!(blockage_ratio(17.1, 171.0), 0.1);
+}
+
+#[test]
+fn a_midship_coefficient_of_1_is_the_default_and_changes_nothing() {
+    let default = ResistanceInputs::default();
+    assert_eq!(default.midship_coefficient, 1.0);
+    assert_eq!(
+        SquatInputs::new(5.0, 3.0, 11.4, 90.0).midship_coefficient,
+        1.0
+    );
+    let explicit = ResistanceInputs {
+        midship_coefficient: 1.0,
+        ..ResistanceInputs::default()
+    };
+    assert_eq!(compute(&default).unwrap(), compute(&explicit).unwrap());
+}
+
+#[test]
+fn a_smaller_midship_coefficient_gives_a_smaller_blockage_ratio_in_squat_and_resistance() {
+    let full = ResistanceInputs::default();
+    let shaped = ResistanceInputs {
+        midship_coefficient: 0.8,
+        ..ResistanceInputs::default()
+    };
+    let (rf, rs) = (compute(&full).unwrap(), compute(&shaped).unwrap());
+    let mut moved = false;
+    for (a, b) in rf.environments.iter().zip(&rs.environments) {
+        if b.blockage_ratio > 0.0 {
+            moved = true;
+            assert!(
+                (b.blockage_ratio - 0.8 * a.blockage_ratio).abs() < 1e-12,
+                "{}",
+                a.name
+            );
+        }
+    }
+    assert!(moved, "a channel environment is needed");
+    let mut s = SquatInputs::new(5.0, 3.0, 11.4, 90.0);
+    s.water_depth_m = 6.0;
+    s.channel_area_m2 = 171.0;
+    let before = squat::compute(&s).unwrap().blockage_ratio;
+    s.midship_coefficient = 0.5;
+    assert!((squat::compute(&s).unwrap().blockage_ratio - before / 2.0).abs() < 1e-12);
+}
+
+#[test]
+fn a_midship_coefficient_outside_0_to_1_is_refused() {
+    for cm in [0.0, -0.1, 1.01] {
+        let mut s = SquatInputs::new(5.0, 3.0, 11.4, 90.0);
+        s.midship_coefficient = cm;
+        assert!(squat::compute(&s).is_err(), "{cm}");
+    }
 }
 
 #[test]

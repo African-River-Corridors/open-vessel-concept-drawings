@@ -2245,6 +2245,8 @@ fn resistance_inputs(args: &Value) -> Result<core_resistance::ResistanceInputs, 
         beam: f64_or(o, "beam", d.beam)?,
         draft: f64_or(o, "draft", d.draft)?,
         block_coefficient: f64_or(o, "block_coefficient", d.block_coefficient)?,
+        // The Python API has no midship coefficient (issue #425): B x T.
+        midship_coefficient: d.midship_coefficient,
         wetted_surface_area: f64_or(o, "wetted_surface_area", d.wetted_surface_area)?,
         displacement_tonnes: f64_or(o, "displacement_tonnes", d.displacement_tonnes)?,
         tug,

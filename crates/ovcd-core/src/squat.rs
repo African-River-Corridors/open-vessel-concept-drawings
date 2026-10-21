@@ -34,6 +34,8 @@ pub struct SquatInputs {
     pub beam_m: f64,
     pub lpp_m: f64,
     pub block_coefficient: f64,
+    /// Midship section coefficient Cm: the section area is B x T x Cm (issue #425).
+    pub midship_coefficient: f64,
     /// Bed to still-water surface.
     pub water_depth_m: f64,
     /// Wetted section of the channel; 0 = open water.
@@ -52,6 +54,7 @@ impl SquatInputs {
             beam_m,
             lpp_m,
             block_coefficient: 0.85,
+            midship_coefficient: crate::confined_water::DEFAULT_MIDSHIP_COEFFICIENT,
             water_depth_m: 0.0,
             channel_area_m2: 0.0,
             displacement_m3: 0.0,
@@ -75,6 +78,9 @@ impl SquatInputs {
         }
         if !(0.3..=1.0).contains(&self.block_coefficient) {
             return Err("block_coefficient outside 0.3-1.0".to_string());
+        }
+        if !(self.midship_coefficient > 0.0 && self.midship_coefficient <= 1.0) {
+            return Err("midship_coefficient outside 0-1".to_string());
         }
         Ok(())
     }
@@ -141,7 +147,11 @@ pub fn compute(inp: &SquatInputs) -> Result<SquatResult, String> {
         inp.block_coefficient * inp.lpp_m * inp.beam_m * inp.draft_m
     };
     // Issue #396: the same midship section and blockage ratio as the resistance.
-    let midship = crate::confined_water::midship_section_area(inp.beam_m, inp.draft_m);
+    let midship = crate::confined_water::midship_section_area(
+        inp.beam_m,
+        inp.draft_m,
+        inp.midship_coefficient,
+    );
     let blockage = crate::confined_water::blockage_ratio(midship, inp.channel_area_m2);
     let fnh = if inp.water_depth_m > 0.0 {
         v_ms / libm::sqrt(GRAVITY * inp.water_depth_m)

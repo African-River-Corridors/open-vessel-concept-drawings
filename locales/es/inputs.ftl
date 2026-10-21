@@ -86,6 +86,9 @@ choice-cargo-containment-type-c-tanks = Tanques tipo C
 input-block-coefficient = Coeficiente de bloque
 
 # status: draft
+input-midship-coefficient = Coeficiente de la sección maestra
+
+# status: draft
 input-min-freeboard-m = Francobordo mínimo
 
 # status: draft
