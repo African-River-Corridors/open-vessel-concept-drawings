@@ -21,6 +21,9 @@ fn a_new_option_has_a_trim_per_condition_and_without_the_block_none() {
         ("length_overall_m", json!(110.0)),
         ("beam_m", json!(11.4)),
         ("moulded_depth_m", json!(6.0)),
+        // The legacy conditions: their trim is there only with the stern block. The IS Code
+        // conditions (issue #426), the default since part 3, always carry a trim.
+        ("loading_conditions", json!("legacy")),
     ] {
         s.set_input("Option 1", n, v).unwrap();
     }

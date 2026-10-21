@@ -34,6 +34,7 @@ use crate::barge_capacity::{
 use crate::checks::{Check, all_ok};
 use crate::gas_stability::{self as gs, DEFAULT_WATER_DENSITY, GasCapacityResult};
 use crate::journey_derating::{JourneyDeratingInputs, JourneyDeratingResult, compute as derate};
+use crate::loading_conditions as lc;
 use crate::measured::{Measured, deadweight_band};
 use crate::models::DEFAULT_TANK_GAP_TRANSVERSE_M;
 use crate::pressure_vessel::PyError;
@@ -127,6 +128,20 @@ pub struct FitOptions {
     pub rules: Vec<RuleSet>,
     /// The Option's inputs, for the input Measures and the Applicability of [`FitOptions::rules`].
     pub rule_inputs: RuleInputs,
+    /// Issue #426: `Some` checks every candidate's stability in the IS Code 2008 loading
+    /// conditions (`loading_conditions`) in place of the legacy laden, half laden and light ones,
+    /// and ranks it by the cargo it carries with its stores and fuel aboard. `None`: legacy.
+    pub is_code: Option<IsCodeConditions>,
+}
+
+/// What the IS Code 2008 loading conditions of a candidate need beyond its own result (issue #426).
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct IsCodeConditions {
+    /// The stores and fuel of the full load (t). 0 for a barge.
+    pub consumables_t: f64,
+    pub may_sail_without_ballast: bool,
+    /// The user's ballast fills by tank group, departure then arrival; `None`: the least ballast.
+    pub user_ballast: Option<[lc::GroupFills; 2]>,
 }
 
 /// The Option's inputs as the Rule Trace reads them: each enumerated input's text value (for
@@ -298,6 +313,7 @@ impl Default for FitOptions {
             aft_design: AftDesign::default(),
             rules: Vec::new(),
             rule_inputs: RuleInputs::default(),
+            is_code: None,
         }
     }
 }
@@ -467,7 +483,9 @@ pub fn length_over_diameter_check(r: &BargeCapacityResult) -> Option<Check> {
 //   - `tank_length_over_diameter`: overall tank length over inner shell diameter, at most 7;
 //   - `freeboard_at_payload`: the hull depth less the carried draught, at least the required freeboard.
 // Costly check (run only for a candidate that passed the cheap ones and could still win):
-//   - stability: IS Code 2008 Part A 2.2, each loading condition (`gas_stability::assess`).
+//   - stability: IS Code 2008 Part A 2.2, each loading condition: the legacy ones
+//     (`gas_stability::assess`), or with `FitOptions::is_code` the Part B 3.4.1.2 ones
+//     (`is_code_conditions`), with their ballast plan and air draft (issue #426).
 // A check of warning severity is advisory: it never gates (`all_ok`), as everywhere else.
 // ---------------------------------------------------------------------------------------------
 
@@ -548,15 +566,136 @@ pub fn stability_check(c: &gs::Condition) -> Check {
     )
 }
 
+/// The checks of one IS Code loading condition (issue #426): its stability, and when they fail,
+/// its ballast plan (none meets every criterion) and its air draft.
+pub fn loading_condition_checks(c: &lc::LoadedCondition) -> Vec<Check> {
+    let mut out = vec![stability_check(&c.condition)];
+    if c.plan_found == Some(false) {
+        out.push(Check::new(
+            "Ballast plan",
+            false,
+            text!(
+                "check-no-ballast-plan",
+                "{condition}: no ballast plan meets every criterion, even with every ballast tank full.",
+                condition = c.condition.name.clone(),
+            ),
+        ));
+    }
+    if c.air_draft_ok == Some(false) {
+        out.push(Check::new(
+            "Air draft",
+            false,
+            text!(
+                "check-condition-air-draft",
+                "{condition}: air draft {air} m is above the limit.",
+                condition = c.condition.name.clone(),
+                air = Arg::fixed(c.air_draft_m, 2),
+            ),
+        ));
+    }
+    out
+}
+
+/// The cargo of the IS Code full-load conditions (issue #426): the payload, but no more than the
+/// displacement at the draught cap less the lightship and the stores and fuel. A draught-bound
+/// cargo is that much less; a volume-bound one does not change.
+pub fn is_code_cargo(
+    r: &BargeCapacityResult,
+    payload_t: f64,
+    loa: f64,
+    beam: f64,
+    t_max: f64,
+    o: &FitOptions,
+    ic: &IsCodeConditions,
+) -> f64 {
+    let room = o.block_coefficient * loa * beam * t_max * o.water_density_t_per_m3
+        - r.lightship_t
+        - ic.consumables_t;
+    let room = if room > 0.0 { room } else { 0.0 };
+    if room < payload_t { room } else { payload_t }
+}
+
+/// The IS Code loading conditions of a gas arrangement with `cargo_t` in the full loads (issue
+/// #426): its lightship and cargo model, its ballast tanks and the stores and fuel of `ic`.
+/// Empty for a result with no gas basis.
+pub fn is_code_conditions(
+    r: &BargeCapacityResult,
+    inp: &BargeCapacityInputs,
+    cargo_t: f64,
+    o: &FitOptions,
+    ic: &IsCodeConditions,
+) -> Result<Vec<lc::LoadedCondition>, gs::PyError> {
+    let Ok(basis) = GasCapacityResult::try_from(r) else {
+        return Ok(Vec::new());
+    };
+    let Some((lightship, cargo)) = lc::gas_model(&basis) else {
+        return Ok(Vec::new());
+    };
+    let cargo_at = |m: f64| cargo.at(m);
+    let tanks = crate::compartments::ballast_tanks(inp, r);
+    let ballast_plans = match &ic.user_ballast {
+        Some([departure, arrival]) => [departure.plan(&tanks), arrival.plan(&tanks)],
+        None => [lc::BallastPlan::Auto, lc::BallastPlan::Auto],
+    };
+    // The consumables tanks sit on the bottom at the aft end, in the stern block.
+    let consumables = lc::Consumables {
+        full_t: ic.consumables_t,
+        tanks: crate::compartments::consumables_tanks(inp.beam, 0.0, ic.consumables_t),
+        density: 1.0,
+    };
+    lc::assess(&lc::Inputs {
+        loa: inp.loa,
+        beam: inp.beam,
+        depth: inp.depth,
+        block_coefficient: o.block_coefficient,
+        water_density: o.water_density_t_per_m3,
+        criteria_set: gs::criteria_set_for(&o.ruleset),
+        lightship: &lightship,
+        full_cargo_t: cargo_t,
+        cargo_at: &cargo_at,
+        consumables,
+        ballast_tanks: &tanks,
+        ballast_density: o.water_density_t_per_m3,
+        ballast_plans,
+        may_sail_without_ballast: ic.may_sail_without_ballast,
+        air_draft_top_m: r.air_draft_top_above_keel_m,
+        air_draft_limit_m: o.air_draft_limit_m,
+        stern: o.stern_geometry.as_ref(),
+    })
+}
+
+/// What the search ranks a candidate by: its payload, or with the IS Code conditions the cargo of
+/// their full loads.
+fn ranked_cargo(
+    r: &BargeCapacityResult,
+    j: &JourneyDeratingResult,
+    inp: &BargeCapacityInputs,
+    o: &FitOptions,
+) -> f64 {
+    match &o.is_code {
+        Some(ic) => is_code_cargo(
+            r,
+            j.achievable_tonnage_t,
+            inp.loa,
+            inp.beam,
+            j.t_max_m,
+            o,
+            ic,
+        ),
+        None => j.achievable_tonnage_t,
+    }
+}
+
 /// The stability checks of a candidate, one per loading condition. None when it carries nothing or
 /// has no gas tanks (the cheap checks report that). An assessment that cannot be made is one failed
 /// check, so that a candidate the engine cannot judge never passes and never stops the search.
 fn stability_checks(
     r: &BargeCapacityResult,
     j: &JourneyDeratingResult,
+    inp: &BargeCapacityInputs,
     o: &FitOptions,
 ) -> Vec<Check> {
-    stability_assessment(r, j, o).0
+    stability_assessment(r, j, inp, o).0
 }
 
 /// The stability checks of a candidate and the loading conditions they come from (none when the
@@ -564,28 +703,42 @@ fn stability_checks(
 fn stability_assessment(
     r: &BargeCapacityResult,
     j: &JourneyDeratingResult,
+    inp: &BargeCapacityInputs,
     o: &FitOptions,
 ) -> (Vec<Check>, Vec<gs::Condition>) {
     if j.achievable_tonnage_t <= 0.0 || r.gas_basis.is_none() {
         return (Vec::new(), Vec::new());
     }
-    let assessed = GasCapacityResult::try_from(r)
-        .map_err(|m| m.to_string())
-        .and_then(|basis| {
-            gs::assess(
-                &basis,
-                j.achievable_tonnage_t,
-                o.block_coefficient,
-                o.water_density_t_per_m3,
-                gs::criteria_set_for(&o.ruleset),
-            )
-            .map_err(|e| e.message().to_string())
-        });
+    let assessed = match &o.is_code {
+        Some(ic) => is_code_conditions(r, inp, ranked_cargo(r, j, inp, o), o, ic)
+            .map(|conds| {
+                (
+                    conds.iter().flat_map(loading_condition_checks).collect(),
+                    conds.into_iter().map(|c| c.condition).collect(),
+                )
+            })
+            .map_err(|e| e.message().to_string()),
+        None => GasCapacityResult::try_from(r)
+            .map_err(|m| m.to_string())
+            .and_then(|basis| {
+                gs::assess(
+                    &basis,
+                    j.achievable_tonnage_t,
+                    o.block_coefficient,
+                    o.water_density_t_per_m3,
+                    gs::criteria_set_for(&o.ruleset),
+                )
+                .map_err(|e| e.message().to_string())
+            })
+            .map(|a| {
+                (
+                    a.conditions.iter().map(stability_check).collect(),
+                    a.conditions,
+                )
+            }),
+    };
     match assessed {
-        Ok(a) => (
-            a.conditions.iter().map(stability_check).collect(),
-            a.conditions,
-        ),
+        Ok(a) => a,
         Err(m) => (
             vec![Check::new(
                 "Stability \u{2014} not assessed",
@@ -605,14 +758,14 @@ fn stability_assessment(
 /// selected, no `fail` row in its Rule Trace.
 fn passes_all(c: &Candidate, o: &FitOptions) -> bool {
     if o.rules.is_empty() {
-        return all_ok(&stability_checks(&c.result, &c.journey, o));
+        return all_ok(&stability_checks(&c.result, &c.journey, &c.inputs, o));
     }
     candidate_failures(&full_measured(c, o), o).is_empty()
 }
 
 /// What the whole Rule Trace of a candidate reads: every check and the stability conditions.
 fn full_measured(c: &Candidate, o: &FitOptions) -> Measured {
-    let (stab, conditions) = stability_assessment(&c.result, &c.journey, o);
+    let (stab, conditions) = stability_assessment(&c.result, &c.journey, &c.inputs, o);
     let mut checks = cheap_checks(&c.result, &c.journey, c.depth, o);
     checks.extend(stab);
     candidate_measured(&c.result, &c.journey, &c.inputs, &checks, conditions)
@@ -622,11 +775,12 @@ fn full_measured(c: &Candidate, o: &FitOptions) -> Measured {
 fn search_checks(
     r: &BargeCapacityResult,
     j: &JourneyDeratingResult,
+    inp: &BargeCapacityInputs,
     depth: f64,
     o: &FitOptions,
 ) -> Vec<Check> {
     let mut all = cheap_checks(r, j, depth, o);
-    all.extend(stability_checks(r, j, o));
+    all.extend(stability_checks(r, j, inp, o));
     all
 }
 
@@ -883,7 +1037,7 @@ fn search(s: &mut Search<'_>, t_max: f64, stop_at_first_pass: bool) -> Result<Po
                 };
                 pool.all.push(Candidate {
                     cheap_failed,
-                    tonnage: j.achievable_tonnage_t,
+                    tonnage: ranked_cargo(&r, &j, &inp, o),
                     depth: d,
                     result: r,
                     journey: j,
@@ -934,7 +1088,7 @@ fn closest_to_passing(pool: &[Candidate], o: &FitOptions) -> Option<usize> {
             continue;
         }
         let failed = if o.rules.is_empty() {
-            search_checks(&c.result, &c.journey, c.depth, o)
+            search_checks(&c.result, &c.journey, &c.inputs, c.depth, o)
                 .iter()
                 .filter(|k| k.is_error() && !k.ok)
                 .count()
@@ -1012,7 +1166,7 @@ pub fn fit(
         }
     };
 
-    let checks = search_checks(&best.result, &best.journey, best.depth, o);
+    let checks = search_checks(&best.result, &best.journey, &best.inputs, best.depth, o);
     let mut failed: Vec<String> = checks
         .iter()
         .filter(|c| c.is_error() && !c.ok)

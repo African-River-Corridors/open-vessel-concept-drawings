@@ -982,9 +982,9 @@
       "basis": "Whether the stern block's mass (thrusters, machinery, units, wheelhouse) counts in the lightship (the WC-A29 finding; spec 0007). Inputs only until the stern block mass ticket (#348). A file saved before keeps false (0 t), as today"
     },
     "loading_conditions": {
-      "default": "legacy",
+      "default": "is_code_2008",
       "status": "estimate",
-      "basis": "The loading conditions the stability is checked in. is_code_2008: the four standard conditions of a cargo ship in IMO IS Code 2008 (MSC.267(85)) Part B 3.4.1.2 (fully loaded departure and arrival, in ballast departure and arrival), with stores and fuel and water ballast, as Part A 2.1.1 and 2.1.2 ask (issue #426). legacy: laden, half laden and light, with no consumables and no ballast. The default stays legacy until the gas arrangement search uses the IS Code conditions; then it becomes is_code_2008. A file saved before keeps legacy"
+      "basis": "The loading conditions the stability is checked in. is_code_2008: the four standard conditions of a cargo ship in IMO IS Code 2008 (MSC.267(85)) Part B 3.4.1.2 (fully loaded departure and arrival, in ballast departure and arrival), with stores and fuel and water ballast, as Part A 2.1.1 and 2.1.2 ask (issue #426). legacy: laden, half laden and light, with no consumables and no ballast. The gas arrangement search checks its candidates in the conditions it is given, so is_code_2008 is the default (issue #426). A file saved before keeps legacy"
     },
     "may_sail_without_ballast": {
       "default_by_formation": { "self_propelled": false, "pushed_barge": true, "pushed_convoy": true, "atb": true, "towed_barge": true },

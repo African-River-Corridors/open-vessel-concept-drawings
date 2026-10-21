@@ -133,6 +133,35 @@ pub enum BallastPlan {
     Fills(Vec<(String, f64)>),
 }
 
+/// A user ballast plan by tank group, both sides alike: the fill of the double bottom, the peaks
+/// and the wing tanks, 0 to 1.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct GroupFills {
+    pub double_bottom: f64,
+    pub peak: f64,
+    pub wing: f64,
+}
+
+impl GroupFills {
+    /// The plan as a fill per tank of `tanks`, by name.
+    pub fn plan(&self, tanks: &[Space]) -> BallastPlan {
+        BallastPlan::Fills(
+            tanks
+                .iter()
+                .map(|t| {
+                    let f = match t.kind {
+                        SpaceKind::DoubleBottomBallast => self.double_bottom,
+                        SpaceKind::PeakBallast => self.peak,
+                        SpaceKind::WingBallast => self.wing,
+                        SpaceKind::Consumables => 0.0,
+                    };
+                    (t.name.clone(), f)
+                })
+                .collect(),
+        )
+    }
+}
+
 /// The inputs of [`assess`].
 pub struct Inputs<'a> {
     pub loa: f64,

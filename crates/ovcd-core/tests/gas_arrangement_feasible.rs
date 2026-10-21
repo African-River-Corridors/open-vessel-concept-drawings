@@ -10,7 +10,10 @@
 //! "sweep gas passes all checks IGC_2G 110x11.4").
 
 use ovcd_core::checks::all_ok;
-use ovcd_core::gas_arrangement::{ArrangementFit, FitOptions, fit, smallest_viable_loa};
+use ovcd_core::gas_arrangement::{
+    ArrangementFit, FitOptions, IsCodeConditions, fit, is_code_cargo, is_code_conditions,
+    smallest_viable_loa,
+};
 use ovcd_core::gas_stability::{self as gs, GasCapacityResult};
 
 /// The stability of a returned arrangement, assessed again on its own, not through `fit`.
@@ -215,4 +218,52 @@ fn the_smallest_viable_loa_has_a_passing_arrangement() {
     let f = fit(loa, 12.0, "LNG", 3.0, &o).unwrap();
     assert!(f.feasible, "{loa}: {:?}", f.failed_checks);
     assert!(stability_ok(&f));
+}
+
+// --- Issue #426 part 3: the search checks its candidates in the IS Code conditions. ---
+
+fn is_code_options(depth: f64, consumables_t: f64) -> FitOptions {
+    FitOptions {
+        is_code: Some(IsCodeConditions {
+            consumables_t,
+            may_sail_without_ballast: false,
+            user_ballast: None,
+        }),
+        ..options(depth)
+    }
+}
+
+#[test]
+fn a_feasible_arrangement_meets_every_is_code_condition() {
+    let o = is_code_options(6.0, 60.0);
+    let f = fit(110.0, 11.4, "LPG_propane", 5.7, &o).unwrap();
+    assert!(f.feasible, "{:?}", f.failed_checks);
+    let ic = o.is_code.as_ref().unwrap();
+    let cargo = is_code_cargo(&f.engine_result, f.payload_t, 110.0, 11.4, 5.7, &o, ic);
+    let conds = is_code_conditions(&f.engine_result, &f.engine_inputs, cargo, &o, ic).unwrap();
+    assert_eq!(conds.len(), 4);
+    for c in &conds {
+        assert!(c.ok(), "{}", c.condition.name);
+    }
+}
+
+#[test]
+fn the_is_code_cargo_is_the_payload_less_the_consumables_only_when_the_draught_binds() {
+    let o = is_code_options(6.0, 60.0);
+    let ic = o.is_code.as_ref().unwrap();
+    let f = fit(110.0, 11.4, "LPG_propane", 5.7, &options(6.0)).unwrap();
+    let r = &f.engine_result;
+    let room = 0.85 * 110.0 * 11.4 * 5.7 * gs::DEFAULT_WATER_DENSITY - r.lightship_t - 60.0;
+    // A payload above the room left by the stores and fuel is cut to it.
+    assert_eq!(
+        is_code_cargo(r, room + 100.0, 110.0, 11.4, 5.7, &o, ic),
+        room
+    );
+    // A payload below it does not change.
+    assert_eq!(
+        is_code_cargo(r, room - 100.0, 110.0, 11.4, 5.7, &o, ic),
+        room - 100.0
+    );
+    // No room: no cargo.
+    assert_eq!(is_code_cargo(r, 10.0, 110.0, 11.4, 0.1, &o, ic), 0.0);
 }
