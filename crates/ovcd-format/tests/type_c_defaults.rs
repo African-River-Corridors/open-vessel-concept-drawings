@@ -280,7 +280,7 @@ fn the_table_values_reach_the_results_and_the_wall_is_the_formula_on_the_steel_d
             steel,
             num(&tank["internal_pressure_mpa"]),
             tank["material"].as_str().unwrap(),
-            "hemisphere",
+            tank["head_type"].as_str().unwrap(),
             0.95,
             None,
         )

@@ -95,6 +95,11 @@ choice-tank-material-316l = 316L stainless steel
 choice-tank-material-9ni = 9 % nickel steel
 choice-tank-material-s690ql1 = S690QL1 quenched and tempered steel
 
+input-tank-head-type = Tank head type
+input-tank-head-type-default-by = Cargo, LPG carriage condition
+choice-tank-head-type-hemisphere = Hemispherical
+choice-tank-head-type-ellipsoidal-2to1 = 2:1 semi-ellipsoidal
+
 input-tank-liquid-pressure = Tank liquid pressure
 choice-tank-liquid-pressure-static = Static (a = 1), IGC 4.28.1.2
 choice-tank-liquid-pressure-igc-4-28-2 = IGC 4.28.2 sea-going accelerations

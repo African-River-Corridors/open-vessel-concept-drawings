@@ -77,6 +77,10 @@
           "value": "9Ni",
           "source": "default"
         },
+        "tank_head_type": {
+          "value": "hemisphere",
+          "source": "default"
+        },
         "tank_liquid_pressure": {
           "value": "none",
           "source": "default"

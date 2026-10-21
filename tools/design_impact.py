@@ -211,6 +211,9 @@ OPTIONAL_INPUT_CASES = (
      {"tank_material": "304L"}),
     ("tank_allowable_stress_mpa", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"tank_allowable_stress_mpa": 200.0}),
+    # Issue #375: the head type, away from the LNG default.
+    ("tank_head_type", "LNG", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tank_head_type": "ellipsoidal_2to1"}),
     # Issue #374: the sea-going accelerations of IGC 4.28.2 in the liquid pressure.
     ("tank_liquid_pressure", "LNG", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"tank_liquid_pressure": "igc_4_28_2"}),

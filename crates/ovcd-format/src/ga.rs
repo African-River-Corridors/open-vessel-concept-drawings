@@ -276,6 +276,9 @@ enum Containment {
         dome: Option<f64>,
         /// `drawing.tank.dome_diameter_m` (issue #316), if the results have it.
         dome_diameter: Option<f64>,
+        /// The head length over the tank radius (issue #375): 1 for a hemispherical head, 0.5 for a
+        /// 2:1 semi-ellipsoidal one (`drawing.tank.head_type`).
+        head_ratio: f64,
         /// The wing ballast tank: width per side, gap to the cargo tank and height as a fraction of
         /// the tank diameter (`drawing`), if the results have them.
         wing_width: Option<f64>,
@@ -325,6 +328,10 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
                 support_height: need(results, &["drawing", "tank_support_height_m"])?,
                 dome: num_at(results, &["drawing", "dome_height_m"]),
                 dome_diameter: num_at(results, &["drawing", "tank", "dome_diameter_m"]),
+                head_ratio: match results["drawing"]["tank"]["head_type"].as_str() {
+                    Some("ellipsoidal_2to1") => 0.5,
+                    _ => 1.0,
+                },
                 wing_width: num_at(results, &["drawing", "wing_tank_width_m"]),
                 wing_gap: num_at(results, &["drawing", "wing_tank_gap_m"]),
                 wing_ratio: num_at(results, &["drawing", "wing_tank_height_ratio"]),
@@ -468,6 +475,14 @@ impl Hull {
         match &self.containment {
             Containment::Tanks { dome: Some(d), .. } if *d > 0.0 => Some(*d),
             _ => None,
+        }
+    }
+
+    /// The head length over the tank radius: 1 for hemispherical heads, 0.5 for 2:1 ones.
+    fn head_ratio(&self) -> f64 {
+        match &self.containment {
+            Containment::Tanks { head_ratio, .. } => *head_ratio,
+            _ => 1.0,
         }
     }
 
@@ -620,6 +635,59 @@ impl Canvas {
         self.line(layer, [xa, yc - r], [xb, yc - r], None);
         self.arc(layer, [xa, yc], r, 90.0, 270.0, None);
         self.arc(layer, [xb, yc], r, 270.0, 90.0, None);
+    }
+
+    /// A tank outline in elevation or plan from `xa` to `xb` (the head joints) about height `yc`, with
+    /// heads `ratio x r` long (issue #375): the stadium for hemispherical heads (`ratio` 1), and
+    /// half-ellipse ends drawn as polylines for 2:1 heads.
+    fn tank_outline(&mut self, layer: &str, (xa, xb, yc, r): (f64, f64, f64, f64), ratio: f64) {
+        if ratio == 1.0 {
+            self.stadium(layer, xa, xb, yc, r);
+            return;
+        }
+        self.line(layer, [xa, yc + r], [xb, yc + r], None);
+        self.line(layer, [xa, yc - r], [xb, yc - r], None);
+        for (x, side) in [(xa, -1.0), (xb, 1.0)] {
+            let pts = half_ellipse(x, yc, ratio * r, r, side);
+            self.polyline(layer, &pts, false);
+        }
+    }
+
+    /// As [`Canvas::tank_outline`], split at height `level` like [`Canvas::stadium_split`].
+    fn tank_outline_split(
+        &mut self,
+        layers: (&str, &str),
+        (xa, xb, yc, r): (f64, f64, f64, f64),
+        ratio: f64,
+        level: f64,
+    ) {
+        if ratio == 1.0 {
+            self.stadium_split(layers, (xa, xb, yc, r), level);
+            return;
+        }
+        let (above, below) = layers;
+        let layer_of = |y: f64| if y >= level { above } else { below };
+        self.line(layer_of(yc + r), [xa, yc + r], [xb, yc + r], None);
+        self.line(layer_of(yc - r), [xa, yc - r], [xb, yc - r], None);
+        for (x, side) in [(xa, -1.0), (xb, 1.0)] {
+            let pts = half_ellipse(x, yc, ratio * r, r, side);
+            // runs of points on one side of the level, joined at the crossing
+            let mut run: Vec<[f64; 2]> = vec![pts[0]];
+            for w in pts.windows(2) {
+                let (p, q) = (w[0], w[1]);
+                if (p[1] >= level) != (q[1] >= level) {
+                    let t = (level - p[1]) / (q[1] - p[1]);
+                    let cross = [p[0] + t * (q[0] - p[0]), level];
+                    run.push(cross);
+                    self.polyline(layer_of(p[1]), &run, false);
+                    run = vec![cross];
+                }
+                run.push(q);
+            }
+            let last = run[run.len() - 1];
+            let first = run[0];
+            self.polyline(layer_of((first[1] + last[1]) / 2.0), &run, false);
+        }
     }
 
     /// The same stadium split at height `level`: the part at or above it on `above`, the part
@@ -889,7 +957,7 @@ fn elevation_gas_detail(c: &mut Canvas, h: &Hull, labels: &mut Vec<(String, [f64
             let half = h
                 .dome_half_base()
                 .unwrap_or((DOME_HALF_BASE_OF_LENGTH * length).max(DOME_HALF_BASE_MIN_M))
-                .min(length / 2.0 - r);
+                .min(length / 2.0 - h.head_ratio() * r);
             if half > 0.0 {
                 c.dome(layer, mid, yc + r, half, rise);
             }
@@ -1190,9 +1258,15 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
                 let r = od / 2.0;
                 // The part of a tank above the deck is in plain view (OBJECT: a secondary object
                 // line, the hull profile being the primary outline); the part below it is hidden.
+                let head = h.head_ratio() * r;
                 for x0 in starts {
-                    let (xa, xb) = (x0 + r, x0 + length - r);
-                    c.stadium_split(("OBJECT", "HIDDEN"), (xa, xb, yc, r), h.depth);
+                    let (xa, xb) = (x0 + head, x0 + length - head);
+                    c.tank_outline_split(
+                        ("OBJECT", "HIDDEN"),
+                        (xa, xb, yc, r),
+                        h.head_ratio(),
+                        h.depth,
+                    );
                 }
             }
         }
@@ -1298,20 +1372,22 @@ fn plan(h: &Hull, n: u32) -> Canvas {
             if let Some((length, starts, centres)) = h.tank_layout() {
                 let r = od / 2.0;
                 let tank_y = h.tank_centre_y().unwrap_or(0.0);
+                let ratio = h.head_ratio();
                 for x0 in &starts {
                     for yc in &centres {
-                        let (xa, xb) = (x0 + r, x0 + length - r);
+                        let (xa, xb) = (x0 + ratio * r, x0 + length - ratio * r);
                         if tank_y >= h.depth {
                             // the widest part stands above the deck: the whole outline is in view
-                            c.stadium("OBJECT", xa, xb, *yc, r);
+                            c.tank_outline("OBJECT", (xa, xb, *yc, r), ratio);
                         } else {
                             // The widest part is under the deck, so the outline is hidden. Where the
                             // tank's top stands above the deck, the part above is in view, and from
-                            // above it is narrower: a sphere or cylinder cut at the deck height.
-                            c.stadium("HIDDEN", xa, xb, *yc, r);
+                            // above it is narrower: a sphere or cylinder cut at the deck height (a
+                            // 2:1 head cut there is a smaller ellipse of the same shape).
+                            c.tank_outline("HIDDEN", (xa, xb, *yc, r), ratio);
                             let dy = h.depth - tank_y;
                             if dy < r {
-                                c.stadium("OBJECT", xa, xb, *yc, chord_half(r, dy));
+                                c.tank_outline("OBJECT", (xa, xb, *yc, chord_half(r, dy)), ratio);
                             }
                         }
                     }
@@ -1342,6 +1418,18 @@ fn plan(h: &Hull, n: u32) -> Canvas {
 }
 
 /// Half the chord of a circle of radius `r` at distance `d` (under `r`) from its centre.
+/// The points of a half ellipse from the top `(x, yc + ry)` to the bottom `(x, yc - ry)`, bulging
+/// by `rx` towards `side` (-1 aft, +1 forward): the outline of a 2:1 head (issue #375).
+fn half_ellipse(x: f64, yc: f64, rx: f64, ry: f64, side: f64) -> Vec<[f64; 2]> {
+    let steps = 24;
+    (0..=steps)
+        .map(|i| {
+            let a = core::f64::consts::PI * f64::from(i) / f64::from(steps);
+            [x + side * rx * libm::sin(a), yc + ry * libm::cos(a)]
+        })
+        .collect()
+}
+
 fn chord_half(r: f64, d: f64) -> f64 {
     (r * r - d * d).sqrt()
 }

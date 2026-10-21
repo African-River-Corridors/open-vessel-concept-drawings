@@ -253,6 +253,32 @@
       "soft": { "min": -170, "max": 60 },
       "basis": "The lowest design temperature of the tank. The engine does not use it in a calculation yet: it is recorded and shown with the results, and it says what steel the tank needs. The default depends on the Cargo and the carriage condition"
     },
+    "tank_head_type": {
+      "default_by_table": {
+        "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
+        "rows": [
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_pressurised" },
+            "value": "ellipsoidal_2to1",
+            "status": "estimate",
+            "basis": "The published river LPG tank (Senjanovic et al., DESIGN 2006, 15.8 bar) has spherical dished ends with a toroidal connection; the engine's nearest head is the 2:1 semi-ellipsoidal one (its calibration case runs the same way)"
+          },
+          {
+            "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"] },
+            "value": "ellipsoidal_2to1",
+            "status": "estimate",
+            "basis": "The published tank of a 22,000 m3 LPG/NH3 carrier (Heo, Kang and Park 2017, design vapour pressure 5.3 barg) has torispherical heads; the engine's nearest head is the 2:1 semi-ellipsoidal one"
+          },
+          {
+            "when": {},
+            "value": "hemisphere",
+            "status": "estimate",
+            "basis": "The head the engine used before the head type was an input. No source read gives the head of a single cylindrical LNG cargo tank of this size; a hemispherical head needs the thinnest plate"
+          }
+        ]
+      },
+      "basis": "The shape of the tank ends. hemisphere: a half sphere, head length R, area 2 pi R^2. ellipsoidal_2to1: a 2:1 semi-ellipsoidal head, head length R/2, area 4.336 R^2 (half an oblate spheroid, issue #314), and the ASME 2:1 head formula for its thickness. The default depends on the Cargo and the carriage condition. A file saved before the input existed keeps hemisphere"
+    },
     "tank_material": {
       "default_by_table": {
         "by": ["cargo_containment", "cargo", "lpg_carriage_condition"],
