@@ -235,6 +235,9 @@ the app. Some are fields of `BargeCapacityInputs` or `BargeInputs` and can be se
 - The gas lightship factors (WC-A01, A04, A05) have no calibration case. Gas and tank barge cases are in
   `not_yet_runnable_cases` (`calibration/cases.yaml:1321`).
 - The sloped-hopper build-up has no calibration case (WC-A28).
+- The result labels the lightship (issue #434). A sloped-hopper hull and a gas barge show
+  `calibration.lightship = "uncalibrated"`; a box-hold barge shows `"calibrated"`. The label is an output kept
+  out of the results hash (`UNHASHED_KEYS`).
 - The app default Cb (0.85) is not the fitted box-barge Cb (0.928) (WC-A33, WC-A37).
 - The main result has no LCG, trim or TCG (WC-A48, WC-A49). The legacy LCG is reachable only through the parity
   interface.

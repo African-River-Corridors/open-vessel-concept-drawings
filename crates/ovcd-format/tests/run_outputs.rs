@@ -89,6 +89,8 @@ fn a_sloped_hopper_hold_runs_as_the_sloped_hopper_barge() {
     without_cost.as_object_mut().unwrap().remove("cost");
     // And the Rule Trace (issue #269), which `simulate` does not give.
     without_cost.as_object_mut().unwrap().remove("rule_trace");
+    // And the calibration label (issue #434), which `simulate` does not give either.
+    without_cost.as_object_mut().unwrap().remove("calibration");
     assert_eq!(without_cost, eval("simulate", &case).unwrap()["ok"]);
     // And not the box barge's answer: the hold shapes differ.
     let box_hold = run_option(&starter().options[0]);

@@ -266,17 +266,19 @@ pub use arc_rules::load::canonical_json;
 
 /// Top-level results keys that are not results: drawing geometry, what a view marks, the capital
 /// budget with the masses it was worked from, the Message Ids of the result's English (ADR 0015), and
-/// the Rule Trace (spec 0004: the stored Rule Set hashes cover the rules). They are left
+/// the Rule Trace (spec 0004: the stored Rule Set hashes cover the rules), and the calibration label
+/// of the lightship (issue #434). They are left
 /// out of the results hash, so adding to one never changes a saved hash, and `tools/design_impact.py`
 /// leaves them out of its comparison (it holds the same list; `tests/test_design_impact_unhashed_keys.py` checks
 /// that the two lists agree).
-pub const UNHASHED_KEYS: [&str; 6] = [
+pub const UNHASHED_KEYS: [&str; 7] = [
     "drawing",
     "stability_marks",
     "cost_masses",
     "cost",
     "text_ids",
     "rule_trace",
+    "calibration",
 ];
 
 /// SHA-256 of the canonical JSON of `results`, without the [`UNHASHED_KEYS`].
@@ -347,6 +349,7 @@ pub fn run_option_with(
                 );
                 if let Some(o) = v.as_object_mut() {
                     o.insert("cost".to_string(), cost);
+                    o.insert("calibration".to_string(), calibration_of(option));
                     o.insert("rule_trace".to_string(), rule_trace);
                 }
                 let hash = results_hash(&v);
@@ -356,6 +359,31 @@ pub fn run_option_with(
         Outcome::Raised(kind, message) => RunOutcome::Failed(format!("{kind}: {message}")),
         Outcome::Refused(message) => RunOutcome::Failed(message),
     }
+}
+
+/// Whether the lightship of the Option's hull has a calibration case (issue #434). The box-hold
+/// factor and block coefficient are fitted to Reference Vessels (`calibration/cases.yaml`); no case
+/// covers a sloped-hopper hull or a gas barge, so their lightship is the build-up with fixed factors.
+/// An output, not hashed.
+fn calibration_of(option: &DesignOption) -> Value {
+    let containment = option
+        .input("cargo_containment")
+        .and_then(|i| i.value.as_str());
+    let (state, basis) = match containment {
+        Some("box_hold") => (
+            "calibrated",
+            "The box-hold lightship factor is fitted to Reference Vessels.",
+        ),
+        Some("sloped_hopper_hold") => (
+            "uncalibrated",
+            "No calibration case covers the lightship of a sloped-hopper barge: the build-up uses fixed factors.",
+        ),
+        _ => (
+            "uncalibrated",
+            "No calibration case covers the lightship of a gas barge: the build-up uses fixed factors.",
+        ),
+    };
+    json!({ "lightship": state, "basis": basis })
 }
 
 /// Run every Option of a Design and compare each hash with the one stored in the file.

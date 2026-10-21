@@ -403,6 +403,9 @@ fn json_results_are_what_simulate_answers_for_a_pushed_barge() {
     // And the Rule Trace (issue #269), outside the results hash.
     assert!(results["rule_trace"].is_object());
     results.as_object_mut().unwrap().remove("rule_trace");
+    // And the calibration label (issue #434), outside the results hash.
+    assert!(results["calibration"].is_object());
+    results.as_object_mut().unwrap().remove("calibration");
     let results = &results;
     let expected = simulate_answer(json!({
         "vessel": "box_barge", "cargo": "bauxite", "loa_m": 76.5, "beam_m": 11.4, "depth_m": 3.5,
@@ -458,6 +461,9 @@ fn json_results_are_what_simulate_answers_for_a_self_propelled_gas_hull() {
     // And the Rule Trace (issue #269), outside the results hash.
     assert!(results["rule_trace"].is_object());
     results.as_object_mut().unwrap().remove("rule_trace");
+    // And the calibration label (issue #434), outside the results hash.
+    assert!(results["calibration"].is_object());
+    results.as_object_mut().unwrap().remove("calibration");
     // `drawing.tank` (issue #292) echoes the tank design values the file held; the plain `simulate`
     // call below is given none of them. The numbers are the same, so compare without it.
     let tank = results["drawing"].as_object_mut().unwrap().remove("tank");
