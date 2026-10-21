@@ -397,12 +397,13 @@
         </table>
       {/each}
 
-      {#if stability.limitations.length > 0}
-        <h4>{t("app-stab-limitations")}</h4>
-        <ul>
-          {#each stability.limitations as l}<li>{tr(l)}</li>{/each}
-        </ul>
-      {/if}
+      <!-- The engine's own limitations, then the known ones of the method that no result carries
+           (issue #282: the areas ignore the down-flooding angle). -->
+      <h4>{t("app-stab-limitations")}</h4>
+      <ul>
+        {#each stability.limitations as l}<li>{tr(l)}</li>{/each}
+        <li>{t("app-stab-limit-downflooding")}</li>
+      </ul>
     </div>
   {/if}
 </div>
