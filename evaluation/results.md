@@ -39,6 +39,27 @@ Each disagreement outside the grid error, in one bucket.
 | `is2008/A.2.2/condition` Each loading condition's stability check; false also if it does not float | note | 0 | 0 | 0 | 0 | - | none | none |
 | `is2008/A.2.3/weather` Severe wind and rolling criterion (weather criterion) | block | 0 | 0 | 0 | 0 | not evaluated | none | none |
 
+## Rule mutation
+
+Each numeric limit and coefficient of each evaluated Rule, moved one step to each side in a mutated copy of its set, loaded at run time ([#279](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/279)). A mutant no case notices (no case changes its verdict on that Rule) is a **weak corpus** finding: a warning. The steps are in [README.md](README.md).
+
+- Mutants run: 12. Not noticed by any case: 0.
+
+| Rule | Number | Value | Mutant | Cases that notice it |
+|---|---|---:|---|---:|
+| `is2008/A.2.2.1/area-0-30` | limit | 0.055 | below: 0.053 | 2 |
+| `is2008/A.2.2.1/area-0-30` | limit | 0.055 | above: 0.057 | 6 |
+| `is2008/A.2.2.1/area-0-40` | limit | 0.09 | below: 0.088 | 5 |
+| `is2008/A.2.2.1/area-0-40` | limit | 0.09 | above: 0.092 | 3 |
+| `is2008/A.2.2.1/area-30-40` | limit | 0.03 | below: 0.028 | 5 |
+| `is2008/A.2.2.1/area-30-40` | limit | 0.03 | above: 0.032 | 5 |
+| `is2008/A.2.2.2/gz-30` | limit | 0.2 | below: 0.19 | 4 |
+| `is2008/A.2.2.2/gz-30` | limit | 0.2 | above: 0.21 | 5 |
+| `is2008/A.2.2.3/angle-max-gz` | limit | 25 | below: 23.0 | 6 |
+| `is2008/A.2.2.3/angle-max-gz` | limit | 25 | above: 27.0 | 10 |
+| `is2008/A.2.2.4/gm0` | limit | 0.15 | below: 0.14 | 4 |
+| `is2008/A.2.2.4/gm0` | limit | 0.15 | above: 0.16 | 5 |
+
 ## Disagreements
 
 None.

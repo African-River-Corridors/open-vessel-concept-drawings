@@ -42,6 +42,7 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+import rule_mutation  # noqa: E402
 from engine import DEFAULT_SELECT, box_trace  # noqa: E402
 
 CASES = HERE / "cases"
@@ -147,6 +148,16 @@ def evaluate(cases: list[dict], rule_sets: tuple[str, ...] = (),
             "select": list(select)}
 
 
+def mutate_rules(result: dict) -> list[dict]:
+    """Run every rule-data mutant of the selected sets over the corpus (issue #279)."""
+    return rule_mutation.run(result["cases"], result["select"], trace_of)
+
+
+def weak(mutation: list[dict]) -> list[dict]:
+    """The rule-data mutants no case noticed: the weak-corpus findings."""
+    return [m for m in mutation if not m["noticed_by"]]
+
+
 def coverage_gaps(result: dict) -> list[str]:
     """The evaluated blocking Rules with no passing or no failing case."""
     gaps = []
@@ -249,7 +260,20 @@ def report(result: dict) -> str:
             out.append(f"| `{rule_id}` {title} | {info['consequence']} | {p['pass_cases']} | {p['fail_cases']} "
                        f"| {len(p['false_fails'])} | {len(p['false_passes'])} | {cov} | {grid} | {buckets} |")
         out.append("")
-    out += ["## Disagreements", ""]
+    mutation = result.get("mutation", [])
+    out += ["## Rule mutation", "",
+            "Each numeric limit and coefficient of each evaluated Rule, moved one step to each side in a "
+            "mutated copy of its set, loaded at run time "
+            "([#279](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/279)). "
+            "A mutant no case notices (no case changes its verdict on that Rule) is a **weak corpus** "
+            "finding: a warning. The steps are in [README.md](README.md).", "",
+            f"- Mutants run: {len(mutation)}. Not noticed by any case: {len(weak(mutation))}.", "",
+            "| Rule | Number | Value | Mutant | Cases that notice it |",
+            "|---|---|---:|---|---:|"]
+    for m in mutation:
+        noticed = str(len(m["noticed_by"])) if m["noticed_by"] else "**none: weak corpus**"
+        out.append(f"| `{m['rule']}` | {m['where']} | {m['value']} | {m['side']}: {m['moved']} | {noticed} |")
+    out += ["", "## Disagreements", ""]
     if not result["disagreements"]:
         out.append("None.")
     for d in result["disagreements"]:
@@ -278,6 +302,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--results", type=Path, default=RESULTS)
     args = ap.parse_args(argv[1:])
     result = evaluate(load_cases(args.cases, args.mutants))
+    result["mutation"] = mutate_rules(result)
     t = totals(result)
     text = report(result)
     status = 0
@@ -291,6 +316,9 @@ def main(argv: list[str]) -> int:
                   "which the case expects to pass")
     for k in t["coverage_gaps"]:
         print(f"::warning title=Evaluation coverage gap::{label(result, k)} has no passing or no failing case")
+    for m in weak(result["mutation"]):
+        print(f"::warning title=Evaluation weak corpus::no case notices {label(result, m['rule'])} "
+              f"with its {m['where']} moved from {m['value']} to {m['moved']}")
     if args.check:
         if not args.results.exists() or args.results.read_text(encoding="utf-8") != text:
             print(f"::error title=Evaluation results stale::{args.results} is not what this run writes; "
@@ -302,7 +330,8 @@ def main(argv: list[str]) -> int:
     b = t["buckets"]
     print(f"evaluation: {t['known_good']} known-good and {t['known_bad']} known-bad Rule verdicts; "
           f"{t['false_fails']} false fails, {t['false_passes']} false passes; triage: "
-          + ", ".join(f"{k} {b[k]}" for k in BUCKETS))
+          + ", ".join(f"{k} {b[k]}" for k in BUCKETS)
+          + f"; rule mutation: {len(result['mutation'])} mutants, {len(weak(result['mutation']))} not noticed")
     return status
 
 
