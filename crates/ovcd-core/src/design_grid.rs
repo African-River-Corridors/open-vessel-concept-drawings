@@ -17,7 +17,7 @@ use alloc::vec::Vec;
 use crate::barge_capacity::{BargeCapacityInputs, compute as capacity};
 use crate::gas_arrangement::length_over_diameter_check;
 use crate::pressure_vessel::PyError;
-use crate::tanks::INT_OVERFLOW_MESSAGE;
+use crate::tanks::{DEFAULT_FILLING_LIMIT, INT_OVERFLOW_MESSAGE};
 
 /// Tanks along the hull in every cell.
 pub const TANKS_LONG: i64 = 2;
@@ -39,7 +39,7 @@ pub struct GridCell {
     pub beam_m: f64,
     pub n_tanks_long: i64,
     pub feasible: bool,
-    /// Volume-bound (1.0 m default side clearance)
+    /// Volume-bound, at the Filling Limit, with the IGC side clearance per tank
     pub cargo_t: Option<f64>,
     pub tank_outer_diameter_m: Option<f64>,
     pub tank_length_m: Option<f64>,
@@ -100,6 +100,9 @@ fn cell(
     let mut inputs = BargeCapacityInputs::new(barge_length_m, beam_m, depth_m);
     inputs.cargo_type = cargo_type.to_string();
     inputs.n_tanks_long = n;
+    // The Filling Limit, not the 0.95 default of the capacity inputs (issue #423): the grid has no
+    // loading-limit inputs, so it fills as a `.vdesign` run does when none is typed.
+    inputs.fill_ratio = DEFAULT_FILLING_LIMIT;
     // The side clearance per tank is the IGC 2.4.1.2 rule (d(Vc) less the insulation), as the
     // arrangement sizes it; the 1.0 m default spacing is gone (issue #283, built in #277).
     let r = match capacity(&inputs) {

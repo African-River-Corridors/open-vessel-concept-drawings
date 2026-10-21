@@ -1746,7 +1746,7 @@ fn with_text_ids(mut result: Value, ids: TextIds) -> R<Value> {
 
 /// Tank filling limit by ruleset: IGC 15.3 default 98 %, for both IGC rulesets.
 fn fill_by_ruleset(_ruleset: &str) -> f64 {
-    0.98
+    ovcd_core::tanks::DEFAULT_FILLING_LIMIT
 }
 
 #[allow(clippy::too_many_arguments)] // one call site; the run's Rule Sets join the simulate params
