@@ -152,7 +152,7 @@ a change can be traced later. Newest first.
 
 ### ticket/347-stern-inputs (2026-10-21)
 
-Between `main 0edcb52` and `this branch 5b06e82`.
+Between `main 6bdb1d8` and `this branch c5a0143`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -197,6 +197,7 @@ Between `main 0edcb52` and `this branch 5b06e82`.
 | sweep gas carries nothing (draught limit) | `checks[9].message` | raised eye 13.00 m >= obstruction 15.20 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 13.15 m >= obstruction 15.20 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | changed |
 | sweep gas carries nothing (draught limit) | `warnings[0]` | Sightline needs 8.70 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Sightline needs 8.55 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
 | ... | 109 more changed quantities | | | |
+
 ### 281 (2026-10-21)
 
 Between `main 0edcb52` and `this branch 920c302`.
