@@ -194,6 +194,8 @@ pub(crate) fn condition_json(c: &Condition) -> Value {
     );
     m.insert("max_gz_m".into(), fl_or_int(c.max_gz_m));
     m.insert("max_gz_deg".into(), json!(c.max_gz_deg));
+    // Reported for reference; no Rule uses it (issue #433). It stays: dropping it would move
+    // every gas results hash.
     m.insert("area_0_27".into(), fl_or_int(c.area_0_27));
     m.insert("area_0_30".into(), fl_or_int(c.area_0_30));
     m.insert("area_0_40".into(), fl_or_int(c.area_0_40));
