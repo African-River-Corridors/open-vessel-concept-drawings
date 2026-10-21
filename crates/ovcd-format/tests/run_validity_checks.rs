@@ -39,12 +39,7 @@ fn checks(results: &Value) -> &Vec<Value> {
 fn named<'a>(results: &'a Value, base: &str) -> Vec<&'a Value> {
     checks(results)
         .iter()
-        .filter(|c| {
-            c["name"]
-                .as_str()
-                .unwrap()
-                .starts_with(&format!("{base}["))
-        })
+        .filter(|c| c["name"].as_str().unwrap().starts_with(&format!("{base}[")))
         .collect()
 }
 
