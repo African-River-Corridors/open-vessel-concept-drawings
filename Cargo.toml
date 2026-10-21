@@ -17,7 +17,7 @@ ovcd-core = { path = "crates/ovcd-core" }
 ovcd-format = { path = "crates/ovcd-format" }
 # The Drawing Format Standard in Rust lives in its own repository (open-technical-drawer). OVCD code
 # keeps the name `ovcd_draw` for it.
-ovcd-draw = { package = "otd", git = "https://github.com/African-River-Corridors/open-technical-drawer", rev = "d78d022d22580ed3f7f7fa495ed47a0fb3575cc5" }
+ovcd-draw = { package = "otd", git = "https://github.com/African-River-Corridors/open-technical-drawer", tag = "v0.1.0" }
 ovcd-shell = { path = "crates/ovcd-shell" }
 # float_roundtrip, arbitrary_precision: read every number exactly as written, big ints too.
 # preserve_order: a JSON object keeps its key order, as a Python dict does.

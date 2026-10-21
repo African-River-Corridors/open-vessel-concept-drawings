@@ -2215,7 +2215,7 @@ checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
 [[package]]
 name = "otd"
 version = "0.1.0"
-source = "git+https://github.com/African-River-Corridors/open-technical-drawer?rev=d78d022d22580ed3f7f7fa495ed47a0fb3575cc5#d78d022d22580ed3f7f7fa495ed47a0fb3575cc5"
+source = "git+https://github.com/African-River-Corridors/open-technical-drawer?tag=v0.1.0#d78d022d22580ed3f7f7fa495ed47a0fb3575cc5"
 dependencies = [
  "libm",
  "miniz_oxide 0.8.9",

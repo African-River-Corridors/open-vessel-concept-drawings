@@ -79,6 +79,18 @@ def test_core_crates_never_depend_on_pyo3():
         assert "pyo3" not in (ROOT / "crates" / crate / "Cargo.toml").read_text(encoding="utf-8"), crate
 
 
+
+def test_the_drawing_crate_is_otd_pinned_by_tag():
+    """Issue #499: drawings go through `otd` (open-technical-drawer), pinned by a release tag, never a branch or a commit."""
+    cargo = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))
+    dep = cargo["workspace"]["dependencies"]["ovcd-draw"]
+    assert dep["package"] == "otd"
+    assert dep["git"] == "https://github.com/African-River-Corridors/open-technical-drawer"
+    assert set(dep) == {"package", "git", "tag"}
+    assert dep["tag"].startswith("v")
+    assert not (ROOT / "crates" / "ovcd-draw").exists()
+
+
 def test_ovcd_py_is_abi3_for_python_312():
     text = (ROOT / "crates/ovcd-py/Cargo.toml").read_text(encoding="utf-8")
     assert "abi3-py312" in text
