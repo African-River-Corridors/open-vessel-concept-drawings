@@ -145,6 +145,9 @@ pub struct GasBasis {
     /// The bow and stern voids (m): the tanks and the cargo lie between them (issue #349).
     pub bow_void_m: f64,
     pub stern_void_m: f64,
+    /// Issue #410: the covering above the moulded depth D (wing plate, side plating up to it,
+    /// weather shield), each with its own centre. Empty when nothing stands above D.
+    pub covering_items: Vec<crate::weights::MassItem>,
 }
 
 /// What `assess` reads from a `BargeCapacityResult`.
@@ -192,6 +195,8 @@ impl TryFrom<&BargeCapacityResult> for GasCapacityResult {
                 outfitting: b.weights.outfitting,
                 bow_void_m: b.inputs.bow_non_tank_length.unwrap_or(0.0),
                 stern_void_m: b.inputs.stern_non_tank_length.unwrap_or(0.0),
+                covering_items: crate::weights::covering_items(&b.inputs, &b.tanks)
+                    .map_err(|_| "gas basis covering is not weighable")?,
             }),
         };
         Ok(Self {
@@ -259,6 +264,8 @@ pub fn assess_num(
         (basis.piping_machinery, d),
         (basis.outfitting, 0.75 * d),
     ];
+    // Issue #410: the covering above D at its own heights.
+    light_items.extend(basis.covering_items.iter().map(|i| (i.mass_t, i.kcg_m)));
     // Issue #348: the stern block items at their own heights, when they are in the lightship.
     light_items.extend(result.stern_block_items.iter().map(|i| (i.mass_t, i.kcg_m)));
     // Issue #349: the same items along the hull (from the stern), for the trim: the hull steel and
@@ -271,6 +278,7 @@ pub fn assess_num(
         (basis.piping_machinery, l / 2.0),
         (basis.outfitting, basis.stern_void_m / 2.0),
     ];
+    long_items.extend(basis.covering_items.iter().map(|i| (i.mass_t, i.lcg_m)));
     long_items.extend(result.stern_block_items.iter().map(|i| (i.mass_t, i.lcg_m)));
     let with_trim = !result.stern_block_items.is_empty();
     let trim_hull = crate::hull::HullGeometry::new(l, b, d, 0.0, 0.0, 0.0, 0.0);
