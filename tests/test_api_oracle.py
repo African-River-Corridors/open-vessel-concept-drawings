@@ -29,6 +29,9 @@ API = json.loads((DATA / "public_api.json").read_text(encoding="utf-8"))
 # Scenarios whose answer is allowed to differ from 0.1.0, with the reason. Each is listed as a
 # known change in CHANGELOG.md.
 KNOWN_DIFFERENCES: dict = {
+    # Issue #414: the stern rake's LCB was mirrored (integrated from x = 0 forward); 0.1.0 gave the
+    # mirror value. Only a hull with a stern rake moves; no Design has one.
+    "hull.methods": "issue #414: the stern rake LCB is no longer mirrored",
     # Issue #175: no 28 m tank-length cap, so every cell has two tanks along (the old count stepped
     # up with the hull length), and a cell is infeasible when its tank is longer than 7 diameters.
     # The cells' tank length and slenderness are now the engine's own figures. `n_tanks_for_length`

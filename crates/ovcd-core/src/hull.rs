@@ -201,12 +201,14 @@ pub mod hull_form {
             let x_mid_center = x_mid_start + self.parallel_length() / 2.0;
             let v_mid = self.beam * py_min(draft, self.depth) * self.parallel_length();
             let moment_mid = v_mid * x_mid_center;
+            // The stern rake's deep end is at its forward end, x = stern_rake_length, and it rises
+            // aft toward x = 0 (issue #414: it was integrated from x = 0 forward, mirrored).
             let moment_stern = self.rake_first_moment_volume(
                 draft,
                 self.stern_rake_length,
                 self.stern_rake_rise,
-                0.0,
-                true,
+                self.stern_rake_length,
+                false,
             );
             let x_bow_start = self.stern_rake_length + self.parallel_length();
             let moment_bow = self.rake_first_moment_volume(
