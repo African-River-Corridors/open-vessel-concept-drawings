@@ -127,6 +127,8 @@ warn-machinery-no-engine = No engine of the table covers { $kw } kW per engine (
 
 ## crates/ovcd-core/src/resistance.rs
 
+check-name-lackenby-fit-subcritical = lackenby fit subcritical
+check-lackenby-fit-subcritical = depth Froude { $froude } at the service speed; the shallow-water fit holds below { $limit }, above it a fixed factor stands in
 check-service-speed-below-limiting = { $environment }: service { $service } kn <= 0.95 x Schijf limit { $limit } kn
 check-power-within-installed = { $environment }: power { $power } kW <= installed { $installed } kW
 check-blockage-in-range = { $environment }: blockage n = { $blockage } must be in (0, 1)

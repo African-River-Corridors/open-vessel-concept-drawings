@@ -39,6 +39,10 @@ use alloc::string::{String, ToString};
 use alloc::vec;
 use alloc::vec::Vec;
 
+/// The depth Froude number up to which the Lackenby shallow-water term is used; above it a fixed
+/// factor of 5 stands in (an OVCD choice, no source).
+pub const LACKENBY_FNH_MAX: f64 = 0.95;
+
 // --- Physical constants ---
 pub const GRAVITY: f64 = 9.81; // m/s^2
 pub const KNOTS_TO_MS: f64 = 0.5144; // 1 knot = 0.5144 m/s
@@ -422,7 +426,7 @@ impl<'a> ResistanceCalculator<'a> {
         let th_ratio = t / h;
 
         // Lackenby: delta = a * (T/h)^b * Fnh^c, fitted a = 1.4, b = 1.5, c = 2.5
-        let lackenby = if fnh < 0.95 {
+        let lackenby = if fnh < LACKENBY_FNH_MAX {
             1.4 * libm::pow(th_ratio, 1.5) * libm::pow(fnh, 2.5)
         } else {
             5.0 // near critical speed
@@ -508,18 +512,7 @@ impl<'a> ResistanceCalculator<'a> {
         // Added resistance in waves. Zero in a river.
         let mut r_waves = 0.0;
         if env.significant_wave_height_m > 0.0 {
-            let wave_inputs = WaveResistanceInputs {
-                heading_deg_off_bow: env.wave_heading_deg_off_bow,
-                peak_wave_period_s: env.peak_wave_period_s,
-                water_density_t_m3: env.water_density,
-                speed_kn: speed_through_water,
-                ..WaveResistanceInputs::new(
-                    env.significant_wave_height_m,
-                    self.inputs.beam,
-                    self.inputs.lwl,
-                )
-            };
-            r_waves = waves::compute(&wave_inputs)
+            r_waves = waves::compute(&self.wave_inputs(env, speed_through_water))
                 .map_err(PyException::ValueError)?
                 .added_resistance_kn;
         }
@@ -530,19 +523,8 @@ impl<'a> ResistanceCalculator<'a> {
         let mut dyn_ukc = f64::INFINITY;
         let mut squat_limited = false;
         if squat_applies(env) {
-            let squat_inputs = SquatInputs {
-                block_coefficient: self.inputs.block_coefficient,
-                water_depth_m: env.water_depth,
-                channel_area_m2: self.channel_cross_section(env),
-                safety_margin_m: env.squat_safety_margin_m,
-                ..SquatInputs::new(
-                    speed_through_water,
-                    self.inputs.draft,
-                    self.inputs.beam,
-                    self.inputs.lwl,
-                )
-            };
-            let sr = squat::compute(&squat_inputs).map_err(PyException::ValueError)?;
+            let sr = squat::compute(&self.squat_inputs(env, speed_through_water))
+                .map_err(PyException::ValueError)?;
             sq = sr.squat_m;
             dyn_ukc = sr.dynamic_ukc_m;
             squat_limited = dyn_ukc < env.squat_safety_margin_m;
@@ -578,6 +560,94 @@ impl<'a> ResistanceCalculator<'a> {
     }
 
     /// Full speed sweep for one environment.
+    /// The STAwave-1 inputs of one environment at a speed through the water.
+    fn wave_inputs(
+        &self,
+        env: &EnvironmentInputs,
+        speed_through_water: f64,
+    ) -> WaveResistanceInputs {
+        WaveResistanceInputs {
+            heading_deg_off_bow: env.wave_heading_deg_off_bow,
+            peak_wave_period_s: env.peak_wave_period_s,
+            water_density_t_m3: env.water_density,
+            speed_kn: speed_through_water,
+            ..WaveResistanceInputs::new(
+                env.significant_wave_height_m,
+                self.inputs.beam,
+                self.inputs.lwl,
+            )
+        }
+    }
+
+    /// The squat inputs of one environment at a speed through the water.
+    fn squat_inputs(&self, env: &EnvironmentInputs, speed_through_water: f64) -> SquatInputs {
+        SquatInputs {
+            block_coefficient: self.inputs.block_coefficient,
+            water_depth_m: env.water_depth,
+            channel_area_m2: self.channel_cross_section(env),
+            safety_margin_m: env.squat_safety_margin_m,
+            ..SquatInputs::new(
+                speed_through_water,
+                self.inputs.draft,
+                self.inputs.beam,
+                self.inputs.lwl,
+            )
+        }
+    }
+
+    /// The method checks at the service speed of one environment (issue #420): the squat checks
+    /// where squat applies, the STAwave-1 checks where there are waves, and the validity of the
+    /// shallow-water fit. Each is named for its environment, as `keel_clears_bed[<environment>]`.
+    fn service_point_checks(
+        &self,
+        env: &EnvironmentInputs,
+        out: &EnvironmentResult,
+    ) -> Result<Vec<Check>, PyException> {
+        let Some(point) = out
+            .speed_curve
+            .iter()
+            .find(|p| p.speed_knots == out.service_speed_knots)
+        else {
+            return Ok(Vec::new());
+        };
+        let stw = point.speed_through_water_knots;
+        let mut checks: Vec<Check> = Vec::new();
+        if squat_applies(env) {
+            checks.extend(
+                squat::compute(&self.squat_inputs(env, stw))
+                    .map_err(PyException::ValueError)?
+                    .checks,
+            );
+        }
+        if env.significant_wave_height_m > 0.0 {
+            checks.extend(
+                waves::compute(&self.wave_inputs(env, stw))
+                    .map_err(PyException::ValueError)?
+                    .checks,
+            );
+        }
+        if !env.is_deep_water && env.water_depth > 0.0 && self.inputs.draft > 0.0 {
+            // The Lackenby term is a fit up to a depth Froude number of 0.95; above it the code
+            // takes a fixed factor (an OVCD choice, no source), so the fit no longer holds.
+            checks.push(Check::with_severity(
+                "lackenby_fit_subcritical",
+                point.froude_depth < LACKENBY_FNH_MAX,
+                text!(
+                    "check-lackenby-fit-subcritical",
+                    "depth Froude {froude} at the service speed; the shallow-water fit holds below \
+                     {limit}, above it a fixed factor stands in",
+                    froude = Arg::fixed(point.froude_depth, 2),
+                    limit = Arg::fixed(LACKENBY_FNH_MAX, 2),
+                ),
+                "warning",
+            ));
+        }
+        for c in &mut checks {
+            c.name = format!("{}[{}]", c.name, out.name);
+        }
+        Ok(checks)
+    }
+
     fn compute_environment(
         &self,
         env: &EnvironmentInputs,
@@ -800,7 +870,15 @@ fn build_checks(inputs: &ResistanceInputs, environments: &[EnvironmentResult]) -
 /// Pure entry point: runs the calculator and attaches the validity checks. `Err` carries the
 /// Python exception the same input raises.
 pub fn compute(inputs: &ResistanceInputs) -> Result<ResistanceResults, PyException> {
-    let mut result = ResistanceCalculator::new(inputs).calculate()?;
+    let calc = ResistanceCalculator::new(inputs);
+    let mut result = calc.calculate()?;
     result.checks = build_checks(inputs, &result.environments);
+    // Issue #420: the squat, wave and fit checks at each service speed.
+    let mut method = Vec::new();
+    for (env, out) in inputs.environments.iter().zip(&result.environments) {
+        method.extend(calc.service_point_checks(env, out)?);
+    }
+    let advisory = result.checks.len() - 1;
+    result.checks.splice(advisory..advisory, method);
     Ok(result)
 }
