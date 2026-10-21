@@ -87,7 +87,10 @@ def hemisphere_head_thickness(
     allowable_stress_mpa: float,
     weld_efficiency: float = 0.95,
 ) -> float:
-    """ASME UG-27 formula for hemispherical heads.
+    """Hemispherical head thickness.
+
+    Not UG-27, which is the cylindrical shell paragraph; the ASME head paragraph is not in the
+    rule-source library, so none is cited (issue #433).
 
     t = P * R / (2 * f * E - 0.2 * P)
 
@@ -111,7 +114,10 @@ def ellipsoidal_head_thickness(
     allowable_stress_mpa: float,
     weld_efficiency: float = 0.95,
 ) -> float:
-    """ASME UG-27 formula for 2:1 ellipsoidal heads.
+    """2:1 ellipsoidal head thickness.
+
+    Not UG-27, which is the cylindrical shell paragraph; the ASME head paragraph is not in the
+    rule-source library, so none is cited (issue #433).
 
     t = P * D / (2 * f * E - 0.2 * P)
 
