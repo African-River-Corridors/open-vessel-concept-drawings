@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+## 0.2.4 (2026-10-21)
+
+Highlights, since 0.2.3:
+
+- Rule Sets. Checks are now Rules in versioned, content-hashed Rule Sets: `is2008-a`, `igc-2g`, `lr-inland-gas` and `ovcd`, all 1.0.0. Every applicable Rule applies and the strictest governs. Every result carries a Rule Trace, and the app shows it. This release is the first to ship Rule Set versions, so their files are now frozen (`RELEASED.json`).
+- `arc-rules`: the domain-free part of the rules engine is its own crate, so other tools can share it.
+- Type C tanks follow the IGC Code more closely: cited allowable stresses, the design liquid pressure on the wall, the tank head type as an input, the dome rule, and LPG at its loading temperature.
+- Stern and propulsion for self-propelled hulls: stern form, propulsor, machinery, installed power, trim per loading condition, and the wheelhouse Blind Distance.
+- Tug inputs and two new Formations: ATB and towed barge.
+- Confined water: one midship section, the Schijf limiting speed, and installed power.
+- The IS Code 2008 loading conditions, as an opt-in input.
+- The first Vessel Model steps: the Sections Table, equilibrium with free trim, and the GZ curve on the sections.
+
+Read this before you use this build:
+
+- Format version 3 is not final. Files saved as version 3 may need changes before 0.3. Version 2 files still open.
+- Results move for most gas designs. See the design-impact entries below.
+- Known open finding: the gas hull steel KG is low when the wing plate is above the moulded depth D (issue #410), so GM is high on those designs.
+- Concept and preliminary design only. Results are not verified.
+
 - Change (issue #401, step 1): the capital budget shows its two hull steel figures. The lightship, piping and outfitting use the top-down steel (`steel_rate_per_cbm` x moulded volume); the budget prices the bottom-up steel (hull plating and structure, wing plate, weather shield). The `cost` block has a new `steel` field (`top_down_t`, `bottom_up_t`, `delta_t` = top-down less bottom-up), and the app shows it under the hull steel line (new message `app-cost-steel-delta`, English). The doc comments of `calculate_weights` and `piping_factor` now say which steel each uses. The budget is outside the results hash, so no result or hash moves.
 - Change (issue #403): the capital budget adds a tug only for a Formation that has one. A self-propelled Option has no tug breakdown: the tug's hull steel (the core default, 115 t) and its outfitting lump are no longer costed, and the vessel's own battery, propulsion and wheelhouse and accommodation are barge items. At the example rates that is 487,500 less in the subtotal (115 t x 2,500 + 200,000), 536,250 less in the unit total with the 10 % yard margin, for a self-propelled gas Option. Every other Formation keeps the tug line. New core function `barge_cost::compute_for(inputs, rates, tug)`; `compute` is unchanged, so the Python API does not move. The app hides an empty tug table. The budget is outside the results hash, so no result or hash moves.
 - Design change (issue #399): the residuary resistance fit is continuous at Fn 0.20. Cr/Cf rose to about 0.179 just below Fn 0.20 and stepped down to 0.150 at Fn 0.20; the part above Fn 0.20 now starts at 0.179 (0.10 + 2.5 x 0.10^1.5), the higher and so conservative of the two ways to close the step. The fit is an OVCD Estimate, not from a source: the Python module no longer names the Guldhammer-Harvald charts, which the code does not use. At Fn 0.20 and above the residuary resistance rises by 0.029 x the frictional resistance (19.4 % of the residuary part at Fn 0.20, less above), and power and fuel follow; points below Fn 0.20 do not move. Tests re-pinned to what the code prints. No sourced test changed.
