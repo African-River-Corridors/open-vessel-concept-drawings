@@ -1099,6 +1099,7 @@ fn simulate_measured(
         "name": "Cargo > 0",
         "ok": cargo_t > 0.0,
         "message": if cargo_t <= 0.0 { "Lightship alone exceeds the allowed draught." } else { "OK" },
+        "severity": "error",
     })];
     // Issue #415: the hold GM at the cargo and the draught the Design reports, in every dry bulk
     // Option, in place of the capacity result's GM at the volume-bound load (which it gives only
@@ -1973,6 +1974,7 @@ fn simulate_gas(
         "name": "Cargo > 0",
         "ok": f.payload_t > 0.0,
         "message": if f.payload_t > 0.0 { "OK" } else { "Nothing fits: lengthen or widen the hull." },
+        "severity": "error",
     })];
     if !f.feasible {
         // Said plainly: no arrangement passes (issue #264). The design shown is the closest one.
@@ -1991,6 +1993,7 @@ fn simulate_gas(
             "name": "Feasible arrangement",
             "ok": false,
             "message": message,
+            "severity": "error",
         }));
     }
     capacity_checks(&r.checks, &mut checks);
@@ -2039,6 +2042,7 @@ fn simulate_gas(
                 "name": k.name,
                 "ok": k.ok,
                 "message": k.message,
+                "severity": k.severity,
             }));
         }
         let set_label = match a.criteria_set.as_str() {

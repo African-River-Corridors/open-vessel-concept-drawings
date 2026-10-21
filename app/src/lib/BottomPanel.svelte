@@ -52,10 +52,22 @@
   ]);
 
   let checks = $derived.by(() => {
-    const list = (valueAt(current?.results, ["checks"]) as { name: string; ok: boolean; message: string }[] | undefined) ?? [];
-    // Failures first, otherwise in the engine's order.
-    return [...list.filter((c) => !c.ok), ...list.filter((c) => c.ok)];
+    const list =
+      (valueAt(current?.results, ["checks"]) as { name: string; ok: boolean; message: string; severity?: string }[] | undefined) ?? [];
+    // Issue #419: a failed check of severity "warning" does not gate the result, so it reads as a
+    // warning, not a failure. A check with no severity is an error, as in the CLI summary.
+    const warned = (c: { ok: boolean; severity?: string }) => !c.ok && c.severity === "warning";
+    // Failures that gate first, then failed warnings, then passes; otherwise in the engine's order.
+    return [...list.filter((c) => !c.ok && !warned(c)), ...list.filter(warned), ...list.filter((c) => c.ok)].map((c) => ({
+      ...c,
+      tone: c.ok ? "ok" : warned(c) ? "warn" : "fail",
+    }));
   });
+  const TAGS: Record<string, { mark: string; label: string }> = {
+    ok: { mark: "✓", label: "app-pass" },
+    warn: { mark: "!", label: "app-rules-warn" },
+    fail: { mark: "✕", label: "app-fail" },
+  };
   let warnings = $derived((valueAt(current?.results, ["warnings"]) as string[] | undefined) ?? []);
   let ids = $derived(textIds(current?.results));
   let softWarnings = $derived((activeEval?.messages ?? []).filter((m) => m.severity === "warning"));
@@ -113,8 +125,8 @@
         {/if}
         <ul class="checks" data-testid="checks">
           {#each checks as c (c.name)}
-            <li class={c.ok ? "ok" : "fail"}>
-              <span class="tag"><span aria-hidden="true">{c.ok ? "✓" : "✕"}</span> {t(c.ok ? "app-pass" : "app-fail")}</span>
+            <li class={c.tone} data-testid="check" data-tone={c.tone}>
+              <span class="tag"><span aria-hidden="true">{TAGS[c.tone].mark}</span> {t(TAGS[c.tone].label)}</span>
               <strong>{checkName(c.name, ids)}</strong>
               {#if c.message && c.message !== "OK"}<span class="msg">{say(c.message, ids)}</span>{/if}
             </li>
@@ -197,6 +209,7 @@
   .ok .tag { background: var(--pass-soft); color: var(--pass); }
   .fail .tag { background: var(--fail-soft); color: var(--fail); }
   .fail { color: var(--fail); }
+  .warn .tag { background: var(--warn-soft); color: var(--warn); }
   .msg { color: var(--ink-3); margin-left: var(--sp-1); }
   .fail .msg { color: var(--fail); }
 </style>

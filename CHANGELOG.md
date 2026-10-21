@@ -7,6 +7,7 @@
 - Text fix (issue #433, item 1): the limitation `stab-limit-no-wind-or-damage` cited ADN 9.3.1.15 for wind heel, but ADN 9.3.1.15 is the damaged-condition stability only. It now cites ADN 9.3.1.15 and IGC 2.7 for damage stability and the IS Code 2008 weather criterion (Part A 2.3) for wind heel. Every result with a stability block moves by this text (107 design-impact cases move by it alone).
 - Change (issue #420, part a, the resistance side): `resistance::compute` now keeps the method checks at the service speed of each environment. Where squat applies: the `squat.rs` checks (`keel_clears_bed`, `keel_clears_bed_with_margin`, `froude_depth_subcritical`, and `blockage_within_barrass_range` and `methods_agree_within_50pct` when they apply); where there are waves: the STAwave-1 checks (`stawave1_short_wave_validity`, `wave_height_within_screening_range`, `bow_length_supplied`); in shallow water: a new warning `lackenby_fit_subcritical` (the shallow-water fit holds below a depth Froude number of 0.95, `LACKENBY_FNH_MAX`; above it a fixed factor stands in, an OVCD choice). Each is named for its environment, as `keel_clears_bed[<environment>]`. They are in `ResistanceResults.checks` (and the Python API); the Design run does not copy them yet (part b, the rules lane), so no result or hash moves. New message `check-lackenby-fit-subcritical`.
 - Design change (issue #421): one air draft verdict per Design. With an air draft limit, a run listed two checks of the hull's air draft: the capacity result's `air draft within limit`, which takes the ballasted light condition when the hull carries ballast, and the run's own `Air draft (empty, governing)`, which always took the empty light condition. The second is removed (its Message Ids `check-air-draft-limit` and `name-check-air-draft` too). The IS Code loading conditions keep their own air draft per condition. `ovcd` 2.0.0, still unreleased since #415, drops the Rule `ovcd/capacity/air-draft-empty`, so 2.0.0 is the one major version for both. Of the 194 design-impact cases, the 3 with an air draft limit move: one check fewer, and the checks after it move up one place; no value and no verdict moves.
+- Change (issue #419): severity on every check of a run, and a failed warning reads as a warning. Four checks of `simulate.rs` had no `severity` and were read as errors: `Cargo > 0` (dry and gas), `Feasible arrangement`, and the gas stability check of each legacy loading condition; each now says `error` (the fifth, `Air draft (empty, governing)`, goes in #421). No verdict changes: a check with no severity was already an error. The app's check list (`BottomPanel.svelte`) shows a failed warning check with the warning tag, not FAIL, after the failures that gate; the CLI summary already listed failed warnings apart (#418) and now has a test for it. Every results hash moves (194 of 194 design-impact cases, only in `checks[n].severity`, absent to `error`); fixture and legacy hashes re-stamped from `ovcd run`.
 - Docs (issue #431, part 1): `calibration/README.md` no longer says the barge database is unreachable; sources K1 to K39 cite archived copies of its pages. The Yangtze motor vessel note in `calibration/results.md` (and the harness text that writes it) says the harness takes Lwl = 0.97 x LOA while the app uses Lwl = LOA. A new test fails when the committed `calibration/results.md` or `factors.yaml` is not what the harness writes (`python -m vessel_designer.calibration` writes them). No result moves.
 - Drawings (issue #407, part 1): the GA draws the wing tank top at the wing plate level the weights carry (tank bottom + wing tank height ratio x tank outer diameter), no longer clamped at the deck. Where it stands above the Moulded Depth, the midship section draws the side shell up to it, and the side elevation shows the wing plate in view (hidden below the deck). Both gas fixtures have the wing plate above the deck (6.05 m and 5.35 m on a 4.5 m depth), so their drawings change. The weather shield outline waits for its values in the `drawing` block. No result moves.
 - API change (issue #413), Python API only; no Design moves (the design-impact check gives no design change). The legacy chain `hydrostatics.calculate_stability` / `tanks.free_surface_moment_cylindrical` took the fill as a height ratio (h = fill x 2r); it now takes it as a volume ratio and finds the liquid height of the circular segment (`gas_stability.segment_fill`), as the gas stability does. At 0.95 to 0.98 fill the free surface moment is about 12 times larger, so the legacy GM_fluid is much lower. `to_ga` no longer sets three flags to a constant true: `min_freeboard_ok` is the drawn freeboard against the required freeboard, `air_draft_ok` the air draft against its limit (true with no limit), `stability_ok` the gas stability criteria (a dry result: GM at least 0.15 m; false with no GM). Its drawn tank cylinder holds the volume the two heads do not (the heads counted twice). The doc comments say what the legacy chain leaves out (Cb applied to the raked hull volume; KG items that do not sum to the lightship).
@@ -214,6 +215,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/419-severity-everywhere (2026-10-21)
+
+Between `main 66589b9` and `this branch 353bef4`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration amaggi-box-2000 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x12-imt201 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x12-imt205 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x12-pb2012 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x12-rci250 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x13-cby252 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x13-cby400 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x13-cby433 | `checks[0].severity` | absent | error | changed |
+| calibration canal-box-200x35x13-pb2352 | `checks[0].severity` | absent | error | changed |
+| calibration cargill-amazon-jumbo | `checks[0].severity` | absent | error | changed |
+| calibration danube-barge-77 | `checks[0].severity` | absent | error | changed |
+| calibration dsb-holdbarge-1997-76.5 | `checks[0].severity` | absent | error | changed |
+| calibration europa-iib-1635ou | `checks[0].severity` | absent | error | changed |
+| calibration europa-iib-rdb06 | `checks[0].severity` | absent | error | changed |
+| calibration hidrovia-lhg-3200 | `checks[0].severity` | absent | error | changed |
+| calibration jeffboat-am2100 | `checks[0].severity` | absent | error | changed |
+| calibration mcdonough-195x35x12 | `checks[0].severity` | absent | error | changed |
+| calibration meb-dcb23-ptich | `checks[0].severity` | absent | error | changed |
+| calibration meb-dcb24-pola | `checks[0].severity` | absent | error | changed |
+| calibration meb-rdb12-samarskaya | `checks[0].severity` | absent | error | changed |
+| calibration meb-rdb20-belmax9 | `checks[0].severity` | absent | error | changed |
+| calibration para-mississippi-2200 | `checks[0].severity` | absent | error | changed |
+| calibration stretch-hopper-light | `checks[0].severity` | absent | error | changed |
+| calibration taf-danube-2008 | `checks[0].severity` | absent | error | changed |
+| calibration taf-mississippi-2011 | `checks[0].severity` | absent | error | changed |
+| calibration taf-parana-2013 | `checks[0].severity` | absent | error | changed |
+| calibration taf-rhin-1980-covered | `checks[0].severity` | absent | error | changed |
+| calibration taf-rhin-2000 | `checks[0].severity` | absent | error | changed |
+| calibration taf-rhin-2001 | `checks[0].severity` | absent | error | changed |
+| calibration taf-rhin-2008-covered | `checks[0].severity` | absent | error | changed |
+| calibration taf-rhin-2019-covered | `checks[0].severity` | absent | error | changed |
+| calibration taf-seine-1973 | `checks[0].severity` | absent | error | changed |
+| calibration taf-seine-1981 | `checks[0].severity` | absent | error | changed |
+| calibration taf-seine-1993 | `checks[0].severity` | absent | error | changed |
+| calibration taf-seine-1996 | `checks[0].severity` | absent | error | changed |
+| calibration taf-seine-1997 | `checks[0].severity` | absent | error | changed |
+| calibration taf-seine-2000 | `checks[0].severity` | absent | error | changed |
+| calibration taf-seine-2008 | `checks[0].severity` | absent | error | changed |
+| ... | 162 more changed quantities | | | |
 
 ### ticket/411-head-insulation (2026-10-21)
 

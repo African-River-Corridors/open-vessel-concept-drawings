@@ -12,6 +12,7 @@ import { serve } from "./web-server.mjs";
 
 const here = import.meta.dirname;
 const FIXTURE = path.resolve(here, "../../crates/ovcd-format/tests/fixtures/gas_igc_2g_self_propelled.vdesign");
+const DRY_FIXTURE = path.resolve(here, "../../crates/ovcd-format/tests/fixtures/dry_bulk_box_hold.vdesign");
 const DIST = path.resolve(here, "../dist-web-test");
 const CLI = process.env.OVCD_CLI;
 assert.ok(CLI, "OVCD_CLI must be set (run e2e/run-web.sh)");
@@ -233,6 +234,36 @@ describe("OVCD web smoke tests", () => {
     await (await (await b.$(".confirm")).$("button=Delete")).click();
     await until(b, "one Option", async () => (await b.$$('select[aria-label="Active Option"] option')).length === 1);
     await until(b, "the notes to go", async () => !(await (await bar()).isExisting()));
+  });
+
+  it("shows a failed warning check as a warning, not a failure (issue #419)", async () => {
+    // The dry bulk example is overloaded at its volume-bound load: `not overloaded` fails, and it is a
+    // warning (issue #418), so it does not gate the result.
+    const b = await start();
+    await b.url(`${origin}/ovcd/app`);
+    await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+    await (await b.$("button=I understand")).click();
+    await until(b, "results", async () => (await outputs(b)).isExisting());
+    await b.execute(() => {
+      HTMLInputElement.prototype.click = function () {};
+    });
+    await (await b.$("button=Open")).click();
+    const picker = await b.$("[data-testid=file-picker]");
+    await picker.waitForExist({ timeout: 5000 });
+    await picker.setValue(DRY_FIXTURE);
+    await until(b, "the file name", async () => (await b.$("header")).getText().then((t) => t.includes("dry_bulk_box_hold.vdesign")));
+    await until(b, "the checks", async () => (await b.$$("[data-testid=checks] [data-testid=check]")).length > 0);
+    const rows = await b.$$("[data-testid=checks] [data-testid=check]");
+    const seen = [];
+    for (const r of rows) seen.push([await r.getAttribute("data-tone"), await r.getText()]);
+    const overloaded = seen.find(([, text]) => text.includes("not overloaded"));
+    assert.ok(overloaded, `a "not overloaded" check: ${JSON.stringify(seen)}`);
+    assert.equal(overloaded[0], "warn");
+    assert.ok(overloaded[1].includes("WARN") && !overloaded[1].includes("FAIL"), overloaded[1]);
+    // The warnings come after the failures that gate and before the passes.
+    const tones = seen.map(([tone]) => tone);
+    const order = { fail: 0, warn: 1, ok: 2 };
+    assert.deepEqual([...tones].sort((x, y) => order[x] - order[y]), tones);
   });
 
   it("still loads when browser storage is blocked", async () => {
