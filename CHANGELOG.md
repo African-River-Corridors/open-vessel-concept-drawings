@@ -3,6 +3,7 @@
 ## Unreleased
 
 - API change (issue #413), Python API only; no Design moves (the design-impact check gives no design change). The legacy chain `hydrostatics.calculate_stability` / `tanks.free_surface_moment_cylindrical` took the fill as a height ratio (h = fill x 2r); it now takes it as a volume ratio and finds the liquid height of the circular segment (`gas_stability.segment_fill`), as the gas stability does. At 0.95 to 0.98 fill the free surface moment is about 12 times larger, so the legacy GM_fluid is much lower. `to_ga` no longer sets three flags to a constant true: `min_freeboard_ok` is the drawn freeboard against the required freeboard, `air_draft_ok` the air draft against its limit (true with no limit), `stability_ok` the gas stability criteria (a dry result: GM at least 0.15 m; false with no GM). Its drawn tank cylinder holds the volume the two heads do not (the heads counted twice). The doc comments say what the legacy chain leaves out (Cb applied to the raked hull volume; KG items that do not sum to the lightship).
+- Design change (issue #415): the dry bulk hold GM is checked at the cargo and the draught the Design reports, in every dry bulk Option. It ran only at the volume-bound load, and only when that load floated, so a dense cargo that a draught limit cuts (bauxite in the default box hold) got no GM figure at all. The check is renamed `intact gm at reported cargo` (it tests GM >= 0.15 m; "gm positive" said less) and stays a warning. The first-order method is unchanged (`barge_capacity::bulk_gm_at`; the cargo KG of the full hold, on the safe side for a smaller load). The core `barge_capacity` result keeps its own `gm_positive` check (Python API unchanged). The `ovcd` Rule Set is 2.0.0, a major version: `ovcd/capacity/hopper-gm` is replaced by `ovcd/capacity/intact-gm`, which cites IS Code 2008 Part A 2.2.4 as the origin of the 0.15 m value (read in MSC.267(85), annex p. 12); it is a tool limit, not a sourced Rule. `ovcd` 1.0.0 is kept. New Message Ids `check-intact-gm-reported-cargo` and `check-name-intact-gm-at-reported-cargo` (draft `es`, `pt` and `zh-Hans`). Of the 194 design-impact cases, the 104 dry bulk ones move: only `checks` (the new check, and the checks after it move one place) and `warnings` (the first-order GM note, now in all 104); no cargo, draught or feasibility value moves, and no new check fails. Dry bulk fixture and legacy hashes re-stamped from `ovcd run`.
 - Rules (issue #424): `lr-inland-gas` 1.1.0, a minor version (Rules added; 1.0.0 is kept). The tank length over diameter limit of Pt 4 Ch 4 3.5.1 is now a class Rule, `lr-inland/3.5.1/tank-l-over-d`, on the engine check "tank length over diameter" (the inner shell diameter since #416); the `ovcd` tool limit stays. 3.2.1 (tank capacity, Table 4.3.1) and 3.5.2 (the hull in the cargo area) are listed as not evaluated, each with what the engine lacks. The three are codified and wait for a second reader. Gas Options now select 1.1.0. In `fit`, the Rules on one engine check now count once when the search ranks candidates that all fail (`failing_groups`; the kernel `Failure` carries its Measure), so a check that two sets report does not count twice. No case of the design-impact set moves.
 - Design change (issue #426, part 3): the IS Code 2008 loading conditions are the default, and the gas arrangement search checks its candidates in them. A new Option gets `loading_conditions = is_code_2008` (the four conditions of Part B 3.4.1.2, with stores and fuel and water ballast, and "Lightship, no ballast" where the vessel may sail that way); a file saved before keeps `legacy`, and every fixture and legacy results hash still matches. With the IS Code conditions, `fit` judges each candidate by them (stability, ballast plan and air draft of each condition, by the same core functions the results use, `gas_arrangement::is_code_conditions` and `is_code_cargo`) and ranks it by the cargo it carries with its stores and fuel aboard. The Python API keeps the legacy search. The stores and fuel are now worked out before the search, at the design draught (the draught the installed power is sized at); part 2 used the answer's draught. Design impact (194 cases, `main b8e3059`): 190 move, most only by the new `loading_conditions` and `stability` blocks. Gas: 87 of 90 keep their arrangement and cargo. On main, run with `is_code_2008`, none of the 86 feasible gas answers fails an IS Code condition, so the 43 of 89 failures PR #440 found no longer occur (`fit` has changed since: #418, #422, #277). Three gas cases move: the two 110 x 24 m wide hulls become feasible (a 3-wide arrangement, 4,161 t to 3,011 t; before, no arrangement passed and the closest failed the sightline), and the 200 x 12 m hull, infeasible both before and after, shows a different closest candidate (4,333 t to 2,111 t). Every feasible gas answer meets every IS Code condition (86 of 86). Dry bulk: 7 of 103 cases carry up to 0.75 % less cargo (a self-propelled, draught-bound hold now carries its stores and fuel); their condition checks stay warnings. Tests: `trim_results` now sets `legacy`, as its point is the legacy trim fields.
 
@@ -203,6 +204,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/415-dry-bulk-gm (2026-10-21)
+
+Between `main b1e9324` and `this branch dfc9420`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration amaggi-box-2000 | `checks[10].message` | absent | GM 15.42 m (fluid), max GZ 2.76 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | changed |
+| calibration amaggi-box-2000 | `checks[10].name` | absent | Stability — lightship, no ballast | changed |
+| calibration amaggi-box-2000 | `checks[10].ok` | absent | False | changed |
+| calibration amaggi-box-2000 | `checks[10].severity` | absent | warning | changed |
+| calibration amaggi-box-2000 | `checks[5].message` | GM 1.38 m (fluid), max GZ 0.23 m at 13° — fails: Area 0–40° 0.074 < 0.09, Area 30–40° -0.006 < 0.03, GZ at ≥ 30° 0.047 < 0.2, Angle of max GZ 13.000 < 25.0 | intact GM 1.38 m >= 0.15 m at the reported cargo 1665 t, draught 3.56 m (first-order box; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration amaggi-box-2000 | `checks[5].name` | Stability — full load, departure | intact gm at reported cargo | changed |
+| calibration amaggi-box-2000 | `checks[5].ok` | False | True | changed |
+| calibration amaggi-box-2000 | `checks[6].name` | Stability — full load, arrival | Stability — full load, departure | changed |
+| calibration amaggi-box-2000 | `checks[7].message` | GM 6.02 m (fluid), max GZ 1.76 m at 25° | GM 1.38 m (fluid), max GZ 0.23 m at 13° — fails: Area 0–40° 0.074 < 0.09, Area 30–40° -0.006 < 0.03, GZ at ≥ 30° 0.047 < 0.2, Angle of max GZ 13.000 < 25.0 | changed |
+| calibration amaggi-box-2000 | `checks[7].name` | Stability — ballast, departure | Stability — full load, arrival | changed |
+| calibration amaggi-box-2000 | `checks[7].ok` | True | False | changed |
+| calibration amaggi-box-2000 | `checks[8].name` | Stability — ballast, arrival | Stability — ballast, departure | changed |
+| calibration amaggi-box-2000 | `checks[9].message` | GM 15.42 m (fluid), max GZ 2.76 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | GM 6.02 m (fluid), max GZ 1.76 m at 25° | changed |
+| calibration amaggi-box-2000 | `checks[9].name` | Stability — lightship, no ballast | Stability — ballast, arrival | changed |
+| calibration amaggi-box-2000 | `checks[9].ok` | False | True | changed |
+| calibration amaggi-box-2000 | `warnings[1]` | absent | Bulk GM is first-order (assumed lightship KG); cargo-shift/angle-of-repose not modelled — confirm with a full intact-stability booklet. | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[10].message` | absent | GM 8.69 m (fluid), max GZ 1.76 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[10].name` | absent | Stability — lightship, no ballast | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[10].ok` | absent | False | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[10].severity` | absent | warning | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[5].message` | GM 0.40 m (fluid), max GZ 0.12 m at 17° — fails: Area 0–30° 0.038 < 0.055, Area 0–40° 0.031 < 0.09, Area 30–40° -0.007 < 0.03, GZ at ≥ 30° 0.024 < 0.2, Angle of max GZ 17.000 < 25.0 | intact GM 0.40 m >= 0.15 m at the reported cargo 897 t, draught 2.74 m (first-order box; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[5].name` | Stability — full load, departure | intact gm at reported cargo | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[5].ok` | False | True | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[6].name` | Stability — full load, arrival | Stability — full load, departure | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[7].message` | GM 3.71 m (fluid), max GZ 1.14 m at 25° | GM 0.40 m (fluid), max GZ 0.12 m at 17° — fails: Area 0–30° 0.038 < 0.055, Area 0–40° 0.031 < 0.09, Area 30–40° -0.007 < 0.03, GZ at ≥ 30° 0.024 < 0.2, Angle of max GZ 17.000 < 25.0 | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[7].name` | Stability — ballast, departure | Stability — full load, arrival | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[7].ok` | True | False | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[8].name` | Stability — ballast, arrival | Stability — ballast, departure | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[9].message` | GM 8.69 m (fluid), max GZ 1.76 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | GM 3.71 m (fluid), max GZ 1.14 m at 25° | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[9].name` | Stability — lightship, no ballast | Stability — ballast, arrival | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[9].ok` | False | True | changed |
+| calibration canal-box-200x25x12-pb2230 | `warnings[1]` | absent | Bulk GM is first-order (assumed lightship KG); cargo-shift/angle-of-repose not modelled — confirm with a full intact-stability booklet. | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[10].message` | absent | GM 18.57 m (fluid), max GZ 2.97 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[10].name` | absent | Stability — lightship, no ballast | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[10].ok` | absent | False | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[10].severity` | absent | warning | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[5].message` | GM 2.09 m (fluid), max GZ 0.49 m at 19° — fails: Angle of max GZ 19.000 < 25.0 | intact GM 2.09 m >= 0.15 m at the reported cargo 1256 t, draught 2.74 m (first-order box; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[5].name` | Stability — full load, departure | intact gm at reported cargo | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[5].ok` | False | True | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[6].name` | Stability — full load, arrival | Stability — full load, departure | changed |
+| ... | 1102 more changed quantities | | | |
 
 ### ticket/426-part3-default-conditions (2026-10-21)
 
