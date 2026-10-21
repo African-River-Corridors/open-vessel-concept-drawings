@@ -173,6 +173,54 @@ Each entry is a before/after table written by `python3 tools/design_impact.py ch
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
 
+### ticket/399-400-resistance-labels (2026-10-21)
+
+Between `main 9980d3c` and `this branch 83ea31a`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep box self-propelled 60x10 | `checks[10].message` | 2 x 1.31 m engines abreast need 5.62 m across a 10.00 m beam | 2 x 1.32 m engines abreast need 5.65 m across a 10.00 m beam | changed |
+| sweep box self-propelled 60x10 | `checks[11].message` | engine 1.23 m + 1.00 m double bottom and deck structure (ESTIMATE) <= moulded depth 4.50 m | engine 1.24 m + 1.00 m double bottom and deck structure (ESTIMATE) <= moulded depth 4.50 m | changed |
+| sweep box self-propelled 60x10 | `checks[3].message` | freeboard 2.14 m >= required 0.3 m | freeboard 2.13 m >= required 0.3 m | changed |
+| sweep hopper 60x10 | `checks[10].message` | 2 x 1.31 m engines abreast need 5.62 m across a 10.00 m beam | 2 x 1.32 m engines abreast need 5.65 m across a 10.00 m beam | changed |
+| sweep hopper 60x10 | `checks[11].message` | engine 1.23 m + 1.00 m double bottom and deck structure (ESTIMATE) <= moulded depth 4.50 m | engine 1.24 m + 1.00 m double bottom and deck structure (ESTIMATE) <= moulded depth 4.50 m | changed |
+| sweep box self-propelled 60x10 | `stern_block_mass.items[10].mass_t` | 0.508848855467 | 0.523200836184 | +2.82 % |
+| sweep box self-propelled 60x10 | `stern_block_mass.items[8].mass_t` | 1.01769771093 | 1.04640167237 | +2.82 % |
+| sweep hopper 60x10 | `stern_block_mass.items[10].mass_t` | 0.508848855467 | 0.523200836184 | +2.82 % |
+| sweep hopper 60x10 | `stern_block_mass.items[8].mass_t` | 1.01769771093 | 1.04640167237 | +2.82 % |
+| sweep box self-propelled 60x10 | `powering.installed_power_kw` | 508.848855467 | 523.200836184 | +2.82 % |
+| sweep hopper 60x10 | `powering.installed_power_kw` | 508.848855467 | 523.200836184 | +2.82 % |
+| sweep box self-propelled 60x10 | `stern_block_mass.items[7].mass_t` | 2.49335939179 | 2.5636840973 | +2.82 % |
+| sweep hopper 60x10 | `stern_block_mass.items[7].mass_t` | 2.49335939179 | 2.5636840973 | +2.82 % |
+| sweep box self-propelled 60x10 | `powering.environments[0].fuel_kg_per_h` | 71.5188254959 | 73.5086501428 | +2.78 % |
+| sweep box self-propelled 60x10 | `powering.environments[0].power_at_service_kw` | 366.763207671 | 376.96743663 | +2.78 % |
+| sweep hopper 60x10 | `powering.environments[0].power_at_service_kw` | 340.766331966 | 350.206876415 | +2.77 % |
+| sweep hopper 60x10 | `powering.environments[0].fuel_kg_per_h` | 66.4494347334 | 68.2903409009 | +2.77 % |
+| sweep gas IGC_2G 60x10 | `stern_block_mass.items[8].mass_t` | 1.97774040955 | 2.03008023023 | +2.65 % |
+| sweep gas IGC_2G_EXACT 60x10 | `stern_block_mass.items[8].mass_t` | 1.97774040955 | 2.03008023023 | +2.65 % |
+| sweep gas IGC_2G 60x10 | `stern_block_mass.items[6].mass_t` | 0.41202925199 | 0.422933381298 | +2.65 % |
+| sweep gas IGC_2G_EXACT 60x10 | `stern_block_mass.items[6].mass_t` | 0.41202925199 | 0.422933381298 | +2.65 % |
+| sweep gas IGC_2G 60x10 | `stern_block_mass.items[10].mass_t` | 0.329623401592 | 0.338346705038 | +2.65 % |
+| sweep gas IGC_2G_EXACT 60x10 | `stern_block_mass.items[10].mass_t` | 0.329623401592 | 0.338346705038 | +2.65 % |
+| sweep gas IGC_2G 60x10 | `powering.installed_power_kw` | 329.623401592 | 338.346705038 | +2.65 % |
+| sweep gas IGC_2G_EXACT 60x10 | `powering.installed_power_kw` | 329.623401592 | 338.346705038 | +2.65 % |
+| sweep gas IGC_2G 60x10 | `powering.environments[0].power_at_service_kw` | 218.405808977 | 224.127182331 | +2.62 % |
+| sweep gas IGC_2G_EXACT 60x10 | `powering.environments[0].power_at_service_kw` | 218.405808977 | 224.127182331 | +2.62 % |
+| sweep hopper 60x10 | `curves[0].points[17].kw` | 246.341894586 | 252.576008101 | +2.53 % |
+| sweep hopper 60x10 | `curves[0].points[17].fuel_lph` | 56.8481295199 | 58.2867711003 | +2.53 % |
+| sweep box self-propelled 60x10 | `curves[0].points[17].fuel_lph` | 60.7923600013 | 62.3306586724 | +2.53 % |
+| sweep box self-propelled 60x10 | `curves[0].points[17].kw` | 263.433560006 | 270.099520914 | +2.53 % |
+| sweep gas IGC_2G 60x10 | `curves[0].points[17].fuel_lph` | 58.8875771528 | 60.3772602403 | +2.53 % |
+| sweep gas IGC_2G_EXACT 60x10 | `curves[0].points[17].fuel_lph` | 58.8875771528 | 60.3772602403 | +2.53 % |
+| sweep gas IGC_2G 60x10 | `curves[0].points[17].kw` | 255.179500995 | 261.634794374 | +2.53 % |
+| sweep gas IGC_2G_EXACT 60x10 | `curves[0].points[17].kw` | 255.179500995 | 261.634794374 | +2.53 % |
+| sweep hopper 60x10 | `curves[0].points[18].kw` | 285.617550949 | 292.838451244 | +2.53 % |
+| sweep hopper 60x10 | `curves[0].points[18].fuel_lph` | 65.9117425268 | 67.5781041333 | +2.53 % |
+| sweep box self-propelled 60x10 | `curves[0].points[18].kw` | 305.434235509 | 313.155338786 | +2.53 % |
+| sweep box self-propelled 60x10 | `curves[0].points[18].fuel_lph` | 70.4848235789 | 72.266616643 | +2.53 % |
+| sweep gas IGC_2G 60x10 | `curves[0].points[18].kw` | 295.86418603 | 303.341273592 | +2.53 % |
+| ... | 799 more changed quantities | | | |
+
 ### ticket/396-397-confined-water (2026-10-21)
 
 Between `main 2a763b5` and `this branch ff452b9`.
