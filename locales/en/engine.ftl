@@ -279,11 +279,13 @@ msg-profile-no-default = the Defaults Profile '{ $profile }' gives no default fo
 msg-profile-no-table-default-carriage = the Defaults Profile '{ $profile }' gives no default for `{ $input }` when the Cargo Containment is { $containment }, the Cargo { $cargo } and the carriage condition { $condition } (no row of `{ $key }.default_by_table` fits)
 msg-profile-no-table-default = the Defaults Profile '{ $profile }' gives no default for `{ $input }` when the Cargo Containment is { $containment }, the Cargo { $cargo } (no row of `{ $key }.default_by_table` fits)
 msg-profile-no-depth-ratio = the Defaults Profile '{ $profile }' gives no depth-to-beam ratio for { $group } Cargo (`depth_to_beam_ratio.default_by_cargo_group.{ $group }` is missing)
+msg-currency = `{ $input }` must be a three-letter currency code in capitals, such as USD
+msg-price-base-date = `{ $input }` must be a date as YYYY, YYYY-MM or YYYY-MM-DD, or null (none)
+msg-string = `{ $input }` must be a string
 msg-number-or-null = `{ $input }` must be a number or null (none)
 msg-bool = `{ $input }` must be true or false
 msg-hull-form-not-built = `{ $input }` = { $value } is not built yet: the engine computes only raked_box for now (spec 0008)
 msg-choice = `{ $input }` = { $value } must be one of: { $choices }
-msg-string = `{ $input }` must be a string
 msg-parameter-set = `{ $input }` must be an object of named numbers, or null
 msg-offsets-table = `{ $input }` must be a list of rows with `station_x_m`, `y_m` and `z_m` in metres, or null
 msg-scheme = `{ $input }` = { $value } is not a scheme with a Vessel Class that can define a vessel (see `ovcd schema`)

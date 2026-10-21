@@ -375,6 +375,10 @@ msg-choice = “{ $input }” = { $value }必须为以下之一：{ $choices }
 # status: draft
 msg-string = “{ $input }”必须为字符串
 # status: draft
+msg-currency = “{ $input }”必须为三个大写字母的货币代码，例如 USD
+# status: draft
+msg-price-base-date = “{ $input }”必须为 YYYY、YYYY-MM 或 YYYY-MM-DD 格式的日期，或 null（无）
+# status: draft
 msg-scheme = “{ $input }” = { $value }不是含有可定义船舶的船型等级的等级方案（见 `ovcd schema`）
 # status: draft
 msg-class-cannot-define = “{ $input }” = { $value }无法定义船舶：等级{ $class }未给出船长或型宽，或其船队编组（{ $formation }）不是设计所具有的船队编组

@@ -436,6 +436,10 @@ app-cost-none = 此方案没有资本预算，因为船体未包含可计价的�
 # status: draft
 app-cost-currency = 所有金额均以 { $currency } 计。
 # status: draft
+app-cost-prices-current = 当前估算。
+# status: draft
+app-cost-prices-as-of = 价格基准日期：{ $date }。
+# status: draft
 app-cost-barge = 驳船
 # status: draft
 app-cost-tug = 拖轮

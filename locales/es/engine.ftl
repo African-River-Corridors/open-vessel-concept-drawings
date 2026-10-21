@@ -375,6 +375,10 @@ msg-choice = { $input } = { $value } debe ser uno de: { $choices }
 # status: draft
 msg-string = { $input } debe ser una cadena
 # status: draft
+msg-currency = { $input } debe ser un código de moneda de tres letras en mayúsculas, como USD
+# status: draft
+msg-price-base-date = { $input } debe ser una fecha como AAAA, AAAA-MM o AAAA-MM-DD, o null (ninguna)
+# status: draft
 msg-scheme = { $input } = { $value } no es un esquema con una clase de embarcación que pueda definir una embarcación (vea `ovcd schema`)
 # status: draft
 msg-class-cannot-define = { $input } = { $value } no puede definir una embarcación: la clase { $class } no da eslora ni manga, o su formación ({ $formation }) no es una que tenga un diseño

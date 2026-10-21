@@ -173,6 +173,18 @@
         </label>
       </div>
     {/if}
+  {:else if spec.kind === "text"}
+    <!-- Issue #429: a text (the currency, the price base date). An empty box is "none" where the input allows it. -->
+    <div class="row">
+      <input
+        type="text"
+        class="text"
+        aria-label={label}
+        class:invalid={hasError}
+        use:fill={value === null ? "" : String(value)}
+        oninput={(e) => onEdit(e.currentTarget.value === "" && spec.nullable ? null : e.currentTarget.value)}
+      />
+    </div>
   {:else if spec.kind === "parameter_set"}
     <!-- Issue #446: shown, not edited here; its editor comes with the ShipD Hull Form (#452). -->
     <span class="summary">{value === null ? t("app-none") : t("app-parameter-count", { count: Object.keys(value as object).length })}</span>
@@ -202,6 +214,7 @@
   input[type="text"], select { width: 100%; padding: 3px 5px; font: inherit; color: var(--ink); background-color: var(--surface); border: var(--lw-thin) solid var(--rule-strong); border-radius: var(--radius); box-sizing: border-box; }
   select { padding-right: var(--sp-5); }
   input[type="text"] { text-align: right; font-variant-numeric: tabular-nums; }
+  input[type="text"].text { text-align: left; }
   input:focus-visible, select:focus-visible { outline-offset: 0; }
   input.invalid, select.invalid { border-width: var(--lw-thick); border-color: var(--fail); padding: 2px 4px; }
   select.invalid { padding-right: calc(var(--sp-5) - 1px); }

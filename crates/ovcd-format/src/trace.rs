@@ -28,7 +28,7 @@ pub fn measure_info(id: &str) -> Option<MeasureInfo> {
     let value = match spec.kind {
         InputKind::Number { .. } => ValueKind::Number,
         InputKind::Bool => ValueKind::Bool,
-        InputKind::Choice(_) | InputKind::Cargo => ValueKind::Text,
+        InputKind::Choice(_) | InputKind::Cargo | InputKind::Text { .. } => ValueKind::Text,
         InputKind::Formation
         | InputKind::VesselScheme
         | InputKind::VesselClass

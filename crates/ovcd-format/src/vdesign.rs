@@ -349,6 +349,17 @@ pub const COST_RATES_BASIS: &str = "Example rates \u{2014} replace with yours.";
 /// The capital budget's basis once any rate is typed (issue #404).
 pub const COST_RATES_BASIS_USER: &str = "Your rates.";
 
+/// What the capital budget says of the date of its prices, with no price base date (issue #429).
+pub const COST_PRICES_CURRENT: &str = "Current estimates.";
+
+/// The capital budget's statement of the date of its prices (issue #429).
+pub fn cost_prices_basis(price_base_date: Option<&str>) -> String {
+    match price_base_date {
+        Some(date) => format!("Prices as of {date}."),
+        None => COST_PRICES_CURRENT.to_string(),
+    }
+}
+
 /// Both dry-bulk holds.
 const DRY_HOLDS: &[&str] = &["box_hold", "sloped_hopper_hold"];
 
@@ -812,6 +823,17 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::All,
         value: "null",
     },
+    // Issue #429: a file saved before costs in USD, with no price base date.
+    LegacyFixedJson {
+        name: "currency",
+        applies_to: AppliesTo::All,
+        value: "\"USD\"",
+    },
+    LegacyFixedJson {
+        name: "price_base_date",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
     LegacyFixedJson {
         name: "lpg_carriage_condition",
         applies_to: AppliesTo::Only("type_c_tanks"),
@@ -1234,6 +1256,11 @@ pub enum InputKind {
     ParameterSet,
     /// Issue #446: an offsets table, rows of `station_x_m`, `y_m`, `z_m`, or null.
     OffsetsTable,
+    /// Issue #429: a text. A `nullable` one takes `null` for "none". `currency` and
+    /// `price_base_date` each have their own form (see [`check_text`]).
+    Text {
+        nullable: bool,
+    },
 }
 
 /// Which Cargo Containments an input is used for.
@@ -1613,6 +1640,8 @@ const fn lpg(
 
 const NUM: InputKind = InputKind::Number { nullable: false };
 const NUM_OR_NONE: InputKind = InputKind::Number { nullable: true };
+const TEXT: InputKind = InputKind::Text { nullable: false };
+const TEXT_OR_NONE: InputKind = InputKind::Text { nullable: true };
 
 /// Every input of an Option, in the order defaults are resolved (a default may depend on an
 /// input above it). Names follow `GLOSSARY.md`.
@@ -2722,6 +2751,15 @@ pub const INPUTS: &[InputSpec] = &[
         Group::CostRates,
     ),
     spec("delivery_lump", "Delivery", NUM, false, Group::CostRates),
+    // Issue #429: the currency of the rates and the date they are priced at.
+    spec("currency", "Currency", TEXT, false, Group::CostRates),
+    spec(
+        "price_base_date",
+        "Price base date",
+        TEXT_OR_NONE,
+        false,
+        Group::CostRates,
+    ),
 ];
 
 /// Where a stored input came from.
@@ -3931,6 +3969,64 @@ fn depth_default(
     Ok(Some(json!(((ratio * beam) * 1000.0).round() / 1000.0)))
 }
 
+/// Whether `s` is a date as `YYYY`, `YYYY-MM` or `YYYY-MM-DD` (a real month and day).
+fn is_partial_date(s: &str) -> bool {
+    let digits = |p: &str, n: usize| p.len() == n && p.bytes().all(|b| b.is_ascii_digit());
+    let mut parts = s.split('-');
+    let (Some(y), m, d, None) = (parts.next(), parts.next(), parts.next(), parts.next()) else {
+        return false;
+    };
+    if !digits(y, 4) {
+        return false;
+    }
+    let Some(m) = m else { return true };
+    let month = match m.parse::<u32>() {
+        Ok(n) if digits(m, 2) && (1..=12).contains(&n) => n,
+        _ => return false,
+    };
+    let Some(d) = d else { return true };
+    let year: u32 = y.parse().unwrap_or(0);
+    let leap = year.is_multiple_of(4) && (!year.is_multiple_of(100) || year.is_multiple_of(400));
+    let last = match month {
+        2 if leap => 29,
+        2 => 28,
+        4 | 6 | 9 | 11 => 30,
+        _ => 31,
+    };
+    matches!(d.parse::<u32>(), Ok(n) if digits(d, 2) && (1..=last).contains(&n))
+}
+
+/// The two text inputs of the cost rates (issue #429): `currency`, a three-letter code in capitals
+/// (ISO 4217 form), and `price_base_date`, a date or `null` for none.
+fn check_text(name: &str, v: &Value, nullable: bool) -> Result<Value, Text> {
+    let input = || Arg::input(name);
+    match (name, v) {
+        (_, Value::Null) if nullable => Ok(Value::Null),
+        ("currency", Value::String(s))
+            if s.len() == 3 && s.bytes().all(|b| b.is_ascii_uppercase()) =>
+        {
+            Ok(v.clone())
+        }
+        ("currency", _) => Err(text!(
+            "msg-currency",
+            "`{input}` must be a three-letter currency code in capitals, such as USD",
+            input = input()
+        )),
+        ("price_base_date", Value::String(s)) if is_partial_date(s) => Ok(v.clone()),
+        ("price_base_date", _) => Err(text!(
+            "msg-price-base-date",
+            "`{input}` must be a date as YYYY, YYYY-MM or YYYY-MM-DD, or null (none)",
+            input = input()
+        )),
+        (_, Value::String(_)) => Ok(v.clone()),
+        _ => Err(text!(
+            "msg-string",
+            "`{input}` must be a string",
+            input = input()
+        )),
+    }
+}
+
 /// Store every number as a float, so `10` and `10.0` are the same input.
 fn normalise(v: Value) -> Value {
     match v.as_f64() {
@@ -4034,6 +4130,7 @@ fn check_value(spec: &InputSpec, v: &Value, profile: &Profile) -> Result<(Value,
                 input = input()
             )),
         },
+        InputKind::Text { nullable } => check_text(name, v, nullable).map(|v| (v, vec![])),
         InputKind::VesselScheme => match v {
             Value::Null => Ok((Value::Null, vec![])),
             Value::String(s) if ovcd_core::vessel_classes::schemes().contains(&s.as_str()) => {

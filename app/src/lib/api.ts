@@ -81,7 +81,7 @@ export interface InputSpec extends Ranges {
   /** Whether a plain or keyed default is sourced (with its source) or an estimate. */
   default_status?: "sourced" | "estimate";
   default_source?: string;
-  kind: "number" | "bool" | "choice" | "cargo" | "formation" | "vessel_scheme" | "vessel_class" | "parameter_set" | "offsets_table";
+  kind: "number" | "bool" | "choice" | "cargo" | "formation" | "vessel_scheme" | "vessel_class" | "parameter_set" | "offsets_table" | "text";
   nullable?: boolean;
   choices?: Choice[];
   default?: unknown;
