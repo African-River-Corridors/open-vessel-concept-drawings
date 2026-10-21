@@ -812,6 +812,107 @@ fn set_not_applicable(set: &RuleSet) -> TraceRow {
     }
 }
 
+/// What a Rule reaches before any object is tested: one row with this outcome and gap, or its
+/// Measure and the objects to test it on.
+enum Reach {
+    One(Outcome, Option<String>),
+    Objects(Vec<String>),
+}
+
+fn reach(rule: &Rule, def: Option<&MeasureInfo>, source: &dyn MeasureSource) -> Reach {
+    if !applies(&rule.applies_when, source) || !source.has(&rule.measure) {
+        return Reach::One(Outcome::NotApplicable, None);
+    }
+    let Some(def) = def else {
+        // Only a Rule that is not evaluated may name a Measure the engine lacks: one row.
+        return if rule.evaluated {
+            Reach::One(
+                failed(rule),
+                Some(format!("unknown Measure `{}`", rule.measure.id)),
+            )
+        } else {
+            Reach::One(Outcome::NotEvaluated, None)
+        };
+    };
+    let objects = source.objects(def.object);
+    if objects.is_empty() {
+        return match source.missing(def.object) {
+            Some(reason) => Reach::One(Outcome::NotEvaluated, Some(reason)),
+            None => Reach::One(Outcome::NotApplicable, None),
+        };
+    }
+    Reach::Objects(objects)
+}
+
+/// A Rule tested on one object.
+struct Tested {
+    outcome: Outcome,
+    value: Option<MeasureValue>,
+    limit: Option<f64>,
+    margin: Option<f64>,
+    inputs: Vec<UsedValue>,
+    gap: Option<String>,
+}
+
+fn test_object(rule: &Rule, set: &RuleSet, source: &dyn MeasureSource, index: usize) -> Tested {
+    let mut t = Tested {
+        outcome: Outcome::NotEvaluated,
+        value: None,
+        limit: None,
+        margin: None,
+        inputs: Vec::new(),
+        gap: None,
+    };
+    if !rule.evaluated {
+        return t;
+    }
+    match (rule.kind, source.value(&rule.measure, index)) {
+        (_, Err(reason)) => {
+            t.outcome = failed(rule);
+            t.gap = Some(reason);
+        }
+        (Kind::Note, Ok(v)) => {
+            t.value = Some(v);
+            t.outcome = Outcome::Note;
+        }
+        (Kind::Check, Ok(v)) => {
+            t.outcome = match v {
+                MeasureValue::Bool(true) => Outcome::Pass,
+                MeasureValue::Bool(false) => failed(rule),
+                _ => {
+                    t.gap = Some(format!("`{}` is not a yes/no Measure", rule.measure.id));
+                    failed(rule)
+                }
+            };
+            t.value = Some(v);
+        }
+        (Kind::Limit | Kind::Table | Kind::Formula, Ok(v)) => {
+            let compare = rule.compare.expect("a limit Rule has a comparison");
+            match (
+                number(v.clone(), &rule.measure.id),
+                limit_of(rule, set, source, index),
+            ) {
+                (Ok(x), Ok((limit, used))) => {
+                    t.limit = Some(limit);
+                    t.margin = Some(margin(compare, x, limit));
+                    t.outcome = if holds(compare, x, limit, rule.tolerance) {
+                        Outcome::Pass
+                    } else {
+                        failed(rule)
+                    };
+                    t.inputs = used;
+                }
+                (Err(reason), _) | (_, Err(reason)) => {
+                    t.outcome = failed(rule);
+                    t.gap = Some(reason);
+                }
+            }
+            t.value = Some(v);
+        }
+    }
+    t
+}
+
 /// The rows of one Rule: one per object of its type.
 fn rule_rows(
     rule: &Rule,
@@ -821,86 +922,86 @@ fn rule_rows(
 ) -> Vec<TraceRow> {
     let def = source.def(&rule.measure.id);
     let base = row_of(rule, holders, def.as_ref());
-    if !applies(&rule.applies_when, source) || !source.has(&rule.measure) {
-        return vec![base];
-    }
-    let Some(def) = def else {
-        // Only a Rule that is not evaluated may name a Measure the engine lacks: one row.
-        let mut row = base;
-        row.outcome = if rule.evaluated {
-            failed(rule)
-        } else {
-            Outcome::NotEvaluated
-        };
-        if rule.evaluated {
-            row.gap = Some(format!("unknown Measure `{}`", rule.measure.id));
+    let objects = match reach(rule, def.as_ref(), source) {
+        Reach::One(outcome, gap) => {
+            let mut row = base;
+            row.outcome = outcome;
+            if gap.is_some() {
+                row.gap = gap;
+            }
+            return vec![row];
         }
-        return vec![row];
+        Reach::Objects(objects) => objects,
     };
-    let objects = source.objects(def.object);
-    if objects.is_empty() {
-        let mut row = base;
-        if let Some(reason) = source.missing(def.object) {
-            row.outcome = Outcome::NotEvaluated;
-            row.gap = Some(reason);
-        }
-        return vec![row];
-    }
     let mut out = Vec::new();
     for (index, label) in objects.into_iter().enumerate() {
         let mut row = base.clone();
         row.object = Some(label);
-        if !rule.evaluated {
-            row.outcome = Outcome::NotEvaluated;
-            out.push(row);
-            continue;
-        }
-        let value = source.value(&rule.measure, index);
-        match (rule.kind, value) {
-            (_, Err(reason)) => {
-                row.outcome = failed(rule);
-                row.gap = Some(reason);
-            }
-            (Kind::Note, Ok(v)) => {
-                row.value = Some(v);
-                row.outcome = Outcome::Note;
-            }
-            (Kind::Check, Ok(v)) => {
-                row.outcome = match v {
-                    MeasureValue::Bool(true) => Outcome::Pass,
-                    MeasureValue::Bool(false) => failed(rule),
-                    _ => {
-                        row.gap = Some(format!("`{}` is not a yes/no Measure", rule.measure.id));
-                        failed(rule)
-                    }
-                };
-                row.value = Some(v);
-            }
-            (Kind::Limit | Kind::Table | Kind::Formula, Ok(v)) => {
-                let compare = rule.compare.expect("a limit Rule has a comparison");
-                match (
-                    number(v.clone(), &rule.measure.id),
-                    limit_of(rule, set, source, index),
-                ) {
-                    (Ok(x), Ok((limit, used))) => {
-                        row.limit = Some(limit);
-                        row.margin = Some(margin(compare, x, limit));
-                        row.outcome = if holds(compare, x, limit, rule.tolerance) {
-                            Outcome::Pass
-                        } else {
-                            failed(rule)
-                        };
-                        row.inputs = used;
-                    }
-                    (Err(reason), _) | (_, Err(reason)) => {
-                        row.outcome = failed(rule);
-                        row.gap = Some(reason);
-                    }
-                }
-                row.value = Some(v);
-            }
+        let t = test_object(rule, set, source, index);
+        row.outcome = t.outcome;
+        row.value = t.value;
+        row.limit = t.limit;
+        row.margin = t.margin;
+        row.inputs = t.inputs;
+        if t.gap.is_some() {
+            row.gap = t.gap;
         }
         out.push(row);
+    }
+    out
+}
+
+/// One failing row, as the search needs it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Failure {
+    pub rule: String,
+    pub object_type: Option<ObjectType>,
+    pub object: Option<String>,
+}
+
+/// The failing rows of `evaluate(sets, source)`, in its order, without the rest of the trace: only
+/// blocking Rules can fail, so only they are tested. The arrangement search calls this on every
+/// candidate.
+pub fn failures(sets: &[&RuleSet], source: &dyn MeasureSource) -> Vec<Failure> {
+    let mut seen: Vec<&str> = Vec::new();
+    let mut out = Vec::new();
+    for set in sets {
+        if !applies(&set.applies_when, source) {
+            continue;
+        }
+        for rule in &set.rules {
+            if seen.contains(&rule.id.as_str()) {
+                continue;
+            }
+            seen.push(&rule.id);
+            if rule.consequence != Consequence::Block {
+                continue;
+            }
+            let def = source.def(&rule.measure.id);
+            let object_type = def.as_ref().map(|d| d.object);
+            match reach(rule, def.as_ref(), source) {
+                Reach::One(outcome, _) => {
+                    if outcome == Outcome::Fail {
+                        out.push(Failure {
+                            rule: rule.id.clone(),
+                            object_type,
+                            object: None,
+                        });
+                    }
+                }
+                Reach::Objects(objects) => {
+                    for (index, label) in objects.into_iter().enumerate() {
+                        if test_object(rule, set, source, index).outcome == Outcome::Fail {
+                            out.push(Failure {
+                                rule: rule.id.clone(),
+                                object_type,
+                                object: Some(label),
+                            });
+                        }
+                    }
+                }
+            }
+        }
     }
     out
 }

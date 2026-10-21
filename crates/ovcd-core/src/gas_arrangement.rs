@@ -38,7 +38,8 @@ use crate::pressure_vessel::PyError;
 use crate::protective_location::d_vc_exact;
 use crate::pyfmt::{fixed, py_str, round_to};
 use crate::rule_trace::{
-    MeasureInfo, MeasureSource, MeasureValue, ObjectType, Outcome, Trace, evaluate, measure_def,
+    Failure, MeasureInfo, MeasureSource, MeasureValue, ObjectType, Outcome, Trace, evaluate,
+    failures, measure_def,
 };
 use crate::rules::{MeasureRef, RuleSet};
 use crate::tanks::INT_OVERFLOW_MESSAGE;
@@ -180,18 +181,17 @@ impl MeasureSource for CandidateSource<'_> {
     }
 }
 
-/// The Rule Trace of a candidate: its checks (named as a result lists them), its stability
-/// conditions (none before the costly stage) and its tank and separation values.
-fn candidate_trace(
+/// What the Rule Trace of a candidate reads: its checks (named as a result lists them), its
+/// stability conditions (none before the costly stage) and its tank and separation values.
+fn candidate_measured(
     r: &BargeCapacityResult,
     j: &JourneyDeratingResult,
     inp: &BargeCapacityInputs,
-    o: &FitOptions,
     checks: &[Check],
     conditions: Vec<gs::Condition>,
-) -> Trace {
+) -> Measured {
     let plane = inp.separation.as_ref().is_some_and(|s| s.plane_tank_ends);
-    let measured = Measured {
+    Measured {
         conditions,
         deadweight_t: Some(j.achievable_tonnage_t),
         tank: r.tank_rules.clone(),
@@ -200,12 +200,29 @@ fn candidate_trace(
             .iter()
             .map(|c| (c.name.replace('_', " "), c.ok))
             .collect(),
-    };
+    }
+}
+
+/// The whole Rule Trace of a candidate. Built once, for the answer.
+fn candidate_trace(measured: &Measured, o: &FitOptions) -> Trace {
     let sets: Vec<&RuleSet> = o.rules.iter().collect();
     evaluate(
         &sets,
         &CandidateSource {
-            measured: &measured,
+            measured,
+            inputs: &o.rule_inputs,
+        },
+    )
+}
+
+/// The failing rows of a candidate's Rule Trace, without building the trace: the search calls this
+/// on every candidate.
+fn candidate_failures(measured: &Measured, o: &FitOptions) -> Vec<Failure> {
+    let sets: Vec<&RuleSet> = o.rules.iter().collect();
+    failures(
+        &sets,
+        &CandidateSource {
+            measured,
             inputs: &o.rule_inputs,
         },
     )
@@ -213,17 +230,17 @@ fn candidate_trace(
 
 /// The failing rows of a trace, grouped as the check list groups them: the rows of one loading
 /// condition count once (one stability check per condition), each other failing Rule once.
-fn failing_groups(t: &Trace) -> Vec<String> {
+fn failing_groups(fails: &[Failure]) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
-    for row in t.rows.iter().filter(|r| r.outcome == Outcome::Fail) {
-        let key = match row.object_type {
+    for f in fails {
+        let key = match f.object_type {
             Some(ObjectType::LoadingCondition) => {
                 format!(
                     "Stability \u{2014} {}",
-                    row.object.clone().unwrap_or_default()
+                    f.object.clone().unwrap_or_default()
                 )
             }
-            _ => row.rule.clone().unwrap_or_default(),
+            _ => f.rule.clone(),
         };
         if !out.contains(&key) {
             out.push(key);
@@ -557,18 +574,15 @@ fn passes_all(c: &Candidate, o: &FitOptions) -> bool {
     if o.rules.is_empty() {
         return all_ok(&stability_checks(&c.result, &c.journey, o));
     }
-    full_trace(c, o)
-        .rows
-        .iter()
-        .all(|r| r.outcome != Outcome::Fail)
+    candidate_failures(&full_measured(c, o), o).is_empty()
 }
 
-/// The whole Rule Trace of a candidate: every check and the stability conditions.
-fn full_trace(c: &Candidate, o: &FitOptions) -> Trace {
+/// What the whole Rule Trace of a candidate reads: every check and the stability conditions.
+fn full_measured(c: &Candidate, o: &FitOptions) -> Measured {
     let (stab, conditions) = stability_assessment(&c.result, &c.journey, o);
     let mut checks = cheap_checks(&c.result, &c.journey, c.depth, o);
     checks.extend(stab);
-    candidate_trace(&c.result, &c.journey, &c.inputs, o, &checks, conditions)
+    candidate_measured(&c.result, &c.journey, &c.inputs, &checks, conditions)
 }
 
 /// Every check of a candidate: the cheap ones, then stability.
@@ -589,8 +603,9 @@ type Built = (BargeCapacityInputs, BargeCapacityResult);
 /// One scored candidate, as Python's `(payload, depth, result, journey, inputs)` tuple.
 #[derive(Clone)]
 struct Candidate {
-    /// Every cheap check passes (see "THE CHECKS THE SEARCH USES").
-    cheap_ok: bool,
+    /// How many cheap checks fail (see "THE CHECKS THE SEARCH USES"), counted as
+    /// `closest_to_passing` counts: never more than the candidate fails in all.
+    cheap_failed: usize,
     tonnage: f64,
     depth: f64,
     result: BargeCapacityResult,
@@ -794,16 +809,17 @@ fn search(s: &mut Search<'_>, t_max: f64, stop_at_first_pass: bool) -> Result<Po
                 let cheap = cheap_checks(&r, &j, d, o);
                 // With Rule Sets: the trace before stability (its stability Rules are not yet
                 // evaluated, so they cannot fail here).
-                let cheap_ok = if o.rules.is_empty() {
-                    all_ok(&cheap)
+                let cheap_failed = if o.rules.is_empty() {
+                    cheap.iter().filter(|k| k.is_error() && !k.ok).count()
                 } else {
-                    candidate_trace(&r, &j, &inp, o, &cheap, Vec::new())
-                        .rows
-                        .iter()
-                        .all(|row| row.outcome != Outcome::Fail)
+                    failing_groups(&candidate_failures(
+                        &candidate_measured(&r, &j, &inp, &cheap, Vec::new()),
+                        o,
+                    ))
+                    .len()
                 };
                 pool.all.push(Candidate {
-                    cheap_ok,
+                    cheap_failed,
                     tonnage: j.achievable_tonnage_t,
                     depth: d,
                     result: r,
@@ -815,7 +831,7 @@ fn search(s: &mut Search<'_>, t_max: f64, stop_at_first_pass: bool) -> Result<Po
     }
     // The costly check, from the most cargo down (a stable sort keeps the build order of equals).
     let mut order: Vec<usize> = (0..pool.all.len())
-        .filter(|&i| pool.all[i].cheap_ok)
+        .filter(|&i| pool.all[i].cheap_failed == 0)
         .collect();
     order.sort_by(|&a, &b| pool.all[b].tonnage.total_cmp(&pool.all[a].tonnage));
     let mut top = 0.0;
@@ -846,13 +862,21 @@ fn search(s: &mut Search<'_>, t_max: f64, stop_at_first_pass: bool) -> Result<Po
 fn closest_to_passing(pool: &[Candidate], o: &FitOptions) -> Option<usize> {
     let mut best: Option<(usize, usize)> = None;
     for (i, c) in pool.iter().enumerate() {
+        // The cheap failures are a floor on all of them: skip the costly stage when even the floor
+        // cannot beat the best so far. The answer is the one a full count of each gives.
+        if let Some((bi, bf)) = best
+            && (c.cheap_failed > bf
+                || (c.cheap_failed == bf && c.tonnage <= pool[bi].tonnage + 1e-6))
+        {
+            continue;
+        }
         let failed = if o.rules.is_empty() {
             search_checks(&c.result, &c.journey, c.depth, o)
                 .iter()
                 .filter(|k| k.is_error() && !k.ok)
                 .count()
         } else {
-            failing_groups(&full_trace(c, o)).len()
+            failing_groups(&candidate_failures(&full_measured(c, o), o)).len()
         };
         let better = match best {
             None => true,
@@ -915,7 +939,7 @@ pub fn fit(
                 o.water_density_t_per_m3,
             )?;
             Candidate {
-                cheap_ok: false,
+                cheap_failed: 1,
                 tonnage: 0.0,
                 depth: d,
                 result: r,
@@ -936,7 +960,7 @@ pub fn fit(
     } else {
         // The failing rows no check of the list reports (a tank Rule, a Rule of a set loaded at
         // run time) join the failed checks, as "rule id: title (object)".
-        let trace = full_trace(&best, o);
+        let trace = candidate_trace(&full_measured(&best, o), o);
         for row in trace.rows.iter().filter(|r| r.outcome == Outcome::Fail) {
             let mirrored = row
                 .measure

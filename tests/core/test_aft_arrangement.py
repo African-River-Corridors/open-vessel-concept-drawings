@@ -152,14 +152,14 @@ def test_narrow_beam_stacks_the_units_in_two_rows():
     assert narrow.ok
 
 
-def test_sightline_warns_when_the_column_is_too_short():
-    """A cargo top the wheelhouse cannot see over is a real design problem, reported as a
-    warning: it is solved by a taller column or a lower tank, not by calling the vessel
-    impossible on the strength of an assumed stroke.
+def test_sightline_blocks_when_the_column_is_too_short():
+    """A cargo top the wheelhouse cannot see over is an arrangement that is not feasible: the
+    maintainer decided on issue #264 that the sightline blocks (built in #277). A taller column
+    or a lower tank solves it, and the warning says which.
 
     Label: property
     """
     r = _a(sightline_obstruction_m=30.0, wheelhouse_max_lift_m=2.0)
     c = next(c for c in r.checks if c.name == "wheelhouse_sees_over_cargo")
-    assert not c.ok and c.severity == "warning"
-    assert r.warnings and r.ok
+    assert not c.ok and c.severity == "error"
+    assert r.warnings and not r.ok

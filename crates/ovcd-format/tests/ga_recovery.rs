@@ -37,6 +37,35 @@ fn results_at_depth(fixture: &str, self_propelled: bool, depth: &str) -> Value {
     }
 }
 
+/// As `results_of`, with a 4 m air draft limit: no arrangement meets it, so the closest one comes
+/// back with its failed checks.
+fn results_of_low_air_draft(fixture: &str, self_propelled: bool) -> Value {
+    let text = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures")
+            .join(fixture),
+    )
+    .expect("fixture");
+    let mut v: Value = serde_json::from_str(&text).unwrap();
+    for o in v["options"].as_array_mut().unwrap() {
+        o["inputs"]["air_draft_limit_m"] = serde_json::json!({"value": 4.0, "source": "typed"});
+        o.as_object_mut().unwrap().remove("results_hash");
+    }
+    let text = v.to_string();
+    let text = if self_propelled {
+        text.replace("pushed_barge", "self_propelled")
+    } else {
+        text.replace("self_propelled", "pushed_barge")
+    };
+    let design = check(&text, &Profile::built_in())
+        .design
+        .expect("a valid Design");
+    match run_design(&design).remove(0).outcome {
+        RunOutcome::Results { results, .. } => results,
+        other => panic!("no results: {other:?}"),
+    }
+}
+
 fn f(v: &Value) -> f64 {
     v.as_f64().unwrap_or_else(|| panic!("not a number: {v}"))
 }
@@ -712,6 +741,7 @@ fn polylines_with(document: &Value, layer: &str, x: f64) -> Vec<Vec<(f64, f64)>>
 #[test]
 fn the_section_draws_the_double_bottom_wing_tanks_voids_cradles_and_domes_from_the_results() {
     let mut with_double_bottom = 0;
+    let mut with_wing_tank = 0;
     // Since issue #264 the search keeps only arrangements that pass stability, and the fixtures at
     // their own 4.5 m depth no longer leave a double bottom, so a deeper hull is drawn too.
     for (file, depth) in GAS_FIXTURES.iter().flat_map(|f| [(f, "4.5"), (f, "6.0")]) {
@@ -764,27 +794,37 @@ fn the_section_draws_the_double_bottom_wing_tanks_voids_cradles_and_domes_from_t
             let w = f(&d["wing_tank_width_m"]);
             let gap = f(&d["wing_tank_gap_m"]);
             let top = (db + support + f(&d["wing_tank_height_ratio"]) * od).min(depth);
-            assert!(w > 0.0 && w < cs, "{file}: the fixtures have a wing tank");
-            for side in [-1.0, 1.0] {
-                let wall = polylines_with(ent, "OBJECT", side * (half - w));
-                assert_eq!(wall.len(), 1, "{file}");
+            // The wing width is the side clearance less the gap (issue #283, built in #277): a
+            // clearance no wider than the gap leaves no wing tank, and none is drawn.
+            if w > 0.0 {
+                with_wing_tank += 1;
+                assert!(w < cs, "{file}");
+                for side in [-1.0, 1.0] {
+                    let wall = polylines_with(ent, "OBJECT", side * (half - w));
+                    assert_eq!(wall.len(), 1, "{file}");
+                    assert!(
+                        wall[0].iter().any(|p| close(p.1, db))
+                            && wall[0].iter().any(|p| close(p.1, top))
+                    );
+                    // the void, to the cargo tank's side clearance at most
+                    let edge = side * (half - w - gap.min(cs - w));
+                    let void = polylines_with(ent, "ZONE", edge);
+                    assert_eq!(void.len(), 1, "{file}: void on the ZONE layer");
+                    // the void lies between the wing tank wall and the cargo tank's side clearance
+                    assert!(void[0].iter().all(|p| {
+                        p.0.abs() >= half - cs - 1e-9 && p.0.abs() <= half - w + 1e-9
+                    }));
+                }
+                assert!(has_leader(ent, "WBT (BOTH SIDES)"));
+                assert!(has_leader(ent, "VOID (BOTH SIDES)"));
+            } else {
                 assert!(
-                    wall[0].iter().any(|p| close(p.1, db))
-                        && wall[0].iter().any(|p| close(p.1, top))
+                    cs <= gap,
+                    "{file}: no wing tank only when the gap takes the clearance"
                 );
-                // the void, to the cargo tank's side clearance at most
-                let edge = side * (half - w - gap.min(cs - w));
-                let void = polylines_with(ent, "ZONE", edge);
-                assert_eq!(void.len(), 1, "{file}: void on the ZONE layer");
-                // the void lies between the wing tank wall and the cargo tank's side clearance
-                assert!(
-                    void[0]
-                        .iter()
-                        .all(|p| { p.0.abs() >= half - cs - 1e-9 && p.0.abs() <= half - w + 1e-9 })
-                );
+                assert!(!has_leader(ent, "WBT (BOTH SIDES)"));
+                assert!(!has_leader(ent, "VOID (BOTH SIDES)"));
             }
-            assert!(has_leader(ent, "WBT (BOTH SIDES)"));
-            assert!(has_leader(ent, "VOID (BOTH SIDES)"));
 
             // a cradle under each tank, a little outside it, with its legs to the double bottom
             let arcs = of_layer(ent, "OBJECT", "arc");
@@ -840,6 +880,7 @@ fn the_section_draws_the_double_bottom_wing_tanks_voids_cradles_and_domes_from_t
         }
     }
     assert!(with_double_bottom > 0);
+    assert!(with_wing_tank > 0);
 }
 
 #[test]
@@ -1234,9 +1275,16 @@ fn accepted(document: &Value) {
 #[test]
 fn a_failing_design_carries_a_note_in_each_view_and_still_passes_the_standard() {
     let mut seen = 0;
-    for file in GAS_FIXTURES {
+    // The fixtures, and each one under an air draft limit no arrangement meets: since the search
+    // keeps only arrangements that pass every blocking Rule (issue #277), the fixtures pass, so the
+    // low limit is the case that fails.
+    for (file, low) in GAS_FIXTURES.iter().flat_map(|f| [(f, false), (f, true)]) {
         for self_propelled in [false, true] {
-            let r = results_of(file, self_propelled);
+            let r = if low {
+                results_of_low_air_draft(file, self_propelled)
+            } else {
+                results_of(file, self_propelled)
+            };
             let failed = failed_names(&r);
             if failed.is_empty() {
                 continue;

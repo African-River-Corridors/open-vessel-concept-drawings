@@ -11,8 +11,8 @@ energy value sets anything. It has no mass in the lightship, so cargo and draugh
 light air draft is wrong. Every result floats on an even keel. One propulsive efficiency, 0.45, serves a
 battery-electric azimuth barge and a shallow-draught pusher alike. The app shows delivered-power curves
 and sizes no engine. A pushed convoy has no results; a pushed barge is the barge alone; an ATB tug is
-three drawing numbers. The sightline check is a warning with a fixed margin over one height, though the
-maintainer decided (#264) that it must block `fit`. The drawings show a square stern and circles for
+three drawing numbers. The sightline check has a fixed margin over one height; since #277 it blocks `fit`,
+as the maintainer decided on #264. The drawings show a square stern and circles for
 thrusters.
 
 Designers choose the stern form, the drive and the power source early, and size the tug with the barge.
@@ -308,7 +308,7 @@ the `atb` and `towed_barge` Vessel Classes pickable (`vessel_classes.rs` `format
   selected sets; the result reports it, the raised eye and floor, and whether the maximum lift is
   enough.
 - **Fixed Height and air draft:** with the wheelhouse lowered (ES-TRIN 1.01, 4.29), as today.
-- `sightline_method: margin` (legacy) keeps today's warning check exactly. With `blind_distance` the
+- `sightline_method: margin` (legacy) keeps today's check exactly. With `blind_distance` the
   Rules below apply.
 - **`fit` blocks on the sightline** for every file, as the maintainer decided on #264. This is a
   tracked design change (design-impact table and changelog): a candidate that fails is not feasible.

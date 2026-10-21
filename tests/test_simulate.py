@@ -12,8 +12,8 @@ def test_gas_uses_the_search_not_auto():
     """Label: snapshot
     """
     # Re-pinned (issue #237: the per-tank d(Vc) of IGC 2.4.1.1, dome in Vc); was 2058 under the
-    # stepped IGC_2G.
-    assert abs(simulate(CN_II)["results"]["cargo_t"] - 2535) < 1.0
+    # stepped IGC_2G. Re-pinned (issue #277: the wheelhouse sightline blocks the search); was 2535.
+    assert abs(simulate(CN_II)["results"]["cargo_t"] - 1763) < 1.0
 
 
 def test_gas_optimised_depth_matches_snapshot():
@@ -21,7 +21,8 @@ def test_gas_optimised_depth_matches_snapshot():
     """
     o = simulate(dict(CN_II, cargo="LNG", draught_limit_m=3.0, ruleset="IGC_2G",
                       fill_ratio=None, optimise_depth=True))
-    assert abs(o["results"]["cargo_t"] - 1738) < 1.0
+    # Re-pinned (issue #277: the wheelhouse sightline blocks the search); was 1738.
+    assert abs(o["results"]["cargo_t"] - 1691) < 1.0
     assert o["arrangement"]["fill_ratio"] == 0.98          # ruleset-driven default
 
 
@@ -31,11 +32,12 @@ def test_the_tank_diameter_cap_is_a_simulate_input_16_m_by_default():
     default = {k: v for k, v in CN_II.items() if k != "max_tank_od_m"}
     # Issue #237: the per-tank rule asks for less side clearance, so on a 26 m beam the search
     # prefers two tanks abreast and the cap does not bind. At the CN II beam, 14.8 m, one tank
-    # fills the beam and the cap sets its diameter (13.7 m at the default cap).
+    # fills the beam. Since issue #277 the wheelhouse sightline blocks, so the tank is lower than
+    # either cap (10.7 m); an 8 m cap still sets the diameter.
     wide = dict(default, beam_m=14.8, loa_m=90, depth_m=6.5, cargo="LNG", draught_limit_m=4.4)
-    assert simulate(dict(wide, max_tank_od_m=12.0))["geometry"]["tank_outer_diameter_m"] <= 12.0 + 1e-6
+    assert simulate(dict(wide, max_tank_od_m=8.0))["geometry"]["tank_outer_diameter_m"] <= 8.0 + 1e-6
     od = simulate(wide)["geometry"]["tank_outer_diameter_m"]
-    assert 12.0 < od <= 16.0 + 1e-6
+    assert 8.0 < od <= 16.0 + 1e-6
 
 
 def test_a_tank_longer_than_seven_diameters_is_a_failed_check():

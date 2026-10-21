@@ -24,8 +24,8 @@ Retrieved 2026-10-20. For spec 0007 and ADR 0017. Concept and preliminary design
   only; it sizes no engine, battery or genset.
 - **Formations:** a pushed convoy has no results; a pushed barge is the barge hull alone. The tug length,
   beam and notch depth in `models.rs` are for drawings only. `calibration/pushers.yaml` is read by no code.
-- **Sightline:** a warning check with a fixed 0.50 m margin over one obstruction height. The maintainer
-  decided on #264 that it must block `fit`.
+- **Sightline:** a check with a fixed 0.50 m margin over one obstruction height. Since #277 it blocks
+  `fit`, as the maintainer decided on #264.
 - **Drawings:** a square stern, circles for thrusters, the wheelhouse lowered only.
 
 ## 2. Stern forms

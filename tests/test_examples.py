@@ -10,5 +10,6 @@ def test_quickstart_runs(capsys):
                    run_name="__main__")
     out = capsys.readouterr().out
     # Re-pinned (issue #237: the per-tank d(Vc) of IGC 2.4.1.1, dome in Vc); was 2,058 t. Re-pinned
-    # again (issue #264: the search keeps only arrangements that pass stability); was 2,943 t.
-    assert "Searched   : 1 tank(s) abreast" in out and "2,833 t" in out
+    # again (issue #264: the search keeps only arrangements that pass stability); was 2,943 t. Re-pinned
+    # again (issue #277: the wheelhouse sightline blocks the search); was 2,833 t.
+    assert "Searched   : 1 tank(s) abreast" in out and "2,021 t" in out

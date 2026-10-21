@@ -31,7 +31,9 @@ pub fn measure_info(id: &str) -> Option<MeasureInfo> {
         InputKind::Choice(_) | InputKind::Cargo => ValueKind::Text,
         InputKind::Formation | InputKind::VesselScheme | InputKind::VesselClass => return None,
     };
-    let unit = match Profile::built_in().unit(name) {
+    // Parsed once: a run asks this for every input.
+    static PROFILE: std::sync::OnceLock<Profile> = std::sync::OnceLock::new();
+    let unit = match PROFILE.get_or_init(Profile::built_in).unit(name) {
         "" => "-".to_string(),
         u => u.to_string(),
     };

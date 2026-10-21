@@ -235,11 +235,11 @@ fn the_drawing_object_follows_each_input_and_the_ga_views_follow_the_drawing_obj
     // The double bottom is the bottom clearance less the support, and not below zero.
     let cb = r["geometry"]["bottom_clearance_m"].as_f64().unwrap();
     assert_eq!(drawing(&r, "double_bottom_m"), (cb - 0.7).max(0.0));
-    // The wing width is the default 1.0 m side clearance less the gap, and not below zero. The
-    // engine fixes it from the default clearance, not from the one the rule gives (a latent
-    // defect, reported in the PR for issue #237). Until #237 the rule gave exactly 1.0 m for this
-    // hull, so the two agreed; the per-tank rule gives less.
-    assert_eq!(drawing(&r, "wing_tank_width_m"), (1.0_f64 - 0.4).max(0.0));
+    // The wing width is the side clearance less the gap, and not below zero. The clearance is the
+    // one the IGC 2.4.1.2 rule gives the arrangement (issue #283, built in #277); until then the
+    // engine used the default 1.0 m, a latent defect reported in the PR for issue #237.
+    let cs = r["geometry"]["side_clearance_m"].as_f64().unwrap();
+    assert_eq!(drawing(&r, "wing_tank_width_m"), (cs - 0.4).max(0.0));
     // The views are drawn from those values (ga.rs reads the drawing object), so they change.
     let (a, b) = (ga_views(&base).unwrap(), ga_views(&r).unwrap());
     assert_ne!(a.midship_section, b.midship_section);
