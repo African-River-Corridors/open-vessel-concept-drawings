@@ -14,7 +14,7 @@
 //! Axes: x forward from the aft end, y to starboard, z up from the base line. Heel is positive to
 //! starboard (starboard goes down); trim is positive by the bow (bow goes down).
 //!
-//! Not yet wired into any result (issue #443).
+//! Not yet wired into any result (issues #443 and #444).
 
 use alloc::vec::Vec;
 use core::fmt;
@@ -65,8 +65,12 @@ pub enum SectionsError {
     NegativeY { section: usize, point: usize },
     /// Two edges of a half-section cross.
     SelfCrossing { section: usize },
-    /// The hull has no immersed volume or no waterplane at this draught.
+    /// The hull has no immersed volume or no waterplane at this draught, or no mass to float.
     NotAfloat,
+    /// The mass is more than the whole closed hull displaces.
+    Sinks,
+    /// The free-trim equilibrium needs a trim beyond ±10 degrees.
+    TrimOutOfRange,
 }
 
 impl fmt::Display for SectionsError {
@@ -115,6 +119,11 @@ impl fmt::Display for SectionsError {
                     "the hull has no immersed volume or waterplane at this draught"
                 )
             }
+            SectionsError::Sinks => write!(f, "the mass is more than the whole hull displaces"),
+            SectionsError::TrimOutOfRange => write!(
+                f,
+                "the hull would trim more than {TRIM_LIMIT_DEG} degrees; the trim solver stops there"
+            ),
         }
     }
 }
@@ -339,43 +348,57 @@ struct Cut {
     girth: f64,
 }
 
-/// The full section of a half-section: the half, then its mirror back to the keel.
-fn full(half: &[(f64, f64)]) -> Vec<(f64, f64)> {
-    let n = half.len();
-    let mut out = Vec::with_capacity(2 * n - 2);
-    out.extend_from_slice(half);
-    for &(y, z) in half[1..n - 1].iter().rev() {
-        out.push((-y, z));
+/// Buffers reused from cut to cut, so the solvers do not allocate in their inner loops.
+#[derive(Default)]
+struct Work {
+    /// The full section being cut.
+    poly: Vec<(f64, f64)>,
+    /// Slope `(dy/dx, dz/dx)` of each vertex's point line.
+    tan: Vec<(f64, f64)>,
+    /// Which vertices are immersed.
+    wet: Vec<bool>,
+    f: Vec<f64>,
+    clipped: Vec<(f64, f64)>,
+    /// `(s, y, z)` of each crossing of the waterline.
+    crossings: Vec<(f64, f64, f64)>,
+    xs: Vec<f64>,
+}
+
+/// Write the full section of the half-section `(1 − t) a + t b` (exact at both ends): the half, then
+/// its mirror back to the keel.
+fn fill_full(dst: &mut Vec<(f64, f64)>, a: &[(f64, f64)], b: &[(f64, f64)], t: f64) {
+    let n = a.len();
+    dst.clear();
+    for (p, q) in a.iter().zip(b) {
+        dst.push(((1.0 - t) * p.0 + t * q.0, (1.0 - t) * p.1 + t * q.1));
     }
-    out
+    for i in (1..n - 1).rev() {
+        let (y, z) = dst[i];
+        dst.push((-y, z));
+    }
 }
 
-/// Interpolate two half-sections on the ruled surface: `(1 − t) a + t b`, exact at both ends.
-fn lerp(a: &[(f64, f64)], b: &[(f64, f64)], t: f64) -> Vec<(f64, f64)> {
-    a.iter()
-        .zip(b)
-        .map(|(p, q)| ((1.0 - t) * p.0 + t * q.0, (1.0 - t) * p.1 + t * q.1))
-        .collect()
-}
-
-/// Cut one full section at station `x`. `wet` says which vertices are immersed (fixed for the whole
-/// sub-interval, so an end of it takes the limit from inside); `tan` is the slope `(dy/dx, dz/dx)` of
-/// each vertex's point line.
-fn cut(fr: &Frame, x: f64, poly: &[(f64, f64)], tan: &[(f64, f64)], wet: &[bool]) -> Cut {
-    let n = poly.len();
-    let f: Vec<f64> = poly.iter().map(|&p| fr.f(x, p)).collect();
-    let mut clipped: Vec<(f64, f64)> = Vec::with_capacity(n + 4);
-    // (s, y, z) of each crossing of the waterline.
-    let mut crossings: Vec<(f64, f64, f64)> = Vec::new();
+/// Cut the full section in `w.poly` at station `x`. `w.wet` says which vertices are immersed (fixed
+/// for the whole sub-interval, so an end of it takes the limit from inside). With `area_only`, only
+/// the area is worked out.
+fn cut(fr: &Frame, x: f64, w: &mut Work, area_only: bool) -> Cut {
+    let n = w.poly.len();
+    w.f.clear();
+    w.f.extend(w.poly.iter().map(|&p| fr.f(x, p)));
+    w.clipped.clear();
+    w.crossings.clear();
+    let (poly, tan, wet, f) = (&w.poly, &w.tan, &w.wet, &w.f);
     let mut out = Cut::default();
     for i in 0..n {
         let j = (i + 1) % n;
         let (p, q) = (poly[i], poly[j]);
         if wet[i] {
-            clipped.push(p);
+            w.clipped.push(p);
         }
         if wet[i] && wet[j] {
-            out.girth += piece(p, q, tan[i], tan[j]);
+            if !area_only {
+                out.girth += piece(p, q, tan[i], tan[j]);
+            }
         } else if wet[i] != wet[j] {
             let t = if f[i] == f[j] {
                 0.5
@@ -383,34 +406,41 @@ fn cut(fr: &Frame, x: f64, poly: &[(f64, f64)], tan: &[(f64, f64)], wet: &[bool]
                 (f[i] / (f[i] - f[j])).clamp(0.0, 1.0)
             };
             let r = (p.0 + t * (q.0 - p.0), p.1 + t * (q.1 - p.1));
-            let tr = (
-                tan[i].0 + t * (tan[j].0 - tan[i].0),
-                tan[i].1 + t * (tan[j].1 - tan[i].1),
-            );
-            clipped.push(r);
-            out.girth += if wet[i] {
-                piece(p, r, tan[i], tr)
-            } else {
-                piece(r, q, tr, tan[j])
-            };
-            crossings.push((fr.uy * r.0 + fr.uz * r.1, r.0, r.1));
+            w.clipped.push(r);
+            if !area_only {
+                let tr = (
+                    tan[i].0 + t * (tan[j].0 - tan[i].0),
+                    tan[i].1 + t * (tan[j].1 - tan[i].1),
+                );
+                out.girth += if wet[i] {
+                    piece(p, r, tan[i], tr)
+                } else {
+                    piece(r, q, tr, tan[j])
+                };
+                w.crossings.push((fr.uy * r.0 + fr.uz * r.1, r.0, r.1));
+            }
         }
     }
     let (mut a, mut my, mut mz) = (0.0, 0.0, 0.0);
-    let m = clipped.len();
+    let m = w.clipped.len();
     for i in 0..m {
-        let ((y0, z0), (y1, z1)) = (clipped[i], clipped[(i + 1) % m]);
+        let ((y0, z0), (y1, z1)) = (w.clipped[i], w.clipped[(i + 1) % m]);
         let c = y0 * z1 - y1 * z0;
         a += c;
-        my += (y0 + y1) * c;
-        mz += (z0 + z1) * c;
+        if !area_only {
+            my += (y0 + y1) * c;
+            mz += (z0 + z1) * c;
+        }
     }
     out.area = a / 2.0;
+    if area_only {
+        return out;
+    }
     out.my = my / 6.0;
     out.mz = mz / 6.0;
-    crossings.sort_by(|p, q| p.0.total_cmp(&q.0));
-    for w in crossings.as_chunks::<2>().0 {
-        let ((s0, y0, z0), (s1, y1, z1)) = (w[0], w[1]);
+    w.crossings.sort_by(|p, q| p.0.total_cmp(&q.0));
+    for pair in w.crossings.as_chunks::<2>().0 {
+        let ((s0, y0, z0), (s1, y1, z1)) = (pair[0], pair[1]);
         let len = s1 - s0;
         out.chord += len;
         out.chord_y += len * (y0 + y1) / 2.0;
@@ -418,7 +448,7 @@ fn cut(fr: &Frame, x: f64, poly: &[(f64, f64)], tan: &[(f64, f64)], wet: &[bool]
         out.chord_s += (s1 * s1 - s0 * s0) / 2.0;
         out.chord_s2 += (s1 * s1 * s1 - s0 * s0 * s0) / 3.0;
     }
-    if let (Some(first), Some(last)) = (crossings.first(), crossings.last()) {
+    if let (Some(first), Some(last)) = (w.crossings.first(), w.crossings.last()) {
         out.breadth = last.0 - first.0;
     }
     out
@@ -473,71 +503,100 @@ struct Interval<'a> {
     x1: f64,
     a: &'a [(f64, f64)],
     b: &'a [(f64, f64)],
-    /// Slope of each vertex's point line, on the full section.
-    tan: Vec<(f64, f64)>,
 }
 
 impl<'a> Interval<'a> {
     fn new(s0: &'a Section, s1: &'a Section) -> Self {
-        let h = s1.x - s0.x;
-        let half: Vec<(f64, f64)> = s0
-            .points
-            .iter()
-            .zip(&s1.points)
-            .map(|(p, q)| ((q.0 - p.0) / h, (q.1 - p.1) / h))
-            .collect();
         Self {
             x0: s0.x,
             x1: s1.x,
             a: &s0.points,
             b: &s1.points,
-            tan: full(&half),
         }
     }
 
-    fn full_at(&self, x: f64) -> Vec<(f64, f64)> {
-        full(&lerp(self.a, self.b, (x - self.x0) / (self.x1 - self.x0)))
+    /// Put the full section at `x` into `w.poly`.
+    fn section_at(&self, x: f64, w: &mut Work) {
+        fill_full(
+            &mut w.poly,
+            self.a,
+            self.b,
+            (x - self.x0) / (self.x1 - self.x0),
+        );
     }
 
-    /// The interval's ends and every x inside it where a point line crosses the waterplane. Each
-    /// point line is straight, so `p · k − c` is linear along it and has one exact root.
-    fn splits(&self, fr: &Frame) -> Vec<f64> {
-        let (pa, pb) = (full(self.a), full(self.b));
-        let mut xs = Vec::with_capacity(4);
-        xs.push(self.x0);
-        for (p, q) in pa.iter().zip(&pb) {
-            let (f0, f1) = (fr.f(self.x0, *p), fr.f(self.x1, *q));
-            if (f0 < 0.0) != (f1 < 0.0) && f0 != f1 {
-                let r = self.x0 + (self.x1 - self.x0) * (f0 / (f0 - f1));
-                if r > self.x0 && r < self.x1 {
-                    xs.push(r);
+    /// Put the slope of each vertex's point line into `w.tan`.
+    fn slopes(&self, w: &mut Work) {
+        let h = self.x1 - self.x0;
+        let n = self.a.len();
+        w.tan.clear();
+        for (p, q) in self.a.iter().zip(self.b) {
+            w.tan.push(((q.0 - p.0) / h, (q.1 - p.1) / h));
+        }
+        for i in (1..n - 1).rev() {
+            let (ty, tz) = w.tan[i];
+            w.tan.push((-ty, tz));
+        }
+    }
+
+    /// Put into `w.xs` the interval's ends and every x inside it where a point line crosses the
+    /// waterplane. Each point line is straight, so `p · k − c` is linear along it and has one exact
+    /// root.
+    fn splits(&self, fr: &Frame, w: &mut Work) {
+        let n = self.a.len();
+        w.xs.clear();
+        w.xs.push(self.x0);
+        for (i, (p, q)) in self.a.iter().zip(self.b).enumerate() {
+            let mirror = i > 0 && i < n - 1;
+            for (pp, qq) in [(*p, *q), ((-p.0, p.1), (-q.0, q.1))]
+                .into_iter()
+                .take(if mirror { 2 } else { 1 })
+            {
+                let (f0, f1) = (fr.f(self.x0, pp), fr.f(self.x1, qq));
+                if (f0 < 0.0) != (f1 < 0.0) && f0 != f1 {
+                    let r = self.x0 + (self.x1 - self.x0) * (f0 / (f0 - f1));
+                    if r > self.x0 && r < self.x1 {
+                        w.xs.push(r);
+                    }
                 }
             }
         }
-        xs.push(self.x1);
-        xs.sort_by(f64::total_cmp);
-        xs.dedup();
-        xs
+        w.xs.push(self.x1);
+        w.xs.sort_by(f64::total_cmp);
+        w.xs.dedup();
     }
 
-    /// Which vertices are immersed on the open sub-interval `(a, b)`: none crosses inside it, so
-    /// the sign at its middle holds throughout.
-    fn wet(&self, fr: &Frame, a: f64, b: f64) -> Vec<bool> {
+    /// Set `w.wet` for the open sub-interval `(a, b)`: no point line crosses inside it, so the sign
+    /// at its middle holds throughout.
+    fn wet(&self, fr: &Frame, a: f64, b: f64, w: &mut Work) {
         let m = (a + b) / 2.0;
-        self.full_at(m).iter().map(|&p| fr.f(m, p) < 0.0).collect()
+        self.section_at(m, w);
+        w.wet.clear();
+        w.wet.extend(w.poly.iter().map(|&p| fr.f(m, p) < 0.0));
     }
 }
 
-/// Cut the hull by a waterplane and integrate along the length.
-pub fn immersed(table: &SectionsTable, wp: &Waterplane) -> Immersed {
-    let fr = Frame::new(wp);
-    let mut sums = Sums::default();
-    let mut b_wl: f64 = 0.0;
-    let mut wl: Option<(f64, f64)> = None;
-    // End and step faces: the immersed area on each side of a step, and at both ends.
-    let mut faces = 0.0;
+/// What the integration along the length gives.
+struct Integral {
+    sums: Sums,
+    /// End and step faces: the immersed area on each side of a step, and at both ends.
+    faces: f64,
+    /// Aft and forward ends of the waterplane.
+    wl: Option<(f64, f64)>,
+    b_wl: f64,
+}
+
+/// Integrate the cuts along the length by Simpson's rule on each sub-interval.
+fn integrate(table: &SectionsTable, fr: &Frame, area_only: bool, w: &mut Work) -> Integral {
+    let mut out = Integral {
+        sums: Sums::default(),
+        faces: 0.0,
+        wl: None,
+        b_wl: 0.0,
+    };
     let mut pending_face: Option<f64> = Some(0.0);
     let mut last_area = 0.0;
+    let mut xs = core::mem::take(&mut w.xs);
     for pair in table.sections.windows(2) {
         let (s0, s1) = (&pair[0], &pair[1]);
         if s1.x <= s0.x {
@@ -545,33 +604,53 @@ pub fn immersed(table: &SectionsTable, wp: &Waterplane) -> Immersed {
             continue;
         }
         let iv = Interval::new(s0, s1);
-        let xs = iv.splits(&fr);
-        for w in xs.windows(2) {
-            let (a, b) = (w[0], w[1]);
+        if !area_only {
+            iv.slopes(w);
+        }
+        w.xs = xs;
+        iv.splits(fr, w);
+        xs = core::mem::take(&mut w.xs);
+        for ab in xs.windows(2) {
+            let (a, b) = (ab[0], ab[1]);
             let m = (a + b) / 2.0;
-            let wet = iv.wet(&fr, a, b);
-            let ca = cut(&fr, a, &iv.full_at(a), &iv.tan, &wet);
-            let cm = cut(&fr, m, &iv.full_at(m), &iv.tan, &wet);
-            let cb = cut(&fr, b, &iv.full_at(b), &iv.tan, &wet);
+            iv.wet(fr, a, b, w);
+            let cm = cut(fr, m, w, area_only);
+            iv.section_at(a, w);
+            let ca = cut(fr, a, w, area_only);
+            iv.section_at(b, w);
+            let cb = cut(fr, b, w, area_only);
             let h = (b - a) / 6.0;
-            sums.add(h, a, &ca);
-            sums.add(4.0 * h, m, &cm);
-            sums.add(h, b, &cb);
+            out.sums.add(h, a, &ca);
+            out.sums.add(4.0 * h, m, &cm);
+            out.sums.add(h, b, &cb);
             if let Some(prev) = pending_face.take() {
-                faces += (ca.area - prev).abs();
+                out.faces += (ca.area - prev).abs();
             }
             last_area = cb.area;
             if ca.chord > 0.0 || cm.chord > 0.0 || cb.chord > 0.0 {
-                wl = Some(match wl {
+                out.wl = Some(match out.wl {
                     None => (a, b),
                     Some((lo, hi)) => (lo.min(a), hi.max(b)),
                 });
             }
-            b_wl = b_wl.max(ca.breadth).max(cm.breadth).max(cb.breadth);
+            out.b_wl = out.b_wl.max(ca.breadth).max(cm.breadth).max(cb.breadth);
         }
     }
-    faces += last_area.abs();
+    w.xs = xs;
+    out.faces += last_area.abs();
+    out
+}
 
+/// Cut the hull by a waterplane and integrate along the length.
+pub fn immersed(table: &SectionsTable, wp: &Waterplane) -> Immersed {
+    let fr = Frame::new(wp);
+    let mut w = Work::default();
+    let Integral {
+        sums,
+        faces,
+        wl,
+        b_wl,
+    } = integrate(table, &fr, false, &mut w);
     let v = sums.area;
     let (lcb, tcb, kb) = if v > 0.0 {
         (sums.x_area / v, sums.my / v, sums.mz / v)
@@ -593,7 +672,10 @@ pub fn immersed(table: &SectionsTable, wp: &Waterplane) -> Immersed {
         (0.0, 0.0, 0.0, 0.0, 0.0)
     };
     let (l_wl, midship) = match wl {
-        Some((lo, hi)) => (hi - lo, station_cut(table, &fr, lo + (hi - lo) / 2.0).area),
+        Some((lo, hi)) => (
+            hi - lo,
+            station_cut(table, &fr, lo + (hi - lo) / 2.0, &mut w).area,
+        ),
         None => (0.0, 0.0),
     };
     Immersed {
@@ -616,19 +698,22 @@ pub fn immersed(table: &SectionsTable, wp: &Waterplane) -> Immersed {
 
 /// The cut of the section at any x on the ruled surface. At a Section shared by two intervals the
 /// interval aft of it is used.
-fn station_cut(table: &SectionsTable, fr: &Frame, x: f64) -> Cut {
+fn station_cut(table: &SectionsTable, fr: &Frame, x: f64, w: &mut Work) -> Cut {
     for pair in table.sections.windows(2) {
         let (s0, s1) = (&pair[0], &pair[1]);
         if s1.x <= s0.x || x < s0.x || x > s1.x {
             continue;
         }
         let iv = Interval::new(s0, s1);
-        let xs = iv.splits(fr);
-        for w in xs.windows(2) {
-            if x <= w[1] {
-                let wet = iv.wet(fr, w[0], w[1]);
-                return cut(fr, x, &iv.full_at(x), &iv.tan, &wet);
-            }
+        iv.slopes(w);
+        iv.splits(fr, w);
+        let xs = core::mem::take(&mut w.xs);
+        let hit = xs.windows(2).find(|ab| x <= ab[1]).map(|ab| (ab[0], ab[1]));
+        w.xs = xs;
+        if let Some((a, b)) = hit {
+            iv.wet(fr, a, b, w);
+            iv.section_at(x, w);
+            return cut(fr, x, w, false);
         }
     }
     Cut::default()
@@ -665,4 +750,229 @@ pub fn upright(
         cp: cb / cm,
         cwp: awp / (im.l_wl_m * im.b_wl_m),
     })
+}
+
+/// Steps of the inner solve, on the height `c` for the volume (Illinois secant method). No early
+/// stop, so native and WebAssembly take the same steps and give the same bits.
+pub const VOLUME_STEPS: u32 = 16;
+/// Steps of the outer solve, on the trim for the longitudinal moment (Illinois secant method). No
+/// early stop.
+pub const TRIM_STEPS: u32 = 12;
+/// The free-trim solve looks for the trim between −10 and +10 degrees.
+pub const TRIM_LIMIT_DEG: f64 = 10.0;
+
+/// The centre of gravity of the loaded hull: x (LCG), y (TCG) and z (KG), m in hull axes.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Gravity {
+    pub lcg_m: f64,
+    pub tcg_m: f64,
+    pub kg_m: f64,
+}
+
+/// The floating position at one heel: the height of the waterplane, the trim, and the cut there.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Equilibrium {
+    pub waterplane: Waterplane,
+    pub immersed: Immersed,
+}
+
+/// The height `c` that immerses `target` m³ at this heel and trim, by the Illinois secant method in
+/// a bracket from the lowest to the highest point of the hull along `k`. At those ends the volume is
+/// 0 and `total` (the whole hull), so the bracket costs no cut.
+fn c_for_volume(
+    table: &SectionsTable,
+    heel_deg: f64,
+    trim_deg: f64,
+    target: f64,
+    total: f64,
+    w: &mut Work,
+) -> f64 {
+    let at = |c: f64| Waterplane {
+        heel_deg,
+        trim_deg,
+        c,
+    };
+    let fr = Frame::new(&at(0.0));
+    let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
+    for s in &table.sections {
+        for &(y, z) in &s.points {
+            for p in [(y, z), (-y, z)] {
+                let d = fr.f(s.x, p);
+                lo = lo.min(d);
+                hi = hi.max(d);
+            }
+        }
+    }
+    illinois(lo, -target, hi, total - target, VOLUME_STEPS, |c| {
+        integrate(table, &Frame::new(&at(c)), true, w).sums.area - target
+    })
+    .0
+}
+
+/// The Illinois secant method on a bracket `[a, b]` with `f(a) <= 0 <= f(b)`, `f` rising: a fixed
+/// number of steps, no early stop. Gives the last point and what `f` returned there.
+fn illinois<T>(
+    mut a: f64,
+    mut fa: f64,
+    mut b: f64,
+    mut fb: f64,
+    steps: u32,
+    mut f: impl FnMut(f64) -> T,
+) -> (f64, Option<T>)
+where
+    T: Residual,
+{
+    let mut last = None;
+    let mut x = b;
+    for _ in 0..steps {
+        x = if fb != fa {
+            (a * fb - b * fa) / (fb - fa)
+        } else {
+            b
+        };
+        let r = f(x);
+        let fx = r.residual();
+        if (fx < 0.0) != (fb < 0.0) {
+            a = b;
+            fa = fb;
+        } else {
+            fa /= 2.0;
+        }
+        b = x;
+        fb = fx;
+        last = Some(r);
+    }
+    (x, last)
+}
+
+/// What a step of [`illinois`] gives: its residual, and anything the caller keeps.
+trait Residual {
+    fn residual(&self) -> f64;
+}
+
+impl Residual for f64 {
+    fn residual(&self) -> f64 {
+        *self
+    }
+}
+
+/// Unit vectors of the earth frame in hull axes: `u` horizontal across (towards the low side at a
+/// positive heel), `w` horizontal forward. `k` is the vertical.
+fn earth_axes(wp: &Waterplane) -> ((f64, f64, f64), (f64, f64, f64)) {
+    let fr = Frame::new(wp);
+    let u = (0.0, fr.uy, fr.uz);
+    // w = u × k.
+    let w = (u.1 * fr.kz - u.2 * fr.ky, u.2 * fr.kx, -u.1 * fr.kx);
+    (u, w)
+}
+
+fn dot(a: (f64, f64, f64), b: (f64, f64, f64)) -> f64 {
+    a.0 * b.0 + a.1 * b.1 + a.2 * b.2
+}
+
+/// The floating position at a heel with free trim: the height `c` gives ρ∇ = Δ (inner solve), and
+/// the trim puts the centre of buoyancy on the vertical through G in the longitudinal plane (outer
+/// solve, between ±10 degrees). Both are Illinois secant solves with fixed step counts and no early
+/// stop.
+pub fn equilibrium(
+    table: &SectionsTable,
+    mass_t: f64,
+    g: Gravity,
+    heel_deg: f64,
+    density: f64,
+) -> Result<Equilibrium, SectionsError> {
+    let target = mass_t / density;
+    if target.is_nan() || target <= 0.0 {
+        return Err(SectionsError::NotAfloat);
+    }
+    // The whole hull immersed: nothing heavier floats.
+    let total = immersed(
+        table,
+        &Waterplane {
+            heel_deg: 0.0,
+            trim_deg: 0.0,
+            c: f64::MAX / 4.0,
+        },
+    )
+    .volume_m3;
+    if target >= total {
+        return Err(SectionsError::Sinks);
+    }
+    let gp = (g.lcg_m, g.tcg_m, g.kg_m);
+    let mut w = Work::default();
+    // B − G along the earth's forward horizontal, at a trim: it rises with the trim (bow down
+    // moves B forward).
+    let mut float_at = |trim_deg: f64| {
+        let c = c_for_volume(table, heel_deg, trim_deg, target, total, &mut w);
+        let waterplane = Waterplane {
+            heel_deg,
+            trim_deg,
+            c,
+        };
+        let immersed = immersed(table, &waterplane);
+        let (_, fwd) = earth_axes(&waterplane);
+        let lever = dot((immersed.lcb_m, immersed.tcb_m, immersed.kb_m), fwd) - dot(gp, fwd);
+        Floating {
+            eq: Equilibrium {
+                waterplane,
+                immersed,
+            },
+            lever,
+        }
+    };
+    let aft = float_at(-TRIM_LIMIT_DEG);
+    let fwd = float_at(TRIM_LIMIT_DEG);
+    if aft.lever > 0.0 || fwd.lever < 0.0 {
+        return Err(SectionsError::TrimOutOfRange);
+    }
+    let (_, last) = illinois(
+        -TRIM_LIMIT_DEG,
+        aft.lever,
+        TRIM_LIMIT_DEG,
+        fwd.lever,
+        TRIM_STEPS,
+        &mut float_at,
+    );
+    Ok(last.unwrap_or(fwd).eq)
+}
+
+/// One trim tried by the outer solve.
+struct Floating {
+    eq: Equilibrium,
+    /// B − G along the earth's forward horizontal.
+    lever: f64,
+}
+
+impl Residual for Floating {
+    fn residual(&self) -> f64 {
+        self.lever
+    }
+}
+
+/// The righting lever at one equilibrium: the horizontal distance across from G to the vertical
+/// through B, positive when righting.
+pub fn righting_lever(eq: &Equilibrium, g: Gravity) -> f64 {
+    let (u, _) = earth_axes(&eq.waterplane);
+    let im = &eq.immersed;
+    dot((im.lcb_m, im.tcb_m, im.kb_m), u) - dot((g.lcg_m, g.tcg_m, g.kg_m), u)
+}
+
+/// The GZ curve with free trim: at each heel (degrees) the equilibrium, its righting lever, less the
+/// free surface term `FSM / Δ × sin φ` (FSM in t·m).
+pub fn gz_curve(
+    table: &SectionsTable,
+    mass_t: f64,
+    g: Gravity,
+    free_surface_moment_tm: f64,
+    density: f64,
+    angles: impl IntoIterator<Item = i32>,
+) -> Result<Vec<(i32, f64)>, SectionsError> {
+    let fsc = free_surface_moment_tm / mass_t;
+    let mut out = Vec::new();
+    for deg in angles {
+        let heel = f64::from(deg);
+        let eq = equilibrium(table, mass_t, g, heel, density)?;
+        out.push((deg, righting_lever(&eq, g) - fsc * sin(radians(heel))));
+    }
+    Ok(out)
 }
