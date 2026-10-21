@@ -51,13 +51,14 @@ validation:
     absolute_links: warn
     unrecognized_links: warn
 
-# "adr/" and "specs/" expand to every page in the folder (hooks.py).
+# "adr/", "specs/" and "basis/" expand to every page in the folder (hooks.py).
 nav:
   - Overview: index.md
   - Roadmap: roadmap.md
   - Glossary: glossary.md
   - Decisions: adr/
   - Specs: specs/
+  - Engineering basis: basis/
   - Contribute:
       - contributing.md
       - code-of-conduct.md

@@ -48,6 +48,16 @@ PAGES = {
 for folder in ("docs/adr", "docs/specs"):
     for md in sorted((REPO / folder).glob("*.md")):
         PAGES[f"{folder}/{md.name}"] = f"{folder.removeprefix('docs/')}/{md.name}"
+# Engineering basis: the twelve area pages only. The authoring README and proposals/ are never published.
+for md in sorted((REPO / "docs/basis").glob("[0-9][0-9]-*.md")):
+    PAGES[f"docs/basis/{md.name}"] = f"basis/{md.name}"
+
+BASIS_BANNER = (
+    '!!! warning "Draft: needs expert review"\n'
+    "    Concept and preliminary design only. Not for approval. No discipline reviewer has signed this page\n"
+    "    off. The page describes the code at the commit named in its header; later changes in the changelog\n"
+    "    may not be in it yet.\n\n"
+)
 
 LINK = re.compile(r"(\]\()([^)\s]+)(\))")
 
@@ -73,6 +83,9 @@ def assemble_docs() -> None:
     for source, dest in PAGES.items():
         text = (REPO / source).read_text(encoding="utf-8")
         text = LINK.sub(lambda m: m[1] + rewrite_link(m[2], source, dest) + m[3], text)
+        if dest.startswith("basis/"):
+            head, _, rest = text.partition("\n")
+            text = head + "\n\n" + BASIS_BANNER + rest
         out = DOCS_SRC / dest
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(text, encoding="utf-8")
