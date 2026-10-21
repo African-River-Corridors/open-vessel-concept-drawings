@@ -24,8 +24,11 @@ import sys
 import tempfile
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import otd  # noqa: E402  the pinned crate, for its conformance suite
+
 ROOT = Path(__file__).resolve().parent.parent
-SUITE = ROOT / "crates" / "ovcd-draw" / "standard" / "conformance"
+SUITE = otd.standard() / "conformance"
 FIXTURES = ROOT / "crates" / "ovcd-format" / "tests" / "fixtures"
 MIN_FILES = 100
 

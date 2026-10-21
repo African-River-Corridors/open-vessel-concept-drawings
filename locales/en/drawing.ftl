@@ -4,15 +4,6 @@
 # `text!` call and run the tool again. A number argument arrives as text, already rounded.
 
 
-## crates/ovcd-draw/src/furniture.rs
-
-draw-status-draft = DRAFT – NOT FOR CONSTRUCTION
-draw-status-concept = CONCEPT – NOT FOR CONSTRUCTION
-draw-earlier-revisions = { $count } EARLIER REVISIONS NOT SHOWN
-draw-scale-as-shown = AS SHOWN
-draw-heading-notes = NOTES
-draw-heading-references = REFERENCES
-
 ## crates/ovcd-format/src/ga.rs
 
 draw-double-bottom = DOUBLE BOTTOM
@@ -47,3 +38,12 @@ draw-note-dimensions = { $view }. DIMENSIONS IN METRES.
 draw-view-side-elevation = SIDE ELEVATION
 draw-view-plan = PLAN
 draw-view-midship-section = MIDSHIP SECTION
+
+## otd/src/furniture.rs
+
+draw-status-draft = DRAFT – NOT FOR CONSTRUCTION
+draw-status-concept = CONCEPT – NOT FOR CONSTRUCTION
+draw-earlier-revisions = { $count } EARLIER REVISIONS NOT SHOWN
+draw-scale-as-shown = AS SHOWN
+draw-heading-notes = NOTES
+draw-heading-references = REFERENCES

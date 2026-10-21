@@ -187,7 +187,7 @@ contrast target. A border that marks a control (an input box, a toggle) uses `--
 - **The app bundles its fonts.** It runs offline, and never loads Google Fonts or any other web font
   service at run time. The font files live in `app/src/fonts/` as woff2, each with its SIL Open Font
   License in `app/public/licenses/`. The drawing font stays where the drawing crate vendors it
-  (`crates/ovcd-draw/standard/fonts/`, TTF); the app uses a woff2 copy of it.
+  (the `otd` crate's `standard/fonts/`, TTF); the app uses a woff2 copy of it.
 - **Scale (px):** 11 tags and captions · 12 panel heads · 13 UI body · 14 tabs and buttons · 16 group
   titles (serif) · 20 dialog titles (serif) · 24, 32, 48 splash.
 - **Line height:** 1.35 in the UI, 1.6 for reading text.

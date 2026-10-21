@@ -7,7 +7,8 @@ use std::process::Command;
 
 fn document(case: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../ovcd-draw/standard/conformance/documents")
+        // Four documents of the standard's conformance suite, copied from the otd crate's vendored copy.
+        .join("tests/data/conformance")
         .join(case)
         .join("input.json")
 }

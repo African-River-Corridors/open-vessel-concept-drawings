@@ -75,8 +75,20 @@ def test_example_rates_ship_in_the_package_and_match_the_reader_copy():
 # ---------- ovcd-py skeleton ----------
 
 def test_core_crates_never_depend_on_pyo3():
-    for crate in ("ovcd-core", "ovcd-format", "ovcd-draw", "ovcd-cli"):
+    for crate in ("ovcd-core", "ovcd-format", "ovcd-cli"):
         assert "pyo3" not in (ROOT / "crates" / crate / "Cargo.toml").read_text(encoding="utf-8"), crate
+
+
+
+def test_the_drawing_crate_is_otd_pinned_by_tag():
+    """Issue #499: drawings go through `otd` (open-technical-drawer), pinned by a release tag, never a branch or a commit."""
+    cargo = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))
+    dep = cargo["workspace"]["dependencies"]["ovcd-draw"]
+    assert dep["package"] == "otd"
+    assert dep["git"] == "https://github.com/African-River-Corridors/open-technical-drawer"
+    assert set(dep) == {"package", "git", "tag"}
+    assert dep["tag"].startswith("v")
+    assert not (ROOT / "crates" / "ovcd-draw").exists()
 
 
 def test_ovcd_py_is_abi3_for_python_312():
@@ -160,9 +172,9 @@ def test_version_is_0_2_3_everywhere():
     assert cargo["workspace"]["package"]["version"] == "0.2.4"
     lock = tomllib.loads((ROOT / "Cargo.lock").read_text(encoding="utf-8"))
     ours = {p["name"]: p["version"] for p in lock["package"]
-            if p["name"] in ("ovcd-core", "ovcd-format", "ovcd-draw", "ovcd-cli", "ovcd-py", "ovcd-shell", "ovcd-web", "xtask")}
-    assert ours == dict.fromkeys(("ovcd-core", "ovcd-format", "ovcd-draw", "ovcd-cli", "ovcd-py", "ovcd-shell", "ovcd-web", "xtask"), "0.2.4")
-    for crate in ("ovcd-core", "ovcd-format", "ovcd-draw", "ovcd-cli", "ovcd-py", "ovcd-shell", "ovcd-web"):
+            if p["name"] in ("ovcd-core", "ovcd-format", "ovcd-cli", "ovcd-py", "ovcd-shell", "ovcd-web", "xtask")}
+    assert ours == dict.fromkeys(("ovcd-core", "ovcd-format", "ovcd-cli", "ovcd-py", "ovcd-shell", "ovcd-web", "xtask"), "0.2.4")
+    for crate in ("ovcd-core", "ovcd-format", "ovcd-cli", "ovcd-py", "ovcd-shell", "ovcd-web"):
         manifest = tomllib.loads((ROOT / "crates" / crate / "Cargo.toml").read_text(encoding="utf-8"))
         assert manifest["package"]["version"] == {"workspace": True}, crate
     # the app: its front end, its Tauri config (the installer name) and its crate
