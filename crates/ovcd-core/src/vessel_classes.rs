@@ -54,6 +54,9 @@ pub fn formation_kind(class_formation: &str) -> Option<&'static str> {
         "motor_vessel" => Some("self_propelled"),
         "pushed_barge" => Some("pushed_barge"),
         "pushed_convoy" | "coupled_unit" => Some("pushed_convoy"),
+        // Issue #357: the ATB and the towed barge are Formation kinds now.
+        "atb" => Some("atb"),
+        "towed_barge" => Some("towed_barge"),
         _ => None,
     }
 }

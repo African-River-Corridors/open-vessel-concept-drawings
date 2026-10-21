@@ -115,7 +115,7 @@ fn the_schema_says_which_formations_each_input_is_used_for_and_keeps_applies_to(
     };
     assert_eq!(
         entry("pushed_stern_void_m")["applies_to_formation"],
-        json!(["pushed_barge", "pushed_convoy"])
+        json!(["pushed_barge", "pushed_convoy", "atb", "towed_barge"])
     );
     assert_eq!(
         entry("pushed_stern_void_m")["applies_to"],
@@ -123,7 +123,13 @@ fn the_schema_says_which_formations_each_input_is_used_for_and_keeps_applies_to(
     );
     assert_eq!(
         entry("bow_rake_length_to_depth_ratio")["applies_to_formation"],
-        json!(["self_propelled", "pushed_barge", "pushed_convoy"])
+        json!([
+            "self_propelled",
+            "pushed_barge",
+            "pushed_convoy",
+            "atb",
+            "towed_barge"
+        ])
     );
     assert_eq!(entry("bulk_end_bulkhead_m")["group"], "Dry-bulk hold");
     assert_eq!(

@@ -897,7 +897,7 @@
       "basis": "The loading conditions the stability is checked in. is_code_2008: the four standard conditions of a cargo ship in IMO IS Code 2008 (MSC.267(85)) Part B 3.4.1.2 (fully loaded departure and arrival, in ballast departure and arrival), with stores and fuel and water ballast, as Part A 2.1.1 and 2.1.2 ask (issue #426). legacy: laden, half laden and light, with no consumables and no ballast. The default stays legacy until the gas arrangement search uses the IS Code conditions; then it becomes is_code_2008. A file saved before keeps legacy"
     },
     "may_sail_without_ballast": {
-      "default_by_formation": { "self_propelled": false, "pushed_barge": true, "pushed_convoy": true },
+      "default_by_formation": { "self_propelled": false, "pushed_barge": true, "pushed_convoy": true, "atb": true, "towed_barge": true },
       "status": "estimate",
       "basis": "Whether the vessel may sail with no cargo, no consumables and no ballast; if so, the condition \"Lightship, no ballast\" is checked too. A barge may sail empty; a self-propelled vessel sails in ballast (maintainer decision on issue #426)"
     },
@@ -964,6 +964,182 @@
       "hard": { "ge": 0, "le": 1 },
       "status": "estimate",
       "basis": "The fill of the wing tanks in the ballast arrival condition, when the ballast plan is set by the user: 0 empty, 1 pressed full. A fill of 0.98 or more is nominally full and has no free surface (IS Code 2008 Part B 3.1.2)"
+    },
+    "tug_included": {
+      "default": true,
+      "status": "estimate",
+      "basis": "Whether the Formation's results include its tug (the maintainer's decision of 2026-10-20 in spec 0007: a new barge Formation includes it). Inputs only until the Formation powering (#359). A file saved before keeps false: the barge alone, as today"
+    },
+    "tug_preset": {
+      "default": "none",
+      "status": "estimate",
+      "basis": "A Reference Vessel tug, pusher or ATB tug of the research note (sec. 10) whose power, size and propulsor fill the tug inputs, marked reference (ovcd_core::tug_presets). none: the tug inputs keep their own values"
+    },
+    "tug_length_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 200 },
+      "soft": { "min": 10.0, "max": 60.0 },
+      "status": "estimate",
+      "basis": "none: a pusher 19.5 x (P / 1,400 kW)^0.67, an ATB tug 0.28 x the barge length, a towing tug 23 x (P / 3,000 kW)^0.45, fitted to the reference pushers and tugs (spec 0007, section Formation and Tug; docs/research/stern-and-tugs.md); the sizing comes with #359"
+    },
+    "tug_beam_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 50 },
+      "soft": { "min": 5.0, "max": 20.0 },
+      "status": "estimate",
+      "basis": "none: a pusher 9.5 x (P / 1,400 kW)^0.45, an ATB tug 0.53 x the barge beam, a towing tug L / 2.5 (spec 0007, section Formation and Tug; docs/research/stern-and-tugs.md); the sizing comes with #359"
+    },
+    "tug_draught_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 15 },
+      "soft": { "min": 1.0, "max": 7.0 },
+      "status": "estimate",
+      "basis": "none: a pusher 2.0 m capped by the draught limit (reference pushers 1.4 to 2.65 m), an ATB tug B / 2.33 (the mean tug B/T of Yanakiev 2025 sec. 4.1, sourced), a towing tug 0.42 x B (spec 0007, section Formation and Tug; docs/research/stern-and-tugs.md)"
+    },
+    "tug_stern_form": {
+      "default_by_formation": { "pushed_barge": "tunnel", "pushed_convoy": "tunnel", "atb": "transom", "towed_barge": "transom" },
+      "status": "estimate",
+      "basis": "A pusher has a tunnel stern, an ATB tug and a towing tug a transom stern, as the reference pushers, ATB tugs and ASD tugs (spec 0007, section Formation and Tug; docs/research/stern-and-tugs.md)"
+    },
+    "tug_stern_run_length_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 2.0, "max": 40.0 },
+      "status": "estimate",
+      "basis": "none: the rule of the tug's Stern Form, as stern_run_length_m (spec 0007)"
+    },
+    "tug_stern_transom_height_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 20 },
+      "soft": { "min": 0.0, "max": 8.0 },
+      "status": "estimate",
+      "basis": "none: the rule of the tug's Stern Form, as stern_transom_height_m (spec 0007)"
+    },
+    "tug_tunnel_crown_height_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 10 },
+      "soft": { "min": 0.5, "max": 4.0 },
+      "status": "estimate",
+      "basis": "none: D + 0.10 D, as tunnel_crown_height_m (spec 0007)"
+    },
+    "tug_propulsor_type": {
+      "default_by_formation": { "pushed_barge": "shaft_nozzle", "pushed_convoy": "shaft_nozzle", "atb": "azimuth_ducted", "towed_barge": "azimuth_ducted" },
+      "status": "estimate",
+      "basis": "A pusher has shafts in nozzles (the reference pushers, twin and triple screw), an ATB tug and a towing tug ducted azimuth units (the ATB tugs and ASD tugs) (spec 0007, section Formation and Tug; docs/research/stern-and-tugs.md)"
+    },
+    "tug_propulsor_count": {
+      "default": 2,
+      "unit": "propulsors",
+      "hard": { "ge": 1, "le": 4 },
+      "soft": { "min": 1.0, "max": 3.0 },
+      "status": "estimate",
+      "basis": "Twin drive, as the reference pushers and tugs; spec 0007 gives three above 2,500 kW, which the tug sizing (#359) applies (spec 0007, section Formation and Tug; docs/research/stern-and-tugs.md)"
+    },
+    "tug_propeller_diameter_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 10 },
+      "soft": { "min": 0.8, "max": 4.0 },
+      "status": "estimate",
+      "basis": "none: the largest the tug's stern allows, as propeller_diameter_m (spec 0007)"
+    },
+    "tug_power_source": {
+      "default": "diesel_mechanical",
+      "status": "estimate",
+      "basis": "Diesel-mechanical, as most reference pushers, ATB tugs and towing tugs (spec 0007, section Formation and Tug; docs/research/stern-and-tugs.md)"
+    },
+    "tug_installed_power_kw": {
+      "default": null,
+      "unit": "kW",
+      "hard": { "gt": 0, "le": 30000 },
+      "soft": { "min": 300.0, "max": 10000.0 },
+      "status": "estimate",
+      "basis": "none: the Formation's resistance at its design speed x the margin sets the tug's power (the Formation powering, #359; spec 0007)"
+    },
+    "tug_design_speed_kn": {
+      "default": 9.7,
+      "unit": "kn",
+      "hard": { "gt": 0, "le": 30 },
+      "soft": { "min": 3.0, "max": 15.0 },
+      "status": "estimate",
+      "basis": "The speed the Formation's tug is sized for: the design speed of the self-propelled reference ships, 18 km/h, an estimate for a Formation until the convoy cases (#359) fit one"
+    },
+    "tug_installed_power_margin": {
+      "default": 1.2,
+      "unit": "-",
+      "hard": { "ge": 1, "le": 3 },
+      "soft": { "min": 1.0, "max": 1.5 },
+      "status": "estimate",
+      "basis": "The tug's installed power over the power for the design speed: 1.20, as installed_power_margin (an estimate; spec 0007)"
+    },
+    "tug_bow_thruster": {
+      "default": "none",
+      "status": "estimate",
+      "basis": "A pusher steers with its flanking and steering rudders (research note sec. 5); no bow thruster on the tug"
+    },
+    "tug_bow_thruster_power_kw": {
+      "default": null,
+      "unit": "kW",
+      "hard": { "gt": 0, "le": 5000 },
+      "soft": { "min": 50.0, "max": 1000.0 },
+      "status": "estimate",
+      "basis": "For a fitted bow thruster. none: 0.11 kW per m3 of L x B x T, as bow_thruster_power_kw"
+    },
+    "tug_battery_energy_kwh": {
+      "default": null,
+      "unit": "kWh",
+      "hard": { "gt": 0, "le": 100000 },
+      "soft": { "min": 200.0, "max": 20000.0 },
+      "status": "estimate",
+      "basis": "For a battery Power Source. none: the energy per trip, as battery_energy_kwh"
+    },
+    "tug_battery_unit_energy_kwh": {
+      "default": 5000,
+      "unit": "kWh",
+      "hard": { "gt": 0, "le": 50000 },
+      "soft": { "min": 1000.0, "max": 10000.0 },
+      "status": "estimate",
+      "basis": "The energy of one 40 ft battery unit, as battery_unit_energy_kwh"
+    },
+    "tug_wheelhouse_type": {
+      "default": "elevating",
+      "status": "estimate",
+      "basis": "An elevating wheelhouse, as the reference pushers (an eye of 11 m on 19 m pushers; research note sec. 9.3)"
+    },
+    "tug_sightline_method": {
+      "default": "blind_distance",
+      "status": "estimate",
+      "basis": "The Blind Distance over the convoy (ES-TRIN 7.02(2)), as sightline_method for a new Option"
+    },
+    "formation_resistance_allowance": {
+      "default_by_formation": { "pushed_barge": 1.0, "pushed_convoy": 1.0, "atb": 1.05, "towed_barge": 1.0 },
+      "unit": "-",
+      "hard": { "gt": 0, "le": 3 },
+      "soft": { "min": 0.8, "max": 1.5 },
+      "status": "estimate",
+      "basis": "The Formation's resistance over that of its Equivalent Hull: an ATB 1.05, from \"rigidly linked ... 5 % increase in resistance compared to equivalent ships\" (Yanakiev 2025 Table 3), applied to ATBs as an estimate; pushed and towed 1.00, estimates the convoy calibration (#359) sets (spec 0007)"
+    },
+    "notch_depth_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 60 },
+      "soft": { "min": 3.0, "max": 30.0 },
+      "status": "estimate",
+      "basis": "The Notch of an ATB barge. none: 0.50 x the tug length (one deep-notch ATB, derived; spec 0007)"
+    },
+    "notch_width_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 40 },
+      "soft": { "min": 3.0, "max": 25.0 },
+      "status": "estimate",
+      "basis": "The Notch of an ATB barge. none: the tug beam + 2 x 0.15 m (coupler clearance, an estimate; spec 0007)"
     },
     "water_density_t_per_m3": {
       "default": 1.0,

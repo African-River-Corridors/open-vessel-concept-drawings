@@ -608,6 +608,7 @@ impl DesignSession {
         }
         match name {
             "vessel_class" => self.pick_class(i, &value)?,
+            "tug_preset" => self.pick_tug_preset(i, value)?,
             "vessel_scheme" => self.pick_scheme(i, value),
             _ => self.put(i, name, value),
         }
@@ -660,6 +661,51 @@ impl DesignSession {
         // The convoy counts of the class replace those that were waiting for a return.
         self.hidden
             .retain(|(o, n, _)| !(o == &self.design.options[i].name && n == CONVOY_MEMORY));
+        Ok(())
+    }
+
+    /// Pick a tug preset (issue #357): its power, size and propulsor fill the tug inputs, marked
+    /// `reference`. `none` keeps the values the preset gave, now typed.
+    fn pick_tug_preset(&mut self, i: usize, value: Value) -> Result<(), String> {
+        let id = value.as_str().unwrap_or("none");
+        let preset = match id {
+            "none" => None,
+            _ => Some(
+                ovcd_core::tug_presets::find(id)
+                    .ok_or_else(|| format!("`{id}` is not a tug preset"))?,
+            ),
+        };
+        self.put(i, "tug_preset", json!(id));
+        let option = &mut self.design.options[i];
+        let Some(p) = preset else {
+            for (_, s) in option.inputs.iter_mut() {
+                if s.source == Source::Reference {
+                    s.source = Source::Typed;
+                }
+            }
+            return Ok(());
+        };
+        let opt = |v: Option<f64>| v.map_or(Value::Null, |x| json!(x));
+        let values = [
+            ("tug_length_m", json!(p.loa_m)),
+            ("tug_beam_m", json!(p.beam_m)),
+            ("tug_draught_m", opt(p.draught_m)),
+            ("tug_installed_power_kw", json!(p.installed_power_kw)),
+            ("tug_propulsor_type", json!(p.propulsor_type)),
+            ("tug_propulsor_count", json!(f64::from(p.propulsor_count))),
+            ("tug_propeller_diameter_m", opt(p.propeller_diameter_m)),
+            ("tug_power_source", json!(p.power_source)),
+        ];
+        for (name, v) in values {
+            let stored = StoredInput {
+                value: v,
+                source: Source::Reference,
+            };
+            match option.inputs.iter_mut().find(|(n, _)| n == name) {
+                Some((_, slot)) => *slot = stored,
+                None => option.inputs.push((name.into(), stored)),
+            }
+        }
         Ok(())
     }
 
@@ -973,10 +1019,9 @@ impl DesignSession {
         }
         let mut changed = vec![changed.to_string()];
         while let Some(by_name) = changed.pop() {
-            let by_name = if by_name == "cargo" {
-                "cargo_phase".to_string()
-            } else {
-                by_name
+            let by_name = match by_name.as_str() {
+                "cargo" => "cargo_phase".to_string(),
+                _ => by_name,
             };
             for (input, by, _) in KEYED_DEFAULTS {
                 if *by == by_name {

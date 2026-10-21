@@ -29,6 +29,8 @@
     self_propelled: "app-formation-self-propelled",
     pushed_barge: "app-formation-pushed-barge",
     pushed_convoy: "app-formation-pushed-convoy",
+    atb: "app-formation-atb",
+    towed_barge: "app-formation-towed-barge",
   };
 
   function range(r: [number, number] | null | undefined, unit: string): string {

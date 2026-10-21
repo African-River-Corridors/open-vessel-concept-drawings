@@ -166,7 +166,7 @@ def check(root: Path = ROOT, fix: bool = False) -> list[str]:
 
 
 # The input table: each `spec(…)`-style constructor call gives an input's key and its English label.
-INPUT_SPEC = re.compile(r'\b(?:spec|only|only_in|pushed|self_propelled|lpg)\(\s*"([a-z0-9_]+)",\s*"((?:[^"\\]|\\.)*)"')
+INPUT_SPEC = re.compile(r'\b(?:spec|only|only_in|pushed|self_propelled|lpg|tug|atb)\(\s*"([a-z0-9_]+)",\s*"((?:[^"\\]|\\.)*)"')
 
 
 def check_input_labels(root: Path, english: dict[str, "Message"]) -> list[str]:
