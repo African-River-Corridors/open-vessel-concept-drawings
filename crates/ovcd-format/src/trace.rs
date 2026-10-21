@@ -5,7 +5,7 @@ use crate::profile::Profile;
 use crate::rule_set::{Library, Selection};
 use crate::simulate::Measured;
 use crate::vdesign::{DesignOption, INPUTS, InputKind};
-use ovcd_core::box_stability::area;
+use ovcd_core::gas_arrangement::RuleInputs;
 use ovcd_core::rule_trace::{
     ArgDef, MeasureInfo, MeasureSource, MeasureValue, MethodStatus, ObjectType, Outcome, Trace,
     TraceRow, ValueKind, evaluate, measure_def,
@@ -95,27 +95,7 @@ pub const DERIVED_INPUTS: &[(&str, &[&str])] = &[
     ("deadweight_band", DEADWEIGHT_BANDS),
 ];
 
-/// The deadweight bands, at the thresholds of MARPOL Annex I Reg. 19 (MEPC.117(52)): 19.1, 600
-/// tonnes deadweight and above; 19.2 and 19.6, 5,000 tonnes; 19.3.4, 20,000 tonnes.
-pub const DEADWEIGHT_BANDS: &[&str] = &[
-    "under-600-t",
-    "600-to-5000-t",
-    "5000-to-20000-t",
-    "20000-t-and-above",
-];
-
-/// The band of a deadweight, t. "x tonnes deadweight and above" is in the band that starts at x.
-pub fn deadweight_band(dw_t: f64) -> &'static str {
-    if dw_t < 600.0 {
-        DEADWEIGHT_BANDS[0]
-    } else if dw_t < 5000.0 {
-        DEADWEIGHT_BANDS[1]
-    } else if dw_t < 20000.0 {
-        DEADWEIGHT_BANDS[2]
-    } else {
-        DEADWEIGHT_BANDS[3]
-    }
-}
+pub use ovcd_core::measured::{DEADWEIGHT_BANDS, deadweight_band};
 
 /// The `cargo_class` value of a Cargo Class.
 pub fn cargo_class_value(class: ovcd_core::cargo::CargoClass) -> &'static str {
@@ -151,52 +131,13 @@ pub struct OptionMeasures<'a> {
     pub measured: &'a Measured,
 }
 
-fn arg(m: &MeasureRef, name: &str) -> Result<f64, String> {
-    match m.args.iter().find(|(k, _)| k == name) {
-        Some((_, ArgValue::Number(x))) => Ok(*x),
-        _ => Err(format!("`{}` needs the number argument `{name}`", m.id)),
-    }
-}
-
-/// A heel argument: a whole number of degrees on the 0 to 60 degree grid.
-fn deg(m: &MeasureRef, name: &str) -> Result<i32, String> {
-    let x = arg(m, name)?;
-    if x.fract() == 0.0 && (0.0..=60.0).contains(&x) {
-        Ok(x as i32)
-    } else {
-        Err(format!(
-            "`{}` argument `{name}` must be a whole number of degrees from 0 to 60",
-            m.id
-        ))
-    }
-}
-
 impl MeasureSource for OptionMeasures<'_> {
     fn def(&self, id: &str) -> Option<MeasureInfo> {
         measure_info(id)
     }
 
     fn objects(&self, object: ObjectType) -> Vec<String> {
-        match object {
-            ObjectType::Option => vec![self.option.name.clone()],
-            ObjectType::LoadingCondition => self
-                .measured
-                .conditions
-                .iter()
-                .map(|c| c.name.clone())
-                .collect(),
-            ObjectType::Tank => match &self.measured.tank {
-                Some(t) => (1..=t.n_tanks.max(0))
-                    .map(|i| format!("Tank {i}"))
-                    .collect(),
-                None => Vec::new(),
-            },
-            // No Measure on these objects is computed yet.
-            ObjectType::Hull
-            | ObjectType::CargoTank
-            | ObjectType::BallastTank
-            | ObjectType::SlopTank => Vec::new(),
-        }
+        self.measured.objects(object, &self.option.name)
     }
 
     fn value(&self, m: &MeasureRef, index: usize) -> Result<MeasureValue, String> {
@@ -215,118 +156,11 @@ impl MeasureSource for OptionMeasures<'_> {
                 _ => Err(format!("`{name}` has no value")),
             };
         }
-        if m.id == "check.ok" {
-            let name = match m.args.iter().find(|(k, _)| k == "name") {
-                Some((_, ArgValue::Text(n))) => n,
-                _ => return Err("`check.ok` needs the text argument `name`".to_string()),
-            };
-            return self
-                .measured
-                .checks
-                .iter()
-                .find(|(n, _)| n == name)
-                .map(|(_, ok)| MeasureValue::Bool(*ok))
-                .ok_or_else(|| format!("the result has no check `{name}`"));
-        }
-        if let Some(name) = m.id.strip_prefix("separation.") {
-            let (s, plane) = self
-                .measured
-                .separation
-                .as_ref()
-                .ok_or_else(|| "the Option has no gas cargo-area separation".to_string())?;
-            return match name {
-                "cofferdam" => Ok(MeasureValue::Number(s.cofferdam_m)),
-                "aft" => Ok(MeasureValue::Number(s.aft_separation_m)),
-                "fwd" => Ok(MeasureValue::Number(s.fwd_separation_m)),
-                "tank_end" => Ok(MeasureValue::Text(
-                    if *plane { "plane" } else { "domed" }.to_string(),
-                )),
-                other => Err(format!("no value for Measure `separation.{other}`")),
-            };
-        }
-        if let Some(name) = m.id.strip_prefix("tank.") {
-            let t = self
-                .measured
-                .tank
-                .as_ref()
-                .ok_or_else(|| "the Option has no Type C tanks".to_string())?;
-            let number = |x: f64| Ok(MeasureValue::Number(x));
-            return match name {
-                "vc" => number(t.vc_m3),
-                "side_gap" => number(t.side_gap_m),
-                "bottom_gap" => number(t.bottom_gap_m),
-                "insulation" => number(t.insulation_m),
-                // The thinner wall; the first of equal, as Python's `min`.
-                "wall_thickness" => number(if t.head_wall_mm < t.cylinder_wall_mm {
-                    t.head_wall_mm
-                } else {
-                    t.cylinder_wall_mm
-                }),
-                "weld_factor" => number(t.weld_factor),
-                "allowable_stress" => number(t.allowable_stress_mpa),
-                "rm" => number(t.tensile_strength_mpa),
-                "re" => number(t.yield_strength_mpa),
-                "material" => Ok(MeasureValue::Text(t.material.clone())),
-                other => Err(format!("no value for Measure `tank.{other}`")),
-            };
-        }
-        let c = self
-            .measured
-            .conditions
-            .get(index)
-            .ok_or_else(|| format!("no loading condition {index}"))?;
-        if c.gz.is_empty() {
-            return Err(format!(
-                "{}: the barge does not float with freeboard, so it has no GZ curve",
-                c.name
-            ));
-        }
-        match m.id.as_str() {
-            "gz.area" => {
-                let (from, to) = (deg(m, "from_deg")?, deg(m, "to_deg")?);
-                if from >= to {
-                    return Err("`gz.area` needs from_deg below to_deg".to_string());
-                }
-                Ok(MeasureValue::Number(area(&c.gz, from, to)))
-            }
-            "gz.max_from" => {
-                let from = deg(m, "from_deg")?;
-                // `max()` keeps the first of equal values, as the IS Code criterion does.
-                let mut best: Option<f64> = None;
-                for &(d, g) in &c.gz {
-                    if d >= from && best.is_none_or(|b| g > b) {
-                        best = Some(g);
-                    }
-                }
-                best.map(MeasureValue::Number)
-                    .ok_or_else(|| format!("no GZ at {from} degrees or more"))
-            }
-            "gz.angle_of_max" => Ok(MeasureValue::Number(f64::from(c.max_gz_deg))),
-            "stability.condition_ok" => {
-                // The check `simulate` lists for the condition (`ga::stability_check`).
-                let name = format!("Stability \u{2014} {}", c.name.to_lowercase());
-                self.measured
-                    .checks
-                    .iter()
-                    .find(|(n, _)| *n == name)
-                    .map(|(_, ok)| MeasureValue::Bool(*ok))
-                    .ok_or_else(|| format!("the result has no check `{name}`"))
-            }
-            "gm0" => Ok(MeasureValue::Number(c.gm_fluid_m)),
-            other => Err(format!("no value for Measure `{other}`")),
-        }
+        self.measured.value(m, index)
     }
 
     fn has(&self, measure: &MeasureRef) -> bool {
-        match measure.id.as_str() {
-            // A check the engine did not run for this Option: the Rule does not apply to it.
-            "check.ok" => measure.args.iter().any(|(k, v)| {
-                k == "name"
-                    && matches!(v, ArgValue::Text(n) if self.measured.checks.iter().any(|(c, _)| c == n))
-            }),
-            id if id.starts_with("separation.") => self.measured.separation.is_some(),
-            _ => true,
-        }
+        self.measured.has(measure)
     }
 
     fn missing(&self, object: ObjectType) -> Option<String> {
@@ -369,6 +203,45 @@ impl MeasureSource for OptionMeasures<'_> {
             .input(name)
             .and_then(|i| i.value.as_str())
             .map(str::to_string)
+    }
+}
+
+/// The Option's inputs as the arrangement search reads them for its Rule Sets (#277): every input
+/// with a text value, the derived `service_area` and `cargo_class` (the search works out
+/// `deadweight_band` per candidate), and every input Measure with its registry entry and value.
+pub fn rule_inputs(option: &DesignOption) -> RuleInputs {
+    let source = OptionMeasures {
+        option,
+        measured: &Measured::default(),
+    };
+    let mut applicability: Vec<(String, String)> = Vec::new();
+    for spec in INPUTS {
+        if let Some(v) = source.input(spec.name) {
+            applicability.push((spec.name.to_string(), v));
+        }
+    }
+    for name in ["service_area", "cargo_class"] {
+        if let Some(v) = source.input(name) {
+            applicability.push((name.to_string(), v));
+        }
+    }
+    let mut measures = Vec::new();
+    for spec in INPUTS {
+        let id = format!("input.{}", spec.name);
+        if let (Some(info), Ok(value)) = (measure_info(&id), source.value(&bare(&id), 0)) {
+            measures.push((id, info, value));
+        }
+    }
+    RuleInputs {
+        applicability,
+        measures,
+    }
+}
+
+fn bare(id: &str) -> MeasureRef {
+    MeasureRef {
+        id: id.to_string(),
+        args: Vec::new(),
     }
 }
 
@@ -559,11 +432,23 @@ pub const CHECK_RULES: &[(&str, &str)] = &[
     ("cofferdam min width", "lr-inland/3.6.13/cofferdam"),
     ("opening setback", "lr-inland/3.3.7/opening-setback"),
     ("fwd end bulkhead space", "lr-inland/3.5.3/end-space"),
+    // The checks only the arrangement search makes (`fit`, #277).
+    ("not overloaded", "ovcd/capacity/not-overloaded"),
+    ("freeboard ok", "ovcd/capacity/freeboard"),
+    ("capacity is volume bound", "ovcd/journey/volume-bound"),
+    ("floats", "ovcd/journey/floats"),
+    ("ukc consistent", "ovcd/journey/ukc-consistent"),
+    ("utilisation reasonable", "ovcd/journey/utilisation"),
+    (
+        "freeboard at payload",
+        "ovcd/gas-arrangement/freeboard-at-payload",
+    ),
+    ("Stability \u{2014} not assessed", "ovcd/stability/assessed"),
 ];
 
 /// The id of the Rule a check reports, or `None` for a check no Rule reports.
 pub fn rule_of_check(name: &str) -> Option<&'static str> {
-    if name.starts_with("Stability \u{2014} ") {
+    if name.starts_with("Stability \u{2014} ") && name != "Stability \u{2014} not assessed" {
         return Some("is2008/A.2.2/condition");
     }
     CHECK_RULES
