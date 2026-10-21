@@ -221,7 +221,8 @@ _Avoid_: constraint, clause
 
 **Applicability**:
 The condition on an Option's inputs (Cargo, Cargo Containment, Service Area, and similar) under which a
-Rule or a Rule Set applies. A Rule that does not apply is listed as not applicable, never dropped.
+Rule or a Rule Set applies. It may also name a derived input the engine works out: the Cargo Class or
+the deadweight band. A Rule that does not apply is listed as not applicable, never dropped.
 _Avoid_: scope, filter
 
 **Blocking Rule**:

@@ -8,8 +8,10 @@
 //! table names, and conflicts between two constant Criteria.
 
 use crate::run::canonical_json;
-use crate::trace::measure_info;
-use ovcd_core::rule_trace::{FORMULA_SHAPES, ObjectType, ROW_SHAPES, ValueKind};
+use crate::trace::{applicability_values, measure_info};
+use ovcd_core::rule_trace::{
+    FORMULA_SHAPES, FREE_UNIT_OPERANDS, ObjectType, ROW_SHAPES, ValueKind,
+};
 use ovcd_core::rules::{
     Applicability, ArgValue, Bound, Citation, Codified, Compare, Consequence, Include, Kind,
     KnownConflict, Limit, MeasureRef, Operand, Origin, RowWhen, Rule, RuleSet, SetStatus, Source,
@@ -821,6 +823,10 @@ fn check_set(set: &RuleSet) -> Result<(), String> {
 /// takes, a `check` Rule names a yes/no Measure, a limit's unit is the Measure's unit, and every
 /// table row shape and formula shape is a known one with its coefficients and operands.
 fn check_measures(set: &RuleSet) -> Result<(), String> {
+    check_applicability(&set.applies_when, "the set")?;
+    for r in &set.rules {
+        check_applicability(&r.applies_when, &format!("rule `{}`", r.id))?;
+    }
     for t in &set.tables {
         for (i, row) in t.rows.iter().enumerate() {
             let Some((_, coeffs)) = ROW_SHAPES.iter().find(|(s, _)| *s == row.shape) else {
@@ -908,7 +914,7 @@ fn check_measures(set: &RuleSet) -> Result<(), String> {
                     r.id, table.unit
                 ));
             }
-            operand(r, info.object, at, &table.input_unit)
+            operand(r, info.object, at, Some(&table.input_unit))
         };
         match limit {
             Limit::Constant { .. } => {}
@@ -933,9 +939,12 @@ fn check_measures(set: &RuleSet) -> Result<(), String> {
                         coeffs.join(", ")
                     ));
                 }
-                for (_, op) in operands {
+                for (name, op) in operands {
+                    let free = FREE_UNIT_OPERANDS.contains(&(shape.as_str(), name.as_str()));
                     match op {
-                        Operand::Measure(id) => operand(r, info.object, id, unit)?,
+                        // The coefficients convert this operand, so any number Measure will do.
+                        Operand::Measure(id) if free => operand(r, info.object, id, None)?,
+                        Operand::Measure(id) => operand(r, info.object, id, Some(unit))?,
                         Operand::TableAt { table, at } => table_at(table, at)?,
                     }
                 }
@@ -945,9 +954,27 @@ fn check_measures(set: &RuleSet) -> Result<(), String> {
     Ok(())
 }
 
-/// A Measure a limit reads (a formula operand, a table key): known, with no arguments, in `unit`
-/// (empty: a text key), and on the Rule's object or on the Option.
-fn operand(r: &Rule, object: ObjectType, id: &str, unit: &str) -> Result<(), String> {
+/// Each input an Applicability names can be named (a choice input, `cargo`, or a derived input), and
+/// each value is one of its values. So a typo never makes a Rule silently not apply.
+fn check_applicability(a: &Applicability, whose: &str) -> Result<(), String> {
+    for (input, values) in &a.conditions {
+        let known = applicability_values(input).ok_or_else(|| {
+            format!("{whose}: `applies_when` names `{input}`, which is not an input it can name")
+        })?;
+        if let Some(v) = values.iter().find(|v| !known.contains(v)) {
+            return Err(format!(
+                "{whose}: `applies_when.{input}` has `{v}`; its values are {}",
+                known.join(", ")
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// A Measure a limit reads (a formula operand, a table key): known, with no arguments, a number in
+/// `unit` (`Some("")`: a text key; `None`: a number in any unit), and on the Rule's object or on
+/// the Option.
+fn operand(r: &Rule, object: ObjectType, id: &str, unit: Option<&str>) -> Result<(), String> {
     let info = measure_info(id)
         .ok_or_else(|| format!("rule `{}`: its limit reads unknown Measure `{id}`", r.id))?;
     if !info.args.is_empty() {
@@ -956,15 +983,17 @@ fn operand(r: &Rule, object: ObjectType, id: &str, unit: &str) -> Result<(), Str
             r.id
         ));
     }
-    let unit_ok = if unit.is_empty() {
-        info.value == ValueKind::Text
-    } else {
-        info.value == ValueKind::Number && info.unit == unit
+    let unit_ok = match unit {
+        Some("") => info.value == ValueKind::Text,
+        Some(u) => info.value == ValueKind::Number && info.unit == u,
+        None => info.value == ValueKind::Number,
     };
     if !unit_ok {
         return Err(format!(
-            "rule `{}`: its limit reads `{id}` in `{}`, where `{unit}` is needed",
-            r.id, info.unit
+            "rule `{}`: its limit reads `{id}` in `{}`, where `{}` is needed",
+            r.id,
+            info.unit,
+            unit.unwrap_or("a number")
         ));
     }
     if info.object != ObjectType::Option && info.object != object {
