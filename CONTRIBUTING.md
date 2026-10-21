@@ -45,6 +45,13 @@ reports whether designs moved (`tools/design_impact.py`, see `CHANGELOG.md`).
 - Cite the source of every number — standard, table and page, or the reference vessel.
 - Use the words in `GLOSSARY.md`. If you need a new term, add it there.
 
+## Translations
+
+OVCD's text is in Fluent files under `locales/`, one folder per language (spec 0005). English is
+the source. The other languages are drafts until a native speaker reviews them. To review or
+improve a translation, follow [`locales/REVIEWING.md`](locales/REVIEWING.md). It needs no code
+knowledge. Label the pull request `translation`.
+
 ## Pull requests
 
 1. Open an issue first for anything bigger than a small fix, so we can agree the approach.
