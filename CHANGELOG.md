@@ -212,7 +212,7 @@ a change can be traced later. Newest first.
 
 ### ticket/410-covering-lightship (2026-10-21)
 
-Between `main ed26760` and `this branch 6ad64b4`.
+Between `main aa5fe5a` and `this branch 864f699`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
