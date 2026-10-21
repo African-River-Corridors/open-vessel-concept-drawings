@@ -216,9 +216,9 @@ Table. Each has its exact or closed-form test.
   sections with an independent strip integral of the same shape to 1e−4 relative at 400 strips, and with
   the closed form at the transom section to 1e−12. The difference to the closed form is part of the
   design-impact table.
-- **The Notch** of an ATB barge (spec 0007, #362) is a stern parameter too. If #362 lands first, its
-  closed form is the test of a later generator change. If the switch-over lands first, #362 writes it into
-  the sections. The two lanes agree the order on #362.
+- **The Notch** of an ATB barge (spec 0007, #362) is a stern parameter of the generator (#465), with no
+  closed form in `stern_form.rs`. A half-section may then start and end off the centre line (a slot), so
+  its full section is two polygons; the Notch's forward end is a step. #362 is blocked by #465.
 - **Bow.** Every form but `shipd` and `offsets` has the raked-box bow: a straight rake from the base at
   `L − bow_rake_length_m` to `bow_rake_rise_m` at the bow. Today's main-path inputs give these values, so
   an old file's drawn bow rake now enters the hydrostatics.
@@ -465,9 +465,9 @@ A new **geometry builder lane** builds this spec. It owns, from the hand-over:
 
 Hand-over rules:
 
-- **Tank and stern lane** (owns format version 3; built #350 `stern_form.rs`): it finishes its in-flight
-  stern tickets that edit these three files before the hand-over; the hand-over point is recorded on the
-  parent issue. After it, a stern ticket that needs the hull (the Notch of #362, the stern drawings of
+- **Tank and stern lane** (owns format version 3; built #350 `stern_form.rs`): agreed 2026-10-21, the
+  hand-over follows the merge of #353 and #414 (the mirrored stern-rake LCB). Its next tickets (#354,
+  #357, #356) do not edit these files. After it, a stern ticket that needs the hull (the Notch of #362, the stern drawings of
   #356) asks the geometry lane, or the two lanes agree a ticket order on the issue.
 - **Basis-fixes lane** (#426: Spaces, ballast tanks, loading conditions): `compartments.rs` stays with it
   until #426 closes. The seam is `box_stability::box_condition_at`: its signature holds, and the
@@ -581,6 +581,7 @@ blockers are all closed (`docs/agents/build-process.md`).
 9. #451 import a typed offsets table (blocked by #448)
 10. #452 ShipD-style parametric hull (no bulbs) and its benchmark (blocked by #448)
 11. #453 ShipD-style bulbous bow and stern, and their benchmark (blocked by #452)
+12. #465 the ATB Notch as a stern parameter of the sections (blocked by #447, #448, #357); #362 waits for it
 
 **Phase 2: Vessel Model, 3D viewer, exports**
 12. #454 assemble the Vessel Model (hull, decks, bulkheads, Spaces) (blocked by #448, #426)
