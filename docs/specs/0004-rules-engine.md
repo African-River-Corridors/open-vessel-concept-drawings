@@ -384,8 +384,11 @@ One row per Rule per object, in selection order, then the set's rule order, then
 - **The trace is outside the results hash**, as the `drawing` object is (ADR 0007). Every result number
   is already hashed in its own field, and the stored Rule Set hashes cover the rules. So adding the trace
   changes no hash, and a rule change is reported as a rule change, not as "results differ".
-- The existing `checks` list stays for now, so nothing that reads it breaks. Each check gains the id of
-  the Rule it reports. Removing the duplicate list is a later change.
+- The existing `checks` list stays for now, so nothing that reads it breaks. Each check reports one
+  Rule. The `checks` list is in the results hash, so the Rule id is not written into each check (that
+  would move every saved hash): the table `CHECK_RULES` in `crates/ovcd-format/src/trace.rs` holds the
+  link, and a test over the fixture Designs keeps it complete (#272). Removing the duplicate list is a
+  later change.
 - A blocking failure is a row with outcome `fail`. The Option's `ok` is unchanged in meaning: no
   blocking Rule fails.
 - **A row added in the migration may not change `ok`.** Where a new Rule would fail a design that passes

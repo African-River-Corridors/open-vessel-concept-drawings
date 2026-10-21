@@ -117,7 +117,8 @@ fn each_criterion_at_both_sides_of_its_limit() {
 #[test]
 fn the_set_holds_seven_rules_and_the_weather_criterion_is_not_evaluated() {
     let s = set();
-    assert_eq!(s.rules.len(), 7);
+    // Six criteria, the note of each condition's check (#272) and the weather criterion.
+    assert_eq!(s.rules.len(), 8);
     let weather = s.rule("is2008/A.2.3/weather").unwrap();
     assert!(!weather.evaluated);
     let t = evaluate(&[&s], &One(good()));
@@ -241,7 +242,8 @@ fn every_gas_option_has_the_is_code_rows_of_each_loading_condition() {
                 .iter()
                 .filter(|r| r["rule_sets"][0] == "is2008-a@1.0.0")
                 .count();
-            assert_eq!(is_code, 6 * conditions.len() + 1, "{file}");
+            // ... and the note of each condition's own check (#272).
+            assert_eq!(is_code, 7 * conditions.len() + 1, "{file}");
         }
     }
 }
@@ -250,9 +252,18 @@ fn every_gas_option_has_the_is_code_rows_of_each_loading_condition() {
 fn a_dry_bulk_option_lists_the_is_code_rules_as_not_evaluated() {
     for results in results_of("dry_bulk_box_hold.vdesign") {
         let trace = &results["rule_trace"];
-        assert_eq!(trace["rule_sets"], serde_json::json!(["is2008-a@1.0.0"]));
-        let rows = trace["rows"].as_array().unwrap();
-        assert_eq!(rows.len(), 7);
+        assert_eq!(
+            trace["rule_sets"],
+            serde_json::json!(["is2008-a@1.0.0", "ovcd@1.0.0"])
+        );
+        let rows: Vec<&serde_json::Value> = trace["rows"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|r| r["rule_sets"][0] == "is2008-a@1.0.0")
+            .collect();
+        // The six criteria and the weather criterion block; the condition note does not.
+        assert_eq!(rows.len(), 8);
         assert!(rows.iter().all(|r| r["outcome"] == "not evaluated"));
         assert_eq!(
             trace["verdict"]["blocking_not_evaluated"]

@@ -226,7 +226,12 @@ fn every_gas_option_has_the_igc_rows_of_each_tank_and_the_is_code_rows() {
             let trace = &results["rule_trace"];
             assert_eq!(
                 trace["rule_sets"],
-                serde_json::json!(["igc-2g@1.0.0", "is2008-a@1.0.0"]),
+                serde_json::json!([
+                    "igc-2g@1.0.0",
+                    "is2008-a@1.0.0",
+                    "lr-inland-gas@1.0.0",
+                    "ovcd@1.0.0"
+                ]),
                 "{file}"
             );
             let rows = trace["rows"].as_array().unwrap();

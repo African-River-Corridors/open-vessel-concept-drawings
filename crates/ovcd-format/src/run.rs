@@ -301,7 +301,7 @@ pub fn run_option_with(
         Err(m) if m == CONVOY_NOT_AVAILABLE => return RunOutcome::NotAvailable(m),
         Err(m) => return RunOutcome::Failed(m),
     };
-    let (outcome, measured) = simulate_params_measured(&params);
+    let (outcome, mut measured) = simulate_params_measured(&params);
     match outcome {
         Outcome::Result(v) => match v.get("error").and_then(Value::as_str) {
             Some(message) => RunOutcome::Failed(message.to_string()),
@@ -310,6 +310,20 @@ pub fn run_option_with(
                 let mut v = v;
                 let cost = crate::cost::cost_of(option, &v);
                 // The Rule Trace: not hashed either; the stored Rule Set hashes cover the rules.
+                measured.checks = v
+                    .get("checks")
+                    .and_then(Value::as_array)
+                    .map(|list| {
+                        list.iter()
+                            .filter_map(|c| {
+                                Some((
+                                    c.get("name")?.as_str()?.to_string(),
+                                    c.get("ok")?.as_bool()?,
+                                ))
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default();
                 let rule_trace = match stack_for(library, option, extra) {
                     Ok(selection) => trace_json(
                         &trace_of(&selection, option, &measured),

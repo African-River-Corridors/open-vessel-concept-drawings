@@ -918,6 +918,12 @@ pub struct Measured {
     pub deadweight_t: Option<f64>,
     /// The Type C tank values the IGC Rules read; `None` but for a gas barge.
     pub tank: Option<ovcd_core::barge_capacity::TankRuleValues>,
+    /// The gas cargo-area separation and whether its tanks count as pressure tanks; `None` but for
+    /// a gas barge.
+    pub separation: Option<(ovcd_core::gas_separation::GasSeparationResult, bool)>,
+    /// The result's check list, (name, ok), in order: the verdicts the `ovcd` Rules mirror. Filled
+    /// by the run from the finished result.
+    pub checks: Vec<(String, bool)>,
 }
 
 fn simulate(p: &Map<String, Value>) -> R<Value> {
@@ -1426,6 +1432,15 @@ fn simulate_gas(
                 conditions,
                 deadweight_t: Some(f.payload_t),
                 tank: r.tank_rules.clone(),
+                separation: r.separation.clone().map(|s| {
+                    let pressure = f
+                        .engine_inputs
+                        .separation
+                        .as_ref()
+                        .is_none_or(|i| i.is_pressure_tank);
+                    (s, pressure)
+                }),
+                checks: Vec::new(),
             },
         )
     })

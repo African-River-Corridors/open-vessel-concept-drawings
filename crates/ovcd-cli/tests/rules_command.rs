@@ -129,7 +129,13 @@ fn a_rule_set_changes_no_result_and_shows_in_the_trace() {
     // The default stack of a gas Option, then the loaded set.
     assert_eq!(
         trace["rule_sets"],
-        json!(["igc-2g@1.0.0", "is2008-a@1.0.0", "example@1.0.0"])
+        json!([
+            "igc-2g@1.0.0",
+            "is2008-a@1.0.0",
+            "lr-inland-gas@1.0.0",
+            "ovcd@1.0.0",
+            "example@1.0.0"
+        ])
     );
     let not_evaluated = trace["verdict"]["blocking_not_evaluated"]
         .as_array()
