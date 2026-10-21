@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Design change (issue #418, two maintainer decisions): no hidden check gates `fit`. The two capacity checks that test the full tank volume, `not overloaded` and `freeboard ok`, no longer remove candidates: a candidate is de-rated to its payload, and the carried draught is gated by `freeboard at payload` (with the user's freeboard) and the journey `floats` check. `freeboard ok` now reads the user's freeboard, not a hidden 0.3 m. Every result lists the two as warnings (they were hidden), and a gas result now also lists the search's own checks of the answer (`capacity is volume bound`, `floats`, `ukc consistent`, `utilisation reasonable` as a warning, `tank length over diameter`, `freeboard at payload`), so every check that can remove a candidate is visible. The `ovcd` Rules `ovcd/capacity/freeboard` and `ovcd/capacity/not-overloaded` are `warn`. The CLI summary and the drawing's failed-checks note count failed errors only; the CLI lists failed warnings on their own line. Every results hash moves (177 of 177 design-impact cases; no cargo, draught or feasibility value moves); the fixtures and the legacy test files are re-stamped from `ovcd run` (the v1 ADN file keeps its old hash, as its test expects a difference). API: `simulate.box` and `simulate.hopper_channel` are new known differences from 0.1.0. New core function `gas_arrangement::answer_search_checks`.
 - Known limitation (issue #282, as the maintainer decided): the 0 to 40 degree and 30 to 40 degree areas of IS Code 2008 Part A 2.2.1 always run to 40 degrees, because the model has no down-flooding angle yet. The README says so, and the app's Stability view lists it under Limitations for every gas design (new message `app-stab-limit-downflooding`; draft `es`, `pt` and `zh-Hans`). The Rule Trace rows of the two areas already link the finding. The engine's own limitation list is part of the results and is not changed, so no result or hash moves.
 - Evaluation harness (issue #279): rule data mutation. For each numeric limit and coefficient of each evaluated Rule of the selected sets, the harness writes a mutated copy of the set with that number moved one step to each side, loads it at run time, and runs the corpus. A mutant that no case notices is a weak-corpus warning; `results.md` lists every mutant and the cases that notice it. The steps are the big steps of the boundary mutants per unit (m rad 0.002, m 0.01, degrees 2; 1 % for coefficients and table values). On `is2008-a` all 12 mutants are noticed. The harness runs in about a second, so it stays in the pull-request gate. No result moves.
 - Evaluation harness (issue #278): the harness reads the engine's Rule Trace and compares by rule id. A case's `expected` entries are keyed by the `is2008-a` rule ids (`area_0_30` is now `is2008/A.2.2.1/area-0-30`, and so on); `oracle/write_cases.py` and `oracle/mutants.py` write the new keys, and no value changed. A new eval function, `gas_stability.box_trace`, gives the Rule Trace of one box loading condition under the selected Rule Sets (built-in, or loaded at run time); it is the harness's, not part of the Python API. Each disagreement goes in one triage bucket: `model-gap`, `known-limitation`, `code-bug`, `rule-suspect` or `needs-expert`. `results.md` lists coverage per Rule Set and per Rule by id, and the buckets. A false pass on a blocking Rule still fails the build; a `not evaluated` row against an expected `fail` is a model gap, never a pass. The corpus result is unchanged: 253 known-good and 108 known-bad verdicts, 0 false fails, 0 false passes, no disagreement. No result moves.
@@ -257,6 +258,53 @@ Between `main 5e36bd6` and `this branch 2042246`.
 | sweep CN-derived bulk 3 (130x17.2) | `stern_block_mass.items[5].label` | lift column | shaft lines | changed |
 | sweep CN-derived bulk 3 (130x17.2) | `stern_block_mass.items[6].label` | small items | rudders and steering gear | changed |
 | ... | 32380 more changed quantities | | | |
+### 418 (2026-10-21)
+
+Between `main f706146` and `this branch bf8eaf8`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration amaggi-box-2000 | `checks[2].message` | cargo zone 50.13 m = LOA 61.0 - bow void 7.33 m - stern void 3.50 m | volume-bound load must float within the moulded depth | changed |
+| calibration amaggi-box-2000 | `checks[2].name` | cargo zone positive | not overloaded | changed |
+| calibration amaggi-box-2000 | `checks[2].ok` | True | False | changed |
+| calibration amaggi-box-2000 | `checks[2].severity` | error | warning | changed |
+| calibration amaggi-box-2000 | `checks[3].message` | absent | freeboard 0.00 m >= required 0.3 m | changed |
+| calibration amaggi-box-2000 | `checks[3].name` | absent | freeboard ok | changed |
+| calibration amaggi-box-2000 | `checks[3].ok` | absent | False | changed |
+| calibration amaggi-box-2000 | `checks[3].severity` | absent | warning | changed |
+| calibration amaggi-box-2000 | `checks[4].message` | absent | cargo zone 50.13 m = LOA 61.0 - bow void 7.33 m - stern void 3.50 m | changed |
+| calibration amaggi-box-2000 | `checks[4].name` | absent | cargo zone positive | changed |
+| calibration amaggi-box-2000 | `checks[4].ok` | absent | True | changed |
+| calibration amaggi-box-2000 | `checks[4].severity` | absent | error | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[2].message` | cargo zone 51.11 m = LOA 61.0 - bow void 6.35 m - stern void 3.50 m | volume-bound load must float within the moulded depth | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[2].name` | cargo zone positive | not overloaded | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[2].ok` | True | False | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[2].severity` | error | warning | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[3].message` | absent | freeboard 0.00 m >= required 0.3 m | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[3].name` | absent | freeboard ok | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[3].ok` | absent | False | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[3].severity` | absent | warning | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[4].message` | absent | cargo zone 51.11 m = LOA 61.0 - bow void 6.35 m - stern void 3.50 m | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[4].name` | absent | cargo zone positive | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[4].ok` | absent | True | changed |
+| calibration canal-box-200x25x12-pb2230 | `checks[4].severity` | absent | error | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[2].message` | cargo zone 51.11 m = LOA 61.0 - bow void 6.35 m - stern void 3.50 m | volume-bound load must float within the moulded depth | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[2].name` | cargo zone positive | not overloaded | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[2].ok` | True | False | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[2].severity` | error | warning | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[3].message` | absent | freeboard 0.00 m >= required 0.3 m | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[3].name` | absent | freeboard ok | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[3].ok` | absent | False | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[3].severity` | absent | warning | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[4].message` | absent | cargo zone 51.11 m = LOA 61.0 - bow void 6.35 m - stern void 3.50 m | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[4].name` | absent | cargo zone positive | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[4].ok` | absent | True | changed |
+| calibration canal-box-200x35x12-cby222 | `checks[4].severity` | absent | error | changed |
+| calibration canal-box-200x35x12-imt201 | `checks[2].message` | cargo zone 51.11 m = LOA 61.0 - bow void 6.35 m - stern void 3.50 m | volume-bound load must float within the moulded depth | changed |
+| calibration canal-box-200x35x12-imt201 | `checks[2].name` | cargo zone positive | not overloaded | changed |
+| calibration canal-box-200x35x12-imt201 | `checks[2].ok` | True | False | changed |
+| calibration canal-box-200x35x12-imt201 | `checks[2].severity` | error | warning | changed |
+| ... | 6863 more changed quantities | | | |
 
 ### 277 (2026-10-21)
 
