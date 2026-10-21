@@ -566,5 +566,30 @@ Open (for the build, not blocking):
 
 ## Build tickets
 
-See the parent issue. Each ticket has native blocked-by links; a builder takes the next ticket whose
+Parent issue #442. Each ticket has native blocked-by links; a builder takes the next ticket whose
 blockers are all closed (`docs/agents/build-process.md`).
+
+**Phase 1: hull geometry and hydrostatics**
+1. #443 Sections Table type and exact polygon integrator, exact on the box
+2. #444 equilibrium with free trim and the GZ curve on the sections (blocked by #443)
+3. #445 box and raked box generators write sections (blocked by #443)
+4. #446 format version 3 hull block (inputs, schema, legacy values) (blocked by #445)
+5. #447 the Stern Forms (transom, pram, tunnel) write sections (blocked by #445, #353)
+6. #448 hydrostatics and GZ switch to the sections table; Cb becomes a result (blocked by #444, #446, #447, #426)
+7. #449 bilge radius, sheer and camber (blocked by #448)
+8. #450 V-bottom and chine hull forms (blocked by #448, #449)
+9. #451 import a typed offsets table (blocked by #448)
+10. #452 ShipD-style parametric hull (no bulbs) and its benchmark (blocked by #448)
+11. #453 ShipD-style bulbous bow and stern, and their benchmark (blocked by #452)
+
+**Phase 2: Vessel Model, 3D viewer, exports**
+12. #454 assemble the Vessel Model (hull, decks, bulkheads, Spaces) (blocked by #448, #426)
+13. #455 Spaces clipped by the hull, in the results (blocked by #454)
+14. #456 meshes from the core, and the mesh hash in the parity check (blocked by #454)
+15. #457 mesh and section calls in the WebAssembly session and the desktop shell (blocked by #456)
+16. #458 3D view with three.js: orbit, layers, colours by Space type, pick (blocked by #457)
+17. #459 movable section plane and the waterline of each loading condition (blocked by #458)
+18. #460 export to glTF (blocked by #456)
+19. #461 watertight STL or OBJ panel mesh and offsets CSV export (blocked by #456, #451)
+
+**Before 0.3 ships (maintainer):** phase 1 closed, #274 and #275 closed, format version 3 frozen, the version bump.
