@@ -213,6 +213,8 @@ msg-convoy-not-available = 船队结果尚不可用
 ## crates/ovcd-format/src/simulate.rs
 
 # status: draft
+warn-channel-no-bottom-width = 航道有水深但没有底宽，因此不校核航行下沉量、Schijf 限速和阻塞比，航速曲线只适用于深水。吃水限制仍使用水深。请输入航道底宽以进行这些校核。
+# status: draft
 name-governs-draught = 吃水——{ $limit }
 # status: draft
 check-feasible-arrangement = 此船体上没有通过全部校核的布置。显示的是最接近的布置。它不通过：{ $fails }。
