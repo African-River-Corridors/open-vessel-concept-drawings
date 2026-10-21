@@ -28,6 +28,7 @@ pub mod gas_stability;
 pub mod hull;
 pub mod hydrostatics;
 pub mod journey_derating;
+pub mod liquid_bulk;
 pub mod loading_conditions;
 pub mod lpg_saturation;
 pub mod machinery;

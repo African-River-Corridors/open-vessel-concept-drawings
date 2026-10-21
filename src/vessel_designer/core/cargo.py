@@ -1,7 +1,7 @@
-"""Cargo properties for LNG and LPG variants."""
+"""Cargo properties for LNG and LPG variants, bauxite and crude oil."""
 
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Generic, Optional, TypeVar
 from .._bridge import call as _call
 
 
@@ -14,7 +14,8 @@ class CargoProperties:
     temperature: float      # Storage temperature (deg C)
     pressure: float         # Storage pressure (barg)
     description: str = ""
-    phase: str = "liquid_gas"  # "liquid_gas" (cryogenic tanks) or "dry_bulk" (hopper hold)
+    phase: str = "liquid_gas"  # "liquid_gas" (cryogenic tanks), "dry_bulk" (hopper hold) or "liquid_bulk" (cargo tanks)
+    status: str = "released"   # "released", or "development" (work in development; spec 0006 section 4)
 
 
 CARGO_DATABASE: Dict[str, CargoProperties] = {
@@ -79,6 +80,84 @@ CARGO_DATABASE: Dict[str, CargoProperties] = {
         pressure=0.0,
         description="Dry bulk bauxite ore (stowage density, ~0.67 m3/t)",
         phase="dry_bulk",
+    ),
+    "crude_oil": CargoProperties(
+        name="Crude oil",
+        # The default Crude Grade: density at 15 C. An estimate (the middle of the SG 0.77 to 0.97
+        # range of published assays). The grade data, with a status and a basis for every value,
+        # is CRUDE_GRADES below.
+        density=870.0,
+        temperature=15.0,
+        pressure=0.0,
+        description="Crude oil, default grade (density at 15 C; see liquid_bulk::crude_grade)",
+        phase="liquid_bulk",
+        status="development",
+    ),
+}
+
+
+_T = TypeVar("T")
+
+
+@dataclass
+class Graded(Generic[_T]):
+    """A value with its status and its basis. `status` is "sourced" (a document that was read) or
+    "estimate" (a working value; the basis says why)."""
+
+    value: _T
+    status: str
+    basis: str
+
+
+@dataclass
+class CrudeGrade:
+    """The properties of one crude oil that drive a design (spec 0006 section 3.1). The flags are
+    "unknown", "no" or "yes"; `aquatic` is "unknown", "none", "n2" or "n1". An unknown flag gives
+    ADN vessel type C (decision D2 of spec 0006)."""
+
+    name: str
+    density_kg_m3: Graded[float]               # at density_reference_c
+    density_reference_c: float
+    design_density_kg_m3: Graded[float]        # for structure and tank test head
+    sour: Graded[bool]                         # UN 3494: always ADN type C
+    cmr: Graded[str]
+    benzene_over_10_percent: Graded[str]
+    aquatic: Graded[str]
+    flash_point_below_23c: Graded[str]
+    vapour_pressure_50c_at_least_1kpa: Graded[str]
+    pour_point_c: Optional[Graded[float]]      # None: not known, no heating assumed
+    carriage_temperature_c: Optional[Graded[float]]   # None: ambient
+    vapour_pressure_class: Graded[str]         # "low" or "volatile"
+
+
+_UNKNOWN = "Not known: unknown gives type C (spec 0006 decision D2)"
+
+# Kept equal to the Rust data (`ovcd-core/src/liquid_bulk/crude_grade.rs`) by tests/test_crude_grade.py.
+CRUDE_GRADES: Dict[str, CrudeGrade] = {
+    "crude_oil": CrudeGrade(
+        name="Crude oil (default grade)",
+        density_kg_m3=Graded(
+            870.0, "estimate",
+            "Middle of the SG 0.77 to 0.97 range of crude assays (03-design-practice.md 1.1); spec 0006 section 3.1"),
+        density_reference_c=15.0,
+        design_density_kg_m3=Graded(
+            1025.0, "estimate",
+            "Designer practice 1.015 to 1.025 t/m3 for tank scantlings (03-design-practice.md 1.1); spec 0006 section 3.1"),
+        sour=Graded(
+            False, "estimate",
+            "Not sour until the user says so; UN 3494 is always ADN type C (ADN 2025 3.2.3.2 Table C, column 6)"),
+        cmr=Graded("unknown", "estimate", _UNKNOWN),
+        benzene_over_10_percent=Graded("unknown", "estimate", _UNKNOWN),
+        aquatic=Graded("unknown", "estimate", _UNKNOWN),
+        flash_point_below_23c=Graded(
+            "yes", "estimate",
+            "Crude oil is Class 3, group F1 in ADN 2025 Table C (UN 1267); flash point below 23 deg C is the usual case"),
+        vapour_pressure_50c_at_least_1kpa=Graded(
+            "yes", "estimate",
+            "Published crude assays give vapour pressure far above 1 kPa at 50 deg C (03-design-practice.md 1.3: Bakken 115 kPa maximum)"),
+        pour_point_c=None,
+        carriage_temperature_c=None,
+        vapour_pressure_class=Graded("low", "estimate", "spec 0006 section 3.1"),
     ),
 }
 

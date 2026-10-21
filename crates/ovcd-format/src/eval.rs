@@ -225,6 +225,7 @@ fn cargo_json(c: &CargoProperties) -> Value {
         "pressure": c.pressure,
         "description": c.description,
         "phase": c.phase.key(),
+        "status": c.status.key(),
     })
 }
 
@@ -238,6 +239,12 @@ fn cargo(function: &str, args: &Value) -> Result<Value, EvalError> {
             ovcd_core::cargo::CARGO_DATABASE
                 .iter()
                 .map(|(key, c)| json!({ "key": key, "cargo": cargo_json(c) }))
+                .collect(),
+        )),
+        "crude_grades" => ok(Value::Array(
+            ovcd_core::liquid_bulk::crude_grade::CRUDE_GRADES
+                .iter()
+                .map(|(key, g)| json!({ "key": key, "grade": g }))
                 .collect(),
         )),
         other => Err(EvalError::BadInput(format!(

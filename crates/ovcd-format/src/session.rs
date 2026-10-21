@@ -130,6 +130,7 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
                         "value": key,
                         "label": p.name,
                         "phase": p.phase.key(),
+                        "status": p.status.key(),
                         "description": p.description,
                     })
                 })

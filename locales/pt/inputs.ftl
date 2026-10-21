@@ -41,6 +41,8 @@ choice-cargo-lpg-butane = GLP (Butano)
 choice-cargo-lpg-mix = GLP (60/40 Propano/Butano)
 # status: draft
 choice-cargo-bauxite = Bauxita
+# status: draft
+choice-cargo-crude-oil = Petróleo bruto
 
 # status: draft
 input-hull-form = Forma do casco
