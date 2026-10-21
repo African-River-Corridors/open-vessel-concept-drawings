@@ -110,13 +110,6 @@ const MIN_DIM_MM: f64 = 8.0;
 const CRADLE_WRAP_DEG: f64 = 120.0;
 /// A cradle stands this far outside the tank envelope, in metres.
 const CRADLE_CLEARANCE_M: f64 = 0.05;
-/// Half the base of a dome in the midship section, as a fraction of the tank diameter, when the
-/// results give no dome diameter.
-const DOME_HALF_BASE_OF_OD: f64 = 0.15;
-/// Half the base of a dome in the elevation, as a fraction of one tank's length, and its floor in
-/// metres, when the results give no dome diameter.
-const DOME_HALF_BASE_OF_LENGTH: f64 = 0.06;
-const DOME_HALF_BASE_MIN_M: f64 = 1.2;
 /// A thruster is drawn as a circle: in elevation a fraction of the thruster room length (at most
 /// 1.1 m) standing 0.2 m above the keel, in plan a fraction (at most 1.3 m).
 const THRUSTER_R_ELEVATION_OF_ROOM: f64 = 0.30;
@@ -278,7 +271,8 @@ enum Containment {
         support_height: f64,
         /// `drawing.dome_height_m`, if the results have it.
         dome: Option<f64>,
-        /// `drawing.tank.dome_diameter_m` (issue #316), if the results have it.
+        /// `drawing.tank.dome_diameter_m` (issue #316); the results must give it when there is a
+        /// dome (issue #406).
         dome_diameter: Option<f64>,
         /// The head length over the tank radius (issue #375): 1 for a hemispherical head, 0.5 for a
         /// 2:1 semi-ellipsoidal one (`drawing.tank.head_type`).
@@ -331,7 +325,14 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
                 double_bottom: need(results, &["drawing", "double_bottom_m"])?,
                 support_height: need(results, &["drawing", "tank_support_height_m"])?,
                 dome: num_at(results, &["drawing", "dome_height_m"]),
-                dome_diameter: num_at(results, &["drawing", "tank", "dome_diameter_m"]),
+                // A dome is drawn at the core's diameter in force (issue #316); with a dome, the
+                // results must give it (issue #406: no drawing proportion stands in for it).
+                dome_diameter: match num_at(results, &["drawing", "dome_height_m"]) {
+                    Some(h) if h > 0.0 => {
+                        Some(need(results, &["drawing", "tank", "dome_diameter_m"])?)
+                    }
+                    _ => None,
+                },
                 head_ratio: match results["drawing"]["tank"]["head_type"].as_str() {
                     Some("ellipsoidal_2to1") => 0.5,
                     _ => 1.0,
@@ -476,10 +477,15 @@ impl Hull {
         }
     }
 
-    /// The dome height of the gas tanks, if the results have a positive one.
-    fn dome(&self) -> Option<f64> {
+    /// The dome: its rise above the tank top and half its base, from the core's dome height and
+    /// diameter in force (issue #316); `None` with no dome.
+    fn dome(&self) -> Option<(f64, f64)> {
         match &self.containment {
-            Containment::Tanks { dome: Some(d), .. } if *d > 0.0 => Some(*d),
+            Containment::Tanks {
+                dome: Some(rise),
+                dome_diameter: Some(d),
+                ..
+            } if *rise > 0.0 && *d > 0.0 => Some((*rise, d / 2.0)),
             _ => None,
         }
     }
@@ -489,18 +495,6 @@ impl Hull {
         match &self.containment {
             Containment::Tanks { head_ratio, .. } => *head_ratio,
             _ => 1.0,
-        }
-    }
-
-    /// Half the base of a dome, from the dome diameter in force (issue #316); `None` when the
-    /// results do not give it (an older result), and the drawing keeps its proportions.
-    fn dome_half_base(&self) -> Option<f64> {
-        match &self.containment {
-            Containment::Tanks {
-                dome_diameter: Some(d),
-                ..
-            } if *d > 0.0 => Some(d / 2.0),
-            _ => None,
         }
     }
 
@@ -962,7 +956,7 @@ fn elevation_gas_detail(c: &mut Canvas, h: &Hull, labels: &mut Vec<(String, [f64
             [x1, (db + top) / 2.0],
         ));
     }
-    if let (Some(rise), Some((length, starts, _))) = (h.dome(), h.tank_layout()) {
+    if let (Some((rise, half_base)), Some((length, starts, _))) = (h.dome(), h.tank_layout()) {
         let r = od / 2.0;
         let layer = if yc + r >= h.depth {
             "OBJECT"
@@ -971,10 +965,7 @@ fn elevation_gas_detail(c: &mut Canvas, h: &Hull, labels: &mut Vec<(String, [f64
         };
         for x in &starts {
             let mid = x + length / 2.0;
-            let half = h
-                .dome_half_base()
-                .unwrap_or((DOME_HALF_BASE_OF_LENGTH * length).max(DOME_HALF_BASE_MIN_M))
-                .min(length / 2.0 - h.head_ratio() * r);
+            let half = half_base.min(length / 2.0 - h.head_ratio() * r);
             if half > 0.0 {
                 c.dome(layer, mid, yc + r, half, rise);
             }
@@ -1535,11 +1526,8 @@ fn section_gas_detail(
         }
     }
     // a dome on top of each tank
-    if let Some(rise) = h.dome() {
-        let half_base = h
-            .dome_half_base()
-            .unwrap_or(DOME_HALF_BASE_OF_OD * od)
-            .min(0.95 * r);
+    if let Some((rise, half_base)) = h.dome() {
+        let half_base = half_base.min(0.95 * r);
         let base = yc + (r * r - half_base * half_base).sqrt();
         let sag = yc + r + rise - base;
         for (i, x) in centres.iter().enumerate() {
