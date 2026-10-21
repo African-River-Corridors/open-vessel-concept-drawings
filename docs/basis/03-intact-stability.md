@@ -1,6 +1,8 @@
 # Intact stability
 
 > Concept and preliminary design only. Not for approval. Draft: needs expert review.
+>
+> Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
 **For:** stability specialist  ·  **Code:** `crates/ovcd-core/src/gas_stability.rs`, `barge_capacity.rs` (`bulk_gm`),
 `gas_arrangement.rs` (stability checks), `hydrostatics.rs` (legacy API only)  ·  **Rule Sets:** none loaded yet. The
@@ -88,7 +90,7 @@ For a **dry bulk Cargo** (work in development):
 
 A port of the original engine's GM function. Only the Python API `hydrostatics.calculate_stability` and
 `ovcd_format::eval` call it; `simulate` and `fit` do not. It differs from `gas_stability` (cargo KG at the tank
-centre, a stores item, the fill read as a height fraction). See the proposals file.
+centre, a stores item, the fill read as a height fraction). see the triage tickets.
 
 ## Assumptions, rules and estimates
 

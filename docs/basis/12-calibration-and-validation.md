@@ -1,6 +1,8 @@
 # Calibration and validation
 
 > Concept and preliminary design only. Not for approval. Draft: needs expert review.
+>
+> Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
 **For:** Any reviewer  ·  **Code:** `src/vessel_designer/calibration.py`, `calibration/`, `evaluation/run.py`, `evaluation/oracle/`, `tools/design_impact.py`, `tools/web_parity.mjs`, `tools/check_fixture_hashes.py`, `tools/draw_crosscheck.py`, `.github/workflows/ci.yml`  ·  **Rule Sets:** none (the harness checks the IS Code 2008 Part A 2.2 criteria)
 

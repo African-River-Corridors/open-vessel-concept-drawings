@@ -1,6 +1,8 @@
 # Drawings
 
 > Concept and preliminary design only. Not for approval. Draft: needs expert review.
+>
+> Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
 **For:** naval architect, draughtsperson  ·  **Code:** `crates/ovcd-format/src/ga.rs` (view builder),
 `crates/ovcd-draw/` (Drawing Format Standard, Rust), `crates/ovcd-format/src/simulate.rs` (the `geometry`
@@ -109,7 +111,7 @@ Each row is one drawn element. "Source or basis" starts with the geometry source
 | DR-A24 | Hold ends and inner bottom (dry) | Hidden hold ends from inner bottom to deck; hidden inner bottom along the full hull | Method | Input: `hold_double_bottom_m`, default 1.2 m (`drawing.double_bottom_m`) | `ga.rs` `side_elevation` | Unknown |
 | DR-A25 | Hatch coaming (dry) | Above the deck over the hold length (elevation); two vertical lines at the hold top width (section) | Method | Input: `hatch_coaming_height_m`, default 1.0 m | `ga.rs` `side_elevation`, `midship_section` | Unknown |
 | DR-A26 | Hold opening (plan) | Rectangle of the hold top width over the cargo zone; bottom width hidden if different | Method | Computed result: `geometry.hold_top_width_m`, `hold_bottom_width_m` | `ga.rs` `plan` | Unknown |
-| DR-A27 | Hopper slope (section) | Straight line from (top width / 2, deck) to (bottom width / 2, inner bottom) | Method | Computed result: top and bottom width. The drawn slope is not the input slope: see proposals E1 | `ga.rs` `midship_section` | Unknown: drawn hold area differs from the computed one |
+| DR-A27 | Hopper slope (section) | Straight line from (top width / 2, deck) to (bottom width / 2, inner bottom) | Method | Computed result: top and bottom width. The drawn slope is not the input slope: see the triage tickets | `ga.rs` `midship_section` | Unknown: drawn hold area differs from the computed one |
 | DR-A28 | Tank outer diameter | Circle (section) and stadium (elevation, plan) at the Tank Outer Diameter (insulated face) | Method | Computed result: `geometry.tank_outer_diameter_m` | `ga.rs` `read_hull` | Unknown |
 | DR-A29 | Tanks across and along | Count from the arrangement | Method | Computed result: `arrangement.n_wide`, `n_long` | `ga.rs` `tank_layout` | Unknown |
 | DR-A30 | Tank length and spacing | Length = (cargo zone − (n_long − 1) × 2.0 m) / n_long; first tank at the stern void end; across: from −(beam − 2 × side clearance) / 2, pitch OD + 1.0 m | Fixed in code | Computed result (cargo zone, OD, side clearance) and fixed gaps 2.0 m and 1.0 m read from `BargeInputs` defaults, the same as the core | `ga.rs` `tank_layout`, `read_hull` | Unknown |
@@ -117,10 +119,10 @@ Each row is one drawn element. "Source or basis" starts with the geometry source
 | DR-A32 | Tank height | Tank bottom = double bottom + support height; centre = bottom + OD / 2 | Method | Computed result: `drawing.double_bottom_m` (= max(0, bottom clearance − support)); input `tank_support_height_m`, default 0.5 m | `ga.rs` `tank_bottom`, `tank_centre_y` | Unknown |
 | DR-A33 | Tank above and below the deck | Elevation: stadium split at deck height. Plan: hidden full outline, plus the chord outline at deck height | Method | Computed result | `ga.rs` `stadium_split`, `chord_half` | Unknown |
 | DR-A34 | Double bottom (gas) | Elevation: hidden line along the hull. Section: line across and a `lines` hatch under it. Only if > 0 | Method | Computed result: `drawing.double_bottom_m` | `ga.rs` `elevation_gas_detail`, `section_gas_detail` | Unknown |
-| DR-A35 | Wing ballast tank | Inboard wall and top per side; top = tank bottom + ratio × OD, cut at the deck. Not drawn if its width ≥ side clearance | Method | Computed result: `drawing.wing_tank_width_m` (in practice 0.4 m, see proposals E3); input `wing_tank_height_ratio`, default 0.66 | `ga.rs` `wing_tank` | Non-conservative: the cut at the deck hides the side extension the weights count (proposals E2) |
+| DR-A35 | Wing ballast tank | Inboard wall and top per side; top = tank bottom + ratio × OD, cut at the deck. Not drawn if its width ≥ side clearance | Method | Computed result: `drawing.wing_tank_width_m` (in practice 0.4 m, see the triage tickets; input `wing_tank_height_ratio`, default 0.66 | `ga.rs` `wing_tank` | Non-conservative: the cut at the deck hides the side extension the weights count (see the triage tickets) |
 | DR-A36 | Void beside the wing tank | `ZONE` line from the wing tank wall, width = min(gap, side clearance − wing width) | Method | Input: `wing_tank_gap_m`, default 0.6 m | `ga.rs` `wing_tank` | Unknown |
 | DR-A37 | Cradle (saddle) | Section only: arc of 120° under each tank, 0.05 m outside it, two legs down to the double bottom | Fixed in code | Fixed proportion (`CRADLE_WRAP_DEG`, `CRADLE_CLEARANCE_M`). Saddle height is the support height (DR-A32) | `ga.rs` `section_gas_detail` | Unknown (symbol only) |
-| DR-A38 | Dome | Curve on each tank top. Rise = dome height. Base: section 0.30 × OD; elevation 2 × max(0.06 × tank length, 1.2 m), at most tank length − OD | Fixed in code | Rise: input `tank_dome_height_m`, default 2.0 m. Base and shape: fixed proportion; the dome diameter input is not read (proposals E4) | `ga.rs` `DOME_*`, `Canvas::dome` | Unknown |
+| DR-A38 | Dome | Curve on each tank top. Rise = dome height. Base: section 0.30 × OD; elevation 2 × max(0.06 × tank length, 1.2 m), at most tank length − OD | Fixed in code | Rise: input `tank_dome_height_m`, default 2.0 m. Base and shape: fixed proportion; the dome diameter input is not read (see the triage tickets) | `ga.rs` `DOME_*`, `Canvas::dome` | Unknown |
 | DR-A39 | Side clearance label | Value at the gap between the hull side and the first tank | Method | Computed result: `geometry.side_clearance_m` | `ga.rs` `midship_section` | Unknown |
 | DR-A40 | Bottom clearance label | "BOTTOM CLEARANCE x m", or "TANK BOTTOM x m (CLEARANCE y m)" when they differ | Method | Computed result: `geometry.bottom_clearance_m` and DR-A32 | `ga.rs` `midship_section` | Unknown |
 | DR-A41 | Section deck line | Stops at each tank circle that passes through the deck | Method | Computed result | `ga.rs` `section_deck_line` | Unknown |
@@ -159,7 +161,7 @@ The drawing constants in DR-A23, DR-A30, DR-A31, DR-A37, DR-A38 and DR-A43 are n
   when the wing tank top is above the deck; the forward separation and service space; the engine room, gas
   valve unit room and generator sets of the stern block; the raised wheelhouse; the ballast waterline;
   the air draft; separate holds (`n_holds`); containers in a container hold; the bulk wing voids as
-  labelled spaces. See the proposals file.
+  labelled spaces. see the triage tickets.
 - The "midship section" is a typical section through the tanks or the hold. It is not cut at
   amidships: with two tanks in line it can show a tank where amidships falls in the gap between tanks.
 - The three views can have different scales. A view is not at a fixed scale for a given hull.
@@ -168,7 +170,7 @@ The drawing constants in DR-A23, DR-A30, DR-A31, DR-A37, DR-A38 and DR-A43 are n
 - There is no title block, no drawing number and no revision register. The status is always `concept`.
 - `crates/ovcd-core/src/ga_adapter.rs` is a port of the earlier Python drawing adapter. The view builder
   does not use it. It serves the parity harness (`eval.rs`) and one core test only.
-- Findings for the register (#121): see `proposals/11-drawings.md`, errors E1 to E4.
+- Findings for the register (#121): see the engineering basis triage tickets, errors E1 to E4.
 
 ## Evidence
 

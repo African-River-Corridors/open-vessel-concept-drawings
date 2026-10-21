@@ -1,6 +1,8 @@
 # Rules and Rule Sets
 
 > Concept and preliminary design only. Not for approval. Draft: needs expert review.
+>
+> Code state: written against `main` at commit `f6d446c` (2026-10-20). **Out of date:** since then the Rule Set loader (#268), the evaluator and Rule Trace (#269), `is2008-a` (#270), `igc-2g` (#271) and `ovcd` / `lr-inland-gas` (#272) have merged. A rewrite is ticketed.
 
 **For:** Classification and regulatory specialist  ·  **Code:** `crates/ovcd-core/src/checks.rs`,
 `gas_stability.rs`, `gas_separation.rs`, `protective_location.rs`, `gas_arrangement.rs`,

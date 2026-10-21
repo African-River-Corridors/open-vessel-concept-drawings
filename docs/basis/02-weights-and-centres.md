@@ -1,6 +1,8 @@
 # Weights and centres
 
 > Concept and preliminary design only. Not for approval. Draft: needs expert review.
+>
+> Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
 **For:** naval architect, weight engineer  ·  **Code:** `crates/ovcd-core/src/weights.rs`, `barge_capacity.rs`,
 `gas_stability.rs` (weight split), `hydrostatics.rs` (legacy centres), `models.rs`, `aft_arrangement.rs`;
@@ -224,7 +226,7 @@ the app. Some are fields of `BargeCapacityInputs` or `BargeInputs` and can be se
 - The main result has no LCG, trim or TCG (WC-A48, WC-A49). The legacy LCG is reachable only through the parity
   interface.
 - No weight margin or growth allowance is added.
-- Findings go to the register (#121) after triage. See `proposals/02-weights-and-centres.md`.
+- Findings go to the register (#121) after triage. See the findings register (#121) and the engineering basis triage tickets.
 
 ## Evidence
 

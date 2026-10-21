@@ -108,6 +108,9 @@ Each area has a companion file `proposals/<nn>-<slug>.md`. It is not published. 
 
 ## Publishing
 
-The pages go in a new "Engineering basis" section of the docs site, after maintainer and expert review. `build.py`
-assembles `docs/basis/*.md` (not `proposals/`). Each page shows "Draft: needs expert review" until a named
-discipline reviewer signs it off in the page history.
+The twelve area pages are published as draft pages in the "Engineering basis" section of the docs site (maintainer
+decision, 2026-10-21). `website/build.py` assembles `docs/basis/[0-9][0-9]-*.md` only: this README and `proposals/`
+are never published. `build.py` puts a "Draft: needs expert review" banner on every page, so no page can ship
+without it. A page loses the banner only when a named discipline reviewer signs it off in the page history.
+
+The triage of all proposals is `proposals/00-triage.md`; its items are GitHub issues titled "Basis <n>: …".

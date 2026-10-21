@@ -1,6 +1,8 @@
 # Hull form and hydrostatics
 
 > Concept and preliminary design only. Not for approval. Draft: needs expert review.
+>
+> Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
 **For:** naval architect  ·  **Code:** `crates/ovcd-core/src/hull.rs`, `hydrostatics.rs`, `barge_capacity.rs`,
 `vessel_classes.rs`, `vessel_standards.rs`, `gas_stability.rs` (box hydrostatics only), `squat.rs` (hull-form terms
@@ -156,7 +158,7 @@ its Schijf speed limit.
 | HF-A16 | Draught limit from a class | Top of the class draught range | Method | Catalogue | `vessel_classes.rs:78`; `class_input.rs:59` | Non-conservative if the waterway is shallower than the class top |
 | HF-A17 | Air-draft limit from a class | Bottom of the class air-draft range | Method | Catalogue | `vessel_classes.rs:84` | Conservative |
 | HF-A18 | Class data | Length, beam, draught, air draft, deadweight per class, each with a source and a confidence | Sourced default | Per row `source` in `catalogue/vessel_classes.yaml` | `vessel_classes_generated.rs` | Depends on the row; 12 rows are low confidence |
-| HF-A19 | Convoy unit beam | `B / n_abreast` | Fixed in code | None | `vessel_standards.rs:92-94` | Unknown; see the proposals file |
+| HF-A19 | Convoy unit beam | `B / n_abreast` | Fixed in code | None | `vessel_standards.rs:92-94` | Unknown; see the triage tickets |
 | HF-A20 | Pushed convoy | No results | Fixed in code | Not built | `run.rs:91` | Not applicable |
 | HF-A21 | Hydrostatic hull, main path | Box `L × B × D`, no rakes | Fixed in code | Carried over from the original engine | `barge_capacity.rs:570`, `:889`; `journey_derating.rs:113` | See HF-A26 |
 | HF-A22 | Bow rake length | `1.6 × D` | Estimate | Carried over from the original engine | `barge_capacity.rs:49`, `:788-791` | Sets the bow void and so the cargo length: unknown |
@@ -179,7 +181,7 @@ its Schijf speed limit.
 | HF-A39 | KB, legacy | 100-strip midpoint integration of the waterplane area | Method | Numerical integration | `hull.rs:171-188` | Negligible |
 | HF-A40 | Waterplane inertias, legacy | `I_T = L_wp B³ / 12`, `I_L = B L_wp³ / 12` | Method | Rectangle | `hull.rs:158-167` | Exact for the raked box |
 | HF-A41 | Rake volume, legacy | Triangle below the rise, trapezium above; not clipped at `D` | Method | Geometry | `hull.rs:64-76`, `:128-131` | Exact below `D`; above `D` only when overloaded |
-| HF-A42 | LCB, legacy | First moments of midbody and rakes, from the stern | Method | Geometry | `hull.rs:192-220` | Stern rake moment is mirrored: LCB too far aft (see proposals). Legacy path only |
+| HF-A42 | LCB, legacy | First moments of midbody and rakes, from the stern | Method | Geometry | `hull.rs:192-220` | Stern rake moment is mirrored: LCB too far aft (see the triage tickets). Legacy path only |
 | HF-A43 | Trim, legacy | `(LCG − LCB) × L_wp / BM_L`, `GM_L ≈ BM_L` | Method | Moment to change trim with `GM_L ≈ BM_L` | `hydrostatics.rs:220-227` | Small |
 | HF-A44 | Draughts fore and aft, legacy | `T ∓ trim / 2`: centre of flotation at mid-length | Fixed in code | None | `hydrostatics.rs:230-231` | Unknown for a hull with unequal rakes |
 | HF-A45 | Displacement, legacy stability | Raked volume × `ρ` × `Cb` | Fixed in code | None | `hydrostatics.rs:71`, `:172` | With rakes, the form reduction counts twice: displacement too low |
@@ -227,7 +229,7 @@ are not inputs.
 - The drawn bow rake is not in the hydrostatics, and `Cb` is not derived from it.
 - The default `Cb` (0.85) is below the range its own basis cites (0.883 to 0.995).
 - Pushed convoys give no results.
-- Errors and proposed changes: `proposals/01-hull-form-and-hydrostatics.md`. After triage they go to the findings
+- Errors and proposed changes: see the findings register (#121) and the engineering basis triage tickets. After triage they go to the findings
   register (#121).
 
 ## Evidence

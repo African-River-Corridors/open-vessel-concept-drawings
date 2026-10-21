@@ -1,6 +1,8 @@
 # Liquid, dry bulk and container cargo
 
 > Concept and preliminary design only. Not for approval. Draft: needs expert review.
+>
+> Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
 **For:** Barge designer  ·  **Code:** `crates/ovcd-core/src/cargo.rs`, `barge_capacity.rs`, `tanks.rs` (volumes and free
 surface), `journey_derating.rs`, `checks.rs`, `models.rs`; `crates/ovcd-format/src/simulate.rs`, `vdesign.rs`, `run.rs`,
@@ -327,7 +329,7 @@ files, so an old file keeps its results.
   applies by default, and no ADN Rule Set exists.
 - **The free surface formula of `tanks.rs` uses the volume fill as a height fraction** (CG-A67). At 98 % fill it gives
   about a quarter of the true moment for a circular section. It reaches only the Python API, not a Design.
-- Findings register (#121): none filed for this area yet. Proposed findings are in the proposals file.
+- Findings register (#121): none filed for this area yet. Proposed findings are in the engineering basis triage tickets.
 
 ## Evidence
 

@@ -1,6 +1,8 @@
 # Waterway and route
 
 > Concept and preliminary design only. Not for approval. Draft: needs expert review.
+>
+> Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
 **For:** Inland waterway engineer  ·  **Code:** `crates/ovcd-core/src/squat.rs`, `waves.rs`,
 `journey_derating.rs`, `barge_capacity.rs`, `gas_arrangement.rs`, `resistance.rs` (channel parts),
@@ -121,7 +123,7 @@ Through the evaluation API only (`crates/ovcd-format/src/eval.rs`, not from a De
 
 1. **Limiting speed**: F_nh,crit = √(2/3) · (1 − m)^(1/3), V_L = F_nh,crit · √(g · h), with m = A_m / A_c
    (`resistance.rs`, `schijf_limiting_speed`, line 370). The code names it Schijf (1949). Label: **Method**,
-   unverified. See the proposals file: this form does not tend to F_nh = 1 when m tends to 0.
+   unverified. see the triage tickets: this form does not tend to F_nh = 1 when m tends to 0.
 2. Midship area here A_m = B · T · C_b (`resistance.rs`, `midship_section_area`, line 365). This differs from the
    squat blockage (B · T).
 3. The speed sweep stops at 0.95 · V_L (`resistance.rs`, line 580). "channel" governs the service speed when the
@@ -174,7 +176,7 @@ Through the evaluation API only (`crates/ovcd-format/src/eval.rs`, not from a De
    - As a draught limit: D − freeboard (step 3.1).
    - `freeboard_ok` (error) in the capacity result, at the volume-bound full-load draught
      (`barge_capacity.rs`, line 941). The simulator hides this row (`capacity_checks`, line 368), but the gas
-     search still gates on it, with a fixed 0.3 m (see the proposals file).
+     search still gates on it, with a fixed 0.3 m (see the triage tickets).
    - `freeboard_at_payload` (error) in the gas search, at the carried draught, with a 1e-9 m tolerance
      (`gas_arrangement.rs`, `cheap_checks`, line 297).
 4. Input checks: minimum freeboard < moulded depth (hard); with `optimise_depth`, minimum freeboard ≤ 7.0 m
@@ -212,7 +214,7 @@ Through the evaluation API only (`crates/ovcd-format/src/eval.rs`, not from a De
 | WR-A26 | Squat-limited speed search | Bisection, 0 to 20 kn, tolerance 0.01 kn | Fixed in code | Design choice | `resistance.rs` l.608–617 | Small; above 20 kn not searched |
 | WR-A27 | Where squat applies | Not deep water, depth > 0 | Fixed in code | Design choice | `resistance.rs` `squat_applies` l.294 | None |
 | WR-A28 | Draught for squat | Loaded draught of the Option only | Fixed in code | Design choice | `simulate.rs` `curves` | Non-conservative for trim by the bow |
-| WR-A29 | Limiting speed | F_nh,crit = √(2/3) · (1 − m)^(1/3) | Method | Named Schijf (1949) in code; not in the library | `resistance.rs` `schijf_limiting_speed` l.370 | Non-conservative for m above about 0.03 (see proposals) |
+| WR-A29 | Limiting speed | F_nh,crit = √(2/3) · (1 − m)^(1/3) | Method | Named Schijf (1949) in code; not in the library | `resistance.rs` `schijf_limiting_speed` l.370 | Non-conservative for m above about 0.03 (see the triage tickets) |
 | WR-A30 | Limiting-speed midship area | A_m = B · T · C_b | Fixed in code | Design choice | `resistance.rs` l.365 | Non-conservative (A_m too small for a barge) |
 | WR-A31 | Speed cap | 0.95 · V_L | Fixed in code | Design choice | `resistance.rs` l.580 | Unknown |
 | WR-A32 | "channel" governs | Service ≥ 0.95 · V_L − 0.05 kn | Fixed in code | Design choice | `resistance.rs` l.632 | Label only |
@@ -288,7 +290,7 @@ All from `crates/ovcd-format/src/builtin_profile.json` unless stated.
   top point.
 - Old result fields in the GA payload say "ok" without a check (WR-A66).
 - Spec 0004 lists the squat and wave methods among 43 items with no checkable source. Findings go to #121 after
-  triage. See `proposals/08-waterway-and-route.md`.
+  triage. See the findings register (#121) and the engineering basis triage tickets.
 
 ## Evidence
 

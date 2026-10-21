@@ -1,6 +1,8 @@
 # Gas cargo arrangement
 
 > Concept and preliminary design only. Not for approval. Draft: needs expert review.
+>
+> Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
 **For:** gas carrier designer  ·  **Code:** `crates/ovcd-core/src/gas_arrangement.rs`, `barge_capacity.rs`
 (gas branch), `protective_location.rs`, `gas_separation.rs`, `design_grid.rs`, `aft_arrangement.rs`, `tanks.rs`,

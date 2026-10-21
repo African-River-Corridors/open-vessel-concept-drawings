@@ -1,6 +1,8 @@
 # Resistance and powering
 
 > Concept and preliminary design only. Not for approval. Draft: needs expert review.
+>
+> Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
 **For:** Hydrodynamicist, marine engineer  ·  **Code:** `crates/ovcd-core/src/resistance.rs`,
 `electric_energy.rs`, `aft_arrangement.rs`, `squat.rs` (speed limit only), `waves.rs` (added resistance only);
@@ -51,7 +53,7 @@ path also gives:
    (`resistance.rs:315-344`). Label: Method.
 5. **Residuary.** Rr = Rf × k(Fn), Fn = V/√(g·Lwl), with k = 0.10 below Fn 0.10; 0.10 + 2.5(Fn − 0.10)^1.5
    up to Fn 0.20; 0.15 + 8(Fn − 0.20)² above (`resistance.rs:346-357`). No source gives these coefficients.
-   Label: Fixed in code (the method itself: Method, reference not matched; see the proposals file).
+   Label: Fixed in code (the method itself: Method, reference not matched; see the triage tickets.
 6. **Shallow and confined water.** In an environment that is not marked deep water, the deep-water
    resistance Rf + Rr is multiplied by (1 + δ + β) (`resistance.rs:385-419`, `483-484`):
    - δ = 1.4 (T/h)^1.5 Fnh^2.5 for Fnh < 0.95, else δ = 5.0 ("Lackenby", coefficients "fitted", source not
@@ -61,7 +63,7 @@ path also gives:
 7. **Limiting speed.** Fnh,lim = √(2/3) × (1 − n)^(1/3), V_lim = Fnh,lim × √(g·h) (`resistance.rs:369-383`).
    The sweep stops at 0.95 × V_lim (`resistance.rs:575-581`). If Am ≥ Ac, V_lim = 0 and no cap applies.
    Label: Method (named "Schijf (1949)"; the formula does not match the one-dimensional Schijf solution, see
-   the proposals file).
+   the triage tickets).
 8. **Added resistance in waves.** Only if the significant wave height is above zero: STAwave-1 for head seas,
    R = (1/16) ρ g Hs² B √(B/L_BWL), times cos² of the heading (`waves.rs:104-126`). The app never sets a wave
    height, so this term is zero there. Page 08 covers waves. Label: Method.
@@ -126,7 +128,7 @@ path also gives:
 | RP-A17 | Channel section | Ac = (Wb + Ws)/2 × h, trapezoid | Method | Geometry | `resistance.rs:359-362` | n/a |
 | RP-A18 | Channel surface width (app) | Ws = Wb + 2 × bank slope × h | Method | Geometry | `simulate.rs:220` | n/a |
 | RP-A19 | Bank slope default | 3.0 H:V | Estimate | Profile, no basis text | `builtin_profile.json` `channel_bank_slope` | Unknown |
-| RP-A20 | Limiting speed | Fnh,lim = √(2/3)(1 − n)^(1/3); V_lim = Fnh,lim √(g h) | Method | Named "Schijf (1949)", `core/resistance.py:10`; formula not traced to it | `resistance.rs:369-383` | Non-conservative (V_lim too high, see proposals E1) |
+| RP-A20 | Limiting speed | Fnh,lim = √(2/3)(1 − n)^(1/3); V_lim = Fnh,lim √(g h) | Method | Named "Schijf (1949)", `core/resistance.py:10`; formula not traced to it | `resistance.rs:369-383` | Non-conservative (V_lim too high, see the triage tickets |
 | RP-A21 | Depth used in the limit | Full depth h, not mean depth Ac/Ws | Fixed in code | None stated | `resistance.rs:381` | Non-conservative in trapezoid channels |
 | RP-A22 | Hull fills channel | Am ≥ Ac or Ac ≤ 0: V_lim = 0, no cap | Fixed in code | Edge case | `resistance.rs:376-378`, `577-581` | Sweep runs uncapped |
 | RP-A23 | Sweep cap | 0.95 × V_lim | Fixed in code | None stated | `resistance.rs:575-581` | Unknown |
@@ -157,7 +159,7 @@ path also gives:
 | RP-A48 | Service speed | Highest grid speed, under the cap, with power and squat clear | Method | None stated | `resistance.rs:587-598` | Resolution 0.5 kn |
 | RP-A49 | No valid speed | Service speed = first grid speed | Fixed in code | Python port | `resistance.rs:637-640` | Reports a speed that fails power or squat |
 | RP-A50 | What governs | From the next grid point; "channel" within 0.05 kn of 0.95 V_lim; else "power" | Fixed in code | None stated | `resistance.rs:624-635` | Says "power" when the grid top governs |
-| RP-A51 | Binding environment | Lowest service speed; first of equal ones | Method | None stated | `resistance.rs:249-260` | See proposals E4 |
+| RP-A51 | Binding environment | Lowest service speed; first of equal ones | Method | None stated | `resistance.rs:249-260` | see the triage tickets |
 | RP-A52 | Squat safety margin | 0.15 m | Estimate | Profile: "carried over from the original engine" | `squat.rs:23`; `resistance.rs:101`, `526` | Unknown |
 | RP-A53 | Squat speed search | Bisection, 0 to 20 kn, tolerance 0.01 kn | Fixed in code | None stated | `resistance.rs:608-618`; `squat.rs:271-313` | Capped at 20 kn |
 | RP-A54 | Am in squat | B × T (resistance uses B × T × Cb) | Fixed in code | None stated | `squat.rs:142` | Two blockage ratios for one hull |
@@ -226,8 +228,8 @@ trips per year), and `propulsion`, `electrical_load_kwe` and the genset fields.
 - **Validity ranges are not checked as OVCD Checks for resistance.** The residuary fit, the depth term and
   the blockage term have no stated Fn, Fnh, n, L/B, B/T or Cb range. The code gives one standing warning
   (`resistance.rs:729-736`).
-- **The limiting-speed formula does not match the one-dimensional Schijf solution.** See proposals E1.
-- **Findings register (#121):** no finding for this area is filed yet. The proposals file lists candidates.
+- **The limiting-speed formula does not match the one-dimensional Schijf solution.** see the triage tickets.
+- **Findings register (#121):** no finding for this area is filed yet. The engineering basis triage tickets list candidates.
 
 ## Evidence
 

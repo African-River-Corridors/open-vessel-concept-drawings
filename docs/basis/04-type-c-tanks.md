@@ -1,6 +1,8 @@
 # Type C tanks
 
 > Concept and preliminary design only. Not for approval. Draft: needs expert review.
+>
+> Code state: written against `main` at commit `f6d446c` (2026-10-20). The Type C values are updated for #313 to #317.
 
 **For:** gas containment engineer  ·  **Code:** `crates/ovcd-core/src/tanks.rs`, `pressure_vessel.rs`,
 `barge_capacity.rs` (`TankDesign`, `gas_volumetric`, `dome_volume_m3`), `weights.rs` (tank lines),

@@ -1,6 +1,8 @@
 # Cost, BOQ and capital budget
 
 > Concept and preliminary design only. Not for approval. Draft: needs expert review.
+>
+> Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
 **For:** Cost engineer  ·  **Code:** `crates/ovcd-core/src/barge_cost.rs`, `crates/ovcd-format/src/cost.rs`, `crates/ovcd-core/src/weights.rs`, `app/src/lib/views/CapitalBudget.svelte`  ·  **Rule Sets:** none
 
@@ -164,7 +166,7 @@ mass factors, only the tank structure factor is an input. The currency and the t
 - No price base date and no currency input.
 - The view shows amounts only. It does not show quantity, unit and rate per line, so a reviewer cannot audit a
   line in the app. The quantities are in `cost.masses` in the results file.
-- No findings in the register (#121) for this area yet. Proposed findings are in the proposals file.
+- No findings in the register (#121) for this area yet. Proposed findings are in the engineering basis triage tickets.
 
 ## Evidence
 
