@@ -191,6 +191,12 @@ input-propulsor-count = Propulsor count
 
 input-propeller-diameter-m = Propeller diameter
 
+input-propulsor-efficiency-factor = Propulsor efficiency factor
+input-propulsor-efficiency-factor-default-by = propulsor_type
+
+input-bollard-pull-factor = Bollard pull factor
+input-bollard-pull-factor-default-by = propulsor_type
+
 input-power-source = Power source
 input-power-source-default-by = cargo_phase
 choice-power-source-battery-electric = Battery-electric

@@ -481,6 +481,136 @@ def _tank_weight_range() -> tuple[float, float]:
     return min(values), max(values)
 
 
+# --- Propulsion cases (issue #351, spec 0007) -----------------------------------------------------
+# Tugs and pushers with a published bollard pull, run through the Propulsor model only (no hull):
+# `calibration/propulsion_cases.yaml`, banded in `bands.yaml` (`bollard_pull_t`). The in-sample cases
+# of a type fit its bollard pull factor kappa_b (the mean of published over model at kappa_b = 1); the
+# held-out cases are run and banded, never fitted.
+
+# The transmission of spec 0007 "Power and transmission": the diesel-mechanical gearbox for engine
+# power, then the shaft line or the azimuth drive.
+_GEARBOX = {"engine": 0.97, "motor": 1.0}
+_SHAFT = {"shaft": 0.99, "azimuth": 0.95}
+# kappa_b of the types with no runnable case: the open-propeller value, 0.9 kN per (D P)^(2/3) of the
+# Wartsila estimate with k2 = 1 over the disc limit at 1,025 kg/m3 (derived, spec 0007), an estimate.
+_KAPPA_B_OPEN = 0.77
+_PROPULSOR_TYPES = ("azimuth_open", "azimuth_ducted", "shaft_open", "shaft_nozzle", "voith_schneider",
+                    "pump_jet")
+
+
+def _load_propulsion_cases() -> dict:
+    return yaml.safe_load((CAL / "propulsion_cases.yaml").read_text(encoding="utf-8"))
+
+
+def _delivered_kw(c: dict) -> float:
+    """P_D of one unit: the published power through the spec 0007 transmission."""
+    return c["power_per_unit_kw"] * _GEARBOX[c["power_basis"]] * _SHAFT[c["drive"]]
+
+
+def _bollard_pull(c: dict, kappa_b: float) -> float:
+    """The engine's bollard pull of the case (t), at the factor `kappa_b`."""
+    from vessel_designer import _bridge
+    out = _bridge.raw("propulsor", "bollard_pull", {
+        "inputs": {"type": c["run_as_type"], "count": int(c["count"]), "diameter_m": float(c["diameter_m"]),
+                   "kappa_b": float(kappa_b), "rho_kg_m3": float(c["water_density_kg_m3"])},
+        "pd_kw": float(_delivered_kw(c))})
+    if "error" in out:
+        raise RuntimeError(out["error"])
+    return float(out["ok"])
+
+
+def _fit_bollard_pull_factor(cases: list) -> dict:
+    """kappa_b per Propulsor type: the mean of published over model at kappa_b = 1 over the in-sample
+    cases of the type; a type with none takes the open-propeller estimate."""
+    out = {}
+    for t in _PROPULSOR_TYPES:
+        fit = [c for c in cases if c["run_as_type"] == t and not _is_held_out(c)]
+        if not fit:
+            out[t] = {"value": _KAPPA_B_OPEN, "n": 0,
+                      "basis": "no in-sample case: the open-propeller value (Wartsila, k2 = 1), an estimate"}
+            continue
+        ratios = [(c["id"], c["observed"]["bollard_pull_t"] / _bollard_pull(c, 1.0)) for c in fit]
+        k = sum(r for _, r in ratios) / len(ratios)
+        out[t] = {"value": round(k, 3), "min": round(min(r for _, r in ratios), 3),
+                  "max": round(max(r for _, r in ratios), 3), "n": len(ratios),
+                  "evidence": [{"case": i, "kappa_b": round(r, 3)} for i, r in ratios]}
+    return out
+
+
+def _assess_propulsion(cases: dict | None = None) -> list[BandCheck]:
+    cases = cases if cases is not None else _load_propulsion_cases()
+    factors = _fit_bollard_pull_factor(cases["propulsion_case"])
+    band = BANDS["bands"]["bollard_pull_t"]
+    out = []
+    for c in cases["propulsion_case"]:
+        obs = c["observed"]["bollard_pull_t"]
+        model = _bollard_pull(c, factors[c["run_as_type"]]["value"])
+        out.append(_Banded(case=c["id"], figure="bollard_pull_t", observed=obs, model=model,
+                           err_pct=pct(model, obs), band_pct=float(band["pct"][c["confidence"]]),
+                           confidence=c["confidence"], basis=band["basis"],
+                           held_out=c.get("held_out") or None, group=c["run_as_type"]))
+    return out
+
+
+def _propulsion_warnings_for(checks: list[BandCheck]) -> list[str]:
+    """One annotation per bollard pull outside its band, with the reason when the miss is accepted."""
+    accepted = {(c["id"], fig): why for c in _load_propulsion_cases()["propulsion_case"]
+                for fig, why in c.get("accepted_miss", {}).items()}
+    lines = []
+    for b in checks:
+        if b.inside:
+            continue
+        why = accepted.get((b.case, b.figure))
+        lines.append(github_warning(
+            f"{b.case}: modelled bollard pull is {b.err_pct:+.1f} % from the published {b.observed:g} t "
+            f"(model {b.model:,.1f} t), outside ±{b.band_pct:g} % ({b.confidence} confidence, "
+            f"{'held-out' if b.held_out else 'in-sample'})" + (f"; accepted: {why}" if why else ""),
+            title="Calibration band", file="calibration/propulsion_cases.yaml"))
+    return lines
+
+
+def _propulsion_section() -> list[str]:
+    cases = _load_propulsion_cases()
+    factors = _fit_bollard_pull_factor(cases["propulsion_case"])
+    checks = {b.case: b for b in _assess_propulsion(cases)}
+    out = ["", "## 6. Bollard pull (propulsion cases, spec 0007)", "",
+           "Tugs and pushers with a published bollard pull, run through the Propulsor model only "
+           "(`propulsion_cases.yaml`, band `bollard_pull_t` in `bands.yaml`): kappa_b x (2 rho A)^(1/3) "
+           "P_D^(2/3) per unit, P_D the published power through the spec 0007 transmission (gearbox 0.97 "
+           "for engine power; shaft line 0.99, azimuth drive 0.95). The in-sample cases of a type fit its "
+           "kappa_b; **their errors are in-sample**. Held-out cases were never used in the fit. A miss is "
+           "a warning only.", "", "### Fitted bollard pull factors", ""]
+    for t, f in factors.items():
+        if f["n"]:
+            out.append(f"- **{t}:** kappa_b {f['value']} (range {f['min']}–{f['max']}, n = {f['n']})")
+        else:
+            out.append(f"- **{t}:** kappa_b {f['value']} ({f['basis']})")
+    out += ["", "| Case | Type | Sample | Conf. | n × D (m) | P_D per unit (kW) | Published (t) | Model (t) | "
+            "err % | t per 100 kW published | Band ± % | vs band |", "|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    for c in cases["propulsion_case"]:
+        b = checks[c["id"]]
+        note = ""
+        if "bollard_pull_t" in c.get("accepted_miss", {}):
+            note = f" (accepted: {c['accepted_miss']['bollard_pull_t']})"
+        per_100 = 100.0 * b.observed / (c["count"] * c["power_per_unit_kw"])
+        out.append(f"| {c['id']} | {c['run_as_type']} | {'held out' if b.held_out else 'in-sample'} | "
+                   f"{c['confidence']} | {c['count']} × {c['diameter_m']:g} | {fmt(_delivered_kw(c))} | "
+                   f"{fmt(b.observed, 1)} | {fmt(b.model, 1)} | {fmt(b.err_pct, 1)} | {per_100:.2f} | "
+                   f"±{b.band_pct:g} | {'inside' if b.inside else '**OUTSIDE** ⚠'}{note} |")
+    out += ["", "### Propulsion records that cannot run yet", "", "Listed with their published figures and the "
+            "reason. They are never run.", "", "| Case | Published | Why not run |", "|---|---|---|"]
+    for c in cases.get("not_yet_runnable_propulsion_cases", []):
+        out.append(f"| {c['id']} | {c['published']} | {c['not_yet_runnable']} |")
+    return out
+
+
+def _all_factors(dry_barge: list) -> dict:
+    """Every fitted factor of factors.yaml: the barge factors, then the bollard pull factors (#351)."""
+    factors = fit_factors(dry_barge)
+    factors["bollard_pull_factor"] = _fit_bollard_pull_factor(_load_propulsion_cases()["propulsion_case"])
+    return factors
+
+
 def main_check() -> int:
     """Print one warning annotation per case outside its band. Exit 0 whatever the result: a band
     miss is a warning. An exception (a missing file, a bad case) is a crash and fails."""
@@ -490,9 +620,12 @@ def main_check() -> int:
     tank_checks = _assess_tanks()
     for line in _tank_warnings_for(tank_checks):
         print(line)
-    outside = sum(1 for b in checks + tank_checks if not b.inside)
-    print(f"calibration: {len(checks) + len(tank_checks)} results against their bands, {outside} outside "
-          f"(warning only)")
+    propulsion_checks = _assess_propulsion()
+    for line in _propulsion_warnings_for(propulsion_checks):
+        print(line)
+    every = checks + tank_checks + propulsion_checks
+    outside = sum(1 for b in every if not b.inside)
+    print(f"calibration: {len(every)} results against their bands, {outside} outside (warning only)")
     return 0
 
 
@@ -509,7 +642,8 @@ def fmt(x, nd=0):
 
 
 def factors_yaml(f: dict) -> str:
-    return ("# GENERATED by python -m vessel_designer.calibration from calibration/cases.yaml.\n"
+    return ("# GENERATED by python -m vessel_designer.calibration from calibration/cases.yaml and\n"
+            "# calibration/propulsion_cases.yaml.\n"
             "# Do not edit: add or correct cases, then re-run.\n"
             + yaml.safe_dump(f, sort_keys=False, width=110))
 
@@ -727,6 +861,7 @@ def report() -> str:
                    f"{fmt(m.power_kw)} | {fmt(m.delivered_kw)} | {fmt(ratio, 2)} |")
     out += _held_out_section(held_cases, held_rows, cases.get("not_yet_runnable_cases", []), all_checks)
     out += _tank_section()
+    out += _propulsion_section()
     return "\n".join(out) + "\n"
 
 
@@ -735,7 +870,7 @@ def main(out_dir: Path = CAL) -> None:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     cases = load_cases()
-    (out_dir / "factors.yaml").write_text(factors_yaml(fit_factors(cases["dry_barge"])), encoding="utf-8")
+    (out_dir / "factors.yaml").write_text(factors_yaml(_all_factors(cases["dry_barge"])), encoding="utf-8")
     (out_dir / "results.md").write_text(report(), encoding="utf-8")
     print((out_dir / "results.md").read_text(encoding="utf-8"))
 

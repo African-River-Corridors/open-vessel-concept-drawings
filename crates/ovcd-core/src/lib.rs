@@ -30,6 +30,7 @@ pub mod lpg_saturation;
 pub mod measured;
 pub mod models;
 pub mod pressure_vessel;
+pub mod propulsor;
 pub mod protective_location;
 pub mod pyfmt;
 pub mod pyint;

@@ -283,3 +283,46 @@ Published empty weights of marine LNG Type C tanks over their gross volume. They
 | lng-bunker-vessel-bilobe-2500 | low | 2,500 | 240 | 0.096 | 'light weight' of the tank, as printed; what it covers is not stated | bilobe tanks are not modelled, and no diameter is printed |
 
 Published range: 0.096 to 0.115 t per m³ of tank.
+
+## 6. Bollard pull (propulsion cases, spec 0007)
+
+Tugs and pushers with a published bollard pull, run through the Propulsor model only (`propulsion_cases.yaml`, band `bollard_pull_t` in `bands.yaml`): kappa_b x (2 rho A)^(1/3) P_D^(2/3) per unit, P_D the published power through the spec 0007 transmission (gearbox 0.97 for engine power; shaft line 0.99, azimuth drive 0.95). The in-sample cases of a type fit its kappa_b; **their errors are in-sample**. Held-out cases were never used in the fit. A miss is a warning only.
+
+### Fitted bollard pull factors
+
+- **azimuth_open:** kappa_b 0.77 (no in-sample case: the open-propeller value (Wartsila, k2 = 1), an estimate)
+- **azimuth_ducted:** kappa_b 0.975 (range 0.917–1.063, n = 3)
+- **shaft_open:** kappa_b 0.77 (no in-sample case: the open-propeller value (Wartsila, k2 = 1), an estimate)
+- **shaft_nozzle:** kappa_b 0.951 (range 0.939–0.963, n = 2)
+- **voith_schneider:** kappa_b 0.77 (no in-sample case: the open-propeller value (Wartsila, k2 = 1), an estimate)
+- **pump_jet:** kappa_b 0.77 (no in-sample case: the open-propeller value (Wartsila, k2 = 1), an estimate)
+
+| Case | Type | Sample | Conf. | n × D (m) | P_D per unit (kW) | Published (t) | Model (t) | err % | t per 100 kW published | Band ± % | vs band |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| stan-tug-1606 | shaft_nozzle | in-sample | high | 2 × 1.35 | 429 | 16.0 | 15.8 | -1.3 | 1.79 | ±10 | inside |
+| stan-tug-1907 | shaft_nozzle | in-sample | high | 2 × 1.8 | 859 | 30.0 | 30.4 | 1.3 | 1.68 | ±10 | inside |
+| demi-k | shaft_nozzle | held out | medium | 2 × 1.6 | 620 | 22.0 | 22.4 | 1.9 | 1.70 | ±15 | inside |
+| cds-4115 | shaft_nozzle | held out | medium | 3 × 1.85 | 1,277 | 45.9 | 60.0 | 30.7 | 1.15 | ±15 | **OUTSIDE** ⚠ (accepted: a shallow-draught pusher pulls less per kW than a tug (about 1.15 t per 100 kW, research note sec. 3.5): the rudders and the tunnel behind a nozzle cut the nozzle thrust of a pusher (research note sec. 3.2, from MARIN Report 128, p.14), which the open-water disc does not model) |
+| asd-tug-3212 | azimuth_ducted | in-sample | high | 2 × 3 | 2,327 | 82.4 | 85.1 | 3.3 | 1.63 | ±10 | inside |
+| rsd-tug-2513 | azimuth_ducted | in-sample | high | 2 × 3 | 2,327 | 80.0 | 85.1 | 6.4 | 1.58 | ±10 | inside |
+| aveogan | azimuth_ducted | in-sample | medium | 2 × 2.8 | 2,302 | 88.0 | 80.7 | -8.3 | 1.76 | ±15 | inside |
+| asd-tug-2312 | azimuth_ducted | held out | high | 2 × 2.8 | 1,753 | 70.0 | 67.3 | -3.9 | 1.84 | ±10 | inside |
+| asd-tug-2811 | azimuth_ducted | held out | high | 2 × 2.4 | 1,754 | 60.0 | 60.7 | 1.2 | 1.58 | ±10 | inside |
+| rsd-tug-2513-electric | azimuth_ducted | held out | medium | 2 × 3 | 1,758 | 70.0 | 70.6 | 0.8 | 1.89 | ±15 | inside |
+| capt-joseph-bisso | azimuth_ducted | held out | low | 2 × 2.5 | 2,064 | 68.0 | 69.6 | 2.3 | 1.52 | ±20 | inside |
+
+### Propulsion records that cannot run yet
+
+Listed with their published figures and the reason. They are never run.
+
+| Case | Published | Why not run |
+|---|---|---|
+| asd-tug-2111-electric | Bollard pull ahead 70.0 t in full electric mode; 2x POD incl. electric motor, approx. 4394 kW; propeller 2800 mm (a concept) | a pod is not one of the engine's Propulsor types, and the sheet does not say whether it has a duct |
+| ewolf | Bollard Pull 70 short-tons (estimated); 2 x 2100 kW motors; 2x azimuthing thruster | no propeller diameter is printed |
+| asd-tug-2810-07413 | Bollard pull ahead about 60.7 tons; output 4935 bhp total; propulsion 2x Rolls Royce US205 | no propeller diameter is printed |
+| ramparts-2500 | Bollard pull @ 100% MCR 60 to 70 t; main engines 2 x 1900 to 2240 kW; 2 ASD propellers | the bollard pull and the power are ranges, and no propeller diameter is printed |
+| bess | Bollard pull at MCR: 52 tonnes; 2x Ulstein Bergen KRMB9, 5.450 bhp in total; 2 x Voith 32G II/200 | a Voith Schneider rotor has no disc diameter printed |
+| baut | Bollard pull at MCR 92 TBP; 2x Deutz SBV 16 M 628, 6.880 kW in total; 2 x Voith 36R6/255-2 | a Voith Schneider rotor has no disc diameter printed |
+| rapide-4600-z3 | Bollard Pull of 65 tonnes ahead; three gensets each 1,670 ekW; Schottel SRP 430 FP L-drives in nozzles | no propeller diameter and no motor power are printed (genset power only) |
+| sdp-4600 | max bollard pull of 69 tons; 7200 bHP diesel-electric; three azimuthing Schottel fixed pitch propellers in nozzles | no propeller diameter and no power per unit are printed |
+| riverbuster-1909 | Bollard pull ahead 25 tonnes; 2x Volvo T16, total 1,500 kW; propulsion 2x Veth VL-400si | no propeller diameter is printed, and the drive type is not named |

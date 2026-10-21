@@ -20,3 +20,7 @@ bands:
     label: Deadweight at the stated draught
     pct: {high: 7.5, medium: 10.0, low: 15.0}
     basis: "deadweight +-7.5 % at high confidence, +-10 % at medium, +-15 % at low (maintainer, issue #119); in-sample for fitted cases, out of sample for held-out cases"
+  bollard_pull_t:
+    label: Bollard pull
+    pct: {high: 10.0, medium: 15.0, low: 20.0}
+    basis: "bollard pull +-10 % at high confidence, +-15 % at medium, +-20 % at low (spec 0007, an estimate the maintainer may change); the cases of propulsion_cases.yaml; in-sample for fitted cases, out of sample for held-out cases"

@@ -71,6 +71,17 @@ pub const KEYED_DEFAULTS: &[(&str, &str, &[&str])] = &[
     ("stern_form", "cargo_phase", CARGO_PHASES),
     ("propulsor_type", "cargo_phase", CARGO_PHASES),
     ("power_source", "cargo_phase", CARGO_PHASES),
+    // Issue #351: the Propulsor factors by Propulsor type.
+    (
+        "propulsor_efficiency_factor",
+        "propulsor_type",
+        SPECIFIED_PROPULSORS,
+    ),
+    (
+        "bollard_pull_factor",
+        "propulsor_type",
+        SPECIFIED_PROPULSORS,
+    ),
 ];
 
 /// The LPG Cargos: the ones that are carried in one of three conditions (issue #292).
@@ -785,6 +796,18 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         name: "propeller_diameter_m",
         applies_to: AppliesTo::All,
         value: "null",
+    },
+    // Issue #351: the Propulsor factors apply only with a specified Propulsor, which a file saved
+    // before never has; 1 is the plain actuator disc.
+    LegacyFixedJson {
+        name: "propulsor_efficiency_factor",
+        applies_to: AppliesTo::All,
+        value: "1.0",
+    },
+    LegacyFixedJson {
+        name: "bollard_pull_factor",
+        applies_to: AppliesTo::All,
+        value: "1.0",
     },
     LegacyFixedJson {
         name: "power_source",
@@ -1618,6 +1641,26 @@ pub const INPUTS: &[InputSpec] = &[
             "propeller_diameter_m",
             "Propeller diameter",
             NUM_OR_NONE,
+            Group::SternAndPropulsion,
+        ),
+        "propulsor_type",
+        SPECIFIED_PROPULSORS,
+    ),
+    when(
+        self_propelled(
+            "propulsor_efficiency_factor",
+            "Propulsor efficiency factor",
+            NUM,
+            Group::SternAndPropulsion,
+        ),
+        "propulsor_type",
+        SPECIFIED_PROPULSORS,
+    ),
+    when(
+        self_propelled(
+            "bollard_pull_factor",
+            "Bollard pull factor",
+            NUM,
             Group::SternAndPropulsion,
         ),
         "propulsor_type",
