@@ -9,6 +9,12 @@
 //! Lean job sets it); otherwise it passes with a note. `ARC_RULES_LEAN_CASES` sets the number of
 //! cases (default 400), `ARC_RULES_LEAN_SEED` the seed.
 //!
+//! It also compares the sized bound: of each requirement that has a `sizes` Rule, the governing
+//! Rule and its effective bound (the limit, with the tolerance folded in; the strict flag says
+//! whether a value must be strictly beyond it). The bound is what a sizing step builds at; the
+//! Lean model proves it meets the requirement and never falls (or never rises, for an upper
+//! bound) when Rules are added (`proofs/lean/OvcdRules/Sizing.lean`, issue #482).
+//!
 //! The model leaves out what the oracle cannot say: tolerances, tables, formulas, Applicability.
 //! A key with no value is "not evaluated" in the model; here its Rules are written with
 //! `evaluated: false`, and the model's governing Rule of such a key is not compared (the
@@ -89,6 +95,7 @@ fn rule(
     compare: Compare,
     limit: f64,
     block: bool,
+    sizes: bool,
     evaluated: bool,
 ) -> Rule {
     Rule {
@@ -119,7 +126,7 @@ fn rule(
         } else {
             Consequence::Warn
         },
-        sizes: false,
+        sizes,
         evaluated,
         gap: (!evaluated).then(|| "no value in this case".into()),
         finding: None,
@@ -150,6 +157,7 @@ fn case(rng: &mut Rng, n: usize) -> (Value, Value, Vec<String>) {
         let lower = rng.chance(50);
         let strict = rng.chance(30);
         let block = rng.chance(70);
+        let sizes = rng.chance(35);
         let (text, limit) = grid(rng);
         let compare = match (lower, strict) {
             (true, false) => Compare::Ge,
@@ -161,7 +169,15 @@ fn case(rng: &mut Rng, n: usize) -> (Value, Value, Vec<String>) {
         // list order.
         let id = format!("t/1/r{i:03}");
         let evaluated = values.contains_key(&key);
-        rules.push(rule(id.clone(), &key, compare, limit, block, evaluated));
+        rules.push(rule(
+            id.clone(),
+            &key,
+            compare,
+            limit,
+            block,
+            sizes,
+            evaluated,
+        ));
         rules_json.push(json!({
             "id": id,
             "key": format!("{key}@x"),
@@ -169,6 +185,7 @@ fn case(rng: &mut Rng, n: usize) -> (Value, Value, Vec<String>) {
             "limit": serde_json::from_str::<Value>(&text).unwrap(),
             "strict": strict,
             "blocking": block,
+            "sizes": sizes,
         }));
     }
     let set = RuleSet {
@@ -189,6 +206,15 @@ fn case(rng: &mut Rng, n: usize) -> (Value, Value, Vec<String>) {
     let trace = evaluate(&[&set], &[], &OneObject { values });
     let mut outcomes = serde_json::Map::new();
     let mut governing = serde_json::Map::new();
+    let mut sized = serde_json::Map::new();
+    // The requirements (key and direction) that have a `sizes` Rule.
+    let mut sizing_keys: Vec<String> = Vec::new();
+    for r in &trace.rows {
+        if let (true, Some(m), Some(c)) = (r.sizes, r.measure.as_ref(), r.compare) {
+            let dir = if c.is_lower_bound() { "lower" } else { "upper" };
+            sizing_keys.push(format!("{}@x|{dir}", m.id));
+        }
+    }
     for r in &trace.rows {
         let id = r.rule.clone().unwrap();
         let outcome = match r.outcome {
@@ -206,6 +232,19 @@ fn case(rng: &mut Rng, n: usize) -> (Value, Value, Vec<String>) {
                 "upper"
             };
             let key = format!("{}@x|{dir}", r.measure.as_ref().unwrap().id);
+            if sizing_keys.contains(&key) {
+                let compare = r.compare.unwrap();
+                let (limit, tol) = (r.limit.unwrap(), r.tolerance);
+                let effective = if compare.is_lower_bound() {
+                    limit - tol
+                } else {
+                    limit + tol
+                };
+                sized.insert(
+                    key.clone(),
+                    json!({"rule": id, "limit": effective, "strict": compare.is_strict()}),
+                );
+            }
             governing.insert(key, json!(id));
         }
     }
@@ -216,6 +255,7 @@ fn case(rng: &mut Rng, n: usize) -> (Value, Value, Vec<String>) {
         "ok": trace.passes(),
         "outcomes": outcomes,
         "governing": governing,
+        "sized": sized,
     });
     (input, rust, missing)
 }
@@ -272,6 +312,38 @@ fn the_evaluator_agrees_with_the_lean_model() {
             rust["governing"],
             "{name}: a governing Rule differs"
         );
+        let mut lean_sized = lean["sized"].as_object().unwrap().clone();
+        lean_sized.retain(|k, _| !missing.iter().any(|m| k.starts_with(&format!("{m}|"))));
+        assert_eq!(
+            lean_sized.keys().collect::<Vec<_>>().len(),
+            rust["sized"].as_object().unwrap().len(),
+            "{name}: the sizing requirements differ"
+        );
+        for (key, want) in rust["sized"].as_object().unwrap() {
+            let got = &lean_sized[key];
+            assert_eq!(
+                got["rule"], want["rule"],
+                "{name}: {key}: the sizing Rule differs"
+            );
+            assert_eq!(
+                got["strict"], want["strict"],
+                "{name}: {key}: the strict flag of the sized bound differs"
+            );
+            assert_eq!(
+                got["limit"].as_f64(),
+                want["limit"].as_f64(),
+                "{name}: {key}: the sized bound differs"
+            );
+        }
     }
-    eprintln!("{cases} random cases agree with the Lean model");
+    let sized: usize = expected
+        .iter()
+        .map(|(r, _)| r["sized"].as_object().unwrap().len())
+        .sum();
+    // The sizing comparison must not be empty, or it could not fail.
+    assert!(
+        sized >= cases / 4,
+        "only {sized} sizing requirements in {cases} cases"
+    );
+    eprintln!("{cases} random cases agree with the Lean model ({sized} sizing requirements)");
 }

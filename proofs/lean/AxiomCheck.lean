@@ -4,6 +4,9 @@ open OvcdRules
 #print axioms atLeastAsStrict_total
 #print axioms atLeastAsStrict_trans
 #print axioms holds_strictestBy_iff
+#print axioms sized_meets_requirement
+#print axioms sized_limit_mono_lower
+#print axioms sized_limit_mono_upper
 #print axioms no_value_of_conflict
 #print axioms witness_of_not_conflict
 #print axioms ok_of_ok_append

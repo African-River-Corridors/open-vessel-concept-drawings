@@ -1,25 +1,48 @@
 {"cases":
- [{"outcomes":
+ [{"sized": {},
+   "outcomes":
    {"is2008/A.2.2.1/area-0-30": "pass", "fixture/1.1/area-0-30-tight": "pass"},
    "ok": true,
    "name": "two sets cover one requirement; the stricter governs and passes",
    "governing": {"gz.area(0,30)@laden|lower": "fixture/1.1/area-0-30-tight"}},
-  {"outcomes":
+  {"sized": {},
+   "outcomes":
    {"is2008/A.2.2.1/area-0-30": "pass", "fixture/1.1/area-0-30-tight": "fail"},
    "ok": false,
    "name": "the stricter rule fails, so the Option fails",
    "governing": {"gz.area(0,30)@laden|lower": "fixture/1.1/area-0-30-tight"}},
-  {"outcomes":
+  {"sized": {},
+   "outcomes":
    {"is2008/A.2.2.4/gm0": "pass", "fixture/2.1/gm0-advisory": "warn"},
    "ok": true,
    "name":
    "a value equal to a ge limit passes; a gt limit at the same value fails but is advisory",
    "governing": {"gm0@laden|lower": "is2008/A.2.2.4/gm0"}},
-  {"outcomes":
+  {"sized": {},
+   "outcomes":
    {"ovcd/gas-arrangement/tank-l-over-d": "pass",
     "is2008/A.2.3/weather": "not evaluated"},
    "ok": true,
    "name": "a not evaluated blocking rule does not fail the Option",
    "governing":
    {"weather.ratio@laden|lower": "is2008/A.2.3/weather",
-    "tank.l_over_d@tank1|upper": "ovcd/gas-arrangement/tank-l-over-d"}}]}
+    "tank.l_over_d@tank1|upper": "ovcd/gas-arrangement/tank-l-over-d"}},
+  {"sized":
+   {"speed@reach|upper":
+    {"strict": true, "rule": "fixture/3.2/speed-b", "limit": 9},
+    "channel.width@reach|lower":
+    {"strict": false, "rule": "fixture/3.1/width-b", "limit": 34.5}},
+   "outcomes":
+   {"fixture/3.3/depth-a": "pass",
+    "fixture/3.2/speed-b": "pass",
+    "fixture/3.2/speed-a": "pass",
+    "fixture/3.1/width-c": "pass",
+    "fixture/3.1/width-b": "pass",
+    "fixture/3.1/width-a": "pass"},
+   "ok": true,
+   "name":
+   "a sizing requirement: the stricter lower bound is the sized value; a strict upper bound is reported as strict",
+   "governing":
+   {"speed@reach|upper": "fixture/3.2/speed-b",
+    "depth@reach|lower": "fixture/3.3/depth-a",
+    "channel.width@reach|lower": "fixture/3.1/width-b"}}]}
