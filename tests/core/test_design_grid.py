@@ -6,7 +6,10 @@ from vessel_designer.core.design_grid import sweep
 
 
 def test_base_point_regression_anchor():
-    """60 m barge x 12 m beam, 1.0 m standard clearance = 680 t.
+    """60 m barge x 11 m beam, side clearance per tank from IGC 2.4.1.2 = 693 t.
+
+    Re-pinned (issue #277): was 60 m x 12 m, 680 t, with the 1.0 m standard clearance. The
+    12 m cell's tanks now hide the view from the raised wheelhouse, which blocks.
 
     Set by the DERIVED ARRANGEMENT. A 60 m
     self-propelled gas vessel gives 21.9 m of its length to the stern block and the
@@ -17,10 +20,10 @@ def test_base_point_regression_anchor():
 
     Label: snapshot
     """
-    g = sweep([60], [12.0])
+    g = sweep([60], [11.0])
     c = g.curve(60)[0]
     assert c.n_tanks_long == 2
-    assert round(c.cargo_t) == 680
+    assert round(c.cargo_t) == 693
 
 
 def test_every_cell_has_two_tanks_along_the_hull():
@@ -41,7 +44,8 @@ def test_a_tank_may_be_longer_than_28_m_but_not_more_than_seven_diameters():
 
     Label: property
     """
-    long_tank = sweep([100], [14.0]).cells[0]
+    # 100 x 11 m: the 100 x 14 m cell's tanks hide the wheelhouse view (issue #277).
+    long_tank = sweep([100], [11.0]).cells[0]
     assert long_tank.feasible and long_tank.tank_length_m > 28.0
     assert long_tank.slenderness <= 7.0
     thin = sweep([200], [11.0]).cells[0]
@@ -60,12 +64,13 @@ def test_cargo_monotonic_in_length():
     worth guarding, because length buys cargo zone one-for-one once the fixed end voids
     are paid. Narrow beams are out of this test's sample: below 11 m the three 40 ft units
     go into two rows, which lengthens the stern block, and short narrow hulls then have no
-    cargo zone at all.
+    cargo zone at all. The 12 m and 14 m beams of this sample were replaced by 11 m and 20 m in
+    issue #277: their tanks hide the view from the raised wheelhouse, which now blocks.
 
     Label: property
     """
     lengths = [70, 80, 90]
-    beams = [12.0, 14.0]
+    beams = [11.0, 20.0]
     g = sweep(lengths, beams)
     for beam in beams:
         col = [next(c.cargo_t for c in g.curve(loa) if c.beam_m == beam)
@@ -89,13 +94,19 @@ def test_short_hulls_are_now_infeasible_for_gas():
 
     Label: snapshot
     """
-    g = sweep([45, 60, 90], [8.0, 12.0, 16.0])
+    g = sweep([45, 60, 90], [11.0, 12.0, 16.0])
     by_loa = {}
     for c in g.cells:
         by_loa.setdefault(c.barge_length_m, []).append(c)
     assert all(not c.feasible for c in by_loa[45]), "45 m gas vessel should not fit"
-    assert all(c.feasible for c in by_loa[60] if c.beam_m < 16.0), [c.reason for c in by_loa[60]]
+    # Issue #277: the beams were 8, 12 and 16 m. With the IGC side clearance per tank the 8 m tank
+    # is wider and its heads do not fit; the 12 m cell's tanks hide the view from the raised
+    # wheelhouse, which now blocks.
+    assert [c.feasible for c in by_loa[60] if c.beam_m < 16.0] == [True, False]
+    assert by_loa[60][1].reason.startswith("raised eye"), by_loa[60][1].reason
     # Issue #175: with the 16 m diameter cap a 16 m beam is one 14 m tank, and two of those do not
     # fit in the 60 m hull (it was two tanks across under the old 12 m cap).
     assert [c.feasible for c in by_loa[60] if c.beam_m == 16.0] == [False]
-    assert all(c.feasible for c in by_loa[90]), [c.reason for c in by_loa[90]]
+    # Issue #277: at 90 m the 11 m cell fits; the 12 m and 16 m cells' tanks hide the wheelhouse view.
+    assert [c.feasible for c in by_loa[90]] == [True, False, False], [c.reason for c in by_loa[90]]
+    assert all(c.reason.startswith("raised eye") for c in by_loa[90][1:])

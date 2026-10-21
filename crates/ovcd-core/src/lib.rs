@@ -27,6 +27,7 @@ pub mod hull;
 pub mod hydrostatics;
 pub mod journey_derating;
 pub mod lpg_saturation;
+pub mod measured;
 pub mod models;
 pub mod pressure_vessel;
 pub mod protective_location;

@@ -22,8 +22,9 @@ fn the_cn_ii_benchmark_is_reproduced() {
     };
     let f = fit(90.0, 14.8, "LPG_propane", 4.4, &o).unwrap();
     // Re-pinned (issue #264, the search keeps only arrangements that pass stability); was
-    // 2943.4407266060916 (issue #237) and 2058.228164213275 under the stepped IGC_2G.
-    assert_eq!(f.payload_t, 2832.6643735601965);
+    // 2943.4407266060916 (issue #237) and 2058.228164213275 under the stepped IGC_2G. Re-pinned
+    // again (issue #277, the wheelhouse sightline blocks the search); was 2832.6643735601965.
+    assert_eq!(f.payload_t, 2021.2487121368047);
     assert_eq!((f.n_tanks, f.n_tanks_wide, f.n_tanks_long), (2, 1, 2));
     // Re-pinned (issue #264); was "volume" under the stepped IGC_2G and "draft" (issue #237): the
     // arrangement that passes stability is smaller, so the volume binds again.

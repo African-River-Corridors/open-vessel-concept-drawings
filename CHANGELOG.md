@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Design change (issue #277): the gas arrangement search (`fit`) reads the Rule Trace of each candidate. With Rule Sets selected (every `.vdesign` run), a candidate wins only if no blocking Rule fails; the answer's trace is the one shown, and the failing Rules of an infeasible answer are named in "Feasible arrangement". The `ovcd` set gains Rules for the search-only checks (overload, freeboard, journey, utilisation as a warning, freeboard at payload, stability not assessed). A Rule Set loaded at run time now constrains `fit`. Two maintainer decisions are built here. (1) Issue #264: the wheelhouse sightline is an error check, so it blocks `fit`, the design grid and `smallest_viable_loa`; `ovcd/aft-block/wheelhouse-sightline` is `block`. (2) Issue #283, step 2: the design grid sizes each cell's side clearance with the IGC 2.4.1.2 rule (d(Vc) per tank less the insulation), not the 1.0 m default, and the wing ballast tank width is that clearance less the gap. Of the 177 designs of the design-impact set, 107 move: 92 only by the sightline check's severity (`warning` to `error`); 11 gas designs carry 14 % to 31 % less cargo, because a taller tank hid the view from the raised wheelhouse (the CN II benchmark, 90 x 14.8 x 6.5 m propane at a 4.4 m draught cap: 2,832.66 t to 2,021.25 t, a 10.70 m tank); 2 sweep designs have no feasible arrangement now (130 x 16.3 m: the eye cannot clear the tanks at any depth; the optional tank head type case: each arrangement that clears the view fails the light-condition angle of maximum GZ); the other 2 move in other quantities. The before/after table is under "Design changes" below. API: `aft_arrangement.compute`, `barge_capacity.compute` (dry bulk) and `ga_adapter.to_ga` (dry bulk) list the sightline with severity `error` (known differences from 0.1.0); the 0.1.0 constant `design_grid.SIDE_CLEARANCE_M` is kept but not read. Tests re-pinned to what the code prints (the CN II benchmark, the gas snapshots, the README example and the design grid cells, which now pick cells the sightline does not block). Fixture hashes re-stamped from `ovcd run`. No sourced test changed.
 - Rules engine (issue #273): every released Rule Set version is kept. `crates/ovcd-format/rules/RELEASED.json` lists the versions a tagged release has shipped, with their content hashes (none yet: the next version bump adds the four built-in sets). A new fast-gate step, `ovcd rules --provenance`, fails on a changed released file, a version number below its class (patch, minor or major by content hash), a rule id that changes its Measure or direction or comes back after it was dropped, and a regulation or class Rule with no paragraph; it prints the unverified blocking Rules of each set. A `v*` release fails if a built-in set version is not listed. No result moves.
 - Design change (issue #281): the space between the gas cargo tanks and the hold end bulkhead is keyed to the shape of the tank ends, as the inland class rules (Pt 4 Ch 4 3.5.3) and ADN 9.3.1.11.3(a) say: 0.50 m for plane tank ends, 0.20 m for any other end. It was keyed to "pressure tank" (0.20 m) or "standard" (0.50 m), citing 3.6.3, a type C (liquid cargo) clause. Every tank OVCD models has domed heads, so no length, volume or verdict moves. The check message of every gas design changes ("domed tank ends, cl. 3.5.3" for "pressure tank, cl. 3.5.3 / 3.6.3"), so every gas results hash moves. The before/after table is under "Design changes" below. In the Python API, `GasSeparationInputs.is_pressure_tank` is kept but no longer read, and the new Rust field `plane_tank_ends` (default false) sets plane ends. The Rule `lr-inland/3.5.3/end-space` of `lr-inland-gas` follows the tank end shape and no longer links a finding. Fixture hashes re-stamped from `ovcd run` (two gas fixtures and three gas files of `tests/legacy`; the v1 file keeps its old hash, as its test expects a difference). No sourced test changed.
 - App and web app (issue #276): the Rule check calculations tab shows the Rule Trace: one row per Rule per object, with Result, Rule (title, id, sets), Object, Value, Limit, Margin, Citation (with any finding or gap) and Status (verified, unverified, OVCD Check, method unverified). Failures come first, then warnings, passes, notes, not evaluated and not applicable. Tags differ by word and shape, not colour only; the governing Rule and the Rules that size the arrangement are marked. The verdict line names any blocking Rule that is not evaluated. The app computes nothing: every field comes from the trace.
@@ -154,6 +155,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### 277 (2026-10-21)
+
+Between `main b781747` and `this branch 365fa94`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived bulk 1 (88x16.3) | `checks[8].severity` | warning | error | changed |
+| sweep CN-derived bulk 2 (130x16.3) | `checks[8].severity` | warning | error | changed |
+| sweep CN-derived bulk 3 (130x17.2) | `checks[8].severity` | warning | error | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[12].message` | GM 3.08 m (fluid), max GZ 1.15 m at 25° | GM 6.33 m (fluid), max GZ 2.68 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[13].message` | GM 4.65 m (fluid), max GZ 1.96 m at 26° | GM 8.87 m (fluid), max GZ 3.10 m at 30° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[14].message` | GM 8.87 m (fluid), max GZ 2.89 m at 29° | GM 14.89 m (fluid), max GZ 3.61 m at 26° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[8].message` | raised eye 13.35 m >= obstruction 14.43 m + 0.50 m margin (lift used 6.00 m of 6.00 m) | raised eye 9.64 m >= obstruction 9.14 m + 0.50 m margin (lift used 2.29 m of 6.00 m) | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[8].ok` | False | True | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[8].severity` | warning | error | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `warnings[0]` | Sightline needs 7.58 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release. | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `warnings[1]` | Separation clauses are cited from the classification rules for inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release. | absent | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `arrangement.feasible` | True | False | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[10].message` | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | cofferdam 0.60 m >= 0.60 m (cl. 3.6.13) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[10].name` | opening setback | cofferdam min width | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[11].message` | forward end-bulkhead space 0.50 m >= 0.20 m (domed tank ends, cl. 3.5.3) | aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[11].name` | fwd end bulkhead space | opening setback | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].message` | GM 3.87 m (fluid), max GZ 1.62 m at 26° | forward end-bulkhead space 0.50 m >= 0.20 m (domed tank ends, cl. 3.5.3) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].name` | Stability — laden | fwd end bulkhead space | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[12].severity` | absent | error | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[13].message` | GM 5.77 m (fluid), max GZ 2.32 m at 27° | GM 3.87 m (fluid), max GZ 1.62 m at 26° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[13].name` | Stability — half laden | Stability — laden | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | GM 10.93 m (fluid), max GZ 3.15 m at 27° | GM 5.77 m (fluid), max GZ 2.32 m at 27° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].name` | Stability — light | Stability — half laden | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[15].message` | absent | GM 10.93 m (fluid), max GZ 3.15 m at 27° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[15].name` | absent | Stability — light | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[15].ok` | absent | True | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[1].message` | cargo volume must be positive (tank/hold fits) | No arrangement passes every check on this hull. The closest one is shown. It fails: wheelhouse_sees_over_cargo. | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[1].name` | feasible geometry | Feasible arrangement | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[1].ok` | True | False | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[1].severity` | error | absent | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[2].message` | cargo zone 98.49 m = LOA 130.0 - bow void 9.62 m - stern void 21.89 m | cargo volume must be positive (tank/hold fits) | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[2].name` | cargo zone positive | feasible geometry | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[3].message` | 3 x 2.60 m thrusters need 10.20 m across a 16.30 m beam | cargo zone 98.49 m = LOA 130.0 - bow void 9.62 m - stern void 21.89 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[3].name` | thrusters fit beam | cargo zone positive | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[4].message` | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 16.30 m beam | 3 x 2.60 m thrusters need 10.20 m across a 16.30 m beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[4].name` | requested thruster count fits | thrusters fit beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[4].severity` | warning | error | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[5].message` | 3 x 40 ft units abreast need 10.91 m across a 16.30 m beam | 3 of 3 requested thrusters fit; 3 would need 10.20 m of 16.30 m beam | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[5].name` | containers fit beam | requested thruster count fits | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[5].severity` | error | warning | changed |
+| ... | 4086 more changed quantities | | | |
 
 ### ticket/350-stern-form (2026-10-21)
 

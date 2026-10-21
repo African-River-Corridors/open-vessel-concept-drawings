@@ -21,7 +21,7 @@ from typing import List, Optional
 from .._bridge import call as _call
 from .barge_capacity import BargeCapacityInputs  # noqa: F401  (0.1.0 exposed it here)
 
-SIDE_CLEARANCE_M = 1.0         # design default per side, no published source; not an IGC value (#283)
+SIDE_CLEARANCE_M = 1.0         # kept for the 0.1.0 API; the grid takes IGC 2.4.1.2 per tank (#283, #277)
 BOW_NON_TANK_PCT = 0.10        # mirror models.py defaults
 STERN_NON_TANK_PCT = 0.15
 TUG_LOA_M = 16.0               # Kotug E-Pusher pattern — for the total-LOA note

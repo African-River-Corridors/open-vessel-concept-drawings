@@ -908,31 +908,26 @@ fn tank_report(
     )
 }
 
-/// The typed values of one run that the Rule Trace reads (spec 0004): never JSON, so a Measure gives
-/// exactly the number the engine worked with.
-#[derive(Debug, Clone, Default)]
-pub struct Measured {
-    /// The gas stability loading conditions, in the order the engine builds them. Empty for a dry
-    /// bulk barge (its stability is first-order only) and for a gas barge that carries nothing.
-    pub conditions: Vec<gs::Condition>,
-    /// The deadweight of the result, t: for the derived input `deadweight_band`. `None` when the
-    /// result has none.
-    pub deadweight_t: Option<f64>,
-    /// The Type C tank values the IGC Rules read; `None` but for a gas barge.
-    pub tank: Option<ovcd_core::barge_capacity::TankRuleValues>,
-    /// The gas cargo-area separation and whether its tanks have plane ends; `None` but for a gas
-    /// barge.
-    pub separation: Option<(ovcd_core::gas_separation::GasSeparationResult, bool)>,
-    /// The result's check list, (name, ok), in order: the verdicts the `ovcd` Rules mirror. Filled
-    /// by the run from the finished result.
-    pub checks: Vec<(String, bool)>,
-}
+/// The typed values of one run that the Rule Trace reads (spec 0004).
+pub use ovcd_core::measured::Measured;
 
 fn simulate(p: &Map<String, Value>) -> R<Value> {
-    simulate_measured(p, &mut Measured::default())
+    simulate_measured(p, &mut Measured::default(), &RunRules::default())
 }
 
-fn simulate_measured(p: &Map<String, Value>, measured: &mut Measured) -> R<Value> {
+/// The Rule Sets of a run and the Option's inputs, which the gas arrangement search reads (spec
+/// 0004, #277). Empty: the search judges by its own check list, as the Python API does.
+#[derive(Debug, Clone, Default)]
+pub struct RunRules {
+    pub sets: Vec<ovcd_core::rules::RuleSet>,
+    pub inputs: ga::RuleInputs,
+}
+
+fn simulate_measured(
+    p: &Map<String, Value>,
+    measured: &mut Measured,
+    rules: &RunRules,
+) -> R<Value> {
     let vessel_id = match p.get("vessel") {
         None => "box_barge",
         Some(Value::String(s)) => s.as_str(),
@@ -970,6 +965,7 @@ fn simulate_measured(p: &Map<String, Value>, measured: &mut Measured) -> R<Value
             (l, b, d),
             (cb, rho),
             (self_propelled, stern),
+            rules,
         )
         .map(|(v, gas)| {
             *measured = gas;
@@ -1365,6 +1361,7 @@ fn fill_by_ruleset(_ruleset: &str) -> f64 {
     0.98
 }
 
+#[allow(clippy::too_many_arguments)] // one call site; the run's Rule Sets join the simulate params
 fn simulate_gas(
     p: &Map<String, Value>,
     label: &str,
@@ -1373,6 +1370,7 @@ fn simulate_gas(
     (l, b, d0): (f64, f64, f64),
     (cb, rho): (f64, f64),
     (self_propelled, stern): (bool, Option<&ovcd_core::stern_form::SternGeometry>),
+    rules: &RunRules,
 ) -> R<(Value, Measured)> {
     let ruleset = match p.get("ruleset") {
         None => "IGC_2G",
@@ -1496,6 +1494,8 @@ fn simulate_gas(
         aft_design: aft_design_of(p)?,
         stern_block_mass: stern_mass_of(p)?,
         stern_geometry: stern.cloned(),
+        rules: rules.sets.clone(),
+        rule_inputs: rules.inputs.clone(),
         ..FitOptions::default()
     };
     let f = ga::fit(l, b, cargo_key, t_max, &options)
@@ -1740,9 +1740,12 @@ pub enum Outcome {
 
 /// `simulate(params)` as the app calls it: params in, an [`Outcome`] out, with the typed values the
 /// Rule Trace reads.
-pub(crate) fn simulate_params_measured(params: &Map<String, Value>) -> (Outcome, Measured) {
+pub(crate) fn simulate_params_measured(
+    params: &Map<String, Value>,
+    rules: &RunRules,
+) -> (Outcome, Measured) {
     let mut measured = Measured::default();
-    let outcome = match simulate_measured(params, &mut measured) {
+    let outcome = match simulate_measured(params, &mut measured, rules) {
         Ok(v) => Outcome::Result(v),
         Err(Stop::Raised(kind, message)) => Outcome::Raised(kind, message),
         Err(Stop::Eval(e)) => Outcome::Refused(e.to_string()),

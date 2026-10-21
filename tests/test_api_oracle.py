@@ -72,6 +72,12 @@ KNOWN_DIFFERENCES: dict = {
     # the NL2011 class is RWS-M12 with 135 m and 5601 t and no bridge clearance), CN_II_motor has no
     # moulded depth, and `VesselStandard` has four more fields and four Optional ones.
     "vessel_standards": "issue #94: the class list is the Vessel Class catalogue",
+    # Issue #277: the wheelhouse sightline is an error check (the maintainer decision on #264), so
+    # an aft arrangement or a dry-bulk result lists it with severity `error`, not `warning`.
+    "barge_capacity.compute.bulk": "issue #277: the wheelhouse sightline is an error check",
+    "barge_capacity.compute.bulk_holds": "issue #277: the wheelhouse sightline is an error check",
+    "ga_adapter.to_ga.bulk": "issue #277: the wheelhouse sightline is an error check",
+    "aft_arrangement.compute": "issue #277: the wheelhouse sightline is an error check",
 }
 
 # Keys added to inputs and results after 0.1.0, with the issue that added them. They are dropped

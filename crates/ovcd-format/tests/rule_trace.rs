@@ -5,7 +5,8 @@
 //! Label: property
 
 use ovcd_core::rule_trace::{
-    MeasureInfo, MeasureSource, MeasureValue, ObjectType, Outcome, Trace, evaluate, holds,
+    Failure, MeasureInfo, MeasureSource, MeasureValue, ObjectType, Outcome, Trace, evaluate,
+    failures, holds,
 };
 use ovcd_core::rules::{MeasureRef, RuleSet};
 use ovcd_format::rule_set::{Library, load};
@@ -301,6 +302,37 @@ fn property_adding_a_rule_never_turns_a_failing_option_into_a_passing_one() {
         let gm: Vec<f64> = (0..2).map(|_| g.value()).collect();
         if !trace_of(&[&a], &gm).passes() {
             assert!(!trace_of(&[&a, &b], &gm).passes());
+        }
+    }
+}
+
+#[test]
+fn property_failures_are_exactly_the_failing_rows_of_the_trace() {
+    // The arrangement search tests each candidate with `failures`, then builds the trace once for
+    // the answer: the two must agree on every case, a Measure that cannot be computed included.
+    let mut g = Gen(0x5eed_0006);
+    for _ in 0..300 {
+        let a = random_set(&mut g, "a", 4);
+        let b = random_set(&mut g, "b", 4);
+        let objects = g.below(4) as usize;
+        let mut source = fake(&(0..objects).map(|_| g.value()).collect::<Vec<_>>());
+        for v in &mut source.values[0].1 {
+            if g.below(5) == 0 {
+                *v = Err("cannot compute".into());
+            }
+        }
+        for sets in [vec![&a], vec![&a, &b], vec![&b, &a, &b]] {
+            let want: Vec<Failure> = evaluate(&sets, &source)
+                .rows
+                .into_iter()
+                .filter(|r| r.outcome == Outcome::Fail)
+                .map(|r| Failure {
+                    rule: r.rule.unwrap(),
+                    object_type: r.object_type,
+                    object: r.object,
+                })
+                .collect();
+            assert_eq!(failures(&sets, &source), want);
         }
     }
 }

@@ -14,8 +14,9 @@ fn every_cell_has_two_tanks_along_the_hull() {
 
 #[test]
 fn a_tank_is_not_capped_at_28_m() {
-    // Issue #175: tank length is limited only by length over diameter and the hull.
-    let g = sweep(&[100.0], &[14.0], 6.0, "LPG_propane").unwrap();
+    // Issue #175: tank length is limited only by length over diameter and the hull. The cell was
+    // 100 x 14 m until the wheelhouse sightline blocked (issue #277): its tanks hide the view.
+    let g = sweep(&[100.0], &[11.0], 6.0, "LPG_propane").unwrap();
     let c = &g.cells[0];
     assert!(c.feasible, "{}", c.reason);
     assert!(c.tank_length_m.unwrap() > 28.0, "{:?}", c.tank_length_m);
@@ -50,15 +51,21 @@ fn no_feasible_cell_has_a_slenderness_above_seven() {
 
 #[test]
 fn the_curve_is_the_feasible_cells_of_one_length_in_beam_order() {
-    let g = sweep(&[45.0, 60.0], &[8.0, 12.0, 16.0], 6.0, "LPG_propane").unwrap();
-    assert_eq!(g.cells.len(), 6);
+    let g = sweep(&[45.0, 60.0], &[11.0, 12.0, 16.0, 20.0], 6.0, "LPG_propane").unwrap();
+    assert_eq!(g.cells.len(), 8);
     assert!(g.curve(45.0).is_empty());
     let beams: Vec<f64> = g.curve(60.0).iter().map(|c| c.beam_m).collect();
-    // The 16 m beam was feasible with the old 12 m tank cap (two tanks across). With the 16 m cap
-    // it is one 14 m tank across, and two tanks along do not fit in a 60 m hull: "tank heads don't fit".
-    assert_eq!(beams, [8.0, 12.0]);
-    assert!(g.cells[5].reason.starts_with("Cylinder length is -1.00m"));
-    assert_eq!(g.curve(60.0)[1].cargo_t, Some(680.3055097251973));
+    // Re-pinned (issue #277): the beams were 8, 12 and 16 m. With the IGC side clearance per tank
+    // (issue #283) the 8 m tank is wider and its heads no longer fit; the 12 m cell's tanks hide
+    // the wheelhouse view, which now blocks; the 16 m cell is one tank across, too long for 60 m.
+    assert_eq!(beams, [11.0, 20.0]);
+    assert!(
+        g.cells[5]
+            .reason
+            .starts_with("raised eye 13.50 m >= obstruction 13.60 m")
+    );
+    assert!(g.cells[6].reason.starts_with("Cylinder length is -1.70m"));
+    assert_eq!(g.curve(60.0)[0].cargo_t, Some(692.5678145592659));
     assert!(g.curve(75.0).is_empty());
 }
 

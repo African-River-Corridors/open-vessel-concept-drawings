@@ -436,7 +436,7 @@
       "codified": {
         "by": "agent",
         "date": "2026-10-21",
-        "review": "#272"
+        "review": "#277"
       },
       "verified": false,
       "kind": "check",
@@ -446,7 +446,7 @@
           "name": "wheelhouse sees over cargo"
         }
       },
-      "consequence": "warn",
+      "consequence": "block",
       "sizes": false,
       "evaluated": true,
       "finding": null,
@@ -636,6 +636,198 @@
         "id": "check.ok",
         "args": {
           "name": "service below schijf"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/capacity/not-overloaded",
+      "title": "The cargo the tanks hold floats within the hull",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "not overloaded"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/capacity/freeboard",
+      "title": "Freeboard at the full-load draught at least the required freeboard",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "freeboard ok"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/journey/volume-bound",
+      "title": "The cargo is bound by the tank volume, not overloaded",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "capacity is volume bound"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/journey/floats",
+      "title": "The payload the draught limit leaves is above zero",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "floats"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/journey/ukc-consistent",
+      "title": "The draught limit leaves room for the under-keel clearance",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "ukc consistent"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/journey/utilisation",
+      "title": "The payload uses a reasonable share of the tank volume",
+      "origin": "tool-limit",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "utilisation reasonable"
+        }
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/gas-arrangement/freeboard-at-payload",
+      "title": "Freeboard at the carried draught at least the required freeboard",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "freeboard at payload"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "ovcd/stability/assessed",
+      "title": "The engine could assess the stability of every loading condition",
+      "origin": "tool-limit",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#277"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "Stability — not assessed"
         }
       },
       "consequence": "block",

@@ -13,13 +13,14 @@ def test_cn_ii_benchmark_is_reproduced():
 
     Re-pinned in issue #237 (the per-tank d(Vc) of IGC 2.4.1.1, datum of 2.4.2, dome in Vc) to
     2,943.44 t; it was 2,058 t under the stepped reading. Re-pinned again in issue #264 (the search
-    keeps only arrangements that pass stability) to what the code prints now, 2,832.66 t. See the
-    before/after table in CHANGELOG.md.
+    keeps only arrangements that pass stability) to 2,832.66 t, and in issue #277 (the wheelhouse
+    sightline blocks the search) to what the code prints now, 2,021.25 t. See the before/after
+    table in CHANGELOG.md.
 
     Label: snapshot
     """
     f = fit(90.0, 14.8, "LPG_propane", 4.4, depths=[6.5], ruleset="IGC_2G", fill_ratio=0.95)
-    assert abs(f.payload_t - 2833) < 1.0
+    assert abs(f.payload_t - 2021) < 1.0
     assert f.n_tanks_wide == 1
 
 
@@ -32,7 +33,9 @@ def test_search_beats_the_auto_seed_on_cn_ii():
     auto = capacity(BargeCapacityInputs(loa=90, beam=14.8, depth=6.5, cargo_type="LPG_propane",
                                         max_tank_od_m=12.0))
     best = fit(90.0, 14.8, "LPG_propane", 4.4, depths=[6.5], max_tank_od_m=12.0)
-    assert best.payload_t > 1.5 * min(auto.cargo_capacity_t, 3000)
+    # Issue #277: the wheelhouse sightline now blocks, so the search answer is lower (1,763 t); it
+    # still beats the AUTO seed (1,406 t). The margin was 1.5 times.
+    assert best.payload_t > 1.2 * min(auto.cargo_capacity_t, 3000)
 
 
 @pytest.mark.parametrize("cap", [12.0, 16.0])
@@ -74,7 +77,10 @@ def test_payload_never_exceeds_the_draught_cap():
 # These are the cases of the 12 m tank diameter cap, which was fixed until issue #175 made it
 # an input (16 m by default), so each sets `max_tank_od_m=12.0`. The 16 m cases are below.
 # (90, 12.9) re-pinned in issue #264 (stability gates the search): printed 1497.6289987038715; was 1505.
-SNAPSHOT = [((90, 12.9), 1498), ((90, 14.8), 1738), ((90, 18.0), 2033), ((120, 18.0), 2922)]
+# Issue #277 (the wheelhouse sightline blocks; the wing tank width follows the IGC side clearance)
+# re-pinned the others to the printed values 1691.1903238505604, 1875.1180321250488 and
+# 2957.2540744793505; they were 1738, 2033 and 2922.
+SNAPSHOT = [((90, 12.9), 1498), ((90, 14.8), 1691), ((90, 18.0), 1875), ((120, 18.0), 2957)]
 
 
 @pytest.mark.parametrize("dims,expected", SNAPSHOT)
@@ -89,12 +95,13 @@ def test_regression_snapshot(dims, expected):
 def test_snapshot_120x18_is_two_8m_tanks_abreast():
     """Issue #6 moved this to one 11 m tank because the 2 x 8 m design broke an inland type-G side
     floor (0.48 m clearance). Issue #215 removed the floor: the search picks 2 x 8 m again.
+    Issue #277 moved the diameter from 8.017 m to the printed 8.01586 m.
 
     Label: snapshot
     """
     f = fit(120.0, 18.0, "LNG", 3.0, ruleset="IGC_2G", fill_ratio=0.98, max_tank_od_m=12.0)
     assert f.feasible
-    assert f.n_tanks_wide == 2 and abs(f.tank_od_m - 8.017) < 0.001
+    assert f.n_tanks_wide == 2 and abs(f.tank_od_m - 8.016) < 0.001
 
 
 # The same hulls under the default 16 m cap. Values printed by this code when the cap moved
@@ -104,7 +111,9 @@ def test_snapshot_120x18_is_two_8m_tanks_abreast():
 # values; they were 1755.1158212773869 and 2921.7916111312247.
 # (90, 14.8) re-pinned in issue #264 (stability gates the search): printed 1692.4687453268486; was
 # 1755.2051149886904.
-SNAPSHOT_16 = [((90, 14.8), 1692.4687453268486), ((120, 18.0), 2921.887266646023)]
+# Issue #277 (the wheelhouse sightline blocks; the wing tank width follows the IGC side clearance)
+# re-pinned both to the printed values; they were 1692.4687453268486 and 2921.887266646023.
+SNAPSHOT_16 = [((90, 14.8), 1614.9482417833697), ((120, 18.0), 2957.2540744793505)]
 
 
 @pytest.mark.parametrize("dims,expected", SNAPSHOT_16)

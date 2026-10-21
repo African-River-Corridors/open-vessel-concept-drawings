@@ -11,8 +11,8 @@
 //! barge (without its pusher) are computed.
 
 use crate::rule_set::Library;
-use crate::simulate::{Outcome, simulate_params_measured};
-use crate::trace::{stack_for, trace_json, trace_of};
+use crate::simulate::{Outcome, RunRules, simulate_params_measured};
+use crate::trace::{rule_inputs, stack_for, trace_json, trace_of};
 use crate::vdesign::{Design, DesignOption};
 use ovcd_core::pyfmt::fixed;
 use serde_json::{Map, Value, json};
@@ -315,7 +315,16 @@ pub fn run_option_with(
         Err(m) if m == CONVOY_NOT_AVAILABLE => return RunOutcome::NotAvailable(m),
         Err(m) => return RunOutcome::Failed(m),
     };
-    let (outcome, mut measured) = simulate_params_measured(&params);
+    // The Rule Sets of the run: the gas arrangement search keeps only candidates that meet them.
+    let selection = match stack_for(library, option, extra) {
+        Ok(s) => s,
+        Err(m) => return RunOutcome::Failed(m),
+    };
+    let rules = RunRules {
+        sets: selection.sets.iter().map(|s| (*s).clone()).collect(),
+        inputs: rule_inputs(option),
+    };
+    let (outcome, mut measured) = simulate_params_measured(&params, &rules);
     match outcome {
         Outcome::Result(v) => match v.get("error").and_then(Value::as_str) {
             Some(message) => RunOutcome::Failed(message.to_string()),
@@ -338,13 +347,10 @@ pub fn run_option_with(
                             .collect()
                     })
                     .unwrap_or_default();
-                let rule_trace = match stack_for(library, option, extra) {
-                    Ok(selection) => trace_json(
-                        &trace_of(&selection, option, &measured),
-                        &selection.warnings,
-                    ),
-                    Err(m) => return RunOutcome::Failed(m),
-                };
+                let rule_trace = trace_json(
+                    &trace_of(&selection, option, &measured),
+                    &selection.warnings,
+                );
                 if let Some(o) = v.as_object_mut() {
                     o.insert("cost".to_string(), cost);
                     o.insert("rule_trace".to_string(), rule_trace);
