@@ -177,7 +177,7 @@ pub struct MachineryInputs {
     pub propeller_diameter_m: f64,
     /// The installed power P_B of all engines or motors (kW). `None`: not sized yet (#353).
     pub installed_power_kw: Option<f64>,
-    /// The battery energy of a battery hybrid's room (kWh). `None`: not sized yet.
+    /// The battery energy in force (kWh): a battery hybrid's room holds it. `None`: not sized yet.
     pub battery_energy_kwh: Option<f64>,
     /// The bow thruster's power (kW) when one is fitted: typed, or the default of L x B x T.
     pub bow_thruster_kw: Option<f64>,

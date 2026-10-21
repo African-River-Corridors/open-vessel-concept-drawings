@@ -3,14 +3,25 @@
 // quantity type, and the full value is always on hover.
 import { num, say, t, type TextIds } from "./i18n.svelte";
 
-export type Quantity = "tonnes" | "volume" | "length" | "ratio" | "fraction" | "count" | "text" | "flag";
+export type Quantity =
+  | "tonnes"
+  | "volume"
+  | "length"
+  | "ratio"
+  | "fraction"
+  | "count"
+  | "text"
+  | "flag"
+  | "power"
+  | "speed"
+  | "energy";
 
 export interface Metric {
   /** The Message Id of its label. */
   label: string;
   unit?: string;
   quantity: Quantity;
-  /** Where the value lives in the results object. */
+  /** Where the value lives in the results object. A key `name=X` picks the list item named X. */
   path: string[];
 }
 
@@ -23,6 +34,9 @@ const DECIMALS: Record<Quantity, number> = {
   count: 0,
   text: 0,
   flag: 0,
+  power: 0,
+  speed: 1,
+  energy: 0,
 };
 
 export const MAIN: Metric[] = [
@@ -52,13 +66,42 @@ export const TANKS: Metric[] = [
   { label: "app-metric-depth-optimised", quantity: "flag", path: ["arrangement", "depth_optimised"] },
 ];
 
+/** Shown only for an Option with a specified Propulsor: its `powering` block (issue #353). */
+export const POWERING: Metric[] = [
+  { label: "app-metric-installed-power", unit: "kW", quantity: "power", path: ["powering", "installed_power_kw"] },
+  { label: "app-metric-bollard-pull", unit: "t", quantity: "tonnes", path: ["powering", "bollard_pull_t"] },
+  {
+    label: "app-metric-service-speed-deep",
+    unit: "kn",
+    quantity: "speed",
+    path: ["powering", "environments", "name=Deep water", "service_speed_kn"],
+  },
+  {
+    label: "app-metric-service-speed-channel",
+    unit: "kn",
+    quantity: "speed",
+    path: ["powering", "environments", "name=Channel", "service_speed_kn"],
+  },
+  { label: "app-metric-battery-energy", unit: "kWh", quantity: "energy", path: ["powering", "battery_energy_kwh"] },
+];
+
 export function valueAt(results: unknown, path: string[]): unknown {
   let v: unknown = results;
   for (const key of path) {
     if (v === null || typeof v !== "object") return undefined;
+    if (Array.isArray(v) && key.startsWith("name=")) {
+      const name = key.slice(5);
+      v = v.find((item) => item !== null && typeof item === "object" && (item as { name?: unknown }).name === name);
+      continue;
+    }
     v = (v as Record<string, unknown>)[key];
   }
   return v;
+}
+
+export function hasPowering(results: unknown): boolean {
+  const p = valueAt(results, ["powering"]);
+  return p !== null && p !== undefined && typeof p === "object";
 }
 
 /** The value as a person reads it: rounded by quantity type, with thousands separators. */

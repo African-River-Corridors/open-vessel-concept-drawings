@@ -248,6 +248,18 @@ the `atb` and `towed_barge` Vessel Classes pickable (`vessel_classes.rs` `format
 - **Fuel and energy:** diesel at today's 195 g/kWh on P_B load; battery energy per trip as
   `electric_energy` does today, now with the Propulsor's η_D; gas fuel stays on boil-off as today.
 - The app shows installed power, bollard pull and service speed per environment, beside today's curves.
+- As built (#353):
+  - The Installed Power is sized on the highest P_needed over the environments, each at the Design
+    Speed or the fastest speed it allows if lower (triage on #353), and at the design draught: the
+    laden draught waits for the machinery's mass, which waits for the power.
+  - "Rounded up to the engine table": an engine is offered across its rating range, so only a power
+    per engine in a gap between ranges (3,200 to 3,400 kW) rounds up; below 955 kW the small-engine
+    rule needs no rounding.
+  - The battery: with a `trip_length_km`, the energy per trip at the service speed of the most demanding
+    environment x 1.25 / 0.8 sets the battery energy, the battery-electric unit count and the hybrid's
+    room; the gas Option's cost takes the same battery and the Installed Power.
+  - kappa of shafts in nozzles is fitted on the CDS 110 Tanker (CDS 135 Tanker held out); the other
+    types keep 0.80 until an inland ship of the type prints both its power and its speed.
 
 ### Machinery space and mass (`machinery`)
 

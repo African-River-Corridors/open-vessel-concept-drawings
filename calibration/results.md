@@ -326,3 +326,29 @@ Listed with their published figures and the reason. They are never run.
 | rapide-4600-z3 | Bollard Pull of 65 tonnes ahead; three gensets each 1,670 ekW; Schottel SRP 430 FP L-drives in nozzles | no propeller diameter and no motor power are printed (genset power only) |
 | sdp-4600 | max bollard pull of 69 tons; 7200 bHP diesel-electric; three azimuthing Schottel fixed pitch propellers in nozzles | no propeller diameter and no power per unit are printed |
 | riverbuster-1909 | Bollard pull ahead 25 tonnes; 2x Volvo T16, total 1,500 kW; propulsion 2x Veth VL-400si | no propeller diameter is printed, and the drive type is not named |
+
+## 7. Installed power (spec 0007)
+
+Inland ships that print both the installed power and a design speed, run through the whole engine: the hull at its printed size and maximum draught, its propulsors, and the Installed Power sized for the design speed in deep water with the 1.20 margin. The in-sample cases of a type fit its efficiency factor kappa; **their errors are in-sample**. A miss is a warning only.
+
+### Fitted efficiency factors
+
+- **azimuth_open:** kappa 0.8 (no in-sample case: the starting estimate)
+- **azimuth_ducted:** kappa 0.8 (no in-sample case: the starting estimate)
+- **shaft_open:** kappa 0.8 (no in-sample case: the starting estimate)
+- **shaft_nozzle:** kappa 0.447 (n = 1)
+- **voith_schneider:** kappa 0.8 (no in-sample case: the starting estimate)
+- **pump_jet:** kappa 0.8 (no in-sample case: the starting estimate)
+
+| Case | Type | Sample | Conf. | L x B x T (m) | Speed (kn) | Published (kW) | Model (kW) | err % | Band ± % | vs band |
+|---|---|---|---|---|---|---|---|---|---|---|
+| cds-tanker-110 | shaft_nozzle | in-sample | medium | 110 x 11.45 x 3.3 | 9.719 | 1,000 | 999 | -0.1 | ±20 | inside |
+| cds-tanker-135 | shaft_nozzle | held out | medium | 135 x 11.45 x 3.5 | 9.719 | 1,418 | 1,221 | -13.9 | ±20 | inside |
+
+### Installed power records that cannot run yet
+
+| Case | Published | Why not run |
+|---|---|---|
+| cds-dry-cargo-110 | Aft ship 2x 500 kW permanent magnetic (option 2x 500 kW diesel engine); Propellor 1500 mm in nozzle; 110.00 x 11.45 m, draft 3.75 m | no speed is printed |
+| factofour | two Caterpillar 3512 (C) DI-TA, 1350 kW each; 135 x 17.20 m, draft 4.00 m | no speed and no propulsor are printed |
+| lng-greenstream | four LNG spark-ignited engines of 285 kW each; two VZ-550 Z-drives generating 500 kW, a propeller in a nozzle; 110 x 11.4 m, draught 3.46 m | no speed and no propeller diameter are printed, and 500 kW may be per drive or the total |

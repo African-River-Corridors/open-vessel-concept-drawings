@@ -313,3 +313,72 @@ not_yet_runnable_propulsion_cases:
     source_file: vessels/cd-riverbuster-1909-brochure/CDS-Riverbuster-1909-vouwvel-2405-plano.pdf
     sha256: ce7bf693b4a7b285e56019565aa4464b483df3d67d7b5dabd24ffeb42c01f96f
     not_yet_runnable: "no propeller diameter is printed, and the drive type is not named"
+
+# Installed power cases (issue #353): inland ships that print both the installed propulsion power and
+# a design speed. Each runs through the whole engine (`simulate`): the hull at its printed length,
+# beam, depth and maximum draught (the laden draught), its propulsors, and the Installed Power sized
+# for the printed design speed in deep water with the 1.20 margin. The figure is the printed total
+# installed power. The in-sample cases of a Propulsor type fit its efficiency factor kappa
+# (factors.yaml, `propulsor_efficiency_factor`); held-out cases are run and banded, never fitted.
+# Where the source prints no stern form, the run takes the engine's default for a dry hull (a
+# tunnel), as `stern_basis` says.
+installed_power_case:
+  - id: cds-tanker-110
+    vessel: "CDS 110 Tanker"
+    loa_m: 110.0
+    beam_m: 11.45
+    depth_m: 4.90
+    draught_m: 3.30
+    draught_basis: "Draught max. 3.30 m, the speed's draught is not printed"
+    run_as_type: shaft_nozzle
+    count: 2
+    diameter_m: 1.5
+    power_source: diesel_mechanical
+    stern_basis: "no stern form is printed; run as a tunnel stern, the engine's default for a dry hull"
+    design_speed_kn: 9.719
+    observed: {installed_power_kw: 1000.0}
+    published: "Power 2x 500 kW @ 1,800 rpm (Caterpillar C18, diesel direct); Speed (design) 18 km/h; Propellors 2x 1,500 mm in 1,520 mm nozzles; Length o.a. 110.00 m, Beam o.a. 11.45 m, Depth at side 4.90 m, Draught max. 3.30 m"
+    source_file: vessels/cd-tanker-110-brochure/CDS-110-Tanker-vouwvel-05.pdf
+    sha256: a8dfb747c6e21e204c5b24ad4217a5219aa9aa72826641632c4fdc6c13eb733c
+    url: https://concordiadamen.com/wp-content/uploads/2024/06/BRP-CON-005-2404-CDS-110-Tanker-vouwvel-05.pdf
+    retrieved: 2026-10-20
+    confidence: medium
+
+  - id: cds-tanker-135
+    vessel: "CDS 135 Tanker"
+    loa_m: 135.0
+    beam_m: 11.45
+    depth_m: 4.95
+    draught_m: 3.50
+    draught_basis: "Draught max. 3.50 m, the speed's draught is not printed"
+    run_as_type: shaft_nozzle
+    count: 2
+    diameter_m: 1.6
+    power_source: diesel_mechanical
+    stern_basis: "no stern form is printed; run as a tunnel stern, the engine's default for a dry hull"
+    design_speed_kn: 9.719
+    observed: {installed_power_kw: 1418.0}
+    published: "Power 2x 709 kW @ 1,800 rpm (diesel direct; the table names a Caterpillar C32, the prose two Mitsubishi S12); Speed (design) 18 km/h; Propellors 2x 1,600 mm in 1,620 mm nozzles; Length o.a. 135.00 m, Beam o.a. 11.45 m, Depth at side 4.95 m, Draught max. 3.50 m"
+    source_file: vessels/cd-tanker-135-brochure/CDS-Tanker-135-vouwvel-2405-plano.pdf
+    sha256: 9acb7d5b10c5521eef595e79cd07d56381bdd2583471847ba34d22938860e2ea
+    url: https://concordiadamen.com/wp-content/uploads/2024/05/CDS-Tanker-135-vouwvel-2405-plano.pdf
+    retrieved: 2026-10-20
+    confidence: medium
+    held_out: "the longer hull of the same yard and beam, kept out of the fit to test the length scaling"
+
+not_yet_runnable_installed_power_cases:
+  - id: cds-dry-cargo-110
+    published: "Aft ship 2x 500 kW permanent magnetic (option 2x 500 kW diesel engine); Propellor 1500 mm in nozzle; 110.00 x 11.45 m, draft 3.75 m"
+    source_file: vessels/cd-dry-cargo-110-brochure/CDS-Dry-Cargo-110-vouwvel-2405-plano.pdf
+    sha256: 90bc54be15e43699b5b2ebf59fd8ce9d763e04af7d1b82fcd91690781e1ae820
+    not_yet_runnable: "no speed is printed"
+  - id: factofour
+    published: "two Caterpillar 3512 (C) DI-TA, 1350 kW each; 135 x 17.20 m, draft 4.00 m"
+    source_file: vessels/cd-factofour-spec/Factofour.pdf
+    sha256: d993e5d726ab20e728a59dbcbf31b6f589a8ab50544a36fab1f2ca6fb9d5fba9
+    not_yet_runnable: "no speed and no propulsor are printed"
+  - id: lng-greenstream
+    published: "four LNG spark-ignited engines of 285 kW each; two VZ-550 Z-drives generating 500 kW, a propeller in a nozzle; 110 x 11.4 m, draught 3.46 m"
+    source_file: vessels/shiptech-greenstream/shiptech-lng-greenstream.html
+    sha256: ddc0d7c213f71cf58d11123862f9b4fc56c2fa8b4997e3beb50b0096144a77e0
+    not_yet_runnable: "no speed and no propeller diameter are printed, and 500 kW may be per drive or the total"

@@ -24,3 +24,7 @@ bands:
     label: Bollard pull
     pct: {high: 10.0, medium: 15.0, low: 20.0}
     basis: "bollard pull +-10 % at high confidence, +-15 % at medium, +-20 % at low (spec 0007, an estimate the maintainer may change); the cases of propulsion_cases.yaml; in-sample for fitted cases, out of sample for held-out cases"
+  installed_power_kw:
+    label: Installed power
+    pct: {high: 15.0, medium: 20.0, low: 30.0}
+    basis: "installed power +-15 % at high confidence, +-20 % at medium, +-30 % at low (spec 0007, an estimate the maintainer may change); the installed power cases of propulsion_cases.yaml; in-sample for fitted cases, out of sample for held-out cases"

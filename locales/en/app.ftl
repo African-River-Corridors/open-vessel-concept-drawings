@@ -178,6 +178,11 @@ app-metric-side-clearance = Side clearance
 app-metric-ruleset = Ruleset
 app-metric-fill-ratio = Fill ratio
 app-metric-depth-optimised = Depth optimised
+app-metric-installed-power = Installed power
+app-metric-bollard-pull = Bollard pull
+app-metric-service-speed-deep = Service speed, deep water
+app-metric-service-speed-channel = Service speed, channel
+app-metric-battery-energy = Battery energy
 
 ## Rule checks view
 

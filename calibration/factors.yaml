@@ -90,3 +90,29 @@ bollard_pull_factor:
     value: 0.77
     n: 0
     basis: 'no in-sample case: the open-propeller value (Wartsila, k2 = 1), an estimate'
+propulsor_efficiency_factor:
+  azimuth_open:
+    value: 0.8
+    n: 0
+    basis: 'no in-sample case: the starting estimate'
+  azimuth_ducted:
+    value: 0.8
+    n: 0
+    basis: 'no in-sample case: the starting estimate'
+  shaft_open:
+    value: 0.8
+    n: 0
+    basis: 'no in-sample case: the starting estimate'
+  shaft_nozzle:
+    value: 0.447
+    n: 1
+    evidence:
+    - case: cds-tanker-110
+  voith_schneider:
+    value: 0.8
+    n: 0
+    basis: 'no in-sample case: the starting estimate'
+  pump_jet:
+    value: 0.8
+    n: 0
+    basis: 'no in-sample case: the starting estimate'

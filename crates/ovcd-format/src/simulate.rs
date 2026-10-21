@@ -273,7 +273,8 @@ fn h_over_t(ch: &Map<String, Value>, t: f64) -> R<Value> {
     }
 }
 
-/// `_curves`: speed-power for the hull alone.
+/// `_curves`: speed-power for the hull alone, with the resistance results they came from (issue
+/// #353: the powering reads them).
 fn curves(
     p: &Map<String, Value>,
     l: f64,
@@ -282,7 +283,43 @@ fn curves(
     (cb, extra_wetted_m2): (f64, f64),
     disp: f64,
     rho: f64,
-) -> R<Value> {
+) -> R<(Value, Option<resistance::ResistanceResults>)> {
+    let Some(rr) = resistance_of(p, l, b, t, (cb, extra_wetted_m2), disp, rho)? else {
+        return Ok((json!([]), None));
+    };
+    let list = Value::Array(
+        rr.environments
+            .iter()
+            .map(|e| {
+                json!({
+                    "name": e.name,
+                    "limiting_speed_kn": e.limiting_speed_knots.map_or(Value::Null, num),
+                    "blockage": num(e.blockage_ratio),
+                    "points": e.speed_curve.iter().map(|s| json!({
+                        "kn": num(s.speed_knots),
+                        "kw": num(s.delivered_power_kw),
+                        "fuel_lph": num(s.fuel_litres_per_hour),
+                        "squat_m": num(s.squat_m),
+                        "squat_limited": s.squat_limited,
+                    })).collect::<Vec<_>>(),
+                })
+            })
+            .collect(),
+    );
+    Ok((list, Some(rr)))
+}
+
+/// The resistance of the hull in each environment (deep water, and the channel when one is given);
+/// `None` with no draught.
+fn resistance_of(
+    p: &Map<String, Value>,
+    l: f64,
+    b: f64,
+    t: f64,
+    (cb, extra_wetted_m2): (f64, f64),
+    disp: f64,
+    rho: f64,
+) -> R<Option<resistance::ResistanceResults>> {
     let margin = get_or(
         p,
         "squat_safety_margin_m",
@@ -316,7 +353,7 @@ fn curves(
         );
     }
     if t <= 0.0 {
-        return Ok(json!([]));
+        return Ok(None);
     }
     // Mutation survivors (#64), deleting one of these fields below: equivalent, each for its own
     // reason. `loa` and `displacement_tonnes` are never read by the resistance code (it uses `lwl`,
@@ -344,27 +381,9 @@ fn curves(
         wetted_surface_extra_m2: extra_wetted_m2,
         ..ResistanceInputs::default()
     };
-    let rr = resistance::compute(&inputs)
-        .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))?;
-    Ok(Value::Array(
-        rr.environments
-            .iter()
-            .map(|e| {
-                json!({
-                    "name": e.name,
-                    "limiting_speed_kn": e.limiting_speed_knots.map_or(Value::Null, num),
-                    "blockage": num(e.blockage_ratio),
-                    "points": e.speed_curve.iter().map(|s| json!({
-                        "kn": num(s.speed_knots),
-                        "kw": num(s.delivered_power_kw),
-                        "fuel_lph": num(s.fuel_litres_per_hour),
-                        "squat_m": num(s.squat_m),
-                        "squat_limited": s.squat_limited,
-                    })).collect::<Vec<_>>(),
-                })
-            })
-            .collect(),
-    ))
+    resistance::compute(&inputs)
+        .map(Some)
+        .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))
 }
 
 /// The capacity checks as the simulator lists them: two superseded ones are left out, and the
@@ -996,6 +1015,15 @@ fn simulate_measured(
     inp.stern_block_mass = stern_mass_of(p)?;
     inp.stern_geometry = stern.cloned();
     inp.machinery = machinery_of(p, stern, (l, b, d), t_design, self_propelled)?;
+    size_installed_power(
+        p,
+        &mut inp.machinery,
+        &mut inp.aft_design,
+        stern,
+        (l, b, d),
+        t_design,
+        (cb, rho),
+    )?;
     // The hold design values. A key left out keeps the core default, which is the value the engine
     // used before these were inputs.
     inp.wing_void_width = get_or(p, "hold_wing_void_width_m", inp.wing_void_width)?;
@@ -1062,7 +1090,7 @@ fn simulate_measured(
     if let Some(limit) = truthy_float(p, "air_draft_limit_m")? {
         checks.push(air_draft_check(&r, limit, &mut ids)?);
     }
-    let curve_list = curves(
+    let (curve_list, resistance) = curves(
         p,
         l,
         b,
@@ -1071,6 +1099,7 @@ fn simulate_measured(
         disp,
         rho,
     )?;
+    let powering_block = powering_json(p, inp.machinery.as_ref(), stern, rho, resistance.as_ref())?;
     let geo = json!({
         "bow_void_length_m": opt_num(r.bow_void_length_m),
         "stern_void_length_m": opt_num(r.stern_void_length_m),
@@ -1092,7 +1121,8 @@ fn simulate_measured(
         dry_parts.push(("stern", stern_drawing(g)));
     }
     let drawing = drawing_json(dry_parts);
-    with_text_ids(
+    with_powering_and_text_ids(
+        powering_block,
         with_stern_mass(
             json!({
                 "vessel": label,
@@ -1234,6 +1264,149 @@ fn stern_of(
         },
     );
     Ok(if g.is_legacy() { None } else { Some(g) })
+}
+
+/// Issue #353: the Propulsor and the Power Source of a machinery, for the powering. The wake is
+/// spec 0007's: 0.30 under a tunnel, 0.20 at a transom or pram stern (estimates).
+fn powering_inputs(
+    p: &Map<String, Value>,
+    m: &ovcd_core::machinery::MachineryInputs,
+    stern: Option<&ovcd_core::stern_form::SternGeometry>,
+    rho: f64,
+    installed_power_kw: Option<f64>,
+) -> R<ovcd_core::powering::PoweringInputs> {
+    use ovcd_core::propulsor::{PropulsorInputs, WAKE_OPEN_STERN, WAKE_TUNNEL};
+    let wake = match stern.map(|g| g.form) {
+        Some(ovcd_core::stern_form::SternForm::Tunnel) => WAKE_TUNNEL,
+        _ => WAKE_OPEN_STERN,
+    };
+    Ok(ovcd_core::powering::PoweringInputs {
+        propulsor: PropulsorInputs {
+            propulsor_type: m.propulsor,
+            count: m.propulsor_count,
+            diameter_m: m.propeller_diameter_m,
+            wake,
+            kappa: get_or(p, "propulsor_efficiency_factor", 1.0)?,
+            kappa_b: get_or(p, "bollard_pull_factor", 1.0)?,
+            rho_kg_m3: rho * 1000.0,
+        },
+        power_source: m.power_source,
+        design_speed_kn: get_or(p, "design_speed_kn", 9.7)?,
+        margin: get_or(p, "installed_power_margin", 1.2)?,
+        installed_power_kw,
+        trip_length_km: truthy_float(p, "trip_length_km")?,
+    })
+}
+
+/// The resistance curves of the powering (issue #353), from the resistance results.
+fn powering_curves(
+    rr: &resistance::ResistanceResults,
+) -> Vec<ovcd_core::powering::EnvironmentCurve> {
+    rr.environments
+        .iter()
+        .map(|e| ovcd_core::powering::EnvironmentCurve {
+            name: e.name.clone(),
+            points: e
+                .speed_curve
+                .iter()
+                .map(|s| ovcd_core::powering::CurvePoint {
+                    speed_kn: s.speed_knots,
+                    speed_through_water_kn: s.speed_through_water_knots,
+                    resistance_kn: s.resistance_total_kn,
+                    squat_limited: s.squat_limited,
+                })
+                .collect(),
+        })
+        .collect()
+}
+
+/// Issue #353: size the Installed Power of a machinery that has none typed, at the design draught,
+/// and give it to the machinery (its engines and their room). The laden draught is not known before
+/// the machinery's mass is, so the design draught (the deepest the hull loads to) stands for it.
+/// The battery follows its energy, typed or from the trip: a battery-electric block carries as many
+/// units as the energy needs, a hybrid's battery room holds it.
+fn size_installed_power(
+    p: &Map<String, Value>,
+    machinery: &mut Option<ovcd_core::machinery::MachineryInputs>,
+    aft_design: &mut ovcd_core::aft_arrangement::AftDesign,
+    stern: Option<&ovcd_core::stern_form::SternGeometry>,
+    (l, b, _d): (f64, f64, f64),
+    t_design: f64,
+    (cb, rho): (f64, f64),
+) -> R<()> {
+    use ovcd_core::machinery::PowerSource;
+    let Some(m) = machinery else {
+        return Ok(());
+    };
+    let extra = stern.map_or(0.0, |g| g.extra_wetted_surface(t_design));
+    let disp = cb * l * b * t_design * rho;
+    let Some(rr) = resistance_of(p, l, b, t_design, (cb, extra), disp, rho)? else {
+        return Ok(());
+    };
+    let pw = ovcd_core::powering::compute(
+        &powering_inputs(p, m, stern, rho, m.installed_power_kw)?,
+        &powering_curves(&rr),
+    );
+    if m.installed_power_kw.is_none() && pw.installed_power_kw > 0.0 {
+        m.installed_power_kw = Some(pw.installed_power_kw);
+    }
+    if let Some(e) = m.battery_energy_kwh.or(pw.battery_energy_kwh) {
+        // The energy in force, sized at the design draught like the power.
+        m.battery_energy_kwh = Some(e);
+        if m.power_source == PowerSource::BatteryElectric {
+            let unit = get_or(p, "battery_unit_energy_kwh", 5000.0)?;
+            if unit > 0.0 {
+                aft_design.n_battery_units = Some(libm::ceil(e / unit) as i64);
+            }
+        }
+    }
+    Ok(())
+}
+
+/// The energy of a stern block's battery units (kWh): their count x the energy of one.
+fn battery_units_kwh(p: &Map<String, Value>, r: &BargeCapacityResult) -> f64 {
+    let n = r.aft_arrangement.as_ref().map_or(0, |a| {
+        a.container_labels
+            .iter()
+            .filter(|l| l.starts_with("BATTERY"))
+            .count()
+    });
+    n as f64 * get_or(p, "battery_unit_energy_kwh", 5000.0).unwrap_or(5000.0)
+}
+
+/// Issue #353: the `powering` block of a machinery's results, at the laden draught's curves; `None`
+/// with no machinery (today's curves stand alone).
+fn powering_json(
+    p: &Map<String, Value>,
+    machinery: Option<&ovcd_core::machinery::MachineryInputs>,
+    stern: Option<&ovcd_core::stern_form::SternGeometry>,
+    rho: f64,
+    rr: Option<&resistance::ResistanceResults>,
+) -> R<Option<Value>> {
+    let (Some(m), Some(rr)) = (machinery, rr) else {
+        return Ok(None);
+    };
+    let sized = truthy_float(p, "installed_power_kw")?.is_none();
+    let pw = ovcd_core::powering::compute(
+        &powering_inputs(p, m, stern, rho, m.installed_power_kw)?,
+        &powering_curves(rr),
+    );
+    Ok(Some(json!({
+        "installed_power_kw": num(pw.installed_power_kw),
+        "installed_power_sized": sized,
+        "design_speed_kn": num(get_or(p, "design_speed_kn", 9.7)?),
+        "margin": num(get_or(p, "installed_power_margin", 1.2)?),
+        "bollard_pull_t": num(pw.bollard_pull_t),
+        // The battery in force: typed, else from the trip (none without a battery or a route).
+        "battery_energy_kwh": m.battery_energy_kwh.or(pw.battery_energy_kwh).map_or(Value::Null, num),
+        "environments": pw.environments.iter().map(|e| json!({
+            "name": e.name,
+            "service_speed_kn": num(e.service_speed_kn),
+            "power_at_service_kw": num(e.needed_at_service_kw),
+            "fuel_kg_per_h": num(e.fuel_kg_per_h),
+            "energy_per_trip_kwh": e.energy_per_trip_kwh.map_or(Value::Null, num),
+        })).collect::<Vec<_>>(),
+    })))
 }
 
 /// The machinery of a specified Propulsor (issue #352), or `None` for an `unspecified` one (today's
@@ -1428,6 +1601,19 @@ fn with_stern_mass(
     result
 }
 
+/// Issue #353: the `powering` block joins a machinery's results only, so other results keep their
+/// hash; then the Message Ids.
+fn with_powering_and_text_ids(
+    powering: Option<Value>,
+    mut result: Value,
+    ids: TextIds,
+) -> R<Value> {
+    if let Some(block) = powering {
+        result["powering"] = block;
+    }
+    with_text_ids(result, ids)
+}
+
 fn with_text_ids(mut result: Value, ids: TextIds) -> R<Value> {
     result["text_ids"] = ids.finish(&result);
     Ok(result)
@@ -1514,6 +1700,18 @@ fn simulate_gas(
         limits.push((hull_limit.as_str(), depths[depths.len() - 1] - fb));
     }
     let (lim_name, t_max) = min_item(&limits);
+    let mut gas_machinery =
+        machinery_of(p, stern, (l, b, d0), design_draught(p, d0)?, self_propelled)?;
+    let mut gas_aft_design = aft_design_of(p)?;
+    size_installed_power(
+        p,
+        &mut gas_machinery,
+        &mut gas_aft_design,
+        stern,
+        (l, b, d0),
+        design_draught(p, d0)?,
+        (cb, rho),
+    )?;
     let options = FitOptions {
         ruleset: ruleset.to_string(),
         fill_ratio: loading.fill,
@@ -1568,12 +1766,12 @@ fn simulate_gas(
         water_density_t_per_m3: rho,
         required_freeboard_m: fb,
         air_draft_limit_m: truthy_float(p, "air_draft_limit_m")?,
-        aft_design: aft_design_of(p)?,
+        aft_design: gas_aft_design,
         stern_block_mass: stern_mass_of(p)?,
         stern_geometry: stern.cloned(),
         rules: rules.sets.clone(),
         rule_inputs: rules.inputs.clone(),
-        machinery: machinery_of(p, stern, (l, b, d0), design_draught(p, d0)?, self_propelled)?,
+        machinery: gas_machinery,
         ..FitOptions::default()
     };
     let f = ga::fit(l, b, cargo_key, t_max, &options)
@@ -1678,7 +1876,7 @@ fn simulate_gas(
                 .collect::<Vec<_>>(),
         });
     }
-    let curve_list = curves(
+    let (curve_list, resistance) = curves(
         p,
         l,
         b,
@@ -1686,6 +1884,13 @@ fn simulate_gas(
         (cb, stern.map_or(0.0, |g| g.extra_wetted_surface(t))),
         disp,
         rho,
+    )?;
+    let powering_block = powering_json(
+        p,
+        options.machinery.as_ref(),
+        stern,
+        rho,
+        resistance.as_ref(),
     )?;
     let geo = json!({
         "bow_void_length_m": opt_num(r.bow_void_length_m),
@@ -1710,7 +1915,8 @@ fn simulate_gas(
     }
     let drawing = drawing_json(drawing_parts);
     let air_loaded = r.air_draft_top_above_keel_m - t;
-    with_text_ids(
+    with_powering_and_text_ids(
+        powering_block.clone(),
         with_stern_mass(
         json!({
             "vessel": label,
@@ -1755,7 +1961,15 @@ fn simulate_gas(
             "curves": curve_list,
             "stability": stability,
             "stability_marks": stability_marks,
-            "cost_masses": r.gas_basis.as_ref().map_or(Value::Null, |b| crate::cost::gas_masses(&b.weights)),
+            "cost_masses": r.gas_basis.as_ref().map_or(Value::Null, |b| match &powering_block {
+                // Issue #353: the Option's own battery and Installed Power, not a tug's.
+                Some(pw) => crate::cost::self_propelled_gas_masses(
+                    &b.weights,
+                    pw["battery_energy_kwh"].as_f64().unwrap_or_else(|| battery_units_kwh(p, r)),
+                    pw["installed_power_kw"].as_f64().unwrap_or(0.0),
+                ),
+                None => crate::cost::gas_masses(&b.weights),
+            }),
         }),
             (&r.stern_block_items, &r.trim_conditions),
         ),
