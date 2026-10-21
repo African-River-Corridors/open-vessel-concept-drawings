@@ -929,7 +929,11 @@ fn the_elevation_and_plan_draw_the_cofferdam_zone_limits_and_forward_equipment()
                 && close(ends(e).1.1, db)
                 && ends(e).1.0 - ends(e).0.0 > loa / 2.0));
         }
-        assert!(has_leader(&v.side_elevation, "WBT (BOTH SIDES)"));
+        // the wing tank's label, where the arrangement has one (issue #410: a self-propelled
+        // arrangement can be two tanks wide, with no wing tank)
+        if f(&r["drawing"]["wing_tank_width_m"]) > 0.0 {
+            assert!(has_leader(&v.side_elevation, "WBT (BOTH SIDES)"));
+        }
         // elevation domes: one on each tank; the tank top is above the deck here, so they are in view
         let top = f(&r["drawing"]["double_bottom_m"])
             + f(&r["drawing"]["tank_support_height_m"])

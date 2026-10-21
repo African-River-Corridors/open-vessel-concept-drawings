@@ -33,6 +33,7 @@ fn narrow_deep() -> GasCapacityResult {
             outfitting: 15.085025777540716,
             bow_void_m: 0.0,
             stern_void_m: 0.0,
+            covering_items: Vec::new(),
         }),
         cargo_density_t_per_m3: 0.581,
         lightship_t: 480.59038275062665,

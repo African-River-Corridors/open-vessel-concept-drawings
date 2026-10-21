@@ -474,15 +474,18 @@ fn json_results_are_what_simulate_answers_for_a_self_propelled_gas_hull() {
     // again (issue #264, the search keeps only arrangements that pass stability); was
     // 2943.4407266060916, and lightship_t 2038.2392733939087. Re-pinned again (issue #277, the
     // wheelhouse sightline blocks the search); was 2832.6643735601965 and 1893.6869533634328.
+    // Re-pinned again (issue #410, the covering above D is in the lightship; the one-wide
+    // arrangement fails the light-condition angle of max GZ); was 2021.2487121368047 and
+    // 1604.5823133024817.
     let r = &results["results"];
     assert_close(
         r["cargo_t"].as_f64().unwrap(),
-        2021.2487121368047,
+        1405.8516419707348,
         "cargo_t",
     );
     assert_close(
         r["lightship_t"].as_f64().unwrap(),
-        1604.5823133024817,
+        1509.0556682648712,
         "lightship_t",
     );
     // Re-pinned (issue #264); was "tank volume" (stepped IGC_2G) and "draught — Draught limit" (issue #237).

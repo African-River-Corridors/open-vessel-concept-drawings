@@ -545,6 +545,12 @@ pub fn gas_model(
             lcg_m: g.stern_void_m / 2.0
         },
     ];
+    // Issue #410: the covering above D at its own centres.
+    items.extend(g.covering_items.iter().map(|i| Item {
+        mass_t: i.mass_t,
+        kcg_m: i.kcg_m,
+        lcg_m: i.lcg_m,
+    }));
     items.extend(result.stern_block_items.iter().map(|i| Item {
         mass_t: i.mass_t,
         kcg_m: i.kcg_m,

@@ -4,6 +4,7 @@
 //! every expression keeps Python's evaluation order so the rounding is the same.
 
 use alloc::string::ToString;
+use alloc::vec::Vec;
 
 use libm::{fabs, pow, sqrt};
 
@@ -115,13 +116,109 @@ pub fn vertical_moment(items: &[MassItem]) -> f64 {
     items.iter().map(|i| i.mass_t * i.kcg_m).sum()
 }
 
+/// The covering above the moulded depth D of a gas hull with a wing tank (issue #410): a
+/// non-structural weather covering, weighed as lightship items each with its own centre. Only the
+/// parts above D count; the hull steel (`steel_rate_per_cbm` x LOA x B x D) holds what is below.
+/// So a user who sets D over the tanks makes the covering structural, and the list is empty.
+///
+/// - the wing plate, at its own level, when it stands above D;
+/// - the side plating from D up to the wing plate, at mid-height;
+/// - the weather shield top, at the tank top plus the clearance;
+/// - the weather shield sides and ends, at mid-height between the higher of the wing plate and D
+///   and the shield top.
+///
+/// The plates take the same thicknesses as the bottom-up steel. The LCGs are from the aft end:
+/// the wing plate's tank-zone part at the tank zone centre and its full-beam parts in the bow and
+/// stern zones; the side plating at mid-length; the shield at the tank zone centre.
+pub fn covering_items(inputs: &BargeInputs, tanks: &TankResult) -> Result<Vec<MassItem>, PyError> {
+    let mut items = Vec::new();
+    if !(wing_tank_width_positive(inputs)? && inputs.wing_tank_height_ratio < 1.0) {
+        return Ok(items);
+    }
+    let rho = inputs.hull_steel_density;
+    let d = inputs.depth;
+    let db = inputs.double_bottom_height.unwrap_or(0.0);
+    let tank_od = tanks.outer_diameter;
+    let tank_r = tank_od / 2.0;
+    let cargo_tank_bottom = db + inputs.tank_support_height;
+    let wing_tank_top = cargo_tank_bottom + inputs.wing_tank_height_ratio * tank_od;
+    let tank_zone_length = tank_zone_length(inputs)?;
+    let stern = inputs.stern_non_tank_length.unwrap_or(0.0);
+    let bow = inputs.bow_non_tank_length.unwrap_or(0.0);
+    let tank_zone_centre = stern + tank_zone_length / 2.0;
+
+    if wing_tank_top > d {
+        // The wing plate: the beam less the tank cut-outs in the tank zone, the full beam in the
+        // bow and stern zones (as `calculate_weights` weighs it).
+        let dy = wing_tank_top - (cargo_tank_bottom + tank_r);
+        let chord_width = if fabs(dy) < tank_r {
+            2.0 * sqrt(pow(tank_r, 2.0) - pow(dy, 2.0))
+        } else {
+            0.0
+        };
+        let t_deck = inputs.deck_plate_thickness / 1000.0;
+        let net_width = inputs.beam - (inputs.n_tanks_wide as f64) * chord_width;
+        let m_zone = net_width * tank_zone_length * t_deck * rho;
+        let m_stern = inputs.beam * stern * t_deck * rho;
+        let m_bow = inputs.beam * bow * t_deck * rho;
+        let mass = m_zone + m_stern + m_bow;
+        let moment =
+            m_zone * tank_zone_centre + m_stern * stern / 2.0 + m_bow * (inputs.loa - bow / 2.0);
+        items.push(MassItem {
+            label: "wing plate",
+            mass_t: mass,
+            lcg_m: if mass > 0.0 {
+                moment / mass
+            } else {
+                inputs.loa / 2.0
+            },
+            kcg_m: wing_tank_top,
+        });
+        // The side plating from D up to the wing plate: two sides, full LOA.
+        let t_side = inputs.side_plate_thickness / 1000.0;
+        items.push(MassItem {
+            label: "side plating to the wing plate",
+            mass_t: 2.0 * (wing_tank_top - d) * inputs.loa * t_side * rho,
+            lcg_m: inputs.loa / 2.0,
+            kcg_m: (d + wing_tank_top) / 2.0,
+        });
+    }
+
+    if inputs.weather_shield_thickness > 0.0 {
+        let t_shield = inputs.weather_shield_thickness / 1000.0;
+        let shield_top = cargo_tank_bottom + tank_od + inputs.weather_shield_clearance;
+        if shield_top > d {
+            items.push(MassItem {
+                label: "weather shield top",
+                mass_t: inputs.beam * tank_zone_length * t_shield * rho,
+                lcg_m: tank_zone_centre,
+                kcg_m: shield_top,
+            });
+            // The sides and ends stand on the wing plate, or on the deck where D is higher.
+            let foot = py_max(wing_tank_top, d);
+            let height = shield_top - foot;
+            if height > 0.0 {
+                let area = 2.0 * height * tank_zone_length + 2.0 * inputs.beam * height;
+                items.push(MassItem {
+                    label: "weather shield sides and ends",
+                    mass_t: area * t_shield * rho,
+                    lcg_m: tank_zone_centre,
+                    kcg_m: (foot + shield_top) / 2.0,
+                });
+            }
+        }
+    }
+    Ok(items)
+}
+
 /// Calculate the component weight breakdown, in tonnes.
 ///
 /// Hull steel has two figures. The bottom-up one is built from plating areas and thicknesses, plus a
 /// structure factor for internal framing (floors, frames, longitudinals, bulkheads), with the wing
 /// plate and the weather shield (`steel_bottom_up`); the capital budget prices it. The top-down one
-/// is `steel_rate_per_cbm` times the moulded volume (`steel_top_down`); the lightship, the piping
-/// and the outfitting use it. `steel_delta` is top-down less bottom-up (issue #401).
+/// is `steel_rate_per_cbm` times the moulded volume to D (`steel_top_down`); the lightship, the
+/// piping and the outfitting use it. The covering above D joins the lightship as its own items
+/// (`covering_items`, issue #410). `steel_delta` is top-down less bottom-up (issue #401).
 pub fn calculate_weights(
     inputs: &BargeInputs,
     hull: &HullGeometry,
@@ -227,18 +324,13 @@ pub fn calculate_weights(
     }
 
     // --- Top-down vs bottom-up steel ---
-    // Moulded depth = wing plate level (uniform moulded depth).
-    let db_td = inputs.double_bottom_height.unwrap_or(0.0);
-    let cargo_tank_bottom_td = db_td + inputs.tank_support_height;
-    let wing_tank_top_td =
-        cargo_tank_bottom_td + inputs.wing_tank_height_ratio * tanks.outer_diameter;
-    let moulded_depth = if wing_tank_width_positive(inputs)? {
-        py_max(inputs.depth, wing_tank_top_td)
-    } else {
-        inputs.depth
-    };
+    // Issue #410: the hull is weighed to the moulded depth D only. What stands above D (the wing
+    // plate, the side plating up to it, the weather shield) is a non-structural covering: it goes
+    // into the lightship as its own items (`covering_items`), not as hull girder.
+    let moulded_depth = inputs.depth;
     let moulded_volume = inputs.loa * inputs.beam * moulded_depth;
     let steel_top_down = inputs.steel_rate_per_cbm * moulded_volume;
+    let covering = total_mass(&covering_items(inputs, tanks)?);
 
     // Bottom-up: hull steel only (excluding tanks, which are separate).
     let steel_bottom_up = w_hull_total + w_wing_plate + w_weather_shield;
@@ -250,8 +342,10 @@ pub fn calculate_weights(
     // --- Outfitting (percentage of steel + tanks) ---
     let w_outfitting = inputs.outfitting_factor * (steel_top_down + w_tank_total);
 
-    // --- Lightship total (top-down hull steel + bottom-up tanks + insulation + piping + outfitting) ---
-    let lightship = steel_top_down + w_tank_total + w_insulation + w_piping + w_outfitting;
+    // --- Lightship total (top-down hull steel + bottom-up tanks + insulation + piping + outfitting
+    // + the covering above D) ---
+    let lightship =
+        steel_top_down + w_tank_total + w_insulation + w_piping + w_outfitting + covering;
 
     Ok(WeightBreakdown {
         hull_bottom_plating: w_bottom,

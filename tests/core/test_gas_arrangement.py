@@ -14,14 +14,16 @@ def test_cn_ii_benchmark_is_reproduced():
     Re-pinned in issue #237 (the per-tank d(Vc) of IGC 2.4.1.1, datum of 2.4.2, dome in Vc) to
     2,943.44 t; it was 2,058 t under the stepped reading. Re-pinned again in issue #264 (the search
     keeps only arrangements that pass stability) to 2,832.66 t, and in issue #277 (the wheelhouse
-    sightline blocks the search) to what the code prints now, 2,021.25 t. See the before/after
-    table in CHANGELOG.md.
+    sightline blocks the search) to 2,021.25 t. Re-pinned again in issue #410 (the covering above D
+    is in the lightship at its own heights): the one-wide arrangement fails the light-condition
+    angle of max GZ, so the search takes two tanks wide, 1,405.85 t as the code prints it now. See
+    the before/after table in CHANGELOG.md.
 
     Label: snapshot
     """
     f = fit(90.0, 14.8, "LPG_propane", 4.4, depths=[6.5], ruleset="IGC_2G", fill_ratio=0.95)
-    assert abs(f.payload_t - 2021) < 1.0
-    assert f.n_tanks_wide == 1
+    assert abs(f.payload_t - 1405.85) < 1.0
+    assert f.n_tanks_wide == 2
 
 
 def test_search_beats_the_auto_seed_on_cn_ii():
@@ -34,8 +36,10 @@ def test_search_beats_the_auto_seed_on_cn_ii():
                                         max_tank_od_m=12.0))
     best = fit(90.0, 14.8, "LPG_propane", 4.4, depths=[6.5], max_tank_od_m=12.0)
     # Issue #277: the wheelhouse sightline now blocks, so the search answer is lower (1,763 t); it
-    # still beats the AUTO seed (1,406 t). The margin was 1.5 times.
-    assert best.payload_t > 1.2 * min(auto.cargo_capacity_t, 3000)
+    # still beats the AUTO seed (1,406 t). The margin was 1.5 times. Issue #410: the one-wide
+    # arrangement that beat the seed now fails the light-condition angle of max GZ, so the search
+    # lands on the seed's own two-wide answer. It must never do worse than the seed.
+    assert best.payload_t >= auto.cargo_capacity_t - 1e-9
 
 
 @pytest.mark.parametrize("cap", [12.0, 16.0])
@@ -80,7 +84,10 @@ def test_payload_never_exceeds_the_draught_cap():
 # Issue #277 (the wheelhouse sightline blocks; the wing tank width follows the IGC side clearance)
 # re-pinned the others to the printed values 1691.1903238505604, 1875.1180321250488 and
 # 2957.2540744793505; they were 1738, 2033 and 2922.
-SNAPSHOT = [((90, 12.9), 1498), ((90, 14.8), 1691), ((90, 18.0), 1875), ((120, 18.0), 2957)]
+# Issue #410 (the covering above D is in the lightship; the one-wide arrangements fail the
+# light-condition angle of max GZ) re-pinned two to the printed values 1129.9948047917674 and
+# 1204.2783981854238; they were 1498 and 1691.
+SNAPSHOT = [((90, 12.9), 1130), ((90, 14.8), 1204), ((90, 18.0), 1875), ((120, 18.0), 2957)]
 
 
 @pytest.mark.parametrize("dims,expected", SNAPSHOT)
@@ -113,7 +120,9 @@ def test_snapshot_120x18_is_two_8m_tanks_abreast():
 # 1755.2051149886904.
 # Issue #277 (the wheelhouse sightline blocks; the wing tank width follows the IGC side clearance)
 # re-pinned both to the printed values; they were 1692.4687453268486 and 2921.887266646023.
-SNAPSHOT_16 = [((90, 14.8), 1614.9482417833697), ((120, 18.0), 2957.2540744793505)]
+# Issue #410 (the covering above D is in the lightship) re-pinned (90, 14.8) to the printed value;
+# it was 1614.9482417833697.
+SNAPSHOT_16 = [((90, 14.8), 1204.2783981854238), ((120, 18.0), 2957.2540744793505)]
 
 
 @pytest.mark.parametrize("dims,expected", SNAPSHOT_16)

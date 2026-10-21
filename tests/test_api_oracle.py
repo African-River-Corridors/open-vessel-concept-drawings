@@ -98,12 +98,25 @@ KNOWN_DIFFERENCES: dict = {
     # Issue #413: the legacy free surface takes the fill as a volume ratio (the liquid height is
     # the circular segment's, as the gas stability has it), not as a height ratio. Its moment at
     # 0.95 fill is about 12 times larger, so the legacy GM_fluid falls.
+    # Issue #410: the hull steel is weighed to the moulded depth D, not to the wing plate, and the
+    # covering above D (wing plate, side plating up to it, weather shield) is in the lightship. So
+    # `moulded_depth`, `moulded_volume`, `steel_top_down`, piping, outfitting and the lightship move,
+    # and the legacy stability and trim that read them.
     "tanks.free_surface_moment_cylindrical": "issue #413: the free surface takes the fill as a volume ratio",
-    "hydrostatics.calculate_stability": "issue #413: the free surface takes the fill as a volume ratio",
-    "edited.stability_with_raked_hull": "issue #413: the free surface takes the fill as a volume ratio",
-    "edited.stability_with_heavier_weights": "issue #413: the free surface takes the fill as a volume ratio",
-    "edited.stability_with_other_tanks": "issue #413: the free surface takes the fill as a volume ratio",
-    "reuse.barge_inputs_in_a_loop": "issue #413: the free surface takes the fill as a volume ratio",
+    "hydrostatics.calculate_stability": "issue #410: the hull steel to D and the covering above D in the lightship; "
+                                        "issue #413: the free surface takes the fill as a volume ratio",
+    "edited.stability_with_raked_hull": "issue #410: the hull steel to D and the covering above D in the lightship; "
+                                        "issue #413: the free surface takes the fill as a volume ratio",
+    "edited.stability_with_heavier_weights": "issue #410: the hull steel to D and the covering above D in the lightship; "
+                                             "issue #413: the free surface takes the fill as a volume ratio",
+    "edited.stability_with_other_tanks": "issue #410: the hull steel to D and the covering above D in the lightship; "
+                                         "issue #413: the free surface takes the fill as a volume ratio",
+    "reuse.barge_inputs_in_a_loop": "issue #410: the hull steel to D and the covering above D in the lightship; "
+                                    "issue #413: the free surface takes the fill as a volume ratio",
+    "weights.calculate_weights": "issue #410: the hull steel to D and the covering above D in the lightship",
+    "hydrostatics.calculate_trim": "issue #410: the hull steel to D and the covering above D in the lightship",
+    "edited.trim_with_raked_hull": "issue #410: the hull steel to D and the covering above D in the lightship",
+    "edited.weights_with_doubled_tank_shells": "issue #410: the hull steel to D and the covering above D in the lightship",
 }
 
 # Keys added to inputs and results after 0.1.0, with the issue that added them. They are dropped

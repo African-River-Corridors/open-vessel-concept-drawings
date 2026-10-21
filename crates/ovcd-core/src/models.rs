@@ -341,9 +341,10 @@ pub struct WeightBreakdown {
     pub outfitting: f64,
     /// Diesel, fresh water, provisions
     pub stores: f64,
-    /// LOA x beam x moulded depth (m^3)
+    /// LOA x beam x moulded depth D (m^3)
     pub moulded_volume: f64,
-    /// Effective moulded depth to wing plate (m)
+    /// The moulded depth D the hull steel is weighed to (m). Issue #410: the covering above D is
+    /// not hull girder, so this is no longer raised to the wing plate.
     pub moulded_depth: f64,
     /// Top-down: rate x moulded volume (tonnes)
     pub steel_top_down: f64,

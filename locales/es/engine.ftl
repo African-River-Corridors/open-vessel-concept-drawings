@@ -107,7 +107,7 @@ warn-separation-clauses = Las cláusulas de separación se citan de las reglas d
 # status: draft
 stab-limit-concept-stage = Etapa conceptual: sección prismática de caja, alturas de pesos de primer orden, sin aberturas de inundación progresiva.
 # status: draft
-stab-limit-no-wind-or-damage = Sin escora por viento y sin estabilidad en averías (ADN 9.3.1.15 / IGC 2.7 exigen ambas antes de la aprobación).
+stab-limit-no-wind-or-damage = Sin escora por viento y sin estabilidad en averías. Ambas se exigen antes de la aprobación: la estabilidad en averías según ADN 9.3.1.15 e IGC 2.7, la escora por viento según el criterio meteorológico del Código IS 2008 (parte A 2.3).
 # status: draft
 stab-limit-stern-block-mass = La masa del bloque de popa autopropulsado no está en el peso en rosca de gas, así que KG y el desplazamiento no la incluyen; el GM real podría ser menor.
 # status: draft

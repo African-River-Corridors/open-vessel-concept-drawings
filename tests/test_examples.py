@@ -11,5 +11,7 @@ def test_quickstart_runs(capsys):
     out = capsys.readouterr().out
     # Re-pinned (issue #237: the per-tank d(Vc) of IGC 2.4.1.1, dome in Vc); was 2,058 t. Re-pinned
     # again (issue #264: the search keeps only arrangements that pass stability); was 2,943 t. Re-pinned
-    # again (issue #277: the wheelhouse sightline blocks the search); was 2,833 t.
-    assert "Searched   : 1 tank(s) abreast" in out and "2,021 t" in out
+    # again (issue #277: the wheelhouse sightline blocks the search); was 2,833 t. Re-pinned again
+    # (issue #410: the covering above D is in the lightship; one tank abreast fails the
+    # light-condition angle of max GZ); was 1 tank abreast and 2,021 t.
+    assert "Searched   : 2 tank(s) abreast" in out and "1,406 t" in out
