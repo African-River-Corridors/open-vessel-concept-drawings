@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Feature (issue #426, part 2): the IS Code 2008 loading conditions, opt-in by the new format v3 input `loading_conditions` (`legacy` stays the default until the gas arrangement search uses the new conditions; a file saved before reads `legacy`). With `is_code_2008`, gas and dry bulk Options are checked in the four standard conditions of Part B 3.4.1.2 (full load and ballast, departure and arrival), and in "Lightship, no ballast" where `may_sail_without_ballast` (default: barges yes, self-propelled no). Stores and fuel (self-propelled only: `fixed_stores_t` plus fuel for `endurance_h` at the service speed; none for battery-electric) are 100 % at departure and 10 % at arrival, with their largest free surface (3.1.3.2, 3.1.4); the full load carries them, so a draught-bound cargo is that much less and the deadweight holds them. Each ballast condition has a ballast plan, the least ballast that meets every criterion or user fills, stated per tank (3.4.2.3), with the free surface of slack tanks. Dry bulk condition checks are warnings and stay out of the Rule Trace until a dry bulk Rule Set exists. New results blocks `loading_conditions` and (for dry bulk too) `stability`, only when opted in. Five design-impact sweep cases opt in; their table is under "Design changes".
 - Design change (issue #418, two maintainer decisions): no hidden check gates `fit`. The two capacity checks that test the full tank volume, `not overloaded` and `freeboard ok`, no longer remove candidates: a candidate is de-rated to its payload, and the carried draught is gated by `freeboard at payload` (with the user's freeboard) and the journey `floats` check. `freeboard ok` now reads the user's freeboard, not a hidden 0.3 m. Every result lists the two as warnings (they were hidden), and a gas result now also lists the search's own checks of the answer (`capacity is volume bound`, `floats`, `ukc consistent`, `utilisation reasonable` as a warning, `tank length over diameter`, `freeboard at payload`), so every check that can remove a candidate is visible. The `ovcd` Rules `ovcd/capacity/freeboard` and `ovcd/capacity/not-overloaded` are `warn`. The CLI summary and the drawing's failed-checks note count failed errors only; the CLI lists failed warnings on their own line. Every results hash moves (177 of 177 design-impact cases; no cargo, draught or feasibility value moves); the fixtures and the legacy test files are re-stamped from `ovcd run` (the v1 ADN file keeps its old hash, as its test expects a difference). API: `simulate.box` and `simulate.hopper_channel` are new known differences from 0.1.0. New core function `gas_arrangement::answer_search_checks`.
 - Known limitation (issue #282, as the maintainer decided): the 0 to 40 degree and 30 to 40 degree areas of IS Code 2008 Part A 2.2.1 always run to 40 degrees, because the model has no down-flooding angle yet. The README says so, and the app's Stability view lists it under Limitations for every gas design (new message `app-stab-limit-downflooding`; draft `es`, `pt` and `zh-Hans`). The Rule Trace rows of the two areas already link the finding. The engine's own limitation list is part of the results and is not changed, so no result or hash moves.
 - Evaluation harness (issue #279): rule data mutation. For each numeric limit and coefficient of each evaluated Rule of the selected sets, the harness writes a mutated copy of the set with that number moved one step to each side, loads it at run time, and runs the corpus. A mutant that no case notices is a weak-corpus warning; `results.md` lists every mutant and the cases that notice it. The steps are the big steps of the boundary mutants per unit (m rad 0.002, m 0.01, degrees 2; 1 % for coefficients and table values). On `is2008-a` all 12 mutants are noticed. The harness runs in about a second, so it stays in the pull-request gate. No result moves.
@@ -162,6 +163,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/426-conditions (2026-10-21)
+
+Between `main b0c1e32` and `this branch 2ef061a`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep optional ballast_plan | `checks[5].message` | absent | GM 2.79 m (fluid), max GZ 0.17 m at 6° — fails: Area 0–30° 0.021 < 0.055, Area 0–40° -0.024 < 0.09, Area 30–40° -0.046 < 0.03, GZ at ≥ 30° -0.174 < 0.2, Angle of max GZ 6.000 < 25.0 | changed |
+| sweep optional ballast_plan | `checks[5].name` | absent | Stability — full load, departure | changed |
+| sweep optional ballast_plan | `checks[5].ok` | absent | False | changed |
+| sweep optional ballast_plan | `checks[5].severity` | absent | warning | changed |
+| sweep optional ballast_plan | `checks[6].message` | absent | GM 2.79 m (fluid), max GZ 0.17 m at 6° — fails: Area 0–30° 0.021 < 0.055, Area 0–40° -0.024 < 0.09, Area 30–40° -0.046 < 0.03, GZ at ≥ 30° -0.174 < 0.2, Angle of max GZ 6.000 < 25.0 | changed |
+| sweep optional ballast_plan | `checks[6].name` | absent | Stability — full load, arrival | changed |
+| sweep optional ballast_plan | `checks[6].ok` | absent | False | changed |
+| sweep optional ballast_plan | `checks[6].severity` | absent | warning | changed |
+| sweep optional ballast_plan | `checks[7].message` | absent | GM 6.68 m (fluid), max GZ 2.27 m at 26° | changed |
+| sweep optional ballast_plan | `checks[7].name` | absent | Stability — ballast, departure | changed |
+| sweep optional ballast_plan | `checks[7].ok` | absent | True | changed |
+| sweep optional ballast_plan | `checks[7].severity` | absent | warning | changed |
+| sweep optional ballast_plan | `checks[8].message` | absent | GM 6.80 m (fluid), max GZ 2.87 m at 34° | changed |
+| sweep optional ballast_plan | `checks[8].name` | absent | Stability — ballast, arrival | changed |
+| sweep optional ballast_plan | `checks[8].ok` | absent | True | changed |
+| sweep optional ballast_plan | `checks[8].severity` | absent | warning | changed |
+| sweep optional ballast_plan | `checks[9].message` | absent | GM 26.27 m (fluid), max GZ 4.01 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | changed |
+| sweep optional ballast_plan | `checks[9].name` | absent | Stability — lightship, no ballast | changed |
+| sweep optional ballast_plan | `checks[9].ok` | absent | False | changed |
+| sweep optional ballast_plan | `checks[9].severity` | absent | warning | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_capacity_m3` | absent | 2322.72 | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_capacity_t` | absent | 2322.72 | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tank_count` | absent | 6 | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[0].capacity_m3` | absent | 661.92 | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[0].capacity_t` | absent | 661.92 | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[0].kind` | absent | double_bottom_ballast | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[0].lcg_m` | absent | 42.9 | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[0].name` | absent | DB1P | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[0].side` | absent | port | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[0].tcg_m` | absent | -3.5 | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[0].vcg_m` | absent | 0.6 | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[1].capacity_m3` | absent | 661.92 | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[1].capacity_t` | absent | 661.92 | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[1].kind` | absent | double_bottom_ballast | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[1].lcg_m` | absent | 42.9 | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[1].name` | absent | DB1S | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[1].side` | absent | starboard | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[1].tcg_m` | absent | 3.5 | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[1].vcg_m` | absent | 0.6 | changed |
+| sweep optional ballast_plan | `loading_conditions.ballast_tanks[2].capacity_m3` | absent | 260.04 | changed |
+| ... | 7704 more changed quantities | | | |
 
 ### 418 (2026-10-21)
 
