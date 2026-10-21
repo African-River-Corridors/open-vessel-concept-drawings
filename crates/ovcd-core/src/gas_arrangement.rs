@@ -4,7 +4,8 @@
 //! Only IGC rules apply to the gas tanks (issue #175): `IGC_2G`, the per-tank rule of IGC 2.4.1.1
 //! with the datum of 2.4.2 (issue #237). Two tanks lie
 //! along the hull. Every tank has to keep to the outer diameter cap (`FitOptions::max_tank_od_m`)
-//! and to length over diameter at most [`MAX_TANK_LENGTH_OVER_OD`]. A candidate over that is not
+//! and to length over inner diameter at most [`MAX_TANK_LENGTH_OVER_OD`] (the diameter of a tank
+//! shell is its internal diameter, ADN 2025 1.2.1; issue #416). A candidate over that is not
 //! feasible: it gets the failed check `tank_length_over_diameter`, so it can never win while a
 //! compliant one exists, and a hull with none is reported infeasible, not given a payload.
 //!
@@ -416,22 +417,26 @@ pub fn required_side_clearance(
     Ok(d_vc_exact(per_tank_m3) - insulation_mm / 1000.0)
 }
 
-/// The length over diameter check of a candidate's tank. `None` when there is no tank (a bulk
-/// result, or a hull with no cargo area), which the other checks already report.
+/// The length over diameter check of a candidate's tank: the overall tank length, heads included,
+/// over the inner diameter of the steel shell. ADN 2025 9.3.1.11.1 (b) and the inland class rules
+/// Pt 4 Ch 4 3.5.1 set the ratio at 7; ADN 1.2.1 defines the diameter of a tank shell as its
+/// internal diameter (maintainer decision on issue #416; it was the insulated outer diameter).
+/// `None` when there is no tank (a bulk result, or a hull with no cargo area), which the other
+/// checks already report.
 pub fn length_over_diameter_check(r: &BargeCapacityResult) -> Option<Check> {
     let tanks = &r.gas_basis.as_ref()?.tanks;
-    if tanks.outer_diameter <= 0.0 {
+    if tanks.outer_diameter <= 0.0 || tanks.inner_diameter <= 0.0 {
         return None;
     }
-    let ratio = tanks.overall_tank_length / tanks.outer_diameter;
+    let ratio = tanks.overall_tank_length / tanks.inner_diameter;
     Some(Check::new(
         "tank_length_over_diameter",
         ratio <= MAX_TANK_LENGTH_OVER_OD,
         text!(
-            "check-tank-length-over-diameter",
-            "tank length {length} m / outer diameter {diameter} m = {ratio} <= {max}",
+            "check-tank-length-over-inner-diameter",
+            "tank length {length} m / inner diameter {diameter} m = {ratio} <= {max}",
             length = Arg::fixed(tanks.overall_tank_length, 2),
-            diameter = Arg::fixed(tanks.outer_diameter, 2),
+            diameter = Arg::fixed(tanks.inner_diameter, 2),
             ratio = Arg::fixed(ratio, 2),
             max = Arg::py(MAX_TANK_LENGTH_OVER_OD),
         ),
@@ -450,7 +455,7 @@ pub fn length_over_diameter_check(r: &BargeCapacityResult) -> Option<Check> {
 //     `freeboard_ok` (`FULL_VOLUME_CHECKS`): they test the full tank volume, and a candidate is
 //     de-rated to its payload, so they do not gate (maintainer decision on issue #418);
 //   - the journey checks: the channel draught limit leaves a payload that floats;
-//   - `tank_length_over_diameter`: overall tank length over outer diameter, at most 7;
+//   - `tank_length_over_diameter`: overall tank length over inner shell diameter, at most 7;
 //   - `freeboard_at_payload`: the hull depth less the carried draught, at least the required freeboard.
 // Costly check (run only for a candidate that passed the cheap ones and could still win):
 //   - stability: IS Code 2008 Part A 2.2, each loading condition (`gas_stability::assess`).

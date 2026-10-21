@@ -36,7 +36,7 @@ class GridCell:
     cargo_t: Optional[float] = None            # volume-bound (1.0 m default side clearance)
     tank_outer_diameter_m: Optional[float] = None
     tank_length_m: Optional[float] = None
-    slenderness: Optional[float] = None         # overall tank length / OD
+    slenderness: Optional[float] = None         # overall tank length / inner shell diameter
     full_load_draft_m: Optional[float] = None
     air_draft_m: Optional[float] = None
     reason: str = ""                            # why infeasible, if so

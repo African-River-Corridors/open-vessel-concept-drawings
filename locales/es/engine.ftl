@@ -75,7 +75,7 @@ check-resistance-coeffs-first-order = la resistencia en aguas restringidas (resi
 ## crates/ovcd-core/src/gas_arrangement.rs
 
 # status: draft
-check-tank-length-over-diameter = longitud del tanque { $length } m / diámetro exterior { $diameter } m = { $ratio } <= { $max }
+check-tank-length-over-inner-diameter = longitud del tanque { $length } m / diámetro interior { $diameter } m = { $ratio } <= { $max }
 # status: draft
 check-freeboard-at-payload = francobordo { $freeboard } m al calado de carga { $draught } m >= requerido { $required } m
 # status: draft

@@ -72,7 +72,7 @@ check-resistance-coeffs-first-order = confined-water resistance (residuary/Lacke
 ## crates/ovcd-core/src/gas_arrangement.rs
 
 check-name-tank-length-over-diameter = tank length over diameter
-check-tank-length-over-diameter = tank length { $length } m / outer diameter { $diameter } m = { $ratio } <= { $max }
+check-tank-length-over-inner-diameter = tank length { $length } m / inner diameter { $diameter } m = { $ratio } <= { $max }
 check-name-freeboard-at-payload = freeboard at payload
 check-freeboard-at-payload = freeboard { $freeboard } m at the carried draught { $draught } m >= required { $required } m
 check-stability = GM { $gm } m (fluid), max GZ { $max_gz } m at { $angle }°
