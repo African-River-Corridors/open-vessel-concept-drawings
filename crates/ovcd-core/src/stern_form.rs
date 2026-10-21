@@ -14,13 +14,15 @@
 //!   Its section at the propeller plane is the circular segment above the base; it tapers linearly to
 //!   nothing at x = run, so the volume is the section below the waterline x run / 2 per tunnel.
 //!
-//! The sections table of ADR 0012 will later replace these closed forms with sections the generator
-//! writes from the same inputs ([`SternFormInputs`]); the closed forms then stay as its test, as the
-//! raked box does.
+//! [`apply`] writes the same stern into a Sections Table (ADR 0012, spec 0008 "Hull Forms", issue
+//! #447); the closed forms stay as its test, as the raked box's do. Not yet wired into any result.
 
 use alloc::vec::Vec;
+use core::fmt;
 
-use libm::{acos, pow, sqrt};
+use libm::{acos, cos, pow, sin, sqrt};
+
+use crate::sections::{Section, SectionsError, SectionsTable};
 
 /// The three Stern Forms.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -362,6 +364,236 @@ impl SternGeometry {
                     .collect()
             })
             .collect()
+    }
+}
+
+/// Spec 0008: the intervals over the run of a pram or tunnel stern (17 Stations), and the chords of
+/// a whole tunnel arc at each Station (a centreline tunnel's starboard half has half of them).
+pub const RUN_INTERVALS: u32 = 16;
+pub const TUNNEL_CHORDS: u32 = 16;
+
+/// Why the stern cannot be written into a Sections Table.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ApplyError {
+    /// The table does not start at x = 0, or ends before the run does.
+    RunOutsideHull { run_m: f64 },
+    /// Under a tunnel stern the first edge of a Section in the run (keel point to the next point)
+    /// is not on the base line.
+    BottomNotFlat { section: usize },
+    /// A tunnel reaches past the first edge of a Section (the flat bottom), or two tunnels overlap.
+    TunnelOutsideBottom { section: usize },
+    /// The Sections written were refused.
+    Sections(SectionsError),
+}
+
+impl fmt::Display for ApplyError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            ApplyError::RunOutsideHull { run_m } => {
+                write!(f, "the stern run of {run_m} m does not fit the hull")
+            }
+            ApplyError::BottomNotFlat { section } => write!(
+                f,
+                "section {section} has no flat bottom on the base line for the tunnels"
+            ),
+            ApplyError::TunnelOutsideBottom { section } => write!(
+                f,
+                "the tunnels do not fit the flat bottom of section {section}"
+            ),
+            ApplyError::Sections(e) => write!(f, "{e}"),
+        }
+    }
+}
+
+/// Write the stern run into the Sections Table of a hull whose aft end is square (spec 0008, "Hull
+/// Forms"): [`RUN_INTERVALS`] intervals over the run of a pram or tunnel stern, one of a transom.
+/// The legacy stern (run 0) leaves the table unchanged.
+pub fn apply(g: &SternGeometry, table: &mut SectionsTable) -> Result<(), ApplyError> {
+    apply_with(g, table, RUN_INTERVALS)
+}
+
+/// [`apply`] with `intervals` intervals over a pram or tunnel run (a transom has one), for the
+/// convergence tests.
+pub fn apply_with(
+    g: &SternGeometry,
+    table: &mut SectionsTable,
+    intervals: u32,
+) -> Result<(), ApplyError> {
+    if g.is_legacy() {
+        return Ok(());
+    }
+    let run = g.run_m;
+    let first = table.sections[0].x;
+    let last = table.sections[table.sections.len() - 1].x;
+    if first != 0.0 || last < run {
+        return Err(ApplyError::RunOutsideHull { run_m: run });
+    }
+    let n = match g.form {
+        SternForm::Transom => 1,
+        _ => intervals.max(1),
+    };
+    // The Stations of the run, x = 0 included, with each Section the table has there or the ruled
+    // surface between its neighbours. A Section already in the run is kept and shaped too.
+    let mut stations: Vec<(Section, f64)> = Vec::new();
+    for i in 0..=n {
+        let x = run * f64::from(i) / f64::from(n);
+        if !table.sections.iter().any(|s| s.x == x) {
+            stations.push(interpolate(table, x));
+        }
+    }
+    let mut rows: Vec<(Section, f64)> = table
+        .sections
+        .iter()
+        .cloned()
+        .zip(table.depth_at_side.iter().copied())
+        .chain(stations)
+        .collect();
+    // A stable sort keeps the order of two Sections that share an x (a step).
+    rows.sort_by(|a, b| a.0.x.total_cmp(&b.0.x));
+    match g.form {
+        SternForm::Transom | SternForm::Pram => {
+            for (s, _) in rows.iter_mut().filter(|(s, _)| s.x <= run) {
+                let z_b = g.bottom_height(s.x);
+                for p in s.points.iter_mut() {
+                    p.1 = p.1.max(z_b);
+                }
+            }
+        }
+        SternForm::Tunnel => {
+            for (i, (s, _)) in rows.iter_mut().enumerate() {
+                cut_tunnels(g, s, i)?;
+            }
+        }
+    }
+    let (sections, depths) = rows.into_iter().unzip();
+    *table = SectionsTable::new(sections, depths).map_err(ApplyError::Sections)?;
+    Ok(())
+}
+
+/// The Section at `x` on the ruled surface between the table's Sections either side, and its deck
+/// edge height.
+fn interpolate(table: &SectionsTable, x: f64) -> (Section, f64) {
+    let ss = &table.sections;
+    let j = ss.iter().position(|s| s.x > x).unwrap_or(ss.len() - 1);
+    let (a, b) = (&ss[j - 1], &ss[j]);
+    let u = (x - a.x) / (b.x - a.x);
+    let lerp = |p: f64, q: f64| p + u * (q - p);
+    let points = a
+        .points
+        .iter()
+        .zip(&b.points)
+        .map(|(p, q)| (lerp(p.0, q.0), lerp(p.1, q.1)))
+        .collect();
+    let depth = lerp(table.depth_at_side[j - 1], table.depth_at_side[j]);
+    (Section { x, points }, depth)
+}
+
+/// Cut the starboard tunnels into the first edge of one Section: arcs in the run, and the same
+/// number of points on the edge forward of it, so every Section keeps one point count.
+fn cut_tunnels(g: &SternGeometry, s: &mut Section, index: usize) -> Result<(), ApplyError> {
+    let (p0, p1) = (s.points[0], s.points[1]);
+    let r = g.propeller_diameter_m;
+    let in_run = s.x < g.run_m;
+    if in_run && (p0.1 != 0.0 || p1.1 != 0.0) {
+        return Err(ApplyError::BottomNotFlat { section: index });
+    }
+    let crown = g.tunnel_crown_height(s.x);
+    let zc = crown - r;
+    // The arc above the base runs from -a0 to a0 about the top of the circle.
+    let a0 = if in_run && r > 0.0 {
+        acos((-zc / r).clamp(-1.0, 1.0))
+    } else {
+        0.0
+    };
+    // The widest the tunnel gets over the run: at the transom.
+    let zc0 = g.tunnel_crown_height_m - r;
+    let reach = if zc0 >= 0.0 {
+        r
+    } else {
+        sqrt((r * r - zc0 * zc0).max(0.0))
+    };
+    let on_edge = |y: f64| {
+        let u = y / p1.0;
+        (y, p0.1 + u * (p1.1 - p0.1))
+    };
+    let mut y0s: Vec<f64> = g
+        .tunnel_offsets_m
+        .iter()
+        .copied()
+        .filter(|&y0| y0 >= 0.0)
+        .collect();
+    y0s.sort_by(f64::total_cmp);
+    let mut cut = Vec::new();
+    let mut keel = p0;
+    let mut edge_reached = 0.0_f64;
+    for (t, &y0) in y0s.iter().enumerate() {
+        // A centreline tunnel is halved by the centre line. The innermost of a pair may cross it:
+        // there it meets its mirror, and the section is their union, cut off at the centre line.
+        // Any other tunnel must clear the one inboard of it.
+        let clear = y0 == 0.0 || t == 0 || y0 - reach >= edge_reached;
+        if !clear || y0 + reach > p1.0 {
+            return Err(ApplyError::TunnelOutsideBottom { section: index });
+        }
+        edge_reached = y0 + reach;
+        let arc = |a: f64| {
+            if in_run {
+                (y0 + r * sin(a), zc + r * cos(a))
+            } else {
+                on_edge(y0)
+            }
+        };
+        if y0 == 0.0 {
+            // The centreline tunnel's starboard half: its crown is the keel point.
+            let k = TUNNEL_CHORDS / 2;
+            keel = arc(0.0);
+            if !in_run {
+                keel = p0;
+            }
+            cut.extend((1..=k).map(|j| arc(a0 * f64::from(j) / f64::from(k))));
+        } else {
+            // Where the arc crosses the centre line, it starts at its upper crossing, and that
+            // height is the keel point's.
+            let a_start = if t == 0 && in_run && y0 < r && a0 > libm::asin(y0 / r) {
+                -libm::asin(y0 / r)
+            } else {
+                -a0
+            };
+            let k = TUNNEL_CHORDS;
+            cut.extend(
+                (0..=k).map(|j| arc(a_start + (a0 - a_start) * f64::from(j) / f64::from(k))),
+            );
+            if t == 0 && a_start > -a0 {
+                cut[0].0 = 0.0;
+                keel = (0.0, cut[0].1);
+            }
+        }
+    }
+    s.points[0] = keel;
+    s.points.splice(1..1, cut);
+    Ok(())
+}
+
+impl SternGeometry {
+    /// The keel height of a transom or pram stern at `x` from the transom (0 forward of the run).
+    pub fn bottom_height(&self, x: f64) -> f64 {
+        let (l, h) = (self.run_m, self.transom_height_m);
+        if l <= 0.0 || x >= l {
+            return 0.0;
+        }
+        match self.form {
+            SternForm::Transom => h * (1.0 - x / l),
+            SternForm::Pram => h * pow(1.0 - x / l, 2.0),
+            SternForm::Tunnel => 0.0,
+        }
+    }
+
+    /// The tunnel crown height at `x` from the transom: falling linearly to the base at the end of
+    /// the run, as [`SternGeometry::profile`] draws it.
+    pub fn tunnel_crown_height(&self, x: f64) -> f64 {
+        if self.run_m <= 0.0 || x >= self.run_m {
+            return 0.0;
+        }
+        self.tunnel_crown_height_m * (1.0 - x / self.run_m)
     }
 }
 
