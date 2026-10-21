@@ -98,6 +98,18 @@ pub const DEFAULT_WING_TANK_HEIGHT_RATIO: f64 = 0.66;
 /// Default aft void of a pushed barge (m).
 pub const DEFAULT_PUSHED_STERN_VOID_M: f64 = 3.0;
 
+/// How the design liquid pressure of a gas tank is worked out (issue #374).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum LiquidPressure {
+    /// No liquid pressure: the wall takes the vapour pressure only (the original engine).
+    None,
+    /// Gravity only, a = 1 (the default; an estimate for inland and sheltered service).
+    Static,
+    /// IGC 4.28.2: a = 1 + az, the guidance vertical acceleration for the North Atlantic, for a ship
+    /// over 50 m at its service speed (knots).
+    Igc4282 { service_speed_kn: f64 },
+}
+
 /// The design values of a gas tank that depend on the Cargo (issue #292): the pressure, the steel,
 /// the insulation and the structure factor. `Default` is what the engine used before they were
 /// inputs. The tank wall thickness is not here: it is `BargeCapacityInputs::tank_wall_thickness`
@@ -114,6 +126,10 @@ pub struct TankDesign {
     pub insulation_thickness_mm: f64,
     /// Internal stiffeners, supports and saddles as a multiple of the shell weight.
     pub structure_factor: f64,
+    /// The liquid pressure added to the design pressure in the wall formula (issue #374).
+    pub liquid_pressure: LiquidPressure,
+    /// The lowest design temperature (C): the liquid pressure takes the cargo density there.
+    pub design_temperature_c: Option<f64>,
 }
 
 impl Default for TankDesign {
@@ -124,6 +140,8 @@ impl Default for TankDesign {
             allowable_stress_mpa: None,
             insulation_thickness_mm: DEFAULT_TANK_INSULATION_MM,
             structure_factor: DEFAULT_TANK_STRUCTURE_FACTOR,
+            liquid_pressure: LiquidPressure::None,
+            design_temperature_c: None,
         }
     }
 }
@@ -505,6 +523,65 @@ pub fn dome_volume_m3(diameter_m: f64, height_m: f64) -> f64 {
     core::f64::consts::FRAC_PI_4 * diameter_m * diameter_m * height_m
 }
 
+/// The IGC 4.28.2 guidance vertical acceleration az (no static weight), at a tank whose centre of
+/// gravity is `x_m` from amidships (forward positive), on the centreline (y = 0, K = 1):
+/// az = a0 x sqrt(1 + (5.3 - 45/L0)^2 (x/L0 + 0.05)^2 (0.6/CB)^1.5), a0 = 0.2 V / sqrt(L0) +
+/// (34 - 600/L0) / L0, with L0 the length (m), CB the block coefficient and V the speed (knots).
+pub fn igc_vertical_acceleration(l0_m: f64, cb: f64, speed_kn: f64, x_m: f64) -> f64 {
+    let a0 = 0.2 * speed_kn / libm::sqrt(l0_m) + (34.0 - 600.0 / l0_m) / l0_m;
+    let k = 5.3 - 45.0 / l0_m;
+    let r = x_m / l0_m + 0.05;
+    a0 * libm::sqrt(1.0 + k * k * r * r * libm::pow(0.6 / cb, 1.5))
+}
+
+/// The acceleration a and the density rho (kg/m^3) of the design liquid pressure of a gas design
+/// (issue #374). rho is the largest cargo density at the design temperature: the saturated
+/// liquid density there for an LPG Cargo inside the tables, else the cargo density in force.
+/// For IGC 4.28.2 the tank is the one farthest from amidships, `n_long` tanks of equal length
+/// between the voids with `gap_m` between them.
+pub fn liquid_pressure_basis(
+    inp: &BargeCapacityInputs,
+    bow_void_m: f64,
+    stern_void_m: f64,
+    gap_m: f64,
+) -> Result<(Option<f64>, f64), PyError> {
+    let props = get_cargo(&inp.cargo_type).map_err(value_error)?;
+    let in_force = inp.cargo_density_kg_m3.unwrap_or(props.density);
+    let rho = inp
+        .tank_design
+        .design_temperature_c
+        .and_then(|t| crate::lpg_saturation::liquid_density_kg_m3(&inp.cargo_type, t))
+        .map_or(in_force, |d| if d > in_force { d } else { in_force });
+    let accel = match inp.tank_design.liquid_pressure {
+        LiquidPressure::None => None,
+        LiquidPressure::Static => Some(1.0),
+        LiquidPressure::Igc4282 { service_speed_kn } => {
+            let n = if inp.n_tanks_long > 0 {
+                inp.n_tanks_long
+            } else {
+                1
+            };
+            let zone = inp.loa - bow_void_m - stern_void_m;
+            let length = (zone - (n - 1) as f64 * gap_m) / n as f64;
+            let mut worst = 0.0;
+            for i in 0..n {
+                let centre = stern_void_m + (i as f64 + 0.5) * length + i as f64 * gap_m;
+                let az = igc_vertical_acceleration(
+                    inp.loa,
+                    inp.block_coefficient,
+                    service_speed_kn,
+                    centre - inp.loa / 2.0,
+                );
+                if az > worst {
+                    worst = az;
+                }
+            }
+            Some(1.0 + worst)
+        }
+    };
+    Ok((accel, rho))
+}
+
 /// IGC/IGF protective-location clearances, then the tank arrangement, then cargo volume.
 ///
 /// Resolves the volume and d(Vc) circular dependency by iterating.
@@ -527,6 +604,11 @@ fn gas_volumetric(
     base.n_tanks_long = inp.n_tanks_long;
     base.tank_wall_thickness = inp.tank_wall_thickness;
     base.design_pressure = inp.tank_design.design_pressure_mpa;
+    // Issue #374: the design liquid pressure (IGC 4.23.2.2, 4.28.1.2) joins the wall formula.
+    let (accel, rho) =
+        liquid_pressure_basis(inp, bow_void_m, stern_void_m, base.tank_gap_longitudinal)?;
+    base.liquid_pressure_accel = accel;
+    base.liquid_pressure_density = rho;
     base.tank_material = inp.tank_design.material.clone();
     base.tank_allowable_stress = inp.tank_design.allowable_stress_mpa;
     // The wall formula takes the steel diameter, inside the insulation (issue #292).
@@ -638,6 +720,8 @@ fn gas_volumetric(
             inputs: BargeInputs {
                 wall_formula_on_steel_diameter: false,
                 tank_allowable_stress: None,
+                liquid_pressure_accel: None,
+                liquid_pressure_density: 0.0,
                 ..bi
             },
             tanks: tanks.clone(),

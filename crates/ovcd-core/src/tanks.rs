@@ -77,6 +77,19 @@ pub fn ellipsoidal_2to1_head_area(radius: f64) -> f64 {
     (2.0 * PI * pow(a, 2.0) + PI * pow(c, 2.0) / e * log((1.0 + e) / (1.0 - e))) / 2.0
 }
 
+/// The design liquid pressure of IGC 4.28.1.2 (MPa): Pgd = a x Z x rho / 1.02e5, with a the
+/// dimensionless acceleration, Z the largest liquid height (m) and rho the cargo density (kg/m^3).
+/// Issue #374: Z is the diameter the wall formula takes (the steel outer diameter), the full height
+/// of a horizontal cylinder, a little over the inner diameter (on the safe side by twice the wall).
+/// `None`: no liquid pressure, as the original engine did. IGC 4.23.2.2 and 4.13.2.4 add it to the
+/// vapour pressure: Peq = Po + Pgd.
+pub fn liquid_pressure_mpa(accel: Option<f64>, z_m: f64, density_kg_m3: f64) -> f64 {
+    match accel {
+        Some(a) => a * z_m * density_kg_m3 / 1.02e5,
+        None => 0.0,
+    }
+}
+
 /// Calculate tank dimensions, volumes, and weights for the given barge inputs.
 ///
 /// 1. Available beam = beam - 2 * side_clearance
@@ -137,18 +150,26 @@ pub fn calculate_tank_arrangement_wide(
         // The formula is for the shell, so it wants the steel outer diameter: the diameter without
         // the insulation (issue #292). The original engine gave it the insulated diameter, and the
         // Python API still does (`wall_formula_on_steel_diameter` false).
-        None => calculate_wall_thicknesses_with(
-            if inputs.wall_formula_on_steel_diameter {
+        None => {
+            let formula_diameter = if inputs.wall_formula_on_steel_diameter {
                 outer_diameter - 2.0 * inputs.insulation_thickness / 1000.0
             } else {
                 outer_diameter
-            },
-            inputs.design_pressure,
-            &inputs.tank_material,
-            &inputs.tank_head_type,
-            inputs.weld_efficiency,
-            inputs.tank_allowable_stress,
-        )?,
+            };
+            calculate_wall_thicknesses_with(
+                formula_diameter,
+                inputs.design_pressure
+                    + liquid_pressure_mpa(
+                        inputs.liquid_pressure_accel,
+                        formula_diameter,
+                        inputs.liquid_pressure_density,
+                    ),
+                &inputs.tank_material,
+                &inputs.tank_head_type,
+                inputs.weld_efficiency,
+                inputs.tank_allowable_stress,
+            )?
+        }
     };
 
     let wall_cyl_m = wall_cyl_mm / 1000.0;

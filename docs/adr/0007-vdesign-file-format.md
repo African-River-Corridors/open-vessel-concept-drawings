@@ -120,6 +120,11 @@ save writes the current version.
   it; a file that lacks the inputs gets the fixed 2.0 m, as before. The dome in force is in `drawing.tank`.
   The format version is not changed.
 
+- **Design liquid pressure** (issue #374): a new input `tank_liquid_pressure` (`static`, the Defaults
+  Profile value; `igc_4_28_2`; `none`) sets the liquid pressure the wall formula adds to the design
+  pressure (IGC 4.23.2.2, 4.28.1.2). A file that lacks it gets `none` (a table in `vdesign.rs`, marked
+  `default`): the vapour pressure only, so its results do not change. The format version is not changed.
+
 ## Consequences
 
 - A saved file gives the same results when opened again, on Windows and macOS.

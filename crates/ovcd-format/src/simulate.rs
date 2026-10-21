@@ -596,7 +596,28 @@ fn tank_design_of(p: &Map<String, Value>) -> R<ovcd_core::barge_capacity::TankDe
             ));
         }
     };
+    // Issue #374: the design liquid pressure; left out, the vapour pressure only (the old way).
+    let liquid_pressure = match p.get("tank_liquid_pressure") {
+        None | Some(Value::Null) => b::LiquidPressure::None,
+        Some(Value::String(s)) if s == "none" => b::LiquidPressure::None,
+        Some(Value::String(s)) if s == "static" => b::LiquidPressure::Static,
+        Some(Value::String(s)) if s == "igc_4_28_2" => b::LiquidPressure::Igc4282 {
+            service_speed_kn: get_or(p, "max_speed_kn", 10.0)?,
+        },
+        Some(other) => {
+            return bad(format!(
+                "`params.tank_liquid_pressure` must be one of static, igc_4_28_2, none, not {}",
+                py_repr(other)
+            ));
+        }
+    };
+    let design_temperature_c = match p.get("tank_design_temperature_c") {
+        None | Some(Value::Null) => None,
+        Some(v) => Some(py_float(v, "params.tank_design_temperature_c")?),
+    };
     Ok(b::TankDesign {
+        liquid_pressure,
+        design_temperature_c,
         design_pressure_mpa: get_or(
             p,
             "tank_design_pressure_mpa",
@@ -766,6 +787,16 @@ fn tank_report(
             / 1000.0
     });
     let head = r.gas_basis.as_ref().map(|b| b.tanks.head_wall_thickness);
+    // The design liquid pressure the wall took (issue #374): Pgd = a x Z x rho / 1.02e5, with Z the
+    // steel outer diameter, and Peq = Po + Pgd.
+    let liquid = ovcd_core::barge_capacity::liquid_pressure_basis(
+        inp,
+        r.bow_void_length_m.unwrap_or(0.0),
+        r.stern_void_length_m.unwrap_or(0.0),
+        ovcd_core::models::BargeInputs::new(1.0, 1.0, 1.0, 1.0, 1.0).tank_gap_longitudinal,
+    )
+    .unwrap_or((None, 0.0));
+    let pgd = ovcd_core::tanks::liquid_pressure_mpa(liquid.0, steel.unwrap_or(0.0), liquid.1);
     // The dome in force (issue #316): the rule of `dome_dimensions` on the steel diameter, or the
     // typed size.
     let dome = steel.map(|sd| {
@@ -797,6 +828,14 @@ fn tank_report(
         [
             ("lpg_carriage_condition", text("lpg_carriage_condition")),
             ("design_pressure_mpa", num(design.design_pressure_mpa)),
+            ("liquid_pressure", text("tank_liquid_pressure")),
+            ("liquid_pressure_accel", opt_num(liquid.0)),
+            ("liquid_pressure_density_kg_m3", num(liquid.1)),
+            ("liquid_pressure_mpa", num(pgd)),
+            (
+                "internal_pressure_mpa",
+                num(design.design_pressure_mpa + pgd),
+            ),
             ("design_temperature_c", text("tank_design_temperature_c")),
             ("material", json!(design.material)),
             ("allowable_stress_mpa", opt_num(allowable)),

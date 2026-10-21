@@ -95,6 +95,11 @@ choice-tank-material-316l = 316L stainless steel
 choice-tank-material-9ni = 9 % nickel steel
 choice-tank-material-s690ql1 = S690QL1 quenched and tempered steel
 
+input-tank-liquid-pressure = Tank liquid pressure
+choice-tank-liquid-pressure-static = Static (a = 1), IGC 4.28.1.2
+choice-tank-liquid-pressure-igc-4-28-2 = IGC 4.28.2 sea-going accelerations
+choice-tank-liquid-pressure-none = None
+
 input-tank-allowable-stress-basis = Tank allowable stress basis
 choice-tank-allowable-stress-basis-igc-4-23-3-1 = IGC 4.23.3.1: lesser of Rm/A and Re/B
 choice-tank-allowable-stress-basis-published-design = Before the IGC check (S690QL1 at 285 MPa)
