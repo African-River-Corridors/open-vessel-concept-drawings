@@ -8,6 +8,7 @@
   import Notice from "./lib/Notice.svelte";
   import ThemeControl from "./lib/ThemeControl.svelte";
   import LanguageControl from "./lib/LanguageControl.svelte";
+  import MessageBar, { type BarMessage } from "./lib/MessageBar.svelte";
   import { loadPanels, savePanels } from "./lib/panels";
   import { list, say, schemaText, setInputLabels, t } from "./lib/i18n.svelte";
 
@@ -19,6 +20,8 @@
   let lastGood = $state<Record<string, OptionEvaluation>>({});
   let error = $state<string | null>(null);
   let bannerDismissed = $state(false);
+  /** Migration notes the user dismissed, by their text (a rename gives a note a new text). */
+  let notesDismissed = $state<string[]>([]);
   let generation = $state(0);
   /** The first-run notice: open on first start, and again from About. */
   let noticeOpen = $state(false);
@@ -62,6 +65,7 @@
     if (newDesign) {
       lastGood = {};
       bannerDismissed = false;
+      notesDismissed = [];
     }
     if (redraw) generation += 1;
     snap = next;
@@ -174,6 +178,28 @@
     return typeof v === "number" ? v : null;
   });
   let activeEval = $derived(evaluation?.options.find((o) => o.name === active));
+  /**
+   * Every message the app shows, for the message bar, worked out from the state each time (issue
+   * #436): an app error, the file's messages, the notes of a changed old file and the hash warning.
+   * Errors stay until they are fixed; notes and the hash warning can be dismissed.
+   */
+  let messages = $derived.by((): BarMessage[] => {
+    const out: BarMessage[] = [];
+    if (error) out.push({ key: "error", severity: "error", text: error, dismiss: () => (error = null) });
+    for (const m of evaluation?.file_messages ?? []) {
+      out.push({ key: `file:${m.text}`, severity: m.severity === "error" ? "error" : "warning", text: say(m.text, null, m.msg) });
+    }
+    (snap?.migration_notes ?? []).forEach((note, i) => {
+      if (notesDismissed.includes(note)) return;
+      const dismiss = () => (notesDismissed = [...notesDismissed, note]);
+      out.push({ key: `note:${note}`, severity: "note", text: say(note, null, snap?.migration_note_msgs?.[i]), dismiss });
+    });
+    if (snap && snap.hash_changed.length > 0 && !bannerDismissed) {
+      out.push({ key: "hash-changed", severity: "note", text: t("app-hash-changed", { options: list(snap.hash_changed, "unit") }), dismiss: () => (bannerDismissed = true) });
+    }
+    return out;
+  });
+
   /** The inputs of the active Option that have a hard error, with their schema labels. */
   let blockers = $derived.by(() => {
     const names = new Set<string>();
@@ -219,24 +245,7 @@
     {/if}
   </header>
 
-  {#if error}
-    <div class="banner error" role="alert">
-      <span class="msg">{error}</span>
-      <button onclick={() => (error = null)}>{t("app-dismiss")}</button>
-    </div>
-  {/if}
-  {#each evaluation?.file_messages ?? [] as m}
-    <div class="banner {m.severity === 'error' ? 'error' : 'warn'}" role="status">{say(m.text, null, m.msg)}</div>
-  {/each}
-  {#each snap?.migration_notes ?? [] as note, i}
-    <div class="banner warn" role="status" data-testid="migration-note">{say(note, null, snap?.migration_note_msgs?.[i])}</div>
-  {/each}
-  {#if snap && snap.hash_changed.length > 0 && !bannerDismissed}
-    <div class="banner warn" role="status">
-      {t("app-hash-changed", { options: list(snap.hash_changed, "unit") })}
-      <button onclick={() => (bannerDismissed = true)}>{t("app-dismiss")}</button>
-    </div>
-  {/if}
+  <MessageBar {messages} />
 
   <div class="body" style:grid-template-columns={showInput ? `${leftWidth}px 6px 1fr` : "0 0 1fr"} style:grid-template-rows={showOutputs ? `1fr 6px ${bottomHeight}px` : "1fr 0 0"}>
     <section class="left" hidden={!showInput}><LeftPanel {snap} {schema} {generation} evaluation={activeEval}
@@ -283,17 +292,6 @@
     background: var(--surface-2); color: var(--ink-2); border: var(--lw-thin) solid var(--rule-strong); border-radius: var(--radius);
   }
   header :global(a) { color: var(--accent); font-size: var(--fs-13); }
-  .banner {
-    display: flex; align-items: baseline; gap: var(--sp-2); padding: var(--sp-1) var(--sp-3); font-size: var(--fs-13);
-    border-bottom: var(--lw-thin) solid var(--rule);
-  }
-  .banner::before { flex: none; }
-  .banner .msg { flex: 1; }
-  .banner button { margin-left: var(--sp-2); font-size: var(--fs-13); padding: 1px var(--sp-2); }
-  .banner.error { background: var(--fail-soft); color: var(--fail); }
-  .banner.error::before { content: "\2715"; }
-  .banner.warn { background: var(--warn-soft); color: var(--warn); }
-  .banner.warn::before { content: "\25B2"; }
   .body { flex: 1; display: grid; min-height: 0; }
   .body > section { overflow: auto; min-width: 0; min-height: 0; }
   .left { grid-column: 1; grid-row: 1 / 4; }

@@ -28,6 +28,13 @@ app-theme-dark = Dark
 ## Banners and common words
 
 app-dismiss = Dismiss
+app-msg-bar = Messages
+app-msg-count = { $index } of { $count }
+app-msg-previous = Previous message
+app-msg-next = Next message
+app-msg-show-all = All
+app-msg-show-more = More
+app-msg-show-less = Less
 app-hash-changed = Results changed since this file was saved. Options affected: { $options }.
 app-ok = OK
 app-cancel = Cancel

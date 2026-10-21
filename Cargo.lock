@@ -2445,6 +2445,7 @@ dependencies = [
 name = "ovcd-shell"
 version = "0.2.3"
 dependencies = [
+ "ovcd-core",
  "ovcd-draw",
  "ovcd-format",
  "serde_json",
