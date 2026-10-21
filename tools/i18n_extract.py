@@ -15,6 +15,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tools"))
+import otd  # noqa: E402  the pinned drawing crate: its `label!` calls are drawing messages too
 HEADER = """\
 # The engine's messages: checks, warnings, stability notes and names (spec 0005, ADR 0015).
 # Written by tools/i18n_extract.py from the Rust source. Do not edit: change the English in the
@@ -122,18 +124,27 @@ def fixed_value(english: str, file: str) -> str:
     return fluent_value(english.replace("{", "{{").replace("}", "}}"), file)[0]
 
 
+def rust_sources(root: Path) -> list[tuple[Path, str]]:
+    """Each Rust file to read, with its name in the Text Library: the crates under `crates/`, and, for
+    this repository, the source of the pinned `otd` crate as `otd/src/…`. A test tree has no `otd`."""
+    out = [(p, str(p.relative_to(root))) for p in sorted((root / "crates").rglob("*.rs"))]
+    if root == ROOT:
+        base = otd.root()
+        out += [(p, "otd/" + p.relative_to(base).as_posix()) for p in sorted((base / "src").rglob("*.rs"))]
+    return out
+
+
 def extract(root: Path = ROOT) -> tuple[list[tuple[str, str, str]], list[str]]:
     """The (id, Fluent value, file) of every engine message, in source order, and any problems."""
     found: dict[str, tuple[str, str]] = {}
     order: list[tuple[str, str, str]] = []
     problems: list[str] = []
-    for path in sorted((root / "crates").rglob("*.rs")):
+    for path, rel in rust_sources(root):
         if "target" in path.parts or path.name == "text.rs":
             continue
         text = path.read_text(encoding="utf-8")
         if "text!(" not in text and "label!(" not in text and "Text::fixed(" not in text and "Check::" not in text:
             continue
-        rel = str(path.relative_to(root))
         consts: dict[str, str] = {}
         for m in CONST.finditer(text):
             try:

@@ -17,7 +17,7 @@
 #      .config/nextest.toml), then the doctests, which nextest does not run (issue #481)
 #   4a. the Rule Set gate: released versions unchanged, version classes, rule ids, provenance
 #       (`ovcd rules --provenance`; it prints the unverified blocking Rules of each set)
-#   5. the WebAssembly build of ovcd-core, ovcd-draw and ovcd-web
+#   5. the WebAssembly build of ovcd-core and ovcd-web (ovcd-web builds the pinned otd crate too)
 #   6. the design-impact check (before/after on main; fails only if a change is missing from
 #      CHANGELOG.md)
 #   7. pytest against the shipped package, on every core (pytest-xdist). The `pr` profile leaves out
@@ -106,7 +106,7 @@ step "clippy -D warnings" cargo clippy --all-targets --all-features -- -D warnin
 step "clippy ovcd-py -D warnings" env PYO3_PYTHON="$PY" cargo clippy -p ovcd-py --all-targets --all-features -- -D warnings
 step "cargo test (no Python)" cargo_test_without_python
 step "Rule Set gate" cargo run -q -p ovcd-cli -- rules --provenance
-step "WebAssembly build of ovcd-core, ovcd-draw and ovcd-web" cargo build -p ovcd-core -p ovcd-draw -p ovcd-web --all-features --target "$WASM_TARGET"
+step "WebAssembly build of ovcd-core and ovcd-web" cargo build -p ovcd-core -p ovcd-web --all-features --target "$WASM_TARGET"
 step "design impact" "$PY" tools/design_impact.py gate
 step "pytest" "$PY" -m pytest -q -n auto ${PYTEST_SELECT[@]+"${PYTEST_SELECT[@]}"}
 

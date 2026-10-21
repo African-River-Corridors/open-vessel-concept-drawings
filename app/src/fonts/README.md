@@ -7,7 +7,7 @@ allows this, and each font keeps its licence in `app/public/licenses/`.
 
 | File | Licence |
 |---|---|
-| `BarlowSemiCondensed-Regular.woff2` (from `crates/ovcd-draw/standard/fonts/`), `-Medium`, `-SemiBold` | `BarlowSemiCondensed-OFL.txt` |
+| `BarlowSemiCondensed-Regular.woff2` (from the `otd` crate's `standard/fonts/`), `-Medium`, `-SemiBold` | `BarlowSemiCondensed-OFL.txt` |
 | `SourceSerif4-Variable.woff2`, `SourceSerif4-Italic-Variable.woff2` | `SourceSerif4-OFL.txt` |
 | `IBMPlexMono-Regular.woff2` | `IBMPlexMono-OFL.txt` |
 | `ArchitectsDaughter-Regular.woff2` | `ArchitectsDaughter-OFL.txt` |

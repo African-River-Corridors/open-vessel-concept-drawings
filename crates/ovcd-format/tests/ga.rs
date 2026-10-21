@@ -1,7 +1,7 @@
 //! Seam 5: the GA view builder (spec 0003, issue #100). Every view of every fixture Design is checked
 //! against the Drawing Format Standard itself, through `ovcd-draw`.
 
-#[path = "../../ovcd-draw/tests/support/dxf_reader.rs"]
+#[path = "support/dxf_reader.rs"]
 mod dxf_reader;
 
 use ovcd_core::pyfmt::fixed;

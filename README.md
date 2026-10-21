@@ -143,7 +143,7 @@ passing; it stays in the results as a failed check.
 | `src/vessel_designer/simulate.py` | one-call JSON-in, JSON-out simulation |
 | `catalogue/` | standard vessel classes and reference vessels, with sources |
 | `calibration/` | calibration cases, fitted factors and results |
-| `crates/` | the Rust core (`ovcd-core`), file format and Design session (`ovcd-format`), drawings (`ovcd-draw`) and CLI |
+| `crates/` | the Rust core (`ovcd-core`), file format and Design session (`ovcd-format`), and CLI. Drawings go through [`otd`](https://github.com/African-River-Corridors/open-technical-drawer), pinned by tag |
 | `app/` | the desktop app (Tauri) |
 | `website/` | the website and docs ([africanrivercorridors.com/ovcd](https://www.africanrivercorridors.com/ovcd)) |
 | `docs/adr/` | architecture decisions |

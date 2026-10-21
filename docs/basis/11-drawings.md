@@ -5,7 +5,7 @@
 > Code state: written against `main` at commit `f6d446c` (2026-10-20).
 
 **For:** naval architect, draughtsperson  ·  **Code:** `crates/ovcd-format/src/ga.rs` (view builder),
-`crates/ovcd-draw/` (Drawing Format Standard, Rust), `crates/ovcd-format/src/simulate.rs` (the `geometry`
+the [`otd`](https://github.com/African-River-Corridors/open-technical-drawer) crate (Drawing Format Standard, Rust; pinned by tag), `crates/ovcd-format/src/simulate.rs` (the `geometry`
 and `drawing` result objects), `crates/ovcd-cli/src/draw.rs`  ·  **Rule Sets:** none
 
 ## What OVCD computes here
@@ -20,7 +20,8 @@ For each Option that runs, it makes three drawings (General Arrangement views, s
   bottom, wing ballast tanks, voids, cradles and domes, waterlines, clearances.
 
 Each drawing is one drawing document (JSON) of the Drawing Format Standard. `ovcd-draw` turns it into
-normalised content, then SVG, PDF and DXF.
+normalised content, then SVG, PDF and DXF. OVCD code names the crate `ovcd_draw` (the dependency's
+name in `Cargo.toml`); its package is `otd`.
 
 A convoy, or an Option that cannot be computed, gives no drawings. The message is the same as the outputs
 panel (`ga_views_of`, `ga.rs`).
@@ -174,13 +175,14 @@ The drawing constants in DR-A23, DR-A30, DR-A31, DR-A37, DR-A38 and DR-A43 are n
 
 ## Evidence
 
-- **Standard conformance:** `crates/ovcd-draw/tests/conformance.rs` runs every case of the vendored suite
-  (`crates/ovcd-draw/standard/conformance/suite.json`). `tests/vendored.rs` checks the copy against
-  `standard/PIN.json` (pinned commit of the standard's repository, with a hash).
+- **Standard conformance:** in the `otd` repository, `tests/conformance.rs` runs every case of the vendored
+  suite (`standard/conformance/suite.json`), and `tests/vendored.rs` checks the copy against
+  `standard/PIN.json` (pinned commit of the standard's repository, with a hash). `python3 tools/otd.py`
+  prints where cargo keeps the pinned crate.
 - **Cross-implementation:** a CI job (`.github/workflows/ci.yml`) installs the Python tool at the pinned
   commit and compares normalised content for every fixture Design.
-- **Outputs:** `crates/ovcd-draw/tests/outputs.rs` and `tests/dxf.rs` (DXF read back with a second reader,
-  `tests/support/dxf_reader.rs`).
+- **Outputs:** in the `otd` repository, `tests/outputs.rs` and `tests/dxf.rs` (DXF read back with a second
+  reader, `tests/support/dxf_reader.rs`). Here, `tools/dxf_crosscheck.py` reads OVCD's own DXF files back.
 - **View builder:** `crates/ovcd-format/tests/ga.rs` (every document validates; LOA, beam, depth, draught
   and freeboard on the drawings equal the results; dry bulk and gas show their containment);
   `ga_recovery.rs` (each drawn item at the place the results give, `null` items left out);

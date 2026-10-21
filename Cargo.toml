@@ -1,8 +1,8 @@
 [workspace]
 resolver = "3"
-members = ["crates/arc-rules", "crates/ovcd-core", "crates/ovcd-format", "crates/ovcd-draw", "crates/ovcd-cli", "crates/ovcd-py", "crates/ovcd-shell", "crates/ovcd-web", "app/src-tauri", "xtask"]
+members = ["crates/arc-rules", "crates/ovcd-core", "crates/ovcd-format", "crates/ovcd-cli", "crates/ovcd-py", "crates/ovcd-shell", "crates/ovcd-web", "app/src-tauri", "xtask"]
 # ovcd-py (PyO3 bindings) and the app (Tauri, needs Node for the front end) are left out so `cargo build` and `cargo test` need no Python.
-default-members = ["crates/arc-rules", "crates/ovcd-core", "crates/ovcd-format", "crates/ovcd-draw", "crates/ovcd-cli", "crates/ovcd-shell", "crates/ovcd-web", "xtask"]
+default-members = ["crates/arc-rules", "crates/ovcd-core", "crates/ovcd-format", "crates/ovcd-cli", "crates/ovcd-shell", "crates/ovcd-web", "xtask"]
 
 [workspace.package]
 version = "0.2.4"
@@ -15,7 +15,9 @@ repository = "https://github.com/African-River-Corridors/open-vessel-concept-dra
 arc-rules = { path = "crates/arc-rules", default-features = false }
 ovcd-core = { path = "crates/ovcd-core" }
 ovcd-format = { path = "crates/ovcd-format" }
-ovcd-draw = { path = "crates/ovcd-draw" }
+# The Drawing Format Standard in Rust lives in its own repository (open-technical-drawer). OVCD code
+# keeps the name `ovcd_draw` for it.
+ovcd-draw = { package = "otd", git = "https://github.com/African-River-Corridors/open-technical-drawer", rev = "d78d022d22580ed3f7f7fa495ed47a0fb3575cc5" }
 ovcd-shell = { path = "crates/ovcd-shell" }
 # float_roundtrip, arbitrary_precision: read every number exactly as written, big ints too.
 # preserve_order: a JSON object keeps its key order, as a Python dict does.

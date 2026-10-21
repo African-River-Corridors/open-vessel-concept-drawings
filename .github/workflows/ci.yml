@@ -156,7 +156,8 @@ jobs:
 
   # The drawing crate against the Python implementation of the same standard (spec 0003): the views
   # of every fixture Design give equal normalised content in both. The Python tool is installed at
-  # the commit that crates/ovcd-draw/standard/PIN.json pins, so a suite update moves both together.
+  # the commit that the pinned otd crate's standard/PIN.json pins (tools/otd.py), so a suite update
+  # moves both together.
   drawing-crosscheck:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -172,7 +173,7 @@ jobs:
         run: cargo build -p ovcd-cli
       - name: Install the Python implementation of the standard at the pinned commit
         run: |
-          pin=$(python -c "import json; p = json.load(open('crates/ovcd-draw/standard/PIN.json')); print(p['repository'] + '@' + p['commit'])")
+          pin=$(python tools/otd.py pin)
           python -m pip install --upgrade pip
           python -m pip install "git+https://github.com/${pin}"
       - name: Rust and Python give equal normalised content for every fixture view
@@ -181,7 +182,7 @@ jobs:
       # codes, no ezdxf) and ezdxf with its audit. The reader lives in the standard's repository.
       - name: Read the DXF files back with the standard's reader and ezdxf
         run: |
-          read -r repo commit < <(python -c "import json; p = json.load(open('crates/ovcd-draw/standard/PIN.json')); print(p['repository'], p['commit'])")
+          IFS=@ read -r repo commit < <(python tools/otd.py pin)
           git init -q "$RUNNER_TEMP/tdfa"
           git -C "$RUNNER_TEMP/tdfa" fetch -q --depth 1 "https://github.com/${repo}" "${commit}"
           git -C "$RUNNER_TEMP/tdfa" checkout -q FETCH_HEAD

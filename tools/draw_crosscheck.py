@@ -7,8 +7,8 @@ and their normalised content must be equal (clause 16.9: numbers are compared as
 
     python3 tools/draw_crosscheck.py [--ovcd target/debug/ovcd] [--tool technical_drawings_for_agents]
 
-The Python tool is installed at the commit that crates/ovcd-draw/standard/PIN.json records (see the
-`drawing-crosscheck` job in .github/workflows/ci.yml). Exit 1 on any difference, and on a run that
+The Python tool is installed at the commit that the pinned `otd` crate's standard/PIN.json records
+(`python3 tools/otd.py pin`; see the `drawing-crosscheck` job in .github/workflows/ci.yml). Exit 1 on any difference, and on a run that
 compared too few documents to mean anything. Standard library only.
 """
 from __future__ import annotations

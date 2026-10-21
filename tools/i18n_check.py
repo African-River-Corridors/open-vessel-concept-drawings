@@ -103,6 +103,11 @@ def code_ids(root: Path) -> tuple[set[str], set[str]]:
             used.update(USED.findall(text))
             used.update(re.findall(r'data-i18n(?:-aria)?="([a-z0-9-]+)"', text))
             built.update(BUILT.findall(text))
+    if root == ROOT:  # the pinned otd crate's `label!` calls are code too (tools/otd.py)
+        import otd
+
+        for p in (otd.root() / "src").rglob("*.rs"):
+            used.update(RUST_USED.findall(p.read_text(encoding="utf-8")))
     return used, built
 
 
