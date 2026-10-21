@@ -175,7 +175,7 @@ struct Aft {
     block_top: f64,
 }
 
-/// The names of the failed checks, in the plain capitals a note allows: an em dash becomes a hyphen,
+/// The names of the failed error checks, in the plain capitals a note allows: an em dash becomes a hyphen,
 /// an underscore a space, and any other character outside printable ASCII is dropped.
 fn failed_checks(results: &Value) -> Vec<String> {
     let Some(checks) = results.get("checks").and_then(Value::as_array) else {
@@ -183,7 +183,11 @@ fn failed_checks(results: &Value) -> Vec<String> {
     };
     checks
         .iter()
-        .filter(|c| c.get("ok").and_then(Value::as_bool) == Some(false))
+        // A failed warning does not make the design fail (issue #418); no severity is an error.
+        .filter(|c| {
+            c.get("ok").and_then(Value::as_bool) == Some(false)
+                && c.get("severity").and_then(Value::as_str) != Some("warning")
+        })
         .map(|c| {
             let name = c.get("name").and_then(Value::as_str).unwrap_or("CHECK");
             let plain: String = name

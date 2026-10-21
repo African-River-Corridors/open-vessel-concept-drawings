@@ -386,15 +386,20 @@ fn resistance_of(
         .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))
 }
 
-/// The capacity checks as the simulator lists them: two superseded ones are left out, and the
-/// name reads with spaces.
+/// The capacity checks as the simulator lists them, the name read with spaces. The two that test
+/// the full tank volume (`FULL_VOLUME_CHECKS`) gate nothing, so they are listed as warnings: shown,
+/// as every check is, but not a failure (issue #418).
 fn capacity_checks(r: &BargeCapacityResult, out: &mut Vec<Value>) {
     let kept: Vec<Check> = r
         .checks
         .iter()
-        .filter(|c| c.name != "not_overloaded" && c.name != "freeboard_ok")
         .map(|c| Check {
             name: c.name.replace('_', " "),
+            severity: if ga::FULL_VOLUME_CHECKS.contains(&c.name.as_str()) {
+                "warning".to_string()
+            } else {
+                c.severity.clone()
+            },
             ..c.clone()
         })
         .collect();
@@ -1824,15 +1829,20 @@ fn simulate_gas(
     capacity_checks(r, &mut checks);
     ids.checks(&r.checks);
     ids.texts(&r.warnings);
-    // A tank longer than 7 outer diameters is listed when it fails, as the search names it.
-    for msg in &f.failed_checks {
-        if let Some(rest) = msg.strip_prefix("tank_length_over_diameter: ") {
-            checks.push(json!({
-                "name": "tank length over diameter",
-                "ok": false,
-                "message": rest,
-            }));
-        }
+    // The search's own checks of the answer (the journey, tank length over diameter, freeboard
+    // at the payload): every check that can remove a candidate is listed (issue #418).
+    let search = ga::answer_search_checks(&f, &options)
+        .map_err(|e| Stop::Raised(e.kind.to_string(), e.message))?;
+    ids.checks(&search);
+    let search: Vec<Check> = search
+        .into_iter()
+        .map(|c| Check {
+            name: c.name.replace('_', " "),
+            ..c
+        })
+        .collect();
+    if let Value::Array(items) = checks_json(&search) {
+        checks.extend(items);
     }
     if let Some(limit) = truthy_float(p, "air_draft_limit_m")? {
         checks.push(air_draft_check(r, limit, &mut ids)?);

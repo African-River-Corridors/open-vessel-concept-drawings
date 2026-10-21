@@ -646,7 +646,7 @@
     },
     {
       "id": "ovcd/capacity/not-overloaded",
-      "title": "The cargo the tanks hold floats within the hull",
+      "title": "The full tank volume floats within the hull (information: it does not gate, #418)",
       "origin": "physical",
       "source": {},
       "codified": {
@@ -662,7 +662,7 @@
           "name": "not overloaded"
         }
       },
-      "consequence": "block",
+      "consequence": "warn",
       "sizes": false,
       "evaluated": true,
       "finding": null,
@@ -670,7 +670,7 @@
     },
     {
       "id": "ovcd/capacity/freeboard",
-      "title": "Freeboard at the full-load draught at least the required freeboard",
+      "title": "Freeboard at the full-volume draught at least the required freeboard (information: it does not gate, #418)",
       "origin": "physical",
       "source": {},
       "codified": {
@@ -686,7 +686,7 @@
           "name": "freeboard ok"
         }
       },
-      "consequence": "block",
+      "consequence": "warn",
       "sizes": false,
       "evaluated": true,
       "finding": null,

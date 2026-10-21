@@ -398,3 +398,33 @@ fn a_design_that_failed_only_the_type_g_floor_now_passes() {
     assert!(f.feasible);
     assert!(f.failed_checks.is_empty());
 }
+
+#[test]
+fn a_full_volume_check_does_not_remove_a_de_rated_candidate() {
+    // Issue #418 (maintainer decision): `freeboard_ok` and `not_overloaded` test the full tank
+    // volume. A candidate carries only its de-rated payload, so they do not gate the search; the
+    // carried draught is gated by `freeboard_at_payload`. A 6.5 m hull at a 2.0 m draught cap, with
+    // a 4.45 m required freeboard: the payload keeps 4.50 m, the full volume misses it, and the
+    // arrangement passes.
+    let o = FitOptions {
+        depths: vec![6.5],
+        required_freeboard_m: 4.45,
+        ..FitOptions::default()
+    };
+    let f = fit(90.0, 14.8, "LPG_propane", 2.0, &o).unwrap();
+    assert!(f.feasible, "{:?}", f.failed_checks);
+    let full = f
+        .engine_result
+        .checks
+        .iter()
+        .find(|c| c.name == "freeboard_ok")
+        .unwrap();
+    assert!(!full.ok, "{}", full.message);
+    // The full-volume check reads the user's freeboard, not a hidden 0.3 m.
+    assert!(
+        full.message.to_string().contains("required 4.45"),
+        "{}",
+        full.message
+    );
+    assert!(f.depth_m - f.draft_at_payload_m >= 4.45 - 1e-9);
+}

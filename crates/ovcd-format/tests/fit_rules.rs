@@ -153,3 +153,87 @@ fn property_a_feasible_answer_never_has_a_failing_row_and_more_rules_never_add_c
         }
     }
 }
+
+/// A gas fixture with some inputs replaced.
+fn variant(name: &str, inputs: &[(&str, Value)]) -> ovcd_format::Design {
+    let mut design = fixture(name);
+    let o = &mut design.options[0];
+    for (input, value) in inputs {
+        match o.inputs.iter_mut().find(|(n, _)| n == input) {
+            Some(i) => i.1.value = value.clone(),
+            None => {
+                let mut i = o.inputs[0].1.clone();
+                i.value = value.clone();
+                o.inputs.push((input.to_string(), i));
+            }
+        }
+    }
+    o.results_hash = None;
+    design
+}
+
+#[test]
+fn property_every_check_that_removes_a_candidate_is_visible_in_the_result() {
+    // Issue #418: no hidden check gates `fit`. For hulls where nothing passes, each check the
+    // "Feasible arrangement" message names is in the result's check list and failed there; each
+    // failing Rule it names has a failing row in the trace. The two full-volume checks, which gate
+    // nothing, are shown as warnings.
+    let mut infeasible = 0;
+    for name in [
+        "gas_igc_2g_self_propelled.vdesign",
+        "gas_igc_2g_exact.vdesign",
+    ] {
+        for inputs in [
+            vec![],
+            vec![("length_overall_m", json!(30.0))],
+            vec![("length_overall_m", json!(45.0))],
+            vec![("air_draft_limit_m", json!(4.0))],
+            vec![("min_freeboard_m", json!(4.0))],
+        ] {
+            let r = run(&variant(name, &inputs), &[]);
+            let checks = r["checks"].as_array().unwrap();
+            for full in ["not overloaded", "freeboard ok"] {
+                let c = checks.iter().find(|c| c["name"] == full).unwrap();
+                assert_eq!(c["severity"], "warning", "{name} {inputs:?}: {full}");
+            }
+            if r["arrangement"]["feasible"] == true {
+                continue;
+            }
+            infeasible += 1;
+            let message = checks
+                .iter()
+                .find(|c| c["name"] == "Feasible arrangement")
+                .unwrap()["message"]
+                .as_str()
+                .unwrap()
+                .to_string();
+            let list = message
+                .split("It fails: ")
+                .nth(1)
+                .unwrap()
+                .trim_end_matches('.');
+            let rows = r["rule_trace"]["rows"].as_array().unwrap();
+            for item in list.split("; ") {
+                if let Some((rule, _)) = item.split_once(": ") {
+                    assert!(
+                        rows.iter()
+                            .any(|row| row["rule"] == rule && row["outcome"] == "fail"),
+                        "{name} {inputs:?}: no failing row for {rule}"
+                    );
+                    continue;
+                }
+                let shown = item.replace('_', " ");
+                let c = checks
+                    .iter()
+                    .find(|c| c["name"].as_str().unwrap().eq_ignore_ascii_case(&shown))
+                    .unwrap_or_else(|| panic!("{name} {inputs:?}: `{item}` is not in the result"));
+                assert_eq!(c["ok"], false, "{name} {inputs:?}: {item}");
+                assert_ne!(c["severity"], "warning", "{name} {inputs:?}: {item}");
+            }
+        }
+    }
+    assert!(
+        infeasible >= 2,
+        "the corpus reaches too few infeasible hulls"
+    );
+}
