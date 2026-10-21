@@ -166,6 +166,21 @@ impl Measured {
                 "rm" => number(t.tensile_strength_mpa),
                 "re" => number(t.yield_strength_mpa),
                 "material" => Ok(MeasureValue::Text(t.material.clone())),
+                "design_pressure" => number(t.design_pressure_mpa),
+                // IGC 4.23.1.2: sigma_m is taken as the allowable stress f, the most the wall may
+                // carry; the tank dimension C and the relative density are the tank's own.
+                "dynamic_pressure_term" => {
+                    number(crate::pressure_vessel::igc_dynamic_pressure_term_mpa(
+                        t.allowable_stress_mpa,
+                        t.outer_diameter_m,
+                        t.overall_length_m,
+                        t.liquid_density_t_per_m3,
+                    ))
+                }
+                "design_temperature" => t
+                    .design_temperature_c
+                    .map(MeasureValue::Number)
+                    .ok_or_else(|| "the design gives no tank design temperature".to_string()),
                 other => Err(format!("no value for Measure `tank.{other}`")),
             };
         }

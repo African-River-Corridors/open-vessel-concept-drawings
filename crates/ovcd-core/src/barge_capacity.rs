@@ -367,6 +367,17 @@ pub struct TankRuleValues {
     /// Rm and Re of the material, MPa (IGC 4.18.1.3).
     pub tensile_strength_mpa: f64,
     pub yield_strength_mpa: f64,
+    /// The outer diameter of the steel tank, m.
+    pub outer_diameter_m: f64,
+    /// The overall length of one tank including its heads, m.
+    pub overall_length_m: f64,
+    /// The design vapour pressure the wall formula used, MPa.
+    pub design_pressure_mpa: f64,
+    /// The lowest design temperature of the tank, C; none when the design gives none.
+    pub design_temperature_c: Option<f64>,
+    /// The liquid density at the design temperature, t/m^3 (the relative density of IGC 4.23.1.2,
+    /// as fresh water is 1): the largest cargo density there.
+    pub liquid_density_t_per_m3: f64,
 }
 
 /// The converged gas arrangement and its weight split, for the gas stability check.
@@ -810,6 +821,11 @@ fn gas_volumetric(
                 material: bi.tank_material.clone(),
                 tensile_strength_mpa: mat.tensile_strength,
                 yield_strength_mpa: mat.yield_strength,
+                outer_diameter_m: tanks.outer_diameter,
+                overall_length_m: tanks.overall_tank_length,
+                design_pressure_mpa: bi.design_pressure,
+                design_temperature_c: inp.tank_design.design_temperature_c,
+                liquid_density_t_per_m3: bi.liquid_pressure_density / 1000.0,
             }
         }),
         gas_basis: Some(GasBasis {
