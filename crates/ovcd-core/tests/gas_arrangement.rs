@@ -428,3 +428,44 @@ fn a_full_volume_check_does_not_remove_a_de_rated_candidate() {
     );
     assert!(f.depth_m - f.draft_at_payload_m >= 4.45 - 1e-9);
 }
+
+#[test]
+fn a_tank_put_on_the_cap_counts_the_gaps_between_tanks() {
+    // Issue #422: with n tanks across on the diameter cap, the side clearance is what the beam
+    // leaves after n caps and the n - 1 transverse gaps (1.0 m each), so the tanks reach the cap.
+    // A 22 m beam, two tanks across, an 8 m cap: clearance (22 - 16 - 1) / 2 = 2.5 m, not 3 m.
+    let o = FitOptions {
+        depths: vec![6.0],
+        tanks_wide: vec![2],
+        max_tank_od_m: 8.0,
+        ..FitOptions::default()
+    };
+    let f = fit(100.0, 22.0, "LNG", 3.0, &o).unwrap();
+    assert_eq!(f.n_tanks_wide, 2);
+    assert!((f.tank_od_m - 8.0).abs() < 1e-6, "{}", f.tank_od_m);
+    assert!(
+        (f.side_clearance_m - 2.5).abs() < 1e-6,
+        "{}",
+        f.side_clearance_m
+    );
+}
+
+#[test]
+fn property_the_smallest_viable_length_is_a_length_that_passes() {
+    // Issue #422: the answer is rounded to 0.1 m, and the rounded length itself passes every
+    // check; rounding never returns an untested length below the one the search found.
+    for (beam, cargo, t) in [
+        (11.4, "LNG", 3.0),
+        (14.8, "LPG_propane", 3.5),
+        (9.0, "LNG", 2.5),
+    ] {
+        let o = FitOptions::default();
+        let l = smallest_viable_loa(beam, cargo, t, 20.0, 200.0, &o).unwrap();
+        assert!(l.is_finite(), "{beam} {cargo}");
+        assert_eq!((l * 10.0).round() / 10.0, l, "{l} is not on the 0.1 m grid");
+        assert!(
+            fit(l, beam, cargo, t, &o).unwrap().feasible,
+            "{beam} {cargo}: {l} m does not pass"
+        );
+    }
+}
