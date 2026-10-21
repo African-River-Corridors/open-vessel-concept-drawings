@@ -132,6 +132,96 @@ pub static MEASURES: &[MeasureDef] = &[
         method: "Initial metacentric height of the box section, less the free surface correction",
         method_status: MethodStatus::Unverified,
     },
+    MeasureDef {
+        id: "tank.vc",
+        unit: "m3",
+        object: ObjectType::Tank,
+        value: ValueKind::Number,
+        args: &[],
+        method: "Gross volume of one tank (cylinder and heads, inside the steel) plus its dome, as IGC 2.4.1.1 defines Vc",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
+        id: "tank.side_gap",
+        unit: "m",
+        object: ObjectType::Tank,
+        value: ValueKind::Number,
+        args: &[],
+        method: "Clear gap from the moulded side to the outer face of the insulation, as the arrangement places the tank",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
+        id: "tank.bottom_gap",
+        unit: "m",
+        object: ObjectType::Tank,
+        value: ValueKind::Number,
+        args: &[],
+        method: "Clear height from the moulded base to the outer face of the insulation: double bottom plus support height",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
+        id: "tank.insulation",
+        unit: "m",
+        object: ObjectType::Tank,
+        value: ValueKind::Number,
+        args: &[],
+        method: "Insulation thickness of the tank",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
+        id: "tank.wall_thickness",
+        unit: "mm",
+        object: ObjectType::Tank,
+        value: ValueKind::Number,
+        args: &[],
+        method: "The thinner of the shell and head walls after forming, with the corrosion allowance (pressure-vessel formula, paywalled source)",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
+        id: "tank.weld_factor",
+        unit: "-",
+        object: ObjectType::Tank,
+        value: ValueKind::Number,
+        args: &[],
+        method: "The welded joint efficiency factor the wall formula used",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
+        id: "tank.allowable_stress",
+        unit: "MPa",
+        object: ObjectType::Tank,
+        value: ValueKind::Number,
+        args: &[],
+        method: "The allowable stress f the wall formula used",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
+        id: "tank.rm",
+        unit: "MPa",
+        object: ObjectType::Tank,
+        value: ValueKind::Number,
+        args: &[],
+        method: "Rm of the tank material: specified minimum tensile strength at room temperature (IGC 4.18.1.3)",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
+        id: "tank.re",
+        unit: "MPa",
+        object: ObjectType::Tank,
+        value: ValueKind::Number,
+        args: &[],
+        method: "Re of the tank material: specified minimum yield stress at room temperature (IGC 4.18.1.3)",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
+        id: "tank.material",
+        unit: "",
+        object: ObjectType::Tank,
+        value: ValueKind::Text,
+        args: &[],
+        method: "The tank material key",
+        method_status: MethodStatus::Unverified,
+    },
 ];
 
 /// A Measure of the core registry.
@@ -356,10 +446,27 @@ pub const FORMULA_SHAPES: &[(&str, &[&str], &[&str])] = &[
     ("clamp", &["x"], &["a", "b", "c", "lo", "hi"]),
     // `max(lo, a + x * b / c)`: the same with no upper limit (MARPOL Annex I Reg. 19.6.2).
     ("at-least", &["x"], &["a", "b", "c", "lo"]),
+    // `max(min(a + x * b / c, hi), of) - less`: the greater of a capped value and `of`, less an
+    // input (IGC 2.4.1.2 bottom distance: the greater of B/15 or 2 m, whichever is less, and d,
+    // less the insulation).
+    (
+        "max-capped-less",
+        &["x", "of", "less"],
+        &["a", "b", "c", "hi"],
+    ),
+    // `min(rm / a, re / b)`: the lesser of two ratios (IGC 4.23.3.1, f = the lesser of Rm/A or
+    // Re/B).
+    ("lesser-ratio", &["rm", "re", "a", "b"], &[]),
 ];
 
 /// The formula operands whose unit is not the limit's: the coefficients convert them.
-pub const FREE_UNIT_OPERANDS: &[(&str, &str)] = &[("clamp", "x"), ("at-least", "x")];
+pub const FREE_UNIT_OPERANDS: &[(&str, &str)] = &[
+    ("clamp", "x"),
+    ("at-least", "x"),
+    ("max-capped-less", "x"),
+    ("lesser-ratio", "a"),
+    ("lesser-ratio", "b"),
+];
 
 /// The value of a formula shape. The order of operations is the text's (`a + x * b / c`, then the
 /// upper limit, then the lower), so a Rule written from the text stays bit-identical to a hand
@@ -391,6 +498,25 @@ pub fn formula_value(
             let v = c("a")? + operand("x")? * c("b")? / c("c")?;
             let lo = c("lo")?;
             Ok(if v > lo { v } else { lo })
+        }
+        "max-capped-less" => {
+            // The order of `py_max(py_min(beam / 15.0, 2.0), d_vc) - ins_m` in the gas arrangement.
+            let v = c("a")? + operand("x")? * c("b")? / c("c")?;
+            let hi = c("hi")?;
+            let capped = if hi < v { hi } else { v };
+            let of = operand("of")?;
+            let greater = if of > capped { of } else { capped };
+            Ok(greater - operand("less")?)
+        }
+        "lesser-ratio" => {
+            // The order of `igc_allowable_stress` in `pressure_vessel`.
+            let by_tensile = operand("rm")? / operand("a")?;
+            let by_yield = operand("re")? / operand("b")?;
+            Ok(if by_yield < by_tensile {
+                by_yield
+            } else {
+                by_tensile
+            })
         }
         other => Err(format!("unknown formula shape `{other}`")),
     }

@@ -157,7 +157,7 @@ explain). `rule-record.template.json` beside this page holds the same record wit
   },
   "codified": { "by": "agent", "date": "YYYY-MM-DD", "review": "#<pull request>" },
   "verified": false,                       // or { by, date, edition_held, locator_read, review }
-  "applies_when": {},                      // e.g. { "cargo_containment": ["type-c"] }
+  "applies_when": {},                      // e.g. { "cargo_containment": ["type_c_tanks"] }
   "kind": "limit",                         // limit | table | formula | check | note
   "measure": { "id": "<measure id>", "args": {} },
   "compare": "ge",                         // ge | gt | le | lt
@@ -197,7 +197,9 @@ that other Rules can use too (the bottom distance). (The first draft of spec 000
   insulation lies inside d: the clear gap must be at least d less the insulation thickness. The code
   compares exactly that, so the Rule keeps it.
 - Criterion: `ge`; limit: formula shape `less-input` (d − insulation), with d from table `igc-d-vc` at
-  Vc = `tank.vc` and the insulation from `input.tank_insulation_thickness`; tolerance 0.
+  Vc = `tank.vc` and the insulation from `tank.insulation`; tolerance 1e-9 m. The tolerance keeps the
+  engine's own sizing: its clearance loop stops when d moves less than 1e-9 m, so the gap it builds can
+  sit that far under the d of the final tank volume.
 - Table `igc-d-vc`, boundaries as printed:
 
 | Branch | Vc (m³) | d (m) |
@@ -210,9 +212,9 @@ that other Rules can use too (the bottom distance). (The first draft of spec 000
 - Consequence `block`; `sizes: true` (the search builds tanks with this clearance).
 
 **Step 4. Units, applicability, citation.** Metres and cubic metres. Applicability: on the Rule Set
-`igc-2g` (ship type 2G, gas Cargo); on the Rule, Cargo Containment `type-c` (2.4.2 measures membrane
-tanks differently). Citation: IGC Code, MSC.370(93) as amended, 2.4.1.2 with 2.4.1.1 and 2.4.2,
-`MSC.370-93.pdf` pp. 21–22.
+`igc-2g` (ship type 2G): Cargo Containment `type_c_tanks`, so a membrane tank (which 2.4.2 measures
+differently) or a crude oil tank never gets the Rule. Citation: IGC Code, MSC.370(93) as amended,
+2.4.1.2 with 2.4.1.1 and 2.4.2, `MSC.370-93.pdf` annex pp. 20–21.
 
 **Step 5. Status.** `codified` by `agent`; `verified: false` until the second reading; `evaluated: true`.
 No finding: the code's `d_vc_exact` has the same four branches and the same boundaries, and since #237
@@ -251,17 +253,17 @@ one 1 mm below, from the oracle.
   },
   "codified": { "by": "agent", "date": "2026-10-20", "review": "#<pull request>" },
   "verified": false,
-  "applies_when": { "cargo_containment": ["type-c"] },
+  "applies_when": {},
   "kind": "formula",
   "measure": { "id": "tank.side_gap", "args": {} },
   "compare": "ge",
   "limit": {
     "shape": "less-input",
     "of": { "table": "igc-d-vc", "at": "tank.vc" },
-    "less": "input.tank_insulation_thickness",
+    "less": "tank.insulation",
     "unit": "m"
   },
-  "tolerance": 0,
+  "tolerance": 1e-9,
   "consequence": "block",
   "sizes": true,
   "evaluated": true,

@@ -864,6 +864,8 @@ pub struct Measured {
     /// The deadweight of the result, t: for the derived input `deadweight_band`. `None` when the
     /// result has none.
     pub deadweight_t: Option<f64>,
+    /// The Type C tank values the IGC Rules read; `None` but for a gas barge.
+    pub tank: Option<ovcd_core::barge_capacity::TankRuleValues>,
 }
 
 fn simulate(p: &Map<String, Value>) -> R<Value> {
@@ -1371,6 +1373,7 @@ fn simulate_gas(
             Measured {
                 conditions,
                 deadweight_t: Some(f.payload_t),
+                tank: r.tank_rules.clone(),
             },
         )
     })

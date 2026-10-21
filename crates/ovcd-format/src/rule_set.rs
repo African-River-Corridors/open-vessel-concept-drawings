@@ -25,10 +25,16 @@ pub const SCHEMA: &str = include_str!("../rules/rule-set.schema.json");
 
 /// The built-in Rule Sets: `(path, text)`, one file per set version, embedded so that every binary
 /// and the WebAssembly build carry them.
-const BUILT_IN: &[(&str, &str)] = &[(
-    "rules/is2008-a/1.0.0.json",
-    include_str!("../rules/is2008-a/1.0.0.json"),
-)];
+const BUILT_IN: &[(&str, &str)] = &[
+    (
+        "rules/is2008-a/1.0.0.json",
+        include_str!("../rules/is2008-a/1.0.0.json"),
+    ),
+    (
+        "rules/igc-2g/1.0.0.json",
+        include_str!("../rules/igc-2g/1.0.0.json"),
+    ),
+];
 
 /// The roles that may write or verify a Rule. A person's name never goes in a Rule Set: the
 /// repository is public.
@@ -909,9 +915,10 @@ fn check_measures(set: &RuleSet) -> Result<(), String> {
                 r.id, r.measure.id, info.unit
             ));
         }
-        let table_at = |t: &str, at: &str| -> Result<(), String> {
+        // `free`: the table gives a factor the formula converts, so its unit is not the limit's.
+        let table_at = |t: &str, at: &str, free: bool| -> Result<(), String> {
             let table = set.table(t).expect("checked in check_set");
-            if table.unit != *unit {
+            if !free && table.unit != *unit {
                 return Err(format!(
                     "rule `{}`: table `{t}` is in `{}`, the limit in `{unit}`",
                     r.id, table.unit
@@ -921,7 +928,7 @@ fn check_measures(set: &RuleSet) -> Result<(), String> {
         };
         match limit {
             Limit::Constant { .. } => {}
-            Limit::Table { table, at, .. } => table_at(table, at)?,
+            Limit::Table { table, at, .. } => table_at(table, at, false)?,
             Limit::Formula {
                 shape,
                 coefficients,
@@ -948,7 +955,7 @@ fn check_measures(set: &RuleSet) -> Result<(), String> {
                         // The coefficients convert this operand, so any number Measure will do.
                         Operand::Measure(id) if free => operand(r, info.object, id, None)?,
                         Operand::Measure(id) => operand(r, info.object, id, Some(unit))?,
-                        Operand::TableAt { table, at } => table_at(table, at)?,
+                        Operand::TableAt { table, at } => table_at(table, at, free)?,
                     }
                 }
             }

@@ -21,7 +21,7 @@ from typing import List, Optional
 from .._bridge import call as _call
 from .barge_capacity import BargeCapacityInputs  # noqa: F401  (0.1.0 exposed it here)
 
-SIDE_CLEARANCE_M = 1.0         # standard IGC-2G protective-location spacing per side
+SIDE_CLEARANCE_M = 1.0         # design default per side, no published source; not an IGC value (#283)
 BOW_NON_TANK_PCT = 0.10        # mirror models.py defaults
 STERN_NON_TANK_PCT = 0.15
 TUG_LOA_M = 16.0               # Kotug E-Pusher pattern — for the total-LOA note
@@ -33,7 +33,7 @@ class GridCell:
     beam_m: float
     n_tanks_long: int
     feasible: bool
-    cargo_t: Optional[float] = None            # volume-bound (1.0 m standard side clearance)
+    cargo_t: Optional[float] = None            # volume-bound (1.0 m default side clearance)
     tank_outer_diameter_m: Optional[float] = None
     tank_length_m: Optional[float] = None
     slenderness: Optional[float] = None         # overall tank length / OD
