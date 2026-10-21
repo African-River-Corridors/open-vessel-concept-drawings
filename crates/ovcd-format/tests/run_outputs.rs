@@ -178,6 +178,22 @@ fn the_summary_names_the_failed_checks_and_lists_the_warnings() {
     assert_eq!(lines.len(), 8);
 }
 
+/// Issue #419: a failed check of severity "warning" reads as a warning, apart from the failures; a
+/// check with no severity is an error.
+#[test]
+fn a_failed_warning_check_reads_as_a_warning_not_a_failure() {
+    let mut r = results_object();
+    r["checks"] = json!([
+        { "name": "gates", "ok": false, "message": "x", "severity": "error" },
+        { "name": "advice", "ok": false, "message": "y", "severity": "warning" },
+        { "name": "plain", "ok": false, "message": "z" },
+        { "name": "fine", "ok": true, "message": "OK", "severity": "warning" }
+    ]);
+    let lines = summary_lines("O", &r);
+    assert_eq!(lines[5], "  Checks: 2 of 3 fail: gates; plain");
+    assert_eq!(lines[6], "  Warning checks: 1 not met: advice");
+}
+
 /// A result with nothing in it still prints, with `?` for missing text and `n/a` for a missing number.
 #[test]
 fn the_summary_of_an_empty_result_uses_question_marks_and_not_available() {
