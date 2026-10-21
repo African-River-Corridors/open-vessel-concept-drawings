@@ -147,7 +147,7 @@ a change can be traced later. Newest first.
 
 ### ticket/374-liquid-pressure (2026-10-21)
 
-Between `main 5df1cb2` and `this branch 73b9aa5`.
+Between `main abf1300` and `this branch 73ad0f6`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
