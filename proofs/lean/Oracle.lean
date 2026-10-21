@@ -26,6 +26,12 @@ def parseRule (j : Json) : Except String (Rule Float) := do
   let blocking ← j.getObjValAs? Bool "blocking"
   return { id, key, bound := { dir, limit, strict }, blocking }
 
+/-- Whether a Rule lends its limit to a sizing step (`sizes`); absent means false. -/
+def parseSizes (j : Json) : Bool :=
+  match j.getObjVal? "sizes" with
+  | .ok (.bool b) => b
+  | _ => false
+
 /-- Measure values: a missing key or `null` means not evaluated. -/
 def parseValues (j : Json) : Except String (List (String × Float)) := do
   let obj ← j.getObj?
@@ -53,7 +59,10 @@ def groups (rs : List (Rule Float)) : List (String × List (Rule Float)) :=
 
 def evalCase (j : Json) : Except String Json := do
   let name ← j.getObjValAs? String "name"
-  let rules ← (← j.getObjValAs? (Array Json) "rules").toList.mapM parseRule
+  let ruleJson := (← j.getObjValAs? (Array Json) "rules").toList
+  let rules ← ruleJson.mapM parseRule
+  let sizing := (rules.zip (ruleJson.map parseSizes)).filterMap fun (r, s) =>
+    if s then some r.id else none
   let values ← parseValues (← j.getObjVal? "values")
   let design : Design Float := fun k => (values.find? (·.1 == k)).map (·.2)
   -- Spec 0004: a failing Rule that does not block reports `warn`; the governing Rule is the
@@ -66,11 +75,24 @@ def evalCase (j : Json) : Except String Json := do
     match (if blocking.isEmpty then g else blocking) with
     | [] => none
     | r :: rest => some (n, Json.str (governing r rest).id)
+  -- Sizing: the governing bound of a requirement that has a `sizes` Rule is the value the sizing
+  -- step builds at (the limit, as the effective bound; for a strict bound, any value beyond it).
+  let sized := (groups rules).filterMap fun (n, g) =>
+    let blocking := g.filter (·.blocking)
+    match (if blocking.isEmpty then g else blocking) with
+    | [] => none
+    | r :: rest =>
+      if g.any (fun x => sizing.contains x.id) then
+        let w := governing r rest
+        some (n, Json.mkObj [("rule", .str w.id), ("limit", toJson w.bound.limit),
+                             ("strict", .bool w.bound.strict)])
+      else none
   return Json.mkObj [
     ("name", .str name),
     ("ok", .bool (ok rules design)),
     ("outcomes", Json.mkObj rows),
-    ("governing", Json.mkObj gov)]
+    ("governing", Json.mkObj gov),
+    ("sized", Json.mkObj sized)]
 
 def main (args : List String) : IO UInt32 := do
   let some path := args.head?

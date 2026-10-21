@@ -31,6 +31,18 @@
         {"id": "ovcd/gas-arrangement/tank-l-over-d", "key": "tank.l_over_d@tank1", "dir": "upper", "limit": 7.0, "strict": false, "blocking": true}
       ],
       "values": {"weather.ratio@laden": null, "tank.l_over_d@tank1": 6.2}
+    },
+    {
+      "name": "a sizing requirement: the stricter lower bound is the sized value; a strict upper bound is reported as strict",
+      "rules": [
+        {"id": "fixture/3.1/width-a", "key": "channel.width@reach", "dir": "lower", "limit": 30.0, "strict": false, "blocking": true, "sizes": true},
+        {"id": "fixture/3.1/width-b", "key": "channel.width@reach", "dir": "lower", "limit": 34.5, "strict": false, "blocking": true, "sizes": true},
+        {"id": "fixture/3.1/width-c", "key": "channel.width@reach", "dir": "lower", "limit": 34.5, "strict": true, "blocking": false, "sizes": false},
+        {"id": "fixture/3.2/speed-a", "key": "speed@reach", "dir": "upper", "limit": 9.0, "strict": false, "blocking": true, "sizes": true},
+        {"id": "fixture/3.2/speed-b", "key": "speed@reach", "dir": "upper", "limit": 9.0, "strict": true, "blocking": true, "sizes": false},
+        {"id": "fixture/3.3/depth-a", "key": "depth@reach", "dir": "lower", "limit": 2.0, "strict": false, "blocking": true, "sizes": false}
+      ],
+      "values": {"channel.width@reach": 35.0, "speed@reach": 8.5, "depth@reach": 2.4}
     }
   ]
 }

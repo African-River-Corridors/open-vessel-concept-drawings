@@ -1,7 +1,7 @@
 # Lean model of the rules engine's composition kernel
 
 This folder holds a small Lean 4 model of how the rules engine (spec 0004) combines Rules. It
-proves four properties of that model. It also builds an oracle program that runs the same
+proves six properties of that model. It also builds an oracle program that runs the same
 definitions on real numbers, so the Rust engine can be compared with it.
 
 The model is a prototype for the Lean decision record (ADR 0014). It is **not part of the
@@ -36,6 +36,8 @@ uses; they are core Lean's `propext` and `Quot.sound` only.
 | 2. The conflict check is sound | `no_value_of_conflict`, `witness_of_not_conflict` | `Conflict.lean` |
 | 3. Adding a Rule never makes a failing design pass | `ok_of_ok_append`, `not_ok_append` | `Rule.lean` |
 | 4. `fit` never returns a failing design | `fit_sound`, `fit_max`, `fit_cargo_antitone`, `fit_none_append` | `Fit.lean` |
+| 5. The sized value meets its Requirement | `holds_of_sizedAt`, `sized_meets_requirement` | `Sizing.lean` |
+| 6. Adding a Rule never lowers (lower bound) or raises (upper bound) the sized value | `strictestBy_mono`, `sized_limit_mono_lower`, `sized_limit_mono_upper` | `Sizing.lean` |
 
 In words:
 
@@ -48,6 +50,15 @@ In words:
 4. `fit` returns a candidate from the list that meets every blocking Rule, with the most cargo
    of those that pass. Adding Rules never raises the cargo of the answer, and never turns "no
    answer" into an answer.
+
+5. A Rule with `sizes: true` lends its limit to a sizing step. For a non-empty Requirement of bounds
+   of one direction, the value of the governing bound meets every bound of the Requirement. The
+   value is the limit for a non-strict bound; for a strict bound (`gt`, `lt`) it is any value
+   strictly beyond the limit (`Bound.sizedAt`). The limit is the effective bound: the Rust
+   evaluator folds the tolerance into it before it compares.
+6. Adding bounds to a Requirement never makes the governing effective bound smaller (lower bounds)
+   or larger (upper bounds), so the sized value never falls (or rises). The general form: the
+   governing bound of a larger Requirement is at least as strict as that of the smaller one.
 
 ## The order the proofs use
 
@@ -93,8 +104,10 @@ toolchain itself is about 1.8 GB on disk.
 }]}
 ```
 
-A missing key or `null` value means "not evaluated". The output gives, per case, the verdict
-`ok`, each Rule's outcome, and the governing Rule id per `key|direction`. `examples/expected.json`
+A missing key or `null` value means "not evaluated". A Rule may carry `"sizes": true` (default
+false). The output gives, per case, the verdict `ok`, each Rule's outcome, the governing Rule id per
+`key|direction`, and `sized`: for each requirement that has a `sizes` Rule, the governing Rule, its
+effective bound (`limit`) and its `strict` flag. `examples/expected.json`
 holds the expected output of `examples/cases.json`; CI compares the two.
 
 ## The tie to the Rust engine
@@ -102,9 +115,10 @@ holds the expected output of `examples/cases.json`; CI compares the two.
 The proofs say nothing about the shipped engine on their own. The tie is a **differential test**
 against the domain-free rules kernel, `arc-rules` (`crates/arc-rules/tests/lean_oracle.rs`, ADR
 0019). It generates random groups of constant-limit Rules and random values, writes them in the
-oracle's JSON form, runs the oracle, and compares the verdict, each outcome and each governing
-Rule with the kernel's evaluator. A key with no value is written as Rules that are not evaluated;
-the model's governing Rule of such a key is not compared, as the evaluator marks governing rows
+oracle's JSON form, runs the oracle, and compares the verdict, each outcome, each governing
+Rule and the sized bound of each requirement that has a `sizes` Rule with the kernel's evaluator. A
+key with no value is written as Rules that are not evaluated; the model's governing Rule and sized
+bound of such a key are not compared, as the evaluator marks governing rows
 only among worked-out limits. It runs in the same separate pass as this job, never in the fast
 gate:
 
