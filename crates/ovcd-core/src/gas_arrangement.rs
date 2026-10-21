@@ -43,7 +43,7 @@ use crate::rule_trace::{
     Failure, MeasureInfo, MeasureSource, MeasureValue, ObjectType, Outcome, Trace, evaluate,
     failures, measure_def,
 };
-use crate::rules::{MeasureRef, RuleSet};
+use crate::rules::{ArgValue, MeasureRef, RuleSet};
 use crate::tanks::INT_OVERFLOW_MESSAGE;
 use crate::text;
 use crate::text::Arg;
@@ -235,17 +235,26 @@ fn candidate_failures(measured: &Measured, o: &FitOptions) -> Vec<Failure> {
 }
 
 /// The failing rows of a trace, grouped as the check list groups them: the rows of one loading
-/// condition count once (one stability check per condition), each other failing Rule once.
+/// condition count once (one stability check per condition), the Rules on one engine check count
+/// once (a class Rule and a tool limit can both report it, #424), each other failing Rule once.
 fn failing_groups(fails: &[Failure]) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
     for f in fails {
-        let key = match f.object_type.as_deref().and_then(ObjectType::from_key) {
-            Some(ObjectType::LoadingCondition) => {
+        let check = match (f.measure.id.as_str(), f.measure.args.as_slice()) {
+            ("check.ok", [(_, ArgValue::Text(name))]) => Some(name),
+            _ => None,
+        };
+        let key = match (
+            f.object_type.as_deref().and_then(ObjectType::from_key),
+            check,
+        ) {
+            (Some(ObjectType::LoadingCondition), _) => {
                 format!(
                     "Stability \u{2014} {}",
                     f.object.clone().unwrap_or_default()
                 )
             }
+            (_, Some(name)) => format!("check {name}"),
             _ => f.rule.clone(),
         };
         if !out.contains(&key) {

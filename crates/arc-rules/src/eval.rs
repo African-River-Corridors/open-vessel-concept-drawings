@@ -618,9 +618,11 @@ fn rule_rows(
 }
 
 /// One failing row, as the search needs it.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Failure {
     pub rule: String,
+    /// The Measure instance the Rule tests: two Rules on one Measure instance fail together.
+    pub measure: MeasureRef,
     /// The key of the Rule's object type.
     pub object_type: Option<String>,
     pub object: Option<String>,
@@ -655,6 +657,7 @@ pub fn failures(
                     if outcome == Outcome::Fail {
                         out.push(Failure {
                             rule: rule.id.clone(),
+                            measure: rule.measure.clone(),
                             object_type: object_type.clone(),
                             object: None,
                         });
@@ -669,6 +672,7 @@ pub fn failures(
                         {
                             out.push(Failure {
                                 rule: rule.id.clone(),
+                                measure: rule.measure.clone(),
                                 object_type: object_type.clone(),
                                 object: Some(label),
                             });

@@ -32,6 +32,10 @@ const BUILT_IN: &[(&str, &str)] = &[
         include_str!("../rules/lr-inland-gas/1.0.0.json"),
     ),
     (
+        "rules/lr-inland-gas/1.1.0.json",
+        include_str!("../rules/lr-inland-gas/1.1.0.json"),
+    ),
+    (
         "rules/ovcd/1.0.0.json",
         include_str!("../rules/ovcd/1.0.0.json"),
     ),
