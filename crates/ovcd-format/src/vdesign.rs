@@ -110,6 +110,9 @@ pub const LOADING_LIMIT_BASES: &[&str] = &["igc_15_1_3", "igc_15_5_2", "refriger
 /// engine did before. A file that names none keeps `none`, so its results do not change.
 pub const LIQUID_PRESSURE_BASES: &[&str] = &["static", "igc_4_28_2", "none"];
 
+/// The tank head types (issue #375), as the core's `tanks.rs` names them.
+pub const HEAD_TYPES: &[&str] = &["hemisphere", "ellipsoidal_2to1"];
+
 /// The tank insulation types. `unspecified` is the generic insulation the engine used before the
 /// type was an input; the density is the one value (60 kg/m3) for every type.
 pub const INSULATION_TYPES: &[&str] = &["unspecified", "none", "pu_foam", "panel"];
@@ -121,6 +124,7 @@ pub const INSULATION_TYPES: &[&str] = &["unspecified", "none", "pu_foam", "panel
 /// profile must have a row for every combination the schema can make.
 pub const TABLE_DEFAULTS: &[&str] = &[
     "fill_ratio",
+    "tank_head_type",
     "lpg_loading_temperature_c",
     "tank_design_pressure_mpa",
     "tank_design_temperature_c",
@@ -695,6 +699,12 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::Only("type_c_tanks"),
         value: "\"refrigerated_density\"",
     },
+    // Issue #375: a file saved before the head type was an input keeps hemispherical heads.
+    LegacyFixedJson {
+        name: "tank_head_type",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        value: "\"hemisphere\"",
+    },
     // Issue #374: a file saved before the liquid pressure keeps the vapour pressure only.
     LegacyFixedJson {
         name: "tank_liquid_pressure",
@@ -876,6 +886,8 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("316L", "316L stainless steel"),
     ("9Ni", "9 % nickel steel"),
     ("S690QL1", "S690QL1 quenched and tempered steel"),
+    ("hemisphere", "Hemispherical"),
+    ("ellipsoidal_2to1", "2:1 semi-ellipsoidal"),
     ("static", "Static (a = 1), IGC 4.28.1.2"),
     ("igc_4_28_2", "IGC 4.28.2 sea-going accelerations"),
     ("igc_4_23_3_1", "IGC 4.23.3.1: lesser of Rm/A and Re/B"),
@@ -1187,6 +1199,13 @@ pub const INPUTS: &[InputSpec] = &[
         "tank_material",
         "Tank material",
         InputKind::Choice(TANK_MATERIALS),
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_head_type",
+        "Tank head type",
+        InputKind::Choice(HEAD_TYPES),
         "type_c_tanks",
         Group::GasTanks,
     ),

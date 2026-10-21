@@ -125,6 +125,11 @@ save writes the current version.
   pressure (IGC 4.23.2.2, 4.28.1.2). A file that lacks it gets `none` (a table in `vdesign.rs`, marked
   `default`): the vapour pressure only, so its results do not change. The format version is not changed.
 
+- **Tank head type** (issue #375): a new input `tank_head_type` (`hemisphere`, `ellipsoidal_2to1`), with a
+  default table by Cargo and carriage condition in the Defaults Profile. A file that lacks it gets
+  `hemisphere` (a table in `vdesign.rs`, marked `default`), so its results do not change. The format version
+  is not changed.
+
 ## Consequences
 
 - A saved file gives the same results when opened again, on Windows and macOS.

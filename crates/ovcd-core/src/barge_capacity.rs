@@ -89,6 +89,8 @@ pub const DEFAULT_TANK_WALL_THICKNESS_MM: f64 = 25.0;
 /// defaults): design pressure 0.5 MPa, 9 % nickel steel, 350 mm insulation, structure factor 1.30.
 pub const DEFAULT_TANK_DESIGN_PRESSURE_MPA: f64 = 0.5;
 pub const DEFAULT_TANK_MATERIAL: &str = "9Ni";
+/// The tank head type the engine used before it was an input (issue #375).
+pub const DEFAULT_TANK_HEAD_TYPE: &str = "hemisphere";
 pub const DEFAULT_TANK_INSULATION_MM: f64 = 350.0;
 pub const DEFAULT_TANK_STRUCTURE_FACTOR: f64 = 1.30;
 /// Default gap between the wing tank and the cargo tank, per side (m).
@@ -130,6 +132,8 @@ pub struct TankDesign {
     pub liquid_pressure: LiquidPressure,
     /// The lowest design temperature (C): the liquid pressure takes the cargo density there.
     pub design_temperature_c: Option<f64>,
+    /// The tank head type, `"hemisphere"` or `"ellipsoidal_2to1"` (issue #375).
+    pub head_type: String,
 }
 
 impl Default for TankDesign {
@@ -142,6 +146,7 @@ impl Default for TankDesign {
             structure_factor: DEFAULT_TANK_STRUCTURE_FACTOR,
             liquid_pressure: LiquidPressure::None,
             design_temperature_c: None,
+            head_type: DEFAULT_TANK_HEAD_TYPE.to_string(),
         }
     }
 }
@@ -635,6 +640,7 @@ fn gas_volumetric(
     base.n_tanks_long = inp.n_tanks_long;
     base.tank_wall_thickness = inp.tank_wall_thickness;
     base.design_pressure = inp.tank_design.design_pressure_mpa;
+    base.tank_head_type = inp.tank_design.head_type.clone();
     // Issue #374: the design liquid pressure (IGC 4.23.2.2, 4.28.1.2) joins the wall formula.
     let (accel, rho) =
         liquid_pressure_basis(inp, bow_void_m, stern_void_m, base.tank_gap_longitudinal)?;

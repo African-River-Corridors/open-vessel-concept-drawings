@@ -615,7 +615,19 @@ fn tank_design_of(p: &Map<String, Value>) -> R<ovcd_core::barge_capacity::TankDe
         None | Some(Value::Null) => None,
         Some(v) => Some(py_float(v, "params.tank_design_temperature_c")?),
     };
+    // Issue #375: the head type; left out, hemispherical heads (the old way).
+    let head_type = match p.get("tank_head_type") {
+        None | Some(Value::Null) => b::DEFAULT_TANK_HEAD_TYPE.to_string(),
+        Some(Value::String(s)) if s == "hemisphere" || s == "ellipsoidal_2to1" => s.clone(),
+        Some(other) => {
+            return bad(format!(
+                "`params.tank_head_type` must be one of hemisphere, ellipsoidal_2to1, not {}",
+                py_repr(other)
+            ));
+        }
+    };
     Ok(b::TankDesign {
+        head_type,
         liquid_pressure,
         design_temperature_c,
         design_pressure_mpa: get_or(
@@ -838,6 +850,7 @@ fn tank_report(
             ),
             ("design_temperature_c", text("tank_design_temperature_c")),
             ("material", json!(design.material)),
+            ("head_type", json!(design.head_type)),
             ("allowable_stress_mpa", opt_num(allowable)),
             (
                 "allowable_stress_basis",

@@ -134,6 +134,7 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
         "tank_design_pressure_mpa",
         "tank_design_temperature_c",
         "tank_material",
+        "tank_head_type",
         "tank_liquid_pressure",
         "tank_allowable_stress_basis",
         "tank_allowable_stress_mpa",
