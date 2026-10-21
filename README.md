@@ -46,7 +46,11 @@ known engineering findings are under review in the open
   diameters, and a search over depth and tanks abreast for the most cargo at a draught limit
   (`core.gas_arrangement`). Only IGC rules apply to gas tanks.
 - **Hydrostatics and stability.** Equilibrium draught, freeboard, air draught, and intact stability
-  for gas barges (`core.hydrostatics`, `core.gas_stability`).
+  for gas barges (`core.hydrostatics`, `core.gas_stability`). Known limitation: the 0 to 40 degree and
+  30 to 40 degree areas of IS Code 2008 Part A 2.2.1 always run to 40 degrees. The text stops them at
+  the down-flooding angle when it is less, and the model has no down-flooding angle yet, so a hull whose
+  openings immerse before 40 degrees can pass when it should fail
+  ([#282](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/282)).
 - **Journey de-rating.** Cargo per trip when the channel, not the hull, limits the draught
   (`core.journey_derating`).
 - **Resistance, squat, waves and power** in deep and confined shallow water (`core.resistance`,
