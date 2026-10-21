@@ -258,42 +258,9 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     Ok(p)
 }
 
-/// The canonical JSON text: sorted keys, no white space.
-pub fn canonical_json(v: &Value) -> String {
-    let mut out = String::new();
-    write_canonical(v, &mut out);
-    out
-}
-
-fn write_canonical(v: &Value, out: &mut String) {
-    match v {
-        Value::Object(o) => {
-            let mut keys: Vec<&String> = o.keys().collect();
-            keys.sort();
-            out.push('{');
-            for (i, k) in keys.into_iter().enumerate() {
-                if i > 0 {
-                    out.push(',');
-                }
-                out.push_str(&Value::String(k.clone()).to_string());
-                out.push(':');
-                write_canonical(&o[k], out);
-            }
-            out.push('}');
-        }
-        Value::Array(a) => {
-            out.push('[');
-            for (i, x) in a.iter().enumerate() {
-                if i > 0 {
-                    out.push(',');
-                }
-                write_canonical(x, out);
-            }
-            out.push(']');
-        }
-        other => out.push_str(&other.to_string()),
-    }
-}
+/// The canonical JSON text: sorted keys, no white space. The rules kernel hashes Rule Sets with the
+/// same function.
+pub use arc_rules::load::canonical_json;
 
 /// Top-level results keys that are not results: drawing geometry, what a view marks, the capital
 /// budget with the masses it was worked from, the Message Ids of the result's English (ADR 0015), and

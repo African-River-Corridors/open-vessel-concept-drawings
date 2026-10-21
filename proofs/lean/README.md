@@ -100,10 +100,23 @@ holds the expected output of `examples/cases.json`; CI compares the two.
 ## The tie to the Rust engine
 
 The proofs say nothing about the shipped engine on their own. The tie is a **differential test**
-(not built yet): a Rust property test generates random Rule groups and values, writes them in the
+against the domain-free rules kernel, `arc-rules` (`crates/arc-rules/tests/lean_oracle.rs`, ADR
+0019). It generates random groups of constant-limit Rules and random values, writes them in the
 oracle's JSON form, runs the oracle, and compares the verdict, each outcome and each governing
-Rule with the Rust evaluator. That test belongs in the same separate pass as this job, never in
-the fast gate.
+Rule with the kernel's evaluator. A key with no value is written as Rules that are not evaluated;
+the model's governing Rule of such a key is not compared, as the evaluator marks governing rows
+only among worked-out limits. It runs in the same separate pass as this job, never in the fast
+gate:
+
+```bash
+cd proofs/lean && lake build && cd ../..
+ARC_RULES_LEAN_ORACLE=$PWD/proofs/lean/.lake/build/bin/ovcd-rules-oracle \
+  cargo test -p arc-rules --test lean_oracle -- --nocapture
+```
+
+Without `ARC_RULES_LEAN_ORACLE` the test passes with a note, so `cargo test` needs no Lean.
+`ARC_RULES_LEAN_CASES` (default 400) and `ARC_RULES_LEAN_SEED` set the number of cases and the
+seed.
 
 ## What the model leaves out
 

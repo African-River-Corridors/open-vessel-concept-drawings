@@ -8,6 +8,8 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+# The rules kernel with its Rule Set loader (ADR 0019).
+arc-rules = { workspace = true, features = ["load"] }
 # `serde` writes the engine's English messages (`Text`) into the results.
 ovcd-core = { workspace = true, features = ["serde"] }
 

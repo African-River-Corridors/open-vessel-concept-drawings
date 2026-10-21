@@ -154,8 +154,8 @@ impl MeasureSource for CandidateSource<'_> {
             .find(|(n, _, _)| n == id)
             .map(|(_, info, _)| info.clone())
     }
-    fn objects(&self, object: ObjectType) -> Vec<String> {
-        self.measured.objects(object, "Candidate")
+    fn objects(&self, object: &str) -> Vec<String> {
+        self.measured.objects_by_key(object, "Candidate")
     }
     fn value(&self, m: &MeasureRef, index: usize) -> Result<MeasureValue, String> {
         if m.id.starts_with("input.") {
@@ -239,7 +239,7 @@ fn candidate_failures(measured: &Measured, o: &FitOptions) -> Vec<Failure> {
 fn failing_groups(fails: &[Failure]) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
     for f in fails {
-        let key = match f.object_type {
+        let key = match f.object_type.as_deref().and_then(ObjectType::from_key) {
             Some(ObjectType::LoadingCondition) => {
                 format!(
                     "Stability \u{2014} {}",
@@ -1020,7 +1020,7 @@ pub fn fit(
                 .measure
                 .as_ref()
                 .is_some_and(|m| m.id == "check.ok" || m.id.starts_with("separation."))
-                || row.object_type == Some(ObjectType::LoadingCondition);
+                || row.object_type.as_deref() == Some(ObjectType::LoadingCondition.key());
             let line = format!(
                 "{}: {} ({})",
                 row.rule.clone().unwrap_or_default(),

@@ -287,6 +287,17 @@ Of the Rules in one Requirement, the one with the strictest Criterion. All of th
 governs, and no Rule loosens another.
 _Avoid_: controlling rule, binding rule
 
+**Rules Kernel**:
+The domain-free part of the rules engine, the `arc-rules` crate: the Rule Set format and loader, the
+content hash, Applicability and the evaluator. It knows no vessel. OVCD declares its object types,
+Measures, inputs and formula shapes to it; another tool can declare its own.
+_Avoid_: rules library, rule core
+
+**Object-Scoped Input**:
+An input with one value per object, not one per Design (for a channel, the kind of each reach). An
+Applicability condition on it is read for each object a Rule tests. Every OVCD input is one per Option.
+_Avoid_: local input, per-object flag
+
 **OVCD Check**:
 A Rule that OVCD makes but no published rule book requires: physical feasibility (the draught is below
 the depth), a method's validity range, or a limit of the tool. Shown in the Rule Trace with its origin,

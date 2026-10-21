@@ -1,0 +1,21 @@
+[package]
+name = "arc-rules"
+description = "A domain-free rules engine: versioned, content-hashed Rule Sets, the strictest Rule governs, and a Rule Trace on every result. no_std + alloc."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[features]
+default = ["load"]
+# The Rule Set loader, the content hash and the library (JSON and SHA-256). Without it the crate is
+# the model and the evaluator only, with no dependency at all.
+load = ["dep:serde_json", "dep:sha2"]
+
+# No dependency on any domain crate (tests/independence.rs checks it).
+[dependencies]
+# float_roundtrip, arbitrary_precision: read every number exactly as written. No `std`.
+serde_json = { version = "1", default-features = false, features = ["alloc", "float_roundtrip", "arbitrary_precision"], optional = true }
+sha2 = { version = "0.11.1", default-features = false, optional = true }

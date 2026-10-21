@@ -286,8 +286,8 @@ impl MeasureSource for Crude {
     fn def(&self, id: &str) -> Option<MeasureInfo> {
         measure_info(id)
     }
-    fn objects(&self, object: ObjectType) -> Vec<String> {
-        match object {
+    fn objects(&self, object: &str) -> Vec<String> {
+        match ObjectType::from_key(object).expect("an OVCD object type") {
             ObjectType::Option => vec!["Crude".into()],
             _ => Vec::new(),
         }

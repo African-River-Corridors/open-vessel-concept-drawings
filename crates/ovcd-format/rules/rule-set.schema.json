@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/African-River-Corridors/open-vessel-concept-drawings/crates/ovcd-format/rules/rule-set.schema.json",
-  "title": "OVCD Rule Set",
-  "description": "One version of a Rule Set (spec 0004, 'Rule Set (data)'; ADR 0013). The loader in ovcd-format checks the same fields, and also what a schema cannot: the rule id against its locator, repeated ids, table names and conflicts between two constant Criteria.",
+  "$id": "https://github.com/African-River-Corridors/open-vessel-concept-drawings/crates/arc-rules/rule-set.schema.json",
+  "title": "ARC Rule Set (schema 1.x)",
+  "description": "One version of a Rule Set (spec 0004, 'Rule Set (data)'; ADR 0013). Schema 1.x is frozen: changes are additive only. The loader of the arc-rules crate checks the same fields, and also what a schema cannot: the rule id against its locator, repeated ids, table names and conflicts between two constant Criteria.",
   "type": "object",
   "additionalProperties": false,
   "required": ["id", "family", "title", "version", "edition", "sources", "status", "rules"],
@@ -11,7 +11,7 @@
     "id": { "$ref": "#/$defs/word", "description": "The set id, for example igc-2g." },
     "family": { "$ref": "#/$defs/word", "description": "The first segment of every rule id in the set." },
     "title": { "$ref": "#/$defs/text" },
-    "version": { "$ref": "#/$defs/semver", "description": "OVCD's encoding of the edition. Patch: same content hash. Minor: Rules added. Major: a Rule changed or removed." },
+    "version": { "$ref": "#/$defs/semver", "description": "The set's encoding of the edition. Patch: same content hash. Minor: Rules added. Major: a Rule changed or removed." },
     "edition": {
       "type": "object",
       "description": "The source edition: document, edition, amendments included, in-force date.",
@@ -161,10 +161,10 @@
         "id": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9.()-]*/[a-z0-9][a-z0-9-]*$",
-          "description": "<family>/<paragraph>/<slug>. For a regulation or class Rule the paragraph is the locator with spaces removed."
+          "description": "<family>/<paragraph>/<slug>. For a regulation, class, guideline or national-practice Rule the paragraph is the locator with spaces removed."
         },
         "title": { "$ref": "#/$defs/text" },
-        "origin": { "enum": ["regulation", "class", "method-validity", "physical", "tool-limit"] },
+        "origin": { "enum": ["regulation", "class", "method-validity", "physical", "tool-limit", "guideline", "national-practice"] },
         "source": { "$ref": "#/$defs/citation" },
         "codified": {
           "type": "object",
@@ -276,7 +276,7 @@
           "else": { "properties": { "gap": { "type": "null" } } }
         },
         {
-          "if": { "properties": { "origin": { "enum": ["regulation", "class"] } } },
+          "if": { "properties": { "origin": { "enum": ["regulation", "class", "guideline", "national-practice"] } } },
           "then": { "properties": { "source": { "required": ["locator"], "properties": { "locator": { "$ref": "#/$defs/text" } } } } }
         }
       ]

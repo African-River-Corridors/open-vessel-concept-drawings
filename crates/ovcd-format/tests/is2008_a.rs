@@ -35,8 +35,8 @@ impl MeasureSource for One {
     fn def(&self, id: &str) -> Option<MeasureInfo> {
         measure_info(id)
     }
-    fn objects(&self, object: ObjectType) -> Vec<String> {
-        match object {
+    fn objects(&self, object: &str) -> Vec<String> {
+        match ObjectType::from_key(object).expect("an OVCD object type") {
             ObjectType::LoadingCondition => vec!["Laden".into()],
             ObjectType::Option => vec!["Option".into()],
             _ => Vec::new(),

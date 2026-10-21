@@ -247,7 +247,7 @@ Rules. A default that breaks one is a finding, not a silent pass (see the allowa
 |---|---|---|
 | `id` | `<family>/<paragraph>/<slug>` (grammar below), stable, never reused for another requirement | `is2008/A.2.2.1/area-0-30` |
 | `title` | OVCD's own words, at most 15 words | "Area under the GZ curve, 0° to 30°" |
-| `origin` | `regulation`, `class`, `method-validity`, `physical`, `tool-limit` | `regulation` |
+| `origin` | `regulation`, `class`, `method-validity`, `physical`, `tool-limit`; and, added in schema 1.x for outside users, `guideline`, `national-practice` (#463) | `regulation` |
 | `source` | document, edition, paragraph (`locator`), page, `access` | MSC.267(85), IS Code 2008, Part A 2.2.1, p12 |
 | `codified` | `{by, date, review}`: who wrote the record (a role) and the pull request | `{by: "agent", date: 2026-10-21, review: "#n"}` |
 | `verified` | `{by, date, edition_held, locator_read, review}` or `false` | `{by: "maintainer", date: 2026-10-22, edition_held: "MSC.267(85)", locator_read: "Part A 2.2.1, p12", review: "#n"}` |
@@ -286,8 +286,10 @@ Rules. A default that breaks one is a finding, not a silent pass (see the allowa
   shows which kind of reader it was. The codification process is in `docs/rules/codification.md`.
 - **Paywalled texts.** `source.access` is `free`, `paywalled` or `sign-up`. For a paywalled text the file
   holds numbers, tables and the paragraph, never the prose.
-- **Sourced** means `origin` is `regulation` or `class` **and** `verified` is filled. Nothing else is
-  ever shown as a published rule. A sourced Rule whose Measure method is `unverified` is shown as
+- **Sourced** means `origin` is a published one (`regulation`, `class`, `guideline` or
+  `national-practice`) **and** `verified` is filled. Nothing else is ever shown as a published rule.
+  A `guideline` is a design guideline that says it is not a standard; `national-practice` is a
+  national standard known through another text (a guideline's survey, say). OVCD's sets use neither. A sourced Rule whose Measure method is `unverified` is shown as
   sourced with an unverified method: both statuses are in the trace.
 
 ### Rule Set (data)
@@ -321,13 +323,33 @@ Rules. A default that breaks one is a finding, not a silent pass (see the allowa
   content hash. CI fails if a listed file changes. A change is a new file with a new version. A set
   version is released when a tagged release ships it.
 
+### The shared kernel (`arc-rules`, #463, ADR 0019)
+
+The model, the schema, the loader, the content hash, the library, Applicability and the evaluator are
+a domain-free crate, `arc-rules`, that a second tool shares. OVCD registers its side with it:
+
+- **Object types are string keys** (`option`, `hull`, `tank`, `loading-condition`, `cargo-tank`,
+  `ballast-tank`, `slop-tank`). The caller declares them; `option` is OVCD's design object.
+- **The caller passes in** the Measure registry, the applicability vocabulary and the formula shapes
+  (`less-input`, `clamp`, `at-least`, `max-capped-less`, `lesser-ratio` are OVCD's). The table row
+  shapes `const`, `a+v*b/c` and `a+v/c` are the kernel's.
+- **Object-scoped inputs.** The vocabulary marks each input `design` or `object`. A Rule's
+  Applicability condition on an object input is read for each object of the Rule's type
+  (`MeasureSource::object_input`, by default the design's value); an object that does not meet it has
+  a `not applicable` row. A set's own Applicability names only design inputs. Every OVCD input is a
+  design input, so no OVCD result changes.
+- **Rule Set schema 1.x is frozen for outside users.** A change is additive only: a new optional field,
+  a new enumeration value, a new shape the caller registers. A breaking change needs schema 2.0 and a
+  maintainer decision. The schema file is the kernel's (`crates/arc-rules/rule-set.schema.json`); the
+  copy beside OVCD's rule files must stay the same file (a test checks it).
+
 ### Loading at run time
 
-- The loader in `ovcd-format` reads a set file, checks it against the schema, and refuses it with a clear
+- The loader (in the `arc-rules` kernel; OVCD gives it its vocabulary from `ovcd-format`) reads a set file, checks it against the schema, and refuses it with a clear
   message when: a field is missing; a rule id is malformed, repeated, or its paragraph segment does not
   match its locator; a Measure id is unknown, its arguments are wrong, or its unit does not match the
   limit; a table or formula shape is unknown; a limit or coefficient is not finite; a `check` Rule names
-  a non-`bool` Measure; an `includes` target is missing; a `regulation` or `class` Rule has no
+  a non-`bool` Measure; an `includes` target is missing; a Rule of a published origin has no
   paragraph; two constant Criteria of the set conflict and are not declared (Coherence, above). It warns
   (does not refuse) when a blocking Rule is `unverified`.
 - After loading, the **selection** is checked as a whole (Selection, above): include cycles, two versions
