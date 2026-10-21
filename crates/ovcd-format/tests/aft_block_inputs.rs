@@ -144,6 +144,16 @@ fn legacy_value(name: &str, containment: &str) -> f64 {
 fn each_default_equals_the_legacy_table_value_and_the_core_default() {
     let profile = Profile::built_in();
     for name in NEW {
+        // Issue #347: a new Option takes the ES-TRIN 7.02 eye height, 1.65 m; a file saved before
+        // keeps the 1.5 m of the table, which is still the core's.
+        if name == "wheelhouse_eye_height_m" {
+            assert_eq!(profile_default(&profile, name, true), 1.65);
+            assert_eq!(
+                legacy_value(name, GAS_CONTAINMENT),
+                core_default(name, true)
+            );
+            continue;
+        }
         let gas = (
             profile_default(&profile, name, true),
             legacy_value(name, GAS_CONTAINMENT),
@@ -650,6 +660,12 @@ fn a_session_gives_the_profile_value_when_the_formation_or_cargo_changes() {
     s.set_formation("Option 1", "self_propelled", None, None)
         .unwrap();
     for name in NEW {
+        // Issue #347: a new dry-bulk Option has shafts in nozzles, so the thruster count of an
+        // unspecified propulsor is not used.
+        if name == "thruster_count" {
+            assert!(s.design().options[0].input(name).is_none());
+            continue;
+        }
         let got = s.design().options[0]
             .input(name)
             .unwrap_or_else(|| panic!("{name}"));

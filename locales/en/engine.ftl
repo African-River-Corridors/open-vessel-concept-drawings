@@ -242,6 +242,7 @@ msg-marker-value = a marked input needs a `value`
 msg-marker-only = a marked input holds only `value` and `source`
 msg-unknown-input = unknown input `{ $key }`
 msg-input-unused-cargo = `{ $input }` is not used for the Cargo { $cargo }; ignored
+msg-input-unused-when = `{ $input }` is not used when `{ $by }` is { $value }; ignored
 msg-input-unused-containment = `{ $input }` is not used for a { $containment } Cargo Containment; ignored
 msg-input-unused-formation = `{ $input }` is not used for a { $formation } Formation; ignored
 msg-input-required = missing required input `{ $input }`

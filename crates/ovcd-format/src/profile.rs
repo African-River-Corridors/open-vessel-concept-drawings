@@ -353,6 +353,30 @@ impl Profile {
                 .ok_or_else(|| format!("profile `{}` must be an object", spec.name))?;
             // Every lookup the schema can make must find a value; a gap would leave an
             // Option silently short of an input.
+            // Issue #347: a plain or keyed default may say whether it is sourced or an estimate.
+            if let Some(status) = entry.get("status") {
+                let status = status.as_str().unwrap_or("");
+                if !TABLE_STATUSES.contains(&status) {
+                    return Err(format!(
+                        "profile `{}.status` must be one of {}, not `{status}`",
+                        spec.name,
+                        TABLE_STATUSES.join(", ")
+                    ));
+                }
+                let text = |k: &str| entry.get(k).and_then(Value::as_str).unwrap_or("").trim();
+                if status == "sourced" && text("source").is_empty() {
+                    return Err(format!(
+                        "profile `{}` says its default is sourced but gives no `source`",
+                        spec.name
+                    ));
+                }
+                if text("basis").is_empty() {
+                    return Err(format!(
+                        "profile `{}` gives a status but no `basis`",
+                        spec.name
+                    ));
+                }
+            }
             if TABLE_DEFAULTS.contains(&spec.name) {
                 check_table(spec.name, entry)?;
                 continue;
@@ -469,6 +493,14 @@ impl Profile {
     }
 
     /// The profile's note on where an input's ranges come from, or "" when it has none.
+    /// The status of a plain or keyed default (issue #347): `sourced` with its source, or
+    /// `estimate`; `None` when the entry gives none (a default table gives one per row).
+    pub fn default_status(&self, name: &str) -> Option<(&str, Option<&str>)> {
+        let e = self.entry(name)?;
+        let status = e.get("status").and_then(Value::as_str)?;
+        Some((status, e.get("source").and_then(Value::as_str)))
+    }
+
     pub fn basis(&self, name: &str) -> &str {
         self.entry(name)
             .and_then(|e| e.get("basis"))

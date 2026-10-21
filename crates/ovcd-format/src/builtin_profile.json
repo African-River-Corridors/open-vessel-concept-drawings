@@ -717,11 +717,13 @@
       "basis": "carried over from the original engine: the gap between the units and the wheelhouse"
     },
     "wheelhouse_eye_height_m": {
-      "default": 1.5,
+      "default": 1.65,
       "unit": "m",
       "hard": { "gt": 0, "le": 5 },
       "soft": { "min": 1.2, "max": 2.0 },
-      "basis": "carried over from the original engine: the helmsman's eye height above the wheelhouse floor"
+      "status": "sourced",
+      "source": "ES-TRIN 2025, Article 7.02: the helmsman shall be assumed to have a height of eye of 1,65 m above the wheelhouse floor at the steering position",
+      "basis": "The helmsman's eye height above the wheelhouse floor. A new Option takes the ES-TRIN 1.65 m; a file saved before keeps the 1.5 m of the original engine (issue #347)"
     },
     "sightline_margin_m": {
       "default": 0.5,
@@ -736,6 +738,133 @@
       "hard": { "ge": 0, "le": 30 },
       "soft": { "min": 3.0, "max": 10.0 },
       "basis": "carried over from the original engine: the most the wheelhouse can rise on its lift"
+    },
+    "stern_form": {
+      "default_by_cargo_phase": { "dry_bulk": "tunnel", "liquid_gas": "transom" },
+      "status": "estimate",
+      "basis": "The stern of a self-propelled hull: a transom (square stern above a short run), a pram (a long flat run up to a transom) or a tunnel (a raised tunnel over each propeller, closed by a skirt). Tunnel sterns suit intermediate and very shallow water, pram sterns a high depth over draught (Rotteveel 2019, sec. 2.3.1); azimuth thrusters need no tunnel (MARIN 2020), so gas takes a transom and dry bulk a tunnel (spec 0007 and docs/research/stern-and-tugs.md). Inputs only until the stern geometry ticket (#350): the engine still draws and weighs today's square stern. A file saved before keeps transom"
+    },
+    "stern_run_length_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 0.0, "max": 30.0 },
+      "status": "estimate",
+      "basis": "The length of the stern run, from the transom forward to where the bottom is flat. none: the rule of the Stern Form (transom 1.0 x depth, pram 1.6 x depth, tunnel the Heuser length by shaft arrangement, Rotteveel 2019 sec. 2.3.1; spec 0007 and docs/research/stern-and-tugs.md). The tunnel rule is sourced; the transom and pram rules are estimates. A file saved before keeps 0 m (a square stern)"
+    },
+    "stern_transom_height_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 30 },
+      "soft": { "min": 0.0, "max": 10.0 },
+      "status": "estimate",
+      "basis": "The height of the transom above base. none: 1.0 x the design draught for a transom or pram stern (clear of the design waterline), 0 for a tunnel stern (the run ends at the transom with the skirt); an estimate (spec 0007 and docs/research/stern-and-tugs.md). A file saved before keeps none: with no run, the stern is square"
+    },
+    "tunnel_crown_height_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 30 },
+      "soft": { "min": 0.5, "max": 8.0 },
+      "status": "estimate",
+      "basis": "For a tunnel stern only: the height of the tunnel crown above base. none: the shaft axis + D/2 + 0.10 x D tip clearance, with the tunnel radius = D (the radius after Heuser, Rotteveel 2019 sec. 2.3.1, sourced; the tip clearance an estimate; spec 0007 and docs/research/stern-and-tugs.md)"
+    },
+    "propulsor_type": {
+      "default_by_cargo_phase": { "dry_bulk": "shaft_nozzle", "liquid_gas": "azimuth_ducted" },
+      "status": "estimate",
+      "basis": "What drives the hull. unspecified: today's fixed propulsive efficiency and thruster layout (the value a file saved before keeps). A new Option: gas takes ducted azimuth thrusters (a Z-drive LNG tanker), dry bulk twin shafts in nozzles (twin ducted Rhine Class Va ships, CDS 110 and 135 tankers) (spec 0007 and docs/research/stern-and-tugs.md). Inputs only until the propulsor model ticket (#351). thruster_count and propulsive_efficiency are used only with unspecified"
+    },
+    "propulsor_count": {
+      "default": 2,
+      "unit": "propulsors",
+      "hard": { "ge": 1, "le": 4 },
+      "soft": { "min": 1.0, "max": 3.0 },
+      "status": "estimate",
+      "basis": "The number of propulsors, a whole number, for a Propulsor type other than unspecified: twin drive on the reference cargo ships and gas tanker (spec 0007 and docs/research/stern-and-tugs.md)"
+    },
+    "propeller_diameter_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 10 },
+      "soft": { "min": 0.8, "max": 3.5 },
+      "status": "estimate",
+      "basis": "For a Propulsor type other than unspecified. none: the largest diameter the stern allows (the stern geometry and propulsor tickets, #350 and #351; spec 0007 and docs/research/stern-and-tugs.md)"
+    },
+    "power_source": {
+      "default_by_cargo_phase": { "dry_bulk": "diesel_mechanical", "liquid_gas": "gas_fuelled" },
+      "status": "estimate",
+      "basis": "Where the propulsion power comes from: battery-electric and gas-fuelled (today's two), diesel-mechanical, diesel-electric and battery hybrid (maintainer decisions of 2026-10-20, spec 0007 decisions 6 and 7: gas takes gas-fuelled gensets, dry bulk diesel-mechanical). A file saved before keeps battery_electric. Inputs only until the machinery ticket (#352)"
+    },
+    "installed_power_kw": {
+      "default": null,
+      "unit": "kW",
+      "hard": { "gt": 0, "le": 20000 },
+      "soft": { "min": 100.0, "max": 6000.0 },
+      "status": "estimate",
+      "basis": "The installed propulsion power. none: sized for the design speed with the margin below (the powering ticket, #353; spec 0007 and docs/research/stern-and-tugs.md). A file saved before keeps none: no service speed, as today"
+    },
+    "design_speed_kn": {
+      "default": 9.7,
+      "unit": "kn",
+      "hard": { "gt": 0, "le": 30 },
+      "soft": { "min": 4.0, "max": 14.0 },
+      "status": "sourced",
+      "source": "Spec 0007 and the research note: the CDS 110 and 135 tanker design speed of 18 km/h (9.7 kn)",
+      "basis": "The speed the installed power is sized for (#353), in knots. A file saved before keeps none, as today"
+    },
+    "installed_power_margin": {
+      "default": 1.2,
+      "unit": "-",
+      "hard": { "ge": 1, "le": 3 },
+      "soft": { "min": 1.0, "max": 1.5 },
+      "status": "estimate",
+      "basis": "The installed power over the power for the design speed: 1.20, the value electric_energy already uses (an estimate; spec 0007 and docs/research/stern-and-tugs.md). A file saved before keeps none"
+    },
+    "bow_thruster": {
+      "default": "channel_jet",
+      "status": "sourced",
+      "source": "ES-TRIN 2025, Article 31.03(1), Standard S2: a motor cargo vessel or motor tanker operating separately is equipped with a bow thruster which can be operated from the steering position",
+      "basis": "The bow thruster. A channel jet fits a shallow bow (Beveridge 1971; spec 0007 and docs/research/stern-and-tugs.md). A file saved before keeps none. Inputs only until the machinery ticket (#352)"
+    },
+    "bow_thruster_power_kw": {
+      "default": null,
+      "unit": "kW",
+      "hard": { "gt": 0, "le": 5000 },
+      "soft": { "min": 50.0, "max": 1500.0 },
+      "status": "sourced",
+      "source": "Hekkenberg 2013 (PhD thesis, TU Delft), p. 222: 0.11 kW per m3 of L x B x T as a default value, from statistical data of inland vessels",
+      "basis": "For a fitted bow thruster. none: 0.11 kW per m3 of L x B x T"
+    },
+    "battery_energy_kwh": {
+      "default": null,
+      "unit": "kWh",
+      "hard": { "gt": 0, "le": 100000 },
+      "soft": { "min": 200.0, "max": 20000.0 },
+      "status": "estimate",
+      "basis": "For a battery-electric or battery hybrid Power Source. none: the energy per trip x 1.25 reserve, at 80 % usable (the reserve and the usable share are estimates; LTO cells 90 % usable, Echandia; spec 0007 and docs/research/stern-and-tugs.md). A file saved before keeps none: the unit count, as today"
+    },
+    "battery_unit_energy_kwh": {
+      "default": 5000,
+      "unit": "kWh",
+      "hard": { "gt": 0, "le": 50000 },
+      "soft": { "min": 1000.0, "max": 10000.0 },
+      "status": "estimate",
+      "basis": "The energy of one 40 ft battery unit: 70 kWh per m3 of room (an estimate) x 76 m3 inside a 40 ft high-cube unit (ISO internal size) (spec 0007 and docs/research/stern-and-tugs.md)"
+    },
+    "wheelhouse_type": {
+      "default": "elevating",
+      "status": "estimate",
+      "basis": "An elevating wheelhouse (as today) or a fixed one. A file saved before keeps elevating"
+    },
+    "sightline_method": {
+      "default": "blind_distance",
+      "status": "sourced",
+      "source": "ES-TRIN 2025, Article 7.02(2): the blind distance ahead of the bow, a distance rather than a margin",
+      "basis": "How the wheelhouse sightline is checked: margin (today's check: the eye clears the cargo top by a margin) or blind_distance (the distance ahead hidden by the cargo, ES-TRIN 7.02(2)). Inputs only until the wheelhouse ticket (#354). A file saved before keeps margin"
+    },
+    "stern_block_mass_included": {
+      "default": true,
+      "status": "estimate",
+      "basis": "Whether the stern block's mass (thrusters, machinery, units, wheelhouse) counts in the lightship (the WC-A29 finding; spec 0007). Inputs only until the stern block mass ticket (#348). A file saved before keeps false (0 t), as today"
     },
     "water_density_t_per_m3": {
       "default": 1.0,

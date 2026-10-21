@@ -105,7 +105,7 @@ fn new_writes_one_option_with_engine_version_and_si_inputs() {
     let dir = temp_dir("new-shape");
     let (_, design) = new_design(&dir);
     assert_eq!(design["format"], "vdesign");
-    assert_eq!(design["format_version"], 2);
+    assert_eq!(design["format_version"], 3);
     assert_eq!(design["engine_version"], env!("CARGO_PKG_VERSION"));
     assert_eq!(design["units"], "SI");
     let options = design["options"].as_array().unwrap();
@@ -884,7 +884,7 @@ fn fill_writes_a_version_1_adn_g_file_as_a_version_2_igc_2g_file_and_warns() {
         "{err}"
     );
     let design = read_json(&out_file);
-    assert_eq!(design["format_version"], 2);
+    assert_eq!(design["format_version"], 3);
     let inputs = &design["options"][0]["inputs"];
     assert_eq!(inputs["ruleset"]["value"], "IGC_2G");
     assert!(inputs.get("adn_tank_cap_m3").is_none());
@@ -940,7 +940,7 @@ fn new_class_writes_an_option_defined_by_the_class_and_it_validates() {
     let out = ovcd(&["new", "--class", "CEMT-VIa", path_str(&file)]);
     assert!(out.status.success(), "{}", stderr(&out));
     let design = read_json(&file);
-    assert_eq!(design["format_version"], 2);
+    assert_eq!(design["format_version"], 3);
     let inputs = &design["options"][0]["inputs"];
     assert_eq!(
         inputs["vessel_class"],

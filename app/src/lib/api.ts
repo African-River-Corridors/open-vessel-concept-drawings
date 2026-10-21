@@ -76,6 +76,11 @@ export interface InputSpec extends Ranges {
   applies_to?: string[];
   /** The Formation kinds the input is used for. The panel needs neither: Rust sends only the inputs an Option uses. */
   applies_to_formation?: string[];
+  /** Issue #347: used only when another input holds one of these values (the panel needs none: Rust drops the input). */
+  applies_when?: { input: string; values: string[] };
+  /** Whether a plain or keyed default is sourced (with its source) or an estimate. */
+  default_status?: "sourced" | "estimate";
+  default_source?: string;
   kind: "number" | "bool" | "choice" | "cargo" | "formation" | "vessel_scheme" | "vessel_class";
   nullable?: boolean;
   choices?: Choice[];

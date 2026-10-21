@@ -1,6 +1,6 @@
 {
   "format": "vdesign",
-  "format_version": 2,
+  "format_version": 3,
   "engine_version": "0.2.2",
   "units": "SI",
   "options": [
@@ -142,6 +142,62 @@
           "source": "default"
         },
         "optimise_depth": {
+          "value": false,
+          "source": "default"
+        },
+        "stern_form": {
+          "value": "transom",
+          "source": "default"
+        },
+        "stern_run_length_m": {
+          "value": 0.0,
+          "source": "default"
+        },
+        "stern_transom_height_m": {
+          "value": null,
+          "source": "default"
+        },
+        "propulsor_type": {
+          "value": "unspecified",
+          "source": "default"
+        },
+        "power_source": {
+          "value": "battery_electric",
+          "source": "default"
+        },
+        "installed_power_kw": {
+          "value": null,
+          "source": "default"
+        },
+        "design_speed_kn": {
+          "value": null,
+          "source": "default"
+        },
+        "installed_power_margin": {
+          "value": null,
+          "source": "default"
+        },
+        "bow_thruster": {
+          "value": "none",
+          "source": "default"
+        },
+        "battery_energy_kwh": {
+          "value": null,
+          "source": "default"
+        },
+        "battery_unit_energy_kwh": {
+          "value": 5000.0,
+          "source": "default"
+        },
+        "wheelhouse_type": {
+          "value": "elevating",
+          "source": "default"
+        },
+        "sightline_method": {
+          "value": "margin",
+          "source": "default"
+        },
+        "stern_block_mass_included": {
           "value": false,
           "source": "default"
         },

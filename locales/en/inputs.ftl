@@ -11,6 +11,7 @@ group-gas-tanks = Gas tanks
 group-note-gas-tanks = The tank outer diameter (the cap below and the result) is measured to the outside of the insulation; the clearances and the drawing use that face. The steel diameter is that less twice the insulation thickness. The wall thickness is worked out from the pressure-vessel formula unless a thickness is typed. The design values below depend on the Cargo and, for LPG, on the carriage condition; each shows its source or marks an estimate.
 group-dry-bulk-hold = Dry-bulk hold
 group-aft-block = Aft block
+group-stern-and-propulsion = Stern and propulsion
 group-waterway-limits = Waterway Limits
 group-speed-and-power = Speed and power
 group-cost-rates = Cost rates
@@ -163,6 +164,67 @@ input-hopper-plate-mm = Hopper plate thickness
 input-hold-bulkhead-plate-mm = Hold bulkhead plate thickness
 
 input-hatch-coaming-plate-mm = Hatch coaming plate thickness
+
+input-stern-form = Stern form
+input-stern-form-default-by = cargo_phase
+choice-stern-form-transom = Transom
+choice-stern-form-pram = Pram
+choice-stern-form-tunnel = Tunnel
+
+input-stern-run-length-m = Stern run length
+
+input-stern-transom-height-m = Transom height above base
+
+input-tunnel-crown-height-m = Tunnel crown height above base
+
+input-propulsor-type = Propulsor type
+input-propulsor-type-default-by = cargo_phase
+choice-propulsor-type-unspecified = Unspecified
+choice-propulsor-type-azimuth-open = Azimuth thruster, open
+choice-propulsor-type-azimuth-ducted = Azimuth thruster, ducted
+choice-propulsor-type-shaft-open = Shaft and open propeller
+choice-propulsor-type-shaft-nozzle = Shaft and propeller in a nozzle
+choice-propulsor-type-voith-schneider = Voith Schneider
+choice-propulsor-type-pump-jet = Pump jet
+
+input-propulsor-count = Propulsor count
+
+input-propeller-diameter-m = Propeller diameter
+
+input-power-source = Power source
+input-power-source-default-by = cargo_phase
+choice-power-source-battery-electric = Battery-electric
+choice-power-source-gas-fuelled = Gas-fuelled
+choice-power-source-diesel-mechanical = Diesel-mechanical
+choice-power-source-diesel-electric = Diesel-electric
+choice-power-source-battery-hybrid = Battery hybrid
+
+input-installed-power-kw = Installed power
+
+input-design-speed-kn = Design speed
+
+input-installed-power-margin = Installed power margin
+
+input-bow-thruster = Bow thruster
+choice-bow-thruster-none = None
+choice-bow-thruster-channel-jet = Channel jet
+choice-bow-thruster-tunnel = Tunnel
+
+input-bow-thruster-power-kw = Bow thruster power
+
+input-battery-energy-kwh = Battery energy
+
+input-battery-unit-energy-kwh = Battery energy per 40 ft unit
+
+input-wheelhouse-type = Wheelhouse type
+choice-wheelhouse-type-elevating = Elevating
+choice-wheelhouse-type-fixed = Fixed
+
+input-sightline-method = Sightline method
+choice-sightline-method-margin = Margin over the obstruction
+choice-sightline-method-blind-distance = Blind distance (ES-TRIN 7.02)
+
+input-stern-block-mass-included = Stern block mass in the lightship
 
 input-propulsive-efficiency = Propulsive efficiency
 
