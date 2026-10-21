@@ -20,11 +20,27 @@ This folder holds:
     python3 evaluation/run.py            # run every case and mutant; write evaluation/results.md
     python3 evaluation/run.py --check    # what CI runs
 
-CI runs `--check` on every pull request, in the `test` job. **A false pass fails the build**: the
-engine passes a criterion a case expects to fail. A false fail (the engine fails a criterion expected to
-pass) and a coverage gap (a criterion with no passing or no failing case) are warning annotations, as
+CI runs `--check` on every pull request, in the `test` job. The runner reads the engine's Rule Trace
+of each case (`box_trace`, the built-in set `is2008-a` 1.0.0) and compares each row with the case's
+expected verdict, keyed by rule id (issue #278). **A false pass fails the build**: the engine passes a
+blocking Rule a case expects to fail. A false fail (the engine fails a Rule expected to pass) and a
+coverage gap (an evaluated blocking Rule with no passing or no failing case) are warning annotations, as
 the Calibration Bands are (issue #119). A `results.md` that is not what the run writes also fails.
-`results.md` reports the false-fail rate, the false-pass rate and the per-criterion coverage.
+
+### Triage
+
+Each disagreement outside the grid error goes in one bucket, in this order:
+
+| Bucket | When |
+|---|---|
+| `model-gap` | the Rule is `not evaluated` or has no row, or the case has an input the box trace does not read. A `not evaluated` row against an expected `fail` is a model gap, never a pass |
+| `known-limitation` | the Rule links a finding (`finding` in its row) |
+| `code-bug` | the oracle and the engine disagree. A derived case's verdict is the oracle's |
+| `rule-suspect` | the oracle and the engine agree with each other, but not with a published verdict |
+| `needs-expert` | the rest: for example a published verdict with no oracle verdict to compare |
+
+A false pass on a blocking Rule fails the build whatever its bucket. `results.md` lists, per Rule Set
+and per Rule by id, the passing and failing case counts, the coverage, and the buckets.
 
 ## Boundary mutants
 
@@ -57,8 +73,10 @@ The core checks the IMO Intact Stability Code 2008, Part A 2.2 only inside the g
 there the KG comes out of the gas arrangement, so a `.vdesign` cannot set a known KG. Phase 0 therefore
 takes box particulars (beam, depth, draught, KG, free surface) and calls `box_condition`, the
 per-condition work `assess` does, made callable on its own (`ovcd_core::gas_stability::box_condition`;
-`evaluation/engine.py`, the harness's one call into the engine, outside the package's public API). A later phase runs whole `.vdesign` files; the case
-format already has a `vdesign` field for that.
+`evaluation/engine.py`, the harness's one call into the engine, outside the package's public API).
+`box_trace` evaluates the selected Rule Sets on that one loading condition, named "Box", and gives
+the Rule Trace a run writes. A later phase runs whole `.vdesign` files; the case format already has a
+`vdesign` field for that.
 
 ## Case format
 
@@ -70,14 +88,18 @@ One YAML file per case in `cases/`:
 | `inputs.form` | `particulars` in phase 0 |
 | `inputs.vdesign` | path to a `.vdesign` for later phases; `null` for particulars |
 | `inputs.length_m`, `beam_m`, `depth_m`, `draught_m`, `kg_m`, `water_density_t_m3`, `free_surface_m` | the box. The draught is given, so the length and the water density do not enter the criteria |
-| `expected.<criterion>` | for each of the six criteria below: `rule` (citation), `what`, `unit`, `verdict` (`pass` or `fail`), `value` (the governing value), `limit`, `margin` (value minus limit) |
+| `expected.<rule id>` | for each of the six Rules below: `rule` (citation), `what`, `unit`, `verdict` (`pass` or `fail`), `value` (the governing value), `limit`, `margin` (value minus limit); optionally `oracle` (the oracle's verdict, for a case whose verdict is `published`) |
 | `provenance.verdict_basis` | `published` (the verdict is in the source) or `derived` (worked out by the oracle) |
 | `provenance.source`, `edition`, `locator`, `licence`, `confidence`, `inputs_basis` | where it comes from: the document, the edition, the page or paragraph, the licence, how far to trust it, and where the inputs came from |
-| `mutant` (mutants only) | `parent` (case id), `criterion`, `side` (`pass` or `fail`), and `grid: true` when the step is inside the engine's grid error |
+| `mutant` (mutants only) | `parent` (case id), `criterion` (the rule id), `side` (`pass` or `fail`), and `grid: true` when the step is inside the engine's grid error |
 
-The six criteria (keys of `expected`): `area_0_30`, `area_0_40`, `area_30_40` (Part A 2.2.1, limits
-0.055, 0.090 and 0.030 m rad), `gz_30_plus` (2.2.2, GZ at least 0.20 m at 30 degrees or more),
-`angle_max_gz` (2.2.3, at least 25 degrees) and `gm` (2.2.4, at least 0.15 m).
+The six Rules (keys of `expected`, the ids of `is2008-a`; the oracle's own names in brackets):
+`is2008/A.2.2.1/area-0-30`, `is2008/A.2.2.1/area-0-40`, `is2008/A.2.2.1/area-30-40` (`area_0_30`,
+`area_0_40`, `area_30_40`; Part A 2.2.1, limits 0.055, 0.090 and 0.030 m rad), `is2008/A.2.2.2/gz-30`
+(`gz_30_plus`; 2.2.2, GZ at least 0.20 m at 30 degrees or more), `is2008/A.2.2.3/angle-max-gz`
+(`angle_max_gz`; 2.2.3, at least 25 degrees) and `is2008/A.2.2.4/gm0` (`gm`; 2.2.4, at least 0.15 m).
+`oracle/write_cases.py` holds the map (`RULE_IDS`); the oracle keeps its own names, so it shares nothing
+with the engine.
 
 ## Sources, and what was read
 

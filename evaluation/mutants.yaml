@@ -14,7 +14,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -23,7 +23,7 @@ mutants:
       limit: 0.055
       margin: 0.5505058651
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -32,7 +32,7 @@ mutants:
       limit: 0.09
       margin: 0.8173019618
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -41,7 +41,7 @@ mutants:
       limit: 0.03
       margin: 0.2717960968
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -50,7 +50,7 @@ mutants:
       limit: 0.2
       margin: 1.713191995
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -59,7 +59,7 @@ mutants:
       limit: 25.0
       margin: 1.999999904
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -70,7 +70,7 @@ mutants:
       grid: false
   mutant:
     parent: box_a
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: pass
     magnitude: big
     moved: depth_m
@@ -97,7 +97,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -106,7 +106,7 @@ mutants:
       limit: 0.055
       margin: 0.5110702393
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -115,7 +115,7 @@ mutants:
       limit: 0.09
       margin: 0.7202943465
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -124,7 +124,7 @@ mutants:
       limit: 0.03
       margin: 0.2142241071
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -133,7 +133,7 @@ mutants:
       limit: 0.2
       margin: 1.421340174
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -142,7 +142,7 @@ mutants:
       limit: 25.0
       margin: 0.1999995178
       grid: true
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -153,7 +153,7 @@ mutants:
       grid: false
   mutant:
     parent: box_a
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: pass
     magnitude: small
     moved: depth_m
@@ -180,7 +180,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -189,7 +189,7 @@ mutants:
       limit: 0.055
       margin: 0.4381478446
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -198,7 +198,7 @@ mutants:
       limit: 0.09
       margin: 0.5671217023
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -207,7 +207,7 @@ mutants:
       limit: 0.03
       margin: 0.1339738577
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -216,7 +216,7 @@ mutants:
       limit: 0.2
       margin: 0.994904089
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -225,7 +225,7 @@ mutants:
       limit: 25.0
       margin: -2.00000022
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -236,7 +236,7 @@ mutants:
       grid: false
   mutant:
     parent: box_a
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: fail
     magnitude: big
     moved: depth_m
@@ -263,7 +263,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -272,7 +272,7 @@ mutants:
       limit: 0.055
       margin: 0.4994778503
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -281,7 +281,7 @@ mutants:
       limit: 0.09
       margin: 0.6943235874
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -290,7 +290,7 @@ mutants:
       limit: 0.03
       margin: 0.1998457371
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -299,7 +299,7 @@ mutants:
       limit: 0.2
       margin: 1.346320398
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -308,7 +308,7 @@ mutants:
       limit: 25.0
       margin: -0.2000003628
       grid: true
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -319,7 +319,7 @@ mutants:
       grid: false
   mutant:
     parent: box_a
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: fail
     magnitude: small
     moved: depth_m
@@ -346,7 +346,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -355,7 +355,7 @@ mutants:
       limit: 0.055
       margin: 0.002
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -364,7 +364,7 @@ mutants:
       limit: 0.09
       margin: 0.01047530114
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -373,7 +373,7 @@ mutants:
       limit: 0.03
       margin: 0.01347530114
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -382,7 +382,7 @@ mutants:
       limit: 0.2
       margin: 0.06516394382
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -391,7 +391,7 @@ mutants:
       limit: 25.0
       margin: 6.026928182
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -402,7 +402,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: area_0_30
+    criterion: is2008/A.2.2.1/area-0-30
     side: pass
     magnitude: big
     moved: kg_m
@@ -429,7 +429,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -438,7 +438,7 @@ mutants:
       limit: 0.055
       margin: 2.000000011e-05
       grid: true
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -447,7 +447,7 @@ mutants:
       limit: 0.09
       margin: 0.007017690403
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -456,7 +456,7 @@ mutants:
       limit: 0.03
       margin: 0.0119976904
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -465,7 +465,7 @@ mutants:
       limit: 0.2
       margin: 0.0575615524
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -474,7 +474,7 @@ mutants:
       limit: 25.0
       margin: 5.889110452
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -485,7 +485,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: area_0_30
+    criterion: is2008/A.2.2.1/area-0-30
     side: pass
     magnitude: small
     moved: kg_m
@@ -512,7 +512,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -521,7 +521,7 @@ mutants:
       limit: 0.055
       margin: -0.002
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -530,7 +530,7 @@ mutants:
       limit: 0.09
       margin: 0.003490228943
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -539,7 +539,7 @@ mutants:
       limit: 0.03
       margin: 0.01049022894
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -548,7 +548,7 @@ mutants:
       limit: 0.2
       margin: 0.04983682831
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -557,7 +557,7 @@ mutants:
       limit: 25.0
       margin: 5.750165722
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -568,7 +568,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: area_0_30
+    criterion: is2008/A.2.2.1/area-0-30
     side: fail
     magnitude: big
     moved: kg_m
@@ -595,7 +595,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -604,7 +604,7 @@ mutants:
       limit: 0.055
       margin: -2.000000061e-05
       grid: true
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -613,7 +613,7 @@ mutants:
       limit: 0.09
       margin: 0.00694783968
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -622,7 +622,7 @@ mutants:
       limit: 0.03
       margin: 0.01196783968
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -631,7 +631,7 @@ mutants:
       limit: 0.2
       margin: 0.05740828232
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -640,7 +640,7 @@ mutants:
       limit: 25.0
       margin: 5.886343248
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -651,7 +651,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: area_0_30
+    criterion: is2008/A.2.2.1/area-0-30
     side: fail
     magnitude: small
     moved: kg_m
@@ -678,7 +678,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -687,7 +687,7 @@ mutants:
       limit: 0.055
       margin: -0.002853379263
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -696,7 +696,7 @@ mutants:
       limit: 0.09
       margin: 0.002
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -705,7 +705,7 @@ mutants:
       limit: 0.03
       margin: 0.009853379263
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -714,7 +714,7 @@ mutants:
       limit: 0.2
       margin: 0.04658280759
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -723,7 +723,7 @@ mutants:
       limit: 25.0
       margin: 5.691958726
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -734,7 +734,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: area_0_40
+    criterion: is2008/A.2.2.1/area-0-40
     side: pass
     magnitude: big
     moved: kg_m
@@ -761,7 +761,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -770,7 +770,7 @@ mutants:
       limit: 0.055
       margin: -0.003987225811
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -779,7 +779,7 @@ mutants:
       limit: 0.09
       margin: 1.999999991e-05
       grid: true
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -788,7 +788,7 @@ mutants:
       limit: 0.03
       margin: 0.009007225811
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -797,7 +797,7 @@ mutants:
       limit: 0.2
       margin: 0.04226791972
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -806,7 +806,7 @@ mutants:
       limit: 25.0
       margin: 5.61506817
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -817,7 +817,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: area_0_40
+    criterion: is2008/A.2.2.1/area-0-40
     side: pass
     magnitude: small
     moved: kg_m
@@ -844,7 +844,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -853,7 +853,7 @@ mutants:
       limit: 0.055
       margin: -0.00514397835
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -862,7 +862,7 @@ mutants:
       limit: 0.09
       margin: -0.002
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -871,7 +871,7 @@ mutants:
       limit: 0.03
       margin: 0.00814397835
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -880,7 +880,7 @@ mutants:
       limit: 0.2
       margin: 0.03787590126
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -889,7 +889,7 @@ mutants:
       limit: 25.0
       margin: 5.537146195
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -900,7 +900,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: area_0_40
+    criterion: is2008/A.2.2.1/area-0-40
     side: fail
     magnitude: big
     moved: kg_m
@@ -927,7 +927,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -936,7 +936,7 @@ mutants:
       limit: 0.055
       margin: -0.004010131802
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -945,7 +945,7 @@ mutants:
       limit: 0.09
       margin: -1.999999929e-05
       grid: true
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -954,7 +954,7 @@ mutants:
       limit: 0.03
       margin: 0.008990131802
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -963,7 +963,7 @@ mutants:
       limit: 0.2
       margin: 0.04218085085
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -972,7 +972,7 @@ mutants:
       limit: 25.0
       margin: 5.613521194
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -983,7 +983,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: area_0_40
+    criterion: is2008/A.2.2.1/area-0-40
     side: fail
     magnitude: small
     moved: kg_m
@@ -1010,7 +1010,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -1019,7 +1019,7 @@ mutants:
       limit: 0.055
       margin: -0.01337691603
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -1028,7 +1028,7 @@ mutants:
       limit: 0.09
       margin: -0.01637691603
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -1037,7 +1037,7 @@ mutants:
       limit: 0.03
       margin: 0.002
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -1046,7 +1046,7 @@ mutants:
       limit: 0.2
       margin: 0.006904401124
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -1055,7 +1055,7 @@ mutants:
       limit: 25.0
       margin: 4.99716467
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -1066,7 +1066,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: area_30_40
+    criterion: is2008/A.2.2.1/area-30-40
     side: pass
     magnitude: big
     moved: kg_m
@@ -1093,7 +1093,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -1102,7 +1102,7 @@ mutants:
       limit: 0.055
       margin: -0.01603011819
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -1111,7 +1111,7 @@ mutants:
       limit: 0.09
       margin: -0.02101011819
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -1120,7 +1120,7 @@ mutants:
       limit: 0.03
       margin: 1.999999988e-05
       grid: true
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -1129,7 +1129,7 @@ mutants:
       limit: 0.2
       margin: -0.002997484131
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -1138,7 +1138,7 @@ mutants:
       limit: 25.0
       margin: 4.82838813
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -1149,7 +1149,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: area_30_40
+    criterion: is2008/A.2.2.1/area-30-40
     side: pass
     magnitude: small
     moved: kg_m
@@ -1176,7 +1176,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -1185,7 +1185,7 @@ mutants:
       limit: 0.055
       margin: -0.01873692039
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -1194,7 +1194,7 @@ mutants:
       limit: 0.09
       margin: -0.02573692039
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -1203,7 +1203,7 @@ mutants:
       limit: 0.03
       margin: -0.002
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -1212,7 +1212,7 @@ mutants:
       limit: 0.2
       margin: -0.01309940747
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -1221,7 +1221,7 @@ mutants:
       limit: 25.0
       margin: 4.658719855
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -1232,7 +1232,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: area_30_40
+    criterion: is2008/A.2.2.1/area-30-40
     side: fail
     magnitude: big
     moved: kg_m
@@ -1259,7 +1259,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -1268,7 +1268,7 @@ mutants:
       limit: 0.055
       margin: -0.01608371823
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -1277,7 +1277,7 @@ mutants:
       limit: 0.09
       margin: -0.02110371823
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -1286,7 +1286,7 @@ mutants:
       limit: 0.03
       margin: -1.999999993e-05
       grid: true
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -1295,7 +1295,7 @@ mutants:
       limit: 0.2
       margin: -0.003197522216
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -1304,7 +1304,7 @@ mutants:
       limit: 25.0
       margin: 4.825005049
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -1315,7 +1315,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: area_30_40
+    criterion: is2008/A.2.2.1/area-30-40
     side: fail
     magnitude: small
     moved: kg_m
@@ -1342,7 +1342,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -1351,7 +1351,7 @@ mutants:
       limit: 0.055
       margin: -0.01254805001
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -1360,7 +1360,7 @@ mutants:
       limit: 0.09
       margin: -0.01492949378
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -1369,7 +1369,7 @@ mutants:
       limit: 0.03
       margin: 0.002618556232
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -1378,7 +1378,7 @@ mutants:
       limit: 0.2
       margin: 0.01
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -1387,7 +1387,7 @@ mutants:
       limit: 25.0
       margin: 5.050401613
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -1398,7 +1398,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: gz_30_plus
+    criterion: is2008/A.2.2.2/gz-30
     side: pass
     magnitude: big
     moved: kg_m
@@ -1425,7 +1425,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -1434,7 +1434,7 @@ mutants:
       limit: 0.055
       margin: -0.01520014982
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -1443,7 +1443,7 @@ mutants:
       limit: 0.09
       margin: -0.01956077094
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -1452,7 +1452,7 @@ mutants:
       limit: 0.03
       margin: 0.0006393788778
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -1461,7 +1461,7 @@ mutants:
       limit: 0.2
       margin: 9.99999988e-05
       grid: true
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -1470,7 +1470,7 @@ mutants:
       limit: 25.0
       margin: 4.880919066
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -1481,7 +1481,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: gz_30_plus
+    criterion: is2008/A.2.2.2/gz-30
     side: pass
     magnitude: small
     moved: kg_m
@@ -1508,7 +1508,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -1517,7 +1517,7 @@ mutants:
       limit: 0.055
       margin: -0.01790643666
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -1526,7 +1526,7 @@ mutants:
       limit: 0.09
       margin: -0.02428667319
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -1535,7 +1535,7 @@ mutants:
       limit: 0.03
       margin: -0.001380236528
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -1544,7 +1544,7 @@ mutants:
       limit: 0.2
       margin: -0.01
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -1553,7 +1553,7 @@ mutants:
       limit: 25.0
       margin: 4.710509014
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -1564,7 +1564,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: gz_30_plus
+    criterion: is2008/A.2.2.2/gz-30
     side: fail
     magnitude: big
     moved: kg_m
@@ -1591,7 +1591,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -1600,7 +1600,7 @@ mutants:
       limit: 0.055
       margin: -0.01525373966
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -1609,7 +1609,7 @@ mutants:
       limit: 0.09
       margin: -0.01965435316
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -1618,7 +1618,7 @@ mutants:
       limit: 0.03
       margin: 0.0005993864935
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -1627,7 +1627,7 @@ mutants:
       limit: 0.2
       margin: -0.0001000000012
       grid: true
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -1636,7 +1636,7 @@ mutants:
       limit: 25.0
       margin: 4.877520192
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -1647,7 +1647,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: gz_30_plus
+    criterion: is2008/A.2.2.2/gz-30
     side: fail
     magnitude: small
     moved: kg_m
@@ -1674,7 +1674,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -1683,7 +1683,7 @@ mutants:
       limit: 0.055
       margin: 0.004748155704
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -1692,7 +1692,7 @@ mutants:
       limit: 0.09
       margin: 0.0001533530732
       grid: true
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -1701,7 +1701,7 @@ mutants:
       limit: 0.03
       margin: 0.000405197369
       grid: true
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -1710,7 +1710,7 @@ mutants:
       limit: 0.2
       margin: 0.02091624708
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -1719,7 +1719,7 @@ mutants:
       limit: 25.0
       margin: 2.000000016
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -1730,7 +1730,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: pass
     magnitude: big
     moved: depth_m
@@ -1757,7 +1757,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -1766,7 +1766,7 @@ mutants:
       limit: 0.055
       margin: 0.001298638294
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -1775,7 +1775,7 @@ mutants:
       limit: 0.09
       margin: -0.01287793945
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -1784,7 +1784,7 @@ mutants:
       limit: 0.03
       margin: -0.009176577746
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -1793,7 +1793,7 @@ mutants:
       limit: 0.2
       margin: -0.0184921181
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -1802,7 +1802,7 @@ mutants:
       limit: 25.0
       margin: 0.1999999036
       grid: true
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -1813,7 +1813,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: pass
     magnitude: small
     moved: depth_m
@@ -1840,7 +1840,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -1849,7 +1849,7 @@ mutants:
       limit: 0.055
       margin: -0.004443106476
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -1858,7 +1858,7 @@ mutants:
       limit: 0.09
       margin: -0.03216774515
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -1867,7 +1867,7 @@ mutants:
       limit: 0.03
       margin: -0.02272463868
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -1876,7 +1876,7 @@ mutants:
       limit: 0.2
       margin: -0.0764157823
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -1885,7 +1885,7 @@ mutants:
       limit: 25.0
       margin: -2.0
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -1896,7 +1896,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: fail
     magnitude: big
     moved: depth_m
@@ -1923,7 +1923,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -1932,7 +1932,7 @@ mutants:
       limit: 0.055
       margin: 0.0003917469491
       grid: true
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -1941,7 +1941,7 @@ mutants:
       limit: 0.09
       margin: -0.01609311286
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -1950,7 +1950,7 @@ mutants:
       limit: 0.03
       margin: -0.01148485981
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -1959,7 +1959,7 @@ mutants:
       limit: 0.2
       margin: -0.0281901721
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -1968,7 +1968,7 @@ mutants:
       limit: 25.0
       margin: -0.2000000787
       grid: true
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -1979,7 +1979,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: fail
     magnitude: small
     moved: depth_m
@@ -2006,7 +2006,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -2015,7 +2015,7 @@ mutants:
       limit: 0.055
       margin: -0.004864935626
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -2024,7 +2024,7 @@ mutants:
       limit: 0.09
       margin: -0.001512716608
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -2033,7 +2033,7 @@ mutants:
       limit: 0.03
       margin: 0.008352219019
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -2042,7 +2042,7 @@ mutants:
       limit: 0.2
       margin: 0.03893446049
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -2051,7 +2051,7 @@ mutants:
       limit: 25.0
       margin: 5.555895894
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -2062,7 +2062,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: gm
+    criterion: is2008/A.2.2.4/gm0
     side: pass
     magnitude: big
     moved: kg_m
@@ -2089,7 +2089,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -2098,7 +2098,7 @@ mutants:
       limit: 0.055
       margin: -0.005400834011
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -2107,7 +2107,7 @@ mutants:
       limit: 0.09
       margin: -0.002448538835
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -2116,7 +2116,7 @@ mutants:
       limit: 0.03
       margin: 0.007952295176
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -2125,7 +2125,7 @@ mutants:
       limit: 0.2
       margin: 0.03690202799
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -2134,7 +2134,7 @@ mutants:
       limit: 25.0
       margin: 5.519914571
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -2145,7 +2145,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: gm
+    criterion: is2008/A.2.2.4/gm0
     side: pass
     magnitude: small
     moved: kg_m
@@ -2172,7 +2172,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -2181,7 +2181,7 @@ mutants:
       limit: 0.055
       margin: -0.006204681589
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -2190,7 +2190,7 @@ mutants:
       limit: 0.09
       margin: -0.003852272177
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -2199,7 +2199,7 @@ mutants:
       limit: 0.03
       margin: 0.007352409412
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -2208,7 +2208,7 @@ mutants:
       limit: 0.2
       margin: 0.0338574286
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -2217,7 +2217,7 @@ mutants:
       limit: 25.0
       margin: 5.466149131
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -2228,7 +2228,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: gm
+    criterion: is2008/A.2.2.4/gm0
     side: fail
     magnitude: big
     moved: kg_m
@@ -2255,7 +2255,7 @@ mutants:
     water_density_t_m3: 1.0
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -2264,7 +2264,7 @@ mutants:
       limit: 0.055
       margin: -0.005668783204
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -2273,7 +2273,7 @@ mutants:
       limit: 0.09
       margin: -0.002916449949
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -2282,7 +2282,7 @@ mutants:
       limit: 0.03
       margin: 0.007752333255
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -2291,7 +2291,7 @@ mutants:
       limit: 0.2
       margin: 0.03588662235
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -2300,7 +2300,7 @@ mutants:
       limit: 25.0
       margin: 5.501965198
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -2311,7 +2311,7 @@ mutants:
       grid: false
   mutant:
     parent: box_b
-    criterion: gm
+    criterion: is2008/A.2.2.4/gm0
     side: fail
     magnitude: small
     moved: kg_m
@@ -2339,7 +2339,7 @@ mutants:
     water_density_t_m3: 1.025
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -2348,7 +2348,7 @@ mutants:
       limit: 0.055
       margin: 0.7388316914
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -2357,7 +2357,7 @@ mutants:
       limit: 0.09
       margin: 1.058130835
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -2366,7 +2366,7 @@ mutants:
       limit: 0.03
       margin: 0.3242991431
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -2375,7 +2375,7 @@ mutants:
       limit: 0.2
       margin: 1.874023216
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -2384,7 +2384,7 @@ mutants:
       limit: 25.0
       margin: 2.0
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -2395,7 +2395,7 @@ mutants:
       grid: false
   mutant:
     parent: lcu_empty
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: pass
     magnitude: big
     moved: depth_m
@@ -2425,7 +2425,7 @@ mutants:
     water_density_t_m3: 1.025
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -2434,7 +2434,7 @@ mutants:
       limit: 0.055
       margin: 0.5753322461
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -2443,7 +2443,7 @@ mutants:
       limit: 0.09
       margin: 0.8016432351
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -2452,7 +2452,7 @@ mutants:
       limit: 0.03
       margin: 0.231310989
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -2461,7 +2461,7 @@ mutants:
       limit: 0.2
       margin: 1.337697705
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -2470,7 +2470,7 @@ mutants:
       limit: 25.0
       margin: 0.2000001129
       grid: true
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -2481,7 +2481,7 @@ mutants:
       grid: false
   mutant:
     parent: lcu_empty
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: pass
     magnitude: small
     moved: depth_m
@@ -2511,7 +2511,7 @@ mutants:
     water_density_t_m3: 1.025
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -2520,7 +2520,7 @@ mutants:
       limit: 0.055
       margin: 0.1414031184
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -2529,7 +2529,7 @@ mutants:
       limit: 0.09
       margin: 0.1767766398
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -2538,7 +2538,7 @@ mutants:
       limit: 0.03
       margin: 0.04037352142
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -2547,7 +2547,7 @@ mutants:
       limit: 0.2
       margin: 0.2128297925
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -2556,7 +2556,7 @@ mutants:
       limit: 25.0
       margin: -2.000000408
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -2567,7 +2567,7 @@ mutants:
       grid: false
   mutant:
     parent: lcu_empty
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: fail
     magnitude: big
     moved: depth_m
@@ -2597,7 +2597,7 @@ mutants:
     water_density_t_m3: 1.025
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -2606,7 +2606,7 @@ mutants:
       limit: 0.055
       margin: 0.2096767599
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -2615,7 +2615,7 @@ mutants:
       limit: 0.09
       margin: 0.2723338363
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -2624,7 +2624,7 @@ mutants:
       limit: 0.03
       margin: 0.06765707641
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -2633,7 +2633,7 @@ mutants:
       limit: 0.2
       margin: 0.3736719055
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -2642,7 +2642,7 @@ mutants:
       limit: 25.0
       margin: -0.1999985789
       grid: true
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -2653,7 +2653,7 @@ mutants:
       grid: false
   mutant:
     parent: lcu_empty
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: fail
     magnitude: small
     moved: depth_m
@@ -2683,7 +2683,7 @@ mutants:
     water_density_t_m3: 1.025
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -2692,7 +2692,7 @@ mutants:
       limit: 0.055
       margin: 0.5413141475
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -2701,7 +2701,7 @@ mutants:
       limit: 0.09
       margin: 0.7823456684
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -2710,7 +2710,7 @@ mutants:
       limit: 0.03
       margin: 0.2460315208
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -2719,7 +2719,7 @@ mutants:
       limit: 0.2
       margin: 1.432943417
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -2728,7 +2728,7 @@ mutants:
       limit: 25.0
       margin: 1.999999905
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -2739,7 +2739,7 @@ mutants:
       grid: false
   mutant:
     parent: lcu_loaded
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: pass
     magnitude: big
     moved: depth_m
@@ -2769,7 +2769,7 @@ mutants:
     water_density_t_m3: 1.025
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -2778,7 +2778,7 @@ mutants:
       limit: 0.055
       margin: 0.4592618396
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -2787,7 +2787,7 @@ mutants:
       limit: 0.09
       margin: 0.6437711356
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -2796,7 +2796,7 @@ mutants:
       limit: 0.03
       margin: 0.189509296
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -2805,7 +2805,7 @@ mutants:
       limit: 0.2
       margin: 1.113331525
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -2814,7 +2814,7 @@ mutants:
       limit: 25.0
       margin: 0.1999990475
       grid: true
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -2825,7 +2825,7 @@ mutants:
       grid: false
   mutant:
     parent: lcu_loaded
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: pass
     magnitude: small
     moved: depth_m
@@ -2855,7 +2855,7 @@ mutants:
     water_density_t_m3: 1.025
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -2864,7 +2864,7 @@ mutants:
       limit: 0.055
       margin: 0.3159052434
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -2873,7 +2873,7 @@ mutants:
       limit: 0.09
       margin: 0.4187224986
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -2882,7 +2882,7 @@ mutants:
       limit: 0.03
       margin: 0.1078172552
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -2891,7 +2891,7 @@ mutants:
       limit: 0.2
       margin: 0.6421670475
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -2900,7 +2900,7 @@ mutants:
       limit: 25.0
       margin: -2.0
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -2911,7 +2911,7 @@ mutants:
       grid: false
   mutant:
     parent: lcu_loaded
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: fail
     magnitude: big
     moved: depth_m
@@ -2941,7 +2941,7 @@ mutants:
     water_density_t_m3: 1.025
     free_surface_m: 0.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -2950,7 +2950,7 @@ mutants:
       limit: 0.055
       margin: 0.4357105466
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -2959,7 +2959,7 @@ mutants:
       limit: 0.09
       margin: 0.6056602959
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -2968,7 +2968,7 @@ mutants:
       limit: 0.03
       margin: 0.1749497493
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -2977,7 +2977,7 @@ mutants:
       limit: 0.2
       margin: 1.030019321
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -2986,7 +2986,7 @@ mutants:
       limit: 25.0
       margin: -0.1999999036
       grid: true
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -2997,7 +2997,7 @@ mutants:
       grid: false
   mutant:
     parent: lcu_loaded
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: fail
     magnitude: small
     moved: depth_m
@@ -3028,7 +3028,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -3037,7 +3037,7 @@ mutants:
       limit: 0.055
       margin: 0.002
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -3046,7 +3046,7 @@ mutants:
       limit: 0.09
       margin: 0.01244788652
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -3055,7 +3055,7 @@ mutants:
       limit: 0.03
       margin: 0.01544788652
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -3064,7 +3064,7 @@ mutants:
       limit: 0.2
       margin: 0.206102569
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -3073,7 +3073,7 @@ mutants:
       limit: 25.0
       margin: 4.790443833
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -3084,7 +3084,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: area_0_30
+    criterion: is2008/A.2.2.1/area-0-30
     side: pass
     magnitude: big
     moved: kg_m
@@ -3114,7 +3114,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -3123,7 +3123,7 @@ mutants:
       limit: 0.055
       margin: 2.000000061e-05
       grid: true
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -3132,7 +3132,7 @@ mutants:
       limit: 0.09
       margin: 0.008990275786
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -3141,7 +3141,7 @@ mutants:
       limit: 0.03
       margin: 0.01397027579
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -3150,7 +3150,7 @@ mutants:
       limit: 0.2
       margin: 0.1987131084
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -3159,7 +3159,7 @@ mutants:
       limit: 25.0
       margin: 4.770062209
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -3170,7 +3170,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: area_0_30
+    criterion: is2008/A.2.2.1/area-0-30
     side: pass
     magnitude: small
     moved: kg_m
@@ -3200,7 +3200,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -3209,7 +3209,7 @@ mutants:
       limit: 0.055
       margin: -0.002
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -3218,7 +3218,7 @@ mutants:
       limit: 0.09
       margin: 0.005462814323
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -3227,7 +3227,7 @@ mutants:
       limit: 0.03
       margin: 0.01246281432
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -3236,7 +3236,7 @@ mutants:
       limit: 0.2
       margin: 0.1911743657
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -3245,7 +3245,7 @@ mutants:
       limit: 25.0
       margin: 4.74931588
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -3256,7 +3256,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: area_0_30
+    criterion: is2008/A.2.2.1/area-0-30
     side: fail
     magnitude: big
     moved: kg_m
@@ -3286,7 +3286,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -3295,7 +3295,7 @@ mutants:
       limit: 0.055
       margin: -2.000000011e-05
       grid: true
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -3304,7 +3304,7 @@ mutants:
       limit: 0.09
       margin: 0.008920425063
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -3313,7 +3313,7 @@ mutants:
       limit: 0.03
       margin: 0.01394042506
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -3322,7 +3322,7 @@ mutants:
       limit: 0.2
       margin: 0.1985638263
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -3331,7 +3331,7 @@ mutants:
       limit: 25.0
       margin: 4.769650761
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -3342,7 +3342,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: area_0_30
+    criterion: is2008/A.2.2.1/area-0-30
     side: fail
     magnitude: small
     moved: kg_m
@@ -3372,7 +3372,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -3381,7 +3381,7 @@ mutants:
       limit: 0.055
       margin: -0.003982979831
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -3390,7 +3390,7 @@ mutants:
       limit: 0.09
       margin: 0.002
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -3399,7 +3399,7 @@ mutants:
       limit: 0.03
       margin: 0.01098297983
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -3408,7 +3408,7 @@ mutants:
       limit: 0.2
       margin: 0.1837737843
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -3417,7 +3417,7 @@ mutants:
       limit: 25.0
       margin: 4.728996438
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -3428,7 +3428,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: area_0_40
+    criterion: is2008/A.2.2.1/area-0-40
     side: pass
     magnitude: big
     moved: kg_m
@@ -3458,7 +3458,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -3467,7 +3467,7 @@ mutants:
       limit: 0.055
       margin: -0.005116826379
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -3476,7 +3476,7 @@ mutants:
       limit: 0.09
       margin: 2.000000017e-05
       grid: true
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -3485,7 +3485,7 @@ mutants:
       limit: 0.03
       margin: 0.01013682638
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -3494,7 +3494,7 @@ mutants:
       limit: 0.2
       margin: 0.1795422113
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -3503,7 +3503,7 @@ mutants:
       limit: 25.0
       margin: 4.717398633
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -3514,7 +3514,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: area_0_40
+    criterion: is2008/A.2.2.1/area-0-40
     side: pass
     magnitude: small
     moved: kg_m
@@ -3544,7 +3544,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -3553,7 +3553,7 @@ mutants:
       limit: 0.055
       margin: -0.006273578918
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -3562,7 +3562,7 @@ mutants:
       limit: 0.09
       margin: -0.001999999999
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -3571,7 +3571,7 @@ mutants:
       limit: 0.03
       margin: 0.009273578918
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -3580,7 +3580,7 @@ mutants:
       limit: 0.2
       margin: 0.1752251521
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -3589,7 +3589,7 @@ mutants:
       limit: 25.0
       margin: 4.70558144
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -3600,7 +3600,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: area_0_40
+    criterion: is2008/A.2.2.1/area-0-40
     side: fail
     magnitude: big
     moved: kg_m
@@ -3630,7 +3630,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -3639,7 +3639,7 @@ mutants:
       limit: 0.055
       margin: -0.00513973237
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -3648,7 +3648,7 @@ mutants:
       limit: 0.09
       margin: -1.999999903e-05
       grid: true
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -3657,7 +3657,7 @@ mutants:
       limit: 0.03
       margin: 0.01011973237
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -3666,7 +3666,7 @@ mutants:
       limit: 0.2
       margin: 0.179456725
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -3675,7 +3675,7 @@ mutants:
       limit: 25.0
       margin: 4.717164013
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -3686,7 +3686,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: area_0_40
+    criterion: is2008/A.2.2.1/area-0-40
     side: fail
     magnitude: small
     moved: kg_m
@@ -3716,7 +3716,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -3725,7 +3725,7 @@ mutants:
       limit: 0.055
       margin: -0.01602018259
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -3734,7 +3734,7 @@ mutants:
       limit: 0.09
       margin: -0.01902018259
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -3743,7 +3743,7 @@ mutants:
       limit: 0.03
       margin: 0.002
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -3752,7 +3752,7 @@ mutants:
       limit: 0.2
       margin: 0.138850332
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -3761,7 +3761,7 @@ mutants:
       limit: 25.0
       margin: 4.606625955
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -3772,7 +3772,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: area_30_40
+    criterion: is2008/A.2.2.1/area-30-40
     side: pass
     magnitude: big
     moved: kg_m
@@ -3802,7 +3802,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -3811,7 +3811,7 @@ mutants:
       limit: 0.055
       margin: -0.01867338475
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -3820,7 +3820,7 @@ mutants:
       limit: 0.09
       margin: -0.02365338475
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -3829,7 +3829,7 @@ mutants:
       limit: 0.03
       margin: 1.999999983e-05
       grid: true
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -3838,7 +3838,7 @@ mutants:
       limit: 0.2
       margin: 0.1289484467
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -3847,7 +3847,7 @@ mutants:
       limit: 25.0
       margin: 4.579876626
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -3858,7 +3858,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: area_30_40
+    criterion: is2008/A.2.2.1/area-30-40
     side: pass
     magnitude: small
     moved: kg_m
@@ -3888,7 +3888,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -3897,7 +3897,7 @@ mutants:
       limit: 0.055
       margin: -0.02138018695
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -3906,7 +3906,7 @@ mutants:
       limit: 0.09
       margin: -0.02838018695
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -3915,7 +3915,7 @@ mutants:
       limit: 0.03
       margin: -0.002
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -3924,7 +3924,7 @@ mutants:
       limit: 0.2
       margin: 0.1188465234
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -3933,7 +3933,7 @@ mutants:
       limit: 25.0
       margin: 4.552669267
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -3944,7 +3944,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: area_30_40
+    criterion: is2008/A.2.2.1/area-30-40
     side: fail
     magnitude: big
     moved: kg_m
@@ -3974,7 +3974,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -3983,7 +3983,7 @@ mutants:
       limit: 0.055
       margin: -0.01872698479
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -3992,7 +3992,7 @@ mutants:
       limit: 0.09
       margin: -0.02374698479
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -4001,7 +4001,7 @@ mutants:
       limit: 0.03
       margin: -1.999999999e-05
       grid: true
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -4010,7 +4010,7 @@ mutants:
       limit: 0.2
       margin: 0.1287484086
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -4019,7 +4019,7 @@ mutants:
       limit: 25.0
       margin: 4.579337225
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -4030,7 +4030,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: area_30_40
+    criterion: is2008/A.2.2.1/area-30-40
     side: fail
     magnitude: small
     moved: kg_m
@@ -4060,7 +4060,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -4069,7 +4069,7 @@ mutants:
       limit: 0.055
       margin: -0.05054552499
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -4078,7 +4078,7 @@ mutants:
       limit: 0.09
       margin: -0.07931068494
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -4087,7 +4087,7 @@ mutants:
       limit: 0.03
       margin: -0.02376515995
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -4096,7 +4096,7 @@ mutants:
       limit: 0.2
       margin: 0.01
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -4105,7 +4105,7 @@ mutants:
       limit: 25.0
       margin: 4.264685849
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -4116,7 +4116,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: gz_30_plus
+    criterion: is2008/A.2.2.2/gz-30
     side: pass
     magnitude: big
     moved: kg_m
@@ -4146,7 +4146,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -4155,7 +4155,7 @@ mutants:
       limit: 0.055
       margin: -0.053198222
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -4164,7 +4164,7 @@ mutants:
       limit: 0.09
       margin: -0.08394300496
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -4173,7 +4173,7 @@ mutants:
       limit: 0.03
       margin: -0.02574478297
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -4182,7 +4182,7 @@ mutants:
       limit: 0.2
       margin: 9.999999961e-05
       grid: true
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -4191,7 +4191,7 @@ mutants:
       limit: 25.0
       margin: 4.238953486
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -4202,7 +4202,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: gz_30_plus
+    criterion: is2008/A.2.2.2/gz-30
     side: pass
     magnitude: small
     moved: kg_m
@@ -4232,7 +4232,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -4241,7 +4241,7 @@ mutants:
       limit: 0.055
       margin: -0.05590450884
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -4250,7 +4250,7 @@ mutants:
       limit: 0.09
       margin: -0.08866890721
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -4259,7 +4259,7 @@ mutants:
       limit: 0.03
       margin: -0.02776439837
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -4268,7 +4268,7 @@ mutants:
       limit: 0.2
       margin: -0.01
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -4277,7 +4277,7 @@ mutants:
       limit: 25.0
       margin: 4.212779215
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -4288,7 +4288,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: gz_30_plus
+    criterion: is2008/A.2.2.2/gz-30
     side: fail
     magnitude: big
     moved: kg_m
@@ -4318,7 +4318,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -4327,7 +4327,7 @@ mutants:
       limit: 0.055
       margin: -0.05325181183
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -4336,7 +4336,7 @@ mutants:
       limit: 0.09
       margin: -0.08403658719
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -4345,7 +4345,7 @@ mutants:
       limit: 0.03
       margin: -0.02578477535
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -4354,7 +4354,7 @@ mutants:
       limit: 0.2
       margin: -0.0001000000004
       grid: true
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -4363,7 +4363,7 @@ mutants:
       limit: 25.0
       margin: 4.238434451
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -4374,7 +4374,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: gz_30_plus
+    criterion: is2008/A.2.2.2/gz-30
     side: fail
     magnitude: small
     moved: kg_m
@@ -4404,7 +4404,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -4413,7 +4413,7 @@ mutants:
       limit: 0.055
       margin: 0.2542640337
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -4422,7 +4422,7 @@ mutants:
       limit: 0.09
       margin: 0.3549351157
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -4431,7 +4431,7 @@ mutants:
       limit: 0.03
       margin: 0.1056710821
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -4440,7 +4440,7 @@ mutants:
       limit: 0.2
       margin: 0.7510000692
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -4449,7 +4449,7 @@ mutants:
       limit: 25.0
       margin: 1.999999977
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -4460,7 +4460,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: pass
     magnitude: big
     moved: depth_m
@@ -4490,7 +4490,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -4499,7 +4499,7 @@ mutants:
       limit: 0.055
       margin: 0.2427362937
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -4508,7 +4508,7 @@ mutants:
       limit: 0.09
       margin: 0.3249989511
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -4517,7 +4517,7 @@ mutants:
       limit: 0.03
       margin: 0.08726265741
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -4526,7 +4526,7 @@ mutants:
       limit: 0.2
       margin: 0.6591360529
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -4535,7 +4535,7 @@ mutants:
       limit: 25.0
       margin: 0.1999982974
       grid: true
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -4546,7 +4546,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: pass
     magnitude: small
     moved: depth_m
@@ -4576,7 +4576,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -4585,7 +4585,7 @@ mutants:
       limit: 0.055
       margin: 0.2249796717
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -4594,7 +4594,7 @@ mutants:
       limit: 0.09
       margin: 0.2816973577
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -4603,7 +4603,7 @@ mutants:
       limit: 0.03
       margin: 0.06171768594
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -4612,7 +4612,7 @@ mutants:
       limit: 0.2
       margin: 0.5292037748
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -4621,7 +4621,7 @@ mutants:
       limit: 25.0
       margin: -2.000000675
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -4632,7 +4632,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: fail
     magnitude: big
     moved: depth_m
@@ -4662,7 +4662,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -4671,7 +4671,7 @@ mutants:
       limit: 0.055
       margin: 0.2398299467
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -4680,7 +4680,7 @@ mutants:
       limit: 0.09
       margin: 0.3177049387
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -4689,7 +4689,7 @@ mutants:
       limit: 0.03
       margin: 0.08287499196
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -4698,7 +4698,7 @@ mutants:
       limit: 0.2
       margin: 0.6370090766
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -4707,7 +4707,7 @@ mutants:
       limit: 25.0
       margin: -0.1999999036
       grid: true
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -4718,7 +4718,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: angle_max_gz
+    criterion: is2008/A.2.2.3/angle-max-gz
     side: fail
     magnitude: small
     moved: depth_m
@@ -4747,7 +4747,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -4756,7 +4756,7 @@ mutants:
       limit: 0.055
       margin: 0.03253857819
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -4765,7 +4765,7 @@ mutants:
       limit: 0.09
       margin: 0.06577642991
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -4774,7 +4774,7 @@ mutants:
       limit: 0.03
       margin: 0.03823785172
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -4783,7 +4783,7 @@ mutants:
       limit: 0.2
       margin: 0.3201391193
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -4792,7 +4792,7 @@ mutants:
       limit: 25.0
       margin: 5.110715938
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -4803,7 +4803,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: gm
+    criterion: is2008/A.2.2.4/gm0
     side: pass
     magnitude: big
     moved: kg_m
@@ -4833,7 +4833,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -4842,7 +4842,7 @@ mutants:
       limit: 0.055
       margin: 0.0320026798
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -4851,7 +4851,7 @@ mutants:
       limit: 0.09
       margin: 0.06484060768
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -4860,7 +4860,7 @@ mutants:
       limit: 0.03
       margin: 0.03783792788
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -4869,7 +4869,7 @@ mutants:
       limit: 0.2
       margin: 0.3181326018
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -4878,7 +4878,7 @@ mutants:
       limit: 25.0
       margin: 5.104998193
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -4889,7 +4889,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: gm
+    criterion: is2008/A.2.2.4/gm0
     side: pass
     magnitude: small
     moved: kg_m
@@ -4918,7 +4918,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -4927,7 +4927,7 @@ mutants:
       limit: 0.055
       margin: 0.03119883223
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -4936,7 +4936,7 @@ mutants:
       limit: 0.09
       margin: 0.06343687434
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -4945,7 +4945,7 @@ mutants:
       limit: 0.03
       margin: 0.03723804211
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -4954,7 +4954,7 @@ mutants:
       limit: 0.2
       margin: 0.3151234728
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -4963,7 +4963,7 @@ mutants:
       limit: 25.0
       margin: 5.096428091
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -4974,7 +4974,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: gm
+    criterion: is2008/A.2.2.4/gm0
     side: fail
     magnitude: big
     moved: kg_m
@@ -5004,7 +5004,7 @@ mutants:
     free_surface_m: 0.0
     downflooding_angle_deg: 40.0
   expected:
-    area_0_30:
+    is2008/A.2.2.1/area-0-30:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 30 degrees
       unit: m rad
@@ -5013,7 +5013,7 @@ mutants:
       limit: 0.055
       margin: 0.03173473061
       grid: false
-    area_0_40:
+    is2008/A.2.2.1/area-0-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 0 to 40 degrees
       unit: m rad
@@ -5022,7 +5022,7 @@ mutants:
       limit: 0.09
       margin: 0.06437269657
       grid: false
-    area_30_40:
+    is2008/A.2.2.1/area-30-40:
       rule: IS Code 2008 Part A 2.2.1
       what: area under the GZ curve, 30 to 40 degrees
       unit: m rad
@@ -5031,7 +5031,7 @@ mutants:
       limit: 0.03
       margin: 0.03763796595
       grid: false
-    gz_30_plus:
+    is2008/A.2.2.2/gz-30:
       rule: IS Code 2008 Part A 2.2.2
       what: GZ at an angle of heel of 30 degrees or more
       unit: m
@@ -5040,7 +5040,7 @@ mutants:
       limit: 0.2
       margin: 0.3171294725
       grid: false
-    angle_max_gz:
+    is2008/A.2.2.3/angle-max-gz:
       rule: IS Code 2008 Part A 2.2.3
       what: angle of maximum GZ
       unit: deg
@@ -5049,7 +5049,7 @@ mutants:
       limit: 25.0
       margin: 5.102140858
       grid: false
-    gm:
+    is2008/A.2.2.4/gm0:
       rule: IS Code 2008 Part A 2.2.4
       what: initial metacentric height
       unit: m
@@ -5060,7 +5060,7 @@ mutants:
       grid: false
   mutant:
     parent: generic_barge
-    criterion: gm
+    criterion: is2008/A.2.2.4/gm0
     side: fail
     magnitude: small
     moved: kg_m
@@ -5076,302 +5076,302 @@ mutants:
     confidence: high for the verdicts; a mutant is not an external published example
 skipped:
 - parent: box_a
-  criterion: area_0_30
+  criterion: is2008/A.2.2.1/area-0-30
   side: pass
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
-  criterion: area_0_30
+  criterion: is2008/A.2.2.1/area-0-30
   side: pass
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
-  criterion: area_0_30
+  criterion: is2008/A.2.2.1/area-0-30
   side: fail
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
-  criterion: area_0_30
+  criterion: is2008/A.2.2.1/area-0-30
   side: fail
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
-  criterion: area_0_40
+  criterion: is2008/A.2.2.1/area-0-40
   side: pass
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
-  criterion: area_0_40
+  criterion: is2008/A.2.2.1/area-0-40
   side: pass
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
-  criterion: area_0_40
+  criterion: is2008/A.2.2.1/area-0-40
   side: fail
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
-  criterion: area_0_40
+  criterion: is2008/A.2.2.1/area-0-40
   side: fail
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
-  criterion: area_30_40
+  criterion: is2008/A.2.2.1/area-30-40
   side: pass
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
-  criterion: area_30_40
+  criterion: is2008/A.2.2.1/area-30-40
   side: pass
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
-  criterion: area_30_40
+  criterion: is2008/A.2.2.1/area-30-40
   side: fail
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
-  criterion: area_30_40
+  criterion: is2008/A.2.2.1/area-30-40
   side: fail
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
-  criterion: gz_30_plus
+  criterion: is2008/A.2.2.2/gz-30
   side: pass
   magnitude: big
   reason: no KG between the keel and the deck gives the wanted value
 - parent: box_a
-  criterion: gz_30_plus
+  criterion: is2008/A.2.2.2/gz-30
   side: pass
   magnitude: small
   reason: no KG between the keel and the deck gives the wanted value
 - parent: box_a
-  criterion: gz_30_plus
+  criterion: is2008/A.2.2.2/gz-30
   side: fail
   magnitude: big
   reason: no KG between the keel and the deck gives the wanted value
 - parent: box_a
-  criterion: gz_30_plus
+  criterion: is2008/A.2.2.2/gz-30
   side: fail
   magnitude: small
   reason: no KG between the keel and the deck gives the wanted value
 - parent: box_a
-  criterion: gm
+  criterion: is2008/A.2.2.4/gm0
   side: pass
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
-  criterion: gm
+  criterion: is2008/A.2.2.4/gm0
   side: pass
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
-  criterion: gm
+  criterion: is2008/A.2.2.4/gm0
   side: fail
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: box_a
-  criterion: gm
+  criterion: is2008/A.2.2.4/gm0
   side: fail
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_empty
-  criterion: area_0_30
+  criterion: is2008/A.2.2.1/area-0-30
   side: pass
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_empty
-  criterion: area_0_30
+  criterion: is2008/A.2.2.1/area-0-30
   side: pass
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_empty
-  criterion: area_0_30
+  criterion: is2008/A.2.2.1/area-0-30
   side: fail
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_empty
-  criterion: area_0_30
+  criterion: is2008/A.2.2.1/area-0-30
   side: fail
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_empty
-  criterion: area_0_40
+  criterion: is2008/A.2.2.1/area-0-40
   side: pass
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_empty
-  criterion: area_0_40
+  criterion: is2008/A.2.2.1/area-0-40
   side: pass
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_empty
-  criterion: area_0_40
+  criterion: is2008/A.2.2.1/area-0-40
   side: fail
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_empty
-  criterion: area_0_40
+  criterion: is2008/A.2.2.1/area-0-40
   side: fail
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_empty
-  criterion: area_30_40
+  criterion: is2008/A.2.2.1/area-30-40
   side: pass
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_empty
-  criterion: area_30_40
+  criterion: is2008/A.2.2.1/area-30-40
   side: pass
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_empty
-  criterion: area_30_40
+  criterion: is2008/A.2.2.1/area-30-40
   side: fail
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_empty
-  criterion: area_30_40
+  criterion: is2008/A.2.2.1/area-30-40
   side: fail
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_empty
-  criterion: gz_30_plus
-  side: pass
-  magnitude: big
-  reason: no KG between the keel and the deck gives the wanted value
-- parent: lcu_empty
-  criterion: gz_30_plus
-  side: pass
-  magnitude: small
-  reason: no KG between the keel and the deck gives the wanted value
-- parent: lcu_empty
-  criterion: gz_30_plus
-  side: fail
-  magnitude: big
-  reason: no KG between the keel and the deck gives the wanted value
-- parent: lcu_empty
-  criterion: gz_30_plus
-  side: fail
-  magnitude: small
-  reason: no KG between the keel and the deck gives the wanted value
-- parent: lcu_empty
-  criterion: gm
-  side: pass
-  magnitude: big
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_empty
-  criterion: gm
-  side: pass
-  magnitude: small
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_empty
-  criterion: gm
-  side: fail
-  magnitude: big
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_empty
-  criterion: gm
-  side: fail
-  magnitude: small
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_loaded
-  criterion: area_0_30
-  side: pass
-  magnitude: big
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_loaded
-  criterion: area_0_30
-  side: pass
-  magnitude: small
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_loaded
-  criterion: area_0_30
-  side: fail
-  magnitude: big
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_loaded
-  criterion: area_0_30
-  side: fail
-  magnitude: small
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_loaded
-  criterion: area_0_40
-  side: pass
-  magnitude: big
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_loaded
-  criterion: area_0_40
-  side: pass
-  magnitude: small
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_loaded
-  criterion: area_0_40
-  side: fail
-  magnitude: big
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_loaded
-  criterion: area_0_40
-  side: fail
-  magnitude: small
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_loaded
-  criterion: area_30_40
-  side: pass
-  magnitude: big
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_loaded
-  criterion: area_30_40
-  side: pass
-  magnitude: small
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_loaded
-  criterion: area_30_40
-  side: fail
-  magnitude: big
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_loaded
-  criterion: area_30_40
-  side: fail
-  magnitude: small
-  reason: the KG that crosses the limit is not between the keel and the deck
-- parent: lcu_loaded
-  criterion: gz_30_plus
+  criterion: is2008/A.2.2.2/gz-30
   side: pass
   magnitude: big
   reason: no KG between the keel and the deck gives the wanted value
-- parent: lcu_loaded
-  criterion: gz_30_plus
+- parent: lcu_empty
+  criterion: is2008/A.2.2.2/gz-30
   side: pass
   magnitude: small
   reason: no KG between the keel and the deck gives the wanted value
-- parent: lcu_loaded
-  criterion: gz_30_plus
+- parent: lcu_empty
+  criterion: is2008/A.2.2.2/gz-30
   side: fail
   magnitude: big
   reason: no KG between the keel and the deck gives the wanted value
-- parent: lcu_loaded
-  criterion: gz_30_plus
+- parent: lcu_empty
+  criterion: is2008/A.2.2.2/gz-30
   side: fail
   magnitude: small
   reason: no KG between the keel and the deck gives the wanted value
+- parent: lcu_empty
+  criterion: is2008/A.2.2.4/gm0
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: is2008/A.2.2.4/gm0
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: is2008/A.2.2.4/gm0
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_empty
+  criterion: is2008/A.2.2.4/gm0
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_loaded
-  criterion: gm
+  criterion: is2008/A.2.2.1/area-0-30
   side: pass
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_loaded
-  criterion: gm
+  criterion: is2008/A.2.2.1/area-0-30
   side: pass
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_loaded
-  criterion: gm
+  criterion: is2008/A.2.2.1/area-0-30
   side: fail
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_loaded
-  criterion: gm
+  criterion: is2008/A.2.2.1/area-0-30
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.1/area-0-40
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.1/area-0-40
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.1/area-0-40
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.1/area-0-40
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.1/area-30-40
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.1/area-30-40
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.1/area-30-40
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.1/area-30-40
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.2/gz-30
+  side: pass
+  magnitude: big
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.2/gz-30
+  side: pass
+  magnitude: small
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.2/gz-30
+  side: fail
+  magnitude: big
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.2/gz-30
+  side: fail
+  magnitude: small
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.4/gm0
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.4/gm0
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.4/gm0
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: lcu_loaded
+  criterion: is2008/A.2.2.4/gm0
   side: fail
   magnitude: small
   reason: the KG that crosses the limit is not between the keel and the deck

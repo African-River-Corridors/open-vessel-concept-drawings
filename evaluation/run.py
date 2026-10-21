@@ -1,26 +1,36 @@
 #!/usr/bin/env python3
-"""Run the evaluation corpus through the engine and report (issue #184, phase 0).
+"""Run the evaluation corpus through the engine and report (issues #184 and #278).
 
     python3 evaluation/run.py            # run, and write evaluation/results.md
     python3 evaluation/run.py --check    # CI: run; fail on a false pass or a stale results.md;
                                          # one warning annotation per false fail and per coverage gap
 
 Every case (`evaluation/cases/*.yaml`) and every generated boundary mutant (`evaluation/mutants.yaml`)
-is run through the engine's `box_condition`, and the engine's verdict on each of the six criteria is
-compared with the expected one.
+is run through the engine's Rule Trace (`box_trace`), and the trace row of each Rule the case expects a
+verdict for is compared with that verdict, keyed by rule id. The first row whose outcome differs
+names the Rule.
 
-  * false fail: the engine fails a criterion the case expects to pass (a known-good criterion).
-  * false pass: the engine passes a criterion the case expects to fail (a known-bad criterion).
-  * coverage: a criterion is covered when at least one case expects it to pass and one expects it to
-    fail, both outside the engine's grid error.
+  * false fail: the engine fails a Rule the case expects to pass (a known-good verdict).
+  * false pass: the engine passes a blocking Rule the case expects to fail (a known-bad verdict).
+  * coverage: an evaluated blocking Rule is covered when at least one case expects it to pass and one
+    expects it to fail, both outside the engine's grid error.
 
-A criterion marked `grid: true` (the expected value is within the engine's grid error of its limit)
-is run and listed, but never counts as a false fail or a false pass.
+Each disagreement goes in one triage bucket (spec 0004, "How the evaluation harness uses it"):
 
-Exit status. A false pass fails the run (1). A false fail and a coverage gap are warnings, as the
-Calibration Bands are (issue #119). With --check a results.md that is not what this run would write
-also fails it. The engine is not tuned here: a disagreement is reported, and what to do with it is a
-separate, deliberate change.
+  * model-gap: the Rule is `not evaluated` (or has no row), or the case needs an input the engine lacks;
+  * known-limitation: the Rule links a finding;
+  * code-bug: the independent oracle and the engine disagree;
+  * rule-suspect: the oracle and the engine agree with each other, but not with a published verdict;
+  * needs-expert: the rest.
+
+A `not evaluated` row against an expected `fail` is a model gap, never a pass. A Rule marked
+`grid: true` (the expected value is within the engine's grid error of its limit) is run and listed,
+but never counts as a false fail, a false pass or a disagreement.
+
+Exit status. A false pass on a blocking Rule fails the run (1). A false fail and a coverage gap are
+warnings, as the Calibration Bands are (issue #119). With --check a results.md that is not what this
+run would write also fails it. The engine is not tuned here: a disagreement is reported, and what to
+do with it is a separate, deliberate change.
 """
 from __future__ import annotations
 
@@ -32,29 +42,16 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from engine import box_condition  # noqa: E402
+from engine import DEFAULT_SELECT, box_trace  # noqa: E402
 
 CASES = HERE / "cases"
 MUTANTS = HERE / "mutants.yaml"
 RESULTS = HERE / "results.md"
 
-#: criterion key -> the name the engine gives it
-ENGINE_NAMES = {
-    "area_0_30": "Area 0–30°",
-    "area_0_40": "Area 0–40°",
-    "area_30_40": "Area 30–40°",
-    "gz_30_plus": "GZ at ≥ 30°",
-    "angle_max_gz": "Angle of max GZ",
-    "gm": "Initial GM (fluid)",
-}
-LABELS = {
-    "area_0_30": "Area 0-30 deg (2.2.1)",
-    "area_0_40": "Area 0-40 deg (2.2.1)",
-    "area_30_40": "Area 30-40 deg (2.2.1)",
-    "gz_30_plus": "GZ at 30 deg or more (2.2.2)",
-    "angle_max_gz": "Angle of max GZ (2.2.3)",
-    "gm": "Initial GM (2.2.4)",
-}
+BUCKETS = ("model-gap", "known-limitation", "code-bug", "rule-suspect", "needs-expert")
+#: The trace inputs a box case gives; a case that needs any other input is a model gap.
+BOX_INPUTS = {"form", "vdesign", "length_m", "beam_m", "depth_m", "draught_m", "kg_m",
+              "water_density_t_m3", "free_surface_m", "downflooding_angle_deg"}
 
 
 def load_cases(cases_dir: Path = CASES, mutants_file: Path | None = MUTANTS) -> list[dict]:
@@ -64,41 +61,102 @@ def load_cases(cases_dir: Path = CASES, mutants_file: Path | None = MUTANTS) -> 
     return cases
 
 
-def run_case(case: dict) -> dict:
-    """Engine verdict per criterion for one case, next to the expected one."""
+def trace_of(case: dict, rule_sets: tuple[str, ...] = (), select: tuple[str, ...] = DEFAULT_SELECT) -> dict:
     i = case["inputs"]
-    c = box_condition(i["beam_m"], i["depth_m"], i["draught_m"], i["kg_m"],
-                      free_surface_m=i.get("free_surface_m", 0.0))
-    by_name = {x.name: x for x in c.criteria}
-    rows = {}
-    for key, engine_name in ENGINE_NAMES.items():
-        crit = by_name[engine_name]
-        exp = case["expected"][key]
-        rows[key] = {
-            "expected": exp["verdict"], "engine": "pass" if crit.ok else "fail",
+    return box_trace(i["beam_m"], i["depth_m"], i["draught_m"], i["kg_m"],
+                     free_surface_m=i.get("free_surface_m", 0.0), rule_sets=rule_sets, select=select)
+
+
+def engine_verdict(row: dict | None) -> str:
+    """`pass`, `fail`, `not evaluated` or `not applicable`: a failed `warn` or `note` Rule counts as
+    `fail`, and a Rule with no row as `not evaluated`."""
+    if row is None:
+        return "not evaluated"
+    return {"warn": "fail", "note": "pass"}.get(row["outcome"], row["outcome"])
+
+
+def triage(case: dict, expected: dict, row: dict | None) -> str:
+    """The bucket of one disagreement between `expected` (a case's entry for one Rule) and the
+    engine's `row` for it."""
+    missing = sorted(set(case["inputs"]) - BOX_INPUTS)
+    if row is None or row["outcome"] in ("not evaluated", "not applicable") or missing:
+        return "model-gap"
+    if row.get("finding"):
+        return "known-limitation"
+    engine = engine_verdict(row)
+    published = case["provenance"].get("verdict_basis") == "published"
+    # For a derived case the expected verdict IS the oracle's; a published one may also carry it.
+    oracle = expected.get("oracle", None if published else expected["verdict"])
+    if oracle is not None and oracle != engine:
+        return "code-bug"
+    if published and oracle is not None and oracle == engine:
+        return "rule-suspect"
+    return "needs-expert"
+
+
+def run_case(case: dict, rule_sets: tuple[str, ...] = (), select: tuple[str, ...] = DEFAULT_SELECT) -> dict:
+    """The engine's row, next to the expected verdict, for each Rule the case expects one for."""
+    trace = trace_of(case, rule_sets, select)
+    by_rule = {r["rule"]: r for r in trace["rows"] if r["rule"]}
+    out = {}
+    for rule_id, exp in case["expected"].items():
+        row = by_rule.get(rule_id)
+        out[rule_id] = {
+            "expected": exp["verdict"], "engine": engine_verdict(row),
             "grid": bool(exp.get("grid", False)),
-            "expected_value": exp["value"], "engine_value": crit.value, "limit": exp["limit"],
+            "expected_value": exp["value"], "engine_value": row["value"] if row else None,
+            "limit": exp["limit"], "row": row,
+            "blocking": bool(row) and row["consequence"] == "block",
         }
-    return rows
+    return {"trace": trace, "rows": out}
 
 
-def evaluate(cases: list[dict]) -> dict:
-    per = {k: {"pass_cases": 0, "fail_cases": 0, "false_fails": [], "false_passes": [],
-               "grid_disagreements": [], "compared": 0} for k in ENGINE_NAMES}
+def evaluate(cases: list[dict], rule_sets: tuple[str, ...] = (),
+             select: tuple[str, ...] = DEFAULT_SELECT) -> dict:
+    per: dict[str, dict] = {}
+    rules: dict[str, dict] = {}
+    disagreements = []
     for case in cases:
-        for key, r in run_case(case).items():
-            p = per[key]
+        ran = run_case(case, rule_sets, select)
+        for row in ran["trace"]["rows"]:
+            if row["rule"] and row["rule"] not in rules:
+                rules[row["rule"]] = {"set": row["rule_sets"][0], "title": row["title"],
+                                      "consequence": row["consequence"], "finding": row["finding"],
+                                      "evaluated": row["outcome"] != "not evaluated"}
+        for rule_id, r in ran["rows"].items():
+            p = per.setdefault(rule_id, {"pass_cases": 0, "fail_cases": 0, "false_fails": [],
+                                         "false_passes": [], "grid_disagreements": [], "compared": 0,
+                                         "buckets": {b: 0 for b in BUCKETS}})
             if r["grid"]:
                 if r["expected"] != r["engine"]:
                     p["grid_disagreements"].append(case["id"])
                 continue
             p["compared"] += 1
             p["pass_cases" if r["expected"] == "pass" else "fail_cases"] += 1
+            if r["expected"] == r["engine"]:
+                continue
+            bucket = triage(case, case["expected"][rule_id], r["row"])
+            p["buckets"][bucket] += 1
+            disagreements.append({"case": case["id"], "rule": rule_id, "expected": r["expected"],
+                                  "engine": r["engine"], "bucket": bucket})
             if r["expected"] == "pass" and r["engine"] == "fail":
                 p["false_fails"].append(case["id"])
-            if r["expected"] == "fail" and r["engine"] == "pass":
+            if r["expected"] == "fail" and r["engine"] == "pass" and r["blocking"]:
                 p["false_passes"].append(case["id"])
-    return {"cases": cases, "per": per}
+    return {"cases": cases, "per": per, "rules": rules, "disagreements": disagreements,
+            "select": list(select)}
+
+
+def coverage_gaps(result: dict) -> list[str]:
+    """The evaluated blocking Rules with no passing or no failing case."""
+    gaps = []
+    for rule_id, info in result["rules"].items():
+        if info["consequence"] != "block" or not info["evaluated"]:
+            continue
+        p = result["per"].get(rule_id)
+        if p is None or p["pass_cases"] == 0 or p["fail_cases"] == 0:
+            gaps.append(rule_id)
+    return gaps
 
 
 def totals(result: dict) -> dict:
@@ -107,13 +165,18 @@ def totals(result: dict) -> dict:
     bad = sum(p["fail_cases"] for p in per.values())
     ff = sum(len(p["false_fails"]) for p in per.values())
     fp = sum(len(p["false_passes"]) for p in per.values())
-    gaps = [k for k, p in per.items() if p["pass_cases"] == 0 or p["fail_cases"] == 0]
+    buckets = {b: sum(1 for d in result["disagreements"] if d["bucket"] == b) for b in BUCKETS}
     return {"known_good": good, "known_bad": bad, "false_fails": ff, "false_passes": fp,
-            "coverage_gaps": gaps}
+            "coverage_gaps": coverage_gaps(result), "buckets": buckets}
 
 
 def pct(n: int, d: int) -> str:
     return "n/a" if d == 0 else f"{100.0 * n / d:.1f} %"
+
+
+def label(result: dict, rule_id: str) -> str:
+    info = result["rules"].get(rule_id)
+    return f"`{rule_id}` ({info['title']})" if info else f"`{rule_id}`"
 
 
 def report(result: dict) -> str:
@@ -127,47 +190,70 @@ def report(result: dict) -> str:
     out = [
         "# Evaluation results",
         "",
-        "Generated by `python3 evaluation/run.py`. Do not edit by hand. Phase 0 of the evaluation harness "
-        "([#184](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/184)): "
-        "the IMO Intact Stability Code 2008, Part A 2.2, for box sections with a known KG. "
-        "The format and the sources are in [README.md](README.md).",
+        "Generated by `python3 evaluation/run.py`. Do not edit by hand. The evaluation harness "
+        "([#184](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/184), keyed by "
+        "rule id since [#278](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/278)): "
+        "the IMO Intact Stability Code 2008, Part A 2.2, for box sections with a known KG, read from the "
+        "engine's Rule Trace. The format and the sources are in [README.md](README.md).",
         "",
         "## Summary",
         "",
+        f"- Rule Sets selected: {', '.join('`' + s + '`' for s in result['select'])}.",
         f"- Cases: {len(base)} base cases and {len(mutants)} generated boundary mutants "
         f"({len(skipped)} possible mutants skipped because no KG on the hull crosses the limit).",
         f"- Base cases with an external published source for the inputs: **{len(external)}** "
         f"({', '.join('`' + c['id'] + '`' for c in external) or 'none'}; their verdicts are still derived by the "
         f"oracle, the sources give no IS Code 2.2 verdict). Derived entirely by the oracle: "
         f"{len(base) - len(external)}.",
-        f"- Criterion verdicts compared (outside the grid error): {t['known_good'] + t['known_bad']} "
+        f"- Rule verdicts compared (outside the grid error): {t['known_good'] + t['known_bad']} "
         f"({t['known_good']} expected to pass, {t['known_bad']} expected to fail).",
-        f"- **False fails** (engine fails a known-good criterion): {t['false_fails']} "
+        f"- **False fails** (engine fails a known-good verdict): {t['false_fails']} "
         f"({pct(t['false_fails'], t['known_good'])}). A warning.",
-        f"- **False passes** (engine passes a known-bad criterion): {t['false_passes']} "
+        f"- **False passes** (engine passes a blocking Rule a case expects to fail): {t['false_passes']} "
         f"({pct(t['false_passes'], t['known_bad'])}). Fails the build.",
-        f"- Criteria with no passing or no failing case: "
-        f"{', '.join(LABELS[k] for k in t['coverage_gaps']) or 'none'}. A warning.",
+        f"- Evaluated blocking Rules with no passing or no failing case: "
+        f"{', '.join('`' + k + '`' for k in t['coverage_gaps']) or 'none'}. A warning.",
         "",
-        "## Per criterion",
+        "## Triage",
         "",
-        "| Criterion | Expected pass | Expected fail | False fails | False passes | Coverage | Inside grid error, engine differs |",
-        "|---|---:|---:|---:|---:|---|---|",
+        "Each disagreement outside the grid error, in one bucket.",
+        "",
+        "| Bucket | Disagreements |",
+        "|---|---:|",
     ]
-    for key, p in per.items():
-        cov = "yes" if p["pass_cases"] and p["fail_cases"] else "**gap**"
-        grid = ", ".join(p["grid_disagreements"]) or "none"
-        out.append(f"| {LABELS[key]} | {p['pass_cases']} | {p['fail_cases']} | {len(p['false_fails'])} | "
-                   f"{len(p['false_passes'])} | {cov} | {grid} |")
-    fails = [(k, i) for k, p in per.items() for i in p["false_fails"]]
-    passes = [(k, i) for k, p in per.items() for i in p["false_passes"]]
-    out += ["", "## Disagreements", ""]
-    if not fails and not passes:
+    for b in BUCKETS:
+        out.append(f"| {b} | {t['buckets'][b]} |")
+    out += ["", "## Coverage by rule id", ""]
+    sets = sorted({info["set"] for info in result["rules"].values()})
+    for s in sets:
+        out += [f"### {s}", "",
+                "| Rule | Consequence | Expected pass | Expected fail | False fails | False passes | Coverage "
+                "| Inside grid error, engine differs | Buckets |",
+                "|---|---|---:|---:|---:|---:|---|---|---|"]
+        for rule_id, info in result["rules"].items():
+            if info["set"] != s:
+                continue
+            p = per.get(rule_id)
+            if not info["evaluated"]:
+                cov = "not evaluated"
+            elif info["consequence"] != "block":
+                cov = "-"
+            else:
+                cov = "yes" if p and p["pass_cases"] and p["fail_cases"] else "**gap**"
+            title = info["title"] + (f" (finding {info['finding']})" if info["finding"] else "")
+            if p is None:
+                out.append(f"| `{rule_id}` {title} | {info['consequence']} | 0 | 0 | 0 | 0 | {cov} | none | none |")
+                continue
+            grid = ", ".join(p["grid_disagreements"]) or "none"
+            buckets = ", ".join(f"{b} {n}" for b, n in p["buckets"].items() if n) or "none"
+            out.append(f"| `{rule_id}` {title} | {info['consequence']} | {p['pass_cases']} | {p['fail_cases']} "
+                       f"| {len(p['false_fails'])} | {len(p['false_passes'])} | {cov} | {grid} | {buckets} |")
+        out.append("")
+    out += ["## Disagreements", ""]
+    if not result["disagreements"]:
         out.append("None.")
-    for k, i in fails:
-        out.append(f"- false fail: `{i}`, {LABELS[k]}")
-    for k, i in passes:
-        out.append(f"- false pass: `{i}`, {LABELS[k]}")
+    for d in result["disagreements"]:
+        out.append(f"- {d['bucket']}: `{d['case']}`, `{d['rule']}`: expected {d['expected']}, engine {d['engine']}")
     out += ["", "## Base cases", "", "| Case | Inputs basis | Verdict basis | Source |", "|---|---|---|---|"]
     for c in base:
         pv = c["provenance"]
@@ -180,7 +266,7 @@ def report(result: dict) -> str:
         out += ["", "## Mutants not generated", "",
                 "A limit that no physical input crosses has no mutant (the KG would have to be above the deck).", ""]
         for s in skipped:
-            out.append(f"- `{s['parent']}`, {LABELS[s['criterion']]}, {s['side']}, {s['magnitude']} step: {s['reason']}")
+            out.append(f"- `{s['parent']}`, `{s['criterion']}`, {s['side']}, {s['magnitude']} step: {s['reason']}")
     return "\n".join(out) + "\n"
 
 
@@ -195,14 +281,16 @@ def main(argv: list[str]) -> int:
     t = totals(result)
     text = report(result)
     status = 0
-    for k, p in result["per"].items():
+    for rule_id, p in result["per"].items():
         for i in p["false_passes"]:
-            print(f"::error title=Evaluation false pass::{i}: the engine passes {LABELS[k]}, which the case expects to fail")
+            print(f"::error title=Evaluation false pass::{i}: the engine passes {label(result, rule_id)}, "
+                  "which the case expects to fail")
             status = 1
         for i in p["false_fails"]:
-            print(f"::warning title=Evaluation false fail::{i}: the engine fails {LABELS[k]}, which the case expects to pass")
+            print(f"::warning title=Evaluation false fail::{i}: the engine fails {label(result, rule_id)}, "
+                  "which the case expects to pass")
     for k in t["coverage_gaps"]:
-        print(f"::warning title=Evaluation coverage gap::{LABELS[k]} has no passing or no failing case")
+        print(f"::warning title=Evaluation coverage gap::{label(result, k)} has no passing or no failing case")
     if args.check:
         if not args.results.exists() or args.results.read_text(encoding="utf-8") != text:
             print(f"::error title=Evaluation results stale::{args.results} is not what this run writes; "
@@ -211,8 +299,10 @@ def main(argv: list[str]) -> int:
     else:
         args.results.write_text(text, encoding="utf-8")
         print(f"wrote {args.results}")
-    print(f"evaluation: {t['known_good']} known-good and {t['known_bad']} known-bad criterion verdicts; "
-          f"{t['false_fails']} false fails, {t['false_passes']} false passes")
+    b = t["buckets"]
+    print(f"evaluation: {t['known_good']} known-good and {t['known_bad']} known-bad Rule verdicts; "
+          f"{t['false_fails']} false fails, {t['false_passes']} false passes; triage: "
+          + ", ".join(f"{k} {b[k]}" for k in BUCKETS))
     return status
 
 

@@ -461,3 +461,45 @@ fn a_set_that_does_not_apply_to_a_dry_option_gives_one_row() {
     assert_eq!(rows[0]["outcome"], "not applicable");
     assert_eq!(rows[0]["rule"], Value::Null);
 }
+
+#[test]
+fn property_a_box_trace_gives_the_verdicts_of_the_box_condition_criteria() {
+    // The evaluation harness (issue #278) reads the Rule Trace of a box loading condition; each
+    // is2008-a row must give the verdict and value of the criterion the stability check uses.
+    let pairs = [
+        ("Area 0–30°", "is2008/A.2.2.1/area-0-30"),
+        ("Area 0–40°", "is2008/A.2.2.1/area-0-40"),
+        ("Area 30–40°", "is2008/A.2.2.1/area-30-40"),
+        ("GZ at ≥ 30°", "is2008/A.2.2.2/gz-30"),
+        ("Angle of max GZ", "is2008/A.2.2.3/angle-max-gz"),
+        ("Initial GM (fluid)", "is2008/A.2.2.4/gm0"),
+    ];
+    let mut g = Gen(0x5eed_0007);
+    let lib = Library::built_in();
+    for _ in 0..60 {
+        let beam = 8.0 + g.below(20) as f64;
+        let depth = 4.0 + g.below(6) as f64;
+        let draught = depth * (0.3 + 0.1 * g.below(6) as f64);
+        let kg = depth * (0.3 + 0.1 * g.below(7) as f64);
+        let c =
+            ovcd_core::gas_stability::box_condition(beam, depth, draught, kg, 0.0, "IS_CODE_2008")
+                .unwrap();
+        let t = ovcd_format::trace::box_trace(c.clone(), &lib, &[("is2008-a", "1.0.0")]).unwrap();
+        let rows = t["rows"].as_array().unwrap();
+        for (name, id) in pairs {
+            let crit = c.criteria.iter().find(|x| x.name == name).unwrap();
+            let row = rows.iter().find(|r| r["rule"] == id).unwrap();
+            assert_eq!(row["object"], "Box");
+            assert_eq!(
+                row["outcome"] == "pass",
+                crit.ok,
+                "{id} on {beam} x {depth} at {draught}, KG {kg}"
+            );
+        }
+        let note = rows
+            .iter()
+            .find(|r| r["rule"] == "is2008/A.2.2/condition")
+            .unwrap();
+        assert_eq!(note["value"], c.criteria.iter().all(|x| x.ok));
+    }
+}

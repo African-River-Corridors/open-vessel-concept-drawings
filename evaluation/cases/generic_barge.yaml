@@ -14,7 +14,7 @@ inputs:
   free_surface_m: 0.0
   downflooding_angle_deg: 40.0
 expected:
-  area_0_30:
+  is2008/A.2.2.1/area-0-30:
     rule: IS Code 2008 Part A 2.2.1
     what: area under the GZ curve, 0 to 30 degrees
     unit: m rad
@@ -22,7 +22,7 @@ expected:
     value: 0.3570508076
     limit: 0.055
     margin: 0.3020508076
-  area_0_40:
+  is2008/A.2.2.1/area-0-40:
     rule: IS Code 2008 Part A 2.2.1
     what: area under the GZ curve, 0 to 40 degrees
     unit: m rad
@@ -30,7 +30,7 @@ expected:
     value: 0.6264170252
     limit: 0.09
     margin: 0.5364170252
-  area_30_40:
+  is2008/A.2.2.1/area-30-40:
     rule: IS Code 2008 Part A 2.2.1
     what: area under the GZ curve, 30 to 40 degrees
     unit: m rad
@@ -38,7 +38,7 @@ expected:
     value: 0.2693662176
     limit: 0.03
     margin: 0.2393662176
-  gz_30_plus:
+  is2008/A.2.2.2/gz-30:
     rule: IS Code 2008 Part A 2.2.2
     what: GZ at an angle of heel of 30 degrees or more
     unit: m
@@ -46,7 +46,7 @@ expected:
     value: 1.577547699
     limit: 0.2
     margin: 1.377547699
-  angle_max_gz:
+  is2008/A.2.2.3/angle-max-gz:
     rule: IS Code 2008 Part A 2.2.3
     what: angle of maximum GZ
     unit: deg
@@ -54,7 +54,7 @@ expected:
     value: 33.50910019
     limit: 25.0
     margin: 8.509100187
-  gm:
+  is2008/A.2.2.4/gm0:
     rule: IS Code 2008 Part A 2.2.4
     what: initial metacentric height
     unit: m
