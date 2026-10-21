@@ -11,9 +11,10 @@ import copy
 import re
 
 from vessel_designer import calibration
-from vessel_designer.calibration import (BANDS, CAL, _assess_propulsion, _bollard_pull,
-                                         _fit_bollard_pull_factor, _load_propulsion_cases,
-                                         _propulsion_warnings_for, report)
+from vessel_designer.calibration import (BANDS, CAL, _assess_installed_power, _assess_propulsion,
+                                         _bollard_pull, _fit_bollard_pull_factor,
+                                         _fit_efficiency_factor, _installed_power,
+                                         _load_propulsion_cases, _propulsion_warnings_for, report)
 
 TYPES = {"azimuth_open", "azimuth_ducted", "shaft_open", "shaft_nozzle", "voith_schneider", "pump_jet"}
 
@@ -116,3 +117,33 @@ def test_the_model_scales_with_kappa_b_and_the_report_lists_every_case():
     for c in _cases() + _load_propulsion_cases()["not_yet_runnable_propulsion_cases"]:
         assert f"| {c['id']} |" in text, c["id"]
     assert calibration.main_check() == 0
+
+
+def _power_cases():
+    return _load_propulsion_cases()["installed_power_case"]
+
+
+def test_the_efficiency_fit_uses_the_in_sample_ships_and_is_committed():
+    """Label: property
+    """
+    import yaml
+    cases = _power_cases()
+    fitted = _fit_efficiency_factor(cases)
+    assert _fit_efficiency_factor([c for c in cases if "held_out" not in c]) == fitted
+    committed = yaml.safe_load((CAL / "factors.yaml").read_text(encoding="utf-8"))
+    assert committed["propulsor_efficiency_factor"] == fitted
+    # The Installed Power falls as kappa rises: the fit has a direction.
+    c = cases[0]
+    assert _installed_power(c, 0.9) < _installed_power(c, 0.45)
+
+
+def test_the_installed_power_cases_are_inside_their_bands():
+    """Label: sourced - the CDS 110 and CDS 135 Tanker brochures (2x 500 and 2x 709 kW at a design speed of 18 km/h), read from the files named in propulsion_cases.yaml; the bands of spec 0007.
+    """
+    checks = _assess_installed_power()
+    assert {b.case for b in checks} == {c["id"] for c in _power_cases()}
+    for b in checks:
+        assert b.inside, (b.case, b.err_pct)
+        assert b.band_pct == BANDS["bands"]["installed_power_kw"]["pct"][b.confidence]
+    assert any(b.held_out for b in checks)
+    assert "## 7. Installed power" in report()

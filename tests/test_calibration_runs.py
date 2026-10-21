@@ -61,7 +61,7 @@ CONFIDENCES = ("high", "medium", "low")
 def test_every_figure_has_a_band_for_every_confidence_with_its_basis():
     """Label: property
     """
-    assert set(BANDS["bands"]) == {"lightship_t", "dwt_t", "bollard_pull_t"}
+    assert set(BANDS["bands"]) == {"lightship_t", "dwt_t", "bollard_pull_t", "installed_power_kw"}
     for figure, band in BANDS["bands"].items():
         assert set(band["pct"]) == set(CONFIDENCES), figure
         assert band["basis"].strip(), figure
@@ -130,10 +130,10 @@ def test_the_check_prints_warnings_and_still_exits_zero():
     out = subprocess.run([sys.executable, "-m", "vessel_designer.calibration", "--check"],
                          capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
-    from vessel_designer.calibration import _assess_propulsion, _assess_tanks
-    # One annotation for each result outside its band: the barge, tank (issue #292) and bollard pull
-    # (issue #351) results.
-    every = assess() + _assess_tanks() + _assess_propulsion()
+    from vessel_designer.calibration import _assess_installed_power, _assess_propulsion, _assess_tanks
+    # One annotation for each result outside its band: the barge, tank (issue #292), bollard pull
+    # (issue #351) and installed power (issue #353) results.
+    every = assess() + _assess_tanks() + _assess_propulsion() + _assess_installed_power()
     assert out.stdout.count("::warning ") == sum(1 for b in every if not b.inside)
 
 

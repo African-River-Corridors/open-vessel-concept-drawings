@@ -69,6 +69,28 @@ fn masses_json(m: &BargeCostInputs, from_design: &[&str]) -> Value {
     })
 }
 
+/// The masses of a self-propelled gas Option with its own powering (issue #353): the weight
+/// breakdown, and its own battery energy and Installed Power in place of a tug's. The tug's hull
+/// steel keeps the core's default.
+pub fn self_propelled_gas_masses(
+    w: &WeightBreakdown,
+    battery_kwh: f64,
+    propulsion_kw: f64,
+) -> Value {
+    let mut v = gas_masses(w);
+    v["masses"]["battery_kwh"] = json!(battery_kwh);
+    v["masses"]["propulsion_kw"] = json!(propulsion_kw);
+    for name in ["battery_kwh", "propulsion_kw"] {
+        if let Some(list) = v["from_design"].as_array_mut() {
+            list.push(json!(name));
+        }
+        if let Some(list) = v["core_default"].as_array_mut() {
+            list.retain(|n| n != name);
+        }
+    }
+    v
+}
+
 /// The masses of a gas barge: its weight breakdown. The tug (hull steel, battery, propulsion) is a
 /// separate vessel that the engine does not size, so those three keep the core's defaults.
 pub fn gas_masses(w: &WeightBreakdown) -> Value {

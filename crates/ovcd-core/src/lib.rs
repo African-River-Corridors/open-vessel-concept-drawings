@@ -31,6 +31,7 @@ pub mod lpg_saturation;
 pub mod machinery;
 pub mod measured;
 pub mod models;
+pub mod powering;
 pub mod pressure_vessel;
 pub mod propulsor;
 pub mod protective_location;

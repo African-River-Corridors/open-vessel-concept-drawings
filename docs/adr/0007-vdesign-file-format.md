@@ -88,7 +88,9 @@ save writes the current version.
   Issue #351 adds two inputs to the group, held only with a specified Propulsor type:
   `propulsor_efficiency_factor` (kappa) and `bollard_pull_factor` (kappa_b), with Defaults Profile values
   by Propulsor type. A file without them reads 1.0 for each; it never holds a specified Propulsor, so
-  neither applies to it.
+  neither applies to it. Issue #353 adds `trip_length_km`, held only with a battery Power Source:
+  none (no route) keeps the battery unit count; a length sizes the battery on the energy per trip. A
+  file without it reads none.
 - **Inputs added after the first files** (issue #4: the dry-bulk hold, the bow rake over depth, the stern void of a pushed barge, the end bulkhead allowance, the gas tank arrangement values, the water density, the squat safety margin, the 14 cost rates, the 17 aft block values of a self-propelled hull): a file that lacks one of these
   inputs, in version 1 or in a version 2 file from a test build, is read with the fixed value the engine
   used before the input existed (a table in `vdesign.rs`, not the Defaults Profile), marked `default`, with

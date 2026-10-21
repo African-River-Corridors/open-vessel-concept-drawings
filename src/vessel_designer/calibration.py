@@ -604,10 +604,102 @@ def _propulsion_section() -> list[str]:
     return out
 
 
+# Installed power (issue #353): inland ships that print both the installed power and a design
+# speed, run through the whole engine. The in-sample cases of a type fit its efficiency factor kappa;
+# the Installed Power is close to inverse in kappa, so the fit is the kappa at which the in-sample
+# model meets the published power, found by a few steps of kappa x model / published.
+_KAPPA_START = 0.8
+
+
+def _installed_power(c: dict, kappa: float) -> float:
+    """The Installed Power the engine sizes for the case (kW), at the efficiency factor `kappa`."""
+    from vessel_designer.simulate import simulate
+    out = simulate({
+        "vessel": "hopper_barge", "cargo": "bauxite", "self_propelled": True,
+        "loa_m": float(c["loa_m"]), "beam_m": float(c["beam_m"]), "depth_m": float(c["depth_m"]),
+        "cb": None, "draught_limit_m": float(c["draught_m"]), "stern_form": "tunnel",
+        "propulsor_type": c["run_as_type"], "propulsor_count": int(c["count"]),
+        "propeller_diameter_m": float(c["diameter_m"]), "power_source": c["power_source"],
+        "design_speed_kn": float(c["design_speed_kn"]), "installed_power_margin": 1.2,
+        "propulsor_efficiency_factor": float(kappa), "speed_max_kn": 14.0,
+    })
+    return float(out["powering"]["installed_power_kw"])
+
+
+def _fit_efficiency_factor(cases: list) -> dict:
+    """kappa per Propulsor type from its in-sample installed power cases; a type with none keeps the
+    starting estimate."""
+    out = {}
+    for t in _PROPULSOR_TYPES:
+        fit = [c for c in cases if c["run_as_type"] == t and not _is_held_out(c)]
+        if not fit:
+            out[t] = {"value": _KAPPA_START, "n": 0,
+                      "basis": "no in-sample case: the starting estimate"}
+            continue
+        k = _KAPPA_START
+        for _ in range(4):
+            ratio = sum(_installed_power(c, k) / c["observed"]["installed_power_kw"] for c in fit) / len(fit)
+            k *= ratio
+        out[t] = {"value": round(k, 3), "n": len(fit), "evidence": [{"case": c["id"]} for c in fit]}
+    return out
+
+
+def _assess_installed_power(cases: dict | None = None) -> list[BandCheck]:
+    cases = cases if cases is not None else _load_propulsion_cases()
+    factors = _fit_efficiency_factor(cases["installed_power_case"])
+    band = BANDS["bands"]["installed_power_kw"]
+    out = []
+    for c in cases["installed_power_case"]:
+        obs = c["observed"]["installed_power_kw"]
+        model = _installed_power(c, factors[c["run_as_type"]]["value"])
+        out.append(_Banded(case=c["id"], figure="installed_power_kw", observed=obs, model=model,
+                           err_pct=pct(model, obs), band_pct=float(band["pct"][c["confidence"]]),
+                           confidence=c["confidence"], basis=band["basis"],
+                           held_out=c.get("held_out") or None, group=c["run_as_type"]))
+    return out
+
+
+def _installed_power_section() -> list[str]:
+    cases = _load_propulsion_cases()
+    factors = _fit_efficiency_factor(cases["installed_power_case"])
+    checks = {b.case: b for b in _assess_installed_power(cases)}
+    out = ["", "## 7. Installed power (spec 0007)", "",
+           "Inland ships that print both the installed power and a design speed, run through the whole "
+           "engine: the hull at its printed size and maximum draught, its propulsors, and the Installed "
+           "Power sized for the design speed in deep water with the 1.20 margin. The in-sample cases of a "
+           "type fit its efficiency factor kappa; **their errors are in-sample**. A miss is a warning only.",
+           "", "### Fitted efficiency factors", ""]
+    for t, f in factors.items():
+        out.append(f"- **{t}:** kappa {f['value']}" + (f" (n = {f['n']})" if f["n"] else f" ({f['basis']})"))
+    out += ["", "| Case | Type | Sample | Conf. | L x B x T (m) | Speed (kn) | Published (kW) | Model (kW) | err % | "
+            "Band ± % | vs band |", "|---|---|---|---|---|---|---|---|---|---|---|"]
+    for c in cases["installed_power_case"]:
+        b = checks[c["id"]]
+        out.append(f"| {c['id']} | {c['run_as_type']} | {'held out' if b.held_out else 'in-sample'} | "
+                   f"{c['confidence']} | {c['loa_m']:g} x {c['beam_m']:g} x {c['draught_m']:g} | "
+                   f"{c['design_speed_kn']:g} | {fmt(b.observed)} | {fmt(b.model)} | {fmt(b.err_pct, 1)} | "
+                   f"±{b.band_pct:g} | {'inside' if b.inside else '**OUTSIDE** ⚠'} |")
+    out += ["", "### Installed power records that cannot run yet", "", "| Case | Published | Why not run |",
+            "|---|---|---|"]
+    for c in cases.get("not_yet_runnable_installed_power_cases", []):
+        out.append(f"| {c['id']} | {c['published']} | {c['not_yet_runnable']} |")
+    return out
+
+
+def _installed_power_warnings_for(checks: list[BandCheck]) -> list[str]:
+    return [github_warning(
+        f"{b.case}: modelled installed power is {b.err_pct:+.1f} % from the published {b.observed:g} kW "
+        f"(model {b.model:,.0f} kW), outside ±{b.band_pct:g} % ({b.confidence} confidence, "
+        f"{'held-out' if b.held_out else 'in-sample'})",
+        title="Calibration band", file="calibration/propulsion_cases.yaml") for b in checks if not b.inside]
+
+
 def _all_factors(dry_barge: list) -> dict:
     """Every fitted factor of factors.yaml: the barge factors, then the bollard pull factors (#351)."""
     factors = fit_factors(dry_barge)
-    factors["bollard_pull_factor"] = _fit_bollard_pull_factor(_load_propulsion_cases()["propulsion_case"])
+    propulsion = _load_propulsion_cases()
+    factors["bollard_pull_factor"] = _fit_bollard_pull_factor(propulsion["propulsion_case"])
+    factors["propulsor_efficiency_factor"] = _fit_efficiency_factor(propulsion["installed_power_case"])
     return factors
 
 
@@ -623,7 +715,10 @@ def main_check() -> int:
     propulsion_checks = _assess_propulsion()
     for line in _propulsion_warnings_for(propulsion_checks):
         print(line)
-    every = checks + tank_checks + propulsion_checks
+    power_checks = _assess_installed_power()
+    for line in _installed_power_warnings_for(power_checks):
+        print(line)
+    every = checks + tank_checks + propulsion_checks + power_checks
     outside = sum(1 for b in every if not b.inside)
     print(f"calibration: {len(every)} results against their bands, {outside} outside (warning only)")
     return 0
@@ -862,6 +957,7 @@ def report() -> str:
     out += _held_out_section(held_cases, held_rows, cases.get("not_yet_runnable_cases", []), all_checks)
     out += _tank_section()
     out += _propulsion_section()
+    out += _installed_power_section()
     return "\n".join(out) + "\n"
 
 

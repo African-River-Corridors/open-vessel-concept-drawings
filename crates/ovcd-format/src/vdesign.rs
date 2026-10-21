@@ -844,6 +844,12 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::All,
         value: "null",
     },
+    // Issue #353: no route, so the battery keeps its unit count.
+    LegacyFixedJson {
+        name: "trip_length_km",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
     LegacyFixedJson {
         name: "wheelhouse_type",
         applies_to: AppliesTo::All,
@@ -1710,6 +1716,16 @@ pub const INPUTS: &[InputSpec] = &[
         self_propelled(
             "battery_energy_kwh",
             "Battery energy",
+            NUM_OR_NONE,
+            Group::SternAndPropulsion,
+        ),
+        "power_source",
+        BATTERY_POWER_SOURCES,
+    ),
+    when(
+        self_propelled(
+            "trip_length_km",
+            "Trip length",
             NUM_OR_NONE,
             Group::SternAndPropulsion,
         ),

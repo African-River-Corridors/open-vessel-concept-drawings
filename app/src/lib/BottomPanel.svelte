@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Evaluation, OptionEvaluation } from "./api";
   import StaleWhy from "./StaleWhy.svelte";
-  import { MAIN, TANKS, exact, hasTanks, show, textIds, valueAt, type Metric } from "./metrics";
+  import { MAIN, POWERING, TANKS, exact, hasPowering, hasTanks, show, textIds, valueAt, type Metric } from "./metrics";
   import { checkName, say, t } from "./i18n.svelte";
 
   // Outputs of the active Option, its checks and warnings, and a compare table of every Option.
@@ -45,7 +45,11 @@
   let columns = $derived((evaluation?.options ?? []).map(column));
   let current = $derived(columns.find((c) => c.name === active));
   let activeEval = $derived(evaluation?.options.find((o) => o.name === active));
-  let rows = $derived<Metric[]>([...MAIN, ...(columns.some((c) => hasTanks(c.results)) ? TANKS : [])]);
+  let rows = $derived<Metric[]>([
+    ...MAIN,
+    ...(columns.some((c) => hasTanks(c.results)) ? TANKS : []),
+    ...(columns.some((c) => hasPowering(c.results)) ? POWERING : []),
+  ]);
 
   let checks = $derived.by(() => {
     const list = (valueAt(current?.results, ["checks"]) as { name: string; ok: boolean; message: string }[] | undefined) ?? [];
@@ -83,7 +87,7 @@
             <tbody>
               {#each rows as m (m.label)}
                 {@const v = valueAt(current.results, m.path)}
-                {#if !(m.path[0] === "arrangement" && !hasTanks(current.results))}
+                {#if !(m.path[0] === "arrangement" && !hasTanks(current.results)) && !(m.path[0] === "powering" && !hasPowering(current.results))}
                   <tr>
                     <th>{t(m.label)}</th>
                     <td class="num" class:text={m.quantity === "text"} title={exact(m, v)}><span class:old={current.stale}>{show(m, v, ids)}</span>{#if v !== null && v !== undefined && m.unit}<span class="unit">&nbsp;{m.unit}</span>{/if}</td>

@@ -59,14 +59,19 @@ fn a_typed_installed_power_places_the_engines_below_deck_and_in_the_lightship() 
             "SHAFT RUN".to_string()
         ]
     );
-    assert!(!zones(&r).contains(&"ENGINE ROOM".to_string()));
+    // Issue #353 sizes the Installed Power, so the engines are below deck with no warning.
     let warned = |r: &Value| {
         r["warnings"].as_array().unwrap().iter().any(|w| {
             w.as_str()
                 .is_some_and(|w| w.contains("installed power is not sized"))
         })
     };
-    assert!(warned(&r), "{}", r["warnings"]);
+    assert!(
+        zones(&r).contains(&"ENGINE ROOM".to_string()),
+        "{:?}",
+        zones(&r)
+    );
+    assert!(!warned(&r), "{}", r["warnings"]);
     assert!(items(&r).contains(&"rudders and steering gear".to_string()));
     assert!(items(&r).contains(&"bow thruster".to_string()));
     s.set_input("Option 1", "installed_power_kw", json!(1200.0))

@@ -68,6 +68,10 @@ pub const ETA_R: f64 = 0.98;
 /// thrusters p.83): open and ducted.
 pub const BLADE_LOAD_OPEN_KW_M2: f64 = 400.0;
 pub const BLADE_LOAD_DUCTED_KW_M2: f64 = 500.0;
+/// The wake fraction w of spec 0007: transom and pram 0.20, tunnel 0.30 (estimates in the MAN range
+/// 0.20 to 0.45, below the DST tunnel nominal wake 0.457 at h/T 3).
+pub const WAKE_OPEN_STERN: f64 = 0.20;
+pub const WAKE_TUNNEL: f64 = 0.30;
 /// The gravity the spec turns kN into tonnes with.
 pub const G: f64 = 9.81;
 

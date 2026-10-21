@@ -90,14 +90,14 @@ fn the_eval_seam_gives_the_bollard_pull_and_the_blade_load() {
     assert!(eval("propulsor", &bad).is_err());
 }
 
-/// `calibration/factors.yaml`, `bollard_pull_factor`: (type, value) in the order written.
-fn fitted_bollard_pull_factors() -> Vec<(String, f64)> {
+/// `calibration/factors.yaml`, the block `name`: (type, value) in the order written.
+fn fitted_factors(name: &str) -> Vec<(String, f64)> {
     let path = format!(
         "{}/../../calibration/factors.yaml",
         env!("CARGO_MANIFEST_DIR")
     );
     let text = std::fs::read_to_string(path).unwrap();
-    let block = text.split("\nbollard_pull_factor:\n").nth(1).unwrap();
+    let block = text.split(&format!("\n{name}:\n")).nth(1).unwrap();
     let mut out = Vec::new();
     let mut current = None;
     for line in block.lines() {
@@ -116,13 +116,20 @@ fn fitted_bollard_pull_factors() -> Vec<(String, f64)> {
 }
 
 #[test]
-fn the_profile_takes_the_fitted_bollard_pull_factors() {
-    let fitted = fitted_bollard_pull_factors();
-    assert_eq!(fitted.len(), 6, "{fitted:?}");
+fn the_profile_takes_the_fitted_factors() {
     let profile: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
-    let entry = &profile["inputs"]["bollard_pull_factor"];
-    assert_eq!(entry["status"], "estimate");
-    for (t, v) in fitted {
-        assert_eq!(entry["default_by_propulsor_type"][&t], json!(v), "{t}");
+    // kappa_b from the bollard pull cases (#351), kappa from the installed power cases (#353).
+    for name in ["bollard_pull_factor", "propulsor_efficiency_factor"] {
+        let fitted = fitted_factors(name);
+        assert_eq!(fitted.len(), 6, "{name}: {fitted:?}");
+        let entry = &profile["inputs"][name];
+        assert_eq!(entry["status"], "estimate");
+        for (t, v) in fitted {
+            assert_eq!(
+                entry["default_by_propulsor_type"][&t],
+                json!(v),
+                "{name} {t}"
+            );
+        }
     }
 }

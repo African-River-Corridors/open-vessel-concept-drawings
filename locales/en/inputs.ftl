@@ -220,6 +220,8 @@ input-bow-thruster-power-kw = Bow thruster power
 
 input-battery-energy-kwh = Battery energy
 
+input-trip-length-km = Trip length
+
 input-battery-unit-energy-kwh = Battery energy per 40 ft unit
 
 input-wheelhouse-type = Wheelhouse type
