@@ -9,20 +9,19 @@
 ·  **Rule Sets:** none loaded yet. The IGC values in this area are constants in code with citations. Spec 0004 plans
 them as Rules of the set `igc-2g` (4.23.2.1.2 minimum thickness, 4.23.2.1.3 weld factor, 4.23.3.1 allowable stress).
 
-> **Changes in progress.** A builder lane is changing five items in this area now. This page describes the code on
-> `main` before those changes. Rows that will change carry "(changing, #nnn)".
+> **Changes made, 2026-10-20 and 21.** These fixes are on `main`, and the rows below show the new values:
+> #313 S690QL1 at 256.7 MPa (TC-A24, TC-A37); #314 2:1 head area (TC-A08, TC-A47); #315 LPG density by carriage
+> condition and the IGC 15.5.1 loading limit (TC-A48, TC-A52 to TC-A54); #316 dome rule (TC-A55, TC-A56); #317
+> part 1 tank weight records (TC-A62, TC-A63).
 >
-> | Issue | Change | Rows |
-> |---|---|---|
-> | #313 | S690QL1 allowable stress from 285 MPa to 256.7 MPa (IGC 4.23.3.1, Rm/3) | TC-A24, TC-A37 |
-> | #314 | 2:1 ellipsoidal head area, found 21 % to 27 % low, fixed against a cited formula | TC-A08, TC-A47 |
-> | #315 | LPG cargo density by carriage condition, and the IGC 15.5.1 loading limit as the default fill | TC-A48, TC-A52 to TC-A54 |
-> | #316 | Dome default from a rule on tank diameter, not a fixed 2.0 m | TC-A55, TC-A56 |
-> | #317 | New Rules: minimum design pressure (IGC 4.23.1.2) and steel by design temperature; tank weight calibration cases | TC-A26 to TC-A39, TC-A62, TC-A63 |
+> **Still open:** #317 Rules for the IGC 4.23.1.2 minimum design pressure and steel by design temperature (rows marked
+> "Rule pending"); #374 the wall must include the IGC liquid pressure; #375 the head type as an input (a Design
+> still gets hemispherical heads, so #314 moves no Design result yet). Code line numbers on changed rows are given
+> by file only; recheck them at review.
 >
-> Note on #314: a Design always uses hemispherical heads today (TC-A06). The 2:1 head is reached only through the
-> Python and `eval` API and the tank calibration runner. So #314 does not move Design results until a head type input
-> exists.
+> Calibration after the fixes: the river LPG tank wall is 15.5 mm against 13.1 mm printed (+18.3 %, outside the
+> ±15 % band). This is an accepted miss: the paper uses the inland basis Rm/2.7. Its steel at the published thickness
+> is 37.4 t against 34.4 t published.
 
 OVCD is a concept tool (ADR 0011). This page says how OVCD sizes and weighs a Type C tank today. It is not a tank
 design and it gives no verdict that an Administration or class can use.
@@ -123,7 +122,7 @@ API, not a Design.
 | TC-A05 | Tank shape | One horizontal cylinder with two heads; no bilobe, no vertical tank | Fixed in code | Scope of the port | `tanks.rs` | Unknown; bilobe tanks fill a beam better |
 | TC-A06 | Head type in a Design | Hemispherical always (no input) | Fixed in code | `BargeInputs` default; `gas_volumetric` does not set it | `models.rs` 194 | Unknown. Hemispherical heads are thin (half the shell) and long |
 | TC-A07 | Hemispherical head | Length R_od; volume (2/3)πR_hi³; steel area 2πR_so² | Method | Sphere geometry | `tanks.rs` 166–169 | None known |
-| TC-A08 | 2:1 ellipsoidal head (API only) | Length OD/4; volume (1/3)πR_hi³; steel area 1.084·πR_so² **(changing, #314)** | Method | Area constant has no source. A half 2:1 oblate spheroid is 4.336·R² (derived), the code gives 3.405·R² | `tanks.rs` 170–173, 226–230 | Non-conservative: head steel and insulation 21 % low |
+| TC-A08 | 2:1 ellipsoidal head (API only) | Length OD/4; volume (1/3)πR_hi³; steel area 1.380173·πR² = 4.336·R² at the steel outer surface | Method | Half an oblate spheroid (MathWorld "Oblate Spheroid", eq. 11). Fixed in #314: the old constant 1.084 was meant for D², not πR², so it was 21.5 % low (the true area is 27.3 % above the old one) | `tanks.rs` | Matches the cited formula. A Design still gets hemispherical heads (TC-A06, #375) |
 | TC-A09 | Cylinder length | L_c = L_t − 2 × head length | Method | Geometry | `tanks.rs` 192 | None known for hemispheres |
 | TC-A10 | Gross tank volume | πR_i²L_c + 2V_head; dome excluded | Method | Geometry | `tanks.rs` 205–209 | None known. Calibration: −0.1 % and +0.2 % |
 | TC-A11 | Shell thickness formula | t = P·R/(f·E − 0.6·P), two passes from the steel outer radius | Method | ASME VIII-1 UG-27 form (standard not held; unverified, spec 0004 App. A). IGC 4.23.2.4 asks for "accepted pressure vessel design theory" | `pressure_vessel.rs` 155–168, 259–263 | Unknown until checked against the standard |
@@ -139,22 +138,22 @@ API, not a Design.
 | TC-A21 | Allowable stress, 304L | 113 MPa | Estimate | Matches IGC 4.23.3.1 with standard minimums: min(485/3.5, 170/1.5) = 113.3 (derived). The code holds no Rm or Re; profile says "no source cited" | `pressure_vessel.rs` 50 | Close to the limit; non-conservative by 0.3 % at most |
 | TC-A22 | Allowable stress, 316L | 113 MPa | Estimate | As TC-A21 | `pressure_vessel.rs` 61 | As TC-A21 |
 | TC-A23 | Allowable stress, 9Ni | 230 MPa | Estimate | Matches IGC 4.23.3.1 with ASTM A553 Type I minimums: min(690/3, 585/1.5) = 230 (derived) | `pressure_vessel.rs` 72 | None known at those strengths |
-| TC-A24 | Allowable stress, S690QL1 | 285 MPa (Rm 770 / 2.7) **(changing, #313)** | Sourced default | River LPG tank paper, DESIGN 2006 (inland basis). IGC 4.23.3.1 gives min(770/3, 690/1.5) = 256.7 MPa | `pressure_vessel.rs` 88; profile 218, 235 | Non-conservative: wall about 10 % thin |
+| TC-A24 | Allowable stress, S690QL1 | 256.7 MPa = min(770/3, 690/1.5) | Sourced default | IGC 4.23.3.1; Rm and Re from the DESIGN 2006 river tank paper and an EN 10025-6 S690QL data sheet (#313). Input `tank_allowable_stress_basis`: `igc_4_23_3_1` (default) or `published_design` (285 MPa, kept for old files). A stress above the IGC limit gives a warning | `pressure_vessel.rs`; profile | Matches the IGC limit |
 | TC-A25 | Steel density | 7.93 (304L), 7.98 (316L), 7.85 (9Ni, S690QL1) t/m³ | Fixed in code | Original engine; S690QL1 copies 9Ni (code comment says estimate) | `pressure_vessel.rs` 51, 62, 73, 89 | Small |
-| TC-A26 | Design pressure, LNG | 0.4 MPa **(changing, #317: new check)** | Sourced default | Owners' sheets of two LNG bunker vessels (4 bar); a tank maker's 2018 presentation (3 to 5 barg) | Profile 127; wall formula | Unknown |
-| TC-A27 | Design pressure, LNG and ethane | 0.4 MPa **(changing, #317: new check)** | Estimate | Taken as for LNG | Profile 133 | Unknown |
-| TC-A28 | Design pressure, LPG fully pressurised | 1.77 MPa **(changing, #317: new check)** | Sourced default | Owner's Form C particulars of 16 pressurised LPG carriers: 17.65 to 17.7 barg | Profile 138–143 | Unknown |
-| TC-A29 | Design pressure, LPG semi-pressurised | 1.0 MPa **(changing, #317: new check)** | Estimate | One trade-press report: 9.97 bar at −48 °C, condition not stated | Profile 145–150 | Unknown |
-| TC-A30 | Design pressure, LPG fully refrigerated | 0.4 MPa **(changing, #317: new check)** | Estimate | Taken as for LNG | Profile 152–156 | May be below the IGC 4.23.1.2 minimum (see Questions) |
-| TC-A31 | Design temperature, LNG and LNG/ethane | −163 °C **(changing, #317: new check)** | Sourced default | Owner's Form B particulars of a 2022 LNG bunker vessel | Profile 168–174; recorded only | No effect today |
-| TC-A32 | Design temperature, LPG fully pressurised | 0 °C **(changing, #317: new check)** | Sourced default | Owner's Form C sheet of a 2007 pressurised LPG carrier (0 to 45 °C) | Profile 176–181; recorded only | No effect today |
-| TC-A33 | Design temperature, LPG semi-pressurised | −48 °C **(changing, #317: new check)** | Estimate | One trade-press report | Profile 183–188; recorded only | No effect today |
-| TC-A34 | Design temperature, LPG fully refrigerated | −48 °C **(changing, #317: new check)** | Estimate | Propane boils at −42.1 °C; margin | Profile 190–195; recorded only | No effect today |
-| TC-A35 | Steel, LNG and LNG/ethane | 9Ni **(changing, #317: new check)** | Sourced default | A tank maker lists 9 % Ni or 304L for LNG | Profile 207–213 | Unknown; 304L is the other common choice |
-| TC-A36 | Steel, LPG semi-pressurised | 9Ni **(changing, #317: new check)** | Estimate | No source | Profile 222–226 | Likely heavy and dear against built practice |
-| TC-A37 | Steel, LPG fully pressurised | S690QL1 **(changing, #313 and #317)** | Sourced default | River LPG tank paper, DESIGN 2006 | Profile 215–220 | See TC-A24 |
-| TC-A38 | Steel, LPG fully refrigerated | 9Ni **(changing, #317: new check)** | Estimate | No source; profile says a low-temperature C-Mn steel would be lighter | Profile 228–232 | Likely heavy |
-| TC-A39 | Allowable stress override | none (the material's) **(changing, #317)** | Sourced default | Profile 237–243; spec 0004 plans an upper bound Rule (IGC 4.23.3.1) | `barge_capacity.rs` `TankDesign`; `pressure_vessel.rs` 254 | A typed value above the IGC limit is not refused today |
+| TC-A26 | Design pressure, LNG | 0.4 MPa **(Rule pending, #317)** | Sourced default | Owners' sheets of two LNG bunker vessels (4 bar); a tank maker's 2018 presentation (3 to 5 barg) | Profile 127; wall formula | Unknown |
+| TC-A27 | Design pressure, LNG and ethane | 0.4 MPa **(Rule pending, #317)** | Estimate | Taken as for LNG | Profile 133 | Unknown |
+| TC-A28 | Design pressure, LPG fully pressurised | 1.77 MPa **(Rule pending, #317)** | Sourced default | Owner's Form C particulars of 16 pressurised LPG carriers: 17.65 to 17.7 barg | Profile 138–143 | Unknown |
+| TC-A29 | Design pressure, LPG semi-pressurised | 1.0 MPa **(Rule pending, #317)** | Estimate | One trade-press report: 9.97 bar at −48 °C, condition not stated | Profile 145–150 | Unknown |
+| TC-A30 | Design pressure, LPG fully refrigerated | 0.4 MPa **(Rule pending, #317)** | Estimate | Taken as for LNG | Profile 152–156 | May be below the IGC 4.23.1.2 minimum (see Questions) |
+| TC-A31 | Design temperature, LNG and LNG/ethane | −163 °C **(Rule pending, #317)** | Sourced default | Owner's Form B particulars of a 2022 LNG bunker vessel | Profile 168–174; recorded only | No effect today |
+| TC-A32 | Design temperature, LPG fully pressurised | 0 °C **(Rule pending, #317)** | Sourced default | Owner's Form C sheet of a 2007 pressurised LPG carrier (0 to 45 °C) | Profile 176–181; recorded only | No effect today |
+| TC-A33 | Design temperature, LPG semi-pressurised | −48 °C **(Rule pending, #317)** | Estimate | One trade-press report | Profile 183–188; recorded only | No effect today |
+| TC-A34 | Design temperature, LPG fully refrigerated | −48 °C **(Rule pending, #317)** | Estimate | Propane boils at −42.1 °C; margin | Profile 190–195; recorded only | No effect today |
+| TC-A35 | Steel, LNG and LNG/ethane | 9Ni **(Rule pending, #317)** | Sourced default | A tank maker lists 9 % Ni or 304L for LNG | Profile 207–213 | Unknown; 304L is the other common choice |
+| TC-A36 | Steel, LPG semi-pressurised | 9Ni **(Rule pending, #317)** | Estimate | No source | Profile 222–226 | Likely heavy and dear against built practice |
+| TC-A37 | Steel, LPG fully pressurised | S690QL1 at 256.7 MPa **(steel-by-temperature Rule pending, #317)** | Sourced default | River LPG tank paper, DESIGN 2006; allowable stress per TC-A24 | Profile | See TC-A24 |
+| TC-A38 | Steel, LPG fully refrigerated | 9Ni **(Rule pending, #317)** | Estimate | No source; profile says a low-temperature C-Mn steel would be lighter | Profile 228–232 | Likely heavy |
+| TC-A39 | Allowable stress override | none (the material's) **(Rule pending, #317)** | Sourced default | Profile 237–243; spec 0004 plans an upper bound Rule (IGC 4.23.3.1) | `barge_capacity.rs` `TankDesign`; `pressure_vessel.rs` 254 | A typed value above the IGC limit is not refused today |
 | TC-A40 | Insulation thickness, LNG and LNG/ethane | 330 mm | Estimate | One secondary report (330 mm panel); maker data not found | Profile 276–281 | Unknown. Public range 300 to 350 mm |
 | TC-A41 | Insulation thickness, LPG fully pressurised | 0 mm | Sourced default | Owner's Form C sheet and GA of a 2007 pressurised LPG carrier: tanks not insulated | Profile 283–288 | None known |
 | TC-A42 | Insulation thickness, LPG semi-pressurised and fully refrigerated | 200 mm | Estimate | One cold Type C design study (LCO2 at −35 °C, 200 mm PUF) | Profile 290–295 | Possibly thin for −48 °C |
@@ -162,23 +161,23 @@ API, not a Design.
 | TC-A44 | Insulation type, LPG fully pressurised | none | Sourced default | As TC-A41 | Profile 255–260; recorded only | No effect today |
 | TC-A45 | Insulation type, LPG semi and refrigerated | pu_foam | Estimate | As TC-A42 | Profile 262–267; recorded only | No effect today |
 | TC-A46 | Insulation density | 60 kg/m³, every type | Fixed in code | Original engine; no source | `models.rs` 203; `tanks.rs` 233 | Unknown. Public figures: perlite 40, lab PUF 96 kg/m³ |
-| TC-A47 | Insulation volume | Insulated outer surface × thickness; 2:1 head at 1.084·πR_od² **(changing, #314)** | Method | Thin-layer approximation | `tanks.rs` 224–234 | Conservative (a few %) for thick layers on small tanks; 2:1 head part low |
-| TC-A48 | Fill ratio | 0.98 for every Cargo and carriage condition **(changing, #315)** | Sourced default | IGC 15.3 default filling limit 98 % | Profile 95–112; `simulate.rs` 814–843; `tanks.rs` 211 | Non-conservative for cargo loaded colder than the reference temperature (IGC 15.5.1) |
+| TC-A47 | Insulation volume | Insulated outer surface × thickness; 2:1 head at 4.336·R_od² | Method | Thin-layer approximation; head area per TC-A08 (#314) | `tanks.rs` | Conservative (a few %) for thick layers on small tanks |
+| TC-A48 | Fill ratio | `fill_ratio` is the filling limit FL, 0.98. An LPG Cargo is loaded to LL = FL × ρR / ρL (IGC 15.5.1), never above FL. Reference temperature (IGC 15.1.3): fully pressurised = saturation temperature at the MARVS; semi-pressurised and fully refrigerated = the loading temperature, so LL = FL | Sourced default | IGC 15.3 (FL 98 %), 15.1.3 and 15.5.1 (#315). Inputs `lpg_loading_limit_basis` (`igc_15_1_3` default; `igc_15_5_2` gives a 45 °C reference when pressurised; `refrigerated_density` keeps old files) and `lpg_loading_temperature_c` | Profile; `simulate.rs`; `tanks.rs` | Matches IGC 15.5.1. Fully pressurised propane LL is about 85 % |
 | TC-A49 | Cargo volume basis | Fill × gross volume without the dome | Method | IGC 15.1.1 says "relative to the total tank volume" | `tanks.rs` 211 | Conservative (small) if the dome counts in the total |
 | TC-A50 | Cargo density, LNG | 450 kg/m³ | Fixed in code | Original engine (comments in the Python file) | `cargo.rs` 32; `barge_capacity.rs` 828, 886 | Unknown |
 | TC-A51 | Cargo density, LNG/ethane | 500 kg/m³ | Fixed in code | Original engine | `cargo.rs` 43 | Unknown |
-| TC-A52 | Cargo density, propane | 581 kg/m³ at −42.1 °C, every carriage condition **(changing, #315)** | Fixed in code | Refrigerated value | `cargo.rs` 54 | Non-conservative for pressurised LPG: cargo mass too high |
-| TC-A53 | Cargo density, butane | 600 kg/m³ **(changing, #315)** | Fixed in code | Original engine | `cargo.rs` 65 | As TC-A52 |
-| TC-A54 | Cargo density, LPG mix | 588.4 kg/m³ **(changing, #315)** | Fixed in code | 60/40 propane/butane, refrigerated | `cargo.rs` 76 | As TC-A52 |
-| TC-A55 | Dome height above tank top | 2.0 m **(changing, #316)** | Estimate | Carried over from the original engine; no source | Profile 418–423; `barge_capacity.rs` 55, 573 | Conservative for air draft on small tanks |
-| TC-A56 | Dome diameter | 2.0 m **(changing, #316)** | Estimate | Nominal, as wide as high; no source | Profile 425–430; `barge_capacity.rs` 58, 523 | Small effect, through Vc |
+| TC-A52 | Cargo density, propane | Saturated liquid density at the loading temperature: 15 °C fully pressurised (estimate), −10 °C semi-pressurised (estimate), −42.1 °C fully refrigerated | Sourced default | NIST WebBook saturation tables (#315). Cargo per m³ of tank, fully pressurised: 569 → 432 kg | `cargo.rs`; profile | Matches the source at the stated temperatures |
+| TC-A53 | Cargo density, butane | As TC-A52; fully refrigerated at −0.5 °C | Sourced default | NIST WebBook, n-butane (#315). Fully pressurised: 588 → 437 kg per m³ of tank | `cargo.rs`; profile | As TC-A52 |
+| TC-A54 | Cargo density, LPG mix | As TC-A52; fully refrigerated at −34.3 °C (estimate) | Estimate | Ideal solution of the propane and butane values (#315). Fully pressurised: 577 → 440 kg per m³ of tank | `cargo.rs`; profile | Unknown; ideal-solution estimate |
+| TC-A55 | Dome height above tank top | = dome diameter | Estimate | Dome rule (#316), two published points: a Ø2,500 mm dome 2,500 mm above the inside of the shell on an R7,300 lobe (Heo, Kang and Park 2017, Fig. 19); a Ø1,200 mm valve dome on a 4.73 m river LPG tank (DESIGN 2006). Old files keep 2.0 m | Profile; `barge_capacity.rs` | Unknown; two data points. A 110 × 11.4 m example moves from 2.0 to 1.64 m (air draft −0.36 m) |
+| TC-A56 | Dome diameter | max(1.2 m, 0.17 × steel OD) | Estimate | Dome rule (#316), same two points. Both drawing views now draw the dome at this diameter | Profile; `barge_capacity.rs`; `ga.rs` | Small effect, through Vc |
 | TC-A57 | Dome volume | (π/4)·d_d²·h_d, in Vc only; not in cargo, fill or weight | Method | IGC 2.4.1.1 (Vc includes domes) | `barge_capacity.rs` 467–469, 561 | Dome steel and fittings missing from weight: non-conservative (small) |
 | TC-A58 | Tank top | db + support height + OD + dome height | Method | Geometry | `barge_capacity.rs` 573; `tanks.rs` 237 | None known |
 | TC-A59 | Length over diameter | ≤ 7, insulated length over insulated OD | Fixed in code | OVCD Check. Origin ADN 2025 9.3.1.11.1(b), which states no datum; no IGC paragraph | `gas_arrangement.rs` 47, 257–274 | Unknown |
 | TC-A60 | Outer diameter cap | 16 m | Estimate | Tool limit, not an IGC rule (profile 113–118) | `barge_capacity.rs` 46; `gas_arrangement.rs` 459–462 | Unknown |
 | TC-A61 | Shell steel volume | Cylinder at mean surface × t; heads at outer steel surface × t | Method | Thin-shell approximation | `tanks.rs` 213–222 | Heads slightly conservative |
-| TC-A62 | Structure factor, LPG fully pressurised | 1.12 **(changing, #317)** | Estimate | One published uninsulated tank: 34.4 t steel over 30.6 t shell plate | Profile 308–313 | Unknown; one tank, in-sample |
-| TC-A63 | Structure factor, all other rows | 1.30 **(changing, #317)** | Estimate | Original engine | Profile 315–319 | Non-conservative: model tanks weigh about half of published ones (see Evidence) |
+| TC-A62 | Structure factor, LPG fully pressurised | 1.12 | Estimate | One published uninsulated tank: 34.4 t steel over 30.6 t shell plate. Two tank weight records added, held out and not yet runnable: 0.115 t/m³ (155 t, 1,350 m³) and 0.096 t/m³ (240 t, 2,500 m³ bilobe) (#317 part 1) | Profile; `calibration/` | Unknown; one tank, in-sample |
+| TC-A63 | Structure factor, all other rows | 1.30 | Estimate | Original engine. Not tuned yet: the tank weight records above come first (#317) | Profile | Non-conservative: model tanks weigh about half of published ones (see Evidence) |
 | TC-A64 | Internals and supports | W_shell × (factor − 1); rings, saddles, chocks, dome and fittings not modelled apart | Method | Single-factor model | `weights.rs` 77; `cost.rs` 80 | Non-conservative (see TC-A63) |
 | TC-A65 | Tank weight centre | Tank steel and insulation at the tank centre | Method | Symmetric cylinder | `gas_stability.rs` 709–716 | Small; the dome would raise it |
 | TC-A66 | Saddle height | 0.5 m above the inner bottom | Estimate | Original engine | Profile 411–416; `tanks.rs` 237 | Unknown |
@@ -194,7 +193,10 @@ Cargo Containment, Cargo and LPG Carriage Condition (see TC-A26 to TC-A48).
 | Input | Default | Unit | Range (hard; soft) | Where the default comes from |
 |---|---|---|---|---|
 | `lpg_carriage_condition` | `fully_pressurised` | – | three values; LPG only | Profile 91–94. A file with none is read as fully pressurised, with a warning |
-| `fill_ratio` | 0.98 | – | 0.1–1; 0.8–0.99 | IGC 15.3 |
+| `fill_ratio` | 0.98 | – | 0.1–1; 0.8–0.99 | IGC 15.3, the filling limit FL. LPG loads to the IGC 15.5.1 loading limit |
+| `lpg_loading_limit_basis` | `igc_15_1_3` | – | three values; LPG only | #315 |
+| `lpg_loading_temperature_c` | by carriage condition (TC-A52) | °C | LPG only | #315 |
+| `tank_allowable_stress_basis` | `igc_4_23_3_1` | – | two values | #313 |
 | `tank_design_pressure_mpa` | 0.4 / 1.77 / 1.0 / 0.4 by row | MPa | > 0, ≤ 5; 0.1–2.5 | Table rows TC-A26 to TC-A30 |
 | `tank_design_temperature_c` | −163 / 0 / −48 / −48 by row | °C | > −273.15, ≤ 200; −170–60 | Table rows TC-A31 to TC-A34; recorded only |
 | `tank_material` | 9Ni / S690QL1 by row | – | 304L, 316L, 9Ni, S690QL1 | Table rows TC-A35 to TC-A38 |
@@ -206,8 +208,8 @@ Cargo Containment, Cargo and LPG Carriage Condition (see TC-A26 to TC-A48).
 | `max_tank_od_m` | 16.0 | m | > 0, ≤ 50; 4–20 | Tool limit |
 | `tanks_in_line` | 2 | tanks | 1–50; 1–4 | Original engine |
 | `tank_support_height_m` | 0.5 | m | 0–5; 0.2–1.5 | Original engine |
-| `tank_dome_height_m` | 2.0 | m | 0–10; 0.5–3 | Original engine (changing, #316) |
-| `tank_dome_diameter_m` | 2.0 | m | 0–10; 0.5–3 | Nominal (changing, #316) |
+| `tank_dome_height_m` | from the dome rule (TC-A55) | m | 0–10; 0.5–3 | Dome rule, estimate (#316); old files keep 2.0 |
+| `tank_dome_diameter_m` | max(1.2, 0.17 × steel OD) | m | 0–10; 0.5–3 | Dome rule, estimate (#316); old files keep 2.0 |
 
 Not inputs today: head type, weld efficiency, corrosion allowance, minimum thickness, insulation density, tank gaps,
 cargo density.
