@@ -179,6 +179,10 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
                 json!({ "type": "object", "values": "number" }),
             );
         }
+        InputKind::Text { nullable } => {
+            e.insert("kind".into(), json!("text"));
+            e.insert("nullable".into(), json!(nullable));
+        }
         InputKind::OffsetsTable => {
             e.insert("kind".into(), json!("offsets_table"));
             e.insert("nullable".into(), json!(true));

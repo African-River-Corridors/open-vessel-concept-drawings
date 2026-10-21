@@ -561,7 +561,7 @@ describe("OVCD app smoke tests", () => {
     await show("BOQ & Finance", "Capital budget");
     await until("the budget", async () => (await browser.$$("[data-testid=cost-unit-total]")).length === 1);
     assert.equal((await browser.$$("[data-testid=capital-budget-wip]")).length, 0);
-    assert.match(await browser.$("[data-testid=capital-budget-basis]").getText(), /^Example rates . replace with yours\. All amounts are in [A-Z]{3}\.$/);
+    assert.match(await browser.$("[data-testid=capital-budget-basis]").getText(), /^Example rates . replace with yours\. Current estimates\. All amounts are in [A-Z]{3}\.$/);
     for (const table of ["barge", "tug", "total"]) assert.ok(await browser.$(`[data-testid=cost-${table}]`).isExisting(), table);
     // Plain names, as the input labels have them.
     const barge = await browser.$("[data-testid=cost-barge]").getText();

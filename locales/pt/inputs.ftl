@@ -389,3 +389,9 @@ input-lpg-loading-temperature-c = Temperatura de carregamento do GLP
 
 # status: draft
 input-lpg-loading-temperature-c-default-by = Carga, condição de transporte do GLP
+
+# status: draft
+input-currency = Moeda
+
+# status: draft
+input-price-base-date = Data-base dos preços

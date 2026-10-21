@@ -151,7 +151,10 @@ fn a_new_design_holds_the_example_rates_and_its_budget_uses_them() {
     assert!(results(&s, 0)["cost"].is_null());
     let cost = &results(&open(&raw_fixture("gas_igc_2g_exact")), 0)["cost"].clone();
     assert_eq!(cost["currency"], example_rates().unwrap().currency);
-    assert_eq!(cost["basis"], "Example rates \u{2014} replace with yours.");
+    assert_eq!(
+        cost["basis"],
+        json!(format!("{COST_RATES_BASIS} Current estimates."))
+    );
 }
 
 #[test]
@@ -400,7 +403,10 @@ fn typed_rates_change_the_basis_line() {
     let mut s = open(&raw_fixture("gas_igc_2g_exact"));
     let cost = results(&s, 0)["cost"].clone();
     assert_eq!(cost["rates"], json!("example"));
-    assert_eq!(cost["basis"], json!(COST_RATES_BASIS));
+    assert_eq!(
+        cost["basis"],
+        json!(format!("{COST_RATES_BASIS} Current estimates."))
+    );
     let first = s.design().options[0].name.clone();
     s.set_input(&first, "piping_rate", json!(4500.0)).unwrap();
     let cost = results(&s, 0)["cost"].clone();
@@ -409,5 +415,139 @@ fn typed_rates_change_the_basis_line() {
         json!("user"),
         "a typed rate, even at the example value"
     );
-    assert_eq!(cost["basis"], json!(COST_RATES_BASIS_USER));
+    assert_eq!(
+        cost["basis"],
+        json!(format!("{COST_RATES_BASIS_USER} Current estimates."))
+    );
+}
+
+// --- Currency and price base date (issue #429) ---------------------------------------------
+
+const CURRENT: &str = "Current estimates.";
+
+fn gas_session() -> (DesignSession, String) {
+    let s = open(&raw_fixture("gas_igc_2g_exact"));
+    let first = s.design().options[0].name.clone();
+    (s, first)
+}
+
+#[test]
+fn the_default_currency_is_usd_and_the_default_price_base_date_is_none() {
+    let profile = Profile::built_in();
+    assert_eq!(profile.default("currency"), Some(&json!("USD")));
+    assert_eq!(profile.default("price_base_date"), Some(&Value::Null));
+    for (name, want) in [("currency", json!("USD")), ("price_base_date", Value::Null)] {
+        assert!(INPUTS.iter().any(|s| s.name == name), "{name}");
+        assert_eq!(
+            ovcd_format::vdesign::legacy_value(name, None),
+            Some(want),
+            "{name}"
+        );
+    }
+    // The budget of an old Design says "current estimates" and USD, as the maintainer decided.
+    let (s, _) = gas_session();
+    let cost = results(&s, 0)["cost"].clone();
+    assert_eq!(cost["currency"], json!("USD"));
+    assert_eq!(cost["price_base_date"], Value::Null);
+    assert_eq!(
+        cost["basis"],
+        json!(format!("{COST_RATES_BASIS} {CURRENT}"))
+    );
+}
+
+#[test]
+fn a_typed_currency_and_price_base_date_show_in_the_budget_and_the_basis_line() {
+    let (mut s, first) = gas_session();
+    s.set_input(&first, "currency", json!("EUR")).unwrap();
+    s.set_input(&first, "price_base_date", json!("2026-10"))
+        .unwrap();
+    let cost = results(&s, 0)["cost"].clone();
+    assert_eq!(cost["currency"], json!("EUR"));
+    assert_eq!(cost["price_base_date"], json!("2026-10"));
+    // The currency is typed, so the rates are the user's: the example rates are in USD.
+    assert_eq!(cost["rates"], json!("user"));
+    assert_eq!(
+        cost["basis"],
+        json!(format!("{COST_RATES_BASIS_USER} Prices as of 2026-10."))
+    );
+}
+
+#[test]
+fn the_currency_and_the_date_change_no_figure_and_nothing_hashed() {
+    let (mut s, first) = gas_session();
+    let before = results(&s, 0);
+    s.set_input(&first, "currency", json!("GBP")).unwrap();
+    s.set_input(&first, "price_base_date", json!("2026-10-21"))
+        .unwrap();
+    let after = results(&s, 0);
+    assert_eq!(results_hash(&before), results_hash(&after));
+    for key in ["barge", "tug", "unit_total", "barge_subtotal"] {
+        assert_eq!(before["cost"][key], after["cost"][key], "{key}");
+    }
+}
+
+#[test]
+fn a_bad_currency_or_date_is_refused() {
+    let (mut s, first) = gas_session();
+    for (name, bad) in [
+        ("currency", json!("usd")),
+        ("currency", json!("US")),
+        ("currency", json!("DOLLAR")),
+        ("currency", json!(3)),
+        ("currency", Value::Null),
+        ("price_base_date", json!("next week")),
+        ("price_base_date", json!("2026-13")),
+        ("price_base_date", json!("2026-02-30")),
+        ("price_base_date", json!("2026-1-5")),
+        ("price_base_date", json!(2026)),
+    ] {
+        s.set_input(&first, name, bad.clone()).unwrap();
+        let errors = check(&s.design().to_text(), &Profile::built_in())
+            .report
+            .errors;
+        assert!(!errors.is_empty(), "{name} = {bad}");
+    }
+    for good in [
+        json!("2026"),
+        json!("2026-02"),
+        json!("2028-02-29"),
+        Value::Null,
+    ] {
+        s.set_input(&first, "price_base_date", good.clone())
+            .unwrap();
+        s.set_input(&first, "currency", json!("USD")).unwrap();
+        let errors = check(&s.design().to_text(), &Profile::built_in())
+            .report
+            .errors;
+        assert!(errors.is_empty(), "{good}: {errors:?}");
+    }
+}
+
+#[test]
+fn a_file_saved_before_the_two_inputs_opens_with_usd_and_no_date() {
+    for file in FIXTURES {
+        let mut v: Value = serde_json::from_str(&raw_fixture(file)).unwrap();
+        for option in v["options"].as_array_mut().unwrap() {
+            let inputs = option["inputs"].as_object_mut().unwrap();
+            inputs.remove("currency");
+            inputs.remove("price_base_date");
+        }
+        let text = v.to_string();
+        assert_eq!(
+            check(&text, &Profile::built_in()).report.errors,
+            Vec::<String>::new(),
+            "{file}"
+        );
+        let (session, opened) = DesignSession::open(&text, Profile::built_in()).unwrap();
+        let (_, whole) = DesignSession::open(&raw_fixture(file), Profile::built_in()).unwrap();
+        assert_eq!(opened.hash_status, whole.hash_status, "{file}");
+        for option in &session.design().options {
+            let c = option.input("currency").unwrap();
+            assert_eq!(
+                (&c.value, c.source),
+                (&json!("USD"), ovcd_format::Source::Default)
+            );
+            assert_eq!(option.input("price_base_date").unwrap().value, Value::Null);
+        }
+    }
 }

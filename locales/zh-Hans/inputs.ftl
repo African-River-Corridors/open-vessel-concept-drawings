@@ -303,3 +303,9 @@ input-lpg-loading-temperature-c = LPG 装载温度
 
 # status: draft
 input-lpg-loading-temperature-c-default-by = 货物、LPG 装运方式
+
+# status: draft
+input-currency = 货币
+
+# status: draft
+input-price-base-date = 价格基准日期

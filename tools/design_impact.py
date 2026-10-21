@@ -274,6 +274,12 @@ OPTIONAL_INPUT_CASES = (
       "ballast_departure_double_bottom_fill": 0.5, "ballast_departure_peak_fill": 1.0,
       "ballast_departure_wing_fill": 0.0, "ballast_arrival_double_bottom_fill": 1.0,
       "ballast_arrival_peak_fill": 0.0, "ballast_arrival_wing_fill": 0.98}),
+    # The currency and the price base date (issue #429), set to their defaults: the same results as
+    # leaving them out.
+    ("currency", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"currency": "USD"}),
+    ("price_base_date", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"price_base_date": None}),
     # The Hull Form parameters (issue #446), set to their defaults on a raked box. Inputs only until
     # the hydrostatics switch-over (#448): each shows no change. A base from before them refuses the
     # input and leaves it out.

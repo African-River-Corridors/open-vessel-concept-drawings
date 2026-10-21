@@ -408,6 +408,14 @@
         "delivery_lump": {
           "value": 200000.0,
           "source": "default"
+        },
+        "currency": {
+          "value": "USD",
+          "source": "default"
+        },
+        "price_base_date": {
+          "value": null,
+          "source": "default"
         }
       },
       "results_hash": "1e94667c0d6124e5cbae82745cf9a3fa9f920a143e2b3970c20671e7acab4f32"

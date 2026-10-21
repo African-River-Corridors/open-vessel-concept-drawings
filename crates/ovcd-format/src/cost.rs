@@ -5,13 +5,15 @@
 //! the Option's cost-rate inputs. Nothing here feeds `simulate`: the budget is an output, kept out of the results hash
 //! (`UNHASHED_KEYS`), so saved Designs keep their hashes.
 
-use crate::vdesign::{COST_RATES_BASIS, COST_RATES_BASIS_USER, DesignOption, Source};
+use crate::vdesign::{
+    COST_RATES_BASIS, COST_RATES_BASIS_USER, DesignOption, Source, cost_prices_basis,
+};
 use ovcd_core::barge_cost::{BargeCostInputs, BargeCostRates, BargeCostResult, compute_for};
 use ovcd_core::models::WeightBreakdown;
 use serde_json::{Value, json};
 
-/// The 14 numeric rates, as `(input name, how to set it on the core's rates)`. The currency is not an
-/// input: it comes from the example rates file.
+/// The 14 numeric rates, as `(input name, how to set it on the core's rates)`. The currency is a
+/// text input of its own (issue #429).
 type SetRate = fn(&mut BargeCostRates, f64);
 pub const RATE_INPUTS: [(&str, SetRate); 14] = [
     ("hull_steel_rate", |r, v| r.hull_steel_rate = v),
@@ -32,10 +34,11 @@ pub const RATE_INPUTS: [(&str, SetRate); 14] = [
     ("delivery_lump", |r, v| r.delivery_lump = v),
 ];
 
-/// The rates of an Option: its cost-rate inputs, with the currency of the example rates. `None` if
-/// an input is missing or not a number.
+/// The rates of an Option: its cost-rate inputs and its currency. `None` if an input is missing or
+/// not a number, or the currency is not text.
 pub fn rates_of(option: &DesignOption) -> Option<BargeCostRates> {
     let mut rates = ovcd_core::barge_cost::example_rates().ok()?;
+    rates.currency = option.input("currency")?.value.as_str()?.to_string();
     for (name, set) in RATE_INPUTS {
         set(&mut rates, option.input(name)?.value.as_f64()?);
     }
@@ -163,17 +166,28 @@ fn rows(list: &[(&str, ovcd_core::pyint::PyInt)]) -> Value {
 }
 
 /// Which rates the budget uses (issue #404): `example` while every rate is the Defaults Profile's
-/// (the example file's), `user` once any rate is typed.
+/// (the example file's), `user` once any rate or the currency is typed: the example rates are in
+/// USD, so they are not the rates of another currency.
 fn rates_kind(option: &DesignOption) -> &'static str {
-    let typed = RATE_INPUTS.iter().any(|(name, _)| {
-        option
-            .input(name)
-            .is_some_and(|i| i.source != Source::Default)
-    });
+    let typed = RATE_INPUTS
+        .iter()
+        .map(|(name, _)| name)
+        .chain(["currency"].iter())
+        .any(|name| {
+            option
+                .input(name)
+                .is_some_and(|i| i.source != Source::Default)
+        });
     if typed { "user" } else { "example" }
 }
 
-fn result_json(r: &BargeCostResult, masses: &Value, tug: bool, rates: &str) -> Value {
+fn result_json(
+    r: &BargeCostResult,
+    masses: &Value,
+    tug: bool,
+    rates: &str,
+    price_base_date: Option<&str>,
+) -> Value {
     // With no tug its hull steel is not costed, so it is not listed (issue #403).
     let mut masses = masses.clone();
     if !tug {
@@ -187,7 +201,12 @@ fn result_json(r: &BargeCostResult, masses: &Value, tug: bool, rates: &str) -> V
     json!({
         "currency": r.rates.currency,
         "rates": rates,
-        "basis": if rates == "user" { COST_RATES_BASIS_USER } else { COST_RATES_BASIS },
+        "price_base_date": price_base_date,
+        "basis": format!(
+            "{} {}",
+            if rates == "user" { COST_RATES_BASIS_USER } else { COST_RATES_BASIS },
+            cost_prices_basis(price_base_date)
+        ),
         "barge": rows(&r.barge_breakdown),
         "tug": rows(&r.tug_breakdown),
         "barge_subtotal": money(&r.barge_subtotal),
@@ -214,7 +233,12 @@ pub fn cost_of(option: &DesignOption, results: &Value) -> Value {
     // Only a Formation with a tug costs one (issue #403): a self-propelled vessel has none.
     let tug = has_tug(option);
     match compute_for(&inputs, &rates, tug) {
-        Ok(r) => result_json(&r, masses, tug, rates_kind(option)),
+        Ok(r) => {
+            let date = option
+                .input("price_base_date")
+                .and_then(|i| i.value.as_str());
+            result_json(&r, masses, tug, rates_kind(option), date)
+        }
         Err(_) => Value::Null,
     }
 }

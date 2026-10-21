@@ -1337,6 +1337,14 @@
       "hard": { "ge": 0, "le": 1 },
       "basis": "example rate fraction of the barge and tug subtotal, for engineering, class, trials and margin. Not a market quote: replace with your own"
     },
+    "currency": {
+      "default": "USD",
+      "basis": "The currency of the rates and of every amount in the capital budget. A three-letter code in capitals. The example rates are in USD: type your own rates when you change it. Nothing converts a currency"
+    },
+    "price_base_date": {
+      "default": null,
+      "basis": "The date the rates are priced at: YYYY, YYYY-MM or YYYY-MM-DD. none: the example rates are current estimates with no set price base date, and the capital budget says so"
+    },
     "delivery_lump": {
       "default": 200000.0,
       "unit": "per unit",

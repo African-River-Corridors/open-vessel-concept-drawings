@@ -7,6 +7,8 @@
   interface Cost {
     currency: string;
     basis: string;
+    /** The date the prices are as of (issue #429): null for current estimates. */
+    price_base_date?: string | null;
     /** Which rates (issue #404): "example" while every rate is the example file's, "user" once one is typed. */
     rates?: "example" | "user";
     barge: { item: string; amount: number }[];
@@ -75,7 +77,7 @@
   {:else if !cost}
     <p class="note" data-testid="capital-budget-none">{t("app-cost-none")}</p>
   {:else}
-    <p class="basis" data-testid="capital-budget-basis"><strong>{cost.rates ? t(`app-cost-basis-${cost.rates}`) : say(cost.basis, ids)}</strong> {t("app-cost-currency", { currency: cost.currency })}</p>
+    <p class="basis" data-testid="capital-budget-basis"><strong>{cost.rates ? t(`app-cost-basis-${cost.rates}`) : say(cost.basis, ids)}</strong> {cost.rates ? t(cost.price_base_date ? "app-cost-prices-as-of" : "app-cost-prices-current", { date: cost.price_base_date ?? "" }) : ""} {t("app-cost-currency", { currency: cost.currency })}</p>
     <div class="tables">
       {#each sections as { key, caption, total, rows, subtotal } (key)}
         <table data-testid="cost-{key}">

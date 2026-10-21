@@ -477,3 +477,7 @@ input-tug-outfitting-lump = Tug outfitting
 input-yard-margin-fraction = Yard margin
 
 input-delivery-lump = Delivery
+
+input-currency = Currency
+
+input-price-base-date = Price base date

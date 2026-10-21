@@ -439,6 +439,10 @@ app-cost-none = Esta opción no tiene presupuesto de capital, porque el casco no
 # status: draft
 app-cost-currency = Todos los importes están en { $currency }.
 # status: draft
+app-cost-prices-current = Estimaciones actuales.
+# status: draft
+app-cost-prices-as-of = Precios a fecha de { $date }.
+# status: draft
 app-cost-barge = Barcaza
 # status: draft
 app-cost-tug = Remolcador
