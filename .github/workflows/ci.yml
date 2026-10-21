@@ -1,13 +1,25 @@
 name: CI
 
 on:
+  # A push to a PR branch runs as `pull_request` only (issue #480). The tags are app-build.yml's: it
+  # publishes a tag only when `test` and `release-guard` succeeded on its commit, and a `test-*` tag
+  # may be on a commit that no other run checks.
   push:
+    branches: ["main"]
+    tags: ["v*", "test-*"]
   pull_request:
   workflow_dispatch:
   workflow_call: # the release workflow runs these same two jobs as its gate
 
 permissions:
   contents: read
+
+# A new push to a PR cancels the PR's older run. Any other run has a group of its own (the run id), so
+# a run on `main` or a tag is never cancelled and never waits. Called from release.yml, `github.workflow`
+# and `github.run_id` are the caller's, so the group never matches a run of this workflow by itself.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # Fast gate (spec 0001): one fail-closed script, tools/gates.sh. Target under 5 minutes.
