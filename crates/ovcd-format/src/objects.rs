@@ -396,6 +396,7 @@ pub(crate) fn capacity_result_from_json(
         gas_basis,
         // The Python API result has no stern block mass (issue #348).
         stern_block_items: Vec::new(),
+        trim_conditions: Vec::new(),
         checks: o.checks("checks")?,
         warnings: o.text_list("warnings")?,
     })

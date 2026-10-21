@@ -95,6 +95,9 @@ pub struct StabilityAssessment {
     pub criteria_set: String,
     pub conditions: Vec<Condition>,
     pub limitations: Vec<Text>,
+    /// Issue #349: the trim of each condition, in the order of `conditions`, when the stern block
+    /// is in the lightship; empty otherwise (a file saved before gets no new field).
+    pub trims: Vec<crate::models::TrimResult>,
 }
 
 impl StabilityAssessment {
@@ -139,6 +142,9 @@ pub struct GasBasis {
     pub insulation: f64,
     pub piping_machinery: f64,
     pub outfitting: f64,
+    /// The bow and stern voids (m): the tanks and the cargo lie between them (issue #349).
+    pub bow_void_m: f64,
+    pub stern_void_m: f64,
 }
 
 /// What `assess` reads from a `BargeCapacityResult`.
@@ -182,6 +188,8 @@ impl TryFrom<&BargeCapacityResult> for GasCapacityResult {
                 insulation: b.weights.insulation,
                 piping_machinery: b.weights.piping_machinery,
                 outfitting: b.weights.outfitting,
+                bow_void_m: b.inputs.bow_non_tank_length.unwrap_or(0.0),
+                stern_void_m: b.inputs.stern_non_tank_length.unwrap_or(0.0),
             }),
         };
         Ok(Self {
@@ -250,6 +258,20 @@ pub fn assess_num(
     ];
     // Issue #348: the stern block items at their own heights, when they are in the lightship.
     light_items.extend(result.stern_block_items.iter().map(|i| (i.mass_t, i.kcg_m)));
+    // Issue #349: the same items along the hull (from the stern), for the trim: the hull steel and
+    // the piping at the middle, the tanks at the middle of the tank zone, the outfitting in the
+    // stern zone (as the legacy `calculate_trim` has them), the stern block items at their zones.
+    let tank_zone_centre = (basis.stern_void_m + (l - basis.bow_void_m)) / 2.0;
+    let mut long_items: Vec<(f64, f64)> = vec![
+        (basis.steel_top_down, l / 2.0),
+        (basis.tank_total + basis.insulation, tank_zone_centre),
+        (basis.piping_machinery, l / 2.0),
+        (basis.outfitting, basis.stern_void_m / 2.0),
+    ];
+    long_items.extend(result.stern_block_items.iter().map(|i| (i.mass_t, i.lcg_m)));
+    let with_trim = !result.stern_block_items.is_empty();
+    let trim_hull = crate::hull::HullGeometry::new(l, b, d, 0.0, 0.0, 0.0, 0.0);
+    let mut trims = Vec::new();
     let lightship = py_sum(light_items.iter().map(|&(m, _)| m));
 
     let mut conds = Vec::new();
@@ -274,6 +296,13 @@ pub fn assess_num(
         // An int mass times a float height is a float, so the products are all floats.
         let kg = div(py_sum(items.iter().map(|&(m, z, _)| m * z)), disp)?;
         let t = div(disp, block_coefficient * l * b * water_density)?;
+        if with_trim {
+            let mut along = long_items.clone();
+            if cargo > 0.0 {
+                along.push((cargo, tank_zone_centre));
+            }
+            trims.push(crate::hydrostatics::trim(&trim_hull, t, &along));
+        }
         if t >= d {
             conds.push(Condition {
                 name: name.to_string(),
@@ -352,6 +381,7 @@ pub fn assess_num(
         criteria_set: criteria_set.to_string(),
         conditions: conds,
         limitations,
+        trims,
     })
 }
 

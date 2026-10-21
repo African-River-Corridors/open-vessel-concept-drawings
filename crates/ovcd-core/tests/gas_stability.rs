@@ -31,6 +31,8 @@ fn narrow_deep() -> GasCapacityResult {
             insulation: 17.264591011876167,
             piping_machinery: 17.240029460046532,
             outfitting: 15.085025777540716,
+            bow_void_m: 0.0,
+            stern_void_m: 0.0,
         }),
         cargo_density_t_per_m3: 0.581,
         lightship_t: 480.59038275062665,
