@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Rules (issue #424): `lr-inland-gas` 1.1.0, a minor version (Rules added; 1.0.0 is kept). The tank length over diameter limit of Pt 4 Ch 4 3.5.1 is now a class Rule, `lr-inland/3.5.1/tank-l-over-d`, on the engine check "tank length over diameter" (the inner shell diameter since #416); the `ovcd` tool limit stays. 3.2.1 (tank capacity, Table 4.3.1) and 3.5.2 (the hull in the cargo area) are listed as not evaluated, each with what the engine lacks. The three are codified and wait for a second reader. Gas Options now select 1.1.0. In `fit`, the Rules on one engine check now count once when the search ranks candidates that all fail (`failing_groups`; the kernel `Failure` carries its Measure), so a check that two sets report does not count twice. No case of the design-impact set moves.
+- Design change (issue #426, part 3): the IS Code 2008 loading conditions are the default, and the gas arrangement search checks its candidates in them. A new Option gets `loading_conditions = is_code_2008` (the four conditions of Part B 3.4.1.2, with stores and fuel and water ballast, and "Lightship, no ballast" where the vessel may sail that way); a file saved before keeps `legacy`, and every fixture and legacy results hash still matches. With the IS Code conditions, `fit` judges each candidate by them (stability, ballast plan and air draft of each condition, by the same core functions the results use, `gas_arrangement::is_code_conditions` and `is_code_cargo`) and ranks it by the cargo it carries with its stores and fuel aboard. The Python API keeps the legacy search. The stores and fuel are now worked out before the search, at the design draught (the draught the installed power is sized at); part 2 used the answer's draught. Design impact (194 cases, `main b8e3059`): 190 move, most only by the new `loading_conditions` and `stability` blocks. Gas: 87 of 90 keep their arrangement and cargo. On main, run with `is_code_2008`, none of the 86 feasible gas answers fails an IS Code condition, so the 43 of 89 failures PR #440 found no longer occur (`fit` has changed since: #418, #422, #277). Three gas cases move: the two 110 x 24 m wide hulls become feasible (a 3-wide arrangement, 4,161 t to 3,011 t; before, no arrangement passed and the closest failed the sightline), and the 200 x 12 m hull, infeasible both before and after, shows a different closest candidate (4,333 t to 2,111 t). Every feasible gas answer meets every IS Code condition (86 of 86). Dry bulk: 7 of 103 cases carry up to 0.75 % less cargo (a self-propelled, draught-bound hold now carries its stores and fuel); their condition checks stay warnings. Tests: `trim_results` now sets `legacy`, as its point is the legacy trim fields.
 
 ## 0.2.4 (2026-10-21)
 
@@ -200,6 +201,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/426-part3-default-conditions (2026-10-21)
+
+Between `main 01f2a10` and `this branch 7b56c5f`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration amaggi-box-2000 | `checks[5].message` | absent | GM 1.38 m (fluid), max GZ 0.23 m at 13° — fails: Area 0–40° 0.074 < 0.09, Area 30–40° -0.006 < 0.03, GZ at ≥ 30° 0.047 < 0.2, Angle of max GZ 13.000 < 25.0 | changed |
+| calibration amaggi-box-2000 | `checks[5].name` | absent | Stability — full load, departure | changed |
+| calibration amaggi-box-2000 | `checks[5].ok` | absent | False | changed |
+| calibration amaggi-box-2000 | `checks[5].severity` | absent | warning | changed |
+| calibration amaggi-box-2000 | `checks[6].message` | absent | GM 1.38 m (fluid), max GZ 0.23 m at 13° — fails: Area 0–40° 0.074 < 0.09, Area 30–40° -0.006 < 0.03, GZ at ≥ 30° 0.047 < 0.2, Angle of max GZ 13.000 < 25.0 | changed |
+| calibration amaggi-box-2000 | `checks[6].name` | absent | Stability — full load, arrival | changed |
+| calibration amaggi-box-2000 | `checks[6].ok` | absent | False | changed |
+| calibration amaggi-box-2000 | `checks[6].severity` | absent | warning | changed |
+| calibration amaggi-box-2000 | `checks[7].message` | absent | GM 6.02 m (fluid), max GZ 1.76 m at 25° | changed |
+| calibration amaggi-box-2000 | `checks[7].name` | absent | Stability — ballast, departure | changed |
+| calibration amaggi-box-2000 | `checks[7].ok` | absent | True | changed |
+| calibration amaggi-box-2000 | `checks[7].severity` | absent | warning | changed |
+| calibration amaggi-box-2000 | `checks[8].message` | absent | GM 6.02 m (fluid), max GZ 1.76 m at 25° | changed |
+| calibration amaggi-box-2000 | `checks[8].name` | absent | Stability — ballast, arrival | changed |
+| calibration amaggi-box-2000 | `checks[8].ok` | absent | True | changed |
+| calibration amaggi-box-2000 | `checks[8].severity` | absent | warning | changed |
+| calibration amaggi-box-2000 | `checks[9].message` | absent | GM 15.42 m (fluid), max GZ 2.76 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | changed |
+| calibration amaggi-box-2000 | `checks[9].name` | absent | Stability — lightship, no ballast | changed |
+| calibration amaggi-box-2000 | `checks[9].ok` | absent | False | changed |
+| calibration amaggi-box-2000 | `checks[9].severity` | absent | warning | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_capacity_m3` | absent | 1287.5044664 | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_capacity_t` | absent | 1287.5044664 | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tank_count` | absent | 6 | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[0].capacity_m3` | absent | 320.919456 | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[0].capacity_t` | absent | 320.919456 | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[0].kind` | absent | double_bottom_ballast | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[0].lcg_m` | absent | 28.564 | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[0].name` | absent | DB1P | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[0].side` | absent | port | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[0].tcg_m` | absent | -2.6675 | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[0].vcg_m` | absent | 0.6 | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[1].capacity_m3` | absent | 320.919456 | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[1].capacity_t` | absent | 320.919456 | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[1].kind` | absent | double_bottom_ballast | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[1].lcg_m` | absent | 28.564 | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[1].name` | absent | DB1S | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[1].side` | absent | starboard | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[1].tcg_m` | absent | 2.6675 | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[1].vcg_m` | absent | 0.6 | changed |
+| calibration amaggi-box-2000 | `loading_conditions.ballast_tanks[2].capacity_m3` | absent | 153.89296 | changed |
+| ... | 287251 more changed quantities | | | |
 
 ### ticket/416-ld-inner-diameter (2026-10-21)
 

@@ -1,8 +1,8 @@
 //! Seam: the IS Code 2008 loading conditions in a Design's results (issue #426). An Option with
 //! `loading_conditions` = `is_code_2008` has results that carry the four standard conditions of IS Code
 //! 2008 Part B 3.4.1.2 (and "Lightship, no ballast" for a barge), the ballast tanks and a ballast
-//! plan per ballast condition. A file saved before keeps `legacy`, gets no new field, and keeps its
-//! results hash.
+//! plan per ballast condition. It is the default for a new Option (part 3). A file saved before
+//! keeps `legacy`, gets no new field, and keeps its results hash.
 //!
 //! Label: property. tests/loading_conditions.rs in ovcd-core holds the hand-worked values.
 
@@ -120,11 +120,37 @@ fn each_ballast_condition_states_the_quantity_and_disposition_of_its_ballast() {
 }
 
 #[test]
-fn a_new_option_keeps_the_legacy_conditions_until_the_search_uses_the_new_ones() {
-    let mut s = DesignSession::new_design(Profile::built_in()).unwrap();
-    s.set_input("Option 1", "cargo", json!("bauxite")).unwrap();
-    let r = results(&s);
-    assert!(r.get("loading_conditions").is_none());
+fn a_new_option_is_checked_in_the_is_code_conditions() {
+    // Issue #426 part 3: the gas arrangement search uses the IS Code conditions, so they are the
+    // default for a new Option, gas and dry bulk.
+    for cargo in ["bauxite", "LNG"] {
+        let mut s = DesignSession::new_design(Profile::built_in()).unwrap();
+        s.set_input("Option 1", "cargo", json!(cargo)).unwrap();
+        let r = results(&s);
+        assert_eq!(roles(&r)[0], "full_load_departure", "{cargo}");
+    }
+}
+
+#[test]
+fn a_feasible_gas_arrangement_meets_every_is_code_condition() {
+    // The search checks each candidate in the conditions the results show, so an arrangement it
+    // calls feasible meets all of them, ballast plan and air draft included.
+    let mut checked = 0;
+    for (cargo, formation) in [
+        ("LNG", "self_propelled"),
+        ("LPG_propane", "self_propelled"),
+        ("LPG_propane", "pushed_barge"),
+    ] {
+        let r = results(&session(cargo, formation));
+        if r["arrangement"]["feasible"] != json!(true) {
+            continue;
+        }
+        checked += 1;
+        for c in r["loading_conditions"]["conditions"].as_array().unwrap() {
+            assert_eq!(c["ok"], json!(true), "{cargo} {formation}: {}", c["role"]);
+        }
+    }
+    assert!(checked > 0, "no case was feasible, so nothing was checked");
 }
 
 #[test]

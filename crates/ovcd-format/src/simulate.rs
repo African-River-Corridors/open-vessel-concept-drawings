@@ -1837,6 +1837,25 @@ fn simulate_gas(
         design_draught(p, d0)?,
         (cb, rho),
     )?;
+    // Issue #426: with the IS Code conditions the full load carries the stores and fuel. The fuel
+    // is worked out at the design draught, the full-load draught the installed power is sized at,
+    // before the search, so the search checks and ranks its candidates with them aboard.
+    let is_code_options = if is_code(p) {
+        let t_design = design_draught(p, d0)?;
+        let extra = stern.map_or(0.0, |g| g.extra_wetted_surface(t_design));
+        let disp = cb * l * b * t_design * rho;
+        Some(ga::IsCodeConditions {
+            consumables_t: consumables_full_t(
+                p,
+                self_propelled,
+                &curves(p, l, b, t_design, (cb, extra), disp, rho)?.0,
+            )?,
+            may_sail_without_ballast: may_sail_without_ballast(p, self_propelled),
+            user_ballast: user_ballast(p)?,
+        })
+    } else {
+        None
+    };
     let options = FitOptions {
         ruleset: ruleset.to_string(),
         fill_ratio: loading.fill,
@@ -1898,6 +1917,7 @@ fn simulate_gas(
         rule_inputs: rules.inputs.clone(),
         machinery: gas_machinery,
         sightline_limit_m: sightline_limit_of(p, self_propelled),
+        is_code: is_code_options,
         ..FitOptions::default()
     };
     let f = ga::fit(l, b, cargo_key, t_max, &options)
@@ -1915,26 +1935,10 @@ fn simulate_gas(
         }
     };
     let disp = r.lightship_t + f.payload_t;
-    // Issue #426: with the IS Code conditions the full load carries the stores and fuel. The fuel
-    // is worked out at the arrangement's draught; a draught-bound cargo is that much less.
-    let consumables_t = if is_code(p) {
-        let extra = stern.map_or(0.0, |g| g.extra_wetted_surface(t));
-        consumables_full_t(
-            p,
-            self_propelled,
-            &curves(p, l, b, t, (cb, extra), disp, rho)?.0,
-        )?
-    } else {
-        0.0
-    };
-    let (cargo_t, disp, t) = if is_code(p) {
-        let cargo = py_min(
-            f.payload_t,
-            py_max(
-                0.0,
-                cb * l * b * t_max * rho - r.lightship_t - consumables_t,
-            ),
-        );
+    // Issue #426: the full load carries the stores and fuel; a draught-bound cargo is that much less.
+    let consumables_t = options.is_code.as_ref().map_or(0.0, |ic| ic.consumables_t);
+    let (cargo_t, disp, t) = if let Some(ic) = &options.is_code {
+        let cargo = ga::is_code_cargo(r, f.payload_t, l, b, t_max, &options, ic);
         let disp = r.lightship_t + cargo + consumables_t;
         let t = if cargo > 0.0 {
             py_div(disp, cb * l * b * rho)?
@@ -2010,30 +2014,11 @@ fn simulate_gas(
     let mut conditions = Vec::new();
     let mut is_code_stability = Value::Null;
     let mut loading_conditions = Value::Null;
-    if is_code(p) && r.gas_basis.is_some() {
-        let basis = GasCapacityResult::try_from(r)
-            .map_err(|m| Stop::Eval(EvalError::BadInput(m.into())))?;
-        let (lightship, cargo) = ovcd_core::loading_conditions::gas_model(&basis)
-            .ok_or_else(|| Stop::Eval(EvalError::BadInput("no gas basis".into())))?;
-        let cargo_at = |m: f64| cargo.at(m);
+    if let Some(ic) = options.is_code.as_ref().filter(|_| r.gas_basis.is_some()) {
+        // The same conditions the search checked the arrangement in.
         let tanks = ovcd_core::compartments::ballast_tanks(&f.engine_inputs, r);
-        let conds = is_code_conditions(
-            p,
-            &IsCodeHull {
-                dims: (l, b, d),
-                cb,
-                rho,
-                criteria_set: gs::criteria_set_for(ruleset),
-                lightship: &lightship,
-                full_cargo_t: cargo_t,
-                cargo_at: &cargo_at,
-                ballast_tanks: &tanks,
-                consumables_t,
-                air_draft_top_m: r.air_draft_top_above_keel_m,
-                self_propelled,
-                stern,
-            },
-        )?;
+        let conds = ga::is_code_conditions(r, &f.engine_inputs, cargo_t, &options, ic)
+            .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))?;
         loading_condition_checks(&conds, "error", &mut checks, &mut ids);
         is_code_stability = is_code_stability_json(&conds, &mut ids);
         loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho);
@@ -2335,30 +2320,39 @@ fn ballast_plans(
     p: &Map<String, Value>,
     tanks: &[ovcd_core::compartments::Space],
 ) -> R<[ovcd_core::loading_conditions::BallastPlan; 2]> {
-    use ovcd_core::compartments::SpaceKind;
     use ovcd_core::loading_conditions::BallastPlan;
+    Ok(match user_ballast(p)? {
+        Some([departure, arrival]) => [departure.plan(tanks), arrival.plan(tanks)],
+        None => [BallastPlan::Auto, BallastPlan::Auto],
+    })
+}
+
+/// The user's ballast fills by tank group of the two ballast conditions, departure then arrival;
+/// `None` when the plan is the least ballast.
+fn user_ballast(
+    p: &Map<String, Value>,
+) -> R<Option<[ovcd_core::loading_conditions::GroupFills; 2]>> {
+    use ovcd_core::loading_conditions::GroupFills;
     if p.get("ballast_plan").and_then(Value::as_str) != Some("user_set") {
-        return Ok([BallastPlan::Auto, BallastPlan::Auto]);
+        return Ok(None);
     }
-    let plan = |condition: &str| -> R<BallastPlan> {
+    let plan = |condition: &str| -> R<GroupFills> {
         let fill = |group: &str| get_or(p, &format!("ballast_{condition}_{group}_fill"), 0.0);
-        let (db, peak, wing) = (fill("double_bottom")?, fill("peak")?, fill("wing")?);
-        Ok(BallastPlan::Fills(
-            tanks
-                .iter()
-                .map(|t| {
-                    let f = match t.kind {
-                        SpaceKind::DoubleBottomBallast => db,
-                        SpaceKind::PeakBallast => peak,
-                        SpaceKind::WingBallast => wing,
-                        SpaceKind::Consumables => 0.0,
-                    };
-                    (t.name.clone(), f)
-                })
-                .collect(),
-        ))
+        Ok(GroupFills {
+            double_bottom: fill("double_bottom")?,
+            peak: fill("peak")?,
+            wing: fill("wing")?,
+        })
     };
-    Ok([plan("departure")?, plan("arrival")?])
+    Ok(Some([plan("departure")?, plan("arrival")?]))
+}
+
+/// The `may_sail_without_ballast` input; with none, a barge may and a self-propelled vessel may not.
+fn may_sail_without_ballast(p: &Map<String, Value>, self_propelled: bool) -> bool {
+    match p.get("may_sail_without_ballast") {
+        Some(v) => truthy(v),
+        None => !self_propelled,
+    }
 }
 
 /// What the IS Code conditions of one Option need beyond its params.
@@ -2390,10 +2384,7 @@ fn is_code_conditions(
         tanks: ovcd_core::compartments::consumables_tanks(b, 0.0, h.consumables_t),
         density: 1.0,
     };
-    let may_sail = match p.get("may_sail_without_ballast") {
-        Some(v) => truthy(v),
-        None => !h.self_propelled,
-    };
+    let may_sail = may_sail_without_ballast(p, h.self_propelled);
     let inputs = lc::Inputs {
         loa: l,
         beam: b,
@@ -2501,41 +2492,11 @@ fn loading_condition_checks(
     checks: &mut Vec<Value>,
     ids: &mut TextIds,
 ) {
-    for c in conds {
-        let k = ga::stability_check(&c.condition);
+    for k in conds.iter().flat_map(ga::loading_condition_checks) {
         ids.checks(core::slice::from_ref(&k));
         checks.push(
             json!({ "name": k.name, "ok": k.ok, "message": k.message, "severity": severity }),
         );
-        if c.plan_found == Some(false) {
-            let message = text!(
-                "check-no-ballast-plan",
-                "{condition}: no ballast plan meets every criterion, even with every ballast tank full.",
-                condition = c.condition.name.clone(),
-            );
-            ids.text(&message);
-            checks.push(json!({
-                "name": "Ballast plan",
-                "ok": false,
-                "message": message,
-                "severity": severity,
-            }));
-        }
-        if c.air_draft_ok == Some(false) {
-            let message = text!(
-                "check-condition-air-draft",
-                "{condition}: air draft {air} m is above the limit.",
-                condition = c.condition.name.clone(),
-                air = Arg::fixed(c.air_draft_m, 2),
-            );
-            ids.text(&message);
-            checks.push(json!({
-                "name": "Air draft",
-                "ok": false,
-                "message": message,
-                "severity": severity,
-            }));
-        }
     }
 }
 
