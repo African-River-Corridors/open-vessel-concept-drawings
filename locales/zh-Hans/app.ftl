@@ -322,14 +322,6 @@ app-metric-depth-optimised = 型深已优化
 
 # status: draft
 app-rules-none = 引擎未报告此方案的任何校核。
-# status: draft
-app-rules-count = { $total } 项校核中有 { $failing } 项不通过
-# status: draft
-app-rules-result = 结果
-# status: draft
-app-rules-check = 校核
-# status: draft
-app-rules-message = 信息
 
 ## Speed and power view
 
