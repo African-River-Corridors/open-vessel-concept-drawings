@@ -80,7 +80,7 @@
   });
   const drawing = (key: HullKey): string | null => (views && key in views ? (views as Record<HullKey, string>)[key] : null);
   let message = $derived(outcome && (outcome.status === "not_available" || outcome.status === "failed") ? say(outcome.message, null, outcome.msg) : null);
-  /** The engine's Message Ids of the shown results (ADR 0014). */
+  /** The engine's Message Ids of the shown results (ADR 0015). */
   let ids = $derived(((results as { text_ids?: TextIds } | null)?.text_ids ?? null));
 
   interface Curve {

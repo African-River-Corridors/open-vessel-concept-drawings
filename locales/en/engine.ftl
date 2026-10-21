@@ -1,4 +1,4 @@
-# The engine's messages: checks, warnings, stability notes and names (spec 0005, ADR 0014).
+# The engine's messages: checks, warnings, stability notes and names (spec 0005, ADR 0015).
 # Written by tools/i18n_extract.py from the Rust source. Do not edit: change the English in the
 # `text!` call and run the tool again. A number argument arrives as text, already rounded.
 

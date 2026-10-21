@@ -1,6 +1,6 @@
 # Spec 0005: Languages
 
-Status: **agreed with the maintainer, 2026-10-20.** Decision record: ADR 0014 (amends ADR 0008). Issue: #307.
+Status: **agreed with the maintainer, 2026-10-20.** Decision record: ADR 0015 (amends ADR 0008). Issue: #307.
 
 ## Problem Statement
 
@@ -164,7 +164,7 @@ It reads only text files and finishes in well under a second.
 
 ### Pull requests
 
-1. This spec and ADR 0014 (docs).
+1. This spec and ADR 0015 (docs).
 2. The Text Library and `i18n.ts`, with every app string moved to `app.ftl`, English only, and the
    catalogue check.
 3. Engine messages: `text!`, `text_ids`, session `msg`, input labels; the English test.

@@ -1,4 +1,4 @@
-//! Message Ids beside the engine's English (ADR 0014, spec 0005).
+//! Message Ids beside the engine's English (ADR 0015, spec 0005).
 //!
 //! The core writes its messages in English, and that English is part of the results (and of their
 //! hash). It does no translation and takes no language. Beside each English message it records a

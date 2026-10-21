@@ -21,7 +21,7 @@ use sha2::{Digest, Sha256};
 /// What a convoy Formation gets in place of results.
 pub const CONVOY_NOT_AVAILABLE: &str = "convoy results not yet available";
 
-/// The Message Id of an outcome's fixed text, where it has one (ADR 0014). A refusal's text
+/// The Message Id of an outcome's fixed text, where it has one (ADR 0015). A refusal's text
 /// (`Failed`) is an error and stays English.
 pub fn outcome_text(message: &str) -> Option<ovcd_core::text::Text> {
     (message == CONVOY_NOT_AVAILABLE)
@@ -281,7 +281,7 @@ fn write_canonical(v: &Value, out: &mut String) {
 }
 
 /// Top-level results keys that are not results: drawing geometry, what a view marks, the capital
-/// budget with the masses it was worked from, the Message Ids of the result's English (ADR 0014), and
+/// budget with the masses it was worked from, the Message Ids of the result's English (ADR 0015), and
 /// the Rule Trace (spec 0004: the stored Rule Set hashes cover the rules). They are left
 /// out of the results hash, so adding to one never changes a saved hash, and `tools/design_impact.py`
 /// leaves them out of its comparison (it holds the same list; `tests/test_design_impact_unhashed_keys.py` checks

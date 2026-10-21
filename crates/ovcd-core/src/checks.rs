@@ -16,7 +16,7 @@ pub struct Check {
     pub message: String,
     /// `"error"` (gates the result) or `"warning"` (advisory).
     pub severity: String,
-    /// The Message Id of `message`, where the engine gives one (ADR 0014). Not part of the result:
+    /// The Message Id of `message`, where the engine gives one (ADR 0015). Not part of the result:
     /// it is not compared and not serialised.
     #[cfg_attr(feature = "serde", serde(skip))]
     pub msg: Option<Msg>,

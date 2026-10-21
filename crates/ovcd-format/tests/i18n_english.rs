@@ -1,4 +1,4 @@
-//! The engine's Message Ids agree with its English, and change no result (ADR 0014, spec 0005).
+//! The engine's Message Ids agree with its English, and change no result (ADR 0015, spec 0005).
 //!
 //! Every fixture is opened and evaluated as the app does. Each `text_ids` entry of each result, and
 //! each message `msg`, is formatted with the English Text Library (`locales/en/*.ftl`, by the Fluent

@@ -2,7 +2,7 @@
   import { LANGUAGES, chooseLanguage, language, t } from "./i18n.svelte";
 
   // The Display Language. It is display state only, kept per user: it changes no input, no result
-  // and no saved file (ADR 0014). Each language is named in its own words.
+  // and no saved file (ADR 0015). Each language is named in its own words.
 </script>
 
 <label class="lang">

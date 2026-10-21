@@ -1,4 +1,4 @@
-// The only door to the Text Library (spec 0005, ADR 0014). Every string the app shows comes through
+// The only door to the Text Library (spec 0005, ADR 0015). Every string the app shows comes through
 // here, in the Display Language, with English as the fallback. Language is display state only: it
 // changes no input and no result, and it is never sent to Rust.
 import { FluentBundle, FluentResource, type FluentVariable } from "@fluent/bundle";
@@ -109,7 +109,7 @@ export function t(id: string, args?: Record<string, FluentVariable>): string {
 
 /** One argument of an engine message, as the engine sends it (ovcd-core `text::Arg`). */
 export type EngineArg = string | number | { num: string; value: number } | { cite: string } | { input: string } | EngineMsg;
-/** A Message Id with its arguments, as the engine sends it beside its English (ADR 0014). */
+/** A Message Id with its arguments, as the engine sends it beside its English (ADR 0015). */
 export interface EngineMsg {
   id: string;
   args?: Record<string, EngineArg>;

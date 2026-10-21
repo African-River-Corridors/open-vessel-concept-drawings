@@ -1,4 +1,4 @@
-//! The `text_ids` key of a result (ADR 0014, spec 0005).
+//! The `text_ids` key of a result (ADR 0015, spec 0005).
 //!
 //! A result holds the engine's English. `text_ids` maps each English text of the result to its
 //! Message Id and arguments, so the app can show the text in another language. It is a reading aid,

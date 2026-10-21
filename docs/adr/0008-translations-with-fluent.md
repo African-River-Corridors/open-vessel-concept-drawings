@@ -1,7 +1,7 @@
 # Translations with Fluent: English, Simplified Chinese, Latin American Spanish
 
 The app and the reports are translated with [Fluent](https://projectfluent.org/). The first three
-languages are English, Simplified Chinese and Latin American Spanish. ADR 0014 adds Portuguese and Twi.
+languages are English, Simplified Chinese and Latin American Spanish. ADR 0015 adds Portuguese and Twi.
 
 ## Decisions
 
@@ -13,5 +13,5 @@ languages are English, Simplified Chinese and Latin American Spanish. ADR 0014 a
 ## Consequences
 
 - The core's check messages and warnings are English text that the tests compare exactly (the port's parity harness did too, until it was removed).
-  ADR 0014 settles how: the engine gives a Message Id beside its English, and the edge translates. Spec 0005 has the plan.
+  ADR 0015 settles how: the engine gives a Message Id beside its English, and the edge translates. Spec 0005 has the plan.
 - A report crate (PDF with translations) is later work, not part of spec 0001.
