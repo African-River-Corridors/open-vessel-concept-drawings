@@ -57,7 +57,8 @@ fn the_quickstart_weights_match_python() {
     assert_eq!(w.steel_top_down, 865.8000000000001);
     assert_eq!(w.steel_bottom_up, 568.6509162719419);
     assert_eq!(w.steel_delta, 297.14908372805814);
-    assert_eq!(w.lightship, 1454.0040562313482);
+    // Re-pinned (issue #410): the weather shield above D is in the lightship; was 1454.0040562313482.
+    assert_eq!(w.lightship, 1506.7706007113482);
 }
 
 #[test]
@@ -95,14 +96,16 @@ fn no_wing_tank_means_no_wing_plate_or_shield_and_the_hull_depth_rules() {
 }
 
 #[test]
-fn a_full_height_wing_tank_has_no_plate_but_raises_the_moulded_depth() {
+fn a_full_height_wing_tank_has_no_plate_and_the_hull_is_weighed_to_d() {
     let mut i = quickstart();
     i.wing_tank_height_ratio = 1.0;
     let w = weigh(&i);
     assert_eq!((w.wing_plate, w.weather_shield), (0.0, 0.0));
-    assert_eq!(w.moulded_depth, 6.9);
-    assert_eq!(w.moulded_volume, 9190.800000000001);
-    assert_eq!(w.lightship, 1511.280056231348);
+    // Re-pinned (issue #410): the hull steel is weighed to D, not to the wing tank top; was 6.9,
+    // 9190.800000000001 and 1511.280056231348.
+    assert_eq!(w.moulded_depth, 6.5);
+    assert_eq!(w.moulded_volume, 8658.0);
+    assert_eq!(w.lightship, 1454.0040562313482);
 }
 
 #[test]
@@ -113,7 +116,8 @@ fn a_wing_plate_above_the_deck_adds_a_side_extension() {
     let w = weigh(&i);
     assert_eq!(w.wing_plate, 119.53723776000002);
     assert_eq!(w.weather_shield, 54.055343664);
-    assert_eq!(w.moulded_depth, 6.3100000000000005);
+    // Re-pinned (issue #410): the hull is weighed to D; was 6.3100000000000005.
+    assert_eq!(w.moulded_depth, 3.0);
     assert_eq!(w.steel_bottom_up, 554.989541424);
 }
 
@@ -126,7 +130,8 @@ fn a_wing_plate_below_the_deck_has_no_side_extension() {
     i.post_init().unwrap();
     let w = weigh(&i);
     assert_eq!(w.wing_plate, 71.47277479415334);
-    assert_eq!(w.moulded_depth, 6.808000000000001);
+    // Re-pinned (issue #410): the hull is weighed to D; was 6.808000000000001.
+    assert_eq!(w.moulded_depth, 6.5);
 }
 
 #[test]

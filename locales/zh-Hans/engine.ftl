@@ -107,7 +107,7 @@ warn-separation-clauses = 间隔条款引自内河船舶入级规范（Pt 4 Ch 4
 # status: draft
 stab-limit-concept-stage = 概念阶段：棱柱形箱形剖面，一阶重心高度估算，未计进水开口。
 # status: draft
-stab-limit-no-wind-or-damage = 未计风压横倾，也未计破舱稳性（批准前 ADN 9.3.1.15 / IGC 2.7 要求两者都有）。
+stab-limit-no-wind-or-damage = 未计风压横倾，也未计破舱稳性。批准前两者都需要：破舱稳性按 ADN 9.3.1.15 和 IGC 2.7，风压横倾按 2008 IS 规则的天气衡准（A 部分 2.3）。
 # status: draft
 stab-limit-stern-block-mass = 自航尾部区块的质量不在气体空船重量中，因此 KG 和排水量未计入该质量；实际 GM 可能更低。
 # status: draft

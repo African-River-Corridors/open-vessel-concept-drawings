@@ -3,7 +3,7 @@
 //! plating up to it and the weather shield are lightship items, each at its own centre. A user who
 //! sets D over the tanks makes the covering structural.
 //!
-//! Label: property.
+//! Label: property
 
 use ovcd_core::barge_capacity::{BargeCapacityInputs, compute};
 use ovcd_core::gas_stability::{GasCapacityResult, assess};

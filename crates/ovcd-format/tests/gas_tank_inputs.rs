@@ -262,10 +262,10 @@ fn the_dome_raises_the_air_draft_and_the_wall_takes_volume() {
 fn the_wing_ratio_and_the_support_move_the_lightship_and_the_air_draft_the_expected_way() {
     let base = results(SELF, &[]);
     let ls = |v: &Value| v["results"]["lightship_t"].as_f64().unwrap();
-    // A taller wing tank raises the wing plate level and so the moulded volume in the lightship
-    // when it passes the moulded depth.
-    let tall = results(SELF, &[("wing_tank_height_ratio", json!(1.5))]);
-    assert!(ls(&tall) >= ls(&base));
+    // A taller wing tank raises the wing plate above D, and so the side plating up to it, a
+    // lightship item since issue #410 (the hull steel stays weighed to D).
+    let tall = results(SELF, &[("wing_tank_height_ratio", json!(0.9))]);
+    assert!(ls(&tall) >= ls(&base), "{} vs {}", ls(&tall), ls(&base));
     // A higher support raises the tank top and so the air draft.
     let up = results(SELF, &[("tank_support_height_m", json!(1.4))]);
     let air = |v: &Value| v["results"]["air_draft_light_m"].as_f64().unwrap();

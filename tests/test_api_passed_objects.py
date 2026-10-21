@@ -47,28 +47,32 @@ def gm_fluid(result, payload=1500.0):
 def test_stability_uses_the_hull_it_is_given():
     """Label: snapshot"""
     s = HY.calculate_stability(RAKED, BI, TANKS, WEIGHTS, 2000.0, 0.58, 3.5)
-    # Re-pinned (issue #413: the free surface takes the fill as a volume ratio); was
-    # 0.05969187822861491 at ce96e66.
-    assert s.GM_fluid == close(-0.7603459744139444)
+    # Re-pinned (issue #413: the free surface takes the fill as a volume ratio; issue #410: hull
+    # steel to D, the covering above D in the lightship); was 0.05969187822861491 at ce96e66.
+    assert s.GM_fluid == close(PLACEHOLDER)
 
 
 def test_trim_uses_the_hull_it_is_given():
     """Label: snapshot"""
     t = HY.calculate_trim(RAKED, BI, TANKS, WEIGHTS, 2000.0, 3.5)
-    assert t.trim == close(1.3653183822264685)                             # ce96e66
+    # Re-pinned (issue #410); was 1.3653183822264685 at ce96e66.
+    assert t.trim == close(1.4585011885805368)
 
 
 def test_stability_uses_the_weights_it_is_given():
     """Label: snapshot"""
     heavier = dataclasses.replace(WEIGHTS, hull_steel_total=WEIGHTS.hull_steel_total + 500,
                                   lightship=WEIGHTS.lightship + 500)
-    assert HY.calculate_stability(HULL, BI, TANKS, heavier, 2000.0, 0.58, 3.5).KG == close(6.59527868136034)   # ce96e66
+    # Re-pinned (issue #410); was 6.59527868136034 at ce96e66.
+    assert HY.calculate_stability(HULL, BI, TANKS, heavier, 2000.0, 0.58, 3.5).KG == close(6.6034575199425944)
 
 
 def test_weights_use_the_tanks_they_are_given():
     """Label: snapshot"""
     doubled = dataclasses.replace(TANKS, tank_shell_weight=TANKS.tank_shell_weight * 2)
-    assert W.calculate_weights(BI, HULL, doubled).lightship == close(2814.5959265880624)   # ce96e66
+    # Re-pinned (issue #410: the hull steel is weighed to D, not to the wing plate); was
+    # 2814.5959265880624 at ce96e66.
+    assert W.calculate_weights(BI, HULL, doubled).lightship == close(2502.322865499698)
 
 
 def test_to_ga_uses_the_result_it_is_given():

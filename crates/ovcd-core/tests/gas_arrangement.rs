@@ -24,8 +24,11 @@ fn the_cn_ii_benchmark_is_reproduced() {
     // Re-pinned (issue #264, the search keeps only arrangements that pass stability); was
     // 2943.4407266060916 (issue #237) and 2058.228164213275 under the stepped IGC_2G. Re-pinned
     // again (issue #277, the wheelhouse sightline blocks the search); was 2832.6643735601965.
-    assert_eq!(f.payload_t, 2021.2487121368047);
-    assert_eq!((f.n_tanks, f.n_tanks_wide, f.n_tanks_long), (2, 1, 2));
+    // Re-pinned again (issue #410, the covering above D is in the lightship at its own heights):
+    // the one-wide arrangement fails the light-condition angle of max GZ (24 deg < 25 deg), so the
+    // search takes two tanks wide; was 2021.2487121368047 with (2, 1, 2).
+    assert_eq!(f.payload_t, 1405.8516419707348);
+    assert_eq!((f.n_tanks, f.n_tanks_wide, f.n_tanks_long), (4, 2, 2));
     // Re-pinned (issue #264); was "volume" under the stepped IGC_2G and "draft" (issue #237): the
     // arrangement that passes stability is smaller, so the volume binds again.
     assert_eq!(f.binding, "volume");
@@ -277,7 +280,10 @@ fn no_feasible_fit_has_a_tank_longer_than_seven_diameters() {
             }
         }
     }
-    assert!(accepted > 20, "only {accepted} accepted");
+    // Issue #410: with the covering above D in the lightship some wide hulls fail stability, so
+    // the sweep accepts 20 hulls (it accepted more than 20). The guard only proves the sweep is
+    // not empty.
+    assert!(accepted >= 15, "only {accepted} accepted");
     assert!(
         refused_for_slenderness > 5,
         "only {refused_for_slenderness} refused"

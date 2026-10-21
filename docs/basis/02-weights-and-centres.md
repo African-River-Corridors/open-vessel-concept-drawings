@@ -37,8 +37,8 @@ lightship.
 1. **Top-down steel** (Method, factor Fixed in code), `weights.rs:151-163`:
    - wing tank top = DB + h_support + r_wing × OD, where DB is the double bottom, h_support the tank support
      height, r_wing the wing tank height ratio (0.66) and OD the Tank Outer Diameter.
-   - moulded depth D_m = max(D, wing tank top) if the wing tank width is more than 0; else D.
-   - moulded volume V_m = LOA × B × D_m (m³).
+   - the hull is weighed to the moulded depth D (the input) only (issue #410). The wing plate does not raise it.
+   - moulded volume V_m = LOA × B × D (m³).
    - steel_top_down = 0.10 t/m³ × V_m.
 2. **Bottom-up steel** (Method, all values Fixed in code), `weights.rs:56-149`, `166`. Plating area × thickness ×
    7.85 t/m³, for bottom (12 mm), side (10 mm), deck (10 mm) and rakes (mean of bottom and side). Internal
@@ -47,7 +47,14 @@ lightship.
 3. **Tank weight** (`tank_total`, `insulation`): see page 04. This page uses the two values as they come.
 4. **Piping and machinery** = 0.04 × (steel_top_down + tank_total), `weights.rs:170` (Fixed in code).
 5. **Outfitting** = 0.035 × (steel_top_down + tank_total), `weights.rs:173` (Fixed in code).
-6. **Lightship** = steel_top_down + tank_total + insulation + piping + outfitting, `weights.rs:176` (Method).
+6. **Covering above D** (Method, `weights::covering_items`, issue #410). By default everything above D is a
+   non-structural weather covering, not hull girder. Its parts above D are lightship items, each with its own
+   centre (see section 5): the wing plate, the side plating from D up to the wing plate, and the weather shield
+   (6 mm, top at the tank top + 1.5 m). The plates take the bottom-up thicknesses. The covering is structural only
+   by the user's choice of D: when D is at or above the wing plate and the shield top, the hull steel holds it and
+   the list is empty.
+7. **Lightship** = steel_top_down + tank_total + insulation + piping + outfitting + the covering items (Method).
+   Piping and outfitting stay factors on the steel to D and the tanks.
 
 Stores are an explicit zero (`weights.rs:194`). The `stores_weight` input (200 t, `models.rs:218`) is not read.
 
@@ -110,8 +117,14 @@ height above the keel (`gas_stability.rs:714-719`):
 | Tanks and insulation | tank_total + insulation | tank centre = DB + h_support + OD / 2 |
 | Piping and machinery | piping_machinery | D |
 | Outfitting | outfitting | 0.75 × D |
+| Wing plate (above D only) | plate over the beam, less the tank cut-outs | wing plate level |
+| Side plating D to the wing plate | 2 × height × LOA × side plate | mid-height |
+| Weather shield top | B × tank zone × 6 mm | tank top + clearance |
+| Weather shield sides and ends | sides and ends above max(wing plate, D) | mid-height |
 
-D is the hull depth, not D_m. The cargo is at the centroid of a filled circular segment of the tank inside
+D is the hull depth. The covering items also carry an LCG for the trim: the wing plate's tank-zone part at the
+tank zone centre and its full-beam parts in the bow and stern zones, the side plating at mid-length, the shield
+at the tank zone centre (issue #410). The cargo is at the centroid of a filled circular segment of the tank inside
 diameter (`gas_stability.rs:733-734`). KG = Σ(m × z) / Σm. The code adds a limitation if the four items differ from
 the lightship by more than 1 t (`gas_stability.rs:805`).
 
@@ -145,7 +158,7 @@ writes `calibration/factors.yaml`. Held-out cases are left out of the fit.
 | Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
 |---|---|---|---|---|---|---|
 | WC-A01 | Gas top-down steel rate | 0.10 t/m³ of LOA × B × D_m | Fixed in code | Carried over from the original engine; no source. No gas case is runnable in calibration | `models.rs:212`; `weights.rs:163` | Unknown |
-| WC-A02 | Moulded depth for top-down steel | D_m = max(D, wing tank top) if wing tank width > 0 | Method | Wing plate taken as the uniform strength deck | `weights.rs:151-162` | Unknown |
+| WC-A02 | Hull depth for top-down steel; covering above D | Steel to D; wing plate, side plating and weather shield above D are lightship items at their own centres | Method | Maintainer decision (issue #410): the covering above D is non-structural by default; structural only where the user sets D over it | `weights::covering_items` | Moves cargo: the light KG rises, and some designs fail the IS Code angle of max GZ |
 | WC-A03 | Wing tank top | DB + h_support + 0.66 × OD | Estimate | Profile `wing_tank_height_ratio`, carried over from the original engine | `weights.rs:155-156`; `barge_capacity.rs:70` | Unknown |
 | WC-A04 | Gas piping and machinery | 0.04 × (top-down steel + tank total) | Fixed in code | Original engine; no source | `models.rs:217`; `weights.rs:170` | Unknown |
 | WC-A05 | Gas outfitting | 0.035 × (top-down steel + tank total) | Fixed in code | Original engine; no source | `models.rs:216`; `weights.rs:173` | Unknown |
@@ -181,7 +194,7 @@ writes `calibration/factors.yaml`. Held-out cases are left out of the fit.
 | WC-A35 | Deadweight items | cargo only; no fuel, water, stores, crew or ballast | Method | Not modelled | `simulate.rs:797`, `1081`; `barge_capacity.rs:1032` | Non-conservative on cargo |
 | WC-A36 | Ballast capacity | 0 t; ballast draught only | Fixed in code | API field only | `barge_capacity.rs:212`, `914-926` | None on deadweight |
 | WC-A37 | Box-barge Cb (fitted) | 0.928 on LOA | Estimate | Fitted: 7 cases, 6 with a k-derived lightship (`calibration.py:132`) | Calibration only (`calibration.py:161`) | Unknown |
-| WC-A38 | Gas hull steel KG | 0.5 × D | Fixed in code | First-order, original engine | `gas_stability.rs:715` | Non-conservative when D_m > D |
+| WC-A38 | Gas hull steel KG | 0.5 × D | Fixed in code | First-order, original engine. Since issue #410 the steel is weighed to D, so the centre matches | `gas_stability.rs` | Unknown |
 | WC-A39 | Gas tank and insulation KG | DB + h_support + OD / 2 | Method | Tank centre | `gas_stability.rs:708-716` | Small |
 | WC-A40 | Gas piping and machinery KG | D | Fixed in code | First-order | `gas_stability.rs:717` | Unknown |
 | WC-A41 | Gas outfitting KG | 0.75 × D | Fixed in code | First-order | `gas_stability.rs:718` | Unknown |
@@ -203,7 +216,7 @@ From the Defaults Profile (`crates/ovcd-format/src/builtin_profile.json`). Names
 | `block_coefficient` | 0.85 | – | Profile; basis cites calibrated box barges 0.883–0.995 |
 | `lightship_factor_t_per_m3` | 0.1093 (box hold) | t/m³ | `calibration/factors.yaml`, box fit |
 | `water_density_t_per_m3` | 1.0 | t/m³ | Fresh water, original engine |
-| `wing_tank_height_ratio` | 0.66 | – | Original engine; sets D_m and so the top-down steel |
+| `wing_tank_height_ratio` | 0.66 | – | Original engine; sets the wing plate level and so the covering items |
 | `tank_support_height_m` | 0.5 | m | Original engine; sets the wing tank top and the tank KG |
 | `n_holds` | 3 | holds | Original engine; hopper steel |
 | `inner_bottom_plate_mm`, `hopper_plate_mm`, `hold_bulkhead_plate_mm`, `hatch_coaming_plate_mm` | 14, 14, 11, 10 | mm | Original engine; hopper steel |
@@ -248,7 +261,7 @@ the app. Some are fields of `BargeCapacityInputs` or `BargeInputs` and can be se
 
 ## Questions for reviewers
 
-1. Is 0.10 t/m³ of LOA × B × D_m a fair hull steel rate for a Type C gas barge with a wing plate and a weather
+1. Is 0.10 t/m³ of LOA × B × D a fair hull steel rate for a Type C gas barge with a wing plate and a weather
    shield? Which built gas barges publish a lightship we can use as a case?
 2. Should the lightship use the bottom-up steel (with the plating build-up) or the top-down rate? They differ by
    about a third in the parity example.
@@ -259,7 +272,8 @@ the app. Some are fields of `BargeCapacityInputs` or `BargeInputs` and can be se
 5. Should the default Cb be 0.928 for a box-hold barge and stay 0.85 only for a gas barge?
 6. For a deck barge or pontoon, should lightship KG be at the main deck, as IS Code 2008 Part B 8.6 allows as a
    conservative value? Should OVCD use the main deck for every barge at concept stage?
-7. Is 0.5 × D a fair KG for hull steel when the wing plate is above D?
+7. Is a 6 mm plate a fair weight for a non-structural weather shield, and should its cost rate differ from the
+   hull steel rate (issue #410 left this open)?
 8. Which consumables (fuel, fresh water, stores, crew) should the laden and light conditions carry for a
    self-propelled inland vessel?
 9. Is a weight margin on the lightship normal at concept stage for these Hulls? What size?

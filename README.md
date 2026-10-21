@@ -123,13 +123,14 @@ Output:
 ```
 Class CN-GB50139 CN-II-MOTOR: 90 m x 14.8 m, 2,000 t class deadweight
 Single run : 1 tanks abreast, OD 13.70 m, 3,278 t, laden draught 4.29 m
-Searched   : 1 tank(s) abreast, OD 10.70 m, 2,021 t (volume-bound), draught 3.20 m
+Searched   : 2 tank(s) abreast, OD 6.45 m, 1,406 t (volume-bound), draught 2.57 m
 ```
 
 The single run fills the tank volume and does not look at the draught cap or the checks. The search
 respects the cap and keeps only arrangements that pass every blocking Rule, stability and the
-wheelhouse sightline included. The larger tanks are too tender when laden or hide the view from the
-raised wheelhouse, so the search carries 2,021 t in a 10.70 m tank. If no arrangement passed, `feasible` would be false and
+wheelhouse sightline included. The larger tanks are too tender when laden, hide the view from the
+raised wheelhouse, or (one 10.70 m tank) fail the light-condition angle of maximum GZ, so the search
+carries 1,406 t in two 6.45 m tanks abreast. If no arrangement passed, `feasible` would be false and
 `failed_checks` would list the checks the closest one fails. Tank side clearance follows IGC Code
 2.4.1.1 (the distance d(Vc), per tank, dome included in Vc), measured plate to plate with the
 insulation inside d (2.4.2). A check that is only advisory, a warning, does not stop an arrangement

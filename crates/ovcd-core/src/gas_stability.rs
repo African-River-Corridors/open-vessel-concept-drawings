@@ -374,7 +374,9 @@ pub fn assess_num(
         ),
         text!(
             "stab-limit-no-wind-or-damage",
-            "No wind heel and no damage stability (ADN 9.3.1.15 / IGC 2.7 need both before approval)."
+            "No wind heel and no damage stability. Both are needed before approval: damage \
+             stability by ADN 9.3.1.15 and IGC 2.7, wind heel by the IS Code 2008 weather \
+             criterion (Part A 2.3)."
         ),
     ];
     if result.has_aft_arrangement && result.stern_block_items.is_empty() {

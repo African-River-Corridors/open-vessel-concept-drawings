@@ -99,7 +99,7 @@ warn-separation-clauses = Separation clauses are cited from the classification r
 ## crates/ovcd-core/src/gas_stability.rs
 
 stab-limit-concept-stage = Concept-stage: prismatic box section, first-order weight heights, no downflooding openings.
-stab-limit-no-wind-or-damage = No wind heel and no damage stability (ADN 9.3.1.15 / IGC 2.7 need both before approval).
+stab-limit-no-wind-or-damage = No wind heel and no damage stability. Both are needed before approval: damage stability by ADN 9.3.1.15 and IGC 2.7, wind heel by the IS Code 2008 weather criterion (Part A 2.3).
 stab-limit-stern-block-mass = The self-propelled stern block's mass is not in the gas lightship, so KG and displacement leave it out; the true GM could be lower.
 stab-limit-weight-split = Weight split sums to { $split } t vs lightship { $lightship } t.
 
