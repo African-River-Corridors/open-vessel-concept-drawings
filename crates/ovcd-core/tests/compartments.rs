@@ -3,7 +3,7 @@
 //! rectangular and a trapezoidal prism (I = l b³ / 12 for a rectangular free surface).
 
 use ovcd_core::barge_capacity::{BargeCapacityInputs, compute};
-use ovcd_core::compartments::{Side, Space, SpaceKind, area_centroid, ballast_tanks};
+use ovcd_core::compartments::{Side, Space, SpaceKind, ballast_tanks};
 
 fn close(a: f64, b: f64) {
     assert!((a - b).abs() < 1e-9, "{a} != {b}");
@@ -55,9 +55,16 @@ fn an_empty_or_pressed_full_tank_has_no_free_surface() {
 fn a_trapezoid_section_has_the_hand_worked_area_and_centroid() {
     // Corners (1,0) (3,0) (3,2) (2,2): area (2 + 1) / 2 × 2 = 3; z̄ = h(a + 2b) / (3(a + b)) with
     // the bottom a = 2 and the top b = 1: 2 × 4 / 9.
-    let (a, _, z) = area_centroid(&[(1.0, 0.0), (3.0, 0.0), (3.0, 2.0), (2.0, 2.0)]);
-    close(a, 3.0);
-    close(z, 8.0 / 9.0);
+    let t = Space {
+        name: "WB1S".into(),
+        kind: SpaceKind::WingBallast,
+        side: Side::Starboard,
+        x_aft: 0.0,
+        x_fwd: 1.0,
+        section: vec![(1.0, 0.0), (3.0, 0.0), (3.0, 2.0), (2.0, 2.0)],
+    };
+    close(t.volume_m3(), 3.0);
+    close(t.fill(1.0).vcg_m, 8.0 / 9.0);
 }
 
 #[test]

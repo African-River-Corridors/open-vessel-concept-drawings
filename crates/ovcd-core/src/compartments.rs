@@ -13,6 +13,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::barge_capacity::{BargeCapacityInputs, BargeCapacityResult};
+use crate::box_stability::{area_centroid, clip_below};
 use crate::cargo::CargoClass;
 
 /// What a Space holds. The crude oil module adds its own kinds (#330).
@@ -180,44 +181,6 @@ impl Space {
             free_surface_inertia_m4: inertia,
         }
     }
-}
-
-/// Area and centroid (y, z) of a simple polygon (shoelace). (0, 0, 0) for an empty one.
-pub fn area_centroid(poly: &[(f64, f64)]) -> (f64, f64, f64) {
-    if poly.len() < 3 {
-        return (0.0, 0.0, 0.0);
-    }
-    let (mut a2, mut cy, mut cz) = (0.0, 0.0, 0.0);
-    for i in 0..poly.len() {
-        let (y0, z0) = poly[i];
-        let (y1, z1) = poly[(i + 1) % poly.len()];
-        let cross = y0 * z1 - y1 * z0;
-        a2 += cross;
-        cy += (y0 + y1) * cross;
-        cz += (z0 + z1) * cross;
-    }
-    if a2 == 0.0 {
-        return (0.0, 0.0, 0.0);
-    }
-    (a2.abs() / 2.0, cy / (3.0 * a2), cz / (3.0 * a2))
-}
-
-/// The part of `poly` at or below `level` (Sutherland–Hodgman against one half-plane).
-fn clip_below(poly: &[(f64, f64)], level: f64) -> Vec<(f64, f64)> {
-    let mut out = Vec::new();
-    for i in 0..poly.len() {
-        let p = poly[i];
-        let q = poly[(i + 1) % poly.len()];
-        let (p_in, q_in) = (p.1 <= level, q.1 <= level);
-        if p_in {
-            out.push(p);
-        }
-        if p_in != q_in {
-            let t = (level - p.1) / (q.1 - p.1);
-            out.push((p.0 + t * (q.0 - p.0), level));
-        }
-    }
-    out
 }
 
 /// The second moment, per metre of length, of the chords of `poly` at `level`, about their joint
