@@ -1,12 +1,17 @@
 //! Box barge hull geometry with bottom rakes at bow and stern. Port of `core/hull.py`.
 //!
-//! The raked box is the only Hull Form, and lives in [`hull_form`] so later Hull Forms slot in
-//! beside it. [`HullGeometry`] is the Python name for it. Behaviour is copied exactly: every
+//! The raked box lives in [`hull_form`] in closed form; [`hull_form::generate`] writes the
+//! Sections Table of the box and the raked box (issue #445), and later Hull Forms slot in beside it. [`HullGeometry`] is the Python name for it. Behaviour is copied exactly: every
 //! `**` is `libm::pow`, Python's two-argument `min` keeps its first-of-equal rule, and every
 //! expression keeps Python's evaluation order so the floating-point rounding is the same.
 
-/// Hull Forms. Only the raked box exists today.
+/// Hull Forms: the closed-form raked box, and the generators that write a Sections Table
+/// (spec 0008, "Hull Forms"): [`hull_form::generate`].
 pub mod hull_form {
+    use crate::sections::{Section, SectionsError, SectionsTable};
+    use alloc::vec;
+    use alloc::vec::Vec;
+    use core::fmt;
     use libm::{pow, sqrt};
 
     /// Box barge hull with bottom rakes (`HullGeometry` in Python). All lengths in metres.
@@ -282,6 +287,161 @@ pub mod hull_form {
                 + self.deck_area()
                 + self.bow_rake_area()
                 + self.stern_rake_area()
+        }
+    }
+
+    /// Which Hull Form, with its own parameters. All lengths in metres.
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum HullFormKind {
+        /// A rectangular box: stations at 0 and L.
+        Box,
+        /// A box with a straight bottom rake at each end: the keel rises from the base at the
+        /// knuckle to the rise at the end.
+        RakedBox {
+            bow_rake_length_m: f64,
+            bow_rake_rise_m: f64,
+            stern_rake_length_m: f64,
+            stern_rake_rise_m: f64,
+        },
+    }
+
+    /// The main dimensions and the Hull Form.
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub struct HullFormInputs {
+        pub length_overall_m: f64,
+        pub beam_m: f64,
+        pub moulded_depth_m: f64,
+        pub form: HullFormKind,
+    }
+
+    /// Why a Hull Form cannot write its sections.
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum HullError {
+        /// Length, beam or depth is not a positive finite number.
+        Dimension,
+        /// A rake length or rise is negative or not finite.
+        NegativeRake,
+        /// The two rakes together are longer than the hull.
+        RakeLongerThanHull { rakes_m: f64, length_m: f64 },
+        /// A rake rises above the moulded depth.
+        RiseAboveDepth { rise_m: f64, depth_m: f64 },
+        /// The sections the generator wrote were refused.
+        Sections(SectionsError),
+    }
+
+    impl fmt::Display for HullError {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            match *self {
+                HullError::Dimension => {
+                    write!(f, "length, beam and moulded depth must be positive numbers")
+                }
+                HullError::NegativeRake => {
+                    write!(f, "a rake length or rise must be 0 or more")
+                }
+                HullError::RakeLongerThanHull { rakes_m, length_m } => write!(
+                    f,
+                    "the bow and stern rakes ({rakes_m} m) are longer than the hull ({length_m} m)"
+                ),
+                HullError::RiseAboveDepth { rise_m, depth_m } => write!(
+                    f,
+                    "a rake rise of {rise_m} m is above the moulded depth of {depth_m} m"
+                ),
+                HullError::Sections(e) => write!(f, "{e}"),
+            }
+        }
+    }
+
+    fn positive(x: f64) -> bool {
+        x.is_finite() && x > 0.0
+    }
+
+    fn non_negative(x: f64) -> bool {
+        x.is_finite() && x >= 0.0
+    }
+
+    /// A rectangle half-section with its keel at `z_keel`.
+    fn box_half(beam: f64, depth: f64, z_keel: f64) -> Vec<(f64, f64)> {
+        vec![
+            (0.0, z_keel),
+            (beam / 2.0, z_keel),
+            (beam / 2.0, depth),
+            (0.0, depth),
+        ]
+    }
+
+    /// Write the Sections Table of a Hull Form.
+    pub fn generate(inputs: &HullFormInputs) -> Result<SectionsTable, HullError> {
+        let (l, b, d) = (
+            inputs.length_overall_m,
+            inputs.beam_m,
+            inputs.moulded_depth_m,
+        );
+        if !(positive(l) && positive(b) && positive(d)) {
+            return Err(HullError::Dimension);
+        }
+        // Stations and keel heights, aft to forward.
+        let keel: Vec<(f64, f64)> = match inputs.form {
+            HullFormKind::Box => vec![(0.0, 0.0), (l, 0.0)],
+            HullFormKind::RakedBox {
+                bow_rake_length_m: bl,
+                bow_rake_rise_m: br,
+                stern_rake_length_m: sl,
+                stern_rake_rise_m: sr,
+            } => {
+                if ![bl, br, sl, sr].iter().all(|&v| non_negative(v)) {
+                    return Err(HullError::NegativeRake);
+                }
+                if bl + sl > l {
+                    return Err(HullError::RakeLongerThanHull {
+                        rakes_m: bl + sl,
+                        length_m: l,
+                    });
+                }
+                for rise in [br, sr] {
+                    if rise > d {
+                        return Err(HullError::RiseAboveDepth {
+                            rise_m: rise,
+                            depth_m: d,
+                        });
+                    }
+                }
+                let mut k = Vec::with_capacity(4);
+                // A rake of no length is a vertical end: no knuckle station.
+                k.push((0.0, if sl > 0.0 { sr } else { 0.0 }));
+                if sl > 0.0 {
+                    k.push((sl, 0.0));
+                }
+                if bl > 0.0 {
+                    k.push((l - bl, 0.0));
+                }
+                k.push((l, if bl > 0.0 { br } else { 0.0 }));
+                k
+            }
+        };
+        let sections = keel
+            .iter()
+            .map(|&(x, z)| Section {
+                x,
+                points: box_half(b, d, z),
+            })
+            .collect();
+        SectionsTable::new(sections, vec![d; keel.len()]).map_err(HullError::Sections)
+    }
+
+    impl RakedBox {
+        /// The Sections Table of this raked box (its closed forms above are the generator's test).
+        pub fn sections(&self) -> Result<SectionsTable, HullError> {
+            generate(&HullFormInputs {
+                length_overall_m: self.loa,
+                beam_m: self.beam,
+                moulded_depth_m: self.depth,
+                form: HullFormKind::RakedBox {
+                    bow_rake_length_m: self.bow_rake_length,
+                    bow_rake_rise_m: self.bow_rake_rise,
+                    stern_rake_length_m: self.stern_rake_length,
+                    stern_rake_rise_m: self.stern_rake_rise,
+                },
+            })
         }
     }
 }
