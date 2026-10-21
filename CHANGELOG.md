@@ -175,6 +175,54 @@ Each entry is a before/after table written by `python3 tools/design_impact.py ch
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
 
+### ticket/416-ld-inner-diameter (2026-10-21)
+
+Between `main 97f7d80` and `this branch f465131`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 1 (88x16.3) | `checks[21].message` | tank length 28.44 m / outer diameter 6.85 m = 4.15 <= 7.0 | tank length 28.44 m / inner diameter 6.80 m = 4.18 <= 7.0 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[22].message` | tank length 49.44 m / outer diameter 10.12 m = 4.89 <= 7.0 | tank length 49.44 m / inner diameter 10.04 m = 4.92 <= 7.0 | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[21].message` | tank length 49.44 m / outer diameter 7.25 m = 6.82 <= 7.0 | tank length 49.44 m / inner diameter 7.20 m = 6.87 <= 7.0 | changed |
+| sweep default depth gas 90x14 | `checks[21].message` | tank length 25.89 m / outer diameter 9.91 m = 2.61 <= 7.0 | tank length 25.89 m / inner diameter 9.23 m = 2.81 <= 7.0 | changed |
+| sweep gas IGC_2G 60x10 | `checks[21].message` | tank length 12.65 m / outer diameter 8.40 m = 1.51 <= 7.0 | tank length 12.65 m / inner diameter 8.34 m = 1.52 <= 7.0 | changed |
+| sweep gas IGC_2G 90x14 | `checks[21].message` | tank length 27.65 m / outer diameter 8.20 m = 3.37 <= 7.0 | tank length 27.65 m / inner diameter 8.14 m = 3.40 <= 7.0 | changed |
+| sweep gas IGC_2G_EXACT 60x10 | `checks[21].message` | tank length 12.65 m / outer diameter 8.40 m = 1.51 <= 7.0 | tank length 12.65 m / inner diameter 8.34 m = 1.52 <= 7.0 | changed |
+| sweep gas IGC_2G_EXACT 90x14 | `checks[21].message` | tank length 27.65 m / outer diameter 8.20 m = 3.37 <= 7.0 | tank length 27.65 m / inner diameter 8.14 m = 3.40 <= 7.0 | changed |
+| sweep gas cargo LNG | `checks[21].message` | tank length 27.65 m / outer diameter 8.89 m = 3.11 <= 7.0 | tank length 27.65 m / inner diameter 8.21 m = 3.37 <= 7.0 | changed |
+| sweep gas cargo LNG pushed | `checks[12].message` | tank length 36.45 m / outer diameter 11.79 m = 3.09 <= 7.0 | tank length 36.45 m / inner diameter 11.11 m = 3.28 <= 7.0 | changed |
+| sweep gas cargo LNG_ethane | `checks[21].message` | tank length 27.65 m / outer diameter 8.89 m = 3.11 <= 7.0 | tank length 27.65 m / inner diameter 8.21 m = 3.37 <= 7.0 | changed |
+| sweep gas cargo LNG_ethane pushed | `checks[12].message` | tank length 36.45 m / outer diameter 10.79 m = 3.38 <= 7.0 | tank length 36.45 m / inner diameter 10.11 m = 3.60 <= 7.0 | changed |
+| sweep gas cargo LPG_butane | `checks[21].message` | tank length 27.65 m / outer diameter 8.20 m = 3.37 <= 7.0 | tank length 27.65 m / inner diameter 8.14 m = 3.40 <= 7.0 | changed |
+| sweep gas cargo LPG_butane pushed | `checks[12].message` | tank length 36.45 m / outer diameter 9.11 m = 4.00 <= 7.0 | tank length 36.45 m / inner diameter 9.04 m = 4.03 <= 7.0 | changed |
+| sweep gas cargo LPG_mix | `checks[21].message` | tank length 27.65 m / outer diameter 8.20 m = 3.37 <= 7.0 | tank length 27.65 m / inner diameter 8.14 m = 3.40 <= 7.0 | changed |
+| sweep gas cargo LPG_mix pushed | `checks[12].message` | tank length 36.45 m / outer diameter 9.11 m = 4.00 <= 7.0 | tank length 36.45 m / inner diameter 9.04 m = 4.03 <= 7.0 | changed |
+| sweep gas cargo LPG_propane | `checks[21].message` | tank length 27.65 m / outer diameter 8.20 m = 3.37 <= 7.0 | tank length 27.65 m / inner diameter 8.14 m = 3.40 <= 7.0 | changed |
+| sweep gas cargo LPG_propane pushed | `checks[12].message` | tank length 36.45 m / outer diameter 9.11 m = 4.00 <= 7.0 | tank length 36.45 m / inner diameter 9.04 m = 4.03 <= 7.0 | changed |
+| sweep gas carriage LPG_butane fully_pressurised | `checks[21].message` | tank length 37.25 m / outer diameter 7.64 m = 4.87 <= 7.0 | tank length 37.25 m / inner diameter 7.59 m = 4.91 <= 7.0 | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[21].message` | tank length 37.25 m / outer diameter 8.04 m = 4.63 <= 7.0 | tank length 37.25 m / inner diameter 7.63 m = 4.89 <= 7.0 | changed |
+| sweep gas carriage LPG_butane semi_pressurised | `checks[21].message` | tank length 37.25 m / outer diameter 8.04 m = 4.63 <= 7.0 | tank length 37.25 m / inner diameter 7.61 m = 4.90 <= 7.0 | changed |
+| sweep gas carriage LPG_mix fully_pressurised | `checks[21].message` | tank length 37.25 m / outer diameter 7.64 m = 4.87 <= 7.0 | tank length 37.25 m / inner diameter 7.59 m = 4.91 <= 7.0 | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[21].message` | tank length 37.25 m / outer diameter 8.04 m = 4.63 <= 7.0 | tank length 37.25 m / inner diameter 7.63 m = 4.89 <= 7.0 | changed |
+| sweep gas carriage LPG_mix semi_pressurised | `checks[21].message` | tank length 37.25 m / outer diameter 8.04 m = 4.63 <= 7.0 | tank length 37.25 m / inner diameter 7.61 m = 4.90 <= 7.0 | changed |
+| sweep gas carriage LPG_propane fully_pressurised | `checks[21].message` | tank length 37.25 m / outer diameter 7.64 m = 4.87 <= 7.0 | tank length 37.25 m / inner diameter 7.59 m = 4.91 <= 7.0 | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[21].message` | tank length 37.25 m / outer diameter 8.04 m = 4.63 <= 7.0 | tank length 37.25 m / inner diameter 7.63 m = 4.89 <= 7.0 | changed |
+| sweep gas carriage LPG_propane semi_pressurised | `checks[21].message` | tank length 37.25 m / outer diameter 8.04 m = 4.63 <= 7.0 | tank length 37.25 m / inner diameter 7.61 m = 4.90 <= 7.0 | changed |
+| sweep gas carries nothing (draught limit) | `checks[22].message` | tank length 27.65 m / outer diameter 8.20 m = 3.37 <= 7.0 | tank length 27.65 m / inner diameter 8.14 m = 3.40 <= 7.0 | changed |
+| sweep gas channel 60x10 | `checks[12].message` | tank length 23.05 m / outer diameter 8.05 m = 2.86 <= 7.0 | tank length 23.05 m / inner diameter 7.38 m = 3.13 <= 7.0 | changed |
+| sweep gas channel 90x14 | `checks[12].message` | tank length 36.85 m / outer diameter 10.79 m = 3.42 <= 7.0 | tank length 36.85 m / inner diameter 10.11 m = 3.65 <= 7.0 | changed |
+| sweep gas passes all checks IGC_2G 110x11.4 | `checks[21].message` | tank length 37.25 m / outer diameter 7.64 m = 4.87 <= 7.0 | tank length 37.25 m / inner diameter 7.59 m = 4.91 <= 7.0 | changed |
+| sweep gas passes all checks IGC_2G_EXACT 80x14 | `checks[21].message` | tank length 23.45 m / outer diameter 5.70 m = 4.11 <= 7.0 | tank length 23.45 m / inner diameter 5.66 m = 4.15 <= 7.0 | changed |
+| sweep gas tank longer than 7 diameters IGC_2G 200x12 | `checks[22].message` | tank length 82.65 m / outer diameter 9.58 m = 8.63 <= 7.0 | tank length 82.65 m / inner diameter 8.90 m = 9.29 <= 7.0 | changed |
+| sweep gas wide hull IGC_2G 110x24 | `checks[22].message` | tank length 38.80 m / outer diameter 9.94 m = 3.91 <= 7.0 | tank length 38.80 m / inner diameter 9.26 m = 4.19 <= 7.0 | changed |
+| sweep gas wide hull IGC_2G_EXACT 110x24 | `checks[22].message` | tank length 38.80 m / outer diameter 9.94 m = 3.91 <= 7.0 | tank length 38.80 m / inner diameter 9.26 m = 4.19 <= 7.0 | changed |
+| sweep optional accommodation_unit_count | `checks[21].message` | tank length 37.25 m / outer diameter 7.64 m = 4.87 <= 7.0 | tank length 37.25 m / inner diameter 7.59 m = 4.91 <= 7.0 | changed |
+| sweep optional battery_rate_per_kwh | `checks[21].message` | tank length 37.25 m / outer diameter 7.64 m = 4.87 <= 7.0 | tank length 37.25 m / inner diameter 7.59 m = 4.91 <= 7.0 | changed |
+| sweep optional battery_unit_count | `checks[21].message` | tank length 37.25 m / outer diameter 7.64 m = 4.87 <= 7.0 | tank length 37.25 m / inner diameter 7.59 m = 4.91 <= 7.0 | changed |
+| sweep optional cargo_system_lump | `checks[21].message` | tank length 37.25 m / outer diameter 7.64 m = 4.87 <= 7.0 | tank length 37.25 m / inner diameter 7.59 m = 4.91 <= 7.0 | changed |
+| sweep optional delivery_lump | `checks[21].message` | tank length 37.25 m / outer diameter 7.64 m = 4.87 <= 7.0 | tank length 37.25 m / inner diameter 7.59 m = 4.91 <= 7.0 | changed |
+| ... | 49 more changed quantities | | | |
+
 ### ticket/399-400-resistance-labels (2026-10-21)
 
 Between `main 9980d3c` and `this branch 83ea31a`.
