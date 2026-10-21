@@ -82,7 +82,7 @@ fn fill_writes_a_version_2_file_that_validates_without_those_warnings() {
     assert!(has(&filled.report.warnings, ADN));
     let text = filled.design.unwrap().to_text();
     let saved: Value = serde_json::from_str(&text).unwrap();
-    assert_eq!(saved["format_version"], 2);
+    assert_eq!(saved["format_version"], 3);
     assert_eq!(saved["options"][0]["inputs"]["ruleset"]["value"], "IGC_2G");
     assert!(
         saved["options"][0]["inputs"]
@@ -119,7 +119,7 @@ fn the_design_session_opens_it_with_the_warnings_and_runs_it_as_igc_2g() {
     assert!(!text.contains("ADN_G"), "{text}");
     // Saving writes the current format.
     let saved: Value = serde_json::from_str(&session.save().unwrap()).unwrap();
-    assert_eq!(saved["format_version"], 2);
+    assert_eq!(saved["format_version"], 3);
 }
 
 #[test]

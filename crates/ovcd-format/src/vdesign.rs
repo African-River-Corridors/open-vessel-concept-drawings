@@ -36,7 +36,7 @@ use std::fmt;
 /// #175: `adn_tank_cap_m3` and the `ADN_G` ruleset went, `max_tank_od_m` came). A later change to
 /// the input table that needs the same kind of reading step reuses version 2 only while it is
 /// unreleased; see ADR 0007.
-pub const FORMAT_VERSION: u64 = 2;
+pub const FORMAT_VERSION: u64 = 3;
 
 /// The oldest `.vdesign` format version this tool still reads. A version 1 file is changed to
 /// the current inputs as it is read, with a warning for each change (see [`migrate_v1_option`]).
@@ -67,6 +67,10 @@ pub const KEYED_DEFAULTS: &[(&str, &str, &[&str])] = &[
     ),
     ("battery_unit_count", "cargo_phase", CARGO_PHASES),
     ("accommodation_unit_count", "cargo_phase", CARGO_PHASES),
+    // Issue #347 (spec 0007, maintainer decision 7): a new Option's stern by Cargo phase.
+    ("stern_form", "cargo_phase", CARGO_PHASES),
+    ("propulsor_type", "cargo_phase", CARGO_PHASES),
+    ("power_source", "cargo_phase", CARGO_PHASES),
 ];
 
 /// The LPG Cargos: the ones that are carried in one of three conditions (issue #292).
@@ -112,6 +116,41 @@ pub const LIQUID_PRESSURE_BASES: &[&str] = &["static", "igc_4_28_2", "none"];
 
 /// The tank head types (issue #375), as the core's `tanks.rs` names them.
 pub const HEAD_TYPES: &[&str] = &["hemisphere", "ellipsoidal_2to1"];
+
+/// The stern and propulsion choices of spec 0007 (issue #347). Inputs only in #347: the engine
+/// still computes today's arrangement, and later tickets give them effect.
+pub const STERN_FORMS: &[&str] = &["transom", "pram", "tunnel"];
+pub const PROPULSOR_TYPES: &[&str] = &[
+    "unspecified",
+    "azimuth_open",
+    "azimuth_ducted",
+    "shaft_open",
+    "shaft_nozzle",
+    "voith_schneider",
+    "pump_jet",
+];
+/// The Propulsor types other than `unspecified` (the ones with a count and a diameter).
+pub const SPECIFIED_PROPULSORS: &[&str] = &[
+    "azimuth_open",
+    "azimuth_ducted",
+    "shaft_open",
+    "shaft_nozzle",
+    "voith_schneider",
+    "pump_jet",
+];
+pub const POWER_SOURCES: &[&str] = &[
+    "battery_electric",
+    "gas_fuelled",
+    "diesel_mechanical",
+    "diesel_electric",
+    "battery_hybrid",
+];
+/// The Power Sources that carry a battery.
+pub const BATTERY_POWER_SOURCES: &[&str] = &["battery_electric", "battery_hybrid"];
+pub const BOW_THRUSTERS: &[&str] = &["none", "channel_jet", "tunnel"];
+pub const BOW_THRUSTERS_FITTED: &[&str] = &["channel_jet", "tunnel"];
+pub const WHEELHOUSE_TYPES: &[&str] = &["elevating", "fixed"];
+pub const SIGHTLINE_METHODS: &[&str] = &["margin", "blind_distance"];
 
 /// The tank insulation types. `unspecified` is the generic insulation the engine used before the
 /// type was an input; the density is the one value (60 kg/m3) for every type.
@@ -646,6 +685,26 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
         formations: Some(SELF_PROPELLED),
         value: AFT_SIGHTLINE_MARGIN_M,
     },
+    // Issue #347 (spec 0007): the stern and propulsion numbers that reproduce today's stern block.
+    // A square stern has no run; the count and the unit energy are not used by today's arrangement.
+    LegacyFixed {
+        name: "stern_run_length_m",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: 0.0,
+    },
+    LegacyFixed {
+        name: "propulsor_count",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: 2.0,
+    },
+    LegacyFixed {
+        name: "battery_unit_energy_kwh",
+        applies_to: AppliesTo::All,
+        formations: Some(SELF_PROPELLED),
+        value: 5000.0,
+    },
     LegacyFixed {
         name: "wheelhouse_max_lift_m",
         applies_to: AppliesTo::All,
@@ -698,6 +757,84 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         name: "lpg_loading_limit_basis",
         applies_to: AppliesTo::Only("type_c_tanks"),
         value: "\"refrigerated_density\"",
+    },
+    // Issue #347 (spec 0007): today's stern block. A file saved before reads a square transom
+    // stern with an unspecified propulsor, battery-electric, no bow thruster, an elevating
+    // wheelhouse with the margin sightline, and no stern block mass in the lightship.
+    LegacyFixedJson {
+        name: "stern_form",
+        applies_to: AppliesTo::All,
+        value: "\"transom\"",
+    },
+    LegacyFixedJson {
+        name: "stern_transom_height_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "tunnel_crown_height_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "propulsor_type",
+        applies_to: AppliesTo::All,
+        value: "\"unspecified\"",
+    },
+    LegacyFixedJson {
+        name: "propeller_diameter_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "power_source",
+        applies_to: AppliesTo::All,
+        value: "\"battery_electric\"",
+    },
+    LegacyFixedJson {
+        name: "installed_power_kw",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "design_speed_kn",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "installed_power_margin",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "bow_thruster",
+        applies_to: AppliesTo::All,
+        value: "\"none\"",
+    },
+    LegacyFixedJson {
+        name: "bow_thruster_power_kw",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "battery_energy_kwh",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "wheelhouse_type",
+        applies_to: AppliesTo::All,
+        value: "\"elevating\"",
+    },
+    LegacyFixedJson {
+        name: "sightline_method",
+        applies_to: AppliesTo::All,
+        value: "\"margin\"",
+    },
+    LegacyFixedJson {
+        name: "stern_block_mass_included",
+        applies_to: AppliesTo::All,
+        value: "false",
     },
     // Issue #375: a file saved before the head type was an input keeps hemispherical heads.
     LegacyFixedJson {
@@ -826,6 +963,7 @@ pub enum Group {
     GasTanks,
     DryBulkHold,
     AftBlock,
+    SternAndPropulsion,
     WaterwayLimits,
     SpeedAndPower,
     CostRates,
@@ -833,13 +971,14 @@ pub enum Group {
 
 impl Group {
     /// Every group, in the order a form shows them.
-    pub const ALL: [Group; 9] = [
+    pub const ALL: [Group; 10] = [
         Group::Required,
         Group::VesselClass,
         Group::HullAndContainment,
         Group::GasTanks,
         Group::DryBulkHold,
         Group::AftBlock,
+        Group::SternAndPropulsion,
         Group::WaterwayLimits,
         Group::SpeedAndPower,
         Group::CostRates,
@@ -854,6 +993,7 @@ impl Group {
             Group::GasTanks => "Gas tanks",
             Group::DryBulkHold => "Dry-bulk hold",
             Group::AftBlock => "Aft block",
+            Group::SternAndPropulsion => "Stern and propulsion",
             Group::WaterwayLimits => "Waterway Limits",
             Group::SpeedAndPower => "Speed and power",
             Group::CostRates => "Cost rates",
@@ -886,6 +1026,25 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("316L", "316L stainless steel"),
     ("9Ni", "9 % nickel steel"),
     ("S690QL1", "S690QL1 quenched and tempered steel"),
+    ("transom", "Transom"),
+    ("pram", "Pram"),
+    ("tunnel", "Tunnel"),
+    ("azimuth_open", "Azimuth thruster, open"),
+    ("azimuth_ducted", "Azimuth thruster, ducted"),
+    ("shaft_open", "Shaft and open propeller"),
+    ("shaft_nozzle", "Shaft and propeller in a nozzle"),
+    ("voith_schneider", "Voith Schneider"),
+    ("pump_jet", "Pump jet"),
+    ("battery_electric", "Battery-electric"),
+    ("gas_fuelled", "Gas-fuelled"),
+    ("diesel_mechanical", "Diesel-mechanical"),
+    ("diesel_electric", "Diesel-electric"),
+    ("battery_hybrid", "Battery hybrid"),
+    ("channel_jet", "Channel jet"),
+    ("elevating", "Elevating"),
+    ("fixed", "Fixed"),
+    ("margin", "Margin over the obstruction"),
+    ("blind_distance", "Blind distance (ES-TRIN 7.02)"),
     ("hemisphere", "Hemispherical"),
     ("ellipsoidal_2to1", "2:1 semi-ellipsoidal"),
     ("static", "Static (a = 1), IGC 4.28.1.2"),
@@ -929,7 +1088,25 @@ pub struct InputSpec {
     /// The Cargos the input is used for (the LPG carriage condition is for LPG only); `None` for
     /// every Cargo.
     pub cargos: Option<&'static [&'static str]>,
+    /// Issue #347: the input is used only when another input (earlier in [`INPUTS`]) holds one of
+    /// these values; `None` for always. An input that does not apply leaves the condition met.
+    pub when: Option<(&'static str, &'static [&'static str])>,
     pub group: Group,
+}
+
+/// The same input, used only when `input` holds one of `values` (issue #347).
+const fn when(mut s: InputSpec, input: &'static str, values: &'static [&'static str]) -> InputSpec {
+    s.when = Some((input, values));
+    s
+}
+
+/// Whether an input with the condition `when` applies, given the value of the input it names
+/// (`None` when that input is absent or does not apply: then the condition is met).
+pub fn when_includes(when: Option<(&str, &[&str])>, value: Option<&str>) -> bool {
+    match (when, value) {
+        (Some((_, values)), Some(v)) => values.contains(&v),
+        _ => true,
+    }
 }
 
 const fn spec(
@@ -947,6 +1124,7 @@ const fn spec(
         applies_to: AppliesTo::All,
         formations: None,
         cargos: None,
+        when: None,
         group,
     }
 }
@@ -966,6 +1144,7 @@ const fn only(
         applies_to: AppliesTo::Only(containment),
         formations: None,
         cargos: None,
+        when: None,
         group,
     }
 }
@@ -985,6 +1164,7 @@ const fn only_in(
         applies_to: AppliesTo::AnyOf(containments),
         formations: None,
         cargos: None,
+        when: None,
         group,
     }
 }
@@ -1003,6 +1183,7 @@ const fn pushed(
         applies_to: AppliesTo::All,
         formations: Some(PUSHED),
         cargos: None,
+        when: None,
         group,
     }
 }
@@ -1021,6 +1202,7 @@ const fn self_propelled(
         applies_to: AppliesTo::All,
         formations: Some(SELF_PROPELLED),
         cargos: None,
+        when: None,
         group,
     }
 }
@@ -1041,6 +1223,7 @@ const fn lpg(
         applies_to: AppliesTo::Only(containment),
         formations: None,
         cargos: Some(LPG_CARGOS),
+        when: None,
         group,
     }
 }
@@ -1384,12 +1567,150 @@ pub const INPUTS: &[InputSpec] = &[
         "sloped_hopper_hold",
         Group::DryBulkHold,
     ),
-    spec(
-        "propulsive_efficiency",
-        "Propulsive efficiency",
-        NUM,
-        false,
-        Group::SpeedAndPower,
+    // Issue #347 (spec 0007): the stern and propulsion of a self-propelled hull. They come before
+    // the inputs whose use they decide (`thruster_count`, `propulsive_efficiency`).
+    self_propelled(
+        "stern_form",
+        "Stern form",
+        InputKind::Choice(STERN_FORMS),
+        Group::SternAndPropulsion,
+    ),
+    self_propelled(
+        "stern_run_length_m",
+        "Stern run length",
+        NUM_OR_NONE,
+        Group::SternAndPropulsion,
+    ),
+    self_propelled(
+        "stern_transom_height_m",
+        "Transom height above base",
+        NUM_OR_NONE,
+        Group::SternAndPropulsion,
+    ),
+    when(
+        self_propelled(
+            "tunnel_crown_height_m",
+            "Tunnel crown height above base",
+            NUM_OR_NONE,
+            Group::SternAndPropulsion,
+        ),
+        "stern_form",
+        &["tunnel"],
+    ),
+    self_propelled(
+        "propulsor_type",
+        "Propulsor type",
+        InputKind::Choice(PROPULSOR_TYPES),
+        Group::SternAndPropulsion,
+    ),
+    when(
+        self_propelled(
+            "propulsor_count",
+            "Propulsor count",
+            NUM,
+            Group::SternAndPropulsion,
+        ),
+        "propulsor_type",
+        SPECIFIED_PROPULSORS,
+    ),
+    when(
+        self_propelled(
+            "propeller_diameter_m",
+            "Propeller diameter",
+            NUM_OR_NONE,
+            Group::SternAndPropulsion,
+        ),
+        "propulsor_type",
+        SPECIFIED_PROPULSORS,
+    ),
+    self_propelled(
+        "power_source",
+        "Power source",
+        InputKind::Choice(POWER_SOURCES),
+        Group::SternAndPropulsion,
+    ),
+    self_propelled(
+        "installed_power_kw",
+        "Installed power",
+        NUM_OR_NONE,
+        Group::SternAndPropulsion,
+    ),
+    self_propelled(
+        "design_speed_kn",
+        "Design speed",
+        NUM_OR_NONE,
+        Group::SternAndPropulsion,
+    ),
+    self_propelled(
+        "installed_power_margin",
+        "Installed power margin",
+        NUM_OR_NONE,
+        Group::SternAndPropulsion,
+    ),
+    self_propelled(
+        "bow_thruster",
+        "Bow thruster",
+        InputKind::Choice(BOW_THRUSTERS),
+        Group::SternAndPropulsion,
+    ),
+    when(
+        self_propelled(
+            "bow_thruster_power_kw",
+            "Bow thruster power",
+            NUM_OR_NONE,
+            Group::SternAndPropulsion,
+        ),
+        "bow_thruster",
+        BOW_THRUSTERS_FITTED,
+    ),
+    when(
+        self_propelled(
+            "battery_energy_kwh",
+            "Battery energy",
+            NUM_OR_NONE,
+            Group::SternAndPropulsion,
+        ),
+        "power_source",
+        BATTERY_POWER_SOURCES,
+    ),
+    when(
+        self_propelled(
+            "battery_unit_energy_kwh",
+            "Battery energy per 40 ft unit",
+            NUM,
+            Group::SternAndPropulsion,
+        ),
+        "power_source",
+        BATTERY_POWER_SOURCES,
+    ),
+    self_propelled(
+        "wheelhouse_type",
+        "Wheelhouse type",
+        InputKind::Choice(WHEELHOUSE_TYPES),
+        Group::SternAndPropulsion,
+    ),
+    self_propelled(
+        "sightline_method",
+        "Sightline method",
+        InputKind::Choice(SIGHTLINE_METHODS),
+        Group::SternAndPropulsion,
+    ),
+    self_propelled(
+        "stern_block_mass_included",
+        "Stern block mass in the lightship",
+        InputKind::Bool,
+        Group::SternAndPropulsion,
+    ),
+    when(
+        spec(
+            "propulsive_efficiency",
+            "Propulsive efficiency",
+            NUM,
+            false,
+            Group::SpeedAndPower,
+        ),
+        "propulsor_type",
+        &["unspecified"],
     ),
     spec(
         "max_speed_kn",
@@ -1398,11 +1719,15 @@ pub const INPUTS: &[InputSpec] = &[
         false,
         Group::SpeedAndPower,
     ),
-    self_propelled(
-        "thruster_count",
-        "Thruster count (most)",
-        NUM,
-        Group::AftBlock,
+    when(
+        self_propelled(
+            "thruster_count",
+            "Thruster count (most)",
+            NUM,
+            Group::AftBlock,
+        ),
+        "propulsor_type",
+        &["unspecified"],
     ),
     self_propelled(
         "thruster_envelope_m",
@@ -2452,6 +2777,10 @@ fn read_option(
                 .is_some_and(|c| scope.includes(c)),
         } && formation_includes(spec.formations, kind)
             && cargo_includes(spec.cargos, cargo);
+        // Issue #347: an input used only when an earlier input holds one of some values.
+        let controller = spec.when.and_then(|(n, _)| value_of(&inputs, n));
+        let applies =
+            applies && when_includes(spec.when, controller.as_ref().and_then(Value::as_str));
         if let Some(raw_input) = raw.get(spec.name) {
             let stored = match unmark(raw_input) {
                 Ok(s) => s,
@@ -2472,6 +2801,18 @@ fn read_option(
                         "`{input}` is not used for the Cargo {cargo}; ignored",
                         input = input,
                         cargo = cargo.unwrap_or("unknown")
+                    )
+                } else if !when_includes(spec.when, controller.as_ref().and_then(Value::as_str)) {
+                    let (by, _) = spec.when.expect("a condition failed, so there is one");
+                    text!(
+                        "msg-input-unused-when",
+                        "`{input}` is not used when `{by}` is {value}; ignored",
+                        input = input,
+                        by = Arg::input(by),
+                        value = controller
+                            .as_ref()
+                            .and_then(Value::as_str)
+                            .unwrap_or("unknown")
                     )
                 } else if formation_includes(spec.formations, kind) {
                     text!(

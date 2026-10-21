@@ -337,6 +337,7 @@ const AFT_FIELDS: &[&str] = &[
     "sightline_margin_m",
     "wheelhouse_max_lift_m",
     "propulsion",
+    "power_source",
     "electrical_load_kwe",
     "n_gensets",
     "genset_model",
@@ -394,6 +395,24 @@ fn aft_inputs(args: &Value) -> Result<AftArrangementInputs, EvalError> {
     }
     if let Some(p) = opt_str_field(o, "propulsion")? {
         i.propulsion = p;
+    }
+    // Issue #347: `power_source` is the new name of `propulsion` (spec 0007). The stern block models
+    // its two first values; the others wait for the machinery ticket (#352). `propulsion` is still
+    // read as before: the Python API sends it on every call.
+    if let Some(source) = opt_str_field(o, "power_source")? {
+        if !matches!(source.as_str(), "battery_electric" | "gas_fuelled") {
+            return Err(EvalError::BadInput(format!(
+                "`inputs.power_source` {source} is not modelled by the stern block yet; it takes \
+                 battery_electric or gas_fuelled"
+            )));
+        }
+        if o.contains_key("propulsion") && source != i.propulsion {
+            return Err(EvalError::BadInput(format!(
+                "`inputs.power_source` {source} and `inputs.propulsion` {} disagree",
+                i.propulsion
+            )));
+        }
+        i.propulsion = source;
     }
     // Issue #180: a gas-fuelled block carries no battery, so an absent or null count means 0.
     if i.is_gas_fuelled() {

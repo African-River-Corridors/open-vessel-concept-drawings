@@ -342,14 +342,14 @@ fn a_convoy_needs_whole_numbers_abreast_and_in_line() {
 fn file_level_problems_are_hard_errors() {
     let p = Profile::built_in();
     let r = check(
-        r#"{"format": "vdesign", "format_version": 3, "engine_version": "0.1.0", "options": []}"#,
+        r#"{"format": "vdesign", "format_version": 4, "engine_version": "0.1.0", "options": []}"#,
         &p,
     )
     .report;
     assert!(
         has(
             &r.errors,
-            "format_version 3 is not supported; this tool reads versions 1 to 2"
+            "format_version 4 is not supported; this tool reads versions 1 to 3"
         ),
         "{r:?}"
     );

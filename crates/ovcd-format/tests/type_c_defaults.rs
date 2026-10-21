@@ -520,7 +520,12 @@ fn a_file_with_the_carriage_condition_does_not_warn() {
 
 #[test]
 fn the_legacy_other_table_covers_every_text_or_none_default() {
-    let names: Vec<&str> = LEGACY_FIXED_OTHER.iter().map(|l| l.name).collect();
+    // The gas tank inputs only: the stern inputs of issue #347 are in their own group.
+    let names: Vec<&str> = LEGACY_FIXED_OTHER
+        .iter()
+        .filter(|l| l.applies_to.containments() == ["type_c_tanks"])
+        .map(|l| l.name)
+        .collect();
     for name in [
         "lpg_carriage_condition",
         "tank_material",

@@ -27,7 +27,7 @@ use crate::text_ids::msg_json;
 use crate::vdesign::{
     AppliesTo, CARGO_CONTAINMENTS, Design, DesignOption, ENGINE_VERSION, FORMATION_KINDS, Group,
     INPUTS, InputKind, KEYED_DEFAULTS, Report, Source, StoredInput, TABLE_DEFAULTS, TABLE_KEYS,
-    cargo_includes, check, choice_label, fill, formation_includes, new_design,
+    cargo_includes, check, choice_label, fill, formation_includes, new_design, when_includes,
 };
 use ovcd_core::text::{Arg, Msg};
 use serde_json::{Map, Value, json};
@@ -42,8 +42,10 @@ use serde_json::{Map, Value, json};
 ///   "inputs": [ { "name", "group", "kind", "required", "applies_to": [containments],
 ///                 "applies_to_formation": [Formation kinds],
 ///                 "applies_to_cargo": [Cargo keys],
+///                 "applies_when": { "input", "values" } (only when the input has a condition),
 ///                 "unit", "nullable", "choices": [{ "value", "label", ... }],
 ///                 "default" | "default_by": { "by", "values" },
+///                 "default_status", "default_source" (when the profile gives them),
 ///                 "default_table": { "by": [keys], "rows": [{ "when", "value", "status", "source",
 ///                                    "basis" }] },
 ///                 "hard": { "gt"|"ge"|"lt"|"le" }, "soft": { "min", "max" }, "basis" } ] }
@@ -94,6 +96,14 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
         .filter(|k| cargo_includes(spec.cargos, Some(k)))
         .collect();
     e.insert("applies_to_cargo".into(), json!(cargos));
+    // Issue #347: the input is used only when another input holds one of these values.
+    if let Some((by, values)) = spec.when {
+        e.insert(
+            "applies_when".into(),
+            json!({ "input": by, "values": values }),
+        );
+    }
+    add_status(&mut e, name, profile);
     match spec.kind {
         InputKind::Number { nullable } => {
             e.insert("kind".into(), json!("number"));
@@ -305,6 +315,16 @@ fn add_ranges(e: &mut Map<String, Value>, name: &str, profile: &Profile) {
         e.insert("soft".into(), json!({ "min": s.min, "max": s.max }));
     }
     e.insert("basis".into(), json!(profile.basis(name)));
+}
+
+/// The status of a plain or keyed default, if the profile gives one (issue #347).
+fn add_status(e: &mut Map<String, Value>, name: &str, profile: &Profile) {
+    if let Some((status, source)) = profile.default_status(name) {
+        e.insert("default_status".into(), json!(status));
+        if let Some(source) = source {
+            e.insert("default_source".into(), json!(source));
+        }
+    }
 }
 
 /// What [`DesignSession::open`] found in the file.
@@ -575,6 +595,16 @@ impl DesignSession {
             && !cargo_includes(spec.cargos, Some(cargo))
         {
             return Err(format!("`{name}` is not used for the Cargo {cargo}"));
+        }
+        // Issue #347: an input used only when another input holds one of some values.
+        if let Some((by, _)) = spec.when
+            && let Some(value) = self.design.options[i].input(by).map(|s| s.value.clone())
+            && !when_includes(spec.when, value.as_str())
+        {
+            return Err(format!(
+                "`{name}` is not used when `{by}` is {}",
+                value.as_str().unwrap_or("unknown")
+            ));
         }
         match name {
             "vessel_class" => self.pick_class(i, &value)?,
@@ -1005,7 +1035,13 @@ impl DesignSession {
                     (AppliesTo::All, _) | (_, None) => true,
                     (scope, Some(current)) => scope.includes(current),
                 } && formation_includes(spec.formations, kind)
-                    && cargo_includes(spec.cargos, cargo);
+                    && cargo_includes(spec.cargos, cargo)
+                    && when_includes(
+                        spec.when,
+                        spec.when
+                            .and_then(|(by, _)| from_fill.input(by))
+                            .and_then(|i| i.value.as_str()),
+                    );
                 let held = self
                     .hidden
                     .iter()

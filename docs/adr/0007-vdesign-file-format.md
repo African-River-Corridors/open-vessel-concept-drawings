@@ -62,6 +62,26 @@ save writes the current version.
   class that disagrees is replaced, with a warning. Picking a class sets length, beam and Formation
   (and a convoy's counts), marked `class`; its draught (top of the range) and air draft (bottom of the
   range) fill the two limits, marked `class`, unless a limit was typed. Depth stays typed.
+- **3** (issue #347, spec 0007; no release has shipped it, so later tickets add to it: #274's
+  `service_area` and `rule_sets`, the ADR 0012 hull block, the tug and Formation inputs of spec 0007): the stern
+  and propulsion inputs of a self-propelled hull, in a new group "Stern and propulsion": `stern_form`,
+  `stern_run_length_m`, `stern_transom_height_m`, `tunnel_crown_height_m`, `propulsor_type`,
+  `propulsor_count`, `propeller_diameter_m`, `power_source`, `installed_power_kw`, `design_speed_kn`,
+  `installed_power_margin`, `bow_thruster`, `bow_thruster_power_kw`, `battery_energy_kwh`,
+  `battery_unit_energy_kwh`, `wheelhouse_type`, `sightline_method` and `stern_block_mass_included`. A file of
+  version 1 or 2 that lacks them gets the value that reproduces today's stern block (a table in `vdesign.rs`,
+  marked `default`, one warning per Option): a square transom stern, an unspecified propulsor (the fixed
+  efficiency and today's thruster layout), battery-electric, no bow thruster, an elevating wheelhouse with the
+  margin sightline, no stern block mass in the lightship. So its results do not change. A new Option takes the
+  Defaults Profile values: `stern_form`, `propulsor_type` and `power_source` by Cargo phase, and
+  `wheelhouse_eye_height_m` 1.65 m (ES-TRIN 7.02; a file keeps its own, and a file without it 1.50 m). An input
+  can now apply only when an earlier input holds some values (`applies_when` in the schema):
+  `thruster_count` and `propulsive_efficiency` only with an `unspecified` propulsor, the count and diameter
+  only with a specified one, the tunnel crown only with a tunnel stern, the bow thruster power only with a
+  bow thruster, the battery energy only with a battery Power Source. The engine reads none of the new inputs
+  yet: later tickets of spec 0007 give them effect. A profile entry may say `status` (`sourced` with its
+  `source`, or `estimate`) beside its `basis`; the schema shows it as `default_status`. Saving writes
+  version 3.
 - **Inputs added after the first files** (issue #4: the dry-bulk hold, the bow rake over depth, the stern void of a pushed barge, the end bulkhead allowance, the gas tank arrangement values, the water density, the squat safety margin, the 14 cost rates, the 17 aft block values of a self-propelled hull): a file that lacks one of these
   inputs, in version 1 or in a version 2 file from a test build, is read with the fixed value the engine
   used before the input existed (a table in `vdesign.rs`, not the Defaults Profile), marked `default`, with

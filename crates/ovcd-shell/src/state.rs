@@ -398,7 +398,7 @@ mod tests {
         state.saved(Path::new("old.vdesign"));
         assert_eq!(state.snapshot()["migration_notes"], json!([]));
         let saved: Value = serde_json::from_str(&state.save_text().unwrap()).unwrap();
-        assert_eq!(saved["format_version"], 2);
+        assert_eq!(saved["format_version"], 3);
         // A file that needs no change has none.
         let fresh = AppState::open(Path::new("a.vdesign"), &starter_text()).unwrap();
         assert_eq!(fresh.snapshot()["migration_notes"], json!([]));
