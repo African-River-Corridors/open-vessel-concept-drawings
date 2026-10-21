@@ -78,6 +78,25 @@ def test_gates_fail_when_cargo_test_fails(tmp_path):
     assert "gates: ok: clippy -D warnings" in result.stdout
 
 
+def test_gates_fail_when_cargo_nextest_is_missing(tmp_path):
+    """The gate runs the Rust tests with cargo-nextest (issue #481): without it the gate fails
+    before any step runs, not with a later step that never ran the tests."""
+    libdir = tmp_path / "wasm-libdir"
+    libdir.mkdir()
+    path = _path_with_only(tmp_path, GATES_TOOLS)
+    bin_dir = Path(path)
+    (bin_dir / "cargo").write_text(
+        '#!/bin/sh\nif [ "$1" = nextest ]; then echo "no such command: nextest" >&2; exit 101; fi\nexit 0\n'
+    )
+    (bin_dir / "rustc").write_text(f'#!/bin/sh\necho "{libdir}"\n')
+    for stub in ("cargo", "rustc"):
+        (bin_dir / stub).chmod(0o755)
+    result = _gates(path, OVCD_PYTHON=sys.executable)
+    assert result.returncode != 0
+    assert "cargo-nextest is not installed" in result.stderr
+    assert "gates: ok:" not in result.stdout
+
+
 @pytest.mark.parametrize("missing", GATES_TOOLS)
 def test_gates_fail_when_any_tool_they_call_is_missing(tmp_path, missing):
     libdir = tmp_path / "wasm-libdir"

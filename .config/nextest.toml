@@ -1,0 +1,28 @@
+# cargo-nextest profiles (issue #481). `tools/gates.sh` runs the `pr` profile; with
+# GATES_NEXTEST_PROFILE=nightly it runs `nightly`, which is every test. The tests that `pr` leaves
+# out are listed, with their measured time and the reason, in docs/agents/slow-tests.md. Keep the
+# two lists equal (tests/test_gates_slow_list.py checks it). Never leave out a test that proves a
+# gate: the evaluation harness false-pass check, the fixture and results hashes, WebAssembly
+# parity, the release guard and the embargo check, or the design-impact check.
+
+[profile.default]
+
+[profile.pr]
+default-filter = """
+not (
+    (binary_id(ovcd-core::gas_arrangement_feasible) & test(=no_arrangement_labelled_feasible_has_a_failing_check))
+  | (binary_id(ovcd-format::ga) & test(=a_sweep_of_hull_sizes_always_draws_a_valid_sheet))
+  | (binary_id(ovcd-core::gas_arrangement) & test(=property_the_smallest_viable_length_is_a_length_that_passes))
+  | (binary_id(ovcd-format::aft_block_inputs) & test(=each_input_moves_the_aft_block_in_the_drawing_object))
+)
+"""
+
+[profile.pr.junit]
+path = "junit.xml"
+
+[profile.nightly]
+default-filter = "all()"
+fail-fast = false
+
+[profile.nightly.junit]
+path = "junit.xml"

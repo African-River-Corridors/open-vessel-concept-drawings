@@ -142,6 +142,7 @@ def test_the_grid_error_tolerances_are_above_what_the_engine_shows():
         assert gen.STEPS[k][0] >= gen.GRID_TOL[k], k
 
 
+@pytest.mark.slow
 def test_the_mutants_file_is_what_the_generator_writes():
     """Label: property - evaluation/mutants.yaml is generated, never edited by hand."""
     r = subprocess.run([sys.executable, str(EVAL / "oracle" / "mutants.py"), "--check"],

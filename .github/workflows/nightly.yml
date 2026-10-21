@@ -1,0 +1,56 @@
+name: Nightly
+
+# Every test (issue #481): the fast gate with the `nightly` profile, which also runs the tests the
+# PR `test` job leaves out (docs/agents/slow-tests.md), and the mutants file check. It runs every day,
+# by hand, and on a PR that changes the slow list, the nextest profiles, the gate script or this
+# workflow. It is not a required check. Its job is not named `test`, so it never stands in for the
+# required `test` check of ci.yml.
+
+on:
+  schedule:
+    - cron: "41 2 * * *" # every day, 02:41 UTC
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/nightly.yml"
+      - ".config/nextest.toml"
+      - "docs/agents/slow-tests.md"
+      - "tools/gates.sh"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  every-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the design-impact check diffs against the merge base
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: Install cargo-nextest (pinned)
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest@0.9.100
+      - name: Install the Python package (maturin builds the extension, so Rust comes first)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev]'
+      - name: Fast gate, every test
+        env:
+          GATES_NEXTEST_PROFILE: nightly
+        run: bash tools/gates.sh
+      - name: Evaluation harness (a false pass fails the build)
+        run: python evaluation/run.py --check
+      - name: The mutants file is what the generator writes
+        run: python evaluation/oracle/mutants.py --check
