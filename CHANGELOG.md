@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Design change (issue #411): an insulated 2:1 semi-ellipsoidal tank head is R_s/2 + t_ins long (R_s the shell outer radius, t_ins the insulation), not (R_s + t_ins)/2: the insulation adds its full thickness at the crown. The cylinder is t_ins shorter per tank, so the tank volume and the cargo fall a little. Only insulated LPG Options with 2:1 heads move (semi-pressurised and fully refrigerated LPG; fully pressurised LPG has no insulation; hemispheres were already right): cargo -0.5 % on the LPG carriage sweeps, -0.9 % on the `tank_head_type` sweep. No saved file moves.
 - Design change (issue #410, part 1a, the maintainer decision on #410): the covering above the moulded depth D is a non-structural weather covering by default. The hull steel is weighed to D only (`steel_rate_per_cbm` x LOA x B x D; the wing plate no longer raises the moulded depth). The wing plate, the side plating from D up to it, and the weather shield (6 mm, top at the tank top + 1.5 m) are lightship items, each with its own VCG and LCG (`weights::covering_items`); only the parts above D count, so a D set over the tanks makes the covering structural. The gas stability and the IS Code loading conditions take the items at their own heights. The bottom-up steel and the cost do not change. Effect, on top of the IS Code loading conditions of #426 part 3: the light KG rises by about 0.5 to 0.6 m on gas designs with a wing tank. 86 gas cases move (lightship, KG, GM); the cargo moves on three: -21 % on the `tank_material` sweep (1,754 t to 1,378 t), and the two gas channel cases (+6 % and +25 %, both now infeasible). Four sweeps turn infeasible: LNG and LNG/ethane pushed, and the two gas channel cases. The new failures are the IS Code 2008 Part A 2.2.3 angle of maximum GZ of at least 25 degrees, in the Light condition. That criterion on wide, shallow hulls is #498. In the `gas_arrangement::fit` API (the legacy gas stability) the CN II benchmark falls from 2,021 t to 1,406 t: one tank abreast fails that criterion, so the search takes two. Part 1b (the shield thickness and clearance as inputs) follows.
 - Text fix (issue #433, item 1): the limitation `stab-limit-no-wind-or-damage` cited ADN 9.3.1.15 for wind heel, but ADN 9.3.1.15 is the damaged-condition stability only. It now cites ADN 9.3.1.15 and IGC 2.7 for damage stability and the IS Code 2008 weather criterion (Part A 2.3) for wind heel. Every result with a stability block moves by this text (107 design-impact cases move by it alone).
 - Change (issue #420, part a, the resistance side): `resistance::compute` now keeps the method checks at the service speed of each environment. Where squat applies: the `squat.rs` checks (`keel_clears_bed`, `keel_clears_bed_with_margin`, `froude_depth_subcritical`, and `blockage_within_barrass_range` and `methods_agree_within_50pct` when they apply); where there are waves: the STAwave-1 checks (`stawave1_short_wave_validity`, `wave_height_within_screening_range`, `bow_length_supplied`); in shallow water: a new warning `lackenby_fit_subcritical` (the shallow-water fit holds below a depth Froude number of 0.95, `LACKENBY_FNH_MAX`; above it a fixed factor stands in, an OVCD choice). Each is named for its environment, as `keel_clears_bed[<environment>]`. They are in `ResistanceResults.checks` (and the Python API); the Design run does not copy them yet (part b, the rules lane), so no result or hash moves. New message `check-lackenby-fit-subcritical`.
@@ -211,6 +212,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/411-head-insulation (2026-10-21)
+
+Between `main e8e5589` and `this branch a4a089f`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[21].message` | tank length 37.25 m / inner diameter 7.63 m = 4.89 <= 7.0 | tank length 37.25 m / inner diameter 7.63 m = 4.88 <= 7.0 | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[22].message` | freeboard 3.20 m at the carried draught 2.80 m >= required 0.3 m | freeboard 3.21 m at the carried draught 2.79 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[23].message` | GM 1.43 m (fluid), max GZ 1.08 m at 36° | GM 1.44 m (fluid), max GZ 1.08 m at 36° | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[24].message` | GM 1.42 m (fluid), max GZ 1.08 m at 36° | GM 1.43 m (fluid), max GZ 1.08 m at 36° | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[26].message` | GM 5.73 m (fluid), max GZ 1.81 m at 27° | GM 5.74 m (fluid), max GZ 1.81 m at 27° | changed |
+| sweep gas carriage LPG_butane fully_refrigerated | `checks[3].message` | freeboard 3.20 m >= required 0.3 m | freeboard 3.21 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_butane semi_pressurised | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.93 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.94 m of 6.00 m | changed |
+| sweep gas carriage LPG_butane semi_pressurised | `checks[22].message` | freeboard 3.00 m at the carried draught 3.00 m >= required 0.3 m | freeboard 3.01 m at the carried draught 2.99 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_butane semi_pressurised | `checks[23].message` | GM 1.22 m (fluid), max GZ 0.95 m at 36° | GM 1.23 m (fluid), max GZ 0.96 m at 36° | changed |
+| sweep gas carriage LPG_butane semi_pressurised | `checks[24].message` | GM 1.21 m (fluid), max GZ 0.95 m at 36° | GM 1.22 m (fluid), max GZ 0.95 m at 36° | changed |
+| sweep gas carriage LPG_butane semi_pressurised | `checks[25].message` | GM 4.77 m (fluid), max GZ 1.57 m at 26° | GM 4.78 m (fluid), max GZ 1.57 m at 26° | changed |
+| sweep gas carriage LPG_butane semi_pressurised | `checks[26].message` | GM 4.81 m (fluid), max GZ 1.57 m at 26° | GM 4.82 m (fluid), max GZ 1.57 m at 26° | changed |
+| sweep gas carriage LPG_butane semi_pressurised | `checks[3].message` | freeboard 3.00 m >= required 0.3 m | freeboard 3.01 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[21].message` | tank length 37.25 m / inner diameter 7.63 m = 4.89 <= 7.0 | tank length 37.25 m / inner diameter 7.63 m = 4.88 <= 7.0 | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[22].message` | freeboard 3.21 m at the carried draught 2.79 m >= required 0.3 m | freeboard 3.22 m at the carried draught 2.78 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[23].message` | GM 1.44 m (fluid), max GZ 1.09 m at 36° | GM 1.45 m (fluid), max GZ 1.09 m at 36° | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[24].message` | GM 1.44 m (fluid), max GZ 1.08 m at 36° | GM 1.45 m (fluid), max GZ 1.09 m at 36° | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[26].message` | GM 5.73 m (fluid), max GZ 1.81 m at 27° | GM 5.74 m (fluid), max GZ 1.81 m at 27° | changed |
+| sweep gas carriage LPG_mix fully_refrigerated | `checks[3].message` | freeboard 3.21 m >= required 0.3 m | freeboard 3.22 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_mix semi_pressurised | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.93 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.94 m of 6.00 m | changed |
+| sweep gas carriage LPG_mix semi_pressurised | `checks[22].message` | freeboard 3.12 m at the carried draught 2.88 m >= required 0.3 m | freeboard 3.13 m at the carried draught 2.87 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_mix semi_pressurised | `checks[23].message` | GM 1.30 m (fluid), max GZ 1.01 m at 36° | GM 1.31 m (fluid), max GZ 1.01 m at 36° | changed |
+| sweep gas carriage LPG_mix semi_pressurised | `checks[24].message` | GM 1.30 m (fluid), max GZ 1.00 m at 36° | GM 1.31 m (fluid), max GZ 1.01 m at 36° | changed |
+| sweep gas carriage LPG_mix semi_pressurised | `checks[25].message` | GM 4.77 m (fluid), max GZ 1.57 m at 26° | GM 4.78 m (fluid), max GZ 1.57 m at 26° | changed |
+| sweep gas carriage LPG_mix semi_pressurised | `checks[26].message` | GM 4.81 m (fluid), max GZ 1.57 m at 26° | GM 4.82 m (fluid), max GZ 1.57 m at 26° | changed |
+| sweep gas carriage LPG_mix semi_pressurised | `checks[3].message` | freeboard 3.12 m >= required 0.3 m | freeboard 3.13 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[21].message` | tank length 37.25 m / inner diameter 7.63 m = 4.89 <= 7.0 | tank length 37.25 m / inner diameter 7.63 m = 4.88 <= 7.0 | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[23].message` | GM 1.48 m (fluid), max GZ 1.10 m at 36° | GM 1.49 m (fluid), max GZ 1.11 m at 36° | changed |
+| sweep gas carriage LPG_propane fully_refrigerated | `checks[26].message` | GM 5.73 m (fluid), max GZ 1.81 m at 27° | GM 5.74 m (fluid), max GZ 1.81 m at 27° | changed |
+| sweep gas carriage LPG_propane semi_pressurised | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.93 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.94 m of 6.00 m | changed |
+| sweep gas carriage LPG_propane semi_pressurised | `checks[22].message` | freeboard 3.19 m at the carried draught 2.81 m >= required 0.3 m | freeboard 3.20 m at the carried draught 2.80 m >= required 0.3 m | changed |
+| sweep gas carriage LPG_propane semi_pressurised | `checks[23].message` | GM 1.36 m (fluid), max GZ 1.04 m at 36° | GM 1.37 m (fluid), max GZ 1.04 m at 36° | changed |
+| sweep gas carriage LPG_propane semi_pressurised | `checks[25].message` | GM 4.77 m (fluid), max GZ 1.57 m at 26° | GM 4.78 m (fluid), max GZ 1.57 m at 26° | changed |
+| sweep gas carriage LPG_propane semi_pressurised | `checks[26].message` | GM 4.81 m (fluid), max GZ 1.57 m at 26° | GM 4.82 m (fluid), max GZ 1.57 m at 26° | changed |
+| sweep gas carriage LPG_propane semi_pressurised | `checks[3].message` | freeboard 3.19 m >= required 0.3 m | freeboard 3.20 m >= required 0.3 m | changed |
+| sweep optional lpg_carriage_condition | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.93 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.94 m of 6.00 m | changed |
+| sweep optional lpg_carriage_condition | `checks[22].message` | freeboard 3.19 m at the carried draught 2.81 m >= required 0.3 m | freeboard 3.20 m at the carried draught 2.80 m >= required 0.3 m | changed |
+| sweep optional lpg_carriage_condition | `checks[23].message` | GM 1.36 m (fluid), max GZ 1.04 m at 36° | GM 1.37 m (fluid), max GZ 1.04 m at 36° | changed |
+| sweep optional lpg_carriage_condition | `checks[24].message` | GM 1.35 m (fluid), max GZ 1.03 m at 36° | GM 1.36 m (fluid), max GZ 1.04 m at 36° | changed |
+| sweep optional lpg_carriage_condition | `checks[25].message` | GM 4.75 m (fluid), max GZ 1.57 m at 26° | GM 4.76 m (fluid), max GZ 1.57 m at 26° | changed |
+| ... | 6454 more changed quantities | | | |
 
 ### ticket/410-covering-lightship (2026-10-21)
 

@@ -62,19 +62,23 @@ fn an_automatic_wall_names_the_material_and_uses_the_pressure_vessel_formula() {
 }
 
 #[test]
-fn an_ellipsoidal_head_is_half_as_long_and_uses_the_oblate_spheroid_area() {
+fn an_ellipsoidal_head_is_half_the_shell_radius_plus_the_insulation_and_uses_the_oblate_spheroid_area()
+ {
     let mut i = quickstart();
     i.tank_head_type = "ellipsoidal_2to1".into();
     i.tank_wall_thickness = None;
     i.post_init().unwrap();
     let t = calculate_tank_arrangement(&i).unwrap();
-    assert_eq!(t.head_length, 1.475);
-    assert_eq!(t.cylinder_length, 24.653999999999996);
+    // Issue #411: re-pinned to what the code prints with the head R_s/2 + t_ins long (hand case in
+    // tests/head_length.rs); were 1.475, 24.653999999999996, 108.51739261326834 and
+    // 44.72485318453459 with the head (R_s + t_ins)/2 long.
+    assert_eq!(t.head_length, 1.65);
+    assert_eq!(t.cylinder_length, 24.303999999999995);
     assert_eq!(t.volume_heads, 36.49344885686704);
     // Issue #314: re-pinned to what the code prints with the head area of tests/head_area.rs (it
     // was 105.55486138152804 t and 43.36450948944139 t with the old 1.084 pi R^2).
-    assert_eq!(t.tank_shell_weight, 108.51739261326834);
-    assert_eq!(t.insulation_weight, 44.72485318453459);
+    assert_eq!(t.tank_shell_weight, 107.17281667932176);
+    assert_eq!(t.insulation_weight, 44.17991252284289);
 }
 
 #[test]

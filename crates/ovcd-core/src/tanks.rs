@@ -199,7 +199,8 @@ pub fn calculate_tank_arrangement_wide(
     }
 
     // --- Head geometry ---
-    // Head length uses the full OD (the outer envelope including insulation).
+    // Head length is the outer envelope including insulation: the steel head depth plus the
+    // insulation over its crown.
     let hemisphere = inputs.tank_head_type == "hemisphere";
     let (head_length_outer, volume_one_head_inner, sa_one_head_shell);
     if hemisphere {
@@ -207,7 +208,10 @@ pub fn calculate_tank_arrangement_wide(
         volume_one_head_inner = (2.0 / 3.0) * PI * pow(head_inner_radius, 3.0);
         sa_one_head_shell = 2.0 * PI * pow(shell_outer_radius, 2.0);
     } else if inputs.tank_head_type == "ellipsoidal_2to1" {
-        head_length_outer = outer_radius / 2.0;
+        // Issue #411: the steel head is R_s/2 deep (R_s the shell outer radius) and the insulation
+        // adds its full thickness at the crown, so the head is R_s/2 + t_ins long, not
+        // (R_s + t_ins)/2. A hemisphere's R_s + t_ins is the outer radius, as above.
+        head_length_outer = shell_outer_radius / 2.0 + insulation_m;
         volume_one_head_inner = (1.0 / 3.0) * PI * pow(head_inner_radius, 3.0);
         sa_one_head_shell = ellipsoidal_2to1_head_area(shell_outer_radius);
     } else {
