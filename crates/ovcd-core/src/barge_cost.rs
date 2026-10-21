@@ -344,7 +344,18 @@ pub fn compute(
     inp: &BargeCostInputs,
     rt: &BargeCostRates,
 ) -> Result<BargeCostResult, ComputeError> {
-    let barge: [(&'static str, f64); 8] = [
+    compute_for(inp, rt, true)
+}
+
+/// [`compute`] for a Formation with a tug (`tug`) or without one (issue #403). With no tug there is
+/// no tug breakdown: the tug's hull steel and outfitting lump are not costed, and the vessel's own
+/// battery, propulsion and wheelhouse and accommodation are barge items.
+pub fn compute_for(
+    inp: &BargeCostInputs,
+    rt: &BargeCostRates,
+    tug: bool,
+) -> Result<BargeCostResult, ComputeError> {
+    let mut barge: Vec<(&'static str, f64)> = alloc::vec![
         (
             "hull_steel",
             (inp.hull_steel_t + inp.wing_plate_t + inp.weather_shield_t) * rt.hull_steel_rate,
@@ -357,13 +368,20 @@ pub fn compute(
         ("outfitting", inp.outfitting_t * rt.outfitting_rate),
         ("paint_anodes_misc", rt.paint_anodes_misc),
     ];
-    let tug: [(&'static str, f64); 5] = [
-        ("hull_steel", inp.tug_hull_steel_t * rt.hull_steel_rate),
+    let powering = [
         ("battery", inp.battery_kwh * rt.battery_rate_per_kwh),
         ("propulsion", inp.propulsion_kw * rt.propulsion_rate_per_kw),
         ("wheelhouse_accommodation", rt.wheelhouse_accom_lump),
-        ("outfitting", rt.tug_outfitting_lump),
     ];
+    let tug: Vec<(&'static str, f64)> = if tug {
+        let mut rows = alloc::vec![("hull_steel", inp.tug_hull_steel_t * rt.hull_steel_rate)];
+        rows.extend(powering);
+        rows.push(("outfitting", rt.tug_outfitting_lump));
+        rows
+    } else {
+        barge.extend(powering);
+        Vec::new()
+    };
     let barge_values: Vec<f64> = barge.iter().map(|(_, v)| *v).collect();
     let tug_values: Vec<f64> = tug.iter().map(|(_, v)| *v).collect();
     let b_sub = py_sum(&barge_values);

@@ -6,7 +6,7 @@
 //! (`UNHASHED_KEYS`), so saved Designs keep their hashes.
 
 use crate::vdesign::{COST_RATES_BASIS, DesignOption};
-use ovcd_core::barge_cost::{BargeCostInputs, BargeCostRates, BargeCostResult, compute};
+use ovcd_core::barge_cost::{BargeCostInputs, BargeCostRates, BargeCostResult, compute_for};
 use ovcd_core::models::WeightBreakdown;
 use serde_json::{Value, json};
 
@@ -162,7 +162,17 @@ fn rows(list: &[(&str, ovcd_core::pyint::PyInt)]) -> Value {
     )
 }
 
-fn result_json(r: &BargeCostResult, masses: &Value) -> Value {
+fn result_json(r: &BargeCostResult, masses: &Value, tug: bool) -> Value {
+    // With no tug its hull steel is not costed, so it is not listed (issue #403).
+    let mut masses = masses.clone();
+    if !tug {
+        if let Some(m) = masses["masses"].as_object_mut() {
+            m.remove("tug_hull_steel_t");
+        }
+        if let Some(list) = masses["core_default"].as_array_mut() {
+            list.retain(|n| n != "tug_hull_steel_t");
+        }
+    }
     json!({
         "currency": r.rates.currency,
         "basis": COST_RATES_BASIS,
@@ -189,8 +199,19 @@ pub fn cost_of(option: &DesignOption, results: &Value) -> Value {
     let (Some(inputs), Some(rates)) = (masses_of(masses), rates_of(option)) else {
         return Value::Null;
     };
-    match compute(&inputs, &rates) {
-        Ok(r) => result_json(&r, masses),
+    // Only a Formation with a tug costs one (issue #403): a self-propelled vessel has none.
+    let tug = has_tug(option);
+    match compute_for(&inputs, &rates, tug) {
+        Ok(r) => result_json(&r, masses, tug),
         Err(_) => Value::Null,
     }
+}
+
+/// Whether the Option's Formation has a tug: every one but `self_propelled`.
+fn has_tug(option: &DesignOption) -> bool {
+    let kind = option
+        .input("formation")
+        .and_then(|i| i.value.get("kind"))
+        .and_then(Value::as_str);
+    kind != Some("self_propelled")
 }

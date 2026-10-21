@@ -1,6 +1,7 @@
 <script lang="ts">
   // The capital budget of one Option, as the Design session gives it (the core's `barge_cost`): the
   // barge and tug breakdowns, subtotals, yard margin, delivery and unit total, in the rates' currency.
+  // A Formation with no tug (self-propelled, issue #403) has an empty tug breakdown: it is not shown.
   // The app adds nothing up. Below the tables: which masses came from this design, which are the
   // core's defaults, so that the figures are not read as more than they are.
   interface Cost {
@@ -57,7 +58,7 @@
       ? [
           { key: "barge", caption: "app-cost-barge", total: "app-cost-barge-subtotal", rows: cost.barge, subtotal: cost.barge_subtotal },
           { key: "tug", caption: "app-cost-tug", total: "app-cost-tug-subtotal", rows: cost.tug, subtotal: cost.tug_subtotal },
-        ]
+        ].filter((s) => s.rows.length > 0)
       : [],
   );
   let failing = $derived((cost?.checks ?? []).filter((c) => !c.ok));
@@ -92,7 +93,7 @@
         <caption>{t("app-cost-unit")}</caption>
         <tbody>
           <tr><th scope="row">{t("app-cost-barge-subtotal")}</th><td class="num">{money(cost.barge_subtotal)}</td></tr>
-          <tr><th scope="row">{t("app-cost-tug-subtotal")}</th><td class="num">{money(cost.tug_subtotal)}</td></tr>
+          {#if cost.tug.length > 0}<tr><th scope="row">{t("app-cost-tug-subtotal")}</th><td class="num">{money(cost.tug_subtotal)}</td></tr>{/if}
           <tr><th scope="row">{t("app-cost-yard-margin", { percent: num(cost.yard_margin_fraction * 100, 0, 1) })}</th><td class="num">{money(cost.yard_margin)}</td></tr>
           <tr><th scope="row">{t("app-cost-delivery")}</th><td class="num">{money(cost.delivery)}</td></tr>
           <tr class="sub total"><th scope="row">{t("app-cost-unit-total")}</th><td class="num" data-testid="cost-unit-total">{money(cost.unit_total)}</td></tr>
