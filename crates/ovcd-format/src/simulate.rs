@@ -995,6 +995,7 @@ fn simulate_measured(
     inp.aft_design = aft_design_of(p)?;
     inp.stern_block_mass = stern_mass_of(p)?;
     inp.stern_geometry = stern.cloned();
+    inp.machinery = machinery_of(p, stern, (l, b, d), t_design, self_propelled)?;
     // The hold design values. A key left out keeps the core default, which is the value the engine
     // used before these were inputs.
     inp.wing_void_width = get_or(p, "hold_wing_void_width_m", inp.wing_void_width)?;
@@ -1221,6 +1222,8 @@ fn stern_of(
             tunnel_crown_height_m: opt("tunnel_crown_height_m")?,
             propulsor_count: whole_number(count, "propulsor_count")?.max(1) as u32,
             propeller_diameter_m: opt("propeller_diameter_m")?,
+            max_unit_diameter_m: ovcd_core::propulsor::PropulsorType::from_key(propulsor)
+                .and_then(|t| t.max_unit_diameter_m()),
             parallel_shafts: propulsor.starts_with("shaft"),
         },
         &HullDims {
@@ -1231,6 +1234,80 @@ fn stern_of(
         },
     );
     Ok(if g.is_legacy() { None } else { Some(g) })
+}
+
+/// The machinery of a specified Propulsor (issue #352), or `None` for an `unspecified` one (today's
+/// stern block) and for a hull with no propulsion of its own.
+fn machinery_of(
+    p: &Map<String, Value>,
+    stern: Option<&ovcd_core::stern_form::SternGeometry>,
+    (l, b, d): (f64, f64, f64),
+    t: f64,
+    self_propelled: bool,
+) -> R<Option<ovcd_core::machinery::MachineryInputs>> {
+    use ovcd_core::machinery::{MachineryInputs, PowerSource, default_bow_thruster_kw};
+    let key = p
+        .get("propulsor_type")
+        .and_then(Value::as_str)
+        .unwrap_or("unspecified");
+    let (true, Some(propulsor)) = (
+        self_propelled,
+        ovcd_core::propulsor::PropulsorType::from_key(key),
+    ) else {
+        return Ok(None);
+    };
+    let source = p
+        .get("power_source")
+        .and_then(Value::as_str)
+        .unwrap_or("battery_electric");
+    let Some(power_source) = PowerSource::from_key(source) else {
+        return bad(format!(
+            "`params.power_source` {} is not a Power Source",
+            py_repr(&json!(source))
+        ));
+    };
+    let count = whole_number(get_or(p, "propulsor_count", 2.0)?, "propulsor_count")?.max(1) as u32;
+    let diameter = match stern {
+        Some(g) => g.propeller_diameter_m,
+        None => match truthy_float(p, "propeller_diameter_m")? {
+            Some(dia) => dia,
+            None => {
+                let d_max = ovcd_core::stern_form::K_D_OPEN * t;
+                propulsor
+                    .max_unit_diameter_m()
+                    .map_or(d_max, |m| d_max.min(m))
+            }
+        },
+    };
+    let bow_thruster = p
+        .get("bow_thruster")
+        .and_then(Value::as_str)
+        .unwrap_or("none");
+    let bow_thruster_kw = if bow_thruster == "none" {
+        None
+    } else {
+        Some(match truthy_float(p, "bow_thruster_power_kw")? {
+            Some(kw) => kw,
+            None => default_bow_thruster_kw(l, b, t),
+        })
+    };
+    let rake = get_or(
+        p,
+        "bow_rake_length_to_depth_ratio",
+        ovcd_core::barge_capacity::DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
+    )? * d;
+    Ok(Some(MachineryInputs {
+        power_source,
+        propulsor,
+        propulsor_count: count,
+        propeller_diameter_m: diameter,
+        installed_power_kw: truthy_float(p, "installed_power_kw")?,
+        battery_energy_kwh: truthy_float(p, "battery_energy_kwh")?,
+        bow_thruster_kw,
+        // The bow thruster sits in the bow, aft of the rake.
+        bow_thruster_lcg_m: l - rake,
+        stern_run_m: stern.map_or(0.0, |g| g.run_m),
+    }))
 }
 
 /// The block coefficient (issue #350): as the params give it; null asks for the rule, the volume
@@ -1496,6 +1573,7 @@ fn simulate_gas(
         stern_geometry: stern.cloned(),
         rules: rules.sets.clone(),
         rule_inputs: rules.inputs.clone(),
+        machinery: machinery_of(p, stern, (l, b, d0), design_draught(p, d0)?, self_propelled)?,
         ..FitOptions::default()
     };
     let f = ga::fit(l, b, cargo_key, t_max, &options)

@@ -188,7 +188,9 @@ the `atb` and `towed_barge` Vessel Classes pickable (`vessel_classes.rs` `format
   above D_max is used and fails the OVCD Check "propeller fits the stern". Under a tunnel, D_max is also
   capped so the tunnels fit (maintainer decision on #350): a tunnel of radius D with its crown 0.10 D above
   the tip is 2D·√0.99 wide at the base, so side by side the tunnels may meet but not overlap, and the
-  outer ones stay inside the beam.
+  outer ones stay inside the beam. With no typed D, the default is D_max, capped at the largest unit of
+  the Propulsor's maker range where one is known (maintainer decision on #352): azimuth units 4.2 m, the
+  Schottel SRP 800 (SCHOTTEL Product Guide, the SRP table).
 - **The sections table** (ADR 0012) later replaces the closed forms with sections the generator writes
   from the same inputs. The closed forms stay as the test of the generator, as the raked box does.
 

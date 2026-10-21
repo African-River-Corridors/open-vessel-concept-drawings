@@ -222,6 +222,9 @@ pub struct BargeCapacityInputs {
     /// Issue #350: the Stern Form, when it is not today's square stern: it corrects the LCB of the
     /// trim. `None`: a square stern.
     pub stern_geometry: Option<crate::stern_form::SternGeometry>,
+    /// Issue #352: the machinery of a specified Propulsor; it sets the stern block's run below deck
+    /// and its mass items. `None`: today's stern block.
+    pub machinery: Option<crate::machinery::MachineryInputs>,
     pub dome_height: f64,
     /// Diameter of the cylindrical dome (m). With `dome_height` it gives the dome's volume, which
     /// counts in Vc for d(Vc) only (IGC 2.4.1.1: Vc includes domes and appendages), not in the
@@ -294,6 +297,7 @@ impl BargeCapacityInputs {
             cargo_density_kg_m3: None,
             stern_block_mass: None,
             stern_geometry: None,
+            machinery: None,
             dome_height: DEFAULT_TANK_DOME_HEIGHT_M,
             dome_diameter: DEFAULT_TANK_DOME_DIAMETER_M,
             dome_diameter_by_rule: false,
@@ -994,6 +998,17 @@ fn arrangement(inp: &BargeCapacityInputs, is_gas: bool) -> Result<Arrangement, P
     // Keep the block's beam and depth honest even if a caller passed an `aft` built elsewhere.
     aft_in.beam = inp.beam;
     aft_in.depth = inp.depth;
+    if inp.self_propelled
+        && let Some(m) = &inp.machinery
+    {
+        aft_in.machinery = Some(m.clone());
+        // A gas-fuelled Power Source: the gas gensets and their rooms of issue #180.
+        if m.power_source == crate::machinery::PowerSource::GasFuelled && !aft_in.is_gas_fuelled() {
+            aft_in.propulsion = "gas_fuelled".to_string();
+            aft_in.n_battery_units = 0;
+            aft_in.electrical_load_kwe = inp.electrical_load_kwe;
+        }
+    }
     let aft0 = compute_aft_arrangement(&aft_in)?;
     let block_len = if inp.self_propelled {
         aft0.length_m

@@ -21,6 +21,7 @@ fn inputs(form: SternForm) -> SternFormInputs {
         tunnel_crown_height_m: None,
         propulsor_count: 2,
         propeller_diameter_m: None,
+        max_unit_diameter_m: None,
         parallel_shafts: true,
     }
 }
@@ -190,4 +191,22 @@ fn the_same_inputs_give_the_same_geometry_for_the_sections_generator() {
         assert_eq!(a.tunnel_sections(), b.tunnel_sections());
         assert_eq!(a.removed(3.0), b.removed(3.0));
     }
+}
+
+#[test]
+fn the_maker_range_caps_the_default_diameter_but_not_d_max_or_a_typed_d() {
+    // The maintainer's decision on issue #352: a 0.65 T default above the largest unit takes it.
+    let deep = HullDims {
+        design_draught: 7.4,
+        ..HULL
+    };
+    let mut i = inputs(SternForm::Transom);
+    i.max_unit_diameter_m = Some(4.2);
+    let g = geometry(&i, &deep);
+    assert_eq!(g.propeller_diameter_m, 4.2);
+    assert!((g.d_max_m - 0.65 * 7.4).abs() < 1e-12);
+    // Below the cap the default stays D_max; a typed D is used as typed.
+    assert!((geometry(&i, &HULL).propeller_diameter_m - 0.65 * 3.5).abs() < 1e-12);
+    i.propeller_diameter_m = Some(4.5);
+    assert_eq!(geometry(&i, &deep).propeller_diameter_m, 4.5);
 }

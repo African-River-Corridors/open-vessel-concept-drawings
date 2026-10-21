@@ -64,6 +64,9 @@ pub struct SternFormInputs {
     /// The number of propulsors (tunnels under a tunnel stern).
     pub propulsor_count: u32,
     pub propeller_diameter_m: Option<f64>,
+    /// The largest unit of the Propulsor's maker range (m), which caps the default D (the
+    /// maintainer's decision on issue #352); `None`: no cap.
+    pub max_unit_diameter_m: Option<f64>,
     /// Shaft propulsors run parallel shafts (Heuser 0.45 B spacing), azimuth units converge (0.28 B).
     pub parallel_shafts: bool,
 }
@@ -116,7 +119,12 @@ pub fn geometry(inp: &SternFormInputs, hull: &HullDims) -> SternGeometry {
         SternForm::Tunnel => (k_d * t).min(tunnel_fit_diameter(hull.beam, spacing, n)),
         _ => k_d * t,
     };
-    let d = inp.propeller_diameter_m.unwrap_or(d_max);
+    let d = inp
+        .propeller_diameter_m
+        .unwrap_or(match inp.max_unit_diameter_m {
+            Some(largest) => d_max.min(largest),
+            None => d_max,
+        });
     let run = inp.run_length_m.unwrap_or(match inp.form {
         SternForm::Transom => TRANSOM_RUN_OVER_DEPTH * hull.depth,
         SternForm::Pram => PRAM_RUN_OVER_DEPTH * hull.depth,
