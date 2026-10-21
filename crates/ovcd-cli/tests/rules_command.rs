@@ -174,3 +174,62 @@ fn rule_set_is_not_an_option_of_new_or_schema() {
         );
     }
 }
+
+/// Issue #424: the class Rule `lr-inland/3.5.1/tank-l-over-d` blocks on the same engine check as the
+/// `ovcd` tank L/D Rule. When no candidate passes, `fit` reports the candidate with the fewest
+/// failed checks; one failed check must count once, whichever sets report it. A narrow gas hull
+/// that no arrangement fits gives the same answer under `lr-inland-gas` 1.1.0 (the default) and
+/// 1.0.0 (which has no L/D Rule). Counting per Rule moved this answer.
+#[test]
+fn a_check_two_rule_sets_report_counts_once_in_fit() {
+    let mut design: Value = serde_json::from_str(
+        &std::fs::read_to_string(fixture("gas_igc_2g_exact.vdesign")).unwrap(),
+    )
+    .unwrap();
+    let option = &mut design["options"][0];
+    option["inputs"]["beam_m"]["value"] = json!(7.0);
+    option.as_object_mut().unwrap().remove("results_hash");
+    let dir = std::env::temp_dir().join(format!("ovcd-424-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("narrow_gas.vdesign");
+    std::fs::write(&file, design.to_string()).unwrap();
+    let file = file.to_str().unwrap();
+    let old = root().join("crates/ovcd-format/rules/lr-inland-gas/1.0.0.json");
+    let run = |extra: &[&str]| -> Value {
+        let mut args = vec!["run", "--json"];
+        args.extend_from_slice(extra);
+        args.push(file);
+        let out = ovcd(&args);
+        assert!(out.status.success(), "{}", stderr(&out));
+        serde_json::from_str::<Value>(&stdout(&out)).unwrap()["options"][0]["results"].clone()
+    };
+    let mut default = run(&[]);
+    let mut without = run(&["--rule-set", old.to_str().unwrap()]);
+    let sets = |r: &Value| r["rule_trace"]["rule_sets"].clone();
+    assert!(
+        sets(&default)
+            .as_array()
+            .unwrap()
+            .contains(&json!("lr-inland-gas@1.1.0"))
+    );
+    assert!(
+        sets(&without)
+            .as_array()
+            .unwrap()
+            .contains(&json!("lr-inland-gas@1.0.0"))
+    );
+    // The case this guards: nothing fits, and the L/D check fails.
+    let failed = |r: &Value, name: &str| {
+        r["checks"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|c| c["name"] == name && c["ok"] == false)
+    };
+    assert!(failed(&default, "Feasible arrangement"));
+    assert!(failed(&default, "tank length over diameter"));
+    default.as_object_mut().unwrap().remove("rule_trace");
+    without.as_object_mut().unwrap().remove("rule_trace");
+    assert_eq!(default, without);
+    std::fs::remove_dir_all(&dir).ok();
+}

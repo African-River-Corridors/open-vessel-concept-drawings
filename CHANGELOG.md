@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Rules (issue #424): `lr-inland-gas` 1.1.0, a minor version (Rules added; 1.0.0 is kept). The tank length over diameter limit of Pt 4 Ch 4 3.5.1 is now a class Rule, `lr-inland/3.5.1/tank-l-over-d`, on the engine check "tank length over diameter" (the inner shell diameter since #416); the `ovcd` tool limit stays. 3.2.1 (tank capacity, Table 4.3.1) and 3.5.2 (the hull in the cargo area) are listed as not evaluated, each with what the engine lacks. The three are codified and wait for a second reader. Gas Options now select 1.1.0. In `fit`, the Rules on one engine check now count once when the search ranks candidates that all fail (`failing_groups`; the kernel `Failure` carries its Measure), so a check that two sets report does not count twice. No case of the design-impact set moves.
+
 ## 0.2.4 (2026-10-21)
 
 Highlights, since 0.2.3:

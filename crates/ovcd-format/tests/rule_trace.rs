@@ -328,6 +328,7 @@ fn property_failures_are_exactly_the_failing_rows_of_the_trace() {
                 .filter(|r| r.outcome == Outcome::Fail)
                 .map(|r| Failure {
                     rule: r.rule.unwrap(),
+                    measure: r.measure.unwrap(),
                     object_type: r.object_type,
                     object: r.object,
                 })
