@@ -87,6 +87,14 @@ During development the app makes 0.2.x patch releases only. Version 0.3 is reser
 - **A test-release tag.** `git tag test-<name> <commit> && git push origin test-<name>` publishes a
   pre-release named after the tag, with the `Unreleased` notes. It is for trying a build; the commit need
   not be on `main`. Delete old test releases by hand when they are no longer needed.
+- **Rule Set versions.** A version bump releases the Rule Set versions it ships. In the bump PR, add
+  each built-in set version that is not yet in `crates/ovcd-format/rules/RELEASED.json` (`ovcd rules
+  --released-entries` prints the entries with their content hashes). From then on the file of a
+  listed version never changes: a change is a new version, patch, minor or major by its content hash
+  (spec 0004, "Version numbers"). The fast gate (`ovcd rules --provenance`) fails on a changed
+  released file, a version number below its class, a rule id that changes its Measure or direction
+  or comes back after it was dropped, and a regulation or class Rule with no paragraph. The release
+  workflow fails a `v*` release whose built-in set versions are not all listed.
 - Any other merge builds and publishes nothing. Both kinds need `test` and `release-guard` green on the
   commit, and the release gate (wheels, binaries, pytest on each system) runs before anything is
   published.

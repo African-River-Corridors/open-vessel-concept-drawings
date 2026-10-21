@@ -1,0 +1,4 @@
+{
+  "$comment": "Each Rule Set version a tagged release has shipped, with its content hash. A listed file never changes: a change is a new version. The version-bump PR adds the versions it ships (`ovcd rules --released-entries`); see docs/agents/build-process.md.",
+  "released": []
+}
