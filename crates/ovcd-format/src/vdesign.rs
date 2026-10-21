@@ -825,6 +825,13 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::All,
         value: "null",
     },
+    // Issue #274 (spec 0004): a file saved before holds no Service Area; every Option was checked
+    // as river-only.
+    LegacyFixedJson {
+        name: "service_area",
+        applies_to: AppliesTo::All,
+        value: "\"river-only\"",
+    },
     LegacyFixedJson {
         name: "bow_rake_rise_m",
         applies_to: AppliesTo::All,
@@ -1140,7 +1147,15 @@ pub fn legacy_value(name: &str, containment: Option<&str>) -> Option<Value> {
 ///
 /// One rule set: `IGC_2G` is the per-tank d(Vc) of IGC 2.4.1.1, measured plate to plate (2.4.2).
 /// A file that names the old `IGC_2G_EXACT` is read as `IGC_2G` (see [`migrate_ruleset`]).
+///
+/// Issue #274: this is no longer an input. The Rule Sets an Option checks are its `rule_sets`; the
+/// per-tank rule is the only one the gas search has, so a file that names it (any version) is read
+/// with the name dropped.
 pub const RULESETS: &[&str] = &["IGC_2G"];
+
+/// The Service Areas of an Option (spec 0004, "Service Area and default stacks"; ADR 0011).
+/// `ocean-only` is not offered.
+pub const SERVICE_AREAS: &[&str] = &["river-only", "coastal-and-river"];
 
 /// The Formation kinds of a barge Formation: the ones with no stern block of their own (issue
 /// #357 adds the ATB barge and the towed barge).
@@ -1268,6 +1283,8 @@ pub enum InputKind {
     Text {
         nullable: bool,
     },
+    /// Issue #274: the Rule Sets an Option checks, a list of `{id, version, hash, source}`.
+    RuleSets,
 }
 
 /// Which Cargo Containments an input is used for.
@@ -1313,6 +1330,7 @@ pub enum Group {
     SternAndPropulsion,
     Tug,
     WaterwayLimits,
+    Rules,
     LoadingConditions,
     SpeedAndPower,
     CostRates,
@@ -1320,7 +1338,7 @@ pub enum Group {
 
 impl Group {
     /// Every group, in the order a form shows them.
-    pub const ALL: [Group; 13] = [
+    pub const ALL: [Group; 14] = [
         Group::Required,
         Group::VesselClass,
         Group::HullAndContainment,
@@ -1331,6 +1349,7 @@ impl Group {
         Group::SternAndPropulsion,
         Group::Tug,
         Group::WaterwayLimits,
+        Group::Rules,
         Group::LoadingConditions,
         Group::SpeedAndPower,
         Group::CostRates,
@@ -1349,6 +1368,7 @@ impl Group {
             Group::SternAndPropulsion => "Stern and propulsion",
             Group::Tug => "Tug",
             Group::WaterwayLimits => "Waterway Limits",
+            Group::Rules => "Rules",
             Group::LoadingConditions => "Loading conditions",
             Group::SpeedAndPower => "Speed and power",
             Group::CostRates => "Cost rates",
@@ -1372,6 +1392,8 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("type_c_tanks", "Type C tanks"),
     ("box", "Box"),
     ("raked_box", "Raked box"),
+    ("river-only", "River only"),
+    ("coastal-and-river", "Coastal and river"),
     ("v_bottom", "V-bottom"),
     ("chine", "Chine"),
     ("shipd", "ShipD-style"),
@@ -1870,13 +1892,6 @@ pub const INPUTS: &[InputSpec] = &[
         NUM,
         "box_hold",
         Group::HullAndContainment,
-    ),
-    only(
-        "ruleset",
-        "Ruleset",
-        InputKind::Choice(RULESETS),
-        "type_c_tanks",
-        Group::GasTanks,
     ),
     lpg(
         "lpg_carriage_condition",
@@ -2775,6 +2790,22 @@ pub const INPUTS: &[InputSpec] = &[
         false,
         Group::CostRates,
     ),
+    // Issue #274 (spec 0004): where the vessel operates, and the Rule Sets it is checked against.
+    // They come last: the default stack follows the Cargo Containment.
+    spec(
+        "service_area",
+        "Service Area",
+        InputKind::Choice(SERVICE_AREAS),
+        false,
+        Group::Rules,
+    ),
+    spec(
+        "rule_sets",
+        "Rule Sets",
+        InputKind::RuleSets,
+        false,
+        Group::Rules,
+    ),
 ];
 
 /// Where a stored input came from.
@@ -3344,6 +3375,29 @@ fn read_design(
         if version == Some(1) {
             migrate_v1_option(name, &mut m, profile, report);
         }
+        // Issue #274: `ruleset` is no longer an input. Its one value is the per-tank rule, which is
+        // what the engine always used; any note about it was given above.
+        if let Some(stored) = m.remove("ruleset") {
+            let named = match &stored {
+                Value::Object(o) => o.get("value").unwrap_or(&Value::Null),
+                bare => bare,
+            };
+            if !named.as_str().is_some_and(|n| RULESETS.contains(&n)) {
+                report.error_text(
+                    of_option(
+                        name,
+                        text!(
+                            "msg-choice",
+                            "`{input}` = {value} must be one of: {choices}",
+                            input = Arg::input("ruleset"),
+                            value = named.to_string(),
+                            choices = RULESETS.join(", ")
+                        ),
+                    ),
+                    &["ruleset"],
+                );
+            }
+        }
         let inputs = &m;
         let mut option = read_option(name, inputs, profile, missing, report);
         match raw.get("results_hash") {
@@ -3689,9 +3743,17 @@ fn read_option(
         }
         // An input that is new since the first files, left out of a file: the fixed value the
         // engine used before it was an input (never the profile value), noted once per Option.
+        // Issue #274: for `rule_sets` that is the default stack of the Cargo Containment, which the
+        // engine checked every Option against.
+        let legacy = if spec.name == "rule_sets" {
+            Some(crate::trace::default_rule_sets(
+                containment.as_ref().and_then(Value::as_str),
+            ))
+        } else {
+            legacy_value(spec.name, containment.as_ref().and_then(Value::as_str))
+        };
         if !matches!(missing, Missing::FillProfile)
-            && let Some(fixed) =
-                legacy_value(spec.name, containment.as_ref().and_then(Value::as_str))
+            && let Some(fixed) = legacy
         {
             legacy_added.push(spec.name);
             inputs.push((
@@ -3837,6 +3899,12 @@ fn default_for(
     };
     if name == DEPTH_INPUT {
         return depth_default(inputs, profile);
+    }
+    // Issue #274: the default stack of the Cargo Containment, at the highest built-in versions.
+    if name == "rule_sets" {
+        return Ok(
+            got("cargo_containment").map(|c| crate::trace::default_rule_sets(Some(c.as_str())))
+        );
     }
     if TABLE_DEFAULTS.contains(&name) {
         return table_default_for(name, inputs, profile);
@@ -4135,6 +4203,7 @@ fn check_value(spec: &InputSpec, v: &Value, profile: &Profile) -> Result<(Value,
                 input = input()
             )),
         },
+        InputKind::RuleSets => check_rule_sets(name, v),
         InputKind::OffsetsTable => match v {
             Value::Null => Ok((Value::Null, vec![])),
             Value::Array(rows) if rows.iter().all(is_offset_row) => Ok((v.clone(), vec![])),
@@ -4186,6 +4255,47 @@ fn check_value(spec: &InputSpec, v: &Value, profile: &Profile) -> Result<(Value,
             )),
         },
     }
+}
+
+/// The sources an entry of `rule_sets` may have: `default` (from the Service Area and the Cargo) or
+/// `typed` (added by the user).
+pub const RULE_SET_SOURCES: [&str; 2] = ["default", "typed"];
+
+/// Check `rule_sets` (issue #274): a list of `{id, version, hash, source}`, with no set id twice
+/// and the `ovcd` set always in it. Whether each version exists is checked when the Option runs,
+/// because a `--rule-set` file may supply it.
+fn check_rule_sets(name: &str, v: &Value) -> Result<(Value, Vec<Text>), Text> {
+    let bad = || {
+        text!(
+            "msg-rule-sets",
+            "`{input}` must be a list of Rule Sets, each with `id`, `version`, `hash` and `source` \
+             (`default` or `typed`), no set twice, and the `ovcd` set always in it",
+            input = Arg::input(name)
+        )
+    };
+    let Value::Array(list) = v else {
+        return Err(bad());
+    };
+    let mut seen: Vec<&str> = Vec::new();
+    for entry in list {
+        let Some(o) = entry.as_object() else {
+            return Err(bad());
+        };
+        let text = |k: &str| o.get(k).and_then(Value::as_str).filter(|s| !s.is_empty());
+        let (Some(id), Some(_), Some(_), Some(source)) =
+            (text("id"), text("version"), text("hash"), text("source"))
+        else {
+            return Err(bad());
+        };
+        if o.len() != 4 || !RULE_SET_SOURCES.contains(&source) || seen.contains(&id) {
+            return Err(bad());
+        }
+        seen.push(id);
+    }
+    if !seen.contains(&"ovcd") {
+        return Err(bad());
+    }
+    Ok((v.clone(), vec![]))
 }
 
 /// The columns of one row of an offsets table (spec 0008, "Offsets table").

@@ -38,20 +38,20 @@ fn v1_with(name: &str) -> Value {
     f
 }
 
-fn ruleset_of(f: &Value) -> (Value, Vec<String>, Vec<String>) {
+/// Open a file that names a ruleset. Issue #274: `ruleset` is no longer an input, so the name is
+/// dropped after any note about it; the per-tank rule is the only one the engine has.
+fn ruleset_of(f: &Value) -> (Vec<String>, Vec<String>) {
     let c = check(&f.to_string(), &Profile::built_in());
     let design = c.design.expect("the file opens");
-    let r = design.options[0].input("ruleset").unwrap();
-    assert_eq!(r.source, Source::Typed);
-    (r.value.clone(), c.report.errors, c.report.warnings)
+    assert!(design.options[0].input("ruleset").is_none());
+    (c.report.errors, c.report.warnings)
 }
 
 #[test]
 fn a_file_that_names_igc_2g_exact_opens_as_igc_2g_in_either_version() {
     for f in [v2_with("IGC_2G_EXACT"), v1_with("IGC_2G_EXACT")] {
-        let (value, errors, warnings) = ruleset_of(&f);
-        assert_eq!(errors, Vec::<String>::new());
-        assert_eq!(value, json!("IGC_2G"), "{}", f["format_version"]);
+        let (errors, warnings) = ruleset_of(&f);
+        assert_eq!(errors, Vec::<String>::new(), "{}", f["format_version"]);
         assert!(has(&warnings, EXACT_NOTE), "{warnings:?}");
         assert!(!has(&warnings, STEPPED_NOTE), "{warnings:?}");
     }
@@ -72,9 +72,8 @@ fn the_exact_name_may_be_a_bare_string_too() {
 
 #[test]
 fn a_version_1_file_that_names_igc_2g_opens_with_a_results_may_change_note() {
-    let (value, errors, warnings) = ruleset_of(&v1_with("IGC_2G"));
+    let (errors, warnings) = ruleset_of(&v1_with("IGC_2G"));
     assert_eq!(errors, Vec::<String>::new());
-    assert_eq!(value, json!("IGC_2G"));
     assert!(has(&warnings, STEPPED_NOTE), "{warnings:?}");
     assert!(has(&warnings, "results may change"), "{warnings:?}");
     assert!(!has(&warnings, EXACT_NOTE), "{warnings:?}");
@@ -83,18 +82,16 @@ fn a_version_1_file_that_names_igc_2g_opens_with_a_results_may_change_note() {
 #[test]
 fn a_version_2_file_that_names_igc_2g_needs_no_ruleset_note() {
     // Version 2 is unreleased and written by this build: its IGC_2G is the per-tank rule.
-    let (value, errors, warnings) = ruleset_of(&v2_with("IGC_2G"));
+    let (errors, warnings) = ruleset_of(&v2_with("IGC_2G"));
     assert_eq!(errors, Vec::<String>::new());
-    assert_eq!(value, json!("IGC_2G"));
     assert!(!has(&warnings, "IGC_2G now uses"), "{warnings:?}");
     assert!(!has(&warnings, "IGC_2G_EXACT is now"), "{warnings:?}");
 }
 
 #[test]
 fn a_version_1_adn_g_file_still_opens_as_igc_2g() {
-    let (value, errors, warnings) = ruleset_of(&v1_with("ADN_G"));
+    let (errors, warnings) = ruleset_of(&v1_with("ADN_G"));
     assert_eq!(errors, Vec::<String>::new());
-    assert_eq!(value, json!("IGC_2G"));
     assert!(
         has(&warnings, "`ruleset` ADN_G is no longer offered"),
         "{warnings:?}"
@@ -102,9 +99,10 @@ fn a_version_1_adn_g_file_still_opens_as_igc_2g() {
 }
 
 #[test]
-fn igc_2g_exact_is_not_a_choice_and_the_profile_default_is_igc_2g() {
+fn igc_2g_exact_is_not_a_choice_and_ruleset_is_no_longer_an_input() {
     let profile = Profile::built_in();
-    assert_eq!(profile.default("ruleset"), Some(&json!("IGC_2G")));
+    // Issue #274: the input is gone; the profile has no entry for it.
+    assert_eq!(profile.default("ruleset"), None);
     // Issue #292: the fill ratio is a table by Cargo and carriage condition, 98 % (IGC 15.3).
     let context = [
         ("cargo_containment", "type_c_tanks"),
@@ -172,11 +170,13 @@ fn the_dome_diameter_is_a_gas_tank_input_with_a_basis_and_a_range() {
 }
 
 #[test]
-fn the_profile_basis_of_the_ruleset_cites_the_two_paragraphs() {
-    let basis = Profile::built_in().basis("ruleset").to_string();
-    assert!(basis.contains("IGC Code 2.4.1.1"), "{basis}");
-    assert!(basis.contains("IGC 2.4.2"), "{basis}");
-    assert!(basis.contains("excluding insulation"), "{basis}");
+fn the_rule_set_data_cites_the_two_paragraphs_the_ruleset_input_did() {
+    // Issue #274: the profile basis of the `ruleset` input went with the input; the Rule Set holds
+    // the citations.
+    let path = format!("{}/rules/igc-2g/1.0.0.json", env!("CARGO_MANIFEST_DIR"));
+    let text = std::fs::read_to_string(path).unwrap();
+    assert!(text.contains("2.4.1.1"), "the per-tank distance");
+    assert!(text.contains("2.4.2"), "the datum of the distance");
 }
 
 #[test]

@@ -250,6 +250,7 @@ msg-option-no-name = Option { $number } needs a non-empty string `name`
 msg-option-names-differ = two Options are named '{ $option }'; names must differ
 msg-option-no-inputs = needs an `inputs` object
 msg-option-unknown-key = unknown key `{ $key }` is ignored
+msg-choice = `{ $input }` = { $value } must be one of: { $choices }
 msg-results-hash-shape = `results_hash` must be 64 hex digits
 msg-results-hash-text = `results_hash` must be text
 msg-ruleset-exact-renamed = IGC_2G_EXACT is now IGC_2G: the same per-tank rule of IGC 2.4.1.1
@@ -292,6 +293,7 @@ msg-scheme = `{ $input }` = { $value } is not a scheme with a Vessel Class that 
 msg-class-cannot-define = `{ $input }` = { $value } cannot define a vessel: class { $class } gives no length or beam, or its Formation ({ $formation }) is not one a Design has
 msg-class-unknown = `{ $input }` = { $value } is not a Vessel Class (see `ovcd schema`)
 msg-class-id = `{ $input }` must be a class id or null
+msg-rule-sets = `{ $input }` must be a list of Rule Sets, each with `id`, `version`, `hash` and `source` (`default` or `typed`), no set twice, and the `ovcd` set always in it
 msg-formation-object = `{ $input }` must be an object with a `kind`
 msg-formation-kind = `{ $input }` must be one of: { $choices }
 msg-formation-only-kind = `{ $input }`: a { $kind } holds only `kind`; `abreast` and `in_line` are for a pushed_convoy

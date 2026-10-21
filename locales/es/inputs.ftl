@@ -103,11 +103,6 @@ input-lightship-factor-t-per-m3 = Factor de peso en rosca
 input-lightship-factor-t-per-m3-default-by = cargo_containment
 
 # status: draft
-input-ruleset = Conjunto de reglas
-# status: draft
-choice-ruleset-igc-2g = IGC_2G
-
-# status: draft
 input-lpg-carriage-condition = Condición de transporte del GLP
 # status: draft
 choice-lpg-carriage-condition-fully-pressurised = Totalmente presurizado

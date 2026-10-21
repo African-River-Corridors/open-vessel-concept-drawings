@@ -126,6 +126,26 @@ impl Library {
     }
 }
 
+/// The built-in sets, parsed once: the reader of a file (`vdesign`) needs their versions and hashes
+/// for the default `rule_sets` of an Option.
+pub fn built_in() -> &'static Library {
+    static BUILT_IN_LIBRARY: std::sync::OnceLock<Library> = std::sync::OnceLock::new();
+    BUILT_IN_LIBRARY.get_or_init(Library::built_in)
+}
+
+/// Whether version `a` is higher than version `b` (both `major.minor.patch`).
+pub fn is_newer(a: &str, b: &str) -> bool {
+    let key = |v: &str| {
+        let mut it = v.split('.').map(|p| p.parse::<u64>().unwrap_or(0));
+        (
+            it.next().unwrap_or(0),
+            it.next().unwrap_or(0),
+            it.next().unwrap_or(0),
+        )
+    };
+    key(a) > key(b)
+}
+
 // --- released versions and provenance (#273) ----------------------------------------------------
 
 /// The list of released Rule Set versions: `{id, version, hash}` each. A version is released when a

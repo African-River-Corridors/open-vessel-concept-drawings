@@ -88,10 +88,6 @@ input-lightship-factor-t-per-m3 = 空船重量系数
 # status: draft
 input-lightship-factor-t-per-m3-default-by = cargo_containment
 # status: draft
-input-ruleset = 规范集
-# status: draft
-choice-ruleset-igc-2g = IGC_2G
-# status: draft
 input-lpg-carriage-condition = LPG 装运方式
 # status: draft
 choice-lpg-carriage-condition-fully-pressurised = 全压式

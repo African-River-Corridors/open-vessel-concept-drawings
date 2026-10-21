@@ -85,8 +85,9 @@ Usage:
 --rule-set <file> (repeatable) loads a Rule Set file at run time, after the built-in sets
 and in the order given. A file is refused with a message when it is malformed, or when it has
 the id and version of a loaded set but other content: a changed Rule Set needs a new version.
-`ovcd run` checks each Option against its default Rule Sets and each loaded set (a loaded
-set with the id of a default set replaces it for the run); --json gives the Rule Trace as
+`ovcd run` checks each Option against the Rule Sets it stores (`rule_sets`, at the stored
+versions) and each loaded set (a loaded set with the id of a stored set replaces it for the
+run); a stored version the engine lacks refuses the Option, naming the set; --json gives the Rule Trace as
 `rule_trace` in the results. fill and validate only check the files they are given.
 
 All files and output are SI, except speeds, which are in knots.
@@ -599,6 +600,17 @@ fn run(args: &[&str]) -> Result<bool, String> {
                         HashStatus::NotStored | HashStatus::NotChecked => "none saved in the file",
                     };
                     println!("  Results hash {} ({note})", &hash[..12]);
+                    // Issue #274: a stored Rule Set whose rules differ from the file, or that has
+                    // a newer built-in version.
+                    for w in results["rule_trace"]["warnings"]
+                        .as_array()
+                        .into_iter()
+                        .flatten()
+                    {
+                        if let Some(w) = w.as_str() {
+                            println!("  Rule Sets: {w}");
+                        }
+                    }
                 }
                 RunOutcome::NotAvailable(m) => println!("Option '{}': {m}", r.name),
                 RunOutcome::Failed(m) => println!("Option '{}': cannot be computed: {m}", r.name),

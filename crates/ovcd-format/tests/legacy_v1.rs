@@ -42,12 +42,8 @@ fn validate_opens_it_as_igc_2g_without_the_cap_and_warns() {
     assert!(has(w, OD), "{w:?}");
     let design = checked.design.unwrap();
     let o = &design.options[0];
-    let ruleset = o.input("ruleset").unwrap();
-    // The marker of the file is kept: the ruleset was typed.
-    assert_eq!(
-        (ruleset.value.clone(), ruleset.source),
-        (json!("IGC_2G"), Source::Typed)
-    );
+    // Issue #274: the ruleset is no longer an input; the name is read, and dropped.
+    assert!(o.input("ruleset").is_none());
     assert!(o.input("adn_tank_cap_m3").is_none());
     let od = o.input("max_tank_od_m").unwrap();
     assert_eq!(
@@ -83,7 +79,8 @@ fn fill_writes_a_version_2_file_that_validates_without_those_warnings() {
     let text = filled.design.unwrap().to_text();
     let saved: Value = serde_json::from_str(&text).unwrap();
     assert_eq!(saved["format_version"], 3);
-    assert_eq!(saved["options"][0]["inputs"]["ruleset"]["value"], "IGC_2G");
+    // Issue #274: the ruleset is no longer an input, so it is not written.
+    assert!(saved["options"][0]["inputs"].get("ruleset").is_none());
     assert!(
         saved["options"][0]["inputs"]
             .get("adn_tank_cap_m3")
@@ -136,7 +133,7 @@ fn a_bare_value_form_is_changed_too() {
     assert!(r.report.is_ok(), "{:?}", r.report);
     assert!(has(&r.report.warnings, ADN) && has(&r.report.warnings, CAP));
     let o = &r.design.unwrap().options[0];
-    assert_eq!(o.input("ruleset").unwrap().value, json!("IGC_2G"));
+    assert!(o.input("ruleset").is_none());
     // Left out, so the Defaults Profile gives it under the new ruleset: 98 %.
     assert_eq!(o.input("fill_ratio").unwrap().value, json!(0.98));
 }
