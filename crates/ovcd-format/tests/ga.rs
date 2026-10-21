@@ -411,6 +411,21 @@ fn the_drawn_wing_tank_top_is_the_wing_plate_level_even_above_the_deck() {
 }
 
 #[test]
+fn a_dome_is_drawn_only_at_the_diameter_the_results_give() {
+    // Issue #406: no drawing proportion stands in for the core's dome diameter.
+    let (_, r) = computed("gas_igc_2g_exact.vdesign").remove(0);
+    assert!(r["drawing"]["dome_height_m"].as_f64().unwrap() > 0.0);
+    assert!(ovcd_format::ga_views(&r).is_ok());
+    let mut broken = r;
+    broken["drawing"]["tank"]
+        .as_object_mut()
+        .unwrap()
+        .remove("dome_diameter_m");
+    let err = ovcd_format::ga_views(&broken).unwrap_err();
+    assert!(err.contains("drawing.tank.dome_diameter_m"), "{err}");
+}
+
+#[test]
 fn results_of_an_unsupported_or_unknown_cargo_class_are_refused() {
     // Issue #328: a class with no drawing is an error, never drawn as gas tanks or a dry hold.
     for name in ["dry_bulk_box_hold.vdesign", "gas_igc_2g_exact.vdesign"] {
