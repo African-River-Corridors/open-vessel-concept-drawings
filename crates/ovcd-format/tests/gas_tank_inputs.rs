@@ -13,13 +13,16 @@ use ovcd_format::vdesign::{INPUTS, LEGACY_FIXED_INPUTS};
 use ovcd_format::{DesignSession, HashStatus, Profile, RunOutcome, Source, check, ga_views};
 use serde_json::{Value, json};
 
-const NEW: [&str; 6] = [
+const NEW: [&str; 8] = [
     "tanks_in_line",
     "tank_support_height_m",
     "tank_dome_height_m",
     "wing_tank_gap_m",
     "wing_tank_height_ratio",
     "tank_wall_thickness_mm",
+    // Issue #410, part 1b: the weather shield.
+    "weather_shield_thickness_mm",
+    "weather_shield_clearance_m",
 ];
 
 fn raw_fixture(name: &str) -> String {
@@ -53,6 +56,12 @@ fn core_default(name: &str) -> f64 {
         "tank_dome_height_m" => (c.dome_height, f.tank_dome_height_m),
         "wing_tank_gap_m" => (c.wing_tank_gap_m, f.wing_tank_gap_m),
         "wing_tank_height_ratio" => (c.wing_tank_height_ratio, f.wing_tank_height_ratio),
+        "weather_shield_thickness_mm" => {
+            (c.weather_shield_thickness_mm, f.weather_shield_thickness_mm)
+        }
+        "weather_shield_clearance_m" => {
+            (c.weather_shield_clearance_m, f.weather_shield_clearance_m)
+        }
         "tank_wall_thickness_mm" => (
             c.tank_wall_thickness.unwrap(),
             f.tank_wall_thickness_mm.unwrap(),
@@ -67,6 +76,8 @@ fn core_default(name: &str) -> f64 {
         "tank_support_height_m" => assert_eq!(cap, b.tank_support_height),
         "tank_dome_height_m" => assert_eq!(cap, b.dome_height),
         "tanks_in_line" => assert_eq!(cap, b.n_tanks_long as f64),
+        "weather_shield_thickness_mm" => assert_eq!(cap, b.weather_shield_thickness),
+        "weather_shield_clearance_m" => assert_eq!(cap, b.weather_shield_clearance),
         _ => {}
     }
     cap
@@ -152,7 +163,8 @@ fn a_dry_bulk_file_holds_none_of_them_and_the_stored_gas_fixtures_hold_all() {
         assert!(dry.options[0].input(name).is_none(), "{name}");
     }
     let raw: Value = serde_json::from_str(&raw_fixture("gas_igc_2g_exact")).unwrap();
-    for name in NEW {
+    // The fixture was saved before the two weather shield inputs (issue #410) existed.
+    for name in &NEW[..6] {
         assert_eq!(raw["options"][0]["inputs"][name]["source"], "default");
     }
 }
@@ -297,4 +309,27 @@ fn tanks_in_line_sets_the_tanks_along_the_hull_and_the_length_over_diameter_chec
     // The fixture hull: two tanks pass; one tank is twice as long and does not.
     assert!(!failing(&two));
     assert!(failing(&one), "{:?}", one["checks"]);
+}
+
+#[test]
+fn the_weather_shield_inputs_move_the_lightship_and_its_centre() {
+    // Issue #410, part 1b. The self-propelled fixture's wing plate stands above D, so its shield is
+    // a lightship item. No shield weighs less; a higher shield weighs more and sits higher.
+    let base = results(SELF, &[]);
+    let ls = |v: &Value| v["results"]["lightship_t"].as_f64().unwrap();
+    let none = results(SELF, &[("weather_shield_thickness_mm", json!(0.0))]);
+    assert!(ls(&none) < ls(&base), "{} vs {}", ls(&none), ls(&base));
+    let thick = results(SELF, &[("weather_shield_thickness_mm", json!(12.0))]);
+    assert!(ls(&thick) > ls(&base), "{} vs {}", ls(&thick), ls(&base));
+    let high = results(SELF, &[("weather_shield_clearance_m", json!(3.0))]);
+    assert!(ls(&high) > ls(&base), "{} vs {}", ls(&high), ls(&base));
+    // Typed at their defaults, the results are the same as leaving them out.
+    let same = results(
+        SELF,
+        &[
+            ("weather_shield_thickness_mm", json!(6.0)),
+            ("weather_shield_clearance_m", json!(1.5)),
+        ],
+    );
+    assert_eq!(same["results"], base["results"]);
 }

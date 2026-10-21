@@ -639,7 +639,21 @@
       "unit": "-",
       "hard": { "gt": 0, "le": 2 },
       "soft": { "min": 0.4, "max": 1.0 },
-      "basis": "carried over from the original engine: the wing tank height as a fraction of the cargo tank outer diameter. It sets the wing plate level, and so the moulded volume in the lightship"
+      "basis": "carried over from the original engine: the wing tank height as a fraction of the cargo tank outer diameter. It sets the wing plate level; the wing plate and the side plating above the moulded depth are lightship items (issue #410)"
+    },
+    "weather_shield_thickness_mm": {
+      "default": 6.0,
+      "unit": "mm",
+      "hard": { "ge": 0, "le": 50 },
+      "soft": { "min": 4.0, "max": 12.0 },
+      "basis": "carried over from the original engine: the plate of the non-structural weather shield over the tanks (top, sides and ends), weighed at the hull steel density. Its part above the moulded depth is a lightship item at its own height (issue #410). 0: no shield"
+    },
+    "weather_shield_clearance_m": {
+      "default": 1.5,
+      "unit": "m",
+      "hard": { "ge": 0, "le": 10 },
+      "soft": { "min": 0.5, "max": 3.0 },
+      "basis": "carried over from the original engine: the height of the weather shield top above the tank top. It sets the shield's height and so its weight and centre (issue #410)"
     },
     "tank_wall_thickness_mm": {
       "default": null,

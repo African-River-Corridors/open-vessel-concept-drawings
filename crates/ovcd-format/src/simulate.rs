@@ -1959,6 +1959,16 @@ fn simulate_gas(
             "wing_tank_height_ratio",
             ovcd_core::barge_capacity::DEFAULT_WING_TANK_HEIGHT_RATIO,
         )?,
+        weather_shield_thickness_mm: get_or(
+            p,
+            "weather_shield_thickness_mm",
+            ovcd_core::barge_capacity::DEFAULT_WEATHER_SHIELD_THICKNESS_MM,
+        )?,
+        weather_shield_clearance_m: get_or(
+            p,
+            "weather_shield_clearance_m",
+            ovcd_core::barge_capacity::DEFAULT_WEATHER_SHIELD_CLEARANCE_M,
+        )?,
         tank_wall_thickness_mm: tank_wall_of(p)?,
         tank_design: tank_design_of(p)?,
         water_density_t_per_m3: rho,
