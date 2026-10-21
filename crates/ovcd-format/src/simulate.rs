@@ -389,9 +389,8 @@ fn resistance_of(
 /// The capacity checks as the simulator lists them, the name read with spaces. The two that test
 /// the full tank volume (`FULL_VOLUME_CHECKS`) gate nothing, so they are listed as warnings: shown,
 /// as every check is, but not a failure (issue #418).
-fn capacity_checks(r: &BargeCapacityResult, out: &mut Vec<Value>) {
-    let kept: Vec<Check> = r
-        .checks
+fn capacity_checks(checks: &[Check], out: &mut Vec<Value>) {
+    let kept: Vec<Check> = checks
         .iter()
         .map(|c| Check {
             name: c.name.replace('_', " "),
@@ -1119,9 +1118,38 @@ fn simulate_measured(
         "ok": cargo_t > 0.0,
         "message": if cargo_t <= 0.0 { "Lightship alone exceeds the allowed draught." } else { "OK" },
     })];
-    capacity_checks(&r, &mut checks);
-    ids.checks(&r.checks);
-    ids.texts(&r.warnings);
+    // Issue #415: the hold GM at the cargo and the draught the Design reports, in every dry bulk
+    // Option, in place of the capacity result's GM at the volume-bound load (which it gives only
+    // when that load floats).
+    let mut capacity: Vec<Check> = r
+        .checks
+        .iter()
+        .filter(|c| c.name != "gm_positive")
+        .cloned()
+        .collect();
+    let mut warnings = r.warnings.clone();
+    if phase == CargoClass::DryBulk && t > 0.0 && t <= d {
+        let g = barge_capacity::bulk_gm_at(&inp, &r, cargo_t, t);
+        capacity.push(Check::with_severity(
+            "intact_gm_at_reported_cargo",
+            g >= 0.15,
+            text!(
+                "check-intact-gm-reported-cargo",
+                "intact GM {gm} m >= 0.15 m at the reported cargo {cargo} t, draught {draught} m (first-order box; cargo KG of the full hold; KG_light @0.5D)",
+                gm = Arg::fixed(g, 2),
+                cargo = Arg::fixed(cargo_t, 0),
+                draught = Arg::fixed(t, 2),
+            ),
+            "warning",
+        ));
+        let note = barge_capacity::bulk_gm_note();
+        if !warnings.contains(&note) {
+            warnings.push(note);
+        }
+    }
+    capacity_checks(&capacity, &mut checks);
+    ids.checks(&capacity);
+    ids.texts(&warnings);
     if let Some(limit) = truthy_float(p, "air_draft_limit_m")? {
         checks.push(air_draft_check(&r, limit, &mut ids)?);
     }
@@ -1233,7 +1261,7 @@ fn simulate_measured(
                         "h_over_T": h_over_t(&ch, t)?,
                     },
                     "checks": checks,
-                    "warnings": r.warnings,
+                    "warnings": warnings,
                     "curves": curve_list,
                     "cost_masses": Value::Null,
                 }),
@@ -1986,7 +2014,7 @@ fn simulate_gas(
             "message": message,
         }));
     }
-    capacity_checks(r, &mut checks);
+    capacity_checks(&r.checks, &mut checks);
     ids.checks(&r.checks);
     ids.texts(&r.warnings);
     // The search's own checks of the answer (the journey, tank length over diameter, freeboard

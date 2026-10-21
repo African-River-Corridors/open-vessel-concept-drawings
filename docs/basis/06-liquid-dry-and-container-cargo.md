@@ -180,7 +180,7 @@ cargo (`crates/ovcd-format/src/session.rs` line 153).
   of the full hold section (the hold taken as full to the coaming top).
 - The check `gm_positive` is `GM ≥ 0.15 m`, severity warning (line 1006). The value equals IS Code 2008 Part A 2.2.4
   ("not less than 0.15 m"), but the code cites no rule.
-- The check runs only if the volume-bound load is not overloaded and the draught is above zero (line 1002).
+- The check runs only if the volume-bound load is not overloaded and the draught is above zero (line 1002). Since #415 a Design's results carry the check `intact gm at reported cargo` instead: the same first-order GM at the cargo and draught the Design reports, in every dry bulk Option (Rule `ovcd/capacity/intact-gm`, `ovcd` 2.0.0).
 - A fixed warning says cargo shift and angle of repose are not modelled (lines 814 to 815).
 
 ### 11. Free surface of a cylindrical tank (API only)
@@ -315,7 +315,7 @@ files, so an old file keeps its results.
   (cargo zone 69.5 m as in the golden test): `V_c = 14 × 5.8 × 69.5 × 0.95 ≈ 5,360 m³`, cargo `≈ 8,040 t`, lightship
   `≈ 1,050 t`, total `≈ 9,090 t`, against `0.85 × 9,600 = 8,160 t` at D. The load is overloaded, so `gm_positive` does
   not run (CG-A65). The Design path then carries the weight-bound cargo (`≈ 6,700 t`) with no GM figure.
-- **The bulk GM, when it runs, is for the volume-bound load,** not for the cargo the Design reports.
+- **The bulk GM, when it runs, is for the volume-bound load,** not for the cargo the Design reports. (Fixed in the Design results by #415.)
 - **The LPG density is the fully refrigerated value for every carriage condition** (CG-A03, CG-A07). The default
   carriage condition is fully pressurised (`builtin_profile.json` line 92). The code's own comment puts propane at
   ambient temperature at about 489 to 493 kg/m³, so a pressurised LPG cargo mass reads about 16 % high. That comment's

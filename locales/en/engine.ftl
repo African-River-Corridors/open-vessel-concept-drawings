@@ -31,6 +31,7 @@ warn-aft-sightline-lift = Sightline needs { $lift } m of lift; the column gives 
 
 ## crates/ovcd-core/src/barge_capacity.rs
 
+warn-barge-bulk-gm = Bulk GM is first-order (assumed lightship KG); cargo-shift/angle-of-repose not modelled — confirm with a full intact-stability booklet.
 check-wheelhouse-blind-distance = blind distance ahead of the bow { $blind } m <= { $limit } m, light (ES-TRIN 7.02(2)); lift used { $lift } m of { $max_lift } m
 warn-aft-blind-distance-lift = The blind distance needs { $needed } m of lift; the column gives { $max_lift } m. Raise the column or lower the cargo top.
 check-feasible-geometry = cargo volume must be positive (tank/hold fits)
@@ -48,7 +49,6 @@ check-air-draft-within-limit = { $condition } air draft { $governing } m <= limi
 warn-barge-pushed = PUSHED barge: crew, battery and propulsion are on the tug and are NOT in this hull's lightship, capacity or air draft. The tug is a separate vessel and must be costed and air-draft-gated separately.
 check-name-gm-positive = gm positive
 check-gm-positive = hopper intact GM { $gm } m >= 0.15 m (first-order; KG_light @0.5D)
-warn-barge-bulk-gm = Bulk GM is first-order (assumed lightship KG); cargo-shift/angle-of-repose not modelled — confirm with a full intact-stability booklet.
 
 ## crates/ovcd-core/src/barge_cost.rs
 
@@ -194,6 +194,8 @@ msg-convoy-not-available = convoy results not yet available
 ## crates/ovcd-format/src/simulate.rs
 
 check-air-draft-limit = { $air_draft } m vs limit { $limit } m
+check-name-intact-gm-at-reported-cargo = intact gm at reported cargo
+check-intact-gm-reported-cargo = intact GM { $gm } m >= 0.15 m at the reported cargo { $cargo } t, draught { $draught } m (first-order box; cargo KG of the full hold; KG_light @0.5D)
 name-governs-draught = draught — { $limit }
 check-feasible-arrangement = No arrangement passes every check on this hull. The closest one is shown. It fails: { $fails }.
 stab-limit-moulded-tanks = Ballast and consumables tanks are moulded volumes with no structure deduction; one tank per side and kind, and the consumables tank height is an estimate.

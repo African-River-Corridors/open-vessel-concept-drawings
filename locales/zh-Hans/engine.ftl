@@ -50,6 +50,8 @@ warn-barge-pushed = 顶推驳船：船员、电池和推进装置位于推轮上
 # status: draft
 check-gm-positive = 斗式货舱驳船完整稳性 GM { $gm } m >= 0.15 m（一阶估算；KG_light @0.5D）
 # status: draft
+check-intact-gm-reported-cargo = 报告货量 { $cargo } t、吃水 { $draught } m 时的完整稳性 GM { $gm } m >= 0.15 m（一阶箱形估算；货物 KG 按满舱计；KG_light @0.5D）
+# status: draft
 warn-barge-bulk-gm = 散货 GM 为一阶估算（假定空船 KG）；未模拟货物移动/休止角——请用完整的完整稳性计算书确认。
 
 ## crates/ovcd-core/src/barge_cost.rs
@@ -464,6 +466,8 @@ check-name-cargo-zone-positive = 货物区为正
 check-name-air-draft-within-limit = 水上高度在限值内
 # status: draft
 check-name-gm-positive = GM 为正
+# status: draft
+check-name-intact-gm-at-reported-cargo = 报告货量下的完整稳性 GM
 # status: draft
 check-name-masses-positive = 质量为正
 # status: draft

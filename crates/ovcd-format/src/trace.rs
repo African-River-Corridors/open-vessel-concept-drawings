@@ -399,7 +399,7 @@ pub const CHECK_RULES: &[(&str, &str)] = &[
         "Air draft (empty, governing)",
         "ovcd/capacity/air-draft-empty",
     ),
-    ("gm positive", "ovcd/capacity/hopper-gm"),
+    ("intact gm at reported cargo", "ovcd/capacity/intact-gm"),
     (
         "Feasible arrangement",
         "ovcd/gas-arrangement/feasible-arrangement",

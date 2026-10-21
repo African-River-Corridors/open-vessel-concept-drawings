@@ -50,6 +50,8 @@ warn-barge-pushed = Barcaza EMPUJADA: la tripulación, la batería y la propulsi
 # status: draft
 check-gm-positive = GM intacto de la tolva { $gm } m >= 0.15 m (primer orden; KG_light @0.5D)
 # status: draft
+check-intact-gm-reported-cargo = GM intacto { $gm } m >= 0.15 m con la carga indicada { $cargo } t, calado { $draught } m (caja de primer orden; KG de la carga con la bodega llena; KG_light @0.5D)
+# status: draft
 warn-barge-bulk-gm = El GM a granel es de primer orden (KG de peso en rosca supuesto); no se modelan el corrimiento de la carga ni el ángulo de reposo. Confírmelo con un cuadernillo completo de estabilidad intacta.
 
 ## crates/ovcd-core/src/barge_cost.rs
@@ -464,6 +466,8 @@ check-name-cargo-zone-positive = zona de carga positiva
 check-name-air-draft-within-limit = calado aéreo dentro del límite
 # status: draft
 check-name-gm-positive = GM positivo
+# status: draft
+check-name-intact-gm-at-reported-cargo = GM intacto con la carga indicada
 # status: draft
 check-name-masses-positive = masas positivas
 # status: draft

@@ -230,7 +230,7 @@ fn every_gas_option_has_the_igc_rows_of_each_tank_and_the_is_code_rows() {
                     "igc-2g@1.0.0",
                     "is2008-a@1.0.0",
                     "lr-inland-gas@1.1.0",
-                    "ovcd@1.0.0"
+                    "ovcd@2.0.0"
                 ]),
                 "{file}"
             );
