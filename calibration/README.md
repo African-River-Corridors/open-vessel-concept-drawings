@@ -16,6 +16,27 @@ are **in-sample**: the factors in `factors.yaml` were fitted to the same cases (
 one case). The errors of held-out cases are **out of sample** (next section).
 To add a case, give it a `confidence`; it is banded from then on.
 
+## Case confidence (draft, for review)
+
+The `confidence` of a case sets its band. The criteria below are a **draft** written from how the 90 dry-barge
+cases are marked today (1 high, 50 medium, 39 low). They are not yet agreed. Nothing in the harness reads them.
+
+- **high**: the source is the owner's or builder's own specification of this one vessel, and the figures agree
+  with each other (a draught, a lightship and a deadweight that give a Cb a barge can have).
+- **medium**: the source is a builder, owner or operator sheet or table, or a thesis table, with the vessel's
+  dimensions and either a lightship or a deadweight, and nothing in the figures disagrees.
+- **low**: the source is a broker listing with blank fields, a practitioner statement, a table value read at one
+  draught, or figures that cannot all be true together (the case notes say which).
+
+A case whose figures disagree is `low` or is excluded from a fit with its reason written on the case.
+
+## Web source checksums
+
+Each entry of `web_sources` in `sources.yaml` carries `retrieved` (the date the page was fetched again) and
+`sha256` (of the bytes served). A page that has changed since gives a different hash, so the entry shows it. An
+entry with no `sha256` has a `checksum_note` that says why. On 2026-10-22, 107 of 110 pages were fetched; the
+other three could not be, and are listed in their entries.
+
 ## Held-out cases (issue #3)
 
 A case with a `held_out` marker (a one-line reason) is run and banded but **never used to fit** k or Cb:
