@@ -77,6 +77,8 @@ pub struct FitOptions {
     pub stern_geometry: Option<crate::stern_form::SternGeometry>,
     /// Issue #352: the machinery of a specified Propulsor (`BargeCapacityInputs::machinery`).
     pub machinery: Option<crate::machinery::MachineryInputs>,
+    /// Issue #354: the Blind Distance limit (`BargeCapacityInputs::sightline_limit_m`).
+    pub sightline_limit_m: Option<f64>,
     pub self_propelled: bool,
     pub depths: Vec<f64>,
     pub tanks_wide: Vec<i64>,
@@ -261,6 +263,7 @@ impl Default for FitOptions {
             stern_block_mass: None,
             stern_geometry: None,
             machinery: None,
+            sightline_limit_m: None,
             self_propelled: true,
             depths: DEFAULT_DEPTHS_M.to_vec(),
             tanks_wide: DEFAULT_TANKS_WIDE.to_vec(),
@@ -687,6 +690,7 @@ impl Search<'_> {
         inp.stern_block_mass = self.o.stern_block_mass.clone();
         inp.stern_geometry = self.o.stern_geometry.clone();
         inp.machinery = self.o.machinery.clone();
+        inp.sightline_limit_m = self.o.sightline_limit_m;
         inp.block_coefficient = self.o.block_coefficient;
         inp.n_tanks_wide = Some(nw);
         inp.n_tanks_long = nl;

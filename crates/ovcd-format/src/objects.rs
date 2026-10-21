@@ -399,6 +399,8 @@ pub(crate) fn capacity_result_from_json(
         stern_block_items: Vec::new(),
         trim_conditions: Vec::new(),
         stern_geometry: None,
+        sightline: None,
+        blind_distance_laden_m: None,
         checks: o.checks("checks")?,
         warnings: o.text_list("warnings")?,
     })

@@ -31,6 +31,8 @@ warn-aft-sightline-lift = Sightline needs { $lift } m of lift; the column gives 
 
 ## crates/ovcd-core/src/barge_capacity.rs
 
+check-wheelhouse-blind-distance = blind distance ahead of the bow { $blind } m <= { $limit } m, light (ES-TRIN 7.02(2)); lift used { $lift } m of { $max_lift } m
+warn-aft-blind-distance-lift = The blind distance needs { $needed } m of lift; the column gives { $max_lift } m. Raise the column or lower the cargo top.
 check-feasible-geometry = cargo volume must be positive (tank/hold fits)
 check-name-feasible-geometry = feasible geometry
 check-name-not-overloaded = not overloaded
