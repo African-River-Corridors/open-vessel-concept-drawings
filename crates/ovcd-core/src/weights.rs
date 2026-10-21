@@ -117,8 +117,11 @@ pub fn vertical_moment(items: &[MassItem]) -> f64 {
 
 /// Calculate the component weight breakdown, in tonnes.
 ///
-/// Hull steel is estimated from plating areas and thicknesses, plus a structure factor for
-/// internal framing (floors, frames, longitudinals, bulkheads).
+/// Hull steel has two figures. The bottom-up one is built from plating areas and thicknesses, plus a
+/// structure factor for internal framing (floors, frames, longitudinals, bulkheads), with the wing
+/// plate and the weather shield (`steel_bottom_up`); the capital budget prices it. The top-down one
+/// is `steel_rate_per_cbm` times the moulded volume (`steel_top_down`); the lightship, the piping
+/// and the outfitting use it. `steel_delta` is top-down less bottom-up (issue #401).
 pub fn calculate_weights(
     inputs: &BargeInputs,
     hull: &HullGeometry,

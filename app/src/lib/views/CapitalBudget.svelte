@@ -17,6 +17,8 @@
     checks: { name: string; ok: boolean; message: string; severity: string }[];
     from_design: string[];
     core_default: string[];
+    /** The two hull steel figures (issue #401): the lightship's top-down one, the budget's bottom-up one. */
+    steel?: { top_down_t: number; bottom_up_t: number; delta_t: number } | null;
   }
   import { checkName, list as join, num, say, t, type TextIds } from "../i18n.svelte";
 
@@ -78,6 +80,9 @@
           <tbody>
             {#each rows as r (r.item)}
               <tr><th scope="row">{item(r.item)}</th><td class="num">{money(r.amount)}</td></tr>
+              {#if key === "barge" && r.item === "hull_steel" && cost.steel}
+                <tr class="steel" data-testid="cost-steel-delta"><td colspan="2">{t("app-cost-steel-delta", { top_down: num(cost.steel.top_down_t, 1), bottom_up: num(cost.steel.bottom_up_t, 1), delta: num(cost.steel.delta_t, 1) })}</td></tr>
+              {/if}
             {/each}
             <tr class="sub"><th scope="row">{t(total)}</th><td class="num">{money(subtotal)}</td></tr>
           </tbody>
@@ -122,6 +127,7 @@
   td.num { text-align: right; font-variant-numeric: tabular-nums; }
   tr.sub th, tr.sub td { font-weight: 600; border-top: var(--lw-thin) solid var(--rule-strong); }
   tr.total th, tr.total td { background: var(--surface-2); }
+  tr.steel td { color: var(--ink-3); font-size: var(--fs-12); }
   .masses { margin: var(--sp-3) 0 6px; color: var(--ink-3); }
   .checks { margin: var(--sp-1) 0 0; padding: 0; list-style: none; }
   .checks li { color: var(--fail); background: var(--fail-soft); padding: var(--sp-1) var(--sp-2); margin-bottom: 2px; }

@@ -327,3 +327,21 @@ fn the_cost_rates_do_not_reach_the_engine() {
     }
     assert_ne!(before["cost"], after["cost"]);
 }
+
+#[test]
+fn the_budget_shows_the_steel_difference_between_lightship_and_cost() {
+    // Issue #401: the lightship uses the top-down hull steel; the budget prices the bottom-up one,
+    // the hull steel, wing plate and weather shield masses it lists. The difference is shown.
+    let cost = results(&open(&raw_fixture("gas_igc_2g_exact")), 0)["cost"].clone();
+    let steel = &cost["steel"];
+    let m = |k: &str| cost["masses"][k].as_f64().unwrap();
+    let bottom_up = steel["bottom_up_t"].as_f64().unwrap();
+    let top_down = steel["top_down_t"].as_f64().unwrap();
+    let priced = m("hull_steel_t") + m("wing_plate_t") + m("weather_shield_t");
+    assert!(
+        (bottom_up - priced).abs() <= 1e-9 * priced,
+        "{bottom_up} vs {priced}"
+    );
+    assert!(top_down > 0.0);
+    assert_eq!(steel["delta_t"].as_f64().unwrap(), top_down - bottom_up);
+}

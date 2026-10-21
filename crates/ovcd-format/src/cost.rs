@@ -105,7 +105,7 @@ pub fn gas_masses(w: &WeightBreakdown) -> Value {
         outfitting_t: w.outfitting,
         ..BargeCostInputs::default()
     };
-    masses_json(
+    let mut v = masses_json(
         &m,
         &[
             "hull_steel_t",
@@ -117,7 +117,20 @@ pub fn gas_masses(w: &WeightBreakdown) -> Value {
             "piping_machinery_t",
             "outfitting_t",
         ],
-    )
+    );
+    v["steel"] = steel_json(w);
+    v
+}
+
+/// The two hull steel figures of a gas barge (issue #401): the lightship uses the top-down one (a
+/// rate per cubic metre of moulded volume); the budget prices the bottom-up one (hull plating and
+/// structure, wing plate, weather shield). `delta_t` is top-down less bottom-up.
+fn steel_json(w: &WeightBreakdown) -> Value {
+    json!({
+        "top_down_t": w.steel_top_down,
+        "bottom_up_t": w.steel_bottom_up,
+        "delta_t": w.steel_delta,
+    })
 }
 
 fn masses_of(m: &Value) -> Option<BargeCostInputs> {
@@ -165,6 +178,7 @@ fn result_json(r: &BargeCostResult, masses: &Value) -> Value {
         "masses": masses["masses"],
         "from_design": masses["from_design"],
         "core_default": masses["core_default"],
+        "steel": masses["steel"],
     })
 }
 
