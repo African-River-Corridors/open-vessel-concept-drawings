@@ -178,12 +178,13 @@ pub struct SectionsTable {
 - **Equilibrium** (`equilibrium`, given mass Δ, centre of gravity G = (LCG, TCG, KG) and heel φ):
   the engine solves for the height `c` and the trim θ such that ρ∇ = Δ and the centre of buoyancy B lies
   on the vertical through G in the longitudinal plane (free trim). The inner solve finds `c` for the
-  volume by a safeguarded Newton method (dV/dc is the waterplane area; a step that leaves the bracket is
-  replaced by bisection); the outer solve finds θ for the longitudinal moment by the Illinois secant
-  method between ±10° (an Option that needs more fails with a message). Fixed step counts and no early
-  stop, so native and WebAssembly give the same bits. The code states the counts, and a test checks the
-  result against an 80 × 60 bisection on the box to 1e−12. (Maintainer decision, 2026-10-21: bisection
-  took about 13 s per GZ curve, too slow for the capacity search.)
+  volume by the Illinois secant method in a bracket from the lowest to the highest point of the hull
+  along k (the volume is 0 and the whole hull there); the outer solve finds θ for the longitudinal
+  moment by the same method between ±10° (an Option that needs more fails with a message). Fixed step
+  counts (16 inner, 12 outer) and no early stop, so native and WebAssembly give the same bits. A test
+  checks the result against an 80 × 60 bisection to 1e−12. (Maintainer decision, 2026-10-21: bisection
+  took about 13 s per 61-angle GZ curve on a 41-station hull, too slow for the capacity search; the
+  secant solver takes about 1 s and agrees to 2e−15. Newton overshot at heavy trim.)
 - **GZ** (`gz_curve`, angles in degrees, `box_stability::ANGLES_DEG` as today): at each heel, the
   equilibrium above, and GZ = the horizontal distance from G to the vertical through B, measured in the
   transverse direction, positive when righting. The free surface stays as today's correction to GM and
