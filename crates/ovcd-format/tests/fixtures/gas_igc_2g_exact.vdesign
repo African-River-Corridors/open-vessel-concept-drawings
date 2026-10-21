@@ -153,6 +153,14 @@
           "value": 0.66,
           "source": "default"
         },
+        "weather_shield_thickness_mm": {
+          "value": 6.0,
+          "source": "default"
+        },
+        "weather_shield_clearance_m": {
+          "value": 1.5,
+          "source": "default"
+        },
         "tank_wall_thickness_mm": {
           "value": 25.0,
           "source": "default"

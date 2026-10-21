@@ -150,6 +150,11 @@ OPTIONAL_INPUT_CASES = (
      {"wing_tank_height_ratio": 0.66}),
     ("tank_wall_thickness_mm", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"tank_wall_thickness_mm": 25.0}),
+    # The weather shield (issue #410, part 1b), set to its defaults: the same results as leaving it out.
+    ("weather_shield_thickness_mm", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4,
+     6.0, {"weather_shield_thickness_mm": 6.0}),
+    ("weather_shield_clearance_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4,
+     6.0, {"weather_shield_clearance_m": 1.5}),
     # The aft block inputs (issue #4, slice 4), set to their defaults in the same way. A self-propelled
     # hull carries the block; the unit counts default by Cargo phase (gas 1 battery and 2
     # accommodation units, dry bulk 2 and 1), so each has a gas and a dry case.

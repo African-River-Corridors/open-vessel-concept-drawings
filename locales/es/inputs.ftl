@@ -196,6 +196,12 @@ input-wing-tank-gap-m = Holgura del tanque lateral
 input-wing-tank-height-ratio = Altura del tanque lateral sobre diámetro del tanque
 
 # status: draft
+input-weather-shield-thickness-mm = Espesor de la chapa del techo de protección
+
+# status: draft
+input-weather-shield-clearance-m = Holgura del techo de protección sobre los tanques
+
+# status: draft
 input-tank-wall-thickness-mm = Espesor de pared del tanque (valor manual)
 
 # status: draft
