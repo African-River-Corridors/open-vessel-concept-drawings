@@ -20,6 +20,10 @@ use crate::pressure_vessel::{PyError, calculate_wall_thicknesses_with};
 use crate::pyfmt::{fixed, py_str};
 
 /// The one message for a tank count product that no 64-bit field can hold.
+/// The Filling Limit by default: 98 % of a cargo tank's volume (IGC Code 15.3, as `simulate` and
+/// GLOSSARY.md use it). A cargo with a typed loading-limit basis is loaded to its Loading Limit.
+pub const DEFAULT_FILLING_LIMIT: f64 = 0.98;
+
 pub const INT_OVERFLOW_MESSAGE: &str = "integer does not fit in 64 bits";
 
 fn value_error(message: String) -> PyError {
