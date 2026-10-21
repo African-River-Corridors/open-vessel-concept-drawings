@@ -50,6 +50,20 @@ app-theme-dark = Escuro
 # status: draft
 app-dismiss = Dispensar
 # status: draft
+app-msg-bar = Mensagens
+# status: draft
+app-msg-count = { $index } de { $count }
+# status: draft
+app-msg-previous = Mensagem anterior
+# status: draft
+app-msg-next = Próxima mensagem
+# status: draft
+app-msg-show-all = Todas
+# status: draft
+app-msg-show-more = Mais
+# status: draft
+app-msg-show-less = Menos
+# status: draft
 app-hash-changed = Os resultados mudaram desde que este arquivo foi salvo. Opções afetadas: { $options }.
 # status: draft
 app-ok = OK

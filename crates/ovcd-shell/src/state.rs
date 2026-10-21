@@ -6,6 +6,7 @@
 //! validation or default logic: every answer comes from [`DesignSession`].
 
 use crate::views;
+use ovcd_core::text::{Arg, Msg};
 use ovcd_format::{DesignSession, HashStatus, Profile, RunOutcome, msg_json};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
@@ -17,10 +18,66 @@ pub struct AppState {
     active_option: String,
     /// Names of the Options whose stored results hash differs from this engine's, at open.
     hash_changed: Vec<String>,
-    /// What changed when an old (version 1) file was read as the current inputs, at open.
-    migration_notes: Vec<String>,
-    /// The Message Id of each migration note, where it has one (ADR 0014).
-    migration_note_msgs: Vec<Value>,
+    /// What changed when an old file was read as the current inputs, at open: one note per change,
+    /// kept with the Option it is about, so a rename or a delete of that Option follows (issue #436).
+    migration_notes: Vec<Note>,
+}
+
+/// One migration note: the Option it is about (none for a note about the file), the message without
+/// its "Option '<name>': " lead-in, and that message's Message Id.
+#[derive(Debug, Clone)]
+struct Note {
+    option: Option<String>,
+    body: String,
+    msg: Option<Msg>,
+}
+
+impl Note {
+    /// A note as the report words it. A note about an Option has the Message Id `msg-option`, with
+    /// the Option's name and the message itself as its arguments.
+    fn from_report(text: &str, msg: Option<&Msg>) -> Note {
+        if let Some(m) = msg.filter(|m| m.id == "msg-option") {
+            let arg = |name: &str| m.args.iter().find(|(n, _)| *n == name).map(|(_, a)| a);
+            if let (Some(Arg::Text(option)), Some(message)) = (arg("option"), arg("message")) {
+                let (body, msg) = match message {
+                    Arg::Msg(inner) => (inner.english.clone(), Some(inner.clone())),
+                    other => (other.english(), None),
+                };
+                return Note {
+                    option: Some(option.clone()),
+                    body,
+                    msg,
+                };
+            }
+        }
+        Note {
+            option: None,
+            body: text.to_string(),
+            msg: msg.cloned(),
+        }
+    }
+
+    /// The note's text, with the Option's name as it is now.
+    fn text(&self) -> String {
+        match &self.option {
+            Some(name) => format!("Option '{name}': {}", self.body),
+            None => self.body.clone(),
+        }
+    }
+
+    /// The note's Message Id and arguments, with the Option's name as it is now.
+    fn msg(&self) -> Value {
+        let Some(body) = &self.msg else {
+            return Value::Null;
+        };
+        match &self.option {
+            Some(name) => json!({
+                "id": "msg-option",
+                "args": { "option": name, "message": msg_json(body, true) },
+            }),
+            None => msg_json(body, false),
+        }
+    }
 }
 
 fn first_option(session: &DesignSession) -> String {
@@ -44,7 +101,6 @@ impl AppState {
             active_option,
             hash_changed: Vec::new(),
             migration_notes: Vec::new(),
-            migration_note_msgs: Vec::new(),
         })
     }
 
@@ -64,13 +120,20 @@ impl AppState {
             dirty: false,
             active_option,
             hash_changed,
-            migration_note_msgs: report
+            migration_notes: report
                 .report
-                .migration_note_msgs
+                .migration_notes
                 .iter()
-                .map(|m| m.as_ref().map_or(Value::Null, |m| msg_json(m, false)))
+                .enumerate()
+                .map(|(i, text)| {
+                    let msg = report
+                        .report
+                        .migration_note_msgs
+                        .get(i)
+                        .and_then(Option::as_ref);
+                    Note::from_report(text, msg)
+                })
                 .collect(),
-            migration_notes: report.report.migration_notes,
         })
     }
 
@@ -139,8 +202,20 @@ impl AppState {
 
     pub fn rename_option(&mut self, option: &str, new_name: &str) -> Result<(), String> {
         self.session.rename_option(option, new_name)?;
+        let new_name = new_name.trim();
         if self.active_option == option {
-            self.active_option = new_name.trim().to_string();
+            self.active_option = new_name.to_string();
+        }
+        // The notes and hash warnings of the Option follow its new name.
+        for note in &mut self.migration_notes {
+            if note.option.as_deref() == Some(option) {
+                note.option = Some(new_name.to_string());
+            }
+        }
+        for name in &mut self.hash_changed {
+            if name == option {
+                *name = new_name.to_string();
+            }
         }
         self.dirty = true;
         Ok(())
@@ -152,6 +227,10 @@ impl AppState {
         if self.active_option == option {
             self.active_option = first_option(&self.session);
         }
+        // The notes and hash warnings of a deleted Option go with it.
+        self.migration_notes
+            .retain(|n| n.option.as_deref() != Some(option));
+        self.hash_changed.retain(|n| n != option);
         self.dirty = true;
         Ok(())
     }
@@ -194,7 +273,6 @@ impl AppState {
         // A saved file carries fresh hashes and the current inputs, so the open-time warnings are over.
         self.hash_changed.clear();
         self.migration_notes.clear();
-        self.migration_note_msgs.clear();
     }
 
     pub fn file_name(&self) -> String {
@@ -229,8 +307,9 @@ impl AppState {
             "title": self.title(),
             "active_option": self.active_option,
             "hash_changed": self.hash_changed,
-            "migration_notes": self.migration_notes,
-            "migration_note_msgs": self.migration_note_msgs,
+            "migration_notes": self.migration_notes.iter().map(Note::text).collect::<Vec<_>>(),
+            "migration_note_msgs": self.migration_notes.iter().map(Note::msg).collect::<Vec<_>>(),
+            "migration_note_options": self.migration_notes.iter().map(|n| n.option.clone()).collect::<Vec<_>>(),
         })
     }
 }
@@ -402,6 +481,75 @@ mod tests {
         // A file that needs no change has none.
         let fresh = AppState::open(Path::new("a.vdesign"), &starter_text()).unwrap();
         assert_eq!(fresh.snapshot()["migration_notes"], json!([]));
+    }
+
+    #[test]
+    fn an_options_migration_notes_follow_a_rename_and_go_with_a_delete() {
+        // Issue #436: a note stayed on screen after its Option was deleted.
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../crates/ovcd-format/tests/legacy/v1_adn_g_self_propelled.vdesign"
+        );
+        let text = std::fs::read_to_string(path).unwrap();
+        let mut state = AppState::open(Path::new("old.vdesign"), &text).unwrap();
+        let notes = |state: &AppState| {
+            state.snapshot()["migration_notes"]
+                .as_array()
+                .unwrap()
+                .clone()
+        };
+        let before = notes(&state);
+        assert_eq!(before.len(), 6);
+        state.duplicate_option("Option 1").unwrap();
+        assert_eq!(notes(&state), before, "a copy brings no notes of its own");
+
+        state.rename_option("Option 1", "Laden case").unwrap();
+        let after = notes(&state);
+        assert_eq!(after.len(), 6);
+        for (old, new) in before.iter().zip(&after) {
+            let old = old.as_str().unwrap();
+            let new = new.as_str().unwrap();
+            assert_eq!(
+                new,
+                old.replacen("Option 'Option 1': ", "Option 'Laden case': ", 1)
+            );
+        }
+        let snap = state.snapshot();
+        for (i, msg) in snap["migration_note_msgs"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .enumerate()
+        {
+            assert_eq!(msg["id"], "msg-option");
+            assert_eq!(msg["args"]["option"], "Laden case", "note {i}");
+        }
+        assert!(
+            snap["migration_note_options"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|o| o == "Laden case")
+        );
+
+        state.delete_option("Laden case").unwrap();
+        assert_eq!(
+            notes(&state),
+            Vec::<Value>::new(),
+            "the notes went with their Option"
+        );
+        assert_eq!(state.snapshot()["migration_note_msgs"], json!([]));
+    }
+
+    #[test]
+    fn a_hash_warning_follows_a_rename_and_goes_with_a_delete() {
+        let mut state = AppState::new_design().unwrap();
+        state.hash_changed = vec!["Option 1".into()];
+        state.duplicate_option("Option 1").unwrap();
+        state.rename_option("Option 1", "B").unwrap();
+        assert_eq!(state.snapshot()["hash_changed"], json!(["B"]));
+        state.delete_option("B").unwrap();
+        assert_eq!(state.snapshot()["hash_changed"], json!([]));
     }
 
     #[test]

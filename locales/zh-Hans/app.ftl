@@ -50,6 +50,20 @@ app-theme-dark = 深色
 # status: draft
 app-dismiss = 关闭
 # status: draft
+app-msg-bar = 消息
+# status: draft
+app-msg-count = 第 { $index } 条，共 { $count } 条
+# status: draft
+app-msg-previous = 上一条消息
+# status: draft
+app-msg-next = 下一条消息
+# status: draft
+app-msg-show-all = 全部
+# status: draft
+app-msg-show-more = 更多
+# status: draft
+app-msg-show-less = 收起
+# status: draft
 app-hash-changed = 自保存此文件以来，计算结果已变化。受影响的选项：{ $options }。
 # status: draft
 app-ok = 确定

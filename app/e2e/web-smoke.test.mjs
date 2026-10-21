@@ -173,6 +173,52 @@ describe("OVCD web smoke tests", () => {
     fs.writeFileSync(path.join(SHOTS, "311-overflow.txt"), `${[...new Set(overflow)].join("\n")}\n`);
   });
 
+  it("shows every message in one line, steps through them, lists them all, and drops an Option's notes with it", async () => {
+    const OLD = path.resolve(here, "../../crates/ovcd-format/tests/legacy/v1_adn_g_self_propelled.vdesign");
+    const b = await start();
+    await b.url(`${origin}/ovcd/app`);
+    await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+    await (await b.$("button=I understand")).click();
+    await until(b, "results", async () => (await outputs(b)).isExisting());
+    await b.execute(() => {
+      HTMLInputElement.prototype.click = function () {};
+    });
+    await (await b.$("button=Open")).click();
+    const picker = await b.$("[data-testid=file-picker]");
+    await picker.waitForExist({ timeout: 5000 });
+    await picker.setValue(OLD);
+    const bar = () => b.$("[data-testid=message-bar]");
+    await until(b, "the message bar", async () => (await bar()).isExisting());
+    // Six notes of the changed old file (issue #436): one line, not six banners.
+    const count = await (await b.$("[data-testid=message-count]")).getText();
+    const total = Number(count.split(" of ")[1]);
+    assert.ok(total >= 5, `at least five messages: ${count}`);
+    assert.equal(count, `1 of ${total}`);
+    const height = await b.execute(() => document.querySelector("[data-testid=message-bar]").getBoundingClientRect().height);
+    assert.ok(height <= 32, `the bar is one line high (${height} px)`);
+    const seen = new Set();
+    for (let i = 0; i < total; i++) {
+      seen.add(await (await b.$("[data-testid=message-text]")).getText());
+      await (await b.$("button[aria-label='Next message']")).click();
+    }
+    assert.equal(seen.size, total, "next shows each message once");
+    assert.equal(await (await b.$("[data-testid=message-count]")).getText(), `1 of ${total}`, "next wraps round");
+    await (await b.$("button[aria-label='Previous message']")).click();
+    assert.equal(await (await b.$("[data-testid=message-count]")).getText(), `${total} of ${total}`);
+    await (await b.$("button=All")).click();
+    assert.equal((await b.$$("[data-testid=message-list] li")).length, total, "the list shows them all");
+    await (await b.$("button=Less")).click();
+    assert.equal(await (await b.$("[data-testid=message-list]")).isExisting(), false);
+    // Keep a copy, then delete the Option the notes are about: its notes go with it.
+    await (await b.$("button=Duplicate")).click();
+    await until(b, "two Options", async () => (await b.$$('select[aria-label="Active Option"] option')).length === 2);
+    await (await b.$('select[aria-label="Active Option"]')).selectByIndex(0);
+    await (await b.$("button=Delete")).click();
+    await (await (await b.$(".confirm")).$("button=Delete")).click();
+    await until(b, "one Option", async () => (await b.$$('select[aria-label="Active Option"] option')).length === 1);
+    await until(b, "the notes to go", async () => !(await (await bar()).isExisting()));
+  });
+
   it("still loads when browser storage is blocked", async () => {
     // Blocking cookies and site data makes `localStorage` throw.
     const b = await start({ prefs: { "profile.default_content_setting_values.cookies": 2 } });
