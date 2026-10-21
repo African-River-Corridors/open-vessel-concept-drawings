@@ -109,6 +109,16 @@ check-name-utilisation-reasonable = utilisation reasonable
 check-utilisation-reasonable = volume utilisation { $utilisation } >= floor { $floor }
 warn-journey-draft-bound = Draft-bound: shed { $shed } t of { $capacity } t volume capacity to float at T_max = { $t_max } m (full-load draft { $full_load_draft } m).
 
+## crates/ovcd-core/src/machinery.rs
+
+warn-machinery-battery-not-sized = The battery energy of the hybrid is not sized yet, so the battery room is not in the stern block.
+check-name-machinery-fits-beam = machinery fits beam
+check-machinery-fits-beam = { $count } x { $width } m engines abreast need { $needed } m across a { $beam } m beam
+check-name-machinery-fits-under-deck = machinery fits under deck
+check-machinery-fits-under-deck = engine { $height } m + 1.00 m double bottom and deck structure (ESTIMATE) <= moulded depth { $depth } m
+warn-machinery-power-not-sized = The installed power is not sized yet, so the engines and their room are not in the stern block; type an installed power to place them.
+warn-machinery-no-engine = No engine of the table covers { $kw } kW per engine (the largest is 4,400 kW), so the engine room is not in the stern block.
+
 ## crates/ovcd-core/src/resistance.rs
 
 check-service-speed-below-limiting = { $environment }: service { $service } kn <= 0.95 x Schijf limit { $limit } kn

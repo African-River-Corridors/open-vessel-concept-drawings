@@ -71,6 +71,20 @@ pub const BLADE_LOAD_DUCTED_KW_M2: f64 = 500.0;
 /// The gravity the spec turns kN into tonnes with.
 pub const G: f64 = 9.81;
 
+/// The largest azimuth unit of the maker range (m): the Schottel SRP 800, 4,200 mm (SCHOTTEL Product
+/// Guide 1125, the SRP table). It caps the default propeller diameter (issue #352).
+pub const AZIMUTH_MAX_DIAMETER_M: f64 = 4.2;
+
+impl PropulsorType {
+    /// The largest unit of the type's maker range (m), where a range is known: azimuth units only.
+    pub fn max_unit_diameter_m(self) -> Option<f64> {
+        match self {
+            Self::AzimuthOpen | Self::AzimuthDucted => Some(AZIMUTH_MAX_DIAMETER_M),
+            _ => None,
+        }
+    }
+}
+
 /// One set of identical propulsors.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PropulsorInputs {

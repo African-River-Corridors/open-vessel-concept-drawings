@@ -292,6 +292,7 @@ fn aft_from_json(value: &Value, ctx: &str) -> Result<AftArrangementResult, EvalE
             None | Some(Value::Null) => o.f64("length_m")?,
             Some(_) => o.f64("deck_length_m")?,
         },
+        machinery: None,
     })
 }
 

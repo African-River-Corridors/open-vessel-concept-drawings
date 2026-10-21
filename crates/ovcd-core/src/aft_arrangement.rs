@@ -299,6 +299,9 @@ pub struct AftArrangementInputs {
     pub engine_room_end_clear_m: f64,
     /// Gas valve unit room forward of the engine room (IGF Code: its own space). ESTIMATE length.
     pub gvu_room_length_m: f64,
+    /// Issue #352: the machinery of a specified Propulsor, which sets the below-deck run (aft peak,
+    /// drive room, engine, genset or battery room). `None`: today's thruster room and gas rooms.
+    pub machinery: Option<crate::machinery::MachineryInputs>,
 }
 
 impl AftArrangementInputs {
@@ -338,6 +341,7 @@ impl AftArrangementInputs {
             genset_clear_m: 1.0,
             engine_room_end_clear_m: 1.2,
             gvu_room_length_m: 2.0,
+            machinery: None,
         }
     }
 
@@ -439,6 +443,8 @@ pub struct AftArrangementResult {
     pub genset_engine_mass_t: f64,
     pub below_deck_length_m: f64,
     pub deck_length_m: f64,
+    /// Issue #352: the machinery laid out, when the inputs give one.
+    pub machinery: Option<crate::machinery::Machinery>,
 }
 
 /// The rates of the stern block mass (issue #348, spec 0007 "Machinery space and mass"; Hekkenberg
@@ -500,7 +506,18 @@ pub fn stern_block_mass(
     let mut items = Vec::new();
     let power_kw = m.power_kw(res);
     let n_thrusters = res.thruster_offsets_m.len() as f64;
-    if n_thrusters > 0.0 {
+    // Issue #352: a specified Propulsor's machinery gives its own propulsor, plant and piping items.
+    let machinery = match (&inp.machinery, &res.machinery) {
+        (Some(mi), Some(mr)) => Some(crate::machinery::mass_items(
+            mi,
+            mr,
+            inp.depth,
+            double_bottom_m,
+            res.installed_kwe,
+        )),
+        _ => None,
+    };
+    if n_thrusters > 0.0 && machinery.is_none() {
         let d = inp.thruster_envelope_m / ENVELOPE_OVER_DIAMETER;
         items.push(MassItem {
             label: "thrusters",
@@ -557,6 +574,10 @@ pub fn stern_block_mass(
             lcg_m: res.genset_x0_m + res.genset_length_m / 2.0,
             kcg_m: double_bottom_m + res.genset_height_m / 2.0,
         });
+    }
+    if let Some(m) = machinery {
+        items.extend(m);
+        return items;
     }
     let block_lcg = res.length_m / 2.0;
     items.push(MassItem {
@@ -815,15 +836,42 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, PyExc
     let mut zones: Vec<(String, f64, f64)> = Vec::new();
     let thr_x0 = 0.0;
     let thr_x1 = thr_x0 + inp.thruster_room_length_m;
-    zones.push(("THRUSTER ROOM".to_string(), thr_x0, thr_x1));
-    let x = thr_x1;
+    let (mut er_x0, mut er_x1, mut gvu_x0, mut gvu_x1) = (0.0, 0.0, 0.0, 0.0);
+    let mut below_len = thr_x1;
+    // Issue #352: a specified Propulsor's machinery sets the run below deck.
+    let machinery = inp.machinery.as_ref().map(|m| {
+        let gas_rooms = gas.then_some((
+            g_len + 2.0 * inp.engine_room_end_clear_m,
+            inp.gvu_room_length_m,
+        ));
+        crate::machinery::arrange(
+            m,
+            inp.beam,
+            inp.depth,
+            inp.thruster_room_length_m,
+            gas_rooms,
+        )
+    });
+    let x = match &machinery {
+        Some(m) => m.drive_room_x1_m,
+        None => thr_x1,
+    };
+    if let Some(m) = &machinery {
+        zones.extend(m.zones.iter().cloned());
+        below_len = m.below_deck_length_m;
+        if gas {
+            (er_x0, er_x1) = (m.engine_room_x0_m, m.engine_room_x1_m);
+            gvu_x0 = er_x1;
+            gvu_x1 = gvu_x0 + inp.gvu_room_length_m;
+        }
+    } else {
+        zones.push(("THRUSTER ROOM".to_string(), thr_x0, thr_x1));
+    }
 
     // Below deck, gas-fuelled only: engine room (sets abreast, maintenance space fore and aft), then
     // the gas valve unit room. They sit under the deck items and cost length only where they run
     // further forward.
-    let (mut er_x0, mut er_x1, mut gvu_x0, mut gvu_x1) = (0.0, 0.0, 0.0, 0.0);
-    let mut below_len = thr_x1;
-    if gas {
+    if gas && machinery.is_none() {
         er_x0 = thr_x1;
         er_x1 = er_x0 + g_len + 2.0 * inp.engine_room_end_clear_m;
         gvu_x0 = er_x1;
@@ -866,11 +914,13 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, PyExc
         zones.push(("WHEELHOUSE (LIFTING)".to_string(), wh_x0, wh_x1));
     }
     let deck_len = wh_x1;
-    // Battery-electric: the deck items set the length (0.1.0). Gas-fuelled: the longer layer.
-    let length = if gas {
-        py_max(deck_len, below_len)
-    } else {
-        wh_x1
+    // Battery-electric: the deck items set the length (0.1.0). Gas-fuelled: the longer layer. With
+    // a specified Propulsor (#352): the longest of the run below deck, the deck items and the stern
+    // run where the propulsors sit.
+    let length = match (&inp.machinery, gas) {
+        (Some(m), _) => py_max(py_max(deck_len, below_len), m.stern_run_m),
+        (None, true) => py_max(deck_len, below_len),
+        (None, false) => wh_x1,
     };
 
     // Transverse: thrusters equally spaced, containers side by side.
@@ -1127,6 +1177,11 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, PyExc
         }
     }
 
+    if let Some(m) = &machinery {
+        checks.extend(m.checks.iter().cloned());
+        warnings.extend(m.warnings.iter().cloned());
+    }
+
     Ok(AftArrangementResult {
         length_m: length,
         zones,
@@ -1178,6 +1233,7 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, PyExc
         genset_height_m: g_hgt,
         genset_engine_mass_t: n_gen as f64 * g_mass,
         below_deck_length_m: below_len,
+        machinery: machinery.clone(),
         deck_length_m: deck_len,
     })
 }
