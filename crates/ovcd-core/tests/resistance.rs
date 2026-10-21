@@ -34,7 +34,8 @@ fn service_speed_and_what_governs_it() {
     };
     assert_eq!(sea.limiting_speed_knots, None);
     assert_eq!(sea.service_speed_knots, 12.0);
-    assert_eq!(sea.service_speed_governed_by, "power");
+    // Issue #400: the open sea runs to the top of the speed grid (12 kn); it was labelled "power".
+    assert_eq!(sea.service_speed_governed_by, "speed grid");
     assert_eq!(sea.squat_limited_speed_knots, None);
     assert_eq!(sea.speed_curve.len(), 21);
     // Re-pinned (issues #396, #397); was 10.827543883575197.
@@ -602,4 +603,57 @@ fn the_residuary_ratio_never_falls_as_the_froude_number_grows() {
         assert!(r >= last, "Fn {}", f64::from(i) / 1000.0);
         last = r;
     }
+}
+
+// --- Issue #400: the speed governing labels. ---
+
+#[test]
+fn a_service_speed_at_the_top_of_the_speed_grid_is_labelled_speed_grid() {
+    let inp = ResistanceInputs {
+        speed_max_knots: 6.0,
+        ..with_envs(vec![deep("Deep")])
+    };
+    let r = compute(&inp).unwrap();
+    let e = &r.environments[0];
+    assert_eq!(e.service_speed_knots, 6.0);
+    assert_eq!(e.service_speed_governed_by, "speed grid");
+}
+
+#[test]
+fn a_sweep_cut_by_the_channel_cap_is_labelled_channel_even_off_the_grid_step() {
+    // 60 m wide: 0.95 x the limit is about 3.48 kn, so the 0.1 kn grid stops at 3.4 kn, more than
+    // 0.05 kn below the cap. It was labelled "power".
+    let mut e = env("Cut", 5.0, 60.0, 80.0);
+    e.apply_squat_limit = false;
+    let inp = ResistanceInputs {
+        speed_step_knots: 0.1,
+        ..with_envs(vec![e])
+    };
+    let r = compute(&inp).unwrap();
+    let c = &r.environments[0];
+    assert_eq!(c.service_speed_knots, 3.4);
+    assert_eq!(c.service_speed_governed_by, "channel");
+}
+
+#[test]
+fn a_service_speed_that_fails_squat_is_flagged() {
+    // The default river: no speed point keeps the under-keel clearance at its depth, so the first
+    // point stands in, and the flag says so.
+    let mut e = env("Shoal", 6.3, 40.0, 60.0);
+    e.squat_safety_margin_m = 0.5;
+    let r = compute(&with_envs(vec![e])).unwrap();
+    let flag = r
+        .checks
+        .iter()
+        .find(|c| c.name == "service_speed_clears_squat[Shoal]")
+        .expect("the flag");
+    assert!(!flag.ok);
+    assert_eq!(flag.severity, "warning");
+    let e = &r.environments[0];
+    let p = e
+        .speed_curve
+        .iter()
+        .find(|p| p.speed_knots == e.service_speed_knots)
+        .unwrap();
+    assert!(p.squat_limited);
 }

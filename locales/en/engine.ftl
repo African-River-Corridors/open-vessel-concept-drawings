@@ -126,6 +126,7 @@ warn-machinery-no-engine = No engine of the table covers { $kw } kW per engine (
 check-service-speed-below-limiting = { $environment }: service { $service } kn <= 0.95 x Schijf limit { $limit } kn
 check-power-within-installed = { $environment }: power { $power } kW <= installed { $installed } kW
 check-blockage-in-range = { $environment }: blockage n = { $blockage } must be in (0, 1)
+check-service-speed-fails-squat = { $environment }: at the service speed { $service } kn the squat leaves less than the under-keel clearance
 check-name-coefficients-are-first-order = coefficients are first order
 check-coefficients-are-first-order = Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor are uncalibrated first-order estimates (RS1) — ITTC-1957 friction is standard.
 
