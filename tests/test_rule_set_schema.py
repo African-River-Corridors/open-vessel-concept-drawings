@@ -38,7 +38,8 @@ def test_the_example_set_validates():
 
 def test_every_rule_set_file_in_the_repo_validates():
     """Label: property"""
-    files = [p for p in RULES.rglob("*.json") if p.name != "rule-set.schema.json"]
+    # RELEASED.json is the list of released versions (issue #273), not a Rule Set.
+    files = [p for p in RULES.rglob("*.json") if p.name not in ("rule-set.schema.json", "RELEASED.json")]
     assert files, "no Rule Set files found"
     for path in files:
         assert errors(json.loads(path.read_text())) == [], path
