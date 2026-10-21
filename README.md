@@ -158,4 +158,4 @@ issues privately — see [SECURITY.md](SECURITY.md).
 ## Licence
 
 Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
-Copyright 2026 Mobile Clipboard Limited (trading as African River Corridors).
+Copyright 2026 African River Corridors Limited.
