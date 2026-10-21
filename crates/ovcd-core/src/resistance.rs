@@ -22,6 +22,7 @@
 
 use crate::aft_arrangement::PyException;
 use crate::checks::{Check, all_ok};
+use crate::confined_water::LIMITING_SPEED_MARGIN;
 use crate::pyfmt::round_to;
 use crate::squat::{self, SquatInputs};
 use crate::text;
@@ -366,9 +367,9 @@ impl<'a> ResistanceCalculator<'a> {
         (env.channel_width_bottom + env.channel_width_surface) / 2.0 * env.water_depth
     }
 
-    /// Midship section area of the vessel (m^2).
+    /// Midship section area of the vessel (m^2): B x T, as squat has it (issue #396).
     fn midship_section_area(&self) -> f64 {
-        self.inputs.beam * self.inputs.draft * self.inputs.block_coefficient
+        crate::confined_water::midship_section_area(self.inputs.beam, self.inputs.draft)
     }
 
     /// Schijf (1949) critical speed in a confined waterway (knots); `None` for deep water.
@@ -381,8 +382,9 @@ impl<'a> ResistanceCalculator<'a> {
         if ac <= 0.0 || am >= ac {
             return Ok(Some(0.0));
         }
-        let n = am / ac;
-        let fnh_crit = libm::sqrt(2.0 / 3.0) * libm::pow(1.0 - n, 1.0 / 3.0);
+        // Issue #397: the first critical speed of Schijf, on the water depth.
+        let n = crate::confined_water::blockage_ratio(am, ac);
+        let fnh_crit = crate::confined_water::critical_froude_depth(n);
         let v_limit = fnh_crit * py_sqrt(GRAVITY * env.water_depth)?;
         Ok(Some(v_limit / KNOTS_TO_MS))
     }
@@ -577,12 +579,12 @@ impl<'a> ResistanceCalculator<'a> {
             s += inp.speed_step_knots;
         }
 
-        // Cap at 95% of limiting speed for river environments
+        // Cap at the margin of the limiting speed for river environments
         let mut max_eval = inp.speed_max_knots;
         if let Some(l) = limiting
             && l > 0.0
         {
-            max_eval = py_min(max_eval, l * 0.95);
+            max_eval = py_min(max_eval, l * LIMITING_SPEED_MARGIN);
         }
 
         let mut curve: Vec<SpeedPoint> = Vec::new();
@@ -605,7 +607,12 @@ impl<'a> ResistanceCalculator<'a> {
         // Blockage ratio
         let ac = self.channel_cross_section(env);
         let am = self.midship_section_area();
-        let blockage = if ac > 0.0 { am / ac } else { 0.0 };
+        // Open water has no channel: m = 0 (maintainer decision on issue #396).
+        let blockage = if env.is_deep_water {
+            0.0
+        } else {
+            crate::confined_water::blockage_ratio(am, ac)
+        };
 
         // What actually governed the service speed.
         let sq_limit = if squat_applies(env) {
@@ -634,7 +641,7 @@ impl<'a> ResistanceCalculator<'a> {
                 governed = "squat";
             }
         } else if let Some(l) = limiting
-            && service_speed >= l * 0.95 - 0.05
+            && service_speed >= l * LIMITING_SPEED_MARGIN - 0.05
         {
             governed = "channel";
         }
@@ -692,7 +699,7 @@ fn build_checks(inputs: &ResistanceInputs, environments: &[EnvironmentResult]) -
         if let Some(l) = env.limiting_speed_knots
             && l > 0.0
         {
-            let ok = env.service_speed_knots <= 0.95 * l + 1e-6;
+            let ok = env.service_speed_knots <= LIMITING_SPEED_MARGIN * l + 1e-6;
             checks.push(Check::new(
                 format!("service_speed_below_limiting[{}]", env.name),
                 ok,

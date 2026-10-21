@@ -83,9 +83,18 @@ KNOWN_DIFFERENCES: dict = {
     "aft_arrangement.compute": "issue #277: the wheelhouse sightline is an error check",
     # Issue #418: every check that can remove a `fit` candidate is listed, and the two full-volume
     # checks (`not overloaded`, `freeboard ok`) are listed as warnings, so a `simulate` result has
-    # more checks. The gas scenarios above already differ.
-    "simulate.box": "issue #418: every check is listed; the full-volume ones as warnings",
-    "simulate.hopper_channel": "issue #418: every check is listed; the full-volume ones as warnings",
+    # more checks. The gas scenarios above already differ. Issues #396, #397, #398: the midship
+    # section is B x T in the resistance (it was B x T x Cb), the Schijf limiting speed is the first
+    # critical speed of the source (it was sqrt(2/3)(1 - n)^(1/3)), one 0.95 margin on it, the
+    # open-water blockage is 0, and the electric installed power follows the highest battery power.
+    "simulate.box": "issue #418: every check is listed; the full-volume ones as warnings; issue "
+                    "#396: the open-water blockage is 0",
+    "simulate.hopper_channel": "issue #418: every check is listed; the full-volume ones as warnings; "
+                               "issues #396, #397: one midship section B x T and the Schijf first "
+                               "critical speed",
+    "resistance": "issues #396, #397: one midship section B x T and the Schijf first critical speed",
+    "electric_energy.compute": "issues #396, #397, #398: the Schijf limit, its 0.95 margin and the "
+                               "installed power on the highest battery power",
 }
 
 # Keys added to inputs and results after 0.1.0, with the issue that added them. They are dropped

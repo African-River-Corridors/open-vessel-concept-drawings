@@ -21,7 +21,8 @@ fn the_default_barge_has_three_environments_and_the_river_binds() {
     );
     let binding = r.binding_environment().unwrap();
     assert_eq!(binding.name, "Confined shallow river");
-    close(r.binding_power_at_service_kw(), 66.18578807734983);
+    // Re-pinned (issues #396, #397); was 66.18578807734983.
+    close(r.binding_power_at_service_kw(), 66.60443130757577);
     assert!(r.ok());
 }
 
@@ -36,13 +37,17 @@ fn service_speed_and_what_governs_it() {
     assert_eq!(sea.service_speed_governed_by, "power");
     assert_eq!(sea.squat_limited_speed_knots, None);
     assert_eq!(sea.speed_curve.len(), 21);
-    close(river.limiting_speed_knots.unwrap(), 10.827543883575197);
+    // Re-pinned (issues #396, #397); was 10.827543883575197.
+    close(river.limiting_speed_knots.unwrap(), 3.798949005299152);
     assert_eq!(river.service_speed_knots, 2.5);
     assert_eq!(river.service_speed_governed_by, "squat");
     close(river.squat_limited_speed_knots.unwrap(), 3.779296875);
-    assert_eq!(river.speed_curve.len(), 17);
-    assert_eq!(creek.service_speed_knots, 10.0);
-    close(creek.blockage_ratio, 0.19124999999999998);
+    // Re-pinned (issues #396, #397); was 17: the sweep stops at 0.95 x the lower limit.
+    assert_eq!(river.speed_curve.len(), 4);
+    // Re-pinned (issues #396, #397); was 10.0.
+    assert_eq!(creek.service_speed_knots, 7.0);
+    // Re-pinned (issue #396, Am = B x T); was 0.19124999999999998, that is x Cb 0.85.
+    close(creek.blockage_ratio, 0.225);
 }
 
 #[test]
@@ -52,9 +57,12 @@ fn one_speed_point_in_the_river() {
     assert_eq!(p.speed_knots, 3.5);
     assert_eq!(p.speed_through_water_knots, 4.5);
     close(p.froude_number, 0.06610342521903137);
-    close(p.resistance_shallow_factor, 1.1194701507773603);
-    close(p.resistance_total_kn, 27.688735115992472);
-    close(p.delivered_power_kw, 142.43085343666527);
+    // Re-pinned (issues #396, #397); was 1.1194701507773603.
+    close(p.resistance_shallow_factor, 1.1306399397755689);
+    // Re-pinned (issues #396, #397); was 27.688735115992472.
+    close(p.resistance_total_kn, 27.965006286472686);
+    // Re-pinned (issues #396, #397); was 142.43085343666527.
+    close(p.delivered_power_kw, 143.85199233761548);
     close(p.squat_m, 0.5020177291974529);
     assert!(p.squat_limited);
     assert!(p.power_available);
@@ -79,11 +87,13 @@ fn the_check_texts_match_python() {
     );
     assert_eq!(
         texts[1].2,
-        "Confined shallow river: service 2.5 kn <= 0.95 x Schijf limit 10.83 kn"
+        // Re-pinned (issues #396, #397); was "... limit 10.83 kn".
+        "Confined shallow river: service 2.5 kn <= 0.95 x Schijf limit 3.80 kn"
     );
     assert_eq!(
         texts[3].2,
-        "Confined shallow river: blockage n = 0.377 must be in (0, 1)"
+        // Re-pinned (issue #396, Am = B x T); was n = 0.377.
+        "Confined shallow river: blockage n = 0.443 must be in (0, 1)"
     );
     assert_eq!(texts[7].0, "coefficients_are_first_order");
     assert_eq!(r.checks[7].severity, "warning");
@@ -212,12 +222,15 @@ fn a_supplied_wetted_area_is_used_not_computed() {
     close(p.resistance_frictional_kn, 3.3525227670168434);
     close(p.resistance_total_kn, 3.6877750437185277);
     close(r.environments[0].power_at_service_kw, 1497.2142889390188);
-    close(r.environments[1].power_at_service_kw, 43.258685017875706);
+    // Re-pinned (issues #396, #397); was 43.258685017875706.
+    close(r.environments[1].power_at_service_kw, 43.53230804416717);
 }
 
 #[test]
 fn a_channel_can_govern_the_service_speed() {
-    let mut e = env("Cut", 5.0, 40.0, 60.0);
+    // Issue #397: wider than before (was 40 m to 60 m), so the lower Schijf limit still falls in
+    // the middle of the speed range.
+    let mut e = env("Cut", 5.0, 100.0, 120.0);
     e.apply_squat_limit = false;
     let inp = ResistanceInputs {
         speed_step_knots: 0.1,
@@ -226,14 +239,16 @@ fn a_channel_can_govern_the_service_speed() {
     let r = compute(&inp).unwrap();
     let c = &r.environments[0];
     assert_eq!(c.service_speed_governed_by, "channel");
-    assert_eq!(c.service_speed_knots, 8.4);
-    close(c.limiting_speed_knots.unwrap(), 8.884025674746445);
-    close(c.blockage_ratio, 0.4896);
-    assert_eq!(c.speed_curve.len(), 65);
-    close(c.power_at_service_kw, 1522.048057913056);
+    // Re-pinned (issues #396, #397) with the wider channel; were 8.4 kn, 8.884025674746445 kn,
+    // 0.4896, 65 points and 1522.048057913056 kW.
+    assert_eq!(c.service_speed_knots, 5.2);
+    close(c.limiting_speed_knots.unwrap(), 5.501113013453215);
+    close(c.blockage_ratio, 0.26181818181818184);
+    assert_eq!(c.speed_curve.len(), 33);
+    close(c.power_at_service_kw, 246.57198379488898);
     assert_eq!(
         r.checks[0].message,
-        "Cut: service 8.4 kn <= 0.95 x Schijf limit 8.88 kn"
+        "Cut: service 5.2 kn <= 0.95 x Schijf limit 5.50 kn"
     );
 }
 
@@ -259,8 +274,8 @@ fn a_zero_area_channel_is_ok_with_a_failed_blockage_check() {
 
 #[test]
 fn a_channel_exactly_filled_by_the_hull_fails_the_blockage_check() {
-    // Midship area equals channel area: n is exactly 1.0, and (0, 1) is open.
-    let r = compute(&with_envs(vec![env("Plug", 6.0, 20.4, 20.4)])).unwrap();
+    // Midship area (B x T, issue #396) equals channel area: n is exactly 1.0, and (0, 1) is open.
+    let r = compute(&with_envs(vec![env("Plug", 6.0, 24.0, 24.0)])).unwrap();
     let e = &r.environments[0];
     assert_eq!(e.blockage_ratio, 1.0);
     close(
@@ -282,14 +297,17 @@ fn the_wave_heading_changes_the_added_resistance() {
     e.peak_wave_period_s = 7.0;
     let r = compute(&with_envs(vec![e.clone()])).unwrap();
     let p = &r.environments[0].speed_curve[0];
-    close(p.resistance_total_kn, 30.581921358527396);
-    close(p.delivered_power_kw, 69.91706820811774);
+    // Re-pinned (issues #396, #397); was 30.581921358527396.
+    close(p.resistance_total_kn, 30.582327201001185);
+    // Re-pinned (issues #396, #397); was 69.91706820811774.
+    close(p.delivered_power_kw, 69.91799605420003);
     assert_eq!(r.environments[0].service_speed_knots, 11.0);
     e.wave_heading_deg_off_bow = 0.0;
     let head = compute(&with_envs(vec![e])).unwrap();
+    // Re-pinned (issues #396, #397); was 38.89178587876913.
     close(
         head.environments[0].speed_curve[0].resistance_total_kn,
-        38.89178587876913,
+        38.89219172124292,
     );
 }
 
@@ -307,7 +325,8 @@ fn a_zero_propulsive_efficiency_gives_zero_fuel_and_still_returns() {
     let p = &r.environments[0].speed_curve[0];
     close(p.delivered_power_kw, 5.80479393641576);
     close(p.fuel_litres_per_nm, 0.6697839157402801);
-    close(r.environments[1].power_at_service_kw, 29.783604634807425);
+    // Re-pinned (issues #396, #397); was 29.783604634807425.
+    close(r.environments[1].power_at_service_kw, 29.971994088409097);
 }
 
 #[test]
@@ -398,7 +417,8 @@ fn equal_service_speeds_bind_to_the_first_environment() {
     assert_eq!(r.environments[0].service_speed_knots, 4.5);
     assert_eq!(r.environments[1].service_speed_knots, 4.5);
     assert_eq!(r.binding_environment().unwrap().name, "First");
-    close(r.binding_power_at_service_kw(), 142.69389106055436);
+    // Re-pinned (issues #396, #397); was 142.69389106055436.
+    close(r.binding_power_at_service_kw(), 143.42648336242655);
 }
 
 // --- Knife edges: the comparison sits exactly on its bound. ---
@@ -434,8 +454,10 @@ fn depth_froude_number_exactly_0_95_keeps_the_subcritical_factor() {
     let r = compute(&inp).unwrap();
     let p = &r.environments[0].speed_curve[0];
     assert_eq!(p.froude_depth, 0.95);
-    close(p.resistance_shallow_factor, 6.106217307692308);
-    close(p.resistance_total_kn, 1499.7916759260709);
+    // Re-pinned (issues #396, #397); was 6.106217307692308.
+    close(p.resistance_shallow_factor, 6.124961538461538);
+    // Re-pinned (issues #396, #397); was 1499.7916759260709.
+    close(p.resistance_total_kn, 1504.3955804159937);
 }
 
 #[test]
@@ -465,7 +487,9 @@ fn a_dynamic_clearance_exactly_on_the_margin_is_not_squat_limited() {
 
 #[test]
 fn a_service_speed_exactly_at_95_percent_of_the_limit_passes() {
-    let mut e = env("Cut", 5.0, 17.386400075809654, 37.386400075809654);
+    // Issue #397: the width that puts 0.95 x the Schijf limit on 5.0 kn (was 17.386400075809654
+    // under the old limit formula).
+    let mut e = env("Cut", 5.0, 93.3280161725555, 113.3280161725555);
     e.apply_squat_limit = false;
     let inp = ResistanceInputs {
         speed_step_knots: 0.1,

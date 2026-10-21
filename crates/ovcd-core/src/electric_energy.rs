@@ -137,6 +137,26 @@ impl EnergyResult {
     pub fn binding(&self) -> Option<&EnergyEnvironment> {
         binding_of(&self.environments)
     }
+
+    /// The environment that sizes the installed power: the highest battery power at service
+    /// speed; the first of equal ones (issue #398).
+    pub fn sizing(&self) -> Option<&EnergyEnvironment> {
+        sizing_of(&self.environments)
+    }
+}
+
+/// See [`EnergyResult::sizing`]. The most confined environment has the lowest service speed, but
+/// not always the highest power: a lower channel cap can leave another environment the hardest.
+fn sizing_of(envs: &[EnergyEnvironment]) -> Option<&EnergyEnvironment> {
+    let mut best: Option<&EnergyEnvironment> = None;
+    for e in envs {
+        match best {
+            Some(b) if e.battery_power_kw > b.battery_power_kw => best = Some(e),
+            Some(_) => {}
+            None => best = Some(e),
+        }
+    }
+    best
 }
 
 fn binding_of(envs: &[EnergyEnvironment]) -> Option<&EnergyEnvironment> {
@@ -276,7 +296,7 @@ pub fn compute(inp: &EnergyInputs) -> Result<EnergyResult, PyException> {
     }
 
     let binding = binding_of(&energy_envs);
-    let installed = binding.map_or(0.0, |b| b.battery_power_kw * inp.power_margin);
+    let installed = sizing_of(&energy_envs).map_or(0.0, |b| b.battery_power_kw * inp.power_margin);
 
     let mut checks: Vec<Check> = Vec::new();
     if let Some(b) = binding {
@@ -296,7 +316,10 @@ pub fn compute(inp: &EnergyInputs) -> Result<EnergyResult, PyException> {
         checks.push(Check::new(
             "service_below_schijf",
             b.limiting_speed_knots
-                .is_none_or(|l| b.service_speed_knots <= l + 1e-6),
+                // Issue #397: the same margin on the limit as the resistance.
+                .is_none_or(|l| {
+                    b.service_speed_knots <= crate::confined_water::LIMITING_SPEED_MARGIN * l + 1e-6
+                }),
             message,
         ));
         checks.push(Check::new(
