@@ -1251,7 +1251,8 @@ fn failed_names(r: &Value) -> Vec<String> {
         .as_array()
         .unwrap()
         .iter()
-        .filter(|c| c["ok"] == false)
+        // A failed warning is not a failure (issue #418).
+        .filter(|c| c["ok"] == false && c["severity"] != "warning")
         .map(|c| c["name"].as_str().unwrap().to_string())
         .collect()
 }

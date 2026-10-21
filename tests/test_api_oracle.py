@@ -78,6 +78,11 @@ KNOWN_DIFFERENCES: dict = {
     "barge_capacity.compute.bulk_holds": "issue #277: the wheelhouse sightline is an error check",
     "ga_adapter.to_ga.bulk": "issue #277: the wheelhouse sightline is an error check",
     "aft_arrangement.compute": "issue #277: the wheelhouse sightline is an error check",
+    # Issue #418: every check that can remove a `fit` candidate is listed, and the two full-volume
+    # checks (`not overloaded`, `freeboard ok`) are listed as warnings, so a `simulate` result has
+    # more checks. The gas scenarios above already differ.
+    "simulate.box": "issue #418: every check is listed; the full-volume ones as warnings",
+    "simulate.hopper_channel": "issue #418: every check is listed; the full-volume ones as warnings",
 }
 
 # Keys added to inputs and results after 0.1.0, with the issue that added them. They are dropped

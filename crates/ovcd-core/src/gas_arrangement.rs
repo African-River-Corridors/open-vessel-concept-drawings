@@ -612,6 +612,27 @@ fn search_checks(
     all
 }
 
+/// The checks the search applies to the answer beyond its capacity result's own checks and its
+/// stability: the journey checks, tank length over diameter and freeboard at the payload. A
+/// result lists them, so every check that can remove a candidate is visible (issue #418).
+pub fn answer_search_checks(f: &ArrangementFit, o: &FitOptions) -> Result<Vec<Check>, PyError> {
+    let r = &f.engine_result;
+    let j = derate_candidate(
+        r,
+        f.loa_m,
+        f.beam_m,
+        f.depth_m,
+        f.t_max_m,
+        o.block_coefficient,
+        o.water_density_t_per_m3,
+    )?;
+    let own: Vec<&str> = r.checks.iter().map(|c| c.name.as_str()).collect();
+    Ok(cheap_checks(r, &j, f.depth_m, o)
+        .into_iter()
+        .filter(|c| !own.contains(&c.name.as_str()))
+        .collect())
+}
+
 /// One built candidate: the inputs and the capacity result they gave.
 type Built = (BargeCapacityInputs, BargeCapacityResult);
 
