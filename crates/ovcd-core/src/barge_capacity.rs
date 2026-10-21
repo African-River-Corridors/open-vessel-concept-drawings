@@ -731,6 +731,10 @@ fn gas_volumetric(
         // `dataclasses.replace`: copy, set, run `__post_init__` again.
         bi = base.clone();
         bi.side_clearance = Some(cs);
+        // The wing ballast tank fills the governing side clearance inboard of the cargo-tank gap
+        // (IGC 2.4.1.2 sets the clearance; maintainer decision on issue #283, built in #277). It
+        // took the 1.0 m default before, whatever clearance the rule gave.
+        bi.wing_tank_width = Some(py_max(0.0, cs - inp.wing_tank_gap_m));
         bi.double_bottom_height = Some(db);
         bi.n_tanks_wide = n_wide;
         bi.post_init()?;

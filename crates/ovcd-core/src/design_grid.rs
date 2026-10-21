@@ -21,8 +21,8 @@ use crate::tanks::INT_OVERFLOW_MESSAGE;
 
 /// Tanks along the hull in every cell.
 pub const TANKS_LONG: i64 = 2;
-/// Side clearance per side (m): a design default with no published source, not an IGC value. IGC
-/// 2.4.1.2 sets the side distance by d(Vc) per tank (issue #283; #277 derives it from that Rule).
+/// Kept for the 0.1.0 API only: the grid no longer uses it. The side clearance of each cell is the
+/// IGC 2.4.1.2 rule, d(Vc) per tank less the insulation (issue #283, built in #277).
 pub const SIDE_CLEARANCE_M: f64 = 1.0;
 /// Kotug E-Pusher pattern, for the total-LOA note (m).
 pub const TUG_LOA_M: f64 = 16.0;
@@ -100,7 +100,8 @@ fn cell(
     let mut inputs = BargeCapacityInputs::new(barge_length_m, beam_m, depth_m);
     inputs.cargo_type = cargo_type.to_string();
     inputs.n_tanks_long = n;
-    inputs.side_clearance_override_m = Some(SIDE_CLEARANCE_M);
+    // The side clearance per tank is the IGC 2.4.1.2 rule (d(Vc) less the insulation), as the
+    // arrangement sizes it; the 1.0 m default spacing is gone (issue #283, built in #277).
     let r = match capacity(&inputs) {
         Ok(r) => r,
         // The fixed range-rule error has no Python twin: Python holds the big integer and
@@ -174,9 +175,8 @@ pub fn sweep(
         beams_m: beams_m.to_vec(),
         depth_m,
         cargo_type: cargo_type.to_string(),
-        clearance_basis:
-            "1.0 m side clearance per side: a design default with no published source, not an IGC value"
-                .to_string(),
+        clearance_basis: "side clearance per tank from IGC 2.4.1.2: d(Vc) less the insulation"
+            .to_string(),
         cells: Vec::new(),
     };
     for &loa in barge_lengths_m {

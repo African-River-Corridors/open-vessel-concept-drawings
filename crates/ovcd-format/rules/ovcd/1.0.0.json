@@ -436,7 +436,7 @@
       "codified": {
         "by": "agent",
         "date": "2026-10-21",
-        "review": "#272"
+        "review": "#277"
       },
       "verified": false,
       "kind": "check",
@@ -446,7 +446,7 @@
           "name": "wheelhouse sees over cargo"
         }
       },
-      "consequence": "warn",
+      "consequence": "block",
       "sizes": false,
       "evaluated": true,
       "finding": null,

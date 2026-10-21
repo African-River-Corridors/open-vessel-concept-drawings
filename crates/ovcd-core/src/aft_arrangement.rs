@@ -1101,8 +1101,9 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, PyExc
     if let Some(obstruction) = inp.sightline_obstruction_m {
         let cleared = (wh_floor_hi + inp.wheelhouse_eye_above_floor_m)
             >= (obstruction + inp.sightline_margin_m - 1e-9);
-        // A warning, not a gate: see the Python file.
-        checks.push(Check::with_severity(
+        // An error: the sightline is a real arrangement limit, and an arrangement that fails it is
+        // not feasible (maintainer decision on issue #264, built in #277).
+        checks.push(Check::new(
             "wheelhouse_sees_over_cargo",
             cleared,
             text!(
@@ -1114,7 +1115,6 @@ pub fn compute(inp: &AftArrangementInputs) -> Result<AftArrangementResult, PyExc
                 lift = Arg::fixed(lift_used, 2),
                 max_lift = Arg::fixed(inp.wheelhouse_max_lift_m, 2),
             ),
-            "warning",
         ));
         if lift > inp.wheelhouse_max_lift_m + 1e-9 {
             warnings.push(text!(
