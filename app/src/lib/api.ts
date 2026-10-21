@@ -29,7 +29,7 @@ export interface Snapshot {
   hash_changed: string[];
   /** What changed when an old (version 1) file was read as the current inputs, at open. */
   migration_notes: string[];
-  /** The Message Id of each migration note, where it has one (ADR 0014). */
+  /** The Message Id of each migration note, where it has one (ADR 0015). */
   migration_note_msgs?: (EngineMsg | null)[];
 }
 export interface Choice {
@@ -112,7 +112,7 @@ export interface Message {
   scope: "input" | "cross_check" | "option";
   inputs: string[];
   text: string;
-  /** The Message Id of `text`, where the engine gives one (ADR 0014). */
+  /** The Message Id of `text`, where the engine gives one (ADR 0015). */
   msg?: EngineMsg | null;
 }
 /** The hull views of a computed Option, drawn in Rust to the Drawing Format Standard, as SVG text. */

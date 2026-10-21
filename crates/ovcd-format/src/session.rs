@@ -362,7 +362,7 @@ pub struct Message {
     pub severity: Severity,
     pub scope: Scope,
     pub text: String,
-    /// The Message Id of `text`, where it has one (ADR 0014). Not part of any result.
+    /// The Message Id of `text`, where it has one (ADR 0015). Not part of any result.
     pub msg: Option<Msg>,
 }
 

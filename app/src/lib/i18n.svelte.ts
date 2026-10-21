@@ -109,7 +109,7 @@ export function t(id: string, args?: Record<string, FluentVariable>): string {
 
 /** One argument of an engine message, as the engine sends it (ovcd-core `text::Arg`). */
 export type EngineArg = string | number | { num: string; value: number } | { cite: string } | { input: string } | EngineMsg;
-/** A Message Id with its arguments, as the engine sends it beside its English (ADR 0014). */
+/** A Message Id with its arguments, as the engine sends it beside its English (ADR 0015). */
 export interface EngineMsg {
   id: string;
   args?: Record<string, EngineArg>;

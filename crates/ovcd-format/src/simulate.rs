@@ -1140,7 +1140,7 @@ fn governs_draught(limit: &str) -> Text {
     )
 }
 
-/// The result with its `text_ids` (ADR 0014): a reading aid, outside the results hash.
+/// The result with its `text_ids` (ADR 0015): a reading aid, outside the results hash.
 /// A condition with its trim (issue #349), only when the trim was worked out: a file without the
 /// stern block mass gets no new field.
 fn with_trim(mut c: Value, trim: Option<&ovcd_core::models::TrimResult>) -> Value {

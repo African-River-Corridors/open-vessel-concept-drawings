@@ -2112,7 +2112,7 @@ pub struct Report {
     /// (also in `warnings`), so a front end can show them on their own.
     pub migration_notes: Vec<String>,
     /// The Message Id of each entry of `errors`, `warnings` and `migration_notes`, where the
-    /// message has one (ADR 0014). A message of an Option is `msg-option`, with the message
+    /// message has one (ADR 0015). A message of an Option is `msg-option`, with the message
     /// itself as its argument.
     pub error_msgs: Vec<Option<Msg>>,
     pub warning_msgs: Vec<Option<Msg>>,
