@@ -458,7 +458,9 @@ impl Hull {
                 wing_ratio: Some(ratio),
                 ..
             } if *w > 0.0 && *w < *side_clearance => {
-                let top = (self.tank_bottom()? + ratio * od).min(self.depth);
+                // The wing plate level, as the weights carry it: not clamped at the deck (issue
+                // #407). Above the Moulded Depth the side shell runs up to it.
+                let top = self.tank_bottom()? + ratio * od;
                 let gap = wing_gap.unwrap_or(0.0).max(0.0).min(side_clearance - w);
                 Some((*w, gap, top))
             }
@@ -943,7 +945,18 @@ fn elevation_gas_detail(c: &mut Canvas, h: &Hull, labels: &mut Vec<(String, [f64
         labels.push((label!("draw-double-bottom", "DOUBLE BOTTOM"), [x_fwd, db]));
     }
     if let Some((_, _, top)) = h.wing_tank() {
-        c.polyline("HIDDEN", &[[x0, db], [x0, top], [x1, top], [x1, db]], false);
+        if top > h.depth {
+            // The wing plate stands above the deck, so it is in view (issue #407).
+            c.line("HIDDEN", [x0, db], [x0, h.depth], None);
+            c.line("HIDDEN", [x1, h.depth], [x1, db], None);
+            c.polyline(
+                "OBJECT",
+                &[[x0, h.depth], [x0, top], [x1, top], [x1, h.depth]],
+                false,
+            );
+        } else {
+            c.polyline("HIDDEN", &[[x0, db], [x0, top], [x1, top], [x1, db]], false);
+        }
         labels.push((
             label!("draw-wbt-both-sides", "WBT (BOTH SIDES)"),
             [x1, (db + top) / 2.0],
@@ -1480,6 +1493,10 @@ fn section_gas_detail(
         for side in [-1.0, 1.0] {
             let (outer, wall, edge) = (side * half, side * (half - w), side * (half - w - gap));
             c.polyline("OBJECT", &[[outer, top], [wall, top], [wall, db]], false);
+            // Above the deck the side shell runs up to the wing plate (issue #407).
+            if top > h.depth {
+                c.line("OBJECT", [outer, h.depth], [outer, top], None);
+            }
             if gap > 0.0 {
                 c.polyline("ZONE", &[[wall, top], [edge, top], [edge, db]], false);
             }

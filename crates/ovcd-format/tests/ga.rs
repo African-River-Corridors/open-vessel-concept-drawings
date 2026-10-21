@@ -293,11 +293,13 @@ fn gas_shows_its_tank_arrangement() {
                 "{file}: two heads for each tank of the plan"
             );
             // No hold in a gas barge. The one hidden polyline there may be is the wing ballast
-            // tank band (#196), which is there only when the results give a wing tank width.
+            // tank band (#196), which is there only when the results give a wing tank width, and
+            // is hidden only when the wing plate is below the deck (#407: above it, it is in view).
             let wing = r["drawing"]["wing_tank_width_m"].as_f64().unwrap_or(0.0) > 0.0;
+            let below_deck = wing_plate_level(&r) <= r["dims"]["depth_m"].as_f64().unwrap();
             assert_eq!(
                 of_layer(&v.side_elevation, "HIDDEN", "polyline").len(),
-                usize::from(wing),
+                usize::from(wing && below_deck),
                 "no hold in a gas barge"
             );
         }
@@ -359,6 +361,53 @@ fn results_that_lack_a_value_are_refused_with_a_message() {
     let mut zero = r;
     zero["dims"]["loa_m"] = serde_json::json!(0.0);
     assert!(ovcd_format::ga_views(&zero).unwrap_err().contains("loa"));
+}
+
+/// The wing plate level of a gas result, as the weights work it out: the tank bottom (double
+/// bottom and support height) plus the wing tank height ratio times the tank outer diameter.
+fn wing_plate_level(r: &Value) -> f64 {
+    let d = &r["drawing"];
+    d["double_bottom_m"].as_f64().unwrap()
+        + d["tank_support_height_m"].as_f64().unwrap()
+        + d["wing_tank_height_ratio"].as_f64().unwrap_or(0.0)
+            * r["geometry"]["tank_outer_diameter_m"].as_f64().unwrap()
+}
+
+#[test]
+fn the_drawn_wing_tank_top_is_the_wing_plate_level_even_above_the_deck() {
+    // Issue #407: the wing tank top was clamped at the deck; the weights carry the wing plate at
+    // its own level, and the side shell runs up to it. Both gas fixtures have it above the deck.
+    for file in GAS {
+        for (_, r) in computed(file) {
+            let level = wing_plate_level(&r);
+            let depth = r["dims"]["depth_m"].as_f64().unwrap();
+            assert!(
+                level > depth,
+                "{file}: the fixture tests the case above the deck"
+            );
+            let v = views(&r);
+            let ys: Vec<f64> = of_layer(&v.midship_section, "OBJECT", "polyline")
+                .iter()
+                .flat_map(|e| e["points_m"].as_array().unwrap().iter())
+                .map(|p| p[1].as_f64().unwrap())
+                .collect();
+            assert!(
+                ys.iter().any(|y| close(*y, level)),
+                "{file}: no wing tank top at {level} m in the section"
+            );
+            let side = of_layer(&v.midship_section, "OBJECT", "line")
+                .into_iter()
+                .filter(|e| {
+                    close(e["from_m"][1].as_f64().unwrap(), depth)
+                        && close(e["to_m"][1].as_f64().unwrap(), level)
+                })
+                .count();
+            assert_eq!(
+                side, 2,
+                "{file}: the side shell runs up to the wing plate on both sides"
+            );
+        }
+    }
 }
 
 #[test]

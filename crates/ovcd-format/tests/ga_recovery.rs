@@ -793,7 +793,8 @@ fn the_section_draws_the_double_bottom_wing_tanks_voids_cradles_and_domes_from_t
             // wing tanks: the inboard wall from the double bottom to the top, on both sides
             let w = f(&d["wing_tank_width_m"]);
             let gap = f(&d["wing_tank_gap_m"]);
-            let top = (db + support + f(&d["wing_tank_height_ratio"]) * od).min(depth);
+            // The wing plate level, not clamped at the deck (issue #407).
+            let top = db + support + f(&d["wing_tank_height_ratio"]) * od;
             // The wing width is the side clearance less the gap (issue #283, built in #277): a
             // clearance no wider than the gap leaves no wing tank, and none is drawn.
             if w > 0.0 {
@@ -806,6 +807,13 @@ fn the_section_draws_the_double_bottom_wing_tanks_voids_cradles_and_domes_from_t
                         wall[0].iter().any(|p| close(p.1, db))
                             && wall[0].iter().any(|p| close(p.1, top))
                     );
+                    // above the deck, the side shell runs up to the wing plate (issue #407)
+                    if top > depth {
+                        assert!(
+                            has_line(ent, "OBJECT", (side * half, depth), (side * half, top)),
+                            "{file}"
+                        );
+                    }
                     // the void, to the cargo tank's side clearance at most
                     let edge = side * (half - w - gap.min(cs - w));
                     let void = polylines_with(ent, "ZONE", edge);
