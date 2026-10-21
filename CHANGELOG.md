@@ -210,54 +210,6 @@ Between `main ead175a` and `this branch 416db8a`.
 | sweep CN-derived bulk 2 (130x16.3) | `checks[10].message` | absent | engine 1.65 m + 1.00 m double bottom and deck structure (ESTIMATE) <= moulded depth 5.80 m | changed |
 | sweep CN-derived bulk 2 (130x16.3) | `checks[10].name` | absent | machinery fits under deck | changed |
 | ... | 26045 more changed quantities | | | |
-### 418 (2026-10-21)
-
-Between `main c029d7a` and `this branch 685ffde`.
-
-| Case | Quantity | Before | After | Change |
-|---|---|---|---|---|
-| calibration amaggi-box-2000 | `checks[2].message` | cargo zone 50.13 m = LOA 61.0 - bow void 7.33 m - stern void 3.50 m | volume-bound load must float within the moulded depth | changed |
-| calibration amaggi-box-2000 | `checks[2].name` | cargo zone positive | not overloaded | changed |
-| calibration amaggi-box-2000 | `checks[2].ok` | True | False | changed |
-| calibration amaggi-box-2000 | `checks[2].severity` | error | warning | changed |
-| calibration amaggi-box-2000 | `checks[3].message` | absent | freeboard 0.00 m >= required 0.3 m | changed |
-| calibration amaggi-box-2000 | `checks[3].name` | absent | freeboard ok | changed |
-| calibration amaggi-box-2000 | `checks[3].ok` | absent | False | changed |
-| calibration amaggi-box-2000 | `checks[3].severity` | absent | warning | changed |
-| calibration amaggi-box-2000 | `checks[4].message` | absent | cargo zone 50.13 m = LOA 61.0 - bow void 7.33 m - stern void 3.50 m | changed |
-| calibration amaggi-box-2000 | `checks[4].name` | absent | cargo zone positive | changed |
-| calibration amaggi-box-2000 | `checks[4].ok` | absent | True | changed |
-| calibration amaggi-box-2000 | `checks[4].severity` | absent | error | changed |
-| calibration canal-box-200x25x12-pb2230 | `checks[2].message` | cargo zone 51.11 m = LOA 61.0 - bow void 6.35 m - stern void 3.50 m | volume-bound load must float within the moulded depth | changed |
-| calibration canal-box-200x25x12-pb2230 | `checks[2].name` | cargo zone positive | not overloaded | changed |
-| calibration canal-box-200x25x12-pb2230 | `checks[2].ok` | True | False | changed |
-| calibration canal-box-200x25x12-pb2230 | `checks[2].severity` | error | warning | changed |
-| calibration canal-box-200x25x12-pb2230 | `checks[3].message` | absent | freeboard 0.00 m >= required 0.3 m | changed |
-| calibration canal-box-200x25x12-pb2230 | `checks[3].name` | absent | freeboard ok | changed |
-| calibration canal-box-200x25x12-pb2230 | `checks[3].ok` | absent | False | changed |
-| calibration canal-box-200x25x12-pb2230 | `checks[3].severity` | absent | warning | changed |
-| calibration canal-box-200x25x12-pb2230 | `checks[4].message` | absent | cargo zone 51.11 m = LOA 61.0 - bow void 6.35 m - stern void 3.50 m | changed |
-| calibration canal-box-200x25x12-pb2230 | `checks[4].name` | absent | cargo zone positive | changed |
-| calibration canal-box-200x25x12-pb2230 | `checks[4].ok` | absent | True | changed |
-| calibration canal-box-200x25x12-pb2230 | `checks[4].severity` | absent | error | changed |
-| calibration canal-box-200x35x12-cby222 | `checks[2].message` | cargo zone 51.11 m = LOA 61.0 - bow void 6.35 m - stern void 3.50 m | volume-bound load must float within the moulded depth | changed |
-| calibration canal-box-200x35x12-cby222 | `checks[2].name` | cargo zone positive | not overloaded | changed |
-| calibration canal-box-200x35x12-cby222 | `checks[2].ok` | True | False | changed |
-| calibration canal-box-200x35x12-cby222 | `checks[2].severity` | error | warning | changed |
-| calibration canal-box-200x35x12-cby222 | `checks[3].message` | absent | freeboard 0.00 m >= required 0.3 m | changed |
-| calibration canal-box-200x35x12-cby222 | `checks[3].name` | absent | freeboard ok | changed |
-| calibration canal-box-200x35x12-cby222 | `checks[3].ok` | absent | False | changed |
-| calibration canal-box-200x35x12-cby222 | `checks[3].severity` | absent | warning | changed |
-| calibration canal-box-200x35x12-cby222 | `checks[4].message` | absent | cargo zone 51.11 m = LOA 61.0 - bow void 6.35 m - stern void 3.50 m | changed |
-| calibration canal-box-200x35x12-cby222 | `checks[4].name` | absent | cargo zone positive | changed |
-| calibration canal-box-200x35x12-cby222 | `checks[4].ok` | absent | True | changed |
-| calibration canal-box-200x35x12-cby222 | `checks[4].severity` | absent | error | changed |
-| calibration canal-box-200x35x12-imt201 | `checks[2].message` | cargo zone 51.11 m = LOA 61.0 - bow void 6.35 m - stern void 3.50 m | volume-bound load must float within the moulded depth | changed |
-| calibration canal-box-200x35x12-imt201 | `checks[2].name` | cargo zone positive | not overloaded | changed |
-| calibration canal-box-200x35x12-imt201 | `checks[2].ok` | True | False | changed |
-| calibration canal-box-200x35x12-imt201 | `checks[2].severity` | error | warning | changed |
-| ... | 7506 more changed quantities | | | |
-
 ### ticket/352-machinery (2026-10-21)
 
 Between `main 5e36bd6` and `this branch 2042246`.
