@@ -56,6 +56,14 @@ Usage:
   ovcd rules --measures
       Print the Measure registry: each Measure id, its object, unit, arguments and method
       status. Input Measures are `input.<name>` for an input of the schema.
+  ovcd rules --provenance
+      The CI gate of the built-in Rule Sets: every version in RELEASED.json is built in with
+      its hash; each later version goes up by at least its class (patch, minor, major); a rule
+      id keeps its Measure and direction and is never reused once dropped; every regulation
+      or class Rule cites a paragraph. Prints the unverified blocking Rules of each set.
+  ovcd rules --released-entries | --release-check
+      For a release: print the RELEASED.json entries of every built-in set version, or fail
+      if a built-in version is not listed yet.
   ovcd rules show <id>[@<version>] [--rule-set <file>]...
       Print one Rule Set with each Rule, its test, its citation and its verification status.
       With no version, the highest version.
@@ -225,11 +233,13 @@ fn rules(args: &[&str]) -> Result<(), String> {
     let mut files: Vec<&str> = Vec::new();
     let mut rest: Vec<&str> = Vec::new();
     let mut measures = false;
+    let mut special: Option<&str> = None;
     let mut it = args.iter();
     while let Some(&arg) = it.next() {
         match arg {
             "--rule-set" => files.push(it.next().ok_or("--rule-set needs a file")?),
             "--measures" => measures = true,
+            "--provenance" | "--released-entries" | "--release-check" => special = Some(arg),
             a if a.starts_with('-') => return Err(format!("unknown option `{a}`")),
             a => rest.push(a),
         }
@@ -240,6 +250,14 @@ fn rules(args: &[&str]) -> Result<(), String> {
         }
         print!("{}", ovcd_format::trace::measures_text());
         return Ok(());
+    }
+    if let Some(flag) = special {
+        if !(files.is_empty() && rest.is_empty()) {
+            return Err(format!(
+                "{flag} takes nothing else: it checks the built-in sets"
+            ));
+        }
+        return rule_set_gate(flag);
     }
     let (lib, _) = load_rule_sets(&files)?;
     match rest.as_slice() {
@@ -268,6 +286,66 @@ fn rules(args: &[&str]) -> Result<(), String> {
             Ok(())
         }
         _ => Err("use `ovcd rules` or `ovcd rules show <id>[@<version>]`".into()),
+    }
+}
+
+/// The built-in Rule Sets' CI gate (`--provenance`), and the release steps (#273).
+fn rule_set_gate(flag: &str) -> Result<(), String> {
+    use ovcd_format::rule_set::{RELEASED, gate, released};
+    let lib = Library::built_in();
+    match flag {
+        "--provenance" => {
+            let (errors, report) = gate(&lib);
+            print!("{report}");
+            if errors.is_empty() {
+                println!("rule set gate: ok");
+                Ok(())
+            } else {
+                for e in &errors {
+                    eprintln!("error: {e}");
+                }
+                Err(format!(
+                    "{} problem(s) in the built-in Rule Sets",
+                    errors.len()
+                ))
+            }
+        }
+        "--released-entries" => {
+            // The entries a version-bump PR adds to RELEASED.json: every built-in set version.
+            let list: Vec<serde_json::Value> = lib
+                .sets()
+                .iter()
+                .map(|s| serde_json::json!({"id": s.id, "version": s.version, "hash": s.hash}))
+                .collect();
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&list).map_err(|e| e.to_string())?
+            );
+            Ok(())
+        }
+        _ => {
+            // At a release: every built-in set version must be listed as released.
+            let listed = released(RELEASED)?;
+            let missing: Vec<String> = lib
+                .sets()
+                .iter()
+                .filter(|s| {
+                    !listed
+                        .iter()
+                        .any(|r| r.id == s.id && r.version == s.version)
+                })
+                .map(|s| s.key())
+                .collect();
+            if missing.is_empty() {
+                println!("every built-in Rule Set version is in RELEASED.json");
+                Ok(())
+            } else {
+                Err(format!(
+                    "not in RELEASED.json yet: {}; add them with `ovcd rules --released-entries`",
+                    missing.join(", ")
+                ))
+            }
+        }
     }
 }
 

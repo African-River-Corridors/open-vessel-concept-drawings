@@ -1461,3 +1461,213 @@ pub fn describe(set: &RuleSet) -> String {
     }
     out
 }
+
+// --- released versions and provenance (#273) ----------------------------------------------------
+
+/// The list of released Rule Set versions: `{id, version, hash}` each. A version is released when a
+/// tagged release ships it (`docs/agents/build-process.md`). A listed file never changes.
+pub const RELEASED: &str = include_str!("../rules/RELEASED.json");
+
+/// A released set version, as `RELEASED.json` lists it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Released {
+    pub id: String,
+    pub version: String,
+    pub hash: String,
+}
+
+/// Read `RELEASED.json`.
+pub fn released(text: &str) -> Result<Vec<Released>, String> {
+    let v: Value = serde_json::from_str(text).map_err(|e| format!("RELEASED.json: {e}"))?;
+    let list = v
+        .get("released")
+        .and_then(Value::as_array)
+        .ok_or("RELEASED.json: `released` must be a list")?;
+    let mut out = Vec::new();
+    for (i, e) in list.iter().enumerate() {
+        let o = Obj::of(e, &format!("released[{i}]"))?;
+        o.only(&["id", "version", "hash"])?;
+        out.push(Released {
+            id: o.text("id")?,
+            version: semver(&o, "version")?,
+            hash: o.text("hash")?,
+        });
+    }
+    Ok(out)
+}
+
+/// Each listed version is built in, with the hash it was released with. Messages for each breach.
+pub fn check_released(lib: &Library, list: &[Released]) -> Vec<String> {
+    let mut out = Vec::new();
+    for r in list {
+        match lib.find(&r.id, &r.version) {
+            None => out.push(format!(
+                "{}@{} is released but not built in: a released version is kept for ever",
+                r.id, r.version
+            )),
+            Some(s) if s.hash != r.hash => out.push(format!(
+                "{}@{} is released with hash {} but its file now gives {}: a released file never changes; make a new version",
+                r.id,
+                r.version,
+                short(&r.hash),
+                short(&s.hash)
+            )),
+            Some(_) => {}
+        }
+    }
+    out
+}
+
+/// How a later version of a set differs from an earlier one (spec 0004, "Version numbers").
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum VersionClass {
+    /// The same content hash: citations, verification or titles only.
+    Patch,
+    /// Rules added; nothing else that changes a result.
+    Minor,
+    /// A result-changing field of an existing Rule changed, or a Rule was removed.
+    Major,
+}
+
+/// The class of the change from `old` to `new`.
+pub fn version_class(old: &RuleSet, new: &RuleSet) -> VersionClass {
+    if old.hash == new.hash {
+        return VersionClass::Patch;
+    }
+    let mut set_old = content_json(old);
+    let mut set_new = content_json(new);
+    if let (Some(a), Some(b)) = (set_old.as_object_mut(), set_new.as_object_mut()) {
+        a.remove("rules");
+        b.remove("rules");
+    }
+    let kept = old.rules.iter().all(|r| {
+        new.rule(&r.id)
+            .is_some_and(|n| rule_content_json(n) == rule_content_json(r))
+    });
+    if set_old == set_new && kept {
+        VersionClass::Minor
+    } else {
+        VersionClass::Major
+    }
+}
+
+/// The version checks across the built-in versions of each set: each later version's number goes up
+/// by at least its class; a rule id keeps its Measure and direction in every version; a rule id
+/// that a version dropped is never used again.
+pub fn check_versions(lib: &Library) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut ids: Vec<&str> = lib.sets().iter().map(|s| s.id.as_str()).collect();
+    ids.sort();
+    ids.dedup();
+    for id in ids {
+        let mut versions: Vec<&RuleSet> = lib.sets().iter().filter(|s| s.id == id).collect();
+        versions.sort_by_key(|s| version_key(&s.version));
+        for pair in versions.windows(2) {
+            let (a, b) = (pair[0], pair[1]);
+            let (va, vb) = (version_key(&a.version), version_key(&b.version));
+            let bumped = if vb.0 > va.0 {
+                VersionClass::Major
+            } else if vb.1 > va.1 {
+                VersionClass::Minor
+            } else {
+                VersionClass::Patch
+            };
+            let needed = version_class(a, b);
+            if bumped < needed {
+                out.push(format!(
+                    "{} after {}: the change is {:?}, so the version must go up by at least that",
+                    b.key(),
+                    a.key(),
+                    needed
+                ));
+            }
+        }
+        // Rule ids across versions: the same meaning, and never back once dropped.
+        let mut first: Vec<(&str, &Rule)> = Vec::new();
+        let mut dropped: Vec<&str> = Vec::new();
+        for (i, s) in versions.iter().enumerate() {
+            for r in &s.rules {
+                if dropped.contains(&r.id.as_str()) {
+                    out.push(format!(
+                        "{}: rule id `{}` was dropped by an earlier version and is used again",
+                        s.key(),
+                        r.id
+                    ));
+                }
+                match first.iter().find(|(rid, _)| *rid == r.id) {
+                    Some((_, earlier)) => {
+                        let direction = |x: &Rule| x.compare.map(Compare::is_lower_bound);
+                        if earlier.measure != r.measure || direction(earlier) != direction(r) {
+                            out.push(format!(
+                                "{}: rule id `{}` changes its Measure or direction; give the new requirement a new id",
+                                s.key(),
+                                r.id
+                            ));
+                        }
+                    }
+                    None => first.push((&r.id, r)),
+                }
+            }
+            if let Some(next) = versions.get(i + 1) {
+                for r in &s.rules {
+                    if next.rule(&r.id).is_none() && !dropped.contains(&r.id.as_str()) {
+                        dropped.push(&r.id);
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+/// The provenance gate: a `regulation` or `class` Rule with no paragraph is an error (the loader
+/// refuses one too; the gate checks every set again). The report lists, per set, the blocking Rules
+/// that are not verified: a notice, never a failure.
+pub fn provenance(lib: &Library) -> (Vec<String>, String) {
+    let mut errors = Vec::new();
+    let mut report = String::new();
+    for s in lib.sets() {
+        for r in &s.rules {
+            if r.origin.is_published() && r.source.locator.trim().is_empty() {
+                errors.push(format!(
+                    "{}: `{}` Rule `{}` cites no paragraph",
+                    s.key(),
+                    r.origin.key(),
+                    r.id
+                ));
+            }
+        }
+        let blocking: Vec<&Rule> = s
+            .rules
+            .iter()
+            .filter(|r| r.consequence == Consequence::Block && r.verified.is_none())
+            .collect();
+        // OVCD Checks are never verified; the published Rules are named.
+        let published: Vec<&str> = blocking
+            .iter()
+            .filter(|r| r.origin.is_published())
+            .map(|r| r.id.as_str())
+            .collect();
+        report.push_str(&format!(
+            "{}: {} blocking Rule(s) unverified ({} OVCD Checks){}{}\n",
+            s.key(),
+            blocking.len(),
+            blocking.len() - published.len(),
+            if published.is_empty() { "" } else { ": " },
+            published.join(", ")
+        ));
+    }
+    (errors, report)
+}
+
+/// Every check of the CI gate: released versions, version classes and rule ids, provenance.
+pub fn gate(lib: &Library) -> (Vec<String>, String) {
+    let mut errors = match released(RELEASED) {
+        Ok(list) => check_released(lib, &list),
+        Err(e) => vec![e],
+    };
+    errors.extend(check_versions(lib));
+    let (more, report) = provenance(lib);
+    errors.extend(more);
+    (errors, report)
+}

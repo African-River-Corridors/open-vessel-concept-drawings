@@ -144,6 +144,12 @@ jobs:
       - name: Smoke test
         shell: bash
         run: target/release/ovcd --version
+      # A version release ships its Rule Set versions, so each must be in RELEASED.json and never
+      # change after (spec 0004, #273). A test-release tag does not release them.
+      - name: Every built-in Rule Set version is in RELEASED.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: target/release/ovcd rules --release-check
       # Platform-identical maths (spec 0001): the release binary must give the results hash that each
       # fixture Design stores. `cargo test` checks this on Linux only; this checks it on Windows and on
       # Intel and Apple-silicon macOS. Release gate only, not the pull request gate.
