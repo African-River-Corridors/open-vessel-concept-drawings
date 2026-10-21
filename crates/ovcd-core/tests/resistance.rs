@@ -3,7 +3,7 @@
 
 use ovcd_core::aft_arrangement::PyException;
 use ovcd_core::pyfmt::round_to;
-use ovcd_core::resistance::{ResistanceInputs, TugInputs, compute};
+use ovcd_core::resistance::{ResistanceInputs, TugInputs, compute, residuary_ratio};
 
 fn close(a: f64, b: f64) {
     assert!((a - b).abs() <= 1e-9 * b.abs().max(1.0), "{a} vs {b}");
@@ -436,8 +436,10 @@ fn froude_number_exactly_0_2_uses_the_residuary_fit_above_the_bound() {
     let r = compute(&inp).unwrap();
     let p = &r.environments[0].speed_curve[0];
     assert_eq!(p.froude_number, 0.2);
-    close(p.resistance_residuary_kn, 27.529869204463804);
-    close(p.resistance_total_kn, 211.06233056755585);
+    // Re-pinned (issue #399); was 27.529869204463804.
+    close(p.resistance_residuary_kn, 32.86276119841476);
+    // Re-pinned (issue #399); was 211.06233056755585.
+    close(p.resistance_total_kn, 216.39522256150678);
     assert!(!r.checks[0].ok);
 }
 
@@ -457,7 +459,8 @@ fn depth_froude_number_exactly_0_95_keeps_the_subcritical_factor() {
     // Re-pinned (issues #396, #397); was 6.106217307692308.
     close(p.resistance_shallow_factor, 6.124961538461538);
     // Re-pinned (issues #396, #397); was 1499.7916759260709.
-    close(p.resistance_total_kn, 1504.3955804159937);
+    // Re-pinned (issue #399); was 1504.3955804159937.
+    close(p.resistance_total_kn, 1542.3339836642363);
 }
 
 #[test]
@@ -556,7 +559,8 @@ fn ittc_friction_is_turbulent_at_reynolds_exactly_1e5() {
     let r = compute(&inp).unwrap();
     let p = &r.environments[0].speed_curve[0];
     assert_eq!(p.resistance_frictional_kn, 4.984536e-05);
-    assert_eq!(p.resistance_total_kn, 6.615974179695845e-05);
+    // Re-pinned (issue #399); was 6.615974179695845e-05.
+    assert_eq!(p.resistance_total_kn, 6.760809550673473e-05);
 }
 
 #[test]
@@ -577,4 +581,25 @@ fn the_shallow_water_factor_is_one_when_the_draft_is_zero() {
     let p = &r.environments[0].speed_curve[0];
     assert_eq!(p.resistance_shallow_factor, 1.0);
     assert_eq!(p.resistance_total_kn, 38.784599026937556);
+}
+
+// --- Issue #399: the residuary fit is continuous at Fn 0.20. ---
+
+#[test]
+fn the_residuary_ratio_from_the_left_and_the_right_of_fn_0_20_agree() {
+    let left = residuary_ratio(0.20 - 1e-12);
+    let right = residuary_ratio(0.20);
+    assert!((left - right).abs() <= 1e-9 * right, "{left} vs {right}");
+    // It was 0.15 at Fn 0.20, a step down from 0.179 just below.
+    assert!((right - 0.17905694150420949).abs() < 1e-15);
+}
+
+#[test]
+fn the_residuary_ratio_never_falls_as_the_froude_number_grows() {
+    let mut last = residuary_ratio(0.0);
+    for i in 1..=400 {
+        let r = residuary_ratio(f64::from(i) / 1000.0);
+        assert!(r >= last, "Fn {}", f64::from(i) / 1000.0);
+        last = r;
+    }
 }
