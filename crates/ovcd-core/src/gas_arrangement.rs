@@ -34,6 +34,7 @@ use crate::checks::{Check, all_ok};
 use crate::gas_stability::{self as gs, DEFAULT_WATER_DENSITY, GasCapacityResult};
 use crate::journey_derating::{JourneyDeratingInputs, JourneyDeratingResult, compute as derate};
 use crate::measured::{Measured, deadweight_band};
+use crate::models::DEFAULT_TANK_GAP_TRANSVERSE_M;
 use crate::pressure_vessel::PyError;
 use crate::protective_location::d_vc_exact;
 use crate::pyfmt::{fixed, py_str, round_to};
@@ -721,7 +722,12 @@ impl Search<'_> {
         if self.od_unusable(&r) {
             // Full-beam tank infeasible or over the cap: put the tank ON the cap and widen the
             // clearance: a legitimate design only if that clearance meets the rule.
-            let cs = (self.beam - nw as f64 * self.o.max_tank_od_m) / 2.0;
+            // The n - 1 gaps between tanks side by side take beam too (issue #422), as the tank
+            // layout counts them; without them a capped tank came out below the cap.
+            let cs = (self.beam
+                - nw as f64 * self.o.max_tank_od_m
+                - (nw - 1) as f64 * DEFAULT_TANK_GAP_TRANSVERSE_M)
+                / 2.0;
             // Mutation survivor (#59), `cs < 0.0` to `cs == 0.0`: equivalent. `cs` is negative only
             // when the beam is under `nw` tank diameters at the cap. A full-beam tank over the cap
             // needs a beam over `nw` caps, so a negative `cs` is reached only with an unusable
@@ -1151,5 +1157,15 @@ pub fn smallest_viable_loa(
             lo = mid;
         }
     }
-    Ok(round_to(hi, 1))
+    // The answer is on the 0.1 m grid, and a length is only returned once it has been tested
+    // (issue #422): rounding to nearest could go below `hi`, where nothing was tested.
+    let nearest = round_to(hi, 1);
+    if nearest == hi || has_passing_arrangement(nearest, beam, cargo, t_max, o)? {
+        return Ok(nearest);
+    }
+    let up = libm::ceil(hi * 10.0) / 10.0;
+    if has_passing_arrangement(up, beam, cargo, t_max, o)? {
+        return Ok(up);
+    }
+    Ok(hi)
 }

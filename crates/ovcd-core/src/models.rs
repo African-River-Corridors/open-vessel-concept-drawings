@@ -15,6 +15,10 @@ use crate::pressure_vessel::{PyError, get_tank_material};
 use crate::protective_location::ProtectiveLocationResult;
 use crate::text::Text;
 
+/// The transverse gap between two cargo tanks side by side, m (the default of
+/// `tank_gap_transverse`).
+pub const DEFAULT_TANK_GAP_TRANSVERSE_M: f64 = 1.0;
+
 /// All user-provided inputs for ATB LNG/LPG barge design.
 #[derive(Debug, Clone, PartialEq)]
 pub struct BargeInputs {
@@ -193,7 +197,7 @@ impl BargeInputs {
             weather_shield_clearance: 1.5,
             dome_height: 2.0,
             side_clearance: None,
-            tank_gap_transverse: 1.0,
+            tank_gap_transverse: DEFAULT_TANK_GAP_TRANSVERSE_M,
             tank_gap_longitudinal: 2.0,
             n_tanks_wide: 1,
             n_tanks_long: 2,
