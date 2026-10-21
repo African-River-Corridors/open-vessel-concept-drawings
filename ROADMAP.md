@@ -46,20 +46,41 @@ runs against the engine on every pull request ([#184](https://github.com/African
 
 In order. Each phase builds on the one before; dates depend on contributors.
 
-**Versions:** 0.2.x during development. 0.3 is the first release we share with expert reviewers. 1.0 is the trusted analysis tool. Phases are not tied to version numbers.
+**Versions:** 0.2.x during development. 0.3 is the first release we share with expert reviewers; it ships at the end of Vessel Model phase 1 (below), with `.vdesign` format version 3. 1.0 is the trusted analysis tool. The other phases are not tied to version numbers.
 
 | Phase | Theme | Main work | What users get |
 |---|---|---|---|
 | Now | Concept tool (0.2.x) | Capacity, gas tank arrangement, hydrostatics, journey de-rating, resistance and power; the desktop app with live results and GA drawings | **Released** as unsigned test builds |
 | 0 | Trust the base | Post-port fixes, test gaps (#123, #168), findings register (#121), more calibration cases (#3), PyPI (#1), recover the earlier GA arrangement detail (double bottom, voids, cofferdams, tank cradles), rules structure design (#176), evaluation harness phase 0 (#184), scope statement | `pip install`; a fuller GA; a stated scope |
-| 1 | Rules and geometry | Rules engine with versioned rule sets; hull geometry as a sections table ([ADR 0012](docs/adr/0012-hull-geometry-as-a-sections-table.md)) with more Hull Forms (V-bottom, chine); intact stability for every Cargo, with the weather criterion; harness rule trace and automatic sorting | Stability for any cargo and hull form, every criterion cited |
-| 2 | Spaces and damage | Compartments, tanks and loading conditions; deterministic damage stability; better equipment and accommodation arrangement; GA drawings from the compartment model; checkable reports | Damage stability, tank tables, loading conditions |
-| 3 | Structure and strength | Structural model; still-water and wave bending moment and shear; section modulus; first inland scantling rule set; lightship from the steel weight | Longitudinal strength and scantlings |
+| 1 | Rules and geometry | Rules engine with versioned rule sets; hull geometry as a sections table ([ADR 0012](docs/adr/0012-hull-geometry-as-a-sections-table.md)) with hydrostatics and GZ by exact polygon integration, and more Hull Forms (Vessel Model phase 1); intact stability for every Cargo, with the weather criterion; harness rule trace and automatic sorting; **0.3** | Stability for any cargo and hull form, every criterion cited |
+| 2 | Spaces and damage | Compartments, tanks and loading conditions; the Vessel Model, its 3D view and open exports (Vessel Model phase 2); deterministic damage stability on it; better equipment and accommodation arrangement; GA drawings from the compartment model; checkable reports | Damage stability, tank tables, loading conditions, a 3D model |
+| 3 | Structure and strength | Structure layout, rule scantlings and longitudinal strength (Vessel Model phases 3 to 5): BV NR217 inland and the ABS steel barge rules coastal; still-water and rule wave bending moment and shear; section modulus; lightship from the steel weight | Longitudinal strength and scantlings |
 | 4 | Build outputs | Midship section, shell expansion, plate and stiffener lists; bill of quantities; signed installers (#122); the web version | Drawings and quantities a yard can price |
 | 5 | Systems and voyages | Convoys, towing and articulated tug-barges with a library of standard tugs; resistance, propeller and power; voyage simulation on a real river | Barge and tug designed together; trip time, fuel and cargo |
 | 6 | Cost | Build cost, running cost and lifecycle cost from the same design file, with an open rate set | Cost per tonne-km over the vessel's life |
 | 7 | Trusted analysis tool (1.0) | Every claimed rule set at full harness coverage; expert review of what the harness cannot sort; a verification and validation report; translations | A tool a yard, a lender's engineer or a class reviewer can check and cite |
-| Later | Beyond 1.0 | CFD and seakeeping through open solvers (research starts earlier, in parallel); probabilistic damage stability; production export; a wider vessel envelope only by a new ADR | High-fidelity physics on free solvers |
+| Later | Beyond 1.0 | CFD and seakeeping through open solvers, starting with Capytaine (Vessel Model phase 6; research starts earlier, in parallel); manoeuvring indicators and a ship-handling export (phase 7, recorded only); probabilistic damage stability; production export; STEP and IFC; a wider vessel envelope only by a new ADR | High-fidelity physics on free solvers |
+
+## Vessel Model
+
+One engineering model of each Hull is the single source of truth for its geometry
+([ADR 0018](docs/adr/0018-layered-parametric-vessel-model.md), [spec 0008](docs/specs/0008-vessel-model.md)).
+It has three parametric layers, all data in `.vdesign`: the hull sections table, the arrangement (decks,
+bulkheads, Spaces) and the structure. Meshes are always derived. A 3D view is one view of it; the
+analyses read it. It is a design twin: the model and its analyses stay in step with the design. An
+operational twin with live data is a future direction only. OVCD owns the concept-level analyses
+(ADR 0011); companion projects do detailed FE, CFD, seakeeping and ship-handling simulation from its
+open exports.
+
+| Phase | Work | Spec |
+|---|---|---|
+| 1 | Hull sections table and hydrostatics: exact polygon integration, GZ with heel and free trim; box, raked box, bilge, sheer, camber, the Stern Forms, V-bottom, chine, a ShipD-style hull, offsets import; the hull block in format version 3. **0.3 ships at its end.** | 0008 |
+| 2 | The Vessel Model, the 3D viewer (three.js) and the exports: glTF, a watertight STL or OBJ panel mesh, offsets CSV | 0008 |
+| 3 | Structure layout: frame spacing, longitudinals, stiffener spacing, plate zones | later |
+| 4 | Rule scantlings through the rules engine, starting `unverified`: BV NR217 inland, the ABS steel barge rules coastal; bottom-up steel weight and section modulus | later |
+| 5 | Longitudinal strength: still-water bending moment and shear per loading condition, the rule wave bending moment, the check | later |
+| 6 | Companion adapters: Capytaine (its direct wave bending moment as a comparison only), a finite-element export, STEP and IFC | later |
+| 7 | Recorded, not designed: concept manoeuvring indicators (ES-TRIN manoeuvrability as Rules, turning and stopping estimates) and a coefficient export for ship-handling simulators | later |
 
 ## Near term
 
@@ -94,12 +115,12 @@ there, in order:
    the post-build review of the port ([#113](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/113))
    adds to it. Nothing is agreed yet. Each agreed change comes one at a time, with a before/after table.
 4. Formations: convoy totals, then convoy resistance and power.
-5. More Hull Forms (V-bottom and others), with configurable parameters.
+5. More Hull Forms (V-bottom and others), with configurable parameters. Now Vessel Model phase 1 (spec 0008).
 6. The Tauri desktop app (in parallel with the CLI). **First version done** (spec 0002, version 0.2.1).
    Still to come: US units, translations, the PDF report.
 7. The Drawing Format Standard, then GA drawings and DXF in the app. **Done** (spec 0003, version 0.2.1):
    side elevation, plan and midship section, written as SVG, PDF and DXF.
-8. Later: construction drawings and plate lists; CFD runs. Now planned in phases 4 and later, above.
+8. Later: construction drawings and plate lists; CFD runs. Now planned in phases 4 and later, and in the Vessel Model phases, above.
 9. A web version on the WebAssembly core.
 10. The first signed public installer, once the known engineering findings (#121) are reviewed and each is
     fixed or shown in the app as a known limitation. It also needs signing and notarisation

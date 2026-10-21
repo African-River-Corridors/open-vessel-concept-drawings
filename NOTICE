@@ -1,2 +1,13 @@
 vessel_designer
 Copyright 2026 Mobile Clipboard Limited (trading as African River Corridors)
+
+Acknowledgements
+
+The ShipD-style parametric hull (docs/specs/0008-vessel-model.md) is our own code, written from the
+parameter and constraint definitions of the Ship-D work. Our thanks to its authors:
+
+- Noah J. Bagazinski and Faez Ahmed, "Ship-D: Ship Hull Dataset for Design Optimization Using Machine
+  Learning", Proceedings of the ASME IDETC/CIE 2023, Volume 3A, paper V03AT03A028 (arXiv:2305.08279).
+- Noah Bagazinski and Faez Ahmed, 2024, "Ship-D", Harvard Dataverse, V1,
+  https://doi.org/10.7910/DVN/MMGAUS, released under CC0 1.0. OVCD benchmarks its hydrostatics
+  against a sample of this dataset (calibration/shipd/).
