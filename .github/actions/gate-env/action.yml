@@ -1,0 +1,29 @@
+name: Gate environment
+description: >
+  The tools the fast gate (tools/gates.sh) needs: Python, the pinned Rust toolchain with a build cache,
+  cargo-nextest, and the Python package. The calling job checks the repository out first.
+inputs:
+  cache-key:
+    description: The Rust cache key. Jobs that build the same things share one.
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+      shell: bash
+      run: rustup toolchain install
+    - uses: Swatinem/rust-cache@v2
+      with:
+        shared-key: ${{ inputs.cache-key }}
+    - name: Install cargo-nextest (pinned)
+      uses: taiki-e/install-action@v2
+      with:
+        tool: cargo-nextest@0.9.100
+    - name: Install the Python package (maturin builds the extension, so Rust comes first)
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -e '.[dev]'
