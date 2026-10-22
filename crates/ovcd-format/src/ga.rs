@@ -22,7 +22,6 @@
 
 use crate::run::RunOutcome;
 use ovcd_core::cargo::CargoClass;
-use ovcd_core::models::BargeInputs;
 use ovcd_core::pyfmt::fixed;
 use serde_json::{Value, json};
 
@@ -133,7 +132,6 @@ struct Hull {
     stern_rake: f64,
     bow_void: f64,
     stern_void: f64,
-    cargo_zone: f64,
     /// The gas separation forward of the stern block (`drawing.separation`): the cofferdam and the
     /// aft separation, whose end is the start of the cargo zone. `None` for dry bulk.
     separation: Option<(f64, f64)>,
@@ -282,6 +280,9 @@ enum Containment {
         wing_width: Option<f64>,
         wing_gap: Option<f64>,
         wing_ratio: Option<f64>,
+        /// `drawing.tank.overall_tank_length_m`: the core's length of one tank, heads included.
+        tank_length: f64,
+        /// The gaps between tanks the core laid them out with (`drawing.tank`).
         gap_long: f64,
         gap_across: f64,
     },
@@ -314,7 +315,6 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
         .map_err(|_| format!("the results give an unknown Cargo Class `{phase}`"))?;
     let containment = match class {
         CargoClass::Gas => {
-            let defaults = BargeInputs::new(loa, beam, depth, draught, 0.0);
             let arrangement = |key: &str| need(results, &["arrangement", key]);
             Containment::Tanks {
                 od: geo("tank_outer_diameter_m")?,
@@ -340,8 +340,9 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
                 wing_width: num_at(results, &["drawing", "wing_tank_width_m"]),
                 wing_gap: num_at(results, &["drawing", "wing_tank_gap_m"]),
                 wing_ratio: num_at(results, &["drawing", "wing_tank_height_ratio"]),
-                gap_long: defaults.tank_gap_longitudinal,
-                gap_across: defaults.tank_gap_transverse,
+                tank_length: need(results, &["drawing", "tank", "overall_tank_length_m"])?,
+                gap_long: need(results, &["drawing", "tank", "tank_gap_longitudinal_m"])?,
+                gap_across: need(results, &["drawing", "tank", "tank_gap_transverse_m"])?,
             }
         }
         CargoClass::DryBulk => {
@@ -386,7 +387,6 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
             .max(0.0),
         bow_void: geo("bow_void_length_m")?,
         stern_void: geo("stern_void_length_m")?,
-        cargo_zone: geo("cargo_zone_length_m")?,
         separation: num_at(results, &["drawing", "separation", "cofferdam_m"]).zip(num_at(
             results,
             &["drawing", "separation", "aft_separation_m"],
@@ -499,15 +499,16 @@ impl Hull {
     }
 
     /// The tanks along and across: (length of one tank overall, the x of each tank's stern end,
-    /// the athwartships centre of each tank). The layout is the core's (`tanks.rs`): the cargo zone
-    /// shared between the tanks with the longitudinal gap, the beam less the side clearances shared
-    /// with the transverse gap.
+    /// the athwartships centre of each tank). The length is the core's (`TankResult`); the tanks
+    /// follow each other along the cargo zone with the longitudinal gap, and sit across the beam
+    /// less the side clearances with the transverse gap (the core's layout, `tanks.rs`).
     fn tank_layout(&self) -> Option<(f64, Vec<f64>, Vec<f64>)> {
         let Containment::Tanks {
             od,
             n_wide,
             n_long,
             side_clearance,
+            tank_length,
             gap_long,
             gap_across,
             ..
@@ -519,7 +520,7 @@ impl Hull {
         if n_wide == 0 || n_long == 0 {
             return None;
         }
-        let length = (self.cargo_zone - (n_long as f64 - 1.0) * gap_long) / n_long as f64;
+        let length = *tank_length;
         let starts = (0..n_long)
             .map(|i| self.stern_void + i as f64 * (length + gap_long))
             .collect();
@@ -1954,5 +1955,44 @@ mod tests {
             failed_notes(&[long.clone(), long]),
             ["DESIGN FAILS 2 CHECKS"]
         );
+    }
+
+    fn gas_results() -> Value {
+        let text = include_str!("../tests/fixtures/gas_igc_2g_self_propelled.vdesign");
+        let design = crate::check(text, &crate::Profile::built_in())
+            .design
+            .expect("a valid Design");
+        match crate::run_design(&design).remove(0).outcome {
+            crate::RunOutcome::Results { results, .. } => results,
+            other => panic!("no results: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn the_drawn_tank_is_as_long_as_the_cores_tank() {
+        // Issue #406: the drawing lays the tanks out from the results' own tank length and gaps.
+        let results = gas_results();
+        let hull = read_hull(&results).unwrap();
+        let (length, starts, _) = hull.tank_layout().expect("a tank layout");
+        let tank = &results["drawing"]["tank"];
+        assert_eq!(Some(length), tank["overall_tank_length_m"].as_f64());
+        let gap = tank["tank_gap_longitudinal_m"].as_f64().unwrap();
+        for pair in starts.windows(2) {
+            assert!((pair[1] - pair[0] - (length + gap)).abs() < 1e-9);
+        }
+        // The tanks fill the cargo zone: the last one ends where the zone does.
+        let end = starts.last().unwrap() + length;
+        assert!((end - (hull.loa - hull.bow_void)).abs() < 1e-6, "{end}");
+    }
+
+    #[test]
+    fn results_without_the_tank_lengths_are_refused_not_drawn_from_a_stand_in() {
+        let mut results = gas_results();
+        results["drawing"]["tank"]
+            .as_object_mut()
+            .unwrap()
+            .remove("overall_tank_length_m");
+        let e = read_hull(&results).err().expect("refused");
+        assert!(e.contains("overall_tank_length_m"), "{e}");
     }
 }

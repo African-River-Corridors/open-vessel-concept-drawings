@@ -855,6 +855,13 @@ fn sat_cargo(cargo: &str) -> bool {
 /// IGC distances d are measured plate to plate, so the insulation is taken off them (IGC 2.4.2).
 /// The steel diameter is that less twice the insulation; the wall thickness formula and the volume
 /// both start from the steel diameter. `tank_steel_outer_diameter_m` shows it.
+/// The longitudinal and transverse gaps between tanks. The core lays the tanks out with the defaults
+/// of `BargeInputs` (it has no input for them), so this is where they are read for the results.
+fn core_tank_gaps() -> (f64, f64) {
+    let base = ovcd_core::models::BargeInputs::new(1.0, 1.0, 1.0, 1.0, 1.0);
+    (base.tank_gap_longitudinal, base.tank_gap_transverse)
+}
+
 fn tank_report(
     p: &Map<String, Value>,
     inp: &BargeCapacityInputs,
@@ -868,13 +875,16 @@ fn tank_report(
             / 1000.0
     });
     let head = r.gas_basis.as_ref().map(|b| b.tanks.head_wall_thickness);
+    // Issue #406: the tank lengths and the two gaps the core laid the tanks out with, so the drawing
+    // draws from them and holds no stand-in of its own.
+    let (gap_long, gap_across) = core_tank_gaps();
     // The design liquid pressure the wall took (issue #374): Pgd = a x Z x rho / 1.02e5, with Z the
     // steel outer diameter, and Peq = Po + Pgd.
     let liquid = ovcd_core::barge_capacity::liquid_pressure_basis(
         inp,
         r.bow_void_length_m.unwrap_or(0.0),
         r.stern_void_length_m.unwrap_or(0.0),
-        ovcd_core::models::BargeInputs::new(1.0, 1.0, 1.0, 1.0, 1.0).tank_gap_longitudinal,
+        gap_long,
     )
     .unwrap_or((None, 0.0));
     let pgd = ovcd_core::tanks::liquid_pressure_mpa(liquid.0, steel.unwrap_or(0.0), liquid.1);
@@ -947,6 +957,16 @@ fn tank_report(
             ("tank_outer_diameter_m", opt_num(r.tank_outer_diameter_m)),
             ("tank_steel_outer_diameter_m", opt_num(steel)),
             ("tank_inner_diameter_m", opt_num(r.tank_inner_diameter_m)),
+            (
+                "overall_tank_length_m",
+                opt_num(r.gas_basis.as_ref().map(|b| b.tanks.overall_tank_length)),
+            ),
+            (
+                "cylinder_length_m",
+                opt_num(r.gas_basis.as_ref().map(|b| b.tanks.cylinder_length)),
+            ),
+            ("tank_gap_longitudinal_m", num(gap_long)),
+            ("tank_gap_transverse_m", num(gap_across)),
             ("dome_diameter_m", opt_num(dome.map(|d| d.0))),
             ("dome_height_m", opt_num(dome.map(|d| d.1))),
             (

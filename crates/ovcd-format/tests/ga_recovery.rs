@@ -197,6 +197,16 @@ fn gas_geometry_has_the_core_values() {
         basis.inputs.wing_tank_width.unwrap()
     );
     assert_eq!(f(&g["wing_tank_gap_m"]), basis.inputs.wing_tank_gap);
+    // Issue #406: the tank lengths and the gaps the core laid the tanks out with.
+    let t = &g["tank"];
+    assert_eq!(
+        f(&t["overall_tank_length_m"]),
+        basis.tanks.overall_tank_length
+    );
+    assert_eq!(f(&t["cylinder_length_m"]), basis.tanks.cylinder_length);
+    let gaps = ovcd_core::models::BargeInputs::new(1.0, 1.0, 1.0, 1.0, 1.0);
+    assert_eq!(f(&t["tank_gap_longitudinal_m"]), gaps.tank_gap_longitudinal);
+    assert_eq!(f(&t["tank_gap_transverse_m"]), gaps.tank_gap_transverse);
     let sep = core.separation.as_ref().expect("a separation result");
     let want = GasSeparationInputs::default();
     assert_eq!(f(&g["opening_setback_m"]), want.opening_setback_m);
