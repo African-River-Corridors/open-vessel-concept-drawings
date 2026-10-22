@@ -285,63 +285,63 @@ Published range: 0.096 to 0.115 t per m³ of tank.
 
 ## 5a. Tank barges (issue #335)
 
-Every `hold_type: tank` record of `cases.yaml` and the reference vessels of `tank_barge_cases.yaml`, run through the tank-barge model: lightship = k × L·B·D + outfit (k = 0.1141 t/m³, an Estimate; outfit coefficients are Estimates), and the deadweight at the stated draught is the box-barge Cb × L·B·T·ρ less that lightship. Bands are in `tank_barge_bands.yaml`: starting values for the maintainer, equal to the dry-barge bands. **The 15 cases of the k-fit subset are in-sample** (k was fitted on them, from the same deadweights); every other case is out of sample. A **self-propelled** vessel has no band: the model has no machinery, accommodation or fuel, so its deadweight comes out too high by about that weight. A cargo capacity is not a deadweight, so it is shown against the predicted deadweight and has no band. A band miss is a warning only.
+Every `hold_type: tank` record of `cases.yaml` and the reference vessels of `tank_barge_cases.yaml`, run through the tank-barge model: lightship = k × L·B·D + outfit (k = 0.1134 t/m³, an Estimate; outfit coefficients are Estimates), and the deadweight at the stated draught is the box-barge Cb × L·B·T·ρ less that lightship. Bands are in `tank_barge_bands.yaml`: starting values for the maintainer, equal to the dry-barge bands. **The 15 cases of the k-fit subset are in-sample** (k was fitted on them, from the same deadweights); every other case is out of sample. A **self-propelled** vessel has no band: the model has no machinery, accommodation or fuel, so its deadweight comes out too high by about that weight. A cargo capacity is not a deadweight, so it is shown against the predicted deadweight and has no band. A band miss is a warning only.
 
 | Case | Conf. | Sample | T (m) | Published (t) | Model lightship (t) | Model DWT (t) | err % | Band ± % | vs band | Note |
 |---|---|---|---|---|---|---|---|---|---|---|
-| meb-rob20-belmax | medium | in-sample | 2.75 | 6,000 | 1,346 | 5,566 | -7.2 | ±10 (medium) | inside | in the k fit |
-| meb-rob07-mh4001 | medium | in-sample | 3.50 | 4,244 | 987 | 4,209 | -0.8 | ±10 (medium) | inside | in the k fit |
-| meb-rob05-paloil | medium | held out | 3.60 | 4,324 (cargo) | 960 | 4,358 | 0.8 | – | – |  |
-| meb-rob17-nerida | medium | held out | 1.85 | 1,267 | 258 | 1,547 | 22.1 | ±10 (medium) | **OUTSIDE** ⚠ |  |
-| meb-1635tm-fng | medium | held out | 3.24 | 2,059 (cargo) | 400 | 2,021 | -1.8 | – | – |  |
-| meb-1635t-udp-slt | medium | held out | 3.00 | 1,907 (cargo) | 407 | 1,939 | 1.7 | – | – |  |
-| kirby-10071-200x35 | medium | in-sample | 2.74 | 1,361 | 298 | 1,356 | -0.4 | ±10 (medium) | inside | in the k fit |
-| kirby-10201-200x35 | medium | in-sample | 2.74 | 1,302 | 299 | 1,354 | 4.0 | ±10 (medium) | inside | in the k fit |
-| kirby-10083-200x35 | medium | in-sample | 2.74 | 1,330 | 299 | 1,355 | 1.9 | ±10 (medium) | inside | in the k fit |
-| kirby-10074-195x35 | medium | in-sample | 2.74 | 1,288 | 290 | 1,322 | 2.7 | ±10 (medium) | inside | in the k fit |
-| cgbm-102-200x35 | medium | in-sample | 2.74 | 1,350 | 311 | 1,343 | -0.6 | ±10 (medium) | inside | in the k fit |
-| mer-13-200x35 | medium | in-sample | 2.74 | 1,348 | 316 | 1,338 | -0.8 | ±10 (medium) | inside | in the k fit |
-| kirby-301-250x50 | medium | in-sample | 2.74 | 2,437 | 524 | 2,429 | -0.3 | ±10 (medium) | inside | in the k fit |
-| kirby-407-263x54 | medium | in-sample | 2.74 | 2,718 | 746 | 2,609 | -4.0 | ±10 (medium) | inside | in the k fit |
-| hfl-406-297x54 | medium | in-sample | 2.74 | 3,006 | 697 | 3,092 | 2.9 | ±10 (medium) | inside | in the k fit |
-| kirby-27773-297x54 | medium | in-sample | 2.74 | 3,098 | 693 | 3,101 | 0.1 | ±10 (medium) | inside | in the k fit |
-| kirby-32300b-297x54 | medium | in-sample | 2.74 | 3,267 | 704 | 3,085 | -5.6 | ±10 (medium) | inside | in the k fit |
-| ctco-358-297x54 | medium | in-sample | 2.74 | 2,947 | 693 | 3,101 | 5.2 | ±10 (medium) | inside | in the k fit |
-| htco-3064-320x50 | medium | in-sample | 2.74 | 2,950 | 738 | 3,042 | 3.1 | ±10 (medium) | inside | in the k fit |
-| cms-1601-222x54 | medium | held out | 2.74 | 1,905 | 507 | 2,325 | 22.1 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| meb-rob20-belmax | medium | in-sample | 2.75 | 6,000 | 1,338 | 5,566 | -7.2 | ±10 (medium) | inside | in the k fit |
+| meb-rob07-mh4001 | medium | in-sample | 3.50 | 4,244 | 982 | 4,209 | -0.8 | ±10 (medium) | inside | in the k fit |
+| meb-rob05-paloil | medium | held out | 3.60 | 4,324 (cargo) | 955 | 4,358 | 0.8 | – | – |  |
+| meb-rob17-nerida | medium | held out | 1.85 | 1,267 | 256 | 1,546 | 22.0 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| meb-1635tm-fng | medium | held out | 3.24 | 2,059 (cargo) | 397 | 2,021 | -1.8 | – | – |  |
+| meb-1635t-udp-slt | medium | held out | 3.00 | 1,907 (cargo) | 405 | 1,939 | 1.7 | – | – |  |
+| kirby-10071-200x35 | medium | in-sample | 2.74 | 1,361 | 296 | 1,356 | -0.4 | ±10 (medium) | inside | in the k fit |
+| kirby-10201-200x35 | medium | in-sample | 2.74 | 1,302 | 298 | 1,354 | 4.0 | ±10 (medium) | inside | in the k fit |
+| kirby-10083-200x35 | medium | in-sample | 2.74 | 1,330 | 297 | 1,355 | 1.9 | ±10 (medium) | inside | in the k fit |
+| kirby-10074-195x35 | medium | in-sample | 2.74 | 1,288 | 289 | 1,322 | 2.7 | ±10 (medium) | inside | in the k fit |
+| cgbm-102-200x35 | medium | in-sample | 2.74 | 1,350 | 310 | 1,342 | -0.6 | ±10 (medium) | inside | in the k fit |
+| mer-13-200x35 | medium | in-sample | 2.74 | 1,348 | 315 | 1,338 | -0.8 | ±10 (medium) | inside | in the k fit |
+| kirby-301-250x50 | medium | in-sample | 2.74 | 2,437 | 521 | 2,428 | -0.4 | ±10 (medium) | inside | in the k fit |
+| kirby-407-263x54 | medium | in-sample | 2.74 | 2,718 | 742 | 2,609 | -4.0 | ±10 (medium) | inside | in the k fit |
+| hfl-406-297x54 | medium | in-sample | 2.74 | 3,006 | 693 | 3,092 | 2.8 | ±10 (medium) | inside | in the k fit |
+| kirby-27773-297x54 | medium | in-sample | 2.74 | 3,098 | 689 | 3,101 | 0.1 | ±10 (medium) | inside | in the k fit |
+| kirby-32300b-297x54 | medium | in-sample | 2.74 | 3,267 | 700 | 3,085 | -5.6 | ±10 (medium) | inside | in the k fit |
+| ctco-358-297x54 | medium | in-sample | 2.74 | 2,947 | 689 | 3,101 | 5.2 | ±10 (medium) | inside | in the k fit |
+| htco-3064-320x50 | medium | in-sample | 2.74 | 2,950 | 733 | 3,042 | 3.1 | ±10 (medium) | inside | in the k fit |
+| cms-1601-222x54 | medium | held out | 2.74 | 1,905 | 504 | 2,325 | 22.1 | ±10 (medium) | **OUTSIDE** ⚠ |  |
 | crowley-180-2-tank | low | held out | 3.05 | 2,057 | – | – | – | – | – | no depth; lightship garbled; TPI vs light draft disagree |
-| creek-175x42 | medium | held out | 2.74 | 1,083 | 300 | 1,438 | 32.8 | ±10 (medium) | **OUTSIDE** ⚠ |  |
-| cherokee-bg-175x42 | medium | held out | 2.74 | 1,083 | 301 | 1,441 | 33.0 | ±10 (medium) | **OUTSIDE** ⚠ |  |
-| cc-133-184x52 | medium | held out | 2.74 | 1,763 | 407 | 1,856 | 5.3 | ±10 (medium) | inside |  |
-| cc-132-184x52 | medium | held out | 2.74 | 1,805 | 407 | 1,856 | 2.8 | ±10 (medium) | inside |  |
-| usl-146-192x52 | medium | held out | 2.74 | 1,725 | 423 | 1,938 | 12.3 | ±10 (medium) | **OUTSIDE** ⚠ |  |
-| city-of-galveston-210x44 | medium | held out | 2.74 | 1,083 | 372 | 1,818 | 67.8 | ±10 (medium) | **OUTSIDE** ⚠ |  |
-| ci-1609-239x52 | medium | held out | 2.74 | 1,905 | 565 | 2,380 | 24.9 | ±10 (medium) | **OUTSIDE** ⚠ |  |
-| karankawa-245x48 | medium | held out | 2.74 | 1,678 | 497 | 2,284 | 36.1 | ±10 (medium) | **OUTSIDE** ⚠ |  |
-| fmt-2054-245x48 | medium | held out | 2.74 | 1,699 | 497 | 2,284 | 34.4 | ±10 (medium) | **OUTSIDE** ⚠ |  |
-| fmt-2068-245x48 | medium | held out | 2.74 | 1,718 | 497 | 2,284 | 33.0 | ±10 (medium) | **OUTSIDE** ⚠ |  |
-| dbl-703-250x52 | medium | held out | 2.74 | 1,592 | 589 | 2,485 | 56.1 | ±10 (medium) | **OUTSIDE** ⚠ |  |
-| 401-270x54 | medium | held out | 2.74 | 3,118 | 664 | 2,784 | -10.7 | ±10 (medium) | **OUTSIDE** ⚠ |  |
-| kirby-27730-290x54 | medium | held out | 2.74 | 3,021 | 678 | 3,031 | 0.3 | ±10 (medium) | inside |  |
-| kirby-21853-295x50 | medium | held out | 2.74 | 3,005 | 723 | 2,766 | -8.0 | ±10 (medium) | inside |  |
-| kirby-29173-297x52 | medium | held out | 2.74 | 3,003 | 673 | 2,979 | -0.8 | ±10 (medium) | inside |  |
-| ctco-251-297x50 | medium | held out | 2.74 | 2,794 | 700 | 2,817 | 0.8 | ±10 (medium) | inside |  |
-| ctco-3000-308x54 | medium | held out | 2.74 | 2,794 | 1,098 | 2,836 | 1.5 | ±10 (medium) | inside |  |
-| comanche-380x54 | medium | held out | 2.74 | 2,617 | 1,006 | 3,847 | 47.0 | ±10 (medium) | **OUTSIDE** ⚠ |  |
-| winna-wilson-461x90 | low | not scored | 2.74 | 15,422 | 5,207 | 4,605 | -70.1 | – | – | record flags an implied Cb of 1.459 (impossible) and an unclear hull type (Kirby 'Dry Bulk', 150,000 bbl) |
-| miss-dott-o-463x82 | low | not scored | 2.74 | 7,588 | 4,062 | 4,917 | -35.2 | – | – | record flags an unclear hull type (Kirby 'Dry Bulk', 150,000 bbl) and a 9 ft row far below the table's draughts |
-| meb-rob21 | medium | held out | 1.80 | 1,801 | 486 | 1,956 | 8.6 | ±10 (medium) | inside |  |
-| meb-rt63 | medium | held out | 1.80 | 1,310 | 476 | 1,986 | 51.6 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
-| meb-005rob04 | medium | held out | 3.60 | 5,125 (cargo) | 1,260 | 5,576 | 8.8 | – | – | the published figure is a cargo capacity, not a deadweight |
-| meb-rst27 | medium | held out | 3.60 | 5,428 | 1,743 | 6,116 | 12.7 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
-| meb-rst12 | medium | held out | 3.60 | 5,632 | 1,632 | 6,367 | 13.0 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
-| meb-rst25 | medium | held out | 3.60 | 5,229 | 1,570 | 6,193 | 18.4 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
-| meb-005rst01 | medium | held out | 3.60 | 4,726 | 1,707 | 6,059 | 28.2 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
-| meb-rst05 | medium | held out | 3.60 | 2,868 | 1,112 | 4,146 | 44.5 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
-| meb-rst11 | medium | held out | 3.60 | 4,677 | 1,496 | 5,870 | 25.5 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
-| meb-st19 | medium | held out | 3.60 | 3,270 | 1,364 | 4,865 | 48.8 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
-| meb-rst43c | medium | held out | 5.59 | 11,053 | 2,403 | 11,390 | 3.1 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
-| cds-tanker-110 | low | held out | 3.30 | 2,868 (cargo) | 753 | 3,104 | 8.2 | – | – | self-propelled, and the published figure is a cargo capacity, not a deadweight |
+| creek-175x42 | medium | held out | 2.74 | 1,083 | 298 | 1,438 | 32.8 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| cherokee-bg-175x42 | medium | held out | 2.74 | 1,083 | 299 | 1,441 | 33.0 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| cc-133-184x52 | medium | held out | 2.74 | 1,763 | 405 | 1,855 | 5.3 | ±10 (medium) | inside |  |
+| cc-132-184x52 | medium | held out | 2.74 | 1,805 | 405 | 1,855 | 2.8 | ±10 (medium) | inside |  |
+| usl-146-192x52 | medium | held out | 2.74 | 1,725 | 421 | 1,938 | 12.3 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| city-of-galveston-210x44 | medium | held out | 2.74 | 1,083 | 370 | 1,818 | 67.8 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| ci-1609-239x52 | medium | held out | 2.74 | 1,905 | 561 | 2,380 | 24.9 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| karankawa-245x48 | medium | held out | 2.74 | 1,678 | 494 | 2,284 | 36.1 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| fmt-2054-245x48 | medium | held out | 2.74 | 1,699 | 494 | 2,284 | 34.4 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| fmt-2068-245x48 | medium | held out | 2.74 | 1,718 | 494 | 2,284 | 32.9 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| dbl-703-250x52 | medium | held out | 2.74 | 1,592 | 586 | 2,485 | 56.1 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| 401-270x54 | medium | held out | 2.74 | 3,118 | 660 | 2,784 | -10.7 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| kirby-27730-290x54 | medium | held out | 2.74 | 3,021 | 674 | 3,031 | 0.3 | ±10 (medium) | inside |  |
+| kirby-21853-295x50 | medium | held out | 2.74 | 3,005 | 719 | 2,766 | -7.9 | ±10 (medium) | inside |  |
+| kirby-29173-297x52 | medium | held out | 2.74 | 3,003 | 670 | 2,979 | -0.8 | ±10 (medium) | inside |  |
+| ctco-251-297x50 | medium | held out | 2.74 | 2,794 | 696 | 2,817 | 0.8 | ±10 (medium) | inside |  |
+| ctco-3000-308x54 | medium | held out | 2.74 | 2,794 | 1,091 | 2,838 | 1.6 | ±10 (medium) | inside |  |
+| comanche-380x54 | medium | held out | 2.74 | 2,617 | 1,000 | 3,848 | 47.0 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| winna-wilson-461x90 | low | not scored | 2.74 | 15,422 | 5,178 | 4,624 | -70.0 | – | – | record flags an implied Cb of 1.459 (impossible) and an unclear hull type (Kirby 'Dry Bulk', 150,000 bbl) |
+| miss-dott-o-463x82 | low | not scored | 2.74 | 7,588 | 4,039 | 4,930 | -35.0 | – | – | record flags an unclear hull type (Kirby 'Dry Bulk', 150,000 bbl) and a 9 ft row far below the table's draughts |
+| meb-rob21 | medium | held out | 1.80 | 1,801 | 483 | 1,956 | 8.6 | ±10 (medium) | inside |  |
+| meb-rt63 | medium | held out | 1.80 | 1,310 | 474 | 1,986 | 51.6 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-005rob04 | medium | held out | 3.60 | 5,125 (cargo) | 1,253 | 5,576 | 8.8 | – | – | the published figure is a cargo capacity, not a deadweight |
+| meb-rst27 | medium | held out | 3.60 | 5,428 | 1,733 | 6,117 | 12.7 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-rst12 | medium | held out | 3.60 | 5,632 | 1,622 | 6,367 | 13.1 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-rst25 | medium | held out | 3.60 | 5,229 | 1,561 | 6,194 | 18.5 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-005rst01 | medium | held out | 3.60 | 4,726 | 1,697 | 6,061 | 28.2 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-rst05 | medium | held out | 3.60 | 2,868 | 1,106 | 4,146 | 44.6 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-rst11 | medium | held out | 3.60 | 4,677 | 1,488 | 5,871 | 25.5 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-st19 | medium | held out | 3.60 | 3,270 | 1,356 | 4,867 | 48.8 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-rst43c | medium | held out | 5.59 | 11,053 | 2,389 | 11,389 | 3.0 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| cds-tanker-110 | low | held out | 3.30 | 2,868 (cargo) | 748 | 3,104 | 8.2 | – | – | self-propelled, and the published figure is a cargo capacity, not a deadweight |
 
 | Sample | Banded n | Mean err % | Mean abs err % | Range % | Inside band |
 |---|---|---|---|---|---|
