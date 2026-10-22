@@ -79,7 +79,7 @@ The cargo zone is the hull length that is left after the two end spaces (`barge_
 
 `barge_capacity.rs`, `bulk_volumetric`, lines 610 to 679. All lengths in m.
 
-1. Hold height: `h = (D − DB) + coaming` (line 617). DB is `hold_double_bottom_m` (default 1.2), coaming is
+1. Hold height: `h = (D − DB) + coaming` (line 617). DB is `hold_double_bottom_m` (default 0.8; 1.2 in a file saved before #597), coaming is
    `hatch_coaming_height_m` (default 1.0).
 2. Hold top width: `w_top = B − 2 × wing void` (line 618). Wing void is `hold_wing_void_width_m` (default 1.0).
 3. Hold bottom width (line 619 to 628):
@@ -162,7 +162,7 @@ cargo (`crates/ovcd-format/src/session.rs` line 153).
 
 ### 9. Double bottom and wing spaces
 
-- **Dry bulk holds:** the "double hull" is the wing void (1.0 m each side) and the hold double bottom (1.2 m). They set
+- **Dry bulk holds:** the "double hull" is the wing void (1.0 m each side) and the hold double bottom (0.8 m). They set
   the hold size and nothing else. No check compares them with a rule. No structure or weight is given to them in the
   box hold (the k factor covers all steel). In the sloped hopper the inner bottom plate is in the build-up.
 - **Gas tanks:** the side and bottom clearances come from IGC 2.4 and set a double bottom of `max(0, cb − saddle
@@ -228,7 +228,7 @@ adds "Cargo > 0" (line 755) and the light air draft check (lines 383 to 392).
 | CG-A25 | Hold length | Full cargo zone, no transverse bulkhead length taken off | Method | — | `barge_capacity.rs` line 630 | Non-conservative; small |
 | CG-A26 | Hold fill ratio | 0.95 | Estimate | Carried over from the original engine | `barge_capacity.rs` line 632; `builtin_profile.json` line 369 | Unknown |
 | CG-A27 | Wing void width | 1.0 m per side | Estimate | Carried over from the original engine | `barge_capacity.rs` line 618; `builtin_profile.json` line 327 | Unknown; ADN 9.1.0.91.2 asks 0.80 m for a double-hull dry cargo vessel (not checked) |
-| CG-A28 | Hold double bottom | 1.2 m | Estimate | Carried over from the original engine | `barge_capacity.rs` line 617; `builtin_profile.json` line 334 | Unknown; ADN 9.1.0.91.3 asks at least 0.50 m (not checked) |
+| CG-A28 | Hold double bottom | 0.8 m | Estimate | Two published inland dry bulk barge designs (0.8 m); built barges range 0.38 to 1.0 m. 1.2 m before #597 | `barge_capacity.rs` line 617; `builtin_profile.json` line 334 | Unknown; ADN 9.1.0.91.3 asks at least 0.50 m (not checked) |
 | CG-A29 | Hopper slope | 1.0 H:V | Estimate | Carried over from the original engine | `barge_capacity.rs` line 620; `builtin_profile.json` line 341 | Unknown |
 | CG-A30 | Hatch coaming height | 1.0 m | Estimate | Carried over from the original engine | `barge_capacity.rs` lines 617, 662; `builtin_profile.json` line 348 | Unknown |
 | CG-A31 | Number of holds | 3 (steel weight only) | Estimate | Carried over from the original engine | `barge_capacity.rs` line 643; `builtin_profile.json` line 355 | Small |
@@ -293,7 +293,7 @@ All in `builtin_profile.json`. "Carried over" means the value of the original en
 | `draught_limit_m`, `air_draft_limit_m` | none | m | all | — |
 | `lightship_factor_t_per_m3` | 0.1093 | t/m³ | box hold | `calibration/factors.yaml` |
 | `hold_wing_void_width_m` | 1.0 | m | both holds | Carried over |
-| `hold_double_bottom_m` | 1.2 | m | both holds | Carried over |
+| `hold_double_bottom_m` | 0.8 | m | both holds | Estimate from built barges |
 | `hatch_coaming_height_m` | 1.0 | m | both holds | Carried over |
 | `bulk_end_bulkhead_m` | 0.5 | m | both holds | Carried over |
 | `hold_fill_ratio` | 0.95 | — | both holds | Carried over |

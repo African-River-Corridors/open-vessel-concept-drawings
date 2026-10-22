@@ -525,11 +525,12 @@
       "basis": "carried over from the original engine: the empty space at each side of the hold. The hold width is the beam less two of these. The hold must keep a width that is not negative (hard)"
     },
     "hold_double_bottom_m": {
-      "default": 1.2,
+      "default": 0.8,
       "unit": "m",
       "hard": { "ge": 0, "le": 20 },
       "soft": { "min": 0.5, "max": 2.0 },
-      "basis": "carried over from the original engine: the height of the inner bottom above the keel. The hold height is the depth less this, plus the coaming; it must not be negative (hard)"
+      "status": "estimate",
+      "basis": "the height of the inner bottom above the keel. The hold height is the depth less this, plus the coaming; it must not be negative (hard). 0.80 m is the value in two published inland dry bulk barge designs (a 42 m dumb barge and a 110 m bulk carrier, main sections). Other built barges: 0.38 m (35 ft US river hopper barge), about 1.0 m (1,400 t Danube barge, scaled from a figure). A file saved before keeps 1.20 m, the value of the original engine"
     },
     "double_side_m": {
       "default": 1.0,
