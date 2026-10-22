@@ -17,17 +17,14 @@ on:
       - "Cargo.toml"
       - "Cargo.lock"
       - "tools/build_web.sh"
+  # A pull request builds the site only when the site or the docs change (issue #565). A push to main
+  # (above) still builds and deploys on any change that can alter it.
   pull_request:
     paths:
       - "website/**"
       - "docs/**"
       - "*.md"
       - ".github/workflows/website.yml"
-      - "app/**"
-      - "crates/**"
-      - "Cargo.toml"
-      - "Cargo.lock"
-      - "tools/build_web.sh"
   workflow_dispatch:
 
 permissions:

@@ -325,6 +325,26 @@
           "value": 200000.0,
           "source": "default"
         },
+        "tank_coating_rate": {
+          "value": 40.0,
+          "source": "default"
+        },
+        "cargo_pump_lump": {
+          "value": 150000.0,
+          "source": "default"
+        },
+        "cargo_piping_lump": {
+          "value": 400000.0,
+          "source": "default"
+        },
+        "cargo_heating_rate_per_kw": {
+          "value": 500.0,
+          "source": "default"
+        },
+        "vents_gauging_lump": {
+          "value": 25000.0,
+          "source": "default"
+        },
         "currency": {
           "value": "USD",
           "source": "default"

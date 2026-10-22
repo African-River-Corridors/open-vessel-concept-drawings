@@ -1435,6 +1435,9 @@ fn with_liquid(mut v: Value, r: &BargeCapacityResult, cargo_key: &str) -> Value 
             "liquid".to_string(),
             crate::liquid::liquid_json(l, cargo_key),
         );
+        // Issue #334: what the cargo tank items of the budget are priced on (unhashed, with the rest of
+        // `cost_masses`).
+        o.insert("cost_masses".to_string(), crate::cost::liquid_masses(l));
     }
     v
 }

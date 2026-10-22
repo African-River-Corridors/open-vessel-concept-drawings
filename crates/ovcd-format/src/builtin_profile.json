@@ -1516,6 +1516,36 @@
       "unit": "per unit",
       "hard": { "ge": 0, "le": 1000000000 },
       "basis": "example rate lump sum per unit for the delivery voyage or heavy lift. Not a market quote: replace with your own"
+    },
+    "tank_coating_rate": {
+      "default": 40.0,
+      "unit": "per m2",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate for the cargo tank coating, per m2 of the inside surface of the cargo and slop tanks (tank barges only). Not a market quote: replace with your own"
+    },
+    "cargo_pump_lump": {
+      "default": 150000.0,
+      "unit": "per pump",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum for one cargo pump, one for each cargo tank (tank barges only). Not a market quote: replace with your own"
+    },
+    "cargo_piping_lump": {
+      "default": 400000.0,
+      "unit": "per unit",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum per unit for the cargo piping system (tank barges only). Not a market quote: replace with your own"
+    },
+    "cargo_heating_rate_per_kw": {
+      "default": 500.0,
+      "unit": "per kW",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate per kW of installed cargo heating (tank barges only). Not a market quote: replace with your own"
+    },
+    "vents_gauging_lump": {
+      "default": 25000.0,
+      "unit": "per tank",
+      "hard": { "ge": 0, "le": 1000000000 },
+      "basis": "example rate lump sum for the vents and gauging of one cargo tank (tank barges only). Not a market quote: replace with your own"
     }
   }
 }

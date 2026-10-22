@@ -1,0 +1,46 @@
+name: CodeQL
+
+# Code scanning on a push to main and every week, not on each pull request (issue #565). It replaces the
+# repository's CodeQL default setup, which scans every pull request: that setup must be switched off
+# (Settings, Code security, or `gh api -X PATCH repos/<owner>/<repo>/code-scanning/default-setup -f
+# state=not-configured`), or GitHub refuses the results of this workflow.
+
+on:
+  push:
+    branches: ["main"]
+  schedule:
+    - cron: "29 3 * * 1" # every Monday, 03:29 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: actions
+            build-mode: none
+          - language: javascript-typescript
+            build-mode: none
+          - language: python
+            build-mode: none
+          - language: rust
+            build-mode: none
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"

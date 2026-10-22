@@ -38,6 +38,8 @@ export interface Choice {
   /** A Vessel Class choice: its scheme, the Formation kind it gives and what picking it sets. */
   scheme?: string;
   formation?: string | null;
+  /** A Cargo choice: `development` while the Cargo is work in development (issue #334). */
+  status?: string;
 }
 /** The Vessel Class an Option sits in, and its reference deadweight (shown beside the cargo, never an input). */
 export interface VesselClassSummary {
