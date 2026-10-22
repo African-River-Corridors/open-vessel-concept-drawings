@@ -5,6 +5,7 @@
 //! the Option's cost-rate inputs. Nothing here feeds `simulate`: the budget is an output, kept out of the results hash
 //! (`UNHASHED_KEYS`), so saved Designs keep their hashes.
 
+use crate::vdesign::TANK_INTERNALS_BASIS;
 use crate::vdesign::{
     COST_RATES_BASIS, COST_RATES_BASIS_USER, DesignOption, Source, cost_prices_basis,
 };
@@ -274,6 +275,7 @@ fn result_json(
         "from_design": masses["from_design"],
         "core_default": masses["core_default"],
         "steel": masses["steel"],
+        "tank_internals": masses.get("tank_internals").cloned().unwrap_or(Value::Null),
     })
 }
 
@@ -285,9 +287,31 @@ pub fn cost_of(option: &DesignOption, results: &Value) -> Value {
     if masses.get("liquid").is_some() {
         return liquid_cost_of(option, results);
     }
-    let (Some(inputs), Some(rates)) = (masses_of(masses), rates_of(option)) else {
+    let (Some(mut inputs), Some(rates)) = (masses_of(masses), rates_of(option)) else {
         return Value::Null;
     };
+    // Issue #402: part of the tank structure surplus is stiffeners and ring frames in tank steel, priced
+    // at the tank shell rate; the rest (saddles) stays at the supports rate.
+    let fraction = option
+        .input("tank_internals_fraction")
+        .and_then(|i| i.value.as_f64())
+        .unwrap_or(0.0)
+        .clamp(0.0, 1.0);
+    let surplus = inputs.tank_supports_t;
+    let internals = surplus * fraction;
+    inputs.tank_shell_t += internals;
+    inputs.tank_supports_t = surplus - internals;
+    let mut masses = masses.clone();
+    masses["masses"]["tank_shell_t"] = json!(inputs.tank_shell_t);
+    masses["masses"]["tank_supports_t"] = json!(inputs.tank_supports_t);
+    masses["tank_internals"] = json!({
+        "fraction": fraction,
+        "mass_t": internals,
+        "status": "estimate",
+        "source": null,
+        "basis": TANK_INTERNALS_BASIS,
+    });
+    let masses = &masses;
     // Only a Formation with a tug costs one (issue #403): a self-propelled vessel has none.
     let tug = has_tug(option);
     match compute_for(&inputs, &rates, tug) {

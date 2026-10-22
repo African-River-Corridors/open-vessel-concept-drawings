@@ -358,6 +358,12 @@ pub const LIQUID_TANKS_NOTE: &str = "Rectangular cargo tanks inside a double hul
 /// example file's.
 pub const COST_RATES_BASIS: &str = "Example rates \u{2014} replace with yours.";
 
+/// What the tank internals share is (issue #402). It is an assumption, and says so in the profile, the basis
+/// page and the results.
+pub const TANK_INTERNALS_BASIS: &str = "An assumption, not a sourced value: no source read gives how much of \
+    the tank structure surplus is stiffeners and ring frames. That share is priced at the tank shell rate; \
+    the rest (saddles) at the supports rate.";
+
 /// The capital budget's basis once any rate is typed (issue #404).
 pub const COST_RATES_BASIS_USER: &str = "Your rates.";
 
@@ -394,6 +400,13 @@ pub struct LegacyFixed {
 ///
 /// A profile that has no entry for one of these inputs takes the built-in profile's entry.
 pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
+    // Issue #402: a file saved before prices all of the surplus at the supports rate.
+    LegacyFixed {
+        name: "tank_internals_fraction",
+        applies_to: AppliesTo::All,
+        formations: None,
+        value: 0.0,
+    },
     // Issue #417: a file saved before has no typed openings; each sits at the smallest distance the
     // rules allow, so nothing it was checked against changes.
     LegacyFixed {
@@ -2974,6 +2987,14 @@ pub const INPUTS: &[InputSpec] = &[
         "Vents and gauging",
         NUM,
         "integral_tanks",
+        Group::CostRates,
+    ),
+    // Issue #402: the share of the tank structure surplus priced at the tank shell rate.
+    spec(
+        "tank_internals_fraction",
+        "Tank internals share of the structure surplus",
+        NUM,
+        false,
         Group::CostRates,
     ),
     // Issue #429: the currency of the rates and the date they are priced at.

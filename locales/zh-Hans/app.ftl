@@ -500,3 +500,6 @@ app-splash-state = 状态
 app-splash-starting-engine = 正在启动引擎
 # status: draft
 app-splash-notice = 其结果未经验证。已知的工程问题正在审查中。不提供任何担保。
+
+# status: draft
+app-cost-internals = 液货舱内部构件：结构余量的 { $percent }% 按液货舱壳体单价计价。该比例是一项假设（估算值，未读取任何来源）；其余按支座单价计价。

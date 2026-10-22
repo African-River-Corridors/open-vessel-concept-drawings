@@ -305,6 +305,10 @@
           "value": 200000.0,
           "source": "default"
         },
+        "tank_internals_fraction": {
+          "value": 0.5,
+          "source": "default"
+        },
         "currency": {
           "value": "USD",
           "source": "default"

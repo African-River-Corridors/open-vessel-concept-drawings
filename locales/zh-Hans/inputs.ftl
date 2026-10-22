@@ -339,3 +339,6 @@ input-currency = 货币
 
 # status: draft
 input-price-base-date = 价格基准日期
+
+# status: draft
+input-tank-internals-fraction = 液货舱内部构件占结构余量的比例

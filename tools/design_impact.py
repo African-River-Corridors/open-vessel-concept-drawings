@@ -283,6 +283,9 @@ OPTIONAL_INPUT_CASES = (
       "ballast_departure_double_bottom_fill": 0.5, "ballast_departure_peak_fill": 1.0,
       "ballast_departure_wing_fill": 0.0, "ballast_arrival_double_bottom_fill": 1.0,
       "ballast_arrival_peak_fill": 0.0, "ballast_arrival_wing_fill": 0.98}),
+    # The tank internals share (issue #402), set to its default: the budget is outside the compared results.
+    ("tank_internals_fraction", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"tank_internals_fraction": 0.5}),
     # The currency and the price base date (issue #429), set to their defaults: the same results as
     # leaving them out.
     ("currency", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,

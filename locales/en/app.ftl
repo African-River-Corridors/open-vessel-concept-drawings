@@ -336,3 +336,4 @@ app-splash-tagline-design = concept and preliminary design
 app-splash-state = State
 app-splash-starting-engine = Starting the engine
 app-splash-notice = Its results are not verified. Known engineering findings are under review. There is no warranty.
+app-cost-internals = Tank internals: { $percent }% of the tank structure surplus is priced at the tank shell rate. This share is an assumption (an Estimate, no source read); the rest is priced at the supports rate.

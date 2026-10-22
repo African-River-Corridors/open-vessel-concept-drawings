@@ -426,3 +426,6 @@ input-currency = Moeda
 
 # status: draft
 input-price-base-date = Data-base dos preços
+
+# status: draft
+input-tank-internals-fraction = Parcela dos internos do tanque no excedente de estrutura
