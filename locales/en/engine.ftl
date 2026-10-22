@@ -198,7 +198,7 @@ msg-convoy-not-available = convoy results not yet available
 warn-channel-no-bottom-width = The channel has a depth but no bottom width, so squat, the Schijf limiting speed and the blockage are not checked and the speed curves are for deep water only. The draught limit still uses the depth. Give the channel bottom width to check them.
 check-name-intact-gm-at-reported-cargo = intact gm at reported cargo
 check-intact-gm-reported-cargo = intact GM { $gm } m >= 0.15 m at the reported cargo { $cargo } t, draught { $draught } m (first-order box; cargo KG of the full hold; KG_light @0.5D)
-warn-liquid-no-conditions = Loading conditions and stability are not computed for liquid bulk cargo yet: crude oil is work in development.
+warn-liquid-legacy-conditions = Stability is computed for liquid bulk cargo with the IS Code loading conditions only.
 name-governs-draught = draught — { $limit }
 check-feasible-arrangement = No arrangement passes every check on this hull. The closest one is shown. It fails: { $fails }.
 stab-limit-moulded-tanks = Ballast and consumables tanks are moulded volumes with no structure deduction; one tank per side and kind, and the consumables tank height is an estimate.

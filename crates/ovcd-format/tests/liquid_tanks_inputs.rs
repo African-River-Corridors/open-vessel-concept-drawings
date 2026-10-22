@@ -288,17 +288,13 @@ fn heating_adds_a_lightship_item() {
 }
 
 #[test]
-fn a_self_propelled_crude_hull_has_its_stern_block_and_no_stability_yet() {
+fn a_self_propelled_crude_hull_has_its_stern_block_and_its_stability() {
     let r = results(&raw_fixture("crude_integral_tanks_self_propelled"));
     assert!(r["drawing"]["aft_arrangement"].is_object());
-    assert!(r.get("stability").is_none() && r.get("loading_conditions").is_none());
-    assert!(
-        r["warnings"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|w| w.as_str().unwrap().contains("work in development"))
-    );
+    // The conditions are in the results (`liquid_conditions_results.rs` tests them); the capital
+    // budget is not: the Capital budget view shows Work in development.
+    assert!(r["stability"]["conditions"].is_array());
+    assert!(r["cost_masses"].is_null());
 }
 
 #[test]

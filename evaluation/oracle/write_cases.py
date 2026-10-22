@@ -126,6 +126,35 @@ LCU_LOADED["worked_from_printed"] = {
     "kg_ft": "KG = (540 x 1.9 + 180 x 11) / 720 = 4.175 ft (the tanks' centre of gravity is 7 + 4 = 11 ft above the keel)",
 }
 
+#: A crude oil tank barge, worked from closed forms only (issue #332, spec 0006): a lightship, and rectangular
+#: cargo tanks filled alike to part of their height. The draught is the displacement over L x B x rho, the KG
+#: the mean of the lightship and the cargo, and the free surface correction rho_cargo x n x l x b^3 / 12 over
+#: the displacement, for a slack tank (a tank at 98 % or more is nominally full: IS Code 2008 Part B 3.1.2).
+#: Nothing here is typed as a result: the draught, KG and free surface follow from the particulars.
+LIQUID_HULL = {"L": 76.5, "B": 11.4, "D": 3.6, "density": 1.0}
+LIQUID_LIGHTSHIP = {"mass_t": 330.0, "kg_m": 1.8}
+LIQUID_TANK = {"length_m": 22.0, "inner_breadth_m": 9.4, "bottom_m": 0.7, "height_m": 2.9, "n": 3,
+               "cargo_density_t_m3": 0.87}
+
+
+def liquid_particulars(centreline: bool, fill: float) -> dict:
+    t = LIQUID_TANK
+    n = t["n"] * (2 if centreline else 1)
+    breadth = t["inner_breadth_m"] / (2 if centreline else 1)
+    volume = n * t["length_m"] * breadth * t["height_m"] * fill
+    cargo = volume * t["cargo_density_t_m3"]
+    kg_cargo = t["bottom_m"] + t["height_m"] * fill / 2.0
+    mass = LIQUID_LIGHTSHIP["mass_t"] + cargo
+    h = LIQUID_HULL
+    kg = (LIQUID_LIGHTSHIP["mass_t"] * LIQUID_LIGHTSHIP["kg_m"] + cargo * kg_cargo) / mass
+    draught = mass / (h["L"] * h["B"] * h["density"])
+    slack = fill < 0.98
+    fs = (t["cargo_density_t_m3"] * n * t["length_m"] * breadth ** 3 / 12.0 / mass) if slack else 0.0
+    return {"L": h["L"], "B": h["B"], "D": h["D"], "T": draught, "KG": kg, "FS": fs, "density": h["density"],
+            "liquid": {"tanks": n, "tank_breadth_m": breadth, "fill": fill, "cargo_t": cargo,
+                       "displacement_t": mass, "kg_cargo_m": kg_cargo}}
+
+
 BASE_CASES = [
     {
         "id": "box_a",
@@ -161,6 +190,27 @@ BASE_CASES = [
                 "oracle and recorded as it gives them; the inputs are never adjusted to make a verdict pass.",
         "published": LCU_LOADED,
         "density": 1.025,
+    },
+    {
+        "id": "liquid_slack",
+        "title": "Crude oil tank barge, cargo tanks half full, no centreline bulkhead",
+        **liquid_particulars(False, 0.5),
+        "note": "Slack tanks 9.4 m wide: a large free surface correction. The particulars follow from the "
+                "closed forms in `write_cases.py` (liquid_particulars); the verdicts are derived by the oracle.",
+    },
+    {
+        "id": "liquid_slack_centreline",
+        "title": "Crude oil tank barge, cargo tanks half full, centreline bulkhead",
+        **liquid_particulars(True, 0.5),
+        "note": "The same hull and cargo as liquid_slack with a centreline bulkhead: the free surface moment "
+                "is a quarter. The verdicts are derived by the oracle.",
+    },
+    {
+        "id": "liquid_full",
+        "title": "Crude oil tank barge, cargo tanks nominally full",
+        **liquid_particulars(True, 0.98),
+        "note": "Tanks at 98 %: nominally full, no free surface correction (IS Code 2008 Part B 3.1.2). The "
+                "verdicts are derived by the oracle.",
     },
     {
         "id": "generic_barge",
@@ -210,7 +260,7 @@ def same(a, b, rel: float = 1e-6, abs_: float = 1e-5) -> bool:
 
 
 def case_document(c: dict) -> dict:
-    r = oracle.assess(c["B"], c["D"], c["T"], c["KG"], 0.0)
+    r = oracle.assess(c["B"], c["D"], c["T"], c["KG"], c.get("FS", 0.0))
     expected = {}
     for name in oracle.CRITERIA:
         rule, what, unit = RULES[name]
@@ -232,6 +282,12 @@ def case_document(c: dict) -> dict:
         "confidence": "high for the verdicts (the oracle is checked against closed forms); the case is not an external published example",
         "note": c["note"],
     }
+    if c.get("liquid"):
+        prov["inputs_basis"] = ("worked from closed forms for a crude oil tank barge (the particulars of "
+                                "`liquid`); not from a publication")
+        prov["liquid"] = {k: sig(v) for k, v in c["liquid"].items()}
+        prov["liquid"].update({"lightship_t": LIQUID_LIGHTSHIP["mass_t"], "lightship_kg_m": LIQUID_LIGHTSHIP["kg_m"],
+                               **{f"tank_{k}": v for k, v in LIQUID_TANK.items()}})
     if published:
         prov["inputs_basis"] = "published"
         prov["inputs_source"] = {k: published[k] for k in ("citation", "locator", "licence", "read", "as_printed")}
@@ -252,7 +308,8 @@ def case_document(c: dict) -> dict:
             "form": "particulars",
             "vdesign": None,
             "length_m": c["L"], "beam_m": c["B"], "depth_m": c["D"], "draught_m": c["T"],
-            "kg_m": c["KG"], "water_density_t_m3": c.get("density", 1.0), "free_surface_m": 0.0,
+            "kg_m": c["KG"], "water_density_t_m3": c.get("density", 1.0),
+            "free_surface_m": sig(c.get("FS", 0.0)),
             **({"downflooding_angle_deg": published["downflooding_deg"]} if published and published.get("downflooding_deg") else {}),
         },
         "expected": expected,
