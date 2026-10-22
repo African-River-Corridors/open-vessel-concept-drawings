@@ -346,3 +346,98 @@ fn the_weather_shield_inputs_move_the_lightship_and_its_centre() {
     );
     assert_eq!(same["results"], base["results"]);
 }
+
+/// Issue #412: the tank forming allowance and the dome wall. Unlike the inputs above, their
+/// defaults are NOT the legacy values: the engine weighed neither, so a file saved before keeps 0
+/// and its results do not move, while a new Design takes the Estimate.
+const WEIGHED: [&str; 2] = ["tank_forming_allowance_pct", "tank_dome_wall_thickness_mm"];
+
+#[test]
+fn the_forming_allowance_and_dome_wall_default_to_an_estimate_and_a_saved_file_keeps_none() {
+    let profile = Profile::built_in();
+    let c = BargeCapacityInputs::new(90.0, 14.0, 6.0);
+    let f = FitOptions::default();
+    for (name, cap, fit, estimate) in [
+        (
+            WEIGHED[0],
+            c.tank_forming_allowance_pct,
+            f.tank_forming_allowance_pct,
+            ovcd_core::barge_capacity::DEFAULT_TANK_FORMING_ALLOWANCE_PCT,
+        ),
+        (
+            WEIGHED[1],
+            c.tank_dome_wall_thickness_mm,
+            f.tank_dome_wall_thickness_mm,
+            ovcd_core::barge_capacity::DEFAULT_TANK_DOME_WALL_THICKNESS_MM,
+        ),
+    ] {
+        // The legacy API weighs neither; the Defaults Profile holds the Estimate.
+        assert_eq!((cap, fit), (0.0, 0.0), "{name}");
+        assert_eq!(
+            profile.default(name).and_then(Value::as_f64),
+            Some(estimate)
+        );
+        assert_eq!(profile.default_status(name).map(|s| s.0), Some("estimate"));
+        let legacy = LEGACY_FIXED_INPUTS.iter().find(|l| l.name == name).unwrap();
+        assert_eq!(legacy.value, 0.0, "{name}");
+        let spec = INPUTS.iter().find(|s| s.name == name).unwrap();
+        assert_eq!(spec.group.label(), "Gas tanks", "{name}");
+        assert_eq!(spec.applies_to.containments(), ["type_c_tanks"], "{name}");
+    }
+}
+
+#[test]
+fn a_file_saved_before_the_two_inputs_keeps_its_results_hash() {
+    for file in ["gas_igc_2g_exact", "gas_igc_2g_self_propelled"] {
+        let text = raw_fixture(file);
+        let (_, opened) = DesignSession::open(&text, Profile::built_in()).unwrap();
+        assert_eq!(opened.hash_status[0].1, HashStatus::Matches, "{file}");
+    }
+}
+
+#[test]
+fn the_forming_allowance_and_the_dome_wall_add_to_the_lightship() {
+    // Issue #412. At 0 the tank is weighed at the required thickness and the dome has no mass; a
+    // larger allowance or a thicker dome wall weighs more, and the lightship KG rises with the dome.
+    let ls = |v: &Value| v["results"]["lightship_t"].as_f64().unwrap();
+    let plain = results(
+        SELF,
+        &[
+            ("tank_forming_allowance_pct", json!(0.0)),
+            ("tank_dome_wall_thickness_mm", json!(0.0)),
+        ],
+    );
+    // A file that lacks the two inputs keeps the legacy 0.
+    assert_eq!(results(SELF, &[])["results"], plain["results"]);
+    let base = results(
+        SELF,
+        &[
+            ("tank_forming_allowance_pct", json!(5.0)),
+            ("tank_dome_wall_thickness_mm", json!(25.0)),
+        ],
+    );
+    assert!(ls(&base) > ls(&plain), "{} vs {}", ls(&base), ls(&plain));
+    let formed = results(
+        SELF,
+        &[
+            ("tank_forming_allowance_pct", json!(10.0)),
+            ("tank_dome_wall_thickness_mm", json!(0.0)),
+        ],
+    );
+    assert!(ls(&formed) > ls(&plain));
+    let domed = results(
+        SELF,
+        &[
+            ("tank_forming_allowance_pct", json!(0.0)),
+            ("tank_dome_wall_thickness_mm", json!(40.0)),
+        ],
+    );
+    let domed_less = results(
+        SELF,
+        &[
+            ("tank_forming_allowance_pct", json!(0.0)),
+            ("tank_dome_wall_thickness_mm", json!(20.0)),
+        ],
+    );
+    assert!(ls(&domed) > ls(&domed_less) && ls(&domed_less) > ls(&plain));
+}

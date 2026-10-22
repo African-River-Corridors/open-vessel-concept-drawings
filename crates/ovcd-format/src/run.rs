@@ -134,6 +134,8 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
         "wing_tank_height_ratio",
         "weather_shield_thickness_mm",
         "weather_shield_clearance_m",
+        "tank_forming_allowance_pct",
+        "tank_dome_wall_thickness_mm",
         "tank_wall_thickness_mm",
         "lpg_carriage_condition",
         "lpg_loading_limit_basis",

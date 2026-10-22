@@ -171,6 +171,12 @@ input-weather-shield-thickness-mm = 防风雨罩板厚
 
 # status: draft
 input-weather-shield-clearance-m = 防风雨罩高出液舱顶的间隙
+
+# status: draft
+input-tank-forming-allowance-pct = 液货舱板材成形余量
+
+# status: draft
+input-tank-dome-wall-thickness-mm = 液货舱穹顶壁厚
 # status: draft
 input-tank-wall-thickness-mm = 液货舱壁厚（覆盖值）
 # status: draft

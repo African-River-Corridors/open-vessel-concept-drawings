@@ -6,6 +6,8 @@
 use alloc::string::ToString;
 use alloc::vec::Vec;
 
+use core::f64::consts::PI;
+
 use libm::{fabs, pow, sqrt};
 
 use crate::hull::HullGeometry;
@@ -211,6 +213,52 @@ pub fn covering_items(inputs: &BargeInputs, tanks: &TankResult) -> Result<Vec<Ma
     Ok(items)
 }
 
+/// What a gas tank weighs beyond the original engine's shell and insulation (issue #412). The
+/// default is none of it, so the Python API and a file saved before these inputs weigh as before.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct TankMassOptions {
+    /// Forming allowance, as a share of the required plate thickness (%). IGC 4.23.2.1.1 takes the
+    /// calculated thickness as a minimum after forming, without a negative tolerance, so the plate
+    /// as ordered is thicker. The shell and the heads are weighed at the required thickness plus it.
+    pub forming_allowance_pct: f64,
+    /// Wall thickness of the dome of each tank (mm); 0: no dome mass.
+    pub dome_wall_thickness_mm: f64,
+    /// Diameter of the cylindrical dome (m).
+    pub dome_diameter_m: f64,
+}
+
+/// The mass of the tank domes as one lightship item (issue #412): per tank a cylinder of the dome
+/// diameter and `inputs.dome_height` with a flat top, in the tank steel, standing on the tank top.
+/// Empty when the wall is 0, or the dome has no size. The LCG is the tank zone centre (the domes
+/// are spread along it); the KCG is the mass-weighted height of the cylinder wall and the top.
+pub fn dome_items(
+    inputs: &BargeInputs,
+    tanks: &TankResult,
+    opts: &TankMassOptions,
+) -> Result<Vec<MassItem>, PyError> {
+    let (d, h) = (opts.dome_diameter_m, inputs.dome_height);
+    let t = opts.dome_wall_thickness_mm / 1000.0;
+    if !(t > 0.0 && d > 0.0 && h > 0.0) {
+        return Ok(Vec::new());
+    }
+    let rho = inputs.tank_material_density;
+    let base = inputs.double_bottom_height.unwrap_or(0.0)
+        + inputs.tank_support_height
+        + tanks.outer_diameter;
+    let n = tanks.n_tanks_total as f64;
+    let m_wall = n * PI * d * h * t * rho;
+    let m_top = n * PI * d * d / 4.0 * t * rho;
+    let mass = m_wall + m_top;
+    let tank_zone_centre =
+        inputs.stern_non_tank_length.unwrap_or(0.0) + tank_zone_length(inputs)? / 2.0;
+    Ok(alloc::vec![MassItem {
+        label: "tank domes",
+        mass_t: mass,
+        lcg_m: tank_zone_centre,
+        kcg_m: base + (m_wall * h / 2.0 + m_top * h) / mass,
+    }])
+}
+
 /// Calculate the component weight breakdown, in tonnes.
 ///
 /// Hull steel has two figures. The bottom-up one is built from plating areas and thicknesses, plus a
@@ -223,6 +271,18 @@ pub fn calculate_weights(
     inputs: &BargeInputs,
     hull: &HullGeometry,
     tanks: &TankResult,
+) -> Result<WeightBreakdown, PyError> {
+    calculate_weights_with(inputs, hull, tanks, &TankMassOptions::default())
+}
+
+/// [`calculate_weights`] with the tank forming allowance and the dome mass of issue #412. The
+/// forming allowance scales the shell (so the structure factor, the piping and the outfitting
+/// follow it); the domes join the lightship as an item of their own, beside the covering.
+pub fn calculate_weights_with(
+    inputs: &BargeInputs,
+    hull: &HullGeometry,
+    tanks: &TankResult,
+    opts: &TankMassOptions,
 ) -> Result<WeightBreakdown, PyError> {
     let steel_density = inputs.hull_steel_density; // t/m^3
     let t_side = inputs.side_plate_thickness / 1000.0;
@@ -247,7 +307,8 @@ pub fn calculate_weights(
     );
 
     // --- Tank weights (from tank calculation) ---
-    let w_tank_shells = tanks.tank_shell_weight;
+    // Issue #412: the plate as ordered is the required thickness plus the forming allowance.
+    let w_tank_shells = tanks.tank_shell_weight * (1.0 + opts.forming_allowance_pct / 100.0);
     // Internal stiffeners, ring frames, support saddles/stools.
     let w_tank_internals = w_tank_shells * (inputs.tank_structure_factor - 1.0);
     let w_tank_total = w_tank_shells + w_tank_internals;
@@ -330,7 +391,8 @@ pub fn calculate_weights(
     let moulded_depth = inputs.depth;
     let moulded_volume = inputs.loa * inputs.beam * moulded_depth;
     let steel_top_down = inputs.steel_rate_per_cbm * moulded_volume;
-    let covering = total_mass(&covering_items(inputs, tanks)?);
+    let covering =
+        total_mass(&covering_items(inputs, tanks)?) + total_mass(&dome_items(inputs, tanks, opts)?);
 
     // Bottom-up: hull steel only (excluding tanks, which are separate).
     let steel_bottom_up = w_hull_total + w_wing_plate + w_weather_shield;

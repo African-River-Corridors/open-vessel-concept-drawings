@@ -10,7 +10,10 @@ use ovcd_core::gas_stability::{GasCapacityResult, assess};
 use ovcd_core::hull::HullGeometry;
 use ovcd_core::models::{BargeInputs, TankResult, WeightBreakdown};
 use ovcd_core::tanks::calculate_tank_arrangement_wide;
-use ovcd_core::weights::{MassItem, calculate_weights, covering_items, total_mass};
+use ovcd_core::weights::{
+    MassItem, TankMassOptions, calculate_weights, calculate_weights_with, covering_items,
+    dome_items, total_mass,
+};
 
 /// The quickstart gas barge of `tests/weights.rs`.
 fn quickstart() -> BargeInputs {
@@ -207,4 +210,74 @@ fn no_wing_tank_means_no_covering() {
     i.wing_tank_width = Some(0.0);
     i.depth = 3.0;
     assert!(weigh(&i).2.is_empty());
+}
+
+#[test]
+fn the_tank_domes_are_a_lightship_item_with_their_own_height() {
+    // Issue #412. One dome per tank: a cylinder wall and a flat top in the tank steel, standing on
+    // the tank top. The item has its own mass and height; the lightship holds it.
+    let i = quickstart();
+    let (tanks, _, _) = weigh(&i);
+    let opts = TankMassOptions {
+        forming_allowance_pct: 0.0,
+        dome_wall_thickness_mm: 25.0,
+        dome_diameter_m: 2.0,
+    };
+    let items = dome_items(&i, &tanks, &opts).unwrap();
+    let dome = item(&items, "tank domes");
+    let n = tanks.n_tanks_total as f64;
+    let (d, h, t) = (2.0_f64, i.dome_height, 0.025);
+    let wall = n * std::f64::consts::PI * d * h * t * i.tank_material_density;
+    let top = n * std::f64::consts::PI * d * d / 4.0 * t * i.tank_material_density;
+    assert!(close(dome.mass_t, wall + top));
+    let base = i.double_bottom_height.unwrap() + i.tank_support_height + tanks.outer_diameter;
+    // Above the tank top, below the top of the dome.
+    assert!(
+        dome.kcg_m > base + h / 2.0 && dome.kcg_m < base + h,
+        "{}",
+        dome.kcg_m
+    );
+    assert!(close(
+        dome.kcg_m,
+        base + (wall * h / 2.0 + top * h) / (wall + top)
+    ));
+    let zone_centre =
+        (i.stern_non_tank_length.unwrap() + i.loa - i.bow_non_tank_length.unwrap()) / 2.0;
+    assert!(close(dome.lcg_m, zone_centre));
+
+    // The lightship holds it.
+    let hull = HullGeometry::new(i.loa, i.beam, i.depth, i.bow_rake_length, 6.5, 0.0, 6.5);
+    let with = calculate_weights_with(&i, &hull, &tanks, &opts).unwrap();
+    let without = calculate_weights(&i, &hull, &tanks).unwrap();
+    assert!(close(with.lightship - without.lightship, dome.mass_t));
+
+    // No wall, no dome mass: the legacy weighing.
+    let none = TankMassOptions {
+        dome_wall_thickness_mm: 0.0,
+        ..opts
+    };
+    assert!(dome_items(&i, &tanks, &none).unwrap().is_empty());
+}
+
+#[test]
+fn the_forming_allowance_scales_the_tank_plate_and_what_follows_it() {
+    // Issue #412. IGC 4.23.2.1.1: the calculated thickness is a minimum after forming. The plate as
+    // ordered is thicker by the allowance, so the shell weighs that share more. The structure
+    // factor, the piping and the outfitting follow the tank mass; the insulation does not.
+    let i = quickstart();
+    let (tanks, base, _) = weigh(&i);
+    let hull = HullGeometry::new(i.loa, i.beam, i.depth, i.bow_rake_length, 6.5, 0.0, 6.5);
+    let opts = TankMassOptions {
+        forming_allowance_pct: 10.0,
+        ..TankMassOptions::default()
+    };
+    let w = calculate_weights_with(&i, &hull, &tanks, &opts).unwrap();
+    assert!(close(w.tank_shells, base.tank_shells * 1.1));
+    assert!(close(w.tank_total, base.tank_total * 1.1));
+    assert_eq!(w.insulation, base.insulation);
+    assert!(w.piping_machinery > base.piping_machinery);
+    assert!(w.lightship > base.lightship);
+    // The default options are the original weighing, bit for bit.
+    let same = calculate_weights_with(&i, &hull, &tanks, &TankMassOptions::default()).unwrap();
+    assert_eq!(same, base);
 }

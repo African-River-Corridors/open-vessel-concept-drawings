@@ -412,6 +412,7 @@ pub(crate) fn capacity_result_from_json(
         liquid: None,
         // The Python API result has no stern block mass (issue #348).
         stern_block_items: Vec::new(),
+        dome_items: Vec::new(),
         trim_conditions: Vec::new(),
         stern_geometry: None,
         hull_spec,

@@ -123,6 +123,10 @@ pub struct FitOptions {
     pub weather_shield_thickness_mm: f64,
     /// Clearance from the tank top to the weather shield top (m, issue #410).
     pub weather_shield_clearance_m: f64,
+    /// Forming allowance on the tank plate, % of the required thickness (issue #412).
+    pub tank_forming_allowance_pct: f64,
+    /// Wall thickness of each tank's dome (mm); 0: no dome mass (issue #412).
+    pub tank_dome_wall_thickness_mm: f64,
     /// Fixed tank wall thickness (mm); `None`: the pressure-vessel formula gives it (issue #292).
     pub tank_wall_thickness_mm: Option<f64>,
     /// The Cargo-dependent tank design values: pressure, steel, insulation, structure factor.
@@ -336,6 +340,9 @@ impl Default for FitOptions {
             wing_tank_height_ratio: DEFAULT_WING_TANK_HEIGHT_RATIO,
             weather_shield_thickness_mm: DEFAULT_WEATHER_SHIELD_THICKNESS_MM,
             weather_shield_clearance_m: DEFAULT_WEATHER_SHIELD_CLEARANCE_M,
+            // As the legacy capacity inputs: neither is weighed unless a Design asks (issue #412).
+            tank_forming_allowance_pct: 0.0,
+            tank_dome_wall_thickness_mm: 0.0,
             tank_wall_thickness_mm: Some(DEFAULT_TANK_WALL_THICKNESS_MM),
             tank_design: TankDesign::default(),
             water_density_t_per_m3: DEFAULT_WATER_DENSITY,
@@ -1037,6 +1044,8 @@ impl Search<'_> {
         inp.wing_tank_height_ratio = self.o.wing_tank_height_ratio;
         inp.weather_shield_thickness_mm = self.o.weather_shield_thickness_mm;
         inp.weather_shield_clearance_m = self.o.weather_shield_clearance_m;
+        inp.tank_forming_allowance_pct = self.o.tank_forming_allowance_pct;
+        inp.tank_dome_wall_thickness_mm = self.o.tank_dome_wall_thickness_mm;
         inp.tank_wall_thickness = self.o.tank_wall_thickness_mm;
         inp.tank_design = self.o.tank_design.clone();
         inp.water_density = self.o.water_density_t_per_m3;
