@@ -16,9 +16,7 @@ def test_every_cargo_in_the_database_is_in_the_case_set():
     src = (ROOT / "crates/ovcd-core/src/cargo.rs").read_text(encoding="utf-8")
     keys = set(re.findall(r'^        "([A-Za-z_]+)",$', src, re.M))
     assert {"LNG", "LNG_ethane", "LPG_propane", "LPG_butane", "LPG_mix", "bauxite"} <= keys
-    # Crude oil has no containment until the `integral_tanks` ticket (spec 0006, crude oil 4), which
-    # adds its cases; no design can be run with it before then.
-    assert keys - {"crude_oil"} <= used("cargo"), keys - used("cargo")
+    assert keys <= used("cargo"), keys - used("cargo")
 
 
 def test_every_input_of_an_option_is_in_the_case_set():

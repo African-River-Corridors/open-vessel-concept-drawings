@@ -210,7 +210,12 @@ fn the_inputs_apply_to_every_containment_and_to_self_propelled_only_in_their_gro
         assert_eq!(spec.group.label(), "Aft block", "{name}");
         assert_eq!(
             spec.applies_to.containments(),
-            ["box_hold", "sloped_hopper_hold", "type_c_tanks"],
+            [
+                "box_hold",
+                "sloped_hopper_hold",
+                "type_c_tanks",
+                "integral_tanks"
+            ],
             "{name}"
         );
         assert_eq!(spec.formations, Some(&["self_propelled"][..]), "{name}");
@@ -235,7 +240,7 @@ fn the_inputs_apply_to_every_containment_and_to_self_propelled_only_in_their_gro
     // The two unit counts give the left panel a default for each Cargo phase.
     assert_eq!(
         entry("battery_unit_count")["default_by"]["values"],
-        json!({ "dry_bulk": 2, "liquid_gas": 1 })
+        json!({ "dry_bulk": 2, "liquid_gas": 1, "liquid_bulk": 2 })
     );
 }
 

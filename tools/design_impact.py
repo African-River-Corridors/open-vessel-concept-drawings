@@ -303,6 +303,23 @@ OPTIONAL_INPUT_CASES = (
                           ("deadrise_deg", 5.0), ("keel_half_width_m", 0.5),
                           ("chine_half_breadth_m", None), ("chine_height_m", None),
                           ("shipd_parameters", None), ("hull_offsets", None))),
+    # The liquid cargo tank inputs (issue #331): each moves a crude oil design.
+    ("double_side_m", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5, {"double_side_m": 1.2}),
+    ("double_bottom_m", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5, {"double_bottom_m": 0.9}),
+    ("liquid_tanks_in_line", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"liquid_tanks_in_line": 6}),
+    ("centreline_bulkhead", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"centreline_bulkhead": False}),
+    ("cofferdam_m", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5, {"cofferdam_m": 1.0}),
+    ("pump_arrangement", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"pump_arrangement": "pump_room"}),
+    ("pump_room_length_m", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"pump_arrangement": "pump_room", "pump_room_length_m": 5.0}),
+    ("slop_share", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5, {"slop_share": 0.03}),
+    ("heating_kw_per_m3", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"heating_kw_per_m3": 0.3}),
+    ("liquid_fill_ratio", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"liquid_fill_ratio": 0.9}),
 )
 
 
@@ -395,9 +412,25 @@ def cases() -> dict[str, dict]:
         "bauxite", "box_hold", "pushed_barge", 60.0, 10.0, 4.5, draught_limit_m=0.3)
     # A left-out moulded depth is the Cargo's ratio times the beam (issue #120): one case for each Cargo
     # group the format has. A base from before the rule has no such default, so these show as new.
-    for cargo, containment, group in (("bauxite", "box_hold", "dry bulk"), ("LNG", "type_c_tanks", "gas")):
+    for cargo, containment, group in (("bauxite", "box_hold", "dry bulk"), ("LNG", "type_c_tanks", "gas"),
+                                      ("crude_oil", "integral_tanks", "liquid")):
         out[f"sweep default depth {group} 90x14"] = _inputs(
             cargo, containment, "self_propelled", 90.0, 14.0, None)
+    # Crude oil in integral tanks (spec 0006, issue #331): a pushed and a self-propelled hull at two
+    # sizes, one with a channel, one with a tank barge on coastal service (slop tanks), and one that
+    # carries nothing.
+    for loa, beam in ((60.0, 10.0), (90.0, 14.0)):
+        tag = f"{loa:g}x{beam:g}"
+        out[f"sweep crude pushed {tag}"] = _inputs(
+            "crude_oil", "integral_tanks", "pushed_barge", loa, beam, 4.5)
+        out[f"sweep crude self-propelled {tag}"] = _inputs(
+            "crude_oil", "integral_tanks", "self_propelled", loa, beam, 4.5)
+    out["sweep crude channel 90x14"] = _inputs(
+        "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5, **_CHANNEL)
+    out["sweep crude coastal service 90x14"] = _inputs(
+        "crude_oil", "integral_tanks", "self_propelled", 90.0, 14.0, 4.5, service_area="coastal-and-river")
+    out["sweep crude carries nothing (draught limit)"] = _inputs(
+        "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5, draught_limit_m=0.3)
     # One case for each optional input.
     for name, cargo, containment, formation, loa, beam, depth, extra in OPTIONAL_INPUT_CASES:
         out[f"sweep optional {name}"] = _inputs(cargo, containment, formation, loa, beam, depth, **extra)

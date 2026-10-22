@@ -50,11 +50,13 @@ pub const CARGO_CONTAINMENTS: &[(&str, CargoClass)] = &[
     ("box_hold", CargoClass::DryBulk),
     ("sloped_hopper_hold", CargoClass::DryBulk),
     ("type_c_tanks", CargoClass::Gas),
+    // Crude oil (spec 0006, issue #331): rectangular tanks in a double hull.
+    ("integral_tanks", CargoClass::LiquidBulk),
 ];
 
 /// Cargo phases (the keys of the Cargo Classes that have a containment), as the Defaults Profile
 /// names them.
-pub const CARGO_PHASES: &[&str] = &["dry_bulk", "liquid_gas"];
+pub const CARGO_PHASES: &[&str] = &["dry_bulk", "liquid_gas", "liquid_bulk"];
 
 /// Inputs whose default is chosen by another value: `(input, by, keys)`. The Defaults Profile
 /// must give `default_by_<by>[key]` for every key, because each is a lookup the schema can make.
@@ -63,8 +65,11 @@ pub const KEYED_DEFAULTS: &[(&str, &str, &[&str])] = &[
     (
         "lightship_factor_t_per_m3",
         "cargo_containment",
-        &["box_hold"],
+        &["box_hold", "integral_tanks"],
     ),
+    // Issue #331 (spec 0006 section 3.2): the slop share by Service Area (MARPOL Annex I Reg. 29 is
+    // for sea-going tankers).
+    ("slop_share", "service_area", SERVICE_AREAS),
     ("battery_unit_count", "cargo_phase", CARGO_PHASES),
     ("accommodation_unit_count", "cargo_phase", CARGO_PHASES),
     // Issue #347 (spec 0007, maintainer decision 7): a new Option's stern by Cargo phase.
@@ -341,6 +346,9 @@ pub const GAS_TANKS_NOTE: &str = "The tank outer diameter (the cap below and the
     from the pressure-vessel formula unless a thickness is typed. The design values below depend \
     on the Cargo and, for LPG, on the carriage condition; each shows its source or marks an \
     estimate.";
+
+/// What the liquid cargo tank values are, shown with the group (issue #331).
+pub const LIQUID_TANKS_NOTE: &str = "Rectangular cargo tanks inside a double hull, between the cofferdams at the ends of the cargo zone. The double hull widths and the cofferdam length are the ADN minimums for a type C vessel until the Rule Sets for liquid cargo exist; each value shows its source or marks an estimate. Crude oil is work in development.";
 
 /// What the cost rates are, shown with the group and in the capital budget while every rate is the
 /// example file's.
@@ -1157,6 +1165,10 @@ pub const RULESETS: &[&str] = &["IGC_2G"];
 /// `ocean-only` is not offered.
 pub const SERVICE_AREAS: &[&str] = &["river-only", "coastal-and-river"];
 
+/// How the cargo is pumped out of a liquid cargo tank (spec 0006 decision D4): one deepwell pump per
+/// tank, or a pump room below deck.
+pub const PUMP_ARRANGEMENTS: &[&str] = &["deepwell", "pump_room"];
+
 /// The Formation kinds of a barge Formation: the ones with no stern block of their own (issue
 /// #357 adds the ATB barge and the towed barge).
 pub const PUSHED: &[&str] = &["pushed_barge", "pushed_convoy", "atb", "towed_barge"];
@@ -1326,6 +1338,8 @@ pub enum Group {
     HullForm,
     GasTanks,
     DryBulkHold,
+    /// Issue #331: the cargo tanks of a liquid bulk Cargo (crude oil).
+    LiquidTanks,
     AftBlock,
     SternAndPropulsion,
     Tug,
@@ -1338,13 +1352,14 @@ pub enum Group {
 
 impl Group {
     /// Every group, in the order a form shows them.
-    pub const ALL: [Group; 14] = [
+    pub const ALL: [Group; 15] = [
         Group::Required,
         Group::VesselClass,
         Group::HullAndContainment,
         Group::HullForm,
         Group::GasTanks,
         Group::DryBulkHold,
+        Group::LiquidTanks,
         Group::AftBlock,
         Group::SternAndPropulsion,
         Group::Tug,
@@ -1364,6 +1379,7 @@ impl Group {
             Group::HullForm => "Hull Form",
             Group::GasTanks => "Gas tanks",
             Group::DryBulkHold => "Dry-bulk hold",
+            Group::LiquidTanks => "Liquid cargo tanks",
             Group::AftBlock => "Aft block",
             Group::SternAndPropulsion => "Stern and propulsion",
             Group::Tug => "Tug",
@@ -1380,6 +1396,7 @@ impl Group {
         match self {
             Group::CostRates => Some(COST_RATES_BASIS),
             Group::GasTanks => Some(GAS_TANKS_NOTE),
+            Group::LiquidTanks => Some(LIQUID_TANKS_NOTE),
             _ => None,
         }
     }
@@ -1390,6 +1407,9 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("box_hold", "Box hold"),
     ("sloped_hopper_hold", "Sloped hopper hold"),
     ("type_c_tanks", "Type C tanks"),
+    ("integral_tanks", "Integral tanks"),
+    ("deepwell", "Deepwell pumps"),
+    ("pump_room", "Pump room"),
     ("box", "Box"),
     ("raked_box", "Raked box"),
     ("river-only", "River only"),
@@ -1725,7 +1745,12 @@ pub const INPUTS: &[InputSpec] = &[
     spec(
         "cargo_containment",
         "Cargo Containment",
-        InputKind::Choice(&["box_hold", "sloped_hopper_hold", "type_c_tanks"]),
+        InputKind::Choice(&[
+            "box_hold",
+            "sloped_hopper_hold",
+            "type_c_tanks",
+            "integral_tanks",
+        ]),
         false,
         Group::HullAndContainment,
     ),
@@ -1886,11 +1911,11 @@ pub const INPUTS: &[InputSpec] = &[
         NUM,
         Group::HullAndContainment,
     ),
-    only(
+    only_in(
         "lightship_factor_t_per_m3",
         "Lightship factor",
         NUM,
-        "box_hold",
+        &["box_hold", "integral_tanks"],
         Group::HullAndContainment,
     ),
     lpg(
@@ -2144,6 +2169,74 @@ pub const INPUTS: &[InputSpec] = &[
         NUM,
         "sloped_hopper_hold",
         Group::DryBulkHold,
+    ),
+    // Issue #331 (spec 0006 section 3.2): the cargo tanks of a liquid bulk Cargo.
+    only(
+        "double_side_m",
+        "Double side width",
+        NUM,
+        "integral_tanks",
+        Group::LiquidTanks,
+    ),
+    only(
+        "double_bottom_m",
+        "Double bottom height",
+        NUM,
+        "integral_tanks",
+        Group::LiquidTanks,
+    ),
+    only(
+        "liquid_tanks_in_line",
+        "Cargo tanks in line",
+        NUM,
+        "integral_tanks",
+        Group::LiquidTanks,
+    ),
+    only(
+        "centreline_bulkhead",
+        "Centreline bulkhead",
+        InputKind::Bool,
+        "integral_tanks",
+        Group::LiquidTanks,
+    ),
+    only(
+        "cofferdam_m",
+        "Cofferdam length",
+        NUM,
+        "integral_tanks",
+        Group::LiquidTanks,
+    ),
+    only(
+        "pump_arrangement",
+        "Pump arrangement",
+        InputKind::Choice(PUMP_ARRANGEMENTS),
+        "integral_tanks",
+        Group::LiquidTanks,
+    ),
+    when(
+        only(
+            "pump_room_length_m",
+            "Pump room length",
+            NUM,
+            "integral_tanks",
+            Group::LiquidTanks,
+        ),
+        "pump_arrangement",
+        &["pump_room"],
+    ),
+    only(
+        "heating_kw_per_m3",
+        "Cargo heating",
+        NUM,
+        "integral_tanks",
+        Group::LiquidTanks,
+    ),
+    only(
+        "liquid_fill_ratio",
+        "Cargo tank fill ratio",
+        NUM,
+        "integral_tanks",
+        Group::LiquidTanks,
     ),
     // Issue #347 (spec 0007): the stern and propulsion of a self-propelled hull. They come before
     // the inputs whose use they decide (`thruster_count`, `propulsive_efficiency`).
@@ -2798,6 +2891,14 @@ pub const INPUTS: &[InputSpec] = &[
         InputKind::Choice(SERVICE_AREAS),
         false,
         Group::Rules,
+    ),
+    // Issue #331: after the Service Area, which sets its default.
+    only(
+        "slop_share",
+        "Slop tank share",
+        NUM,
+        "integral_tanks",
+        Group::LiquidTanks,
     ),
     spec(
         "rule_sets",

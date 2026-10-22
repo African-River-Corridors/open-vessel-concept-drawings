@@ -11,6 +11,8 @@ group-hull-form = Hull Form
 group-gas-tanks = Gas tanks
 group-note-gas-tanks = The tank outer diameter (the cap below and the result) is measured to the outside of the insulation; the clearances and the drawing use that face. The steel diameter is that less twice the insulation thickness. The wall thickness is worked out from the pressure-vessel formula unless a thickness is typed. The design values below depend on the Cargo and, for LPG, on the carriage condition; each shows its source or marks an estimate.
 group-dry-bulk-hold = Dry-bulk hold
+group-liquid-cargo-tanks = Liquid cargo tanks
+group-note-liquid-cargo-tanks = Rectangular cargo tanks inside a double hull, between the cofferdams at the ends of the cargo zone. The double hull widths and the cofferdam length are the ADN minimums for a type C vessel until the Rule Sets for liquid cargo exist; each value shows its source or marks an estimate. Crude oil is work in development.
 group-aft-block = Aft block
 group-stern-and-propulsion = Stern and propulsion
 group-tug = Tug
@@ -62,6 +64,7 @@ input-cargo-containment-default-by = cargo_phase
 choice-cargo-containment-box-hold = Box hold
 choice-cargo-containment-sloped-hopper-hold = Sloped hopper hold
 choice-cargo-containment-type-c-tanks = Type C tanks
+choice-cargo-containment-integral-tanks = Integral tanks
 
 input-block-coefficient = Block coefficient
 
@@ -203,6 +206,26 @@ input-hopper-plate-mm = Hopper plate thickness
 input-hold-bulkhead-plate-mm = Hold bulkhead plate thickness
 
 input-hatch-coaming-plate-mm = Hatch coaming plate thickness
+
+input-double-side-m = Double side width
+
+input-double-bottom-m = Double bottom height
+
+input-liquid-tanks-in-line = Cargo tanks in line
+
+input-centreline-bulkhead = Centreline bulkhead
+
+input-cofferdam-m = Cofferdam length
+
+input-pump-arrangement = Pump arrangement
+choice-pump-arrangement-deepwell = Deepwell pumps
+choice-pump-arrangement-pump-room = Pump room
+
+input-pump-room-length-m = Pump room length
+
+input-heating-kw-per-m3 = Cargo heating
+
+input-liquid-fill-ratio = Cargo tank fill ratio
 
 input-stern-form = Stern form
 input-stern-form-default-by = cargo_phase
@@ -486,5 +509,8 @@ input-price-base-date = Price base date
 input-service-area = Service Area
 choice-service-area-river-only = River only
 choice-service-area-coastal-and-river = Coastal and river
+
+input-slop-share = Slop tank share
+input-slop-share-default-by = service_area
 
 input-rule-sets = Rule Sets
