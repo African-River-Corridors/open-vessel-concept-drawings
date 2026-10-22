@@ -295,8 +295,9 @@ pub struct Condition {
     pub area_0_40: f64,
     pub area_30_40: f64,
     pub deck_edge_deg: Option<f64>,
-    /// Issue #282, #592: the angle of down-flooding the criteria were worked with (typed, or the
-    /// heel where the lowest opening is immersed); `None`: none.
+    /// Issue #592: the angle of down-flooding worked from the Design's openings (the heel where the
+    /// lowest is immersed) in this condition; `None`: none worked (a typed angle is the Option's
+    /// input, not held here).
     pub downflooding_deg: Option<f64>,
     pub criteria: Vec<Criterion>,
 }
@@ -679,7 +680,7 @@ pub(crate) fn hull_condition(
     };
     let (b, d) = (hull.spec.beam, hull.spec.depth);
     let deck_edge = degrees(libm::atan(div(2.0 * (d - draught), b)?));
-    condition_from_curve(
+    let mut c = condition_from_curve(
         gz,
         draught,
         g.kg_m,
@@ -688,7 +689,10 @@ pub(crate) fn hull_condition(
         Some(deck_edge),
         criteria_set,
         typed.or(computed),
-    )
+    )?;
+    // The field holds the worked angle only: a typed one is the Option's input (issue #592).
+    c.downflooding_deg = computed;
+    Ok(c)
 }
 
 /// One condition from its GZ curve (issue #448): the areas, the angle of maximum GZ and the criteria

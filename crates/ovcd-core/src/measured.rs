@@ -497,7 +497,10 @@ impl Measured {
                 }
                 // Up to `to_deg`, or the angle of down-flooding where that is less (IS Code Part A
                 // 2.2.1). An angle not above `from_deg` leaves no area.
-                let end = crate::box_stability::area_end_deg(c.downflooding_deg).min(f64::from(to));
+                let end = crate::box_stability::area_end_deg(
+                    c.downflooding_deg.or(self.downflooding_deg),
+                )
+                .min(f64::from(to));
                 Ok(MeasureValue::Number(if end > f64::from(from) {
                     crate::box_stability::area_to(&c.gz, from, end)
                 } else {

@@ -140,7 +140,12 @@ fn an_opening_near_the_waterline_ends_the_areas_at_its_angle_in_each_condition()
 fn a_typed_angle_wins_over_the_openings() {
     let r = results_of(&with(json!(35.0), json!([opening(45.0, 7.4, 0.0)])));
     assert!(names_of(&r, 0).contains(&"Area 0\u{2013}35\u{b0}".to_string()));
-    assert_eq!(r["stability"]["conditions"][0]["downflooding_deg"], 35.0);
+    // A typed angle is the Option's input: the results hold only a worked angle.
+    assert!(
+        r["stability"]["conditions"][0]
+            .get("downflooding_deg")
+            .is_none()
+    );
 }
 
 #[test]
