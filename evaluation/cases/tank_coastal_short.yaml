@@ -78,6 +78,14 @@ expected:
     value: 0.02
     limit: 0.03
     margin: -0.01
+  marpol/23.3.2/cargo-tank-length:
+    rule: MARPOL Annex I Reg. 23.3.2
+    what: cargo tank length over its limit
+    unit: '-'
+    verdict: fail
+    value: 2.112516956
+    limit: 1.0
+    margin: -1.112516956
   marpol/19.6.1/double-bottom-depth:
     rule: MARPOL Annex I Reg. 19.6.1
     what: double bottom depth

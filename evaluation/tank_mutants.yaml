@@ -12361,6 +12361,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.285529499
+      limit: 1.0
+      margin: -0.2855294994
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -12471,6 +12479,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.289643409
+      limit: 1.0
+      margin: -0.2896434088
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -12581,6 +12597,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.293798664
+      limit: 1.0
+      margin: -0.293798664
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -12691,6 +12715,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.289684755
+      limit: 1.0
+      margin: -0.2896847546
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -12801,6 +12833,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.249183007
+      limit: 1.0
+      margin: -0.2491830065
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -12911,6 +12951,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.24999183
+      limit: 1.0
+      margin: -0.2499918301
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -13021,6 +13069,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.250816993
+      limit: 1.0
+      margin: -0.2508169935
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -13131,6 +13187,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.25000817
+      limit: 1.0
+      margin: -0.2500081699
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -13241,6 +13305,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9354248366
+      limit: 1.0
+      margin: 0.0645751634
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -13351,6 +13423,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9359424837
+      limit: 1.0
+      margin: 0.06405751634
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -13461,6 +13541,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9364705882
+      limit: 1.0
+      margin: 0.06352941176
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -13571,6 +13659,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9359529412
+      limit: 1.0
+      margin: 0.06404705882
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -13681,6 +13777,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.983909843
+      limit: 1.0
+      margin: 0.01609015699
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -13791,6 +13895,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9871566373
+      limit: 1.0
+      margin: 0.01284336274
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -13901,6 +14013,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9904911797
+      limit: 1.0
+      margin: 0.009508820251
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -14011,6 +14131,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9872224499
+      limit: 1.0
+      margin: 0.0127775501
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -14121,6 +14249,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9254901961
+      limit: 1.0
+      margin: 0.07450980392
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -14231,6 +14367,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9254901961
+      limit: 1.0
+      margin: 0.07450980392
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -14341,6 +14485,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9254901961
+      limit: 1.0
+      margin: 0.07450980392
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -14451,6 +14603,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9254901961
+      limit: 1.0
+      margin: 0.07450980392
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -14561,6 +14721,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9254901961
+      limit: 1.0
+      margin: 0.07450980392
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -14671,6 +14839,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9254901961
+      limit: 1.0
+      margin: 0.07450980392
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -14781,6 +14957,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9254901961
+      limit: 1.0
+      margin: 0.07450980392
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -14891,6 +15075,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9254901961
+      limit: 1.0
+      margin: 0.07450980392
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -15001,6 +15193,14 @@ mutants:
       value: 0.031
       limit: 0.03
       margin: 0.001
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9341666667
+      limit: 1.0
+      margin: 0.06583333333
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -15111,6 +15311,14 @@ mutants:
       value: 0.03001
       limit: 0.03
       margin: 1.0e-05
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9351210784
+      limit: 1.0
+      margin: 0.06487892157
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -15221,6 +15429,14 @@ mutants:
       value: 0.029
       limit: 0.03
       margin: -0.001
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9360947712
+      limit: 1.0
+      margin: 0.06390522876
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -15331,6 +15547,14 @@ mutants:
       value: 0.02999
       limit: 0.03
       margin: -1.0e-05
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9351403595
+      limit: 1.0
+      margin: 0.06485964052
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -15354,6 +15578,478 @@ mutants:
     magnitude: small
     moved: slop_share
     target_value: 0.02999
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/tank_oracle.py from the parent case
+    edition: ADN 2025 (ECE/TRANS/351); MARPOL Annex I as revised by MEPC.117(52)
+    locator: ADN 9.3.2.11.1, 9.3.2.11.3, 9.3.2.11.7, 9.3.3.11.1, 9.3.3.11.3, 9.3.3.11.7; MARPOL 19.6.1,
+      19.6.2, 29
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the texts'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: tank_coastal_c__marpol_23.3.2_cargo-tank-length__pass_big
+  title: Crude oil tank barge, coastal and river service, 1,500 tonnes deadweight, ADN type C and MARPOL
+    Annex I, marpol/23.3.2/cargo-tank-length just inside its limit (big step)
+  kind: tank
+  inputs:
+    loa_m: 76.5
+    beam_m: 10.0
+    depth_m: 3.5
+    zone_aft_m: 3.0
+    zone_fwd_m: 42.81175
+    double_side_m: 1.2
+    double_bottom_m: 0.9
+    tanks_in_line: 3
+    centreline_bulkhead: false
+    cofferdam_m: 0.8
+    pump_room_m: 0.0
+    slop_share: 0.04
+    deadweight_t: 1500.0
+    service_area: coastal-and-river
+    adn_vessel_type: C
+    rule_sets: *id002
+  expected:
+    adn/9.3.2.11.1(a)/cargo-tank-capacity:
+      rule: ADN 9.3.2.11.1 (a)
+      what: capacity of each cargo tank
+      unit: m3
+      verdict: pass
+      value: 241.6205376
+      limit: 311.92125
+      margin: 70.3007124
+    adn/9.3.2.11.1(d)/cargo-tank-length:
+      rule: ADN 9.3.2.11.1 (d)
+      what: length of each cargo tank
+      unit: m
+      verdict: pass
+      value: 12.22776
+      limit: 15.3
+      margin: 3.07224
+    adn/9.3.2.11.3(a)/cofferdam-width:
+      rule: ADN 9.3.2.11.3 (a)
+      what: width of the cofferdams
+      unit: m
+      verdict: pass
+      value: 0.8
+      limit: 0.6
+      margin: 0.2
+    adn/9.3.2.11.7/wing-width-min:
+      rule: ADN 9.3.2.11.7
+      what: distance from the side wall to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 1.0
+      margin: 0.2
+    adn/9.3.2.11.7/double-bottom-depth:
+      rule: ADN 9.3.2.11.7
+      what: distance from the bottom to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.7
+      margin: 0.2
+    adn/9.3.2.11.7/double-bottom-min:
+      rule: ADN 9.3.2.11.7
+      what: depth of the double bottom, never less than
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.6
+      margin: 0.3
+    marpol/29/slop-tank-capacity:
+      rule: MARPOL Annex I Reg. 29.2.3
+      what: slop tank capacity share
+      unit: '-'
+      verdict: pass
+      value: 0.04
+      limit: 0.03
+      margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.999
+      limit: 1.0
+      margin: 0.001
+    marpol/19.6.1/double-bottom-depth:
+      rule: MARPOL Annex I Reg. 19.6.1
+      what: double bottom depth
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.76
+      margin: 0.14
+    marpol/19.6.2/double-side-width:
+      rule: MARPOL Annex I Reg. 19.6.2
+      what: wing tank width
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 0.76
+      margin: 0.44
+  mutant:
+    parent: tank_coastal_c
+    criterion: marpol/23.3.2/cargo-tank-length
+    side: pass
+    magnitude: big
+    moved: zone_fwd_m
+    target_value: 0.999
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/tank_oracle.py from the parent case
+    edition: ADN 2025 (ECE/TRANS/351); MARPOL Annex I as revised by MEPC.117(52)
+    locator: ADN 9.3.2.11.1, 9.3.2.11.3, 9.3.2.11.7, 9.3.3.11.1, 9.3.3.11.3, 9.3.3.11.7; MARPOL 19.6.1,
+      19.6.2, 29
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the texts'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: tank_coastal_c__marpol_23.3.2_cargo-tank-length__pass_small
+  title: Crude oil tank barge, coastal and river service, 1,500 tonnes deadweight, ADN type C and MARPOL
+    Annex I, marpol/23.3.2/cargo-tank-length just inside its limit (small step)
+  kind: tank
+  inputs:
+    loa_m: 76.5
+    beam_m: 10.0
+    depth_m: 3.5
+    zone_aft_m: 3.0
+    zone_fwd_m: 42.8496175
+    double_side_m: 1.2
+    double_bottom_m: 0.9
+    tanks_in_line: 3
+    centreline_bulkhead: false
+    cofferdam_m: 0.8
+    pump_room_m: 0.0
+    slop_share: 0.04
+    deadweight_t: 1500.0
+    service_area: coastal-and-river
+    adn_vessel_type: C
+    rule_sets: *id002
+  expected:
+    adn/9.3.2.11.1(a)/cargo-tank-capacity:
+      rule: ADN 9.3.2.11.1 (a)
+      what: capacity of each cargo tank
+      unit: m3
+      verdict: pass
+      value: 241.8599814
+      limit: 311.92125
+      margin: 70.06126862
+    adn/9.3.2.11.1(d)/cargo-tank-length:
+      rule: ADN 9.3.2.11.1 (d)
+      what: length of each cargo tank
+      unit: m
+      verdict: pass
+      value: 12.2398776
+      limit: 15.3
+      margin: 3.0601224
+    adn/9.3.2.11.3(a)/cofferdam-width:
+      rule: ADN 9.3.2.11.3 (a)
+      what: width of the cofferdams
+      unit: m
+      verdict: pass
+      value: 0.8
+      limit: 0.6
+      margin: 0.2
+    adn/9.3.2.11.7/wing-width-min:
+      rule: ADN 9.3.2.11.7
+      what: distance from the side wall to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 1.0
+      margin: 0.2
+    adn/9.3.2.11.7/double-bottom-depth:
+      rule: ADN 9.3.2.11.7
+      what: distance from the bottom to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.7
+      margin: 0.2
+    adn/9.3.2.11.7/double-bottom-min:
+      rule: ADN 9.3.2.11.7
+      what: depth of the double bottom, never less than
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.6
+      margin: 0.3
+    marpol/29/slop-tank-capacity:
+      rule: MARPOL Annex I Reg. 29.2.3
+      what: slop tank capacity share
+      unit: '-'
+      verdict: pass
+      value: 0.04
+      limit: 0.03
+      margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.99999
+      limit: 1.0
+      margin: 1.0e-05
+    marpol/19.6.1/double-bottom-depth:
+      rule: MARPOL Annex I Reg. 19.6.1
+      what: double bottom depth
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.76
+      margin: 0.14
+    marpol/19.6.2/double-side-width:
+      rule: MARPOL Annex I Reg. 19.6.2
+      what: wing tank width
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 0.76
+      margin: 0.44
+  mutant:
+    parent: tank_coastal_c
+    criterion: marpol/23.3.2/cargo-tank-length
+    side: pass
+    magnitude: small
+    moved: zone_fwd_m
+    target_value: 0.99999
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/tank_oracle.py from the parent case
+    edition: ADN 2025 (ECE/TRANS/351); MARPOL Annex I as revised by MEPC.117(52)
+    locator: ADN 9.3.2.11.1, 9.3.2.11.3, 9.3.2.11.7, 9.3.3.11.1, 9.3.3.11.3, 9.3.3.11.7; MARPOL 19.6.1,
+      19.6.2, 29
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the texts'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: tank_coastal_c__marpol_23.3.2_cargo-tank-length__fail_big
+  title: Crude oil tank barge, coastal and river service, 1,500 tonnes deadweight, ADN type C and MARPOL
+    Annex I, marpol/23.3.2/cargo-tank-length just across its limit (big step)
+  kind: tank
+  inputs:
+    loa_m: 76.5
+    beam_m: 10.0
+    depth_m: 3.5
+    zone_aft_m: 3.0
+    zone_fwd_m: 42.88825
+    double_side_m: 1.2
+    double_bottom_m: 0.9
+    tanks_in_line: 3
+    centreline_bulkhead: false
+    cofferdam_m: 0.8
+    pump_room_m: 0.0
+    slop_share: 0.04
+    deadweight_t: 1500.0
+    service_area: coastal-and-river
+    adn_vessel_type: C
+    rule_sets: *id002
+  expected:
+    adn/9.3.2.11.1(a)/cargo-tank-capacity:
+      rule: ADN 9.3.2.11.1 (a)
+      what: capacity of each cargo tank
+      unit: m3
+      verdict: pass
+      value: 242.1042624
+      limit: 311.92125
+      margin: 69.8169876
+    adn/9.3.2.11.1(d)/cargo-tank-length:
+      rule: ADN 9.3.2.11.1 (d)
+      what: length of each cargo tank
+      unit: m
+      verdict: pass
+      value: 12.25224
+      limit: 15.3
+      margin: 3.04776
+    adn/9.3.2.11.3(a)/cofferdam-width:
+      rule: ADN 9.3.2.11.3 (a)
+      what: width of the cofferdams
+      unit: m
+      verdict: pass
+      value: 0.8
+      limit: 0.6
+      margin: 0.2
+    adn/9.3.2.11.7/wing-width-min:
+      rule: ADN 9.3.2.11.7
+      what: distance from the side wall to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 1.0
+      margin: 0.2
+    adn/9.3.2.11.7/double-bottom-depth:
+      rule: ADN 9.3.2.11.7
+      what: distance from the bottom to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.7
+      margin: 0.2
+    adn/9.3.2.11.7/double-bottom-min:
+      rule: ADN 9.3.2.11.7
+      what: depth of the double bottom, never less than
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.6
+      margin: 0.3
+    marpol/29/slop-tank-capacity:
+      rule: MARPOL Annex I Reg. 29.2.3
+      what: slop tank capacity share
+      unit: '-'
+      verdict: pass
+      value: 0.04
+      limit: 0.03
+      margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.001
+      limit: 1.0
+      margin: -0.001
+    marpol/19.6.1/double-bottom-depth:
+      rule: MARPOL Annex I Reg. 19.6.1
+      what: double bottom depth
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.76
+      margin: 0.14
+    marpol/19.6.2/double-side-width:
+      rule: MARPOL Annex I Reg. 19.6.2
+      what: wing tank width
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 0.76
+      margin: 0.44
+  mutant:
+    parent: tank_coastal_c
+    criterion: marpol/23.3.2/cargo-tank-length
+    side: fail
+    magnitude: big
+    moved: zone_fwd_m
+    target_value: 1.001
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/tank_oracle.py from the parent case
+    edition: ADN 2025 (ECE/TRANS/351); MARPOL Annex I as revised by MEPC.117(52)
+    locator: ADN 9.3.2.11.1, 9.3.2.11.3, 9.3.2.11.7, 9.3.3.11.1, 9.3.3.11.3, 9.3.3.11.7; MARPOL 19.6.1,
+      19.6.2, 29
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the texts'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: tank_coastal_c__marpol_23.3.2_cargo-tank-length__fail_small
+  title: Crude oil tank barge, coastal and river service, 1,500 tonnes deadweight, ADN type C and MARPOL
+    Annex I, marpol/23.3.2/cargo-tank-length just across its limit (small step)
+  kind: tank
+  inputs:
+    loa_m: 76.5
+    beam_m: 10.0
+    depth_m: 3.5
+    zone_aft_m: 3.0
+    zone_fwd_m: 42.8503825
+    double_side_m: 1.2
+    double_bottom_m: 0.9
+    tanks_in_line: 3
+    centreline_bulkhead: false
+    cofferdam_m: 0.8
+    pump_room_m: 0.0
+    slop_share: 0.04
+    deadweight_t: 1500.0
+    service_area: coastal-and-river
+    adn_vessel_type: C
+    rule_sets: *id002
+  expected:
+    adn/9.3.2.11.1(a)/cargo-tank-capacity:
+      rule: ADN 9.3.2.11.1 (a)
+      what: capacity of each cargo tank
+      unit: m3
+      verdict: pass
+      value: 241.8648186
+      limit: 311.92125
+      margin: 70.05643138
+    adn/9.3.2.11.1(d)/cargo-tank-length:
+      rule: ADN 9.3.2.11.1 (d)
+      what: length of each cargo tank
+      unit: m
+      verdict: pass
+      value: 12.2401224
+      limit: 15.3
+      margin: 3.0598776
+    adn/9.3.2.11.3(a)/cofferdam-width:
+      rule: ADN 9.3.2.11.3 (a)
+      what: width of the cofferdams
+      unit: m
+      verdict: pass
+      value: 0.8
+      limit: 0.6
+      margin: 0.2
+    adn/9.3.2.11.7/wing-width-min:
+      rule: ADN 9.3.2.11.7
+      what: distance from the side wall to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 1.0
+      margin: 0.2
+    adn/9.3.2.11.7/double-bottom-depth:
+      rule: ADN 9.3.2.11.7
+      what: distance from the bottom to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.7
+      margin: 0.2
+    adn/9.3.2.11.7/double-bottom-min:
+      rule: ADN 9.3.2.11.7
+      what: depth of the double bottom, never less than
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.6
+      margin: 0.3
+    marpol/29/slop-tank-capacity:
+      rule: MARPOL Annex I Reg. 29.2.3
+      what: slop tank capacity share
+      unit: '-'
+      verdict: pass
+      value: 0.04
+      limit: 0.03
+      margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.00001
+      limit: 1.0
+      margin: -1.0e-05
+    marpol/19.6.1/double-bottom-depth:
+      rule: MARPOL Annex I Reg. 19.6.1
+      what: double bottom depth
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.76
+      margin: 0.14
+    marpol/19.6.2/double-side-width:
+      rule: MARPOL Annex I Reg. 19.6.2
+      what: wing tank width
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 0.76
+      margin: 0.44
+  mutant:
+    parent: tank_coastal_c
+    criterion: marpol/23.3.2/cargo-tank-length
+    side: fail
+    magnitude: small
+    moved: zone_fwd_m
+    target_value: 1.00001
     grid: false
   provenance:
     verdict_basis: derived
@@ -15441,6 +16137,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9254901961
+      limit: 1.0
+      margin: 0.07450980392
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -15551,6 +16255,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9254901961
+      limit: 1.0
+      margin: 0.07450980392
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -15661,6 +16373,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9254901961
+      limit: 1.0
+      margin: 0.07450980392
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -15771,6 +16491,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.9254901961
+      limit: 1.0
+      margin: 0.07450980392
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -15881,6 +16609,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.069158349
+      limit: 1.0
+      margin: -0.06915834926
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -15991,6 +16727,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.072993235
+      limit: 1.0
+      margin: -0.07299323483
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -16101,6 +16845,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.076934046
+      limit: 1.0
+      margin: -0.07693404635
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -16211,6 +16963,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.073070991
+      limit: 1.0
+      margin: -0.07307099078
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -16321,6 +17081,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.195631395
+      limit: 1.0
+      margin: -0.1956313951
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -16431,6 +17199,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.198770904
+      limit: 1.0
+      margin: -0.1987709038
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -16541,6 +17317,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.201941965
+      limit: 1.0
+      margin: -0.2019419653
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -16651,6 +17435,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.198802457
+      limit: 1.0
+      margin: -0.1988024566
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -16761,6 +17553,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.399084967
+      limit: 1.0
+      margin: -0.3990849673
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -16871,6 +17671,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.39999085
+      limit: 1.0
+      margin: -0.3999908497
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -16981,6 +17789,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.400915033
+      limit: 1.0
+      margin: -0.4009150327
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -17091,6 +17907,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.40000915
+      limit: 1.0
+      margin: -0.4000091503
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -17201,6 +18025,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.047675817
+      limit: 1.0
+      margin: -0.04767581699
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -17311,6 +18143,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.048255582
+      limit: 1.0
+      margin: -0.0482555817
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -17421,6 +18261,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.048847059
+      limit: 1.0
+      margin: -0.04884705882
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -17531,6 +18379,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.048267294
+      limit: 1.0
+      margin: -0.04826729412
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -17641,6 +18497,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.088240441
+      limit: 1.0
+      margin: -0.08824044053
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -17751,6 +18615,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.091075519
+      limit: 1.0
+      margin: -0.09107551865
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -17861,6 +18733,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.093983134
+      limit: 1.0
+      margin: -0.09398313415
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -17971,6 +18851,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.091132945
+      limit: 1.0
+      margin: -0.09113294519
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -18081,6 +18969,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.03654902
+      limit: 1.0
+      margin: -0.03654901961
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -18191,6 +19087,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.03654902
+      limit: 1.0
+      margin: -0.03654901961
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -18301,6 +19205,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.03654902
+      limit: 1.0
+      margin: -0.03654901961
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -18411,6 +19323,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.03654902
+      limit: 1.0
+      margin: -0.03654901961
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -18521,6 +19441,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.03654902
+      limit: 1.0
+      margin: -0.03654901961
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -18631,6 +19559,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.03654902
+      limit: 1.0
+      margin: -0.03654901961
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -18741,6 +19677,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.03654902
+      limit: 1.0
+      margin: -0.03654901961
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -18851,6 +19795,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.03654902
+      limit: 1.0
+      margin: -0.03654901961
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -18961,6 +19913,14 @@ mutants:
       value: 0.031
       limit: 0.03
       margin: 0.001
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.046266667
+      limit: 1.0
+      margin: -0.04626666667
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -19071,6 +20031,14 @@ mutants:
       value: 0.03001
       limit: 0.03
       margin: 1.0e-05
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.047335608
+      limit: 1.0
+      margin: -0.04733560784
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -19181,6 +20149,14 @@ mutants:
       value: 0.029
       limit: 0.03
       margin: -0.001
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.048426144
+      limit: 1.0
+      margin: -0.04842614379
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -19291,6 +20267,14 @@ mutants:
       value: 0.02999
       limit: 0.03
       margin: -1.0e-05
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.047357203
+      limit: 1.0
+      margin: -0.04735720261
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -19314,6 +20298,478 @@ mutants:
     magnitude: small
     moved: slop_share
     target_value: 0.02999
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/tank_oracle.py from the parent case
+    edition: ADN 2025 (ECE/TRANS/351); MARPOL Annex I as revised by MEPC.117(52)
+    locator: ADN 9.3.2.11.1, 9.3.2.11.3, 9.3.2.11.7, 9.3.3.11.1, 9.3.3.11.3, 9.3.3.11.7; MARPOL 19.6.1,
+      19.6.2, 29
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the texts'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: tank_coastal_wide__marpol_23.3.2_cargo-tank-length__pass_big
+  title: Crude oil tank barge, coastal and river service, 4,000 tonnes deadweight, 14 m beam, marpol/23.3.2/cargo-tank-length
+    just inside its limit (big step)
+  kind: tank
+  inputs:
+    loa_m: 76.5
+    beam_m: 14.0
+    depth_m: 3.5
+    zone_aft_m: 3.0
+    zone_fwd_m: 38.7176339286
+    double_side_m: 1.2
+    double_bottom_m: 1.0
+    tanks_in_line: 3
+    centreline_bulkhead: false
+    cofferdam_m: 0.8
+    pump_room_m: 0.0
+    slop_share: 0.04
+    deadweight_t: 4000.0
+    service_area: coastal-and-river
+    adn_vessel_type: C
+    rule_sets: *id002
+  expected:
+    adn/9.3.2.11.1(a)/cargo-tank-capacity:
+      rule: ADN 9.3.2.11.1 (a)
+      what: capacity of each cargo tank
+      unit: m3
+      verdict: pass
+      value: 316.6116429
+      limit: 379.92975
+      margin: 63.31810714
+    adn/9.3.2.11.1(d)/cargo-tank-length:
+      rule: ADN 9.3.2.11.1 (d)
+      what: length of each cargo tank
+      unit: m
+      verdict: pass
+      value: 10.91764286
+      limit: 15.3
+      margin: 4.382357143
+    adn/9.3.2.11.3(a)/cofferdam-width:
+      rule: ADN 9.3.2.11.3 (a)
+      what: width of the cofferdams
+      unit: m
+      verdict: pass
+      value: 0.8
+      limit: 0.6
+      margin: 0.2
+    adn/9.3.2.11.7/wing-width-min:
+      rule: ADN 9.3.2.11.7
+      what: distance from the side wall to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 1.0
+      margin: 0.2
+    adn/9.3.2.11.7/double-bottom-depth:
+      rule: ADN 9.3.2.11.7
+      what: distance from the bottom to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 1.0
+      limit: 0.7
+      margin: 0.3
+    adn/9.3.2.11.7/double-bottom-min:
+      rule: ADN 9.3.2.11.7
+      what: depth of the double bottom, never less than
+      unit: m
+      verdict: pass
+      value: 1.0
+      limit: 0.6
+      margin: 0.4
+    marpol/29/slop-tank-capacity:
+      rule: MARPOL Annex I Reg. 29.2.3
+      what: slop tank capacity share
+      unit: '-'
+      verdict: pass
+      value: 0.04
+      limit: 0.03
+      margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.999
+      limit: 1.0
+      margin: 0.0009999999992
+    marpol/19.6.1/double-bottom-depth:
+      rule: MARPOL Annex I Reg. 19.6.1
+      what: double bottom depth
+      unit: m
+      verdict: pass
+      value: 1.0
+      limit: 0.9333333333
+      margin: 0.06666666667
+    marpol/19.6.2/double-side-width:
+      rule: MARPOL Annex I Reg. 19.6.2
+      what: wing tank width
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 0.88
+      margin: 0.32
+  mutant:
+    parent: tank_coastal_wide
+    criterion: marpol/23.3.2/cargo-tank-length
+    side: pass
+    magnitude: big
+    moved: zone_fwd_m
+    target_value: 0.999
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/tank_oracle.py from the parent case
+    edition: ADN 2025 (ECE/TRANS/351); MARPOL Annex I as revised by MEPC.117(52)
+    locator: ADN 9.3.2.11.1, 9.3.2.11.3, 9.3.2.11.7, 9.3.3.11.1, 9.3.3.11.3, 9.3.3.11.7; MARPOL 19.6.1,
+      19.6.2, 29
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the texts'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: tank_coastal_wide__marpol_23.3.2_cargo-tank-length__pass_small
+  title: Crude oil tank barge, coastal and river service, 4,000 tonnes deadweight, 14 m beam, marpol/23.3.2/cargo-tank-length
+    just inside its limit (small step)
+  kind: tank
+  inputs:
+    loa_m: 76.5
+    beam_m: 14.0
+    depth_m: 3.5
+    zone_aft_m: 3.0
+    zone_fwd_m: 38.7514441964
+    double_side_m: 1.2
+    double_bottom_m: 1.0
+    tanks_in_line: 3
+    centreline_bulkhead: false
+    cofferdam_m: 0.8
+    pump_room_m: 0.0
+    slop_share: 0.04
+    deadweight_t: 4000.0
+    service_area: coastal-and-river
+    adn_vessel_type: C
+    rule_sets: *id002
+  expected:
+    adn/9.3.2.11.1(a)/cargo-tank-capacity:
+      rule: ADN 9.3.2.11.1 (a)
+      what: capacity of each cargo tank
+      unit: m3
+      verdict: pass
+      value: 316.9254021
+      limit: 379.92975
+      margin: 63.00434786
+    adn/9.3.2.11.1(d)/cargo-tank-length:
+      rule: ADN 9.3.2.11.1 (d)
+      what: length of each cargo tank
+      unit: m
+      verdict: pass
+      value: 10.92846214
+      limit: 15.3
+      margin: 4.371537857
+    adn/9.3.2.11.3(a)/cofferdam-width:
+      rule: ADN 9.3.2.11.3 (a)
+      what: width of the cofferdams
+      unit: m
+      verdict: pass
+      value: 0.8
+      limit: 0.6
+      margin: 0.2
+    adn/9.3.2.11.7/wing-width-min:
+      rule: ADN 9.3.2.11.7
+      what: distance from the side wall to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 1.0
+      margin: 0.2
+    adn/9.3.2.11.7/double-bottom-depth:
+      rule: ADN 9.3.2.11.7
+      what: distance from the bottom to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 1.0
+      limit: 0.7
+      margin: 0.3
+    adn/9.3.2.11.7/double-bottom-min:
+      rule: ADN 9.3.2.11.7
+      what: depth of the double bottom, never less than
+      unit: m
+      verdict: pass
+      value: 1.0
+      limit: 0.6
+      margin: 0.4
+    marpol/29/slop-tank-capacity:
+      rule: MARPOL Annex I Reg. 29.2.3
+      what: slop tank capacity share
+      unit: '-'
+      verdict: pass
+      value: 0.04
+      limit: 0.03
+      margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.99999
+      limit: 1.0
+      margin: 1.000000084e-05
+    marpol/19.6.1/double-bottom-depth:
+      rule: MARPOL Annex I Reg. 19.6.1
+      what: double bottom depth
+      unit: m
+      verdict: pass
+      value: 1.0
+      limit: 0.9333333333
+      margin: 0.06666666667
+    marpol/19.6.2/double-side-width:
+      rule: MARPOL Annex I Reg. 19.6.2
+      what: wing tank width
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 0.88
+      margin: 0.32
+  mutant:
+    parent: tank_coastal_wide
+    criterion: marpol/23.3.2/cargo-tank-length
+    side: pass
+    magnitude: small
+    moved: zone_fwd_m
+    target_value: 0.99999
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/tank_oracle.py from the parent case
+    edition: ADN 2025 (ECE/TRANS/351); MARPOL Annex I as revised by MEPC.117(52)
+    locator: ADN 9.3.2.11.1, 9.3.2.11.3, 9.3.2.11.7, 9.3.3.11.1, 9.3.3.11.3, 9.3.3.11.7; MARPOL 19.6.1,
+      19.6.2, 29
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the texts'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: tank_coastal_wide__marpol_23.3.2_cargo-tank-length__fail_big
+  title: Crude oil tank barge, coastal and river service, 4,000 tonnes deadweight, 14 m beam, marpol/23.3.2/cargo-tank-length
+    just across its limit (big step)
+  kind: tank
+  inputs:
+    loa_m: 76.5
+    beam_m: 14.0
+    depth_m: 3.5
+    zone_aft_m: 3.0
+    zone_fwd_m: 38.7859375
+    double_side_m: 1.2
+    double_bottom_m: 1.0
+    tanks_in_line: 3
+    centreline_bulkhead: false
+    cofferdam_m: 0.8
+    pump_room_m: 0.0
+    slop_share: 0.04
+    deadweight_t: 4000.0
+    service_area: coastal-and-river
+    adn_vessel_type: C
+    rule_sets: *id002
+  expected:
+    adn/9.3.2.11.1(a)/cargo-tank-capacity:
+      rule: ADN 9.3.2.11.1 (a)
+      what: capacity of each cargo tank
+      unit: m3
+      verdict: pass
+      value: 317.2455
+      limit: 379.92975
+      margin: 62.68425
+    adn/9.3.2.11.1(d)/cargo-tank-length:
+      rule: ADN 9.3.2.11.1 (d)
+      what: length of each cargo tank
+      unit: m
+      verdict: pass
+      value: 10.9395
+      limit: 15.3
+      margin: 4.3605
+    adn/9.3.2.11.3(a)/cofferdam-width:
+      rule: ADN 9.3.2.11.3 (a)
+      what: width of the cofferdams
+      unit: m
+      verdict: pass
+      value: 0.8
+      limit: 0.6
+      margin: 0.2
+    adn/9.3.2.11.7/wing-width-min:
+      rule: ADN 9.3.2.11.7
+      what: distance from the side wall to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 1.0
+      margin: 0.2
+    adn/9.3.2.11.7/double-bottom-depth:
+      rule: ADN 9.3.2.11.7
+      what: distance from the bottom to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 1.0
+      limit: 0.7
+      margin: 0.3
+    adn/9.3.2.11.7/double-bottom-min:
+      rule: ADN 9.3.2.11.7
+      what: depth of the double bottom, never less than
+      unit: m
+      verdict: pass
+      value: 1.0
+      limit: 0.6
+      margin: 0.4
+    marpol/29/slop-tank-capacity:
+      rule: MARPOL Annex I Reg. 29.2.3
+      what: slop tank capacity share
+      unit: '-'
+      verdict: pass
+      value: 0.04
+      limit: 0.03
+      margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.001
+      limit: 1.0
+      margin: -0.001
+    marpol/19.6.1/double-bottom-depth:
+      rule: MARPOL Annex I Reg. 19.6.1
+      what: double bottom depth
+      unit: m
+      verdict: pass
+      value: 1.0
+      limit: 0.9333333333
+      margin: 0.06666666667
+    marpol/19.6.2/double-side-width:
+      rule: MARPOL Annex I Reg. 19.6.2
+      what: wing tank width
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 0.88
+      margin: 0.32
+  mutant:
+    parent: tank_coastal_wide
+    criterion: marpol/23.3.2/cargo-tank-length
+    side: fail
+    magnitude: big
+    moved: zone_fwd_m
+    target_value: 1.001
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/tank_oracle.py from the parent case
+    edition: ADN 2025 (ECE/TRANS/351); MARPOL Annex I as revised by MEPC.117(52)
+    locator: ADN 9.3.2.11.1, 9.3.2.11.3, 9.3.2.11.7, 9.3.3.11.1, 9.3.3.11.3, 9.3.3.11.7; MARPOL 19.6.1,
+      19.6.2, 29
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the texts'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: tank_coastal_wide__marpol_23.3.2_cargo-tank-length__fail_small
+  title: Crude oil tank barge, coastal and river service, 4,000 tonnes deadweight, 14 m beam, marpol/23.3.2/cargo-tank-length
+    just across its limit (small step)
+  kind: tank
+  inputs:
+    loa_m: 76.5
+    beam_m: 14.0
+    depth_m: 3.5
+    zone_aft_m: 3.0
+    zone_fwd_m: 38.7521272321
+    double_side_m: 1.2
+    double_bottom_m: 1.0
+    tanks_in_line: 3
+    centreline_bulkhead: false
+    cofferdam_m: 0.8
+    pump_room_m: 0.0
+    slop_share: 0.04
+    deadweight_t: 4000.0
+    service_area: coastal-and-river
+    adn_vessel_type: C
+    rule_sets: *id002
+  expected:
+    adn/9.3.2.11.1(a)/cargo-tank-capacity:
+      rule: ADN 9.3.2.11.1 (a)
+      what: capacity of each cargo tank
+      unit: m3
+      verdict: pass
+      value: 316.9317407
+      limit: 379.92975
+      margin: 62.99800929
+    adn/9.3.2.11.1(d)/cargo-tank-length:
+      rule: ADN 9.3.2.11.1 (d)
+      what: length of each cargo tank
+      unit: m
+      verdict: pass
+      value: 10.92868071
+      limit: 15.3
+      margin: 4.371319286
+    adn/9.3.2.11.3(a)/cofferdam-width:
+      rule: ADN 9.3.2.11.3 (a)
+      what: width of the cofferdams
+      unit: m
+      verdict: pass
+      value: 0.8
+      limit: 0.6
+      margin: 0.2
+    adn/9.3.2.11.7/wing-width-min:
+      rule: ADN 9.3.2.11.7
+      what: distance from the side wall to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 1.0
+      margin: 0.2
+    adn/9.3.2.11.7/double-bottom-depth:
+      rule: ADN 9.3.2.11.7
+      what: distance from the bottom to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 1.0
+      limit: 0.7
+      margin: 0.3
+    adn/9.3.2.11.7/double-bottom-min:
+      rule: ADN 9.3.2.11.7
+      what: depth of the double bottom, never less than
+      unit: m
+      verdict: pass
+      value: 1.0
+      limit: 0.6
+      margin: 0.4
+    marpol/29/slop-tank-capacity:
+      rule: MARPOL Annex I Reg. 29.2.3
+      what: slop tank capacity share
+      unit: '-'
+      verdict: pass
+      value: 0.04
+      limit: 0.03
+      margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.00001
+      limit: 1.0
+      margin: -9.999998745e-06
+    marpol/19.6.1/double-bottom-depth:
+      rule: MARPOL Annex I Reg. 19.6.1
+      what: double bottom depth
+      unit: m
+      verdict: pass
+      value: 1.0
+      limit: 0.9333333333
+      margin: 0.06666666667
+    marpol/19.6.2/double-side-width:
+      rule: MARPOL Annex I Reg. 19.6.2
+      what: wing tank width
+      unit: m
+      verdict: pass
+      value: 1.2
+      limit: 0.88
+      margin: 0.32
+  mutant:
+    parent: tank_coastal_wide
+    criterion: marpol/23.3.2/cargo-tank-length
+    side: fail
+    magnitude: small
+    moved: zone_fwd_m
+    target_value: 1.00001
     grid: false
   provenance:
     verdict_basis: derived
@@ -19401,6 +20857,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.03654902
+      limit: 1.0
+      margin: -0.03654901961
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -19511,6 +20975,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.03654902
+      limit: 1.0
+      margin: -0.03654901961
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -19621,6 +21093,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.03654902
+      limit: 1.0
+      margin: -0.03654901961
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -19731,6 +21211,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.03654902
+      limit: 1.0
+      margin: -0.03654901961
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -19841,6 +21329,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.123630374
+      limit: 1.0
+      margin: -0.1236303736
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -19951,6 +21447,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.126653101
+      limit: 1.0
+      margin: -0.1266531014
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -20061,6 +21565,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.1297537
+      limit: 1.0
+      margin: -0.1297536998
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -20171,6 +21683,14 @@ mutants:
       value: 0.04
       limit: 0.03
       margin: 0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.126714334
+      limit: 1.0
+      margin: -0.1267143342
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -20281,6 +21801,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.167089528
+      limit: 1.0
+      margin: -0.1670895278
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -20391,6 +21919,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.170558814
+      limit: 1.0
+      margin: -0.1705588138
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -20501,6 +22037,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.174062967
+      limit: 1.0
+      margin: -0.174062967
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -20611,6 +22155,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.170593681
+      limit: 1.0
+      margin: -0.170593681
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -20721,6 +22273,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.433025034
+      limit: 1.0
+      margin: -0.4330250339
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -20831,6 +22391,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.433952892
+      limit: 1.0
+      margin: -0.4339528918
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -20941,6 +22509,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.434899494
+      limit: 1.0
+      margin: -0.4348994944
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -21051,6 +22627,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.433971636
+      limit: 1.0
+      margin: -0.4339716365
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -21161,6 +22745,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.102413615
+      limit: 1.0
+      margin: -1.102413615
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -21271,6 +22863,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.103322915
+      limit: 1.0
+      margin: -1.103322915
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -21381,6 +22981,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.104250586
+      limit: 1.0
+      margin: -1.104250586
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -21491,6 +23099,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.103341285
+      limit: 1.0
+      margin: -1.103341285
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -21601,6 +23217,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.04188569
+      limit: 1.0
+      margin: -1.04188569
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -21711,6 +23335,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.048048511
+      limit: 1.0
+      margin: -1.048048511
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -21821,6 +23453,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.054374288
+      limit: 1.0
+      margin: -1.054374288
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -21931,6 +23571,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.048173396
+      limit: 1.0
+      margin: -1.048173396
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -22041,6 +23689,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.112516956
+      limit: 1.0
+      margin: -1.112516956
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -22151,6 +23807,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.112516956
+      limit: 1.0
+      margin: -1.112516956
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -22261,6 +23925,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.112516956
+      limit: 1.0
+      margin: -1.112516956
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -22371,6 +24043,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.112516956
+      limit: 1.0
+      margin: -1.112516956
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -22481,6 +24161,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.112516956
+      limit: 1.0
+      margin: -1.112516956
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -22591,6 +24279,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.112516956
+      limit: 1.0
+      margin: -1.112516956
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -22701,6 +24397,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.112516956
+      limit: 1.0
+      margin: -1.112516956
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -22811,6 +24515,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.112516956
+      limit: 1.0
+      margin: -1.112516956
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -22921,6 +24633,14 @@ mutants:
       value: 0.031
       limit: 0.03
       margin: 0.001
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.088805031
+      limit: 1.0
+      margin: -1.088805031
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -23031,6 +24751,14 @@ mutants:
       value: 0.03001
       limit: 0.03
       margin: 1.0e-05
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.090939105
+      limit: 1.0
+      margin: -1.090939105
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -23141,6 +24869,14 @@ mutants:
       value: 0.029
       limit: 0.03
       margin: -0.001
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.093116291
+      limit: 1.0
+      margin: -1.093116291
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -23251,6 +24987,14 @@ mutants:
       value: 0.02999
       limit: 0.03
       margin: -1.0e-05
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.090982217
+      limit: 1.0
+      margin: -1.090982217
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -23274,6 +25018,478 @@ mutants:
     magnitude: small
     moved: slop_share
     target_value: 0.02999
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/tank_oracle.py from the parent case
+    edition: ADN 2025 (ECE/TRANS/351); MARPOL Annex I as revised by MEPC.117(52)
+    locator: ADN 9.3.2.11.1, 9.3.2.11.3, 9.3.2.11.7, 9.3.3.11.1, 9.3.3.11.3, 9.3.3.11.7; MARPOL 19.6.1,
+      19.6.2, 29
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the texts'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: tank_coastal_short__marpol_23.3.2_cargo-tank-length__pass_big
+  title: Crude oil tank barge, coastal and river service, below ADN type C and MARPOL Reg. 19.6, marpol/23.3.2/cargo-tank-length
+    just inside its limit (big step)
+  kind: tank
+  inputs:
+    loa_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.5
+    zone_aft_m: 3.0
+    zone_fwd_m: 25.753198174
+    double_side_m: 0.9
+    double_bottom_m: 0.7
+    tanks_in_line: 2
+    centreline_bulkhead: false
+    cofferdam_m: 0.5
+    pump_room_m: 0.0
+    slop_share: 0.02
+    deadweight_t: 3000.0
+    service_area: coastal-and-river
+    adn_vessel_type: C
+    rule_sets: *id002
+  expected:
+    adn/9.3.2.11.1(a)/cargo-tank-capacity:
+      rule: ADN 9.3.2.11.1 (a)
+      what: capacity of each cargo tank
+      unit: m3
+      verdict: pass
+      value: 286.5157238
+      limit: 335.724225
+      margin: 49.20850121
+    adn/9.3.2.11.1(d)/cargo-tank-length:
+      rule: ADN 9.3.2.11.1 (d)
+      what: length of each cargo tank
+      unit: m
+      verdict: pass
+      value: 10.65906711
+      limit: 15.3
+      margin: 4.640932895
+    adn/9.3.2.11.3(a)/cofferdam-width:
+      rule: ADN 9.3.2.11.3 (a)
+      what: width of the cofferdams
+      unit: m
+      verdict: fail
+      value: 0.5
+      limit: 0.6
+      margin: -0.1
+    adn/9.3.2.11.7/wing-width-min:
+      rule: ADN 9.3.2.11.7
+      what: distance from the side wall to the cargo tanks
+      unit: m
+      verdict: fail
+      value: 0.9
+      limit: 1.0
+      margin: -0.1
+    adn/9.3.2.11.7/double-bottom-depth:
+      rule: ADN 9.3.2.11.7
+      what: distance from the bottom to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 0.7
+      limit: 0.7
+      margin: 0.0
+    adn/9.3.2.11.7/double-bottom-min:
+      rule: ADN 9.3.2.11.7
+      what: depth of the double bottom, never less than
+      unit: m
+      verdict: pass
+      value: 0.7
+      limit: 0.6
+      margin: 0.1
+    marpol/29/slop-tank-capacity:
+      rule: MARPOL Annex I Reg. 29.2.3
+      what: slop tank capacity share
+      unit: '-'
+      verdict: fail
+      value: 0.02
+      limit: 0.03
+      margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.999
+      limit: 1.0
+      margin: 0.001
+    marpol/19.6.1/double-bottom-depth:
+      rule: MARPOL Annex I Reg. 19.6.1
+      what: double bottom depth
+      unit: m
+      verdict: fail
+      value: 0.7
+      limit: 0.76
+      margin: -0.06
+    marpol/19.6.2/double-side-width:
+      rule: MARPOL Annex I Reg. 19.6.2
+      what: wing tank width
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.76
+      margin: 0.14
+  mutant:
+    parent: tank_coastal_short
+    criterion: marpol/23.3.2/cargo-tank-length
+    side: pass
+    magnitude: big
+    moved: zone_fwd_m
+    target_value: 0.999
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/tank_oracle.py from the parent case
+    edition: ADN 2025 (ECE/TRANS/351); MARPOL Annex I as revised by MEPC.117(52)
+    locator: ADN 9.3.2.11.1, 9.3.2.11.3, 9.3.2.11.7, 9.3.3.11.1, 9.3.3.11.3, 9.3.3.11.7; MARPOL 19.6.1,
+      19.6.2, 29
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the texts'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: tank_coastal_short__marpol_23.3.2_cargo-tank-length__pass_small
+  title: Crude oil tank barge, coastal and river service, below ADN type C and MARPOL Reg. 19.6, marpol/23.3.2/cargo-tank-length
+    just inside its limit (small step)
+  kind: tank
+  inputs:
+    loa_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.5
+    zone_aft_m: 3.0
+    zone_fwd_m: 25.7747553974
+    double_side_m: 0.9
+    double_bottom_m: 0.7
+    tanks_in_line: 2
+    centreline_bulkhead: false
+    cofferdam_m: 0.5
+    pump_room_m: 0.0
+    slop_share: 0.02
+    deadweight_t: 3000.0
+    service_area: coastal-and-river
+    adn_vessel_type: C
+    rule_sets: *id002
+  expected:
+    adn/9.3.2.11.1(a)/cargo-tank-capacity:
+      rule: ADN 9.3.2.11.1 (a)
+      what: capacity of each cargo tank
+      unit: m3
+      verdict: pass
+      value: 286.7996583
+      limit: 335.724225
+      margin: 48.92456671
+    adn/9.3.2.11.1(d)/cargo-tank-length:
+      rule: ADN 9.3.2.11.1 (d)
+      what: length of each cargo tank
+      unit: m
+      verdict: pass
+      value: 10.66963014
+      limit: 15.3
+      margin: 4.630369855
+    adn/9.3.2.11.3(a)/cofferdam-width:
+      rule: ADN 9.3.2.11.3 (a)
+      what: width of the cofferdams
+      unit: m
+      verdict: fail
+      value: 0.5
+      limit: 0.6
+      margin: -0.1
+    adn/9.3.2.11.7/wing-width-min:
+      rule: ADN 9.3.2.11.7
+      what: distance from the side wall to the cargo tanks
+      unit: m
+      verdict: fail
+      value: 0.9
+      limit: 1.0
+      margin: -0.1
+    adn/9.3.2.11.7/double-bottom-depth:
+      rule: ADN 9.3.2.11.7
+      what: distance from the bottom to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 0.7
+      limit: 0.7
+      margin: 0.0
+    adn/9.3.2.11.7/double-bottom-min:
+      rule: ADN 9.3.2.11.7
+      what: depth of the double bottom, never less than
+      unit: m
+      verdict: pass
+      value: 0.7
+      limit: 0.6
+      margin: 0.1
+    marpol/29/slop-tank-capacity:
+      rule: MARPOL Annex I Reg. 29.2.3
+      what: slop tank capacity share
+      unit: '-'
+      verdict: fail
+      value: 0.02
+      limit: 0.03
+      margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: pass
+      value: 0.99999
+      limit: 1.0
+      margin: 1.000000102e-05
+    marpol/19.6.1/double-bottom-depth:
+      rule: MARPOL Annex I Reg. 19.6.1
+      what: double bottom depth
+      unit: m
+      verdict: fail
+      value: 0.7
+      limit: 0.76
+      margin: -0.06
+    marpol/19.6.2/double-side-width:
+      rule: MARPOL Annex I Reg. 19.6.2
+      what: wing tank width
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.76
+      margin: 0.14
+  mutant:
+    parent: tank_coastal_short
+    criterion: marpol/23.3.2/cargo-tank-length
+    side: pass
+    magnitude: small
+    moved: zone_fwd_m
+    target_value: 0.99999
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/tank_oracle.py from the parent case
+    edition: ADN 2025 (ECE/TRANS/351); MARPOL Annex I as revised by MEPC.117(52)
+    locator: ADN 9.3.2.11.1, 9.3.2.11.3, 9.3.2.11.7, 9.3.3.11.1, 9.3.3.11.3, 9.3.3.11.7; MARPOL 19.6.1,
+      19.6.2, 29
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the texts'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: tank_coastal_short__marpol_23.3.2_cargo-tank-length__fail_big
+  title: Crude oil tank barge, coastal and river service, below ADN type C and MARPOL Reg. 19.6, marpol/23.3.2/cargo-tank-length
+    just across its limit (big step)
+  kind: tank
+  inputs:
+    loa_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.5
+    zone_aft_m: 3.0
+    zone_fwd_m: 25.7967481203
+    double_side_m: 0.9
+    double_bottom_m: 0.7
+    tanks_in_line: 2
+    centreline_bulkhead: false
+    cofferdam_m: 0.5
+    pump_room_m: 0.0
+    slop_share: 0.02
+    deadweight_t: 3000.0
+    service_area: coastal-and-river
+    adn_vessel_type: C
+    rule_sets: *id002
+  expected:
+    adn/9.3.2.11.1(a)/cargo-tank-capacity:
+      rule: ADN 9.3.2.11.1 (a)
+      what: capacity of each cargo tank
+      unit: m3
+      verdict: pass
+      value: 287.0893288
+      limit: 335.724225
+      margin: 48.63489616
+    adn/9.3.2.11.1(d)/cargo-tank-length:
+      rule: ADN 9.3.2.11.1 (d)
+      what: length of each cargo tank
+      unit: m
+      verdict: pass
+      value: 10.68040658
+      limit: 15.3
+      margin: 4.619593421
+    adn/9.3.2.11.3(a)/cofferdam-width:
+      rule: ADN 9.3.2.11.3 (a)
+      what: width of the cofferdams
+      unit: m
+      verdict: fail
+      value: 0.5
+      limit: 0.6
+      margin: -0.1
+    adn/9.3.2.11.7/wing-width-min:
+      rule: ADN 9.3.2.11.7
+      what: distance from the side wall to the cargo tanks
+      unit: m
+      verdict: fail
+      value: 0.9
+      limit: 1.0
+      margin: -0.1
+    adn/9.3.2.11.7/double-bottom-depth:
+      rule: ADN 9.3.2.11.7
+      what: distance from the bottom to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 0.7
+      limit: 0.7
+      margin: 0.0
+    adn/9.3.2.11.7/double-bottom-min:
+      rule: ADN 9.3.2.11.7
+      what: depth of the double bottom, never less than
+      unit: m
+      verdict: pass
+      value: 0.7
+      limit: 0.6
+      margin: 0.1
+    marpol/29/slop-tank-capacity:
+      rule: MARPOL Annex I Reg. 29.2.3
+      what: slop tank capacity share
+      unit: '-'
+      verdict: fail
+      value: 0.02
+      limit: 0.03
+      margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.001
+      limit: 1.0
+      margin: -0.001
+    marpol/19.6.1/double-bottom-depth:
+      rule: MARPOL Annex I Reg. 19.6.1
+      what: double bottom depth
+      unit: m
+      verdict: fail
+      value: 0.7
+      limit: 0.76
+      margin: -0.06
+    marpol/19.6.2/double-side-width:
+      rule: MARPOL Annex I Reg. 19.6.2
+      what: wing tank width
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.76
+      margin: 0.14
+  mutant:
+    parent: tank_coastal_short
+    criterion: marpol/23.3.2/cargo-tank-length
+    side: fail
+    magnitude: big
+    moved: zone_fwd_m
+    target_value: 1.001
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/tank_oracle.py from the parent case
+    edition: ADN 2025 (ECE/TRANS/351); MARPOL Annex I as revised by MEPC.117(52)
+    locator: ADN 9.3.2.11.1, 9.3.2.11.3, 9.3.2.11.7, 9.3.3.11.1, 9.3.3.11.3, 9.3.3.11.7; MARPOL 19.6.1,
+      19.6.2, 29
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the texts'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: tank_coastal_short__marpol_23.3.2_cargo-tank-length__fail_small
+  title: Crude oil tank barge, coastal and river service, below ADN type C and MARPOL Reg. 19.6, marpol/23.3.2/cargo-tank-length
+    just across its limit (small step)
+  kind: tank
+  inputs:
+    loa_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.5
+    zone_aft_m: 3.0
+    zone_fwd_m: 25.7751908969
+    double_side_m: 0.9
+    double_bottom_m: 0.7
+    tanks_in_line: 2
+    centreline_bulkhead: false
+    cofferdam_m: 0.5
+    pump_room_m: 0.0
+    slop_share: 0.02
+    deadweight_t: 3000.0
+    service_area: coastal-and-river
+    adn_vessel_type: C
+    rule_sets: *id002
+  expected:
+    adn/9.3.2.11.1(a)/cargo-tank-capacity:
+      rule: ADN 9.3.2.11.1 (a)
+      what: capacity of each cargo tank
+      unit: m3
+      verdict: pass
+      value: 286.8053943
+      limit: 335.724225
+      margin: 48.91883066
+    adn/9.3.2.11.1(d)/cargo-tank-length:
+      rule: ADN 9.3.2.11.1 (d)
+      what: length of each cargo tank
+      unit: m
+      verdict: pass
+      value: 10.66984354
+      limit: 15.3
+      margin: 4.630156461
+    adn/9.3.2.11.3(a)/cofferdam-width:
+      rule: ADN 9.3.2.11.3 (a)
+      what: width of the cofferdams
+      unit: m
+      verdict: fail
+      value: 0.5
+      limit: 0.6
+      margin: -0.1
+    adn/9.3.2.11.7/wing-width-min:
+      rule: ADN 9.3.2.11.7
+      what: distance from the side wall to the cargo tanks
+      unit: m
+      verdict: fail
+      value: 0.9
+      limit: 1.0
+      margin: -0.1
+    adn/9.3.2.11.7/double-bottom-depth:
+      rule: ADN 9.3.2.11.7
+      what: distance from the bottom to the cargo tanks
+      unit: m
+      verdict: pass
+      value: 0.7
+      limit: 0.7
+      margin: 0.0
+    adn/9.3.2.11.7/double-bottom-min:
+      rule: ADN 9.3.2.11.7
+      what: depth of the double bottom, never less than
+      unit: m
+      verdict: pass
+      value: 0.7
+      limit: 0.6
+      margin: 0.1
+    marpol/29/slop-tank-capacity:
+      rule: MARPOL Annex I Reg. 29.2.3
+      what: slop tank capacity share
+      unit: '-'
+      verdict: fail
+      value: 0.02
+      limit: 0.03
+      margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 1.00001
+      limit: 1.0
+      margin: -1.000000069e-05
+    marpol/19.6.1/double-bottom-depth:
+      rule: MARPOL Annex I Reg. 19.6.1
+      what: double bottom depth
+      unit: m
+      verdict: fail
+      value: 0.7
+      limit: 0.76
+      margin: -0.06
+    marpol/19.6.2/double-side-width:
+      rule: MARPOL Annex I Reg. 19.6.2
+      what: wing tank width
+      unit: m
+      verdict: pass
+      value: 0.9
+      limit: 0.76
+      margin: 0.14
+  mutant:
+    parent: tank_coastal_short
+    criterion: marpol/23.3.2/cargo-tank-length
+    side: fail
+    magnitude: small
+    moved: zone_fwd_m
+    target_value: 1.00001
     grid: false
   provenance:
     verdict_basis: derived
@@ -23361,6 +25577,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.112516956
+      limit: 1.0
+      margin: -1.112516956
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -23471,6 +25695,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.112516956
+      limit: 1.0
+      margin: -1.112516956
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -23581,6 +25813,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.112516956
+      limit: 1.0
+      margin: -1.112516956
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -23691,6 +25931,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.112516956
+      limit: 1.0
+      margin: -1.112516956
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -23801,6 +26049,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.202558663
+      limit: 1.0
+      margin: -1.202558663
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -23911,6 +26167,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.209731233
+      limit: 1.0
+      margin: -1.209731233
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -24021,6 +26285,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.217097004
+      limit: 1.0
+      margin: -1.217097004
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
@@ -24131,6 +26403,14 @@ mutants:
       value: 0.02
       limit: 0.03
       margin: -0.01
+    marpol/23.3.2/cargo-tank-length:
+      rule: MARPOL Annex I Reg. 23.3.2
+      what: cargo tank length over its limit
+      unit: '-'
+      verdict: fail
+      value: 2.209876615
+      limit: 1.0
+      margin: -1.209876615
     marpol/19.6.1/double-bottom-depth:
       rule: MARPOL Annex I Reg. 19.6.1
       what: double bottom depth
