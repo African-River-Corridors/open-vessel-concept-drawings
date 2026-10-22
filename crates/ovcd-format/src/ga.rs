@@ -56,8 +56,13 @@ impl GaViews {
 /// The views of an Option that was run. A convoy, or an Option that cannot be computed, gives no
 /// views and the same message as the outputs panel.
 pub fn ga_views_of(outcome: &RunOutcome) -> Result<GaViews, String> {
+    ga_views_named(outcome, None)
+}
+
+/// As [`ga_views_of`], with the name of the Option for the title block of each sheet.
+pub fn ga_views_named(outcome: &RunOutcome, option: Option<&str>) -> Result<GaViews, String> {
     match outcome {
-        RunOutcome::Results { results, .. } => ga_views(results),
+        RunOutcome::Results { results, .. } => ga_views_for(results, option),
         RunOutcome::NotAvailable(message) | RunOutcome::Failed(message) => Err(message.clone()),
     }
 }
@@ -66,6 +71,9 @@ pub fn ga_views_of(outcome: &RunOutcome) -> Result<GaViews, String> {
 
 /// The drawing space of A3 landscape (clause 6.3), in millimetres.
 const SHEET: (f64, f64, f64, f64) = (20.0, 10.0, 390.0, 277.0);
+/// The height of the title block (ISO 7200 template, clause 14.3): it stands in the bottom-right
+/// corner of the drawing space, and the notes and the viewport stand above it (clause 14.10).
+const TITLE_BLOCK_MM: f64 = 56.0;
 /// The height of the notes strip at the bottom of the sheet: the heading, two notes and the status
 /// line on its last line (clauses 14.9 and 14.10.1).
 const STRIP_MM: f64 = 21.0;
@@ -128,6 +136,10 @@ struct Hull {
     depth: f64,
     draught: f64,
     light_draught: Option<f64>,
+    /// The Option's name, for the title block (`None` when the caller gives none).
+    option_name: Option<String>,
+    /// The Rule Sets the Option was checked against (`rule_trace.rule_sets`), as `id@version`.
+    rule_sets: Vec<String>,
     /// The draught of the "Ballast, departure" condition, when the results have the IS Code loading
     /// conditions (`loading_conditions`).
     ballast_draught: Option<f64>,
@@ -175,6 +187,21 @@ struct Aft {
     block_top: f64,
 }
 
+/// Text in the plain capitals a note or a field allows: an em dash becomes a hyphen, an underscore a
+/// space, any other character outside printable ASCII is dropped, and the spaces are squeezed.
+fn plain_capitals(name: &str) -> String {
+    let plain: String = name
+        .chars()
+        .filter_map(|ch| match ch {
+            '\u{2014}' | '\u{2013}' | '\u{2212}' => Some('-'),
+            '_' => Some(' '),
+            ch if (' '..='~').contains(&ch) => Some(ch.to_ascii_uppercase()),
+            _ => None,
+        })
+        .collect();
+    plain.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
 /// The names of the failed error checks, in the plain capitals a note allows: an em dash becomes a hyphen,
 /// an underscore a space, and any other character outside printable ASCII is dropped.
 fn failed_checks(results: &Value) -> Vec<String> {
@@ -190,16 +217,7 @@ fn failed_checks(results: &Value) -> Vec<String> {
         })
         .map(|c| {
             let name = c.get("name").and_then(Value::as_str).unwrap_or("CHECK");
-            let plain: String = name
-                .chars()
-                .filter_map(|ch| match ch {
-                    '\u{2014}' | '\u{2013}' | '\u{2212}' => Some('-'),
-                    '_' => Some(' '),
-                    ch if (' '..='~').contains(&ch) => Some(ch.to_ascii_uppercase()),
-                    _ => None,
-                })
-                .collect();
-            plain.split_whitespace().collect::<Vec<_>>().join(" ")
+            plain_capitals(name)
         })
         .collect()
 }
@@ -394,6 +412,15 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
         draught,
         light_draught: num_at(results, &["results", "light_draught_m"])
             .filter(|t| *t > 0.0 && *t < depth),
+        option_name: None,
+        rule_sets: results["rule_trace"]["rule_sets"]
+            .as_array()
+            .map(|list| {
+                list.iter()
+                    .filter_map(|v| v.as_str().map(plain_capitals))
+                    .collect()
+            })
+            .unwrap_or_default(),
         ballast_draught: results["loading_conditions"]["conditions"]
             .as_array()
             .and_then(|list| {
@@ -1997,13 +2024,65 @@ fn strip_mm(notes: usize) -> f64 {
 
 /// The frame of the viewport: the drawing space less the strip of notes.
 fn frame(strip: f64) -> (f64, f64, f64, f64) {
-    (SHEET.0, SHEET.1, SHEET.2, SHEET.3 - strip)
+    (SHEET.0, SHEET.1, SHEET.2, SHEET.3 - TITLE_BLOCK_MM - strip)
 }
 
 fn fits(window: [f64; 4], n: u32, strip: f64) -> bool {
     let k = 1000.0 / f64::from(n);
     let (_, _, fw, fh) = frame(strip);
     (window[2] - window[0]) * k <= fw + 1e-9 && (window[3] - window[1]) * k <= fh + 1e-9
+}
+
+/// The given fields of the title block (clause 14.4.1): the view, the Option and the sheet number
+/// of three. The scale, the status and the sheet size are derived by the standard.
+fn title_fields(h: &Hull, title: &str, sheet: u32) -> Value {
+    let name = h
+        .option_name
+        .as_deref()
+        .map(plain_capitals)
+        .unwrap_or_default();
+    let name = if name.is_empty() {
+        "OPTION".to_string()
+    } else {
+        name
+    };
+    let slug: String = name
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
+        .collect();
+    let mut fields = json!({
+        "owner": label!("draw-owner", "OPEN VESSEL CONCEPT DESIGN"),
+        "title": title,
+        "document_number": format!("{slug}-GA-{sheet}"),
+        "document_type": "GA",
+        "sheet_number": sheet,
+        "sheet_count": 3,
+    });
+    // 110 mm wide at 3.5 mm: about 40 capitals fit.
+    let supplementary = format!("{name}; {}", plain_capitals(&h.vessel));
+    if ovcd_draw::rules::text_width(&supplementary, 3.5).is_some_and(|w| w <= 108.0) {
+        fields["supplementary_title"] = json!(supplementary);
+    } else {
+        fields["supplementary_title"] = json!(name);
+    }
+    fields
+}
+
+/// The note that names the Rule Sets the Option was checked against, when it fits its line.
+fn rule_sets_note(sets: &[String]) -> Option<String> {
+    if sets.is_empty() {
+        return None;
+    }
+    let list = sets.join(", ").replace('@', " ");
+    let note = label!("draw-note-rule-sets", "RULE SETS: {sets}.", sets = list);
+    if note_fits(&note) {
+        return Some(note);
+    }
+    Some(label!(
+        "draw-note-rule-sets-count",
+        "{count} RULE SETS.",
+        count = sets.len()
+    ))
 }
 
 /// Build one view at the largest scale at which everything fits, no larger than 1:`from` (the common
@@ -2013,6 +2092,7 @@ fn document(
     title: &str,
     build: fn(&Hull, u32) -> Canvas,
     from: u32,
+    sheet: u32,
 ) -> Result<(Value, u32), String> {
     let mut notes = vec![label!(
         "draw-note-dimensions",
@@ -2026,6 +2106,13 @@ fn document(
     {
         notes.push(what);
     }
+    if let Some(sets) = rule_sets_note(&h.rule_sets) {
+        notes.push(sets);
+    }
+    notes.push(label!(
+        "draw-note-scope",
+        "FOR CONCEPT AND PRELIMINARY DESIGN ONLY, NOT FOR APPROVAL."
+    ));
     notes.extend(failed_notes(&h.failed_checks));
     let strip = strip_mm(notes.len());
     for n in RATIOS.into_iter().filter(|n| *n >= from) {
@@ -2057,6 +2144,7 @@ fn document(
                 "sheet": {"size": "A3", "orientation": "landscape"},
                 "layers": layers,
                 "status": "concept",
+                "title_block": {"template": "iso7200", "fields": title_fields(h, title, sheet)},
                 "strips": [{"id": "notes", "edge": "bottom", "size_mm": strip, "content": "notes"}],
                 "notes": notes,
                 "viewports": [{
@@ -2082,15 +2170,21 @@ fn document(
 /// few millimetres wide, so it keeps the largest scale at which it fits and says so in its scale
 /// bar.
 pub fn ga_views(results: &Value) -> Result<GaViews, String> {
-    let hull = read_hull(results)?;
+    ga_views_for(results, None)
+}
+
+/// As [`ga_views`], with the name of the Option for the title block of each sheet.
+pub fn ga_views_for(results: &Value, option: Option<&str>) -> Result<GaViews, String> {
+    let mut hull = read_hull(results)?;
+    hull.option_name = option.map(str::to_string);
     let elevation_title = label!("draw-view-side-elevation", "SIDE ELEVATION");
     let plan_title = label!("draw-view-plan", "PLAN");
     // A view that needs a smaller scale than the other sets the scale for both; drawing a view at a
     // smaller scale can change its labels, so the search runs until the two agree.
     let mut common = RATIOS[0];
     let (elevation, plan_view) = loop {
-        let e = document(&hull, &elevation_title, side_elevation, common)?;
-        let p = document(&hull, &plan_title, plan, common)?;
+        let e = document(&hull, &elevation_title, side_elevation, common, 1)?;
+        let p = document(&hull, &plan_title, plan, common, 2)?;
         if e.1 == p.1 {
             break (e.0, p.0);
         }
@@ -2101,6 +2195,7 @@ pub fn ga_views(results: &Value) -> Result<GaViews, String> {
         &label!("draw-view-midship-section", "TYPICAL SECTION"),
         midship_section,
         RATIOS[0],
+        3,
     )?;
     Ok(GaViews {
         side_elevation: elevation,

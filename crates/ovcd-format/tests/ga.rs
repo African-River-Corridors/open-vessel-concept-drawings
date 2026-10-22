@@ -84,7 +84,15 @@ fn every_document_of_every_fixture_validates() {
             assert_eq!(norm.sheet.orientation, "landscape");
             assert_eq!(norm.viewports.len(), 1, "one viewport");
             assert_eq!(document["status"], "concept");
-            assert!(document.get("title_block").is_none(), "no title block");
+            // Issue #409: the ISO 7200 title block, with the view, the Option and the sheet.
+            assert_eq!(document["title_block"]["template"], "iso7200");
+            let fields = &document["title_block"]["fields"];
+            assert_eq!(fields["sheet_count"], 3);
+            assert!(fields["title"].as_str().is_some_and(|t| !t.is_empty()));
+            assert!(
+                document["notes"].to_string().contains("RULE SETS"),
+                "{file}: the Rule Sets are named"
+            );
         }
     }
 }
@@ -457,7 +465,7 @@ fn the_weather_shield_is_drawn_dashed_from_the_wing_plate_to_the_tank_top_plus_t
     }
 }
 
-fn x_lines<'a>(document: &'a Value, layer: &str) -> Vec<f64> {
+fn x_lines(document: &Value, layer: &str) -> Vec<f64> {
     of_layer(document, layer, "line")
         .iter()
         .filter(|e| {

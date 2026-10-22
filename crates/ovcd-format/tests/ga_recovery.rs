@@ -1327,7 +1327,7 @@ fn a_failing_design_carries_a_note_in_each_view_and_still_passes_the_standard() 
             let v = views(&r);
             for (name, doc) in v.all() {
                 let notes = notes_of(doc);
-                let fail_notes: Vec<&String> = notes.iter().skip(2).collect();
+                let fail_notes: Vec<&String> = notes.iter().skip(4).collect();
                 assert!(
                     !fail_notes.is_empty(),
                     "{file} {name}: a note for the failed checks"
@@ -1384,10 +1384,11 @@ fn a_passing_design_has_the_usual_notes_and_strip() {
         let r = results_of(file, false);
         assert!(failed_names(&r).is_empty(), "{file}");
         for (name, doc) in views(&r).all() {
-            assert_eq!(notes_of(doc).len(), 2, "{file} {name}");
+            // the title, what the vessel is, the Rule Sets and the scope
+            assert_eq!(notes_of(doc).len(), 4, "{file} {name}");
             assert!(!notes_of(doc).iter().any(|n| n.starts_with("DESIGN FAILS")));
             assert!(
-                close(f(&doc["strips"][0]["size_mm"]), 21.0),
+                close(f(&doc["strips"][0]["size_mm"]), 30.0),
                 "{file} {name}"
             );
             accepted(doc);
@@ -1404,13 +1405,13 @@ fn a_failing_design_with_many_names_names_some_and_counts_the_rest() {
     r["checks"] = Value::Array(checks);
     for (_, doc) in views(&r).all() {
         let notes = notes_of(doc);
-        assert_eq!(notes.len(), 3);
+        assert_eq!(notes.len(), 5);
         assert!(
-            notes[2].starts_with("DESIGN FAILS 30 CHECKS: A VERY LONG CHECK NAME NUMBER 0, "),
+            notes[4].starts_with("DESIGN FAILS 30 CHECKS: A VERY LONG CHECK NAME NUMBER 0, "),
             "{}",
-            notes[2]
+            notes[4]
         );
-        assert!(notes[2].ends_with(" MORE") && notes[2].chars().count() <= 120);
+        assert!(notes[4].ends_with(" MORE") && notes[4].chars().count() <= 120);
         accepted(doc);
     }
 }

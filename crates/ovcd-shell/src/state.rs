@@ -156,7 +156,7 @@ impl AppState {
         let mut json = evaluation.to_json();
         for (i, option) in evaluation.options.iter().enumerate() {
             if let Some(outcome @ RunOutcome::Results { .. }) = &option.outcome {
-                json["options"][i]["outcome"]["views"] = views::hull_views(outcome);
+                json["options"][i]["outcome"]["views"] = views::hull_views(outcome, &option.name);
             }
         }
         json

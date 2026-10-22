@@ -192,7 +192,9 @@ fn draw_design(args: &[&str]) -> Result<(), String> {
     let mut failed = false;
     for run in runs.iter().filter(|r| a.option.is_none_or(|w| w == r.name)) {
         let views = match &run.outcome {
-            RunOutcome::Results { .. } => ovcd_format::ga_views_of(&run.outcome),
+            RunOutcome::Results { .. } => {
+                ovcd_format::ga_views_named(&run.outcome, Some(&run.name))
+            }
             RunOutcome::NotAvailable(m) | RunOutcome::Failed(m) => Err(m.clone()),
         };
         let views = match views {

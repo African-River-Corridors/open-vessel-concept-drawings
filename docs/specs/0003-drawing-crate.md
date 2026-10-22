@@ -66,9 +66,13 @@ The calculation core is not touched, and no result changes.
 ### The GA view builder
 - A module in `ovcd-format` (it needs results and the Design session; it needs nothing from the
   drawing crate except the document format, which is JSON). For one Option it returns three drawing
-  documents: side elevation, plan, midship section. Each document is one A3 landscape sheet with one
-  viewport, scale chosen by the standard's fit search (preferred scales plus the house list), no
-  title block, status `concept`.
+  documents: side elevation, plan, typical section. Each document is one A3 landscape sheet with one
+  viewport, status `concept`, and the ISO 7200 title block of the standard (title: the view; owner:
+  the tool; supplementary title: the Option and the vessel; document number `<OPTION>-GA-<n>`;
+  sheet `n/3`), with a notes strip that names the Rule Sets and the scope (#409). The side elevation
+  and the plan share one scale, the largest at which both fit; the typical section, a detail of the
+  containment, takes the largest scale at which it fits. The "typical section" is drawn through a
+  tank or the hold, not cut at amidships.
 - What each view shows (all from results and the GA geometry the core already gives; no new
   calculation):
   - **Side elevation:** hull outline with bow and stern rake, deck line, waterline at the design
@@ -112,7 +116,7 @@ The calculation core is not touched, and no result changes.
 ## Out of Scope
 
 - Any change to the standard itself. A problem found in the standard is reported in its repository.
-- A GA sheet with a title block, several views on one sheet, or PDF export from the app (later).
+- Several views on one sheet, or PDF export from the app (later).
 - Hatched materials, tug drawings, deck equipment, and construction detail.
 - The standard's pending ISO and CAD checks.
 
