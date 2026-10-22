@@ -146,7 +146,8 @@ pub struct GasBasis {
     pub bow_void_m: f64,
     pub stern_void_m: f64,
     /// Issue #410: the covering above the moulded depth D (wing plate, side plating up to it,
-    /// weather shield), each with its own centre. Empty when nothing stands above D.
+    /// weather shield) and the tank domes (issue #412), each with its own centre. Empty when
+    /// nothing stands above D and the domes have no mass.
     pub covering_items: Vec<crate::weights::MassItem>,
 }
 
@@ -198,8 +199,12 @@ impl TryFrom<&BargeCapacityResult> for GasCapacityResult {
                 outfitting: b.weights.outfitting,
                 bow_void_m: b.inputs.bow_non_tank_length.unwrap_or(0.0),
                 stern_void_m: b.inputs.stern_non_tank_length.unwrap_or(0.0),
+                // The covering above D, then the tank domes (issue #412), each at its own centre.
                 covering_items: crate::weights::covering_items(&b.inputs, &b.tanks)
-                    .map_err(|_| "gas basis covering is not weighable")?,
+                    .map_err(|_| "gas basis covering is not weighable")?
+                    .into_iter()
+                    .chain(r.dome_items.iter().cloned())
+                    .collect(),
             }),
         };
         Ok(Self {

@@ -750,6 +750,22 @@
       "soft": { "min": 0.5, "max": 3.0 },
       "basis": "carried over from the original engine: the height of the weather shield top above the tank top. It sets the shield's height and so its weight and centre (issue #410)"
     },
+    "tank_forming_allowance_pct": {
+      "default": 5.0,
+      "unit": "%",
+      "hard": { "ge": 0, "le": 50 },
+      "soft": { "min": 0.0, "max": 15.0 },
+      "status": "estimate",
+      "basis": "an Estimate, not from a source read. IGC 4.23.2.1.1 makes the thickness calculated for a pressure vessel a minimum after forming, without a negative tolerance, so the plate as ordered is thicker by the forming thinning. The tank shell and heads are weighed at the required thickness plus this share of it (issue #412). 0: weighed at the required thickness"
+    },
+    "tank_dome_wall_thickness_mm": {
+      "default": 25.0,
+      "unit": "mm",
+      "hard": { "ge": 0, "le": 100 },
+      "soft": { "min": 0.0, "max": 50.0 },
+      "status": "estimate",
+      "basis": "an Estimate: the thickness of the default tank wall. Each tank's dome (diameter and height from the dome inputs, issue #316) is weighed as a cylinder with a flat top in the tank steel, as a lightship item at its own height (issue #412). 0: the dome has no mass"
+    },
     "tank_wall_thickness_mm": {
       "default": null,
       "unit": "mm",

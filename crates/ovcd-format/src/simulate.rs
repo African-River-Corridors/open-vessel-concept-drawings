@@ -2207,6 +2207,16 @@ fn simulate_gas(
             "weather_shield_clearance_m",
             ovcd_core::barge_capacity::DEFAULT_WEATHER_SHIELD_CLEARANCE_M,
         )?,
+        tank_forming_allowance_pct: get_or(
+            p,
+            "tank_forming_allowance_pct",
+            ovcd_core::barge_capacity::DEFAULT_TANK_FORMING_ALLOWANCE_PCT,
+        )?,
+        tank_dome_wall_thickness_mm: get_or(
+            p,
+            "tank_dome_wall_thickness_mm",
+            ovcd_core::barge_capacity::DEFAULT_TANK_DOME_WALL_THICKNESS_MM,
+        )?,
         tank_wall_thickness_mm: tank_wall_of(p)?,
         tank_design: tank_design_of(p)?,
         water_density_t_per_m3: rho,
