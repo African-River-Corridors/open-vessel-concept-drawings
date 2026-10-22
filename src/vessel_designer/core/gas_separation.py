@@ -59,12 +59,12 @@ END_BULKHEAD_SPACE_PRESSURE_M = 0.20    # 3.5.3, any other tank end (Type C dome
 class GasSeparationInputs:
     """Inputs for the longitudinal cargo-area separation."""
 
-    cofferdam_m: float = COFFERDAM_MIN_M
+    # Issue #280 (maintainer decision, 2026-10-22): the end space defaults to the type G rule of 3.5.3
+    # for the tank end shape, 0,20 m for the domed heads of a Type C tank (0,50 m only for plane
+    # ends), not the 0,60 m type C cofferdam (0.1.0 used 0,60 m aft and 0,50 m forward).
+    cofferdam_m: float = END_BULKHEAD_SPACE_PRESSURE_M
     opening_setback_m: float = OPENING_SETBACK_M
-    # Type-C tanks have domed heads, so 3.5.3 asks 0,20 m forward (0,50 m only for plane tank
-    # ends). The default space here is 0,50 m: the saving is immaterial and the reduction needs
-    # a designer's call, not a default.
-    fwd_end_bulkhead_m: float = END_BULKHEAD_SPACE_M
+    fwd_end_bulkhead_m: float = END_BULKHEAD_SPACE_PRESSURE_M
     # Kept so older callers still build. No check reads it: the space is keyed to the tank end
     # shape (issue #281), and every Type C tank has domed heads.
     is_pressure_tank: bool = True

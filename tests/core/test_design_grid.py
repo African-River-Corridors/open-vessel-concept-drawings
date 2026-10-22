@@ -24,7 +24,8 @@ def test_base_point_regression_anchor():
     g = sweep([60], [11.0])
     c = g.curve(60)[0]
     assert c.n_tanks_long == 2
-    assert round(c.cargo_t) == 714
+    # Re-pinned (issue #280: the end space defaults to the type G rule); was 714.
+    assert round(c.cargo_t) == 726
 
 
 def test_every_cell_has_two_tanks_along_the_hull():

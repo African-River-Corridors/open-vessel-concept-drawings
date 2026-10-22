@@ -182,6 +182,10 @@ input-tank-forming-allowance-pct = Tank plate forming allowance
 
 input-tank-dome-wall-thickness-mm = Tank dome wall thickness
 
+input-aft-end-space-m = Aft end-bulkhead space
+
+input-fwd-end-space-m = Forward end-bulkhead space
+
 input-tank-wall-thickness-mm = Tank wall thickness (override)
 
 input-optimise-depth = Optimise depth

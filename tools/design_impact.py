@@ -164,6 +164,11 @@ OPTIONAL_INPUT_CASES = (
      6.0, {"tank_forming_allowance_pct": 5.0}),
     ("tank_dome_wall_thickness_mm", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4,
      6.0, {"tank_dome_wall_thickness_mm": 25.0}),
+    # The end-bulkhead spaces (issue #280), set to the type G rule the Defaults Profile gives.
+    ("aft_end_space_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"aft_end_space_m": 0.2}),
+    ("fwd_end_space_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"fwd_end_space_m": 0.2}),
     # The aft block inputs (issue #4, slice 4), set to their defaults in the same way. A self-propelled
     # hull carries the block; the unit counts default by Cargo phase (gas 1 battery and 2
     # accommodation units, dry bulk 2 and 1), so each has a gas and a dry case.

@@ -95,6 +95,8 @@ const FIT_OPTION_KEYS: &[&str] = &[
     "weather_shield_clearance_m",
     "tank_forming_allowance_pct",
     "tank_dome_wall_thickness_mm",
+    "aft_end_space_m",
+    "fwd_end_space_m",
     "tank_wall_thickness_mm",
     "tank_design_pressure_mpa",
     "tank_material",
@@ -178,6 +180,8 @@ fn fit_options(o: &Map<String, Value>, base: FitOptions) -> Result<FitOptions, E
         "tank_dome_wall_thickness_mm",
         f.tank_dome_wall_thickness_mm,
     )?;
+    f.aft_end_space_m = float_or(o, "aft_end_space_m", f.aft_end_space_m)?;
+    f.fwd_end_space_m = float_or(o, "fwd_end_space_m", f.fwd_end_space_m)?;
     // A key left out keeps the base; `null` asks for the pressure-vessel formula (issue #292).
     match o.get("tank_wall_thickness_mm") {
         None => {}

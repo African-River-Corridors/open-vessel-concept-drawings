@@ -161,6 +161,14 @@
           "value": 0.0,
           "source": "default"
         },
+        "aft_end_space_m": {
+          "value": 0.6,
+          "source": "default"
+        },
+        "fwd_end_space_m": {
+          "value": 0.5,
+          "source": "default"
+        },
         "tank_wall_thickness_mm": {
           "value": 25.0,
           "source": "default"

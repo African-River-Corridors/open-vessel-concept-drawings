@@ -30,7 +30,9 @@ fn the_cn_ii_benchmark_is_reproduced() {
     // search takes two tanks wide; was 2021.2487121368047 with (2, 1, 2). Re-pinned again (issue
     // #498, the angle of max GZ alone in the light condition with no ballast is a warning): the
     // one-wide arrangement is feasible again; was 1405.8516419707348 with (4, 2, 2).
-    assert_eq!(f.payload_t, 2021.2487121368047);
+    // Re-pinned again (issue #280, the end space defaults to the type G rule, 0.20 m); was
+    // 2021.2487121368047.
+    assert_eq!(f.payload_t, 2033.4091181911363);
     assert_eq!((f.n_tanks, f.n_tanks_wide, f.n_tanks_long), (2, 1, 2));
     // Re-pinned (issue #264); was "volume" under the stepped IGC_2G and "draft" (issue #237): the
     // arrangement that passes stability is smaller, so the volume binds again.
@@ -93,11 +95,12 @@ fn the_smallest_viable_loa_is_found_to_a_tenth_of_a_metre() {
     let o = FitOptions::for_smallest_viable_loa();
     assert_eq!(
         smallest_viable_loa(12.0, "LNG", 3.0, 20.0, 120.0, &o).unwrap(),
-        // Re-pinned (#498, the light condition's angle of max GZ alone is a warning); was 41.7
+        // Re-pinned (#280, the end space defaults to the type G rule); was 37.9. Re-pinned (#498, the
+        // light condition's angle of max GZ alone is a warning); was 41.7
         // (#448) and 39.9 before that. Before that re-pinned (issue #264, a viable length needs an
         // arrangement that passes every check, stability included); was 36.1 (issue #237) and
         // 35.6 under the stepped IGC_2G.
-        37.9
+        37.5
     );
 }
 
@@ -158,13 +161,15 @@ fn a_cap_clearance_a_hair_under_the_rule_is_accepted_not_refused() {
         max_tank_od_m: 8.000000001,
         ..FitOptions::default()
     };
-    let f = fit(45.25667782, 10.0, "LNG", 4.0, &o).unwrap();
+    // Issue #280: the end spaces took 0.30 m less (2.2 m, not 2.5 m), so the hull is 0.30 m shorter
+    // for the same tank.
+    let f = fit(44.95667782, 10.0, "LNG", 4.0, &o).unwrap();
     // ce96e66
-    assert_eq!(f.payload_t, 427.5000000542083);
+    assert_eq!(f.payload_t, 427.50000005420844);
     assert_eq!(f.side_clearance_m, 0.9999999995);
     assert_eq!(f.tank_od_m, 8.000000001);
-    assert_eq!(f.containment_inner_volume_m3, 1000.000000126803);
-    assert_eq!(f.per_tank_volume_m3, 500.0000000634015);
+    assert_eq!(f.containment_inner_volume_m3, 1000.0000001268033);
+    assert_eq!(f.per_tank_volume_m3, 500.00000006340167);
     assert_eq!((f.n_tanks, f.candidates_tried), (2, 1));
     assert_eq!(f.binding, "volume");
     // Issue #448: on the hull's sections the Light condition's GZ peaks below 25 degrees (IS Code

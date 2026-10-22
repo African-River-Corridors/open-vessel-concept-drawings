@@ -55,11 +55,12 @@ def test_gas_golden_example():
     assert r.n_tanks_wide == 2
     assert abs(r.tank_outer_diameter_m - 7.05) < 0.05
     assert r.tank_outer_diameter_m <= 12.0 + 1e-9          # the rule itself
-    assert abs(r.cargo_capacity_t - 1786) < 5
+    # Re-pinned (issue #280: the end space defaults to the type G rule); was 1786.
+    assert abs(r.cargo_capacity_t - 1795) < 5
     # Re-pinned (#448); were draught 2.64 m and air draft 7.13 m: the hull's sections, not Cb.
     assert abs(r.full_load_draft_m - 2.43) < 0.02
     assert abs(r.air_draft_m - 7.34) < 0.05
-    assert abs(r.cargo_zone_length_m - 68.01) < 0.05
+    assert abs(r.cargo_zone_length_m - 68.308) < 0.05    # was 68.01 (issue #280)
     assert r.ok and not r.overloaded
 
 

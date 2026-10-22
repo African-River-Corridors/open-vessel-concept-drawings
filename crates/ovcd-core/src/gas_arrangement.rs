@@ -127,6 +127,10 @@ pub struct FitOptions {
     pub tank_forming_allowance_pct: f64,
     /// Wall thickness of each tank's dome (mm); 0: no dome mass (issue #412).
     pub tank_dome_wall_thickness_mm: f64,
+    /// The end-bulkhead space aft and forward of the tanks (m): the type G rule for the tank end
+    /// shape (`gas_separation::default_end_space`), or the Option's own values (issue #280).
+    pub aft_end_space_m: f64,
+    pub fwd_end_space_m: f64,
     /// Fixed tank wall thickness (mm); `None`: the pressure-vessel formula gives it (issue #292).
     pub tank_wall_thickness_mm: Option<f64>,
     /// The Cargo-dependent tank design values: pressure, steel, insulation, structure factor.
@@ -343,6 +347,8 @@ impl Default for FitOptions {
             // As the legacy capacity inputs: neither is weighed unless a Design asks (issue #412).
             tank_forming_allowance_pct: 0.0,
             tank_dome_wall_thickness_mm: 0.0,
+            aft_end_space_m: crate::gas_separation::default_end_space(false),
+            fwd_end_space_m: crate::gas_separation::default_end_space(false),
             tank_wall_thickness_mm: Some(DEFAULT_TANK_WALL_THICKNESS_MM),
             tank_design: TankDesign::default(),
             water_density_t_per_m3: DEFAULT_WATER_DENSITY,
@@ -1046,6 +1052,15 @@ impl Search<'_> {
         inp.weather_shield_clearance_m = self.o.weather_shield_clearance_m;
         inp.tank_forming_allowance_pct = self.o.tank_forming_allowance_pct;
         inp.tank_dome_wall_thickness_mm = self.o.tank_dome_wall_thickness_mm;
+        // Issue #280: end spaces of the Option's own, when they are not the engine's default.
+        let default_space = crate::gas_separation::default_end_space(false);
+        if self.o.aft_end_space_m != default_space || self.o.fwd_end_space_m != default_space {
+            inp.separation = Some(crate::gas_separation::GasSeparationInputs {
+                cofferdam_m: self.o.aft_end_space_m,
+                fwd_end_bulkhead_m: self.o.fwd_end_space_m,
+                ..Default::default()
+            });
+        }
         inp.tank_wall_thickness = self.o.tank_wall_thickness_mm;
         inp.tank_design = self.o.tank_design.clone();
         inp.water_density = self.o.water_density_t_per_m3;

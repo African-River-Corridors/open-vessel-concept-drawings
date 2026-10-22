@@ -15,10 +15,11 @@ def test_golden_defaults():
     """
     r = compute(GasSeparationInputs())
     assert abs(r.aft_separation_m - 2.00) < 1e-9
-    assert abs(r.cofferdam_m - 0.60) < 1e-9
-    assert abs(r.service_space_m - 1.40) < 1e-9
-    assert abs(r.fwd_separation_m - 0.50) < 1e-9
-    assert abs(r.total_length_taken_m - 2.50) < 1e-9
+    # Issue #280: the end space defaults to the type G rule, 0.20 m (was 0.60 aft and 0.50 forward).
+    assert abs(r.cofferdam_m - 0.20) < 1e-9
+    assert abs(r.service_space_m - 1.80) < 1e-9
+    assert abs(r.fwd_separation_m - 0.20) < 1e-9
+    assert abs(r.total_length_taken_m - 2.20) < 1e-9
     assert r.ok
 
 
