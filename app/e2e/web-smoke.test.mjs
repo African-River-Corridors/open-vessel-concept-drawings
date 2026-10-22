@@ -36,7 +36,7 @@ const chrome = (extra = {}) => ({
   "wdio:enforceWebDriverClassic": true,
   "goog:chromeOptions": {
     ...(process.env.CHROME_BINARY ? { binary: process.env.CHROME_BINARY } : fs.existsSync("/Applications/Google Chrome.app") ? { binary: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" } : {}),
-    args: ["--headless=new", "--no-sandbox", "--disable-gpu", "--window-size=1500,950"],
+    args: ["--headless=new", "--no-sandbox", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--window-size=1500,950"],
     ...extra,
   },
 });
@@ -210,6 +210,61 @@ describe("OVCD web smoke tests", () => {
       fs.mkdirSync(SHOTS, { recursive: true });
       await new Promise((r) => setTimeout(r, 500));
       await b.saveScreenshot(path.join(SHOTS, "web-convoy.png"));
+    }
+  });
+
+  it("shows the 3D model: toggles every layer, picks a Space and reads its volume (issue #458)", async () => {
+    const b = await start();
+    await b.url(`${origin}/ovcd/app`);
+    await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+    await (await b.$("button=I understand")).click();
+    await until(b, "results", async () => (await outputs(b)).isExisting());
+    await b.execute(() => {
+      HTMLInputElement.prototype.click = function () {};
+    });
+    await (await b.$("button=Open")).click();
+    const picker = await b.$("[data-testid=file-picker]");
+    await picker.waitForExist({ timeout: 5000 });
+    await picker.setValue(BALLAST_FIXTURE);
+    await until(b, "the file name", async () => (await b.$("header")).getText().then((t) => t.includes("crude_integral_tanks_coastal.vdesign")));
+    const tab = (label) => b.$(`//button[@role="tab" and normalize-space()="${label}"]`);
+    await (await tab("Drawings")).click();
+    await (await tab("3D")).click();
+    await until(b, "the model", async () => (await (await b.$("[data-testid=model3d]")).getAttribute("data-status")) !== "loading", 60000);
+    const status = await (await b.$("[data-testid=model3d]")).getAttribute("data-status");
+    assert.equal(status, "ready", "WebGL is available in the test browser");
+    const shown = async () => JSON.parse(await (await b.$("[data-testid=model3d-canvas]")).getAttribute("data-shown"));
+    const all = await shown();
+    const layers = new Set(all.map((g) => g.split(":")[0]));
+    for (const l of ["hull", "deck", "bulkhead", "space"]) assert.ok(layers.has(l), `a ${l} group is drawn: ${[...layers]}`);
+    // Each layer toggle takes its groups off and puts them back.
+    for (const [testid, layer] of [["layer-hull", "hull"], ["layer-deck", "deck"], ["layer-bulkhead", "bulkhead"]]) {
+      await (await b.$(`[data-testid=${testid}]`)).click();
+      await until(b, `${layer} off`, async () => !(await shown()).some((g) => g.startsWith(`${layer}:`)));
+      await (await b.$(`[data-testid=${testid}]`)).click();
+      await until(b, `${layer} on`, async () => (await shown()).some((g) => g.startsWith(`${layer}:`)));
+    }
+    const kindBoxes = await b.$$("[data-testid^=layer-kind-]");
+    assert.ok(kindBoxes.length >= 3, "one toggle per kind of Space");
+    await kindBoxes[0].click();
+    await until(b, "a kind off", async () => (await shown()).filter((g) => g.startsWith("space:")).length < all.filter((g) => g.startsWith("space:")).length);
+    await kindBoxes[0].click();
+    assert.equal((await b.$("[data-testid=layer-structure]")).isEnabled !== undefined, true);
+    assert.equal(await (await b.$("[data-testid=layer-structure]")).isEnabled(), false, "structure is disabled");
+    // Pick a Space: its volume is the core's.
+    const name = (await (await b.$("[data-testid=model3d-spaces] tbody th button")).getText()).trim();
+    await (await b.$(`[data-testid="space-${name}"]`)).click();
+    await until(b, "the Space info", async () => (await b.$("[data-testid=space-info]")).isExisting());
+    const shownVolume = Number(await (await b.$("[data-testid=space-info-volume]")).getAttribute("data-value"));
+    const core = await b.execute(async (n) => (await window.__ovcdPlatform.spaceInfo("Option 1", n)).volume_m3, name);
+    assert.equal(shownVolume, core);
+    if (SHOTS) {
+      fs.mkdirSync(SHOTS, { recursive: true });
+      for (const theme of ["Light", "Dark"]) {
+        await (await b.$(`button=${theme}`)).click();
+        await new Promise((r) => setTimeout(r, 800));
+        await b.saveScreenshot(path.join(SHOTS, `web-3d-${theme.toLowerCase()}.png`));
+      }
     }
   });
 

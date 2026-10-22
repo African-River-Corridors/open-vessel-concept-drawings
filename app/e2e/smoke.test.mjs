@@ -180,7 +180,7 @@ describe("OVCD app smoke tests", () => {
   const HULL_TABS = { side: "Side elevation", plan: "Plan", midship: "Cross-section" };
   // The views, by top tab. Every view is checked for scrolling and photographed.
   const GROUPS = [
-    ["Drawings", ["Side elevation", "Plan", "Cross-section"]],
+    ["Drawings", ["Side elevation", "Plan", "Cross-section", "3D"]],
     ["Stability & Propulsion", ["Intact stability", "Ballast tanks", "Power and speed curves", "Rule check calculations"]],
     ["BOQ & Finance", ["BOQ", "Capital budget"]],
   ];
@@ -304,7 +304,7 @@ describe("OVCD app smoke tests", () => {
           for (const [group, views] of GROUPS) {
             for (const view of views) {
               await show(group, view);
-              if (group === "Drawings") await until(`the ${view} drawing`, async () => (await browser.$$("[data-testid^=slot-] svg")).length === 1);
+              if (group === "Drawings" && view !== "3D") await until(`the ${view} drawing`, async () => (await browser.$$("[data-testid^=slot-] svg")).length === 1);
               await browser.pause(300);
               assert.ok((await overflow()) <= 0, `${view} scrolls (${cargo}, panels ${hidden ? "hidden" : "shown"})`);
               // The panels-shown views are in the 248 set; keep one panels-hidden shot per tab group.
@@ -645,6 +645,26 @@ describe("OVCD app smoke tests", () => {
     assert.match(await browser.$("[data-row=cargo] [data-cell=total]").getText(), /^[\d,]+\.\d$/);
   });
 
+  it("shows the 3D model, or says why not, and reads the volume of a Space (issue #458)", async () => {
+    await open(path.join(FIXTURES, "crude_integral_tanks_coastal.vdesign"), "crude_integral_tanks_coastal.vdesign");
+    await show("Drawings", "3D");
+    await until("the 3D view", async () => (await (await browser.$("[data-testid=model3d]")).getAttribute("data-status")) !== "loading", 60000);
+    const status = await (await browser.$("[data-testid=model3d]")).getAttribute("data-status");
+    assert.ok(status === "ready" || status === "no-webgl", status);
+    if (status === "no-webgl") assert.equal((await browser.$$("[data-testid=model3d-no-webgl]")).length, 1);
+    // The Space list works either way; the layer toggles need the canvas.
+    assert.ok((await browser.$$("[data-testid=model3d-spaces] tbody tr")).length >= 3, "the Spaces are listed");
+    const name = (await (await browser.$("[data-testid=model3d-spaces] tbody th button")).getText()).trim();
+    await (await browser.$(`[data-testid="space-${name}"]`)).click();
+    await until("the Space info", async () => (await browser.$$("[data-testid=space-info]")).length === 1);
+    assert.match(await browser.$("[data-testid=space-info-volume]").getText(), /^[\d,]+\.\d m³$/);
+    if (status === "ready") {
+      assert.equal(await (await browser.$("[data-testid=layer-structure]")).isEnabled(), false, "structure is disabled");
+      await (await browser.$("[data-testid=layer-hull]")).click();
+      await until("the hull off", async () => !JSON.parse(await (await browser.$("[data-testid=model3d-canvas]")).getAttribute("data-shown")).some((g) => g.startsWith("hull:")));
+    }
+  });
+
   it("lists the ballast tanks and the ballast plan of a Design in the IS Code conditions (issue #426)", async () => {
     await open(path.join(FIXTURES, "crude_integral_tanks_coastal.vdesign"), "crude_integral_tanks_coastal.vdesign");
     await show("Stability & Propulsion", "Ballast tanks");
@@ -753,7 +773,7 @@ describe("OVCD app smoke tests", () => {
           for (const [group, views] of GROUPS) {
             for (const view of views) {
               await show(group, view);
-              if (group === "Drawings") await until(`the ${view} drawing`, async () => (await browser.$$("[data-testid^=slot-] svg")).length === 1);
+              if (group === "Drawings" && view !== "3D") await until(`the ${view} drawing`, async () => (await browser.$$("[data-testid^=slot-] svg")).length === 1);
               if (view === "Power and speed curves") await until("the chart", async () => (await charts()).length >= 1);
               if (view === "Intact stability" && cargo === "gas") await until("the GZ chart", async () => (await browser.$$("[data-testid=stability-chart] canvas")).length >= 1);
               await settle();
