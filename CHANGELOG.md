@@ -251,6 +251,14 @@ Each entry is a before/after table written by `python3 tools/design_impact.py ch
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
 
+### ticket/451-offsets-import (2026-10-22)
+
+Between `main 8fc1d4c` and `this branch 730d0e2`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep hull offsets 76.5x11.4 | `result` | fill: warning: Option 'sweep hull offsets 76.5x11.4': `service_area` was not stored in the file; wrote in the Defaults Profile value river-only, marked default \| warning: Option 'sweep hull offsets 76.5x11.4': `rule_sets` was not stored in the file; wrote in the Defaults Profile value [{"id":"is2008-a","version":"2.0.0","hash":"7dfa155b0d58383f73d35b9b0c037c89dbd928ad4bf22fe93a0a32b1eaee744f","source":"default"},{"id":"es-trin-2025","version":"1.0.0","hash":"a37a0c98b24d77e205b4cc04d4803b2de27912ba81232cc695a1984ef8e58d6a","source":"default"},{"id":"ovcd","version":"2.1.0","hash":"7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96","source":"default"}], marked default \| ovcd fill: 1 error(s); nothing written | computed | changed |
+
 ### ticket/450-v-bottom-chine (2026-10-22)
 
 Between `main 7feae25` and `this branch b3365c3`.
@@ -259,13 +267,6 @@ Between `main 7feae25` and `this branch b3365c3`.
 |---|---|---|---|---|
 | sweep hull chine gas 90x11.4 | `result` | fill: warning: Option 'sweep hull chine gas 90x11.4': `service_area` was not stored in the file; wrote in the Defaults Profile value river-only, marked default \| warning: Option 'sweep hull chine gas 90x11.4': `rule_sets` was not stored in the file; wrote in the Defaults Profile value [{"id":"igc-2g","version":"2.0.0","hash":"bdab7d84a4e89aa293f241f752bffb67725ebd1c51b98f5bd264c124e759b2b5","source":"default"},{"id":"is2008-a","version":"2.0.0","hash":"7dfa155b0d58383f73d35b9b0c037c89dbd928ad4bf22fe93a0a32b1eaee744f","source":"default"},{"id":"lr-inland-gas","version":"2.0.0","hash":"4e5586139fcf5bec3f7182f708bf11e834ff8e5616836dea7827014cb2b5bed3","source":"default"},{"id":"es-trin-2025","version":"1.0.0","hash":"a37a0c98b24d77e205b4cc04d4803b2de27912ba81232cc695a1984ef8e58d6a","source":"default"},{"id":"ovcd","version":"2.1.0","hash":"7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96","source":"default"}], marked default \| ovcd fill: 1 error(s); nothing written | computed | changed |
 | sweep hull v_bottom gas 90x11.4 | `result` | fill: warning: Option 'sweep hull v_bottom gas 90x11.4': `service_area` was not stored in the file; wrote in the Defaults Profile value river-only, marked default \| warning: Option 'sweep hull v_bottom gas 90x11.4': `rule_sets` was not stored in the file; wrote in the Defaults Profile value [{"id":"igc-2g","version":"2.0.0","hash":"bdab7d84a4e89aa293f241f752bffb67725ebd1c51b98f5bd264c124e759b2b5","source":"default"},{"id":"is2008-a","version":"2.0.0","hash":"7dfa155b0d58383f73d35b9b0c037c89dbd928ad4bf22fe93a0a32b1eaee744f","source":"default"},{"id":"lr-inland-gas","version":"2.0.0","hash":"4e5586139fcf5bec3f7182f708bf11e834ff8e5616836dea7827014cb2b5bed3","source":"default"},{"id":"es-trin-2025","version":"1.0.0","hash":"a37a0c98b24d77e205b4cc04d4803b2de27912ba81232cc695a1984ef8e58d6a","source":"default"},{"id":"ovcd","version":"2.1.0","hash":"7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96","source":"default"}], marked default \| ovcd fill: 1 error(s); nothing written | computed | changed |
-### ticket/451-offsets-import (2026-10-22)
-
-Between `main c545457` and `this branch a460e65`.
-
-| Case | Quantity | Before | After | Change |
-|---|---|---|---|---|
-| sweep hull offsets 76.5x11.4 | `result` | fill: warning: Option 'sweep hull offsets 76.5x11.4': `service_area` was not stored in the file; wrote in the Defaults Profile value river-only, marked default \| warning: Option 'sweep hull offsets 76.5x11.4': `rule_sets` was not stored in the file; wrote in the Defaults Profile value [{"id":"is2008-a","version":"2.0.0","hash":"7dfa155b0d58383f73d35b9b0c037c89dbd928ad4bf22fe93a0a32b1eaee744f","source":"default"},{"id":"es-trin-2025","version":"1.0.0","hash":"a37a0c98b24d77e205b4cc04d4803b2de27912ba81232cc695a1984ef8e58d6a","source":"default"},{"id":"ovcd","version":"2.1.0","hash":"7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96","source":"default"}], marked default \| ovcd fill: 1 error(s); nothing written | computed | changed |
 
 ### ticket/412-forming-allowance (2026-10-22)
 
