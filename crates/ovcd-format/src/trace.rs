@@ -387,6 +387,17 @@ impl MeasureSource for OptionMeasures<'_> {
                 _ => Err(format!("`{name}` has no value")),
             };
         }
+        if m.id == "openings.front_clear" {
+            // Issue #417: read from the typed input; no opening on the front means it is clear.
+            return match self
+                .option
+                .input("deckhouse_front_opening")
+                .map(|i| &i.value)
+            {
+                Some(Value::Bool(open)) => Ok(MeasureValue::Bool(!open)),
+                _ => Err("the Option has no `deckhouse_front_opening`".to_string()),
+            };
+        }
         self.measured.value(m, index)
     }
 
@@ -461,6 +472,11 @@ pub fn rule_inputs(option: &DesignOption) -> RuleInputs {
         if let (Some(info), Ok(value)) = (measure_info(&id), source.value(&bare(&id), 0)) {
             measures.push((id, info, value));
         }
+    }
+    // Issue #417: the Measures the Option's typed inputs give, which are not `input.<name>`.
+    let front = "openings.front_clear";
+    if let (Some(info), Ok(value)) = (measure_info(front), source.value(&bare(front), 0)) {
+        measures.push((front.to_string(), info, value));
     }
     RuleInputs {
         applicability,

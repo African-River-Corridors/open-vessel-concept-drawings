@@ -106,6 +106,10 @@ save writes the current version.
   per Option, so its results do not change. Until a Hull Form's generator ticket lands, the engine refuses
   any `hull_form` but `raked_box` with a "not built yet" message. `shipd_parameters` defaults to none
   until the ShipD ticket (#452) brings the dataset rows.
+  Issue #417 (typed openings, a trial) adds an "Openings" group for a gas Option: `deckhouse_front_opening`,
+  `deckhouse_side_opening_distance_m`, `entrance_distance_m`, `engine_room_vent_inlet_distance_m` and
+  `funnel_outlet_distance_m`. A file without them reads false, 5 m, 2 m, 2 m and 2 m, marked `default`, so
+  its results do not change.
   Issue #274 (spec 0004) adds the rules block, a "Rules" group: `service_area` (`river-only` or
   `coastal-and-river`) and `rule_sets`, the list of Rule Sets the Option is checked against, each
   `{id, version, hash, source}` with `source` `default` (from the Service Area and the Cargo) or `typed`

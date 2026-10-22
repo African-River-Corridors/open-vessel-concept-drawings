@@ -524,6 +524,8 @@ fn the_legacy_other_table_covers_every_text_or_none_default() {
     let names: Vec<&str> = LEGACY_FIXED_OTHER
         .iter()
         .filter(|l| l.applies_to.containments() == ["type_c_tanks"])
+        // The typed openings (issue #417) are in their own group.
+        .filter(|l| l.name != "deckhouse_front_opening")
         .map(|l| l.name)
         .collect();
     for name in [
