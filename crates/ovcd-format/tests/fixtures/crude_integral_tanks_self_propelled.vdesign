@@ -257,6 +257,14 @@
           "value": null,
           "source": "default"
         },
+        "lock_length_m": {
+          "value": null,
+          "source": "default"
+        },
+        "lock_width_m": {
+          "value": null,
+          "source": "default"
+        },
         "channel_depth_m": {
           "value": null,
           "source": "default"

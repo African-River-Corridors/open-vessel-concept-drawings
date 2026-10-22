@@ -77,12 +77,7 @@ fn every_fixture_opens_without_error_and_with_matching_hashes() {
             opened.report
         );
         for (option, status) in &opened.hash_status {
-            let expect = if *name == "pushed_convoy" {
-                HashStatus::NotStored
-            } else {
-                HashStatus::Matches
-            };
-            assert_eq!(status, &expect, "{name} / {option}");
+            assert_eq!(status, &HashStatus::Matches, "{name} / {option}");
         }
         // A stored Design opens unchanged.
         assert_eq!(s.design().to_text(), fixture(name), "{name}");
@@ -382,15 +377,12 @@ fn a_profile_that_loosens_a_hard_range_is_refused() {
 // ---- evaluate ---------------------------------------------------------------------------
 
 #[test]
-fn every_fixture_evaluates_to_results_or_the_convoy_message() {
+fn every_fixture_evaluates_to_results() {
     for name in FIXTURES {
         let evaluation = open(name).evaluate();
         for o in &evaluation.options {
             assert!(o.messages.is_empty(), "{name}: {:?}", o.messages);
             match (&o.outcome, *name) {
-                (Some(RunOutcome::NotAvailable(m)), "pushed_convoy") => {
-                    assert_eq!(m, ovcd_format::CONVOY_NOT_AVAILABLE)
-                }
                 (Some(RunOutcome::Results { results, hash }), _) => {
                     assert_eq!(&ovcd_format::results_hash(results), hash)
                 }

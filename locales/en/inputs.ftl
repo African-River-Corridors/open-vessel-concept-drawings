@@ -449,6 +449,10 @@ input-draught-limit-m = Draught limit
 
 input-downflooding-angle-deg = Angle of down-flooding
 
+input-lock-length-m = Lock length
+
+input-lock-width-m = Lock width
+
 input-channel-depth-m = Channel depth
 
 input-channel-under-keel-clearance-m = Under-keel clearance

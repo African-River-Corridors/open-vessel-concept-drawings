@@ -120,6 +120,8 @@ fn fixed_names() -> Vec<Text> {
         Text::fixed("name-check-feasible-arrangement", "Feasible arrangement"),
         Text::fixed("name-check-tank-length", "tank length over diameter"),
         Text::fixed("name-check-ok", "OK"),
+        Text::fixed("name-check-lock-length", "within lock length"),
+        Text::fixed("name-check-lock-width", "within lock width"),
         Text::fixed("name-curve-deep-water", "Deep water"),
         Text::fixed("name-governs-hold-volume", "hold volume"),
         Text::fixed("name-governs-tank-volume", "tank volume"),

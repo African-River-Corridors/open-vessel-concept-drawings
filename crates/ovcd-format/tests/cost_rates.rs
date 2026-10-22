@@ -237,12 +237,7 @@ fn every_saved_fixture_keeps_its_results_hash_with_the_rates_in_it() {
     for file in FIXTURES {
         let (_, opened) = DesignSession::open(&raw_fixture(file), Profile::built_in()).unwrap();
         for (option, status) in &opened.hash_status {
-            // A pushed convoy is not computed yet and stores no hash.
-            let want = if file == "pushed_convoy" {
-                HashStatus::NotStored
-            } else {
-                HashStatus::Matches
-            };
+            let want = HashStatus::Matches;
             assert_eq!(*status, want, "{file}/{option}");
         }
     }

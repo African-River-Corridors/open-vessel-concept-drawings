@@ -219,6 +219,13 @@ msg-offsets-bad-row = row { $row } of the offsets table needs the numbers statio
 msg-offsets-csv-header = an offsets CSV starts with the header { $header }
 msg-offsets-csv-line = line { $line } of the offsets CSV needs three numbers: station_x_m, y_m, z_m
 
+## crates/ovcd-format/src/convoy.rs
+
+check-name-within-lock-length = within lock length
+check-lock-length = overall length { $length } m <= lock length { $limit } m
+check-name-within-lock-width = within lock width
+check-lock-width = overall beam { $width } m <= lock width { $limit } m
+
 ## crates/ovcd-format/src/run.rs
 
 msg-convoy-not-available = convoy results not yet available
@@ -263,6 +270,8 @@ name-check-cargo = Cargo > 0
 name-check-feasible-arrangement = Feasible arrangement
 name-check-tank-length = tank length over diameter
 name-check-ok = OK
+name-check-lock-length = within lock length
+name-check-lock-width = within lock width
 name-curve-deep-water = Deep water
 name-governs-hold-volume = hold volume
 name-governs-tank-volume = tank volume

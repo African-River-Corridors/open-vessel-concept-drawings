@@ -203,6 +203,14 @@
           "value": null,
           "source": "default"
         },
+        "lock_length_m": {
+          "value": null,
+          "source": "default"
+        },
+        "lock_width_m": {
+          "value": null,
+          "source": "default"
+        },
         "channel_depth_m": {
           "value": null,
           "source": "default"
@@ -324,7 +332,8 @@
           ],
           "source": "default"
         }
-      }
+      },
+      "results_hash": "4409d5ae1d681da04f778f580e7f797e0fae617afbac2435813f654666174634"
     }
   ],
   "defaults_profile": "built-in"

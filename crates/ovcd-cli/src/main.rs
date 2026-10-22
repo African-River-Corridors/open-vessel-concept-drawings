@@ -48,10 +48,10 @@ Usage:
       Compute every Option of a Design and print a short summary. --json prints the full
       results instead. Each Option's results hash is compared with the one saved in the file;
       a difference is a warning that the results differ from the hash saved in the file (an
-      engine change, or an input edited by hand, can cause it). A pushed convoy is valid but has
-      no results yet: it prints \"convoy results not yet available\" and no numbers, and the same
-      message goes to stderr as a warning. In --json each Option has a \"status\": \"results\",
-      \"not_yet_supported\" (a convoy) or \"failed\".
+      engine change, or an input edited by hand, can cause it). A pushed convoy prints its totals
+      (cargo, lightship, deadweight, overall size) and then the numbers of one barge; the pusher
+      is not in the totals yet. In --json each Option has a \"status\": \"results\", \"not_yet_supported\"
+      or \"failed\".
       Warnings go to stderr. Exits 0 for a valid file, even if some Options are not yet
       supported. Exits 1 if the file has a hard error or an Option fails to compute.
   ovcd schema [--profile <profile.json>]
@@ -85,7 +85,7 @@ Usage:
   ovcd draw [--profile <profile.json>] [--option <name>] --out <dir> <file.vdesign>
       Draw the side elevation, plan and midship section of each Option of a Design (or of the
       one Option named). Writes, for each view, the drawing document, its normalised content,
-      a DXF, an SVG and a PDF. A convoy, or an Option that cannot be computed, gets no drawings.
+      a DXF, an SVG and a PDF. A pushed convoy, or an Option that cannot be computed, gets no drawings.
   ovcd draw [--profile <profile.json>] [--option <name>] --document <file.vdesign>
       Print the drawing documents only, as JSON, so that they can be built with another
       implementation of the standard.

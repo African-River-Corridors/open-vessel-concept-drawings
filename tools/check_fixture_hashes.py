@@ -11,8 +11,8 @@ macOS, with the release binary, and on WebAssembly: the same CLI built for `wasm
 under `wasmtime` (issue #168). So a platform whose maths differs cannot be released.
 
 It fails when an Option's `hash_status` is anything but "matches", when a fixture that should compute
-does not, when `ovcd` exits non-zero (except for a convoy), or when fewer than MIN_MATCHED Options matched (so an empty
-fixture directory cannot pass). A pushed convoy has no numbers yet and is the one allowed exception.
+does not, when `ovcd` exits non-zero, or when fewer than MIN_MATCHED Options matched (so an empty
+fixture directory cannot pass). Every fixture has results.
 """
 from __future__ import annotations
 
@@ -23,8 +23,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "crates" / "ovcd-format" / "tests" / "fixtures"
-NO_RESULTS_YET = {"pushed_convoy.vdesign"}      # convoy results are not available yet
-MIN_MATCHED = 6                                 # five computable fixtures, one of them with two Options
+NO_RESULTS_YET: set[str] = set()                # every fixture has results since the convoy totals (#358)
+MIN_MATCHED = 7
 
 
 def find_binary(path: str) -> Path:
@@ -53,7 +53,6 @@ def check(binary: Path, fixtures: Path, wasmtime: Path | None = None) -> list[st
     for f in files:
         r = subprocess.run(command_for(binary, fixtures, wasmtime, f), capture_output=True,
                            encoding="utf-8", errors="replace")
-        # A pushed convoy has no results, so `ovcd run` exits 1 for it (not every Option computed).
         if r.returncode != 0 and f.name not in NO_RESULTS_YET:
             problems.append(f"{f.name}: ovcd exited {r.returncode}: {r.stderr.strip()[-200:]}")
             continue
