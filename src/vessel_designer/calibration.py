@@ -880,6 +880,50 @@ def main_check() -> int:
     return 0
 
 
+def _changelog_section(text: str, version: str) -> str:
+    """The text of the `## <version>` section of CHANGELOG.md ("" when there is none)."""
+    import re
+    m = re.search(rf"(?m)^## {re.escape(version)}\b[^\n]*\n", text)
+    if m is None:
+        return ""
+    nxt = re.search(r"(?m)^## ", text[m.end():])
+    return text[m.end(): m.end() + nxt.start()] if nxt else text[m.end():]
+
+
+def release_problems(changelog_text: str, version: str) -> list[str]:
+    """Calibration cases outside their band that block the release `version`: one line each (issue #431).
+
+    A case outside its band blocks a release unless the CHANGELOG entry of that release explains it (the
+    entry names the case id), or the case file already records why: `accepted_miss` (tank and propulsion cases) or
+    `exclude_from_fit_cb` (dry barge cases left out of the Cb fit with a reason). A release with no CHANGELOG section for its version has every miss
+    unexplained.
+    """
+    section = _changelog_section(changelog_text, version)
+    accepted = dict(_accepted_misses())
+    for c in _load_propulsion_cases()["propulsion_case"]:
+        accepted.update({(c["id"], fig): why for fig, why in c.get("accepted_miss", {}).items()})
+    every = assess() + _assess_tanks() + _assess_propulsion() + _assess_installed_power()
+    out = []
+    for b in every:
+        if b.inside or (b.case, b.figure) in accepted or b.excluded:
+            continue
+        if b.case in section:
+            continue
+        out.append(f"{b.case} ({b.figure}): {b.err_pct:+.1f} % against a band of ±{b.band_pct:g} %")
+    return out
+
+
+def main_release(version: str, changelog: Path | None = None) -> int:
+    """Fail (exit 1) when a calibration case outside its band is not explained for the release `version`."""
+    path = Path(changelog) if changelog else CAL.parent / "CHANGELOG.md"
+    bad = release_problems(path.read_text(encoding="utf-8"), version)
+    for line in bad:
+        print(f"::error file=CHANGELOG.md,title=Calibration band blocks the release::{line}: name the case in "
+              f"the CHANGELOG entry of {version}, or bring it inside its band")
+    print(f"calibration: release {version}: {len(bad)} case(s) outside their band without an explanation")
+    return 1 if bad else 0
+
+
 def _band_cells(checks: list[BandCheck], case: str, figure: str) -> tuple[str, str]:
     for b in checks:
         if b.case == case and b.figure == figure:
@@ -1131,6 +1175,8 @@ def main(out_dir: Path = CAL) -> None:
 if __name__ == "__main__":
     if sys.argv[1:] == ["--check"]:
         sys.exit(main_check())
+    if len(sys.argv) in (3, 5) and sys.argv[1] == "--release-check":
+        sys.exit(main_release(sys.argv[2], Path(sys.argv[4]) if len(sys.argv) == 5 and sys.argv[3] == "--changelog" else None))
     if sys.argv[1:]:
-        sys.exit("usage: python -m vessel_designer.calibration [--check]")
+        sys.exit("usage: python -m vessel_designer.calibration [--check | --release-check VERSION [--changelog PATH]]")
     main()

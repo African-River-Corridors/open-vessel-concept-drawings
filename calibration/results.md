@@ -5,33 +5,32 @@
 
 ## Fitted factors
 
-- **k, box hold:** 0.1093 t/m³ (range 0.095–0.1223, n = 3)
+- **k, box hold:** 0.1086 t/m³ (range 0.095–0.1223, n = 2)
 - **k, container hold:** 0.1711 t/m³ (range 0.1711–0.1711, n = 1)
-- **Cb, box barge on LOA:** 0.928 (range 0.883–0.995, n = 7; 2 excluded — see factors.yaml)
+- **Cb, box barge on LOA:** 0.927 (range 0.882–0.994, n = 7; 2 excluded — see factors.yaml)
 
 ## Calibration Bands
 
 Each observed figure has a band, set per figure and per confidence of the case (`bands.yaml`): lightship ±15 / 20 / 30 % and deadweight ±7.5 / 10 / 15 % at high / medium / low confidence. The band applies to the *Calibrated* result. **The errors in sections 1 and 2 are in-sample:** the fitted factors (k per hold type, box-barge Cb) were fitted to the same cases, and the container factor rests on one case, so a result inside its band is not a validation. **The errors in section 4 are out of sample:** those cases were never used in a fit. A case outside its band is marked **OUTSIDE** and raises a CI warning annotation: **warning only, it never fails the build.** A lightship given only as an upper bound has no band. Section 3 compares the core with a design note, not a published figure, and has no band.
 
-13 of 14 in-sample calibrated results are inside their band.
+12 of 13 in-sample calibrated results are inside their band.
 67 of 87 held-out calibrated results are inside their band (section 4; cases excluded for an impossible figure are not counted).
 
 ## 1. Push barges — lightship
 
 | Case | Hold | Conf. | Observed (t) | Ported | err % | Calibrated | err % | Padovezi 0.12 | err % | CN draft | err % | Band ± % | Calibrated vs band |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| para-mississippi-2200 | box | medium | 264 | 558 | 111.3 | 304 | 15.1 | 333 | 26.3 | 426 | 61.5 | ±20 (medium) | inside |
-| amaggi-box-2000 | box | medium | – | 558 | – | 304 | – | 333 | – | 426 | – | – | – |
-| mcdonough-195x35x12 | box | medium | – | 483 | – | 254 | – | 279 | – | 387 | – | – | – |
-| jeffboat-am2100 | box | medium | – | 588 | – | 325 | – | 357 | – | 438 | – | – | – |
-| hidrovia-lhg-3200 | box | medium | – | 724 | – | 427 | – | 469 | – | 551 | – | – | – |
-| cargill-amazon-jumbo | box | medium | – | 724 | – | 427 | – | 469 | – | 551 | – | – | – |
-| europa-iib-rdb06 | box | medium | ≤487 (light draught, Cb=1) | 598 | – | 304 | – | 334 | – | 545 | – | – | – |
-| europa-iib-1635ou | box | medium | – | 678 | – | 359 | – | 394 | – | 578 | – | – | – |
-| danube-barge-77 | box | medium | 290 | 534 | 84.2 | 259 | -10.6 | 285 | -1.9 | 511 | 76.1 | ±20 (medium) | inside |
+| para-mississippi-2200 | box | medium | 264 | 558 | 111.3 | 302 | 14.3 | 333 | 26.3 | 426 | 61.5 | ±20 (medium) | inside |
+| amaggi-box-2000 | box | medium | – | 558 | – | 302 | – | 333 | – | 426 | – | – | – |
+| mcdonough-195x35x12 | box | medium | – | 483 | – | 252 | – | 279 | – | 387 | – | – | – |
+| jeffboat-am2100 | box | medium | – | 588 | – | 323 | – | 357 | – | 438 | – | – | – |
+| hidrovia-lhg-3200 | box | medium | – | 724 | – | 424 | – | 469 | – | 551 | – | – | – |
+| cargill-amazon-jumbo | box | medium | – | 724 | – | 424 | – | 469 | – | 551 | – | – | – |
+| europa-iib-rdb06 | box | medium | ≤487 (light draught, Cb=1) | 598 | – | 302 | – | 334 | – | 545 | – | – | – |
+| europa-iib-1635ou | box | medium | – | 678 | – | 356 | – | 394 | – | 578 | – | – | – |
+| danube-barge-77 | box | medium | 290 | 534 | 84.2 | 258 | -11.2 | 285 | -1.9 | 511 | 76.1 | ±20 (medium) | inside |
 | victor-83-container-barge | container | medium | 455 | 595 | 30.7 | 455 | 0.0 | 319 | -29.9 | 585 | 28.4 | ±20 (medium) | inside |
-| stretch-hopper-light | box | high | ≤514 (light draught, Cb=1) | 496 | – | 260 | – | 286 | – | 401 | – | – | – |
-| us-hopper-195x35-generic | box | low | 267 | 498 | 86.4 | 264 | -1.1 | 290 | 8.6 | 393 | 47.2 | ±30 (low) | inside |
+| stretch-hopper-light | box | high | ≤514 (light draught, Cb=1) | 496 | – | 259 | – | 286 | – | 401 | – | – | – |
 
 Note: where a case is in the k fit, its calibrated error is in-sample.
 
@@ -39,16 +38,16 @@ Note: where a case is in the k fit, its calibrated error is in-sample.
 
 | Case | T (m) | Observed DWT (t) | Ported | err % | Calibrated | err % | In Cb fit | Band ± % | Calibrated vs band |
 |---|---|---|---|---|---|---|---|---|---|
-| para-mississippi-2200 | 3.66 | 2,200 | 1,466 | -33.4 | 1,906 | -13.4 | excluded | ±10 (medium) | **OUTSIDE** ⚠ |
-| amaggi-box-2000 | 3.56 | 2,000 | 1,411 | -29.5 | 1,845 | -7.7 | yes | ±10 (medium) | inside |
+| para-mississippi-2200 | 3.66 | 2,200 | 1,466 | -33.4 | 1,905 | -13.4 | excluded | ±10 (medium) | **OUTSIDE** ⚠ |
+| amaggi-box-2000 | 3.56 | 2,000 | 1,411 | -29.5 | 1,845 | -7.8 | yes | ±10 (medium) | inside |
 | mcdonough-195x35x12 | 3.05 | 1,479 | 1,161 | -21.5 | 1,541 | 4.2 | yes | ±10 (medium) | inside |
 | jeffboat-am2100 | 3.84 | 1,905 | 1,535 | -19.4 | 1,993 | 4.6 | yes | ±10 (medium) | inside |
 | hidrovia-lhg-3200 | 3.96 | 3,200 | 2,356 | -26.4 | 2,935 | -8.3 | excluded | ±10 (medium) | inside |
-| cargill-amazon-jumbo | 4.0 | 3,126 | 2,387 | -23.6 | 2,969 | -5.0 | yes | ±10 (medium) | inside |
-| europa-iib-rdb06 | 3.0 | 2,000 | 1,620 | -19.0 | 2,117 | 5.8 | yes | ±10 (medium) | inside |
+| cargill-amazon-jumbo | 4.0 | 3,126 | 2,387 | -23.6 | 2,969 | -5.1 | yes | ±10 (medium) | inside |
+| europa-iib-rdb06 | 3.0 | 2,000 | 1,620 | -19.0 | 2,116 | 5.8 | yes | ±10 (medium) | inside |
 | europa-iib-1635ou | 3.1 | 2,033 | 1,540 | -24.3 | 2,062 | 1.4 | yes | ±10 (medium) | inside |
-| danube-barge-77 | 2.5 | 1,700 | 1,266 | -25.5 | 1,706 | 0.3 | yes | ±10 (medium) | inside |
-| victor-83-container-barge | 2.6 | 1,976 | 1,505 | -23.8 | 1,838 | -7.0 | no | ±10 (medium) | inside |
+| danube-barge-77 | 2.5 | 1,700 | 1,266 | -25.5 | 1,705 | 0.3 | yes | ±10 (medium) | inside |
+| victor-83-container-barge | 2.6 | 1,976 | 1,505 | -23.8 | 1,835 | -7.1 | no | ±10 (medium) | inside |
 
 ## 3. Yangtze motor vessels — GB 38030 draft design points (2018)
 
@@ -77,104 +76,104 @@ These cases were never used to fit k or Cb (issue #3). The calibrated model meet
 
 | Case | Hull (hold type / run as) | Conf. | Figure | Observed (t) | Calibrated (t) | err % | Band ± % | Calibrated vs band |
 |---|---|---|---|---|---|---|---|---|
-| cbc-1951-deck-195x35 | deck / box | medium | lightship | 301 | 222 | -26.3 | ±20 (medium) | **OUTSIDE** ⚠ |
-| cbc-1951-deck-195x35 | deck / box | medium | DWT | 1,297 | 1,341 | 3.4 | ±10 (medium) | inside |
-| cbc-2762-deck-276x55 | deck / box | medium | lightship | 898 | 720 | -19.9 | ±20 (medium) | inside |
+| cbc-1951-deck-195x35 | deck / box | medium | lightship | 301 | 220 | -26.8 | ±20 (medium) | **OUTSIDE** ⚠ |
+| cbc-1951-deck-195x35 | deck / box | medium | DWT | 1,297 | 1,340 | 3.3 | ±10 (medium) | inside |
+| cbc-2762-deck-276x55 | deck / box | medium | lightship | 898 | 715 | -20.4 | ±20 (medium) | **OUTSIDE** ⚠ |
 | cbc-2762-deck-276x55 | deck / box | medium | DWT | 3,690 | 4,081 | 10.6 | ±10 (medium) | **OUTSIDE** ⚠ |
-| cbc-4508-deck-200x50 | deck / box | medium | lightship | 443 | 434 | -2.1 | ±20 (medium) | inside |
-| cbc-4508-deck-200x50 | deck / box | medium | DWT | 2,546 | 2,801 | 10.0 | ±10 (medium) | **OUTSIDE** ⚠ |
-| cbc-4509-deck-260x54 | deck / box | medium | lightship | 591 | 522 | -11.7 | ±20 (medium) | inside |
-| cbc-miami-deck-250x80 | deck / box | low | lightship | 1,106 | 991 | -10.4 | ±30 (low) | inside |
-| cbc-savannah-deck-260x80 | deck / box | low | lightship | 1,106 | 1,031 | -6.8 | ±30 (low) | inside |
-| cbc-cordie-deck-260x72 | deck / box | medium | lightship | 1,112 | 928 | -16.6 | ±20 (medium) | inside |
-| cbc-cordie-deck-260x72 | deck / box | medium | DWT | 5,690 | 5,459 | -4.1 | ±10 (medium) | inside |
-| cbc-julius-deck-300x100 | deck / box | medium | lightship | 1,997 | 1,764 | -11.7 | ±20 (medium) | inside |
-| cbc-julius-deck-300x100 | deck / box | medium | DWT | 10,000 | 11,014 | 10.1 | ±10 (medium) | **OUTSIDE** ⚠ |
-| cbc-oceanus-deck-400x105 | deck / box | medium | lightship | 3,551 | 3,249 | -8.5 | ±20 (medium) | inside |
-| cbc-oceanus-deck-400x105 | deck / box | medium | DWT | 19,678 | 20,501 | 4.2 | ±10 (medium) | inside |
-| cbc-761-deck-180x54 | deck / box | low | lightship | 345 | 361 | 4.7 | ±30 (low) | inside (excluded) |
-| cbc-761-deck-180x54 | deck / box | low | DWT | 2,585 | 2,130 | -17.6 | ±15 (low) | **OUTSIDE** ⚠ (excluded) |
+| cbc-4508-deck-200x50 | deck / box | medium | lightship | 443 | 431 | -2.8 | ±20 (medium) | inside |
+| cbc-4508-deck-200x50 | deck / box | medium | DWT | 2,546 | 2,800 | 10.0 | ±10 (medium) | inside |
+| cbc-4509-deck-260x54 | deck / box | medium | lightship | 591 | 518 | -12.3 | ±20 (medium) | inside |
+| cbc-miami-deck-250x80 | deck / box | low | lightship | 1,106 | 985 | -11.0 | ±30 (low) | inside |
+| cbc-savannah-deck-260x80 | deck / box | low | lightship | 1,106 | 1,024 | -7.4 | ±30 (low) | inside |
+| cbc-cordie-deck-260x72 | deck / box | medium | lightship | 1,112 | 922 | -17.1 | ±20 (medium) | inside |
+| cbc-cordie-deck-260x72 | deck / box | medium | DWT | 5,690 | 5,458 | -4.1 | ±10 (medium) | inside |
+| cbc-julius-deck-300x100 | deck / box | medium | lightship | 1,997 | 1,753 | -12.2 | ±20 (medium) | inside |
+| cbc-julius-deck-300x100 | deck / box | medium | DWT | 10,000 | 11,012 | 10.1 | ±10 (medium) | **OUTSIDE** ⚠ |
+| cbc-oceanus-deck-400x105 | deck / box | medium | lightship | 3,551 | 3,229 | -9.1 | ±20 (medium) | inside |
+| cbc-oceanus-deck-400x105 | deck / box | medium | DWT | 19,678 | 20,497 | 4.2 | ±10 (medium) | inside |
+| cbc-761-deck-180x54 | deck / box | low | lightship | 345 | 359 | 4.0 | ±30 (low) | inside (excluded) |
+| cbc-761-deck-180x54 | deck / box | low | DWT | 2,585 | 2,129 | -17.6 | ±15 (low) | **OUTSIDE** ⚠ (excluded) |
 | cbc-758-spud-180x54 | deck / box | medium | light draught 0.52 m only | – | – | – | – | cross-check, no band |
-| lm3004-deck-288ft | deck / box | medium | lightship | 1,450 | 1,289 | -11.1 | ±20 (medium) | inside |
-| lm3004-deck-288ft | deck / box | medium | DWT | 7,388 | 7,480 | 1.2 | ±10 (medium) | inside |
-| itk-cargo-barge-330ft | deck / box | low | lightship | 1,803 | 1,930 | 7.0 | ±30 (low) | inside |
-| vl-deck-365ft | deck / box | low | lightship | 2,330 | 2,363 | 1.4 | ±30 (low) | inside |
-| vl-deck-365ft | deck / box | low | DWT | 12,040 | 13,720 | 13.9 | ±15 (low) | inside |
-| vl-deck-345ft | deck / box | low | lightship | 1,780 | 2,018 | 13.4 | ±30 (low) | inside |
-| vl-deck-345ft | deck / box | low | DWT | 10,165 | 11,756 | 15.7 | ±15 (low) | **OUTSIDE** ⚠ |
-| vl-deck-300ft | deck / box | low | lightship | 1,300 | 1,502 | 15.6 | ±30 (low) | inside |
-| vl-deck-300ft | deck / box | low | DWT | 8,154 | 8,733 | 7.1 | ±15 (low) | inside |
-| vl-deck-250ft | deck / box | low | lightship | 952 | 892 | -6.3 | ±30 (low) | inside |
-| vl-deck-250ft | deck / box | low | cargo capacity (not DWT) | 4,989 | 5,281 | 5.8 | – | no band (not a DWT) |
-| jml5019-pontoon | deck / box | medium | cargo capacity (not DWT) | 1,734 | 1,766 | 1.9 | – | cross-check, no band |
-| touax-193-194-2021 | box | medium | DWT | 2,528 | 2,551 | 0.9 | ±10 (medium) | inside |
-| touax-seine-2020 | box | medium | DWT | 2,553 | 2,551 | -0.1 | ±10 (medium) | inside |
-| taf-seine-2008 | box | medium | DWT | 2,516 | 2,609 | 3.7 | ±10 (medium) | inside |
-| taf-seine-2000 | box | medium | DWT | 2,664 | 2,676 | 0.5 | ±10 (medium) | inside |
-| taf-seine-1997 | box | medium | DWT | 2,700 | 2,704 | 0.1 | ±10 (medium) | inside |
+| lm3004-deck-288ft | deck / box | medium | lightship | 1,450 | 1,280 | -11.7 | ±20 (medium) | inside |
+| lm3004-deck-288ft | deck / box | medium | DWT | 7,388 | 7,478 | 1.2 | ±10 (medium) | inside |
+| itk-cargo-barge-330ft | deck / box | low | lightship | 1,803 | 1,918 | 6.4 | ±30 (low) | inside |
+| vl-deck-365ft | deck / box | low | lightship | 2,330 | 2,348 | 0.8 | ±30 (low) | inside |
+| vl-deck-365ft | deck / box | low | DWT | 12,040 | 13,717 | 13.9 | ±15 (low) | inside |
+| vl-deck-345ft | deck / box | low | lightship | 1,780 | 2,005 | 12.6 | ±30 (low) | inside |
+| vl-deck-345ft | deck / box | low | DWT | 10,165 | 11,754 | 15.6 | ±15 (low) | **OUTSIDE** ⚠ |
+| vl-deck-300ft | deck / box | low | lightship | 1,300 | 1,493 | 14.8 | ±30 (low) | inside |
+| vl-deck-300ft | deck / box | low | DWT | 8,154 | 8,731 | 7.1 | ±15 (low) | inside |
+| vl-deck-250ft | deck / box | low | lightship | 952 | 886 | -6.9 | ±30 (low) | inside |
+| vl-deck-250ft | deck / box | low | cargo capacity (not DWT) | 4,989 | 5,280 | 5.8 | – | no band (not a DWT) |
+| jml5019-pontoon | deck / box | medium | cargo capacity (not DWT) | 1,734 | 1,766 | 1.8 | – | cross-check, no band |
+| touax-193-194-2021 | box | medium | DWT | 2,528 | 2,550 | 0.9 | ±10 (medium) | inside |
+| touax-seine-2020 | box | medium | DWT | 2,553 | 2,550 | -0.1 | ±10 (medium) | inside |
+| taf-seine-2008 | box | medium | DWT | 2,516 | 2,608 | 3.7 | ±10 (medium) | inside |
+| taf-seine-2000 | box | medium | DWT | 2,664 | 2,676 | 0.4 | ±10 (medium) | inside |
+| taf-seine-1997 | box | medium | DWT | 2,700 | 2,703 | 0.1 | ±10 (medium) | inside |
 | taf-seine-1996 | box | medium | DWT | 2,016 | 1,945 | -3.5 | ±10 (medium) | inside |
-| taf-seine-1993 | box | medium | DWT | 2,482 | 2,561 | 3.2 | ±10 (medium) | inside |
-| taf-seine-1981 | box | medium | DWT | 1,699 | 1,675 | -1.4 | ±10 (medium) | inside |
-| taf-seine-1973 | box | medium | DWT | 2,546 | 2,465 | -3.2 | ±10 (medium) | inside |
-| taf-rhin-2019-covered | box | medium | DWT | 3,557 | 3,517 | -1.1 | ±10 (medium) | inside |
-| taf-rhin-2008-covered | box | medium | DWT | 3,599 | 3,656 | 1.6 | ±10 (medium) | inside |
+| taf-seine-1993 | box | medium | DWT | 2,482 | 2,560 | 3.1 | ±10 (medium) | inside |
+| taf-seine-1981 | box | medium | DWT | 1,699 | 1,674 | -1.5 | ±10 (medium) | inside |
+| taf-seine-1973 | box | medium | DWT | 2,546 | 2,464 | -3.2 | ±10 (medium) | inside |
+| taf-rhin-2019-covered | box | medium | DWT | 3,557 | 3,516 | -1.2 | ±10 (medium) | inside |
+| taf-rhin-2008-covered | box | medium | DWT | 3,599 | 3,655 | 1.6 | ±10 (medium) | inside |
 | taf-rhin-2000 | box | medium | DWT | 2,793 | 2,666 | -4.6 | ±10 (medium) | inside |
 | taf-rhin-2001 | box | medium | DWT | 2,793 | 2,678 | -4.1 | ±10 (medium) | inside |
 | taf-rhin-1980-covered | box | medium | DWT | 2,841 | 2,767 | -2.6 | ±10 (medium) | inside |
 | taf-danube-2008 | box | medium | DWT | 2,026 | 2,120 | 4.6 | ±10 (medium) | inside |
-| taf-parana-2013 | box | medium | DWT | 2,500 | 2,578 | 3.1 | ±10 (medium) | inside |
-| taf-mississippi-2011 | box | low | DWT | 2,500 | 1,905 | -23.8 | ±15 (low) | **OUTSIDE** ⚠ (excluded) |
-| meb-dcb23-ptich | box | medium | DWT | 6,222 | 6,485 | 4.2 | ±10 (medium) | inside |
-| meb-dcb24-pola | box | medium | DWT | 6,688 | 6,425 | -3.9 | ±10 (medium) | inside |
+| taf-parana-2013 | box | medium | DWT | 2,500 | 2,577 | 3.1 | ±10 (medium) | inside |
+| taf-mississippi-2011 | box | low | DWT | 2,500 | 1,904 | -23.8 | ±15 (low) | **OUTSIDE** ⚠ (excluded) |
+| meb-dcb23-ptich | box | medium | DWT | 6,222 | 6,486 | 4.2 | ±10 (medium) | inside |
+| meb-dcb24-pola | box | medium | DWT | 6,688 | 6,427 | -3.9 | ±10 (medium) | inside |
 | meb-rdb12-samarskaya | box | medium | DWT | 4,121 | 4,408 | 7.0 | ±10 (medium) | inside |
 | meb-rdb20-belmax9 | box | medium | DWT | 6,000 | 5,987 | -0.2 | ±10 (medium) | inside |
-| vl-pontoon-33.7x7.8x2.0 | pontoon / box | low | lightship | 105 | 57 | -45.3 | ±30 (low) | **OUTSIDE** ⚠ |
-| vl-pontoon-30.0x11.2x2.5 | pontoon / box | low | lightship | 162 | 92 | -43.3 | ±30 (low) | **OUTSIDE** ⚠ |
-| vl-pontoon-40.0x12.5x3.0 | pontoon / box | low | lightship | 222 | 164 | -26.1 | ±30 (low) | inside |
-| vl-pontoon-50.0x12.0x2.8 | pontoon / box | low | lightship | 328 | 184 | -44.0 | ±30 (low) | **OUTSIDE** ⚠ |
-| vl-pontoon-50.0x14.0x3.0 | pontoon / box | low | lightship | 300 | 230 | -23.5 | ±30 (low) | inside |
-| vl-pontoon-50.0x18.8x3.0 | pontoon / box | low | lightship | 375 | 308 | -17.8 | ±30 (low) | inside |
-| vl-pontoon-50.0x20.0x3.0 | pontoon / box | low | lightship | 400 | 328 | -18.0 | ±30 (low) | inside |
-| vl-pontoon-60.0x16.5x3.5 | pontoon / box | low | lightship | 475 | 379 | -20.3 | ±30 (low) | inside |
-| vl-pontoon-60.0x20.0x4.0 | pontoon / box | low | lightship | 560 | 525 | -6.3 | ±30 (low) | inside |
-| vl-pontoon-60.0x22.0x4.0-lw740 | pontoon / box | low | lightship | 740 | 577 | -22.0 | ±30 (low) | inside |
-| vl-pontoon-60.0x22.0x4.0-lw600-dwt3350 | pontoon / box | low | lightship | 600 | 577 | -3.8 | ±30 (low) | inside |
-| vl-pontoon-60.0x22.0x4.0-lw600-dwt3400 | pontoon / box | low | lightship | 600 | 577 | -3.8 | ±30 (low) | inside |
-| vl-pontoon-70.0x22.0x4.0 | pontoon / box | low | lightship | 760 | 673 | -11.4 | ±30 (low) | inside |
-| vl-pontoon-80.0x22.0x4.5 | pontoon / box | low | lightship | 900 | 866 | -3.8 | ±30 (low) | inside |
-| vl-pontoon-80.0x24.0x5.0 | pontoon / box | low | lightship | 1,550 | 1,049 | -32.3 | ±30 (low) | **OUTSIDE** ⚠ |
-| wilcarry-250-45x8 | pontoon / box | medium | lightship | 130 | 79 | -39.3 | ±20 (medium) | **OUTSIDE** ⚠ |
+| vl-pontoon-33.7x7.8x2.0 | pontoon / box | low | lightship | 105 | 57 | -45.6 | ±30 (low) | **OUTSIDE** ⚠ |
+| vl-pontoon-30.0x11.2x2.5 | pontoon / box | low | lightship | 162 | 91 | -43.7 | ±30 (low) | **OUTSIDE** ⚠ |
+| vl-pontoon-40.0x12.5x3.0 | pontoon / box | low | lightship | 222 | 163 | -26.6 | ±30 (low) | inside |
+| vl-pontoon-50.0x12.0x2.8 | pontoon / box | low | lightship | 328 | 182 | -44.4 | ±30 (low) | **OUTSIDE** ⚠ |
+| vl-pontoon-50.0x14.0x3.0 | pontoon / box | low | lightship | 300 | 228 | -24.0 | ±30 (low) | inside |
+| vl-pontoon-50.0x18.8x3.0 | pontoon / box | low | lightship | 375 | 306 | -18.3 | ±30 (low) | inside |
+| vl-pontoon-50.0x20.0x3.0 | pontoon / box | low | lightship | 400 | 326 | -18.6 | ±30 (low) | inside |
+| vl-pontoon-60.0x16.5x3.5 | pontoon / box | low | lightship | 475 | 376 | -20.8 | ±30 (low) | inside |
+| vl-pontoon-60.0x20.0x4.0 | pontoon / box | low | lightship | 560 | 521 | -6.9 | ±30 (low) | inside |
+| vl-pontoon-60.0x22.0x4.0-lw740 | pontoon / box | low | lightship | 740 | 573 | -22.5 | ±30 (low) | inside |
+| vl-pontoon-60.0x22.0x4.0-lw600-dwt3350 | pontoon / box | low | lightship | 600 | 573 | -4.4 | ±30 (low) | inside |
+| vl-pontoon-60.0x22.0x4.0-lw600-dwt3400 | pontoon / box | low | lightship | 600 | 573 | -4.4 | ±30 (low) | inside |
+| vl-pontoon-70.0x22.0x4.0 | pontoon / box | low | lightship | 760 | 669 | -12.0 | ±30 (low) | inside |
+| vl-pontoon-80.0x22.0x4.5 | pontoon / box | low | lightship | 900 | 860 | -4.4 | ±30 (low) | inside |
+| vl-pontoon-80.0x24.0x5.0 | pontoon / box | low | lightship | 1,550 | 1,043 | -32.7 | ±30 (low) | **OUTSIDE** ⚠ |
+| wilcarry-250-45x8 | pontoon / box | medium | lightship | 130 | 78 | -39.7 | ±20 (medium) | **OUTSIDE** ⚠ |
 | wilcarry-250-45x8 | pontoon / box | medium | DWT | 255 | 378 | 48.1 | ±10 (medium) | **OUTSIDE** ⚠ |
-| wilcarry-300-36x8 | pontoon / box | medium | lightship | 114 | 63 | -45.0 | ±20 (medium) | **OUTSIDE** ⚠ |
+| wilcarry-300-36x8 | pontoon / box | medium | lightship | 114 | 63 | -45.3 | ±20 (medium) | **OUTSIDE** ⚠ |
 | wilcarry-300-36x8 | pontoon / box | medium | DWT | 282 | 329 | 16.4 | ±10 (medium) | **OUTSIDE** ⚠ |
-| wilcarry-350-33x9.5 | pontoon / box | low | lightship | 180 | 69 | -61.6 | ±30 (low) | **OUTSIDE** ⚠ |
+| wilcarry-350-33x9.5 | pontoon / box | low | lightship | 180 | 69 | -61.8 | ±30 (low) | **OUTSIDE** ⚠ |
 | wilcarry-350-33x9.5 | pontoon / box | low | DWT | 152 | 268 | 76.1 | ±15 (low) | **OUTSIDE** ⚠ |
-| wilcarry-501-30x11.2 | pontoon / box | medium | lightship | 138 | 92 | -33.5 | ±20 (medium) | **OUTSIDE** ⚠ |
+| wilcarry-501-30x11.2 | pontoon / box | medium | lightship | 138 | 91 | -33.9 | ±20 (medium) | **OUTSIDE** ⚠ |
 | wilcarry-501-30x11.2 | pontoon / box | medium | DWT | 491 | 535 | 8.9 | ±10 (medium) | inside |
-| wilcarry-1500-50x14 | pontoon / box | medium | lightship | 280 | 230 | -17.9 | ±20 (medium) | inside |
-| wilcarry-1500-50x14 | pontoon / box | medium | DWT | 1,280 | 1,315 | 2.8 | ±10 (medium) | inside |
-| wilcarry-1711-50x18.8 | pontoon / box | medium | lightship | 431 | 308 | -28.5 | ±20 (medium) | **OUTSIDE** ⚠ |
+| wilcarry-1500-50x14 | pontoon / box | medium | lightship | 280 | 228 | -18.4 | ±20 (medium) | inside |
+| wilcarry-1500-50x14 | pontoon / box | medium | DWT | 1,280 | 1,315 | 2.7 | ±10 (medium) | inside |
+| wilcarry-1711-50x18.8 | pontoon / box | medium | lightship | 431 | 306 | -28.9 | ±20 (medium) | **OUTSIDE** ⚠ |
 | wilcarry-1711-50x18.8 | pontoon / box | medium | DWT | 1,680 | 1,759 | 4.7 | ±10 (medium) | inside |
-| wilcarry-1750-45x20 | pontoon / box | medium | lightship | 665 | 354 | -46.7 | ±20 (medium) | **OUTSIDE** ⚠ |
-| wilcarry-1750-45x20 | pontoon / box | medium | DWT | 1,750 | 2,163 | 23.6 | ±10 (medium) | **OUTSIDE** ⚠ |
-| wilcarry-22-12x4.8 | pontoon / box | low | lightship | 23 | 8 | -67.1 | ±30 (low) | **OUTSIDE** ⚠ (excluded) |
-| wilcarry-22-12x4.8 | pontoon / box | low | DWT | 20 | 32 | 59.3 | ±15 (low) | **OUTSIDE** ⚠ (excluded) |
-| wilcarry-2508-24.7x17.8 | pontoon / box | low | lightship | 88 | 96 | 9.3 | ±30 (low) | inside (excluded) |
-| wilcarry-2508-24.7x17.8 | pontoon / box | low | DWT | 101 | 411 | 307.0 | ±15 (low) | **OUTSIDE** ⚠ (excluded) |
-| meb-rdb15-96x16.7 | deck / box | medium | DWT | 3,866 | 3,988 | 3.2 | ±10 (medium) | inside |
+| wilcarry-1750-45x20 | pontoon / box | medium | lightship | 665 | 352 | -47.1 | ±20 (medium) | **OUTSIDE** ⚠ |
+| wilcarry-1750-45x20 | pontoon / box | medium | DWT | 1,750 | 2,162 | 23.6 | ±10 (medium) | **OUTSIDE** ⚠ |
+| wilcarry-22-12x4.8 | pontoon / box | low | lightship | 23 | 8 | -67.3 | ±30 (low) | **OUTSIDE** ⚠ (excluded) |
+| wilcarry-22-12x4.8 | pontoon / box | low | DWT | 20 | 32 | 59.4 | ±15 (low) | **OUTSIDE** ⚠ (excluded) |
+| wilcarry-2508-24.7x17.8 | pontoon / box | low | lightship | 88 | 96 | 8.6 | ±30 (low) | inside (excluded) |
+| wilcarry-2508-24.7x17.8 | pontoon / box | low | DWT | 101 | 411 | 307.1 | ±15 (low) | **OUTSIDE** ⚠ (excluded) |
+| meb-rdb15-96x16.7 | deck / box | medium | DWT | 3,866 | 3,989 | 3.2 | ±10 (medium) | inside |
 | meb-rdb21-85x17.2 | deck / box | medium | DWT | 1,896 | 2,027 | 6.9 | ±10 (medium) | inside |
-| meb-dcb26-78x16.5 | deck / box | medium | DWT | 1,564 | 1,826 | 16.8 | ±10 (medium) | **OUTSIDE** ⚠ |
-| canal-box-200x35x12-cby222 | box | low | DWT | 1,530 | 1,396 | -8.8 | ±15 (low) | inside |
+| meb-dcb26-78x16.5 | deck / box | medium | DWT | 1,564 | 1,827 | 16.8 | ±10 (medium) | **OUTSIDE** ⚠ |
+| canal-box-200x35x12-cby222 | box | low | DWT | 1,530 | 1,395 | -8.8 | ±15 (low) | inside |
 | canal-box-200x35x13-cby252 | box | low | DWT | 1,488 | 1,374 | -7.7 | ±15 (low) | inside |
 | canal-box-200x35x13-cby400 | box | low | DWT | 1,498 | 1,374 | -8.3 | ±15 (low) | inside |
 | canal-box-200x35x13-cby433 | box | low | DWT | 1,497 | 1,374 | -8.2 | ±15 (low) | inside |
-| canal-box-200x35x12-imt201 | box | low | DWT | 1,509 | 1,396 | -7.5 | ±15 (low) | inside |
-| canal-box-200x35x12-imt205 | box | low | DWT | 1,507 | 1,396 | -7.4 | ±15 (low) | inside |
-| canal-box-200x35x12-pb2012 | box | low | DWT | 1,462 | 1,396 | -4.6 | ±15 (low) | inside |
+| canal-box-200x35x12-imt201 | box | low | DWT | 1,509 | 1,395 | -7.5 | ±15 (low) | inside |
+| canal-box-200x35x12-imt205 | box | low | DWT | 1,507 | 1,395 | -7.4 | ±15 (low) | inside |
+| canal-box-200x35x12-pb2012 | box | low | DWT | 1,462 | 1,395 | -4.6 | ±15 (low) | inside |
 | canal-box-200x25x12-pb2230 | box | low | DWT | 1,462 | 997 | -31.8 | ±15 (low) | **OUTSIDE** ⚠ (excluded) |
 | canal-box-200x35x13-pb2352 | box | low | DWT | 1,475 | 1,374 | -6.9 | ±15 (low) | inside |
-| canal-box-200x35x12-rci250 | box | low | DWT | 1,517 | 1,396 | -8.0 | ±15 (low) | inside |
-| dsb-holdbarge-1997-76.5 | box | low | DWT | 2,737 | 2,775 | 1.4 | ±15 (low) | inside |
+| canal-box-200x35x12-rci250 | box | low | DWT | 1,517 | 1,395 | -8.0 | ±15 (low) | inside |
+| dsb-holdbarge-1997-76.5 | box | low | DWT | 2,737 | 2,774 | 1.4 | ±15 (low) | inside |
 | jml50-pontoon | pontoon / box | medium | cargo capacity (not DWT) | 1,300 | 1,335 | 2.7 | – | cross-check, no band |
 
 ### Held-out cases the dry-barge path cannot run yet
@@ -238,13 +237,13 @@ Error is (calibrated − published) ÷ published. Cross-check cases and cases ex
 
 | Figure | Sample | Group | n | Mean err % | Mean abs err % | Range % | Inside band |
 |---|---|---|---|---|---|---|---|
-| Lightship | in-sample | all in-sample cases | 3 | -3.9 | 3.9 | -10.6 to +0.0 | 3 of 3 |
-| Lightship | out of sample | deck (run as box) | 15 | -6.3 | 11.2 | -26.3 to +15.6 | 14 of 15 |
-| Lightship | out of sample | pontoon (run as box) | 22 | -27.0 | 27.0 | -61.6 to -3.8 | 12 of 22 |
-| Deadweight at the stated draught | in-sample | all in-sample cases | 8 | -0.4 | 4.5 | -7.7 to +5.8 | 8 of 8 |
+| Lightship | in-sample | all in-sample cases | 2 | -5.6 | 5.6 | -11.2 to +0.0 | 2 of 2 |
+| Lightship | out of sample | deck (run as box) | 15 | -6.9 | 11.5 | -26.8 to +14.8 | 13 of 15 |
+| Lightship | out of sample | pontoon (run as box) | 22 | -27.5 | 27.5 | -61.8 to -4.4 | 12 of 22 |
+| Deadweight at the stated draught | in-sample | all in-sample cases | 8 | -0.4 | 4.5 | -7.8 to +5.8 | 8 of 8 |
 | Deadweight at the stated draught | out of sample | box | 30 | -2.1 | 4.1 | -8.8 to +7.0 | 30 of 30 |
-| Deadweight at the stated draught | out of sample | deck (run as box) | 13 | +7.6 | 8.2 | -4.1 to +16.8 | 8 of 13 |
-| Deadweight at the stated draught | out of sample | pontoon (run as box) | 7 | +25.8 | 25.8 | +2.8 to +76.1 | 3 of 7 |
+| Deadweight at the stated draught | out of sample | deck (run as box) | 13 | +7.6 | 8.2 | -4.1 to +16.8 | 9 of 13 |
+| Deadweight at the stated draught | out of sample | pontoon (run as box) | 7 | +25.8 | 25.8 | +2.7 to +76.1 | 3 of 7 |
 
 ## 5. Type C tank cases (held out)
 

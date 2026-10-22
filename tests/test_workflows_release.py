@@ -336,3 +336,10 @@ def test_the_pypi_job_takes_the_wheels_the_gate_tested():
     steps = workflow(PUBLISH)["jobs"]["publish"]["steps"]
     pattern = next(s["with"]["pattern"] for s in steps if "download-artifact" in s.get("uses", ""))
     assert "wheel-*" in pattern and "sdist" in pattern
+
+
+def test_the_release_workflow_runs_the_calibration_release_check():
+    """Label: property
+    """
+    wf = (ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
+    assert "calibration --release-check" in wf and "calibration-bands:" in wf

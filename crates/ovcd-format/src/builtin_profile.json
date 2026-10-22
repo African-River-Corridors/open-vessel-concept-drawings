@@ -166,7 +166,7 @@
       "basis": "carried over from the original engine: the aft void of a pushed barge, which has no stern block (the crew, battery and propulsion are on the tug). Used for a pushed Formation only"
     },
     "lightship_factor_t_per_m3": {
-      "default_by_cargo_containment": { "box_hold": 0.1093, "integral_tanks": 0.1141 },
+      "default_by_cargo_containment": { "box_hold": 0.1086, "integral_tanks": 0.1134 },
       "unit": "t/m3",
       "hard": { "gt": 0, "le": 1 },
       "soft": { "min": 0.08, "max": 0.15 },

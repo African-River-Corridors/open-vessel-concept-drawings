@@ -211,3 +211,32 @@ def test_every_web_source_records_whether_its_checksum_was_achieved():
             assert s.get("retrieved"), s["id"]
         else:
             assert s.get("checksum_attempted") and s.get("checksum_failed"), s["id"]
+
+
+def test_a_case_outside_its_band_blocks_a_release_unless_the_changelog_names_it():
+    """Issue #431: the release gate. Label: property
+    """
+    from vessel_designer.calibration import assess, release_problems
+    out = [b for b in assess() if not b.inside and not b.excluded]
+    assert out, "the test needs a dry barge case outside its band"
+    case = out[0].case
+    no_entry = "# Changelog\n\n## Unreleased\n\n- x\n"
+    assert any(p.startswith(case) for p in release_problems(no_entry, "9.9.9")), "no section: blocked"
+    named = f"# Changelog\n\n## 9.9.9 (2026-10-30)\n\n- Calibration: {case} is outside its band because of a stated reason.\n"
+    assert not any(p.startswith(case) for p in release_problems(named, "9.9.9"))
+    # Naming it in another version's entry, or in Unreleased, does not explain it for this release.
+    other = f"# Changelog\n\n## Unreleased\n\n- {case}\n\n## 9.9.9 (2026-10-30)\n\n- nothing\n"
+    assert any(p.startswith(case) for p in release_problems(other, "9.9.9"))
+
+
+def test_a_miss_the_case_file_already_explains_does_not_block_a_release():
+    """Label: property
+    """
+    from vessel_designer.calibration import _accepted_misses, release_problems
+    accepted = _accepted_misses()
+    assert accepted, "the tank cases hold accepted misses"
+    text = "# Changelog\n\n## 9.9.9 (2026-10-30)\n\n- nothing\n"
+    blocked = " ".join(release_problems(text, "9.9.9"))
+    for case, _fig in accepted:
+        assert case not in blocked, case
+

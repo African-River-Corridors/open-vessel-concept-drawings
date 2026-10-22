@@ -148,16 +148,9 @@ dry_barge:
     source: "oceanmarine.com listing 16478 (PDF read)"
     confidence: high
     note: "Light draught alone needs a light-condition Cb; used as a cross-check only, not in the fit."
-  - id: us-hopper-195x35-generic
-    hold_type: box
-    what: "Typical US river hopper, 195 x 35 x 12-13 ft — trade rule of thumb"
-    loa_m: 59.44
-    beam_m: 10.67
-    depth_m: 3.81          # 12.5 ft, middle of the 12-13 ft range
-    draught_m: null
-    observed: {lightship_t: 267}   # 280-310 short tons = 254-281 t; midpoint
-    source: "Practitioner statements (eng-tips / proz.com answers via search summary): lightship 280-310 st; light draft 1 ft 6 in - 1 ft 10 in. Not a primary source."
-    confidence: low
+  # Dropped (maintainer decision, issue #431): "us-hopper-195x35-generic", a typical US river hopper whose
+  # lightship came from practitioner statements in forum answers (eng-tips, proz.com), not a primary source. It
+  # was one of the three points of the box k.
 
   - id: cbc-1951-deck-195x35
     hold_type: deck

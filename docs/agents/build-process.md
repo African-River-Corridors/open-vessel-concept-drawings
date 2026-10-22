@@ -138,6 +138,9 @@ Installers are built and published only on purpose (issue #173; `tools/release_p
 
 During development the app makes 0.2.x patch releases only. Version 0.3 is reserved for the first release shared with expert reviewers, and any minor bump needs the maintainer.
 
+- **A calibration case outside its band** blocks a release unless that release's `CHANGELOG.md` entry names it
+  and says why (`calibration/README.md`, "When a band blocks a release"). The `calibration-bands` job of
+  `release.yml` checks it; run `python -m vessel_designer.calibration --release-check <version>` before the bump.
 - **A version bump.** A merge to `main` that changes `version` in `pyproject.toml` publishes the
   pre-release `v<version>`, tagged at that commit. Bump the version in every place the version test
   names, run `python3 tools/changelog_collect.py` (it moves the fragments into `CHANGELOG.md`), and add a

@@ -215,7 +215,7 @@ def test_every_new_case_is_held_out_and_marked_with_what_the_note_suggested():
     """
     cases = _cases()
     in_sample = [c for c in cases["dry_barge"] if not _is_held_out(c)]
-    assert len(in_sample) == 12
+    assert len(in_sample) == 11
     held = _held_out(cases)
     note, follow = _note_cases(cases), _follow_up_cases(cases)
     assert len(note) == 62 and len(follow) == 64

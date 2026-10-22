@@ -96,9 +96,9 @@ Labels: the geometry is a **Method** with no reference (an OVCD estimate). Each 
 
 ### 4. Dry bulk lightship (work in development)
 
-- **Box hold:** `lightship = k × LOA × B × D`, with `k = lightship_factor_t_per_m3` (default 0.1093 t/m³)
+- **Box hold:** `lightship = k × LOA × B × D`, with `k = lightship_factor_t_per_m3` (default 0.1086 t/m³)
   (`barge_capacity.rs` lines 652 to 660; `builtin_profile.json` lines 80 to 86). `k` is the mean of three published
-  pushed box barges (`calibration/factors.yaml`). Label: **Estimate** (in-sample fit, n = 3).
+  pushed box barges (`calibration/factors.yaml`). Label: **Estimate** (in-sample fit, n = 2).
 - **Sloped hopper hold:** a plating-area build-up (lines 635 to 651):
   - plate volumes (m³): inner bottom `L_c × B × t_ib`; hopper slopes `2 × h × √(s² + 1) × L_c × t_hop`; wing
     bulkheads `2 × h × L_c × t_bhd`; transverse bulkheads `(n_holds + 1) × A × t_bhd`; coaming
@@ -238,7 +238,7 @@ adds "Cargo > 0" (line 755) and the light air draft check (lines 383 to 392).
 | CG-A35 | Hopper structure factor | 1.40 | Fixed in code | None | `barge_capacity.rs` line 251 | Unknown |
 | CG-A36 | Top-down hull steel rate, hopper | 0.10 t/m³ of LOA × B × D | Fixed in code | None | `barge_capacity.rs` lines 252, 649 | Unknown |
 | CG-A37 | Piping and outfitting, hopper | 0.04 and 0.035 of steel | Fixed in code | None | `barge_capacity.rs` lines 253 to 254, 651 | Unknown |
-| CG-A38 | Box hold lightship factor | k = 0.1093 t/m³ × LOA × B × D | Estimate | Fit to 3 published pushed box barges, range 0.095 to 0.1223 (`calibration/factors.yaml`) | `barge_capacity.rs` line 659; `builtin_profile.json` line 81 | Unknown; in-sample |
+| CG-A38 | Box hold lightship factor | k = 0.1086 t/m³ × LOA × B × D | Estimate | Fit to 2 published pushed box barges, range 0.095 to 0.1223 (`calibration/factors.yaml`) | `barge_capacity.rs` line 659; `builtin_profile.json` line 81 | Unknown; in-sample |
 | CG-A39 | Container hold lightship factor | k = 0.1711 t/m³ | Estimate | One calibration case; not reachable from a Design | `calibration/factors.yaml`; `barge_capacity.rs` lines 652 to 660 | No effect today |
 | CG-A40 | Stern block mass | 0 t in the lightship | Fixed in code | — | `barge_capacity.rs` lines 861 to 867 | Non-conservative for a self-propelled dry hull (cargo and deadweight high) |
 | CG-A41 | Bow and stern void fractions | 0.10 and 0.15; not read in the capacity path | Fixed in code | — | `barge_capacity.rs` lines 244 to 245 | No effect |
@@ -291,7 +291,7 @@ All in `builtin_profile.json`. "Carried over" means the value of the original en
 | `bow_rake_length_to_depth_ratio` | 1.6 | — | all | Carried over |
 | `pushed_stern_void_m` | 3.0 | m | pushed | Carried over |
 | `draught_limit_m`, `air_draft_limit_m` | none | m | all | — |
-| `lightship_factor_t_per_m3` | 0.1093 | t/m³ | box hold | `calibration/factors.yaml` |
+| `lightship_factor_t_per_m3` | 0.1086 | t/m³ | box hold | `calibration/factors.yaml` |
 | `hold_wing_void_width_m` | 1.0 | m | both holds | Carried over |
 | `hold_double_bottom_m` | 0.8 | m | both holds | Estimate from built barges |
 | `hatch_coaming_height_m` | 1.0 | m | both holds | Carried over |
@@ -360,7 +360,7 @@ files, so an old file keeps its results.
    does a typical inland hopper barge have?
 4. Should the hold double bottom default be 1.2 m and the wing void 1.0 m for a box barge, or nearer the ADN
    9.1.0.91 minimums (0.50 m and 0.80 m)?
-5. Is `k = 0.1093 t/m³ × LOA × B × D` fair for a self-propelled dry bulk hull if the stern block is added on top?
+5. Is `k = 0.1086 t/m³ × LOA × B × D` fair for a self-propelled dry bulk hull if the stern block is added on top?
    What mass should the stern block carry?
 6. For a box barge, should the default Cb be the calibrated 0.928 rather than 0.85?
 7. Should the bulk GM warning become blocking at 0.15 m (IS Code 2008 Part A 2.2.4), and should it run at the
