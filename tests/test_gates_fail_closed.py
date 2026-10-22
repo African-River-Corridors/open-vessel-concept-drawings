@@ -158,8 +158,11 @@ def _gates_on_copy(copy: Path, rel: str, addition: str) -> subprocess.CompletedP
     original = target.read_text(encoding="utf-8")
     target.write_text(original + addition, encoding="utf-8")
     try:
-        env = {**os.environ, "OVCD_PYTHON": sys.executable,
-               "CARGO_TARGET_DIR": os.environ.get("CARGO_TARGET_DIR", str(ROOT / "target"))}
+        # The CI job that runs this test sets GATES_STEPS and GATES_PARTITION for itself (issue #561):
+        # the gate on the copy must run in full.
+        env = {k: v for k, v in os.environ.items() if k not in ("GATES_STEPS", "GATES_PARTITION")}
+        env.update({"OVCD_PYTHON": sys.executable,
+                    "CARGO_TARGET_DIR": os.environ.get("CARGO_TARGET_DIR", str(ROOT / "target"))})
         return subprocess.run([shutil.which("bash"), str(copy / "tools" / "gates.sh")], cwd=copy, env=env,
                               capture_output=True, text=True, timeout=1500)
     finally:
