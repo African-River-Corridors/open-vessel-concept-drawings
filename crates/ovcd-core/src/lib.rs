@@ -23,6 +23,7 @@ pub mod confined_water;
 pub mod damage_stability;
 pub mod design_grid;
 pub mod electric_energy;
+pub mod formation;
 pub mod ga_adapter;
 pub mod gas_arrangement;
 pub mod gas_separation;

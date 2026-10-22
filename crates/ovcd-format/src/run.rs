@@ -495,6 +495,17 @@ pub fn run_option_with(
             None => {
                 // The capital budget: an output, not hashed, never fed back into the run.
                 let mut v = v;
+                if let Some((abreast, in_line)) = crate::convoy::counts(option) {
+                    crate::convoy::add_totals(abreast, in_line, &mut v);
+                }
+                crate::convoy::add_lock_checks(option, &mut v);
+                // Issue #359: the pusher of a pushed barge or convoy, when the Option includes it.
+                crate::formation::add_formation(
+                    option,
+                    &params,
+                    crate::convoy::counts(option).unwrap_or((1, 1)),
+                    &mut v,
+                );
                 let cost = crate::cost::cost_of(option, &v);
                 // The Rule Trace: not hashed either; the stored Rule Set hashes cover the rules.
                 measured.checks = v
@@ -519,7 +530,12 @@ pub fn run_option_with(
                 let sightline = &v["sightline"];
                 measured.blind_distance_light_m = sightline["blind_distance_light_m"].as_f64();
                 measured.blind_distance_laden_m = sightline["blind_distance_laden_m"].as_f64();
-                measured.speeds_kn = v["powering"]["environments"]
+                let speeds_of = if v["powering"].is_null() {
+                    &v["formation"]
+                } else {
+                    &v["powering"]
+                };
+                measured.speeds_kn = speeds_of["environments"]
                     .as_array()
                     .map(|list| {
                         list.iter()
@@ -533,6 +549,10 @@ pub fn run_option_with(
                     })
                     .unwrap_or_default();
                 measured.design_speed_kn = v["powering"]["design_speed_kn"].as_f64();
+                // Issue #359: a pushed Formation with its pusher has its speeds in `formation`.
+                if v["formation"]["environments"].is_array() && v["powering"].is_null() {
+                    measured.design_speed_kn = v["formation"]["design_speed_kn"].as_f64();
+                }
                 measured.lift_enough = v["sightline"]["lift_enough"].as_bool();
                 measured.depth_over_draught = match (
                     option
@@ -548,10 +568,6 @@ pub fn run_option_with(
                     crate::trace::service_area_of(option),
                     &selection.warnings,
                 );
-                if let Some((abreast, in_line)) = crate::convoy::counts(option) {
-                    crate::convoy::add_totals(abreast, in_line, &mut v);
-                }
-                crate::convoy::add_lock_checks(option, &mut v);
                 if let Some(o) = v.as_object_mut() {
                     o.insert("cost".to_string(), cost);
                     o.insert("calibration".to_string(), calibration_of(option));
