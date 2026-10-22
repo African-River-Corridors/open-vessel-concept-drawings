@@ -417,6 +417,26 @@
           "value": null,
           "source": "default"
         },
+        "deckhouse_front_opening": {
+          "value": false,
+          "source": "default"
+        },
+        "deckhouse_side_opening_distance_m": {
+          "value": 5.0,
+          "source": "default"
+        },
+        "entrance_distance_m": {
+          "value": 2.0,
+          "source": "default"
+        },
+        "engine_room_vent_inlet_distance_m": {
+          "value": 2.0,
+          "source": "default"
+        },
+        "funnel_outlet_distance_m": {
+          "value": 2.0,
+          "source": "default"
+        },
         "service_area": {
           "value": "river-only",
           "source": "default"

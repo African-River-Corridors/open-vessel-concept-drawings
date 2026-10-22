@@ -294,6 +294,13 @@ OPTIONAL_INPUT_CASES = (
           "hash": "cfab2d1cda90d0cfda8edbf0955082345cd30ef2d102c9840e8d4feab5297e37"},
          {"id": "ovcd", "version": "2.1.0", "source": "default",
           "hash": "7a4b82e2b709ae694076787156efe9ad57b4916829085128330e4366e6e5295a"}]}),
+    # The typed openings (issue #417), set to their defaults on a self-propelled gas barge. They feed
+    # Rules (the Rule Trace is not hashed), not the results; the same results as leaving them out. A
+    # base from before them refuses the input and leaves it out.
+    *((name, "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0, {name: value})
+      for name, value in (("deckhouse_front_opening", False), ("deckhouse_side_opening_distance_m", 5.0),
+                          ("entrance_distance_m", 2.0), ("engine_room_vent_inlet_distance_m", 2.0),
+                          ("funnel_outlet_distance_m", 2.0))),
     # The Hull Form parameters (issue #446), set to their defaults on a raked box. Inputs only until
     # the hydrostatics switch-over (#448): each shows no change. A base from before them refuses the
     # input and leaves it out.

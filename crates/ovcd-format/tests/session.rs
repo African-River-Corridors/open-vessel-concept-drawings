@@ -569,6 +569,7 @@ fn the_schema_lists_every_input_in_table_order_with_its_group() {
             "Dry-bulk hold",
             "Liquid cargo tanks",
             "Aft block",
+            "Openings",
             "Stern and propulsion",
             "Tug",
             "Waterway Limits",

@@ -179,14 +179,19 @@ impl MeasureSource for CandidateSource<'_> {
         self.measured.objects_by_key(object, "Candidate")
     }
     fn value(&self, m: &MeasureRef, index: usize) -> Result<MeasureValue, String> {
+        // The Option's own values: each input Measure, and the Measures its typed inputs give
+        // (issue #417).
+        let own = self
+            .inputs
+            .measures
+            .iter()
+            .find(|(n, _, _)| *n == m.id)
+            .map(|(_, _, v)| v.clone());
         if m.id.starts_with("input.") {
-            return self
-                .inputs
-                .measures
-                .iter()
-                .find(|(n, _, _)| *n == m.id)
-                .map(|(_, _, v)| v.clone())
-                .ok_or_else(|| format!("the Option has no `{}`", m.id));
+            return own.ok_or_else(|| format!("the Option has no `{}`", m.id));
+        }
+        if let Some(v) = own {
+            return Ok(v);
         }
         self.measured.value(m, index)
     }

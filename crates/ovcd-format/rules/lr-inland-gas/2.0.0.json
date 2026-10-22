@@ -1,0 +1,366 @@
+{
+  "$schema": "../rule-set.schema.json",
+  "id": "lr-inland-gas",
+  "family": "lr-inland",
+  "title": "Inland class rules, gas tank clauses of Pt 4 Ch 4 Sec 3 (draft, until the IGC chapter 3 Rules)",
+  "version": "2.0.0",
+  "edition": {
+    "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+    "edition": "July 2022, as the code cites it",
+    "read": "November 2015 edition (same clauses); unofficial copy of the July 2022 Pt 4 Ch 4 Sec 3"
+  },
+  "sources": [
+    {
+      "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3, November 2015",
+      "edition": "November 2015",
+      "url": "https://archive.org/details/lloyds-register-rules-and-regulations-for-the-classification-of-inland-waterways-ships-november-2015",
+      "access": "free",
+      "sha256": "db7972754a860bf1cd21e310e499554ee7c6a4d06ed078f1804cd44d4f4ec0ea"
+    },
+    {
+      "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3, July 2022 (unofficial copy of the section)",
+      "edition": "July 2022",
+      "url": "https://www.imorules.com/IWW_PT4_CH4_3.html",
+      "access": "free",
+      "sha256": "c8ba02574a28f784129f03819c13aa5480d479b1269334586ce6b0f1f812ee83"
+    }
+  ],
+  "status": "draft",
+  "applies_when": {
+    "cargo_containment": [
+      "type_c_tanks"
+    ]
+  },
+  "includes": [],
+  "known_conflicts": [],
+  "tables": [
+    {
+      "id": "lr-end-space",
+      "source": {
+        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+        "locator": "3.5.3",
+        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 255"
+      },
+      "input": {
+        "name": "tank end shape"
+      },
+      "unit": "m",
+      "rows": [
+        {
+          "when": {
+            "in": [
+              "domed"
+            ]
+          },
+          "shape": "const",
+          "a": 0.2
+        },
+        {
+          "when": {
+            "in": [
+              "plane"
+            ]
+          },
+          "shape": "const",
+          "a": 0.5
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "lr-inland/3.3.7/opening-setback",
+      "title": "Engine room and accommodation entrances at least 2.00 m from the cargo area",
+      "origin": "class",
+      "source": {
+        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+        "edition": "July 2022 as the code cites it; read in the November 2015 edition, and in an unofficial copy of the July 2022 section, which have the same clauses",
+        "locator": "3.3.7",
+        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 254",
+        "access": "free",
+        "also": [
+          "3.3.11"
+        ]
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "separation.aft"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 2.0,
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "block",
+      "sizes": true,
+      "evaluated": true,
+      "finding": "#381",
+      "since": "1.0.0"
+    },
+    {
+      "id": "lr-inland/3.5.3/end-space",
+      "title": "Space between the tanks and the hold end bulkhead: 0.20 m, or 0.50 m for plane ends",
+      "origin": "class",
+      "source": {
+        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+        "edition": "July 2022 as the code cites it; read in the November 2015 edition, and in an unofficial copy of the July 2022 section, which have the same clauses",
+        "locator": "3.5.3",
+        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 255",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#281"
+      },
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "Inland Waterways Ships rules, November 2015 edition, and the July 2022 Pt 4 Ch 4 Sec 3 (same clause)",
+        "locator_read": "3.5.3(a), PDF p. 255",
+        "review": "#281"
+      },
+      "kind": "table",
+      "measure": {
+        "id": "separation.fwd"
+      },
+      "compare": "ge",
+      "limit": {
+        "table": "lr-end-space",
+        "at": "separation.tank_end",
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "block",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "lr-inland/3.5.1/tank-l-over-d",
+      "title": "Cargo tank length at most seven diameters (Type G)",
+      "origin": "class",
+      "source": {
+        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+        "edition": "July 2022 as the code cites it; read in the November 2015 edition, and in an unofficial copy of the July 2022 section, which have the same clauses",
+        "locator": "3.5.1",
+        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 255",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#424"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "tank length over diameter"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.1.0"
+    },
+    {
+      "id": "lr-inland/3.2.1/tank-capacity",
+      "title": "Capacity of each cargo tank within Table 4.3.1",
+      "origin": "class",
+      "source": {
+        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+        "edition": "July 2022 as the code cites it; read in the November 2015 edition, and in an unofficial copy of the July 2022 section, which have the same clauses",
+        "locator": "3.2.1",
+        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 252",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#424"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "tank.capacity_within_table"
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "needs the product Loa x Boa x D of the measurement certificate (D with the trunk correction) and the tank capacity in the sense of Table 4.3.1; the engine has neither Measure",
+      "finding": null,
+      "since": "1.1.0"
+    },
+    {
+      "id": "lr-inland/3.5.2/hull-design",
+      "title": "Hull in the cargo area: one of the three designs the clause allows (Type G)",
+      "origin": "class",
+      "source": {
+        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+        "edition": "July 2022 as the code cites it; read in the November 2015 edition, and in an unofficial copy of the July 2022 section, which have the same clauses",
+        "locator": "3.5.2",
+        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 255",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#424"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "hull.cargo_area_design"
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "the engine models no hull structure: not the double hull and double bottom of (a), not the side stringers and web frames of (b), and not the collision energy of (c)",
+      "finding": null,
+      "since": "1.1.0"
+    },
+    {
+      "id": "lr-inland/3.3.7/entrance-setback",
+      "title": "Entrances of engine rooms at least 2.00 m from the cargo area",
+      "origin": "class",
+      "source": {
+        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+        "edition": "July 2022 as the code cites it; read in the November 2015 edition, and in an unofficial copy of the July 2022 section, which have the same clauses",
+        "locator": "3.3.7",
+        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 254",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#417"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "input.entrance_distance_m"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 2.0,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#381",
+      "since": "2.0.0"
+    },
+    {
+      "id": "lr-inland/3.3.8/vent-inlet-setback",
+      "title": "Ventilation inlets of the engine room, and engine air intakes, at least 2.00 m from the cargo area",
+      "origin": "class",
+      "source": {
+        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+        "edition": "July 2022 as the code cites it; read in the November 2015 edition, and in an unofficial copy of the July 2022 section, which have the same clauses",
+        "locator": "3.3.8",
+        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 254",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#417"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "input.engine_room_vent_inlet_distance_m"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 2.0,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#381",
+      "since": "2.0.0"
+    },
+    {
+      "id": "lr-inland/3.3.11/opening-setback",
+      "title": "Entrances, openable windows and other openings of superstructures and accommodation at least 2.00 m from the cargo area",
+      "origin": "class",
+      "source": {
+        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+        "edition": "July 2022 as the code cites it; read in the November 2015 edition, and in an unofficial copy of the July 2022 section, which have the same clauses",
+        "locator": "3.3.11",
+        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 254",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#417"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "input.entrance_distance_m"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 2.0,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#381",
+      "since": "2.0.0"
+    },
+    {
+      "id": "lr-inland/3.4.1/funnel-setback",
+      "title": "Funnel outlets at least 2.00 m from the cargo area",
+      "origin": "class",
+      "source": {
+        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+        "edition": "July 2022 as the code cites it; read in the November 2015 edition, and in an unofficial copy of the July 2022 section, which have the same clauses",
+        "locator": "3.4.1",
+        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 254",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#417"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "input.funnel_outlet_distance_m"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 2.0,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#381",
+      "since": "2.0.0"
+    }
+  ]
+}

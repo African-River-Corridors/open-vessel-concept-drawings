@@ -14,6 +14,7 @@ group-dry-bulk-hold = Dry-bulk hold
 group-liquid-cargo-tanks = Liquid cargo tanks
 group-note-liquid-cargo-tanks = Rectangular cargo tanks inside a double hull, between the cofferdams at the ends of the cargo zone. The double hull widths and the cofferdam length are the ADN minimums for a type C vessel until the Rule Sets for liquid cargo exist; each value shows its source or marks an estimate. Crude oil is work in development.
 group-aft-block = Aft block
+group-openings = Openings
 group-stern-and-propulsion = Stern and propulsion
 group-tug = Tug
 group-waterway-limits = Waterway Limits
@@ -505,6 +506,16 @@ input-delivery-lump = Delivery
 input-currency = Currency
 
 input-price-base-date = Price base date
+
+input-deckhouse-front-opening = Entrance, air inlet or opening on the deckhouse front
+
+input-deckhouse-side-opening-distance-m = Distance of the first side opening from the deckhouse front
+
+input-entrance-distance-m = Distance of the nearest entrance or openable window from the cargo area
+
+input-engine-room-vent-inlet-distance-m = Distance of the engine room ventilation inlet from the cargo area
+
+input-funnel-outlet-distance-m = Distance of the funnel outlet from the cargo area
 
 input-service-area = Service Area
 choice-service-area-river-only = River only
