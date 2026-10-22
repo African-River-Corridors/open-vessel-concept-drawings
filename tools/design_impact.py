@@ -332,6 +332,17 @@ OPTIONAL_INPUT_CASES = (
      {"heating_kw_per_m3": 0.3}),
     ("liquid_fill_ratio", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
      {"liquid_fill_ratio": 0.9}),
+    # The cargo tank cost rates (issue #334): they move the capital budget, not the hashed results.
+    ("tank_coating_rate", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"tank_coating_rate": 80.0}),
+    ("cargo_pump_lump", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"cargo_pump_lump": 300000.0}),
+    ("cargo_piping_lump", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"cargo_piping_lump": 800000.0}),
+    ("cargo_heating_rate_per_kw", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"cargo_heating_rate_per_kw": 1000.0}),
+    ("vents_gauging_lump", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"vents_gauging_lump": 50000.0}),
 )
 
 

@@ -588,7 +588,7 @@ describe("OVCD app smoke tests", () => {
     await until("the work-in-development state", async () => (await browser.$$("[data-testid=capital-budget-wip]")).length === 1);
     assert.match(
       await browser.$("[data-testid=capital-budget-wip]").getText(),
-      /^Work in development\s+The capital budget is computed for gas cargo only\. A dry-bulk budget is work in development\.$/,
+      /^Work in development\s+The capital budget is computed for gas cargo and crude oil only\. A dry-bulk budget is work in development\.$/,
     );
     assert.equal((await browser.$$("[data-testid=cost-unit-total]")).length, 0, "no budget table");
   });
