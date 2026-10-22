@@ -212,19 +212,19 @@ msg-class-beyond = this length and beam are beyond the largest { $scheme } class
 msg-class-draught-above = `{ $input }` = { $value } is above the draught of class { $class } ({ $limit } m, the top of its range)
 msg-class-clearance-above = `{ $input }` = { $value } is above the lowest bridge clearance of class { $class } ({ $limit } m)
 
-## crates/ovcd-format/src/offsets.rs
-
-msg-offsets-no-table = an offsets Hull Form needs its offsets table (`{ $input }`)
-msg-offsets-bad-row = row { $row } of the offsets table needs the numbers station_x_m, y_m and z_m
-msg-offsets-csv-header = an offsets CSV starts with the header { $header }
-msg-offsets-csv-line = line { $line } of the offsets CSV needs three numbers: station_x_m, y_m, z_m
-
 ## crates/ovcd-format/src/convoy.rs
 
 check-name-within-lock-length = within lock length
 check-lock-length = overall length { $length } m <= lock length { $limit } m
 check-name-within-lock-width = within lock width
 check-lock-width = overall beam { $width } m <= lock width { $limit } m
+
+## crates/ovcd-format/src/offsets.rs
+
+msg-offsets-no-table = an offsets Hull Form needs its offsets table (`{ $input }`)
+msg-offsets-bad-row = row { $row } of the offsets table needs the numbers station_x_m, y_m and z_m
+msg-offsets-csv-header = an offsets CSV starts with the header { $header }
+msg-offsets-csv-line = line { $line } of the offsets CSV needs three numbers: station_x_m, y_m, z_m
 
 ## crates/ovcd-format/src/run.rs
 
