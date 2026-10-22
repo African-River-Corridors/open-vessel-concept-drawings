@@ -890,7 +890,7 @@ def _changelog_section(text: str, version: str) -> str:
     return text[m.end(): m.end() + nxt.start()] if nxt else text[m.end():]
 
 
-def release_problems(changelog_text: str, version: str) -> list[str]:
+def _release_problems(changelog_text: str, version: str) -> list[str]:
     """Calibration cases outside their band that block the release `version`: one line each (issue #431).
 
     A case outside its band blocks a release unless the CHANGELOG entry of that release explains it (the
@@ -913,10 +913,10 @@ def release_problems(changelog_text: str, version: str) -> list[str]:
     return out
 
 
-def main_release(version: str, changelog: Path | None = None) -> int:
+def _main_release(version: str, changelog: Path | None = None) -> int:
     """Fail (exit 1) when a calibration case outside its band is not explained for the release `version`."""
     path = Path(changelog) if changelog else CAL.parent / "CHANGELOG.md"
-    bad = release_problems(path.read_text(encoding="utf-8"), version)
+    bad = _release_problems(path.read_text(encoding="utf-8"), version)
     for line in bad:
         print(f"::error file=CHANGELOG.md,title=Calibration band blocks the release::{line}: name the case in "
               f"the CHANGELOG entry of {version}, or bring it inside its band")
@@ -1176,7 +1176,7 @@ if __name__ == "__main__":
     if sys.argv[1:] == ["--check"]:
         sys.exit(main_check())
     if len(sys.argv) in (3, 5) and sys.argv[1] == "--release-check":
-        sys.exit(main_release(sys.argv[2], Path(sys.argv[4]) if len(sys.argv) == 5 and sys.argv[3] == "--changelog" else None))
+        sys.exit(_main_release(sys.argv[2], Path(sys.argv[4]) if len(sys.argv) == 5 and sys.argv[3] == "--changelog" else None))
     if sys.argv[1:]:
         sys.exit("usage: python -m vessel_designer.calibration [--check | --release-check VERSION [--changelog PATH]]")
     main()

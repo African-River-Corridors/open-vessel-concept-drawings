@@ -5,7 +5,7 @@
 <!-- design-impact -->
 ### ticket/431-box-k (2026-10-22)
 
-Between `main c545457` and `this branch 2b56c8b`.
+Between `main 5edd4ca` and `this branch 9baf00c`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
