@@ -87,6 +87,19 @@ fn every_check_of_a_result_reports_exactly_one_rule() {
                 // Its rows agree with the check: a pass when the check holds, else not a pass.
                 let ok = check["ok"].as_bool().unwrap();
                 let mine: Vec<&Value> = rows.iter().filter(|r| r["rule"] == id).collect();
+                // A file saved before a Rule existed stores the older version of its set: a check
+                // that a later version of the set mirrors (issue #280: the aft end space) has no
+                // row there, and the stored set is the one the file asked for.
+                let stored = results["rule_trace"]["rule_sets"].as_array().unwrap();
+                let in_stack = stored.iter().any(|k| {
+                    k.as_str()
+                        .and_then(|k| k.split_once('@'))
+                        .and_then(|(i, v)| lib.find(i, v))
+                        .is_some_and(|set| set.rule(id).is_some())
+                });
+                if !in_stack {
+                    continue;
+                }
                 assert!(!mine.is_empty(), "{name}: no row for {id}");
                 if id == "is2008/A.2.2/condition" {
                     // A note: the check's own verdict, one row per loading condition.
