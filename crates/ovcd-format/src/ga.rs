@@ -131,6 +131,10 @@ const THRUSTER_R_ELEVATION_MAX_M: f64 = 1.1;
 const THRUSTER_LIFT_M: f64 = 0.2;
 const THRUSTER_R_PLAN_OF_ROOM: f64 = 0.32;
 const THRUSTER_R_PLAN_MAX_M: f64 = 1.3;
+/// The gap between the tug's bow and the end wall of the Notch, where the coupler is drawn (m), and
+/// the share of the tug's length that its bow tapers over.
+const ATB_COUPLER_GAP_M: f64 = 0.3;
+const ATB_BOW_TAPER: f64 = 0.12;
 
 // ---- the geometry that the views draw ------------------------------------------------------------
 
@@ -175,7 +179,35 @@ struct Hull {
     aft: Option<Aft>,
     /// The names of the checks that fail (`results.checks` with `ok` false), as plain capitals.
     failed_checks: Vec<String>,
+    /// The Notch of an ATB barge and its tug (`drawing.atb`, issue #363); `None` for any other
+    /// Formation.
+    atb: Option<AtbDraw>,
     containment: Containment,
+}
+
+/// The Notch of an ATB barge and the tug that sits in it, as the views draw them.
+struct AtbDraw {
+    notch_depth: f64,
+    notch_width: f64,
+    /// The tug, when the Option includes it: length, beam, draught, depth.
+    tug: Option<(f64, f64, f64, f64)>,
+}
+
+fn read_atb(results: &Value) -> Option<AtbDraw> {
+    let a = results.get("drawing")?.get("atb")?;
+    let tug = a.get("tug").filter(|t| !t.is_null()).and_then(|t| {
+        Some((
+            t.get("length_m")?.as_f64()?,
+            t.get("beam_m")?.as_f64()?,
+            t.get("draught_m")?.as_f64()?,
+            t.get("depth_m")?.as_f64()?,
+        ))
+    });
+    Some(AtbDraw {
+        notch_depth: a.get("notch_depth_m")?.as_f64()?,
+        notch_width: a.get("notch_width_m")?.as_f64()?,
+        tug,
+    })
 }
 
 /// The values of the core's aft arrangement that the views draw.
@@ -643,6 +675,7 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
         )),
         aft: read_aft(results),
         failed_checks: failed_checks(results),
+        atb: read_atb(results),
         containment,
     })
 }
@@ -1850,6 +1883,29 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
     let mut c = Canvas::new(n);
     c.polyline("OUTLINE", &profile_points(h), false);
     c.line("OUTLINE", [0.0, h.depth], [h.loa, h.depth], None);
+    // The Notch of an ATB barge, and the tug in it (issue #363): the Notch's end wall is a hidden
+    // line (the Notch is on the centre line), the tug a side outline at its own draught.
+    if let Some(a) = &h.atb {
+        c.line(
+            "HIDDEN",
+            [a.notch_depth, 0.0],
+            [a.notch_depth, h.depth],
+            None,
+        );
+        if let Some((length, _, draught, depth)) = a.tug {
+            let (bow, keel) = (a.notch_depth - ATB_COUPLER_GAP_M, h.draught - draught);
+            c.polyline(
+                "OBJECT",
+                &[
+                    [bow - length, keel],
+                    [bow, keel],
+                    [bow, keel + depth],
+                    [bow - length, keel + depth],
+                ],
+                true,
+            );
+        }
+    }
     // waterlines
     c.line(
         "WATER",
@@ -2025,14 +2081,63 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
     c
 }
 
+/// The tug in the Notch, in plan: its outline with a pointed bow, the bow at the end of the Notch, and
+/// the coupler as two short bars across the gap between the tug's bow and the Notch's end wall
+/// (plain lines: the standard's symbol library has no coupler yet).
+fn atb_tug_plan(c: &mut Canvas, a: &AtbDraw) {
+    let Some((length, beam, _, _)) = a.tug else {
+        return;
+    };
+    let (d, half) = (a.notch_depth, beam / 2.0);
+    // The tug's bow stands a little off the end wall: the coupler's gap.
+    let bow = d - ATB_COUPLER_GAP_M;
+    let stern = bow - length;
+    let shoulder = bow - (length * ATB_BOW_TAPER).min(2.0 * half);
+    c.polyline(
+        "OBJECT",
+        &[
+            [stern, -half],
+            [shoulder, -half],
+            [bow, 0.0],
+            [shoulder, half],
+            [stern, half],
+        ],
+        true,
+    );
+    for y in [-half / 2.0, half / 2.0] {
+        c.line("OBJECT", [bow, y], [d, y], None);
+    }
+}
+
 fn plan(h: &Hull, n: u32) -> Canvas {
     let mut c = Canvas::new(n);
     let (y0, y1) = (-h.beam / 2.0, h.beam / 2.0);
-    c.polyline(
-        "OUTLINE",
-        &[[0.0, y0], [h.loa, y0], [h.loa, y1], [0.0, y1]],
-        true,
-    );
+    match &h.atb {
+        // The barge of an ATB: the Notch is cut at the transom (issue #363), full depth.
+        Some(a) => {
+            let (d, w) = (a.notch_depth, a.notch_width / 2.0);
+            c.polyline(
+                "OUTLINE",
+                &[
+                    [0.0, y0],
+                    [h.loa, y0],
+                    [h.loa, y1],
+                    [0.0, y1],
+                    [0.0, w],
+                    [d, w],
+                    [d, -w],
+                    [0.0, -w],
+                ],
+                true,
+            );
+            atb_tug_plan(&mut c, a);
+        }
+        None => c.polyline(
+            "OUTLINE",
+            &[[0.0, y0], [h.loa, y0], [h.loa, y1], [0.0, y1]],
+            true,
+        ),
+    }
     if h.bow_rake > 0.0 {
         c.line(
             "OBJECT",
