@@ -5,6 +5,11 @@
 //! the full section is a simple polygon. Between two Stations the hull is the ruled surface that joins
 //! point `i` of one Section to point `i` of the next.
 //!
+//! A slotted Section (the Notch of an ATB barge, issue #465) starts and ends at `y = y_in > 0`: a slot
+//! of half width `y_in` on the centre line. The slot wall closes the half, so the full section is two
+//! simple polygons, starboard and port, and every cut sums over the two. A ruled interval joins two
+//! slotted or two whole Sections, never one of each: a slot ends at a step.
+//!
 //! The cut of one full section by the waterplane is a Sutherland-Hodgman clip against one half plane,
 //! and the shoelace formula gives its area and first moments exactly. Along the length, each interval
 //! is first split where a point line crosses the waterplane, and then integrated by Simpson's rule with
@@ -27,7 +32,8 @@ use libm::{cos, sin, sqrt};
 pub struct Section {
     /// Station, m from the aft end.
     pub x: f64,
-    /// Half-section `(y >= 0, z)`, keel at `y = 0` first, deck at the centre line last.
+    /// Half-section `(y >= 0, z)`, keel at `y = 0` first, deck at the centre line last. A slotted
+    /// half-section starts and ends at the slot edge `y = y_in` instead.
     pub points: Vec<(f64, f64)>,
 }
 
@@ -59,8 +65,11 @@ pub enum SectionsError {
         expected: usize,
         found: usize,
     },
-    /// A half-section does not start and end on the centre line (`y = 0`).
+    /// A half-section does not start and end at one y: both on the centre line (`y = 0`), or both on
+    /// the edge of a slot.
     OffCentreLine { section: usize },
+    /// A ruled interval joins a slotted and a whole Section: a slot must end at a step.
+    SlotWithoutStep { section: usize },
     /// A point lies to port of the centre line.
     NegativeY { section: usize, point: usize },
     /// Two edges of a half-section cross.
@@ -105,7 +114,12 @@ impl fmt::Display for SectionsError {
             ),
             SectionsError::OffCentreLine { section } => write!(
                 f,
-                "section {section} does not start and end on the centre line (y = 0)"
+                "section {section} does not start and end on the centre line (y = 0) or on one slot edge"
+            ),
+            SectionsError::SlotWithoutStep { section } => write!(
+                f,
+                "section {section} and the section before it join a slotted and a whole section; a \
+                 slot must end at a step (two sections at one x)"
             ),
             SectionsError::NegativeY { section, point } => {
                 write!(f, "point {point} of section {section} has y below 0")
@@ -160,7 +174,8 @@ impl SectionsTable {
 
     /// A checked table: at least two Sections, x ascending, one deck edge height per Section, the
     /// same point count (at least two) on every Section, each half-section from and to the centre
-    /// line with `y >= 0`, and no two edges of a half-section crossing.
+    /// line (or from and to one slot edge) with `y >= 0`, no two edges of a half-section crossing,
+    /// and no ruled interval from a slotted to a whole Section.
     pub fn new(sections: Vec<Section>, depth_at_side: Vec<f64>) -> Result<Self, SectionsError> {
         if sections.len() < 2 {
             return Err(SectionsError::TooFewSections {
@@ -194,7 +209,7 @@ impl SectionsTable {
                     found: s.points.len(),
                 });
             }
-            if s.points[0].0 != 0.0 || s.points[s.points.len() - 1].0 != 0.0 {
+            if s.points[0].0 != s.points[s.points.len() - 1].0 {
                 return Err(SectionsError::OffCentreLine { section: i });
             }
             if let Some(point) = s.points.iter().position(|p| p.0 < 0.0) {
@@ -203,12 +218,20 @@ impl SectionsTable {
             if crosses_itself(&s.points) {
                 return Err(SectionsError::SelfCrossing { section: i });
             }
+            if i > 0 && s.x > sections[i - 1].x && slotted(s) != slotted(&sections[i - 1]) {
+                return Err(SectionsError::SlotWithoutStep { section: i });
+            }
         }
         Ok(Self {
             sections,
             depth_at_side,
         })
     }
+}
+
+/// True when the half-section starts off the centre line: a slot.
+fn slotted(s: &Section) -> bool {
+    s.points[0].0 > 0.0
 }
 
 /// `(b - a) x (c - a)`.
@@ -388,23 +411,34 @@ struct Work {
     wet: Vec<bool>,
     f: Vec<f64>,
     clipped: Vec<(f64, f64)>,
+    /// Where the second polygon of a slotted section starts in `poly` (`poly.len()` when whole).
+    split: usize,
     /// `(s, y, z)` of each crossing of the waterline.
     crossings: Vec<(f64, f64, f64)>,
     xs: Vec<f64>,
 }
 
 /// Write the full section of the half-section `(1 − t) a + t b` (exact at both ends): the half, then
-/// its mirror back to the keel.
-fn fill_full(dst: &mut Vec<(f64, f64)>, a: &[(f64, f64)], b: &[(f64, f64)], t: f64) {
+/// its mirror back to the keel. A slotted half is closed by its slot wall, and its whole mirror
+/// follows as the second polygon. Gives where the second polygon starts (`dst.len()` when whole).
+fn fill_full(
+    dst: &mut Vec<(f64, f64)>,
+    a: &[(f64, f64)],
+    b: &[(f64, f64)],
+    t: f64,
+    slot: bool,
+) -> usize {
     let n = a.len();
     dst.clear();
     for (p, q) in a.iter().zip(b) {
         dst.push(((1.0 - t) * p.0 + t * q.0, (1.0 - t) * p.1 + t * q.1));
     }
-    for i in (1..n - 1).rev() {
+    let mirrored = if slot { 0..n } else { 1..n - 1 };
+    for i in mirrored.rev() {
         let (y, z) = dst[i];
         dst.push((-y, z));
     }
+    if slot { n } else { dst.len() }
 }
 
 /// Cut the full section in `w.poly` at station `x`. `w.wet` says which vertices are immersed (fixed
@@ -418,47 +452,55 @@ fn cut(fr: &Frame, x: f64, w: &mut Work, area_only: bool) -> Cut {
     w.crossings.clear();
     let (poly, tan, wet, f) = (&w.poly, &w.tan, &w.wet, &w.f);
     let mut out = Cut::default();
-    for i in 0..n {
-        let j = (i + 1) % n;
-        let (p, q) = (poly[i], poly[j]);
-        if wet[i] {
-            w.clipped.push(p);
-        }
-        if wet[i] && wet[j] {
-            if !area_only {
-                out.girth += piece(p, q, tan[i], tan[j]);
+    // One polygon, or two for a slotted section; each closes on itself.
+    let rings = [(0, w.split), (w.split, n)];
+    let mut ends = [0; 2];
+    for (r, &(start, end)) in rings.iter().enumerate() {
+        for i in start..end {
+            let j = if i + 1 == end { start } else { i + 1 };
+            let (p, q) = (poly[i], poly[j]);
+            if wet[i] {
+                w.clipped.push(p);
             }
-        } else if wet[i] != wet[j] {
-            let t = if f[i] == f[j] {
-                0.5
-            } else {
-                (f[i] / (f[i] - f[j])).clamp(0.0, 1.0)
-            };
-            let r = (p.0 + t * (q.0 - p.0), p.1 + t * (q.1 - p.1));
-            w.clipped.push(r);
-            if !area_only {
-                let tr = (
-                    tan[i].0 + t * (tan[j].0 - tan[i].0),
-                    tan[i].1 + t * (tan[j].1 - tan[i].1),
-                );
-                out.girth += if wet[i] {
-                    piece(p, r, tan[i], tr)
+            if wet[i] && wet[j] {
+                if !area_only {
+                    out.girth += piece(p, q, tan[i], tan[j]);
+                }
+            } else if wet[i] != wet[j] {
+                let t = if f[i] == f[j] {
+                    0.5
                 } else {
-                    piece(r, q, tr, tan[j])
+                    (f[i] / (f[i] - f[j])).clamp(0.0, 1.0)
                 };
-                w.crossings.push((fr.uy * r.0 + fr.uz * r.1, r.0, r.1));
+                let r = (p.0 + t * (q.0 - p.0), p.1 + t * (q.1 - p.1));
+                w.clipped.push(r);
+                if !area_only {
+                    let tr = (
+                        tan[i].0 + t * (tan[j].0 - tan[i].0),
+                        tan[i].1 + t * (tan[j].1 - tan[i].1),
+                    );
+                    out.girth += if wet[i] {
+                        piece(p, r, tan[i], tr)
+                    } else {
+                        piece(r, q, tr, tan[j])
+                    };
+                    w.crossings.push((fr.uy * r.0 + fr.uz * r.1, r.0, r.1));
+                }
             }
         }
+        ends[r] = w.clipped.len();
     }
     let (mut a, mut my, mut mz) = (0.0, 0.0, 0.0);
-    let m = w.clipped.len();
-    for i in 0..m {
-        let ((y0, z0), (y1, z1)) = (w.clipped[i], w.clipped[(i + 1) % m]);
-        let c = y0 * z1 - y1 * z0;
-        a += c;
-        if !area_only {
-            my += (y0 + y1) * c;
-            mz += (z0 + z1) * c;
+    for (start, end) in [(0, ends[0]), (ends[0], ends[1])] {
+        let m = end - start;
+        for i in 0..m {
+            let ((y0, z0), (y1, z1)) = (w.clipped[start + i], w.clipped[start + (i + 1) % m]);
+            let c = y0 * z1 - y1 * z0;
+            a += c;
+            if !area_only {
+                my += (y0 + y1) * c;
+                mz += (z0 + z1) * c;
+            }
         }
     }
     out.area = a / 2.0;
@@ -532,6 +574,8 @@ struct Interval<'a> {
     x1: f64,
     a: &'a [(f64, f64)],
     b: &'a [(f64, f64)],
+    /// Both Sections are slotted (a checked table never joins a slotted and a whole one).
+    slot: bool,
 }
 
 impl<'a> Interval<'a> {
@@ -541,16 +585,18 @@ impl<'a> Interval<'a> {
             x1: s1.x,
             a: &s0.points,
             b: &s1.points,
+            slot: slotted(s0),
         }
     }
 
     /// Put the full section at `x` into `w.poly`.
     fn section_at(&self, x: f64, w: &mut Work) {
-        fill_full(
+        w.split = fill_full(
             &mut w.poly,
             self.a,
             self.b,
             (x - self.x0) / (self.x1 - self.x0),
+            self.slot,
         );
     }
 
@@ -562,7 +608,8 @@ impl<'a> Interval<'a> {
         for (p, q) in self.a.iter().zip(self.b) {
             w.tan.push(((q.0 - p.0) / h, (q.1 - p.1) / h));
         }
-        for i in (1..n - 1).rev() {
+        let mirrored = if self.slot { 0..n } else { 1..n - 1 };
+        for i in mirrored.rev() {
             let (ty, tz) = w.tan[i];
             w.tan.push((-ty, tz));
         }
@@ -576,7 +623,7 @@ impl<'a> Interval<'a> {
         w.xs.clear();
         w.xs.push(self.x0);
         for (i, (p, q)) in self.a.iter().zip(self.b).enumerate() {
-            let mirror = i > 0 && i < n - 1;
+            let mirror = self.slot || (i > 0 && i < n - 1);
             for (pp, qq) in [(*p, *q), ((-p.0, p.1), (-q.0, q.1))]
                 .into_iter()
                 .take(if mirror { 2 } else { 1 })
