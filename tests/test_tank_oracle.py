@@ -77,6 +77,7 @@ def test_the_marpol_limits_by_hand():
 
 
 def test_a_type_n_vessel_has_the_type_n_rules():
+    """Label: property"""
     v = oracle.verdicts(case(adn_vessel_type="N_closed", double_side_m=0.6, double_bottom_m=0.5))
     assert v["adn/9.3.3.11.7/wing-width-min"]["verdict"] == "pass"
     assert v["adn/9.3.3.11.7/double-bottom-depth"]["verdict"] == "pass"
@@ -87,6 +88,7 @@ def test_a_type_n_vessel_has_the_type_n_rules():
 
 
 def test_the_oracle_shares_no_code_with_the_engine():
+    """Label: property"""
     text = (ROOT / "evaluation" / "oracle" / "tank_oracle.py").read_text(encoding="utf-8")
     assert "vessel_designer" not in text
     imports = [ln for ln in text.splitlines() if ln.startswith(("import ", "from "))]
@@ -94,6 +96,7 @@ def test_the_oracle_shares_no_code_with_the_engine():
 
 
 def test_the_base_case_files_and_the_boundary_cases_are_what_the_oracle_writes():
+    """Label: property"""
     for c in write_cases.TANK_BASES:
         path = EVAL / "cases" / f"{c['id']}.yaml"
         assert write_cases.first_difference(yaml.safe_load(path.read_text(encoding="utf-8")),
@@ -104,6 +107,7 @@ def test_the_base_case_files_and_the_boundary_cases_are_what_the_oracle_writes()
 
 
 def test_every_boundary_case_moves_one_input_across_one_limit_by_its_step():
+    """Label: property"""
     docs = yaml.safe_load((EVAL / "tank_mutants.yaml").read_text(encoding="utf-8"))["mutants"]
     parents = {p.stem: yaml.safe_load(p.read_text(encoding="utf-8")) for p in (EVAL / "cases").glob("tank_*.yaml")}
     assert len(docs) > 150
@@ -127,6 +131,7 @@ def test_every_boundary_case_moves_one_input_across_one_limit_by_its_step():
 
 
 def test_the_expected_verdicts_of_the_bases_cover_known_good_and_known_bad():
+    """Label: property"""
     verdicts = {}
     for p in (EVAL / "cases").glob("tank_*.yaml"):
         for rule, e in yaml.safe_load(p.read_text(encoding="utf-8"))["expected"].items():
