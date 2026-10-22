@@ -1,0 +1,24 @@
+# Calibration Bands for the tank-barge path (issue #335): the same shape as bands.yaml and tank_bands.yaml.
+# `pct` is the accepted error of the model against the published figure, in percent either way, per
+# confidence of the case. These are STARTING values, proposed with the tank-barge cases and set equal to
+# the dry-barge bands of bands.yaml until the tank-barge data say otherwise; the maintainer sets them.
+# The model is tank-barge lightship = k x L x B x D + outfit (`tank_lightship.yaml`), and the deadweight
+# is the box-barge Cb x L x B x T x rho less that lightship.
+#
+# The error of a case in the declared k-fit subset (`tank_lightship_inputs.yaml`, `fit_subset`) is
+# IN-SAMPLE: k was fitted on it. The error of every other case is out of sample. A case outside its band
+# is a WARNING only: the report marks it and `python -m vessel_designer.calibration --check` prints an
+# annotation. It never fails the build. A self-propelled vessel, and a figure that is a cargo capacity
+# and not a deadweight, have no band (the case says why: `not_banded`).
+#
+# No tank-barge record gives a lightship (the four estimates of the research note are derived, not
+# published), so the lightship band is set and unused today. It is here for the first record that does.
+bands:
+  lightship_t:
+    label: Tank-barge lightship
+    pct: {high: 15.0, medium: 20.0, low: 30.0}
+    basis: "lightship +-15 % at high confidence, +-20 % at medium, +-30 % at low (proposed with issue #335, equal to the dry-barge bands); in-sample for the k-fit subset, out of sample for the rest"
+  dwt_t:
+    label: Tank-barge deadweight at the stated draught
+    pct: {high: 7.5, medium: 10.0, low: 15.0}
+    basis: "deadweight +-7.5 % at high confidence, +-10 % at medium, +-15 % at low (proposed with issue #335, equal to the dry-barge bands); in-sample for the k-fit subset, out of sample for the rest"

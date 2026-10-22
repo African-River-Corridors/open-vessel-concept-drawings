@@ -1334,7 +1334,7 @@ not_yet_runnable_cases:
     note_suggests: "fit"
     flags: "depth 4.00 incl. 1.00 m trunk; main deck 3.00 m"
     note: "Conflict between sources: Baird Maritime (Belmax 3) gives DWT 6,013 t and tanks 6,860 m3; both sources give LOA 118.79 m. The case uses MEB, the designer. Baird page: https://www.bairdmaritime.com/ship-world/okskaya-sudoverf-launches-third-barge-of-project-rob20 (accessed 2026-10-16)."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: meb-rob07-mh4001
     hold_type: tank
     what: "MH-4001 / MH-4002, project ROB07 sea-river tank barge, 2017–18, Nobel Bros yard"
@@ -1350,7 +1350,7 @@ not_yet_runnable_cases:
     note_suggests: "hold out"
     flags: "page's L×B×H line uses H = 5.80; depth row 5.00"
     note: "The page prints an L x B x H product with H = 5.80 that differs from its depth row (5.00). The case uses the depth row."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: meb-rob05-paloil
     hold_type: tank
     what: "Paloil-1 … -5, project 004ROB05 tank barge, 2003–04, Volgograd SY"
@@ -1366,7 +1366,7 @@ not_yet_runnable_cases:
     held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
     note_suggests: "fit"
     flags: "cargo capacity, not DWT"
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: meb-rob17-nerida
     hold_type: tank
     what: "Nerida, project ROB17 methanol tank barge, 2012"
@@ -1382,7 +1382,7 @@ not_yet_runnable_cases:
     held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
     note_suggests: "hold out"
     flags: "very shallow (D 2.0 m)"
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: meb-1635tm-fng
     hold_type: tank
     what: "NFS-22, FNG-2 … FNG-10 (10 hulls), project 1635TM river tank barge, 2000, Kiliya"
@@ -1397,7 +1397,7 @@ not_yet_runnable_cases:
     held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
     note_suggests: "fit"
     flags: "cargo capacity, not DWT"
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: meb-1635t-udp-slt
     hold_type: tank
     what: "UDP-SLT-001 / -002, project 1635T Danube tank barge, 2000, Kiliya"
@@ -1412,7 +1412,7 @@ not_yet_runnable_cases:
     held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
     note_suggests: "hold out"
     flags: "cargo capacity, not DWT"
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: kirby-10071-200x35
     hold_type: tank
     what: "KIRBY 10070, 10071, 10073, Tres Palacios 2007–09 — US inland double-skin tank barge (Kirby database, archived)"
@@ -1428,7 +1428,7 @@ not_yet_runnable_cases:
     note_suggests: "fit"
     flags: "table 7–11 ft (1,091–1,926 ST)"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: kirby-10201-200x35
     hold_type: tank
     what: "KIRBY 10201–10208, Southwest Shipyard 2008–09 — US inland double-skin tank barge (Kirby database, archived)"
@@ -1444,7 +1444,7 @@ not_yet_runnable_cases:
     note_suggests: "hold out"
     flags: "table 6 ft – 10 ft 6 in"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: kirby-10083-200x35
     hold_type: tank
     what: "KIRBY 10080–10088, 10210–10213, Trinity 2010 — US inland double-skin tank barge (Kirby database, archived)"
@@ -1460,7 +1460,7 @@ not_yet_runnable_cases:
     note_suggests: "fit"
     flags: "table 6–11 ft; 10210–13 read 1,471 at 9 ft"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: kirby-10074-195x35
     hold_type: tank
     what: "KIRBY 10074–10079, Trinity 2010 — US inland double-skin tank barge (Kirby database, archived)"
@@ -1476,7 +1476,7 @@ not_yet_runnable_cases:
     note_suggests: "fit"
     flags: "table 6–11 ft"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: cgbm-102-200x35
     hold_type: tank
     what: "CGBM 102–107, 10mb chemical, 2007–08 — US inland double-skin tank barge (Kirby database, archived)"
@@ -1492,7 +1492,7 @@ not_yet_runnable_cases:
     note_suggests: "fit"
     flags: "table 8–10 ft"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: mer-13-200x35
     hold_type: tank
     what: "MER 12 / MER 13, Kennedy Construction 2009 — US inland double-skin tank barge (Kirby database, archived)"
@@ -1508,7 +1508,7 @@ not_yet_runnable_cases:
     note_suggests: "fit"
     flags: "table 6 ft – 11 ft 6 in"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: kirby-301-250x50
     hold_type: tank
     what: "Barge 301, Trinity 2002 — US inland double-skin tank barge (Kirby database, archived)"
@@ -1524,7 +1524,7 @@ not_yet_runnable_cases:
     note_suggests: "fit"
     flags: "table 7–12 ft"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: kirby-407-263x54
     hold_type: tank
     what: "Barge 407 (bunker), Southwest Shipyard 2008 — US inland double-skin tank barge (Kirby database, archived)"
@@ -1540,7 +1540,7 @@ not_yet_runnable_cases:
     note_suggests: "hold out"
     flags: "table 2 ft 6 in (90 ST) to 12 ft (4,369 ST)"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: hfl-406-297x54
     hold_type: tank
     what: "HFL 404 / 406 / 408, Jeffboat 2008 — US inland double-skin tank barge (Kirby database, archived)"
@@ -1556,7 +1556,7 @@ not_yet_runnable_cases:
     note_suggests: "fit"
     flags: "HFL 408 reads 3,343"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: kirby-27773-297x54
     hold_type: tank
     what: "KIRBY 27773, Trinity 2009 — US inland double-skin tank barge (Kirby database, archived)"
@@ -1572,7 +1572,7 @@ not_yet_runnable_cases:
     note_suggests: "fit"
     flags: "table 7–11 ft"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: kirby-32300b-297x54
     hold_type: tank
     what: "KIRBY 32300B, Jeffboat 2007 — US inland double-skin tank barge (Kirby database, archived)"
@@ -1587,7 +1587,7 @@ not_yet_runnable_cases:
     held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
     note_suggests: "hold out"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: ctco-358-297x54
     hold_type: tank
     what: "CTCO 356 / 358 / 359, 2014 — US inland double-skin tank barge (Kirby database, archived)"
@@ -1602,7 +1602,7 @@ not_yet_runnable_cases:
     held_out: "out-of-sample test added for issue #3 (maintainer decision: every new case is held out)"
     note_suggests: "fit"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: htco-3064-320x50
     hold_type: tank
     what: "HTCO 3062–3065, 3070, 3071, 2008–09 — US inland double-skin tank barge (Kirby database, archived)"
@@ -1618,7 +1618,7 @@ not_yet_runnable_cases:
     note_suggests: "fit"
     flags: "3070/3071 list 26,628 / 26,431 bbl"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: cms-1601-222x54
     hold_type: tank
     what: "CMS 1601 / 1602, 2010–11 (type blank) — US inland double-skin tank barge (Kirby database, archived)"
@@ -1634,7 +1634,7 @@ not_yet_runnable_cases:
     note_suggests: "fit"
     flags: "DWT/LBT 0.62 is low: heavy tanks? possibly LPG, unconfirmed"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: crowley-180-2-tank
     hold_type: tank
     what: "Crowley Barge 180-2, single-hull tank barge, Dillingham AK"
@@ -1651,7 +1651,7 @@ not_yet_runnable_cases:
     flags: "no depth; lightship garbled; TPI vs light draft disagree"
     note: "The lightship prints as '554-99 lT'. It may mean 554.99 LT; that was not assumed, so no lightship is recorded. No depth is given. TPI (19.67 LT/in) and light draft (1.771 fwd / 2.85 aft, units not printed) do not agree with DWT 2,025 LT at 10 ft 1/8 in. 16,660 bbl at 100 % is in the published text only. Cross-check only."
     cross_check_only: "no depth; lightship garbled; TPI vs light draft disagree"
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: zhongyi-001-lng
     hold_type: gas
     what: "Zhongyi 001, LNG bunker barge, Three Gorges Reservoir, Damen Yichang, CCS"
@@ -1777,7 +1777,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "1 page(s): CREEK; capacity range in the group 10,629 bbl; table 9 ft – 9 ft (1 rows); Kirby type: blank; identical 1,194 ST table on three records with different dimensions (175 × 42, 175 × 42 ft 1 in, 210 ft 1 in × 44 ft 1 in): a copied table is likely"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: cherokee-bg-175x42
     hold_type: tank
     what: "CHEROKEE-BG and sisters — US inland double-skin barge (Kirby database, archived)"
@@ -1793,7 +1793,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "3 page(s): CHEROKEE-BG, CHICKASAW, CHOCTAW; capacity range in the group 10,629 to 10,696 bbl; table 9 ft – 9 ft (1 rows); Kirby type: blank; identical 1,194 ST table on three records with different dimensions: a copied table is likely"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: cc-133-184x52
     hold_type: tank
     what: "CC 133 — US inland double-skin barge (Kirby database, archived)"
@@ -1809,7 +1809,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "1 page(s): CC 133; capacity range in the group 14,286 bbl; table 3 ft – 11 ft 6 in (18 rows); Kirby type: blank"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: cc-132-184x52
     hold_type: tank
     what: "CC 132 and sisters — US inland double-skin barge (Kirby database, archived)"
@@ -1825,7 +1825,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "2 page(s): CC 132, CC 134; capacity range in the group 14,286 bbl; table 3 ft – 11 ft 6 in (18 rows); Kirby type: blank, Pressure; one page in the group is typed 'Pressure', the rest are not"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: usl-146-192x52
     hold_type: tank
     what: "USL 146 — US inland double-skin barge (Kirby database, archived)"
@@ -1841,7 +1841,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "1 page(s): USL 146; capacity range in the group 14,286 bbl; table 7 ft 8 in – 9 ft (3 rows); Kirby type: Tank"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: city-of-galveston-210x44
     hold_type: tank
     what: "CITY OF GALVESTON — US inland double-skin barge (Kirby database, archived)"
@@ -1857,7 +1857,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "1 page(s): CITY OF GALVESTON; capacity range in the group 10,120 bbl; table 9 ft – 9 ft (1 rows); Kirby type: blank; identical 1,194 ST table on three records with different dimensions: a copied table is likely"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: ci-1609-239x52
     hold_type: tank
     what: "CI 1609 and sisters — US inland double-skin barge (Kirby database, archived)"
@@ -1873,7 +1873,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "2 page(s): CI 1609, CI 1608; capacity range in the group 16,360 bbl; table 9 ft – 9 ft (1 rows); Kirby type: blank; the same 2,100 ST table as CMS 1601 (222 ft × 54 ft × 12 ft), which has other dimensions"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: karankawa-245x48
     hold_type: tank
     what: "KARANKAWA — US inland double-skin barge (Kirby database, archived)"
@@ -1889,7 +1889,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "1 page(s): KARANKAWA; capacity range in the group 16,101 bbl; table 9 ft – 9 ft (1 rows); Kirby type: TANK BARGE"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: fmt-2054-245x48
     hold_type: tank
     what: "FMT 2054 and sisters — US inland double-skin barge (Kirby database, archived)"
@@ -1905,7 +1905,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "5 page(s): FMT 2054, FMT 2060, FMT 2064, FMT 2066, FMT 2056; capacity range in the group 15,940 to 16,132 bbl; table 5 ft – 10 ft (11 rows); Kirby type: Specialty, Pressure; one page in the group is typed 'Pressure', the rest are not"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: fmt-2068-245x48
     hold_type: tank
     what: "FMT 2068 — US inland double-skin barge (Kirby database, archived)"
@@ -1921,7 +1921,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "1 page(s): FMT 2068; capacity range in the group 16,075 bbl; table 5 ft – 11 ft (26 rows); Kirby type: Specialty"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: dbl-703-250x52
     hold_type: tank
     what: "DBL 703 — US inland double-skin barge (Kirby database, archived)"
@@ -1937,7 +1937,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "1 page(s): DBL 703; capacity range in the group 16,983 bbl; table 9 ft – 9 ft (1 rows); Kirby type: blank"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: 401-270x54
     hold_type: tank
     what: "401 — US inland double-skin barge (Kirby database, archived)"
@@ -1953,7 +1953,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "1 page(s): 401; capacity range in the group 20,338 bbl; table 9 ft – 9 ft (1 rows); Kirby type: blank; 3,437 ST is also printed for barge 403, which has other dimensions (263 ft 2 in × 54 ft × 15 ft)"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: kirby-27730-290x54
     hold_type: tank
     what: "KIRBY 27730 — US inland double-skin barge (Kirby database, archived)"
@@ -1969,7 +1969,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "1 page(s): KIRBY 27730; capacity range in the group 27,544 bbl; table 8 ft – 10 ft (3 rows); Kirby type: Black Oil"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: kirby-21853-295x50
     hold_type: tank
     what: "KIRBY 21853 — US inland double-skin barge (Kirby database, archived)"
@@ -1985,7 +1985,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "1 page(s): KIRBY 21853; capacity range in the group 21,820 bbl; table 7 ft – 12 ft (11 rows); Kirby type: Specialty"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: kirby-29173-297x52
     hold_type: tank
     what: "KIRBY 29173 — US inland double-skin barge (Kirby database, archived)"
@@ -2001,7 +2001,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "1 page(s): KIRBY 29173; capacity range in the group 29,273 bbl; table 9 ft – 11 ft 6 in (3 rows); Kirby type: blank"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: ctco-251-297x50
     hold_type: tank
     what: "CTCO 251 and sisters — US inland double-skin barge (Kirby database, archived)"
@@ -2017,7 +2017,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "6 page(s): CTCO 251, CTCO 250, CTCO 254, CTCO 255, CTCO 252, CTCO 253; capacity range in the group 29,506 to 29,732 bbl; table 8 ft – 10 ft (3 rows); Kirby type: Clean; 3,080 ST is printed on three hulls with different dimensions (here, ACT 101, CTCO 3000)"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: ctco-3000-308x54
     hold_type: tank
     what: "CTCO 3000 — US inland double-skin barge (Kirby database, archived)"
@@ -2033,7 +2033,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "1 page(s): CTCO 3000; capacity range in the group 30,146 bbl; table 8 ft – 10 ft (3 rows); Kirby type: Clean; 3,080 ST is printed on three hulls with different dimensions (here, CTCO 251, ACT 101); height 19 ft"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: comanche-380x54
     hold_type: tank
     what: "COMANCHE — US inland double-skin barge (Kirby database, archived)"
@@ -2049,7 +2049,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "1 page(s): COMANCHE; capacity range in the group 30,438 bbl; table 4 ft 6 in – 10 ft (23 rows); Kirby type: blank"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: winna-wilson-461x90
     hold_type: tank
     what: "WINNA WILSON — US inland double-skin barge (Kirby database, archived)"
@@ -2065,7 +2065,7 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "implied Cb 1.459 on the 9 ft row, which is impossible: the 9 ft row does not belong with the table's other draughts; 1 page(s): WINNA WILSON; capacity range in the group 150,000 bbl; table 9 ft – 21 ft (2 rows); Kirby type: Dry Bulk; Kirby type 'Dry Bulk' with a capacity of 150,000 bbl and a 9 ft row far below the table's other draughts: hull type unclear"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"
   - id: miss-dott-o-463x82
     hold_type: tank
     what: "MISS DOTT O — US inland double-skin barge (Kirby database, archived)"
@@ -2081,4 +2081,4 @@ not_yet_runnable_cases:
     found_by: "follow-up research 2026-10-16 (not from the research note)"
     flags: "1 page(s): MISS DOTT O; capacity range in the group 150,000 bbl; table 9 ft – 23 ft (18 rows); Kirby type: Dry Bulk; Kirby type 'Dry Bulk' with a capacity of 150,000 bbl and a 9 ft row far below the table's other draughts: hull type unclear"
     note: "Kirby 'tons' are short tons (the draught tables prove it). Water density is not stated; fresh water assumed (inland service). dwt_t is the metric conversion of the row labelled 'Deadweight Tons' at 9 ft 0 in."
-    not_yet_runnable: "double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel"
+    not_yet_runnable: "the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335)"

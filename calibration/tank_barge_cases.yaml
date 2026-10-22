@@ -1,0 +1,199 @@
+# Tank-barge reference vessels (issue #335, spec 0006 section 7): published river, river-sea and sea
+# tank barges and tankers that the tank-barge path of the calibration runs. They are in a file of their
+# own, with the 41 `hold_type: tank` records of cases.yaml, because that file's counts and its in-sample
+# and held-out batches are fixed (tests/test_calibration_held_out.py).
+#
+# These are the vessels of docs/research/crude-oil/03-design-practice.md section 3 that have full data
+# (the research marks them with a tick) and are not yet in cases.yaml. The other four (ROB20, 004ROB05,
+# ROB07 and 1635T) are in cases.yaml already. Every figure below was read on the source page itself, on
+# 2026-10-22, and each source has its checksum in sources.yaml (`web_sources`, ids M15 to M25 and R1).
+#
+# Conventions are those of cases.yaml: every case is held out, a figure the source does not give is
+# absent, `published` keeps the source text as printed. Fields that are new here:
+#   self_propelled   true when the vessel has its own machinery. The tank-barge model is hull plus
+#                    outfit; it has no engines, no accommodation and no fuel. A deadweight run on it is
+#                    too high by about that weight, so such a case is shown and never banded.
+#   not_banded       a reason the case has no band, when it has none: a self-propelled hull, or a cargo
+#                    capacity that is not a deadweight.
+#   water_density_t_m3  as in cases.yaml: 1.025 for a sea draught, else fresh water (left out).
+# The draught is the one the page gives the deadweight for. A page that gives a river and a sea
+# deadweight is run at the river draught (3.60 m), in fresh water, as the box-barge Cb of factors.yaml was
+# fitted. Where a page gives the breadth overall and the breadth by the hull, the breadth overall is used,
+# as in cases.yaml.
+tank_barge:
+  - id: meb-rob21
+    hold_type: tank
+    what: "Project ROB21, small-draught non-self-propelled river oil tanker"
+    loa_m: 85.00
+    beam_m: 17.20
+    depth_m: 2.60
+    draught_m: 1.80
+    observed: {dwt_t: 1801, tank_capacity_m3: 3257}
+    published: "deadweight in river at d = 1.40 / 1.60 / 1.80 / 2.0 / 2.15 / 2.35 m (about) 1235 / 1526 / 1801 / 2075 / 2280 / 2555 t; draught at DWL 1.80 m; 14 cargo tanks, 3257 m3 (when filling 98%)"
+    source: "M15 — MEB project page, Project ROB21, accessed 2026-10-22"
+    confidence: medium
+    held_out: "tank-barge calibration (issue #335): never used to fit k"
+    flags: "The deadweight is 'about'. The tank volume is at 98 % filling."
+    note: "Run at the DWL draught of 1.80 m with its deadweight 1801 t."
+  - id: meb-rt63
+    hold_type: tank
+    what: "Project RT63, small-draught self-propelled tanker-pusher"
+    loa_m: 85.70
+    beam_m: 17.20
+    depth_m: 2.60
+    draught_m: 1.80
+    observed: {dwt_t: 1310, tank_capacity_m3: 2435}
+    published: "length overall (about) 85.70 m; breadth overall 17.20 m; depth 2.60 m; draught by DWL 1.80 m; deadweight in river at 1.40 / 1.60 / 1.80 / 2.0 / 2.15 / 2.35 m 773 / 1040 / 1310 / 1581 / 1787 / 2064 t; 10 cargo tanks 2435 m3; ME power 2 x 746 kW"
+    source: "M16 — MEB project page, Project RT63, accessed 2026-10-22"
+    confidence: medium
+    held_out: "tank-barge calibration (issue #335): never used to fit k"
+    self_propelled: true
+    not_banded: "self-propelled: the tank-barge model has no machinery, accommodation or fuel"
+    flags: "A tanker-pusher: it also works in a tug-barge combination."
+  - id: meb-005rob04
+    hold_type: tank
+    what: "Project 005ROB04, 5125 t cargo capacity non-self-propelled oil tanker (river-sea)"
+    loa_m: 121.80
+    beam_m: 16.80
+    depth_m: 5.00
+    draught_m: 3.60
+    observed: {cargo_capacity_t: 5125, tank_capacity_m3: 5780}
+    published: "cargo carrying capacity in river at DWL draught 5125 t; draught at DWL 3.60 m; ballast draft 2.20 m; 10 cargo and 2 slop tanks, 5780 m3 (including slop tanks)"
+    source: "M17 — MEB project page, Project 005ROB04, accessed 2026-10-22"
+    confidence: medium
+    held_out: "tank-barge calibration (issue #335): never used to fit k"
+    not_banded: "the published figure is a cargo capacity, not a deadweight"
+    flags: "cargo capacity, not DWT"
+  - id: meb-rst27
+    hold_type: tank
+    what: "Project RST27 (VF Tanker type), self-propelled river-sea product tanker, crude oil to 60 deg C"
+    loa_m: 140.85
+    beam_m: 16.70
+    depth_m: 6.00
+    draught_m: 3.60
+    observed: {dwt_t: 5428, tank_capacity_m3: 8274}
+    published: "length overall 140.85 m; breadth scantlings 16.70 m; depth 6.00 m; draught in sea / in river 4.20 / 3.60 m; deadweight in sea / in river 7030 / 5428 t; 8 tanks (6 cargo, 2 slop), 8274 m3; ME power 2 x 1200 kW"
+    source: "M18 — MEB project page, Project RST27, accessed 2026-10-22"
+    confidence: medium
+    held_out: "tank-barge calibration (issue #335): never used to fit k"
+    self_propelled: true
+    not_banded: "self-propelled: the tank-barge model has no machinery, accommodation or fuel"
+    flags: "The page gives the breadth scantlings only (16.70 m)."
+  - id: meb-rst12
+    hold_type: tank
+    what: "Project RST12, self-propelled river-sea product tanker, crude oil to 50 deg C"
+    loa_m: 141.00
+    beam_m: 16.98
+    depth_m: 5.50
+    draught_m: 3.60
+    observed: {dwt_t: 5632, tank_capacity_m3: 8075}
+    published: "length overall 141.00 m; breadth overall 16.98 m, scantlings 16.90 m; depth 5.50 m; draught in sea (SWL) / in river 4.17 / 3.60 m; deadweight in sea / in river 7183 / 5632 t; 8 tanks (6 cargo, 2 slop), 8075 m3 (including slop tanks); ME power 2 x 1200 kW"
+    source: "M19 — MEB project page, Project RST12, accessed 2026-10-22"
+    confidence: medium
+    held_out: "tank-barge calibration (issue #335): never used to fit k"
+    self_propelled: true
+    not_banded: "self-propelled: the tank-barge model has no machinery, accommodation or fuel"
+  - id: meb-rst25
+    hold_type: tank
+    what: "Project RST25, self-propelled river-sea chemical and product tanker"
+    loa_m: 139.99
+    beam_m: 16.60
+    depth_m: 5.50
+    draught_m: 3.60
+    observed: {dwt_t: 5229, tank_capacity_m3: 6990}
+    published: "length overall 139.99 m; breadth scantlings 16.60 m; depth 5.50 m; draught in sea (at SWL) / in river 4.175 / 3.60 m; deadweight in sea 6710 t; in river at 3.60 / 3.40 m 5229 / 4692 t; 8 tanks (6 cargo, 2 slop), cargo carrying capacity 6990 m3 (including slop tanks); ME power 2 x 1200 kW"
+    source: "M20 — MEB project page, Project RST25, accessed 2026-10-22"
+    confidence: medium
+    held_out: "tank-barge calibration (issue #335): never used to fit k"
+    self_propelled: true
+    not_banded: "self-propelled: the tank-barge model has no machinery, accommodation or fuel"
+    flags: "The page gives the breadth scantlings only (16.60 m)."
+  - id: meb-005rst01
+    hold_type: tank
+    what: "Project 005RST01 (Armada Leader type), self-propelled river-sea chemical and product tanker"
+    loa_m: 138.70
+    beam_m: 16.76
+    depth_m: 6.00
+    draught_m: 3.60
+    observed: {dwt_t: 4726, tank_capacity_m3: 7196}
+    published: "length overall 138.70 m; breadth overall 16.76 m; depth 6.00 m, depth of trunk 1.00 m; draught in sea / in river 4.30 / 3.60 m; deadweight in sea / in river 6444 / 4726 t; 6 cargo tanks, 7196 m3; ME power 2 x 1080 kW"
+    source: "M21 — MEB project page, Project 005RST01, accessed 2026-10-22"
+    confidence: medium
+    held_out: "tank-barge calibration (issue #335): never used to fit k"
+    self_propelled: true
+    not_banded: "self-propelled: the tank-barge model has no machinery, accommodation or fuel"
+    flags: "The depth is 6.00 m, with a trunk of 1.00 m above it; the case uses 6.00 m."
+  - id: meb-rst05
+    hold_type: tank
+    what: "Project RST05 (Narva type), self-propelled river-sea crude oil and product tanker"
+    loa_m: 118.87
+    beam_m: 13.24
+    depth_m: 5.80
+    draught_m: 3.60
+    observed: {dwt_t: 2868, tank_capacity_m3: 4427}
+    published: "length overall 118.87 m; breadth overall 13.24 m, scantlings 13.00 m; depth 5.80 m; draught in sea (at SWL) / in river 4.3 / 3.6 m; deadweight in sea / in river 3955 / 2868 t; 10 tanks (8 cargo, 2 slop), 4427 m3 (including slop tanks); ME power 2 x 567 kW"
+    source: "M22 — MEB project page, Project RST05, accessed 2026-10-22"
+    confidence: medium
+    held_out: "tank-barge calibration (issue #335): never used to fit k"
+    self_propelled: true
+    not_banded: "self-propelled: the tank-barge model has no machinery, accommodation or fuel"
+  - id: meb-rst11
+    hold_type: tank
+    what: "Project RST11, self-propelled river-sea product tanker"
+    loa_m: 131.64
+    beam_m: 16.75
+    depth_m: 5.50
+    draught_m: 3.60
+    observed: {dwt_t: 4677, tank_capacity_m3: 7042}
+    published: "length overall 131.64 m; breadth overall 16.75 m, scantlings 16.50 m; depth 5.50 m; draught (in sea at SWL / in river) 4.477 / 3.60 m; deadweight in sea / in river 6586 / 4677 t; 10 tanks (8 cargo, 2 slop), 7042 m3 (including slop tanks); ME power 2 x 736 kW"
+    source: "M23 — MEB project page, Project RST11, accessed 2026-10-22"
+    confidence: medium
+    held_out: "tank-barge calibration (issue #335): never used to fit k"
+    self_propelled: true
+    not_banded: "self-propelled: the tank-barge model has no machinery, accommodation or fuel"
+  - id: meb-st19
+    hold_type: tank
+    what: "Project ST19 (Kazan type), self-propelled sea and river-sea product tanker"
+    loa_m: 114.40
+    beam_m: 16.30
+    depth_m: 6.10
+    draught_m: 3.60
+    observed: {dwt_t: 3270, tank_capacity_m3: 4150}
+    published: "length overall 114.40 m; breadth overall 16.30 m, scantlings 16.20 m; depth 6.10 m; draught in sea / in river 4.16 / 3.60 m; deadweight in sea / in river 4320 / 3270 t; 12 tanks (10 cargo, 2 slop), 4150 m3 (including slop tanks); ME power 2 x 1020 kW"
+    source: "M24 — MEB project page, Project ST19, accessed 2026-10-22"
+    confidence: medium
+    held_out: "tank-barge calibration (issue #335): never used to fit k"
+    self_propelled: true
+    not_banded: "self-propelled: the tank-barge model has no machinery, accommodation or fuel"
+    flags: "The page's tank volume (4150 m3) is less than its sea deadweight (4320 t); the page does not say why."
+  - id: meb-rst43c
+    hold_type: tank
+    what: "Project RST43C, self-propelled river-sea oil tanker (ABS restricted service)"
+    loa_m: 149.95
+    beam_m: 17.30
+    depth_m: 7.50
+    draught_m: 5.59
+    water_density_t_m3: 1.025
+    observed: {dwt_t: 11053, tank_capacity_m3: 11447}
+    published: "length overall 149.95 m; breadth scantlings / overall 17.20 / 17.30 m; depth 7.50 m; draught at SLWL 5.59 m; deadweight 11053 t; 10 tanks (8 cargo, 2 slop), 11 447 m3 (98%, including slop tanks); ME power 2 x 1600 kW"
+    source: "M25 — MEB project page, Project RST43C, accessed 2026-10-22"
+    confidence: medium
+    held_out: "tank-barge calibration (issue #335): never used to fit k"
+    self_propelled: true
+    not_banded: "self-propelled: the tank-barge model has no machinery, accommodation or fuel"
+    flags: "The page gives a draught at 'SLWL' (a sea draught) and no river figure; the case runs it in sea water (1.025 t/m3)."
+  - id: cds-tanker-110
+    hold_type: tank
+    what: "CDS Tanker 110 (mts Generation), Damen stock design, hybrid-electric Rhine tanker"
+    loa_m: 110.00
+    beam_m: 11.45
+    depth_m: 4.90
+    draught_m: 3.30
+    observed: {cargo_capacity_t: 2868, tank_capacity_m3: 3040}
+    published: "110 m x 11.45 m, depth 4.9 m, draughts 1.2 m (minimum) and 3.3 m (fully loaded); cargo capacity 2,868 tonnes; eight onboard tanks, combined cargo volume 3,040 m3; 1,320 m3 of ballast water; hybrid propulsion"
+    source: "R1 — RINA, The Naval Architect, 29 Aug 2025, Damen hybrid-electric tanker takes to the Rhine, accessed 2026-10-22"
+    confidence: low
+    held_out: "tank-barge calibration (issue #335): never used to fit k"
+    self_propelled: true
+    not_banded: "self-propelled, and the published figure is a cargo capacity, not a deadweight"
+    flags: "A trade press article, not the builder's sheet. The cargo capacity is of the class, 'some 200 tonnes more' than comparable ships, as the article says."

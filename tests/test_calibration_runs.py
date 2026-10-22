@@ -130,10 +130,11 @@ def test_the_check_prints_warnings_and_still_exits_zero():
     out = subprocess.run([sys.executable, "-m", "vessel_designer.calibration", "--check"],
                          capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
-    from vessel_designer.calibration import _assess_installed_power, _assess_propulsion, _assess_tanks
-    # One annotation for each result outside its band: the barge, tank (issue #292), bollard pull
-    # (issue #351) and installed power (issue #353) results.
-    every = assess() + _assess_tanks() + _assess_propulsion() + _assess_installed_power()
+    from vessel_designer.calibration import (_assess_installed_power, _assess_propulsion, _assess_tank_barges,
+                                             _assess_tanks)
+    # One annotation for each result outside its band: the barge, tank (issue #292), tank barge (issue
+    # #335), bollard pull (issue #351) and installed power (issue #353) results.
+    every = assess() + _assess_tanks() + _assess_tank_barges() + _assess_propulsion() + _assess_installed_power()
     assert out.stdout.count("::warning ") == sum(1 for b in every if not b.inside)
 
 

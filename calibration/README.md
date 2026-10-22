@@ -39,7 +39,7 @@ A checksum of each web source must be **attempted**. It need not succeed. Each e
   changed since gives a different hash, so the entry shows it.
 - **not achieved:** `checksum_attempted` (the date) and `checksum_failed` (the reason).
 
-A missing checksum raises no warning and fails no gate. On 2026-10-22, 107 of 110 pages were fetched; the other
+A missing checksum raises no warning and fails no gate. On 2026-10-22, 119 of 122 pages were fetched; the other
 three (S14, K10, P1) have the second form.
 
 ## Held-out cases (issue #3)
@@ -86,6 +86,29 @@ A band miss is a warning, never a failure; `--check` prints one annotation per t
   out from the one published tank steel weight (the first case). That case's steel error is in-sample.
 - **Not yet runnable.** Bilobe tanks, a record with no length, and a double-shell fuel tank are listed in
   `not_yet_runnable_tank_cases` with the reason.
+
+## Tank barges (issue #335)
+
+`python -m vessel_designer.calibration` also runs every tank barge: the 41 `hold_type: tank` records of
+`cases.yaml` and the 12 reference vessels of `tank_barge_cases.yaml` (the vessels of
+`docs/research/crude-oil/03-design-practice.md` section 3 that have full data and were not yet in
+`cases.yaml`; the other four, ROB20, 004ROB05, ROB07 and 1635T, were). The model is the one of
+`tank_lightship.yaml`: lightship = k × L × B × D + outfit, and the deadweight at the stated draught is the
+box-barge Cb × L × B × T × ρ less that lightship. Results are in section 5a of `results.md`; the bands are
+in `tank_barge_bands.yaml`, starting values for the maintainer, equal to the dry-barge bands.
+
+- **In-sample and held out.** The 15 cases of the k-fit subset (`tank_lightship_inputs.yaml`) are
+  **in-sample**: k was fitted on them from the same deadweights, so their errors say little. Every other
+  case is held out: run, banded, never used to fit. The report labels each row and gives both summaries.
+- **No band where the model does not apply.** A self-propelled vessel has no band: the model has no
+  machinery, accommodation or fuel, so its deadweight comes out too high by about that weight (the
+  error is shown). A cargo capacity is not a deadweight: it is shown against the predicted deadweight and
+  has no band. `not_banded` on a case says why.
+- **Cite or skip.** Each new vessel was read on its source page (`web_sources` M15 to M25 and R1, with the
+  checksum of the page as served). A figure the page does not give is absent. The estimated lightships of
+  the research note are derived, not published, so no record has an observed lightship; the lightship band
+  is set and unused.
+- A band miss is a warning, never a failure; `--check` prints one annotation per miss.
 
 ## Pass 1 findings (core as first ported)
 

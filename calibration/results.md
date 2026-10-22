@@ -183,27 +183,27 @@ Listed with their published figures and the reason. They are never run.
 
 | Case | Hull | Conf. | LOA×B×D (m), T | Published figures | Why not run |
 |---|---|---|---|---|---|
-| meb-rob20-belmax | tank | medium | 118.79×22.8×4, T 2.75 | DWT 6,000 t; tanks 6,870 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| meb-rob07-mh4001 | tank | medium | 95.23×16.8×5, T 3.5 | DWT 4,244 t; tanks 4,670 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| meb-rob05-paloil | tank | medium | 93×16.7×5, T 3.6 | cargo capacity 4,324 t; tanks 4,620 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| meb-rob17-nerida | tank | medium | 71.7×14.3×2, T 1.85 | DWT 1,267 t; tanks 1,481 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| meb-1635tm-fng | tank | medium | 73.2×11×3.9, T 3.24 | cargo capacity 2,059 t; tanks 2,581 m³; light draught 0.61 m | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| meb-1635t-udp-slt | tank | medium | 76.5×11.02×3.9, T 3 | cargo capacity 1,907 t; tanks 2,022.4 m³; light draught 0.77 m | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| kirby-10071-200x35 | tank | medium | 60.96×10.67×3.66, T 2.74 | DWT 1,361 t; tanks 1,644 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| kirby-10201-200x35 | tank | medium | 60.96×10.67×3.66, T 2.74 | DWT 1,302 t; tanks 1,737 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| kirby-10083-200x35 | tank | medium | 60.96×10.67×3.66, T 2.74 | DWT 1,330 t; tanks 1,706 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| kirby-10074-195x35 | tank | medium | 59.44×10.67×3.66, T 2.74 | DWT 1,288 t; tanks 1,595 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| cgbm-102-200x35 | tank | medium | 60.96×10.67×3.81, T 2.74 | DWT 1,350 t; tanks 1,789 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| mer-13-200x35 | tank | medium | 60.96×10.67×3.96, T 2.74 | DWT 1,348 t; tanks 1,402 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| kirby-301-250x50 | tank | medium | 76.2×15.24×3.66, T 2.74 | DWT 2,437 t; tanks 2,453 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| kirby-407-263x54 | tank | medium | 80.16×16.46×4.57, T 2.74 | DWT 2,718 t; tanks 3,640 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| hfl-406-297x54 | tank | medium | 90.53×16.46×3.66, T 2.74 | DWT 3,006 t; tanks 4,675 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| kirby-27773-297x54 | tank | medium | 90.65×16.46×3.66, T 2.74 | DWT 3,098 t; tanks 4,343 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| kirby-32300b-297x54 | tank | medium | 90.53×16.46×3.66, T 2.74 | DWT 3,267 t; tanks 5,097 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| ctco-358-297x54 | tank | medium | 90.65×16.46×3.66, T 2.74 | DWT 2,947 t; tanks 4,379 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| htco-3064-320x50 | tank | medium | 97.54×15.24×3.96, T 2.74 | DWT 2,950 t; tanks 4,118 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| cms-1601-222x54 | tank | medium | 67.67×16.46×3.66, T 2.74 | DWT 1,905 t; tanks 2,601 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| crowley-180-2-tank | tank | low | 54.86×16.46, T 3.05 | DWT 2,057 t | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel. Cross-check only: no depth; lightship garbled; TPI vs light draft disagree |
+| meb-rob20-belmax | tank | medium | 118.79×22.8×4, T 2.75 | DWT 6,000 t; tanks 6,870 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| meb-rob07-mh4001 | tank | medium | 95.23×16.8×5, T 3.5 | DWT 4,244 t; tanks 4,670 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| meb-rob05-paloil | tank | medium | 93×16.7×5, T 3.6 | cargo capacity 4,324 t; tanks 4,620 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| meb-rob17-nerida | tank | medium | 71.7×14.3×2, T 1.85 | DWT 1,267 t; tanks 1,481 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| meb-1635tm-fng | tank | medium | 73.2×11×3.9, T 3.24 | cargo capacity 2,059 t; tanks 2,581 m³; light draught 0.61 m | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| meb-1635t-udp-slt | tank | medium | 76.5×11.02×3.9, T 3 | cargo capacity 1,907 t; tanks 2,022.4 m³; light draught 0.77 m | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| kirby-10071-200x35 | tank | medium | 60.96×10.67×3.66, T 2.74 | DWT 1,361 t; tanks 1,644 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| kirby-10201-200x35 | tank | medium | 60.96×10.67×3.66, T 2.74 | DWT 1,302 t; tanks 1,737 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| kirby-10083-200x35 | tank | medium | 60.96×10.67×3.66, T 2.74 | DWT 1,330 t; tanks 1,706 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| kirby-10074-195x35 | tank | medium | 59.44×10.67×3.66, T 2.74 | DWT 1,288 t; tanks 1,595 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| cgbm-102-200x35 | tank | medium | 60.96×10.67×3.81, T 2.74 | DWT 1,350 t; tanks 1,789 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| mer-13-200x35 | tank | medium | 60.96×10.67×3.96, T 2.74 | DWT 1,348 t; tanks 1,402 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| kirby-301-250x50 | tank | medium | 76.2×15.24×3.66, T 2.74 | DWT 2,437 t; tanks 2,453 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| kirby-407-263x54 | tank | medium | 80.16×16.46×4.57, T 2.74 | DWT 2,718 t; tanks 3,640 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| hfl-406-297x54 | tank | medium | 90.53×16.46×3.66, T 2.74 | DWT 3,006 t; tanks 4,675 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| kirby-27773-297x54 | tank | medium | 90.65×16.46×3.66, T 2.74 | DWT 3,098 t; tanks 4,343 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| kirby-32300b-297x54 | tank | medium | 90.53×16.46×3.66, T 2.74 | DWT 3,267 t; tanks 5,097 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| ctco-358-297x54 | tank | medium | 90.65×16.46×3.66, T 2.74 | DWT 2,947 t; tanks 4,379 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| htco-3064-320x50 | tank | medium | 97.54×15.24×3.96, T 2.74 | DWT 2,950 t; tanks 4,118 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| cms-1601-222x54 | tank | medium | 67.67×16.46×3.66, T 2.74 | DWT 1,905 t; tanks 2,601 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| crowley-180-2-tank | tank | low | 54.86×16.46, T 3.05 | DWT 2,057 t | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335). Cross-check only: no depth; lightship garbled; TPI vs light draft disagree |
 | zhongyi-001-lng | gas | low | 90×16×3, T 1.2 | LNG 500 m³ | gas barge: no gas hull model; capacity only |
 | hz-255teu-container-deck | container (motor) | low | 107×21×5.2, T 3.8 | cargo capacity 5,020 t | self-propelled; DWCC not DWT; LOA includes ramp |
 | usl-147-192x52 | gas | medium | 58.5216×15.8496×3.6576, T 2.7432 | DWT 1,705.51 t; tanks 2,271.29 m³ | Kirby barge type 'Pressure': no gas hull model; capacity and DWT only |
@@ -211,26 +211,26 @@ Listed with their published figures and the reason. They are never run.
 | dbl-709-245x48 | gas | medium | 74.676×14.6304×3.6576, T 2.7432 | DWT 1,700.97 t; tanks 2,538.23 m³ | Kirby barge type 'Pressure': no gas hull model; capacity and DWT only |
 | cheyenne-256x53 | gas | medium | 78.0288×16.1544×4.1402, T 2.7432 | DWT 1,426.09 t; tanks 2,646.34 m³ | Kirby barge type 'Pressure': no gas hull model; capacity and DWT only |
 | arrowhead-266-260x48 | gas | medium | 79.248×14.6304×3.6576, T 2.7432 | DWT 1,492.32 t; tanks 2,648.41 m³ | Kirby barge type 'Pressure': no gas hull model; capacity and DWT only |
-| creek-175x42 | tank | medium | 53.34×12.8016×3.5052, T 2.7432 | DWT 1,083.18 t; tanks 1,689.88 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| cherokee-bg-175x42 | tank | medium | 53.34×12.827×3.5052, T 2.7432 | DWT 1,083.18 t; tanks 1,700.53 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| cc-133-184x52 | tank | medium | 56.0832×15.8496×3.6576, T 2.7432 | DWT 1,762.66 t; tanks 2,271.29 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| cc-132-184x52 | tank | medium | 56.0832×15.8496×3.6576, T 2.7432 | DWT 1,805.3 t; tanks 2,271.29 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| usl-146-192x52 | tank | medium | 58.5216×15.8496×3.6576, T 2.7432 | DWT 1,725.47 t; tanks 2,271.29 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| city-of-galveston-210x44 | tank | medium | 64.0334×13.4366×3.5306, T 2.7432 | DWT 1,083.18 t; tanks 1,608.95 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| ci-1609-239x52 | tank | medium | 72.9742×15.8496×3.9624, T 2.7432 | DWT 1,905.09 t; tanks 2,601.03 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| karankawa-245x48 | tank | medium | 74.676×14.6304×3.6576, T 2.7432 | DWT 1,678.29 t; tanks 2,559.85 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| fmt-2054-245x48 | tank | medium | 74.676×14.6304×3.6576, T 2.7432 | DWT 1,699.16 t; tanks 2,564.15 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| fmt-2068-245x48 | tank | medium | 74.676×14.6304×3.6576, T 2.7432 | DWT 1,718.21 t; tanks 2,555.72 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| dbl-703-250x52 | tank | medium | 76.2×15.8496×3.9624, T 2.7432 | DWT 1,592.11 t; tanks 2,700.08 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| 401-270x54 | tank | medium | 82.296×16.4592×3.9624, T 2.7432 | DWT 3,117.99 t; tanks 3,233.48 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| kirby-27730-290x54 | tank | medium | 88.519×16.4592×3.6576, T 2.7432 | DWT 3,020.93 t; tanks 4,379.15 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| kirby-21853-295x50 | tank | medium | 89.916×15.24×4.2672, T 2.7432 | DWT 3,004.6 t; tanks 3,469.1 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| kirby-29173-297x52 | tank | medium | 90.5256×15.8496×3.6576, T 2.7432 | DWT 3,002.78 t; tanks 4,654.04 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| ctco-251-297x50 | tank | medium | 90.6526×15.24×3.9624, T 2.7432 | DWT 2,794.13 t; tanks 4,727.01 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| ctco-3000-308x54 | tank | medium | 93.8784×16.4592×5.7912, T 2.7432 | DWT 2,794.13 t; tanks 4,792.83 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| comanche-380x54 | tank | medium | 115.824×16.4592×4.2672, T 2.7432 | DWT 2,617.23 t; tanks 4,839.26 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| winna-wilson-461x90 | tank | low | 140.513×27.432×10.9728, T 2.7432 | DWT 15,422.1 t; tanks 23,848.1 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
-| miss-dott-o-463x82 | tank | low | 141.122×24.9936×9.144, T 2.7432 | DWT 7,587.69 t; tanks 23,848.1 m³ | double-skin tank barge: no tank hull model in the calibration path; box k does not describe tank steel |
+| creek-175x42 | tank | medium | 53.34×12.8016×3.5052, T 2.7432 | DWT 1,083.18 t; tanks 1,689.88 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| cherokee-bg-175x42 | tank | medium | 53.34×12.827×3.5052, T 2.7432 | DWT 1,083.18 t; tanks 1,700.53 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| cc-133-184x52 | tank | medium | 56.0832×15.8496×3.6576, T 2.7432 | DWT 1,762.66 t; tanks 2,271.29 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| cc-132-184x52 | tank | medium | 56.0832×15.8496×3.6576, T 2.7432 | DWT 1,805.3 t; tanks 2,271.29 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| usl-146-192x52 | tank | medium | 58.5216×15.8496×3.6576, T 2.7432 | DWT 1,725.47 t; tanks 2,271.29 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| city-of-galveston-210x44 | tank | medium | 64.0334×13.4366×3.5306, T 2.7432 | DWT 1,083.18 t; tanks 1,608.95 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| ci-1609-239x52 | tank | medium | 72.9742×15.8496×3.9624, T 2.7432 | DWT 1,905.09 t; tanks 2,601.03 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| karankawa-245x48 | tank | medium | 74.676×14.6304×3.6576, T 2.7432 | DWT 1,678.29 t; tanks 2,559.85 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| fmt-2054-245x48 | tank | medium | 74.676×14.6304×3.6576, T 2.7432 | DWT 1,699.16 t; tanks 2,564.15 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| fmt-2068-245x48 | tank | medium | 74.676×14.6304×3.6576, T 2.7432 | DWT 1,718.21 t; tanks 2,555.72 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| dbl-703-250x52 | tank | medium | 76.2×15.8496×3.9624, T 2.7432 | DWT 1,592.11 t; tanks 2,700.08 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| 401-270x54 | tank | medium | 82.296×16.4592×3.9624, T 2.7432 | DWT 3,117.99 t; tanks 3,233.48 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| kirby-27730-290x54 | tank | medium | 88.519×16.4592×3.6576, T 2.7432 | DWT 3,020.93 t; tanks 4,379.15 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| kirby-21853-295x50 | tank | medium | 89.916×15.24×4.2672, T 2.7432 | DWT 3,004.6 t; tanks 3,469.1 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| kirby-29173-297x52 | tank | medium | 90.5256×15.8496×3.6576, T 2.7432 | DWT 3,002.78 t; tanks 4,654.04 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| ctco-251-297x50 | tank | medium | 90.6526×15.24×3.9624, T 2.7432 | DWT 2,794.13 t; tanks 4,727.01 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| ctco-3000-308x54 | tank | medium | 93.8784×16.4592×5.7912, T 2.7432 | DWT 2,794.13 t; tanks 4,792.83 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| comanche-380x54 | tank | medium | 115.824×16.4592×4.2672, T 2.7432 | DWT 2,617.23 t; tanks 4,839.26 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| winna-wilson-461x90 | tank | low | 140.513×27.432×10.9728, T 2.7432 | DWT 15,422.1 t; tanks 23,848.1 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
+| miss-dott-o-463x82 | tank | low | 141.122×24.9936×9.144, T 2.7432 | DWT 7,587.69 t; tanks 23,848.1 m³ | the dry-barge path has no tank hull model; this record is run by the tank-barge path (section 5a of results.md, issue #335) |
 
 ### Summary: out of sample against in-sample
 
@@ -283,6 +283,71 @@ Published empty weights of marine LNG Type C tanks over their gross volume. They
 | lng-bunker-vessel-bilobe-2500 | low | 2,500 | 240 | 0.096 | 'light weight' of the tank, as printed; what it covers is not stated | bilobe tanks are not modelled, and no diameter is printed |
 
 Published range: 0.096 to 0.115 t per m³ of tank.
+
+## 5a. Tank barges (issue #335)
+
+Every `hold_type: tank` record of `cases.yaml` and the reference vessels of `tank_barge_cases.yaml`, run through the tank-barge model: lightship = k × L·B·D + outfit (k = 0.1141 t/m³, an Estimate; outfit coefficients are Estimates), and the deadweight at the stated draught is the box-barge Cb × L·B·T·ρ less that lightship. Bands are in `tank_barge_bands.yaml`: starting values for the maintainer, equal to the dry-barge bands. **The 15 cases of the k-fit subset are in-sample** (k was fitted on them, from the same deadweights); every other case is out of sample. A **self-propelled** vessel has no band: the model has no machinery, accommodation or fuel, so its deadweight comes out too high by about that weight. A cargo capacity is not a deadweight, so it is shown against the predicted deadweight and has no band. A band miss is a warning only.
+
+| Case | Conf. | Sample | T (m) | Published (t) | Model lightship (t) | Model DWT (t) | err % | Band ± % | vs band | Note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| meb-rob20-belmax | medium | in-sample | 2.75 | 6,000 | 1,346 | 5,566 | -7.2 | ±10 (medium) | inside | in the k fit |
+| meb-rob07-mh4001 | medium | in-sample | 3.50 | 4,244 | 987 | 4,209 | -0.8 | ±10 (medium) | inside | in the k fit |
+| meb-rob05-paloil | medium | held out | 3.60 | 4,324 (cargo) | 960 | 4,358 | 0.8 | – | – |  |
+| meb-rob17-nerida | medium | held out | 1.85 | 1,267 | 258 | 1,547 | 22.1 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| meb-1635tm-fng | medium | held out | 3.24 | 2,059 (cargo) | 400 | 2,021 | -1.8 | – | – |  |
+| meb-1635t-udp-slt | medium | held out | 3.00 | 1,907 (cargo) | 407 | 1,939 | 1.7 | – | – |  |
+| kirby-10071-200x35 | medium | in-sample | 2.74 | 1,361 | 298 | 1,356 | -0.4 | ±10 (medium) | inside | in the k fit |
+| kirby-10201-200x35 | medium | in-sample | 2.74 | 1,302 | 299 | 1,354 | 4.0 | ±10 (medium) | inside | in the k fit |
+| kirby-10083-200x35 | medium | in-sample | 2.74 | 1,330 | 299 | 1,355 | 1.9 | ±10 (medium) | inside | in the k fit |
+| kirby-10074-195x35 | medium | in-sample | 2.74 | 1,288 | 290 | 1,322 | 2.7 | ±10 (medium) | inside | in the k fit |
+| cgbm-102-200x35 | medium | in-sample | 2.74 | 1,350 | 311 | 1,343 | -0.6 | ±10 (medium) | inside | in the k fit |
+| mer-13-200x35 | medium | in-sample | 2.74 | 1,348 | 316 | 1,338 | -0.8 | ±10 (medium) | inside | in the k fit |
+| kirby-301-250x50 | medium | in-sample | 2.74 | 2,437 | 524 | 2,429 | -0.3 | ±10 (medium) | inside | in the k fit |
+| kirby-407-263x54 | medium | in-sample | 2.74 | 2,718 | 746 | 2,609 | -4.0 | ±10 (medium) | inside | in the k fit |
+| hfl-406-297x54 | medium | in-sample | 2.74 | 3,006 | 697 | 3,092 | 2.9 | ±10 (medium) | inside | in the k fit |
+| kirby-27773-297x54 | medium | in-sample | 2.74 | 3,098 | 693 | 3,101 | 0.1 | ±10 (medium) | inside | in the k fit |
+| kirby-32300b-297x54 | medium | in-sample | 2.74 | 3,267 | 704 | 3,085 | -5.6 | ±10 (medium) | inside | in the k fit |
+| ctco-358-297x54 | medium | in-sample | 2.74 | 2,947 | 693 | 3,101 | 5.2 | ±10 (medium) | inside | in the k fit |
+| htco-3064-320x50 | medium | in-sample | 2.74 | 2,950 | 738 | 3,042 | 3.1 | ±10 (medium) | inside | in the k fit |
+| cms-1601-222x54 | medium | held out | 2.74 | 1,905 | 507 | 2,325 | 22.1 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| crowley-180-2-tank | low | held out | 3.05 | 2,057 | – | – | – | – | – | no depth; lightship garbled; TPI vs light draft disagree |
+| creek-175x42 | medium | held out | 2.74 | 1,083 | 300 | 1,438 | 32.8 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| cherokee-bg-175x42 | medium | held out | 2.74 | 1,083 | 301 | 1,441 | 33.0 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| cc-133-184x52 | medium | held out | 2.74 | 1,763 | 407 | 1,856 | 5.3 | ±10 (medium) | inside |  |
+| cc-132-184x52 | medium | held out | 2.74 | 1,805 | 407 | 1,856 | 2.8 | ±10 (medium) | inside |  |
+| usl-146-192x52 | medium | held out | 2.74 | 1,725 | 423 | 1,938 | 12.3 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| city-of-galveston-210x44 | medium | held out | 2.74 | 1,083 | 372 | 1,818 | 67.8 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| ci-1609-239x52 | medium | held out | 2.74 | 1,905 | 565 | 2,380 | 24.9 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| karankawa-245x48 | medium | held out | 2.74 | 1,678 | 497 | 2,284 | 36.1 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| fmt-2054-245x48 | medium | held out | 2.74 | 1,699 | 497 | 2,284 | 34.4 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| fmt-2068-245x48 | medium | held out | 2.74 | 1,718 | 497 | 2,284 | 33.0 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| dbl-703-250x52 | medium | held out | 2.74 | 1,592 | 589 | 2,485 | 56.1 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| 401-270x54 | medium | held out | 2.74 | 3,118 | 664 | 2,784 | -10.7 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| kirby-27730-290x54 | medium | held out | 2.74 | 3,021 | 678 | 3,031 | 0.3 | ±10 (medium) | inside |  |
+| kirby-21853-295x50 | medium | held out | 2.74 | 3,005 | 723 | 2,766 | -8.0 | ±10 (medium) | inside |  |
+| kirby-29173-297x52 | medium | held out | 2.74 | 3,003 | 673 | 2,979 | -0.8 | ±10 (medium) | inside |  |
+| ctco-251-297x50 | medium | held out | 2.74 | 2,794 | 700 | 2,817 | 0.8 | ±10 (medium) | inside |  |
+| ctco-3000-308x54 | medium | held out | 2.74 | 2,794 | 1,098 | 2,836 | 1.5 | ±10 (medium) | inside |  |
+| comanche-380x54 | medium | held out | 2.74 | 2,617 | 1,006 | 3,847 | 47.0 | ±10 (medium) | **OUTSIDE** ⚠ |  |
+| winna-wilson-461x90 | low | not scored | 2.74 | 15,422 | 5,207 | 4,605 | -70.1 | – | – | record flags an implied Cb of 1.459 (impossible) and an unclear hull type (Kirby 'Dry Bulk', 150,000 bbl) |
+| miss-dott-o-463x82 | low | not scored | 2.74 | 7,588 | 4,062 | 4,917 | -35.2 | – | – | record flags an unclear hull type (Kirby 'Dry Bulk', 150,000 bbl) and a 9 ft row far below the table's draughts |
+| meb-rob21 | medium | held out | 1.80 | 1,801 | 486 | 1,956 | 8.6 | ±10 (medium) | inside |  |
+| meb-rt63 | medium | held out | 1.80 | 1,310 | 476 | 1,986 | 51.6 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-005rob04 | medium | held out | 3.60 | 5,125 (cargo) | 1,260 | 5,576 | 8.8 | – | – | the published figure is a cargo capacity, not a deadweight |
+| meb-rst27 | medium | held out | 3.60 | 5,428 | 1,743 | 6,116 | 12.7 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-rst12 | medium | held out | 3.60 | 5,632 | 1,632 | 6,367 | 13.0 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-rst25 | medium | held out | 3.60 | 5,229 | 1,570 | 6,193 | 18.4 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-005rst01 | medium | held out | 3.60 | 4,726 | 1,707 | 6,059 | 28.2 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-rst05 | medium | held out | 3.60 | 2,868 | 1,112 | 4,146 | 44.5 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-rst11 | medium | held out | 3.60 | 4,677 | 1,496 | 5,870 | 25.5 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-st19 | medium | held out | 3.60 | 3,270 | 1,364 | 4,865 | 48.8 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| meb-rst43c | medium | held out | 5.59 | 11,053 | 2,403 | 11,390 | 3.1 | – | – | self-propelled: the tank-barge model has no machinery, accommodation or fuel |
+| cds-tanker-110 | low | held out | 3.30 | 2,868 (cargo) | 753 | 3,104 | 8.2 | – | – | self-propelled, and the published figure is a cargo capacity, not a deadweight |
+
+| Sample | Banded n | Mean err % | Mean abs err % | Range % | Inside band |
+|---|---|---|---|---|---|
+| in-sample (k-fit subset) | 15 | +0.0 | 2.6 | -7.2 to +5.2 | 15 of 15 |
+| out of sample | 21 | +20.1 | 21.9 | -10.7 to +67.8 | 8 of 21 |
 
 ## 6. Bollard pull (propulsion cases, spec 0007)
 
