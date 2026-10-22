@@ -317,6 +317,17 @@ https://doi.org/10.7910/DVN/MMGAUS, Harvard Dataverse, V1, licence CC0 1.0 (from
   why.
 - **Two tickets.** The hull without bulbs first (`bit_BB` = `bit_SB` = 0); the bulbs second. Inland and
   coastal hulls rarely have bulbs.
+- **Bulbs as built (#453).** Each bulb is an ellipsoid with its widest part at the height `Hbb` of the
+  design draught (`Hsb` of its own height `HSBOA` times the design draught, for the stern bulb), where its
+  half-width is `Bbb` (`Bsb`) of the midship half-breadth. At each height below the design draught the
+  waterline runs along the bulb to the half-width the hull's waterline reaches at the bulb's widest part,
+  with a quartic fillet between: it matches value and slope at both ends and has no curvature at the bulb
+  end. The dataset's code writes that curvature row with `6 x^2` where the second derivative has `6 x`; OVCD
+  writes the definition, and the benchmark report lists the hulls where the two differ. The stern bulb
+  starts `Kappa_SB` of `Ls` along the stern taper (the code and its comment say `Ls`; the overview PDF says
+  `Lb`). The constraint rows 36 to 48 follow the constraints PDF; the dataset's code has the sign of row 40
+  the other way round, and OVCD follows the PDF. A bulb needs a zero deadrise or a positive keel radius. The
+  Set 1 sample passes the pass rule of #452 for most of its hulls; each hull outside is in the report.
 
 **Benchmark against the dataset.**
 

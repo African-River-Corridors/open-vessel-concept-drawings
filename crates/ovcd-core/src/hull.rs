@@ -423,8 +423,7 @@ pub mod hull_form {
         ChineAboveDepth { height_m: f64, depth_m: f64 },
         /// The sections the generator wrote were refused.
         Sections(SectionsError),
-        /// The ShipD parameters fail a constraint, ask for a bulb, or are not finite (the Design's
-        /// checks name which).
+        /// The ShipD parameters fail a constraint or are not finite (the Design's checks name which).
         Shipd,
     }
 

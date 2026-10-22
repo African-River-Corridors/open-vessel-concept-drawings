@@ -1,7 +1,7 @@
 """The design-impact gate, end to end, on a small fixture repository (ticket 145).
 
-The fixture is a real git repository that holds a copy of tools/design_impact.py and the two
-calibration files. A stand-in `cargo` (a shell script on PATH) "builds" a stand-in `ovcd` whose result
+The fixture is a real git repository that holds a copy of tools/design_impact.py and the
+calibration files (the two cases files and the ShipD sample). A stand-in `cargo` (a shell script on PATH) "builds" a stand-in `ovcd` whose result
 comes from `factor.txt` in the tree it was built from, so a branch can move results or break the build
 without a compiler. The tests run `python tools/design_impact.py gate` in the fixture and look at the
 exit code and what it says.
@@ -43,6 +43,9 @@ class Fixture:
             shutil.copy(ROOT / "tools" / module, self.root / "tools")
         for name in ("cases.yaml", "cn_yangtze_gb38030_draft_2018.yaml"):
             shutil.copy(ROOT / "calibration" / name, self.root / "calibration")
+        # The sweep reads the ShipD sample for its bulb hull (issue #453).
+        (self.root / "calibration" / "shipd").mkdir()
+        shutil.copy(ROOT / "calibration" / "shipd" / "sample.csv", self.root / "calibration" / "shipd")
         (self.root / "factor.txt").write_text("10\n")
         (self.root / "CHANGELOG.md").write_text("# Changelog\n\n## Unreleased\n")
         (self.root / ".gitignore").write_text("target/\n")

@@ -505,7 +505,26 @@ def cases() -> dict[str, dict]:
     out["sweep hull shipd 80x14"] = _inputs(
         "bauxite", "box_hold", "pushed_barge", 80.0, 14.0, 4.5, hull_form="shipd",
         loading_conditions="legacy")
+    # Issue #453: a ShipD-style hull with a bow bulb and a stern bulb (dataset row 763 of Set 1,
+    # from the benchmark sample), in the legacy loading conditions. A base from before the bulbs
+    # refuses it: the case shows as new.
+    names, hull = _shipd_bulb_hull("Constrained_Randomized_Set_1", "763")
+    out["sweep hull shipd bulbs 80 m"] = _inputs(
+        "bauxite", "box_hold", "pushed_barge", 80.0, hull["Bd"] * 80.0, hull["Dd"] * 80.0,
+        hull_form="shipd", loading_conditions="legacy",
+        shipd_parameters={n: hull[n] for n in names if n not in ("LOA", "Bd", "Dd")})
     return out
+
+
+def _shipd_bulb_hull(set_name: str, row: str):
+    """The 45 ShipD parameters of one row of the committed benchmark sample, by header name."""
+    lines = (ROOT / "calibration" / "shipd" / "sample.csv").read_text().splitlines()
+    names = lines[0].split(",")[2:]
+    for line in lines[1:]:
+        cells = line.split(",")
+        if cells[0] == set_name and cells[1] == row:
+            return names, dict(zip(names, (float(c) for c in cells[2:])))
+    raise SystemExit(f"design_impact: no row {row} of {set_name} in calibration/shipd/sample.csv")
 
 
 # --- running ovcd -------------------------------------------------------------------------------
