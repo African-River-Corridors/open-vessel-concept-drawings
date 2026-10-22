@@ -66,6 +66,7 @@ def test_the_speed_check_by_hand():
 
 
 def test_the_case_files_are_what_the_oracle_writes():
+    """Label: property"""
     for c in write_cases.STERN_BASES:
         path = EVAL / "cases" / f"{c['id']}.yaml"
         want = yaml.safe_load(write_cases.render(write_cases.case_document(c)))
@@ -74,6 +75,7 @@ def test_the_case_files_are_what_the_oracle_writes():
 
 
 def test_every_boundary_case_moves_one_number_across_one_limit():
+    """Label: property"""
     docs = yaml.safe_load((EVAL / "stern_mutants.yaml").read_text(encoding="utf-8"))["mutants"]
     assert docs
     parents = {c["id"]: c for c in write_cases.STERN_BASES}
