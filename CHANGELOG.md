@@ -232,6 +232,54 @@ Each entry is a before/after table written by `python3 tools/design_impact.py ch
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
 
+### ticket/332-liquid-conditions (2026-10-22)
+
+Between `main 251daf5` and `this branch a927401`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep crude carries nothing (draught limit) | `checks[10].message` | absent | GM 22.73 m (fluid), max GZ 3.84 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | changed |
+| sweep crude carries nothing (draught limit) | `checks[10].name` | absent | Stability — lightship, no ballast | changed |
+| sweep crude carries nothing (draught limit) | `checks[10].ok` | absent | False | changed |
+| sweep crude carries nothing (draught limit) | `checks[10].severity` | absent | warning | changed |
+| sweep crude carries nothing (draught limit) | `checks[11].message` | absent | GM 3.32 m (fluid), max GZ 0.74 m at 20° — fails: Angle of max GZ 20.000 < 25.0 | changed |
+| sweep crude carries nothing (draught limit) | `checks[11].name` | absent | Stability — slack cargo tanks, worst case | changed |
+| sweep crude carries nothing (draught limit) | `checks[11].ok` | absent | False | changed |
+| sweep crude carries nothing (draught limit) | `checks[11].severity` | absent | warning | changed |
+| sweep crude carries nothing (draught limit) | `checks[6].message` | absent | GM 22.73 m (fluid), max GZ 3.84 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | changed |
+| sweep crude carries nothing (draught limit) | `checks[6].name` | absent | Stability — full load, departure | changed |
+| sweep crude carries nothing (draught limit) | `checks[6].ok` | absent | False | changed |
+| sweep crude carries nothing (draught limit) | `checks[6].severity` | absent | warning | changed |
+| sweep crude carries nothing (draught limit) | `checks[7].message` | absent | GM 22.73 m (fluid), max GZ 3.84 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | changed |
+| sweep crude carries nothing (draught limit) | `checks[7].name` | absent | Stability — full load, arrival | changed |
+| sweep crude carries nothing (draught limit) | `checks[7].ok` | absent | False | changed |
+| sweep crude carries nothing (draught limit) | `checks[7].severity` | absent | warning | changed |
+| sweep crude carries nothing (draught limit) | `checks[8].message` | absent | GM 11.21 m (fluid), max GZ 3.85 m at 34° | changed |
+| sweep crude carries nothing (draught limit) | `checks[8].name` | absent | Stability — ballast, departure | changed |
+| sweep crude carries nothing (draught limit) | `checks[8].ok` | absent | True | changed |
+| sweep crude carries nothing (draught limit) | `checks[8].severity` | absent | warning | changed |
+| sweep crude carries nothing (draught limit) | `checks[9].message` | absent | GM 11.21 m (fluid), max GZ 3.85 m at 34° | changed |
+| sweep crude carries nothing (draught limit) | `checks[9].name` | absent | Stability — ballast, arrival | changed |
+| sweep crude carries nothing (draught limit) | `checks[9].ok` | absent | True | changed |
+| sweep crude carries nothing (draught limit) | `checks[9].severity` | absent | warning | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_capacity_m3` | absent | 1783.44 | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_capacity_t` | absent | 1783.44 | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_tank_count` | absent | 6 | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_tanks[0].capacity_m3` | absent | 385.14 | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_tanks[0].capacity_t` | absent | 385.14 | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_tanks[0].kind` | absent | double_bottom_ballast | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_tanks[0].lcg_m` | absent | 42.9 | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_tanks[0].name` | absent | DB1P | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_tanks[0].side` | absent | port | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_tanks[0].tcg_m` | absent | -3.5 | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_tanks[0].vcg_m` | absent | 0.35 | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_tanks[1].capacity_m3` | absent | 385.14 | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_tanks[1].capacity_t` | absent | 385.14 | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_tanks[1].kind` | absent | double_bottom_ballast | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_tanks[1].lcg_m` | absent | 42.9 | changed |
+| sweep crude carries nothing (draught limit) | `loading_conditions.ballast_tanks[1].name` | absent | DB1S | changed |
+| ... | 40834 more changed quantities | | | |
+
 ### ticket/331-integral-tanks (2026-10-22)
 
 Between `main 6d46b83` and `this branch 820f768`.
