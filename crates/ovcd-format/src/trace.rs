@@ -379,6 +379,11 @@ pub const DERIVED_INPUTS: &[(&str, &[&str])] = &[
     ("adn_vessel_type", &["N_open", "N_closed", "C"]),
     // Issue #543: the length overall, in the bands of SOLAS V/22.1 and ES-TRIN 28.02.
     ("length_band", LENGTH_BANDS),
+    // Issue #282: whether the Option gives an angle of down-flooding.
+    (
+        "downflooding_angle",
+        ovcd_core::measured::DOWNFLOODING_ANGLES,
+    ),
 ];
 
 pub use ovcd_core::measured::{DEADWEIGHT_BANDS, LENGTH_BANDS, deadweight_band, length_band};
@@ -574,6 +579,16 @@ impl MeasureSource for OptionMeasures<'_> {
                 let props = ovcd_core::cargo::get_cargo(cargo).ok()?;
                 return Some(cargo_class_value(props.phase).to_string());
             }
+            "downflooding_angle" => {
+                return Some(
+                    ovcd_core::measured::downflooding_angle_value(
+                        self.option
+                            .input("downflooding_angle_deg")
+                            .and_then(|i| i.value.as_f64()),
+                    )
+                    .to_string(),
+                );
+            }
             "length_band" => {
                 return self
                     .option
@@ -620,6 +635,7 @@ pub fn rule_inputs(option: &DesignOption) -> RuleInputs {
         "cargo_class",
         "formation_kind",
         "length_band",
+        "downflooding_angle",
         "adn_vessel_type",
     ] {
         if let Some(v) = source.input(name) {

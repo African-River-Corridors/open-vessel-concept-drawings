@@ -317,6 +317,41 @@ pub fn area(gz: &[(i32, f64)], a0: i32, a1: i32) -> f64 {
     }))
 }
 
+/// The area under the GZ curve from `a0` degrees to `a1` degrees, `a1` not a whole number of degrees:
+/// the trapezoid over the whole degrees, and the last part from the last whole degree to `a1` with
+/// GZ interpolated linearly (issue #282, IS Code Part A 2.2.1 up to the angle of down-flooding).
+pub fn area_to(gz: &[(i32, f64)], a0: i32, a1: f64) -> f64 {
+    let whole = libm::floor(a1) as i32;
+    let mut total = area(gz, a0, whole);
+    if f64::from(whole) < a1
+        && let (Some(&(_, g0)), Some(&(_, g1))) = (
+            gz.iter().find(|&&(d, _)| d == whole),
+            gz.iter().find(|&&(d, _)| d == whole + 1),
+        )
+    {
+        let frac = a1 - f64::from(whole);
+        let g_end = g0 + (g1 - g0) * frac;
+        total += 0.5 * (g0 + g_end) * radians(frac);
+    }
+    total
+}
+
+/// The angle where the IS Code areas 0-40 and 30-40 end (issue #282, Part A 2.2.1): 40 degrees, or
+/// the angle of down-flooding where that is below 40 degrees. `None`: 40.
+pub fn area_end_deg(downflooding_deg: Option<f64>) -> f64 {
+    let top = f64::from(CRITERIA_ANGLES_DEG[1]);
+    downflooding_deg.map_or(top, |a| if a < top { a } else { top })
+}
+
+/// An angle as a criterion name prints it: whole degrees plain, else one decimal.
+fn degrees_name(angle: f64) -> String {
+    if angle == libm::floor(angle) {
+        crate::pyfmt::fixed(angle, 0)
+    } else {
+        crate::pyfmt::fixed(angle, 1)
+    }
+}
+
 pub(crate) fn criterion(name: &str, value: f64, limit: f64, ok: bool, source: &str) -> Criterion {
     Criterion {
         name: name.to_string(),
@@ -327,8 +362,32 @@ pub(crate) fn criterion(name: &str, value: f64, limit: f64, ok: bool, source: &s
     }
 }
 
+#[cfg(test)]
 pub(crate) fn criteria(cset: &str, c: &Condition) -> Result<Vec<Criterion>, PyError> {
+    criteria_with(cset, c, None)
+}
+
+/// The criteria of `cset`, the two areas to 40 degrees ending at the angle of down-flooding where
+/// that is below 40 degrees (issue #282); the criteria are named for that angle.
+fn criteria_with(
+    cset: &str,
+    c: &Condition,
+    downflooding_deg: Option<f64>,
+) -> Result<Vec<Criterion>, PyError> {
     if cset == "IS_CODE_2008" {
+        let end = area_end_deg(downflooding_deg);
+        let top = f64::from(CRITERIA_ANGLES_DEG[1]);
+        let (name_0_40, name_30_40) = if end < top {
+            (
+                format!("Area 0\u{2013}{}\u{b0}", degrees_name(end)),
+                format!("Area 30\u{2013}{}\u{b0}", degrees_name(end)),
+            )
+        } else {
+            (
+                "Area 0\u{2013}40\u{b0}".to_string(),
+                "Area 30\u{2013}40\u{b0}".to_string(),
+            )
+        };
         let src = "IMO IS Code 2008, Part A 2.2";
         let gz_30_plus = py_max(
             c.gz.iter()
@@ -345,14 +404,14 @@ pub(crate) fn criteria(cset: &str, c: &Condition) -> Result<Vec<Criterion>, PyEr
                 &s(".1"),
             ),
             criterion(
-                "Area 0\u{2013}40\u{b0}",
+                &name_0_40,
                 c.area_0_40,
                 0.090,
                 c.area_0_40 >= 0.090,
                 &s(".1"),
             ),
             criterion(
-                "Area 30\u{2013}40\u{b0}",
+                &name_30_40,
                 c.area_30_40,
                 0.030,
                 c.area_30_40 >= 0.030,
@@ -427,7 +486,16 @@ pub(crate) fn box_condition_at(
         gz.push((a, heel - fsc * sin(radians(f64::from(a)))?));
     }
     let deck_edge = degrees(libm::atan(div(2.0 * (d - t), b)?));
-    condition_from_curve(gz, t, kg, gm_solid, fsc, Some(deck_edge), criteria_set)
+    condition_from_curve(
+        gz,
+        t,
+        kg,
+        gm_solid,
+        fsc,
+        Some(deck_edge),
+        criteria_set,
+        None,
+    )
 }
 
 /// A condition that has no GZ curve because one criterion already fails it: the hull does not float
@@ -506,12 +574,14 @@ pub(crate) fn hull_condition(
         free_surface_m,
         Some(deck_edge),
         criteria_set,
+        hull.spec.downflooding_deg,
     )
 }
 
 /// One condition from its GZ curve (issue #448): the areas, the angle of maximum GZ and the criteria
 /// of `criteria_set`. The curve already holds the free surface correction. The identity fields
 /// (`name`, cargo, fill, displacement) are left empty or zero for the caller to set.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn condition_from_curve(
     gz: Vec<(i32, f64)>,
     draught: f64,
@@ -520,8 +590,27 @@ pub(crate) fn condition_from_curve(
     free_surface_m: f64,
     deck_edge_deg: Option<f64>,
     criteria_set: &str,
+    downflooding_deg: Option<f64>,
 ) -> Result<Condition, PyError> {
     let (max_gz_deg, max_gz) = max_by_gz(&gz);
+    // Issue #282: the areas 0-40 and 30-40 end at the angle of down-flooding where it is below 40.
+    let end = area_end_deg(downflooding_deg);
+    let top = f64::from(CRITERIA_ANGLES_DEG[1]);
+    let (area_0_40, area_30_40) = if end < top {
+        (
+            area_to(&gz, 0, end),
+            if end > f64::from(CRITERIA_ANGLES_DEG[0]) {
+                area_to(&gz, CRITERIA_ANGLES_DEG[0], end)
+            } else {
+                0.0
+            },
+        )
+    } else {
+        (
+            area(&gz, 0, CRITERIA_ANGLES_DEG[1]),
+            area(&gz, CRITERIA_ANGLES_DEG[0], CRITERIA_ANGLES_DEG[1]),
+        )
+    };
     let mut c = Condition {
         name: String::new(),
         cargo_t: 0.0,
@@ -537,13 +626,13 @@ pub(crate) fn condition_from_curve(
         max_gz_deg,
         area_0_27: area(&gz, 0, 27),
         area_0_30: area(&gz, 0, CRITERIA_ANGLES_DEG[0]),
-        area_0_40: area(&gz, 0, CRITERIA_ANGLES_DEG[1]),
-        area_30_40: area(&gz, CRITERIA_ANGLES_DEG[0], CRITERIA_ANGLES_DEG[1]),
+        area_0_40,
+        area_30_40,
         deck_edge_deg,
         gz,
         criteria: Vec::new(),
     };
-    c.criteria = criteria(criteria_set, &c)?;
+    c.criteria = criteria_with(criteria_set, &c, downflooding_deg)?;
     Ok(c)
 }
 

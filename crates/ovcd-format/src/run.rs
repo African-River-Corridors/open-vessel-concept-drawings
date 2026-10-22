@@ -250,6 +250,7 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     put("speed_max_kn", "max_speed_kn");
     put("air_draft_limit_m", "air_draft_limit_m");
     put("draught_limit_m", "draught_limit_m");
+    put("downflooding_angle_deg", "downflooding_angle_deg");
     // A null wall thickness asks for the pressure-vessel formula (issue #292); `put` leaves nulls
     // out, and a key left out means the engine's old fixed 25 mm.
     // In the same way a null dome size asks for the dome rule (issue #316).
@@ -426,6 +427,9 @@ pub fn run_option_with(
                     .map(crate::trace::with_check_verdicts)
                     .unwrap_or_default();
                 // Issue #355: the Blind Distance and the speed the Rules of the stern read.
+                measured.downflooding_deg = option
+                    .input("downflooding_angle_deg")
+                    .and_then(|i| i.value.as_f64());
                 let sightline = &v["sightline"];
                 measured.blind_distance_light_m = sightline["blind_distance_light_m"].as_f64();
                 measured.blind_distance_laden_m = sightline["blind_distance_laden_m"].as_f64();

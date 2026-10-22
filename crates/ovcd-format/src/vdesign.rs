@@ -922,6 +922,12 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::All,
         value: "null",
     },
+    // Issue #282: a file saved before gives no angle of down-flooding; the IS Code areas ran to 40.
+    LegacyFixedJson {
+        name: "downflooding_angle_deg",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
     // Issue #429: a file saved before costs in USD, with no price base date.
     LegacyFixedJson {
         name: "currency",
@@ -2746,6 +2752,13 @@ pub const INPUTS: &[InputSpec] = &[
         NUM_OR_NONE,
         false,
         Group::WaterwayLimits,
+    ),
+    spec(
+        "downflooding_angle_deg",
+        "Angle of down-flooding",
+        NUM_OR_NONE,
+        false,
+        Group::LoadingConditions,
     ),
     spec(
         "channel_depth_m",

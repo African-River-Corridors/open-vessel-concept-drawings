@@ -289,7 +289,7 @@ app-stab-col-deck-edge = Deck-edge angle
 app-stab-criteria-of = { $condition }: criteria
 app-stab-needs-at-least = needs at least
 app-stab-limitations = Limitations
-app-stab-limit-downflooding = The 0–40° and 30–40° areas always run to 40°. IS Code 2008 Part A 2.2.1 stops them at the down-flooding angle when it is less than 40°, and the model has no down-flooding angle yet, so a hull whose openings immerse sooner can pass when it should fail (finding #282).
+app-stab-limit-downflooding = The 0–40° and 30–40° areas run to 40° unless you type an angle of down-flooding below 40° (the input Angle of down-flooding). IS Code 2008 Part A 2.2.1 stops them at that angle when it is less than 40°. The model has no openings with heights, so it cannot work the angle out: with none typed, a hull whose openings immerse sooner can pass when it should fail (finding #282).
 
 ## Capital budget view
 

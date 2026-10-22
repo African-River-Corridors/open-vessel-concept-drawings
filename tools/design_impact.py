@@ -172,6 +172,10 @@ OPTIONAL_INPUT_CASES = (
     # Where the opening setback is measured from (issue #381), set to the Defaults Profile value.
     ("opening_setback_basis", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"opening_setback_basis": "cargo_area"}),
+    # The angle of down-flooding (issue #282): an angle of 40 degrees or more ends no area sooner, so
+    # a design that types one has the same results as one that gives none.
+    ("downflooding_angle_deg", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"downflooding_angle_deg": 60.0}),
     # The aft block inputs (issue #4, slice 4), set to their defaults in the same way. A self-propelled
     # hull carries the block; the unit counts default by Cargo phase (gas 1 battery and 2
     # accommodation units, dry bulk 2 and 1), so each has a gas and a dry case.

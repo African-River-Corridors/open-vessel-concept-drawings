@@ -447,6 +447,8 @@ input-air-draft-limit-m = Air-draft limit
 
 input-draught-limit-m = Draught limit
 
+input-downflooding-angle-deg = Angle of down-flooding
+
 input-channel-depth-m = Channel depth
 
 input-channel-under-keel-clearance-m = Under-keel clearance

@@ -214,6 +214,9 @@ pub struct BargeCapacityInputs {
     pub bow_rake_rise_m: Option<f64>,
     /// Issue #449: bilge radius, sheer and camber of the hull.
     pub hull_shape: crate::hull::hull_form::HullShape,
+    /// Issue #282: the angle of down-flooding (degrees) the designer gives; `None`: none given, so
+    /// the IS Code areas run to 40 degrees. Below 40 they end there (IS Code Part A 2.2.1).
+    pub downflooding_angle_deg: Option<f64>,
     /// Dry-bulk end-bulkhead allowance at each end of the hold (m)
     pub bulk_end_bulkhead_m: f64,
 
@@ -319,6 +322,7 @@ impl BargeCapacityInputs {
             bow_rake_length_m: None,
             bow_rake_rise_m: None,
             hull_shape: crate::hull::hull_form::HullShape::default(),
+            downflooding_angle_deg: None,
             bow_rake_to_depth_ratio: DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
             bulk_end_bulkhead_m: 0.50,
             vessel_type: "IGC_2G".to_string(),
@@ -1390,6 +1394,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         bow_rake_rise_m: inp.bow_rake_rise_m.unwrap_or(inp.depth),
         stern: inp.stern_geometry.clone(),
         shape: inp.hull_shape.clone(),
+        downflooding_deg: inp.downflooding_angle_deg,
     })
     .map_err(|e| value_error(format!("{e}")))?;
     let rho = inp.water_density;

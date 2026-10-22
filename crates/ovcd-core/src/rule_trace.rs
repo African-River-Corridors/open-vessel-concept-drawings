@@ -93,6 +93,15 @@ pub static MEASURES: &[MeasureDef] = &[
         method_status: MethodStatus::Unverified,
     },
     MeasureDef {
+        id: "gz.area_to_downflooding",
+        unit: "m.rad",
+        object: ObjectType::LoadingCondition,
+        value: ValueKind::Number,
+        args: &[num("from_deg"), num("to_deg")],
+        method: "Trapezoid area under the GZ curve on the 1 degree grid from from_deg to to_deg, or to the angle of down-flooding the designer gave where that is less (the last part with GZ interpolated linearly); none when the angle is not above from_deg",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
         id: "gz.max_from",
         unit: "m",
         object: ObjectType::LoadingCondition,
