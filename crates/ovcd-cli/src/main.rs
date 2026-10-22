@@ -89,6 +89,11 @@ Usage:
   ovcd draw [--profile <profile.json>] [--option <name>] --document <file.vdesign>
       Print the drawing documents only, as JSON, so that they can be built with another
       implementation of the standard.
+  ovcd mesh [--profile <profile.json>] --hash <file.vdesign>
+      Print the mesh hash of each Option (spec 0008, issue #456): the SHA-256 of the meshes of its
+      Vessel Model (hull, decks, bulkheads, Spaces, waterlines). The web parity check compares it
+      with the WebAssembly build. It is not the results hash. A convoy, or an Option that cannot
+      be computed, prints `-` and the reason.
   ovcd --help | --version
 
 --rule-set <file> (repeatable) loads a Rule Set file at run time, after the built-in sets
@@ -120,6 +125,7 @@ fn main() -> ExitCode {
             Err(msg) => usage_error("run", &msg),
         },
         ["draw", rest @ ..] => report(draw::draw(rest), "draw"),
+        ["mesh", rest @ ..] => report(mesh(rest), "mesh"),
         ["schema", rest @ ..] => report(schema(rest), "schema"),
         ["profile"] => {
             print!("{}", Profile::built_in_text());
@@ -578,6 +584,40 @@ fn validate(args: &[&str]) -> Result<bool, String> {
 
 /// Run a saved Design. Returns whether the file had no hard error and no Option failed. An Option
 /// that is not yet supported (a convoy) is not a failure.
+/// `ovcd mesh --hash`: one line per Option, its name and its mesh hash.
+fn mesh(args: &[&str]) -> Result<(), String> {
+    let mut hash = false;
+    let mut rest = Vec::new();
+    for &a in args {
+        if a == "--hash" {
+            hash = true;
+        } else {
+            rest.push(a);
+        }
+    }
+    if !hash {
+        return Err("give --hash: the mesh hash is the only mesh output so far".into());
+    }
+    let flags = parse_flags(&rest, false, false, false)?;
+    let [path] = flags.files.as_slice() else {
+        return Err("give exactly one .vdesign file".into());
+    };
+    let profile = load_profile(flags.profile)?;
+    let text = std::fs::read_to_string(path).map_err(|e| format!("cannot read {path}: {e}"))?;
+    let checked = ovcd_format::check(&text, &profile);
+    let design = checked
+        .design
+        .filter(|_| checked.report.is_ok())
+        .ok_or_else(|| format!("{path} has errors; run `ovcd validate`"))?;
+    for option in &design.options {
+        match ovcd_format::option_meshes(option) {
+            Ok(m) => println!("{}\t{}", option.name, ovcd_format::mesh_hash(&m)),
+            Err(e) => println!("{}\t-\t{e}", option.name),
+        }
+    }
+    Ok(())
+}
+
 fn run(args: &[&str]) -> Result<bool, String> {
     use ovcd_format::{HashStatus, RunOutcome};
     let flags = parse_flags(args, false, true, false)?;
