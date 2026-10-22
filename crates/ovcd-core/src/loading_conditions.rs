@@ -44,6 +44,9 @@ pub enum Role {
     BallastArrival,
     /// No cargo, no consumables, no ballast: only for a vessel that may sail that way.
     LightshipNoBallast,
+    /// Liquid bulk (spec 0006): the departure condition with the cargo tanks slack at the fill
+    /// whose fluid GM is lowest. Not one of [`Role::ALL`]: [`assess_slack`] makes it.
+    SlackCargo,
 }
 
 impl Role {
@@ -62,6 +65,7 @@ impl Role {
             Role::BallastDeparture => "ballast_departure",
             Role::BallastArrival => "ballast_arrival",
             Role::LightshipNoBallast => "lightship_no_ballast",
+            Role::SlackCargo => "slack_cargo",
         }
     }
 
@@ -73,13 +77,14 @@ impl Role {
             Role::BallastDeparture => "Ballast, departure",
             Role::BallastArrival => "Ballast, arrival",
             Role::LightshipNoBallast => "Lightship, no ballast",
+            Role::SlackCargo => "Slack cargo tanks, worst case",
         }
     }
 
     /// The part of the full stores and fuel the condition carries.
     pub fn consumables_fraction(self) -> f64 {
         match self {
-            Role::FullLoadDeparture | Role::BallastDeparture => 1.0,
+            Role::FullLoadDeparture | Role::BallastDeparture | Role::SlackCargo => 1.0,
             Role::FullLoadArrival | Role::BallastArrival => ARRIVAL_CONSUMABLES,
             Role::LightshipNoBallast => 0.0,
         }
@@ -223,6 +228,9 @@ pub struct LoadedCondition {
     /// For a ballast condition with an automatic plan: whether a plan meets every criterion.
     /// `None` for a user plan or no ballast.
     pub plan_found: Option<bool>,
+    /// The weights of the condition and where they are: the lightship, the cargo, the stores and
+    /// fuel, and each ballast tank, as (name, mass, KG, LCG). Their sum is the displacement.
+    pub weights: Vec<(String, Item)>,
 }
 
 impl LoadedCondition {
@@ -373,23 +381,56 @@ fn consumables_at(c: &Consumables, fraction: f64) -> (Vec<Item>, f64) {
 
 /// One condition at the given ballast fills (one per ballast tank).
 fn condition(inp: &Inputs, role: Role, fills: &[f64]) -> Result<LoadedCondition, PyError> {
+    condition_with(inp, role, fills, None)
+}
+
+/// The mass of `items` as one item: its total, and the mass-weighted KG and LCG.
+fn lumped(items: &[Item]) -> Item {
+    let m: f64 = items.iter().fold(0.0, |a, i| a + i.mass_t);
+    if m == 0.0 {
+        return Item {
+            mass_t: 0.0,
+            kcg_m: 0.0,
+            lcg_m: 0.0,
+        };
+    }
+    Item {
+        mass_t: m,
+        kcg_m: items.iter().fold(0.0, |a, i| a + i.mass_t * i.kcg_m) / m,
+        lcg_m: items.iter().fold(0.0, |a, i| a + i.mass_t * i.lcg_m) / m,
+    }
+}
+
+/// [`condition`], with the cargo mass given: the slack cargo condition takes a part load.
+fn condition_with(
+    inp: &Inputs,
+    role: Role,
+    fills: &[f64],
+    cargo_override: Option<f64>,
+) -> Result<LoadedCondition, PyError> {
     let (l, b, d) = (inp.loa, inp.beam, inp.depth);
     let mut items: Vec<Item> = inp.lightship.to_vec();
+    let mut weights: Vec<(String, Item)> = Vec::new();
+    weights.push(("Lightship".to_string(), lumped(&items)));
     let mut fs_moment = 0.0;
-    let cargo_t = if role.carries_cargo() {
-        inp.full_cargo_t
-    } else {
-        0.0
+    let cargo_t = match cargo_override {
+        Some(m) => m,
+        None if role.carries_cargo() => inp.full_cargo_t,
+        None => 0.0,
     };
     let mut cargo_fill = 0.0;
     if cargo_t > 0.0 {
         let c = (inp.cargo_at)(cargo_t)?;
+        weights.push(("Cargo".to_string(), c.item));
         items.push(c.item);
         fs_moment += c.free_surface_moment_tm;
         cargo_fill = c.fill_fraction;
     }
     let (cons, cons_fs) = consumables_at(&inp.consumables, role.consumables_fraction());
     let consumables_t = cons.iter().fold(0.0, |a, i| a + i.mass_t);
+    if consumables_t > 0.0 {
+        weights.push(("Stores and fuel".to_string(), lumped(&cons)));
+    }
     items.extend(cons);
     fs_moment += cons_fs;
     let ballast: Vec<TankFill> = inp
@@ -400,11 +441,13 @@ fn condition(inp: &Inputs, role: Role, fills: &[f64]) -> Result<LoadedCondition,
         .map(|(t, &f)| filled(t, f, inp.ballast_density))
         .collect();
     for t in &ballast {
-        items.push(Item {
+        let item = Item {
             mass_t: t.mass_t,
             kcg_m: t.vcg_m,
             lcg_m: t.lcg_m,
-        });
+        };
+        weights.push((alloc::format!("Ballast {}", t.name), item));
+        items.push(item);
         fs_moment += t.free_surface_moment_tm;
     }
     let ballast_t = ballast.iter().fold(0.0, |a, t| a + t.mass_t);
@@ -472,7 +515,33 @@ fn condition(inp: &Inputs, role: Role, fills: &[f64]) -> Result<LoadedCondition,
         air_draft_m: air_draft,
         air_draft_ok: inp.air_draft_limit_m.map(|limit| air_draft <= limit),
         plan_found: None,
+        weights,
     })
+}
+
+/// The worst slack-tank condition of a liquid bulk hull (spec 0006 section 2, row 5): the departure
+/// condition (full stores and fuel, ballast tanks empty) with the cargo tanks all filled alike to a
+/// part load, at the cargo mass in `candidates_t` whose fluid GM is the lowest. A box tank's free
+/// surface inertia is the same at every slack level, so what moves the fluid GM is the weight and
+/// the centre of the cargo. A mass that fills the tanks to the nominally full level has no free
+/// surface and is not a slack case: the caller leaves it out. `None` with no candidate.
+pub fn assess_slack(
+    inp: &Inputs,
+    candidates_t: &[f64],
+) -> Result<Option<LoadedCondition>, PyError> {
+    let none = alloc::vec![0.0; inp.ballast_tanks.len()];
+    let mut worst: Option<LoadedCondition> = None;
+    for &m in candidates_t {
+        let c = condition_with(inp, Role::SlackCargo, &none, Some(m))?;
+        // The first of equal fluid GM stays, so the result does not depend on rounding.
+        if worst
+            .as_ref()
+            .is_none_or(|w| c.condition.gm_fluid_m < w.condition.gm_fluid_m)
+        {
+            worst = Some(c);
+        }
+    }
+    Ok(worst)
 }
 
 /// The cargo of a gas barge: liquid in the Type C tanks, the same model as the gas stability
@@ -608,4 +677,114 @@ pub fn dry_model(
         lcg_m: (stern + (inp.loa - bow)) / 2.0,
     };
     (items, cargo)
+}
+
+/// The cargo of a liquid bulk hull: liquid in the rectangular cargo tanks of the `liquid_bulk`
+/// module, every tank filled alike. The slop tanks stay empty. A tank at the nominally full level
+/// (Part B 3.1.2) has no free surface; a slack tank has the free surface of its section.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LiquidCargo {
+    /// The cargo tanks, in the order of the layout.
+    pub tanks: Vec<Space>,
+    /// The cargo density (t/m³).
+    pub density: f64,
+}
+
+impl LiquidCargo {
+    /// The gross volume of the cargo tanks (m³).
+    pub fn gross_m3(&self) -> f64 {
+        self.tanks.iter().fold(0.0, |a, t| a + t.volume_m3())
+    }
+
+    /// The cargo mass of a fill fraction of the gross volume (t).
+    pub fn mass_at_fill(&self, fraction: f64) -> f64 {
+        fraction * self.gross_m3() * self.density
+    }
+
+    /// The fill fraction of the gross volume that holds `mass_t`, at most 1.
+    pub fn fill_of(&self, mass_t: f64) -> Result<f64, PyError> {
+        let capacity = self.gross_m3() * self.density;
+        if capacity <= 0.0 {
+            return Ok(0.0);
+        }
+        Ok(div(mass_t, capacity)?.clamp(0.0, 1.0))
+    }
+
+    /// The cargo at `mass_t`: its centre and its free surface moment.
+    pub fn at(&self, mass_t: f64) -> Result<CargoAt, PyError> {
+        let x = self.fill_of(mass_t)?;
+        let fills: Vec<(f64, f64, f64, f64, f64)> = self
+            .tanks
+            .iter()
+            .map(|t| {
+                let f = t.fill(x);
+                (
+                    f.volume_m3 * self.density,
+                    f.vcg_m,
+                    f.lcg_m,
+                    f.free_surface_inertia_m4,
+                    f.fraction,
+                )
+            })
+            .collect();
+        let mass: f64 = fills.iter().fold(0.0, |a, f| a + f.0);
+        let (kcg, lcg) = if mass > 0.0 {
+            (
+                fills.iter().fold(0.0, |a, f| a + f.0 * f.1) / mass,
+                fills.iter().fold(0.0, |a, f| a + f.0 * f.2) / mass,
+            )
+        } else {
+            (0.0, 0.0)
+        };
+        let fs = if x >= NOMINALLY_FULL {
+            0.0
+        } else {
+            self.density * fills.iter().fold(0.0, |a, f| a + f.3)
+        };
+        Ok(CargoAt {
+            item: Item {
+                mass_t: mass,
+                kcg_m: kcg,
+                lcg_m: lcg,
+            },
+            fill_fraction: x,
+            free_surface_moment_tm: fs,
+        })
+    }
+
+    /// The part loads the worst slack condition is searched over: 5 % to 95 % of the gross volume
+    /// in steps of 5 %. All are below the nominally full level.
+    pub fn slack_masses_t(&self) -> Vec<f64> {
+        (1..=19)
+            .map(|k| self.mass_at_fill(f64::from(k) * 0.05))
+            .collect()
+    }
+}
+
+/// The lightship items and the cargo model of a liquid bulk hull: the items of the `liquid_bulk`
+/// layout (the hull and the outfit, each at its own point) and the stern block items. `None` for a
+/// gas or dry bulk result.
+pub fn liquid_model(
+    r: &crate::barge_capacity::BargeCapacityResult,
+) -> Option<(Vec<Item>, LiquidCargo)> {
+    let l = r.liquid.as_ref()?;
+    let mut items: Vec<Item> = l.lightship_items.iter().map(|(_, i)| *i).collect();
+    items.extend(r.stern_block_items.iter().map(|i| Item {
+        mass_t: i.mass_t,
+        kcg_m: i.kcg_m,
+        lcg_m: i.lcg_m,
+    }));
+    let tanks = l
+        .spaces
+        .iter()
+        .filter(|s| s.kind == SpaceKind::CargoTank)
+        .cloned()
+        .collect();
+    Some((
+        items,
+        LiquidCargo {
+            tanks,
+            density: r.cargo_density_t_per_m3,
+        },
+    ))
 }

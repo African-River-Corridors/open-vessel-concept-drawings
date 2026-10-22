@@ -48,7 +48,7 @@ check-air-draft-within-limit = { $condition }水上高度{ $governing } m <= 限
 # status: draft
 warn-barge-pushed = 顶推驳船：船员、电池和推进装置位于推轮上，不计入本船体的空船重量、载货能力或水上高度。推轮是另一艘船舶，必须单独计算费用并单独校核水上高度。
 # status: draft
-warn-liquid-no-conditions = 液体散货的装载工况和稳性尚未计算：原油为开发中的工作。
+warn-liquid-legacy-conditions = 液体散货的稳性仅按《IS 规则》的装载工况计算。
 # status: draft
 check-gm-positive = 斗式货舱驳船完整稳性 GM { $gm } m >= 0.15 m（一阶估算；KG_light @0.5D）
 # status: draft

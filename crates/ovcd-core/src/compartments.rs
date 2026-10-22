@@ -275,6 +275,7 @@ fn pair(
 ///   sloped hopper hold the wing space takes in the hopper.
 /// - The fore peak: the bow void, full beam and depth. The raked part counts half its length, as a
 ///   rake that rises the full depth has half the volume of a box.
+/// - Liquid bulk: the double bottom and the wing tanks of the tank block (`liquid_bulk`).
 /// - The aft peak, for a pushed barge only: the stern void. A self-propelled hull has its machinery
 ///   there.
 pub fn ballast_tanks(inp: &BargeCapacityInputs, r: &BargeCapacityResult) -> Vec<Space> {
@@ -323,8 +324,13 @@ pub fn ballast_tanks(inp: &BargeCapacityInputs, r: &BargeCapacityResult) -> Vec<
                 poly(s, &[(y_bot, db), (half_b, db), (half_b, d), (y_deck, d)])
             }));
         }
-        // The liquid bulk module lays out its own Spaces, ballast included (#330).
-        CargoClass::LiquidBulk => return out,
+        // The liquid bulk module lays out its own Spaces: the ballast ones are the double bottom
+        // and the wing tanks along the tank block (#330). The peaks follow, as for any hull.
+        CargoClass::LiquidBulk => {
+            if let Some(l) = r.liquid.as_ref() {
+                out.extend(l.spaces.iter().filter(|s| s.kind.is_ballast()).cloned());
+            }
+        }
     }
     let rake = r.bow_rake_length_m.unwrap_or(0.0).clamp(0.0, bow);
     let fp_len = (bow - rake) + rake / 2.0;

@@ -1228,15 +1228,39 @@ fn simulate_measured(
     // Issue #426: the IS Code conditions, with the ballast tanks of the hold arrangement.
     let mut is_code_stability = Value::Null;
     let mut loading_conditions = Value::Null;
-    // The liquid bulk conditions (departure, arrival, ballast, slack tanks) come with their own
-    // ticket (spec 0006, crude oil 5): a liquid Option has none yet.
+    // Issue #332 (spec 0006): the liquid bulk conditions are the IS Code ones with the cargo tanks
+    // of the layout, and the worst slack-tank condition besides.
     if is_code(p) && phase == CargoClass::LiquidBulk {
-        let note = Text::fixed(
-            "warn-liquid-no-conditions",
-            "Loading conditions and stability are not computed for liquid bulk cargo yet: crude oil is work in development.",
-        );
-        ids.text(&note);
-        warnings.push(note);
+        // A layout that does not fit has no Spaces (the `feasible geometry` check says why): there are
+        // no conditions to assess.
+        if let Some((lightship, liquid)) = ovcd_core::loading_conditions::liquid_model(&r) {
+            let cargo_at = |m: f64| liquid.at(m);
+            let tanks = ovcd_core::compartments::ballast_tanks(&inp, &r);
+            let slack = liquid.slack_masses_t();
+            let conds = is_code_conditions(
+                p,
+                &IsCodeHull {
+                    dims: (l, b, d),
+                    cb,
+                    rho,
+                    criteria_set: gs::DEFAULT_CRITERIA_SET,
+                    lightship: &lightship,
+                    full_cargo_t: cargo_t,
+                    cargo_at: &cargo_at,
+                    ballast_tanks: &tanks,
+                    consumables_t,
+                    air_draft_top_m: h_top,
+                    self_propelled,
+                    stern,
+                    slack_candidates_t: &slack,
+                },
+            )?;
+            loading_condition_checks(&conds, "warning", &mut checks, &mut ids);
+            is_code_stability = is_code_stability_json(&conds, true, &mut ids);
+            loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho, true);
+            // The liquid conditions stay out of the Rule Trace until the liquid Rule Sets exist: the
+            // IS Code Rule Set would block a low-freeboard tank barge on seagoing criteria.
+        }
     } else if is_code(p) {
         let (lightship, cargo_item) = ovcd_core::loading_conditions::dry_model(&inp, &r);
         let cargo_at = |m: f64| {
@@ -1270,14 +1294,23 @@ fn simulate_measured(
                 air_draft_top_m: h_top,
                 self_propelled,
                 stern,
+                slack_candidates_t: &[],
             },
         )?;
         loading_condition_checks(&conds, "warning", &mut checks, &mut ids);
-        is_code_stability = is_code_stability_json(&conds, &mut ids);
-        loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho);
+        is_code_stability = is_code_stability_json(&conds, false, &mut ids);
+        loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho, false);
         // The dry bulk conditions stay out of the Rule Trace: the IS Code Rule Set would block a
         // low-freeboard hold on seagoing criteria. That waits for a dry bulk Rule Set (triage
         // item 2) and the `fit` seam (#277).
+    } else if phase == CargoClass::LiquidBulk {
+        // The legacy loading conditions are the gas ones: liquid bulk has the IS Code ones only.
+        let note = Text::fixed(
+            "warn-liquid-legacy-conditions",
+            "Stability is computed for liquid bulk cargo with the IS Code loading conditions only.",
+        );
+        ids.text(&note);
+        warnings.push(note);
     }
     let mut dry_parts = structure_json(
         &r,
@@ -2132,8 +2165,8 @@ fn simulate_gas(
         let conds = ga::is_code_conditions(r, &f.engine_inputs, cargo_t, &options, ic)
             .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))?;
         loading_condition_checks(&conds, "error", &mut checks, &mut ids);
-        is_code_stability = is_code_stability_json(&conds, &mut ids);
-        loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho);
+        is_code_stability = is_code_stability_json(&conds, false, &mut ids);
+        loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho, false);
         conditions = conds.iter().map(|c| c.condition.clone()).collect();
     } else if f.payload_t > 0.0 && r.gas_basis.is_some() {
         let basis = GasCapacityResult::try_from(r)
@@ -2489,6 +2522,8 @@ struct IsCodeHull<'a> {
     air_draft_top_m: f64,
     self_propelled: bool,
     stern: Option<&'a ovcd_core::stern_form::SternGeometry>,
+    /// The cargo masses the worst slack condition is searched over (liquid bulk); empty for none.
+    slack_candidates_t: &'a [f64],
 }
 
 /// Assess the IS Code conditions.
@@ -2524,8 +2559,12 @@ fn is_code_conditions(
         air_draft_limit_m: truthy_float(p, "air_draft_limit_m")?,
         stern: h.stern,
     };
-    lc::assess(&inputs)
-        .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))
+    let raised = |e: gs::PyError| Stop::Raised(e.type_name().to_string(), e.message().to_string());
+    let mut conds = lc::assess(&inputs).map_err(raised)?;
+    if !h.slack_candidates_t.is_empty() {
+        conds.extend(lc::assess_slack(&inputs, h.slack_candidates_t).map_err(raised)?);
+    }
+    Ok(conds)
 }
 
 /// The ballast tanks as the results list them: name, kind, side, capacity and centroid full.
@@ -2553,7 +2592,10 @@ fn ballast_tanks_json(tanks: &[ovcd_core::compartments::Space], rho: f64) -> Val
 /// One IS Code condition in the results: the stability fields of a legacy condition, and its role,
 /// consumables, ballast plan (quantity and disposition, IS Code 2008 Part B 3.4.2.3), freeboard,
 /// air draft and trim.
-fn loaded_condition_json(c: &ovcd_core::loading_conditions::LoadedCondition) -> Value {
+fn loaded_condition_json(
+    c: &ovcd_core::loading_conditions::LoadedCondition,
+    with_weights: bool,
+) -> Value {
     let mut v = with_trim(simulate_condition(&c.condition), Some(&c.trim));
     v["role"] = json!(c.role.key());
     v["consumables_t"] = num(c.consumables_t);
@@ -2574,6 +2616,22 @@ fn loaded_condition_json(c: &ovcd_core::loading_conditions::LoadedCondition) -> 
             })
             .collect(),
     );
+    // Issue #332: a liquid bulk condition lists its weights and where they are.
+    if with_weights {
+        v["weights"] = Value::Array(
+            c.weights
+                .iter()
+                .map(|(name, i)| {
+                    json!({
+                        "name": name,
+                        "mass_t": num(i.mass_t),
+                        "kcg_m": num(i.kcg_m),
+                        "lcg_m": num(i.lcg_m),
+                    })
+                })
+                .collect(),
+        );
+    }
     v["plan_found"] = c.plan_found.map_or(Value::Null, Value::Bool);
     v["freeboard_m"] = num(c.freeboard_m);
     v["air_draft_m"] = num(c.air_draft_m);
@@ -2588,6 +2646,7 @@ fn loading_conditions_json(
     tanks: &[ovcd_core::compartments::Space],
     consumables_t: f64,
     rho: f64,
+    with_weights: bool,
 ) -> Value {
     let capacity_m3 = ovcd_core::compartments::total_volume_m3(tanks);
     json!({
@@ -2598,7 +2657,7 @@ fn loading_conditions_json(
         "ballast_capacity_m3": num(capacity_m3),
         "ballast_capacity_t": num(capacity_m3 * rho),
         "ballast_tanks": ballast_tanks_json(tanks, rho),
-        "conditions": conds.iter().map(loaded_condition_json).collect::<Vec<_>>(),
+        "conditions": conds.iter().map(|c| loaded_condition_json(c, with_weights)).collect::<Vec<_>>(),
     })
 }
 
@@ -2624,6 +2683,7 @@ fn loading_condition_checks(
 /// governing condition is the one with the lowest fluid GM, the first of equal.
 fn is_code_stability_json(
     conds: &[ovcd_core::loading_conditions::LoadedCondition],
+    with_weights: bool,
     ids: &mut TextIds,
 ) -> Value {
     let mut governing = &conds[0].condition;
@@ -2655,6 +2715,6 @@ fn is_code_stability_json(
         "ok": conds.iter().all(|c| c.ok()),
         "governing": governing.name,
         "limitations": limitations,
-        "conditions": conds.iter().map(loaded_condition_json).collect::<Vec<_>>(),
+        "conditions": conds.iter().map(|c| loaded_condition_json(c, with_weights)).collect::<Vec<_>>(),
     })
 }

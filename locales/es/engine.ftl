@@ -48,7 +48,7 @@ check-air-draft-within-limit = calado aéreo { $condition } { $governing } m <= 
 # status: draft
 warn-barge-pushed = Barcaza EMPUJADA: la tripulación, la batería y la propulsión están en el remolcador y NO están en el peso en rosca, la capacidad ni el calado aéreo de este casco. El remolcador es una embarcación separada y debe costearse y verificarse por calado aéreo por separado.
 # status: draft
-warn-liquid-no-conditions = Las condiciones de carga y la estabilidad aún no se calculan para la carga líquida a granel: el petróleo crudo es trabajo en desarrollo.
+warn-liquid-legacy-conditions = La estabilidad de la carga líquida a granel se calcula solo con las condiciones de carga del Código IS.
 # status: draft
 check-gm-positive = GM intacto de la tolva { $gm } m >= 0.15 m (primer orden; KG_light @0.5D)
 # status: draft

@@ -94,19 +94,22 @@ def move_input(base: dict, criterion: str, target: float) -> tuple[str, float]:
     """The input (`kg_m` or `depth_m`) and its new value that make `criterion` equal `target`."""
     i = base["inputs"]
     b, d, t, kg = i["beam_m"], i["depth_m"], i["draught_m"], i["kg_m"]
+    # The free surface correction (m of GM, zero for the dry cases) stays as the case has it: a tank's
+    # free surface moment does not change with the KG or the depth (issue #332).
+    fsc = i.get("free_surface_m", 0.0)
     if criterion == "gm":
-        return _kg_on_the_hull("kg_m", oracle.gm(b, t, 0.0) - target, d)
+        return _kg_on_the_hull("kg_m", oracle.gm(b, t, 0.0, fsc) - target, d)
     if criterion in AREA_BAND:
         a0, a1 = AREA_BAND[criterion]
-        value = oracle.assess(b, d, t, kg)[criterion]["value"]
+        value = oracle.assess(b, d, t, kg, fsc)[criterion]["value"]
         per_m = math.cos(math.radians(a0)) - math.cos(math.radians(a1))
         return _kg_on_the_hull("kg_m", kg + (value - target) / per_m, d)
     if criterion == "gz_30_plus":
-        f = lambda k: oracle._max_gz(lambda a: oracle.gz(b, d, t, k, a), 30.0, oracle.MAX_ANGLE)[1]
+        f = lambda k: oracle._max_gz(lambda a: oracle.gz(b, d, t, k, a, fsc), 30.0, oracle.MAX_ANGLE)[1]
         return "kg_m", _bisect(f, 0.0, d, target, increasing=False)
     if criterion == "angle_max_gz":
         def f(depth):
-            return oracle._max_gz(lambda a: oracle.gz(b, depth, t, kg, a), 0.0, oracle.MAX_ANGLE)[0]
+            return oracle._max_gz(lambda a: oracle.gz(b, depth, t, kg, a, fsc), 0.0, oracle.MAX_ANGLE)[0]
         return "depth_m", _bisect(f, t + 0.05, t + 12.0, target, increasing=True)
     raise KeyError(criterion)
 
