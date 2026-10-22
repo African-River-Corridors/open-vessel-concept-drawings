@@ -4,7 +4,7 @@
 <!-- design-impact -->
 ### ticket/464-gas-consumption (2026-10-22)
 
-Between `main 599e821` and `this branch 494d7f6`.
+Between `main 5febb90` and `this branch ee27aa4`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -48,4 +48,4 @@ Between `main 599e821` and `this branch 494d7f6`.
 | sweep default depth gas 90x14 | `boil_off.conductivity_w_per_mk` | absent | 0.026 | changed |
 | sweep default depth gas 90x14 | `boil_off.evaluated` | absent | True | changed |
 | sweep default depth gas 90x14 | `boil_off.gas_use_kg_per_h` | absent | 66.6649223077 | changed |
-| ... | 1159 more changed quantities | | | |
+| ... | 1170 more changed quantities | | | |
