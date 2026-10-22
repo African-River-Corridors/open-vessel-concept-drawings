@@ -66,10 +66,15 @@ fn the_curve_is_the_feasible_cells_of_one_length_in_beam_order() {
             .reason
             .starts_with("raised eye 13.50 m >= obstruction 13.60 m")
     );
-    assert!(g.cells[6].reason.starts_with("Cylinder length is -1.70m"));
+    assert!(
+        g.cells[6].reason.starts_with("Cylinder length is -1.55m"),
+        "{}",
+        g.cells[6].reason
+    );
     // Re-pinned (issue #423: the grid fills to the 98 % Filling Limit, not 0.95); was
     // 692.5678145592659, which times 0.98 / 0.95 is this value.
-    assert_eq!(g.curve(60.0)[0].cargo_t, Some(714.4383771242954));
+    // Re-pinned (issue #280, the end space defaults to the type G rule); was 714.4383771242954.
+    assert_eq!(g.curve(60.0)[0].cargo_t, Some(726.1667176213746));
     assert!(g.curve(75.0).is_empty());
 }
 

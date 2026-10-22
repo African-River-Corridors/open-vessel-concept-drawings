@@ -2321,6 +2321,16 @@ fn simulate_gas(
         // Defaults Profile gives a Design its Estimates.
         tank_forming_allowance_pct: get_or(p, "tank_forming_allowance_pct", 0.0)?,
         tank_dome_wall_thickness_mm: get_or(p, "tank_dome_wall_thickness_mm", 0.0)?,
+        aft_end_space_m: get_or(
+            p,
+            "aft_end_space_m",
+            ovcd_core::gas_separation::default_end_space(false),
+        )?,
+        fwd_end_space_m: get_or(
+            p,
+            "fwd_end_space_m",
+            ovcd_core::gas_separation::default_end_space(false),
+        )?,
         tank_wall_thickness_mm: tank_wall_of(p)?,
         tank_design: tank_design_of(p)?,
         water_density_t_per_m3: rho,

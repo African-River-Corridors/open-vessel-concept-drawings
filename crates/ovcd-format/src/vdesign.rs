@@ -307,6 +307,11 @@ pub const GAS_WEATHER_SHIELD_CLEARANCE_M: f64 = 1.5;
 /// saved before them keeps 0 (no allowance, no dome mass) and its results do not move.
 pub const GAS_TANK_FORMING_ALLOWANCE_PCT: f64 = 0.0;
 pub const GAS_TANK_DOME_WALL_THICKNESS_MM: f64 = 0.0;
+/// The end-bulkhead space aft and forward of the tanks that the engine used before they were inputs
+/// (issue #280): 0.60 m aft (the type C cofferdam width) and 0.50 m forward. A file that lacks the
+/// inputs keeps them. A new Option takes the type G rule from the Defaults Profile.
+pub const GAS_AFT_END_SPACE_M: f64 = 0.60;
+pub const GAS_FWD_END_SPACE_M: f64 = 0.50;
 pub const GAS_TANK_WALL_THICKNESS_MM: f64 = 25.0;
 
 /// The Cargo-dependent tank design values fixed in the engine before they were inputs (issue #292;
@@ -595,6 +600,18 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
         applies_to: AppliesTo::Only("type_c_tanks"),
         formations: None,
         value: GAS_TANK_DOME_WALL_THICKNESS_MM,
+    },
+    LegacyFixed {
+        name: "aft_end_space_m",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: GAS_AFT_END_SPACE_M,
+    },
+    LegacyFixed {
+        name: "fwd_end_space_m",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: GAS_FWD_END_SPACE_M,
     },
     LegacyFixed {
         name: "tank_wall_thickness_mm",
@@ -2147,6 +2164,20 @@ pub const INPUTS: &[InputSpec] = &[
     only(
         "tank_dome_wall_thickness_mm",
         "Tank dome wall thickness",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "aft_end_space_m",
+        "Aft end-bulkhead space",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "fwd_end_space_m",
+        "Forward end-bulkhead space",
         NUM,
         "type_c_tanks",
         Group::GasTanks,

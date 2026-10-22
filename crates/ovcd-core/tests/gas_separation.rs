@@ -5,7 +5,7 @@
 
 use ovcd_core::gas_separation::{
     COFFERDAM_MIN_M, END_BULKHEAD_SPACE_M, END_BULKHEAD_SPACE_PRESSURE_M, GasSeparationInputs,
-    OPENING_SETBACK_M, compute,
+    OPENING_SETBACK_M, compute, default_end_space,
 };
 
 const CLAUSE_WARNING: &str = "Separation clauses are cited from the classification rules for \
@@ -20,11 +20,16 @@ fn constants_are_the_cited_values() {
 }
 
 #[test]
-fn defaults_match_the_python_dataclass() {
+fn the_defaults_are_the_type_g_rule_for_domed_ends() {
+    // Issue #280 (maintainer decision, 2026-10-22): the end space defaults to the type G rule, 0.20 m
+    // for domed tank ends and 0.50 m for plane ends, in place of the 0.60 m type C cofferdam the
+    // original Python used. The Python constant `COFFERDAM_MIN_M` keeps its value.
+    assert_eq!(default_end_space(false), 0.20);
+    assert_eq!(default_end_space(true), 0.50);
     let i = GasSeparationInputs::default();
-    assert_eq!(i.cofferdam_m, 0.60);
+    assert_eq!(i.cofferdam_m, 0.20);
     assert_eq!(i.opening_setback_m, 2.00);
-    assert_eq!(i.fwd_end_bulkhead_m, 0.50);
+    assert_eq!(i.fwd_end_bulkhead_m, 0.20);
     assert!(i.is_pressure_tank);
     assert_eq!(i.side_clearance_m, 0.0);
     assert_eq!(i.double_bottom_m, 0.0);
@@ -34,10 +39,10 @@ fn defaults_match_the_python_dataclass() {
 fn golden_defaults() {
     let r = compute(&GasSeparationInputs::default()).unwrap();
     assert_eq!(r.aft_separation_m, 2.0);
-    assert_eq!(r.fwd_separation_m, 0.5);
-    assert_eq!(r.cofferdam_m, 0.6);
-    assert_eq!(r.service_space_m, 1.4);
-    assert_eq!(r.total_length_taken_m, 2.5);
+    assert_eq!(r.fwd_separation_m, 0.2);
+    assert_eq!(r.cofferdam_m, 0.2);
+    assert_eq!(r.service_space_m, 1.8);
+    assert_eq!(r.total_length_taken_m, 2.2);
     assert!(r.ok());
     assert_eq!(r.warnings, vec![CLAUSE_WARNING]);
     let names: Vec<&str> = r.checks.iter().map(|c| c.name.as_str()).collect();
@@ -51,7 +56,7 @@ fn golden_defaults() {
     );
     assert_eq!(
         r.checks[0].message,
-        "aft end-bulkhead space 0.60 m >= 0.20 m (domed tank ends, cl. 3.5.3)"
+        "aft end-bulkhead space 0.20 m >= 0.20 m (domed tank ends, cl. 3.5.3)"
     );
     assert_eq!(
         r.checks[1].message,
@@ -60,7 +65,7 @@ fn golden_defaults() {
     );
     assert_eq!(
         r.checks[2].message,
-        "forward end-bulkhead space 0.50 m >= 0.20 m (domed tank ends, cl. 3.5.3)"
+        "forward end-bulkhead space 0.20 m >= 0.20 m (domed tank ends, cl. 3.5.3)"
     );
 }
 
@@ -111,8 +116,8 @@ fn a_short_setback_fails_the_opening_check() {
     .unwrap();
     assert!(!r.ok());
     assert_eq!(r.aft_separation_m, 1.0);
-    assert_eq!(r.service_space_m, 0.4);
-    assert_eq!(r.total_length_taken_m, 1.5);
+    assert_eq!(r.service_space_m, 0.8);
+    assert_eq!(r.total_length_taken_m, 1.2);
 }
 
 #[test]
@@ -124,7 +129,7 @@ fn a_cofferdam_wider_than_the_setback_leaves_no_service_space() {
     .unwrap();
     assert_eq!(r.aft_separation_m, 3.0);
     assert_eq!(r.service_space_m, 0.0);
-    assert_eq!(r.total_length_taken_m, 3.5);
+    assert_eq!(r.total_length_taken_m, 3.2);
 }
 
 /// Issue #215: the inland type-G floors are gone. Clearances given in the inputs add no check, however

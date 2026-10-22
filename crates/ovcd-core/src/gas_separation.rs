@@ -9,10 +9,9 @@ use crate::text;
 use crate::text::{Arg, Text};
 
 // Rule constants, each with its clause in the Python file.
-/// The default aft end-bulkhead space (`cofferdam_m`). 0.60 m is the width of the cofferdam of the
-/// type C (liquid cargo) part, 3.6.13; it is not a limit on a gas Design (issue #280), whose rule is
-/// the end-bulkhead space of 3.5.3 (see [`END_BULKHEAD_SPACE_M`]). It stays the default so no
-/// arrangement changes.
+/// The width of the cofferdam of the type C (liquid cargo) part, 3.6.13. It is not a limit on a gas
+/// Design (issue #280), and since issue #280 it is no longer the default end space either (see
+/// [`default_end_space`]). The name stays for the original Python's `COFFERDAM_MIN_M`.
 pub const COFFERDAM_MIN_M: f64 = 0.60;
 pub const OPENING_SETBACK_M: f64 = 2.00;
 /// The space between the cargo tanks and the hold end bulkhead where the tanks have plane ends
@@ -21,6 +20,19 @@ pub const END_BULKHEAD_SPACE_M: f64 = 0.50;
 /// The same space for any other tank end, such as the domed heads of a Type C tank (3.5.3). The name
 /// is kept from when the code keyed it to pressure tanks (issue #281).
 pub const END_BULKHEAD_SPACE_PRESSURE_M: f64 = 0.20;
+
+/// The default end-bulkhead space at each end of the cargo area (`cofferdam_m` aft, `fwd_end_bulkhead_m`
+/// forward): the type G rule for the tank end shape, 0.50 m for plane ends and 0.20 m for any other
+/// end, such as the domed heads of a Type C tank. Basis: Lloyd's Register inland waterways rules
+/// Pt 4 Ch 4 3.5.3 and ADN 2025 9.3.1.11.3(a). Maintainer decision on issue #280 (2026-10-22): the
+/// default follows the type G rule, not the 0.60 m type C cofferdam.
+pub fn default_end_space(plane_tank_ends: bool) -> f64 {
+    if plane_tank_ends {
+        END_BULKHEAD_SPACE_M
+    } else {
+        END_BULKHEAD_SPACE_PRESSURE_M
+    }
+}
 
 const CLAUSE_WARNING: &str = "Separation clauses are cited from the classification rules for \
 inland-waterways ships (Pt 4 Ch 4 Sec 3, Jul 2022). Confirm against the ADN text before release.";
@@ -47,9 +59,9 @@ pub struct GasSeparationInputs {
 impl Default for GasSeparationInputs {
     fn default() -> Self {
         Self {
-            cofferdam_m: COFFERDAM_MIN_M,
+            cofferdam_m: default_end_space(false),
             opening_setback_m: OPENING_SETBACK_M,
-            fwd_end_bulkhead_m: END_BULKHEAD_SPACE_M,
+            fwd_end_bulkhead_m: default_end_space(false),
             is_pressure_tank: true,
             plane_tank_ends: false,
             side_clearance_m: 0.0,

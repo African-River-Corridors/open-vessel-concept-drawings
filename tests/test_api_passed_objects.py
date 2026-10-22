@@ -101,7 +101,9 @@ def test_a_result_rebuilt_with_replace_still_works():
     gas = dataclasses.replace(B.compute(GAS))
     # Re-pinned (issue #237); were (4.496070691510841, 6.706438965623047, 11.201087654316286) at ce96e66.
     # Re-pinned (#448: the hull's sections); were (4.447528112519484, 6.499494396532422, 10.72355412577273).
-    assert gm_fluid(gas) == close((5.010972757840445, 7.1794700173060155, 11.60946081779351))
+    # Re-pinned (issue #280: the end space defaults to the type G rule); were (5.010972757840445,
+    # 7.1794700173060155, 11.60946081779351).
+    assert gm_fluid(gas) == close((5.004407999982387, 7.164408365099867, 11.579766350786437))
     assert ga_adapter.is_gas(gas) is True
 
 
@@ -113,6 +115,7 @@ def test_assess_uses_the_gas_basis_and_density_it_is_given():
     # (4.329311723992825, 6.416895514461225, 10.35664347102438) at ce96e66.
     # Re-pinned (#448: the hull's sections); were (4.28684718522825, 6.172666462858952,
     # 9.940701176338345) and (4.28684718522825, 6.245181641069995, 9.940701176338345).
-    assert gm_fluid(res) == close((4.837941294106674, 6.8338499053915625, 10.78937027065406))
+    # Re-pinned (issue #280); were (4.837941294106674, 6.8338499053915625, 10.78937027065406).
+    assert gm_fluid(res) == close((4.831849086255682, 6.820006681362537, 10.763316659711368))
     res.cargo_density_t_per_m3 = 0.45
-    assert gm_fluid(res) == close((4.837941294106674, 6.906365083602606, 10.78937027065406))
+    assert gm_fluid(res) == close((4.831849086255682, 6.89293666443815, 10.763316659711368))
