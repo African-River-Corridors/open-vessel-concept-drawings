@@ -1,8 +1,8 @@
 // The only door to the Rust side. Every function forwards to the platform adapter (Tauri commands on the
 // desktop, the WebAssembly session in the browser); none computes.
 import { platform } from "./platform";
-export type { DrawingFormat, DrawingView } from "./platform";
-import type { DrawingFormat, DrawingView } from "./platform";
+export type { DrawingFormat, DrawingView, ModelFormat } from "./platform";
+import type { DrawingFormat, DrawingView, ModelFormat } from "./platform";
 import type { EngineMsg } from "./i18n.svelte";
 
 /** Where an input came from: the designer, the Defaults Profile, or the Vessel Class. */
@@ -172,3 +172,4 @@ export const isWeb = () => platform().kind === "web";
 /** Save a drawing view as a download. false where the platform cannot (the desktop app, for now). */
 export const exportDrawing = (option: string, view: DrawingView, format: DrawingFormat) =>
   platform().exportDrawing(option, view, format);
+export const exportModel = (option: string, format: ModelFormat) => platform().exportModel(option, format);
