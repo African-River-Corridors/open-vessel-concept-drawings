@@ -362,6 +362,7 @@ pub(crate) fn criterion(name: &str, value: f64, limit: f64, ok: bool, source: &s
     }
 }
 
+#[cfg(test)]
 pub(crate) fn criteria(cset: &str, c: &Condition) -> Result<Vec<Criterion>, PyError> {
     criteria_with(cset, c, None)
 }
@@ -580,6 +581,7 @@ pub(crate) fn hull_condition(
 /// One condition from its GZ curve (issue #448): the areas, the angle of maximum GZ and the criteria
 /// of `criteria_set`. The curve already holds the free surface correction. The identity fields
 /// (`name`, cargo, fill, displacement) are left empty or zero for the caller to set.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn condition_from_curve(
     gz: Vec<(i32, f64)>,
     draught: f64,

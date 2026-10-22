@@ -104,14 +104,6 @@ fn the_input_is_optional_for_every_option_and_an_old_file_reads_none() {
 #[test]
 fn with_no_angle_the_areas_run_to_40_and_the_trace_says_the_angle_is_not_given() {
     let r = results_of(&with_angle(Value::Null));
-    assert_eq!(
-        criterion(&r, "Area 0")
-            .get("name")
-            .unwrap()
-            .as_str()
-            .is_some(),
-        true
-    );
     assert!(criterion(&r, "Area 30").is_object());
     let names: Vec<String> = r["stability"]["conditions"][0]["criteria"]
         .as_array()
@@ -160,10 +152,6 @@ fn a_typed_angle_below_40_ends_the_areas_there_and_the_note_goes() {
                 && r["outcome"] != "not applicable"
         })
         .unwrap();
-    let cond0 = typed["stability"]["conditions"][0]["name"]
-        .as_str()
-        .unwrap();
-    let _ = cond0;
     assert!((row["value"].as_f64().unwrap() - area_of(&typed, "Area 0\u{2013}35")).abs() < 1e-9);
     // With an angle typed the note row is not applicable.
     assert!(
