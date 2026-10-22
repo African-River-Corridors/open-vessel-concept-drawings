@@ -9,15 +9,19 @@
 //! transom exactly against the closed form; the pram against it within the chord error of its
 //! Stations, worked here; the tunnel against an independent strip integral of the same shape.
 //!
-//! Label: sourced - spec 0007 "Stern geometry" (Heuser in Rotteveel 2019 sec. 2.3.1; MAN d/D below about 0.65); closed form, transom; the strip integrals, the pram chord error B h L / 6 n² and the tunnel chord deficit (r²/2)(2a0 − K sin(2a0/K)) are worked here.
+//! The Notch of an ATB barge in the Sections Table (issue #465): a box barge with a Notch, upright and
+//! heeled, against the box less the notch prism in closed form; a transom stern with a Notch against
+//! the closed form of the slot through the raked run.
+//!
+//! Label: sourced - closed form, notched box. Label: sourced - spec 0007 "Stern geometry" (Heuser in Rotteveel 2019 sec. 2.3.1; MAN d/D below about 0.65); closed form, transom; the strip integrals, the pram chord error B h L / 6 n² and the tunnel chord deficit (r²/2)(2a0 − K sin(2a0/K)) are worked here.
 
 use ovcd_core::hull::HullGeometry;
 use ovcd_core::hull::hull_form::{HullFormInputs, HullFormKind, HullShape, generate};
-use ovcd_core::sections::{SectionsTable, upright};
+use ovcd_core::sections::{SectionsTable, Waterplane, immersed, upright};
 use ovcd_core::stern_form::{
-    HullDims, RUN_INTERVALS, SternForm, SternFormInputs, SternGeometry, TUNNEL_CHORDS, apply,
-    apply_with, geometry, heuser_run_length, removed_by_strips, tunnel_fit_diameter,
-    tunnel_section_area, tunnel_width,
+    ApplyError, HullDims, Notch, RUN_INTERVALS, SternForm, SternFormInputs, SternGeometry,
+    TUNNEL_CHORDS, apply, apply_notch, apply_with, geometry, heuser_run_length, removed_by_strips,
+    tunnel_fit_diameter, tunnel_section_area, tunnel_width,
 };
 
 fn inputs(form: SternForm) -> SternFormInputs {
@@ -566,5 +570,189 @@ fn print_the_tunnel_difference_to_the_closed_form() {
             100.0 * (m - mc) / mc
         );
         assert!(v > 0.0 && vc > 0.0);
+    }
+}
+
+// --- The Notch of an ATB barge (issue #465) -----------------------------------------------------
+
+/// A box barge of `HULL`'s dimensions, as the generator writes it.
+fn box_barge() -> SectionsTable {
+    generate(&HullFormInputs {
+        length_overall_m: HULL.loa,
+        beam_m: HULL.beam,
+        moulded_depth_m: HULL.depth,
+        form: HullFormKind::Box,
+        shape: HullShape::default(),
+    })
+    .unwrap()
+}
+
+const NOTCH: Notch = Notch {
+    depth_m: 12.0,
+    width_m: 4.2,
+};
+
+/// Below the waterplane at heel φ (trim 0), the strip `y0 < y < y1` of a box section holds
+/// `z < h(y) = (c + y sin φ) / cos φ`. Its area and its first moments about y = 0 and z = 0, while
+/// `h` stays between the base and the deck.
+fn strip(y0: f64, y1: f64, c: f64, heel_deg: f64) -> (f64, f64, f64) {
+    let r = heel_deg.to_radians();
+    let (s, k) = (libm::sin(r), libm::cos(r));
+    let (d1, d2, d3) = (y1 - y0, y1 * y1 - y0 * y0, y1 * y1 * y1 - y0 * y0 * y0);
+    let area = (c * d1 + s * d2 / 2.0) / k;
+    let my = (c * d2 / 2.0 + s * d3 / 3.0) / k;
+    let mz = (c * c * d1 + c * s * d2 + s * s * d3 / 3.0) / (2.0 * k * k);
+    (area, my, mz)
+}
+
+fn close(a: f64, b: f64, scale: f64, what: &str) {
+    assert!((a - b).abs() <= 1e-12 * scale, "{what}: {a} vs {b}");
+}
+
+#[test]
+fn a_notched_box_matches_the_box_less_the_notch_prism_upright_and_heeled() {
+    let mut t = box_barge();
+    apply_notch(&NOTCH, &mut t).unwrap();
+    let (l, b, d, w) = (HULL.loa, HULL.beam, NOTCH.depth_m, NOTCH.width_m);
+    // The waterline stays between the base and the deck across the beam at each case.
+    for (draught, heel) in [
+        (1.0_f64, 0.0_f64),
+        (2.5, 0.0),
+        (4.2, 0.0),
+        (2.5, 5.0),
+        (2.5, 15.0),
+    ] {
+        let k = libm::cos(heel.to_radians());
+        let c = draught * k;
+        let im = immersed(
+            &t,
+            &Waterplane {
+                heel_deg: heel,
+                trim_deg: 0.0,
+                c,
+            },
+        );
+        let (af, yf, zf) = strip(-b / 2.0, b / 2.0, c, heel);
+        let (an, yn, zn) = strip(-w / 2.0, w / 2.0, c, heel);
+        let v = l * af - d * an;
+        let what = |q: &str| format!("{q} at T {draught}, heel {heel}");
+        close(im.volume_m3, v, v, &what("volume"));
+        close(
+            im.lcb_m,
+            (l * af * l / 2.0 - d * an * d / 2.0) / v,
+            l,
+            &what("LCB"),
+        );
+        close(im.tcb_m, (l * yf - d * yn) / v, b, &what("TCB"));
+        close(im.kb_m, (l * zf - d * zn) / v, HULL.depth, &what("KB"));
+        let awp = l * b - d * w;
+        close(im.waterplane_area_m2, awp / k, awp, &what("A_WP"));
+        close(
+            im.lcf_m,
+            (l * b * l / 2.0 - d * w * d / 2.0) / awp,
+            l,
+            &what("LCF"),
+        );
+        close(im.b_wl_m, b / k, b, &what("B_WL"));
+        close(im.l_wl_m, l, l, &what("L_WL"));
+    }
+    // Upright: the bottom less the notch, the sides, the transom less the notch, the bow, the two
+    // slot walls and the step face.
+    let draught = 2.5;
+    let im = upright(&t, draught, 1.0).unwrap().immersed;
+    let ws = l * b - d * w + 2.0 * l * draught + 2.0 * d * draught + 2.0 * b * draught;
+    close(im.wetted_surface_m2, ws, ws, "wetted surface");
+}
+
+#[test]
+fn a_notch_through_a_transom_run_removes_the_slot_of_the_raked_run() {
+    // Transom height 3.5 m, run 4.5 m. Above the transom, the slot holds w (T − z_b(x)) per metre,
+    // with z_b = h (1 − x / run) in the run and 0 forward of it.
+    let g = geometry(&inputs(SternForm::Transom), &HULL);
+    let (h, run, draught) = (g.transom_height_m, g.run_m, 3.6);
+    for depth in [3.0, 6.0] {
+        let notch = Notch {
+            depth_m: depth,
+            width_m: NOTCH.width_m,
+        };
+        let mut base = square_stern_table();
+        apply(&g, &mut base).unwrap();
+        let mut cut = base.clone();
+        apply_notch(&notch, &mut cut).unwrap();
+        let (v0, m0) = volume_and_moment(&base, draught);
+        let (v1, m1) = volume_and_moment(&cut, draught);
+        // ∫ z_b dx and ∫ x z_b dx over the slot.
+        let a = depth.min(run);
+        let zb = h * (a - a * a / (2.0 * run));
+        let xzb = h * (a * a / 2.0 - a * a * a / (3.0 * run));
+        let v = notch.width_m * (draught * depth - zb);
+        let m = notch.width_m * (draught * depth * depth / 2.0 - xzb);
+        close(v0 - v1, v, v0, "removed volume");
+        close(m0 - m1, m, m0, "removed moment");
+    }
+}
+
+#[test]
+fn a_notch_of_zero_leaves_the_table_unchanged() {
+    for notch in [
+        Notch {
+            depth_m: 0.0,
+            width_m: 4.2,
+        },
+        Notch {
+            depth_m: 12.0,
+            width_m: 0.0,
+        },
+    ] {
+        let base = box_barge();
+        let mut t = base.clone();
+        apply_notch(&notch, &mut t).unwrap();
+        assert_eq!(t, base);
+    }
+}
+
+#[test]
+fn a_notch_writes_slotted_sections_and_a_step_at_its_forward_end() {
+    let mut t = box_barge();
+    let n = t.sections[0].points.len();
+    apply_notch(&NOTCH, &mut t).unwrap();
+    let y_in = NOTCH.width_m / 2.0;
+    let at_end: Vec<_> = t.sections.iter().filter(|s| s.x == NOTCH.depth_m).collect();
+    assert_eq!(at_end.len(), 2);
+    assert_eq!(at_end[0].points[0].0, y_in);
+    assert_eq!(at_end[1].points[0].0, 0.0);
+    for s in &t.sections {
+        assert_eq!(s.points.len(), n);
+        let slotted = s.points[0].0 > 0.0;
+        assert_eq!(slotted, s.x < NOTCH.depth_m || std::ptr::eq(s, at_end[0]));
+    }
+}
+
+#[test]
+fn a_notch_wider_than_the_beam_or_longer_than_the_hull_is_refused() {
+    let wide = Notch {
+        depth_m: 12.0,
+        width_m: HULL.beam,
+    };
+    assert!(matches!(
+        apply_notch(&wide, &mut box_barge()),
+        Err(ApplyError::NotchWiderThanBeam { .. })
+    ));
+    let long = Notch {
+        depth_m: HULL.loa,
+        width_m: 4.2,
+    };
+    assert_eq!(
+        apply_notch(&long, &mut box_barge()),
+        Err(ApplyError::NotchLongerThanHull {
+            depth_m: HULL.loa,
+            length_m: HULL.loa
+        })
+    );
+    for (depth_m, width_m) in [(-1.0, 4.2), (12.0, f64::NAN)] {
+        assert_eq!(
+            apply_notch(&Notch { depth_m, width_m }, &mut box_barge()),
+            Err(ApplyError::NotchNotValid)
+        );
     }
 }

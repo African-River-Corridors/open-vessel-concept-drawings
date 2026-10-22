@@ -16,6 +16,10 @@
 //!
 //! [`apply`] writes the same stern into a Sections Table (ADR 0012, spec 0008 "Hull Forms", issue
 //! #447); the closed forms stay as its test, as the raked box's do. Not yet wired into any result.
+//!
+//! The Notch of an ATB barge (spec 0008 "Hull Forms", issue #465) has no closed form here:
+//! [`apply_notch`] cuts it into the Sections Table as a slot, and the sections integrator gives its
+//! volume, centroid and waterplane.
 
 use alloc::vec::Vec;
 use core::fmt;
@@ -385,6 +389,19 @@ pub enum ApplyError {
     TunnelOutsideBottom { section: usize },
     /// The Sections written were refused.
     Sections(SectionsError),
+    /// A Notch depth or width is negative or not finite.
+    NotchNotValid,
+    /// The Notch is as long as the hull or longer.
+    NotchLongerThanHull { depth_m: f64, length_m: f64 },
+    /// The Notch is as wide as the hull at a Section in it, or wider.
+    NotchWiderThanBeam {
+        section: usize,
+        width_m: f64,
+        beam_m: f64,
+    },
+    /// The hull at a Section in the Notch comes back inside the slot between its bottom and its
+    /// deck, so a slot does not cut it cleanly.
+    NotchNotClean { section: usize },
 }
 
 impl fmt::Display for ApplyError {
@@ -404,6 +421,27 @@ impl fmt::Display for ApplyError {
                  stern"
             ),
             ApplyError::Sections(e) => write!(f, "{e}"),
+            ApplyError::NotchNotValid => {
+                write!(f, "the Notch depth and width must be finite and 0 or more")
+            }
+            ApplyError::NotchLongerThanHull { depth_m, length_m } => write!(
+                f,
+                "the Notch depth of {depth_m} m must be less than the hull length of {length_m} m"
+            ),
+            ApplyError::NotchWiderThanBeam {
+                section,
+                width_m,
+                beam_m,
+            } => write!(
+                f,
+                "the Notch width of {width_m} m must be less than the beam of {beam_m} m at section \
+                 {section}"
+            ),
+            ApplyError::NotchNotClean { section } => write!(
+                f,
+                "section {section} comes back inside the Notch; the Notch needs a section that \
+                 crosses its edge once on the bottom and once on the deck"
+            ),
         }
     }
 }
@@ -470,6 +508,113 @@ pub fn apply_with(
     }
     let (sections, depths) = rows.into_iter().unzip();
     *table = SectionsTable::new(sections, depths).map_err(ApplyError::Sections)?;
+    Ok(())
+}
+
+/// The Notch of an ATB barge (spec 0007, issue #465): a full-depth rectangular cut on the centre
+/// line, `depth_m` long from the aft end and `width_m` wide.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Notch {
+    pub depth_m: f64,
+    pub width_m: f64,
+}
+
+/// Cut the Notch into the Sections Table, after the Stern Form. Each Section aft of the Notch's
+/// forward end becomes slotted: its points inboard of the slot edge `y = width / 2` move to where the
+/// half-section crosses that edge, from the keel end and from the deck end, so the point count holds.
+/// At the forward end, two Sections share the x: the slotted one, then the whole one (a step). A
+/// Notch of zero depth or width leaves the table unchanged.
+pub fn apply_notch(notch: &Notch, table: &mut SectionsTable) -> Result<(), ApplyError> {
+    let (depth, width) = (notch.depth_m, notch.width_m);
+    if !(depth.is_finite() && width.is_finite() && depth >= 0.0 && width >= 0.0) {
+        return Err(ApplyError::NotchNotValid);
+    }
+    if depth == 0.0 || width == 0.0 {
+        return Ok(());
+    }
+    let ss = &table.sections;
+    let (aft, fwd) = (ss[0].x, ss[ss.len() - 1].x);
+    if depth >= fwd - aft {
+        return Err(ApplyError::NotchLongerThanHull {
+            depth_m: depth,
+            length_m: fwd - aft,
+        });
+    }
+    let x_n = aft + depth;
+    let y_in = width / 2.0;
+    let has_end = ss.iter().any(|s| s.x == x_n);
+    let (at_end, end_edge) = table.section_at(x_n);
+    // The Sections aft of the forward end and the slotted one there, then the whole one(s).
+    let mut rows: Vec<(Section, f64)> = ss
+        .iter()
+        .cloned()
+        .zip(table.depth_at_side.iter().copied())
+        .filter(|(s, _)| s.x < x_n)
+        .chain([(at_end.clone(), end_edge)])
+        .collect();
+    for (i, (s, _)) in rows.iter_mut().enumerate() {
+        slot(s, y_in, i, width)?;
+    }
+    if !has_end {
+        rows.push((at_end, end_edge));
+    }
+    rows.extend(
+        ss.iter()
+            .cloned()
+            .zip(table.depth_at_side.iter().copied())
+            .filter(|(s, _)| s.x >= x_n),
+    );
+    let (sections, depths) = rows.into_iter().unzip();
+    *table = SectionsTable::new(sections, depths).map_err(ApplyError::Sections)?;
+    Ok(())
+}
+
+/// Move the points of one half-section inboard of `y_in` to the slot edge, from each end.
+fn slot(s: &mut Section, y_in: f64, index: usize, width: f64) -> Result<(), ApplyError> {
+    let pts = &mut s.points;
+    let n = pts.len();
+    let beam = 2.0 * pts.iter().fold(0.0_f64, |m, p| m.max(p.0));
+    let (Some(k), Some(m)) = (
+        pts.iter().position(|p| p.0 >= y_in),
+        pts.iter().rposition(|p| p.0 >= y_in),
+    ) else {
+        return Err(ApplyError::NotchWiderThanBeam {
+            section: index,
+            width_m: width,
+            beam_m: beam,
+        });
+    };
+    if beam <= width {
+        return Err(ApplyError::NotchWiderThanBeam {
+            section: index,
+            width_m: width,
+            beam_m: beam,
+        });
+    }
+    if pts[k..=m].iter().any(|p| p.0 < y_in) {
+        return Err(ApplyError::NotchNotClean { section: index });
+    }
+    let edge = |p: (f64, f64), q: (f64, f64)| {
+        let t = (y_in - p.0) / (q.0 - p.0);
+        (y_in, p.1 + t * (q.1 - p.1))
+    };
+    // The keel end (k > 0: the first point is on the centre line, inboard of the slot edge).
+    let keel = if k > 0 {
+        edge(pts[k - 1], pts[k])
+    } else {
+        pts[0]
+    };
+    let deck = if m + 1 < n {
+        edge(pts[m + 1], pts[m])
+    } else {
+        pts[n - 1]
+    };
+    for p in &mut pts[..k] {
+        *p = keel;
+    }
+    for p in &mut pts[m + 1..] {
+        *p = deck;
+    }
     Ok(())
 }
 

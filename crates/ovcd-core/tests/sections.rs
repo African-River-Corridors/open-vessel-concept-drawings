@@ -366,6 +366,89 @@ fn the_constructor_refuses_each_bad_table() {
 }
 
 #[test]
+fn a_slot_must_keep_one_edge_and_end_at_a_step() {
+    let check = |sections: Vec<Section>, depths: Vec<f64>, want: SectionsError| {
+        assert_eq!(SectionsTable::new(sections, depths), Err(want));
+    };
+    let slot = vec![(1.0, 0.0), (B / 2.0, 0.0), (B / 2.0, D), (1.0, D)];
+    // Slotted at both ends of a ruled interval, then a step to the whole section: allowed.
+    SectionsTable::new(
+        vec![
+            sec(0.0, slot.clone()),
+            sec(10.0, slot.clone()),
+            sec(10.0, box_half(B, D)),
+            sec(L, box_half(B, D)),
+        ],
+        vec![D; 4],
+    )
+    .unwrap();
+    // A ruled interval from a slotted to a whole section.
+    check(
+        vec![sec(0.0, slot.clone()), sec(L, box_half(B, D))],
+        vec![D, D],
+        SectionsError::SlotWithoutStep { section: 1 },
+    );
+    // A slot that starts and ends at two different y.
+    check(
+        vec![
+            sec(
+                0.0,
+                vec![(1.0, 0.0), (B / 2.0, 0.0), (B / 2.0, D), (1.5, D)],
+            ),
+            sec(L, slot),
+        ],
+        vec![D, D],
+        SectionsError::OffCentreLine { section: 0 },
+    );
+}
+
+#[test]
+fn a_slotted_prism_is_the_box_less_the_slot_at_any_heel_and_trim() {
+    // Property: the two polygons of a slotted section and the slot box together are the whole box,
+    // in volume and in each first moment, at any waterplane.
+    let y_in = 1.3;
+    let slot = vec![(y_in, 0.0), (B / 2.0, 0.0), (B / 2.0, D), (y_in, D)];
+    let slotted =
+        SectionsTable::new(vec![sec(0.0, slot.clone()), sec(L, slot)], vec![D, D]).unwrap();
+    let inner = box_table_at(&[0.0, L], 2.0 * y_in, D);
+    let whole = box_table();
+    for (heel, trim, c) in [
+        (0.0, 0.0, 2.0),
+        (12.0, 0.0, 1.8),
+        (20.0, 1.5, 2.2),
+        (-30.0, -2.0, 1.0),
+    ] {
+        let wp = Waterplane {
+            heel_deg: heel,
+            trim_deg: trim,
+            c,
+        };
+        let (a, i, w) = (
+            immersed(&slotted, &wp),
+            immersed(&inner, &wp),
+            immersed(&whole, &wp),
+        );
+        let what = |q: &str| format!("{q} at heel {heel}, trim {trim}");
+        let v = w.volume_m3;
+        assert!(
+            rel(a.volume_m3 + i.volume_m3, v) <= 1e-12,
+            "{}",
+            what("volume")
+        );
+        for (pa, pi, pw, q) in [
+            (a.lcb_m, i.lcb_m, w.lcb_m, "x moment"),
+            (a.tcb_m, i.tcb_m, w.tcb_m, "y moment"),
+            (a.kb_m, i.kb_m, w.kb_m, "z moment"),
+        ] {
+            let sum = pa * a.volume_m3 + pi * i.volume_m3;
+            assert!((sum - pw * v).abs() <= 1e-12 * v * L, "{}", what(q));
+        }
+        let awp = a.waterplane_area_m2 + i.waterplane_area_m2;
+        assert!(rel(awp, w.waterplane_area_m2) <= 1e-12, "{}", what("A_WP"));
+    }
+}
+
+#[test]
 fn a_stem_section_on_the_centre_line_and_a_step_are_allowed() {
     // A wedge bow: the last station is a line on the centre line (zero area), and a transom step
     // at x = 0, where the aft section is a point line and the next is the transom.
