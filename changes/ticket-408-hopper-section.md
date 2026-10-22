@@ -1,0 +1,2 @@
+<!-- unreleased -->
+- Hold section drawing (issue #408): the midship section of a dry bulk hold now draws the hold side from the inner bottom to the top of the hatch coaming, where the volume model takes the top width. Before, the drawing put the top width at the deck and drew a separate vertical coaming. For the sloped hopper fixture the drawn hold area was 16 % more than the model area; now they are equal. A box hold looks the same. No result changes.

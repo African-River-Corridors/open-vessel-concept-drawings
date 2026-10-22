@@ -192,6 +192,57 @@ fn close(a: f64, b: f64) -> bool {
 }
 
 #[test]
+fn the_drawn_hold_section_has_the_area_the_volume_model_uses() {
+    // Issue #408: the volume model takes the top width at the coaming top and the slope over the
+    // whole hold height. The drawn side therefore runs from the inner bottom to the coaming top.
+    for file in DRY {
+        for (_, r) in computed(file) {
+            let g = &r["geometry"];
+            let (top_w, bottom_w, hold_h) = (
+                g["hold_top_width_m"].as_f64().unwrap(),
+                g["hold_bottom_width_m"].as_f64().unwrap(),
+                g["hold_height_m"].as_f64().unwrap(),
+            );
+            let model_area = 0.5 * (top_w + bottom_w) * hold_h;
+            let v = views(&r);
+            let cut = of_layer(&v.midship_section, "OUTLINE", "polyline");
+            let hold = cut
+                .iter()
+                .find(|p| {
+                    p["points_m"].as_array().unwrap().len() == 4
+                        && p["closed"] == false
+                        && xs(&p["points_m"])
+                            .iter()
+                            .any(|x| close(x.abs(), top_w / 2.0))
+                })
+                .expect("the hold section");
+            let pts: Vec<[f64; 2]> = hold["points_m"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|p| [p[0].as_f64().unwrap(), p[1].as_f64().unwrap()])
+                .collect();
+            let mut twice = 0.0;
+            for i in 0..4 {
+                let (a, b) = (pts[i], pts[(i + 1) % 4]);
+                twice += a[0] * b[1] - b[0] * a[1];
+            }
+            let drawn_area = twice.abs() / 2.0;
+            assert!(
+                (drawn_area - model_area).abs() < 1e-9,
+                "{file}: drawn {drawn_area} m2, model {model_area} m2"
+            );
+            let depth = r["dims"]["depth_m"].as_f64().unwrap();
+            let coaming = r["drawing"]["hatch_coaming_height_m"].as_f64().unwrap();
+            assert!(
+                close(pts[0][1], depth + coaming),
+                "{file}: top at the coaming top"
+            );
+        }
+    }
+}
+
+#[test]
 fn dry_bulk_shows_its_own_containment() {
     for file in DRY {
         for (_, r) in computed(file) {
