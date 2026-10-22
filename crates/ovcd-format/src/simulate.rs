@@ -1376,6 +1376,8 @@ fn simulate_measured(
     if let Some(g) = stern {
         dry_parts.push(("stern", stern_drawing(g)));
     }
+    // Issue #450: the hull's own midship section, for the GA.
+    dry_parts.extend(midship_outline(&hull));
     let drawing = drawing_json(dry_parts);
     with_blocks_and_text_ids(
         powering_block,
@@ -1798,14 +1800,52 @@ fn bow_rake_of(p: &Map<String, Value>, d: f64) -> R<(f64, f64)> {
     Ok((length, rise))
 }
 
-/// The bilge radius, sheer and camber of the Option's hull (issue #449). A key left out is 0, the
-/// box of a file saved before.
+/// The drawing key `midship_outline` (issue #450): the starboard half-section of the hull at
+/// mid-length, from the keel to the deck edge, as [y, z] pairs. Only for a hull whose section is
+/// not the rectangle (a bilge radius, a V-bottom or a chine); the GA draws the rectangle otherwise.
+fn midship_outline(hull: &Hull) -> Option<(&'static str, Value)> {
+    let shape = &hull.spec.shape;
+    if shape.bilge_radius_m <= 0.0 && shape.bottom == ovcd_core::hull::hull_form::Bottom::Flat {
+        return None;
+    }
+    let (section, edge) = hull.table.section_at(hull.spec.loa / 2.0);
+    let half = hull.spec.beam / 2.0;
+    let end = section
+        .points
+        .iter()
+        .position(|&(y, z)| y == half && z == edge)
+        .unwrap_or(section.points.len() - 1);
+    let points: Vec<Value> = section.points[..=end]
+        .iter()
+        .map(|&(y, z)| json!([num(y), num(z)]))
+        .collect();
+    Some(("midship_outline", Value::Array(points)))
+}
+
+/// The bilge radius, sheer and camber of the Option's hull (issue #449), and its bottom (issue
+/// #450): a V-bottom or chine bottom for those Hull Forms, else flat. A key left out is 0, the box
+/// of a file saved before.
 fn hull_shape_of(p: &Map<String, Value>) -> R<ovcd_core::hull::hull_form::HullShape> {
+    use ovcd_core::hull::hull_form::Bottom;
+    let bottom = match p.get("hull_form").and_then(Value::as_str) {
+        Some("v_bottom") => Bottom::VBottom {
+            deadrise_deg: need(p, "deadrise_deg")?,
+            keel_half_width_m: need(p, "keel_half_width_m")?,
+        },
+        Some("chine") => Bottom::Chine {
+            deadrise_deg: need(p, "deadrise_deg")?,
+            keel_half_width_m: need(p, "keel_half_width_m")?,
+            chine_half_breadth_m: opt_float(p, "chine_half_breadth_m")?,
+            chine_height_m: opt_float(p, "chine_height_m")?,
+        },
+        _ => Bottom::Flat,
+    };
     Ok(ovcd_core::hull::hull_form::HullShape {
         bilge_radius_m: get_or(p, "bilge_radius_m", 0.0)?,
         sheer_aft_m: get_or(p, "sheer_aft_m", 0.0)?,
         sheer_fwd_m: get_or(p, "sheer_fwd_m", 0.0)?,
         camber_m: get_or(p, "camber_m", 0.0)?,
+        bottom,
     })
 }
 
@@ -2457,6 +2497,8 @@ fn simulate_gas(
     if let Some(g) = stern {
         drawing_parts.push(("stern", stern_drawing(g)));
     }
+    // Issue #450: the hull's own midship section, for the GA.
+    drawing_parts.extend(midship_outline(&fit_hull));
     let drawing = drawing_json(drawing_parts);
     let air_loaded = r.air_draft_top_above_keel_m - t;
     with_blocks_and_text_ids(
