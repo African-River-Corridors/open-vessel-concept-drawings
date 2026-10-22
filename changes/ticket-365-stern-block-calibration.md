@@ -4,7 +4,7 @@
 <!-- design-impact -->
 ### ticket/365-stern-block-calibration (2026-10-22)
 
-Between `main c4dd7c9` and `this branch 6a41eaa`.
+Between `main 54e0b1f` and `this branch 1a85aea`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -44,8 +44,8 @@ Between `main c4dd7c9` and `this branch 6a41eaa`.
 | sweep CN-derived liquid 3 (130x17.2) | `checks[26].message` | GM 13.50 m (fluid), max GZ 3.64 m at 27° | GM 13.65 m (fluid), max GZ 3.65 m at 27° | changed |
 | sweep CN-derived liquid 3 (130x17.2) | `checks[3].message` | freeboard 2.60 m >= required 0.3 m | freeboard 2.65 m >= required 0.3 m | changed |
 | sweep CN-derived liquid 3 (130x17.2) | `checks[4].message` | cargo zone 100.99 m = LOA 130.0 - bow void 9.32 m - stern void 19.69 m | cargo zone 98.59 m = LOA 130.0 - bow void 9.32 m - stern void 22.09 m | changed |
-| sweep box self-propelled 60x10 | `checks[12].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 0.17 m of 6.00 m | blind distance ahead of the bow 244.6 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 0.00 m of 6.00 m | changed |
-| sweep box self-propelled 60x10 | `checks[14].message` | intact GM 1.97 m >= 0.15 m at the reported cargo 878 t, draught 2.68 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.28 m >= 0.15 m at the reported cargo 728 t, draught 2.42 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
-| sweep box self-propelled 60x10 | `checks[16].message` | GM 2.02 m (fluid), max GZ 0.49 m at 25° | GM 2.36 m (fluid), max GZ 0.68 m at 28° | changed |
+| sweep box self-propelled 60x10 | `checks[12].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 0.17 m of 6.00 m | blind distance ahead of the bow 245.1 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 0.00 m of 6.00 m | changed |
+| sweep box self-propelled 60x10 | `checks[14].message` | intact GM 1.98 m >= 0.15 m at the reported cargo 878 t, draught 2.68 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.28 m >= 0.15 m at the reported cargo 728 t, draught 2.41 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| sweep box self-propelled 60x10 | `checks[16].message` | GM 2.03 m (fluid), max GZ 0.49 m at 25° | GM 2.37 m (fluid), max GZ 0.68 m at 28° | changed |
 | sweep box self-propelled 60x10 | `checks[17].message` | GM 2.03 m (fluid), max GZ 0.46 m at 25° | GM 2.39 m (fluid), max GZ 0.65 m at 27° | changed |
-| ... | 105718 more changed quantities | | | |
+| ... | 106439 more changed quantities | | | |
