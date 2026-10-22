@@ -219,6 +219,15 @@ msg-offsets-bad-row = row { $row } of the offsets table needs the numbers statio
 msg-offsets-csv-header = an offsets CSV starts with the header { $header }
 msg-offsets-csv-line = line { $line } of the offsets CSV needs three numbers: station_x_m, y_m, z_m
 
+## crates/ovcd-format/src/gas_fuel.rs
+
+check-name-cargo-as-fuel = cargo as fuel
+check-cargo-as-fuel-lng = methane (LNG) vapour may fuel the gensets (IGC Code 16.1)
+check-cargo-as-fuel-other = only methane (LNG) vapour may fuel an engine in a machinery space of category A (IGC Code 16.1); another cargo gas needs the Administration's acceptance (16.9.1)
+check-name-boil-off-within-gas-use = boil-off within gas use
+check-boil-off-within-gas-use = boil-off { $boil } kg/h <= gas use { $used } kg/h at the service speed
+check-boil-off-exceeds-gas-use = boil-off { $boil } kg/h > gas use { $used } kg/h at the service speed: the excess needs reliquefaction, pressure accumulation or thermal oxidation, as venting is not acceptable (IGC Code 7.1.1, 7.1.3)
+
 ## crates/ovcd-format/src/run.rs
 
 msg-convoy-not-available = convoy results not yet available
@@ -264,6 +273,8 @@ name-check-cargo = Cargo > 0
 name-check-feasible-arrangement = Feasible arrangement
 name-check-tank-length = tank length over diameter
 name-check-ok = OK
+name-check-cargo-as-fuel = cargo as fuel
+name-check-boil-off-within-gas-use = boil-off within gas use
 name-curve-deep-water = Deep water
 name-governs-hold-volume = hold volume
 name-governs-tank-volume = tank volume

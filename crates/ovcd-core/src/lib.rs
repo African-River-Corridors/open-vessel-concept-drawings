@@ -24,6 +24,7 @@ pub mod design_grid;
 pub mod electric_energy;
 pub mod ga_adapter;
 pub mod gas_arrangement;
+pub mod gas_fuel;
 pub mod gas_separation;
 pub mod gas_stability;
 pub mod hull;

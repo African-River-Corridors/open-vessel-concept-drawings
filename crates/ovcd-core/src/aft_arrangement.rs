@@ -128,13 +128,16 @@ impl Genset {
     }
 }
 
-/// Weichai medium-speed marine generating sets of the WH20 and WH25 families, whose engines are
-/// offered for MDO/MGO/HFO and dual fuel (DF), IMO Tier II/III (Tier III with SCR), CCS/BV classed.
+/// Weichai medium-speed marine generating sets of the WH20 and WH25 families, whose engines the
+/// presentation lists for MDO/MGO/HFO and DF as a fuel option, IMO Tier II/III (Tier III with SCR),
+/// CCS/BV classed. The presentation does not mark these sets as dual-fuel, and gives no gas
+/// consumption (the gas use of `gas_fuel` is a Wartsila 20DF stand-in).
 /// Source: Weichai Power, "Weichai Medium Speed Marine Engine", product presentation, April 2023:
 /// WH20 and WH25 basic parameters (engine dimensions and mass, slides 12 and 15), the WH20 marine
 /// auxiliary table (6WH20 genset power), and the marine genset model list, 440 V / 50 Hz (CCFJ
 /// models, slides 30 and 31).
-/// Ascending by output. Confirm the dual-fuel build of a chosen set with the maker.
+/// Ascending by output. Confirm the dual-fuel build of a chosen set, and its gas consumption, with the
+/// maker.
 pub const GAS_GENSETS: [Genset; 8] = [
     Genset {
         genset_model: "6WH20LCD1000-1",

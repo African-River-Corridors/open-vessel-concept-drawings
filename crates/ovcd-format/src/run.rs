@@ -380,6 +380,8 @@ pub fn run_option_with(
             None => {
                 // The capital budget: an output, not hashed, never fed back into the run.
                 let mut v = v;
+                // Issue #464: the gas a gas-fuelled Option burns, and its boil-off check.
+                crate::gas_fuel::add_gas_fuel(option, &mut v);
                 let cost = crate::cost::cost_of(option, &v);
                 // The Rule Trace: not hashed either; the stored Rule Set hashes cover the rules.
                 measured.checks = v
