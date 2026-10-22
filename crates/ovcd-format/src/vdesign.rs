@@ -382,6 +382,32 @@ pub struct LegacyFixed {
 ///
 /// A profile that has no entry for one of these inputs takes the built-in profile's entry.
 pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
+    // Issue #417: a file saved before has no typed openings; each sits at the smallest distance the
+    // rules allow, so nothing it was checked against changes.
+    LegacyFixed {
+        name: "deckhouse_side_opening_distance_m",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: OPENING_SIDE_DISTANCE_M,
+    },
+    LegacyFixed {
+        name: "entrance_distance_m",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: ovcd_core::gas_separation::OPENING_SETBACK_M,
+    },
+    LegacyFixed {
+        name: "engine_room_vent_inlet_distance_m",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: ovcd_core::gas_separation::OPENING_SETBACK_M,
+    },
+    LegacyFixed {
+        name: "funnel_outlet_distance_m",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: ovcd_core::gas_separation::OPENING_SETBACK_M,
+    },
     // Issue #425: a file saved before takes the midship section as B x T, so Cm = 1.
     LegacyFixed {
         name: "midship_coefficient",
@@ -818,6 +844,12 @@ pub struct LegacyFixedJson {
 
 /// See [`LegacyFixedJson`]. Read by a file that lacks the input, like [`LEGACY_FIXED_INPUTS`].
 pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
+    // Issue #417: no opening faces the cargo area.
+    LegacyFixedJson {
+        name: "deckhouse_front_opening",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        value: "false",
+    },
     // Issue #446 (spec 0008): a file saved before keeps its own bow rake, from its bow rake over
     // depth ratio, rising to the deck.
     LegacyFixedJson {
@@ -1153,6 +1185,10 @@ pub fn legacy_value(name: &str, containment: Option<&str>) -> Option<Value> {
 /// with the name dropped.
 pub const RULESETS: &[&str] = &["IGC_2G"];
 
+/// The distance of the first side opening from the deckhouse front that IGC 3.2.4.1 allows at most
+/// (the 5 m cap): the value a file saved before is read with (issue #417).
+pub const OPENING_SIDE_DISTANCE_M: f64 = 5.0;
+
 /// The Service Areas of an Option (spec 0004, "Service Area and default stacks"; ADR 0011).
 /// `ocean-only` is not offered.
 pub const SERVICE_AREAS: &[&str] = &["river-only", "coastal-and-river"];
@@ -1327,6 +1363,7 @@ pub enum Group {
     GasTanks,
     DryBulkHold,
     AftBlock,
+    Openings,
     SternAndPropulsion,
     Tug,
     WaterwayLimits,
@@ -1338,7 +1375,7 @@ pub enum Group {
 
 impl Group {
     /// Every group, in the order a form shows them.
-    pub const ALL: [Group; 14] = [
+    pub const ALL: [Group; 15] = [
         Group::Required,
         Group::VesselClass,
         Group::HullAndContainment,
@@ -1346,6 +1383,7 @@ impl Group {
         Group::GasTanks,
         Group::DryBulkHold,
         Group::AftBlock,
+        Group::Openings,
         Group::SternAndPropulsion,
         Group::Tug,
         Group::WaterwayLimits,
@@ -1365,6 +1403,7 @@ impl Group {
             Group::GasTanks => "Gas tanks",
             Group::DryBulkHold => "Dry-bulk hold",
             Group::AftBlock => "Aft block",
+            Group::Openings => "Openings",
             Group::SternAndPropulsion => "Stern and propulsion",
             Group::Tug => "Tug",
             Group::WaterwayLimits => "Waterway Limits",
@@ -2789,6 +2828,44 @@ pub const INPUTS: &[InputSpec] = &[
         TEXT_OR_NONE,
         false,
         Group::CostRates,
+    ),
+    // Issue #417 (typed openings, trial): the openings of the deckhouse and the funnel, typed as the
+    // general arrangement shows them. The engine does not place them; the Rules of `igc-2g` (3.2.4.1)
+    // and `lr-inland-gas` (3.3.7, 3.3.8, 3.3.11, 3.4.1) read them.
+    only(
+        "deckhouse_front_opening",
+        "Entrance, air inlet or opening on the deckhouse front",
+        InputKind::Bool,
+        "type_c_tanks",
+        Group::Openings,
+    ),
+    only(
+        "deckhouse_side_opening_distance_m",
+        "Distance of the first side opening from the deckhouse front",
+        NUM,
+        "type_c_tanks",
+        Group::Openings,
+    ),
+    only(
+        "entrance_distance_m",
+        "Distance of the nearest entrance or openable window from the cargo area",
+        NUM,
+        "type_c_tanks",
+        Group::Openings,
+    ),
+    only(
+        "engine_room_vent_inlet_distance_m",
+        "Distance of the engine room ventilation inlet from the cargo area",
+        NUM,
+        "type_c_tanks",
+        Group::Openings,
+    ),
+    only(
+        "funnel_outlet_distance_m",
+        "Distance of the funnel outlet from the cargo area",
+        NUM,
+        "type_c_tanks",
+        Group::Openings,
     ),
     // Issue #274 (spec 0004): where the vessel operates, and the Rule Sets it is checked against.
     // They come last: the default stack follows the Cargo Containment.

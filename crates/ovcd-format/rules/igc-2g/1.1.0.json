@@ -646,6 +646,160 @@
         ]
       },
       "gap": "S690QL1 has a specified minimum yield stress of 690 N/mm2; the tables of 6.4.1 cover carbon-manganese steel up to 410 N/mm2 (notes to Tables 6.1 and 6.2: higher strengths may be approved by the Administration). No permitted design temperature can be read from the text"
+    },
+    {
+      "id": "igc/3.1.1/hold-space-segregation",
+      "title": "Hold spaces are segregated from machinery, accommodation, service spaces, control stations, chain lockers, domestic water tanks and stores",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "3.1.1",
+        "page": "MSC.370-93.pdf, annex pp. 32-33",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#417"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "arrangement.hold_space_segregation"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "finding": "#417",
+      "since": "1.1.0",
+      "gap": "the model has no machinery, accommodation or store spaces to segregate the hold spaces from; the arrangement search places the tanks in one hold"
+    },
+    {
+      "id": "igc/3.1.2/hold-space-segregation-means",
+      "title": "Segregation by a cofferdam, an oil fuel tank or an A-60 gastight bulkhead (or A-0 where there is no source of ignition)",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "3.1.2",
+        "page": "MSC.370-93.pdf, annex pp. 32-33",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#417"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "arrangement.hold_space_segregation"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "finding": "#417",
+      "since": "1.1.0",
+      "gap": "the model has no division between the hold and the adjoining spaces; the end bulkhead space (lr-inland 3.5.3) is checked, the fire class is not"
+    },
+    {
+      "id": "igc/3.2.1/no-accommodation-in-cargo-area",
+      "title": "No accommodation space, service space or control station within the cargo area",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "3.2.1",
+        "page": "MSC.370-93.pdf, annex pp. 32-33",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#417"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "arrangement.accommodation_outside_cargo_area"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "finding": "#417",
+      "since": "1.1.0",
+      "gap": "the model does not place accommodation, service spaces or control stations; the aft block sits outside the cargo area by construction"
+    },
+    {
+      "id": "igc/3.2.4.1/front-openings",
+      "title": "Entrances, air inlets and openings of the deckhouse do not face the cargo area",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "3.2.4.1",
+        "page": "MSC.370-93.pdf, annex pp. 32-33",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#417"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "openings.front_clear"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#417",
+      "since": "1.1.0"
+    },
+    {
+      "id": "igc/3.2.4.1/side-opening-distance",
+      "title": "Side openings at least 4 % of L (not less than 3 m, not more than 5 m) from the deckhouse end facing the cargo area",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "3.2.4.1",
+        "page": "MSC.370-93.pdf, annex pp. 32-33",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#417"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "input.deckhouse_side_opening_distance_m"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "clamp",
+        "x": "input.length_overall_m",
+        "a": 0.0,
+        "b": 0.04,
+        "c": 1.0,
+        "lo": 3.0,
+        "hi": 5.0,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#417",
+      "since": "1.1.0"
     }
   ]
 }
