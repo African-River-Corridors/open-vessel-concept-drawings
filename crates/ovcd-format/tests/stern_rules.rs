@@ -327,3 +327,112 @@ fn a_pushed_barge_has_the_coupling_note_not_evaluated_and_no_wheelhouse_rows() {
         assert!(rows(&r, id).is_empty(), "{id}");
     }
 }
+
+// --- ovcd 2.1.0: the OVCD Checks the results already carry (issue #355, second slice) ------------
+
+#[test]
+fn installed_power_covers_the_design_speed_at_9_69_and_9_7() {
+    let d = design(json!({}));
+    let at = |speeds: Vec<(&str, f64)>| {
+        let measured = Measured {
+            speeds_kn: speeds
+                .into_iter()
+                .map(|(n, k)| (n.to_string(), k))
+                .collect(),
+            design_speed_kn: Some(9.7),
+            ..Measured::default()
+        };
+        outcome_of(
+            "ovcd",
+            "2.1.0",
+            "ovcd/powering/installed-covers-design-speed",
+            &measured,
+            &d.options[0],
+        )
+    };
+    assert_eq!(at(vec![("Deep water", 9.7)]), Outcome::Pass);
+    assert_eq!(at(vec![("Deep water", 10.0)]), Outcome::Pass);
+    assert_eq!(at(vec![("Deep water", 9.69)]), Outcome::Fail);
+    // The slowest environment governs.
+    assert_eq!(
+        at(vec![("Deep water", 10.0), ("Channel", 9.0)]),
+        Outcome::Fail
+    );
+}
+
+#[test]
+fn the_lift_and_the_channel_depth_rules_at_both_sides() {
+    let d = design(json!({}));
+    let lift = |ok: bool| {
+        let measured = Measured {
+            lift_enough: Some(ok),
+            ..Measured::default()
+        };
+        outcome_of(
+            "ovcd",
+            "2.1.0",
+            "ovcd/wheelhouse/lift-enough",
+            &measured,
+            &d.options[0],
+        )
+    };
+    assert_eq!(lift(true), Outcome::Pass);
+    assert_eq!(lift(false), Outcome::Fail);
+    let depth = |h_over_t: f64| {
+        let measured = Measured {
+            depth_over_draught: Some(h_over_t),
+            ..Measured::default()
+        };
+        outcome_of(
+            "ovcd",
+            "2.1.0",
+            "ovcd/powering/shallow-water-validity",
+            &measured,
+            &d.options[0],
+        )
+    };
+    assert_eq!(depth(2.0), Outcome::Pass);
+    assert_eq!(depth(1.99), Outcome::Warn);
+    // No channel: the Rule does not apply.
+    assert_eq!(
+        outcome_of(
+            "ovcd",
+            "2.1.0",
+            "ovcd/powering/shallow-water-validity",
+            &Measured::default(),
+            &d.options[0]
+        ),
+        Outcome::NotApplicable
+    );
+}
+
+#[test]
+fn a_new_self_propelled_option_passes_the_new_checks_and_a_typed_weak_engine_or_shallow_channel_shows()
+ {
+    let r = results(&design(json!({})));
+    for id in [
+        "ovcd/powering/installed-covers-design-speed",
+        "ovcd/wheelhouse/lift-enough",
+    ] {
+        let row = rows(&r, id);
+        assert_eq!(row.len(), 1, "{id}");
+        assert_eq!(row[0]["outcome"], "pass", "{id}: {}", row[0]);
+    }
+    assert!(
+        rows(&r, "ovcd/powering/shallow-water-validity").is_empty(),
+        "no channel"
+    );
+    // A typed installed power far below the need.
+    let weak = results(&design(json!({ "installed_power_kw": 50.0 })));
+    assert_eq!(
+        rows(&weak, "ovcd/powering/installed-covers-design-speed")[0]["outcome"],
+        "fail"
+    );
+    // A channel 3 m deep under a draught of about 2.3 m: h/T is 1.3, a warning.
+    let shallow = results(&design(
+        json!({ "channel_depth_m": 3.0, "channel_bottom_width_m": 40.0 }),
+    ));
+    let row = rows(&shallow, "ovcd/powering/shallow-water-validity");
+    assert_eq!(row.len(), 1);
+    assert_eq!(row[0]["outcome"], "warn", "{}", row[0]);
+}

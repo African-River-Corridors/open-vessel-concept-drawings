@@ -372,6 +372,17 @@ pub fn run_option_with(
                             .collect()
                     })
                     .unwrap_or_default();
+                measured.design_speed_kn = v["powering"]["design_speed_kn"].as_f64();
+                measured.lift_enough = v["sightline"]["lift_enough"].as_bool();
+                measured.depth_over_draught = match (
+                    option
+                        .input("channel_depth_m")
+                        .and_then(|i| i.value.as_f64()),
+                    v["results"]["draught_m"].as_f64(),
+                ) {
+                    (Some(h), Some(t)) if t > 0.0 => Some(h / t),
+                    _ => None,
+                };
                 let rule_trace = trace_json(
                     &trace_of(&selection, option, &measured),
                     crate::trace::service_area_of(option),
