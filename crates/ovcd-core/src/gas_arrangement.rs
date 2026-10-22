@@ -232,6 +232,7 @@ fn candidate_measured(
             .iter()
             .map(|c| (c.name.replace('_', " "), c.ok))
             .collect(),
+        liquid: None,
     }
 }
 

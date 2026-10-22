@@ -1153,6 +1153,8 @@ fn simulate_measured(
     };
     let deadweight = disp - ls;
     measured.deadweight_t = Some(deadweight);
+    // Issue #337: the liquid bulk layout, for the liquid Measures.
+    measured.liquid = r.liquid.clone();
     let t = py_div(disp, cb * l * b * rho)?;
     let h_top = r.air_draft_top_above_keel_m;
 
@@ -2296,6 +2298,7 @@ fn simulate_gas(
                     (s, plane)
                 }),
                 checks: Vec::new(),
+                liquid: None,
             },
         )
     })

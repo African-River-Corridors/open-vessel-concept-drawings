@@ -159,6 +159,14 @@ fn rules_measures_prints_the_registry() {
         "gz.max_from",
         "gz.angle_of_max",
         "gm0",
+        "hull.double_side_width",
+        "hull.double_bottom_height",
+        "hull.lbh",
+        "cargo-tank.volume",
+        "cargo-tank.length",
+        "option.deadweight",
+        "option.cargo_capacity_m3",
+        "option.slop_capacity_share",
         "input.fill_ratio",
     ] {
         assert!(text.contains(id), "{id}");

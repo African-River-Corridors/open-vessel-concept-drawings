@@ -9,7 +9,9 @@ use alloc::vec::Vec;
 
 use crate::barge_capacity::TankRuleValues;
 use crate::box_stability::{Condition, area};
+use crate::compartments::SpaceKind;
 use crate::gas_separation::GasSeparationResult;
+use crate::liquid_bulk::LiquidBulkResult;
 use crate::rule_trace::{MeasureValue, ObjectType};
 use crate::rules::{ArgValue, MeasureRef};
 
@@ -27,6 +29,9 @@ pub struct Measured {
     /// The gas cargo-area separation and whether its tanks have plane ends; `None` but for a gas
     /// barge.
     pub separation: Option<(GasSeparationResult, bool)>,
+    /// The liquid bulk layout (spec 0006), for the liquid Measures; `None` but for a liquid bulk Cargo.
+    /// The Measures read it and nothing else of the module.
+    pub liquid: Option<LiquidBulkResult>,
     /// The design's check list, (name, ok), in order, with the names as a result lists them (spaces,
     /// not underscores): the verdicts the `ovcd` Rules mirror.
     pub checks: Vec<(String, bool)>,
@@ -75,6 +80,41 @@ fn deg(m: &MeasureRef, name: &str) -> Result<i32, String> {
 }
 
 impl Measured {
+    /// The value of a liquid bulk Measure, or `None` for a Measure that is not one. Read from the
+    /// [`LiquidBulkResult`] only (spec 0006 section 5.3).
+    fn liquid_value(&self, m: &MeasureRef, index: usize) -> Option<Result<MeasureValue, String>> {
+        let known = [
+            "hull.double_side_width",
+            "hull.double_bottom_height",
+            "hull.lbh",
+            "cargo-tank.volume",
+            "cargo-tank.length",
+            "option.cargo_capacity_m3",
+            "option.slop_capacity_share",
+        ];
+        if !known.contains(&m.id.as_str()) {
+            return None;
+        }
+        let Some(l) = self.liquid.as_ref() else {
+            return Some(Err("the Option has no liquid bulk tank layout".to_string()));
+        };
+        let tank = || {
+            l.of_kind(SpaceKind::CargoTank)
+                .nth(index)
+                .ok_or_else(|| format!("no cargo tank {index}"))
+        };
+        let number = |x: f64| Ok(MeasureValue::Number(x));
+        Some(match m.id.as_str() {
+            "hull.double_side_width" => number(l.double_side_width_m),
+            "hull.double_bottom_height" => number(l.double_bottom_height_m),
+            "hull.lbh" => number(l.lbh_m3),
+            "cargo-tank.volume" => tank().and_then(|t| number(t.volume_m3())),
+            "cargo-tank.length" => tank().and_then(|t| number(t.length())),
+            "option.cargo_capacity_m3" => number(l.cargo_gross_m3),
+            _ => number(l.slop_share_actual),
+        })
+    }
+
     /// The labels of the design's objects of one type. `option` names the one Option object.
     pub fn objects(&self, object: ObjectType, option: &str) -> Vec<String> {
         match object {
@@ -88,12 +128,26 @@ impl Measured {
                     .collect(),
                 None => Vec::new(),
             },
-            // No Measure on these objects is computed yet.
-            ObjectType::Hull
-            | ObjectType::CargoTank
-            | ObjectType::BallastTank
-            | ObjectType::SlopTank => Vec::new(),
+            // Issue #337: the one hull of a liquid bulk layout, and its tanks by role.
+            ObjectType::Hull => match self.liquid {
+                Some(_) => alloc::vec!["Hull".to_string()],
+                None => Vec::new(),
+            },
+            ObjectType::CargoTank => self.liquid_names(|k| k == SpaceKind::CargoTank),
+            ObjectType::BallastTank => self.liquid_names(SpaceKind::is_ballast),
+            ObjectType::SlopTank => self.liquid_names(|k| k == SpaceKind::Slop),
         }
+    }
+
+    /// The names of the liquid bulk Spaces of the kinds `keep` allows, in layout order.
+    fn liquid_names(&self, keep: impl Fn(SpaceKind) -> bool) -> Vec<String> {
+        self.liquid.as_ref().map_or_else(Vec::new, |l| {
+            l.spaces
+                .iter()
+                .filter(|s| keep(s.kind))
+                .map(|s| s.name.clone())
+                .collect()
+        })
     }
 
     /// The labels of the design's objects of the type with this key (as the kernel names it); none
@@ -111,6 +165,15 @@ impl Measured {
                     && matches!(v, ArgValue::Text(n) if self.checks.iter().any(|(c, _)| c == n))
             }),
             id if id.starts_with("separation.") => self.separation.is_some(),
+            // Issue #337: the liquid Measures exist for a liquid bulk layout only.
+            "hull.double_side_width"
+            | "hull.double_bottom_height"
+            | "hull.lbh"
+            | "cargo-tank.volume"
+            | "cargo-tank.length"
+            | "option.cargo_capacity_m3"
+            | "option.slop_capacity_share" => self.liquid.is_some(),
+            "option.deadweight" => self.deadweight_t.is_some(),
             _ => true,
         }
     }
@@ -128,6 +191,15 @@ impl Measured {
                 .find(|(n, _)| n == name)
                 .map(|(_, ok)| MeasureValue::Bool(*ok))
                 .ok_or_else(|| format!("the result has no check `{name}`"));
+        }
+        if let Some(v) = self.liquid_value(m, index) {
+            return v;
+        }
+        if m.id == "option.deadweight" {
+            return self
+                .deadweight_t
+                .map(MeasureValue::Number)
+                .ok_or_else(|| "the run gives no deadweight".to_string());
         }
         if let Some(name) = m.id.strip_prefix("separation.") {
             let (s, plane) = self

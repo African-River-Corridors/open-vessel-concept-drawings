@@ -146,6 +146,15 @@ pub struct LiquidBulkResult {
     pub cargo_tank_length_max_m: f64,
     /// The widest cargo tank (m).
     pub cargo_tank_breadth_max_m: f64,
+    /// The width of the double side (m): the layout's, the same along the tank block. A Measure of
+    /// the hull (`hull.double_side_width`).
+    pub double_side_width_m: f64,
+    /// The height of the double bottom (m) (`hull.double_bottom_height`).
+    pub double_bottom_height_m: f64,
+    /// L x B x H of the hull (m³), as ADN 2025 9.3.2.11.1 (a) defines it for the tank capacity table:
+    /// L the overall length of the hull, B the extreme breadth, H the moulded depth within the cargo
+    /// area (`hull.lbh`).
+    pub lbh_m3: f64,
     /// The free surface of each cargo and slop tank at a slack level.
     pub free_surface: Vec<TankFreeSurface>,
     /// The lightship (t): the hull and the outfit.
@@ -263,6 +272,9 @@ pub fn compute(inp: &LiquidBulkInputs) -> Result<LiquidBulkResult, PyError> {
     Ok(LiquidBulkResult {
         free_surface: free_surface::of_tanks(&spaces),
         tanks_in_line,
+        double_side_width_m: inp.double_side_m,
+        double_bottom_height_m: inp.double_bottom_m,
+        lbh_m3: inp.loa_m * inp.beam_m * inp.depth_m,
         cargo_gross_m3: cargo_gross,
         slop_gross_m3: slop_gross,
         cargo_volume_m3: cargo_volume,
