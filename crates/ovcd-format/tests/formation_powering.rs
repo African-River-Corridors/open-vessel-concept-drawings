@@ -109,7 +109,7 @@ fn the_formation_holds_its_equivalent_hull_and_the_pusher_ratios() {
     );
     // The size of the pusher follows its power by the ratios (within the last pass's 1 % move).
     let p = num(f, &["tug", "installed_power_kw"]);
-    let want = 19.5 * (p / 1400.0).powf(0.67);
+    let want = 19.5 * libm::pow(p / 1400.0, 0.67);
     assert!((tug_l - want).abs() / want < 0.02, "{tug_l} vs {want}");
     // The coupling force is the ES-TRIN formula.
     let force = 270.0 * p * tug_l / num(f, &["tug", "beam_m"]) * 1e-3;
@@ -170,7 +170,7 @@ fn a_typed_pusher_power_is_taken_as_typed_and_sizes_the_pusher_by_the_ratios() {
     let f = &r["formation"];
     assert_eq!(num(f, &["tug", "installed_power_kw"]), 2800.0);
     assert_eq!(f["tug"]["installed_power_sized"], false);
-    let want = 19.5 * 2.0_f64.powf(0.67);
+    let want = 19.5 * libm::pow(2.0, 0.67);
     assert!((num(f, &["tug", "length_m"]) - want).abs() < 1e-9);
     // A typed length is used as typed.
     let typed = results(convoy(2, 2), true, &[("tug_length_m", json!(30.0))]);
