@@ -1389,7 +1389,7 @@ pub enum Group {
 
 impl Group {
     /// Every group, in the order a form shows them.
-    pub const ALL: [Group; 15] = [
+    pub const ALL: [Group; 16] = [
         Group::Required,
         Group::VesselClass,
         Group::HullAndContainment,
