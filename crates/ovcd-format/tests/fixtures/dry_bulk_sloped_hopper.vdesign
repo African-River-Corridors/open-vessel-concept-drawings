@@ -97,6 +97,10 @@
           "value": 1.0,
           "source": "default"
         },
+        "hold_covering": {
+          "value": "covered",
+          "source": "default"
+        },
         "n_holds": {
           "value": 3.0,
           "source": "default"

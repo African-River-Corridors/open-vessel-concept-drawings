@@ -858,6 +858,12 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::Only("type_c_tanks"),
         value: "false",
     },
+    // Issue #428: a file saved before has covered holds; no Rule asks for the larger clearance.
+    LegacyFixedJson {
+        name: "hold_covering",
+        applies_to: AppliesTo::AnyOf(DRY_HOLDS),
+        value: "\"covered\"",
+    },
     // Issue #446 (spec 0008): a file saved before keeps its own bow rake, from its bow rake over
     // depth ratio, rising to the deck.
     LegacyFixedJson {
@@ -1197,6 +1203,10 @@ pub const RULESETS: &[&str] = &["IGC_2G"];
 /// (the 5 m cap): the value a file saved before is read with (issue #417).
 pub const OPENING_SIDE_DISTANCE_M: f64 = 5.0;
 
+/// Whether a dry-bulk hold sails covered or open (issue #428): ES-TRIN 4.01(2) asks for a larger
+/// safety clearance for a vessel that sails with its holds uncovered.
+pub const HOLD_COVERINGS: &[&str] = &["covered", "open"];
+
 /// The Service Areas of an Option (spec 0004, "Service Area and default stacks"; ADR 0011).
 /// `ocean-only` is not offered.
 pub const SERVICE_AREAS: &[&str] = &["river-only", "coastal-and-river"];
@@ -1451,6 +1461,8 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("pump_room", "Pump room"),
     ("box", "Box"),
     ("raked_box", "Raked box"),
+    ("covered", "Covered"),
+    ("open", "Open"),
     ("river-only", "River only"),
     ("coastal-and-river", "Coastal and river"),
     ("v_bottom", "V-bottom"),
@@ -1932,7 +1944,7 @@ pub const INPUTS: &[InputSpec] = &[
     ),
     spec(
         "min_freeboard_m",
-        "Minimum freeboard",
+        "Minimum freeboard (safety clearance)",
         NUM,
         false,
         Group::HullAndContainment,
@@ -2157,6 +2169,13 @@ pub const INPUTS: &[InputSpec] = &[
         "hatch_coaming_height_m",
         "Hatch coaming height",
         NUM,
+        DRY_HOLDS,
+        Group::DryBulkHold,
+    ),
+    only_in(
+        "hold_covering",
+        "Hold covering",
+        InputKind::Choice(HOLD_COVERINGS),
         DRY_HOLDS,
         Group::DryBulkHold,
     ),
@@ -3924,11 +3943,9 @@ fn read_option(
         // Issue #274: for `rule_sets` that is the default stack of the Cargo Containment, which the
         // engine checked every Option against.
         let legacy = if spec.name == "rule_sets" {
-            // What the engine always checked, whatever the profile says: the built-in river-only
-            // stack.
-            Some(crate::trace::default_rule_sets(
-                &Profile::built_in(),
-                crate::trace::DEFAULT_SERVICE_AREA,
+            // What the engine always checked, whatever the profile says: the stack before the
+            // freeboard sets (issue #428).
+            Some(crate::trace::legacy_rule_sets(
                 containment.as_ref().and_then(Value::as_str),
             ))
         } else {
