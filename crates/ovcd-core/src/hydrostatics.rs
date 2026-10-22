@@ -367,6 +367,10 @@ impl Hull {
         {
             crate::stern_form::apply(g, &mut table).map_err(BuildError::Stern)?;
         }
+        // The Notch of an ATB barge (issue #362) is cut after the Stern Form.
+        if let Some(n) = &spec.shape.notch {
+            crate::stern_form::apply_notch(n, &mut table).map_err(BuildError::Stern)?;
+        }
         Ok(Self {
             spec: spec.clone(),
             table,

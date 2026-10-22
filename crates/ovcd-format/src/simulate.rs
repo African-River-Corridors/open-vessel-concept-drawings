@@ -1909,7 +1909,31 @@ fn hull_shape_of(p: &Map<String, Value>) -> R<ovcd_core::hull::hull_form::HullSh
         bottom,
         offsets: offsets_of(p)?,
         shipd: shipd_of(p)?,
+        notch: notch_of(p)?,
     })
+}
+
+/// The Notch of an ATB barge (issue #362): typed, or half the tug's length deep and the tug's beam
+/// and 0.30 m wide, the tug itself typed or 0.28 of the barge's length and 0.53 of its beam. `None`
+/// for any other Formation.
+fn notch_of(p: &Map<String, Value>) -> R<Option<ovcd_core::stern_form::Notch>> {
+    if !p.get("atb").is_some_and(truthy) {
+        return Ok(None);
+    }
+    let tug = ovcd_core::atb::tug_from_barge(
+        need(p, "loa_m")?,
+        need(p, "beam_m")?,
+        ovcd_core::atb::TugTyped {
+            length_m: opt_float(p, "tug_length_m")?,
+            beam_m: opt_float(p, "tug_beam_m")?,
+            draught_m: opt_float(p, "tug_draught_m")?,
+        },
+    );
+    Ok(Some(ovcd_core::atb::notch_for_tug(
+        &tug,
+        opt_float(p, "notch_depth_m")?,
+        opt_float(p, "notch_width_m")?,
+    )))
 }
 
 /// The hull of the params as its Sections Table, as the run builds it (issue #451): the Hull
