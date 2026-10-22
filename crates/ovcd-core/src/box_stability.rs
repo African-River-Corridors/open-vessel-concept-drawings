@@ -550,7 +550,8 @@ pub(crate) enum Screened {
 /// already decided by the heels worked, so no number a caller reports changes: the criteria of
 /// each block are the criteria of [`criteria`] on the same points.
 ///
-/// - Heels 30 to 40: the area 30 to 40 degrees (at least 0.030 m rad) needs only these.
+/// - Heels 30 to 40: the area 30 to 40 degrees (at least 0.030 m rad), to the angle of down-flooding
+///   where that is below 40, needs only these.
 /// - Heels 41 to 60: the greatest GZ at 30 degrees or more (at least 0.20 m) needs only these.
 /// - Heels 25 to 29, then 24 down to 0: the angle of maximum GZ is below 25 degrees as soon as a
 ///   heel under 25 has a GZ at least the greatest at 25 or more (the first of equal GZ is the
@@ -581,7 +582,20 @@ pub(crate) fn screened_gz(
     for deg in a30..=a40 {
         at!(deg);
     }
-    if area(&gz, a30, a40) < 0.030 {
+    // The area 30 to 40 degrees ends at the angle of down-flooding where it is below 40 (issue
+    // #282): a hull with one is screened on that area, so the screen never rejects a trial the
+    // criteria accept.
+    let end = area_end_deg(hull.spec.downflooding_deg);
+    let area_30_40 = if end < f64::from(a40) {
+        if end > f64::from(a30) {
+            area_to(&gz, a30, end)
+        } else {
+            0.0
+        }
+    } else {
+        area(&gz, a30, a40)
+    };
+    if area_30_40 < 0.030 {
         return Ok(Screened::Fails);
     }
     for deg in a40 + 1..=*ANGLES_DEG.end() {
@@ -757,12 +771,18 @@ mod screen_tests {
     use crate::hydrostatics::{Hull, HullSpec};
     use crate::sections::Gravity;
 
-    /// Label: property. A trial the screen stops fails the IS Code 2008 criteria (or finds no trim
-    /// balance), and a trial it does not stop gives the whole curve, bit for bit.
+    /// Label: property. A trial the screen stops fails the IS Code 2008 criteria, with the angle of
+    /// down-flooding where the hull has one (or finds no trim balance), and a trial it does not stop gives the whole curve, bit for bit.
     #[test]
     fn the_screen_stops_only_a_trial_that_fails_and_otherwise_gives_the_whole_curve() {
         let (mut stopped, mut worked) = (0, 0);
-        for beam in [9.0, 11.4, 14.0] {
+        for (beam, angle) in [
+            (9.0, None),
+            (11.4, None),
+            (14.0, None),
+            (11.4, Some(35.0)),
+            (14.0, Some(28.0)),
+        ] {
             for depth in [4.5] {
                 for rake in [0.0, 10.0] {
                     let hull = Hull::build(&HullSpec {
@@ -773,6 +793,7 @@ mod screen_tests {
                         bow_rake_rise_m: depth * 0.8,
                         stern: None,
                         shape: HullShape::default(),
+                        downflooding_deg: angle,
                     })
                     .unwrap();
                     for fill in [0.3, 0.55, 0.7] {
@@ -799,6 +820,7 @@ mod screen_tests {
                                             fs_moment / mass,
                                             None,
                                             "IS_CODE_2008",
+                                            angle,
                                         )
                                         .unwrap();
                                         assert!(!c.ok(), "{beam} {depth} {rake} {fill} {kg_share}");
