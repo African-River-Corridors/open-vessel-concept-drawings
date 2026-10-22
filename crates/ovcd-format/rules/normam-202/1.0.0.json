@@ -123,7 +123,7 @@
       "consequence": "warn",
       "sizes": false,
       "evaluated": false,
-      "gap": "damage stability and oil outflow are not modelled",
+      "gap": "the damage Measure has the ADN 9.3.x.15 extents only (issue #341), not the standard damage of 5.23.8; oil outflow is not modelled",
       "finding": null,
       "since": "1.0.0"
     },
@@ -151,7 +151,7 @@
       "consequence": "warn",
       "sizes": false,
       "evaluated": false,
-      "gap": "damage stability is not modelled",
+      "gap": "the damage Measure has the ADN 9.3.x.15 criteria only (issue #341), not the 5.23.9 criteria",
       "finding": null,
       "since": "1.0.0"
     },

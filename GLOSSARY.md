@@ -222,6 +222,12 @@ One state of loading checked for stability: a cargo, consumables and water balla
 for example full load departure or ballast arrival.
 _Avoid_: load case, governing condition
 
+**Damage Case**:
+One assumed damage of a liquid bulk hull (a side or a bottom damage of stated extent at a stated place along the
+hull) and the compartments it floods, checked on the laden departure Loading Condition: the floating position of
+the damaged hull, then its righting lever. The result is a verdict for one Rule object.
+_Avoid_: damage scenario, damage condition (a Loading Condition is intact)
+
 **Water Ballast**:
 Water taken into ballast tanks to bring a vessel to a safe Draught, trim or stability in a Loading Condition.
 _Avoid_: ballast (when the solid kind could be meant)

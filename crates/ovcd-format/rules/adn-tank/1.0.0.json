@@ -425,8 +425,7 @@
       },
       "consequence": "warn",
       "sizes": false,
-      "evaluated": false,
-      "gap": "damage stability is not modelled: the damage Measure is the ticket after the liquid Rule Sets",
+      "evaluated": true,
       "finding": null,
       "since": "1.0.0"
     },
@@ -723,8 +722,7 @@
       },
       "consequence": "warn",
       "sizes": false,
-      "evaluated": false,
-      "gap": "damage stability is not modelled: the damage Measure is the ticket after the liquid Rule Sets",
+      "evaluated": true,
       "finding": null,
       "since": "1.0.0"
     },

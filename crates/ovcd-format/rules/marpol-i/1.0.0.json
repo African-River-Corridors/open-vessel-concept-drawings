@@ -400,7 +400,7 @@
       "consequence": "warn",
       "sizes": false,
       "evaluated": false,
-      "gap": "above the first release size band (5,000 tonnes deadweight and over; decision D1 of spec 0006): listed, not evaluated; damage stability is not modelled",
+      "gap": "above the first release size band (5,000 tonnes deadweight and over; decision D1 of spec 0006): listed, not evaluated; the damage Measure has the ADN 9.3.x.15 extents only (issue #341), not the Regulation 28 extents that reach the cargo tanks",
       "finding": null,
       "since": "1.0.0"
     },

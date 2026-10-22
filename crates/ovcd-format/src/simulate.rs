@@ -1314,6 +1314,11 @@ fn simulate_measured(
             loading_condition_checks(&conds, "warning", false, &mut checks, &mut ids);
             is_code_stability = is_code_stability_json(&conds, true, &mut ids);
             loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho, true);
+            // Issue #341: the assumed damages of ADN 9.3.x.15 on the laden departure condition.
+            if let Some(liquid) = r.liquid.as_ref() {
+                measured.damage =
+                    crate::liquid::damage_verdicts(&hull, liquid, cargo_key, rho, &conds);
+            }
             // The liquid conditions stay out of the Rule Trace until the liquid Rule Sets exist: the
             // IS Code Rule Set would block a low-freeboard tank barge on seagoing criteria.
         }
@@ -1420,6 +1425,7 @@ fn simulate_measured(
                     }),
                     &r,
                     cargo_key,
+                    &measured.damage,
                 ),
                 (&r.stern_block_items, &r.trim_conditions),
             ),
@@ -1431,7 +1437,12 @@ fn simulate_measured(
 }
 
 /// Issue #331: the `liquid` block, for a liquid bulk Cargo only, so a dry bulk result keeps its keys.
-fn with_liquid(mut v: Value, r: &BargeCapacityResult, cargo_key: &str) -> Value {
+fn with_liquid(
+    mut v: Value,
+    r: &BargeCapacityResult,
+    cargo_key: &str,
+    damage: &[ovcd_core::measured::DamageVerdict],
+) -> Value {
     if let (Some(l), Some(o)) = (r.liquid.as_ref(), v.as_object_mut()) {
         o.insert(
             "liquid".to_string(),
@@ -1440,6 +1451,10 @@ fn with_liquid(mut v: Value, r: &BargeCapacityResult, cargo_key: &str) -> Value 
         // Issue #334: what the cargo tank items of the budget are priced on (unhashed, with the rest of
         // `cost_masses`).
         o.insert("cost_masses".to_string(), crate::cost::liquid_masses(l));
+        // Issue #341: what each assumed damage does (unhashed: it is an output of the Rule Trace's input).
+        if !damage.is_empty() {
+            o.insert("damage".to_string(), crate::liquid::damage_json(damage));
+        }
     }
     v
 }
