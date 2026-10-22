@@ -1,5 +1,7 @@
 //! Seam: the public `ovcd_core::gas_separation` API. Expected values are printed by the original
-//! Python (`core/gas_separation.py`), not worked out by hand.
+//! Python (`core/gas_separation.py`), not worked out by hand, except the aft end-bulkhead space check,
+//! which replaced the type C cofferdam check in issue #280 (Label: sourced - LR inland rules Pt 4 Ch 4
+//! 3.5.3 and ADN 2025 9.3.1.11.3(a): 0.20 m, or 0.50 m for plane tank ends).
 
 use ovcd_core::gas_separation::{
     COFFERDAM_MIN_M, END_BULKHEAD_SPACE_M, END_BULKHEAD_SPACE_PRESSURE_M, GasSeparationInputs,
@@ -42,14 +44,14 @@ fn golden_defaults() {
     assert_eq!(
         names,
         [
-            "cofferdam_min_width",
+            "aft_end_bulkhead_space",
             "opening_setback",
             "fwd_end_bulkhead_space"
         ]
     );
     assert_eq!(
         r.checks[0].message,
-        "cofferdam 0.60 m >= 0.60 m (cl. 3.6.13)"
+        "aft end-bulkhead space 0.60 m >= 0.20 m (domed tank ends, cl. 3.5.3)"
     );
     assert_eq!(
         r.checks[1].message,
@@ -63,19 +65,41 @@ fn golden_defaults() {
 }
 
 #[test]
-fn a_thin_cofferdam_fails_and_the_setback_still_governs_aft() {
+fn a_thin_aft_space_fails_and_the_setback_still_governs_aft() {
     let r = compute(&GasSeparationInputs {
-        cofferdam_m: 0.4,
+        cofferdam_m: 0.1,
         ..Default::default()
     })
     .unwrap();
     assert!(!r.ok());
     assert_eq!(r.aft_separation_m, 2.0);
-    assert_eq!(r.service_space_m, 1.6);
+    assert_eq!(r.service_space_m, 1.9);
     assert_eq!(
         r.checks[0].message,
-        "cofferdam 0.40 m >= 0.60 m (cl. 3.6.13)"
+        "aft end-bulkhead space 0.10 m >= 0.20 m (domed tank ends, cl. 3.5.3)"
     );
+}
+
+/// Issue #280: the 0.60 m cofferdam of the type C part (3.6.13) is not a limit on a gas Design. The
+/// type G space is 0.20 m for domed ends, at and just below the limit, and 0.50 m for plane ends.
+#[test]
+fn the_aft_end_space_is_the_type_g_limit_not_the_type_c_cofferdam() {
+    let check = |cofferdam_m: f64, plane: bool| {
+        compute(&GasSeparationInputs {
+            cofferdam_m,
+            plane_tank_ends: plane,
+            ..Default::default()
+        })
+        .unwrap()
+        .checks[0]
+            .ok
+    };
+    assert!(check(0.4, false), "0.40 m is enough for domed ends");
+    assert!(check(0.20, false));
+    assert!(!check(0.19, false));
+    assert!(!check(0.4, true), "plane ends need 0.50 m");
+    assert!(check(0.50, true));
+    assert!(!check(0.49, true));
 }
 
 #[test]
@@ -121,7 +145,7 @@ fn as_designed_clearances_add_no_check() {
     assert_eq!(
         names,
         [
-            "cofferdam_min_width",
+            "aft_end_bulkhead_space",
             "opening_setback",
             "fwd_end_bulkhead_space"
         ]
@@ -162,13 +186,13 @@ fn the_end_space_follows_the_tank_ends_not_the_tank_kind() {
 #[test]
 fn the_checks_allow_one_nano_metre_of_slack() {
     let r = compute(&GasSeparationInputs {
-        cofferdam_m: 0.6 - 1e-10,
+        cofferdam_m: 0.2 - 1e-10,
         ..Default::default()
     })
     .unwrap();
     assert!(r.checks[0].ok);
     let r = compute(&GasSeparationInputs {
-        cofferdam_m: 0.6 - 1e-8,
+        cofferdam_m: 0.2 - 1e-8,
         ..Default::default()
     })
     .unwrap();
