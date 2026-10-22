@@ -402,6 +402,61 @@ fn build(
     }))
 }
 
+/// The Notch and the tug of an ATB as the drawings need them (`drawing.atb`, issue #363): from the
+/// same inputs and ratios the hull and the powering use. Nothing for another Formation. `drawing` is
+/// not in the results hash.
+pub(crate) fn add_atb_drawing(option: &DesignOption, v: &mut Value) {
+    let atb = option
+        .input("formation")
+        .is_some_and(|i| i.value["kind"] == "atb");
+    if !atb {
+        return;
+    }
+    let (Some(l), Some(b)) = (number(option, "length_overall_m"), number(option, "beam_m")) else {
+        return;
+    };
+    let dims = ovcd_core::atb::tug_from_barge(
+        l,
+        b,
+        ovcd_core::atb::TugTyped {
+            length_m: number(option, "tug_length_m"),
+            beam_m: number(option, "tug_beam_m"),
+            draught_m: number(option, "tug_draught_m"),
+        },
+    );
+    let notch = ovcd_core::atb::notch_for_tug(
+        &dims,
+        number(option, "notch_depth_m"),
+        number(option, "notch_width_m"),
+    );
+    let included = option
+        .input("tug_included")
+        .is_some_and(|i| i.value == json!(true));
+    let tug = included.then(|| {
+        let d = TugDims {
+            length_m: dims.length_m,
+            beam_m: dims.beam_m,
+            draught_m: dims.draught_m,
+        };
+        json!({
+            "length_m": d.length_m,
+            "beam_m": d.beam_m,
+            "draught_m": d.draught_m,
+            "depth_m": d.depth_m(),
+        })
+    });
+    if let Some(Value::Object(drawing)) = v.get_mut("drawing") {
+        drawing.insert(
+            "atb".into(),
+            json!({
+                "notch_depth_m": notch.depth_m,
+                "notch_width_m": notch.width_m,
+                "tug": tug,
+            }),
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

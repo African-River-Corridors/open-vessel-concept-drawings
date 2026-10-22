@@ -500,6 +500,7 @@ pub fn run_option_with(
                     crate::convoy::add_totals(abreast, in_line, &mut v);
                 }
                 crate::convoy::add_lock_checks(option, &mut v);
+                crate::formation::add_atb_drawing(option, &mut v);
                 // Issue #359: the pusher of a pushed barge or convoy, when the Option includes it.
                 crate::formation::add_formation(
                     option,
