@@ -142,6 +142,9 @@ During development the app makes 0.2.x patch releases only. Version 0.3 is reser
   pre-release `v<version>`, tagged at that commit. Bump the version in every place the version test
   names, run `python3 tools/changelog_collect.py` (it moves the fragments into `CHANGELOG.md`), and add a
   `## <version>` section to `CHANGELOG.md` (its text is the release notes; the release fails without it). A `v*` tag pushed by hand does the same.
+- **PyPI** (issue #1). `publish-pypi.yml` runs on a `v*` tag pushed by hand (a tag made with `GITHUB_TOKEN` starts no workflow).
+  It runs the release gate, builds the sdist, then the `publish` job waits for the maintainer to approve the `pypi`
+  environment and uploads the gate's wheels with trusted publishing. There is no token.
 - **A test-release tag.** `git tag test-<name> <commit> && git push origin test-<name>` publishes a
   pre-release named after the tag, with the `Unreleased` notes. It is for trying a build; the commit need
   not be on `main`. Delete old test releases by hand when they are no longer needed.

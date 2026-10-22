@@ -292,3 +292,47 @@ def test_the_wheel_check_guard_sees_what_a_test_reads():
     api = {d.split("::")[1] for d in deselected if d.startswith("tests/test_public_api.py::")}
     assert repo_folders_read(tests / "test_public_api.py", api) == set()
     assert repo_folders_read(tests / "core" / "test_barge_cost.py") == {"examples"}
+
+
+# ---------- publishing to PyPI (issue #1) ----------
+
+PUBLISH = ROOT / ".github" / "workflows" / "publish-pypi.yml"
+
+
+def test_pypi_publishing_starts_only_from_a_version_tag():
+    """Label: property
+    """
+    wf = workflow(PUBLISH)
+    assert wf["on"] == {"push": {"tags": ["v*"]}}
+
+
+def test_pypi_publishing_waits_for_the_release_gate_and_the_sdist():
+    """Label: property
+    """
+    jobs = workflow(PUBLISH)["jobs"]
+    assert jobs["gate"]["uses"] == "./.github/workflows/release.yml"
+    assert needs(jobs["sdist"]) == {"gate"}
+    assert {"gate", "sdist"} <= needs(jobs["publish"])
+
+
+def test_the_pypi_job_uses_trusted_publishing_with_no_token():
+    """Label: property
+    """
+    wf = workflow(PUBLISH)
+    text = PUBLISH.read_text(encoding="utf-8")
+    pub = wf["jobs"]["publish"]
+    assert pub["environment"] == "pypi"
+    assert pub["permissions"] == {"id-token": "write"}
+    assert wf["permissions"] == {"contents": "read"}  # the other jobs get no id-token
+    for banned in ("secrets.", "password", "api-token", "twine", "maturin publish"):
+        assert banned not in text.lower(), banned
+    uses = [s["uses"] for s in pub["steps"] if "pypi-publish" in s.get("uses", "")]
+    assert len(uses) == 1 and uses[0].split("@")[1].isalnum() and len(uses[0].split("@")[1]) == 40
+
+
+def test_the_pypi_job_takes_the_wheels_the_gate_tested():
+    """Label: property
+    """
+    steps = workflow(PUBLISH)["jobs"]["publish"]["steps"]
+    pattern = next(s["with"]["pattern"] for s in steps if "download-artifact" in s.get("uses", ""))
+    assert "wheel-*" in pattern and "sdist" in pattern
