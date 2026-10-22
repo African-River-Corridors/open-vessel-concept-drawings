@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { platform, type Meshes, type SpaceInfo } from "../platform";
+  import { platform, type Meshes, type SectionOutline, type SpaceInfo, type Waterline } from "../platform";
   import { watchTheme } from "../chartTheme";
   import { FAMILY_TOKEN, familyOf, fixedView, kindLabelId, orbitStep, type FixedView } from "../model3d";
   import { num, t } from "../i18n.svelte";
@@ -19,6 +19,13 @@
   let spaces = $state<SpaceInfo[]>([]);
   let visible = $state<Record<string, boolean>>({ hull: true, deck: true, bulkhead: true });
   let selected = $state<SpaceInfo | null>(null);
+  // The section plane and the waterline (issue #459).
+  let sectionOn = $state(false);
+  let sectionX = $state(0);
+  let length = $state(0);
+  let waterlines = $state<Waterline[]>([]);
+  let waterline = $state("");
+  const shownWaterline = $derived(waterlines.find((w) => w.name === waterline) ?? null);
   /** Kinds of Space present, in the order the core lists them. */
   let kinds = $derived([...new Set(spaces.map((s) => s.kind))]);
   const layers = $derived<Layer[]>([
@@ -37,6 +44,7 @@
   // Set by onMount, called by the template.
   let apply: () => void = () => {};
   let selectByName: (name: string | null) => void = () => {};
+  let drawSection: () => void = () => {};
   let goTo: (v: FixedView) => void = () => {};
   let reset: () => void = () => {};
   let onKey: (e: KeyboardEvent) => void = () => {};
@@ -45,7 +53,14 @@
     // Any change of a layer, or of the translucency, is drawn.
     void visible;
     void innerOn;
+    void waterline;
     apply();
+  });
+  $effect(() => {
+    // The plane and its outline follow the switch and the slider.
+    void sectionOn;
+    void sectionX;
+    drawSection();
   });
 
   onMount(() => {
@@ -59,6 +74,8 @@
         const names = data.groups.filter((g) => g.layer === "space").map((g) => g.id);
         spaces = await Promise.all(names.map((n) => p.spaceInfo(option, n)));
         for (const s of spaces) visible[`kind:${s.kind}`] ??= true;
+        waterlines = await p.waterlines(option);
+        waterline = waterlines[0]?.name ?? "";
       } catch (e) {
         problem = String(e);
         status = "failed";
@@ -76,6 +93,9 @@
         return;
       }
       status = "ready";
+      renderer.localClippingEnabled = true;
+      // Keeps everything at or behind x = constant (three.js clips where n.p + c < 0).
+      const plane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 1e9);
       const canvas = renderer.domElement;
       canvas.tabIndex = 0;
       canvas.dataset.testid = "model3d-canvas";
@@ -98,12 +118,11 @@
       const root = new THREE.Group();
       scene.add(root);
       for (const g of data.groups) {
-        if (g.layer === "waterline") continue;
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute("position", positions);
         geometry.setIndex(new THREE.BufferAttribute(data.indices.subarray(g.start, g.start + g.count), 1));
         geometry.computeVertexNormals();
-        const material = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, roughness: 0.8, metalness: 0 });
+        const material = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, roughness: 0.8, metalness: 0, clippingPlanes: [plane] });
         const mesh = new THREE.Mesh(geometry, material);
         mesh.userData = { layer: g.layer, id: g.id };
         root.add(mesh);
@@ -114,6 +133,8 @@
       const centre = box.getCenter(new THREE.Vector3());
       const size = box.getSize(new THREE.Vector3());
       const reach = Math.max(size.x, size.y, size.z) * 1.1;
+      length = box.max.x;
+      sectionX = Math.round(length / 2);
       const controls = new OrbitControls(camera, canvas);
       controls.enableDamping = false;
 
@@ -122,6 +143,7 @@
         const { layer, id } = mesh.userData as { layer: string; id: string };
         if (layer === "space") return token(FAMILY_TOKEN[familyOf(kindOf(id))]);
         if (layer === "hull") return token("--ink-3");
+        if (layer === "waterline") return token("--accent");
         if (layer === "deck") return token("--rule-strong");
         return token("--ink-2");
       };
@@ -132,15 +154,21 @@
           const m = mesh.material as InstanceType<typeof THREE.MeshStandardMaterial>;
           m.color.set(colour(mesh));
           const on =
-            layer === "space" ? visible[`kind:${kindOf(id)}`] !== false : visible[layer] !== false;
+            layer === "space"
+              ? visible[`kind:${kindOf(id)}`] !== false
+              : layer === "waterline"
+                ? id === waterline
+                : visible[layer] !== false;
           mesh.visible = on;
           const translucent = layer === "hull" && innerOn;
           m.transparent = translucent || layer === "space" || layer === "deck";
-          m.opacity = translucent ? 0.2 : layer === "space" ? 0.85 : layer === "deck" ? 0.6 : 1;
+          m.transparent = m.transparent || layer === "waterline";
+          m.opacity = translucent ? 0.2 : layer === "space" ? 0.85 : layer === "deck" ? 0.6 : layer === "waterline" ? 0.55 : 1;
           m.depthWrite = !translucent;
           m.emissive.set(layer === "space" && selected?.name === id ? token("--gilt-mark") : "#000000");
           m.emissiveIntensity = 0.55;
         }
+        for (const c of outline.children) ((c as InstanceType<typeof THREE.Line>).material as InstanceType<typeof THREE.LineBasicMaterial>).color.set(token("--accent"));
         controls.update();
         renderer.render(scene, camera);
         // What is drawn, for the end-to-end tests: the groups on, by layer.
@@ -148,6 +176,50 @@
         canvas.dataset.shown = JSON.stringify(shown);
       }
       apply = paint;
+
+      // The section plane: the clip, and the outline the core gives at that x, drawn in the plane.
+      const outline = new THREE.Group();
+      scene.add(outline);
+      let asked = 0;
+      const clear = () => {
+        for (const c of [...outline.children]) {
+          (c as InstanceType<typeof THREE.Line>).geometry.dispose();
+          outline.remove(c);
+        }
+        delete canvas.dataset.section;
+      };
+      drawSection = () => {
+        plane.constant = sectionOn ? sectionX : 1e9;
+        if (!sectionOn) {
+          asked++;
+          clear();
+          paint();
+          return;
+        }
+        const mine = ++asked;
+        platform()
+          .sectionAt(option, sectionX)
+          .then((s: SectionOutline) => {
+            if (mine !== asked) return;
+            clear();
+            const drawn: [number, number][][] = [];
+            for (const ring of s.rings) {
+              const xyz = new Float32Array(ring.length * 3);
+              ring.forEach(([y, z], i) => xyz.set([s.x_m, y, z], i * 3));
+              const g = new THREE.BufferGeometry();
+              g.setAttribute("position", new THREE.BufferAttribute(xyz, 3));
+              const line = new THREE.LineLoop(g, new THREE.LineBasicMaterial({ color: token("--accent") }));
+              line.userData = { outline: true };
+              outline.add(line);
+              drawn.push(ring.map((_, i) => [xyz[i * 3 + 1], xyz[i * 3 + 2]]));
+            }
+            // What is drawn, as the f32 the screen holds, for the end-to-end tests.
+            canvas.dataset.section = JSON.stringify({ x: s.x_m, rings: drawn });
+            paint();
+          })
+          .catch(() => {});
+        paint();
+      };
 
       function look(position: [number, number, number], up: [number, number, number]) {
         camera.up.set(...up);
@@ -226,6 +298,7 @@
         canvas.removeEventListener("pointerdown", onDown);
         canvas.removeEventListener("pointerup", onUp);
         controls.dispose();
+        clear();
         for (const m of meshes.values()) {
           m.geometry.dispose();
           (m.material as InstanceType<typeof THREE.Material>).dispose();
@@ -257,6 +330,26 @@
           <button type="button" data-testid="model3d-view-plan" onclick={() => goTo("plan")}>{t("app-3d-view-plan")}</button>
           <button type="button" data-testid="model3d-view-body" onclick={() => goTo("body")}>{t("app-3d-view-body")}</button>
           <span class="hint">{t("app-3d-hint")}</span>
+        </div>
+        <div class="bar tools">
+          <label><input type="checkbox" data-testid="section-on" bind:checked={sectionOn} /> {t("app-3d-section")}</label>
+          {#if sectionOn}
+            <input type="range" data-testid="section-x" min="0" max={length} step="0.1" bind:value={sectionX} aria-label={t("app-3d-section-x")} />
+            <span class="dim" data-testid="section-x-value">{t("app-3d-section-at", { x: num(sectionX, 1) })}</span>
+          {/if}
+          {#if waterlines.length > 0}
+            <label class="wl">{t("app-3d-waterline")}
+              <select data-testid="waterline-select" bind:value={waterline}>
+                <option value="">{t("app-3d-waterline-none")}</option>
+                {#each waterlines as w (w.name)}<option value={w.name}>{w.name}</option>{/each}
+              </select>
+            </label>
+            {#if shownWaterline}
+              <span class="dim" data-testid="waterline-info" data-draught={shownWaterline.draught_m} data-aft={shownWaterline.draught_aft_m} data-fwd={shownWaterline.draught_fwd_m} data-trim={shownWaterline.trim_m}>
+                {t("app-3d-waterline-draughts", { mean: num(shownWaterline.draught_m, 2), aft: num(shownWaterline.draught_aft_m, 2), fwd: num(shownWaterline.draught_fwd_m, 2), trim: num(shownWaterline.trim_m, 2) })}
+              </span>
+            {/if}
+          {/if}
         </div>
       {/if}
     </div>
@@ -316,6 +409,9 @@
   .bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; }
   .bar button { padding: 1px 10px; background: var(--surface); color: var(--ink); border: 1px solid var(--rule-strong); border-radius: var(--radius); cursor: pointer; }
   .hint { color: var(--ink-3); margin-left: auto; }
+  .tools label { display: flex; align-items: center; gap: 6px; }
+  .tools select { background: var(--surface); color: var(--ink); border: 1px solid var(--rule-strong); border-radius: var(--radius); }
+  .tools input[type="range"] { width: 200px; }
   .side { flex: 1; min-width: 230px; max-width: 340px; overflow: auto; font-size: 12px; }
   h4 { font-family: var(--font-serif); font-size: 13px; margin: 0 0 4px; color: var(--ink); }
   .layers { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 2px; }
