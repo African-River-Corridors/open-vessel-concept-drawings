@@ -5,6 +5,7 @@ use crate::profile::Profile;
 use crate::rule_set::{Library, Selection};
 use crate::simulate::Measured;
 use crate::vdesign::{DesignOption, INPUTS, InputKind, Source, StoredInput};
+use arc_rules::model::Compare;
 use ovcd_core::gas_arrangement::RuleInputs;
 use ovcd_core::rule_trace::{
     ArgDef, MeasureInfo, MeasureSource, MeasureValue, MethodStatus, ObjectType, Outcome, Trace,
@@ -1051,13 +1052,13 @@ pub struct LiquidTraceCase {
     pub adn_vessel_type: String,
 }
 
-/// The Rule Trace of a liquid bulk layout under the sets `chosen` of `library`, as `trace_json` writes
-/// it. The harness compares its rows with a case's expected verdicts, keyed by rule id.
-pub fn liquid_trace(
+/// The Rule Trace of a liquid bulk layout, with the layout's result: the part [`liquid_trace`] and
+/// [`liquid_fit`] share.
+fn liquid_trace_raw(
     case: &LiquidTraceCase,
     library: &Library,
     chosen: &[(&str, &str)],
-) -> Result<Value, String> {
+) -> Result<(Trace, ovcd_core::liquid_bulk::LiquidBulkResult), String> {
     let inputs = ovcd_core::liquid_bulk::LiquidBulkInputs::of(
         (case.loa_m, case.beam_m, case.depth_m),
         (case.zone_aft_m, case.zone_fwd_m),
@@ -1066,7 +1067,7 @@ pub fn liquid_trace(
     );
     let liquid = ovcd_core::liquid_bulk::compute(&inputs).map_err(|e| e.message)?;
     let measured = Measured {
-        liquid: Some(liquid),
+        liquid: Some(liquid.clone()),
         deadweight_t: Some(case.deadweight_t),
         ..Measured::default()
     };
@@ -1085,5 +1086,269 @@ pub fn liquid_trace(
             adn_vessel_type: &case.adn_vessel_type,
         },
     );
+    Ok((trace, liquid))
+}
+
+/// The Rule Trace of a liquid bulk layout under the sets `chosen` of `library`, as `trace_json` writes
+/// it. The harness compares its rows with a case's expected verdicts, keyed by rule id.
+pub fn liquid_trace(
+    case: &LiquidTraceCase,
+    library: &Library,
+    chosen: &[(&str, &str)],
+) -> Result<Value, String> {
+    let (trace, _) = liquid_trace_raw(case, library, chosen)?;
     Ok(trace_json(&trace, &case.service_area, &[]))
+}
+
+/// The JSON of a [`LiquidFit`], as the `liquid_fit` entry point of the evaluation API gives it.
+pub fn liquid_fit_json(f: &LiquidFit) -> Value {
+    let rows = |list: &[LiquidFitRow]| -> Value {
+        Value::Array(
+            list.iter()
+                .map(|r| {
+                    json!({
+                        "rule": r.rule,
+                        "measure": r.measure,
+                        "object": r.object,
+                        "value": r.value,
+                        "limit": r.limit,
+                    })
+                })
+                .collect(),
+        )
+    };
+    let l = &f.layout;
+    json!({
+        "feasible": f.feasible,
+        "sized": f.sized,
+        "layout": {
+            "double_side_m": l.double_side_m,
+            "double_bottom_m": l.double_bottom_m,
+            "tanks_in_line": l.tanks_in_line,
+            "centreline_bulkhead": l.centreline_bulkhead,
+            "cofferdam_m": l.cofferdam_m,
+        },
+        "cargo_volume_m3": f.cargo_volume_m3,
+        "candidates_tried": f.candidates_tried,
+        "fails": rows(&f.fails),
+        "sizing_warnings": rows(&f.sizing_warnings),
+        "not_evaluated": f.not_evaluated,
+    })
+}
+
+// ---- `fit` for liquid bulk (issue #340, spec 0006 section 5) ---------------------------------------
+
+/// The layout inputs a liquid bulk `fit` may choose. An input the designer typed is kept as it is.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct LiquidTyped {
+    pub double_side_m: bool,
+    pub double_bottom_m: bool,
+    pub tanks_in_line: bool,
+    pub centreline_bulkhead: bool,
+    pub cofferdam_m: bool,
+}
+
+/// What `fit` is asked: the hull and the layout. The layout holds the inputs `fit` does not choose (the
+/// pump arrangement, the slop share, the fill ratio, the heating, k) and the value of each one it may
+/// choose but that is `typed`.
+#[derive(Debug, Clone)]
+pub struct LiquidFitCase {
+    pub case: LiquidTraceCase,
+    pub typed: LiquidTyped,
+}
+
+/// A Rule row that a candidate did not meet.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LiquidFitRow {
+    pub rule: String,
+    pub measure: String,
+    pub object: Option<String>,
+    pub value: Option<f64>,
+    pub limit: Option<f64>,
+}
+
+/// The answer of [`liquid_fit`].
+#[derive(Debug, Clone)]
+pub struct LiquidFit {
+    /// No row of the Rule Trace of `layout` fails.
+    pub feasible: bool,
+    /// Every `sizes` Rule of the Trace is met too (a `sizes` Rule that only warns is not a failure).
+    pub sized: bool,
+    pub layout: ovcd_core::liquid_bulk::LiquidLayout,
+    pub cargo_volume_m3: f64,
+    pub candidates_tried: usize,
+    /// The rows that fail, for the best candidate. Empty when `feasible`.
+    pub fails: Vec<LiquidFitRow>,
+    /// The `sizes` rows that warn: a typed input, or a limit that no layout meets.
+    pub sizing_warnings: Vec<LiquidFitRow>,
+    /// The blocking Rules that were not evaluated, each once.
+    pub not_evaluated: Vec<String>,
+}
+
+/// The most tank positions a liquid bulk `fit` tries. A tank is at least 1 m long, so the cargo zone
+/// ends the search first on any real hull.
+const FIT_MAX_TANKS: u32 = 30;
+/// The widest a tank may be, over the beam, before a centreline bulkhead is needed (ADN 9.3.x.13 and
+/// BV NR217, spec 0006 section 3.2).
+const CENTRELINE_BREADTH_OVER_BEAM: f64 = 0.70;
+
+fn fit_row(r: &TraceRow) -> LiquidFitRow {
+    LiquidFitRow {
+        rule: r.rule.clone().unwrap_or_default(),
+        measure: r.measure.as_ref().map(|m| m.id.clone()).unwrap_or_default(),
+        object: r.object.clone(),
+        value: match &r.value {
+            Some(MeasureValue::Number(v)) => Some(*v),
+            _ => None,
+        },
+        limit: r.limit,
+    }
+}
+
+/// A limit rounded up to a whole centimetre, so that a width at it meets the Rule ("greater than" too).
+fn round_up_cm(limit: f64, strict: bool) -> f64 {
+    let up = (limit * 100.0 - 1e-9).ceil() / 100.0;
+    if strict && up <= limit { up + 0.01 } else { up }
+}
+
+/// The layout the `sizes` Rules of a Trace ask for, for the inputs that are not typed: the double side,
+/// the double bottom and the cofferdam take the governing lower limit (the greatest of the limits of the
+/// applicable `sizes` Rules on that Measure).
+fn sized_layout(
+    trace: &Trace,
+    typed: &LiquidTyped,
+    mut layout: ovcd_core::liquid_bulk::LiquidLayout,
+) -> ovcd_core::liquid_bulk::LiquidLayout {
+    let governing = |measure: &str| -> Option<f64> {
+        trace
+            .rows
+            .iter()
+            .filter(|r| r.sizes && r.measure.as_ref().is_some_and(|m| m.id == measure))
+            .filter(|r| !matches!(r.outcome, Outcome::NotApplicable | Outcome::NotEvaluated))
+            .filter_map(|r| {
+                let limit = r.limit?;
+                match r.compare? {
+                    Compare::Ge => Some(round_up_cm(limit, false)),
+                    Compare::Gt => Some(round_up_cm(limit, true)),
+                    Compare::Le | Compare::Lt => None,
+                }
+            })
+            .reduce(f64::max)
+    };
+    if !typed.double_side_m
+        && let Some(v) = governing("hull.double_side_width")
+    {
+        layout.double_side_m = v;
+    }
+    if !typed.double_bottom_m
+        && let Some(v) = governing("hull.double_bottom_height")
+    {
+        layout.double_bottom_m = v;
+    }
+    if !typed.cofferdam_m
+        && let Some(v) = governing("input.cofferdam_m")
+    {
+        layout.cofferdam_m = v;
+    }
+    layout
+}
+
+/// `fit` for a liquid bulk hull: the double side and bottom from the governing `sizes` Rules, the
+/// cofferdam likewise, a centreline bulkhead where a tank would be wider than 0.70 B, and the smallest
+/// count of tanks in line that meets the tank volume and length limits. It tries every count, keeps only
+/// layouts that no Rule fails, and among those prefers the layouts that meet every `sizes` Rule, then the
+/// most cargo, then the fewest tanks. When no layout passes, the answer is not feasible and carries the
+/// failing rows of the closest one. The Rules are those of `chosen`; a `warn` Rule never removes a
+/// layout. Typed inputs are kept (`case.typed`), and a Rule they break shows in the answer.
+pub fn liquid_fit(
+    fit: &LiquidFitCase,
+    library: &Library,
+    chosen: &[(&str, &str)],
+) -> Result<LiquidFit, String> {
+    let mut best: Option<(LiquidFit, (usize, usize, f64, u32))> = None;
+    let mut tried = 0;
+    let counts: Vec<u32> = if fit.typed.tanks_in_line {
+        vec![fit.case.layout.tanks_in_line]
+    } else {
+        (1..=FIT_MAX_TANKS).collect()
+    };
+    for n in counts {
+        let mut case = fit.case.clone();
+        case.layout.tanks_in_line = n;
+        let mut result = None;
+        // The limits of the Rules can depend on the layout (a tank's volume, the cofferdam): size, then
+        // read the Trace again, until the layout stops moving.
+        for _ in 0..4 {
+            if !fit.typed.centreline_bulkhead {
+                let inner = case.beam_m - 2.0 * case.layout.double_side_m;
+                case.layout.centreline_bulkhead =
+                    inner > CENTRELINE_BREADTH_OVER_BEAM * case.beam_m;
+            }
+            // A layout that does not fit the zone has no Trace: the count is skipped.
+            let Ok((trace, liquid)) = liquid_trace_raw(&case, library, chosen) else {
+                result = None;
+                break;
+            };
+            let next = sized_layout(&trace, &fit.typed, case.layout);
+            let settled = next.double_side_m == case.layout.double_side_m
+                && next.double_bottom_m == case.layout.double_bottom_m
+                && next.cofferdam_m == case.layout.cofferdam_m;
+            result = Some((trace, liquid));
+            if settled {
+                break;
+            }
+            case.layout = next;
+        }
+        let Some((trace, liquid)) = result else {
+            continue;
+        };
+        tried += 1;
+        let fails: Vec<LiquidFitRow> = trace
+            .rows
+            .iter()
+            .filter(|r| r.outcome == Outcome::Fail)
+            .map(fit_row)
+            .collect();
+        let sizing_warnings: Vec<LiquidFitRow> = trace
+            .rows
+            .iter()
+            .filter(|r| r.sizes && r.outcome == Outcome::Warn)
+            .map(fit_row)
+            .collect();
+        let candidate = LiquidFit {
+            feasible: fails.is_empty(),
+            sized: fails.is_empty() && sizing_warnings.is_empty(),
+            layout: case.layout,
+            cargo_volume_m3: liquid.cargo_volume_m3,
+            candidates_tried: 0,
+            not_evaluated: trace
+                .blocking_not_evaluated()
+                .iter()
+                .filter_map(|r| r.rule.clone())
+                .collect(),
+            fails,
+            sizing_warnings,
+        };
+        // Lower is better: failing rows, sizing warnings, then more cargo, then fewer tanks.
+        let key = (
+            candidate.fails.len(),
+            candidate.sizing_warnings.len(),
+            -candidate.cargo_volume_m3,
+            n,
+        );
+        let better = best.as_ref().is_none_or(|(_, k)| {
+            (key.0, key.1) < (k.0, k.1)
+                || ((key.0, key.1) == (k.0, k.1)
+                    && (key.2 < k.2 - 1e-9 || (key.2 - k.2).abs() <= 1e-9 && key.3 < k.3))
+        });
+        if better {
+            best = Some((candidate, key));
+        }
+    }
+    let (mut answer, _) = best.ok_or_else(|| {
+        "no layout fits the cargo zone: the zone is too short for its cofferdams and one tank"
+            .to_string()
+    })?;
+    answer.candidates_tried = tried;
+    Ok(answer)
 }

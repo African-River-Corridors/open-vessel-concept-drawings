@@ -295,6 +295,41 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
             }
             py_result(crate::trace::box_trace(condition, &library, &chosen).map_err(PyError::Value))
         }
+        "liquid_fit" => {
+            // `fit` for a liquid bulk hull (issue #340). The arguments are those of `liquid_trace`, and
+            // `typed` lists the layout inputs to keep as given: `double_side_m`, `double_bottom_m`,
+            // `tanks_in_line`, `centreline_bulkhead`, `cofferdam_m`. `rule_sets` and `select` are as for
+            // `box_trace`.
+            let (library, chosen_keys) = trace_library(args)?;
+            let chosen: Vec<(&str, &str)> = chosen_keys
+                .iter()
+                .map(|k| k.split_once('@').unwrap_or((k.as_str(), "")))
+                .collect();
+            let mut typed = crate::trace::LiquidTyped::default();
+            for name in string_list(args, "typed")? {
+                match name.as_str() {
+                    "double_side_m" => typed.double_side_m = true,
+                    "double_bottom_m" => typed.double_bottom_m = true,
+                    "tanks_in_line" => typed.tanks_in_line = true,
+                    "centreline_bulkhead" => typed.centreline_bulkhead = true,
+                    "cofferdam_m" => typed.cofferdam_m = true,
+                    other => {
+                        return Err(EvalError::BadInput(format!(
+                            "`{other}` is not a layout input `fit` chooses"
+                        )));
+                    }
+                }
+            }
+            let fit = crate::trace::LiquidFitCase {
+                case: liquid_trace_case(args)?,
+                typed,
+            };
+            py_result(
+                crate::trace::liquid_fit(&fit, &library, &chosen)
+                    .map(|f| crate::trace::liquid_fit_json(&f))
+                    .map_err(PyError::Value),
+            )
+        }
         "liquid_trace" => {
             // The Rule Trace of a liquid bulk layout (the evaluation harness, issue #338). `rule_sets`
             // and `select` are as for `box_trace`.
@@ -397,6 +432,42 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
             "gas_stability has no function `{other}`"
         ))),
     }
+}
+
+/// A list of strings argument; absent or null is an empty list.
+fn string_list(args: &Value, name: &str) -> Result<Vec<String>, EvalError> {
+    match args.get(name) {
+        None | Some(Value::Null) => Ok(Vec::new()),
+        Some(Value::Array(items)) => items
+            .iter()
+            .map(|v| {
+                v.as_str()
+                    .map(str::to_string)
+                    .ok_or_else(|| EvalError::BadInput(format!("`args.{name}` must be strings")))
+            })
+            .collect(),
+        Some(_) => Err(EvalError::BadInput(format!("`args.{name}` must be a list"))),
+    }
+}
+
+/// The Rule Set library of a call (the built-in sets, then the texts of `rule_sets`) and the `id@version`
+/// keys of `select`.
+fn trace_library(args: &Value) -> Result<(crate::rule_set::Library, Vec<String>), EvalError> {
+    let mut library = crate::rule_set::built_in().clone();
+    for text in string_list(args, "rule_sets")? {
+        library
+            .add_text(&text)
+            .map_err(|e| EvalError::BadInput(format!("`args.rule_sets`: {e}")))?;
+    }
+    let keys = string_list(args, "select")?;
+    for k in &keys {
+        if !k.contains('@') {
+            return Err(EvalError::BadInput(format!(
+                "`{k}` is not an id@version key"
+            )));
+        }
+    }
+    Ok((library, keys))
 }
 
 /// The case of a `liquid_trace` call, from its JSON arguments.
