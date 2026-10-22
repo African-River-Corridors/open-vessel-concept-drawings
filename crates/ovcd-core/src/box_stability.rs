@@ -550,8 +550,16 @@ pub(crate) fn hull_condition(
     free_surface_m: f64,
     density: f64,
     criteria_set: &str,
+    heel0: Option<&crate::sections::Equilibrium>,
 ) -> Result<Condition, PyError> {
-    let gz = match hull.gz(mass_t, g, free_surface_m * mass_t, density, ANGLES_DEG) {
+    let gz = match hull.gz_from(
+        mass_t,
+        g,
+        free_surface_m * mass_t,
+        density,
+        ANGLES_DEG,
+        heel0,
+    ) {
         Ok(gz) => gz,
         // At some heel the free-trim float finds no balance (G above the longitudinal
         // metacentre): the condition fails, with no curve.

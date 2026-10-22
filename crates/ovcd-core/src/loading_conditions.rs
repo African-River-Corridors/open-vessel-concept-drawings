@@ -492,6 +492,8 @@ fn condition_with(
     // hull cannot float has no draught: it fails "Floats with freeboard".
     let to_py = |e: crate::sections::SectionsError| PyError::Value(e.to_string());
     let sinks = disp / inp.water_density >= inp.hull.volume_at(d);
+    // The equilibrium at heel 0, which the GZ curve starts from.
+    let mut heel0 = None;
     let (t, trim) = if sinks {
         (
             d,
@@ -540,7 +542,7 @@ fn condition_with(
             }
             Err(e) => return Err(to_py(e)),
         };
-        (
+        let r = (
             f.draught_mid_m,
             TrimResult {
                 LCG: lcg,
@@ -549,7 +551,9 @@ fn condition_with(
                 draft_aft: f.draught_aft_m,
                 draft_fwd: f.draught_fwd_m,
             },
-        )
+        );
+        heel0 = Some(f.equilibrium);
+        r
     };
     let air_draft = inp.air_draft_top_m - t;
 
@@ -612,6 +616,7 @@ fn condition_with(
             div(fs_moment, disp)?,
             inp.water_density,
             inp.criteria_set,
+            heel0.as_ref(),
         )?
     };
     c.name = role.name().to_string();
