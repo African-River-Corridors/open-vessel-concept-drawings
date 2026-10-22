@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use crate::box_stability::{
     Condition, PyError, criterion, div, failed_condition, hull_condition, trim_out_of_range,
 };
-use crate::compartments::{Space, SpaceKind};
+use crate::compartments::{ClippedSpace, Space, SpaceKind};
 use crate::hydrostatics::Hull;
 use crate::models::TrimResult;
 
@@ -151,12 +151,12 @@ pub struct GroupFills {
 
 impl GroupFills {
     /// The plan as a fill per tank of `tanks`, by name.
-    pub fn plan(&self, tanks: &[Space]) -> BallastPlan {
+    pub fn plan(&self, tanks: &[ClippedSpace]) -> BallastPlan {
         BallastPlan::Fills(
             tanks
                 .iter()
                 .map(|t| {
-                    let f = match t.kind {
+                    let f = match t.space.kind {
                         SpaceKind::DoubleBottomBallast => self.double_bottom,
                         SpaceKind::PeakBallast => self.peak,
                         SpaceKind::WingBallast => self.wing,
@@ -171,7 +171,7 @@ impl GroupFills {
                         | SpaceKind::Machinery
                         | SpaceKind::PeakVoid => 0.0,
                     };
-                    (t.name.clone(), f)
+                    (t.space.name.clone(), f)
                 })
                 .collect(),
         )
@@ -194,7 +194,8 @@ pub struct Inputs<'a> {
     /// Where a cargo mass sits, and its free surface.
     pub cargo_at: &'a dyn Fn(f64) -> Result<CargoAt, PyError>,
     pub consumables: Consumables,
-    pub ballast_tanks: &'a [Space],
+    /// The ballast tanks, clipped by the hull (issue #455).
+    pub ballast_tanks: &'a [ClippedSpace],
     pub ballast_density: f64,
     /// The plan of each ballast condition: departure, then arrival.
     pub ballast_plans: [BallastPlan; 2],
@@ -249,7 +250,7 @@ impl LoadedCondition {
 
 /// The tank groups of the automatic plan, in fill order: the double bottom, then the peaks, then
 /// the wing tanks. The tanks of a group fill together, so the fill is symmetric.
-pub fn auto_groups(tanks: &[Space]) -> Vec<Vec<usize>> {
+pub fn auto_groups(tanks: &[ClippedSpace]) -> Vec<Vec<usize>> {
     [
         SpaceKind::DoubleBottomBallast,
         SpaceKind::PeakBallast,
@@ -258,7 +259,7 @@ pub fn auto_groups(tanks: &[Space]) -> Vec<Vec<usize>> {
     .into_iter()
     .map(|k| {
         (0..tanks.len())
-            .filter(|&i| tanks[i].kind == k)
+            .filter(|&i| tanks[i].space.kind == k)
             .collect::<Vec<_>>()
     })
     .filter(|g| !g.is_empty())
@@ -291,7 +292,7 @@ pub fn assess(inp: &Inputs) -> Result<Vec<LoadedCondition>, PyError> {
                         .map(|t| {
                             fills
                                 .iter()
-                                .find(|(n, _)| *n == t.name)
+                                .find(|(n, _)| *n == t.space.name)
                                 .map_or(0.0, |(_, f)| f.clamp(0.0, 1.0))
                         })
                         .collect();
@@ -345,8 +346,8 @@ fn trial(inp: &Inputs, role: Role, fills: &[f64]) -> Result<Option<LoadedConditi
     Ok(if c.ok() { Some(c) } else { None })
 }
 
-fn filled(space: &Space, fill: f64, density: f64) -> TankFill {
-    let f = space.fill(fill);
+fn filled(tank: &ClippedSpace, fill: f64, density: f64) -> TankFill {
+    let (f, space) = (tank.fill(fill), &tank.space);
     let fs = if fill >= NOMINALLY_FULL {
         0.0
     } else {
