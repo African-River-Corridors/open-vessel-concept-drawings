@@ -165,7 +165,11 @@ impl GroupFills {
                         | SpaceKind::CargoTank
                         | SpaceKind::Slop
                         | SpaceKind::Cofferdam
-                        | SpaceKind::PumpRoom => 0.0,
+                        | SpaceKind::PumpRoom
+                        | SpaceKind::CargoHold
+                        | SpaceKind::Void
+                        | SpaceKind::Machinery
+                        | SpaceKind::PeakVoid => 0.0,
                     };
                     (t.name.clone(), f)
                 })

@@ -352,6 +352,34 @@ pub fn option_hull_table(
     })
 }
 
+/// The Vessel Model of an Option (issue #454): the hull, decks, bulkheads and Spaces of the design
+/// the run computes, with the built-in Rule Sets. A convoy, or an Option that cannot be computed,
+/// gives the message of the outputs panel.
+pub fn option_vessel_model(
+    option: &DesignOption,
+) -> Result<ovcd_core::vessel_model::VesselModel, String> {
+    let params = simulate_params_of(option)?;
+    let library = Library::built_in();
+    let selection = stack_for(&library, option, &[])?;
+    let rules = RunRules {
+        sets: selection.sets.iter().map(|s| (*s).clone()).collect(),
+        inputs: rule_inputs(option),
+    };
+    let (outcome, measured) = simulate_params_measured(&params, &rules);
+    match outcome {
+        Outcome::Result(v) => match v.get("error").and_then(Value::as_str) {
+            Some(message) => Err(message.to_string()),
+            None => measured
+                .vessel
+                .as_ref()
+                .map(ovcd_core::vessel_model::assemble)
+                .ok_or_else(|| "the run gave no Vessel Model".to_string()),
+        },
+        Outcome::Raised(kind, message) => Err(format!("{kind}: {message}")),
+        Outcome::Refused(message) => Err(message),
+    }
+}
+
 /// Compute one Option and check it against its default stack of Rule Sets from `library`, plus the
 /// `extra` sets (`id`, `version`) loaded at run time (spec 0004, "Loading at run time").
 pub fn run_option_with(
