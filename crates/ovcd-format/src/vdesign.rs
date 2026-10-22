@@ -1805,13 +1805,6 @@ pub const INPUTS: &[InputSpec] = &[
         false,
         Group::HullAndContainment,
     ),
-    spec(
-        "block_coefficient",
-        "Block coefficient",
-        NUM_OR_NONE,
-        false,
-        Group::HullAndContainment,
-    ),
     // Issue #425: the midship section area is B x T x Cm.
     spec(
         "midship_coefficient",
@@ -3266,24 +3259,33 @@ pub fn fill_as_new(text: &str, profile: &Profile) -> Checked {
 
 /// As [`fill`], for a Design being edited in a session: an input the Design lacks (a reset input,
 /// or one a changed Cargo Containment or Formation now uses) takes the Defaults Profile value,
-/// never the fixed value an old file gets.
+/// never the fixed value an old file gets. It stamps no results hash: the session runs an Option
+/// when it is evaluated and works out the hash when it is saved (issue #448: a run of a gas Design
+/// on the hull's sections takes up to seconds, so each edit must not run it).
 pub(crate) fn fill_from_profile(text: &str, profile: &Profile) -> Checked {
-    fill_as(text, profile, Missing::FillProfile)
+    let mut checked = read_text(text, profile, Missing::FillProfile);
+    mark_filled(&mut checked, profile);
+    checked
 }
 
 fn fill_as(text: &str, profile: &Profile, missing: Missing) -> Checked {
     let mut checked = read_text(text, profile, missing);
-    if let Some(design) = &mut checked.design
-        && checked.report.warnings.iter().any(|w| w.contains(FILLED))
-    {
-        design.defaults_profile = Some(profile.name().into());
-    }
+    mark_filled(&mut checked, profile);
     if checked.report.is_ok()
         && let Some(design) = &mut checked.design
     {
         crate::run::stamp(design);
     }
     checked
+}
+
+/// A Design that took a Defaults Profile value names that profile.
+fn mark_filled(checked: &mut Checked, profile: &Profile) {
+    if let Some(design) = &mut checked.design
+        && checked.report.warnings.iter().any(|w| w.contains(FILLED))
+    {
+        design.defaults_profile = Some(profile.name().into());
+    }
 }
 
 const FILLED: &str = "was not stored in the file; wrote in the Defaults Profile value";
@@ -3595,6 +3597,7 @@ fn read_design(
                 );
             }
         }
+        migrate_block_coefficient(name, &mut m, report);
         let inputs = &m;
         let mut option = read_option(name, inputs, profile, missing, report);
         match raw.get("results_hash") {
@@ -3677,6 +3680,25 @@ fn migrate_ruleset(
         note = text
     );
     report.migration_note(of_option(name, text), &["ruleset"]);
+}
+
+/// Issue #448: Cb is a result of the hull's sections, not an input. A file that stores
+/// `block_coefficient` (any version; version 3 is not yet released) is read with it dropped, with
+/// one warning per Option.
+fn migrate_block_coefficient(name: &str, inputs: &mut Map<String, Value>, report: &mut Report) {
+    if inputs.remove("block_coefficient").is_some() {
+        report.migration_note(
+            of_option(
+                name,
+                text!(
+                    "msg-block-coefficient-dropped",
+                    "`{input}`: the block coefficient now comes from the hull shape; the stored value was dropped",
+                    input = Arg::input("block_coefficient")
+                ),
+            ),
+            &["block_coefficient"],
+        );
+    }
 }
 
 /// Change one Option of a version 1 file to the current inputs, with a warning for each change.

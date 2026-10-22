@@ -13,7 +13,7 @@ def test_journey_derating_after_the_inputs_object_was_reused():
     """Label: snapshot"""
     expected = {60.0: (1999.8456839999994, 1999.8456839999994),
                 80.0: (3355.305684, 3355.305684),
-                100.0: (4710.765684, 4569.524600031882)}
+                100.0: (4710.765684, 4710.765684)}  # Re-pinned (#448); was 4569.524600031882
     inp = B.BargeCapacityInputs(loa=60.0, beam=16.0, depth=6.0, cargo_type="bauxite")
     results = []
     for loa in expected:
@@ -30,8 +30,10 @@ def test_gas_stability_assess_after_the_inputs_object_was_reused():
     """Label: snapshot"""
     # Re-pinned (issue #237); were (4.496070691510841, 6.706438965623047, 11.201087654316286) and
     # (3.929578290990053, 6.178009228238304, 12.235044383044745) at ce96e66.
-    expected = {90.0: (4.447528112519484, 6.499494396532422, 10.72355412577273),
-                70.0: (3.9244500960933397, 6.352237203882345, 11.782312192191762)}
+    # Re-pinned (#448: the hull's sections); were (4.447528112519484, 6.499494396532422,
+    # 10.72355412577273) and (3.9244500960933397, 6.352237203882345, 11.782312192191762).
+    expected = {90.0: (5.010972757840445, 7.1794700173060155, 11.60946081779351),
+                70.0: (4.368132024606091, 6.823567215928239, 12.28163398784297)}
     # The 12 m tank diameter cap of 0.1.0 (it is an input, 16 m by default, since issue #175).
     inp = B.BargeCapacityInputs(loa=90.0, beam=14.8, depth=6.5, cargo_type="LPG_propane",
                                 max_tank_od_m=12.0)

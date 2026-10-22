@@ -148,8 +148,8 @@ describe("OVCD app smoke tests", () => {
 
   it("opens an example file and shows its outputs", async () => {
     await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
-    assert.match(await cargoOutput(), /^2,038\.5/);
-    assert.match(await outputsText(), /Displacement\s*2,372\.1/);
+    assert.match(await cargoOutput(), /^2,346\.2/);
+    assert.match(await outputsText(), /Displacement\s*2,679\.8/);
     assert.equal(await (await browser.$("[data-testid=engine-version]")).getText(), `Engine ${appVersion}`);
   });
 
@@ -636,7 +636,7 @@ describe("OVCD app smoke tests", () => {
     // The outputs header says why and where to look.
     assert.match(await browser.$('[data-testid="stale-why"]').getText(), /Not recalculated: fix the error under Beam/);
     // The last good numbers stay on screen.
-    assert.match(await cargoOutput(), /^2,038\.5/);
+    assert.match(await cargoOutput(), /^2,346\.2/);
   });
 
   it("switches Option from the picker and from the compare table", async () => {

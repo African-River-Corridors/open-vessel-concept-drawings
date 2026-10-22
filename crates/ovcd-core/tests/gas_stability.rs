@@ -4,9 +4,8 @@
 //! Label: snapshot
 
 use ovcd_core::gas_stability::{
-    DEFAULT_BLOCK_COEFFICIENT, DEFAULT_CRITERIA_SET, DEFAULT_WATER_DENSITY, GasBasis,
-    GasCapacityResult, PyError, PyNum, assess, box_gz, criteria_set_for, segment_fill,
-    segment_fill_int,
+    DEFAULT_CRITERIA_SET, DEFAULT_WATER_DENSITY, GasBasis, GasCapacityResult, PyError, PyNum,
+    assess, box_gz, criteria_set_for, segment_fill, segment_fill_int,
 };
 
 fn close(a: f64, b: f64) -> bool {
@@ -41,6 +40,7 @@ fn narrow_deep() -> GasCapacityResult {
         has_aft_arrangement: false,
         stern_block_items: Vec::new(),
         stern_geometry: None,
+        hull_spec: None,
     }
 }
 
@@ -51,13 +51,7 @@ fn run(
     payload: f64,
     cset: &str,
 ) -> Result<ovcd_core::gas_stability::StabilityAssessment, PyError> {
-    assess(
-        r,
-        payload,
-        DEFAULT_BLOCK_COEFFICIENT,
-        DEFAULT_WATER_DENSITY,
-        cset,
-    )
+    assess(r, payload, DEFAULT_WATER_DENSITY, cset)
 }
 
 #[test]
@@ -65,7 +59,8 @@ fn a_barge_that_does_not_float_gets_one_failed_criterion_and_no_curve() {
     let a = run(&narrow_deep(), 5000.0, DEFAULT_CRITERIA_SET).unwrap();
     let laden = &a.conditions[0];
     assert_eq!(laden.name, "Laden");
-    assert!(close(laden.draught_m, 15.35179378921744));
+    // Re-pinned (#448); was 15.35179378921744. A load the whole hull cannot float reports D.
+    assert!(close(laden.draught_m, 6.0));
     assert!(laden.gz.is_empty());
     assert_eq!(laden.deck_edge_deg, None);
     assert_eq!(laden.gm_solid_m, -1.0);
@@ -77,17 +72,23 @@ fn a_barge_that_does_not_float_gets_one_failed_criterion_and_no_curve() {
     assert!(!c.ok);
     assert_eq!(c.limit, 6.0);
     assert_eq!(c.value, PyNum::Float(laden.draught_m));
-    assert!(close(a.conditions[1].draught_m, 8.348992668769263));
+    // Re-pinned (#448); was 8.348992668769263.
+    assert!(close(a.conditions[1].draught_m, 6.0));
     assert!(a.conditions[1].gz.is_empty());
     // the light condition still floats, so it is assessed in full
     let light = &a.conditions[2];
     assert_eq!(light.gz.len(), 61);
-    assert!(close(light.gm_fluid_m, 0.3270324499662216));
-    assert_eq!(light.max_gz_deg, 27);
-    assert!(close(light.deck_edge_deg.unwrap(), 53.054191472791246));
+    // Re-pinned (#448); was 0.3270324499662216.
+    assert!(close(light.gm_fluid_m, 0.7613472097531631));
+    // Re-pinned (#448); was 27.
+    assert_eq!(light.max_gz_deg, 24);
+    // Re-pinned (#448); was 53.054191472791246.
+    assert!(close(light.deck_edge_deg.unwrap(), 54.21605603610955));
     assert!(!a.ok());
     assert!(!a.conditions[0].ok());
-    assert!(light.ok());
+    // Re-pinned (#448): its GZ peaks at 24 degrees, so it fails the angle of maximum GZ (IS Code
+    // 2008 Part A 2.2.3, at least 25 degrees); was ok at 27 degrees.
+    assert!(!light.ok());
     // lowest fluid GM; the two that do not float tie at -1, and the first of them wins
     assert_eq!(a.governing().name, "Laden");
 }
@@ -125,7 +126,8 @@ fn the_stern_block_note_follows_the_aft_arrangement() {
 fn a_gas_assessment_with_no_cargo_has_the_same_three_conditions() {
     let a = run(&narrow_deep(), 0.0, DEFAULT_CRITERIA_SET).unwrap();
     for c in &a.conditions {
-        assert!(close(c.draught_m, 1.3461915483210831));
+        // Re-pinned (#448); was 1.3461915483210831.
+        assert!(close(c.draught_m, 1.1442628160729207));
         assert_eq!(c.fill_fraction, 0.0);
     }
 }
@@ -137,7 +139,8 @@ fn no_tank_volume_means_no_fill_and_no_free_surface() {
     let a = run(&r, PAYLOAD, DEFAULT_CRITERIA_SET).unwrap();
     assert_eq!(a.conditions[0].fill_fraction, 0.0);
     assert_eq!(a.conditions[0].free_surface_m, 0.0);
-    assert!(close(a.conditions[0].gm_fluid_m, 0.7397881002462028));
+    // Re-pinned (#448); was 0.7397881002462028.
+    assert!(close(a.conditions[0].gm_fluid_m, 0.8037124414284675));
     assert_eq!(a.conditions[0].max_gz_deg, 60);
 }
 
@@ -150,7 +153,7 @@ fn a_zero_divisor_is_a_zero_division_error() {
         Err(PyError::ZeroDivision)
     );
     assert_eq!(
-        assess(&narrow_deep(), PAYLOAD, 0.0, 1.0, DEFAULT_CRITERIA_SET),
+        assess(&narrow_deep(), PAYLOAD, 0.0, DEFAULT_CRITERIA_SET),
         Err(PyError::ZeroDivision)
     );
     let e = PyError::ZeroDivision;
@@ -312,12 +315,13 @@ fn segment_fill_int_takes_the_exact_square_as_given() {
 
 #[test]
 fn a_draught_exactly_equal_to_the_depth_does_not_float() {
-    // Light draught is 1.3461915483210831; with depth set to that value, T >= D holds.
+    // Light draught is 1.1442628160729207 on the hull's sections (issue #448; it was
+    // 1.3461915483210831 on the Cb box); with depth set to that value, T >= D holds.
     let mut r = narrow_deep();
-    r.gas_basis.as_mut().unwrap().depth = 1.3461915483210831;
+    r.gas_basis.as_mut().unwrap().depth = 1.1442628160729207;
     let a = run(&r, PAYLOAD, DEFAULT_CRITERIA_SET).unwrap();
     let light = &a.conditions[2];
-    assert_eq!(light.draught_m, 1.3461915483210831);
+    assert_eq!(light.draught_m, 1.1442628160729207);
     assert!(light.gz.is_empty());
     assert_eq!(light.criteria.len(), 1);
     assert_eq!(light.criteria[0].name, "Floats with freeboard");
@@ -353,13 +357,20 @@ fn a_weight_split_difference_of_exactly_one_tonne_adds_no_note() {
 }
 
 #[test]
-fn block_coefficient_and_water_density_both_scale_the_draught() {
-    // Python: assess(r, payload, block_coefficient=0.8, water_density=1.025)
-    let a = assess(&narrow_deep(), PAYLOAD, 0.8, 1.025, DEFAULT_CRITERIA_SET).unwrap();
-    let draughts: Vec<f64> = a.conditions.iter().map(|c| c.draught_m).collect();
-    let want = [2.8015259766748537, 2.0984842176501832, 1.3954424586255132];
-    for (g, w) in draughts.iter().zip(want) {
-        assert!(close(*g, w), "{g} vs {w}");
+fn water_density_scales_the_draught() {
+    // Issue #448: the hull's sections (here the box of the basis, which floats level); Cb is no
+    // longer an input. On a wall-sided box the draught goes as 1 / rho.
+    let fresh = assess(&narrow_deep(), PAYLOAD, 1.0, DEFAULT_CRITERIA_SET).unwrap();
+    let salt = assess(&narrow_deep(), PAYLOAD, 1.025, DEFAULT_CRITERIA_SET).unwrap();
+    assert_eq!(salt.conditions.len(), 3);
+    for (s, f) in salt.conditions.iter().zip(&fresh.conditions) {
+        assert!(
+            close(s.draught_m * 1.025, f.draught_m),
+            "{} vs {}",
+            s.draught_m,
+            f.draught_m
+        );
+        assert!(s.draught_m < f.draught_m);
     }
 }
 
@@ -400,8 +411,9 @@ fn segment_fill_keeps_the_centroid_when_r_squared_times_the_angle_term_is_even()
 
 #[test]
 fn an_assessment_where_every_criterion_passes_reports_ok() {
-    // The CN II benchmark and a sweep point: every criterion ok.
-    let a = run(&narrow_deep(), 0.0, DEFAULT_CRITERIA_SET).unwrap();
+    // The CN II benchmark and a sweep point: every criterion ok. Issue #448: the box of the basis
+    // in water of density 0.85 floats at the draught the 0.1.0 block coefficient of 0.85 gave.
+    let a = assess(&narrow_deep(), 0.0, 0.85, DEFAULT_CRITERIA_SET).unwrap();
     assert!(a.conditions.iter().all(|c| c.criteria.iter().all(|k| k.ok)));
     assert!(a.ok());
 }
@@ -470,8 +482,10 @@ fn zero_cargo_adds_no_item_even_when_the_cargo_height_is_infinite() {
     assert_eq!(a.conditions.len(), 3);
     for c in &a.conditions {
         assert!(close(c.kg_m, 3.2614881301414833));
-        assert!(close(c.gm_solid_m, 2.2637805432991254));
-        assert!(close(c.max_gz_m, 0.6694170646957496));
+        // Re-pinned (#448); was 2.2637805432991254.
+        assert!(close(c.gm_solid_m, 3.1088226789014612));
+        // Re-pinned (#448); was 0.6694170646957496.
+        assert!(close(c.max_gz_m, 0.7900009183570955));
     }
 }
 
@@ -487,7 +501,8 @@ fn a_tank_filled_to_exactly_one_has_no_free_surface_even_with_an_infinite_length
     let laden = &a.conditions[0];
     assert_eq!(laden.fill_fraction, 1.0);
     assert_eq!(laden.free_surface_m, 0.0);
-    assert!(close(laden.gm_fluid_m, -0.6051313828649265));
+    // Re-pinned (#448); was -0.6051313828649265.
+    assert!(close(laden.gm_fluid_m, -0.5459865386489242));
 }
 
 #[test]

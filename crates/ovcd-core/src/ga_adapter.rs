@@ -199,7 +199,6 @@ fn stability_ok(res: &BargeCapacityResult, inp: &BargeCapacityInputs) -> bool {
                 crate::gas_stability::assess(
                     &gas,
                     res.cargo_capacity_t,
-                    inp.block_coefficient,
                     inp.water_density,
                     crate::gas_stability::DEFAULT_CRITERIA_SET,
                 )

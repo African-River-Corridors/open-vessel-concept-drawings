@@ -87,7 +87,9 @@ def test_payload_never_exceeds_the_draught_cap():
 # Issue #410 (the covering above D is in the lightship; the one-wide arrangements fail the
 # light-condition angle of max GZ) re-pinned two to the printed values 1129.9948047917674 and
 # 1204.2783981854238; they were 1498 and 1691.
-SNAPSHOT = [((90, 12.9), 1130), ((90, 14.8), 1204), ((90, 18.0), 1875), ((120, 18.0), 2957)]
+# Issue #448 (the hull's sections, not Cb) re-pinned two to the printed values 858.7067575154662 and
+# 1889.6665938938233; they were 1130 and 1875.
+SNAPSHOT = [((90, 12.9), 859), ((90, 14.8), 1204), ((90, 18.0), 1890), ((120, 18.0), 2957)]
 
 
 @pytest.mark.parametrize("dims,expected", SNAPSHOT)
@@ -206,9 +208,11 @@ def test_no_feasible_fit_has_a_tank_longer_than_seven_diameters():
     accepted = refused = 0
     for ruleset in ("IGC_2G",):
         # Two lengths more than before issue #237, which had two rule sets in this sweep and so
-        # twice the cases; the thresholds below are unchanged.
-        for loa in (60.0, 100.0, 150.0, 180.0, 210.0, 240.0):
-            for beam in (8.0, 12.0, 18.0, 26.0):
+        # twice the cases; the thresholds below are unchanged. Issue #448: on the hull's sections
+        # more hulls fail the angle of maximum GZ (#498), so the sweep adds an 80 m length and a
+        # 14 m beam to keep more than 5 accepted.
+        for loa in (60.0, 80.0, 100.0, 150.0, 180.0, 210.0, 240.0):
+            for beam in (8.0, 12.0, 14.0, 18.0, 26.0):
                 f = fit(loa, beam, "LNG", 4.0, depths=[5.0], ruleset=ruleset)
                 tank = f.engine_result.gas_basis["tanks"]
                 slenderness = tank.overall_tank_length / tank.outer_diameter

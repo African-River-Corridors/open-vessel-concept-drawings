@@ -49,14 +49,6 @@
     "cargo_containment": {
       "default_by_cargo_phase": { "dry_bulk": "box_hold", "liquid_gas": "type_c_tanks", "liquid_bulk": "integral_tanks" }
     },
-    "block_coefficient": {
-      "default": null,
-      "unit": "-",
-      "hard": { "ge": 0.3, "le": 1 },
-      "soft": { "min": 0.7, "max": 1.0 },
-      "status": "estimate",
-      "basis": "none: for a self-propelled hull whose Stern Form is not today's square stern, the volume of the raked box (today's bow rake and the Stern Form) at the design draught over L x B x T (spec 0007, issue #350); otherwise 0.85, the value the engine always used. A typed value is used as typed, and a saved file keeps its own. Calibrated box barges span 0.883 to 0.995; the soft range is widened down for shaped gas hulls; 0.3 is the squat method's validity floor (hard)"
-    },
     "midship_coefficient": {
       "default": 1.0,
       "unit": "-",
@@ -71,7 +63,7 @@
       "hard": { "ge": 0, "le": 100 },
       "soft": { "min": 0.0, "max": 20.0 },
       "status": "estimate",
-      "basis": "The horizontal length of the bow rake: the keel rises in a straight line from the base at L - this length to the bow rake rise at the bow (spec 0008, \"Hull Forms\"). none: today's rule, bow_rake_length_to_depth_ratio x moulded depth. A file saved before keeps none. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+      "basis": "The horizontal length of the bow rake: the keel rises in a straight line from the base at L - this length to the bow rake rise at the bow (spec 0008, \"Hull Forms\"). none: today's rule, bow_rake_length_to_depth_ratio x moulded depth. A file saved before keeps none. The hull's sections and so its hydrostatics take it (issue #448)."
     },
     "bow_rake_rise_m": {
       "default": null,
@@ -79,7 +71,7 @@
       "hard": { "ge": 0, "le": 30 },
       "soft": { "min": 0.0, "max": 10.0 },
       "status": "estimate",
-      "basis": "The height of the keel above base at the bow. none: the moulded depth, the rake the drawings show today (a straight line from the base up to the deck at the bow). A file saved before keeps none. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+      "basis": "The height of the keel above base at the bow. none: the moulded depth, the rake the drawings show today (a straight line from the base up to the deck at the bow). A file saved before keeps none. The hull's sections and so its hydrostatics take it (issue #448)."
     },
     "bilge_radius_m": {
       "default": 0.0,
@@ -87,7 +79,7 @@
       "hard": { "ge": 0, "le": 15 },
       "soft": { "min": 0.0, "max": 1.5 },
       "status": "estimate",
-      "basis": "The radius of the bilge, from 0 (a square bilge) to half the beam. 0: the square bilge of today's box; a starting value, not from a source (spec 0008 leaves the default to the bilge radius ticket, #449). A file saved before keeps 0. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+      "basis": "The radius of the bilge, from 0 (a square bilge) to half the beam. 0: the square bilge of today's box; a starting value, not from a source (spec 0008 leaves the default to the bilge radius ticket, #449). A file saved before keeps 0. Inputs only until the generator of this Hull Form."
     },
     "sheer_aft_m": {
       "default": 0.0,
@@ -95,7 +87,7 @@
       "hard": { "ge": 0, "le": 10 },
       "soft": { "min": 0.0, "max": 2.0 },
       "status": "estimate",
-      "basis": "The rise of the deck edge above the moulded depth at the aft end: a parabola, zero at mid-length (spec 0008, \"Hull Forms\"). 0: a straight deck edge, today's box. A file saved before keeps 0. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+      "basis": "The rise of the deck edge above the moulded depth at the aft end: a parabola, zero at mid-length (spec 0008, \"Hull Forms\"). 0: a straight deck edge, today's box. A file saved before keeps 0. Inputs only until the generator of this Hull Form."
     },
     "sheer_fwd_m": {
       "default": 0.0,
@@ -103,7 +95,7 @@
       "hard": { "ge": 0, "le": 10 },
       "soft": { "min": 0.0, "max": 2.0 },
       "status": "estimate",
-      "basis": "The rise of the deck edge above the moulded depth at the forward end: a parabola, zero at mid-length (spec 0008, \"Hull Forms\"). 0: a straight deck edge, today's box. A file saved before keeps 0. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+      "basis": "The rise of the deck edge above the moulded depth at the forward end: a parabola, zero at mid-length (spec 0008, \"Hull Forms\"). 0: a straight deck edge, today's box. A file saved before keeps 0. Inputs only until the generator of this Hull Form."
     },
     "camber_m": {
       "default": 0.0,
@@ -111,7 +103,7 @@
       "hard": { "ge": 0, "le": 5 },
       "soft": { "min": 0.0, "max": 0.5 },
       "status": "estimate",
-      "basis": "The rise of the deck at the centre line above the deck edge: a parabola across the deck (spec 0008, \"Hull Forms\"). 0: a flat deck, today's box. A file saved before keeps 0. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+      "basis": "The rise of the deck at the centre line above the deck edge: a parabola across the deck (spec 0008, \"Hull Forms\"). 0: a flat deck, today's box. A file saved before keeps 0. Inputs only until the generator of this Hull Form."
     },
     "deadrise_deg": {
       "default": 5.0,
@@ -119,7 +111,7 @@
       "hard": { "ge": 0, "le": 45 },
       "soft": { "min": 0.0, "max": 25.0 },
       "status": "estimate",
-      "basis": "For a V-bottom or chine hull: the angle of the bottom to the horizontal. 5 degrees: a starting value for a shallow-draught hull, not from a source; the V-bottom and chine ticket (#450) proposes the value with its basis (spec 0008, \"Decisions taken and open questions\"). Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+      "basis": "For a V-bottom or chine hull: the angle of the bottom to the horizontal. 5 degrees: a starting value for a shallow-draught hull, not from a source; the V-bottom and chine ticket (#450) proposes the value with its basis (spec 0008, \"Decisions taken and open questions\"). Inputs only until the generator of this Hull Form."
     },
     "keel_half_width_m": {
       "default": 0.5,
@@ -127,7 +119,7 @@
       "hard": { "ge": 0, "le": 15 },
       "soft": { "min": 0.0, "max": 2.0 },
       "status": "estimate",
-      "basis": "For a V-bottom or chine hull: half the width of the flat keel on the centre line, from which the bottom rises at the deadrise. 0.5 m: a starting value, not from a source; the V-bottom and chine ticket (#450) proposes the value with its basis. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+      "basis": "For a V-bottom or chine hull: half the width of the flat keel on the centre line, from which the bottom rises at the deadrise. 0.5 m: a starting value, not from a source; the V-bottom and chine ticket (#450) proposes the value with its basis. Inputs only until the generator of this Hull Form."
     },
     "chine_half_breadth_m": {
       "default": null,
@@ -135,7 +127,7 @@
       "hard": { "ge": 0, "le": 15 },
       "soft": { "min": 0.0, "max": 12.0 },
       "status": "estimate",
-      "basis": "For a chine hull: the distance of the chine from the centre line. none: half the beam, a hard chine at the side. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+      "basis": "For a chine hull: the distance of the chine from the centre line. none: half the beam, a hard chine at the side. Inputs only until the generator of this Hull Form."
     },
     "chine_height_m": {
       "default": null,
@@ -143,7 +135,7 @@
       "hard": { "ge": 0, "le": 30 },
       "soft": { "min": 0.0, "max": 5.0 },
       "status": "estimate",
-      "basis": "For a chine hull: the height of the chine above base. none: where the bottom at the deadrise meets the chine half-breadth. Inputs only until the hydrostatics switch-over (#448) and the generator of this Hull Form."
+      "basis": "For a chine hull: the height of the chine above base. none: where the bottom at the deadrise meets the chine half-breadth. Inputs only until the generator of this Hull Form."
     },
     "shipd_parameters": {
       "default": null,
@@ -1059,7 +1051,7 @@
       "basis": "For a Propulsor type other than unspecified. none: the largest diameter the stern allows, D_max: 0.80 x the design draught under a tunnel (estimate), capped so the tunnels fit side by side inside the beam, and 0.65 x the design draught at a transom or pram stern (sourced: MAN); an azimuth unit at most 4.2 m, the largest Schottel SRP (SCHOTTEL Product Guide; the maintainer's decision on #352); spec 0007 and docs/research/stern-and-tugs.md"
     },
     "propulsor_efficiency_factor": {
-      "default_by_propulsor_type": { "azimuth_open": 0.8, "azimuth_ducted": 0.8, "shaft_open": 0.8, "shaft_nozzle": 0.447, "voith_schneider": 0.8, "pump_jet": 0.8 },
+      "default_by_propulsor_type": { "azimuth_open": 0.8, "azimuth_ducted": 0.8, "shaft_open": 0.8, "shaft_nozzle": 0.437, "voith_schneider": 0.8, "pump_jet": 0.8 },
       "unit": "-",
       "hard": { "gt": 0, "le": 1 },
       "soft": { "min": 0.3, "max": 1.0 },

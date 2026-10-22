@@ -37,7 +37,6 @@ TOP_LEVEL = {
     "length_overall_m": "loa_m",
     "beam_m": "beam_m",
     "moulded_depth_m": "depth_m",
-    "block_coefficient": "cb",
     "min_freeboard_m": "freeboard_min_m",
     "lightship_factor_t_per_m3": "lightship_k_t_per_m3",
     "ruleset": "ruleset",
@@ -167,7 +166,7 @@ def sweep_options(profile: dict) -> list:
 
 
 # The built-in defaults, written out so each boundary Option holds every input.
-TYPICAL = {"block_coefficient": 0.85, "min_freeboard_m": 0.3, "lightship_factor_t_per_m3": 0.1093,
+TYPICAL = {"min_freeboard_m": 0.3, "lightship_factor_t_per_m3": 0.1093,
            "ruleset": "IGC_2G", "fill_ratio": 0.98, "max_tank_od_m": 16.0,
            "optimise_depth": False, "propulsive_efficiency": 0.45, "max_speed_kn": 10.0,
            "air_draft_limit_m": None, "draught_limit_m": None, "channel_depth_m": None,
@@ -188,7 +187,9 @@ def boundary_options() -> list:
             {"channel_depth_m": 0.5, "channel_under_keel_clearance_m": 0.5},
             {"channel_depth_m": 2.0, "channel_under_keel_clearance_m": 2.0},
             {"channel_depth_m": 0.1, "channel_under_keel_clearance_m": 0.1},
-            {"channel_depth_m": 3.0, "block_coefficient": 0.3},
+            # The block coefficient at the squat method's 0.3 floor was a case here; since issue #448
+            # it is a result of the hull's sections, not an input.
+            {"channel_depth_m": 3.0},
             {"min_freeboard_m": math.nextafter(3.5, 0.0)},
         ]
         if containment != "type_c_tanks":
@@ -227,7 +228,8 @@ def test_the_impossible_result_check_catches_an_error_value_and_a_negative():
                                    if ONLY_FOR.get(k, "box_hold") == "box_hold"}}))
     found = impossible(one_metre)
     assert any(f.startswith("cargo_t = -") for f in found), found
-    assert any(f.startswith("draught_m = -") for f in found), found
+    # Issue #448: the draught comes from the hull's sections, so a negative displacement floats at
+    # zero draught, not at a negative one; the negative cargo and hold width still show.
     assert any(f.startswith("hold_top_width_m = -") for f in found), found
 
 

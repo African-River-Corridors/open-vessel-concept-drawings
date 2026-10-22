@@ -111,7 +111,9 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     put("loa_m", "length_overall_m");
     put("beam_m", "beam_m");
     put("depth_m", "moulded_depth_m");
-    put("cb", "block_coefficient");
+    // Issue #448: the bow of the Hull Form; Cb is a result, not an input.
+    put("bow_rake_length_m", "bow_rake_length_m");
+    put("bow_rake_rise_m", "bow_rake_rise_m");
     put("freeboard_min_m", "min_freeboard_m");
     put("lightship_k_t_per_m3", "lightship_factor_t_per_m3");
     put("fill_ratio", "fill_ratio");
@@ -236,10 +238,6 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
         if get(name).is_some_and(|v| v.is_null()) {
             p.insert(name.to_string(), Value::Null);
         }
-    }
-    // Issue #350: a null block coefficient asks for the rule (the raked box with the Stern Form).
-    if get("block_coefficient").is_some_and(|v| v.is_null()) {
-        p.insert("cb".to_string(), Value::Null);
     }
     let vessel = match get("cargo_containment").as_ref().and_then(Value::as_str) {
         Some("box_hold") => "box_barge",

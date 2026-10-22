@@ -127,7 +127,7 @@ fn the_gas_stability_takes_the_covering_at_its_own_heights() {
     let b = r.gas_basis.clone().unwrap();
     assert!(!b.covering_items.is_empty());
     let light = |r: &GasCapacityResult| {
-        let a = assess(r, 0.0, 0.85, 1.0, "IS_CODE_2008").unwrap();
+        let a = assess(r, 0.0, 1.0, "IS_CODE_2008").unwrap();
         let c = a
             .conditions
             .iter()

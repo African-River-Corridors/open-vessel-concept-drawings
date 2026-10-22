@@ -37,10 +37,6 @@
           "value": "box_hold",
           "source": "default"
         },
-        "block_coefficient": {
-          "value": 0.85,
-          "source": "default"
-        },
         "midship_coefficient": {
           "value": 1.0,
           "source": "default"
@@ -323,7 +319,7 @@
           "source": "default"
         }
       },
-      "results_hash": "e97c19e749f1e27f7a610b571b425174ae04474884a8cfe05c1f883be00bb285"
+      "results_hash": "dfe287bddc24637612171e6fdff7f0a7178838a75063407e4cfae9982e1828c9"
     }
   ],
   "defaults_profile": "built-in"

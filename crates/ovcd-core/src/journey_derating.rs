@@ -12,7 +12,7 @@ use alloc::vec::Vec;
 
 use crate::barge_capacity::BargeCapacityResult;
 use crate::checks::{Check, all_ok};
-use crate::hull::HullGeometry;
+use crate::hydrostatics::Hull;
 use crate::pyfmt::percent;
 use crate::text;
 use crate::text::{Arg, Text};
@@ -26,7 +26,6 @@ pub struct JourneyDeratingInputs<'a> {
     pub loa: f64,
     pub beam: f64,
     pub depth: f64,
-    pub block_coefficient: f64,
     /// t/m^3
     pub water_density: f64,
     /// Channel design depth below minimum water level (m).
@@ -45,7 +44,6 @@ impl<'a> JourneyDeratingInputs<'a> {
             loa,
             beam,
             depth,
-            block_coefficient: 0.85,
             water_density: 1.0,
             design_depth_m: 0.0,
             ukc_m: 0.0,
@@ -111,8 +109,20 @@ pub fn compute(inp: &JourneyDeratingInputs<'_>) -> Result<JourneyDeratingResult,
     let lightship = cap.lightship_t;
 
     let t_max = py_max(0.0, inp.design_depth_m - inp.ukc_m);
-    let hull = HullGeometry::new(inp.loa, inp.beam, inp.depth, 0.0, 0.0, 0.0, 0.0);
-    let (cb, rho) = (inp.block_coefficient, inp.water_density);
+    // Issue #448: the hull the capacity was worked on, as its sections.
+    let spec = cap
+        .hull_spec
+        .clone()
+        .unwrap_or(crate::hydrostatics::HullSpec {
+            loa: inp.loa,
+            beam: inp.beam,
+            depth: inp.depth,
+            bow_rake_length_m: cap.bow_rake_length_m.unwrap_or(0.0),
+            bow_rake_rise_m: inp.depth,
+            stern: None,
+        });
+    let hull = Hull::build(&spec).map_err(|e| alloc::format!("{e}"))?;
+    let rho = inp.water_density;
 
     let (achievable, binding, draft_at);
     if t_max >= full_load_draft {
@@ -123,7 +133,7 @@ pub fn compute(inp: &JourneyDeratingInputs<'_>) -> Result<JourneyDeratingResult,
     } else {
         // Too deep: shed cargo until the draft is `t_max` (weight- and draft-bound).
         let float_draft = py_min(t_max, inp.depth);
-        let displacement_at_tmax = cb * hull.displaced_volume(float_draft) * rho;
+        let displacement_at_tmax = hull.volume_at(float_draft) * rho;
         achievable = py_max(
             0.0,
             py_min(cargo_capacity, displacement_at_tmax - lightship),

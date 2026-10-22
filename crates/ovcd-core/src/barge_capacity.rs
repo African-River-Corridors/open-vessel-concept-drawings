@@ -31,7 +31,6 @@ use crate::gas_separation::{
     GasSeparationInputs, GasSeparationResult, compute as compute_gas_separation,
 };
 use crate::hull::HullGeometry;
-use crate::hydrostatics::find_equilibrium_draft;
 use crate::liquid_bulk::{self, LiquidBulkInputs, LiquidBulkResult, LiquidLayout};
 use crate::models::{BargeInputs, TankResult, WeightBreakdown};
 use crate::pressure_vessel::{PyError, get_tank_material};
@@ -171,6 +170,8 @@ pub struct BargeCapacityInputs {
     pub cargo_type: String,
 
     // --- Common assumptions ---
+    /// Issue #448: Cb only for the IGC 4.28.2 vertical acceleration of a gas tank; the hydrostatics
+    /// come from the hull's sections. The main path sets the hull's Cb at the design draught.
     pub block_coefficient: f64,
     /// t/m^3
     pub water_density: f64,
@@ -202,6 +203,9 @@ pub struct BargeCapacityInputs {
     pub bow_rake_length_m: Option<f64>,
     /// The bow rake as a multiple of the moulded depth, when `bow_rake_length_m` is `None`.
     pub bow_rake_to_depth_ratio: f64,
+    /// Issue #448: the keel height at the bow (m). `None`: the moulded depth, the rake the drawings
+    /// show.
+    pub bow_rake_rise_m: Option<f64>,
     /// Dry-bulk end-bulkhead allowance at each end of the hold (m)
     pub bulk_end_bulkhead_m: f64,
 
@@ -301,6 +305,7 @@ impl BargeCapacityInputs {
             electrical_load_kwe: None,
             pushed_stern_void_m: DEFAULT_PUSHED_STERN_VOID_M,
             bow_rake_length_m: None,
+            bow_rake_rise_m: None,
             bow_rake_to_depth_ratio: DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
             bulk_end_bulkhead_m: 0.50,
             vessel_type: "IGC_2G".to_string(),
@@ -468,6 +473,9 @@ pub struct BargeCapacityResult {
     pub trim_conditions: Vec<(&'static str, crate::models::TrimResult)>,
     /// Issue #350: the Stern Form the result was worked with (`None`: a square stern).
     pub stern_geometry: Option<crate::stern_form::SternGeometry>,
+    /// Issue #448: what the hull's sections were written from (the raked bow, the Stern Form).
+    /// `compute` always sets it; a result read back from JSON may not have it.
+    pub hull_spec: Option<crate::hydrostatics::HullSpec>,
     /// Issue #354: the sightline as a Blind Distance in the light condition, and the laden Blind
     /// Distance at the same lift; `None` with the margin method or no wheelhouse.
     pub sightline: Option<crate::wheelhouse::Sightline>,
@@ -935,18 +943,14 @@ fn bulk_volumetric(
     })
 }
 
-/// First-order transverse intact GM for the bulk hopper: `GM = KB + BM_t - KG`.
-///
-/// Solid bulk has no liquid free surface. KG combines lightship (at 0.5 x moulded depth) and
-/// cargo (the centroid of the filled trapezoidal hold above the double bottom). `hold` is the
-/// hold's top width, bottom width and height.
-fn bulk_gm(
+/// KG of the bulk hull: the lightship at 0.5 x moulded depth (the stern block items at their own
+/// heights) and the cargo at the centroid of the filled trapezoidal hold above the double bottom.
+/// `hold` is the hold's top width, bottom width and height.
+fn bulk_kg(
     inp: &BargeCapacityInputs,
     (w_top, w_bot, h): (f64, f64, f64),
-    draft: f64,
     (lightship, stern): (f64, &[crate::weights::MassItem]),
     cargo_t: f64,
-    hull: &HullGeometry,
 ) -> f64 {
     // Trapezoid centroid above its base: h/3 * (2*top + bot)/(top + bot).
     let zc = if (w_top + w_bot) > 0.0 {
@@ -958,7 +962,7 @@ fn bulk_gm(
     let kg_light = 0.5 * inp.depth;
     let total = lightship + cargo_t;
     // Issue #348: the stern block items (in `lightship`) at their own heights; none, as before.
-    let kg = if stern.is_empty() {
+    if stern.is_empty() {
         if total > 0.0 {
             (lightship * kg_light + cargo_t * kg_cargo) / total
         } else {
@@ -970,8 +974,28 @@ fn bulk_gm(
             + crate::weights::vertical_moment(stern)
             + cargo_t * kg_cargo)
             / total
-    };
-    hull.KB(draft) + hull.BM_transverse(draft) - kg
+    }
+}
+
+/// First-order transverse intact GM for the bulk hopper: `GM = KB + BM_t - KG`.
+///
+/// Solid bulk has no liquid free surface. KG combines lightship (at 0.5 x moulded depth) and
+/// cargo (the centroid of the filled trapezoidal hold above the double bottom). `hold` is the
+/// hold's top width, bottom width and height.
+fn bulk_gm(
+    inp: &BargeCapacityInputs,
+    hold: (f64, f64, f64),
+    draft: f64,
+    (lightship, stern): (f64, &[crate::weights::MassItem]),
+    cargo_t: f64,
+    hull: &crate::hydrostatics::Hull,
+) -> Result<f64, PyError> {
+    let kg = bulk_kg(inp, hold, (lightship, stern), cargo_t);
+    // Issue #448: KM_T of the upright cut at the draught.
+    let u = hull
+        .upright(draft, inp.water_density)
+        .map_err(|e| value_error(e.to_string()))?;
+    Ok(u.km_t_m - kg)
 }
 
 /// The note that goes with the first-order dry bulk GM.
@@ -982,14 +1006,14 @@ pub fn bulk_gm_note() -> Text {
 /// The first-order GM of a dry bulk hold at `cargo_t` and `draft_m` (issue #415): the cargo and the
 /// draught the Design reports, which a draught limit can make less than the volume-bound load. The
 /// cargo stays at the centroid of the full hold: a smaller load sits lower, so this KG is on the
-/// safe side. `r` is the capacity result of `inp`.
+/// safe side. `r` is the capacity result of `inp`; `hull` is its hull (issue #448).
 pub fn bulk_gm_at(
     inp: &BargeCapacityInputs,
     r: &BargeCapacityResult,
     cargo_t: f64,
     draft_m: f64,
-) -> f64 {
-    let hull = HullGeometry::new(inp.loa, inp.beam, inp.depth, 0.0, 0.0, 0.0, 0.0);
+    hull: &crate::hydrostatics::Hull,
+) -> Result<f64, PyError> {
     let hold = (
         r.hold_top_width_m.unwrap_or(f64::NAN),
         r.hold_bottom_width_m.unwrap_or(f64::NAN),
@@ -1001,7 +1025,7 @@ pub fn bulk_gm_at(
         draft_m,
         (r.lightship_t, &r.stern_block_items),
         cargo_t,
-        &hull,
+        hull,
     )
 }
 
@@ -1038,6 +1062,51 @@ fn liquid_volumetric(
         },
         n_total: 0,
     })
+}
+
+/// The draught at mid-length of a dry bulk hull at free trim with `cargo_t` in the hold (issue
+/// #448, definition 1): the rest of the lightship at mid-length, the stern block items at their
+/// zones, the cargo at the middle of the hold zone, KG as `bulk_gm` has it. `None` when there is no
+/// LCG data (no stern block mass), when the hull cannot float the load, or when the float finds no
+/// balance within the trim solver's range: the hull then floats level.
+pub fn bulk_float_draught_at(
+    inp: &BargeCapacityInputs,
+    r: &BargeCapacityResult,
+    cargo_t: f64,
+    hull: &crate::hydrostatics::Hull,
+) -> Result<Option<f64>, PyError> {
+    let stern = &r.stern_block_items;
+    if stern.is_empty() {
+        return Ok(None);
+    }
+    let rho = inp.water_density;
+    let lightship = r.lightship_t;
+    let mass = lightship + cargo_t;
+    if mass <= 0.0 || rho == 0.0 || mass / rho >= hull.volume_at(inp.depth) {
+        return Ok(None);
+    }
+    let block = crate::weights::total_mass(stern);
+    let hold_centre = (r.stern_void_length_m.unwrap_or(0.0)
+        + (inp.loa - r.bow_void_length_m.unwrap_or(0.0)))
+        / 2.0;
+    let moment = (lightship - block) * inp.loa / 2.0
+        + stern.iter().map(|i| i.mass_t * i.lcg_m).sum::<f64>()
+        + cargo_t * hold_centre;
+    let hold = (
+        r.hold_top_width_m.unwrap_or(f64::NAN),
+        r.hold_bottom_width_m.unwrap_or(f64::NAN),
+        r.hold_height_m.unwrap_or(f64::NAN),
+    );
+    let g = crate::sections::Gravity {
+        lcg_m: moment / mass,
+        tcg_m: 0.0,
+        kg_m: bulk_kg(inp, hold, (lightship, stern), cargo_t),
+    };
+    match hull.float(mass, g, rho) {
+        Ok(f) => Ok(Some(py_min(f.draught_mid_m, inp.depth))),
+        Err(crate::sections::SectionsError::TrimOutOfRange) => Ok(None),
+        Err(e) => Err(value_error(e.to_string())),
+    }
 }
 
 /// `replace(aft_in, sightline_obstruction_m=...)` and friends keep the other fields.
@@ -1263,71 +1332,107 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     let cargo_capacity = cargo_volume * density_t;
 
     // --- Full-load hydrostatics (volume-bound load) ---
-    let hull = HullGeometry::new(inp.loa, inp.beam, inp.depth, 0.0, 0.0, 0.0, 0.0);
-    let cb = inp.block_coefficient;
+    // Issue #448: the hull is its Sections Table: the raked bow and the Stern Form.
+    let hull = crate::hydrostatics::Hull::build(&crate::hydrostatics::HullSpec {
+        loa: inp.loa,
+        beam: inp.beam,
+        depth: inp.depth,
+        bow_rake_length_m: rake,
+        bow_rake_rise_m: inp.bow_rake_rise_m.unwrap_or(inp.depth),
+        stern: inp.stern_geometry.clone(),
+    })
+    .map_err(|e| value_error(format!("{e}")))?;
     let rho = inp.water_density;
-    let total_weight = lightship + cargo_capacity;
-
-    // Box hull displacement plateaus at moulded depth; a load that needs more is overloaded.
-    let max_float_volume = hull.displaced_volume(inp.depth);
-    let divisor = cb * rho;
-    if divisor == 0.0 {
+    if rho == 0.0 {
         return Err(zero_division());
     }
-    let required_volume = total_weight / divisor;
-    let overloaded = required_volume > max_float_volume;
+    let total_weight = lightship + cargo_capacity;
 
-    let draft = find_equilibrium_draft(&hull, total_weight, rho, inp.depth, cb, 0.001)?;
-    let draft = py_min(draft, inp.depth); // clamp to the gunwale
-    let displacement = cb * hull.displaced_volume(draft) * rho;
-    let freeboard = inp.depth - draft;
-    let air_draft = h_top - draft;
-
-    // --- Light / ballast conditions ---
-    let light_draft = find_equilibrium_draft(&hull, lightship, rho, inp.depth, cb, 0.001)?;
-    let light_draft = py_min(light_draft, inp.depth);
-    let air_draft_light = h_top - light_draft;
-
-    let mut ballast_draft = light_draft;
-    if inp.ballast_capacity_t > 0.0 {
-        ballast_draft = find_equilibrium_draft(
-            &hull,
-            lightship + inp.ballast_capacity_t,
-            rho,
-            inp.depth,
-            cb,
-            0.001,
-        )?;
-        ballast_draft = py_min(ballast_draft, inp.depth);
-    }
-    let air_draft_ballast = h_top - ballast_draft;
-    let mut air_draft_navigating_light = h_top_navigating - light_draft;
+    // The hull's displacement plateaus at moulded depth; a load that needs more is overloaded.
+    let max_float_volume = hull.volume_at(inp.depth);
+    let overloaded = total_weight / rho > max_float_volume;
+    let level = |mass: f64| -> Result<f64, PyError> {
+        if mass <= 0.0 {
+            return Ok(0.0); // nothing to float: no draught, as the bisection gave
+        }
+        if mass / rho >= max_float_volume {
+            return Ok(inp.depth); // clamp to the gunwale
+        }
+        hull.level_draught(mass, rho)
+            .map_err(|e| value_error(e.to_string()))
+    };
 
     // Issue #349: the trim of a dry-bulk hull when the stern block is in the lightship: the rest of
     // the lightship at the middle of the hull, the block items at their zones, the cargo at the
-    // middle of the hold zone.
-    // Issue #350: the Stern Form moves the LCB.
-    let stern = inp.stern_geometry.as_ref();
-    let trim_conditions = if !is_gas && !stern_block_items.is_empty() {
+    // middle of the hold zone. Issue #448: the free-trim float of the sections; the draught is the
+    // one at mid-length. An Option with no LCG data floats level.
+    let mut trim_conditions = Vec::new();
+    let mut trim_out_of_range: Vec<&str> = Vec::new();
+    let (mut draft, mut light_draft) = (level(total_weight)?, level(lightship)?);
+    if !is_gas && !stern_block_items.is_empty() {
         let block = crate::weights::total_mass(&stern_block_items);
         let hold_centre = (stern_void + (inp.loa - bow_void)) / 2.0;
         let mut light: Vec<(f64, f64)> = vec![(lightship - block, inp.loa / 2.0)];
         light.extend(stern_block_items.iter().map(|i| (i.mass_t, i.lcg_m)));
         let mut laden = light.clone();
         laden.push((cargo_capacity, hold_centre));
-        vec![
-            (
-                "Laden",
-                crate::hydrostatics::trim_with_stern(&hull, draft, &laden, stern),
-            ),
-            (
-                "Light",
-                crate::hydrostatics::trim_with_stern(&hull, light_draft, &light, stern),
-            ),
-        ]
-    } else {
-        Vec::new()
-    };
+        let items = (lightship, stern_block_items.as_slice());
+        // The bulk branch always sets these.
+        let hold = (
+            detail.hold_top_width_m.unwrap_or(f64::NAN),
+            detail.hold_bottom_width_m.unwrap_or(f64::NAN),
+            detail.hold_height_m.unwrap_or(f64::NAN),
+        );
+        let kg_laden = bulk_kg(inp, hold, items, cargo_capacity);
+        let kg_light = bulk_kg(inp, hold, items, 0.0);
+        for (name, items, kg, t) in [
+            ("Laden", &laden, kg_laden, &mut draft),
+            ("Light", &light, kg_light, &mut light_draft),
+        ] {
+            let mass: f64 = items.iter().map(|(m, _)| m).sum();
+            let lcg = items.iter().map(|(m, x)| m * x).sum::<f64>() / mass;
+            if mass / rho >= max_float_volume {
+                continue;
+            }
+            let g = crate::sections::Gravity {
+                lcg_m: lcg,
+                tcg_m: 0.0,
+                kg_m: kg,
+            };
+            let f = match hull.float(mass, g, rho) {
+                Ok(f) => f,
+                // No balance within the trim solver's range: the hull would trim so far that an
+                // end goes under. The condition keeps its level draught and fails a check.
+                Err(crate::sections::SectionsError::TrimOutOfRange) => {
+                    trim_out_of_range.push(name);
+                    continue;
+                }
+                Err(e) => return Err(value_error(e.to_string())),
+            };
+            *t = py_min(f.draught_mid_m, inp.depth);
+            trim_conditions.push((
+                name,
+                crate::models::TrimResult {
+                    LCG: lcg,
+                    LCB: f.equilibrium.immersed.lcb_m,
+                    trim: f.trim_m,
+                    draft_aft: f.draught_aft_m,
+                    draft_fwd: f.draught_fwd_m,
+                },
+            ));
+        }
+    }
+    let displacement = rho * hull.volume_at(draft);
+    let freeboard = inp.depth - draft;
+    let air_draft = h_top - draft;
+    let air_draft_light = h_top - light_draft;
+
+    let mut ballast_draft = light_draft;
+    if inp.ballast_capacity_t > 0.0 {
+        ballast_draft = level(lightship + inp.ballast_capacity_t)?;
+    }
+    let air_draft_ballast = h_top - ballast_draft;
+    let mut air_draft_navigating_light = h_top_navigating - light_draft;
 
     // Issue #354: the sightline as a Blind Distance, in the light condition (ES-TRIN 7.02(2):
     // unladen), on the trimmed waterline where there is one. The wheelhouse lifts as far as the
@@ -1480,6 +1585,23 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
             ),
         ));
     }
+    // Issue #448: a hull with a trim analysis says when the free-trim float found no balance.
+    if !is_gas && !stern_block_items.is_empty() {
+        checks.push(Check::new(
+            "trim_in_range",
+            trim_out_of_range.is_empty(),
+            text!(
+                "check-trim-in-range",
+                "the hull floats within {limit} degrees of trim ({conditions})",
+                limit = Arg::fixed(crate::sections::TRIM_LIMIT_DEG, 0),
+                conditions = if trim_out_of_range.is_empty() {
+                    "every condition".to_string()
+                } else {
+                    trim_out_of_range.join(", ")
+                },
+            ),
+        ));
+    }
     let mut warnings: Vec<Text> = match &aft {
         Some(a) => a.warnings.clone(),
         None => vec![Text::fixed("warn-barge-pushed", PUSHED_WARNING)],
@@ -1488,7 +1610,9 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         warnings.extend(s.warnings.iter().cloned());
     }
     let mut gm = None;
-    if props.phase == CargoClass::DryBulk && draft > 0.0 && !overloaded {
+    // Issue #448: a draught of a few times 1e-324 m immerses nothing, so it has no GM either.
+    let afloat = draft > 0.0 && hull.upright(draft, rho).is_ok();
+    if props.phase == CargoClass::DryBulk && afloat && !overloaded {
         // The bulk branch always sets these.
         let hold = (
             detail.hold_top_width_m.unwrap_or(f64::NAN),
@@ -1502,7 +1626,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
             (lightship, &stern_block_items),
             cargo_capacity,
             &hull,
-        );
+        )?;
         checks.push(Check::with_severity(
             "gm_positive",
             g >= 0.15,
@@ -1572,6 +1696,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         sightline,
         blind_distance_laden_m,
         stern_geometry: inp.stern_geometry.clone(),
+        hull_spec: Some(hull.spec.clone()),
         tank_rules: detail.tank_rules,
         checks,
         warnings,

@@ -37,9 +37,10 @@ def test_the_tank_diameter_cap_is_a_simulate_input_16_m_by_default():
     # prefers two tanks abreast and the cap does not bind. At the CN II beam, 14.8 m, one tank
     # fills the beam. Since issue #277 the wheelhouse sightline blocks, so the tank is lower than
     # either cap (10.7 m); an 8 m cap still sets the diameter. Since issue #410 (the covering above
-    # D is in the lightship) the 14.8 m beam takes two tanks abreast, so the case uses 12 m, where
-    # one tank still fills the beam.
-    wide = dict(default, beam_m=12.0, loa_m=90, depth_m=6.5, cargo="LNG", draught_limit_m=4.4)
+    # D is in the lightship) the 14.8 m beam takes two tanks abreast, so the case used 12 m, where
+    # one tank still filled the beam. Issue #448: on the hull's sections the search takes two
+    # tanks abreast there too; a 10 m beam and a 9.5 m depth keep one tank over 8 m.
+    wide = dict(default, beam_m=10.0, loa_m=90, depth_m=9.5, cargo="LNG", draught_limit_m=4.4)
     assert simulate(dict(wide, max_tank_od_m=8.0))["geometry"]["tank_outer_diameter_m"] <= 8.0 + 1e-6
     od = simulate(wide)["geometry"]["tank_outer_diameter_m"]
     assert 8.0 < od <= 16.0 + 1e-6
@@ -83,7 +84,9 @@ def test_box_barge_unchanged():
     """
     o = simulate(dict(vessel="box_barge", cargo="bauxite", loa_m=76.5, beam_m=11.4, depth_m=3.5,
                       cb=0.928, lightship_k_t_per_m3=0.1093, freeboard_min_m=0.3))
-    assert 2200 < o["results"]["cargo_t"] < 2300
+    # Re-pinned (#448); was 2200 to 2300 t: the hull's sections give the volume, so the cb input
+    # no longer reduces it (2346 t).
+    assert 2300 < o["results"]["cargo_t"] < 2400
 
 
 def test_gas_infeasible_fit_is_shown_as_a_failed_check():

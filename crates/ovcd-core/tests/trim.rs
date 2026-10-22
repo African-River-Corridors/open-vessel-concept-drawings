@@ -1,13 +1,13 @@
 //! Seam: trim from the lightship items, the cargo and the hull (issue #349).
 //!
-//! Label: property. The trim is the legacy `calculate_trim` formula on the item LCGs; each test
+//! Label: property. The trim is the free-trim float of the hull's sections (issue #448); each test
 //! states a rule of it, not a printed number.
 
 use ovcd_core::aft_arrangement::SternMassInputs;
 use ovcd_core::barge_capacity::{BargeCapacityInputs, compute};
 use ovcd_core::gas_stability::{GasCapacityResult, assess};
-use ovcd_core::hull::HullGeometry;
-use ovcd_core::hydrostatics::{calculate_trim, trim};
+use ovcd_core::hydrostatics::{Hull, HullSpec};
+use ovcd_core::sections::Gravity;
 
 fn gas_hull(with_mass: bool) -> BargeCapacityInputs {
     let mut i = BargeCapacityInputs::new(110.0, 11.4, 6.0);
@@ -23,48 +23,55 @@ fn gas_hull(with_mass: bool) -> BargeCapacityInputs {
 }
 
 #[test]
-fn on_a_box_hull_the_trim_is_the_legacy_trim_with_the_same_items() {
-    let r = compute(&gas_hull(false)).unwrap();
-    let b = r.gas_basis.unwrap();
-    let (inputs, tanks, w) = (&b.inputs, &b.tanks, &b.weights);
-    let hull = HullGeometry::new(inputs.loa, inputs.beam, inputs.depth, 0.0, 0.0, 0.0, 0.0);
-    let draft = 3.0;
-    let cargo = 1500.0;
-    let legacy = calculate_trim(&hull, inputs, tanks, w, cargo, draft).unwrap();
-    let stern = inputs.stern_non_tank_length.unwrap();
-    let zone = (stern + inputs.loa - inputs.bow_non_tank_length.unwrap()) / 2.0;
-    let items = [
-        (w.hull_steel_total, inputs.loa / 2.0),
-        (w.tank_shells + w.insulation, zone),
-        (cargo, zone),
-        (w.piping_machinery, inputs.loa / 2.0),
-        (w.outfitting, stern / 2.0),
-        (w.stores, stern / 2.0),
-    ];
-    let new = trim(&hull, draft, &items);
-    assert!((new.LCG - legacy.LCG).abs() < 1e-9);
-    assert!(
-        (new.trim - legacy.trim).abs() < 1e-9,
-        "{} {}",
-        new.trim,
-        legacy.trim
-    );
-    assert!((new.draft_aft - legacy.draft_aft).abs() < 1e-9);
-    assert!((new.draft_fwd - legacy.draft_fwd).abs() < 1e-9);
+fn with_free_trim_the_centre_of_buoyancy_is_under_the_centre_of_gravity() {
+    // Issue #448: the trim is the free-trim float of the sections, so at equilibrium the LCB is the
+    // LCG (a level hull: on the vertical through G).
+    let r = compute(&gas_hull(true)).unwrap();
+    let a = assess(
+        &GasCapacityResult::try_from(&r).unwrap(),
+        1500.0,
+        1.0,
+        "IS_CODE_2008",
+    )
+    .unwrap();
+    for t in &a.trims {
+        assert!(
+            (t.LCB - t.LCG).abs() < 1e-3 * t.LCG.abs().max(1.0),
+            "{} {}",
+            t.LCB,
+            t.LCG
+        );
+    }
 }
 
 #[test]
-fn no_trim_when_the_lcg_is_the_lcb_and_a_heavy_stern_trims_by_the_stern() {
-    let hull = HullGeometry::new(100.0, 12.0, 5.0, 0.0, 0.0, 0.0, 0.0);
-    let draft = 3.0;
-    let lcb = hull.LCB(draft);
-    let level = trim(&hull, draft, &[(1000.0, lcb), (200.0, lcb)]);
-    assert_eq!(level.trim, 0.0);
-    assert_eq!(level.draft_aft, level.draft_fwd);
-    let heavy_aft = trim(&hull, draft, &[(1000.0, lcb), (200.0, 5.0)]);
-    assert!(heavy_aft.trim < 0.0);
-    assert!(heavy_aft.draft_aft > heavy_aft.draft_fwd);
-    assert!((heavy_aft.draft_aft + heavy_aft.draft_fwd) / 2.0 - draft < 1e-12);
+fn no_trim_when_g_is_over_b_and_a_heavy_stern_trims_by_the_stern() {
+    let hull = Hull::build(&HullSpec {
+        loa: 100.0,
+        beam: 12.0,
+        depth: 5.0,
+        bow_rake_length_m: 0.0,
+        bow_rake_rise_m: 5.0,
+        stern: None,
+    })
+    .unwrap();
+    let u = hull.upright(3.0, 1.0).unwrap();
+    let g = |lcg_m: f64| Gravity {
+        lcg_m,
+        tcg_m: 0.0,
+        kg_m: 3.0,
+    };
+    let level = hull
+        .float(u.displacement_t, g(u.immersed.lcb_m), 1.0)
+        .unwrap();
+    assert!(level.trim_m.abs() < 1e-9, "{}", level.trim_m);
+    let heavy_aft = hull
+        .float(u.displacement_t, g(u.immersed.lcb_m - 3.0), 1.0)
+        .unwrap();
+    assert!(heavy_aft.trim_m < 0.0);
+    assert!(heavy_aft.draught_aft_m > heavy_aft.draught_fwd_m);
+    // A box displaces the same at any small trim, so the mean draught stays.
+    assert!(((heavy_aft.draught_aft_m + heavy_aft.draught_fwd_m) / 2.0 - 3.0).abs() < 1e-9);
 }
 
 #[test]
@@ -74,7 +81,6 @@ fn the_gas_conditions_carry_a_trim_only_with_the_stern_block_mass() {
         assess(
             &GasCapacityResult::try_from(&r).unwrap(),
             1500.0,
-            0.85,
             1.0,
             "IS_CODE_2008",
         )
@@ -83,13 +89,23 @@ fn the_gas_conditions_carry_a_trim_only_with_the_stern_block_mass() {
     assert!(run(false).trims.is_empty());
     let with = run(true);
     assert_eq!(with.trims.len(), with.conditions.len());
-    // The light hull, its stern block aft and no cargo forward of it, trims by the stern.
-    let light = with
-        .conditions
-        .iter()
-        .position(|c| c.name == "Light")
-        .unwrap();
-    assert!(with.trims[light].draft_aft > with.trims[light].draft_fwd);
+    // Each condition trims to put its centre of buoyancy under its centre of gravity: by the bow
+    // when G is forward of the level hull's LCB, by the stern when it is aft. Issue #448: the level
+    // LCB is the sections' (the raked bow takes volume from forward), not mid-length.
+    let r = compute(&gas_hull(true)).unwrap();
+    let hull = ovcd_core::hydrostatics::Hull::build(r.hull_spec.as_ref().unwrap()).unwrap();
+    for (c, t) in with.conditions.iter().zip(&with.trims) {
+        let level = hull.level_draught(c.displacement_t, 1.0).unwrap();
+        let lcb = hull.upright(level, 1.0).unwrap().immersed.lcb_m;
+        assert!(t.trim != 0.0, "{}", c.name);
+        assert_eq!(
+            t.draft_fwd > t.draft_aft,
+            t.LCG > lcb,
+            "{}: LCG {} LCB {lcb}",
+            c.name,
+            t.LCG
+        );
+    }
 }
 
 #[test]

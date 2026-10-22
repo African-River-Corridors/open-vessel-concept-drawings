@@ -82,8 +82,6 @@ choice-cargo-containment-type-c-tanks = C型液货舱
 # status: draft
 choice-cargo-containment-integral-tanks = 整体式货舱
 # status: draft
-input-block-coefficient = 方形系数
-# status: draft
 input-midship-coefficient = 中横剖面系数
 # status: draft
 input-min-freeboard-m = 最小干舷

@@ -336,14 +336,14 @@ Inland ships that print both the installed power and a design speed, run through
 - **azimuth_open:** kappa 0.8 (no in-sample case: the starting estimate)
 - **azimuth_ducted:** kappa 0.8 (no in-sample case: the starting estimate)
 - **shaft_open:** kappa 0.8 (no in-sample case: the starting estimate)
-- **shaft_nozzle:** kappa 0.447 (n = 1)
+- **shaft_nozzle:** kappa 0.437 (n = 1)
 - **voith_schneider:** kappa 0.8 (no in-sample case: the starting estimate)
 - **pump_jet:** kappa 0.8 (no in-sample case: the starting estimate)
 
 | Case | Type | Sample | Conf. | L x B x T (m) | Speed (kn) | Published (kW) | Model (kW) | err % | Band ± % | vs band |
 |---|---|---|---|---|---|---|---|---|---|---|
 | cds-tanker-110 | shaft_nozzle | in-sample | medium | 110 x 11.45 x 3.3 | 9.719 | 1,000 | 999 | -0.1 | ±20 | inside |
-| cds-tanker-135 | shaft_nozzle | held out | medium | 135 x 11.45 x 3.5 | 9.719 | 1,418 | 1,221 | -13.9 | ±20 | inside |
+| cds-tanker-135 | shaft_nozzle | held out | medium | 135 x 11.45 x 3.5 | 9.719 | 1,418 | 1,227 | -13.4 | ±20 | inside |
 
 ### Installed power records that cannot run yet
 

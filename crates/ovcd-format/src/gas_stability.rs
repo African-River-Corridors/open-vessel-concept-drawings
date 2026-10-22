@@ -335,7 +335,9 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
                 (None, Some(p)) => PyNum::Float(p),
                 _ => py_num_arg(args, "payload_t")?,
             };
-            let cb = opt_num_arg(args, "block_coefficient", gs::DEFAULT_BLOCK_COEFFICIENT)?;
+            // Issue #448: the hull's sections give the displacement. `block_coefficient` is still
+            // read, so a 0.1.0 call does not fail, and has no effect.
+            let _ = opt_num_arg(args, "block_coefficient", 0.85)?;
             let rho = opt_num_arg(args, "water_density", gs::DEFAULT_WATER_DENSITY)?;
             let cset = match args.get("criteria_set") {
                 None => gs::DEFAULT_CRITERIA_SET,
@@ -343,7 +345,7 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
                     EvalError::BadInput("`args.criteria_set` must be a string".into())
                 })?,
             };
-            py_result(gs::assess_num(&result, payload, cb, rho, cset).map(|a| {
+            py_result(gs::assess_num(&result, payload, rho, cset).map(|a| {
                 json!({
                     "criteria_set": a.criteria_set,
                     "conditions": a.conditions.iter().map(condition_json).collect::<Vec<_>>(),

@@ -14,7 +14,9 @@ export type Quantity =
   | "flag"
   | "power"
   | "speed"
-  | "energy";
+  | "energy"
+  | "coefficient"
+  | "area";
 
 export interface Metric {
   /** The Message Id of its label. */
@@ -37,6 +39,8 @@ const DECIMALS: Record<Quantity, number> = {
   power: 0,
   speed: 1,
   energy: 0,
+  coefficient: 3,
+  area: 0,
 };
 
 export const MAIN: Metric[] = [
@@ -87,6 +91,24 @@ export const POWERING: Metric[] = [
   { label: "app-metric-battery-energy", unit: "kWh", quantity: "energy", path: ["powering", "battery_energy_kwh"] },
 ];
 
+/** The hull's upright hydrostatics at the laden draught, from its sections (issue #448). */
+export const HYDROSTATICS: Metric[] = [
+  { label: "app-metric-block-coefficient", quantity: "coefficient", path: ["hydrostatics", "cb"] },
+  { label: "app-metric-midship-coefficient", quantity: "coefficient", path: ["hydrostatics", "cm"] },
+  { label: "app-metric-prismatic-coefficient", quantity: "coefficient", path: ["hydrostatics", "cp"] },
+  { label: "app-metric-waterplane-coefficient", quantity: "coefficient", path: ["hydrostatics", "cwp"] },
+  { label: "app-metric-waterline-length", unit: "m", quantity: "length", path: ["hydrostatics", "l_wl_m"] },
+  { label: "app-metric-kb", unit: "m", quantity: "length", path: ["hydrostatics", "kb_m"] },
+  { label: "app-metric-bm-transverse", unit: "m", quantity: "length", path: ["hydrostatics", "bm_t_m"] },
+  { label: "app-metric-km-transverse", unit: "m", quantity: "length", path: ["hydrostatics", "km_t_m"] },
+  { label: "app-metric-lcb", unit: "m", quantity: "length", path: ["hydrostatics", "lcb_m"] },
+  { label: "app-metric-lcf", unit: "m", quantity: "length", path: ["hydrostatics", "lcf_m"] },
+  { label: "app-metric-waterplane-area", unit: "m²", quantity: "area", path: ["hydrostatics", "waterplane_area_m2"] },
+  { label: "app-metric-wetted-surface", unit: "m²", quantity: "area", path: ["hydrostatics", "wetted_surface_m2"] },
+  { label: "app-metric-tpc", unit: "t/cm", quantity: "tonnes", path: ["hydrostatics", "tpc_t"] },
+  { label: "app-metric-mct", unit: "t·m/cm", quantity: "tonnes", path: ["hydrostatics", "mct_1cm_tm"] },
+];
+
 export function valueAt(results: unknown, path: string[]): unknown {
   let v: unknown = results;
   for (const key of path) {
@@ -125,6 +147,11 @@ export function textIds(results: unknown): TextIds | null {
 export function exact(m: Metric, v: unknown): string {
   if (v === null || v === undefined) return t("app-not-applicable");
   return `${String(v)}${m.unit ? " " + m.unit : ""}`;
+}
+
+export function hasHydrostatics(results: unknown): boolean {
+  const h = valueAt(results, ["hydrostatics"]);
+  return h !== null && h !== undefined && typeof h === "object";
 }
 
 export function hasTanks(results: unknown): boolean {

@@ -428,8 +428,9 @@ mod tests {
         // Three for the version 1 changes, one for the dome diameter (issue #237: the dome now
         // counts in Vc, so results may change), and one for the hull end input a version 1 file
         // lacks (issue #4): it gets the fixed value the engine used. One more for the LPG carriage
-        // condition the file lacks (issue #292): it is read as fully pressurised.
-        assert_eq!(notes.len(), 6, "{notes:?}");
+        // condition the file lacks (issue #292): it is read as fully pressurised. One more for the
+        // block coefficient the file stores (issue #448): it is no longer an input.
+        assert_eq!(notes.len(), 7, "{notes:?}");
         assert!(
             notes[0]
                 .as_str()
@@ -449,20 +450,26 @@ mod tests {
                 .contains("has no `max_tank_od_m`; it now uses the default 16 m")
         );
         assert!(
-            notes[3]
-                .as_str()
-                .unwrap()
-                .contains("has no `tank_dome_diameter_m`; it now holds 2.0 m"),
+            notes[3].as_str().unwrap().contains(
+                "`block_coefficient`: the block coefficient now comes from the hull shape"
+            ),
             "{notes:?}"
         );
         assert!(
             notes[4]
                 .as_str()
                 .unwrap()
+                .contains("has no `tank_dome_diameter_m`; it now holds 2.0 m"),
+            "{notes:?}"
+        );
+        assert!(
+            notes[5]
+                .as_str()
+                .unwrap()
                 .contains("has no `lpg_carriage_condition`"),
             "{notes:?}"
         );
-        let last = notes[5].as_str().unwrap();
+        let last = notes[6].as_str().unwrap();
         assert!(
             last.contains("has no `")
                 && last.contains("`bow_rake_length_m`")
@@ -502,13 +509,14 @@ mod tests {
                 .clone()
         };
         let before = notes(&state);
-        assert_eq!(before.len(), 6);
+        // Six as above, and one for the stored block coefficient (issue #448).
+        assert_eq!(before.len(), 7);
         state.duplicate_option("Option 1").unwrap();
         assert_eq!(notes(&state), before, "a copy brings no notes of its own");
 
         state.rename_option("Option 1", "Laden case").unwrap();
         let after = notes(&state);
-        assert_eq!(after.len(), 6);
+        assert_eq!(after.len(), 7);
         for (old, new) in before.iter().zip(&after) {
             let old = old.as_str().unwrap();
             let new = new.as_str().unwrap();

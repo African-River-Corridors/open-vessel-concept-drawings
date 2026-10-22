@@ -415,7 +415,13 @@ fn json_results_are_what_simulate_answers_for_a_pushed_barge() {
     assert_eq!(results, &expected);
     // Pinned values from the original Python.
     let r = &results["results"];
-    assert_close(r["cargo_t"].as_f64().unwrap(), 2256.166305, "cargo_t");
+    // Re-pinned (#448); was 2256.166305. The hull's sections give the volume, so the stored
+    // block coefficient 0.928 no longer reduces it (the file gets one warning for it).
+    assert_close(
+        r["cargo_t"].as_f64().unwrap(),
+        2346.1989450000005,
+        "cargo_t",
+    );
     assert_close(
         r["lightship_t"].as_f64().unwrap(),
         333.62185500000004,

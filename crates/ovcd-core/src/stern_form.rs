@@ -491,6 +491,12 @@ fn interpolate(table: &SectionsTable, x: f64) -> (Section, f64) {
 
 /// Cut the starboard tunnels into the first edge of one Section: arcs in the run, and the same
 /// number of points on the edge forward of it, so every Section keeps one point count.
+///
+/// The tunnels have one radius and one crown, so where two overlap (at the default D they meet at
+/// the base, and a crown above the centre makes each arc wider above the base than at it) the
+/// section is their union: each arc is cut where it meets its neighbour, half-way between their
+/// centres, and at the centre line, where it meets its mirror. An arc that reaches past the side is
+/// cut there too, and the corner point of the side rises to the cut.
 fn cut_tunnels(g: &SternGeometry, s: &mut Section, index: usize) -> Result<(), ApplyError> {
     let (p0, p1) = (s.points[0], s.points[1]);
     let r = g.propeller_diameter_m;
@@ -506,13 +512,8 @@ fn cut_tunnels(g: &SternGeometry, s: &mut Section, index: usize) -> Result<(), A
     } else {
         0.0
     };
-    // The widest the tunnel gets over the run: at the transom.
-    let zc0 = g.tunnel_crown_height_m - r;
-    let reach = if zc0 >= 0.0 {
-        r
-    } else {
-        sqrt((r * r - zc0 * zc0).max(0.0))
-    };
+    // How far the arc reaches either side of its centre.
+    let extent = r * sin(a0.min(core::f64::consts::FRAC_PI_2));
     let on_edge = |y: f64| {
         let u = y / p1.0;
         (y, p0.1 + u * (p1.1 - p0.1))
@@ -524,18 +525,18 @@ fn cut_tunnels(g: &SternGeometry, s: &mut Section, index: usize) -> Result<(), A
         .filter(|&y0| y0 >= 0.0)
         .collect();
     y0s.sort_by(f64::total_cmp);
+    if y0s.iter().any(|&y0| y0 >= p1.0) {
+        return Err(ApplyError::TunnelOutsideBottom { section: index });
+    }
+    let side = p1.0;
     let mut cut = Vec::new();
     let mut keel = p0;
-    let mut edge_reached = 0.0_f64;
+    let mut corner = p1;
     for (t, &y0) in y0s.iter().enumerate() {
-        // A centreline tunnel is halved by the centre line. The innermost of a pair may cross it:
-        // there it meets its mirror, and the section is their union, cut off at the centre line.
-        // Any other tunnel must clear the one inboard of it.
-        let clear = y0 == 0.0 || t == 0 || y0 - reach >= edge_reached;
-        if !clear || y0 + reach > p1.0 {
-            return Err(ApplyError::TunnelOutsideBottom { section: index });
-        }
-        edge_reached = y0 + reach;
+        // Where this arc may run: from the centre line or half-way to the tunnel inboard, to
+        // half-way to the tunnel outboard or the side.
+        let left = if t == 0 { 0.0 } else { (y0s[t - 1] + y0) / 2.0 };
+        let right = y0s.get(t + 1).map_or(side, |&next| (y0 + next) / 2.0);
         let arc = |a: f64| {
             if in_run {
                 (y0 + r * sin(a), zc + r * cos(a))
@@ -543,33 +544,37 @@ fn cut_tunnels(g: &SternGeometry, s: &mut Section, index: usize) -> Result<(), A
                 on_edge(y0)
             }
         };
+        // The angle of the upper crossing of the circle with the vertical line y.
+        let crossing = |y: f64| libm::asin(((y - y0) / r).clamp(-1.0, 1.0));
+        let cut_left = in_run && y0 > 0.0 && y0 - extent < left;
+        let cut_right = in_run && y0 + extent > right;
+        let a_hi = if cut_right { crossing(right) } else { a0 };
         if y0 == 0.0 {
             // The centreline tunnel's starboard half: its crown is the keel point.
             let k = TUNNEL_CHORDS / 2;
-            keel = arc(0.0);
-            if !in_run {
-                keel = p0;
-            }
-            cut.extend((1..=k).map(|j| arc(a0 * f64::from(j) / f64::from(k))));
+            keel = if in_run { arc(0.0) } else { p0 };
+            cut.extend((1..=k).map(|j| arc(a_hi * f64::from(j) / f64::from(k))));
         } else {
-            // Where the arc crosses the centre line, it starts at its upper crossing, and that
-            // height is the keel point's.
-            let a_start = if t == 0 && in_run && y0 < r && a0 > libm::asin(y0 / r) {
-                -libm::asin(y0 / r)
-            } else {
-                -a0
-            };
+            let a_lo = if cut_left { crossing(left) } else { -a0 };
             let k = TUNNEL_CHORDS;
-            cut.extend(
-                (0..=k).map(|j| arc(a_start + (a0 - a_start) * f64::from(j) / f64::from(k))),
-            );
-            if t == 0 && a_start > -a0 {
-                cut[0].0 = 0.0;
-                keel = (0.0, cut[0].1);
+            let first = cut.len();
+            cut.extend((0..=k).map(|j| arc(a_lo + (a_hi - a_lo) * f64::from(j) / f64::from(k))));
+            if cut_left {
+                cut[first].0 = left;
+                // Cut at the centre line, the arc meets its mirror there: the keel point rises.
+                if t == 0 {
+                    keel = (0.0, cut[first].1);
+                }
             }
+        }
+        if cut_right && t + 1 == y0s.len() {
+            let last = cut.len() - 1;
+            cut[last].0 = side;
+            corner = (side, cut[last].1);
         }
     }
     s.points[0] = keel;
+    s.points[1] = corner;
     s.points.splice(1..1, cut);
     Ok(())
 }

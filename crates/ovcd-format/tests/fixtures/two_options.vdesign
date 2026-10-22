@@ -37,10 +37,6 @@
           "value": "box_hold",
           "source": "default"
         },
-        "block_coefficient": {
-          "value": 0.85,
-          "source": "default"
-        },
         "midship_coefficient": {
           "value": 1.0,
           "source": "default"
@@ -323,7 +319,7 @@
           "source": "default"
         }
       },
-      "results_hash": "e97c19e749f1e27f7a610b571b425174ae04474884a8cfe05c1f883be00bb285"
+      "results_hash": "dfe287bddc24637612171e6fdff7f0a7178838a75063407e4cfae9982e1828c9"
     },
     {
       "name": "Option 2",
@@ -356,10 +352,6 @@
         },
         "cargo_containment": {
           "value": "box_hold",
-          "source": "default"
-        },
-        "block_coefficient": {
-          "value": 0.85,
           "source": "default"
         },
         "midship_coefficient": {
@@ -644,7 +636,7 @@
           "source": "default"
         }
       },
-      "results_hash": "bf0a2763b68fea3104cdeaf9e3a79fbdd0e87e1c101e6217c6b80b922b43e11e"
+      "results_hash": "88251975f638162c8d08913f3e05293ddbee0f681573b7062b9b1382a0ad08d0"
     }
   ],
   "defaults_profile": "built-in"

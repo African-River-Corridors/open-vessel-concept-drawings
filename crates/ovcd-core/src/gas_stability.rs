@@ -22,8 +22,8 @@ pub use crate::box_stability::{
     ANGLES_DEG, CRITERIA_ANGLES_DEG, Condition, Criterion, PyError, PyNum, box_condition, box_gz,
 };
 use crate::box_stability::{
-    box_condition_at, box_gm_solid, criterion, div, py_max2, py_min2, py_pow, py_sum, py_sum_mixed,
-    sq,
+    criterion, div, failed_condition, hull_condition, py_max2, py_min2, py_pow, py_sum,
+    py_sum_mixed, sq, trim_out_of_range,
 };
 use crate::text;
 use crate::text::{Arg, Text};
@@ -163,6 +163,9 @@ pub struct GasCapacityResult {
     pub stern_block_items: Vec<crate::weights::MassItem>,
     /// Issue #350: the Stern Form, for the LCB of the trim (`None`: a square stern).
     pub stern_geometry: Option<crate::stern_form::SternGeometry>,
+    /// Issue #448: the hull the capacity was worked on. `None` (a hand-built result): the box of
+    /// the gas basis, with the Stern Form.
+    pub hull_spec: Option<crate::hydrostatics::HullSpec>,
 }
 
 impl TryFrom<&BargeCapacityResult> for GasCapacityResult {
@@ -206,12 +209,13 @@ impl TryFrom<&BargeCapacityResult> for GasCapacityResult {
             has_aft_arrangement: r.aft_arrangement.is_some(),
             stern_block_items: r.stern_block_items.clone(),
             stern_geometry: r.stern_geometry.clone(),
+            hull_spec: r.hull_spec.clone(),
         })
     }
 }
 
-/// Python's defaults: block coefficient 0.85, water density 1.0, criteria set `IS_CODE_2008`.
-pub const DEFAULT_BLOCK_COEFFICIENT: f64 = 0.85;
+/// Python's defaults: water density 1.0, criteria set `IS_CODE_2008`. Issue #448: the block
+/// coefficient is no longer an input; the hull's sections give the displacement.
 pub const DEFAULT_WATER_DENSITY: f64 = 1.0;
 pub const DEFAULT_CRITERIA_SET: &str = "IS_CODE_2008";
 
@@ -219,17 +223,10 @@ pub const DEFAULT_CRITERIA_SET: &str = "IS_CODE_2008";
 pub fn assess(
     result: &GasCapacityResult,
     payload_t: f64,
-    block_coefficient: f64,
     water_density: f64,
     criteria_set: &str,
 ) -> Result<StabilityAssessment, PyError> {
-    assess_num(
-        result,
-        PyNum::Float(payload_t),
-        block_coefficient,
-        water_density,
-        criteria_set,
-    )
+    assess_num(result, PyNum::Float(payload_t), water_density, criteria_set)
 }
 
 /// `assess` with a `payload_t` that Python may hold as an int. An int payload stays an int in the
@@ -237,7 +234,6 @@ pub fn assess(
 pub fn assess_num(
     result: &GasCapacityResult,
     payload: PyNum,
-    block_coefficient: f64,
     water_density: f64,
     criteria_set: &str,
 ) -> Result<StabilityAssessment, PyError> {
@@ -281,7 +277,21 @@ pub fn assess_num(
     long_items.extend(basis.covering_items.iter().map(|i| (i.mass_t, i.lcg_m)));
     long_items.extend(result.stern_block_items.iter().map(|i| (i.mass_t, i.lcg_m)));
     let with_trim = !result.stern_block_items.is_empty();
-    let trim_hull = crate::hull::HullGeometry::new(l, b, d, 0.0, 0.0, 0.0, 0.0);
+    // Issue #448: the hull's sections.
+    let spec = result
+        .hull_spec
+        .clone()
+        .unwrap_or(crate::hydrostatics::HullSpec {
+            loa: l,
+            beam: b,
+            depth: d,
+            bow_rake_length_m: 0.0,
+            bow_rake_rise_m: d,
+            stern: result.stern_geometry.clone(),
+        });
+    let hull = crate::hydrostatics::Hull::build(&spec)
+        .map_err(|e| PyError::Value(alloc::format!("{e}")))?;
+    let full = hull.volume_at(d);
     let mut trims = Vec::new();
     let lightship = py_sum(light_items.iter().map(|&(m, _)| m));
 
@@ -306,19 +316,73 @@ pub fn assess_num(
         let disp = py_sum_mixed(items.iter().map(|&(m, _, i)| (m, i)));
         // An int mass times a float height is a float, so the products are all floats.
         let kg = div(py_sum(items.iter().map(|&(m, z, _)| m * z)), disp)?;
-        let t = div(disp, block_coefficient * l * b * water_density)?;
-        if with_trim {
-            let mut along = long_items.clone();
-            if cargo > 0.0 {
-                along.push((cargo, tank_zone_centre));
-            }
-            trims.push(crate::hydrostatics::trim_with_stern(
-                &trim_hull,
-                t,
-                &along,
-                result.stern_geometry.as_ref(),
-            ));
+        if water_density == 0.0 {
+            return Err(PyError::ZeroDivision);
         }
+        let mut along = long_items.clone();
+        if cargo > 0.0 {
+            along.push((cargo, tank_zone_centre));
+        }
+        let lcg = div(py_sum(along.iter().map(|&(m, x)| m * x)), disp)?;
+        // Issue #448: the draught at mid-length of the free-trim float, or (no stern block, so no
+        // LCG data) the level draught. A load the whole hull cannot float has no draught.
+        let sinks = disp / water_density >= full;
+        let to_py = |e: crate::sections::SectionsError| PyError::Value(e.to_string());
+        let (t, g) = if sinks {
+            (d, None)
+        } else if with_trim {
+            let g = crate::sections::Gravity {
+                lcg_m: lcg,
+                tcg_m: 0.0,
+                kg_m: kg,
+            };
+            let f = match hull.float(disp, g, water_density) {
+                Ok(f) => f,
+                // No balance within the trim solver's range: the condition fails, at its level
+                // draught, with no curve.
+                Err(crate::sections::SectionsError::TrimOutOfRange) => {
+                    let t = hull.level_draught(disp, water_density).map_err(to_py)?;
+                    trims.push(crate::models::TrimResult {
+                        LCG: lcg,
+                        LCB: lcg,
+                        trim: 0.0,
+                        draft_aft: t,
+                        draft_fwd: t,
+                    });
+                    let mut c = failed_condition(t, kg, trim_out_of_range());
+                    c.name = name.to_string();
+                    c.cargo_t = cargo;
+                    c.cargo_is_int = cargo_is_int;
+                    c.fill_fraction = frac;
+                    c.displacement_t = disp;
+                    conds.push(c);
+                    continue;
+                }
+                Err(e) => return Err(to_py(e)),
+            };
+            trims.push(crate::models::TrimResult {
+                LCG: lcg,
+                LCB: f.equilibrium.immersed.lcb_m,
+                trim: f.trim_m,
+                draft_aft: f.draught_aft_m,
+                draft_fwd: f.draught_fwd_m,
+            });
+            (f.draught_mid_m, Some(g))
+        } else {
+            let t = hull.level_draught(disp, water_density).map_err(to_py)?;
+            // Floating level: G over the centre of buoyancy.
+            let lcb = hull
+                .upright(t, water_density)
+                .map_err(to_py)?
+                .immersed
+                .lcb_m;
+            let g = crate::sections::Gravity {
+                lcg_m: lcb,
+                tcg_m: 0.0,
+                kg_m: kg,
+            };
+            (t, Some(g))
+        };
         if t >= d {
             conds.push(Condition {
                 name: name.to_string(),
@@ -349,7 +413,8 @@ pub fn assess_num(
             });
             continue;
         }
-        let gm_solid = box_gm_solid(b, t, kg)?;
+        let g = g.expect("a hull that floats has its G");
+        let gm_solid = hull.upright(t, water_density).map_err(to_py)?.km_t_m - kg;
         // Free surface: chord at the liquid level, along the cylindrical length, every tank.
         let i_fs = if 0.0 < frac && frac < 1.0 {
             let chord = 2.0 * libm::sqrt(py_max2(sq(r_in)? - sq(r_in - h)?, 0.0));
@@ -358,7 +423,16 @@ pub fn assess_num(
             0.0
         };
         let fsc = div(rho_c * i_fs, disp)?;
-        let mut c = box_condition_at(b, d, t, kg, gm_solid, fsc, criteria_set)?;
+        let mut c = hull_condition(
+            &hull,
+            disp,
+            g,
+            t,
+            gm_solid,
+            fsc,
+            water_density,
+            criteria_set,
+        )?;
         c.name = name.to_string();
         c.cargo_t = cargo;
         c.cargo_is_int = cargo_is_int;
@@ -370,7 +444,7 @@ pub fn assess_num(
     let mut limitations = vec![
         text!(
             "stab-limit-concept-stage",
-            "Concept-stage: prismatic box section, first-order weight heights, no downflooding openings."
+            "Concept-stage: the hull's sections, first-order weight heights, no downflooding openings."
         ),
         text!(
             "stab-limit-no-wind-or-damage",
