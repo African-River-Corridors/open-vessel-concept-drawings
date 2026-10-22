@@ -4,7 +4,7 @@
 <!-- design-impact -->
 ### ticket/534-governing-names (2026-10-22)
 
-Between `the parent commit b7ae9d6` and `this branch 5d5ec18`.
+Between `main 54e0b1f` and `this branch 4d0d141`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -48,4 +48,4 @@ Between `the parent commit b7ae9d6` and `this branch 5d5ec18`.
 | calibration mcdonough-195x35x12 | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
 | calibration meb-dcb23-ptich | `stability.governing` | Full load, departure | absent | changed |
 | calibration meb-dcb23-ptich | `stability.lowest_gm_condition` | absent | Full load, departure | changed |
-| ... | 433 more changed quantities | | | |
+| ... | 442 more changed quantities | | | |
