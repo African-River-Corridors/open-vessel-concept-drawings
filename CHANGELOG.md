@@ -239,6 +239,54 @@ Each entry is a before/after table written by `python3 tools/design_impact.py ch
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
 
+### ticket/498-light-warning (2026-10-22)
+
+Between `main aed56a4` and `this branch aa02557`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep gas cargo LNG pushed | `arrangement.feasible` | False | True | changed |
+| sweep gas cargo LNG pushed | `checks[10].message` | channel must float some cargo (T_max 5.70 m vs lightship draft) | design depth must be >= UKC (pass depth + UKC, never a pre-reduced T_max) | changed |
+| sweep gas cargo LNG pushed | `checks[10].name` | floats | ukc consistent | changed |
+| sweep gas cargo LNG pushed | `checks[11].message` | design depth must be >= UKC (pass depth + UKC, never a pre-reduced T_max) | volume utilisation 100% >= floor 50% | changed |
+| sweep gas cargo LNG pushed | `checks[11].name` | ukc consistent | utilisation reasonable | changed |
+| sweep gas cargo LNG pushed | `checks[11].severity` | error | warning | changed |
+| sweep gas cargo LNG pushed | `checks[12].message` | volume utilisation 100% >= floor 50% | tank length 36.45 m / inner diameter 11.11 m = 3.28 <= 7.0 | changed |
+| sweep gas cargo LNG pushed | `checks[12].name` | utilisation reasonable | tank length over diameter | changed |
+| sweep gas cargo LNG pushed | `checks[12].severity` | warning | error | changed |
+| sweep gas cargo LNG pushed | `checks[13].message` | tank length 36.45 m / inner diameter 11.11 m = 3.28 <= 7.0 | freeboard 2.52 m at the carried draught 3.48 m >= required 0.3 m | changed |
+| sweep gas cargo LNG pushed | `checks[13].name` | tank length over diameter | freeboard at payload | changed |
+| sweep gas cargo LNG pushed | `checks[14].message` | freeboard 2.52 m at the carried draught 3.48 m >= required 0.3 m | GM 1.58 m (fluid), max GZ 0.84 m at 28° | changed |
+| sweep gas cargo LNG pushed | `checks[14].name` | freeboard at payload | Stability — full load, departure | changed |
+| sweep gas cargo LNG pushed | `checks[15].name` | Stability — full load, departure | Stability — full load, arrival | changed |
+| sweep gas cargo LNG pushed | `checks[16].message` | GM 1.58 m (fluid), max GZ 0.84 m at 28° | GM 5.83 m (fluid), max GZ 1.91 m at 25° | changed |
+| sweep gas cargo LNG pushed | `checks[16].name` | Stability — full load, arrival | Stability — ballast, departure | changed |
+| sweep gas cargo LNG pushed | `checks[17].name` | Stability — ballast, departure | Stability — ballast, arrival | changed |
+| sweep gas cargo LNG pushed | `checks[18].message` | GM 5.83 m (fluid), max GZ 1.91 m at 25° | GM 9.78 m (fluid), max GZ 2.38 m at 21° — warning, not a failure: angle of max GZ 21 < 25 (IS Code 2.2.3) with no ballast; every other criterion holds. To sail light, take 541 t of ballast (the Ballast, departure condition meets every criterion) | changed |
+| sweep gas cargo LNG pushed | `checks[18].name` | Stability — ballast, arrival | Stability — lightship, no ballast | changed |
+| sweep gas cargo LNG pushed | `checks[18].ok` | True | False | changed |
+| sweep gas cargo LNG pushed | `checks[18].severity` | error | warning | changed |
+| sweep gas cargo LNG pushed | `checks[19].message` | GM 9.78 m (fluid), max GZ 2.38 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor are uncalibrated first-order estimates (RS1) — ITTC-1957 friction is standard. | changed |
+| sweep gas cargo LNG pushed | `checks[19].name` | Stability — lightship, no ballast | coefficients are first order | changed |
+| sweep gas cargo LNG pushed | `checks[19].ok` | False | True | changed |
+| sweep gas cargo LNG pushed | `checks[19].severity` | error | warning | changed |
+| sweep gas cargo LNG pushed | `checks[1].message` | No arrangement passes every check on this hull. The closest one is shown. It fails: Stability — lightship, no ballast. | cargo volume must be positive (tank/hold fits) | changed |
+| sweep gas cargo LNG pushed | `checks[1].name` | Feasible arrangement | feasible geometry | changed |
+| sweep gas cargo LNG pushed | `checks[1].ok` | False | True | changed |
+| sweep gas cargo LNG pushed | `checks[20].message` | Residuary Cr/Cf fit, Lackenby shallow-water, blockage and 1.02 form factor are uncalibrated first-order estimates (RS1) — ITTC-1957 friction is standard. | absent | changed |
+| sweep gas cargo LNG pushed | `checks[20].name` | coefficients are first order | absent | changed |
+| sweep gas cargo LNG pushed | `checks[20].ok` | True | absent | changed |
+| sweep gas cargo LNG pushed | `checks[20].severity` | warning | absent | changed |
+| sweep gas cargo LNG pushed | `checks[2].message` | cargo volume must be positive (tank/hold fits) | volume-bound load must float within the moulded depth | changed |
+| sweep gas cargo LNG pushed | `checks[2].name` | feasible geometry | not overloaded | changed |
+| sweep gas cargo LNG pushed | `checks[2].severity` | error | warning | changed |
+| sweep gas cargo LNG pushed | `checks[3].message` | volume-bound load must float within the moulded depth | freeboard 2.52 m >= required 0.3 m | changed |
+| sweep gas cargo LNG pushed | `checks[3].name` | not overloaded | freeboard ok | changed |
+| sweep gas cargo LNG pushed | `checks[4].message` | freeboard 2.52 m >= required 0.3 m | cargo zone 74.90 m = LOA 90.0 - bow void 10.10 m - stern void 5.00 m | changed |
+| sweep gas cargo LNG pushed | `checks[4].name` | freeboard ok | cargo zone positive | changed |
+| sweep gas cargo LNG pushed | `checks[4].severity` | warning | error | changed |
+| ... | 192 more changed quantities | | | |
+
 ### ticket/448-sections-hydrostatics (2026-10-22)
 
 Between `main e706115` and `this branch 52d6517`.
