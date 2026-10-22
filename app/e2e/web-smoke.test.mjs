@@ -13,6 +13,7 @@ import { serve } from "./web-server.mjs";
 const here = import.meta.dirname;
 const FIXTURE = path.resolve(here, "../../crates/ovcd-format/tests/fixtures/gas_igc_2g_self_propelled.vdesign");
 const BALLAST_FIXTURE = path.resolve(here, "../../crates/ovcd-format/tests/fixtures/crude_integral_tanks_coastal.vdesign");
+const CONVOY_FIXTURE = path.resolve(here, "../../crates/ovcd-format/tests/fixtures/pushed_convoy.vdesign");
 const DRY_FIXTURE = path.resolve(here, "../../crates/ovcd-format/tests/fixtures/dry_bulk_box_hold.vdesign");
 const DIST = path.resolve(here, "../dist-web-test");
 const CLI = process.env.OVCD_CLI;
@@ -128,6 +129,46 @@ describe("OVCD web smoke tests", () => {
       fs.mkdirSync(SHOTS, { recursive: true });
       await new Promise((r) => setTimeout(r, 800));
       await b.saveScreenshot(path.join(SHOTS, "web-ballast-tanks.png"));
+    }
+  });
+
+  it("shows the convoy totals of a pushed convoy, and no Convoy tab for any other Formation (issue #551)", async () => {
+    const b = await start();
+    await b.url(`${origin}/ovcd/app`);
+    await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+    await (await b.$("button=I understand")).click();
+    await until(b, "results", async () => (await outputs(b)).isExisting());
+    await b.execute(() => {
+      HTMLInputElement.prototype.click = function () {};
+    });
+    const tab = (label) => b.$(`//button[@role="tab" and normalize-space()="${label}"]`);
+    await (await tab("Drawings")).click();
+    assert.equal(await (await tab("Convoy totals")).isExisting(), false, "the starter Design is not a convoy");
+    await (await b.$("button=Open")).click();
+    const picker = await b.$("[data-testid=file-picker]");
+    await picker.waitForExist({ timeout: 5000 });
+    await picker.setValue(CONVOY_FIXTURE);
+    await until(b, "the file name", async () => (await b.$("header")).getText().then((t) => t.includes("pushed_convoy.vdesign")));
+    await (await tab("Drawings")).click();
+    await until(b, "the Convoy tab", async () => (await tab("Convoy totals")).isExisting());
+    await (await tab("Convoy totals")).click();
+    await until(b, "the totals", async () => (await b.$("[data-testid=convoy-table]")).isExisting());
+    const convoy = await b.execute(async () => (await window.__ovcdPlatform.evaluate()).options[0].outcome.results.convoy);
+    assert.match(await (await b.$("[data-testid=convoy-summary]")).getText(), new RegExp(`^${convoy.abreast} abreast, ${convoy.in_line} in line: ${convoy.barges} barges$`));
+    const want = { cargo: ["cargo_t"], lightship: ["lightship_t"], deadweight: ["deadweight_t"], displacement: ["displacement_t"], volume: ["cargo_volume_m3"], length: ["overall_length_m"], beam: ["overall_beam_m"] };
+    for (const [row, [key]] of Object.entries(want)) {
+      const total = await (await b.$(`[data-row=${row}] [data-cell=total]`)).getAttribute("title");
+      assert.equal(Number(total), convoy.totals[key], row);
+    }
+    for (const row of ["cargo", "lightship", "deadweight", "displacement", "volume"]) {
+      const barge = await (await b.$(`[data-row=${row}] [data-cell=barge]`)).getAttribute("title");
+      assert.equal(Number(barge), convoy.barge[want[row][0]], row);
+    }
+    assert.equal(await (await b.$("[data-testid=convoy-pusher-note]")).isExisting(), !convoy.pusher_included);
+    if (SHOTS) {
+      fs.mkdirSync(SHOTS, { recursive: true });
+      await new Promise((r) => setTimeout(r, 500));
+      await b.saveScreenshot(path.join(SHOTS, "web-convoy.png"));
     }
   });
 

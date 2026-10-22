@@ -134,6 +134,7 @@ app-view-midship = Cross-section
 app-group-stability-propulsion = Stability & Propulsion
 app-view-stability = Intact stability
 app-view-ballast = Ballast tanks
+app-view-convoy = Convoy totals
 app-view-speed-power = Power and speed curves
 app-view-rules = Rule check calculations
 app-group-boq-finance = BOQ & Finance
@@ -364,3 +365,17 @@ app-ballast-kind-peak = Peak
 app-ballast-side-port = Port
 app-ballast-side-starboard = Starboard
 app-ballast-side-centre = Centre
+
+# The convoy totals (issue #551)
+app-convoy-formation = { $abreast } abreast, { $in_line } in line: { $barges } barges
+app-convoy-quantity = Quantity
+app-convoy-one-barge = One barge
+app-convoy-total = Convoy
+app-convoy-cargo = Cargo
+app-convoy-lightship = Lightship
+app-convoy-deadweight = Deadweight
+app-convoy-displacement = Displacement
+app-convoy-cargo-volume = Cargo volume
+app-convoy-overall-length = Overall length
+app-convoy-overall-beam = Overall beam
+app-convoy-pusher-note = The pusher is not in these totals. It joins them when the pusher is sized.

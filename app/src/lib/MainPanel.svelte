@@ -4,6 +4,7 @@
   import HullView from "./HullView.svelte";
   import SpeedPower from "./views/SpeedPower.svelte";
   import Ballast from "./views/Ballast.svelte";
+  import Convoy from "./views/Convoy.svelte";
   import Stability from "./views/Stability.svelte";
   import RuleChecks, { type RuleTrace } from "./views/RuleChecks.svelte";
   import CapitalBudget from "./views/CapitalBudget.svelte";
@@ -30,6 +31,7 @@
         { id: "side", label: "app-view-side" },
         { id: "plan", label: "app-view-plan" },
         { id: "midship", label: "app-view-midship" },
+        { id: "convoy", label: "app-view-convoy" },
       ],
     },
     {
@@ -53,7 +55,7 @@
   ];
   const HULL = ["side", "plan", "midship"];
   /** Views that show results of the Option, and so can be out of date. */
-  const FROM_RESULTS = [...HULL, "stability", "ballast", "speed-power", "rules", "capital"];
+  const FROM_RESULTS = [...HULL, "convoy", "stability", "ballast", "speed-power", "rules", "capital"];
   type HullKey = "side" | "plan" | "midship";
 
   let groupId = $state(GROUPS[0].id);
@@ -72,6 +74,8 @@
     const prior = lastGood[active]?.outcome;
     return outcome?.status === "not_run" && prior?.status === "results" ? prior.results : null;
   });
+  /** The convoy totals of the shown results; only a pushed convoy has them, so only it has the Convoy tab. */
+  const convoyOf = (r: unknown) => (r as { convoy?: never } | null)?.convoy ?? null;
   const stabilityOf = (r: unknown) => (r as { stability?: never }).stability;
   let stale = $derived(outcome?.status === "not_run");
   /** The views of the Option: its own, or the last good ones while the Design has a hard error. */
@@ -105,7 +109,7 @@
     {#if stale && FROM_RESULTS.includes(current)}<span class="stale">{t("app-out-of-date")}</span>{/if}
   </header>
   <div class="tabs sub" role="tablist" aria-label={t("app-views-of", { group: t(group.label) })}>
-    {#each group.views as v (v.id)}
+    {#each group.views.filter((v) => v.id !== "convoy" || convoyOf(results)) as v (v.id)}
       <button type="button" role="tab" aria-selected={v.id === current} class:on={v.id === current} onclick={() => (current = v.id)}>{t(v.label)}</button>
     {/each}
   </div>
@@ -131,6 +135,14 @@
           <p class="note">{t("app-no-results-draw")}</p>
         {/if}
       </div>
+    {:else if current === "convoy"}
+      {#if message}
+        <p class="note">{message}</p>
+      {:else if !convoyOf(results)}
+        <p class="note">{t("app-no-results-show")}</p>
+      {:else}
+        <Convoy convoy={convoyOf(results)!} dims={(results as { dims?: { loa_m?: number; beam_m?: number } }).dims} />
+      {/if}
     {:else if current === "speed-power"}
       <div class="charts">
         {#if message}
