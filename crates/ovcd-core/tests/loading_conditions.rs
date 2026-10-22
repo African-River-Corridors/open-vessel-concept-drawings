@@ -3,7 +3,7 @@
 //! arrival consumables), 3.1.2 (98 % is nominally full) and 3.1.4 (consumables free surface), and
 //! hand calculation (a box hull: T = Δ / (L B ρ), FSC = ρ i / Δ).
 
-use ovcd_core::compartments::{Side, Space, SpaceKind, consumables_tanks};
+use ovcd_core::compartments::{ClippedSpace, Side, Space, SpaceKind, consumables_tanks};
 use ovcd_core::gas_stability::PyError;
 use ovcd_core::hydrostatics::{Hull, HullSpec};
 use ovcd_core::loading_conditions::{
@@ -27,7 +27,7 @@ fn cargo_at(m: f64) -> Result<CargoAt, PyError> {
 }
 
 /// A double-bottom pair 1 m high, the length of the hull.
-fn db_pair() -> Vec<Space> {
+fn db_pair() -> Vec<ClippedSpace> {
     [Side::Port, Side::Starboard]
         .into_iter()
         .map(|side| {
@@ -41,21 +41,21 @@ fn db_pair() -> Vec<Space> {
             if side == Side::Port {
                 section.reverse();
             }
-            Space {
+            ClippedSpace::prism(Space {
                 name: format!("DB1{}", if side == Side::Port { "P" } else { "S" }),
                 kind: SpaceKind::DoubleBottomBallast,
                 side,
                 x_aft: 0.0,
                 x_fwd: L,
                 section,
-            }
+            })
         })
         .collect()
 }
 
 fn inputs<'a>(
     lightship: &'a [Item],
-    tanks: &'a [Space],
+    tanks: &'a [ClippedSpace],
     plans: [BallastPlan; 2],
     consumables_t: f64,
 ) -> Inputs<'a> {

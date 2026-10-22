@@ -147,7 +147,7 @@ fn a_gas_barge_with_a_wing_tank_has_it_up_to_the_wing_plate() {
 }
 
 #[test]
-fn the_fore_peak_counts_half_the_raked_length() {
+fn the_fore_peak_is_the_whole_bow_void_before_the_hull_clips_it() {
     let mut i = BargeCapacityInputs::new(80.0, 11.4, 4.0);
     i.cargo_type = "bauxite".to_string();
     let r = compute(&i).unwrap();
@@ -155,9 +155,10 @@ fn the_fore_peak_counts_half_the_raked_length() {
         .into_iter()
         .find(|t| t.name == "FP1C")
         .unwrap();
-    let (bow, rake) = (r.bow_void_length_m.unwrap(), r.bow_rake_length_m.unwrap());
-    close(fp.volume_m3(), 11.4 * 4.0 * (bow - rake / 2.0));
+    let bow = r.bow_void_length_m.unwrap();
+    close(fp.volume_m3(), 11.4 * 4.0 * bow);
     close(fp.x_aft, 80.0 - bow);
+    close(fp.x_fwd, 80.0);
 }
 
 #[test]
