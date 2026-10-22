@@ -5,7 +5,7 @@
 <!-- design-impact -->
 ### ticket/431-box-k (2026-10-22)
 
-Between `main b7ae9d6` and `this branch 9286a90`.
+Between `main 5d5ec18` and `this branch 821c5d2`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -49,4 +49,4 @@ Between `main b7ae9d6` and `this branch 9286a90`.
 | calibration canal-box-200x35x13-cby400 | `checks[11].message` | GM 17.56 m (fluid), max GZ 2.92 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 17.68 m (fluid), max GZ 2.92 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
 | calibration canal-box-200x35x13-cby400 | `checks[5].message` | intact GM 2.09 m >= 0.15 m at the reported cargo 1381 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.08 m >= 0.15 m at the reported cargo 1383 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
 | calibration canal-box-200x35x13-cby400 | `checks[9].message` | GM 6.58 m (fluid), max GZ 1.90 m at 26° | GM 6.60 m (fluid), max GZ 1.91 m at 25° | changed |
-| ... | 78287 more changed quantities | | | |
+| ... | 78294 more changed quantities | | | |
