@@ -96,6 +96,27 @@ jobs:
         with:
           path: ${{ runner.temp }}/design-impact-cache
           key: design-impact-${{ github.sha }}
+      # The report of the check above is the pull request's report: the `Design impact publish` workflow
+      # puts it in the pull request body and sets the label, so the 224 cases run once (issue #571).
+      # It also works for a fork's pull request: this job has a read-only token and no secrets.
+      - name: Keep the report for the publisher
+        if: always() && github.event_name == 'pull_request'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          mkdir -p target/design-impact
+          echo "$PR_NUMBER" > target/design-impact/pr.txt
+      - name: Upload the report
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: design-impact
+          path: |
+            target/design-impact/report.md
+            target/design-impact/summary.json
+            target/design-impact/pr.txt
+          if-no-files-found: ignore
+          retention-days: 7
 
   gate-python:
     runs-on: ubuntu-latest

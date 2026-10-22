@@ -1,7 +1,8 @@
 name: Design impact publish
 
-# Puts the report of the `Design impact` workflow into the pull request body and sets or removes the
-# `design-change` label. It works for pull requests from forks, which have no write token in the
+# Puts the report of the `gate-impact` job of the `CI` workflow into the pull request body and sets or
+# removes the `design-change` label. It runs when the CI run has finished, whether or not it passed: the
+# report matters most when the gate failed because a table is missing (issue #571). It works for pull requests from forks, which have no write token in the
 # `pull_request` event (ticket 132).
 #
 # Why this is safe (the usual `workflow_run` rules):
@@ -16,7 +17,7 @@ name: Design impact publish
 
 on:
   workflow_run:
-    workflows: ["Design impact"]
+    workflows: ["CI"]
     types: [completed]
 
 permissions:
@@ -27,7 +28,9 @@ permissions:
 
 jobs:
   publish:
-    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      contains(fromJSON('["success", "failure"]'), github.event.workflow_run.conclusion)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -37,12 +40,15 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install pyyaml
       - uses: actions/download-artifact@v4
+        id: report
+        continue-on-error: true      # a run that stopped before the gate-impact job has no report
         with:
           name: design-impact
           path: ${{ runner.temp }}/design-impact
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ github.token }}
       - name: Publish the report and the label
+        if: steps.report.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
           ARTIFACT_DIR: ${{ runner.temp }}/design-impact
