@@ -6,7 +6,7 @@ name: Release
 # There is no nightly run. It builds and tests; it publishes NOTHING (no PyPI, no upload to a release).
 # Wheels and binaries are kept as workflow artifacts for the maintainer to inspect.
 #
-# Order: `gate` (the CI jobs `test` and `release-guard`) -> `wheels` and `binaries`. Both build jobs
+# Order: `gate` (the CI jobs `test` and `release-guard`) -> `web-parity`, `wasm-hashes`, `wheels` and `binaries`. Both build jobs
 # list `gate` in `needs`, so a failing `test` or `release-guard` stops the run before any build step.
 
 on:
@@ -21,6 +21,12 @@ permissions:
 jobs:
   gate:
     uses: ./.github/workflows/ci.yml
+
+  # WebAssembly parity (issue #245): the wasm Design session gives the native results hash for every
+  # fixture. Release gate only (it left the pull request path, see web-parity.yml).
+  web-parity:
+    needs: gate
+    uses: ./.github/workflows/web-parity.yml
 
   wheels:
     needs: gate
