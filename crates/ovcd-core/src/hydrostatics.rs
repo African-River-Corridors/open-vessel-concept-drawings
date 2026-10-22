@@ -397,6 +397,12 @@ impl Hull {
         })
     }
 
+    /// The furthest aft and forward the hull puts its LCB at the displacement of `mass_t`, within the
+    /// trim range (issue #549).
+    pub fn lcb_reach(&self, mass_t: f64, density: f64) -> Result<(f64, f64), SectionsError> {
+        crate::sections::lcb_reach(&self.table, mass_t, density)
+    }
+
     /// The GZ curve with free trim at the given heels (degrees), less the free-surface correction.
     pub fn gz(
         &self,

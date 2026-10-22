@@ -979,6 +979,47 @@ pub fn equilibrium(
     Ok(last.unwrap_or(fwd).eq)
 }
 
+/// The longitudinal centre of buoyancy (m from the stern) at the two ends of the trim range, at heel 0:
+/// at -10 degrees (bow up) and at +10 degrees (bow down), for the displacement of `mass_t`. The
+/// furthest aft and forward the hull can put its LCB at that displacement (issue #549). The LCB
+/// moves forward with trim, so the first is the lesser.
+pub fn lcb_reach(
+    table: &SectionsTable,
+    mass_t: f64,
+    density: f64,
+) -> Result<(f64, f64), SectionsError> {
+    let target = mass_t / density;
+    if target.is_nan() || target <= 0.0 {
+        return Err(SectionsError::NotAfloat);
+    }
+    let total = immersed(
+        table,
+        &Waterplane {
+            heel_deg: 0.0,
+            trim_deg: 0.0,
+            c: f64::MAX / 4.0,
+        },
+    )
+    .volume_m3;
+    if target >= total {
+        return Err(SectionsError::Sinks);
+    }
+    let mut w = Work::default();
+    let mut at = |trim_deg: f64| {
+        let c = c_for_volume(table, 0.0, trim_deg, target, total, &mut w);
+        immersed(
+            table,
+            &Waterplane {
+                heel_deg: 0.0,
+                trim_deg,
+                c,
+            },
+        )
+        .lcb_m
+    };
+    Ok((at(-TRIM_LIMIT_DEG), at(TRIM_LIMIT_DEG)))
+}
+
 /// One trim tried by the outer solve.
 struct Floating {
     eq: Equilibrium,

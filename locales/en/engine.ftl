@@ -47,7 +47,7 @@ check-air-draft-condition-light = light
 check-name-air-draft-within-limit = air draft within limit
 check-air-draft-within-limit = { $condition } air draft { $governing } m <= limit { $limit } m (laden is { $laden } m and is NOT the governing case)
 check-trim-in-range = the hull floats within { $limit } degrees of trim (every condition)
-check-trim-no-balance = no trim balances the load ({ $conditions })
+check-trim-no-balance = no trim balances the load: { $conditions }
 check-name-trim-in-range = trim in range
 warn-barge-pushed = PUSHED barge: crew, battery and propulsion are on the tug and are NOT in this hull's lightship, capacity or air draft. The tug is a separate vessel and must be costed and air-draft-gated separately.
 check-name-gm-positive = gm positive
