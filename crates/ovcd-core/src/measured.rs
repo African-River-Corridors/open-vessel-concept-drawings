@@ -315,7 +315,9 @@ impl Measured {
             "propulsion.redundancy_28_04"
             | "wheelhouse.field_of_view"
             | "wheelhouse.raised_stability"
-            | "formation.coupling_force" => false,
+            | "formation.coupling_force"
+            | "formation.separate_vessels"
+            | "formation.notch_wing_walls" => false,
             _ => true,
         }
     }

@@ -20,11 +20,12 @@ fn ids(s: &DesignSession) -> Vec<String> {
 }
 
 const RIVER: [&str; 4] = ["is2008-a", "es-trin-2025", "adn-tank", "ovcd"];
-const COASTAL: [&str; 7] = [
+const COASTAL: [&str; 8] = [
     "is2008-a",
     "es-trin-2025",
     "icll-freeboard",
     "solas-v22",
+    "abs-barges",
     "adn-tank",
     "marpol-i",
     "ovcd",
@@ -59,6 +60,7 @@ fn the_service_area_changes_the_stack_and_the_cargo_changes_it_back() {
             "es-trin-2025",
             "icll-freeboard",
             "solas-v22",
+            "abs-barges",
             "ovcd"
         ]
     );

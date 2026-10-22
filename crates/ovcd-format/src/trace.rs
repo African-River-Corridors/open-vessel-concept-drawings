@@ -526,7 +526,9 @@ impl MeasureSource for OptionMeasures<'_> {
             // Rules on these are `not evaluated`, with their gaps: the Option has them to name.
             "wheelhouse.field_of_view"
             | "wheelhouse.raised_stability"
-            | "formation.coupling_force" => true,
+            | "formation.coupling_force"
+            | "formation.separate_vessels"
+            | "formation.notch_wing_walls" => true,
             _ => self.measured.has(measure),
         }
     }
