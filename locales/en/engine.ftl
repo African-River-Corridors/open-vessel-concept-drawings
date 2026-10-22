@@ -232,6 +232,13 @@ msg-offsets-bad-row = row { $row } of the offsets table needs the numbers statio
 msg-offsets-csv-header = an offsets CSV starts with the header { $header }
 msg-offsets-csv-line = line { $line } of the offsets CSV needs three numbers: station_x_m, y_m, z_m
 
+## crates/ovcd-format/src/openings.rs
+
+msg-openings-bad-row = opening { $row } needs the numbers x_m, y_m and height_above_deck_m
+msg-opening-x = opening { $row }: x_m = { $value } is outside the hull (0 to { $limit } m)
+msg-opening-y = opening { $row }: y_m = { $value } is outside the breadth ({ $limit } m each side)
+msg-opening-height = opening { $row }: height_above_deck_m = { $value } is below the deck
+
 ## crates/ovcd-format/src/run.rs
 
 msg-convoy-not-available = convoy results not yet available
@@ -346,6 +353,7 @@ msg-bool = `{ $input }` must be true or false
 msg-hull-form-not-built = `{ $input }` = { $value } is not built yet: the engine computes raked_box, v_bottom, chine, offsets and shipd for now (spec 0008)
 msg-parameter-set = `{ $input }` must be an object of named numbers, or null
 msg-offsets-table = `{ $input }` must be a list of rows with `station_x_m`, `y_m` and `z_m` in metres, or null
+msg-openings-list = `{ $input }` must be a list of openings with `x_m`, `y_m` and `height_above_deck_m` in metres, or null
 msg-scheme = `{ $input }` = { $value } is not a scheme with a Vessel Class that can define a vessel (see `ovcd schema`)
 msg-class-cannot-define = `{ $input }` = { $value } cannot define a vessel: class { $class } gives no length or beam, or its Formation ({ $formation }) is not one a Design has
 msg-class-unknown = `{ $input }` = { $value } is not a Vessel Class (see `ovcd schema`)

@@ -27,6 +27,8 @@ pub struct Measured {
     /// The angle of down-flooding the designer gave, degrees (issue #282): the IS Code areas to 40
     /// degrees end there when it is below 40. `None`: none given.
     pub downflooding_deg: Option<f64>,
+    /// Whether the Option lists deck openings for the angle of down-flooding (issue #592).
+    pub downflooding_openings: bool,
     /// The Type C tank values the IGC Rules read; `None` but for a gas barge.
     pub tank: Option<TankRuleValues>,
     /// The gas cargo-area separation and whether its tanks have plane ends; `None` but for a gas
@@ -119,12 +121,15 @@ pub fn deadweight_band(dw_t: f64) -> &'static str {
 }
 
 /// The values of the derived input `downflooding_angle` (issue #282).
-pub const DOWNFLOODING_ANGLES: &[&str] = &["typed", "not-typed"];
+pub const DOWNFLOODING_ANGLES: &[&str] = &["typed", "not-typed", "computed"];
 
-/// `typed` when the designer gave an angle of down-flooding, else `not-typed`.
-pub fn downflooding_angle_value(angle: Option<f64>) -> &'static str {
+/// `typed` when the designer gave an angle of down-flooding; else `computed` when the Option lists
+/// deck openings the engine works it from (issue #592); else `not-typed`.
+pub fn downflooding_angle_value(angle: Option<f64>, openings_listed: bool) -> &'static str {
     if angle.is_some() {
         DOWNFLOODING_ANGLES[0]
+    } else if openings_listed {
+        DOWNFLOODING_ANGLES[2]
     } else {
         DOWNFLOODING_ANGLES[1]
     }
@@ -492,8 +497,10 @@ impl Measured {
                 }
                 // Up to `to_deg`, or the angle of down-flooding where that is less (IS Code Part A
                 // 2.2.1). An angle not above `from_deg` leaves no area.
-                let end =
-                    crate::box_stability::area_end_deg(self.downflooding_deg).min(f64::from(to));
+                let end = crate::box_stability::area_end_deg(
+                    c.downflooding_deg.or(self.downflooding_deg),
+                )
+                .min(f64::from(to));
                 Ok(MeasureValue::Number(if end > f64::from(from) {
                     crate::box_stability::area_to(&c.gz, from, end)
                 } else {

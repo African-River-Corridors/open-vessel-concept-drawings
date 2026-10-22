@@ -24,6 +24,7 @@ fn spec(rake: f64) -> HullSpec {
         stern: None,
         shape: Default::default(),
         downflooding_deg: None,
+        openings: Vec::new(),
     }
 }
 

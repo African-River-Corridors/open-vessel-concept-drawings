@@ -95,6 +95,7 @@ fn box_barge(notch: Option<Notch>) -> Hull {
             ..HullShape::default()
         },
         downflooding_deg: None,
+        openings: Vec::new(),
     })
     .unwrap()
 }

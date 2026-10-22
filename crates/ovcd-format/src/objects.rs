@@ -360,6 +360,7 @@ pub(crate) fn capacity_result_from_json(
             stern: None,
             shape: Default::default(),
             downflooding_deg: None,
+            openings: Vec::new(),
         });
     Ok(BargeCapacityResult {
         cargo_type: o.string("cargo_type")?,
