@@ -524,6 +524,47 @@ pub fn mesh_hash(mesh: &ovcd_core::mesh::Mesh) -> String {
     h.finalize().iter().map(|b| format!("{b:02x}")).collect()
 }
 
+/// The propeller ratios the `ovcd/propulsion` Rules read (issue #355), from the results: the diameter
+/// over the Stern Form's largest, the shaft immersion over its limit at the lightest aft draught of the
+/// loading conditions, and the blade load over its limit. Each is `None` where the results lack what
+/// it needs.
+fn propulsion_ratios(v: &Value) -> (Option<f64>, Option<f64>, Option<f64>) {
+    let over_max = match (
+        v["geometry"]["propeller_diameter_m"].as_f64(),
+        v["geometry"]["propeller_d_max_m"].as_f64(),
+    ) {
+        (Some(d), Some(m)) if m > 0.0 => Some(d / m),
+        _ => None,
+    };
+    let pw = &v["powering"];
+    let diameter = pw["propeller_diameter_m"].as_f64().filter(|d| *d > 0.0);
+    let immersion = diameter.and_then(|d| {
+        let axis = pw["shaft_axis_height_m"].as_f64()?;
+        let aft = v["loading_conditions"]["conditions"]
+            .as_array()?
+            .iter()
+            .filter_map(|c| c["draught_aft_m"].as_f64())
+            .fold(f64::INFINITY, f64::min);
+        if !aft.is_finite() {
+            return None;
+        }
+        let limit = if pw["propeller_ducted"].as_bool()? {
+            ovcd_core::powering::IMMERSION_DUCTED
+        } else {
+            ovcd_core::powering::IMMERSION_OPEN
+        };
+        Some((aft - axis) / d / limit)
+    });
+    let blade = match (
+        pw["blade_load_kw_m2"].as_f64(),
+        pw["blade_load_limit_kw_m2"].as_f64(),
+    ) {
+        (Some(l), Some(m)) if m > 0.0 => Some(l / m),
+        _ => None,
+    };
+    (over_max, immersion, blade)
+}
+
 /// Compute one Option and check it against its default stack of Rule Sets from `library`, plus the
 /// `extra` sets (`id`, `version`) loaded at run time (spec 0004, "Loading at run time").
 pub fn run_option_with(
@@ -632,6 +673,10 @@ pub fn run_option_with(
                     (Some(h), Some(t)) if t > 0.0 => Some(h / t),
                     _ => None,
                 };
+                let (over_max, immersion, blade) = propulsion_ratios(&v);
+                measured.diameter_over_max = over_max;
+                measured.immersion_over_limit = immersion;
+                measured.blade_load_over_limit = blade;
                 let rule_trace = trace_json(
                     &trace_of(&selection, option, &measured),
                     crate::trace::service_area_of(option),

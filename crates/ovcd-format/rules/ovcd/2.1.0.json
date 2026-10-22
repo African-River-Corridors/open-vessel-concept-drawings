@@ -1087,6 +1087,93 @@
       "since": "2.1.0"
     },
     {
+      "id": "ovcd/propulsion/propeller-fits-stern",
+      "title": "The propeller diameter is within the largest the Stern Form allows (D over D_max of 1 or less)",
+      "origin": "method-validity",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#355"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "propulsion.diameter_over_max"
+      },
+      "compare": "le",
+      "limit": {
+        "value": 1.0,
+        "unit": "-"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "2.1.0"
+    },
+    {
+      "id": "ovcd/propulsion/immersion-light",
+      "title": "The shaft axis is at least 0.76 diameters under the water at the lightest aft draught (0.71 for a ducted propeller): a guide, not a tunnel stern",
+      "origin": "method-validity",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#355"
+      },
+      "verified": false,
+      "applies_when": {
+        "stern_form": [
+          "transom",
+          "pram"
+        ]
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "propulsion.immersion_over_limit"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 1.0,
+        "unit": "-"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "2.1.0"
+    },
+    {
+      "id": "ovcd/propulsion/blade-load",
+      "title": "The delivered power of one unit at the Installed Power is at most 400 kW per m2 of disc (500 for a ducted propeller)",
+      "origin": "method-validity",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#355"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "propulsion.blade_load_over_limit"
+      },
+      "compare": "le",
+      "limit": {
+        "value": 1.0,
+        "unit": "-"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "2.1.0"
+    },
+    {
       "id": "ovcd/stability/light-angle-of-max-gz",
       "title": "The angle of maximum GZ is at least 25 degrees in a light condition with no ballast: a warning, with ballast to sail light, not a failure (the bilge emerges early on a wide, shallow hull)",
       "origin": "method-validity",

@@ -1785,6 +1785,13 @@ fn powering_json(
         "design_speed_kn": num(get_or(p, "design_speed_kn", 9.7)?),
         "margin": num(get_or(p, "installed_power_margin", 1.2)?),
         "bollard_pull_t": num(pw.bollard_pull_t),
+        // Issue #355: the propeller the Rules of the propulsion read. The shaft axis is taken at
+        // half the diameter above the base (the propeller tip on the base, as the Stern Form's D_max).
+        "propeller_diameter_m": num(m.propeller_diameter_m),
+        "shaft_axis_height_m": num(m.propeller_diameter_m / 2.0),
+        "blade_load_kw_m2": num(pw.blade_load_kw_m2),
+        "blade_load_limit_kw_m2": num(pw.blade_load_limit_kw_m2),
+        "propeller_ducted": m.propulsor.ducted(),
         // The battery in force: typed, else from the trip (none without a battery or a route).
         "battery_energy_kwh": m.battery_energy_kwh.or(pw.battery_energy_kwh).map_or(Value::Null, num),
         "environments": pw.environments.iter().map(|e| json!({
