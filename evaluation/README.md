@@ -27,6 +27,18 @@ blocking Rule a case expects to fail. A false fail (the engine fails a Rule expe
 coverage gap (an evaluated blocking Rule with no passing or no failing case) are warning annotations, as
 the Calibration Bands are (issue #119). A `results.md` that is not what the run writes also fails.
 
+### Stern cases (`kind: stern`, issue #355)
+
+A stern case is a self-propelled craft with the numbers a run reads from its results: the Blind Distance light
+and laden, the speed through the water in deep water (km/h), the Design Speed, the propeller diameter and the
+largest the stern allows, whether it is ducted, the lightest aft draught and the blade load. The runner selects
+`es-trin-2025`, `solas-v22`, `rheinschpv` and `ovcd` for them and compares each Rule keyed by rule id: ES-TRIN
+7.02(2), 5.06(1) and 28.04(1)(a), SOLAS V/22.1.1, RheinSchPV 1.07(2), and the speed and propeller Checks of `ovcd`.
+`oracle/stern_oracle.py` works the verdicts out from the texts; `stern_mutants.yaml` moves one number to each side
+of each limit by one step (the Blind Distance 249 and 251 m, the speed 12.9 and 13.1 km/h and a craft of 110.1 m
+with and without a bow thruster are base cases). Rule mutation runs on the Rules these cases expect, over the base
+cases and the boundary cases made for that Rule.
+
 ### Triage
 
 Each disagreement outside the grid error goes in one bucket, in this order:

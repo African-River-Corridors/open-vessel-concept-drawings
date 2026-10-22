@@ -78,7 +78,9 @@ def verdicts(i: dict) -> dict:
 # --- boundary cases -----------------------------------------------------------------------------
 
 #: Step from the limit in the unit of the rule: (big, small).
-STEPS = {"m": (0.01, 0.0001), "km/h": (0.01, 0.0001), "-": (0.001, 0.00001)}
+#: A step in metres is smaller than the 0.01 m step of a rule mutant, so a mutant of a constant limit
+#: (one step either way) lies across a case.
+STEPS = {"m": (0.005, 0.0001), "km/h": (0.01, 0.0001), "-": (0.001, 0.00001)}
 
 #: The Rules with no number to move: a case moves them by its particulars.
 NO_BOUNDARY = ("es-trin/28.04(1)(a)/propulsion-redundancy",)
