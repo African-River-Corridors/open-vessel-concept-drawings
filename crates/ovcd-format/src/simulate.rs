@@ -3160,7 +3160,19 @@ pub(crate) fn formation_curves(
         Stop::Raised(kind, message) => format!("{kind}: {message}"),
         Stop::Eval(e) => e.to_string(),
     };
-    resistance_of(p, l, b, t, (cb, 0.0), disp, rho)
+    // An Equivalent Hull has no sections: its waterline length is its length, and Am = B x T x Cm.
+    let cm = get_or(
+        p,
+        "midship_coefficient",
+        ovcd_core::confined_water::DEFAULT_MIDSHIP_COEFFICIENT,
+    )
+    .map_err(stop_text)?;
+    let hull = HullAt {
+        cb,
+        lwl: l,
+        midship_m2: b * t * cm,
+    };
+    resistance_of(p, l, b, t, (hull, 0.0), disp, rho)
         .map(|r| r.map(|r| powering_curves(&r)))
         .map_err(stop_text)
 }
