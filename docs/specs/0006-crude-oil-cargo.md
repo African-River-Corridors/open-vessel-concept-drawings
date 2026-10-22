@@ -61,19 +61,21 @@ A new Cargo Containment, **Integral Tanks**: rectangular cargo tanks bounded by 
 the deck (or a trunk), an optional centreline bulkhead and transverse bulkheads. **Independent Tanks** (an adapter on
 the same seam: a clearance plus the tank's own shell) comes second, for heated cargo above 80 °C.
 
-Layout inputs, each with a Defaults Profile row:
+Layout inputs, each with a Defaults Profile row. `tanks_in_line` and `fill_ratio` already mean the Type C tanks, with
+their own group and note, so the liquid inputs are `liquid_tanks_in_line` and `liquid_fill_ratio` (issue #331). A
+`pump_room_length_m` input (default 4 m, used with a pump room) joins them:
 
 | Input | Default | Basis |
 |---|---|---|
 | `double_side_m` | the governing Rule's minimum for the Option (`sizes: true`) | Rule Sets in §5 |
 | `double_bottom_m` | same | same |
-| `tanks_in_line` | the smallest count that meets the tank volume and length limits | same |
+| `liquid_tanks_in_line` | the smallest count that meets the tank volume and length limits (4 until `fit` works it out) | same |
 | `centreline_bulkhead` | on when a tank would be wider than 0.70 B | ADN 9.3.x.13, BV NR217 (02 §8.5) |
 | `cofferdam_m` | 0.60 | ADN 9.3.x.11.3 |
 | `pump_arrangement` | `deepwell` (one pump per tank) | 03 §2.3; works for UN 1267 and 3494 |
 | `slop_share` | 0.03 sea-going, 0 inland | MARPOL Reg. 29 |
 | `heating_kw_per_m3` | 0 (none) | 03 §1.2, range 0.15–0.65 when used |
-| `fill_ratio` | 0.98, `estimate` | the ADN degree-of-filling text must be read before it is `sourced` |
+| `liquid_fill_ratio` | 0.98, `estimate` | the ADN degree-of-filling text must be read before it is `sourced` |
 
 ### 3.3 Spaces
 
@@ -102,7 +104,7 @@ phase 2 compartment model** (ADR 0016), not a one-off.
 |---|---|---|
 | `adn-tank` | Service Area includes river; Cargo class liquid bulk | Vessel type from cargo data; double side and bottom by type; tank volume and length caps; cofferdams; setbacks; pump room; intact stability for tanks wider than 0.70 B; damage stability (`not evaluated`) |
 | `marpol-i` | Service Area includes coastal; Cargo class oil | Reg. 19.6 small-tanker double bottom and side or 700 m³ cap; Reg. 19.7 nothing forward of the collision bulkhead; Reg. 29 slop tanks; Reg. 19.3, 23, 27, 28 as `not evaluated` above 5,000 dwt |
-| `icll-type-a` | Service Area includes coastal | Type A freeboard tables; the barge reduction (27.14); minimum bow height (39) |
+| `icll-freeboard` | Service Area includes coastal | Type A freeboard, table 28.1, and the barge reduction (27.14), in the set `icll-freeboard` 1.0.0 (issue #428); the minimum bow height (39) is not codified: the model has no bow height Measure. A separate `icll-type-a` set is not made |
 | `normam-202` | optional, chosen by the user | Brazilian inland tank barge widths and setbacks; an example of a national Rule Set |
 | `ovcd` (existing) | always | Physical checks: tank breadth > 0, double side < B/2, cargo zone length > 0 |
 

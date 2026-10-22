@@ -271,7 +271,8 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
                     Some(_) => Err(EvalError::BadInput(format!("`args.{name}` must be a list"))),
                 }
             };
-            let mut library = crate::rule_set::Library::built_in();
+            // The built-in sets are parsed once: a harness run makes thousands of these calls.
+            let mut library = crate::rule_set::built_in().clone();
             for text in texts("rule_sets")? {
                 if let Err(e) = library.add_text(&text) {
                     return py_result(Err(PyError::Value(e)));
@@ -293,6 +294,45 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
                 }
             }
             py_result(crate::trace::box_trace(condition, &library, &chosen).map_err(PyError::Value))
+        }
+        "liquid_trace" => {
+            // The Rule Trace of a liquid bulk layout (the evaluation harness, issue #338). `rule_sets`
+            // and `select` are as for `box_trace`.
+            let case = liquid_trace_case(args)?;
+            let texts = |name: &str| -> Result<Vec<String>, EvalError> {
+                match args.get(name) {
+                    None | Some(Value::Null) => Ok(Vec::new()),
+                    Some(Value::Array(items)) => items
+                        .iter()
+                        .map(|v| {
+                            v.as_str().map(str::to_string).ok_or_else(|| {
+                                EvalError::BadInput(format!("`args.{name}` must be strings"))
+                            })
+                        })
+                        .collect(),
+                    Some(_) => Err(EvalError::BadInput(format!("`args.{name}` must be a list"))),
+                }
+            };
+            // The built-in sets are parsed once: a harness run makes thousands of these calls.
+            let mut library = crate::rule_set::built_in().clone();
+            for text in texts("rule_sets")? {
+                if let Err(e) = library.add_text(&text) {
+                    return py_result(Err(PyError::Value(e)));
+                }
+            }
+            let keys = texts("select")?;
+            let mut chosen: Vec<(&str, &str)> = Vec::new();
+            for k in &keys {
+                match k.split_once('@') {
+                    Some(pair) => chosen.push(pair),
+                    None => {
+                        return Err(EvalError::BadInput(format!(
+                            "`{k}` is not an id@version key"
+                        )));
+                    }
+                }
+            }
+            py_result(crate::trace::liquid_trace(&case, &library, &chosen).map_err(PyError::Value))
         }
         "segment_fill" => {
             let fraction = num_arg(args, "volume_fraction")?;
@@ -357,6 +397,58 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
             "gas_stability has no function `{other}`"
         ))),
     }
+}
+
+/// The case of a `liquid_trace` call, from its JSON arguments.
+fn liquid_trace_case(args: &Value) -> Result<crate::trace::LiquidTraceCase, EvalError> {
+    use ovcd_core::liquid_bulk::{LiquidLayout, PumpArrangement};
+    let text = |name: &str| -> Result<String, EvalError> {
+        args.get(name)
+            .and_then(Value::as_str)
+            .map(str::to_string)
+            .ok_or_else(|| EvalError::BadInput(format!("`args.{name}` must be text")))
+    };
+    let tanks = num_arg(args, "tanks_in_line")?;
+    if tanks.fract() != 0.0 || tanks < 1.0 {
+        return Err(EvalError::BadInput(
+            "`args.tanks_in_line` must be a whole number of at least 1".into(),
+        ));
+    }
+    let pump_room = opt_num_arg(args, "pump_room_m", 0.0)?;
+    Ok(crate::trace::LiquidTraceCase {
+        loa_m: num_arg(args, "loa_m")?,
+        beam_m: num_arg(args, "beam_m")?,
+        depth_m: num_arg(args, "depth_m")?,
+        zone_aft_m: num_arg(args, "zone_aft_m")?,
+        zone_fwd_m: num_arg(args, "zone_fwd_m")?,
+        layout: LiquidLayout {
+            double_side_m: num_arg(args, "double_side_m")?,
+            double_bottom_m: num_arg(args, "double_bottom_m")?,
+            tanks_in_line: tanks as u32,
+            centreline_bulkhead: args
+                .get("centreline_bulkhead")
+                .and_then(Value::as_bool)
+                .ok_or_else(|| {
+                    EvalError::BadInput("`args.centreline_bulkhead` must be true or false".into())
+                })?,
+            cofferdam_m: num_arg(args, "cofferdam_m")?,
+            pump_arrangement: if pump_room > 0.0 {
+                PumpArrangement::PumpRoom {
+                    length_m: pump_room,
+                }
+            } else {
+                PumpArrangement::Deepwell
+            },
+            slop_share: num_arg(args, "slop_share")?,
+            fill_ratio: opt_num_arg(args, "fill_ratio", 0.98)?,
+            heating_kw_per_m3: 0.0,
+            lightship_k_t_per_m3: opt_num_arg(args, "lightship_k_t_per_m3", 0.1141)?,
+        },
+        cargo_density_t_m3: opt_num_arg(args, "cargo_density_t_m3", 0.87)?,
+        deadweight_t: num_arg(args, "deadweight_t")?,
+        service_area: text("service_area")?,
+        adn_vessel_type: text("adn_vessel_type")?,
+    })
 }
 
 #[cfg(test)]

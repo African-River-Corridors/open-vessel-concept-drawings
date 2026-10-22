@@ -1,0 +1,444 @@
+{
+  "$schema": "../rule-set.schema.json",
+  "id": "marpol-i",
+  "family": "marpol",
+  "title": "MARPOL Annex I, oil tankers on coastal service: double bottom and wing tank for tankers of less than 5,000 tonnes deadweight (regulation 19.6), slop tanks (regulation 29), and the larger-tanker regulations listed as not evaluated",
+  "version": "1.0.0",
+  "edition": {
+    "document": "MARPOL Annex I, resolution MEPC.117(52), the revised Annex I (regulations 19 and 29)",
+    "edition": "revised Annex I as adopted by MEPC.117(52) on 15 October 2004",
+    "amendments": "MEPC.141(54), MEPC.248(66) and MEPC.330(76) read: none changes regulation 19.3, 19.6, 23, 27 or 29 (MEPC.248(66) changes the reference in 19.2.2 to regulation 28.7)",
+    "in_force": "1 January 2007"
+  },
+  "sources": [
+    {
+      "document": "Resolution MEPC.117(52), revised MARPOL Annex I",
+      "edition": "adopted 15 October 2004",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MEPCDocuments/MEPC.117%2852%29.pdf",
+      "access": "free",
+      "sha256": "4921809d082be9cca96360ac9858a493bd5bf9238360d520f284854325d3356a"
+    },
+    {
+      "document": "Resolution MEPC.141(54), Annex I amendments (regulation 12A)",
+      "edition": "adopted 24 March 2006",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MEPCDocuments/MEPC.141%2854%29.pdf",
+      "access": "free",
+      "sha256": "48759a1877083a8721c0e27fa09b083c21021e23ec3e984330acc9b0741bfc40"
+    },
+    {
+      "document": "Resolution MEPC.248(66), Annex I amendments",
+      "edition": "adopted 4 April 2014",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MEPCDocuments/MEPC.248%2866%29.pdf",
+      "access": "free",
+      "sha256": "e752eb79c9602428d5b47ada3c17505d3e758c4a158136875d07251b67e87fe9"
+    },
+    {
+      "document": "Resolution MEPC.330(76), Annex I amendments",
+      "edition": "adopted 17 June 2021",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MEPCDocuments/MEPC.330%2876%29.pdf",
+      "access": "free",
+      "sha256": "22daf6b6c77a2dd42e3465135d4e78f0f83b104507f2f1d585b0a39fe32f1234"
+    }
+  ],
+  "status": "draft",
+  "applies_when": {
+    "cargo_class": [
+      "liquid_bulk"
+    ],
+    "service_area": [
+      "coastal-and-river"
+    ]
+  },
+  "includes": [],
+  "known_conflicts": [],
+  "tables": [],
+  "rules": [
+    {
+      "id": "marpol/19.6.1/double-bottom-depth",
+      "title": "Double bottom depth h = B/15 m, at least 0.76 m (oil tankers of less than 5,000 tonnes deadweight)",
+      "origin": "regulation",
+      "source": {
+        "document": "MARPOL Annex I, resolution MEPC.117(52), the revised Annex I (regulations 19 and 29)",
+        "edition": "adopted 15 October 2004, in force 1 January 2007",
+        "locator": "19.6.1",
+        "page": "MEPC.117-52.pdf, annex p. 29",
+        "access": "free",
+        "also": [
+          "19.6"
+        ]
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "deadweight_band": [
+          "600-to-5000-t"
+        ]
+      },
+      "kind": "formula",
+      "measure": {
+        "id": "hull.double_bottom_height"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "at-least",
+        "x": "input.beam_m",
+        "a": 0.0,
+        "b": 1.0,
+        "c": 15.0,
+        "lo": 0.76,
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "marpol/19.6.2/double-side-width",
+      "title": "Wing tank width w = 0.4 + 2.4 DW / 20,000 m, at least 0.76 m, where a cargo tank is more than 700 m3 (oil tankers of less than 5,000 tonnes deadweight)",
+      "origin": "regulation",
+      "source": {
+        "document": "MARPOL Annex I, resolution MEPC.117(52), the revised Annex I (regulations 19 and 29)",
+        "edition": "adopted 15 October 2004, in force 1 January 2007",
+        "locator": "19.6.2",
+        "page": "MEPC.117-52.pdf, annex p. 29",
+        "access": "free",
+        "also": [
+          "19.3.1"
+        ]
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "deadweight_band": [
+          "600-to-5000-t"
+        ]
+      },
+      "kind": "formula",
+      "measure": {
+        "id": "hull.double_side_width"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "at-least",
+        "x": "option.deadweight",
+        "a": 0.4,
+        "b": 2.4,
+        "c": 20000.0,
+        "lo": 0.76,
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "marpol/19.6.2/cargo-tank-volume",
+      "title": "Without wing tanks, the capacity of each cargo tank not more than 700 m3 (shown with the tank volume; the wing tank width above applies to a design with wing tanks)",
+      "origin": "regulation",
+      "source": {
+        "document": "MARPOL Annex I, resolution MEPC.117(52), the revised Annex I (regulations 19 and 29)",
+        "edition": "adopted 15 October 2004, in force 1 January 2007",
+        "locator": "19.6.2",
+        "page": "MEPC.117-52.pdf, annex p. 29",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "deadweight_band": [
+          "600-to-5000-t"
+        ]
+      },
+      "kind": "note",
+      "measure": {
+        "id": "cargo-tank.volume"
+      },
+      "consequence": "note",
+      "evaluated": true,
+      "since": "1.0.0"
+    },
+    {
+      "id": "marpol/19.7/collision-bulkhead",
+      "title": "Oil not carried in any space forward of the collision bulkhead",
+      "origin": "regulation",
+      "source": {
+        "document": "MARPOL Annex I, resolution MEPC.117(52), the revised Annex I (regulations 19 and 29)",
+        "edition": "adopted 15 October 2004, in force 1 January 2007",
+        "locator": "19.7",
+        "page": "MEPC.117-52.pdf, annex p. 29",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "deadweight_band": [
+          "600-to-5000-t",
+          "5000-to-20000-t",
+          "20000-t-and-above"
+        ]
+      },
+      "kind": "check",
+      "measure": {
+        "id": "arrangement.no_oil_forward_of_collision_bulkhead"
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "the model has no collision bulkhead position",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "marpol/19.3.1/wing-width",
+      "title": "Wing tank width w = 0.5 + DW/20,000 m or 2.0 m, whichever is the lesser, at least 1.0 m (5,000 tonnes deadweight and above)",
+      "origin": "regulation",
+      "source": {
+        "document": "MARPOL Annex I, resolution MEPC.117(52), the revised Annex I (regulations 19 and 29)",
+        "edition": "adopted 15 October 2004, in force 1 January 2007",
+        "locator": "19.3.1",
+        "page": "MEPC.117-52.pdf, annex p. 27",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "deadweight_band": [
+          "5000-to-20000-t",
+          "20000-t-and-above"
+        ]
+      },
+      "kind": "formula",
+      "measure": {
+        "id": "hull.double_side_width"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "clamp",
+        "x": "option.deadweight",
+        "a": 0.5,
+        "b": 1.0,
+        "c": 20000.0,
+        "lo": 1.0,
+        "hi": 2.0,
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "above the first release size band (5,000 tonnes deadweight and over; decision D1 of spec 0006): listed, not evaluated",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "marpol/19.3.2/double-bottom-depth",
+      "title": "Double bottom depth h = B/15 m or 2.0 m, whichever is the lesser, at least 1.0 m (5,000 tonnes deadweight and above)",
+      "origin": "regulation",
+      "source": {
+        "document": "MARPOL Annex I, resolution MEPC.117(52), the revised Annex I (regulations 19 and 29)",
+        "edition": "adopted 15 October 2004, in force 1 January 2007",
+        "locator": "19.3.2",
+        "page": "MEPC.117-52.pdf, annex p. 27",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "deadweight_band": [
+          "5000-to-20000-t",
+          "20000-t-and-above"
+        ]
+      },
+      "kind": "formula",
+      "measure": {
+        "id": "hull.double_bottom_height"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "clamp",
+        "x": "input.beam_m",
+        "a": 0.0,
+        "b": 1.0,
+        "c": 15.0,
+        "lo": 1.0,
+        "hi": 2.0,
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "above the first release size band (5,000 tonnes deadweight and over; decision D1 of spec 0006): listed, not evaluated",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "marpol/23/accidental-oil-outflow",
+      "title": "Accidental oil outflow performance (oil tankers delivered on or after 1 January 2010)",
+      "origin": "regulation",
+      "source": {
+        "document": "MARPOL Annex I, resolution MEPC.117(52), the revised Annex I (regulations 19 and 29)",
+        "edition": "adopted 15 October 2004, in force 1 January 2007",
+        "locator": "23",
+        "page": "MEPC.117-52.pdf, annex p. 35",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "deadweight_band": [
+          "5000-to-20000-t",
+          "20000-t-and-above"
+        ]
+      },
+      "kind": "check",
+      "measure": {
+        "id": "option.oil_outflow_mean"
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "above the first release size band (5,000 tonnes deadweight and over; decision D1 of spec 0006): listed, not evaluated; the oil outflow Measure comes with the damage ticket",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "marpol/27/intact-stability",
+      "title": "Intact stability of oil tankers of 5,000 tonnes deadweight and above, including intermediate stages of liquid transfer",
+      "origin": "regulation",
+      "source": {
+        "document": "MARPOL Annex I, resolution MEPC.117(52), the revised Annex I (regulations 19 and 29)",
+        "edition": "adopted 15 October 2004, in force 1 January 2007",
+        "locator": "27",
+        "page": "MEPC.117-52.pdf, annex p. 48",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "deadweight_band": [
+          "5000-to-20000-t",
+          "20000-t-and-above"
+        ]
+      },
+      "kind": "check",
+      "measure": {
+        "id": "stability.liquid_transfer"
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "above the first release size band (5,000 tonnes deadweight and over; decision D1 of spec 0006): listed, not evaluated",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "marpol/28/damage-stability",
+      "title": "Subdivision and damage stability after the assumed side or bottom damage",
+      "origin": "regulation",
+      "source": {
+        "document": "MARPOL Annex I, resolution MEPC.117(52), the revised Annex I (regulations 19 and 29)",
+        "edition": "adopted 15 October 2004, in force 1 January 2007",
+        "locator": "28",
+        "page": "MEPC.117-52.pdf, annex p. 49",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "deadweight_band": [
+          "5000-to-20000-t",
+          "20000-t-and-above"
+        ]
+      },
+      "kind": "check",
+      "measure": {
+        "id": "stability.damage"
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "above the first release size band (5,000 tonnes deadweight and over; decision D1 of spec 0006): listed, not evaluated; damage stability is not modelled",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "marpol/29/slop-tank-capacity",
+      "title": "Total capacity of the slop tanks not less than 3 per cent of the oil carrying capacity (2 per cent, or 1.5 per cent, where the Administration accepts it; here the slop tank volume over the volume of the cargo and slop tanks)",
+      "origin": "regulation",
+      "source": {
+        "document": "MARPOL Annex I, resolution MEPC.117(52), the revised Annex I (regulations 19 and 29)",
+        "edition": "adopted 15 October 2004, in force 1 January 2007",
+        "locator": "29",
+        "page": "MEPC.117-52.pdf, annex p. 53",
+        "access": "free",
+        "also": [
+          "29.2.3"
+        ]
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "option.slop_capacity_share"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.03,
+        "unit": "-"
+      },
+      "tolerance": 1e-09,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    }
+  ]
+}

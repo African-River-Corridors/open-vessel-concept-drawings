@@ -1,6 +1,7 @@
 """The one place the evaluation harness calls the engine (issues #184 and #278).
 
-`box_condition` runs the Rust core's `gas_stability.box_condition` through the same bridge every
+`liquid_trace` runs `gas_stability.liquid_trace` (issue #338): the Rule Trace of a liquid bulk layout under
+the selected Rule Sets. `box_condition` runs the Rust core's `gas_stability.box_condition` through the same bridge every
 Python function of the package uses. `box_trace` runs `gas_stability.box_trace`: the Rule Trace of
 the same box loading condition under the selected Rule Sets. Neither is part of the package's
 public API: the harness is the only caller.
@@ -31,6 +32,23 @@ def box_trace(beam: float, depth: float, draught: float, kg: float, *, free_surf
     out = raw("gas_stability", "box_trace", dict(
         beam=float(beam), depth=float(depth), draught=float(draught), kg=float(kg),
         free_surface_m=float(free_surface_m), rule_sets=list(rule_sets), select=list(select)))
+    if "error" in out:
+        _raise(out["error"])
+    return out["ok"]
+
+
+def liquid_trace(inputs: dict, *, rule_sets: tuple[str, ...] = (), select: tuple[str, ...] = ()) -> dict:
+    """The Rule Trace of a liquid bulk layout case (`kind: tank`): a hull, a cargo zone and a tank layout,
+    the deadweight, the Service Area and the ADN Tank Vessel Type. `rule_sets` and `select` are as for
+    `box_trace`. The trace is the JSON a run writes."""
+    keys = ("loa_m", "beam_m", "depth_m", "zone_aft_m", "zone_fwd_m", "double_side_m", "double_bottom_m",
+            "cofferdam_m", "slop_share", "deadweight_t", "pump_room_m")
+    args = {k: float(inputs[k]) for k in keys if k in inputs}
+    args.update(tanks_in_line=float(inputs["tanks_in_line"]),
+                centreline_bulkhead=bool(inputs["centreline_bulkhead"]),
+                service_area=inputs["service_area"], adn_vessel_type=inputs["adn_vessel_type"],
+                rule_sets=list(rule_sets), select=list(select))
+    out = raw("gas_stability", "liquid_trace", args)
     if "error" in out:
         _raise(out["error"])
     return out["ok"]

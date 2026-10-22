@@ -28,6 +28,18 @@ const BUILT_IN: &[(&str, &str)] = &[
         include_str!("../rules/is2008-a/2.0.0.json"),
     ),
     (
+        "rules/adn-tank/1.0.0.json",
+        include_str!("../rules/adn-tank/1.0.0.json"),
+    ),
+    (
+        "rules/marpol-i/1.0.0.json",
+        include_str!("../rules/marpol-i/1.0.0.json"),
+    ),
+    (
+        "rules/normam-202/1.0.0.json",
+        include_str!("../rules/normam-202/1.0.0.json"),
+    ),
+    (
         "rules/es-trin-2025/1.0.0.json",
         include_str!("../rules/es-trin-2025/1.0.0.json"),
     ),
