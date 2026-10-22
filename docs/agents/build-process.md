@@ -65,7 +65,7 @@ Only `test` and `release-guard` are required. Keep the others from making a pull
 | `ci.yml`: `test` (the `gate-*` jobs), `release-guard`, `drawing-crosscheck`, `app-e2e` | always | push to main, tags |
 | `web-parity.yml`: `web-parity` (a release gate) | never | only from `release.yml` (every release), or by hand |
 | `app-checks.yml`: `web-app` | only when `app/**`, `crates/ovcd-web/**`, `tools/build_web.sh` or `tools/web_parity.mjs` change | push to main on the same paths; every day |
-| `app-checks.yml`: `app-linux`, `app-windows` | never | on request only (`workflow_dispatch`), until most open pull requests have merged |
+| `app-checks.yml`: `app-linux`, `app-windows` | never | every day (07:17 UTC); on request (`workflow_dispatch`) |
 | `codeql.yml` | never | push to main; every Monday |
 | `website.yml` | only when `website/**`, `docs/**` or `*.md` change | push to main |
 | `nightly.yml` | when the slow-test list or the gate script changes | every day |

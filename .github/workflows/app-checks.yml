@@ -6,8 +6,8 @@ name: App and web checks
 #   web-app               On a pull request only when the web front end or the web build changes; on every
 #                         push to main that changes them; and every day (07:17 UTC). `web-parity` is in
 #                         web-parity.yml: a release gate that release.yml calls.
-#   app-linux, app-windows  Only on request (workflow_dispatch) for now. A later change puts them in the
-#                         daily run, when most open pull requests have merged.
+#   app-linux, app-windows  Every day (07:17 UTC) and on request (workflow_dispatch). Never on a pull
+#                         request or a push to main.
 #
 # A failed daily run opens an issue (the last job), so a regression found the next day is not lost.
 
@@ -93,7 +93,7 @@ jobs:
   # The desktop app (spec 0002). Kept out of the fast gate: it needs Node and the Tauri system
   # libraries, and the workspace's default members must build without them.
   app-linux:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -123,7 +123,7 @@ jobs:
 
   # The Windows build only has to compile: there is no installer yet.
   app-windows:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -147,7 +147,7 @@ jobs:
   # A failed daily run opens one issue, or adds a comment to the one that is open.
   daily-failure:
     if: failure() && github.event_name == 'schedule'
-    needs: [web-app]
+    needs: [web-app, app-linux, app-windows]
     runs-on: ubuntu-latest
     permissions:
       issues: write
