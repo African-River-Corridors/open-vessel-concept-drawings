@@ -8,19 +8,26 @@
 
 draw-double-bottom = DOUBLE BOTTOM
 draw-wbt-both-sides = WBT (BOTH SIDES)
+draw-weather-shield = WEATHER SHIELD
 draw-dome = DOME
 draw-cofferdam = COFFERDAM
+draw-service-space = SERVICE SPACE
+draw-fwd-separation = FWD SEPARATION
 draw-fwd-equip = FWD EQUIP.
+draw-holds = HOLDS ({ $count })
+draw-wheelhouse-raised = RAISED
 draw-thrusters = THRUSTERS ({ $count })
 draw-wheelhouse-block-top = WHEELHOUSE, BLOCK TOP { $height }
 draw-containers-block-top = CONTAINERS ({ $abreast } x { $rows }), BLOCK TOP { $height }
 draw-wheelhouse = WHEELHOUSE
 draw-containers = CONTAINERS ({ $abreast } x { $rows })
+draw-air-draft = AIR DRAFT { $draught }
 draw-loa = LOA { $length }
 draw-depth = DEPTH { $depth }
 draw-freeboard = FREEBOARD { $freeboard }
 draw-draught = DRAUGHT { $draught }
 draw-light-draught = LIGHT DRAUGHT { $draught }
+draw-ballast-draught = BALLAST DRAUGHT { $draught }
 draw-beam = BEAM { $beam }
 draw-void-both-sides = VOID (BOTH SIDES)
 draw-cradle = CRADLE
@@ -34,10 +41,15 @@ draw-fails = DESIGN FAILS { $count } CHECKS: { $checks }
 draw-fails-more = DESIGN FAILS { $count } CHECKS: { $checks } AND { $more } MORE
 draw-fails-one-count = DESIGN FAILS { $count } CHECK
 draw-fails-count = DESIGN FAILS { $count } CHECKS
+draw-owner = OPEN VESSEL CONCEPT DESIGN
+draw-note-rule-sets = RULE SETS: { $sets }.
+draw-note-rule-sets-count = { $count } RULE SETS.
 draw-note-dimensions = { $view }. DIMENSIONS IN METRES.
+draw-note-blind-distance = BLIND DISTANCE AHEAD OF THE BOW: LIGHT { $light } M, LADEN { $laden } M, LIMIT { $limit } M.
+draw-note-scope = FOR CONCEPT AND PRELIMINARY DESIGN ONLY, NOT FOR APPROVAL.
 draw-view-side-elevation = SIDE ELEVATION
 draw-view-plan = PLAN
-draw-view-midship-section = MIDSHIP SECTION
+draw-view-midship-section = TYPICAL SECTION
 
 ## otd/src/furniture.rs
 

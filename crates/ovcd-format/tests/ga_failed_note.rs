@@ -96,10 +96,11 @@ fn check_strip(what: &str, document: &Value, failed: usize) {
             "{what}: {text}"
         );
     }
-    // the notes are the title, what the vessel is, and the one failed-checks note
+    // the notes are the title, what the vessel is, the Rule Sets, the scope and the one
+    // failed-checks note
     assert_eq!(
         lines.len(),
-        2 + usize::from(failed > 0),
+        4 + usize::from(failed > 0),
         "{what}: {lines:?}"
     );
 }
