@@ -30,6 +30,20 @@ pub struct Measured {
     /// The design's check list, (name, ok), in order, with the names as a result lists them (spaces,
     /// not underscores): the verdicts the `ovcd` Rules mirror.
     pub checks: Vec<(String, bool)>,
+    /// The Blind Distance ahead of the bow, m, in the light condition (the unladen state of ES-TRIN
+    /// 7.02(2)) and when laden: the answer's sightline. `None` for the margin method and a hull with
+    /// no wheelhouse of its own (issue #355).
+    pub blind_distance_light_m: Option<f64>,
+    pub blind_distance_laden_m: Option<f64>,
+    /// The speed through the water at the installed power, kn, laden, in each environment of the
+    /// powering, by the environment's name. Empty for a hull with no machinery of its own.
+    pub speeds_kn: Vec<(String, f64)>,
+    /// The Design Speed, kn, the installed power is meant to cover (issue #355).
+    pub design_speed_kn: Option<f64>,
+    /// Whether the wheelhouse lift needed is within its maximum lift; `None` with no raised wheelhouse.
+    pub lift_enough: Option<bool>,
+    /// The depth of the design channel over the loaded draught (h/T); `None` with no channel.
+    pub depth_over_draught: Option<f64>,
 }
 
 /// The deadweight bands, at the thresholds of MARPOL Annex I Reg. 19 (MEPC.117(52)): 19.1, 600
@@ -111,6 +125,27 @@ impl Measured {
                     && matches!(v, ArgValue::Text(n) if self.checks.iter().any(|(c, _)| c == n))
             }),
             id if id.starts_with("separation.") => self.separation.is_some(),
+            "wheelhouse.blind_distance" => match m.args.iter().find(|(k, _)| k == "condition") {
+                Some((_, ArgValue::Text(c))) if c == "light" => {
+                    self.blind_distance_light_m.is_some()
+                }
+                Some((_, ArgValue::Text(c))) if c == "laden" => {
+                    self.blind_distance_laden_m.is_some()
+                }
+                _ => false,
+            },
+            "powering.speed_through_water_kmh" => !self.speeds_kn.is_empty(),
+            "powering.speed_over_design" => {
+                !self.speeds_kn.is_empty() && self.design_speed_kn.is_some()
+            }
+            "wheelhouse.lift_enough" => self.lift_enough.is_some(),
+            "powering.depth_over_draught" => self.depth_over_draught.is_some(),
+            // Worked out from the Option's inputs, not from the result: the Option's own source
+            // answers them. A candidate of the search has none.
+            "propulsion.redundancy_28_04"
+            | "wheelhouse.field_of_view"
+            | "wheelhouse.raised_stability"
+            | "formation.coupling_force" => false,
             _ => true,
         }
     }
@@ -128,6 +163,76 @@ impl Measured {
                 .find(|(n, _)| n == name)
                 .map(|(_, ok)| MeasureValue::Bool(*ok))
                 .ok_or_else(|| format!("the result has no check `{name}`"));
+        }
+        if m.id == "wheelhouse.blind_distance" {
+            let condition = match m.args.iter().find(|(k, _)| k == "condition") {
+                Some((_, ArgValue::Text(c))) => c.as_str(),
+                _ => {
+                    return Err(
+                        "`wheelhouse.blind_distance` needs the text argument `condition`"
+                            .to_string(),
+                    );
+                }
+            };
+            let value = match condition {
+                "light" => self.blind_distance_light_m,
+                "laden" => self.blind_distance_laden_m,
+                other => {
+                    return Err(format!(
+                        "`wheelhouse.blind_distance` takes the condition `light` or `laden`, not `{other}`"
+                    ));
+                }
+            };
+            return value.map(MeasureValue::Number).ok_or_else(|| {
+                format!("the result has no Blind Distance in the {condition} condition")
+            });
+        }
+        if m.id == "powering.speed_over_design" {
+            let design = self
+                .design_speed_kn
+                .filter(|d| *d > 0.0)
+                .ok_or_else(|| "the powering has no Design Speed".to_string())?;
+            // The lowest speed of any environment over the Design Speed: the installed power covers
+            // the Design Speed where this is at least 1.
+            let slowest = self
+                .speeds_kn
+                .iter()
+                .map(|(_, kn)| *kn)
+                .fold(f64::INFINITY, |a, b| if b < a { b } else { a });
+            if !slowest.is_finite() {
+                return Err("the powering has no environment".to_string());
+            }
+            return Ok(MeasureValue::Number(slowest / design));
+        }
+        if m.id == "wheelhouse.lift_enough" {
+            return self
+                .lift_enough
+                .map(MeasureValue::Bool)
+                .ok_or_else(|| "the result has no raised wheelhouse".to_string());
+        }
+        if m.id == "powering.depth_over_draught" {
+            return self
+                .depth_over_draught
+                .map(MeasureValue::Number)
+                .ok_or_else(|| "the Option has no design channel".to_string());
+        }
+        if m.id == "powering.speed_through_water_kmh" {
+            let environment = match m.args.iter().find(|(k, _)| k == "environment") {
+                Some((_, ArgValue::Text(e))) => e.as_str(),
+                _ => {
+                    return Err(
+                        "`powering.speed_through_water_kmh` needs the text argument `environment`"
+                            .to_string(),
+                    );
+                }
+            };
+            // 1 kn = 1.852 km/h.
+            return self
+                .speeds_kn
+                .iter()
+                .find(|(n, _)| n == environment)
+                .map(|(_, kn)| MeasureValue::Number(kn * 1.852))
+                .ok_or_else(|| format!("the powering has no environment `{environment}`"));
         }
         if let Some(name) = m.id.strip_prefix("separation.") {
             let (s, plane) = self

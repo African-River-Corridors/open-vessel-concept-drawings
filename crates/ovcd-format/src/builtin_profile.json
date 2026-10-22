@@ -200,12 +200,12 @@
           "other": ["is2008-a", "es-trin-2025", "ovcd"]
         },
         "coastal-and-river": {
-          "gas": ["igc-2g", "is2008-a", "lr-inland-gas", "es-trin-2025", "icll-freeboard", "ovcd"],
-          "other": ["is2008-a", "es-trin-2025", "icll-freeboard", "ovcd"]
+          "gas": ["igc-2g", "is2008-a", "lr-inland-gas", "es-trin-2025", "icll-freeboard", "solas-v22", "ovcd"],
+          "other": ["is2008-a", "es-trin-2025", "icll-freeboard", "solas-v22", "ovcd"]
         }
       },
       "status": "estimate",
-      "basis": "The Rule Set stack a new Option takes, by Service Area and Cargo (gas: a Type C tank Cargo Containment; other: the rest), each set at its highest built-in version with its content hash, marked default (spec 0004, \"Service Area and default stacks\"). River only adds ES-TRIN 2025/1 safety clearance and freeboard (es-trin-2025); coastal and river adds the ICLL type A tabular freeboard (icll-freeboard) and keeps ES-TRIN, as a coastal vessel also sails on rivers and the strictest governs (issue #428). Target stacks (later specs): river only adds an inland class stability set; coastal and river adds IS Code Part B 2.2 for barges. A file saved before holds none and is read as the river-only stack, which is what the engine checked"
+      "basis": "The Rule Set stack a new Option takes, by Service Area and Cargo (gas: a Type C tank Cargo Containment; other: the rest), each set at its highest built-in version with its content hash, marked default (spec 0004, \"Service Area and default stacks\"). River only adds ES-TRIN 2025/1 safety clearance and freeboard (es-trin-2025); coastal and river adds the ICLL type A tabular freeboard (icll-freeboard) and the SOLAS V/22 blind distance (solas-v22, issue #355) and keeps ES-TRIN, as a coastal vessel also sails on rivers and the strictest governs (issue #428). Target stacks (later specs): river only adds an inland class stability set; coastal and river adds IS Code Part B 2.2 for barges. A file saved before holds none and is read as the river-only stack, which is what the engine checked"
     },
     "lpg_carriage_condition": {
       "default": "fully_pressurised",
