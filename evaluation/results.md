@@ -74,7 +74,7 @@ Each disagreement outside the grid error, in one bucket.
 | `marpol/19.3.2/double-bottom-depth` Double bottom depth h = B/15 m or 2.0 m, whichever is the lesser, at least 1.0 m (5,000 tonnes deadweight and above) | warn | 0 | 0 | 0 | 0 | - | none | none |
 | `marpol/23/accidental-oil-outflow` Accidental oil outflow performance (oil tankers delivered on or after 1 January 2010) | warn | 0 | 0 | 0 | 0 | - | none | none |
 | `marpol/27/intact-stability` Intact stability of oil tankers of 5,000 tonnes deadweight and above, including intermediate stages of liquid transfer | warn | 0 | 0 | 0 | 0 | - | none | none |
-| `marpol/28/damage-stability` Subdivision and damage stability after the assumed side or bottom damage | warn | 0 | 0 | 0 | 0 | - | none | none |
+| `marpol/28/damage-stability` Subdivision and damage stability after the assumed side or bottom damage (extents of 28.2, criteria of 28.3.2 and 28.3.3, final stage of flooding) | warn | 0 | 0 | 0 | 0 | not evaluated | none | none |
 | `marpol/29/slop-tank-capacity` Total capacity of the slop tanks not less than 3 per cent of the oil carrying capacity (2 per cent, or 1.5 per cent, where the Administration accepts it; here the slop tank volume over the volume of the cargo and slop tanks) | warn | 72 | 39 | 0 | 0 | - | none | none |
 
 ## Rule mutation
