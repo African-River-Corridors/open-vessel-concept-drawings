@@ -3,8 +3,7 @@
 import init, { Session } from "../../../wasm-pkg/ovcd_web.js";
 import wasmUrl from "../../../wasm-pkg/ovcd_web_bg.wasm?url";
 import type { Evaluation, Schema, Snapshot } from "../api";
-import type { DrawingFormat, DrawingView, ModelFormat, Platform } from "./types";
-import type { DrawingFormat, DrawingView, MeshGroup, Platform, SectionOutline, SpaceInfo, Waterline } from "./types";
+import type { DrawingFormat, DrawingView, MeshGroup, ModelFormat, Platform, SectionOutline, SpaceInfo, Waterline } from "./types";
 import { t } from "../i18n.svelte";
 
 const LAST_DESIGN = "ovcd.lastDesign";
