@@ -1,2 +1,11 @@
 <!-- unreleased -->
 - Hull Forms (issue #453, spec 0008): the `shipd` Hull Form has its bulbs. `bit_BB` and `bit_SB` now build a bow bulb and a stern bulb: ellipsoids with the 14 bulb terms, joined to the hull at each height below the design draught by a quartic fillet that matches value and slope at both ends. The fillet's curvature row is written from the definition (the dataset's code has `6 x^2` where the second derivative has `6 x`); the benchmark report lists the hulls where the two rows differ. The stern bulb starts a share `Kappa_SB` of `Ls` along the stern taper (the code and its comment say `Ls`, the overview PDF says `Lb`; the reading is `Ls`). The constraints 36 to 48 are built from the constraints PDF (the dataset's code has the sign of row 40 the other way round); a bulb needs a zero deadrise or a positive keel radius. A Design no longer refuses a bulb. The section check no longer reports two straight edges on one line as a crossing (a rounding difference of 1e-12 or less). Benchmark: 100 hulls of Constrained Randomized Set 1 with a bulb, at the finer cut: 82 pass the pass rule of #452 and each of the 18 outside is listed with the draughts where it is out: 12 only at the two lowest draughts (small immersed volume), 3 only at the deck-level waterplane, 3 between. Old files keep their hash; the design-impact table shows the new case.
+
+<!-- design-impact -->
+### ticket/453-shipd-bulbs (2026-10-22)
+
+Between `main 5d5ec18` and `this branch 8f81496`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep hull shipd bulbs 80 m | `result` | fill: warning: Option 'sweep hull shipd bulbs 80 m': `service_area` was not stored in the file; wrote in the Defaults Profile value river-only, marked default \| warning: Option 'sweep hull shipd bulbs 80 m': `rule_sets` was not stored in the file; wrote in the Defaults Profile value [{"id":"is2008-a","version":"2.0.0","hash":"7dfa155b0d58383f73d35b9b0c037c89dbd928ad4bf22fe93a0a32b1eaee744f","source":"default"},{"id":"es-trin-2025","version":"1.0.0","hash":"a37a0c98b24d77e205b4cc04d4803b2de27912ba81232cc695a1984ef8e58d6a","source":"default"},{"id":"ovcd","version":"2.1.0","hash":"7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96","source":"default"}], marked default \| ovcd fill: 1 error(s); nothing written | computed | changed |
