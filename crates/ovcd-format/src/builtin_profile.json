@@ -49,14 +49,6 @@
     "cargo_containment": {
       "default_by_cargo_phase": { "dry_bulk": "box_hold", "liquid_gas": "type_c_tanks", "liquid_bulk": "integral_tanks" }
     },
-    "midship_coefficient": {
-      "default": 1.0,
-      "unit": "-",
-      "hard": { "gt": 0, "le": 1 },
-      "soft": { "min": 0.9, "max": 1.0 },
-      "status": "estimate",
-      "basis": "The midship section area over B x T. The section area is B x T x Cm; it sets the blockage ratio in squat, the shallow-water resistance and the limiting speed. 1: a full rectangle, the section the engine always used; a barge midship section is close to it. A shaped hull may type a lower value. No source held gives a value of Cm"
-    },
     "bow_rake_length_m": {
       "default": null,
       "unit": "m",
