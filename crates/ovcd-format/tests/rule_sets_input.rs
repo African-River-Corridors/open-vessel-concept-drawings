@@ -108,10 +108,27 @@ fn the_schema_lists_the_two_new_inputs_and_not_the_ruleset() {
     // shape.
     assert!(sets.get("default_rule").is_none());
     assert_eq!(
-        sets["default_stack"]["type_c_tanks"],
+        sets["default_stack"]["by"],
+        json!(["service_area", "cargo_containment"])
+    );
+    assert_eq!(
+        sets["default_stack"]["stacks"]["river-only"]["gas"],
         json!(["igc-2g", "is2008-a", "lr-inland-gas", "ovcd"])
     );
-    assert_eq!(sets["default_stack"]["other"], json!(["is2008-a", "ovcd"]));
+    assert_eq!(
+        sets["default_stack"]["stacks"]["coastal-and-river"]["other"],
+        json!(["is2008-a", "ovcd"])
+    );
+    // The app lists each selected set with its status and its unverified blocking Rules.
+    let known = sets["known_sets"].as_array().unwrap();
+    let ovcd = known
+        .iter()
+        .find(|k| k["id"] == "ovcd" && k["version"] == "2.1.0")
+        .unwrap();
+    assert_eq!(ovcd["status"], "draft");
+    assert!(ovcd["unverified_blocking"].as_u64().unwrap() > 0);
+    let is = known.iter().find(|k| k["id"] == "is2008-a").unwrap();
+    assert_eq!(is["unverified_blocking"], 0);
     assert!(INPUTS.iter().all(|s| s.name != "ruleset"));
 }
 
@@ -369,11 +386,200 @@ fn a_default_stack_follows_the_cargo_in_a_session_and_a_typed_one_stays() {
     assert_eq!(ids(&s), ["is2008-a", "ovcd"]);
     s.set_input("Option 1", "cargo", json!("LNG")).unwrap();
     assert_eq!(ids(&s), ["igc-2g", "is2008-a", "lr-inland-gas", "ovcd"]);
-    // A stack the designer typed stays when the Cargo changes.
-    let latest = Library::built_in().latest("ovcd").unwrap().clone();
-    let typed =
-        json!([{"id": "ovcd", "version": latest.version, "hash": latest.hash, "source": "typed"}]);
-    s.set_input("Option 1", "rule_sets", typed).unwrap();
+    // A set the designer added stays when the Cargo changes; the default sets follow the Cargo.
+    s.add_rule_set("Option 1", "ovcd@1.0.0").unwrap();
+    assert_eq!(ids(&s), ["igc-2g", "is2008-a", "lr-inland-gas", "ovcd"]);
     s.set_input("Option 1", "cargo", json!("bauxite")).unwrap();
-    assert_eq!(ids(&s), ["ovcd"]);
+    assert_eq!(ids(&s), ["is2008-a", "ovcd"]);
+    let ovcd = &s.design().options[0].input("rule_sets").unwrap().value[1];
+    assert_eq!(
+        (ovcd["version"].as_str(), ovcd["source"].as_str()),
+        (Some("1.0.0"), Some("typed"))
+    );
+}
+
+// --- issue #275: the stacks in the profile, the Service Area, adding and removing sets -------------
+
+fn profile_with_coastal_gas_stack(stack: Value) -> Profile {
+    let mut text: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
+    text["inputs"]["rule_sets"]["default_stacks"]["coastal-and-river"]["gas"] = stack;
+    Profile::from_json(&text.to_string()).unwrap()
+}
+
+fn ids_of(s: &DesignSession) -> Vec<(String, String)> {
+    s.design().options[0]
+        .input("rule_sets")
+        .unwrap()
+        .value
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|e| {
+            (
+                e["id"].as_str().unwrap().to_string(),
+                e["source"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect()
+}
+
+#[test]
+fn the_profile_holds_the_default_stack_of_each_service_area_and_cargo() {
+    let p = Profile::built_in();
+    for area in ["river-only", "coastal-and-river"] {
+        assert_eq!(
+            p.default_stack(area, true).unwrap(),
+            ["igc-2g", "is2008-a", "lr-inland-gas", "ovcd"]
+        );
+        assert_eq!(p.default_stack(area, false).unwrap(), ["is2008-a", "ovcd"]);
+    }
+    // A copy that leaves out a stack, or the `ovcd` set, is refused.
+    let mut text: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
+    text["inputs"]["rule_sets"]["default_stacks"]["river-only"]["gas"] = json!(["igc-2g"]);
+    assert!(
+        Profile::from_json(&text.to_string())
+            .unwrap_err()
+            .contains("`ovcd`")
+    );
+    text["inputs"]["rule_sets"]["default_stacks"]["river-only"]
+        .as_object_mut()
+        .unwrap()
+        .remove("gas");
+    assert!(
+        Profile::from_json(&text.to_string())
+            .unwrap_err()
+            .contains("river-only")
+    );
+    // A copy written before the stacks existed takes the built-in ones.
+    let mut old: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
+    old["inputs"].as_object_mut().unwrap().remove("rule_sets");
+    let loaded = Profile::from_json(&old.to_string()).unwrap();
+    assert_eq!(
+        loaded.default_stack("river-only", false).unwrap(),
+        ["is2008-a", "ovcd"]
+    );
+}
+
+#[test]
+fn changing_the_service_area_resets_the_default_sets_and_keeps_the_typed_ones() {
+    let profile = profile_with_coastal_gas_stack(json!(["igc-2g", "is2008-a", "ovcd"]));
+    let mut s = DesignSession::new_design(profile).unwrap();
+    s.set_input("Option 1", "cargo", json!("LNG")).unwrap();
+    let names = |s: &DesignSession| ids_of(s).into_iter().map(|(i, _)| i).collect::<Vec<_>>();
+    assert_eq!(names(&s), ["igc-2g", "is2008-a", "lr-inland-gas", "ovcd"]);
+    // A set the designer adds is typed; the Service Area change resets the default ones.
+    s.add_rule_set("Option 1", "lr-inland-gas@1.0.0").unwrap();
+    s.set_input("Option 1", "service_area", json!("coastal-and-river"))
+        .unwrap();
+    assert_eq!(
+        ids_of(&s),
+        [
+            ("igc-2g".to_string(), "default".to_string()),
+            ("is2008-a".to_string(), "default".to_string()),
+            ("ovcd".to_string(), "default".to_string()),
+            ("lr-inland-gas".to_string(), "typed".to_string()),
+        ]
+    );
+    assert_eq!(
+        s.design().options[0].input("rule_sets").unwrap().source,
+        Source::Typed
+    );
+    // Back to river-only: the profile's river stack, the typed set still there once.
+    s.set_input("Option 1", "service_area", json!("river-only"))
+        .unwrap();
+    let list = ids_of(&s);
+    assert_eq!(list.iter().filter(|(i, _)| i == "lr-inland-gas").count(), 1);
+    // The typed entry takes the place of the default one with its id.
+    assert_eq!(list[2], ("lr-inland-gas".to_string(), "typed".to_string()));
+    // With nothing typed, the stack is marked default again.
+    s.remove_rule_set("Option 1", "lr-inland-gas").unwrap();
+    s.set_input("Option 1", "service_area", json!("river-only"))
+        .unwrap();
+    assert!(ids_of(&s).iter().all(|(_, src)| src == "default"));
+}
+
+#[test]
+fn the_ovcd_set_and_a_set_an_included_set_requires_cannot_be_removed() {
+    let mut s = DesignSession::new_design(Profile::built_in()).unwrap();
+    s.set_input("Option 1", "cargo", json!("LNG")).unwrap();
+    let e = s.remove_rule_set("Option 1", "ovcd").unwrap_err();
+    assert!(e.contains("cannot be removed"), "{e}");
+    // igc-2g includes is2008-a.
+    let e = s.remove_rule_set("Option 1", "is2008-a").unwrap_err();
+    assert!(e.contains("required by igc-2g@"), "{e}");
+    // Remove the including set first, then the included one goes.
+    s.remove_rule_set("Option 1", "igc-2g").unwrap();
+    s.remove_rule_set("Option 1", "is2008-a").unwrap();
+    let e = s.remove_rule_set("Option 1", "is2008-a").unwrap_err();
+    assert!(e.contains("not selected"), "{e}");
+    assert_eq!(
+        ids_of(&s)
+            .iter()
+            .map(|(i, _)| i.as_str())
+            .collect::<Vec<_>>(),
+        ["lr-inland-gas", "ovcd"]
+    );
+}
+
+#[test]
+fn adding_a_set_takes_a_known_id_and_version_and_replaces_another_version_of_it() {
+    let mut s = DesignSession::new_design(Profile::built_in()).unwrap();
+    let e = s.add_rule_set("Option 1", "nope@1.0.0").unwrap_err();
+    assert!(e.contains("not in this engine"), "{e}");
+    let e = s.add_rule_set("Option 1", "ovcd@9.9.9").unwrap_err();
+    assert!(e.contains("not in this engine"), "{e}");
+    s.add_rule_set("Option 1", "ovcd@1.0.0").unwrap();
+    let ovcd: Vec<&Value> = s.design().options[0]
+        .input("rule_sets")
+        .unwrap()
+        .value
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|e| e["id"] == "ovcd")
+        .collect();
+    assert_eq!(ovcd.len(), 1);
+    assert_eq!(ovcd[0]["version"], "1.0.0");
+}
+
+#[test]
+fn the_trace_states_the_scope_with_the_service_area_the_sets_and_the_gaps() {
+    let mut design = dry();
+    let scope =
+        |d: &ovcd_format::Design| match run_option_with(&d.options[0], &Library::built_in(), &[]) {
+            RunOutcome::Results { results, .. } => {
+                results["rule_trace"]["scope"].as_str().unwrap().to_string()
+            }
+            other => panic!("{other:?}"),
+        };
+    let river = scope(&design);
+    assert!(
+        river.starts_with("Service Area river-only; Rule Sets is2008-a@1.0.0, ovcd@"),
+        "{river}"
+    );
+    assert!(
+        river.contains("no statutory technical code was checked, only these Rule Sets"),
+        "{river}"
+    );
+    // The count of blocking Rules not evaluated, named, as the verdict says it.
+    assert!(
+        river.contains("blocking Rule(s) not evaluated")
+            || river.contains("no blocking Rule is left"),
+        "{river}"
+    );
+    assert!(!river.contains("meets every rule"), "{river}");
+    for (name, input) in &mut design.options[0].inputs {
+        if name == "service_area" {
+            input.value = json!("coastal-and-river");
+        }
+    }
+    let coastal = scope(&design);
+    assert!(
+        coastal.starts_with("Service Area coastal-and-river; "),
+        "{coastal}"
+    );
+    assert!(
+        !coastal.contains("no statutory technical code"),
+        "{coastal}"
+    );
 }

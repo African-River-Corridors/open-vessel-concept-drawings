@@ -270,7 +270,9 @@ impl Profile {
             .iter()
             .map(|l| l.name)
             .chain(LEGACY_FIXED_OTHER.iter().map(|l| l.name))
-            .chain(TABLE_DEFAULTS.iter().copied());
+            .chain(TABLE_DEFAULTS.iter().copied())
+            // Issue #275: a copy written before the default stacks has none.
+            .chain(["rule_sets"]);
         for name in added {
             if !self.inputs.contains_key(name)
                 && let Some(entry) = built_in.inputs.get(name)
@@ -323,6 +325,29 @@ impl Profile {
         Ok(())
     }
 
+    /// The default stacks (issue #275): each Service Area has a `gas` and an `other` list of set ids,
+    /// and the `ovcd` set is in every one.
+    fn check_default_stacks(&self) -> Result<(), String> {
+        for area in crate::vdesign::SERVICE_AREAS {
+            for kind in [true, false] {
+                let stack = self.default_stack(area, kind).ok_or_else(|| {
+                    format!(
+                        "profile gives no default Rule Set stack for {area}, {} \
+                         (`rule_sets.default_stacks.{area}.{}` is missing)",
+                        if kind { "gas" } else { "other" },
+                        if kind { "gas" } else { "other" }
+                    )
+                })?;
+                if !stack.iter().any(|s| s == "ovcd") {
+                    return Err(format!(
+                        "profile default Rule Set stack for {area} must hold the `ovcd` set"
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -343,11 +368,11 @@ impl Profile {
                     && !crate::class_input::UNSET_WHEN_ABSENT.contains(&s.name)
                     // A rule, not a value: the depth is the ratio of the Cargo times the beam.
                     && s.name != crate::vdesign::DEPTH_INPUT
-                    // A rule, not a value: the default stack of the Cargo Containment, each set at
-                    // its highest built-in version (issue #274; the stacks per Service Area come
-                    // with #275).
-                    && s.name != "rule_sets"
         }) {
+            if spec.name == "rule_sets" {
+                self.check_default_stacks()?;
+                continue;
+            }
             let entry = self
                 .inputs
                 .get(spec.name)
@@ -435,6 +460,26 @@ impl Profile {
 
     fn entry(&self, name: &str) -> Option<&Map<String, Value>> {
         self.inputs.get(name).and_then(Value::as_object)
+    }
+
+    /// The default stacks as the profile writes them: `{ <Service Area>: { gas: [..], other: [..] } }`.
+    pub fn default_stacks_json(&self) -> Value {
+        self.entry("rule_sets")
+            .and_then(|e| e.get("default_stacks"))
+            .cloned()
+            .unwrap_or(Value::Null)
+    }
+
+    /// The default Rule Set stack for a Service Area and a Cargo (`gas`: a Type C tank Cargo
+    /// Containment), as set ids in selection order (issue #275). `None` when the profile gives none.
+    pub fn default_stack(&self, service_area: &str, gas: bool) -> Option<Vec<String>> {
+        let list = self
+            .entry("rule_sets")?
+            .get("default_stacks")?
+            .get(service_area)?
+            .get(if gas { "gas" } else { "other" })?
+            .as_array()?;
+        list.iter().map(|v| v.as_str().map(String::from)).collect()
     }
 
     /// The plain default of an input, if the profile gives one.
