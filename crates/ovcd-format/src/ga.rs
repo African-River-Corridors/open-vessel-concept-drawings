@@ -331,7 +331,97 @@ fn read_aft(results: &Value) -> Option<Aft> {
     })
 }
 
+/// A Space of a liquid bulk hull as the drawing reads it (`drawing.liquid_tanks.spaces`): the
+/// views draw its extent and its cross-section corners, nothing of their own.
+struct DrawSpace {
+    name: String,
+    /// The Space kind key: `cargo_tank`, `slop`, `cofferdam`, `pump_room`, `double_bottom_ballast`,
+    /// `wing_ballast`.
+    kind: String,
+    /// `port`, `starboard` or `centre`.
+    side: String,
+    x_aft: f64,
+    x_fwd: f64,
+    /// The cross-section corners, (y, z) in metres.
+    section: Vec<[f64; 2]>,
+}
+
+impl DrawSpace {
+    fn is_tank(&self) -> bool {
+        self.kind == "cargo_tank" || self.kind == "slop"
+    }
+
+    fn mid_x(&self) -> f64 {
+        (self.x_aft + self.x_fwd) / 2.0
+    }
+
+    /// The least and greatest (y, z) of the section.
+    fn extent(&self) -> ([f64; 2], [f64; 2]) {
+        let mut lo = [f64::INFINITY; 2];
+        let mut hi = [f64::NEG_INFINITY; 2];
+        for p in &self.section {
+            for i in 0..2 {
+                lo[i] = lo[i].min(p[i]);
+                hi[i] = hi[i].max(p[i]);
+            }
+        }
+        (lo, hi)
+    }
+
+    /// The name without its side letter: `3P` is tank `3`.
+    fn number(&self) -> String {
+        match self.name.strip_suffix(['P', 'S']) {
+            Some(n) => n.to_string(),
+            None => self.name.clone(),
+        }
+    }
+}
+
+fn read_draw_spaces(results: &Value) -> Result<Vec<DrawSpace>, String> {
+    let list = results["drawing"]["liquid_tanks"]["spaces"]
+        .as_array()
+        .ok_or("the results have no `drawing.liquid_tanks.spaces`")?;
+    list.iter()
+        .map(|v| {
+            let text = |key: &str| {
+                v[key]
+                    .as_str()
+                    .map(str::to_string)
+                    .ok_or_else(|| format!("a Space has no `{key}`"))
+            };
+            let number = |key: &str| {
+                v[key]
+                    .as_f64()
+                    .ok_or_else(|| format!("a Space has no `{key}`"))
+            };
+            let section = v["section_m"]
+                .as_array()
+                .ok_or("a Space has no `section_m`")?
+                .iter()
+                .map(|p| match (p[0].as_f64(), p[1].as_f64()) {
+                    (Some(y), Some(z)) => Ok([y, z]),
+                    _ => Err("a Space section corner is not a pair of numbers".to_string()),
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(DrawSpace {
+                name: text("name")?,
+                kind: text("kind")?,
+                side: text("side")?,
+                x_aft: number("x_aft_m")?,
+                x_fwd: number("x_fwd_m")?,
+                section,
+            })
+        })
+        .collect()
+}
+
 enum Containment {
+    /// Integral cargo tanks of a liquid bulk hull: the typed Spaces.
+    Liquid {
+        spaces: Vec<DrawSpace>,
+        /// Cargo heating is fitted (the lightship has a heating item).
+        heating: bool,
+    },
     /// A box hold or a sloped hopper hold.
     Hold {
         top_width: f64,
@@ -447,9 +537,16 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
                 coaming: drawing("hatch_coaming_height_m")?,
             }
         }
-        CargoClass::LiquidBulk => {
-            return Err("a liquid bulk Cargo has no drawing yet".to_string());
-        }
+        CargoClass::LiquidBulk => Containment::Liquid {
+            spaces: read_draw_spaces(results)?,
+            heating: results["liquid"]["lightship_items"]
+                .as_array()
+                .is_some_and(|items| {
+                    items.iter().any(|i| {
+                        i["name"] == "heating" && i["mass_t"].as_f64().is_some_and(|m| m > 0.0)
+                    })
+                }),
+        },
     };
     for (name, value) in [
         ("loa", loa),
@@ -550,7 +647,7 @@ impl Hull {
                 support_height,
                 ..
             } => Some(double_bottom + support_height),
-            Containment::Hold { .. } => None,
+            Containment::Hold { .. } | Containment::Liquid { .. } => None,
         }
     }
 
@@ -558,7 +655,7 @@ impl Hull {
     fn tank_centre_y(&self) -> Option<f64> {
         match &self.containment {
             Containment::Tanks { od, .. } => Some(self.tank_bottom()? + od / 2.0),
-            Containment::Hold { .. } => None,
+            Containment::Hold { .. } | Containment::Liquid { .. } => None,
         }
     }
 
@@ -620,7 +717,7 @@ impl Hull {
     fn gas_double_bottom(&self) -> f64 {
         match &self.containment {
             Containment::Tanks { double_bottom, .. } => *double_bottom,
-            Containment::Hold { .. } => 0.0,
+            Containment::Hold { .. } | Containment::Liquid { .. } => 0.0,
         }
     }
 
@@ -1261,6 +1358,168 @@ fn hold_bulkheads(c: &mut Canvas, h: &Hull, view: View, labels: &mut Vec<(String
     ));
 }
 
+/// Labels that stand above the hull in rows, each over its target: a label takes the lowest row where
+/// its text clears the texts before it, and where its leader clears the texts of the rows under it.
+/// `targets` are (text, target point, x of the label point); the leaders run up to `base`.
+fn labels_in_rows(c: &mut Canvas, mut targets: Vec<(String, [f64; 2])>, base: f64, loa: f64) {
+    targets.sort_by(|a, b| a.1[0].total_cmp(&b.1[0]));
+    let gap = LABEL_CLEAR_MM * c.k;
+    // the text spans (x start, x end) of each row
+    let mut rows: Vec<Vec<(f64, f64)>> = Vec::new();
+    for (text, target) in targets {
+        // The text stands to the left of the label point in the forward half, so that it keeps clear
+        // of the column of labels beyond the bow.
+        let width = (LEADER_TEXT_GAP_MM + text_width_mm(&text)) * c.k;
+        let left = target[0] > loa / 2.0;
+        let start = if left {
+            target[0] - 2.0 * c.k
+        } else {
+            target[0] + 2.0 * c.k
+        };
+        let (from, end) = if left {
+            (start - width, start)
+        } else {
+            (start, start + width)
+        };
+        let clear = |span: &(f64, f64)| span.1 + gap <= from || end + gap <= span.0;
+        let leader_clear = |span: &(f64, f64)| target[0] < span.0 - gap || target[0] > span.1 + gap;
+        // The row at which the label's leader also clears the texts under it; failing that, the lowest row
+        // where only the text clears. A row past the last one is empty, so the search ends there.
+        let fits_text = |r: usize| rows.get(r).is_none_or(|spans| spans.iter().all(clear));
+        let fits_leader = |r: usize| {
+            rows.iter()
+                .take(r)
+                .all(|lower| lower.iter().all(leader_clear))
+        };
+        let row = (0..=rows.len())
+            .find(|&r| fits_text(r) && fits_leader(r))
+            .or_else(|| (0..=rows.len()).find(|&r| fits_text(r)))
+            .unwrap_or(rows.len());
+        if row >= rows.len() {
+            rows.resize(row + 1, Vec::new());
+        }
+        rows[row].push((from, end));
+        c.leader(
+            &text,
+            target,
+            [start, base + (row as f64 + 1.0) * LABEL_STEP_MM * c.k],
+        );
+    }
+}
+
+/// The names of a liquid bulk hull's Spaces, in elevation and plan. The tank positions (plan), the
+/// cofferdams, the pump room and the slop tanks stand over the hull in rows; the wing ballast (plan)
+/// and the double bottom (elevation) go in the column. Each label is at its Space.
+fn liquid_labels(c: &mut Canvas, h: &Hull, view: View, labels: &mut Vec<(String, [f64; 2])>) {
+    let Containment::Liquid { spaces, .. } = &h.containment else {
+        return;
+    };
+    let top = match view {
+        View::Elevation => h.depth.max(h.air_top.unwrap_or(0.0)),
+        View::Plan => h.beam / 2.0,
+    };
+    let mut above: Vec<(String, [f64; 2])> = Vec::new();
+    for sp in spaces {
+        let (lo, hi) = sp.extent();
+        let (y, z) = ((lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0);
+        let (x, edge) = match view {
+            View::Elevation => (sp.mid_x(), hi[1]),
+            View::Plan => (sp.mid_x(), hi[0]),
+        };
+        let centre = match view {
+            View::Elevation => [x, z],
+            View::Plan => [x, y],
+        };
+        match sp.kind.as_str() {
+            "cargo_tank" if view == View::Plan && sp.side != "starboard" => above.push((
+                label!("draw-tank", "TANK {number}", number = sp.number()),
+                [x, top],
+            )),
+            "slop" if view == View::Plan && sp.side != "starboard" => {
+                above.push((label!("draw-slop-tank", "SLOP TANK"), [x, top]))
+            }
+            "cofferdam" => above.push((label!("draw-cofferdam", "COFFERDAM"), [x, top.min(edge)])),
+            "pump_room" => above.push((label!("draw-pump-room", "PUMP ROOM"), [x, top.min(edge)])),
+            "wing_ballast" if view == View::Plan && sp.side == "port" => {
+                labels.push((label!("draw-wbt-both-sides", "WBT (BOTH SIDES)"), centre));
+            }
+            "double_bottom_ballast" if view == View::Elevation && sp.side == "port" => {
+                labels.push((
+                    label!("draw-double-bottom", "DOUBLE BOTTOM"),
+                    [sp.x_fwd - 3.0 * c.k, z],
+                ))
+            }
+            _ => {}
+        }
+    }
+    labels_in_rows(c, above, top + 2.0 * c.k, h.loa);
+}
+
+/// The typical section of a liquid bulk hull, at the first cargo tank: the cargo tanks, with the
+/// centreline bulkhead where the tank is split, the double bottom and the double side hatched.
+fn liquid_section(
+    c: &mut Canvas,
+    spaces: &[DrawSpace],
+    heating: bool,
+    labels: &mut Vec<(String, [f64; 2])>,
+) {
+    let Some(first) = spaces
+        .iter()
+        .filter(|s| s.kind == "cargo_tank")
+        .map(|s| s.x_aft)
+        .min_by(|a, b| a.total_cmp(b))
+    else {
+        return;
+    };
+    let tank_here = |s: &DrawSpace| s.kind == "cargo_tank" && s.x_aft == first;
+    let ballast_here = |s: &DrawSpace| {
+        (s.kind == "double_bottom_ballast" || s.kind == "wing_ballast")
+            && s.x_aft <= first
+            && s.x_fwd > first
+    };
+    for sp in spaces.iter().filter(|s| tank_here(s) || ballast_here(s)) {
+        let (lo, hi) = sp.extent();
+        let layer = if tank_here(sp) { "OBJECT" } else { "OUTLINE" };
+        c.polyline(layer, &sp.section, true);
+        if ballast_here(sp) {
+            c.hatch("HATCH", &sp.section, "lines");
+        }
+        let mid = [(lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0];
+        match sp.kind.as_str() {
+            "cargo_tank" if sp.side != "starboard" => {
+                let split = sp.side == "port";
+                labels.push((
+                    if split {
+                        label!("draw-cargo-tank-pair", "CARGO TANKS (P AND S)")
+                    } else {
+                        label!("draw-cargo-tank", "CARGO TANK")
+                    },
+                    mid,
+                ));
+                if split {
+                    labels.push((
+                        label!("draw-centreline-bulkhead", "CENTRELINE BULKHEAD"),
+                        [0.0, mid[1]],
+                    ));
+                }
+                if heating {
+                    labels.push((
+                        label!("draw-cargo-heating", "CARGO HEATING FITTED"),
+                        [mid[0], lo[1] + 0.25 * (hi[1] - lo[1])],
+                    ));
+                }
+            }
+            "double_bottom_ballast" if sp.side == "port" => {
+                labels.push((label!("draw-double-bottom", "DOUBLE BOTTOM"), mid));
+            }
+            "wing_ballast" if sp.side == "port" => {
+                labels.push((label!("draw-wbt-both-sides", "WBT (BOTH SIDES)"), mid));
+            }
+            _ => {}
+        }
+    }
+}
+
 /// The aft block of a self-propelled hull, from `drawing.aft_arrangement`; nothing for a pushed
 /// barge. Layers: the units and thrusters are equipment (EQUIP); the wheelhouse is part of the
 /// vessel (OBJECT, like the tanks); the zone bulkheads are below the deck (HIDDEN in elevation).
@@ -1523,6 +1782,28 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
                 false,
             );
         }
+        Containment::Liquid { spaces, .. } => {
+            // every Space under the deck: its extent in x and its height range
+            for sp in spaces
+                .iter()
+                .filter(|sp| sp.side != "starboard" || !sp.is_tank())
+            {
+                if sp.kind == "double_bottom_ballast" || sp.kind == "wing_ballast" {
+                    continue;
+                }
+                let (lo, hi) = sp.extent();
+                c.polyline(
+                    "HIDDEN",
+                    &[
+                        [sp.x_aft, lo[1]],
+                        [sp.x_fwd, lo[1]],
+                        [sp.x_fwd, hi[1]],
+                        [sp.x_aft, hi[1]],
+                    ],
+                    true,
+                );
+            }
+        }
         Containment::Tanks { od, .. } => {
             if let (Some((length, starts, _)), Some(yc)) = (h.tank_layout(), h.tank_centre_y()) {
                 let r = od / 2.0;
@@ -1546,6 +1827,7 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
     aft_block(&mut c, h, View::Elevation);
     zones(&mut c, h, View::Elevation, &mut labels);
     hold_bulkheads(&mut c, h, View::Elevation, &mut labels);
+    liquid_labels(&mut c, h, View::Elevation, &mut labels);
     tunnel_stern(&mut c, h, View::Elevation);
     // Issue #409: the top of the structure and the loaded air draft under it.
     if let Some(top) = h.air_top {
@@ -1662,6 +1944,35 @@ fn plan(h: &Hull, n: u32) -> Canvas {
                 );
             }
         }
+        Containment::Liquid { spaces, .. } => {
+            for sp in spaces {
+                let (lo, hi) = sp.extent();
+                match sp.kind.as_str() {
+                    // the wing ballast tanks are hatched; the rest stands under the deck
+                    "wing_ballast" => c.hatch(
+                        "HATCH",
+                        &[
+                            [sp.x_aft, lo[0]],
+                            [sp.x_fwd, lo[0]],
+                            [sp.x_fwd, hi[0]],
+                            [sp.x_aft, hi[0]],
+                        ],
+                        "lines",
+                    ),
+                    "double_bottom_ballast" => {}
+                    _ => c.polyline(
+                        "HIDDEN",
+                        &[
+                            [sp.x_aft, lo[0]],
+                            [sp.x_fwd, lo[0]],
+                            [sp.x_fwd, hi[0]],
+                            [sp.x_aft, hi[0]],
+                        ],
+                        true,
+                    ),
+                }
+            }
+        }
         Containment::Tanks { od, .. } => {
             if let Some((length, starts, centres)) = h.tank_layout() {
                 let r = od / 2.0;
@@ -1693,6 +2004,7 @@ fn plan(h: &Hull, n: u32) -> Canvas {
     let mut labels: Vec<(String, [f64; 2])> = Vec::new();
     zones(&mut c, h, View::Plan, &mut labels);
     hold_bulkheads(&mut c, h, View::Plan, &mut labels);
+    liquid_labels(&mut c, h, View::Plan, &mut labels);
     tunnel_stern(&mut c, h, View::Plan);
     let overshoot = 4.0 * c.k;
     c.centre_line([-overshoot, 0.0], [h.loa + overshoot, 0.0]);
@@ -1924,6 +2236,9 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
                 ],
                 false,
             );
+        }
+        Containment::Liquid { spaces, heating } => {
+            liquid_section(&mut c, spaces, *heating, &mut labels);
         }
         Containment::Tanks {
             od,
