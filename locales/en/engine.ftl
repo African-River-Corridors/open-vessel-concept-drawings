@@ -225,6 +225,13 @@ msg-convoy-not-available = convoy results not yet available
 
 msg-offsets-resampled = the offsets table has stations of unequal point counts: { $count } station(s) are resampled by arc length to { $points } points, with their own points kept
 
+## crates/ovcd-format/src/shipd.rs
+
+msg-shipd-no-parameters = a ShipD Hull Form needs its parameters (`{ $input }`)
+msg-shipd-missing = `{ $input }` needs the ShipD parameter { $name }
+msg-shipd-bulb = `{ $input }`: a ShipD hull with a bulbous bow or stern is not built yet (bit_BB and bit_SB must be 0)
+msg-shipd-constraint = `{ $input }` fails ShipD constraint { $index } ({ $name })
+
 ## crates/ovcd-format/src/simulate.rs
 
 warn-channel-no-bottom-width = The channel has a depth but no bottom width, so squat, the Schijf limiting speed and the blockage are not checked and the speed curves are for deep water only. The draught limit still uses the depth. Give the channel bottom width to check them.
@@ -320,7 +327,7 @@ msg-price-base-date = `{ $input }` must be a date as YYYY, YYYY-MM or YYYY-MM-DD
 msg-string = `{ $input }` must be a string
 msg-number-or-null = `{ $input }` must be a number or null (none)
 msg-bool = `{ $input }` must be true or false
-msg-hull-form-not-built = `{ $input }` = { $value } is not built yet: the engine computes raked_box, v_bottom, chine and offsets for now (spec 0008)
+msg-hull-form-not-built = `{ $input }` = { $value } is not built yet: the engine computes raked_box, v_bottom, chine, offsets and shipd for now (spec 0008)
 msg-parameter-set = `{ $input }` must be an object of named numbers, or null
 msg-offsets-table = `{ $input }` must be a list of rows with `station_x_m`, `y_m` and `z_m` in metres, or null
 msg-scheme = `{ $input }` = { $value } is not a scheme with a Vessel Class that can define a vessel (see `ovcd schema`)

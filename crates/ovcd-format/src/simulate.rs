@@ -1847,6 +1847,7 @@ fn hull_shape_of(p: &Map<String, Value>) -> R<ovcd_core::hull::hull_form::HullSh
         camber_m: get_or(p, "camber_m", 0.0)?,
         bottom,
         offsets: offsets_of(p)?,
+        shipd: shipd_of(p)?,
     })
 }
 
@@ -1870,6 +1871,17 @@ fn offsets_of(p: &Map<String, Value>) -> R<Option<ovcd_core::sections::SectionsT
     let table = ovcd_core::offsets::from_rows(&rows)
         .map_err(|e| Stop::Raised("ValueError".to_string(), format!("{e}")))?;
     Ok(Some(table))
+}
+
+/// The ShipD parameters of a `shipd` Option (issue #452); `None` for any other Hull Form.
+fn shipd_of(p: &Map<String, Value>) -> R<Option<ovcd_core::shipd::ShipdParameters>> {
+    if p.get("hull_form").and_then(Value::as_str) != Some("shipd") {
+        return Ok(None);
+    }
+    let (l, b, d) = (need(p, "loa_m")?, need(p, "beam_m")?, need(p, "depth_m")?);
+    crate::shipd::parameters_of(p.get("shipd_parameters").unwrap_or(&Value::Null), (l, b, d))
+        .map(Some)
+        .map_err(|e| Stop::Raised("ValueError".to_string(), e.to_string()))
 }
 
 /// The hull of the Option as its Sections Table (issue #448): the raked bow and the Stern Form.

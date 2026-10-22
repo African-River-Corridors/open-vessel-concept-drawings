@@ -240,7 +240,7 @@ pub fn table_combinations() -> Vec<[(&'static str, String); 3]> {
 pub const HULL_FORMS: &[&str] = &["box", "raked_box", "v_bottom", "chine", "shipd", "offsets"];
 /// The Hull Forms the engine computes today. The others are inputs only until their generator and
 /// the hydrostatics switch-over land (spec 0008, "Build tickets"); an Option with one is refused.
-pub const BUILT_HULL_FORMS: &[&str] = &["raked_box", "v_bottom", "chine", "offsets"];
+pub const BUILT_HULL_FORMS: &[&str] = &["raked_box", "v_bottom", "chine", "offsets", "shipd"];
 /// The Hull Forms with the raked-box bow (every form but `shipd` and `offsets`).
 pub const RAKED_BOW_FORMS: &[&str] = &["box", "raked_box", "v_bottom", "chine"];
 /// The Hull Forms that take a bilge radius.
@@ -4488,7 +4488,7 @@ fn check_value(spec: &InputSpec, v: &Value, profile: &Profile) -> Result<(Value,
                 Err(text!(
                     "msg-hull-form-not-built",
                     "`{input}` = {value} is not built yet: the engine computes raked_box, v_bottom, \
-                     chine and offsets for now (spec 0008)",
+                     chine, offsets and shipd for now (spec 0008)",
                     input = input(),
                     value = v.to_string()
                 ))
@@ -4790,6 +4790,31 @@ fn offsets_checks<'a>(
     }
 }
 
+/// Issue #452: a `shipd` Option's parameters are checked as the engine reads them: one error per
+/// failed constraint, with its index and name.
+fn shipd_checks<'a>(
+    get: &dyn Fn(&str) -> Option<&'a Value>,
+    report: &mut Report,
+    at: &dyn Fn(Text) -> Text,
+) {
+    if get("hull_form").and_then(Value::as_str) != Some("shipd") {
+        return;
+    }
+    let dim = |n: &str| get(n).and_then(Value::as_f64);
+    let (Some(l), Some(b), Some(d)) = (dim("length_overall_m"), dim("beam_m"), dim(DEPTH_INPUT))
+    else {
+        return;
+    };
+    if !(l > 0.0 && b > 0.0 && d > 0.0) {
+        return;
+    }
+    let v = get("shipd_parameters").unwrap_or(&Value::Null);
+    for m in crate::shipd::messages(v, (l, b, d)) {
+        report.error_text(at(m), &["shipd_parameters"]);
+    }
+}
+
+/// Checks across inputs.
 fn cross_checks(
     inputs: &[(String, StoredInput)],
     profile: &Profile,
@@ -4866,6 +4891,7 @@ fn cross_checks(
         );
     }
     offsets_checks(&get, report, at);
+    shipd_checks(&get, report, at);
     // A count is a whole number.
     for name in [
         "n_holds",

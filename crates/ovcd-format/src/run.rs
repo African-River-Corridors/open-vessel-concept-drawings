@@ -132,6 +132,7 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     // Issue #451: an offsets hull is its typed table, and its L, B and D are the table's.
     put("hull_form", "hull_form");
     put("hull_offsets", "hull_offsets");
+    put("shipd_parameters", "shipd_parameters");
     put("freeboard_min_m", "min_freeboard_m");
     put("lightship_k_t_per_m3", "lightship_factor_t_per_m3");
     put("fill_ratio", "fill_ratio");
