@@ -144,12 +144,12 @@
       "unit": "m",
       "hard": { "ge": 0 },
       "soft": { "min": 0.15, "max": 1.5 },
-      "basis": "the safety clearance: the least distance from the plane of maximum draught to the deck at side or to the lowest opening. 0.3 m is ES-TRIN 2025/1 Article 4.01(1), at least 300 mm; the rules of the Service Area check the value (es-trin-2025 for a river, icll-freeboard for a coast, in the default stacks). It is not an ICLL freeboard: for a long coastal hull the ICLL type A table value is far larger (984 mm at 90 m). It must also be less than the moulded depth (hard)"
+      "basis": "the safety clearance: the least distance from the plane of maximum draught to the deck at side. For an open hold the Rules add the hatch coaming height, because ES-TRIN 2025/1 Article 4.01 measures to the lowest point that is not watertight. 0.3 m is ES-TRIN 2025/1 Article 4.01(1), at least 300 mm; the rules of the Service Area check the value (es-trin-2025 for a river, icll-freeboard for a coast, in the default stacks). It is not an ICLL freeboard: for a long coastal hull the ICLL type A table value is far larger (984 mm at 90 m). It must also be less than the moulded depth (hard)"
     },
     "hold_covering": {
       "default": "covered",
       "status": "estimate",
-      "basis": "Whether the holds sail covered or open. ES-TRIN 2025/1 Article 4.01(2) asks for a safety clearance of at least 500 mm for a vessel that sails with its holds uncovered, and the es-trin-2025 Rule for it applies only to an open hold. No source says which a barge does; the default is covered, so a new Option is checked against 300 mm. Type open for an uncovered hold. A file saved before reads covered"
+      "basis": "Whether the holds sail covered or open. ES-TRIN 2025/1 Article 4.01(2) asks for a safety clearance of at least 500 mm for a vessel that sails with its holds uncovered, and the es-trin-2025 Rule for it applies only to an open hold, measured to the top of the hatch coaming. The same Article applies where an opening cannot be closed spray-proof and weathertight: type open for that case too. No source says which a barge does; the default is covered, so a new Option is checked against 300 mm. Type open for an uncovered hold. A file saved before reads covered"
     },
     "bow_rake_length_to_depth_ratio": {
       "default": 1.6,

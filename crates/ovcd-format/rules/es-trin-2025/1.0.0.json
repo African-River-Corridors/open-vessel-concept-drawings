@@ -26,13 +26,13 @@
   "rules": [
     {
       "id": "es-trin/4.01(1)/safety-clearance",
-      "title": "Safety clearance at least 300 mm",
+      "title": "Safety clearance at least 300 mm (checked against the freeboard to the deck edge; ES-TRIN measures to the lowest point that is not watertight, so this is the stricter reading for a vessel with openings above the deck)",
       "origin": "regulation",
       "source": {
         "document": "ES-TRIN, European standard laying down technical requirements for inland navigation vessels",
         "edition": "Edition 2025/1",
         "locator": "4.01(1)",
-        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 4, p. 16",
+        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 4, p. 17",
         "access": "free"
       },
       "codified": {
@@ -55,17 +55,110 @@
       "sizes": false,
       "evaluated": true,
       "finding": "#428",
-      "since": "1.0.0"
+      "since": "1.0.0",
+      "applies_when": {
+        "cargo_class": [
+          "gas",
+          "liquid_bulk"
+        ]
+      }
+    },
+    {
+      "id": "es-trin/4.01(1)/safety-clearance-covered-holds",
+      "title": "Safety clearance at least 300 mm for a dry-bulk vessel with covered holds (checked against the freeboard to the deck edge; the stricter reading)",
+      "origin": "regulation",
+      "source": {
+        "document": "ES-TRIN, European standard laying down technical requirements for inland navigation vessels",
+        "edition": "Edition 2025/1",
+        "locator": "4.01(1)",
+        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 4, p. 17",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#428"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "input.min_freeboard_m"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.3,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#428",
+      "since": "1.0.0",
+      "applies_when": {
+        "cargo_class": [
+          "dry_bulk"
+        ],
+        "hold_covering": [
+          "covered"
+        ]
+      }
+    },
+    {
+      "id": "es-trin/4.01(1)/safety-clearance-open-holds",
+      "title": "Safety clearance at least 300 mm for a dry-bulk vessel with open holds, measured to the top of the hatch coaming (the lowest point that is not watertight): freeboard at least 300 mm less the coaming height, not below 0",
+      "origin": "regulation",
+      "source": {
+        "document": "ES-TRIN, European standard laying down technical requirements for inland navigation vessels",
+        "edition": "Edition 2025/1",
+        "locator": "4.01(1)",
+        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 4, p. 17",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#428"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "input.min_freeboard_m"
+      },
+      "limit": {
+        "shape": "at-least",
+        "x": "input.hatch_coaming_height_m",
+        "a": 0.3,
+        "b": -1.0,
+        "c": 1.0,
+        "lo": 0.0,
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#428",
+      "since": "1.0.0",
+      "applies_when": {
+        "cargo_class": [
+          "dry_bulk"
+        ],
+        "hold_covering": [
+          "open"
+        ]
+      },
+      "compare": "ge"
     },
     {
       "id": "es-trin/4.01(2)/safety-clearance-uncovered-holds",
-      "title": "Safety clearance at least 500 mm for vessels that sail with their holds uncovered",
+      "title": "Safety clearance at least 500 mm to each opening, for a vessel that sails with its holds uncovered or whose openings cannot be closed spray-proof and weathertight (type the hold covering as open for either case); measured to the top of the hatch coaming: freeboard at least 500 mm less the coaming height, not below 0",
       "origin": "regulation",
       "source": {
         "document": "ES-TRIN, European standard laying down technical requirements for inland navigation vessels",
         "edition": "Edition 2025/1",
         "locator": "4.01(2)",
-        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 4, p. 16",
+        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 4, p. 17",
         "access": "free"
       },
       "codified": {
@@ -75,20 +168,28 @@
       },
       "verified": false,
       "applies_when": {
+        "cargo_class": [
+          "dry_bulk"
+        ],
         "hold_covering": [
           "open"
         ]
       },
-      "kind": "limit",
+      "kind": "formula",
       "measure": {
         "id": "input.min_freeboard_m"
       },
       "compare": "ge",
       "limit": {
-        "value": 0.5,
+        "shape": "at-least",
+        "x": "input.hatch_coaming_height_m",
+        "a": 0.5,
+        "b": -1.0,
+        "c": 1.0,
+        "lo": 0.0,
         "unit": "m"
       },
-      "tolerance": 0,
+      "tolerance": 1e-09,
       "consequence": "block",
       "sizes": false,
       "evaluated": true,
@@ -103,7 +204,7 @@
         "document": "ES-TRIN, European standard laying down technical requirements for inland navigation vessels",
         "edition": "Edition 2025/1",
         "locator": "4.02(1)",
-        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 4, p. 16",
+        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 4, p. 17",
         "access": "free"
       },
       "codified": {
@@ -111,7 +212,13 @@
         "date": "2026-10-22",
         "review": "#428"
       },
-      "verified": false,
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "edition_held": "ES-TRIN 2025/1 (English, signed)",
+        "locator_read": "4.02(1), p. 17; 1.01 point 4.4, p. 5",
+        "review": "#428"
+      },
       "kind": "limit",
       "measure": {
         "id": "input.min_freeboard_m"
