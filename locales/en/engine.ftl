@@ -34,6 +34,7 @@ warn-aft-sightline-lift = Sightline needs { $lift } m of lift; the column gives 
 warn-barge-bulk-gm = Bulk GM is first-order (assumed lightship KG); cargo-shift/angle-of-repose not modelled — confirm with a full intact-stability booklet.
 check-wheelhouse-blind-distance = blind distance ahead of the bow { $blind } m <= { $limit } m, light (ES-TRIN 7.02(2)); lift used { $lift } m of { $max_lift } m
 warn-aft-blind-distance-lift = The blind distance needs { $needed } m of lift; the column gives { $max_lift } m. Raise the column or lower the cargo top.
+warn-steel-mass-disagreement = The lightship uses { $top_down } t of hull steel (top-down); the cost prices { $bottom_up } t (bottom-up). They differ by { $delta } t ({ $pct } %), more than the { $limit } % limit (an Estimate). The cost keeps the bottom-up mass.
 check-feasible-geometry = cargo volume must be positive (tank/hold fits)
 check-name-feasible-geometry = feasible geometry
 check-name-not-overloaded = not overloaded
