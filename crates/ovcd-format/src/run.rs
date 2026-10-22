@@ -207,6 +207,17 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
         "ballast_arrival_double_bottom_fill",
         "ballast_arrival_peak_fill",
         "ballast_arrival_wing_fill",
+        // Issue #331: the cargo tanks of a liquid bulk Cargo.
+        "double_side_m",
+        "double_bottom_m",
+        "liquid_tanks_in_line",
+        "centreline_bulkhead",
+        "cofferdam_m",
+        "pump_arrangement",
+        "pump_room_length_m",
+        "slop_share",
+        "heating_kw_per_m3",
+        "liquid_fill_ratio",
     ] {
         put(name, name);
     }
@@ -234,6 +245,7 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
         Some("box_hold") => "box_barge",
         Some("sloped_hopper_hold") => "hopper_barge",
         Some("type_c_tanks") => "gas_barge",
+        Some("integral_tanks") => "tank_barge",
         _ => return Err("the Option has no Cargo Containment".to_string()),
     };
     p.insert("vessel".into(), json!(vessel));

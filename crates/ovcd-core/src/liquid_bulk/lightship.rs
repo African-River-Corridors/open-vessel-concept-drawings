@@ -14,7 +14,9 @@ use super::LiquidBulkInputs;
 use crate::loading_conditions::Item;
 
 /// k, t per m³ of L x B x D (the hull and the baseline outfit). Estimate; fitted by
-/// `tools/fit_tank_lightship.py` on 15 records, see `calibration/tank_lightship.yaml`.
+/// `tools/fit_tank_lightship.py` on 15 records, see `calibration/tank_lightship.yaml`. The default of
+/// `LiquidBulkInputs::lightship_k_t_per_m3`: the Defaults Profile holds it as the input
+/// `lightship_factor_t_per_m3` for `integral_tanks`, and a test keeps the two equal.
 pub const TANK_LIGHTSHIP_K_T_PER_M3: f64 = 0.1141;
 /// The cargo pumps, t per m³ of tank volume. Estimate: no published weight.
 pub const PUMPS_T_PER_M3: f64 = 0.004;
@@ -37,7 +39,7 @@ pub fn outfit_t(volume_m3: f64, heating_kw: f64) -> f64 {
 /// The lightship (t) and its items, for `tank_volume_m3` of cargo and slop tank volume (gross).
 /// The outfit sits at the deck, at the middle of the cargo zone: the pumps and the piping are on deck.
 pub(super) fn compute(inp: &LiquidBulkInputs, tank_volume_m3: f64) -> (f64, Vec<(String, Item)>) {
-    let hull_t = TANK_LIGHTSHIP_K_T_PER_M3 * inp.loa_m * inp.beam_m * inp.depth_m;
+    let hull_t = inp.lightship_k_t_per_m3 * inp.loa_m * inp.beam_m * inp.depth_m;
     let heating_kw = inp.heating_kw_per_m3 * tank_volume_m3;
     let lcg_zone = 0.5 * (inp.zone_aft_m + inp.zone_fwd_m);
     let mut items: Vec<(String, Item)> = Vec::new();
@@ -67,5 +69,5 @@ pub(super) fn compute(inp: &LiquidBulkInputs, tank_volume_m3: f64) -> (f64, Vec<
             ));
         }
     }
-    (items.iter().map(|(_, i)| i.mass_t).sum(), items)
+    (items.iter().fold(0.0, |a, (_, i)| a + i.mass_t), items)
 }

@@ -1,7 +1,7 @@
 //! Seam: the Cargo Class (spec 0006 §6, issue #328). A class that has no path is an error, never the
 //! gas path or the dry path.
 
-use ovcd_core::barge_capacity::takes_gas_path;
+use ovcd_core::barge_capacity::{BargeCapacityInputs, compute};
 use ovcd_core::cargo::{CARGO_DATABASE, CargoClass};
 
 #[test]
@@ -23,12 +23,24 @@ fn an_unknown_key_is_an_error_not_a_default_class() {
 }
 
 #[test]
-fn liquid_bulk_is_refused_never_sent_down_the_gas_path() {
-    assert_eq!(takes_gas_path(CargoClass::Gas), Ok(true));
-    assert_eq!(takes_gas_path(CargoClass::DryBulk), Ok(false));
-    let e = takes_gas_path(CargoClass::LiquidBulk).unwrap_err();
-    assert_eq!(e.kind, "ValueError");
-    assert!(e.message.contains("liquid_bulk"), "{}", e.message);
+fn liquid_bulk_without_a_tank_layout_is_refused_never_sent_down_the_gas_or_dry_path() {
+    let mut inp = BargeCapacityInputs::new(76.5, 11.4, 3.5);
+    inp.cargo_type = "crude_oil".to_string();
+    // Like a gas hull that cannot hold its tanks: infeasible, with the reason, not a silent path.
+    let r = compute(&inp).unwrap();
+    assert!(r.liquid.is_none());
+    let feasible = r
+        .checks
+        .iter()
+        .find(|c| c.name == "feasible_geometry")
+        .unwrap();
+    assert!(!feasible.ok);
+    assert!(
+        feasible.message.contains("cargo tank layout"),
+        "{}",
+        feasible.message
+    );
+    assert_eq!(r.cargo_capacity_t, 0.0);
 }
 
 #[test]

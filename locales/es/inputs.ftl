@@ -15,6 +15,10 @@ group-note-gas-tanks = El diámetro exterior del tanque (el límite de abajo y e
 # status: draft
 group-dry-bulk-hold = Bodega de granel seco
 # status: draft
+group-liquid-cargo-tanks = Tanques de carga líquida
+# status: draft
+group-note-liquid-cargo-tanks = Tanques de carga rectangulares dentro de un doble casco, entre los espacios de aislamiento (cofferdams) de los extremos de la zona de carga. Los anchos del doble casco y la longitud del cofferdam son los mínimos de ADN para un buque de tipo C hasta que existan los conjuntos de reglas para carga líquida; cada valor muestra su fuente o indica que es una estimación. El petróleo crudo es trabajo en desarrollo.
+# status: draft
 group-aft-block = Bloque de popa
 # status: draft
 group-waterway-limits = Límites de la vía navegable
@@ -83,6 +87,8 @@ choice-cargo-containment-box-hold = Bodega tipo caja
 choice-cargo-containment-sloped-hopper-hold = Bodega con tolva inclinada
 # status: draft
 choice-cargo-containment-type-c-tanks = Tanques tipo C
+# status: draft
+choice-cargo-containment-integral-tanks = Tanques integrales
 
 # status: draft
 input-block-coefficient = Coeficiente de bloque
@@ -239,6 +245,28 @@ input-hold-bulkhead-plate-mm = Espesor de plancha del mamparo de bodega
 
 # status: draft
 input-hatch-coaming-plate-mm = Espesor de plancha de la brazola de escotilla
+# status: draft
+input-double-side-m = Ancho del doble costado
+# status: draft
+input-double-bottom-m = Altura del doble fondo
+# status: draft
+input-liquid-tanks-in-line = Tanques de carga en línea
+# status: draft
+input-centreline-bulkhead = Mamparo longitudinal de crujía
+# status: draft
+input-cofferdam-m = Longitud del cofferdam
+# status: draft
+input-pump-arrangement = Disposición de las bombas
+# status: draft
+choice-pump-arrangement-deepwell = Bombas de pozo profundo
+# status: draft
+choice-pump-arrangement-pump-room = Cámara de bombas
+# status: draft
+input-pump-room-length-m = Longitud de la cámara de bombas
+# status: draft
+input-heating-kw-per-m3 = Calefacción de la carga
+# status: draft
+input-liquid-fill-ratio = Grado de llenado de los tanques de carga
 
 # status: draft
 input-propulsive-efficiency = Rendimiento propulsivo

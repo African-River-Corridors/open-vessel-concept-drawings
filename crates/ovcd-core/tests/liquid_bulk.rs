@@ -23,6 +23,7 @@ fn base() -> LiquidBulkInputs {
         fill_ratio: 0.98,
         cargo_density_t_m3: 0.87,
         heating_kw_per_m3: 0.0,
+        lightship_k_t_per_m3: lightship::TANK_LIGHTSHIP_K_T_PER_M3,
     }
 }
 
@@ -298,7 +299,7 @@ fn the_lightship_is_the_hull_plus_the_outfit() {
     let mut inp = base();
     inp.heating_kw_per_m3 = 0.3;
     let r = compute(&inp).unwrap();
-    let hull = lightship::TANK_LIGHTSHIP_K_T_PER_M3 * 60.0 * 10.0 * 4.0;
+    let hull = inp.lightship_k_t_per_m3 * 60.0 * 10.0 * 4.0;
     let tanks = r.cargo_gross_m3 + r.slop_gross_m3;
     let outfit = lightship::outfit_t(tanks, 0.3 * tanks);
     near(r.lightship_t, hull + outfit);

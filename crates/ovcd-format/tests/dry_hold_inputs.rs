@@ -126,7 +126,7 @@ fn the_inputs_are_in_the_table_in_the_dry_bulk_hold_group_and_apply_to_the_right
             "{name}: table scope"
         );
     }
-    assert_eq!(AppliesTo::All.containments().len(), 3);
+    assert_eq!(AppliesTo::All.containments().len(), 4);
 }
 
 #[test]

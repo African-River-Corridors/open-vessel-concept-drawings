@@ -36,6 +36,30 @@ pub enum PumpArrangement {
     PumpRoom { length_m: f64 },
 }
 
+/// The tank layout: what a Design chooses about the cargo tanks (spec 0006 section 3.2). Lengths in m.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct LiquidLayout {
+    /// The width of the double side (m).
+    pub double_side_m: f64,
+    /// The height of the double bottom (m).
+    pub double_bottom_m: f64,
+    /// The number of cargo tanks along the hull, at least 1.
+    pub tanks_in_line: u32,
+    /// A centreline bulkhead splits every tank into a port and a starboard tank.
+    pub centreline_bulkhead: bool,
+    /// The length of a cofferdam (m). One at each end of the tank block.
+    pub cofferdam_m: f64,
+    pub pump_arrangement: PumpArrangement,
+    /// The slop tanks' share of the cargo tank volume, 0 to under 1.
+    pub slop_share: f64,
+    /// The fraction of a cargo tank's volume that is filled, 0 to 1.
+    pub fill_ratio: f64,
+    /// The installed heating (kW per m³ of cargo tank volume); 0 for none.
+    pub heating_kw_per_m3: f64,
+    /// The hull lightship factor, t per m³ of L x B x D (see [`lightship`]).
+    pub lightship_k_t_per_m3: f64,
+}
+
 /// The inputs of [`compute`]. Lengths in m, x from the aft end of the hull.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct LiquidBulkInputs {
@@ -66,6 +90,37 @@ pub struct LiquidBulkInputs {
     pub cargo_density_t_m3: f64,
     /// The installed heating (kW per m³ of cargo tank volume); 0 for none.
     pub heating_kw_per_m3: f64,
+    /// The hull lightship factor, t per m³ of L x B x D.
+    pub lightship_k_t_per_m3: f64,
+}
+
+impl LiquidBulkInputs {
+    /// The inputs of a hull, a cargo zone, a cargo density (t/m³) and a layout.
+    pub fn of(
+        (loa_m, beam_m, depth_m): (f64, f64, f64),
+        (zone_aft_m, zone_fwd_m): (f64, f64),
+        cargo_density_t_m3: f64,
+        l: &LiquidLayout,
+    ) -> LiquidBulkInputs {
+        LiquidBulkInputs {
+            loa_m,
+            beam_m,
+            depth_m,
+            zone_aft_m,
+            zone_fwd_m,
+            double_side_m: l.double_side_m,
+            double_bottom_m: l.double_bottom_m,
+            tanks_in_line: l.tanks_in_line,
+            centreline_bulkhead: l.centreline_bulkhead,
+            cofferdam_m: l.cofferdam_m,
+            pump_arrangement: l.pump_arrangement,
+            slop_share: l.slop_share,
+            fill_ratio: l.fill_ratio,
+            cargo_density_t_m3,
+            heating_kw_per_m3: l.heating_kw_per_m3,
+            lightship_k_t_per_m3: l.lightship_k_t_per_m3,
+        }
+    }
 }
 
 /// The result of [`compute`].
@@ -130,6 +185,7 @@ fn check_inputs(inp: &LiquidBulkInputs) -> Result<(), PyError> {
         ("double_bottom_m", inp.double_bottom_m),
         ("cofferdam_m", inp.cofferdam_m),
         ("heating_kw_per_m3", inp.heating_kw_per_m3),
+        ("lightship_k_t_per_m3", inp.lightship_k_t_per_m3),
     ];
     for (name, v) in not_negative {
         if !(v.is_finite() && v >= 0.0) {
@@ -193,8 +249,8 @@ pub fn compute(inp: &LiquidBulkInputs) -> Result<LiquidBulkResult, PyError> {
         .iter()
         .filter(|s| s.kind == SpaceKind::Slop)
         .collect();
-    let cargo_gross: f64 = cargo.iter().map(|s| s.volume_m3()).sum();
-    let slop_gross: f64 = slop.iter().map(|s| s.volume_m3()).sum();
+    let cargo_gross = cargo.iter().fold(0.0, |a, s| a + s.volume_m3());
+    let slop_gross = slop.iter().fold(0.0, |a, s| a + s.volume_m3());
     let cargo_volume = cargo_gross * inp.fill_ratio;
     let (mut len_min, mut len_max, mut breadth_max) = (f64::INFINITY, 0.0_f64, 0.0_f64);
     for s in &cargo {

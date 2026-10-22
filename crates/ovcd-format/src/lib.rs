@@ -7,6 +7,7 @@ mod eval;
 pub mod ga;
 mod gas_arrangement;
 pub mod gas_stability;
+mod liquid;
 mod objects;
 pub mod profile;
 pub mod rule_set;

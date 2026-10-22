@@ -26,7 +26,7 @@
       "unit": "-",
       "hard": { "gt": 0, "le": 2 },
       "soft": { "min": 0.2, "max": 0.7 },
-      "basis": "the default moulded depth is this ratio times the beam, at the midpoint of the range in the reference vessels with a published depth: dry bulk and container 0.22 to 0.44 (inland and pushed), liquid 0.22 to 0.38 (inland and pushed), gas 0.44 to 0.66 (nearly all sea-going). Only dry bulk and gas Cargo exist so far; liquid has no Cargo yet. catalogue/depth_rule.md lists every vessel against the rule"
+      "basis": "the default moulded depth is this ratio times the beam, at the midpoint of the range in the reference vessels with a published depth: dry bulk and container 0.22 to 0.44 (inland and pushed), liquid 0.22 to 0.38 (inland and pushed), gas 0.44 to 0.66 (nearly all sea-going). Dry bulk, gas and liquid (crude oil) Cargo exist; the liquid ratio is the one the reference vessels give, until crude oil designs are calibrated. catalogue/depth_rule.md lists every vessel against the rule"
     },
     "length_to_depth_ratio": {
       "unit": "-",
@@ -47,7 +47,7 @@
       "basis": "catalogue pushed convoys are at most 5 in line"
     },
     "cargo_containment": {
-      "default_by_cargo_phase": { "dry_bulk": "box_hold", "liquid_gas": "type_c_tanks" }
+      "default_by_cargo_phase": { "dry_bulk": "box_hold", "liquid_gas": "type_c_tanks", "liquid_bulk": "integral_tanks" }
     },
     "block_coefficient": {
       "default": null,
@@ -177,11 +177,11 @@
       "basis": "carried over from the original engine: the aft void of a pushed barge, which has no stern block (the crew, battery and propulsion are on the tug). Used for a pushed Formation only"
     },
     "lightship_factor_t_per_m3": {
-      "default_by_cargo_containment": { "box_hold": 0.1093 },
+      "default_by_cargo_containment": { "box_hold": 0.1093, "integral_tanks": 0.1141 },
       "unit": "t/m3",
       "hard": { "gt": 0, "le": 1 },
       "soft": { "min": 0.08, "max": 0.15 },
-      "basis": "calibrated box barges span 0.095 to 0.1223 t/m3 (calibration/factors.yaml)"
+      "basis": "box hold: calibrated box barges span 0.095 to 0.1223 t/m3 (calibration/factors.yaml). Integral tanks: 0.1141 t/m3, the mean implied k of 15 declared tank-barge records (calibration/tank_lightship.yaml, fitted by tools/fit_tank_lightship.py); an estimate, because a record gives a deadweight, not a lightship. The pumps, piping, vents and heating are added on top"
     },
     "service_area": {
       "default": "river-only",
@@ -539,6 +539,81 @@
       "soft": { "min": 0.5, "max": 2.0 },
       "basis": "carried over from the original engine: the height of the inner bottom above the keel. The hold height is the depth less this, plus the coaming; it must not be negative (hard)"
     },
+    "double_side_m": {
+      "default": 1.0,
+      "unit": "m",
+      "hard": { "ge": 0 },
+      "soft": { "min": 0.76, "max": 1.5 },
+      "status": "estimate",
+      "basis": "The width of the double side. 1.00 m is the ADN 2025 type C minimum (9.3.2.11.7: not less than 1.00 m between the side of the vessel and the longitudinal bulkhead of the cargo tanks; 0.80 m with reinforcements), kept as an estimate until the Rule Sets for liquid cargo exist and give the governing value. It must be less than half the beam (hard)"
+    },
+    "double_bottom_m": {
+      "default": 0.7,
+      "unit": "m",
+      "hard": { "ge": 0 },
+      "soft": { "min": 0.6, "max": 1.5 },
+      "status": "estimate",
+      "basis": "The height of the double bottom. 0.70 m is the ADN 2025 type C mean depth (9.3.2.11.7: not less than 0.70 m, never less than 0.60 m), kept as an estimate until the Rule Sets for liquid cargo exist and give the governing value. It must be less than the depth (hard)"
+    },
+    "liquid_tanks_in_line": {
+      "default": 4,
+      "unit": "tanks",
+      "hard": { "ge": 1, "le": 50 },
+      "soft": { "min": 1.0, "max": 8.0 },
+      "status": "estimate",
+      "basis": "The number of cargo tank positions along the hull, a whole number. 4 is a working value: the smallest count that meets the tank volume and length limits of the Rule Sets (ADN 9.3.2.11.1: 380 m3 and 0.20 L) comes with `fit`. Fewer tanks are longer; a tank must be at least 1 m long (hard)"
+    },
+    "centreline_bulkhead": {
+      "default": true,
+      "status": "estimate",
+      "basis": "A centreline bulkhead splits each tank into a port and a starboard tank, and cuts the free surface to a quarter. On by default: ADN 2025 9.3.2.14.2 asks for a stability proof when a cargo tank is wider than 0.70 B, and a tank in a hull with a 1.00 m double side is wider than that on every beam above 3.3 m"
+    },
+    "cofferdam_m": {
+      "default": 0.6,
+      "unit": "m",
+      "hard": { "ge": 0 },
+      "soft": { "min": 0.6, "max": 3.0 },
+      "status": "sourced",
+      "source": "ADN 2025 (ECE/TRANS/351), 9.3.2.11.3 (a): the cargo tanks shall be separated by cofferdams of at least 0.60 m in width from the accommodation, engine rooms and service spaces outside the cargo area below deck or, if there are none, from the vessel's ends",
+      "basis": "The length of the cofferdam at each end of the tank block. The default is the ADN minimum"
+    },
+    "pump_arrangement": {
+      "default": "deepwell",
+      "status": "estimate",
+      "basis": "deepwell: one pump per tank, on deck, no pump room (decision D4 of spec 0006; it works for UN 1267 and UN 3494). pump_room: a pump room below deck, at the aft end of the cargo zone; ADN 2025 Table C, column 14, allows it for UN 1267 and not for UN 3494"
+    },
+    "pump_room_length_m": {
+      "default": 4.0,
+      "unit": "m",
+      "hard": { "gt": 0 },
+      "soft": { "min": 3.0, "max": 8.0 },
+      "status": "estimate",
+      "basis": "The length of the pump room, used only with a pump room. A working value for two to four pump sets with their piping; no published length was found"
+    },
+    "slop_share": {
+      "default_by_service_area": { "river-only": 0.0, "coastal-and-river": 0.03 },
+      "status": "estimate",
+      "unit": "-",
+      "hard": { "ge": 0, "lt": 1 },
+      "soft": { "min": 0.0, "max": 0.05 },
+      "basis": "The slop tanks' share of the cargo tank volume. Coastal and river: 0.03, the MARPOL Annex I (MEPC.117(52)) Reg. 29 paragraph 2.3 capacity of not less than 3 per cent of the oil carrying capacity (2 per cent or less is accepted in cases; none is assumed). River only: none; no slop tank requirement was read in ADN, so it is an estimate. The slop tanks take their share of the tank block, at its aft end, and are not cargo"
+    },
+    "heating_kw_per_m3": {
+      "default": 0.0,
+      "unit": "kW/m3",
+      "hard": { "ge": 0 },
+      "soft": { "min": 0.0, "max": 0.7 },
+      "status": "estimate",
+      "basis": "The installed cargo heating per m3 of cargo tank volume. None by default (a crude that needs no heating). Built vessels have 0.15 to 0.65 kW/m3 (docs/research/crude-oil/03-design-practice.md 1.2; installed heat, an upper bound)"
+    },
+    "liquid_fill_ratio": {
+      "default": 0.98,
+      "unit": "-",
+      "hard": { "gt": 0, "le": 1 },
+      "soft": { "min": 0.9, "max": 0.98 },
+      "status": "estimate",
+      "basis": "The fraction of a cargo tank that is filled. 0.98 is a working value; the ADN degree-of-filling text must be read before it is sourced"
+    },
     "hopper_slope_h_per_v": {
       "default": 1.0,
       "unit": "H:V",
@@ -775,14 +850,14 @@
       "basis": "carried over from the original engine: the length of the thruster room at the stern"
     },
     "battery_unit_count": {
-      "default_by_cargo_phase": { "dry_bulk": 2, "liquid_gas": 1 },
+      "default_by_cargo_phase": { "dry_bulk": 2, "liquid_gas": 1, "liquid_bulk": 2 },
       "unit": "units",
       "hard": { "ge": 0, "le": 10 },
       "soft": { "min": 0.0, "max": 3.0 },
       "basis": "carried over from the original engine: the number of 40 ft battery units in the stern block, a whole number. The default depends on the Cargo phase: dry bulk carries a second battery, gas carries one"
     },
     "accommodation_unit_count": {
-      "default_by_cargo_phase": { "dry_bulk": 1, "liquid_gas": 2 },
+      "default_by_cargo_phase": { "dry_bulk": 1, "liquid_gas": 2, "liquid_bulk": 1 },
       "unit": "units",
       "hard": { "ge": 0, "le": 10 },
       "soft": { "min": 0.0, "max": 3.0 },
@@ -929,7 +1004,7 @@
       "basis": "carried over from the original engine: the most the wheelhouse can rise on its lift"
     },
     "stern_form": {
-      "default_by_cargo_phase": { "dry_bulk": "tunnel", "liquid_gas": "transom" },
+      "default_by_cargo_phase": { "dry_bulk": "tunnel", "liquid_gas": "transom", "liquid_bulk": "tunnel" },
       "status": "estimate",
       "basis": "The stern of a self-propelled hull: a transom (square stern above a short run), a pram (a long flat run up to a transom) or a tunnel (a raised tunnel over each propeller, closed by a skirt). Tunnel sterns suit intermediate and very shallow water, pram sterns a high depth over draught (Rotteveel 2019, sec. 2.3.1); azimuth thrusters need no tunnel (MARIN 2020), so gas takes a transom and dry bulk a tunnel (spec 0007 and docs/research/stern-and-tugs.md). Inputs only until the stern geometry ticket (#350): the engine still draws and weighs today's square stern. A file saved before keeps transom"
     },
@@ -958,7 +1033,7 @@
       "basis": "For a tunnel stern only: the height of the tunnel crown above base. none: the shaft axis + D/2 + 0.10 x D tip clearance, with the tunnel radius = D (the radius after Heuser, Rotteveel 2019 sec. 2.3.1, sourced; the tip clearance an estimate; spec 0007 and docs/research/stern-and-tugs.md)"
     },
     "propulsor_type": {
-      "default_by_cargo_phase": { "dry_bulk": "shaft_nozzle", "liquid_gas": "azimuth_ducted" },
+      "default_by_cargo_phase": { "dry_bulk": "shaft_nozzle", "liquid_bulk": "shaft_nozzle", "liquid_gas": "azimuth_ducted" },
       "status": "estimate",
       "basis": "What drives the hull. unspecified: today's fixed propulsive efficiency and thruster layout (the value a file saved before keeps). A new Option: gas takes ducted azimuth thrusters (a Z-drive LNG tanker), dry bulk twin shafts in nozzles (twin ducted Rhine Class Va ships, CDS 110 and 135 tankers) (spec 0007 and docs/research/stern-and-tugs.md). Inputs only until the propulsor model ticket (#351). thruster_count and propulsive_efficiency are used only with unspecified"
     },
@@ -995,7 +1070,7 @@
       "basis": "kappa_b, the factor of the Propulsor type on the disc's momentum limit at the bollard, T0 = kappa_b x (2 rho A)^(1/3) x P_D^(2/3) per unit (spec 0007). Ducted azimuth and shafts in nozzles: fitted to the in-sample tugs of calibration/propulsion_cases.yaml (calibration/factors.yaml, bollard_pull_factor). Every other type: 0.77, the open-propeller Wartsila estimate 0.9 x (D P_D)^(2/3) kN (k2 = 1) over the disc limit at 1,025 kg/m3 (derived); no reference vessel of those types prints a diameter. Unverified for a pump jet"
     },
     "power_source": {
-      "default_by_cargo_phase": { "dry_bulk": "diesel_mechanical", "liquid_gas": "gas_fuelled" },
+      "default_by_cargo_phase": { "dry_bulk": "diesel_mechanical", "liquid_gas": "gas_fuelled", "liquid_bulk": "diesel_mechanical" },
       "status": "estimate",
       "basis": "Where the propulsion power comes from: battery-electric and gas-fuelled (today's two), diesel-mechanical, diesel-electric and battery hybrid (maintainer decisions of 2026-10-20, spec 0007 decisions 6 and 7: gas takes gas-fuelled gensets, dry bulk diesel-mechanical). A file saved before keeps battery_electric. Inputs only until the machinery ticket (#352)"
     },

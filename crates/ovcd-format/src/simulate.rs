@@ -202,6 +202,12 @@ fn vessel(id: &str) -> R<(&'static str, Option<&'static str>, CargoClass)> {
             CargoClass::DryBulk,
         ),
         "gas_barge" => ("Gas barge, IMO Type C tanks", None, CargoClass::Gas),
+        // Issue #331 (spec 0006): crude oil in integral tanks. The format only; no Python vessel.
+        "tank_barge" => (
+            "Tank barge, integral tanks",
+            Some("tank"),
+            CargoClass::LiquidBulk,
+        ),
         other => return bad(format!("unknown vessel `{other}`")),
     })
 }
@@ -1084,6 +1090,9 @@ fn simulate_measured(
             inp.lightship_k_t_per_m3 = Some(need(p, "lightship_k_t_per_m3")?);
         }
     }
+    if phase == CargoClass::LiquidBulk {
+        inp.liquid = Some(crate::liquid::layout_of(p).or_else(bad)?);
+    }
     let r = match barge_capacity::compute(&inp) {
         Ok(r) => r,
         Err(e) if e.kind == "ValueError" => return Ok(error_result(e.message)),
@@ -1128,7 +1137,11 @@ fn simulate_measured(
     let cargo_t = py_min(cargo_volume_bound, cargo_weight_bound);
     let mut ids = TextIds::default();
     let governs = if cargo_volume_bound <= cargo_weight_bound {
-        Text::plain("hold volume")
+        Text::plain(if phase == CargoClass::LiquidBulk {
+            "tank volume"
+        } else {
+            "hold volume"
+        })
     } else {
         governs_draught(&lim_name)
     };
@@ -1215,7 +1228,16 @@ fn simulate_measured(
     // Issue #426: the IS Code conditions, with the ballast tanks of the hold arrangement.
     let mut is_code_stability = Value::Null;
     let mut loading_conditions = Value::Null;
-    if is_code(p) {
+    // The liquid bulk conditions (departure, arrival, ballast, slack tanks) come with their own
+    // ticket (spec 0006, crude oil 5): a liquid Option has none yet.
+    if is_code(p) && phase == CargoClass::LiquidBulk {
+        let note = Text::fixed(
+            "warn-liquid-no-conditions",
+            "Loading conditions and stability are not computed for liquid bulk cargo yet: crude oil is work in development.",
+        );
+        ids.text(&note);
+        warnings.push(note);
+    } else if is_code(p) {
         let (lightship, cargo_item) = ovcd_core::loading_conditions::dry_model(&inp, &r);
         let cargo_at = |m: f64| {
             Ok(ovcd_core::loading_conditions::CargoAt {
@@ -1257,7 +1279,12 @@ fn simulate_measured(
         // low-freeboard hold on seagoing criteria. That waits for a dry bulk Rule Set (triage
         // item 2) and the `fit` seam (#277).
     }
-    let mut dry_parts = structure_json(&r, inp.separation.as_ref(), Some(&inp));
+    let mut dry_parts = structure_json(
+        &r,
+        inp.separation.as_ref(),
+        (phase != CargoClass::LiquidBulk).then_some(&inp),
+    );
+    dry_parts.extend(crate::liquid::drawing_values(&r));
     if let Some(g) = stern {
         dry_parts.push(("stern", stern_drawing(g)));
     }
@@ -1267,37 +1294,41 @@ fn simulate_measured(
         sightline_json(&r),
         with_loading_conditions(
             with_stern_mass(
-                json!({
-                    "vessel": label,
-                    "cargo": cargo.name,
-                    "phase": cargo.phase.key(),
-                    "self_propelled": self_propelled,
-                    "arrangement": Value::Null,
-                    "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(cb) },
-                    "geometry": geo,
-                    "drawing": drawing,
-                    "results": {
-                        "cargo_t": num(cargo_t),
-                        "cargo_volume_bound_t": num(cargo_volume_bound),
-                        "cargo_weight_bound_t": num(cargo_weight_bound),
-                        "governs": governs,
-                        "cargo_volume_m3": num(r.cargo_volume_m3),
-                        "lightship_t": num(ls),
-                        "displacement_t": num(disp),
-                        "deadweight_t": num(deadweight),
-                        "draught_m": num(t),
-                        "draught_max_m": num(t_max),
-                        "freeboard_m": num(d - t),
-                        "light_draught_m": opt_num(r.light_draft_m),
-                        "air_draft_loaded_m": num(h_top - t),
-                        "air_draft_light_m": opt_num(r.air_draft_light_m),
-                        "h_over_T": h_over_t(&ch, t)?,
-                    },
-                    "checks": checks,
-                    "warnings": warnings,
-                    "curves": curve_list,
-                    "cost_masses": Value::Null,
-                }),
+                with_liquid(
+                    json!({
+                        "vessel": label,
+                        "cargo": cargo.name,
+                        "phase": cargo.phase.key(),
+                        "self_propelled": self_propelled,
+                        "arrangement": Value::Null,
+                        "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(cb) },
+                        "geometry": geo,
+                        "drawing": drawing,
+                        "results": {
+                            "cargo_t": num(cargo_t),
+                            "cargo_volume_bound_t": num(cargo_volume_bound),
+                            "cargo_weight_bound_t": num(cargo_weight_bound),
+                            "governs": governs,
+                            "cargo_volume_m3": num(r.cargo_volume_m3),
+                            "lightship_t": num(ls),
+                            "displacement_t": num(disp),
+                            "deadweight_t": num(deadweight),
+                            "draught_m": num(t),
+                            "draught_max_m": num(t_max),
+                            "freeboard_m": num(d - t),
+                            "light_draught_m": opt_num(r.light_draft_m),
+                            "air_draft_loaded_m": num(h_top - t),
+                            "air_draft_light_m": opt_num(r.air_draft_light_m),
+                            "h_over_T": h_over_t(&ch, t)?,
+                        },
+                        "checks": checks,
+                        "warnings": warnings,
+                        "curves": curve_list,
+                        "cost_masses": Value::Null,
+                    }),
+                    &r,
+                    cargo_key,
+                ),
                 (&r.stern_block_items, &r.trim_conditions),
             ),
             is_code_stability,
@@ -1305,6 +1336,17 @@ fn simulate_measured(
         ),
         ids,
     )
+}
+
+/// Issue #331: the `liquid` block, for a liquid bulk Cargo only, so a dry bulk result keeps its keys.
+fn with_liquid(mut v: Value, r: &BargeCapacityResult, cargo_key: &str) -> Value {
+    if let (Some(l), Some(o)) = (r.liquid.as_ref(), v.as_object_mut()) {
+        o.insert(
+            "liquid".to_string(),
+            crate::liquid::liquid_json(l, cargo_key),
+        );
+    }
+    v
 }
 
 /// Issue #426: the IS Code `stability` and `loading_conditions` blocks, only when they were asked

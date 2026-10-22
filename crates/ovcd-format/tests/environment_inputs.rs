@@ -93,7 +93,7 @@ fn the_inputs_apply_to_every_hull_in_the_waterway_group() {
     for name in NEW {
         let spec = INPUTS.iter().find(|s| s.name == name).unwrap();
         assert_eq!(spec.group.label(), "Waterway Limits", "{name}");
-        assert_eq!(spec.applies_to.containments().len(), 3, "{name}");
+        assert_eq!(spec.applies_to.containments().len(), 4, "{name}");
         assert!(spec.formations.is_none(), "{name}");
     }
 }

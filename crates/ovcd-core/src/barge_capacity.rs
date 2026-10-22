@@ -32,6 +32,7 @@ use crate::gas_separation::{
 };
 use crate::hull::HullGeometry;
 use crate::hydrostatics::find_equilibrium_draft;
+use crate::liquid_bulk::{self, LiquidBulkInputs, LiquidBulkResult, LiquidLayout};
 use crate::models::{BargeInputs, TankResult, WeightBreakdown};
 use crate::pressure_vessel::{PyError, get_tank_material};
 use crate::protective_location::{compute_required_clearances, d_vc_exact};
@@ -251,6 +252,11 @@ pub struct BargeCapacityInputs {
     /// Clearance from the tank top to the weather shield top (m, issue #410).
     pub weather_shield_clearance_m: f64,
 
+    // --- Liquid bulk branch ---
+    /// The cargo tank layout of a liquid bulk Cargo (crude oil). `None` for gas and dry bulk; a liquid
+    /// bulk Cargo with `None` is refused.
+    pub liquid: Option<LiquidLayout>,
+
     // --- Bulk branch ---
     /// "sloped_hopper", "box" or "container"
     pub hold_type: String,
@@ -319,6 +325,7 @@ impl BargeCapacityInputs {
             wing_tank_height_ratio: DEFAULT_WING_TANK_HEIGHT_RATIO,
             weather_shield_thickness_mm: DEFAULT_WEATHER_SHIELD_THICKNESS_MM,
             weather_shield_clearance_m: DEFAULT_WEATHER_SHIELD_CLEARANCE_M,
+            liquid: None,
             hold_type: "sloped_hopper".to_string(),
             lightship_k_t_per_m3: None,
             wing_void_width: 1.0,
@@ -466,6 +473,8 @@ pub struct BargeCapacityResult {
     pub sightline: Option<crate::wheelhouse::Sightline>,
     pub blind_distance_laden_m: Option<f64>,
     pub gas_basis: Option<GasBasis>,
+    /// The liquid bulk layout: Spaces, volumes, free surfaces and the lightship items (crude oil).
+    pub liquid: Option<LiquidBulkResult>,
 
     pub checks: Vec<Check>,
     pub warnings: Vec<Text>,
@@ -589,6 +598,7 @@ struct Detail {
     tank_inner_diameter_m: Option<f64>,
     gas_basis: Option<GasBasis>,
     tank_rules: Option<TankRuleValues>,
+    liquid: Option<LiquidBulkResult>,
 }
 
 /// (cargo volume, lightship, top above keel, detail) of a volume branch. `n_total` is the exact
@@ -995,6 +1005,41 @@ pub fn bulk_gm_at(
     )
 }
 
+/// The liquid bulk branch: the cargo tank layout inside the cargo zone, from the `liquid_bulk`
+/// module. The deck is the top of the cargo (no coaming or trunk).
+fn liquid_volumetric(
+    inp: &BargeCapacityInputs,
+    bow_void_m: f64,
+    stern_void_m: f64,
+    density_t: f64,
+) -> Result<Volumetric, PyError> {
+    let layout = inp.liquid.as_ref().ok_or_else(|| {
+        value_error(
+            "a liquid bulk Cargo needs a cargo tank layout (cargo_containment integral_tanks)"
+                .to_string(),
+        )
+    })?;
+    let li = LiquidBulkInputs::of(
+        (inp.loa, inp.beam, inp.depth),
+        (stern_void_m, inp.loa - bow_void_m),
+        density_t,
+        layout,
+    );
+    let r = liquid_bulk::compute(&li)?;
+    Ok(Volumetric {
+        cargo_volume: r.cargo_volume_m3,
+        lightship: r.lightship_t,
+        h_top: inp.depth,
+        detail: Detail {
+            containment_inner_volume_m3: Some(r.cargo_gross_m3),
+            fill_ratio_applied: Some(layout.fill_ratio),
+            liquid: Some(r),
+            ..Detail::default()
+        },
+        n_total: 0,
+    })
+}
+
 /// `replace(aft_in, sightline_obstruction_m=...)` and friends keep the other fields.
 struct Arrangement {
     bow_void_m: f64,
@@ -1008,7 +1053,8 @@ struct Arrangement {
 ///
 /// The aft block's length does not depend on the cargo, so it is resolved here; only the
 /// wheelhouse lift does, and that is a second pass once the cargo top is known.
-fn arrangement(inp: &BargeCapacityInputs, is_gas: bool) -> Result<Arrangement, PyError> {
+fn arrangement(inp: &BargeCapacityInputs, class: CargoClass) -> Result<Arrangement, PyError> {
+    let is_gas = class == CargoClass::Gas;
     // The mix of 40 ft units differs by cargo: dry bulk carries a second battery, gas a second
     // accommodation unit.
     // Gas-fuelled (issue #180): no battery; the gensets burn the cargo boil-off.
@@ -1085,12 +1131,15 @@ fn arrangement(inp: &BargeCapacityInputs, is_gas: bool) -> Result<Arrangement, P
         None => inp.bow_rake_to_depth_ratio * inp.depth,
     };
 
-    let (aft_sep, fwd_sep, sep) = if is_gas {
-        let sep_in = inp.separation.clone().unwrap_or_default();
-        let sep = compute_gas_separation(&sep_in).map_err(value_error)?;
-        (sep.aft_separation_m, sep.fwd_separation_m, Some(sep))
-    } else {
-        (inp.bulk_end_bulkhead_m, inp.bulk_end_bulkhead_m, None)
+    let (aft_sep, fwd_sep, sep) = match class {
+        CargoClass::Gas => {
+            let sep_in = inp.separation.clone().unwrap_or_default();
+            let sep = compute_gas_separation(&sep_in).map_err(value_error)?;
+            (sep.aft_separation_m, sep.fwd_separation_m, Some(sep))
+        }
+        CargoClass::DryBulk => (inp.bulk_end_bulkhead_m, inp.bulk_end_bulkhead_m, None),
+        // The cofferdams of the liquid layout lie inside the cargo zone: no end bulkhead allowance.
+        CargoClass::LiquidBulk => (0.0, 0.0, None),
     };
 
     Ok(Arrangement {
@@ -1109,18 +1158,6 @@ costed and air-draft-gated separately.";
 const BULK_GM_WARNING: &str = "Bulk GM is first-order (assumed lightship KG); \
 cargo-shift/angle-of-repose not modelled \u{2014} confirm with a full intact-stability booklet.";
 
-/// Whether a Cargo Class takes the gas path (Type C tanks) or the dry path (a hold). Liquid bulk
-/// has no path yet, so it is an error, never the gas path.
-pub fn takes_gas_path(class: CargoClass) -> Result<bool, PyError> {
-    match class {
-        CargoClass::Gas => Ok(true),
-        CargoClass::DryBulk => Ok(false),
-        CargoClass::LiquidBulk => Err(value_error(format!(
-            "Cargo class '{class}' is not supported yet: there is no liquid bulk capacity path"
-        ))),
-    }
-}
-
 /// Run the unified barge capacity chain (volume-bound).
 pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError> {
     // Python builds the nested inputs, and so runs their `__post_init__` checks, before
@@ -1133,37 +1170,53 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     }
     let props = get_cargo(&inp.cargo_type).map_err(value_error)?;
     let density_t = inp.cargo_density_kg_m3.unwrap_or(props.density) / 1000.0;
-    let is_gas = takes_gas_path(props.phase)?;
+    let class = props.phase;
+    let is_gas = class == CargoClass::Gas;
 
-    let arr = arrangement(inp, is_gas)?;
+    let arr = arrangement(inp, class)?;
     let (bow_void, stern_void, rake) = (arr.bow_void_m, arr.stern_void_m, arr.rake_m);
     let cargo_zone = inp.loa - bow_void - stern_void;
 
     let mut geometry_error: Option<String> = None;
-    let vol = if !is_gas {
-        bulk_volumetric(inp, bow_void, stern_void)?
-    } else {
-        match gas_volumetric(inp, bow_void, stern_void) {
-            Ok(v) => v,
-            // A vessel too short for its own stern block, or too narrow for its tanks, is
-            // infeasible, not an exception: it comes back as a failed check.
-            Err(e) if e.kind == "ValueError" => {
-                geometry_error = Some(e.message);
-                Volumetric {
-                    cargo_volume: 0.0,
-                    lightship: 0.0,
-                    h_top: inp.depth,
-                    detail: Detail {
-                        max_tank_od_m: Some(inp.max_tank_od_m),
-                        containment_inner_volume_m3: Some(0.0),
-                        fill_ratio_applied: Some(inp.fill_ratio),
-                        ..Detail::default()
-                    },
-                    n_total: 0,
-                }
-            }
-            Err(e) => return Err(e),
+    // A vessel too short for its own stern block, or too narrow for its tanks, is infeasible, not
+    // an exception: it comes back as a failed check.
+    let mut infeasible = |e: PyError, detail: Detail| -> Result<Volumetric, PyError> {
+        if e.kind != "ValueError" {
+            return Err(e);
         }
+        geometry_error = Some(e.message);
+        Ok(Volumetric {
+            cargo_volume: 0.0,
+            lightship: 0.0,
+            h_top: inp.depth,
+            detail,
+            n_total: 0,
+        })
+    };
+    let vol = match class {
+        CargoClass::DryBulk => bulk_volumetric(inp, bow_void, stern_void)?,
+        CargoClass::Gas => match gas_volumetric(inp, bow_void, stern_void) {
+            Ok(v) => v,
+            Err(e) => infeasible(
+                e,
+                Detail {
+                    max_tank_od_m: Some(inp.max_tank_od_m),
+                    containment_inner_volume_m3: Some(0.0),
+                    fill_ratio_applied: Some(inp.fill_ratio),
+                    ..Detail::default()
+                },
+            )?,
+        },
+        CargoClass::LiquidBulk => match liquid_volumetric(inp, bow_void, stern_void, density_t) {
+            Ok(v) => v,
+            Err(e) => infeasible(
+                e,
+                Detail {
+                    containment_inner_volume_m3: Some(0.0),
+                    ..Detail::default()
+                },
+            )?,
+        },
     };
     let Volumetric {
         cargo_volume,
@@ -1193,10 +1246,12 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     // Issue #348: the stern block's mass, in the lightship only when asked for.
     let stern_block_items = match (&aft, &inp.stern_block_mass) {
         (Some(a), Some(m)) => {
-            let db = if is_gas {
-                detail.bottom_clearance_m.unwrap_or(0.0) - inp.tank_support_height
-            } else {
-                inp.double_bottom_height_bulk
+            let db = match class {
+                CargoClass::Gas => {
+                    detail.bottom_clearance_m.unwrap_or(0.0) - inp.tank_support_height
+                }
+                CargoClass::DryBulk => inp.double_bottom_height_bulk,
+                CargoClass::LiquidBulk => inp.liquid.map_or(0.0, |l| l.double_bottom_m),
             };
             let db = if db > 0.0 { db } else { 0.0 };
             crate::aft_arrangement::stern_block_mass(&aft_second, a, m, db)
@@ -1511,6 +1566,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         air_draft_navigating_light_m: Some(air_draft_navigating_light),
         navigating_top_above_keel_m: Some(h_top_navigating),
         gas_basis: detail.gas_basis,
+        liquid: detail.liquid,
         stern_block_items: stern_block_items.clone(),
         trim_conditions,
         sightline,

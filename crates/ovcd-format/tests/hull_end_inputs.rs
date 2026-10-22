@@ -77,10 +77,10 @@ fn each_default_equals_the_legacy_table_value_and_the_core_default() {
 fn the_inputs_apply_to_the_right_containments_and_formations() {
     let spec = |n: &str| INPUTS.iter().find(|s| s.name == n).unwrap();
     let rake = spec(NEW[0]);
-    assert_eq!(rake.applies_to.containments().len(), 3);
+    assert_eq!(rake.applies_to.containments().len(), 4);
     assert!(rake.formations.is_none());
     let void = spec(NEW[1]);
-    assert_eq!(void.applies_to.containments().len(), 3);
+    assert_eq!(void.applies_to.containments().len(), 4);
     assert_eq!(void.formations, Some(PUSHED));
     assert!(formation_includes(void.formations, Some("pushed_barge")));
     assert!(formation_includes(void.formations, Some("pushed_convoy")));
@@ -119,7 +119,12 @@ fn the_schema_says_which_formations_each_input_is_used_for_and_keeps_applies_to(
     );
     assert_eq!(
         entry("pushed_stern_void_m")["applies_to"],
-        json!(["box_hold", "sloped_hopper_hold", "type_c_tanks"])
+        json!([
+            "box_hold",
+            "sloped_hopper_hold",
+            "type_c_tanks",
+            "integral_tanks"
+        ])
     );
     assert_eq!(
         entry("bow_rake_length_to_depth_ratio")["applies_to_formation"],
