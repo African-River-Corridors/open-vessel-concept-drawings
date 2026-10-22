@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Design change (issue #449, spec 0008): the bilge radius, sheer and camber now shape the hull's Sections Table (they were inputs only). The bilge is an arc of `bilge_radius_m` written as 16 chords per quarter circle (at most half the beam and the moulded depth); the sheer is a parabola from `sheer_aft_m` and `sheer_fwd_m`, zero at mid-length, with 8 more Stations on each sheered half; the camber is a parabola of `camber_m` across the deck, 16 chords on each half. All three default to 0, which writes the same table as before, so no file moves and no hash changes. The freeboard stays at mid-length, where the sheer is 0. Design impact: only the design-impact cases of these inputs move, as they now carry a value (bilge 1.0 m, sheer 0.5 m aft and 1.0 m forward, camber 0.3 m).
 - Rules (issue #543, spec 0004): the derived input `length_band` (`under-45-m`, `45-to-110-m`, `over-110-m`, from the length overall; 45 m is in the band that starts at 45, 110 m in the band below 110), so a Rule can apply from a ship length. The two blind-zone Rules of the unreleased `solas-v22` 1.0.0 now apply from 45 m. That file is edited in place, with its content hash changing, because the set has not been released. No results hash moves.
 - Design change (issue #448, spec 0008): hydrostatics and stability come from the hull's Sections Table (the raked bow and the Stern Form), not from a box with a block coefficient. Draught: the level draught of the sections, or at free trim (Illinois secant, 16/12 steps, trim within 10 degrees) where the hull has LCG data; the reported `draught_m` is then the mid-length draught. KM_T is the upright cut's; GZ is the sections' free-trim curve. The main path, the IS Code and legacy loading conditions, `gas_stability::assess`, journey de-rating, the gas arrangement search, resistance and squat take the hull's displacement, Cb, L_WL and midship area. **Cb is a result** (V / (L_WL B_WL T) at the laden level draught, ES-TRIN 2025/1 Article 1.01, 4.9): `block_coefficient` leaves format v3, and a file that stores it opens with one warning per Option. New result keys `hydrostatics` (the upright values at the laden level draught) and `hydrostatic_table` (10 draughts, 0.1 D to D), shown in the app's results. A condition with no balance within 10 degrees of trim keeps its level draught and fails `trim_in_range`. The Design session no longer runs the engine on each edit (it stamped a hash it never read). The shaft-nozzle propulsor efficiency factor is refitted, 0.447 to 0.437 (the calibration harness writes it). Weights and the resistance wetted surface stay box-based. In a Design the midship section is the hull's own, so the `midship_coefficient` input of #425 has no effect there (it applies in the Python API); #535 takes it out of format v3. Python API: the legacy functions take the sections (Cb no longer counts twice); a NaN or infinite length is refused ("length, beam and moulded depth must be positive numbers"; 0.1.0 gave 0 t and inf t). Design impact: 224 of 224 cases move (`main e706115`; #546 since then adds liquid Measures only). Cb reads 0.79 to 0.99 (median 0.96). Dry bulk: 72 of 107 carry more cargo, median +13.3 %, up to +16.9 % (a draught-bound hold had the volume of Cb 0.85); 4 self-propelled 90 x 14 m cases now fail `trim_in_range` in the Laden condition, which they passed before. Gas: 91 of 99 feasible before and after; 7 carry more cargo (up to +27 %, the draught-bound channel cases). Crude oil: 17 of 18 feasible before and after; no case carries more cargo. Many more hulls now fail IS Code 2008 Part A 2.2.3 (angle of maximum GZ of at least 25 degrees) in the Light condition, narrow ones too (#498). Fixture and legacy hashes re-stamped from `ovcd run`.
 - Rules (issue #337, spec 0006 section 5.3): the liquid bulk Measures, in the registry and read from the `LiquidBulkResult` only (`Measured::liquid`). `hull.double_side_width` (m), `hull.double_bottom_height` (m) and `hull.lbh` (m3; L x B x H as ADN 2025 9.3.2.11.1 (a) defines it for the tank capacity table: the overall length of the hull, the extreme breadth and the moulded depth) are on the hull object; `cargo-tank.volume` (m3) and `cargo-tank.length` (m) are on the cargo tank object, one per cargo tank (a port and a starboard tank beside a centreline bulkhead are two); `option.deadweight` (t), `option.cargo_capacity_m3` (the gross volume of the cargo tanks, slop excluded) and `option.slop_capacity_share` (the slop tanks over the cargo and slop tanks) are on the Option. The hull, cargo tank, ballast tank and slop tank objects now list the Spaces of the layout. A Rule on a liquid Measure is `not applicable` for a Design with no liquid layout. All are `unverified`. No Rule Set uses them yet, so no result and no Rule Trace moves; the loading condition Measures (`gz.*`, `gm0`) are unchanged.
@@ -239,6 +240,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/449-bilge-sheer-camber (2026-10-22)
+
+Between `main d2f66d5` and `this branch ced6ffd`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep optional bilge_radius_m | `checks[14].message` | intact GM 4.12 m >= 0.15 m at the reported cargo 2424 t, draught 3.30 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 4.15 m >= 0.15 m at the reported cargo 2424 t, draught 3.33 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| sweep optional bilge_radius_m | `checks[16].message` | GM 4.12 m (fluid), max GZ 0.88 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.16 m (fluid), max GZ 0.86 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| sweep optional bilge_radius_m | `checks[17].message` | GM 4.13 m (fluid), max GZ 0.87 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.16 m (fluid), max GZ 0.86 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| sweep optional bilge_radius_m | `checks[18].message` | GM 13.57 m (fluid), max GZ 3.63 m at 29° | GM 13.69 m (fluid), max GZ 3.60 m at 29° | changed |
+| sweep optional bilge_radius_m | `checks[19].message` | GM 13.73 m (fluid), max GZ 3.64 m at 29° | GM 13.84 m (fluid), max GZ 3.60 m at 29° | changed |
+| sweep optional bilge_radius_m | `checks[3].message` | freeboard 1.22 m >= required 0.3 m | freeboard 1.19 m >= required 0.3 m | changed |
+| sweep optional camber_m | `checks[16].message` | GM 4.12 m (fluid), max GZ 0.88 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.12 m (fluid), max GZ 1.01 m at 24° — fails: Angle of max GZ 24.000 < 25.0 | changed |
+| sweep optional camber_m | `checks[17].message` | GM 4.13 m (fluid), max GZ 0.87 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.13 m (fluid), max GZ 1.01 m at 24° — fails: Angle of max GZ 24.000 < 25.0 | changed |
+| sweep optional camber_m | `checks[18].message` | GM 13.57 m (fluid), max GZ 3.63 m at 29° | GM 13.57 m (fluid), max GZ 3.64 m at 29° | changed |
+| sweep optional sheer_aft_m | `checks[12].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 1.62 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 1.63 m of 6.00 m | changed |
+| sweep optional sheer_aft_m | `checks[16].message` | GM 4.12 m (fluid), max GZ 0.88 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.12 m (fluid), max GZ 0.90 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| sweep optional sheer_aft_m | `checks[17].message` | GM 4.13 m (fluid), max GZ 0.87 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.13 m (fluid), max GZ 0.89 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| sweep optional sheer_aft_m | `checks[18].message` | GM 13.57 m (fluid), max GZ 3.63 m at 29° | GM 13.57 m (fluid), max GZ 3.65 m at 30° | changed |
+| sweep optional sheer_aft_m | `checks[19].message` | GM 13.73 m (fluid), max GZ 3.64 m at 29° | GM 13.73 m (fluid), max GZ 3.65 m at 30° | changed |
+| sweep optional sheer_fwd_m | `checks[16].message` | GM 4.12 m (fluid), max GZ 0.88 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.12 m (fluid), max GZ 1.11 m at 24° — fails: Angle of max GZ 24.000 < 25.0 | changed |
+| sweep optional sheer_fwd_m | `checks[17].message` | GM 4.13 m (fluid), max GZ 0.87 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.13 m (fluid), max GZ 1.11 m at 24° — fails: Angle of max GZ 24.000 < 25.0 | changed |
+| sweep optional sheer_fwd_m | `loading_conditions.conditions[1].gz[58][1]` | -0.00361669726603 | 0.26166381687 | +7.33e+03 % |
+| sweep optional sheer_fwd_m | `stability.conditions[1].gz[58][1]` | -0.00361669726603 | 0.26166381687 | +7.33e+03 % |
+| sweep optional camber_m | `loading_conditions.conditions[1].gz[58][1]` | -0.00361669726603 | 0.191628007954 | +5.4e+03 % |
+| sweep optional camber_m | `stability.conditions[1].gz[58][1]` | -0.00361669726603 | 0.191628007954 | +5.4e+03 % |
+| sweep optional sheer_fwd_m | `loading_conditions.conditions[0].gz[58][1]` | 0.00817710125754 | 0.270127782223 | +3.2e+03 % |
+| sweep optional sheer_fwd_m | `stability.conditions[0].gz[58][1]` | 0.00817710125754 | 0.270127782223 | +3.2e+03 % |
+| sweep optional camber_m | `loading_conditions.conditions[0].gz[58][1]` | 0.00817710125754 | 0.203707666159 | +2.39e+03 % |
+| sweep optional camber_m | `stability.conditions[0].gz[58][1]` | 0.00817710125754 | 0.203707666159 | +2.39e+03 % |
+| sweep optional sheer_aft_m | `loading_conditions.conditions[1].gz[58][1]` | -0.00361669726603 | 0.0356911701201 | +1.09e+03 % |
+| sweep optional sheer_aft_m | `stability.conditions[1].gz[58][1]` | -0.00361669726603 | 0.0356911701201 | +1.09e+03 % |
+| sweep optional sheer_fwd_m | `loading_conditions.conditions[0].gz[59][1]` | -0.0249817853209 | 0.234049378852 | +1.04e+03 % |
+| sweep optional sheer_fwd_m | `stability.conditions[0].gz[59][1]` | -0.0249817853209 | 0.234049378852 | +1.04e+03 % |
+| sweep optional sheer_fwd_m | `loading_conditions.conditions[1].gz[57][1]` | 0.0295428017617 | 0.297644281481 | +908 % |
+| sweep optional sheer_fwd_m | `stability.conditions[1].gz[57][1]` | 0.0295428017617 | 0.297644281481 | +908 % |
+| sweep optional camber_m | `loading_conditions.conditions[0].gz[59][1]` | -0.0249817853209 | 0.169284148287 | +778 % |
+| sweep optional camber_m | `stability.conditions[0].gz[59][1]` | -0.0249817853209 | 0.169284148287 | +778 % |
+| sweep optional sheer_fwd_m | `loading_conditions.conditions[1].gz[59][1]` | -0.0368831177163 | 0.225447835058 | +711 % |
+| sweep optional sheer_fwd_m | `stability.conditions[1].gz[59][1]` | -0.0368831177163 | 0.225447835058 | +711 % |
+| sweep optional camber_m | `loading_conditions.conditions[1].gz[57][1]` | 0.0295428017617 | 0.225928244712 | +665 % |
+| sweep optional camber_m | `stability.conditions[1].gz[57][1]` | 0.0295428017617 | 0.225928244712 | +665 % |
+| sweep optional sheer_fwd_m | `loading_conditions.conditions[0].gz[57][1]` | 0.041224614325 | 0.305968873642 | +642 % |
+| sweep optional sheer_fwd_m | `stability.conditions[0].gz[57][1]` | 0.041224614325 | 0.305968873642 | +642 % |
+| sweep optional camber_m | `loading_conditions.conditions[1].gz[59][1]` | -0.0368831177163 | 0.157116828396 | +526 % |
+| sweep optional camber_m | `stability.conditions[1].gz[59][1]` | -0.0368831177163 | 0.157116828396 | +526 % |
+| ... | 2538 more changed quantities | | | |
 
 ### ticket/498-light-warning (2026-10-22)
 

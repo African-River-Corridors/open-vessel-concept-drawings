@@ -98,6 +98,8 @@ pub struct FitOptions {
     pub bow_rake_length_m: Option<f64>,
     /// Issue #446: the keel height at the bow (m); `None`: each candidate's moulded depth.
     pub bow_rake_rise_m: Option<f64>,
+    /// Issue #449: bilge radius, sheer and camber of every candidate.
+    pub hull_shape: crate::hull::hull_form::HullShape,
     /// Aft void of a pushed barge (m).
     pub pushed_stern_void_m: f64,
     /// Tanks along the hull, for every candidate.
@@ -322,6 +324,7 @@ impl Default for FitOptions {
             bow_rake_to_depth_ratio: DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
             bow_rake_length_m: None,
             bow_rake_rise_m: None,
+            hull_shape: crate::hull::hull_form::HullShape::default(),
             pushed_stern_void_m: DEFAULT_PUSHED_STERN_VOID_M,
             tanks_in_line: DEFAULT_TANKS_IN_LINE,
             tank_support_height_m: DEFAULT_TANK_SUPPORT_HEIGHT_M,
@@ -1023,6 +1026,7 @@ impl Search<'_> {
         inp.bow_rake_to_depth_ratio = self.o.bow_rake_to_depth_ratio;
         inp.bow_rake_length_m = self.o.bow_rake_length_m;
         inp.bow_rake_rise_m = self.o.bow_rake_rise_m;
+        inp.hull_shape = self.o.hull_shape;
         inp.pushed_stern_void_m = self.o.pushed_stern_void_m;
         inp.tank_support_height = self.o.tank_support_height_m;
         inp.dome_height = self.o.tank_dome_height_m;

@@ -114,6 +114,10 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     // Issue #448: the bow of the Hull Form; Cb is a result, not an input.
     put("bow_rake_length_m", "bow_rake_length_m");
     put("bow_rake_rise_m", "bow_rake_rise_m");
+    // Issue #449: the bilge, sheer and camber of the Hull Form.
+    for name in ["bilge_radius_m", "sheer_aft_m", "sheer_fwd_m", "camber_m"] {
+        put(name, name);
+    }
     put("freeboard_min_m", "min_freeboard_m");
     put("lightship_k_t_per_m3", "lightship_factor_t_per_m3");
     put("fill_ratio", "fill_ratio");

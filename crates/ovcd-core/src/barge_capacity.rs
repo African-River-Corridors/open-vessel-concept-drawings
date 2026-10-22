@@ -206,6 +206,8 @@ pub struct BargeCapacityInputs {
     /// Issue #448: the keel height at the bow (m). `None`: the moulded depth, the rake the drawings
     /// show.
     pub bow_rake_rise_m: Option<f64>,
+    /// Issue #449: bilge radius, sheer and camber of the hull.
+    pub hull_shape: crate::hull::hull_form::HullShape,
     /// Dry-bulk end-bulkhead allowance at each end of the hold (m)
     pub bulk_end_bulkhead_m: f64,
 
@@ -306,6 +308,7 @@ impl BargeCapacityInputs {
             pushed_stern_void_m: DEFAULT_PUSHED_STERN_VOID_M,
             bow_rake_length_m: None,
             bow_rake_rise_m: None,
+            hull_shape: crate::hull::hull_form::HullShape::default(),
             bow_rake_to_depth_ratio: DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
             bulk_end_bulkhead_m: 0.50,
             vessel_type: "IGC_2G".to_string(),
@@ -1340,6 +1343,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         bow_rake_length_m: rake,
         bow_rake_rise_m: inp.bow_rake_rise_m.unwrap_or(inp.depth),
         stern: inp.stern_geometry.clone(),
+        shape: inp.hull_shape,
     })
     .map_err(|e| value_error(format!("{e}")))?;
     let rho = inp.water_density;

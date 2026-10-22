@@ -12,7 +12,7 @@ pub mod hull_form {
     use alloc::vec;
     use alloc::vec::Vec;
     use core::fmt;
-    use libm::{pow, sqrt};
+    use libm::{cos, pow, sin, sqrt};
 
     /// Box barge hull with bottom rakes (`HullGeometry` in Python). All lengths in metres.
     #[derive(Debug, Clone, Copy, PartialEq)]
@@ -305,6 +305,45 @@ pub mod hull_form {
         },
     }
 
+    /// The bilge radius, sheer and camber of a Hull Form (spec 0008, "Hull Forms", issue #449). All
+    /// in metres; 0 (the default) is the square bilge, straight deck edge and flat deck of the box.
+    #[derive(Debug, Clone, Copy, PartialEq, Default)]
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    pub struct HullShape {
+        /// The bilge: an arc of this radius, written as [`BILGE_CHORDS`] chords.
+        pub bilge_radius_m: f64,
+        /// The rise of the deck edge above the moulded depth at the aft end: a parabola, zero at
+        /// mid-length.
+        pub sheer_aft_m: f64,
+        /// The same at the forward end.
+        pub sheer_fwd_m: f64,
+        /// The rise of the deck at the centre line above the deck edge: a parabola across the deck,
+        /// written as [`CAMBER_CHORDS`] chords on each half.
+        pub camber_m: f64,
+    }
+
+    /// Chords per quarter circle of the bilge.
+    pub const BILGE_CHORDS: u32 = 16;
+    /// Chords across each half of a cambered deck.
+    pub const CAMBER_CHORDS: u32 = 16;
+    /// Station intervals over the length of a sheered deck edge (half of them on each half of the
+    /// hull); a half with no sheer gets none.
+    pub const SHEER_INTERVALS: u32 = 16;
+
+    impl HullShape {
+        /// The rise of the deck edge above the moulded depth at `x` on a hull of length `l`.
+        pub fn sheer_at(&self, x: f64, l: f64) -> f64 {
+            let half = l / 2.0;
+            let u = (x - half) / half;
+            let end = if x < half {
+                self.sheer_aft_m
+            } else {
+                self.sheer_fwd_m
+            };
+            end * u * u
+        }
+    }
+
     /// The main dimensions and the Hull Form.
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub struct HullFormInputs {
@@ -312,6 +351,8 @@ pub mod hull_form {
         pub beam_m: f64,
         pub moulded_depth_m: f64,
         pub form: HullFormKind,
+        /// Bilge radius, sheer and camber.
+        pub shape: HullShape,
     }
 
     /// Why a Hull Form cannot write its sections.
@@ -325,6 +366,10 @@ pub mod hull_form {
         RakeLongerThanHull { rakes_m: f64, length_m: f64 },
         /// A rake rises above the moulded depth.
         RiseAboveDepth { rise_m: f64, depth_m: f64 },
+        /// A bilge radius, sheer or camber is negative or not finite.
+        NegativeShape,
+        /// The bilge radius is more than half the beam or more than the moulded depth.
+        BilgeRadius { radius_m: f64, limit_m: f64 },
         /// The sections the generator wrote were refused.
         Sections(SectionsError),
     }
@@ -346,6 +391,13 @@ pub mod hull_form {
                     f,
                     "a rake rise of {rise_m} m is above the moulded depth of {depth_m} m"
                 ),
+                HullError::NegativeShape => {
+                    write!(f, "a bilge radius, sheer or camber must be 0 or more")
+                }
+                HullError::BilgeRadius { radius_m, limit_m } => write!(
+                    f,
+                    "a bilge radius of {radius_m} m is more than {limit_m} m, half the beam or the moulded depth"
+                ),
                 HullError::Sections(e) => write!(f, "{e}"),
             }
         }
@@ -359,14 +411,45 @@ pub mod hull_form {
         x.is_finite() && x >= 0.0
     }
 
-    /// A rectangle half-section with its keel at `z_keel`.
-    fn box_half(beam: f64, depth: f64, z_keel: f64) -> Vec<(f64, f64)> {
-        vec![
-            (0.0, z_keel),
-            (beam / 2.0, z_keel),
-            (beam / 2.0, depth),
-            (0.0, depth),
-        ]
+    /// The half-section of a box with its keel at `z_keel` and its deck edge at `z_edge`: the
+    /// rectangle when the shape is 0, else with the bilge arc and the cambered deck. Every Section of
+    /// one hull gets the same point count. Where the bilge radius is more than the height of the side
+    /// (a rake end near the deck) the arc takes that height.
+    fn box_half(half_beam: f64, z_keel: f64, z_edge: f64, shape: &HullShape) -> Vec<(f64, f64)> {
+        let b = half_beam;
+        let mut pts = vec![(0.0, z_keel)];
+        if shape.bilge_radius_m > 0.0 {
+            let r = shape.bilge_radius_m.min(z_edge - z_keel).max(0.0);
+            let (cy, cz) = (b - r, z_keel + r);
+            let n = BILGE_CHORDS;
+            pts.extend((0..=n).map(|j| {
+                let a = core::f64::consts::FRAC_PI_2 * f64::from(j) / f64::from(n);
+                // From the bottom tangent point (a = 0) round to the side tangent point.
+                (cy + r * sin(a), cz - r * cos(a))
+            }));
+        } else {
+            pts.push((b, z_keel));
+        }
+        pts.push((b, z_edge));
+        if shape.camber_m > 0.0 {
+            let n = CAMBER_CHORDS;
+            pts.extend((1..n).map(|j| {
+                let y = b * (1.0 - f64::from(j) / f64::from(n));
+                let u = y / b;
+                (y, z_edge + shape.camber_m * (1.0 - u * u))
+            }));
+            pts.push((0.0, z_edge + shape.camber_m));
+        } else {
+            pts.push((0.0, z_edge));
+        }
+        pts
+    }
+
+    /// The keel height at `x` on the keel line through `keel` (stations ascending): linear between.
+    fn keel_at(keel: &[(f64, f64)], x: f64) -> f64 {
+        let j = keel.iter().position(|k| k.0 > x).unwrap_or(keel.len() - 1);
+        let (a, b) = (keel[j - 1], keel[j]);
+        a.1 + (x - a.0) / (b.0 - a.0) * (b.1 - a.1)
     }
 
     /// Write the Sections Table of a Hull Form.
@@ -418,14 +501,54 @@ pub mod hull_form {
                 k
             }
         };
-        let sections = keel
+        let shape = &inputs.shape;
+        let parts = [
+            shape.bilge_radius_m,
+            shape.sheer_aft_m,
+            shape.sheer_fwd_m,
+            shape.camber_m,
+        ];
+        if !parts.iter().all(|&v| non_negative(v)) {
+            return Err(HullError::NegativeShape);
+        }
+        let limit = (b / 2.0).min(d);
+        if shape.bilge_radius_m > limit {
+            return Err(HullError::BilgeRadius {
+                radius_m: shape.bilge_radius_m,
+                limit_m: limit,
+            });
+        }
+        // A sheered half gets evenly spaced Stations, so the deck edge follows the parabola; the
+        // keel there is on the keel line (a straight rake stays straight).
+        let mut stations = keel.clone();
+        let half = SHEER_INTERVALS / 2;
+        let mut extra = Vec::new();
+        if shape.sheer_aft_m > 0.0 {
+            extra.extend(1..=half);
+        }
+        if shape.sheer_fwd_m > 0.0 {
+            extra.extend(half..SHEER_INTERVALS);
+        }
+        for i in extra {
+            let x = l * f64::from(i) / f64::from(SHEER_INTERVALS);
+            if !stations.iter().any(|k| k.0 == x) {
+                stations.push((x, keel_at(&keel, x)));
+            }
+        }
+        stations.sort_by(|p, q| p.0.total_cmp(&q.0));
+        let edges: Vec<f64> = stations
             .iter()
-            .map(|&(x, z)| Section {
+            .map(|&(x, _)| d + shape.sheer_at(x, l))
+            .collect();
+        let sections = stations
+            .iter()
+            .zip(&edges)
+            .map(|(&(x, z), &edge)| Section {
                 x,
-                points: box_half(b, d, z),
+                points: box_half(b / 2.0, z, edge, shape),
             })
             .collect();
-        SectionsTable::new(sections, vec![d; keel.len()]).map_err(HullError::Sections)
+        SectionsTable::new(sections, edges).map_err(HullError::Sections)
     }
 
     impl RakedBox {
@@ -441,6 +564,7 @@ pub mod hull_form {
                     stern_rake_length_m: self.stern_rake_length,
                     stern_rake_rise_m: self.stern_rake_rise,
                 },
+                shape: HullShape::default(),
             })
         }
     }

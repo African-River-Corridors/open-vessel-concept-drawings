@@ -47,7 +47,7 @@ known engineering findings are under review in the open
   (`core.gas_arrangement`). Only IGC rules apply to gas tanks.
 - **Hydrostatics and stability.** Equilibrium draught, freeboard, air draught, and intact stability
   for gas barges (`core.hydrostatics`, `core.gas_stability`). The hull is a table of sections: the
-  raked bow and the stern form, with no bilge radius, sheer or camber yet. The draught, trim, GM and
+  raked bow and the stern form, with a bilge radius, sheer and camber when set. The draught, trim, GM and
   GZ come from these sections, and the block coefficient is a result, not an input. The weights and
   the resistance wetted surface still use a box hull. Known limitation: the 0 to 40 degree and
   30 to 40 degree areas of IS Code 2008 Part A 2.2.1 always run to 40 degrees. The text stops them at

@@ -1066,6 +1066,7 @@ fn simulate_measured(
     let (rake_length, rake_rise) = bow_rake_of(p, d)?;
     inp.bow_rake_length_m = Some(rake_length);
     inp.bow_rake_rise_m = Some(rake_rise);
+    inp.hull_shape = hull_shape_of(p)?;
     inp.aft_design = aft_design_of(p)?;
     inp.stern_block_mass = stern_mass_of(p)?;
     inp.stern_geometry = stern.cloned();
@@ -1765,6 +1766,17 @@ fn bow_rake_of(p: &Map<String, Value>, d: f64) -> R<(f64, f64)> {
     Ok((length, rise))
 }
 
+/// The bilge radius, sheer and camber of the Option's hull (issue #449). A key left out is 0, the
+/// box of a file saved before.
+fn hull_shape_of(p: &Map<String, Value>) -> R<ovcd_core::hull::hull_form::HullShape> {
+    Ok(ovcd_core::hull::hull_form::HullShape {
+        bilge_radius_m: get_or(p, "bilge_radius_m", 0.0)?,
+        sheer_aft_m: get_or(p, "sheer_aft_m", 0.0)?,
+        sheer_fwd_m: get_or(p, "sheer_fwd_m", 0.0)?,
+        camber_m: get_or(p, "camber_m", 0.0)?,
+    })
+}
+
 /// The hull of the Option as its Sections Table (issue #448): the raked bow and the Stern Form.
 fn option_hull(
     p: &Map<String, Value>,
@@ -1779,6 +1791,7 @@ fn option_hull(
         bow_rake_length_m: length,
         bow_rake_rise_m: rise,
         stern: stern.cloned(),
+        shape: hull_shape_of(p)?,
     })
     .map_err(|e| Stop::Raised("ValueError".to_string(), format!("{e}")))
 }
@@ -2151,6 +2164,7 @@ fn simulate_gas(
         // Issue #448: a typed bow rake and rise hold for every candidate depth.
         bow_rake_length_m: opt_float(p, "bow_rake_length_m")?,
         bow_rake_rise_m: opt_float(p, "bow_rake_rise_m")?,
+        hull_shape: hull_shape_of(p)?,
         pushed_stern_void_m: get_or(
             p,
             "pushed_stern_void_m",
