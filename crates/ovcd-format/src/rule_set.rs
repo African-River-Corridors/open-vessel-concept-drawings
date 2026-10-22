@@ -24,6 +24,14 @@ const BUILT_IN: &[(&str, &str)] = &[
         include_str!("../rules/is2008-a/1.0.0.json"),
     ),
     (
+        "rules/es-trin-2025/1.0.0.json",
+        include_str!("../rules/es-trin-2025/1.0.0.json"),
+    ),
+    (
+        "rules/icll-freeboard/1.0.0.json",
+        include_str!("../rules/icll-freeboard/1.0.0.json"),
+    ),
+    (
         "rules/igc-2g/1.0.0.json",
         include_str!("../rules/igc-2g/1.0.0.json"),
     ),

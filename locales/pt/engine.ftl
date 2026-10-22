@@ -93,8 +93,6 @@ check-stability-not-assessed = não foi possível avaliar a estabilidade: { $rea
 ## crates/ovcd-core/src/gas_separation.rs
 
 # status: draft
-check-cofferdam-min-width = coferdã { $cofferdam } m >= { $min } m (cl. 3.6.13)
-# status: draft
 check-opening-setback = separação a ré { $aft } m >= { $min } m da área de carga até qualquer entrada ou janela que abra (cl. 3.3.7 / 3.3.11)
 # status: draft
 check-fwd-end-bulkhead-space = espaço da antepara de extremidade de vante { $fwd } m >= { $min } m ({ $tank_ends }, cl. 3.5.3)
@@ -491,8 +489,6 @@ check-name-tank-length-over-diameter = comprimento do tanque sobre diâmetro
 check-name-freeboard-at-payload = borda livre com carga útil
 # status: draft
 check-name-stability-not-assessed = Estabilidade — não avaliada
-# status: draft
-check-name-cofferdam-min-width = largura mínima do coferdã
 # status: draft
 check-name-opening-setback = afastamento das aberturas
 # status: draft

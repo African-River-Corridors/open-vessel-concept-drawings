@@ -43,11 +43,16 @@ def test_service_space_is_the_remainder():
 
 # ---------- feasibility: the checks must fire ----------
 
-def test_thin_cofferdam_fails():
-    """Label: property
+def test_thin_aft_end_space_fails():
+    """Issue #280: the 0.60 m cofferdam of the type C part (3.6.13) is no limit on a gas design. The
+    type G space is 0.20 m between the tanks and the end bulkhead of the hold (3.5.3, ADN
+    9.3.1.11.3(a)); 0.50 m for plane tank ends.
+
+    Label: sourced - LR inland rules Pt 4 Ch 4 3.5.3; ADN 2025 9.3.1.11.3(a)
     """
-    r = compute(GasSeparationInputs(cofferdam_m=0.4))
-    assert any(c.name == "cofferdam_min_width" and not c.ok for c in r.checks)
+    assert all(c.ok for c in compute(GasSeparationInputs(cofferdam_m=0.4)).checks)
+    r = compute(GasSeparationInputs(cofferdam_m=0.1))
+    assert any(c.name == "aft_end_bulkhead_space" and not c.ok for c in r.checks)
 
 
 def test_short_opening_setback_fails():
@@ -63,7 +68,7 @@ def test_clearances_add_no_inland_floor_check():
     Label: property
     """
     r = compute(GasSeparationInputs(side_clearance_m=0.05, double_bottom_m=0.05))
-    assert [c.name for c in r.checks] == ["cofferdam_min_width", "opening_setback", "fwd_end_bulkhead_space"]
+    assert [c.name for c in r.checks] == ["aft_end_bulkhead_space", "opening_setback", "fwd_end_bulkhead_space"]
     assert r.ok
 
 

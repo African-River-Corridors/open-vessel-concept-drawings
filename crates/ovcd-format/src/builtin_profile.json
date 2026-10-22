@@ -160,7 +160,12 @@
       "unit": "m",
       "hard": { "ge": 0 },
       "soft": { "min": 0.15, "max": 1.5 },
-      "basis": "must also be less than the moulded depth (hard)"
+      "basis": "the safety clearance: the least distance from the plane of maximum draught to the deck at side or to the lowest opening. 0.3 m is ES-TRIN 2025/1 Article 4.01(1), at least 300 mm; the rules of the Service Area check the value (es-trin-2025 for a river, icll-freeboard for a coast, in the default stacks). It is not an ICLL freeboard: for a long coastal hull the ICLL type A table value is far larger (984 mm at 90 m). It must also be less than the moulded depth (hard)"
+    },
+    "hold_covering": {
+      "default": "covered",
+      "status": "estimate",
+      "basis": "Whether the holds sail covered or open. ES-TRIN 2025/1 Article 4.01(2) asks for a safety clearance of at least 500 mm for a vessel that sails with its holds uncovered, and the es-trin-2025 Rule for it applies only to an open hold. No source says which a barge does; the default is covered, so a new Option is checked against 300 mm. Type open for an uncovered hold. A file saved before reads covered"
     },
     "bow_rake_length_to_depth_ratio": {
       "default": 1.6,
@@ -191,16 +196,16 @@
     "rule_sets": {
       "default_stacks": {
         "river-only": {
-          "gas": ["igc-2g", "is2008-a", "lr-inland-gas", "ovcd"],
-          "other": ["is2008-a", "ovcd"]
+          "gas": ["igc-2g", "is2008-a", "lr-inland-gas", "es-trin-2025", "ovcd"],
+          "other": ["is2008-a", "es-trin-2025", "ovcd"]
         },
         "coastal-and-river": {
-          "gas": ["igc-2g", "is2008-a", "lr-inland-gas", "ovcd"],
-          "other": ["is2008-a", "ovcd"]
+          "gas": ["igc-2g", "is2008-a", "lr-inland-gas", "es-trin-2025", "icll-freeboard", "ovcd"],
+          "other": ["is2008-a", "es-trin-2025", "icll-freeboard", "ovcd"]
         }
       },
       "status": "estimate",
-      "basis": "The Rule Set stack a new Option takes, by Service Area and Cargo (gas: a Type C tank Cargo Containment; other: the rest), each set at its highest built-in version with its content hash, marked default (spec 0004, \"Service Area and default stacks\"). Both Service Areas have the same stacks while the sets for each are not yet written. Target stacks (later specs): river only adds an inland class stability set and ES-TRIN 4.01 freeboard; coastal and river adds IS Code Part B 2.2 for barges and ICLL freeboard. A file saved before holds none and is read as the river-only stack, which is what the engine checked"
+      "basis": "The Rule Set stack a new Option takes, by Service Area and Cargo (gas: a Type C tank Cargo Containment; other: the rest), each set at its highest built-in version with its content hash, marked default (spec 0004, \"Service Area and default stacks\"). River only adds ES-TRIN 2025/1 safety clearance and freeboard (es-trin-2025); coastal and river adds the ICLL type A tabular freeboard (icll-freeboard) and keeps ES-TRIN, as a coastal vessel also sails on rivers and the strictest governs (issue #428). Target stacks (later specs): river only adds an inland class stability set; coastal and river adds IS Code Part B 2.2 for barges. A file saved before holds none and is read as the river-only stack, which is what the engine checked"
     },
     "lpg_carriage_condition": {
       "default": "fully_pressurised",

@@ -97,6 +97,10 @@
           "value": 1.0,
           "source": "default"
         },
+        "hold_covering": {
+          "value": "covered",
+          "source": "default"
+        },
         "bulk_end_bulkhead_m": {
           "value": 0.5,
           "source": "default"

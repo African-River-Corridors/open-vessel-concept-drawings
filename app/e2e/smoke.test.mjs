@@ -521,7 +521,7 @@ describe("OVCD app smoke tests", () => {
   for (const [cargo, fixture, freeboard] of [["gas", "gas_igc_2g_exact.vdesign", "4.3"], ["dry-bulk", "dry_bulk_box_hold.vdesign", "3.4"]]) {
     it(`shows the Rule Trace in the Rule check calculations table, failures first (${cargo})`, async () => {
       await open(path.join(FIXTURES, fixture), fixture);
-      await type("Minimum freeboard", freeboard);
+      await type("Minimum freeboard (safety clearance)", freeboard);
       await show("Stability & Propulsion", "Rule check calculations");
       await until("a failing row", async () => (await browser.$$('[data-testid=rule-check-row][data-outcome="fail"]')).length > 0);
       assert.deepEqual(await texts(await browser.$$("[data-testid=rule-checks] thead th")),

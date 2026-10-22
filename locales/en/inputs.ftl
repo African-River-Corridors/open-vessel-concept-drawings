@@ -95,7 +95,7 @@ input-shipd-parameters = ShipD parameters
 
 input-hull-offsets = Offsets table
 
-input-min-freeboard-m = Minimum freeboard
+input-min-freeboard-m = Minimum freeboard (safety clearance)
 
 input-bow-rake-length-to-depth-ratio = Bow rake length over depth
 
@@ -193,6 +193,10 @@ input-hold-double-bottom-m = Hold double bottom
 input-hopper-slope-h-per-v = Hopper slope (horizontal over vertical)
 
 input-hatch-coaming-height-m = Hatch coaming height
+
+input-hold-covering = Hold covering
+choice-hold-covering-covered = Covered
+choice-hold-covering-open = Open
 
 input-n-holds = Number of holds
 
