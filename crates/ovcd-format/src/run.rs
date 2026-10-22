@@ -122,7 +122,6 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     for name in [
         "water_density_t_per_m3",
         "squat_safety_margin_m",
-        "midship_coefficient",
         "tanks_in_line",
         "tank_support_height_m",
         "tank_dome_height_m",

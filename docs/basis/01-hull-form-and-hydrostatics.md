@@ -302,9 +302,9 @@ input. The bilge radius, sheer, camber and the V-bottom and chine values are inp
 - Settled by #448: the hull is no longer a box with one `Cb` factor; `Cb` is on `L_WL × B_WL × T`, the ES-TRIN
   2025/1 Article 1.01, 4.9 basis; the drawn bow rake is in the hydrostatics; there is no default `Cb` to sit below
   its basis.
-- The midship coefficient Cm is an input (#425; default 1.0, an Estimate). Where no hull section is given (the Python
-  API) the midship section is B × T × Cm. A Design takes the hull's own midship section from the sections, so Cm has
-  no effect there; it is to leave format v3 like `Cb`.
+- The midship coefficient Cm is a result in a Design (`hydrostatics.cm`, from the hull's own midship section); the
+  input left format v3 (#535), and a file that stores it opens with one warning per Option. Where no hull section is
+  given (the Python API) the midship section is still B × T × Cm, with Cm 1.0 by default (an Estimate).
 - The convoy beam check of the Vessel Class catalogue (`convoy_beam_consistent`) is an identity for the built-in catalogue: its unit beam is the convoy beam over the number abreast. It can fail only for a catalogue that supplies its own unit beam (#432).
 - Pushed convoys give no results.
 - Errors and proposed changes: see the findings register (#121) and the engineering basis triage tickets. After triage they go to the findings

@@ -92,8 +92,6 @@ choice-cargo-containment-integral-tanks = Tanques integrales
 
 # status: draft
 
-# status: draft
-input-midship-coefficient = Coeficiente de la sección maestra
 
 # status: draft
 input-min-freeboard-m = Francobordo mínimo
