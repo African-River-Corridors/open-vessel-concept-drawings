@@ -1,0 +1,63 @@
+{
+  "$schema": "../rule-set.schema.json",
+  "id": "rheinschpv",
+  "family": "rheinschpv",
+  "title": "Rhine Police Regulations (RheinSchPV 1994) Article 1.07: loading and view",
+  "version": "1.0.0",
+  "edition": {
+    "document": "Rheinschiffahrtspolizeiverordnung (RheinSchPV), Anlage zur Verordnung zur Einführung der Rheinschiffahrtspolizeiverordnung",
+    "edition": "as published on gesetze-im-internet.de, retrieved 2026-10-20"
+  },
+  "sources": [
+    {
+      "document": "RheinSchPV 1994 § 1.07 Anforderungen an die Beladung und Sicht",
+      "edition": "as published on gesetze-im-internet.de",
+      "url": "https://www.gesetze-im-internet.de/rheinschpv_1994/__1_07.html",
+      "access": "free",
+      "sha256": "083bf130f50875027cf3da3803bef8a6a721038bbfa96dfd84d3d5514f75bfef"
+    }
+  ],
+  "status": "draft",
+  "applies_when": {},
+  "includes": [],
+  "known_conflicts": [],
+  "tables": [],
+  "rules": [
+    {
+      "id": "rheinschpv/1.07(2)/blind-zone-laden",
+      "title": "Free view not restricted by the cargo or the trim further than 350 m ahead of the bow (laden); the 500 m of 1.07(3) with radar and video is not taken",
+      "origin": "regulation",
+      "source": {
+        "document": "RheinSchPV 1994 § 1.07",
+        "edition": "as published on gesetze-im-internet.de",
+        "locator": "1.07(2)",
+        "page": "rheinschpv_1_07.html, Nr. 2",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#355"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "wheelhouse.blind_distance",
+        "args": {
+          "condition": "laden"
+        }
+      },
+      "compare": "le",
+      "limit": {
+        "value": 350.0,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#355",
+      "since": "1.0.0"
+    }
+  ]
+}

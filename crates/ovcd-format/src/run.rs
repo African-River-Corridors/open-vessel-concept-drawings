@@ -355,6 +355,23 @@ pub fn run_option_with(
                     })
                     .map(crate::trace::with_check_verdicts)
                     .unwrap_or_default();
+                // Issue #355: the Blind Distance and the speed the Rules of the stern read.
+                let sightline = &v["sightline"];
+                measured.blind_distance_light_m = sightline["blind_distance_light_m"].as_f64();
+                measured.blind_distance_laden_m = sightline["blind_distance_laden_m"].as_f64();
+                measured.speeds_kn = v["powering"]["environments"]
+                    .as_array()
+                    .map(|list| {
+                        list.iter()
+                            .filter_map(|e| {
+                                Some((
+                                    e["name"].as_str()?.to_string(),
+                                    e["service_speed_kn"].as_f64()?,
+                                ))
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default();
                 let rule_trace = trace_json(
                     &trace_of(&selection, option, &measured),
                     crate::trace::service_area_of(option),

@@ -30,6 +30,14 @@ pub struct Measured {
     /// The design's check list, (name, ok), in order, with the names as a result lists them (spaces,
     /// not underscores): the verdicts the `ovcd` Rules mirror.
     pub checks: Vec<(String, bool)>,
+    /// The Blind Distance ahead of the bow, m, in the light condition (the unladen state of ES-TRIN
+    /// 7.02(2)) and when laden: the answer's sightline. `None` for the margin method and a hull with
+    /// no wheelhouse of its own (issue #355).
+    pub blind_distance_light_m: Option<f64>,
+    pub blind_distance_laden_m: Option<f64>,
+    /// The speed through the water at the installed power, kn, laden, in each environment of the
+    /// powering, by the environment's name. Empty for a hull with no machinery of its own.
+    pub speeds_kn: Vec<(String, f64)>,
 }
 
 /// The deadweight bands, at the thresholds of MARPOL Annex I Reg. 19 (MEPC.117(52)): 19.1, 600
@@ -111,6 +119,22 @@ impl Measured {
                     && matches!(v, ArgValue::Text(n) if self.checks.iter().any(|(c, _)| c == n))
             }),
             id if id.starts_with("separation.") => self.separation.is_some(),
+            "wheelhouse.blind_distance" => match m.args.iter().find(|(k, _)| k == "condition") {
+                Some((_, ArgValue::Text(c))) if c == "light" => {
+                    self.blind_distance_light_m.is_some()
+                }
+                Some((_, ArgValue::Text(c))) if c == "laden" => {
+                    self.blind_distance_laden_m.is_some()
+                }
+                _ => false,
+            },
+            "powering.speed_through_water_kmh" => !self.speeds_kn.is_empty(),
+            // Worked out from the Option's inputs, not from the result: the Option's own source
+            // answers them. A candidate of the search has none.
+            "propulsion.redundancy_28_04"
+            | "wheelhouse.field_of_view"
+            | "wheelhouse.raised_stability"
+            | "formation.coupling_force" => false,
             _ => true,
         }
     }
@@ -128,6 +152,47 @@ impl Measured {
                 .find(|(n, _)| n == name)
                 .map(|(_, ok)| MeasureValue::Bool(*ok))
                 .ok_or_else(|| format!("the result has no check `{name}`"));
+        }
+        if m.id == "wheelhouse.blind_distance" {
+            let condition = match m.args.iter().find(|(k, _)| k == "condition") {
+                Some((_, ArgValue::Text(c))) => c.as_str(),
+                _ => {
+                    return Err(
+                        "`wheelhouse.blind_distance` needs the text argument `condition`"
+                            .to_string(),
+                    );
+                }
+            };
+            let value = match condition {
+                "light" => self.blind_distance_light_m,
+                "laden" => self.blind_distance_laden_m,
+                other => {
+                    return Err(format!(
+                        "`wheelhouse.blind_distance` takes the condition `light` or `laden`, not `{other}`"
+                    ));
+                }
+            };
+            return value.map(MeasureValue::Number).ok_or_else(|| {
+                format!("the result has no Blind Distance in the {condition} condition")
+            });
+        }
+        if m.id == "powering.speed_through_water_kmh" {
+            let environment = match m.args.iter().find(|(k, _)| k == "environment") {
+                Some((_, ArgValue::Text(e))) => e.as_str(),
+                _ => {
+                    return Err(
+                        "`powering.speed_through_water_kmh` needs the text argument `environment`"
+                            .to_string(),
+                    );
+                }
+            };
+            // 1 kn = 1.852 km/h.
+            return self
+                .speeds_kn
+                .iter()
+                .find(|(n, _)| n == environment)
+                .map(|(_, kn)| MeasureValue::Number(kn * 1.852))
+                .ok_or_else(|| format!("the powering has no environment `{environment}`"));
         }
         if let Some(name) = m.id.strip_prefix("separation.") {
             let (s, plane) = self
