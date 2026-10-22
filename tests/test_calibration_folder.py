@@ -32,7 +32,8 @@ def test_the_bands_are_read_from_the_folder_cal_names_when_used(tmp_path, monkey
     monkeypatch.setattr(calibration, "CAL", tmp_path)
     assert dict(calibration.BANDS) == {"bands": {"lightship_t": {"label": "Test"}}}
     monkeypatch.undo()
-    assert set(calibration.BANDS["bands"]) == {"lightship_t", "dwt_t", "bollard_pull_t", "installed_power_kw"}
+    assert set(calibration.BANDS["bands"]) == {"lightship_t", "dwt_t", "bollard_pull_t", "installed_power_kw",
+                                          "stern_block_m"}
 
 
 def test_the_tests_use_the_calibration_folder_next_to_them():
