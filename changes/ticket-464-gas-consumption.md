@@ -4,7 +4,7 @@
 <!-- design-impact -->
 ### ticket/464-gas-consumption (2026-10-22)
 
-Between `main 5febb90` and `this branch ee27aa4`.
+Between `main f9f99bb` and `this branch 7f99086`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
