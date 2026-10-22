@@ -73,8 +73,8 @@ def main() -> int:
         for fixture in sorted(FIXTURES.glob("*.vdesign")):
             proc = subprocess.run([args.ovcd, "draw", "--document", str(fixture)], capture_output=True, text=True)
             if proc.returncode != 0:
-                # a convoy has no results yet, so no views: that is the expected message, nothing else is
-                if "convoy results not yet available" in proc.stderr and json.loads(proc.stdout or "{}") == {}:
+                # a convoy has no drawings yet (issue #358): that is the expected message, nothing else is
+                if "no drawings of a pushed convoy yet" in proc.stderr and json.loads(proc.stdout or "{}") == {}:
                     print(f"{fixture.name}: no views (convoy), as expected")
                     continue
                 problems.append(f"{fixture.name}: ovcd draw --document failed: {proc.stderr.strip()[:300]}")

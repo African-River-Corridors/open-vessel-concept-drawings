@@ -143,7 +143,7 @@ fn the_slack_condition_is_slack_and_not_better_than_the_full_departure() {
 fn the_stability_block_is_there_for_the_view_and_the_checks_are_warnings() {
     let r = results("crude_integral_tanks_self_propelled");
     assert!(r["stability"]["conditions"].as_array().unwrap().len() >= 5);
-    assert!(r["stability"]["governing"].is_string());
+    assert!(r["stability"]["lowest_gm_condition"].is_string());
     let stability_checks: Vec<&Value> = r["checks"]
         .as_array()
         .unwrap()

@@ -46,7 +46,7 @@ pub fn hull_views(outcome: &RunOutcome, option: &str) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ovcd_format::{CONVOY_NOT_AVAILABLE, Profile, check, run_design};
+    use ovcd_format::{CONVOY_NO_VIEWS, Profile, check, run_design};
     use std::path::Path;
 
     fn outcome(fixture: &str) -> RunOutcome {
@@ -98,7 +98,7 @@ mod tests {
     #[test]
     fn a_convoy_has_no_views_and_the_message_of_the_outputs_panel() {
         let v = hull_views(&outcome("pushed_convoy.vdesign"), "Option 1");
-        assert_eq!(v, json!({ "message": CONVOY_NOT_AVAILABLE }));
+        assert_eq!(v, json!({ "message": CONVOY_NO_VIEWS }));
     }
 
     #[test]

@@ -53,6 +53,10 @@ impl GaViews {
     }
 }
 
+/// What a convoy gets in place of views: its results are the totals of one barge's, and the
+/// arrangement plan of a convoy comes with the pusher (#360).
+pub const CONVOY_NO_VIEWS: &str = "no drawings of a pushed convoy yet";
+
 /// The views of an Option that was run. A convoy, or an Option that cannot be computed, gives no
 /// views and the same message as the outputs panel.
 pub fn ga_views_of(outcome: &RunOutcome) -> Result<GaViews, String> {
@@ -62,6 +66,9 @@ pub fn ga_views_of(outcome: &RunOutcome) -> Result<GaViews, String> {
 /// As [`ga_views_of`], with the name of the Option for the title block of each sheet.
 pub fn ga_views_named(outcome: &RunOutcome, option: Option<&str>) -> Result<GaViews, String> {
     match outcome {
+        RunOutcome::Results { results, .. } if results.get("convoy").is_some() => {
+            Err(CONVOY_NO_VIEWS.to_string())
+        }
         RunOutcome::Results { results, .. } => ga_views_for(results, option),
         RunOutcome::NotAvailable(message) | RunOutcome::Failed(message) => Err(message.clone()),
     }

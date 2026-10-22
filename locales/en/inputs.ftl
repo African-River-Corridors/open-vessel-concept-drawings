@@ -447,6 +447,10 @@ input-air-draft-limit-m = Air-draft limit
 
 input-draught-limit-m = Draught limit
 
+input-lock-length-m = Lock length
+
+input-lock-width-m = Lock width
+
 input-downflooding-angle-deg = Angle of down-flooding
 
 input-channel-depth-m = Channel depth
