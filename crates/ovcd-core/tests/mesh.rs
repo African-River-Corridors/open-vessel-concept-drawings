@@ -186,7 +186,7 @@ fn every_hull_mesh_is_closed_and_has_the_sections_volume() {
             (v - sections).abs() <= bound,
             "{what}: mesh {v} vs sections {sections}, bound {bound}"
         );
-        assert!(m.groups.is_empty() && m.positions.len() % 3 == 0);
+        assert!(m.groups.is_empty() && m.positions.len().is_multiple_of(3));
     }
 }
 
