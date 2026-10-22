@@ -248,3 +248,34 @@ fn the_layout_harness_has_no_loading_condition_so_the_rule_is_not_evaluated_with
             .contains("no loading condition")
     );
 }
+
+/// MARPOL Annex I regulation 28 (issue #341): the coastal fixture has `marpol-i` in its stack, so it has a
+/// `marpol_damage` block and a row of `marpol/28/damage-stability` for each case; the river fixtures have none.
+#[test]
+fn the_marpol_rule_has_one_row_for_each_marpol_damage_and_only_under_the_coastal_stack() {
+    let r = results(&raw_fixture("crude_integral_tanks_coastal"));
+    let cases = r["marpol_damage"].as_array().expect("marpol_damage");
+    assert!(cases.len() >= 6, "{} cases", cases.len());
+    let rows = damage_rows(&r, "marpol/28/damage-stability");
+    assert_eq!(rows.len(), cases.len());
+    for (row, case) in rows.iter().zip(cases) {
+        assert_eq!(row["object"], case["name"]);
+        assert_eq!(row["object_type"], "marpol-damage-case");
+        let want = if case["ok"] == true { "pass" } else { "warn" };
+        assert_eq!(row["outcome"], want, "{}", case["name"]);
+    }
+    // the extents reach the cargo tanks: some case floods a cargo tank (its name starts with a digit: 1S, 2P)
+    assert!(
+        cases
+            .iter()
+            .any(|c| c["flooded"].as_array().unwrap().iter().any(|n| n
+                .as_str()
+                .unwrap()
+                .starts_with(|ch: char| ch.is_ascii_digit()))),
+        "no case floods a cargo tank"
+    );
+    // not in the results hash
+    assert!(ovcd_format::UNHASHED_KEYS.contains(&"marpol_damage"));
+    let river = results(&raw_fixture("crude_integral_tanks_pushed"));
+    assert!(river.get("marpol_damage").is_none());
+}

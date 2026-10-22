@@ -30,10 +30,12 @@ pub enum ObjectType {
     SlopTank,
     /// One assumed damage of a liquid bulk hull (issue #341): the flooded compartments of an extent.
     DamageCase,
+    /// One assumed damage of MARPOL Annex I regulation 28 (issue #341): its extents reach the cargo tanks.
+    MarpolDamageCase,
 }
 
 impl ObjectType {
-    pub const ALL: [ObjectType; 8] = [
+    pub const ALL: [ObjectType; 9] = [
         ObjectType::Option,
         ObjectType::Hull,
         ObjectType::Tank,
@@ -42,6 +44,7 @@ impl ObjectType {
         ObjectType::BallastTank,
         ObjectType::SlopTank,
         ObjectType::DamageCase,
+        ObjectType::MarpolDamageCase,
     ];
 
     /// The object type of a key, or `None` for a key OVCD does not declare.
@@ -59,6 +62,7 @@ impl ObjectType {
             ObjectType::BallastTank => "ballast-tank",
             ObjectType::SlopTank => "slop-tank",
             ObjectType::DamageCase => "damage-case",
+            ObjectType::MarpolDamageCase => "marpol-damage-case",
         }
     }
 }
@@ -465,6 +469,15 @@ pub static MEASURES: &[MeasureDef] = &[
         value: ValueKind::Bool,
         args: &[],
         method: "The damaged hull floats where the heel at the stage of equilibrium is at most 12 degrees and, beyond it, the righting lever reaches 0.05 m with an area of 0.0065 m.rad up to 27 degrees (ADN 2025 9.3.2.15.2 and 9.3.3.15.2). Lost buoyancy method on the Sections Table, final stage of flooding only: the intermediate stages, the non-watertight openings and the flooding of undamaged compartments are not modelled",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
+        id: "stability.damage_marpol",
+        unit: "",
+        object: ObjectType::MarpolDamageCase,
+        value: ValueKind::Bool,
+        args: &[],
+        method: "The damaged hull floats where the heel at the stage of equilibrium is at most 25 degrees and the righting lever stays positive over 20 degrees beyond it, reaching 0.1 m with an area of 0.0175 m.rad within that range (MARPOL Annex I regulation 28.3.2 and 28.3.3). Lost buoyancy method on the Sections Table, final stage of flooding, for the extents of regulation 28.2; a damaged cargo tank is flooded at 95 % and the oil keeps its mass",
         method_status: MethodStatus::Unverified,
     },
     MeasureDef {

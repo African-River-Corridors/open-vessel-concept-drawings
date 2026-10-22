@@ -99,8 +99,7 @@ wins.
 
 **Objects.** A Measure is computed for one object of one **object type**: `option`, `hull`, `tank`
 (a Type C gas cargo tank), `loading-condition`, and one type per liquid bulk tank role:
-`cargo-tank`, `ballast-tank`, `slop-tank` (spec 0006 §5.2, #336), and `damage-case` (one assumed damage of a
-liquid bulk hull, spec 0006, #341). A Rule on cargo tanks so never reaches a ballast or slop tank. An Option has one `option` and one `hull`, zero or more `tank`s, and zero or more
+`cargo-tank`, `ballast-tank`, `slop-tank` (spec 0006 §5.2, #336), `damage-case` (one assumed damage of the ADN extents) and `marpol-damage-case` (one assumed damage of MARPOL Annex I Reg. 28), both on a liquid bulk hull, spec 0006, #341). A Rule on cargo tanks so never reaches a ballast or slop tank. An Option has one `option` and one `hull`, zero or more `tank`s, and zero or more
 `loading-condition`s. Objects of one type are listed in a fixed order (tank 1, 2, …; loading conditions
 in the order the engine builds them), so a trace is the same on every run and platform.
 
@@ -333,7 +332,7 @@ The model, the schema, the loader, the content hash, the library, Applicability 
 a domain-free crate, `arc-rules`, that a second tool shares. OVCD registers its side with it:
 
 - **Object types are string keys** (`option`, `hull`, `tank`, `loading-condition`, `cargo-tank`,
-  `ballast-tank`, `slop-tank`, `damage-case`). The caller declares them; `option` is OVCD's design object.
+  `ballast-tank`, `slop-tank`, `damage-case`, `marpol-damage-case`). The caller declares them; `option` is OVCD's design object.
 - **The caller passes in** the Measure registry, the applicability vocabulary and the formula shapes
   (`less-input`, `clamp`, `at-least`, `max-capped-less`, `lesser-ratio` are OVCD's). The table row
   shapes `const`, `a+v*b/c` and `a+v/c` are the kernel's.

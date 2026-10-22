@@ -372,13 +372,13 @@
     },
     {
       "id": "marpol/28/damage-stability",
-      "title": "Subdivision and damage stability after the assumed side or bottom damage",
+      "title": "Subdivision and damage stability after the assumed side or bottom damage (extents of 28.2, criteria of 28.3.2 and 28.3.3, final stage of flooding)",
       "origin": "regulation",
       "source": {
         "document": "MARPOL Annex I, resolution MEPC.117(52), the revised Annex I (regulations 19 and 29)",
         "edition": "adopted 15 October 2004, in force 1 January 2007",
         "locator": "28",
-        "page": "MEPC.117-52.pdf, annex p. 49",
+        "page": "MEPC.117-52.pdf, annex pp. 49 to 52",
         "access": "free"
       },
       "codified": {
@@ -387,20 +387,13 @@
         "review": "#338"
       },
       "verified": false,
-      "applies_when": {
-        "deadweight_band": [
-          "5000-to-20000-t",
-          "20000-t-and-above"
-        ]
-      },
       "kind": "check",
       "measure": {
-        "id": "stability.damage"
+        "id": "stability.damage_marpol"
       },
       "consequence": "warn",
       "sizes": false,
-      "evaluated": false,
-      "gap": "above the first release size band (5,000 tonnes deadweight and over; decision D1 of spec 0006): listed, not evaluated; the damage Measure has the ADN 9.3.x.15 extents only (issue #341), not the Regulation 28 extents that reach the cargo tanks",
+      "evaluated": true,
       "finding": null,
       "since": "1.0.0"
     },

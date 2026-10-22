@@ -318,9 +318,10 @@ fn newton(p: &Problem, start: State, n: usize) -> Option<State> {
     (norm(&r) < TOLERANCE * 100.0).then_some(s)
 }
 
-/// The ADN 9.3.2.15.2 and 9.3.3.15.2 criteria at the stage of equilibrium and beyond it.
+/// The criteria at the stage of equilibrium and beyond it: ADN 9.3.2.15.2 and 9.3.3.15.2, or MARPOL Annex I
+/// regulation 28.3 (issue #341).
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct AdnCriteria {
+pub struct DamageCriteria {
     /// The angle of heel at the stage of equilibrium shall not exceed this (degrees): 12.
     pub max_heel_deg: f64,
     /// Beyond the equilibrium the righting lever reaches at least this (m): 0.05.
@@ -330,15 +331,30 @@ pub struct AdnCriteria {
     /// The minimum values are met up to the immersion of the first non-watertight opening and in any
     /// event up to this angle of heel (degrees): 27.
     pub limit_deg: f64,
+    /// A range beyond the equilibrium over which the lever stays positive (degrees): MARPOL 28.3.3 asks 20.
+    /// With a range, `limit_deg` is not used: the curve is read to the equilibrium heel plus the range.
+    pub range_beyond_deg: Option<f64>,
 }
 
-impl AdnCriteria {
+impl DamageCriteria {
     /// ADN 2025 9.3.2.15.2 and 9.3.3.15.2.
-    pub const ADN_2025: AdnCriteria = AdnCriteria {
+    pub const ADN_2025: DamageCriteria = DamageCriteria {
         max_heel_deg: 12.0,
         min_gz_m: 0.05,
         min_area_m_rad: 0.0065,
         limit_deg: 27.0,
+        range_beyond_deg: None,
+    };
+
+    /// MARPOL Annex I regulation 28.3.2 and 28.3.3: a heel at equilibrium of at most 25 degrees (the 30 degrees
+    /// of 28.3.2 needs no deck edge immersion, which is not checked), a range of 20 degrees beyond it with a
+    /// righting lever of at least 0.1 m and an area of at least 0.0175 m.rad within that range.
+    pub const MARPOL_I_28: DamageCriteria = DamageCriteria {
+        max_heel_deg: 25.0,
+        min_gz_m: 0.1,
+        min_area_m_rad: 0.0175,
+        limit_deg: 0.0,
+        range_beyond_deg: Some(20.0),
     };
 }
 
@@ -372,7 +388,7 @@ pub struct DamageOutcome {
     pub max_gz_m: f64,
     /// The area under the righting lever curve between the equilibrium and `end_deg`, m.rad.
     pub area_m_rad: f64,
-    /// Every criterion of [`AdnCriteria`] is met.
+    /// Every criterion of [`DamageCriteria`] is met.
     pub ok: bool,
 }
 
@@ -403,7 +419,7 @@ pub fn assess(
     g: Gravity,
     density: f64,
     start: (f64, f64),
-    criteria: &AdnCriteria,
+    criteria: &DamageCriteria,
 ) -> DamageOutcome {
     let target = mass_t / density;
     if target.is_nan() || target <= 0.0 {
@@ -459,8 +475,12 @@ pub fn assess(
         (0.0_f64, 0.0_f64, 0.0_f64, fabs(heel_eq));
     let mut end_deg = fabs(heel_eq);
     let mut deg = fabs(heel_eq);
-    while deg < criteria.limit_deg {
-        let next = (deg + STEP_DEG).min(criteria.limit_deg);
+    let limit_deg = match criteria.range_beyond_deg {
+        Some(r) => fabs(heel_eq) + r,
+        None => criteria.limit_deg,
+    };
+    while deg < limit_deg {
+        let next = (deg + STEP_DEG).min(limit_deg);
         let target_heel = side * next;
         let mut t = state;
         t.heel_deg = target_heel;
@@ -488,7 +508,10 @@ pub fn assess(
         end_deg = next;
         deg = next;
     }
+    // A range asks the lever to stay positive over all of it: the curve must run to the end of the range.
+    let range_met = criteria.range_beyond_deg.is_none() || end_deg >= limit_deg - 1e-9;
     let ok = fabs(heel_eq) <= criteria.max_heel_deg
+        && range_met
         && max_gz >= criteria.min_gz_m
         && area >= criteria.min_area_m_rad;
     DamageOutcome {
