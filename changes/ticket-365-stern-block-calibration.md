@@ -4,7 +4,7 @@
 <!-- design-impact -->
 ### ticket/365-stern-block-calibration (2026-10-22)
 
-Between `main 54e0b1f` and `this branch 1a85aea`.
+Between `main f9f99bb` and `this branch fb73026`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -48,4 +48,4 @@ Between `main 54e0b1f` and `this branch 1a85aea`.
 | sweep box self-propelled 60x10 | `checks[14].message` | intact GM 1.98 m >= 0.15 m at the reported cargo 878 t, draught 2.68 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.28 m >= 0.15 m at the reported cargo 728 t, draught 2.41 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
 | sweep box self-propelled 60x10 | `checks[16].message` | GM 2.03 m (fluid), max GZ 0.49 m at 25° | GM 2.37 m (fluid), max GZ 0.68 m at 28° | changed |
 | sweep box self-propelled 60x10 | `checks[17].message` | GM 2.03 m (fluid), max GZ 0.46 m at 25° | GM 2.39 m (fluid), max GZ 0.65 m at 27° | changed |
-| ... | 106439 more changed quantities | | | |
+| ... | 106743 more changed quantities | | | |
