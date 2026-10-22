@@ -1,0 +1,94 @@
+name: WebAssembly parity
+
+# The results hash of the WebAssembly build equals the native one for every fixture (issue #245). It is a
+# gate: it runs on a pull request that changes the engine, the web crate, the app or the build, so an
+# engine-only change cannot break it unseen. Not a required check. It also runs on a push to main and
+# every day (07:17 UTC); a failed daily run opens an issue.
+
+on:
+  pull_request:
+    paths:
+      - "crates/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "app/**"
+      - "tools/build_web.sh"
+      - "tools/web_parity.mjs"
+      - "tools/check_fixture_hashes.py"
+  push:
+    branches: ["main"]
+    paths:
+      - "crates/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "app/**"
+      - "tools/build_web.sh"
+      - "tools/web_parity.mjs"
+      - ".github/workflows/web-parity.yml"
+  schedule:
+    - cron: "17 7 * * *" # every day, 07:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-parity-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # The web build (issue #245): the wasm Design session gives the same results hash as native
+  # `ovcd run --json` for every fixture. The wasm-bindgen CLI is the version the crate pins.
+  web-parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: The pinned wasm-bindgen version
+        id: wb
+        run: echo "version=$(sed -n 's/^wasm-bindgen = "=\([0-9.]*\)".*/\1/p' crates/ovcd-web/Cargo.toml)" >> "$GITHUB_OUTPUT"
+      - name: wasm-bindgen CLI (cached)
+        id: cli
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/wasm-bindgen
+          key: wasm-bindgen-cli-${{ steps.wb.outputs.version }}-${{ runner.os }}
+      - name: Install wasm-bindgen CLI
+        if: steps.cli.outputs.cache-hit != 'true'
+        run: cargo install wasm-bindgen-cli --version "${{ steps.wb.outputs.version }}" --locked
+      - name: Build the web package
+        run: bash tools/build_web.sh
+      - name: Build ovcd
+        run: cargo build -p ovcd-cli
+      - name: Results-hash parity, wasm against native
+        run: node tools/web_parity.mjs
+
+  # A failed daily run opens one issue, or adds a comment to the one that is open.
+  daily-failure:
+    if: failure() && github.event_name == 'schedule'
+    needs: [web-parity]
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Daily WebAssembly parity failed"
+          body="The daily run of \`web-parity.yml\` failed: $RUN"
+          n=$(gh issue list --repo "${{ github.repository }}" --state open --search "\"$title\" in:title" --json number -q '.[0].number')
+          if [ -n "$n" ]; then
+            gh issue comment "$n" --repo "${{ github.repository }}" --body "$body"
+          else
+            gh issue create --repo "${{ github.repository }}" --title "$title" --body "$body" --label needs-triage
+          fi

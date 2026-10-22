@@ -3,9 +3,9 @@ name: App and web checks
 # Checks that no pull request has to wait for (issue #565). None of them is a required check; `test`,
 # `release-guard`, `drawing-crosscheck` and `app-e2e` stay in ci.yml and run on every pull request.
 #
-#   web-parity, web-app   On a pull request only when the web front end or the web build changes; on every
-#                         push to main that changes them; and every day (07:17 UTC), so an engine change that
-#                         breaks the WebAssembly build is found within a day.
+#   web-app               On a pull request only when the web front end or the web build changes; on every
+#                         push to main that changes them; and every day (07:17 UTC). `web-parity` is in
+#                         web-parity.yml: it is a gate, so it runs on an engine change too.
 #   app-linux, app-windows  Only on request (workflow_dispatch) for now. A later change puts them in the
 #                         daily run, when most open pull requests have merged.
 #
@@ -38,37 +38,6 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # The web build (issue #245): the wasm Design session gives the same results hash as native
-  # `ovcd run --json` for every fixture. The wasm-bindgen CLI is the version the crate pins.
-  web-parity:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
-        run: rustup toolchain install
-      - uses: Swatinem/rust-cache@v2
-      - name: The pinned wasm-bindgen version
-        id: wb
-        run: echo "version=$(sed -n 's/^wasm-bindgen = "=\([0-9.]*\)".*/\1/p' crates/ovcd-web/Cargo.toml)" >> "$GITHUB_OUTPUT"
-      - name: wasm-bindgen CLI (cached)
-        id: cli
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/bin/wasm-bindgen
-          key: wasm-bindgen-cli-${{ steps.wb.outputs.version }}-${{ runner.os }}
-      - name: Install wasm-bindgen CLI
-        if: steps.cli.outputs.cache-hit != 'true'
-        run: cargo install wasm-bindgen-cli --version "${{ steps.wb.outputs.version }}" --locked
-      - name: Build the web package
-        run: bash tools/build_web.sh
-      - name: Build ovcd
-        run: cargo build -p ovcd-cli
-      - name: Results-hash parity, wasm against native
-        run: node tools/web_parity.mjs
 
   # The web app (issue #246): the web build of the front end over the wasm Design session, in
   # headless Chrome. The wasm-bindgen CLI is the version the ovcd-web crate pins.
@@ -175,11 +144,10 @@ jobs:
       - name: Compile the app crate
         run: cargo build -p ovcd-app
 
-
   # A failed daily run opens one issue, or adds a comment to the one that is open.
   daily-failure:
     if: failure() && github.event_name == 'schedule'
-    needs: [web-parity, web-app]
+    needs: [web-app]
     runs-on: ubuntu-latest
     permissions:
       issues: write
