@@ -9,6 +9,7 @@ pub mod export;
 mod formation;
 pub mod ga;
 mod gas_arrangement;
+mod gas_fuel;
 pub mod gas_stability;
 mod liquid;
 mod objects;

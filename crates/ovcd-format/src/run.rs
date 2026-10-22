@@ -508,6 +508,8 @@ pub fn run_option_with(
                     crate::convoy::counts(option).unwrap_or((1, 1)),
                     &mut v,
                 );
+                // Issue #464: the gas a gas-fuelled Option burns, and its boil-off check.
+                crate::gas_fuel::add_gas_fuel(option, &mut v);
                 let mut cost = crate::cost::cost_of(option, &v);
                 // Issue #552: the budget of a pushed convoy is that of every barge.
                 if let Some((abreast, in_line)) = crate::convoy::counts(option) {

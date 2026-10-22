@@ -226,6 +226,15 @@ note-atb-method-unverified = The ATB's resistance is that of its Equivalent Hull
 note-formation-method-unverified = The Formation's resistance is that of its Equivalent Hull (the barges and the pusher as one hull) by the single-hull method, times the Formation resistance allowance. The method is unverified.
 note-formation-coupling-force = Coupling force between the pusher and the pushed craft: { $force } kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B { $power } kW, L_S { $ls } m taken as the pusher length, B_S { $bs } m).
 
+## crates/ovcd-format/src/gas_fuel.rs
+
+check-name-cargo-as-fuel = cargo as fuel
+check-cargo-as-fuel-lng = methane (LNG) vapour may fuel the gensets (IGC Code 16.1)
+check-cargo-as-fuel-other = only methane (LNG) vapour may fuel an engine in a machinery space of category A (IGC Code 16.1); another cargo gas needs the Administration's acceptance (16.9.1)
+check-name-boil-off-within-gas-use = boil-off within gas use
+check-boil-off-within-gas-use = boil-off { $boil } kg/h <= gas use { $used } kg/h at the service speed
+check-boil-off-exceeds-gas-use = boil-off { $boil } kg/h > gas use { $used } kg/h at the service speed: the excess needs reliquefaction, pressure accumulation or thermal oxidation, as venting is not acceptable (IGC Code 7.1.1, 7.1.3)
+
 ## crates/ovcd-format/src/offsets.rs
 
 msg-offsets-no-table = an offsets Hull Form needs its offsets table (`{ $input }`)
@@ -284,6 +293,8 @@ name-check-cargo = Cargo > 0
 name-check-feasible-arrangement = Feasible arrangement
 name-check-tank-length = tank length over diameter
 name-check-ok = OK
+name-check-cargo-as-fuel = cargo as fuel
+name-check-boil-off-within-gas-use = boil-off within gas use
 name-check-lock-length = within lock length
 name-check-lock-width = within lock width
 name-curve-deep-water = Deep water
