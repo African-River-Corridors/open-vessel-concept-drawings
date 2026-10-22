@@ -4,7 +4,7 @@
 <!-- design-impact -->
 ### ticket/592-downflooding-openings (2026-10-22)
 
-Between `main 8b47128` and `this branch c2f1bbc`.
+Between `main 8b47128` and `this branch 73cf6bf`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -48,4 +48,4 @@ Between `main 8b47128` and `this branch c2f1bbc`.
 | sweep downflooding opening gas 90x11.4 | `stability.conditions[0].downflooding_deg` | absent | 34.84653041 | changed |
 | sweep downflooding opening gas 90x11.4 | `stability.conditions[1].criteria[1].name` | Area 0–40° | Area 0–35.1° | changed |
 | sweep downflooding opening gas 90x11.4 | `stability.conditions[1].criteria[2].name` | Area 30–40° | Area 30–35.1° | changed |
-| ... | 747 more changed quantities | | | |
+| ... | 739 more changed quantities | | | |
