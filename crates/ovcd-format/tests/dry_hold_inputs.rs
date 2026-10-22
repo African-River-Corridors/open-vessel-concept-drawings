@@ -71,7 +71,17 @@ fn each_default_equals_the_legacy_table_value_and_the_core_default() {
             .find(|l| l.name == name)
             .unwrap_or_else(|| panic!("{name} is not in the legacy table"));
         let from_profile = profile.default(name).and_then(Value::as_f64).unwrap();
-        assert_eq!(from_profile, legacy.value, "{name}: profile vs table");
+        // Issue #597: a new Option's inner bottom is 0.8 m, from built barges; the table keeps the
+        // 1.2 m of the original engine for a file that stored none.
+        if name == "hold_double_bottom_m" {
+            assert_eq!(from_profile, 0.8, "{name}: the profile default");
+            assert_ne!(
+                from_profile, legacy.value,
+                "{name}: a file saved before keeps 1.2 m"
+            );
+        } else {
+            assert_eq!(from_profile, legacy.value, "{name}: profile vs table");
+        }
         assert_eq!(legacy.value, core_default(name), "{name}: table vs core");
     }
 }

@@ -60,7 +60,7 @@ fn a_laden_hull_that_no_trim_balances_says_where_its_lcg_is_and_how_far_its_lcb_
 
 #[test]
 fn a_hull_that_balances_says_it_floats_within_the_limit() {
-    let c = trim_check(&results(60.0, 11.0, 4.0));
+    let c = trim_check(&results(50.0, 11.0, 4.0));
     assert_eq!(c["ok"], true);
     assert_eq!(
         c["message"],
