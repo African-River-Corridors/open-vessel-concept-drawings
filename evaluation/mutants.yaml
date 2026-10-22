@@ -3012,6 +3012,1350 @@ mutants:
       U.S.C. 105), not verified. Numbers only: the PDF is not committed; oracle: this repository (see
       LICENSE); the limits are quoted from the IMO text'
     confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack__area_0_40__pass_big
+  title: Crude oil tank barge, cargo tanks half full, no centreline bulkhead, area_0_40 just inside its
+    limit (big step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.6
+    draught_m: 1.2758108015135876
+    kg_m: 3.49978466153
+    water_density_t_m3: 1.0
+    free_surface_m: 3.572012267
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.1720933492
+      limit: 0.055
+      margin: 0.1170933492
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.092
+      limit: 0.09
+      margin: 0.002000000001
+      grid: false
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: fail
+      value: -0.0800933492
+      limit: 0.03
+      margin: -0.1100933492
+      grid: false
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: fail
+      value: -0.02772390172
+      limit: 0.2
+      margin: -0.2277239017
+      grid: false
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 16.13055464
+      limit: 25.0
+      margin: -8.869445364
+      grid: false
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 2.054827949
+      limit: 0.15
+      margin: 1.904827949
+      grid: false
+  mutant:
+    parent: liquid_slack
+    criterion: is2008/A.2.2.1/area-0-40
+    side: pass
+    magnitude: big
+    moved: kg_m
+    target_value: 0.092
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack__area_0_40__pass_small
+  title: Crude oil tank barge, cargo tanks half full, no centreline bulkhead, area_0_40 just inside its
+    limit (small step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.6
+    draught_m: 1.2758108015135876
+    kg_m: 3.50824780738
+    water_density_t_m3: 1.0
+    free_surface_m: 3.572012267
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.1709595027
+      limit: 0.055
+      margin: 0.1159595027
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.09002
+      limit: 0.09
+      margin: 2.000000074e-05
+      grid: true
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: fail
+      value: -0.08093950265
+      limit: 0.03
+      margin: -0.1109395027
+      grid: false
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: fail
+      value: -0.03195547464
+      limit: 0.2
+      margin: -0.2319554746
+      grid: false
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 16.1158078
+      limit: 25.0
+      margin: -8.884192201
+      grid: false
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 2.046364804
+      limit: 0.15
+      margin: 1.896364804
+      grid: false
+  mutant:
+    parent: liquid_slack
+    criterion: is2008/A.2.2.1/area-0-40
+    side: pass
+    magnitude: small
+    moved: kg_m
+    target_value: 0.09002
+    grid: true
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack__area_0_40__fail_big
+  title: Crude oil tank barge, cargo tanks half full, no centreline bulkhead, area_0_40 just across its
+    limit (big step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.6
+    draught_m: 1.2758108015135876
+    kg_m: 3.51688192588
+    water_density_t_m3: 1.0
+    free_surface_m: 3.572012267
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.1698027501
+      limit: 0.055
+      margin: 0.1148027501
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: fail
+      value: 0.088
+      limit: 0.09
+      margin: -0.002000000001
+      grid: false
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: fail
+      value: -0.08180275012
+      limit: 0.03
+      margin: -0.1118027501
+      grid: false
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: fail
+      value: -0.03627253389
+      limit: 0.2
+      margin: -0.2362725339
+      grid: false
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 16.10079592
+      limit: 25.0
+      margin: -8.899204075
+      grid: false
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 2.037730685
+      limit: 0.15
+      margin: 1.887730685
+      grid: false
+  mutant:
+    parent: liquid_slack
+    criterion: is2008/A.2.2.1/area-0-40
+    side: fail
+    magnitude: big
+    moved: kg_m
+    target_value: 0.088
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack__area_0_40__fail_small
+  title: Crude oil tank barge, cargo tanks half full, no centreline bulkhead, area_0_40 just across its
+    limit (small step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.6
+    draught_m: 1.2758108015135876
+    kg_m: 3.50841878003
+    water_density_t_m3: 1.0
+    free_surface_m: 3.572012267
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.1709365967
+      limit: 0.055
+      margin: 0.1159365967
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: fail
+      value: 0.08998
+      limit: 0.09
+      margin: -2.000000081e-05
+      grid: true
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: fail
+      value: -0.08095659666
+      limit: 0.03
+      margin: -0.1109565967
+      grid: false
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: fail
+      value: -0.03204096097
+      limit: 0.2
+      margin: -0.232040961
+      grid: false
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 16.11551038
+      limit: 25.0
+      margin: -8.884489616
+      grid: false
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 2.046193831
+      limit: 0.15
+      margin: 1.896193831
+      grid: false
+  mutant:
+    parent: liquid_slack
+    criterion: is2008/A.2.2.1/area-0-40
+    side: fail
+    magnitude: small
+    moved: kg_m
+    target_value: 0.08998
+    grid: true
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack__area_30_40__pass_big
+  title: Crude oil tank barge, cargo tanks half full, no centreline bulkhead, area_30_40 just inside its
+    limit (big step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.6
+    draught_m: 1.2758108015135876
+    kg_m: 2.3786377106
+    water_density_t_m3: 1.0
+    free_surface_m: 3.572012267
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.3222985593
+      limit: 0.055
+      margin: 0.2672985593
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.3542985593
+      limit: 0.09
+      margin: 0.2642985593
+      grid: false
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.032
+      limit: 0.03
+      margin: 0.002
+      grid: false
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 0.5328495737
+      limit: 0.2
+      margin: 0.3328495737
+      grid: false
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 18.41512386
+      limit: 25.0
+      margin: -6.584876136
+      grid: false
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 3.1759749
+      limit: 0.15
+      margin: 3.0259749
+      grid: false
+  mutant:
+    parent: liquid_slack
+    criterion: is2008/A.2.2.1/area-30-40
+    side: pass
+    magnitude: big
+    moved: kg_m
+    target_value: 0.032
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack__area_30_40__pass_small
+  title: Crude oil tank barge, cargo tanks half full, no centreline bulkhead, area_30_40 just inside its
+    limit (small step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.6
+    draught_m: 1.2758108015135876
+    kg_m: 2.39844148111
+    water_density_t_m3: 1.0
+    free_surface_m: 3.572012267
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.3196453571
+      limit: 0.055
+      margin: 0.2646453571
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.3496653571
+      limit: 0.09
+      margin: 0.2596653571
+      grid: false
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.03002
+      limit: 0.03
+      margin: 2.000000001e-05
+      grid: true
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 0.5229476885
+      limit: 0.2
+      margin: 0.3229476885
+      grid: false
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 18.36813525
+      limit: 25.0
+      margin: -6.631864745
+      grid: false
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 3.15617113
+      limit: 0.15
+      margin: 3.00617113
+      grid: false
+  mutant:
+    parent: liquid_slack
+    criterion: is2008/A.2.2.1/area-30-40
+    side: pass
+    magnitude: small
+    moved: kg_m
+    target_value: 0.03002
+    grid: true
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack__area_30_40__fail_big
+  title: Crude oil tank barge, cargo tanks half full, no centreline bulkhead, area_30_40 just across its
+    limit (big step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.6
+    draught_m: 1.2758108015135876
+    kg_m: 2.41864532779
+    water_density_t_m3: 1.0
+    free_surface_m: 3.572012267
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.3169385549
+      limit: 0.055
+      margin: 0.2619385549
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.3449385549
+      limit: 0.09
+      margin: 0.2549385549
+      grid: false
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: fail
+      value: 0.028
+      limit: 0.03
+      margin: -0.002
+      grid: false
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 0.5128457652
+      limit: 0.2
+      margin: 0.3128457652
+      grid: false
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 18.32048236
+      limit: 25.0
+      margin: -6.679517639
+      grid: false
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 3.135967283
+      limit: 0.15
+      margin: 2.985967283
+      grid: false
+  mutant:
+    parent: liquid_slack
+    criterion: is2008/A.2.2.1/area-30-40
+    side: fail
+    magnitude: big
+    moved: kg_m
+    target_value: 0.028
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack__area_30_40__fail_small
+  title: Crude oil tank barge, cargo tanks half full, no centreline bulkhead, area_30_40 just across its
+    limit (small step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.6
+    draught_m: 1.2758108015135876
+    kg_m: 2.39884155728
+    water_density_t_m3: 1.0
+    free_surface_m: 3.572012267
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.319591757
+      limit: 0.055
+      margin: 0.264591757
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.3495717571
+      limit: 0.09
+      margin: 0.2595717571
+      grid: false
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: fail
+      value: 0.02998
+      limit: 0.03
+      margin: -1.999999981e-05
+      grid: true
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 0.5227476504
+      limit: 0.2
+      margin: 0.3227476504
+      grid: false
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 18.36718886
+      limit: 25.0
+      margin: -6.632811139
+      grid: false
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 3.155771054
+      limit: 0.15
+      margin: 3.005771054
+      grid: false
+  mutant:
+    parent: liquid_slack
+    criterion: is2008/A.2.2.1/area-30-40
+    side: fail
+    magnitude: small
+    moved: kg_m
+    target_value: 0.02998
+    grid: true
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack__gz_30_plus__pass_big
+  title: Crude oil tank barge, cargo tanks half full, no centreline bulkhead, gz_30_plus just inside its
+    limit (big step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.6
+    draught_m: 1.2758108015135876
+    kg_m: 3.02433685809
+    water_density_t_m3: 1.0
+    free_surface_m: 3.572012267
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.2357912767
+      limit: 0.055
+      margin: 0.1807912767
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.2032336556
+      limit: 0.09
+      margin: 0.1132336556
+      grid: false
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: fail
+      value: -0.03255762107
+      limit: 0.03
+      margin: -0.06255762107
+      grid: false
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 0.21
+      limit: 0.2
+      margin: 0.01
+      grid: false
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 17.01386799
+      limit: 25.0
+      margin: -7.986132012
+      grid: false
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 2.530275753
+      limit: 0.15
+      margin: 2.380275753
+      grid: false
+  mutant:
+    parent: liquid_slack
+    criterion: is2008/A.2.2.2/gz-30
+    side: pass
+    magnitude: big
+    moved: kg_m
+    target_value: 0.21
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack__gz_30_plus__pass_small
+  title: Crude oil tank barge, cargo tanks half full, no centreline bulkhead, gz_30_plus just inside its
+    limit (small step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.6
+    draught_m: 1.2758108015135876
+    kg_m: 3.04413685809
+    water_density_t_m3: 1.0
+    free_surface_m: 3.572012267
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.2331385797
+      limit: 0.055
+      margin: 0.1781385797
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.1986013356
+      limit: 0.09
+      margin: 0.1086013356
+      grid: false
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: fail
+      value: -0.03453724409
+      limit: 0.03
+      margin: -0.06453724409
+      grid: false
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 0.2001
+      limit: 0.2
+      margin: 0.0001000000007
+      grid: true
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 16.97479539
+      limit: 25.0
+      margin: -8.025204606
+      grid: false
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 2.510475753
+      limit: 0.15
+      margin: 2.360475753
+      grid: false
+  mutant:
+    parent: liquid_slack
+    criterion: is2008/A.2.2.2/gz-30
+    side: pass
+    magnitude: small
+    moved: kg_m
+    target_value: 0.2001
+    grid: true
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack__gz_30_plus__fail_big
+  title: Crude oil tank barge, cargo tanks half full, no centreline bulkhead, gz_30_plus just across its
+    limit (big step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.6
+    draught_m: 1.2758108015135876
+    kg_m: 3.06433685809
+    water_density_t_m3: 1.0
+    free_surface_m: 3.572012267
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.2304322928
+      limit: 0.055
+      margin: 0.1754322928
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.1938754333
+      limit: 0.09
+      margin: 0.1038754333
+      grid: false
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: fail
+      value: -0.03655685949
+      limit: 0.03
+      margin: -0.06655685949
+      grid: false
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: fail
+      value: 0.19
+      limit: 0.2
+      margin: -0.009999999999
+      grid: false
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 16.93515004
+      limit: 25.0
+      margin: -8.064849959
+      grid: false
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 2.490275753
+      limit: 0.15
+      margin: 2.340275753
+      grid: false
+  mutant:
+    parent: liquid_slack
+    criterion: is2008/A.2.2.2/gz-30
+    side: fail
+    magnitude: big
+    moved: kg_m
+    target_value: 0.19
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack__gz_30_plus__fail_small
+  title: Crude oil tank barge, cargo tanks half full, no centreline bulkhead, gz_30_plus just across its
+    limit (small step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.6
+    draught_m: 1.2758108015135876
+    kg_m: 3.04453685809
+    water_density_t_m3: 1.0
+    free_surface_m: 3.572012267
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.2330849898
+      limit: 0.055
+      margin: 0.1780849898
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.1985077534
+      limit: 0.09
+      margin: 0.1085077534
+      grid: false
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: fail
+      value: -0.03457723647
+      limit: 0.03
+      margin: -0.06457723647
+      grid: false
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: fail
+      value: 0.1999
+      limit: 0.2
+      margin: -9.999999927e-05
+      grid: true
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 16.97400796
+      limit: 25.0
+      margin: -8.025992042
+      grid: false
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 2.510075753
+      limit: 0.15
+      margin: 2.360075753
+      grid: false
+  mutant:
+    parent: liquid_slack
+    criterion: is2008/A.2.2.2/gz-30
+    side: fail
+    magnitude: small
+    moved: kg_m
+    target_value: 0.1999
+    grid: true
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack_centreline__angle_max_gz__pass_big
+  title: Crude oil tank barge, cargo tanks half full, centreline bulkhead, angle_max_gz just inside its
+    limit (big step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.42663439419
+    draught_m: 1.2758108015135876
+    kg_m: 1.5362224983835664
+    water_density_t_m3: 1.0
+    free_surface_m: 0.8930030668
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.7904563308
+      limit: 0.055
+      margin: 0.7354563308
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 1.162071265
+      limit: 0.09
+      margin: 1.072071265
+      grid: false
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.3716149339
+      limit: 0.03
+      margin: 0.3416149339
+      grid: false
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 2.241365571
+      limit: 0.2
+      margin: 2.041365571
+      grid: false
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: pass
+      value: 27.0
+      limit: 25.0
+      margin: 2.0
+      grid: false
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 6.697399313
+      limit: 0.15
+      margin: 6.547399313
+      grid: false
+  mutant:
+    parent: liquid_slack_centreline
+    criterion: is2008/A.2.2.3/angle-max-gz
+    side: pass
+    magnitude: big
+    moved: depth_m
+    target_value: 27.0
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack_centreline__angle_max_gz__pass_small
+  title: Crude oil tank barge, cargo tanks half full, centreline bulkhead, angle_max_gz just inside its
+    limit (small step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.18122678209
+    draught_m: 1.2758108015135876
+    kg_m: 1.5362224983835664
+    water_density_t_m3: 1.0
+    free_surface_m: 0.8930030668
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.7803128455
+      limit: 0.055
+      margin: 0.7253128455
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 1.12980575
+      limit: 0.09
+      margin: 1.03980575
+      grid: false
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.3494929045
+      limit: 0.03
+      margin: 0.3194929045
+      grid: false
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 2.137972796
+      limit: 0.2
+      margin: 1.937972796
+      grid: false
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: pass
+      value: 25.2
+      limit: 25.0
+      margin: 0.2
+      grid: true
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 6.697399313
+      limit: 0.15
+      margin: 6.547399313
+      grid: false
+  mutant:
+    parent: liquid_slack_centreline
+    criterion: is2008/A.2.2.3/angle-max-gz
+    side: pass
+    magnitude: small
+    moved: depth_m
+    target_value: 25.2
+    grid: true
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack_centreline__angle_max_gz__fail_big
+  title: Crude oil tank barge, cargo tanks half full, centreline bulkhead, angle_max_gz just across its
+    limit (big step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 2.88218119562
+    draught_m: 1.2758108015135876
+    kg_m: 1.5362224983835664
+    water_density_t_m3: 1.0
+    free_surface_m: 0.8930030668
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.7557493317
+      limit: 0.055
+      margin: 0.7007493317
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 1.07030537
+      limit: 0.09
+      margin: 0.9803053702
+      grid: false
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.3145560385
+      limit: 0.03
+      margin: 0.2845560385
+      grid: false
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 1.96017765
+      limit: 0.2
+      margin: 1.76017765
+      grid: false
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 23.0
+      limit: 25.0
+      margin: -2.0
+      grid: false
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 6.697399313
+      limit: 0.15
+      margin: 6.547399313
+      grid: false
+  mutant:
+    parent: liquid_slack_centreline
+    criterion: is2008/A.2.2.3/angle-max-gz
+    side: fail
+    magnitude: big
+    moved: depth_m
+    target_value: 23.0
+    grid: false
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
+- id: liquid_slack_centreline__angle_max_gz__fail_small
+  title: Crude oil tank barge, cargo tanks half full, centreline bulkhead, angle_max_gz just across its
+    limit (small step)
+  kind: box
+  inputs:
+    form: particulars
+    vdesign: null
+    length_m: 76.5
+    beam_m: 11.4
+    depth_m: 3.12676495907
+    draught_m: 1.2758108015135876
+    kg_m: 1.5362224983835664
+    water_density_t_m3: 1.0
+    free_surface_m: 0.8930030668
+  expected:
+    is2008/A.2.2.1/area-0-30:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 30 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.7770027398
+      limit: 0.055
+      margin: 0.7220027398
+      grid: false
+    is2008/A.2.2.1/area-0-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 0 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 1.120821329
+      limit: 0.09
+      margin: 1.030821329
+      grid: false
+    is2008/A.2.2.1/area-30-40:
+      rule: IS Code 2008 Part A 2.2.1
+      what: area under the GZ curve, 30 to 40 degrees
+      unit: m rad
+      verdict: pass
+      value: 0.3438185891
+      limit: 0.03
+      margin: 0.3138185891
+      grid: false
+    is2008/A.2.2.2/gz-30:
+      rule: IS Code 2008 Part A 2.2.2
+      what: GZ at an angle of heel of 30 degrees or more
+      unit: m
+      verdict: pass
+      value: 2.110037727
+      limit: 0.2
+      margin: 1.910037727
+      grid: false
+    is2008/A.2.2.3/angle-max-gz:
+      rule: IS Code 2008 Part A 2.2.3
+      what: angle of maximum GZ
+      unit: deg
+      verdict: fail
+      value: 24.79999972
+      limit: 25.0
+      margin: -0.2000002786
+      grid: true
+    is2008/A.2.2.4/gm0:
+      rule: IS Code 2008 Part A 2.2.4
+      what: initial metacentric height
+      unit: m
+      verdict: pass
+      value: 6.697399313
+      limit: 0.15
+      margin: 6.547399313
+      grid: false
+  mutant:
+    parent: liquid_slack_centreline
+    criterion: is2008/A.2.2.3/angle-max-gz
+    side: fail
+    magnitude: small
+    moved: depth_m
+    target_value: 24.8
+    grid: true
+  provenance:
+    verdict_basis: derived
+    source: evaluation/oracle/mutants.py from the parent case, checked by evaluation/oracle/box_oracle.py
+    edition: 2008 IS Code, MSC.267(85)
+    locator: Part A 2.2.1 to 2.2.4, printed pages 11 and 12
+    licence: 'inputs and oracle: this repository (see LICENSE); the limits are quoted from the IMO text'
+    confidence: high for the verdicts; a mutant is not an external published example
 - id: generic_barge__area_0_30__pass_big
   title: Generic barge of Marlantes, Kim and Hurt (2022), section 5.1, area_0_30 just inside its limit
     (big step)
@@ -5371,6 +6715,166 @@ skipped:
   magnitude: big
   reason: the KG that crosses the limit is not between the keel and the deck
 - parent: lcu_loaded
+  criterion: is2008/A.2.2.4/gm0
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack
+  criterion: is2008/A.2.2.1/area-0-30
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack
+  criterion: is2008/A.2.2.1/area-0-30
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack
+  criterion: is2008/A.2.2.1/area-0-30
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack
+  criterion: is2008/A.2.2.1/area-0-30
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack
+  criterion: is2008/A.2.2.3/angle-max-gz
+  side: pass
+  magnitude: big
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: liquid_slack
+  criterion: is2008/A.2.2.3/angle-max-gz
+  side: pass
+  magnitude: small
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: liquid_slack
+  criterion: is2008/A.2.2.3/angle-max-gz
+  side: fail
+  magnitude: big
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: liquid_slack
+  criterion: is2008/A.2.2.3/angle-max-gz
+  side: fail
+  magnitude: small
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: liquid_slack
+  criterion: is2008/A.2.2.4/gm0
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack
+  criterion: is2008/A.2.2.4/gm0
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack
+  criterion: is2008/A.2.2.4/gm0
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack
+  criterion: is2008/A.2.2.4/gm0
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.1/area-0-30
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.1/area-0-30
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.1/area-0-30
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.1/area-0-30
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.1/area-0-40
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.1/area-0-40
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.1/area-0-40
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.1/area-0-40
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.1/area-30-40
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.1/area-30-40
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.1/area-30-40
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.1/area-30-40
+  side: fail
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.2/gz-30
+  side: pass
+  magnitude: big
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.2/gz-30
+  side: pass
+  magnitude: small
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.2/gz-30
+  side: fail
+  magnitude: big
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.2/gz-30
+  side: fail
+  magnitude: small
+  reason: no KG between the keel and the deck gives the wanted value
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.4/gm0
+  side: pass
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.4/gm0
+  side: pass
+  magnitude: small
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
+  criterion: is2008/A.2.2.4/gm0
+  side: fail
+  magnitude: big
+  reason: the KG that crosses the limit is not between the keel and the deck
+- parent: liquid_slack_centreline
   criterion: is2008/A.2.2.4/gm0
   side: fail
   magnitude: small

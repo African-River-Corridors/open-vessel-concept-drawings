@@ -49,7 +49,7 @@ check-air-draft-within-limit = calado aéreo { $condition } { $governing } m <= 
 # status: draft
 warn-barge-pushed = Barcaça EMPURRADA: tripulação, bateria e propulsão estão no rebocador e NÃO entram no peso leve, na capacidade nem no calado aéreo deste casco. O rebocador é uma embarcação separada e deve ser orçado e verificado quanto ao calado aéreo separadamente.
 # status: draft
-warn-liquid-no-conditions = As condições de carga e a estabilidade ainda não são calculadas para a carga líquida a granel: o petróleo bruto é trabalho em desenvolvimento.
+warn-liquid-legacy-conditions = A estabilidade da carga líquida a granel é calculada apenas com as condições de carga do Código IS.
 # status: draft
 check-gm-positive = GM intacto da tremonha { $gm } m >= 0.15 m (primeira ordem; KG_light @0.5D)
 # status: draft
