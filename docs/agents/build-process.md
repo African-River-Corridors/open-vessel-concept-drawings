@@ -63,16 +63,17 @@ Only `test` and `release-guard` are required. Keep the others from making a pull
 | Workflow, job | On a pull request | Elsewhere |
 |---|---|---|
 | `ci.yml`: `test` (the `gate-*` jobs), `release-guard`, `drawing-crosscheck`, `app-e2e` | always | push to main, tags |
-| `web-parity.yml`: `web-parity` (a gate) | when `crates/**`, `Cargo.toml`, `Cargo.lock`, `app/**`, `tools/build_web.sh` or `tools/web_parity.mjs` change, so an engine-only change is checked | push to main on the same paths; every day |
+| `web-parity.yml`: `web-parity` (a release gate) | never | only from `release.yml` (every release), or by hand |
 | `app-checks.yml`: `web-app` | only when `app/**`, `crates/ovcd-web/**`, `tools/build_web.sh` or `tools/web_parity.mjs` change | push to main on the same paths; every day |
 | `app-checks.yml`: `app-linux`, `app-windows` | never | on request only (`workflow_dispatch`), until most open pull requests have merged |
 | `codeql.yml` | never | push to main; every Monday |
 | `website.yml` | only when `website/**`, `docs/**` or `*.md` change | push to main |
 | `nightly.yml` | when the slow-test list or the gate script changes | every day |
 
-A failed daily run of `app-checks.yml` or `web-parity.yml` opens an issue (or comments on the open one).
-WebAssembly parity is a gate (`.config/nextest.toml`, `docs/agents/slow-tests.md`), so it stays on every pull
-request that can change the engine.
+A failed daily run of `app-checks.yml` opens an issue (or comments on the open one).
+WebAssembly parity is a release gate: `release.yml` calls `web-parity.yml`, so a release cannot ship with a
+mismatch. It left the pull request path because it never failed on a mismatch and it cost a web build on most
+pull requests. Start it by hand (`gh workflow run web-parity.yml`) for a change to `crates/ovcd-web/**`.
 ## Changelog fragments
 
 A pull request never edits `CHANGELOG.md`: that file made every two open pull requests conflict (issue #560).

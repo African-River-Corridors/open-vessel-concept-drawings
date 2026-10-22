@@ -5,7 +5,7 @@ name: App and web checks
 #
 #   web-app               On a pull request only when the web front end or the web build changes; on every
 #                         push to main that changes them; and every day (07:17 UTC). `web-parity` is in
-#                         web-parity.yml: it is a gate, so it runs on an engine change too.
+#                         web-parity.yml: a release gate that release.yml calls.
 #   app-linux, app-windows  Only on request (workflow_dispatch) for now. A later change puts them in the
 #                         daily run, when most open pull requests have merged.
 #
