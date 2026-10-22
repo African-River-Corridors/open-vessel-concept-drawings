@@ -18,7 +18,6 @@ on:
       - "crates/ovcd-web/**"
       - "tools/build_web.sh"
       - "tools/web_parity.mjs"
-      - ".github/workflows/app-checks.yml"
   push:
     branches: ["main"]
     paths:
