@@ -48,38 +48,24 @@ fn options(depth: f64) -> FitOptions {
 }
 
 #[test]
-fn the_most_cargo_arrangement_fails_stability_and_a_smaller_one_that_passes_is_returned() {
-    // 110 x 11.4 x 6.0 m LPG propane, draught cap 5.7 m. Only the base arrangement (no extra side
-    // clearance) is searched: it is the one the old `fit` returned (2,808 t) and it fails stability
-    // (laden on the Cb box; light on the hull's sections, issue #448).
+fn the_search_takes_the_arrangement_with_most_cargo_that_passes() {
+    // 110 x 11.4 x 6.0 m LPG propane, draught cap 5.7 m. The base arrangement (no extra side
+    // clearance) carries most cargo and passes every check on the hull's sections (issues #448,
+    // #498); the whole search keeps it.
     let only_most_cargo = FitOptions {
         extra_clearance_m: vec![],
         ..options(6.0)
     };
-    let worst = fit(110.0, 11.4, "LPG_propane", 5.7, &only_most_cargo).unwrap();
-    assert!(!worst.feasible);
-    assert!(worst.payload_t > 2808.0);
-    assert!(
-        worst
-            .failed_checks
-            .iter()
-            .any(|c| c.starts_with("Stability \u{2014} ")),
-        "{:?}",
-        worst.failed_checks
-    );
-    assert!(!stability_ok(&worst));
+    let base = fit(110.0, 11.4, "LPG_propane", 5.7, &only_most_cargo).unwrap();
+    assert!(base.feasible, "{:?}", base.failed_checks);
+    assert!(base.failed_checks.is_empty());
+    assert!(base.payload_t > 2808.0);
 
-    // The whole search keeps the arrangements that pass and takes the one with most cargo.
     let f = fit(110.0, 11.4, "LPG_propane", 5.7, &options(6.0)).unwrap();
     assert!(f.feasible, "{:?}", f.failed_checks);
     assert!(f.failed_checks.is_empty());
-    assert!(stability_ok(&f));
     assert!(all_ok(&f.engine_result.checks));
-    assert!(f.payload_t < worst.payload_t);
-    assert!(f.payload_t > 0.0);
-    // The wider side clearance (a smaller tank) is what made it stable.
-    assert!(f.side_clearance_m > worst.side_clearance_m);
-    assert!(f.tank_od_m < worst.tank_od_m);
+    assert!(f.payload_t >= base.payload_t);
 }
 
 #[test]
@@ -96,7 +82,6 @@ fn a_light_condition_that_fails_only_the_angle_of_max_gz_is_a_warning_not_a_fail
     let strict = gs::assess(
         &basis,
         f.payload_t,
-        0.85,
         gs::DEFAULT_WATER_DENSITY,
         gs::criteria_set_for(&f.ruleset),
     )

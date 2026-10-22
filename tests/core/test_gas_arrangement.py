@@ -91,7 +91,9 @@ def test_payload_never_exceeds_the_draught_cap():
 # 1204.2783981854238; they were 1498 and 1691.
 # Issue #448 (the hull's sections, not Cb) re-pinned two to the printed values 858.7067575154662 and
 # 1889.6665938938233; they were 1130 and 1875.
-SNAPSHOT = [((90, 12.9), 859), ((90, 14.8), 1204), ((90, 18.0), 1890), ((120, 18.0), 2957)]
+# Issue #498 (the angle of max GZ alone in the light condition is a warning) re-pinned the first two
+# to the printed values 1667.1735160692485 and 1691.1903238505604; they were 859 and 1204.
+SNAPSHOT = [((90, 12.9), 1667), ((90, 14.8), 1691), ((90, 18.0), 1890), ((120, 18.0), 2957)]
 
 
 @pytest.mark.parametrize("dims,expected", SNAPSHOT)

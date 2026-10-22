@@ -576,8 +576,33 @@ pub fn stability_check(c: &gs::Condition) -> Check {
 /// criteria only with the approval of the Administration, which OVCD does not model, so the
 /// alternative is not taken as a pass. A dry-bulk Design keeps its checks as they were (all its
 /// stability checks are warnings already).
-pub fn gas_stability_check(c: &gs::Condition) -> Check {
-    stability_check_with(c, true)
+pub fn gas_stability_check(c: &gs::Condition, warns: bool) -> Check {
+    stability_check_with(c, warns)
+}
+
+/// The Rule that fails the angle of max GZ of every condition in the IS Code Rule Sets of 1.0.0.
+const ANGLE_RULE: &str = "is2008/A.2.2.3/angle-max-gz";
+
+/// Whether the angle of max GZ alone in a light condition with no ballast is a warning for these
+/// Rule Sets (issue #498). It is when the Rule Sets say so: the IS Code Rule that holds the angle
+/// names the kind of loading condition it applies to. A stack whose Rule applies to every
+/// condition (`is2008-a` 1.0.0) keeps the failure, so a file saved before keeps its results. No
+/// Rule Sets (the Python API) means the warning.
+pub fn light_angle_warns(rules: &[RuleSet]) -> bool {
+    let mut found = rules
+        .iter()
+        .flat_map(|set| set.rules.iter())
+        .filter(|r| r.id == ANGLE_RULE)
+        .peekable();
+    if found.peek().is_none() {
+        return true;
+    }
+    found.all(|r| {
+        r.applies_when
+            .conditions
+            .iter()
+            .any(|(input, _)| input == "loading_condition_kind")
+    })
 }
 
 fn stability_check_with(c: &gs::Condition, gas: bool) -> Check {
@@ -648,14 +673,14 @@ fn stability_check_with(c: &gs::Condition, gas: bool) -> Check {
 /// its ballast plan (none meets every criterion) and its air draft.
 /// The checks of every IS Code condition of a Design, in order. The "Lightship, no ballast" warning of
 /// issue #498 also names the ballast the "Ballast, departure" condition needs to meet every criterion.
-pub fn loading_condition_checks_of(conds: &[lc::LoadedCondition]) -> Vec<Check> {
+pub fn loading_condition_checks_of(conds: &[lc::LoadedCondition], warns: bool) -> Vec<Check> {
     let ballast = conds
         .iter()
         .find(|c| c.role == lc::Role::BallastDeparture && c.ok() && c.ballast_t > 0.0)
         .map(|c| c.ballast_t);
     let mut out = Vec::new();
     for c in conds {
-        let mut checks = loading_condition_checks_with(c, true);
+        let mut checks = loading_condition_checks_with(c, warns);
         if let (Some(t), Some(first)) = (ballast, checks.first_mut())
             && c.role == lc::Role::LightshipNoBallast
             && first.severity == "warning"
@@ -846,7 +871,7 @@ fn stability_assessment(
         Some(ic) => is_code_conditions(r, inp, ranked_cargo(r, j, inp, o), o, ic)
             .map(|conds| {
                 (
-                    loading_condition_checks_of(&conds),
+                    loading_condition_checks_of(&conds, light_angle_warns(&o.rules)),
                     conds.into_iter().map(|c| c.condition).collect(),
                 )
             })
@@ -864,7 +889,10 @@ fn stability_assessment(
             })
             .map(|a| {
                 (
-                    a.conditions.iter().map(gas_stability_check).collect(),
+                    a.conditions
+                        .iter()
+                        .map(|c| gas_stability_check(c, light_angle_warns(&o.rules)))
+                        .collect(),
                     a.conditions,
                 )
             }),

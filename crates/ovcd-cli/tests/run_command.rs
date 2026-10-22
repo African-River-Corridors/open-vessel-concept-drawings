@@ -456,7 +456,33 @@ fn json_results_are_what_simulate_answers_for_a_self_propelled_gas_hull() {
             "draught_limit_m": 4.4
         }),
     );
-    let out = ovcd(&["run", "--json", p(&file)]);
+    // The file is a version 2 file, read with the stack of the time, in which every light condition
+    // keeps the angle of max GZ. `simulate` has no Rule Sets: the angle of max GZ alone in a light
+    // condition with no ballast is a warning (issue #498). The IS Code and IGC Rule Sets of that
+    // kind make `run` answer the same.
+    let rules = |set: &str| {
+        format!(
+            "{}/../ovcd-format/rules/{set}.json",
+            env!("CARGO_MANIFEST_DIR")
+        )
+    };
+    let (is_code, igc) = (rules("is2008-a/2.0.0"), rules("igc-2g/2.0.0"));
+    // The stack differs from the one the hash was stored with, so the stored hash is dropped.
+    let mut saved: Value = serde_json::from_str(&std::fs::read_to_string(&file).unwrap()).unwrap();
+    saved["options"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("results_hash");
+    write_json(&file, &saved);
+    let out = ovcd(&[
+        "run",
+        "--json",
+        "--rule-set",
+        &is_code,
+        "--rule-set",
+        &igc,
+        p(&file),
+    ]);
     assert!(out.status.success(), "{}", stderr(&out));
     let v: Value = serde_json::from_str(&stdout(&out)).unwrap();
     // `run` adds the capital budget (`cost`) to what `simulate` answers; the rest is the same.
