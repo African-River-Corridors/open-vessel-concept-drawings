@@ -305,8 +305,8 @@
           "value": [
             {
               "id": "is2008-a",
-              "version": "2.0.0",
-              "hash": "7dfa155b0d58383f73d35b9b0c037c89dbd928ad4bf22fe93a0a32b1eaee744f",
+              "version": "1.0.0",
+              "hash": "cfab2d1cda90d0cfda8edbf0955082345cd30ef2d102c9840e8d4feab5297e37",
               "source": "default"
             },
             {

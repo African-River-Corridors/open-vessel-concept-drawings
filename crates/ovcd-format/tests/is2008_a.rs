@@ -213,30 +213,6 @@ fn every_gas_option_has_the_is_code_rows_of_each_loading_condition() {
             assert_eq!(conditions.len(), 3, "{file}");
             for c in conditions {
                 for (id, name) in NAMES {
-                    // Issue #498: the angle of max GZ is not a blocking Rule of the light condition
-                    // with no ballast (the legacy "Light"); the OVCD warning Rule has its row.
-                    if id == "is2008/A.2.2.3/angle-max-gz" && c["name"] == "Light" {
-                        let row = rows
-                            .iter()
-                            .find(|r| {
-                                r["rule"] == "ovcd/stability/light-angle-of-max-gz"
-                                    && r["object"] == c["name"]
-                            })
-                            .unwrap_or_else(|| panic!("{file}: no warning row for Light"));
-                        let criterion = c["criteria"]
-                            .as_array()
-                            .unwrap()
-                            .iter()
-                            .find(|k| k["name"] == name)
-                            .unwrap();
-                        assert_eq!(row["value"].as_f64(), criterion["value"].as_f64(), "{file}");
-                        assert_eq!(
-                            row["outcome"] == "pass",
-                            criterion["ok"] == true,
-                            "{file} {id}"
-                        );
-                        continue;
-                    }
                     let row = rows
                         .iter()
                         .find(|r| r["rule"] == id && r["object"] == c["name"])
@@ -258,17 +234,16 @@ fn every_gas_option_has_the_is_code_rows_of_each_loading_condition() {
                         criterion["ok"] == true,
                         "{file} {id}"
                     );
-                    assert_eq!(row["rule_sets"][0], "is2008-a@2.0.0");
+                    assert_eq!(row["rule_sets"][0], "is2008-a@1.0.0");
                 }
             }
             // Six evaluated Rules per condition, and the weather Rule once.
             let is_code = rows
                 .iter()
-                .filter(|r| r["rule_sets"][0] == "is2008-a@2.0.0")
+                .filter(|r| r["rule_sets"][0] == "is2008-a@1.0.0")
                 .count();
-            // ... and the note of each condition's own check (#272), and a row of the 2.2.3
-            // alternative for each condition (`not applicable` but for the light one, #498).
-            assert_eq!(is_code, 8 * conditions.len() + 1, "{file}");
+            // ... and the note of each condition's own check (#272).
+            assert_eq!(is_code, 7 * conditions.len() + 1, "{file}");
         }
     }
 }
@@ -279,17 +254,16 @@ fn a_dry_bulk_option_lists_the_is_code_rules_as_not_evaluated() {
         let trace = &results["rule_trace"];
         assert_eq!(
             trace["rule_sets"],
-            serde_json::json!(["is2008-a@2.0.0", "ovcd@2.1.0"])
+            serde_json::json!(["is2008-a@1.0.0", "ovcd@2.1.0"])
         );
         let rows: Vec<&serde_json::Value> = trace["rows"]
             .as_array()
             .unwrap()
             .iter()
-            .filter(|r| r["rule_sets"][0] == "is2008-a@2.0.0")
+            .filter(|r| r["rule_sets"][0] == "is2008-a@1.0.0")
             .collect();
-        // The six criteria and the weather criterion block; the condition note does not; nor does the
-        // note of the 2.2.3 alternative, `not evaluated` (issue #498).
-        assert_eq!(rows.len(), 9);
+        // The six criteria and the weather criterion block; the condition note does not.
+        assert_eq!(rows.len(), 8);
         assert!(rows.iter().all(|r| r["outcome"] == "not evaluated"));
         assert_eq!(
             trace["verdict"]["blocking_not_evaluated"]
