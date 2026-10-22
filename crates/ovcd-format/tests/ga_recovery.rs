@@ -86,6 +86,8 @@ const GAS_ONLY: &[&str] = &[
     "dome_height_m",
     "wing_tank_width_m",
     "wing_tank_gap_m",
+    "weather_shield_thickness_mm",
+    "weather_shield_clearance_m",
     "opening_setback_m",
     "fwd_end_bulkhead_m",
     "separation",
@@ -197,6 +199,25 @@ fn gas_geometry_has_the_core_values() {
         basis.inputs.wing_tank_width.unwrap()
     );
     assert_eq!(f(&g["wing_tank_gap_m"]), basis.inputs.wing_tank_gap);
+    // Issue #407: the weather shield the weights carry.
+    assert_eq!(
+        f(&g["weather_shield_thickness_mm"]),
+        basis.inputs.weather_shield_thickness
+    );
+    assert_eq!(
+        f(&g["weather_shield_clearance_m"]),
+        basis.inputs.weather_shield_clearance
+    );
+    // Issue #406: the tank lengths and the gaps the core laid the tanks out with.
+    let t = &g["tank"];
+    assert_eq!(
+        f(&t["overall_tank_length_m"]),
+        basis.tanks.overall_tank_length
+    );
+    assert_eq!(f(&t["cylinder_length_m"]), basis.tanks.cylinder_length);
+    let gaps = ovcd_core::models::BargeInputs::new(1.0, 1.0, 1.0, 1.0, 1.0);
+    assert_eq!(f(&t["tank_gap_longitudinal_m"]), gaps.tank_gap_longitudinal);
+    assert_eq!(f(&t["tank_gap_transverse_m"]), gaps.tank_gap_transverse);
     let sep = core.separation.as_ref().expect("a separation result");
     let want = GasSeparationInputs::default();
     assert_eq!(f(&g["opening_setback_m"]), want.opening_setback_m);
@@ -1306,7 +1327,7 @@ fn a_failing_design_carries_a_note_in_each_view_and_still_passes_the_standard() 
             let v = views(&r);
             for (name, doc) in v.all() {
                 let notes = notes_of(doc);
-                let fail_notes: Vec<&String> = notes.iter().skip(2).collect();
+                let fail_notes: Vec<&String> = notes.iter().skip(4).collect();
                 assert!(
                     !fail_notes.is_empty(),
                     "{file} {name}: a note for the failed checks"
@@ -1363,10 +1384,11 @@ fn a_passing_design_has_the_usual_notes_and_strip() {
         let r = results_of(file, false);
         assert!(failed_names(&r).is_empty(), "{file}");
         for (name, doc) in views(&r).all() {
-            assert_eq!(notes_of(doc).len(), 2, "{file} {name}");
+            // the title, what the vessel is, the Rule Sets and the scope
+            assert_eq!(notes_of(doc).len(), 4, "{file} {name}");
             assert!(!notes_of(doc).iter().any(|n| n.starts_with("DESIGN FAILS")));
             assert!(
-                close(f(&doc["strips"][0]["size_mm"]), 21.0),
+                close(f(&doc["strips"][0]["size_mm"]), 30.0),
                 "{file} {name}"
             );
             accepted(doc);
@@ -1383,13 +1405,13 @@ fn a_failing_design_with_many_names_names_some_and_counts_the_rest() {
     r["checks"] = Value::Array(checks);
     for (_, doc) in views(&r).all() {
         let notes = notes_of(doc);
-        assert_eq!(notes.len(), 3);
+        assert_eq!(notes.len(), 5);
         assert!(
-            notes[2].starts_with("DESIGN FAILS 30 CHECKS: A VERY LONG CHECK NAME NUMBER 0, "),
+            notes[4].starts_with("DESIGN FAILS 30 CHECKS: A VERY LONG CHECK NAME NUMBER 0, "),
             "{}",
-            notes[2]
+            notes[4]
         );
-        assert!(notes[2].ends_with(" MORE") && notes[2].chars().count() <= 120);
+        assert!(notes[4].ends_with(" MORE") && notes[4].chars().count() <= 120);
         accepted(doc);
     }
 }

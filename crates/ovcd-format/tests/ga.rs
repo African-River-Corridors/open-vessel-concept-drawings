@@ -84,7 +84,15 @@ fn every_document_of_every_fixture_validates() {
             assert_eq!(norm.sheet.orientation, "landscape");
             assert_eq!(norm.viewports.len(), 1, "one viewport");
             assert_eq!(document["status"], "concept");
-            assert!(document.get("title_block").is_none(), "no title block");
+            // Issue #409: the ISO 7200 title block, with the view, the Option and the sheet.
+            assert_eq!(document["title_block"]["template"], "iso7200");
+            let fields = &document["title_block"]["fields"];
+            assert_eq!(fields["sheet_count"], 3);
+            assert!(fields["title"].as_str().is_some_and(|t| !t.is_empty()));
+            assert!(
+                document["notes"].to_string().contains("RULE SETS"),
+                "{file}: the Rule Sets are named"
+            );
         }
     }
 }
@@ -407,6 +415,342 @@ fn the_drawn_wing_tank_top_is_the_wing_plate_level_even_above_the_deck() {
                 "{file}: the side shell runs up to the wing plate on both sides"
             );
         }
+    }
+}
+
+#[test]
+fn the_weather_shield_is_drawn_dashed_from_the_wing_plate_to_the_tank_top_plus_the_clearance() {
+    // Issue #407: the weights carry a shield over the tanks (sides and ends on the wing plate, or on
+    // the deck where the Moulded Depth is higher; its top the tank top plus the clearance). The
+    // drawing shows it dashed, in the section and the elevation, from the results' own values.
+    for file in GAS {
+        for (_, r) in computed(file) {
+            let d = &r["drawing"];
+            let (t, clearance) = (
+                d["weather_shield_thickness_mm"].as_f64().unwrap(),
+                d["weather_shield_clearance_m"].as_f64().unwrap(),
+            );
+            assert!(t > 0.0, "{file}: the fixture has a shield");
+            let depth = r["dims"]["depth_m"].as_f64().unwrap();
+            let od = r["geometry"]["tank_outer_diameter_m"].as_f64().unwrap();
+            let bottom = d["double_bottom_m"].as_f64().unwrap()
+                + d["tank_support_height_m"].as_f64().unwrap();
+            let top = bottom + od + clearance;
+            let foot = wing_plate_level(&r).max(depth);
+            assert!(top > foot, "{file}: the shield stands above its foot");
+            let v = views(&r);
+            for (name, view) in [
+                ("section", &v.midship_section),
+                ("elevation", &v.side_elevation),
+            ] {
+                let shield: Vec<&Value> = of_layer(view, "ZONE", "polyline")
+                    .into_iter()
+                    .filter(|e| {
+                        let ys: Vec<f64> = e["points_m"]
+                            .as_array()
+                            .unwrap()
+                            .iter()
+                            .map(|p| p[1].as_f64().unwrap())
+                            .collect();
+                        ys.len() == 4
+                            && close(ys[0], foot)
+                            && close(ys[1], top)
+                            && close(ys[2], top)
+                            && close(ys[3], foot)
+                    })
+                    .collect();
+                assert_eq!(shield.len(), 1, "{file}: the shield in the {name}");
+            }
+        }
+    }
+}
+
+fn x_lines(document: &Value, layer: &str) -> Vec<f64> {
+    of_layer(document, layer, "line")
+        .iter()
+        .filter(|e| {
+            close(
+                e["from_m"][0].as_f64().unwrap(),
+                e["to_m"][0].as_f64().unwrap(),
+            )
+        })
+        .map(|e| e["from_m"][0].as_f64().unwrap())
+        .collect()
+}
+
+#[test]
+fn the_elevation_and_the_plan_are_drawn_at_one_scale() {
+    // Issue #409: a length scaled off one view is the same off the other.
+    for (file, r) in all_fixtures().into_iter().map(|(f, _, r)| (f, r)) {
+        let v = views(&r);
+        assert_eq!(
+            v.side_elevation["viewports"][0]["scale"], v.plan["viewports"][0]["scale"],
+            "{file}"
+        );
+        assert!(v.plan["viewports"][0]["scale"].is_number(), "{file}");
+    }
+}
+
+#[test]
+fn the_section_is_labelled_a_typical_section() {
+    let (_, r) = computed("gas_igc_2g_exact.vdesign").remove(0);
+    let notes = views(&r).midship_section["notes"].to_string();
+    assert!(notes.contains("TYPICAL SECTION"), "{notes}");
+}
+
+#[test]
+fn the_top_of_the_structure_is_drawn_at_the_draught_plus_the_air_draft() {
+    // Issue #409: a dashed line at the top of the structure, and the air draft named.
+    for file in GAS.iter().chain(DRY) {
+        let (_, r) = computed(file).remove(0);
+        let top = r["results"]["draught_m"].as_f64().unwrap()
+            + r["results"]["air_draft_loaded_m"].as_f64().unwrap();
+        let v = views(&r);
+        for (name, view) in [
+            ("elevation", &v.side_elevation),
+            ("section", &v.midship_section),
+        ] {
+            let at = of_layer(view, "ZONE", "line")
+                .iter()
+                .filter(|e| close(e["from_m"][1].as_f64().unwrap(), top))
+                .count();
+            assert_eq!(
+                at, 1,
+                "{file}: the line at the top of the structure in the {name}"
+            );
+            // The air draft is a dimension from the waterline to the line, or, with no room for
+            // one, a label that names it.
+            let dim = entities(view).iter().any(|e| {
+                e["type"] == "dimension"
+                    && close(e["to"]["point_m"][1].as_f64().unwrap_or(f64::NAN), top)
+            });
+            assert!(
+                dim || view.to_string().contains("AIR DRAFT"),
+                "{file}: {name} gives the air draft"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_gas_plan_shows_the_forward_separation_and_the_service_space() {
+    for file in GAS {
+        let (_, r) = computed(file).remove(0);
+        let sep = &r["drawing"]["separation"];
+        let (fwd, service) = (
+            sep["fwd_separation_m"].as_f64().unwrap(),
+            sep["service_space_m"].as_f64().unwrap(),
+        );
+        let x1 = r["dims"]["loa_m"].as_f64().unwrap()
+            - r["geometry"]["bow_void_length_m"].as_f64().unwrap();
+        let v = views(&r);
+        for (name, view) in [("elevation", &v.side_elevation), ("plan", &v.plan)] {
+            assert!(
+                x_lines(view, "HIDDEN").iter().any(|x| close(*x, x1 + fwd)),
+                "{file}: the forward end bulkhead in the {name}"
+            );
+            let text = view.to_string();
+            assert!(text.contains("FWD SEPARATION"), "{file}: {name}");
+            assert_eq!(
+                text.contains("SERVICE SPACE"),
+                service > 0.0,
+                "{file}: {name}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_dry_bulk_hull_shows_a_bulkhead_between_each_two_holds() {
+    for file in DRY {
+        let (_, r) = computed(file).remove(0);
+        let holds = r["drawing"]["hold_count"].as_u64().unwrap() as usize;
+        assert!(holds >= 2, "{file}");
+        let (x0, x1) = (
+            r["geometry"]["stern_void_length_m"].as_f64().unwrap(),
+            r["dims"]["loa_m"].as_f64().unwrap()
+                - r["geometry"]["bow_void_length_m"].as_f64().unwrap(),
+        );
+        let v = views(&r);
+        for (name, view) in [("elevation", &v.side_elevation), ("plan", &v.plan)] {
+            let xs = x_lines(view, "HIDDEN");
+            for i in 1..holds {
+                let x = x0 + (x1 - x0) * i as f64 / holds as f64;
+                assert!(
+                    xs.iter().any(|a| close(*a, x)),
+                    "{file}: bulkhead {i} in the {name}"
+                );
+            }
+            assert!(
+                view.to_string().contains(&format!("HOLDS ({holds})")),
+                "{file}: {name}"
+            );
+        }
+        // A gas hull has none.
+    }
+    let (_, gas) = computed("gas_igc_2g_exact.vdesign").remove(0);
+    assert!(gas["drawing"]["hold_count"].is_null());
+    assert!(!views(&gas).plan.to_string().contains("HOLDS"));
+}
+
+#[test]
+fn a_ballast_waterline_is_drawn_when_the_results_have_a_ballast_condition_apart_from_the_others() {
+    // Issue #409. The IS Code loading conditions give a "Ballast, departure" draught. It is drawn
+    // when it stands at least 1 mm from the light and the loaded waterlines at the scale of the view.
+    let (_, mut r) = computed("gas_igc_2g_exact.vdesign").remove(0);
+    r["loading_conditions"] = serde_json::json!({"conditions": [
+        {"role": "ballast_departure", "draught_m": 1.655}
+    ]});
+    let v = views(&r);
+    for (name, view) in [
+        ("elevation", &v.side_elevation),
+        ("section", &v.midship_section),
+    ] {
+        let at = of_layer(view, "WATER", "line")
+            .iter()
+            .filter(|e| close(e["from_m"][1].as_f64().unwrap(), 1.655))
+            .count();
+        assert_eq!(at, 1, "{name}");
+        assert!(view.to_string().contains("BALLAST DRAUGHT"), "{name}");
+    }
+    // Next to the light waterline it is not drawn twice.
+    let light = r["results"]["light_draught_m"].as_f64().unwrap();
+    r["loading_conditions"]["conditions"][0]["draught_m"] = serde_json::json!(light + 0.001);
+    assert!(
+        !views(&r)
+            .side_elevation
+            .to_string()
+            .contains("BALLAST DRAUGHT")
+    );
+}
+
+/// The results of a self-propelled Option as a new Design gets it: the new stern, machinery and a
+/// lifting wheelhouse, every input from the Defaults Profile.
+fn new_self_propelled(cargo: &str) -> Value {
+    let raw = serde_json::json!({
+        "format": "vdesign", "format_version": 3, "engine_version": "0.2.4", "units": "SI",
+        "options": [{ "name": "Option 1", "inputs": {
+            "cargo": { "value": cargo, "source": "typed" },
+            "hull_form": { "value": "raked_box", "source": "typed" },
+            "formation": { "value": { "kind": "self_propelled" }, "source": "typed" },
+            "length_overall_m": { "value": 76.5, "source": "typed" },
+            "beam_m": { "value": 11.4, "source": "typed" },
+            "moulded_depth_m": { "value": 3.5, "source": "typed" }
+        }}]
+    });
+    let filled = ovcd_format::fill_as_new(&raw.to_string(), &Profile::built_in());
+    assert_eq!(filled.report.errors, Vec::<String>::new());
+    match run_design(&filled.design.unwrap()).remove(0).outcome {
+        RunOutcome::Results { results, .. } => results,
+        other => panic!("{other:?}"),
+    }
+}
+
+#[test]
+fn the_tunnel_stern_the_raised_wheelhouse_and_the_blind_distance_are_drawn_from_the_results() {
+    // Issue #356. A tunnel stern: the crown along the run in the elevation, each tunnel in the plan,
+    // both hidden. The lifting wheelhouse raised, as a thin chain outline. The Blind Distances in
+    // the notes.
+    let r = new_self_propelled("bauxite");
+    assert_eq!(r["geometry"]["stern_form"], "tunnel");
+    let v = views(&r);
+    let crown: Vec<f64> = r["drawing"]["stern"]["profile"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|p| p[1].as_f64().unwrap())
+        .collect();
+    let drawn: Vec<Vec<f64>> = of_layer(&v.side_elevation, "HIDDEN", "polyline")
+        .iter()
+        .map(|e| {
+            e["points_m"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|p| p[1].as_f64().unwrap())
+                .collect()
+        })
+        .collect();
+    assert!(
+        drawn
+            .iter()
+            .any(|ys| ys.len() == crown.len() && ys.iter().zip(&crown).all(|(a, b)| close(*a, *b))),
+        "the tunnel crown"
+    );
+    let tunnels = r["drawing"]["stern"]["tunnel_sections"]
+        .as_array()
+        .unwrap()
+        .len();
+    let closed = of_layer(&v.plan, "HIDDEN", "polyline")
+        .iter()
+        .filter(|e| e["closed"] == true && e["points_m"].as_array().unwrap().len() == 4)
+        .filter(|e| {
+            let x1 = e["points_m"][1][0].as_f64().unwrap();
+            close(
+                x1,
+                r["drawing"]["stern"]["profile"]
+                    .as_array()
+                    .unwrap()
+                    .last()
+                    .unwrap()[0]
+                    .as_f64()
+                    .unwrap(),
+            )
+        })
+        .count();
+    assert_eq!(closed, tunnels, "one outline for each tunnel");
+    let a = &r["drawing"]["aft_arrangement"];
+    let (floor, top) = (
+        a["wheelhouse_floor_raised_m"].as_f64().unwrap(),
+        a["wheelhouse_top_raised_m"].as_f64().unwrap(),
+    );
+    assert!(a["wheelhouse_lift_m"].as_f64().unwrap() > 0.0);
+    let raised = of_layer(&v.side_elevation, "CENTRE", "polyline")
+        .iter()
+        .filter(|e| {
+            let ys: Vec<f64> = e["points_m"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|p| p[1].as_f64().unwrap())
+                .collect();
+            ys.iter().any(|y| close(*y, floor)) && ys.iter().any(|y| close(*y, top))
+        })
+        .count();
+    assert_eq!(raised, 1, "the raised wheelhouse");
+    assert!(v.side_elevation.to_string().contains("RAISED"));
+    let notes = v.side_elevation["notes"].to_string();
+    assert!(
+        notes.contains("BLIND DISTANCE AHEAD OF THE BOW: LIGHT 250.0 M, LADEN"),
+        "{notes}"
+    );
+}
+
+#[test]
+fn a_legacy_stern_draws_none_of_it() {
+    // A file saved before the new stern has no tunnel, no lift and no blind distance to draw.
+    let (_, r) = computed("gas_igc_2g_self_propelled.vdesign").remove(0);
+    let v = views(&r);
+    assert!(
+        !v.side_elevation["notes"]
+            .to_string()
+            .contains("BLIND DISTANCE")
+    );
+    assert!(!v.side_elevation.to_string().contains("RAISED"));
+}
+
+#[test]
+fn a_hull_without_a_shield_draws_none() {
+    let (_, mut r) = computed("gas_igc_2g_exact.vdesign").remove(0);
+    r["drawing"]["weather_shield_thickness_mm"] = serde_json::json!(0.0);
+    let v = views(&r);
+    for view in [&v.midship_section, &v.side_elevation] {
+        assert!(
+            of_layer(view, "ZONE", "polyline")
+                .iter()
+                .all(|e| e["points_m"].as_array().unwrap().len() != 4),
+            "no shield"
+        );
     }
 }
 

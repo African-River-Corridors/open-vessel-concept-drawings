@@ -19,7 +19,7 @@ pub mod trace;
 pub mod vdesign;
 
 pub use eval::{ENTRY_POINTS, EvalError, eval, parse_case};
-pub use ga::{GaViews, ga_views, ga_views_of};
+pub use ga::{GaViews, ga_views, ga_views_for, ga_views_named, ga_views_of};
 pub use profile::Profile;
 pub use run::{
     CONVOY_NOT_AVAILABLE, HashStatus, RunOption, RunOutcome, UNHASHED_KEYS, canonical_json,

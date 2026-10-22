@@ -269,6 +269,7 @@ msg-ruleset-exact-renamed = IGC_2G_EXACT is now IGC_2G: the same per-tank rule o
 msg-ruleset-per-tank = IGC_2G now uses the per-tank rule of IGC 2.4.1.1 (d(Vc) from the gross volume of each tank, dome included, measured plate to plate per 2.4.2), so results may change
 msg-input-note = `{ $input }`: { $note }
 msg-block-coefficient-dropped = `{ $input }`: the block coefficient now comes from the hull shape; the stored value was dropped
+msg-midship-coefficient-dropped = `{ $input }`: the midship coefficient now comes from the hull shape; the stored value was dropped
 msg-v1-adn-g = `{ $input }` ADN_G is no longer offered (the engine applies IGC rules only to gas tanks); this version 1 file was opened as IGC_2G
 msg-v1-tank-cap = `{ $input }` is no longer an input (there is no tank volume cap); it was dropped
 msg-v1-max-tank-od = this version 1 file has no `{ $input }`; it now uses the default { $value } m (version 1 used a fixed 12 m cap, so results may change)

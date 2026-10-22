@@ -67,8 +67,6 @@ choice-cargo-containment-sloped-hopper-hold = Sloped hopper hold
 choice-cargo-containment-type-c-tanks = Type C tanks
 choice-cargo-containment-integral-tanks = Integral tanks
 
-input-midship-coefficient = Midship coefficient
-
 input-bow-rake-length-m = Bow rake length
 
 input-bow-rake-rise-m = Bow rake rise
