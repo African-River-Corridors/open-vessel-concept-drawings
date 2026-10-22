@@ -44,9 +44,9 @@ fn liquid_bulk_without_a_tank_layout_is_refused_never_sent_down_the_gas_or_dry_p
 }
 
 #[test]
-fn every_cargo_but_crude_oil_is_gas_or_dry_bulk() {
+fn every_cargo_but_the_oils_is_gas_or_dry_bulk() {
     for (key, props) in CARGO_DATABASE.iter() {
-        if *key == "crude_oil" {
+        if matches!(*key, "crude_oil" | "diesel_en590") {
             assert_eq!(props.phase, CargoClass::LiquidBulk);
             continue;
         }

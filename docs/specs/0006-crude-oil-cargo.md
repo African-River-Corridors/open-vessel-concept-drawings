@@ -183,7 +183,7 @@ Filed as #328 to #342, in the order of this table (ticket n = #327 + n). "None" 
 | 12 | Default Rule Set stacks for liquid bulk by Service Area | default stack | #274, #275 |
 | 13 | `fit` for liquid bulk (tanks in line, double hull from the governing Rule): `liquid_fit` in `ovcd-format`, and the `liquid_fit` entry of the evaluation API | `fit` results only; no `run` calls it | #276, #277 |
 | 14 | Damage stability Measure (ADN extents first), then oil outflow | new checks | 5, 11 |
-| 15 | Second oil (product, vegetable oil): data rows only | new Cargo only | 2–11 |
+| 15 | Second oil (product, vegetable oil): data rows only. Done for diesel fuel to EN 590 (`diesel_en590`, issue #342): a Cargo row, a grade row, a fixture; no new branch on Cargo in Rust code (a test keeps it so) | new Cargo only | 2–11 |
 
 Tank fix tickets #313, #314, #316 and #317 do not block this. #315 shares files and the density model: land it first
 or agree its shape.
