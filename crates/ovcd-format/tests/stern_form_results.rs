@@ -1,6 +1,6 @@
 //! Seam: the Stern Form in a Design's results (issue #350): a new self-propelled Option gets
-//! `geometry.stern_*`, the stern outlines in the drawing and the block coefficient rule; a typed
-//! block coefficient is used as typed; a file saved before gets no new field and keeps its hash.
+//! `geometry.stern_*` and the stern outlines in the drawing; a file saved before gets no new field
+//! and keeps its hash. Issue #448: Cb is a result of the hull's sections, ∇ / (L_WL B_WL T).
 //!
 //! Label: property.
 
@@ -44,14 +44,14 @@ fn a_new_gas_option_has_a_transom_stern_and_the_block_coefficient_rule() {
     assert_eq!(g["stern_rake_length_m"], 6.0);
     assert!(g["propeller_d_max_m"].as_f64().unwrap() > 0.0);
     assert!(r["drawing"]["stern"]["profile"].as_array().unwrap().len() > 1);
-    // The rule: the raked box with the transom cut, below the old 0.85 and above a plain box less
-    // both ends.
-    let rule = cb(&r);
-    assert!(rule > 0.85 && rule < 1.0, "{rule}");
-    // A typed block coefficient is used as typed.
-    s.set_input("Option 1", "block_coefficient", json!(0.85))
-        .unwrap();
-    assert_eq!(cb(&results(&s)), 0.85);
+    // Cb of the raked box with the transom cut: below a box's 1, above the old fixed 0.85.
+    let with_transom = cb(&r);
+    assert!(with_transom > 0.85 && with_transom < 1.0, "{with_transom}");
+    // Cb is not an input.
+    assert!(
+        s.set_input("Option 1", "block_coefficient", json!(0.85))
+            .is_err()
+    );
 }
 
 #[test]
@@ -75,13 +75,15 @@ fn a_new_dry_option_has_a_tunnel_stern_with_no_rake_for_the_drawings() {
 }
 
 #[test]
-fn a_barge_has_no_stern_form_and_keeps_the_old_block_coefficient() {
+fn a_barge_has_no_stern_form_and_the_cb_of_its_raked_box() {
     let mut s = DesignSession::new_design(Profile::built_in()).unwrap();
     s.set_input("Option 1", "cargo", json!("bauxite")).unwrap();
     let r = results(&s);
     assert!(r["geometry"].get("stern_form").is_none());
     assert!(r["drawing"].get("stern").is_none());
-    assert_eq!(cb(&r), 0.85);
+    // A square stern and the raked bow: Cb on L_WL is just under 1.
+    let c = cb(&r);
+    assert!(c > 0.9 && c < 1.0, "{c}");
 }
 
 #[test]
@@ -103,6 +105,7 @@ fn a_file_saved_before_has_no_stern_fields_and_keeps_its_hash() {
         let r = results(&s);
         assert!(r["geometry"].get("stern_form").is_none(), "{name}");
         assert!(r["drawing"].get("stern").is_none(), "{name}");
-        assert_eq!(cb(&r), 0.85, "{name}");
+        // Issue #448: the stored Cb is dropped; the hull's sections give it.
+        assert!(cb(&r) > 0.9 && cb(&r) < 1.0, "{name}: {}", cb(&r));
     }
 }

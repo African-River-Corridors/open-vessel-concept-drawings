@@ -170,6 +170,9 @@ pub struct ResistanceInputs {
     pub wetted_surface_extra_m2: f64,
     /// Tonnes; 0 = auto from Cb. Carried, not used.
     pub displacement_tonnes: f64,
+    /// Issue #448: the hull's own midship section area (m²), for the blockage and squat; `None`:
+    /// B x T.
+    pub midship_area_m2: Option<f64>,
     pub tug: TugInputs,
     pub environments: Vec<EnvironmentInputs>,
     pub speed_min_knots: f64,
@@ -189,6 +192,7 @@ impl Default for ResistanceInputs {
             wetted_surface_area: 0.0,
             wetted_surface_extra_m2: 0.0,
             displacement_tonnes: 0.0,
+            midship_area_m2: None,
             tug: TugInputs::default(),
             environments: default_environments(),
             speed_min_knots: 2.0,
@@ -389,13 +393,16 @@ impl<'a> ResistanceCalculator<'a> {
         (env.channel_width_bottom + env.channel_width_surface) / 2.0 * env.water_depth
     }
 
-    /// Midship section area of the vessel (m^2): B x T x Cm, as squat has it (issues #396, #425).
+    /// Midship section area of the vessel (m^2): the hull's own (issue #448), or B x T x Cm, as
+    /// squat has it (issues #396, #425).
     fn midship_section_area(&self) -> f64 {
-        crate::confined_water::midship_section_area(
-            self.inputs.beam,
-            self.inputs.draft,
-            self.inputs.midship_coefficient,
-        )
+        self.inputs
+            .midship_area_m2
+            .unwrap_or(crate::confined_water::midship_section_area(
+                self.inputs.beam,
+                self.inputs.draft,
+                self.inputs.midship_coefficient,
+            ))
     }
 
     /// Schijf (1949) critical speed in a confined waterway (knots); `None` for deep water.
@@ -594,6 +601,7 @@ impl<'a> ResistanceCalculator<'a> {
             water_depth_m: env.water_depth,
             channel_area_m2: self.channel_cross_section(env),
             safety_margin_m: env.squat_safety_margin_m,
+            midship_area_m2: self.inputs.midship_area_m2,
             ..SquatInputs::new(
                 speed_through_water,
                 self.inputs.draft,
@@ -710,13 +718,11 @@ impl<'a> ResistanceCalculator<'a> {
         // What actually governed the service speed.
         let sq_limit = if squat_applies(env) {
             Some(
-                squat::max_speed_for_ukc(
-                    inp.draft,
-                    inp.beam,
-                    inp.lwl,
+                squat::max_speed_for_ukc_with(
+                    (inp.draft, inp.beam, inp.lwl),
                     env.water_depth,
                     ac,
-                    inp.block_coefficient,
+                    (inp.block_coefficient, inp.midship_area_m2),
                     env.squat_safety_margin_m,
                     20.0,
                     0.01,

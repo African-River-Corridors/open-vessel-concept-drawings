@@ -116,9 +116,11 @@ def test_the_engine_agrees_with_the_oracle_on_the_base_cases(path):
         assert crit.value == pytest.approx(exp["value"], abs=tol), key
 
 
-def test_box_condition_is_what_assess_does_for_each_gas_condition():
-    """Label: property - a pure refactor: `assess`'s conditions equal `box_condition` on the same
-    section, KG and free surface, exactly (the GZ curve, areas, GM and criteria)."""
+def test_assess_is_on_the_hull_sections_and_box_condition_stays_the_box():
+    """Label: property - since issue #448 `assess` works each condition on the hull's Sections
+    Table (the raked bow and the Stern Form) at free trim, so its GZ curve is not the box's at the
+    same draught, KG and free surface. `box_condition` stays the prismatic box of the evaluation
+    harness: on the same 0 to 60 degree grid, with the same criteria, upright at GZ 0."""
     f = fit(90.0, 14.8, "LPG_propane", 4.4)
     a = assess(f.engine_result, f.payload_t)
     seen = 0
@@ -126,8 +128,10 @@ def test_box_condition_is_what_assess_does_for_each_gas_condition():
         if not c.gz:
             continue
         b = box_condition(f.beam_m, f.depth_m, c.draught_m, c.kg_m, free_surface_m=c.free_surface_m)
-        assert (b.gz, b.gm_fluid_m, b.area_0_30, b.area_0_40, b.area_30_40, b.max_gz_deg, b.criteria) == (
-            c.gz, c.gm_fluid_m, c.area_0_30, c.area_0_40, c.area_30_40, c.max_gz_deg, c.criteria)
+        assert [deg for deg, _ in b.gz] == [deg for deg, _ in c.gz]
+        assert [k.name for k in b.criteria] == [k.name for k in c.criteria]
+        assert b.gz[0][1] == 0.0
+        assert b.gz != c.gz
         seen += 1
     assert seen == 3
 

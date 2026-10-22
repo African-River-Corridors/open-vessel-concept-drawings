@@ -24,6 +24,10 @@ const BUILT_IN: &[(&str, &str)] = &[
         include_str!("../rules/is2008-a/1.0.0.json"),
     ),
     (
+        "rules/is2008-a/2.0.0.json",
+        include_str!("../rules/is2008-a/2.0.0.json"),
+    ),
+    (
         "rules/adn-tank/1.0.0.json",
         include_str!("../rules/adn-tank/1.0.0.json"),
     ),
@@ -58,6 +62,10 @@ const BUILT_IN: &[(&str, &str)] = &[
     (
         "rules/igc-2g/1.1.0.json",
         include_str!("../rules/igc-2g/1.1.0.json"),
+    ),
+    (
+        "rules/igc-2g/2.0.0.json",
+        include_str!("../rules/igc-2g/2.0.0.json"),
     ),
     (
         "rules/lr-inland-gas/1.0.0.json",
@@ -96,6 +104,16 @@ impl Domain for Ovcd {
     }
 
     fn input(&self, name: &str) -> Option<InputDef> {
+        // Issue #498: the kind of a loading condition is read for each condition.
+        if name == "loading_condition_kind" {
+            return Some(InputDef {
+                values: ovcd_core::measured::LOADING_CONDITION_KINDS
+                    .iter()
+                    .map(|v| v.to_string())
+                    .collect(),
+                scope: InputScope::Object,
+            });
+        }
         applicability_values(name).map(|values| InputDef {
             values,
             scope: InputScope::Design,

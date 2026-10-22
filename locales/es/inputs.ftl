@@ -91,7 +91,6 @@ choice-cargo-containment-type-c-tanks = Tanques tipo C
 choice-cargo-containment-integral-tanks = Tanques integrales
 
 # status: draft
-input-block-coefficient = Coeficiente de bloque
 
 # status: draft
 input-midship-coefficient = Coeficiente de la sección maestra

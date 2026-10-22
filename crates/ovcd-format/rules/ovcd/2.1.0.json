@@ -1037,6 +1037,39 @@
       "evaluated": true,
       "finding": null,
       "since": "2.1.0"
+    },
+    {
+      "id": "ovcd/stability/light-angle-of-max-gz",
+      "title": "The angle of maximum GZ is at least 25 degrees in a light condition with no ballast: a warning, with ballast to sail light, not a failure (the bilge emerges early on a wide, shallow hull)",
+      "origin": "method-validity",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#498"
+      },
+      "verified": false,
+      "applies_when": {
+        "loading_condition_kind": [
+          "lightship-no-ballast",
+          "legacy-light"
+        ]
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "gz.angle_of_max"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 25,
+        "unit": "deg"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#498",
+      "since": "2.1.0"
     }
   ]
 }

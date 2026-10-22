@@ -128,7 +128,6 @@ fn the_lightship_rises_by_exactly_the_stern_block_and_the_kg_moves_by_its_moment
         let a = assess(
             &GasCapacityResult::try_from(r).unwrap(),
             0.0,
-            0.85,
             1.0,
             "IS_CODE_2008",
         )

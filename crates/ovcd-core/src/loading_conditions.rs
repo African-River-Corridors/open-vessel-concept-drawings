@@ -9,17 +9,19 @@
 //! disposition of any water ballast be stated. "Lightship, no ballast" is added for a vessel that
 //! may sail that way; lightship has no consumables, stores or ballast (Introduction 2.23).
 //!
-//! The hull is a prismatic box, as in the gas stability: KB = T/2, BM = B²/12T, and the GZ curve of
-//! [`crate::box_stability`].
+//! The hull is its Sections Table (issue #448), as in the gas stability: each condition floats at
+//! free trim, its GM is KM_T of the upright cut less KG, and its GZ curve is the sections' one,
+//! judged by [`crate::box_stability`].
 
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
-use crate::box_stability::{Condition, PyError, box_condition_at, box_gm_solid, criterion, div};
+use crate::box_stability::{
+    Condition, PyError, criterion, div, failed_condition, hull_condition, trim_out_of_range,
+};
 use crate::compartments::{Space, SpaceKind};
-use crate::hull::HullGeometry;
+use crate::hydrostatics::Hull;
 use crate::models::TrimResult;
-use crate::stern_form::SternGeometry;
 
 /// IS Code 2008 Part B 3.1.2: a tank filled to 98 % or more is nominally full and has no free
 /// surface correction.
@@ -177,7 +179,9 @@ pub struct Inputs<'a> {
     pub loa: f64,
     pub beam: f64,
     pub depth: f64,
-    pub block_coefficient: f64,
+    /// Issue #448: the hull's sections (the raked bow and the Stern Form) give each condition's
+    /// draught, trim and GZ.
+    pub hull: &'a Hull,
     pub water_density: f64,
     pub criteria_set: &'a str,
     pub lightship: &'a [Item],
@@ -194,7 +198,6 @@ pub struct Inputs<'a> {
     /// The highest fixed point above the keel (m), for the air draft.
     pub air_draft_top_m: f64,
     pub air_draft_limit_m: Option<f64>,
-    pub stern: Option<&'a SternGeometry>,
 }
 
 /// One tank's water ballast in a condition.
@@ -304,8 +307,10 @@ pub fn assess(inp: &Inputs) -> Result<Vec<LoadedCondition>, PyError> {
 /// meets every criterion. If none does, the plan with every ballast tank full, marked not found.
 fn auto_plan(inp: &Inputs, role: Role) -> Result<LoadedCondition, PyError> {
     let mut fills = alloc::vec![0.0; inp.ballast_tanks.len()];
-    let mut c = condition(inp, role, &fills)?;
-    if c.ok() {
+    // Issue #448: a trial that fails a criterion known before the GZ curve (the air draft, the
+    // fluid GM, the freeboard) is not ok whatever its curve, so it is screened out without one.
+    // The trial found, or with none the last one, is worked in full, so no reported number differs.
+    if let Some(mut c) = trial(inp, role, &fills)? {
         c.plan_found = Some(true);
         return Ok(c);
     }
@@ -316,15 +321,24 @@ fn auto_plan(inp: &Inputs, role: Role) -> Result<LoadedCondition, PyError> {
             for &i in &group {
                 fills[i] = f;
             }
-            c = condition(inp, role, &fills)?;
-            if c.ok() {
+            if let Some(mut c) = trial(inp, role, &fills)? {
                 c.plan_found = Some(true);
                 return Ok(c);
             }
         }
     }
+    let mut c = condition(inp, role, &fills)?;
     c.plan_found = Some(false);
     Ok(c)
+}
+
+/// One trial of the automatic plan: the condition when it is ok, `None` when it is not.
+fn trial(inp: &Inputs, role: Role, fills: &[f64]) -> Result<Option<LoadedCondition>, PyError> {
+    let c = match condition_with(inp, role, fills, None, true)? {
+        Some(c) => c,
+        None => return Ok(None),
+    };
+    Ok(if c.ok() { Some(c) } else { None })
 }
 
 fn filled(space: &Space, fill: f64, density: f64) -> TankFill {
@@ -381,7 +395,8 @@ fn consumables_at(c: &Consumables, fraction: f64) -> (Vec<Item>, f64) {
 
 /// One condition at the given ballast fills (one per ballast tank).
 fn condition(inp: &Inputs, role: Role, fills: &[f64]) -> Result<LoadedCondition, PyError> {
-    condition_with(inp, role, fills, None)
+    Ok(condition_with(inp, role, fills, None, false)?
+        .expect("an unscreened condition is always worked"))
 }
 
 /// The mass of `items` as one item: its total, and the mass-weighted KG and LCG.
@@ -401,14 +416,20 @@ fn lumped(items: &[Item]) -> Item {
     }
 }
 
-/// [`condition`], with the cargo mass given: the slack cargo condition takes a part load.
+/// The fluid GM below which the IS Code 2008 Part A 2.2.4 criterion fails (m).
+const GM_FLUID_MIN_M: f64 = 0.15;
+
+/// [`condition`], with the cargo mass given (the slack cargo condition takes a part load). With
+/// `screen`, `None` for a condition that fails a criterion known before its GZ
+/// curve (issue #448): the air draft, the fluid GM, or the freeboard (the hull does not float).
 fn condition_with(
     inp: &Inputs,
     role: Role,
     fills: &[f64],
     cargo_override: Option<f64>,
-) -> Result<LoadedCondition, PyError> {
-    let (l, b, d) = (inp.loa, inp.beam, inp.depth);
+    screen: bool,
+) -> Result<Option<LoadedCondition>, PyError> {
+    let d = inp.depth;
     let mut items: Vec<Item> = inp.lightship.to_vec();
     let mut weights: Vec<(String, Item)> = Vec::new();
     weights.push(("Lightship".to_string(), lumped(&items)));
@@ -454,12 +475,95 @@ fn condition_with(
 
     let disp: f64 = items.iter().map(|i| i.mass_t).sum();
     let kg = div(items.iter().map(|i| i.mass_t * i.kcg_m).sum(), disp)?;
-    let t = div(disp, inp.block_coefficient * l * b * inp.water_density)?;
-    let hull = HullGeometry::new(l, b, d, 0.0, 0.0, 0.0, 0.0);
-    let along: Vec<(f64, f64)> = items.iter().map(|i| (i.mass_t, i.lcg_m)).collect();
-    let trim = crate::hydrostatics::trim_with_stern(&hull, t, &along, inp.stern);
+    let lcg = div(items.iter().map(|i| i.mass_t * i.lcg_m).sum(), disp)?;
+    let g = crate::sections::Gravity {
+        lcg_m: lcg,
+        tcg_m: 0.0,
+        kg_m: kg,
+    };
+    if inp.water_density == 0.0 {
+        return Err(PyError::ZeroDivision);
+    }
+    // Issue #448: the free-trim float of the sections; the draught at mid-length. A load the whole
+    // hull cannot float has no draught: it fails "Floats with freeboard".
+    let to_py = |e: crate::sections::SectionsError| PyError::Value(e.to_string());
+    let sinks = disp / inp.water_density >= inp.hull.volume_at(d);
+    let (t, trim) = if sinks {
+        (
+            d,
+            TrimResult {
+                LCG: lcg,
+                LCB: lcg,
+                trim: 0.0,
+                draft_aft: d,
+                draft_fwd: d,
+            },
+        )
+    } else {
+        let f = match inp.hull.float(disp, g, inp.water_density) {
+            Ok(f) => f,
+            // No balance within the trim solver's range: the condition fails at its level draught.
+            Err(crate::sections::SectionsError::TrimOutOfRange) => {
+                let t = inp
+                    .hull
+                    .level_draught(disp, inp.water_density)
+                    .map_err(to_py)?;
+                let mut c = failed_condition(t, kg, trim_out_of_range());
+                c.name = role.name().to_string();
+                c.cargo_t = cargo_t;
+                c.fill_fraction = cargo_fill;
+                c.displacement_t = disp;
+                let air_draft = inp.air_draft_top_m - t;
+                return Ok(Some(LoadedCondition {
+                    role,
+                    condition: c,
+                    consumables_t,
+                    ballast,
+                    ballast_t,
+                    trim: TrimResult {
+                        LCG: lcg,
+                        LCB: lcg,
+                        trim: 0.0,
+                        draft_aft: t,
+                        draft_fwd: t,
+                    },
+                    freeboard_m: d - t,
+                    air_draft_m: air_draft,
+                    air_draft_ok: inp.air_draft_limit_m.map(|limit| air_draft <= limit),
+                    plan_found: None,
+                    weights,
+                }));
+            }
+            Err(e) => return Err(to_py(e)),
+        };
+        (
+            f.draught_mid_m,
+            TrimResult {
+                LCG: lcg,
+                LCB: f.equilibrium.immersed.lcb_m,
+                trim: f.trim_m,
+                draft_aft: f.draught_aft_m,
+                draft_fwd: f.draught_fwd_m,
+            },
+        )
+    };
     let air_draft = inp.air_draft_top_m - t;
 
+    let air_draft_ok = inp.air_draft_limit_m.map(|limit| air_draft <= limit);
+    if screen && (t >= d || air_draft_ok == Some(false)) {
+        return Ok(None);
+    }
+    if screen && t < d {
+        let gm_solid = inp
+            .hull
+            .upright(t, inp.water_density)
+            .map_err(to_py)?
+            .km_t_m
+            - kg;
+        if gm_solid - div(fs_moment, disp)? < GM_FLUID_MIN_M {
+            return Ok(None);
+        }
+    }
     let mut c = if t >= d {
         Condition {
             name: String::new(),
@@ -489,14 +593,20 @@ fn condition_with(
             )],
         }
     } else {
-        let gm_solid = box_gm_solid(b, t, kg)?;
-        box_condition_at(
-            b,
-            d,
+        let gm_solid = inp
+            .hull
+            .upright(t, inp.water_density)
+            .map_err(to_py)?
+            .km_t_m
+            - kg;
+        hull_condition(
+            inp.hull,
+            disp,
+            g,
             t,
-            kg,
             gm_solid,
             div(fs_moment, disp)?,
+            inp.water_density,
             inp.criteria_set,
         )?
     };
@@ -504,7 +614,7 @@ fn condition_with(
     c.cargo_t = cargo_t;
     c.fill_fraction = cargo_fill;
     c.displacement_t = disp;
-    Ok(LoadedCondition {
+    Ok(Some(LoadedCondition {
         role,
         condition: c,
         consumables_t,
@@ -516,7 +626,7 @@ fn condition_with(
         air_draft_ok: inp.air_draft_limit_m.map(|limit| air_draft <= limit),
         plan_found: None,
         weights,
-    })
+    }))
 }
 
 /// The worst slack-tank condition of a liquid bulk hull (spec 0006 section 2, row 5): the departure
@@ -532,7 +642,8 @@ pub fn assess_slack(
     let none = alloc::vec![0.0; inp.ballast_tanks.len()];
     let mut worst: Option<LoadedCondition> = None;
     for &m in candidates_t {
-        let c = condition_with(inp, Role::SlackCargo, &none, Some(m))?;
+        let c = condition_with(inp, Role::SlackCargo, &none, Some(m), false)?
+            .expect("an unscreened condition is always worked");
         // The first of equal fluid GM stays, so the result does not depend on rounding.
         if worst
             .as_ref()

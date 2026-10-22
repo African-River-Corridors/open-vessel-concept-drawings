@@ -37,10 +37,6 @@
           "value": "box_hold",
           "source": "default"
         },
-        "block_coefficient": {
-          "value": 0.85,
-          "source": "default"
-        },
         "midship_coefficient": {
           "value": 1.0,
           "source": "default"
@@ -316,14 +312,14 @@
             {
               "id": "ovcd",
               "version": "2.1.0",
-              "hash": "ae5c977aa5908851a1afdfc8a4e43d0e11eb2e5ba0736b7c96cf03be6ab08942",
+              "hash": "7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96",
               "source": "default"
             }
           ],
           "source": "default"
         }
       },
-      "results_hash": "e97c19e749f1e27f7a610b571b425174ae04474884a8cfe05c1f883be00bb285"
+      "results_hash": "dfe287bddc24637612171e6fdff7f0a7178838a75063407e4cfae9982e1828c9"
     }
   ],
   "defaults_profile": "built-in"

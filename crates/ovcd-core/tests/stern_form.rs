@@ -200,9 +200,10 @@ fn a_tunnel_stern_moves_the_lcb_of_a_dry_bulk_trim_forward() {
     };
     i.stern_geometry = Some(geometry(&inputs(SternForm::Tunnel), &hull));
     let tunnel = compute(&i).unwrap();
+    // Issue #448: with free trim B is under G, so the tunnel's lost buoyancy aft shows as a trim
+    // more by the stern, not as a moved LCB.
     for ((name, a), (_, b)) in square.trim_conditions.iter().zip(&tunnel.trim_conditions) {
-        assert!(b.LCB > a.LCB, "{name}: {} {}", a.LCB, b.LCB);
-        assert!(b.trim < a.trim, "{name}");
+        assert!(b.trim < a.trim, "{name}: {} {}", a.trim, b.trim);
     }
 }
 
@@ -442,6 +443,31 @@ fn a_tunnel_in_the_sections_matches_a_strip_integral_of_its_ruled_surface() {
             assert!(((v - vs) / vs).abs() < 1e-4, "{what}: {v} {vs}");
             assert!(((m - ms) / ms).abs() < 1e-4, "{what}: {m} {ms}");
         }
+    }
+}
+
+#[test]
+fn three_tunnels_that_overlap_are_written_as_their_union() {
+    // Three tunnels at the capped D meet at the base, and their crowns above the centre make them
+    // overlap above it: the section is the union. It matches the strip integral of its ruled
+    // surface, and it removes less than three separate tunnels would.
+    let mut i = inputs(SternForm::Tunnel);
+    i.propulsor_count = 3;
+    let g = geometry(&i, &HULL);
+    let mut t = square_stern_table();
+    apply(&g, &mut t).unwrap();
+    let r = g.propeller_diameter_m;
+    let separate = 3.0 * tunnel_section_area(r, g.tunnel_crown_height_m, g.tunnel_crown_height_m);
+    let at_transom = HULL.beam * HULL.depth - 2.0 * shoelace(&t.sections[0].points);
+    assert!(
+        at_transom > 0.0 && at_transom < separate,
+        "{at_transom} {separate}"
+    );
+    for d in [1.0, 2.0, 3.5] {
+        let (v, m) = removed_by_sections(&g, RUN_INTERVALS, d);
+        let (vs, ms) = ruled_by_strips(&g, &t, d, 400);
+        assert!(((v - vs) / vs).abs() < 1e-4, "{d}: {v} {vs}");
+        assert!(((m - ms) / ms).abs() < 1e-4, "{d}: {m} {ms}");
     }
 }
 

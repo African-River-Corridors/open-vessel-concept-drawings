@@ -25,6 +25,7 @@ Standard library plus PyYAML (a dependency of the package).
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import datetime
 import importlib.util
 import json
@@ -86,8 +87,6 @@ DEPTH_NOTE = (f"The CN-derived cases take their length, beam, draught and speed 
 _CHANNEL = {"channel_depth_m": 5.0, "channel_bottom_width_m": 60.0}
 _DEEP_CHANNEL = {"channel_depth_m": 3.0, "channel_bottom_width_m": 30.0}      # shallow and narrow
 OPTIONAL_INPUT_CASES = (
-    ("block_coefficient", "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5,
-     {"block_coefficient": 0.7}),
     ("min_freeboard_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5, {"min_freeboard_m": 0.9}),
     ("lightship_factor_t_per_m3", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
      {"lightship_factor_t_per_m3": 0.2}),
@@ -293,7 +292,7 @@ OPTIONAL_INPUT_CASES = (
          {"id": "is2008-a", "version": "1.0.0", "source": "default",
           "hash": "cfab2d1cda90d0cfda8edbf0955082345cd30ef2d102c9840e8d4feab5297e37"},
          {"id": "ovcd", "version": "2.1.0", "source": "default",
-          "hash": "ae5c977aa5908851a1afdfc8a4e43d0e11eb2e5ba0736b7c96cf03be6ab08942"}]}),
+          "hash": "7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96"}]}),
     # The typed openings (issue #417), set to their defaults on a self-propelled gas barge. They feed
     # Rules (the Rule Trace is not hashed), not the results; the same results as leaving them out. A
     # base from before them refuses the input and leaves it out.
@@ -441,6 +440,10 @@ def cases() -> dict[str, dict]:
     # One case for each optional input.
     for name, cargo, containment, formation, loa, beam, depth, extra in OPTIONAL_INPUT_CASES:
         out[f"sweep optional {name}"] = _inputs(cargo, containment, formation, loa, beam, depth, **extra)
+    # Issue #448: a long raked bow, which the hydrostatics now see. It takes the place of the block
+    # coefficient case: the block coefficient is a result, no longer an input.
+    out["sweep hull long bow rake 90x14"] = _inputs(
+        "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5, bow_rake_length_m=20.0)
     return out
 
 
@@ -499,8 +502,18 @@ def run_case(binary: Path, name: str, typed: dict, tmp: Path) -> dict:
 
 
 def run_all(binary: Path, case_set: dict[str, dict]) -> dict[str, dict]:
+    """Every case through one binary. The cases run in parallel, each in its own folder: each is its
+    own `ovcd` process, so the answers do not depend on the order (issue #448: a gas Design on the
+    hull's sections takes up to seconds, so one at a time no longer fits the CI job)."""
     with tempfile.TemporaryDirectory() as t:
-        return {name: run_case(binary, name, typed, Path(t)) for name, typed in case_set.items()}
+        def one(item: tuple[int, tuple[str, dict]]) -> dict:
+            i, (name, typed) = item
+            folder = Path(t) / str(i)
+            folder.mkdir()
+            return run_case(binary, name, typed, folder)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as pool:
+            answers = list(pool.map(one, enumerate(case_set.items())))
+        return dict(zip(case_set, answers))
 
 
 # --- comparing ----------------------------------------------------------------------------------

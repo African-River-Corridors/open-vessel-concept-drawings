@@ -37,10 +37,6 @@
           "value": "integral_tanks",
           "source": "typed"
         },
-        "block_coefficient": {
-          "value": null,
-          "source": "default"
-        },
         "midship_coefficient": {
           "value": 1.0,
           "source": "default"
@@ -360,14 +356,14 @@
             {
               "id": "ovcd",
               "version": "2.1.0",
-              "hash": "ae5c977aa5908851a1afdfc8a4e43d0e11eb2e5ba0736b7c96cf03be6ab08942",
+              "hash": "7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96",
               "source": "default"
             }
           ],
           "source": "default"
         }
       },
-      "results_hash": "5cbbe77d31ef89ed1287dca253cb9dfdc93c1fa627950d956737645ce1da489a"
+      "results_hash": "641a714681241cbc29d48982192a274a1d6cac560f7a18565b37e95510126ba7"
     }
   ],
   "defaults_profile": "built-in"

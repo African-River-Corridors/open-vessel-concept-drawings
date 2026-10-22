@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Evaluation, OptionEvaluation } from "./api";
   import StaleWhy from "./StaleWhy.svelte";
-  import { MAIN, POWERING, TANKS, exact, hasPowering, hasTanks, show, textIds, valueAt, type Metric } from "./metrics";
+  import { HYDROSTATICS, MAIN, POWERING, TANKS, exact, hasHydrostatics, hasPowering, hasTanks, show, textIds, valueAt, type Metric } from "./metrics";
   import { checkName, say, t } from "./i18n.svelte";
 
   // Outputs of the active Option, its checks and warnings, and a compare table of every Option.
@@ -49,6 +49,7 @@
     ...MAIN,
     ...(columns.some((c) => hasTanks(c.results)) ? TANKS : []),
     ...(columns.some((c) => hasPowering(c.results)) ? POWERING : []),
+    ...(columns.some((c) => hasHydrostatics(c.results)) ? HYDROSTATICS : []),
   ]);
 
   let checks = $derived.by(() => {
@@ -99,7 +100,7 @@
             <tbody>
               {#each rows as m (m.label)}
                 {@const v = valueAt(current.results, m.path)}
-                {#if !(m.path[0] === "arrangement" && !hasTanks(current.results)) && !(m.path[0] === "powering" && !hasPowering(current.results))}
+                {#if !(m.path[0] === "arrangement" && !hasTanks(current.results)) && !(m.path[0] === "powering" && !hasPowering(current.results)) && !(m.path[0] === "hydrostatics" && !hasHydrostatics(current.results))}
                   <tr>
                     <th>{t(m.label)}</th>
                     <td class="num" class:text={m.quantity === "text"} title={exact(m, v)}><span class:old={current.stale}>{show(m, v, ids)}</span>{#if v !== null && v !== undefined && m.unit}<span class="unit">&nbsp;{m.unit}</span>{/if}</td>

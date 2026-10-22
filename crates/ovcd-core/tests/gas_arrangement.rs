@@ -27,9 +27,11 @@ fn the_cn_ii_benchmark_is_reproduced() {
     // again (issue #277, the wheelhouse sightline blocks the search); was 2832.6643735601965.
     // Re-pinned again (issue #410, the covering above D is in the lightship at its own heights):
     // the one-wide arrangement fails the light-condition angle of max GZ (24 deg < 25 deg), so the
-    // search takes two tanks wide; was 2021.2487121368047 with (2, 1, 2).
-    assert_eq!(f.payload_t, 1405.8516419707348);
-    assert_eq!((f.n_tanks, f.n_tanks_wide, f.n_tanks_long), (4, 2, 2));
+    // search takes two tanks wide; was 2021.2487121368047 with (2, 1, 2). Re-pinned again (issue
+    // #498, the angle of max GZ alone in the light condition with no ballast is a warning): the
+    // one-wide arrangement is feasible again; was 1405.8516419707348 with (4, 2, 2).
+    assert_eq!(f.payload_t, 2021.2487121368047);
+    assert_eq!((f.n_tanks, f.n_tanks_wide, f.n_tanks_long), (2, 1, 2));
     // Re-pinned (issue #264); was "volume" under the stepped IGC_2G and "draft" (issue #237): the
     // arrangement that passes stability is smaller, so the volume binds again.
     assert_eq!(f.binding, "volume");
@@ -91,9 +93,11 @@ fn the_smallest_viable_loa_is_found_to_a_tenth_of_a_metre() {
     let o = FitOptions::for_smallest_viable_loa();
     assert_eq!(
         smallest_viable_loa(12.0, "LNG", 3.0, 20.0, 120.0, &o).unwrap(),
-        // Re-pinned (issue #264, a viable length needs an arrangement that passes every check,
-        // stability included); was 36.1 (issue #237) and 35.6 under the stepped IGC_2G.
-        39.9
+        // Re-pinned (#498, the light condition's angle of max GZ alone is a warning); was 41.7
+        // (#448) and 39.9 before that. Before that re-pinned (issue #264, a viable length needs an
+        // arrangement that passes every check, stability included); was 36.1 (issue #237) and
+        // 35.6 under the stepped IGC_2G.
+        37.9
     );
 }
 
@@ -163,7 +167,11 @@ fn a_cap_clearance_a_hair_under_the_rule_is_accepted_not_refused() {
     assert_eq!(f.per_tank_volume_m3, 500.0000000634015);
     assert_eq!((f.n_tanks, f.candidates_tried), (2, 1));
     assert_eq!(f.binding, "volume");
-    assert!(f.feasible && f.failed_checks.is_empty());
+    // Issue #448: on the hull's sections the Light condition's GZ peaks below 25 degrees (IS Code
+    // 2008 Part A 2.2.3). Issue #498: with no ballast that criterion alone is a warning, so the
+    // arrangement is feasible and the clearance on the cap is accepted.
+    assert!(f.feasible, "{:?}", f.failed_checks);
+    assert!(f.failed_checks.is_empty(), "{:?}", f.failed_checks);
 }
 
 // --- Issue #175: tank outer diameter cap and length over diameter, under both IGC rulesets ---
@@ -282,9 +290,13 @@ fn no_feasible_fit_has_a_tank_longer_than_seven_diameters() {
         }
     }
     // Issue #410: with the covering above D in the lightship some wide hulls fail stability, so
-    // the sweep accepts 20 hulls (it accepted more than 20). The guard only proves the sweep is
-    // not empty.
-    assert!(accepted >= 15, "only {accepted} accepted");
+    // the sweep accepts 20 hulls (it accepted more than 20). Issue #448: on the hull's sections
+    // more wide shallow hulls fail the angle of maximum GZ in the Light condition (#498), so it
+    // accepts 11. The guard only proves the sweep is not empty.
+    assert!(
+        accepted >= 10,
+        "only {accepted} accepted ({refused_for_slenderness} refused)"
+    );
     assert!(
         refused_for_slenderness > 5,
         "only {refused_for_slenderness} refused"
@@ -304,8 +316,9 @@ fn no_feasible_fit_has_a_tank_longer_than_seven_diameters() {
 //  - the real code therefore moves `lo` up to 35 and can only return a length above 35 m;
 //  - the mutant would move `hi` down to 35 and keep halving towards 10 m, so it could only return
 //    a length at most 35 m (it would stop at 10.1 m).
-// The answer must lie above the last length known to have zero capacity (35 m) and at most the
-// first length known to have capacity (40 m, asserted below).
+// The answer must lie above the last length known to have zero capacity (35 m). Since issue #264 a
+// viable length must also pass every check, stability included, so a length with capacity (40 m,
+// asserted below) need not be viable: on the hull's sections (issue #448) the answer is above it.
 #[test]
 fn the_bisection_treats_a_zero_capacity_midpoint_as_not_viable() {
     let o = FitOptions::for_smallest_viable_loa();
@@ -318,7 +331,7 @@ fn the_bisection_treats_a_zero_capacity_midpoint_as_not_viable() {
     assert!(cap(40.0) > 0.0);
     assert!(cap(60.0) > 0.0);
     let loa = smallest_viable_loa(12.0, "LNG", 3.0, 10.0, 60.0, &o).unwrap();
-    assert!(loa > 35.0 && loa <= 40.0, "got {loa}");
+    assert!(loa > 35.0 && loa <= 60.0, "got {loa}");
     assert!(cap(loa) > 0.0);
 }
 
@@ -411,11 +424,12 @@ fn a_full_volume_check_does_not_remove_a_de_rated_candidate() {
     // Issue #418 (maintainer decision): `freeboard_ok` and `not_overloaded` test the full tank
     // volume. A candidate carries only its de-rated payload, so they do not gate the search; the
     // carried draught is gated by `freeboard_at_payload`. A 6.5 m hull at a 2.0 m draught cap, with
-    // a 4.45 m required freeboard: the payload keeps 4.50 m, the full volume misses it, and the
+    // a 4.49 m required freeboard: the payload keeps 4.50 m, the full volume misses it (4.48 m on
+    // the hull's sections, issue #448; the required freeboard was 4.45 m on the Cb box), and the
     // arrangement passes.
     let o = FitOptions {
         depths: vec![6.5],
-        required_freeboard_m: 4.45,
+        required_freeboard_m: 4.49,
         ..FitOptions::default()
     };
     let f = fit(90.0, 14.8, "LPG_propane", 2.0, &o).unwrap();
@@ -429,11 +443,11 @@ fn a_full_volume_check_does_not_remove_a_de_rated_candidate() {
     assert!(!full.ok, "{}", full.message);
     // The full-volume check reads the user's freeboard, not a hidden 0.3 m.
     assert!(
-        full.message.to_string().contains("required 4.45"),
+        full.message.to_string().contains("required 4.49"),
         "{}",
         full.message
     );
-    assert!(f.depth_m - f.draft_at_payload_m >= 4.45 - 1e-9);
+    assert!(f.depth_m - f.draft_at_payload_m >= 4.49 - 1e-9);
 }
 
 #[test]

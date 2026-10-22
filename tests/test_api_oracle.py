@@ -124,6 +124,15 @@ KNOWN_DIFFERENCES: dict = {
     "hydrostatics.calculate_trim": "issue #410: the hull steel to D and the covering above D in the lightship",
     "edited.trim_with_raked_hull": "issue #410: the hull steel to D and the covering above D in the lightship",
     "edited.weights_with_doubled_tank_shells": "issue #410: the hull steel to D and the covering above D in the lightship",
+    # Issue #448: the hydrostatics come from the hull's Sections Table (the raked bow, the Stern
+    # Form), not from Cb x L x B x T; the block coefficient is a result, not an input. The draughts
+    # and so the derated tonnage move. The gas, capacity and stability scenarios above move again.
+    "hydrostatics.find_equilibrium_draft": "issue #448: the draught comes from the hull's sections; "
+                                           "Cb does not scale the volume",
+    "journey_derating.compute": "issue #448: the draught comes from the hull's sections",
+    "edited.journey_with_other_capacity": "issue #448: the draught comes from the hull's sections",
+    "edited.journey_with_rebuilt_result": "issue #448: the draught comes from the hull's sections",
+    "reuse.journey_over_a_sweep": "issue #448: the draught comes from the hull's sections",
 }
 
 # Keys added to inputs and results after 0.1.0, with the issue that added them. They are dropped

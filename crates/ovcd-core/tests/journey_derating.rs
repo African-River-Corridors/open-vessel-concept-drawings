@@ -21,11 +21,13 @@ fn a_shallow_channel_is_draft_bound_and_warns() {
     let r = compute(&i).unwrap();
     assert_eq!(r.binding_limit, "draft");
     assert_eq!(r.t_max_m, 1.75);
-    assert_eq!(r.achievable_tonnage_t, 829.5246000318816);
+    // Re-pinned (#448); was 829.5246000318816.
+    assert_eq!(r.achievable_tonnage_t, 1019.9246000318817);
+    // Re-pinned (#448); was shed 3881 t, full-load draft 4.60 m.
     assert_eq!(
         r.warnings,
         [
-            "Draft-bound: shed 3881 t of 4711 t volume capacity to float at T_max = 1.75 m (full-load draft 4.60 m)."
+            "Draft-bound: shed 3691 t of 4711 t volume capacity to float at T_max = 1.75 m (full-load draft 4.17 m)."
         ]
     );
     assert!(r.ok());
@@ -139,5 +141,6 @@ fn water_density_scales_the_displacement_in_a_draft_bound_run() {
     i.ukc_m = 0.5;
     i.water_density = 1.025;
     let r = compute(&i).unwrap();
-    assert_eq!(r.achievable_tonnage_t, 889.0246000318816);
+    // Re-pinned (#448); was 889.0246000318816.
+    assert_eq!(r.achievable_tonnage_t, 1084.1846000318815);
 }

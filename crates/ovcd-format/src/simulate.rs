@@ -21,6 +21,7 @@ use ovcd_core::checks::Check;
 use ovcd_core::gas_arrangement::{self as ga, DEFAULT_DEPTHS_M, FitOptions, RULESETS};
 use ovcd_core::gas_separation::GasSeparationInputs;
 use ovcd_core::gas_stability::{self as gs, GasCapacityResult};
+use ovcd_core::hydrostatics::{Hull, HullSpec};
 use ovcd_core::pyfmt::py_str;
 use ovcd_core::pystr::{parse_float, repr_str};
 use ovcd_core::resistance::{self, EnvironmentInputs, ResistanceInputs, TugInputs};
@@ -133,6 +134,14 @@ fn truthy_float(p: &Map<String, Value>, key: &str) -> R<Option<f64>> {
     }
 }
 
+/// A number param that may be left out or null (`None`); 0 is a number.
+fn opt_float(p: &Map<String, Value>, key: &str) -> R<Option<f64>> {
+    match p.get(key) {
+        None | Some(Value::Null) => Ok(None),
+        Some(v) => Ok(Some(py_float(v, &format!("params.{key}"))?)),
+    }
+}
+
 /// Python `min(items, key=value)`: the first of equal values (NaN never replaces the first).
 fn min_item(items: &[(&str, f64)]) -> (String, f64) {
     let mut best = items[0];
@@ -142,17 +151,6 @@ fn min_item(items: &[(&str, f64)]) -> (String, f64) {
         }
     }
     (best.0.to_string(), best.1)
-}
-
-/// Python float `a / b`: a zero divisor raises `ZeroDivisionError`.
-fn py_div(a: f64, b: f64) -> R<f64> {
-    if b == 0.0 {
-        return Err(Stop::Raised(
-            "ZeroDivisionError".to_string(),
-            "float division by zero".to_string(),
-        ));
-    }
-    Ok(a / b)
 }
 
 // Mutation survivors (#64), `>` to `>=` in `py_max` and `<` to `<=` in `py_min`: equivalent. They
@@ -287,11 +285,11 @@ fn curves(
     l: f64,
     b: f64,
     t: f64,
-    (cb, extra_wetted_m2): (f64, f64),
+    (h, extra_wetted_m2): (HullAt, f64),
     disp: f64,
     rho: f64,
 ) -> R<(Value, Option<resistance::ResistanceResults>)> {
-    let Some(rr) = resistance_of(p, l, b, t, (cb, extra_wetted_m2), disp, rho)? else {
+    let Some(rr) = resistance_of(p, l, b, t, (h, extra_wetted_m2), disp, rho)? else {
         return Ok((json!([]), None));
     };
     let list = Value::Array(
@@ -323,7 +321,7 @@ fn resistance_of(
     l: f64,
     b: f64,
     t: f64,
-    (cb, extra_wetted_m2): (f64, f64),
+    (h, extra_wetted_m2): (HullAt, f64),
     disp: f64,
     rho: f64,
 ) -> R<Option<resistance::ResistanceResults>> {
@@ -359,7 +357,8 @@ fn resistance_of(
             ),
         );
     }
-    if t <= 0.0 {
+    // Issue #448: a draught so small that nothing is immersed has no waterline either.
+    if t <= 0.0 || h.lwl <= 0.0 {
         return Ok(None);
     }
     // Mutation survivors (#64), deleting one of these fields below: equivalent, each for its own
@@ -370,17 +369,20 @@ fn resistance_of(
     // curve is not cut by it.
     let inputs = ResistanceInputs {
         loa: l,
-        lwl: l,
+        // Issue #448: the hull's waterline length, Cb and midship section.
+        lwl: h.lwl,
         beam: b,
         draft: t,
-        block_coefficient: cb,
-        // Issue #425: Am = B x T x Cm.
+        block_coefficient: h.cb,
+        // Issue #425: Am = B x T x Cm where no hull section is given; issue #448: a Design gives
+        // the hull's own midship area below, so it is the sections'.
         midship_coefficient: get_or(
             p,
             "midship_coefficient",
             ovcd_core::confined_water::DEFAULT_MIDSHIP_COEFFICIENT,
         )?,
         displacement_tonnes: disp,
+        midship_area_m2: Some(h.midship_m2),
         tug: TugInputs {
             engine_power_kw: 1e6,
             propulsive_efficiency: get_or(p, "eta_d", 0.45)?,
@@ -1020,7 +1022,10 @@ fn simulate_measured(
     let t_design = design_draught(p, d)?;
     let stern_geometry = stern_of(p, (l, b, d), t_design, self_propelled)?;
     let stern = stern_geometry.as_ref();
-    let cb = cb_of(p, stern, (l, b, d), t_design)?;
+    // Issue #448: the hull as its Sections Table. Its Cb at the design draught is the one the IGC
+    // 4.28.2 vertical acceleration of a gas tank reads.
+    let hull = option_hull(p, (l, b, d), stern)?;
+    let cb = hull_at(&hull, t_design, rho)?.cb;
     if vessel_id == "gas_barge" {
         return simulate_gas(
             p,
@@ -1028,7 +1033,7 @@ fn simulate_measured(
             cargo,
             cargo_key,
             (l, b, d),
-            (cb, rho),
+            (&hull, cb, rho),
             (self_propelled, stern),
             rules,
         )
@@ -1057,6 +1062,10 @@ fn simulate_measured(
     )?;
     inp.pushed_stern_void_m = get_or(p, "pushed_stern_void_m", inp.pushed_stern_void_m)?;
     inp.bulk_end_bulkhead_m = get_or(p, "bulk_end_bulkhead_m", inp.bulk_end_bulkhead_m)?;
+    // Issue #448: the same bow as the Option's hull, so the capacity works on that hull.
+    let (rake_length, rake_rise) = bow_rake_of(p, d)?;
+    inp.bow_rake_length_m = Some(rake_length);
+    inp.bow_rake_rise_m = Some(rake_rise);
     inp.aft_design = aft_design_of(p)?;
     inp.stern_block_mass = stern_mass_of(p)?;
     inp.stern_geometry = stern.cloned();
@@ -1068,7 +1077,7 @@ fn simulate_measured(
         stern,
         (l, b, d),
         t_design,
-        (cb, rho),
+        (&hull, rho),
     )?;
     inp.sightline_limit_m = sightline_limit_of(p, self_propelled);
     // The hold design values. A key left out keeps the core default, which is the value the engine
@@ -1112,19 +1121,20 @@ fn simulate_measured(
     }
     let (lim_name, t_max) = min_item(&limits);
     let ls = r.lightship_t;
-    let disp_max = cb * l * b * t_max * rho;
+    // Issue #448: the displacement at the draught cap, from the sections (level).
+    let disp_max = hull.volume_at(py_min(t_max, d)) * rho;
     let cargo_volume_bound = r.cargo_capacity_t;
     // Issue #426: with the IS Code conditions the full load carries the stores and fuel, so the
     // weight-bound cargo is that much less. The fuel is worked out at the full-load draught
     // without them.
     let consumables_t = if is_code(p) {
         let disp0 = ls + py_min(cargo_volume_bound, py_max(0.0, disp_max - ls));
-        let t0 = py_div(disp0, cb * l * b * rho)?;
+        let t0 = level_draught(&hull, disp0, rho)?;
         let extra = stern.map_or(0.0, |g| g.extra_wetted_surface(t0));
         consumables_full_t(
             p,
             self_propelled,
-            &curves(p, l, b, t0, (cb, extra), disp0, rho)?.0,
+            &curves(p, l, b, t0, (hull_at(&hull, t0, rho)?, extra), disp0, rho)?.0,
         )?
     } else {
         0.0
@@ -1155,7 +1165,19 @@ fn simulate_measured(
     measured.deadweight_t = Some(deadweight);
     // Issue #337: the liquid bulk layout, for the liquid Measures.
     measured.liquid = r.liquid.clone();
-    let t = py_div(disp, cb * l * b * rho)?;
+    // Issue #448: Cb and the hydrostatics at the laden level draught; the reported draught is the
+    // one at mid-length of the free-trim float when the hull has LCG data (a dry bulk hull with
+    // its stern block mass), with the deadweight at the middle of the hold zone.
+    let t_level = level_draught(&hull, disp, rho)?;
+    let laden = hull_at(&hull, t_level, rho)?;
+    let (hydrostatics, hydrostatic_table) = hydrostatics_json(&hull, t_level, rho)?;
+    let t = if phase == CargoClass::DryBulk {
+        barge_capacity::bulk_float_draught_at(&inp, &r, deadweight, &hull)
+            .map_err(|e| Stop::Raised(e.kind.to_string(), e.message))?
+            .unwrap_or(t_level)
+    } else {
+        t_level
+    };
     let h_top = r.air_draft_top_above_keel_m;
 
     let mut checks = vec![json!({
@@ -1174,17 +1196,20 @@ fn simulate_measured(
         .cloned()
         .collect();
     let mut warnings = r.warnings.clone();
-    if phase == CargoClass::DryBulk && t > 0.0 && t <= d {
-        let g = barge_capacity::bulk_gm_at(&inp, &r, cargo_t, t);
+    // `laden.lwl` is 0 when nothing is immersed, even at a draught of a few times 1e-324 m.
+    if phase == CargoClass::DryBulk && t_level > 0.0 && laden.lwl > 0.0 && t_level <= d {
+        // KM_T of the upright cut that displaces the load.
+        let g = barge_capacity::bulk_gm_at(&inp, &r, cargo_t, t_level, &hull)
+            .map_err(|e| Stop::Raised(e.kind.to_string(), e.message))?;
         capacity.push(Check::with_severity(
             "intact_gm_at_reported_cargo",
             g >= 0.15,
             text!(
                 "check-intact-gm-reported-cargo",
-                "intact GM {gm} m >= 0.15 m at the reported cargo {cargo} t, draught {draught} m (first-order box; cargo KG of the full hold; KG_light @0.5D)",
+                "intact GM {gm} m >= 0.15 m at the reported cargo {cargo} t, draught {draught} m (first-order; cargo KG of the full hold; KG_light @0.5D)",
                 gm = Arg::fixed(g, 2),
                 cargo = Arg::fixed(cargo_t, 0),
-                draught = Arg::fixed(t, 2),
+                draught = Arg::fixed(t_level, 2),
             ),
             "warning",
         ));
@@ -1201,7 +1226,7 @@ fn simulate_measured(
         l,
         b,
         t,
-        (cb, stern.map_or(0.0, |g| g.extra_wetted_surface(t))),
+        (laden, stern.map_or(0.0, |g| g.extra_wetted_surface(t))),
         disp,
         rho,
     )?;
@@ -1243,7 +1268,7 @@ fn simulate_measured(
                 p,
                 &IsCodeHull {
                     dims: (l, b, d),
-                    cb,
+                    hull: &hull,
                     rho,
                     criteria_set: gs::DEFAULT_CRITERIA_SET,
                     lightship: &lightship,
@@ -1253,11 +1278,10 @@ fn simulate_measured(
                     consumables_t,
                     air_draft_top_m: h_top,
                     self_propelled,
-                    stern,
                     slack_candidates_t: &slack,
                 },
             )?;
-            loading_condition_checks(&conds, "warning", &mut checks, &mut ids);
+            loading_condition_checks(&conds, "warning", false, &mut checks, &mut ids);
             is_code_stability = is_code_stability_json(&conds, true, &mut ids);
             loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho, true);
             // The liquid conditions stay out of the Rule Trace until the liquid Rule Sets exist: the
@@ -1285,7 +1309,7 @@ fn simulate_measured(
             p,
             &IsCodeHull {
                 dims: (l, b, d),
-                cb,
+                hull: &hull,
                 rho,
                 criteria_set: gs::DEFAULT_CRITERIA_SET,
                 lightship: &lightship,
@@ -1295,11 +1319,10 @@ fn simulate_measured(
                 consumables_t,
                 air_draft_top_m: h_top,
                 self_propelled,
-                stern,
                 slack_candidates_t: &[],
             },
         )?;
-        loading_condition_checks(&conds, "warning", &mut checks, &mut ids);
+        loading_condition_checks(&conds, "warning", false, &mut checks, &mut ids);
         is_code_stability = is_code_stability_json(&conds, false, &mut ids);
         loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho, false);
         // The dry bulk conditions stay out of the Rule Trace: the IS Code Rule Set would block a
@@ -1336,7 +1359,9 @@ fn simulate_measured(
                         "phase": cargo.phase.key(),
                         "self_propelled": self_propelled,
                         "arrangement": Value::Null,
-                        "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(cb) },
+                        "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(if t > 0.0 { laden.cb } else { cb }) },
+                        "hydrostatics": hydrostatics,
+                        "hydrostatic_table": hydrostatic_table,
                         "geometry": geo,
                         "drawing": drawing,
                         "results": {
@@ -1566,15 +1591,17 @@ fn size_installed_power(
     stern: Option<&ovcd_core::stern_form::SternGeometry>,
     (l, b, _d): (f64, f64, f64),
     t_design: f64,
-    (cb, rho): (f64, f64),
+    (hull, rho): (&Hull, f64),
 ) -> R<()> {
     use ovcd_core::machinery::PowerSource;
     let Some(m) = machinery else {
         return Ok(());
     };
     let extra = stern.map_or(0.0, |g| g.extra_wetted_surface(t_design));
-    let disp = cb * l * b * t_design * rho;
-    let Some(rr) = resistance_of(p, l, b, t_design, (cb, extra), disp, rho)? else {
+    // Issue #448: the displacement at the design draught, from the sections.
+    let disp = hull.volume_at(t_design) * rho;
+    let h = hull_at(hull, t_design, rho)?;
+    let Some(rr) = resistance_of(p, l, b, t_design, (h, extra), disp, rho)? else {
         return Ok(());
     };
     let pw = ovcd_core::powering::compute(
@@ -1725,34 +1752,135 @@ fn machinery_of(
     }))
 }
 
-/// The block coefficient (issue #350): as the params give it; null asks for the rule, the volume
-/// of the raked box (today's bow rake and the Stern Form) at the design draught over L x B x T,
-/// or 0.85 with no Stern Form, the value the engine always used.
-fn cb_of(
-    p: &Map<String, Value>,
-    stern: Option<&ovcd_core::stern_form::SternGeometry>,
-    (l, b, d): (f64, f64, f64),
-    t: f64,
-) -> R<f64> {
-    match p.get("cb") {
-        Some(Value::Null) => match stern {
-            Some(g) if t > 0.0 => {
-                let rake = get_or(
-                    p,
-                    "bow_rake_length_to_depth_ratio",
-                    ovcd_core::barge_capacity::DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
-                )? * d;
-                let hull = ovcd_core::hull::HullGeometry::new(l, b, d, rake, d, 0.0, 0.0);
-                Ok((hull.displaced_volume(t) - g.removed(t).0) / (l * b * t))
-            }
-            _ => Ok(DEFAULT_BLOCK_COEFFICIENT),
-        },
-        _ => need(p, "cb"),
-    }
+/// The bow rake of the Option (issue #448, as `barge_capacity` takes it): `bow_rake_length_m`, else
+/// the ratio x depth; it rises to `bow_rake_rise_m`, else the depth.
+fn bow_rake_of(p: &Map<String, Value>, d: f64) -> R<(f64, f64)> {
+    let ratio = get_or(
+        p,
+        "bow_rake_length_to_depth_ratio",
+        ovcd_core::barge_capacity::DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
+    )?;
+    let length = opt_float(p, "bow_rake_length_m")?.unwrap_or(ratio * d);
+    let rise = opt_float(p, "bow_rake_rise_m")?.unwrap_or(d);
+    Ok((length, rise))
 }
 
-/// The block coefficient the engine used before it had a rule.
-const DEFAULT_BLOCK_COEFFICIENT: f64 = 0.85;
+/// The hull of the Option as its Sections Table (issue #448): the raked bow and the Stern Form.
+fn option_hull(
+    p: &Map<String, Value>,
+    (l, b, d): (f64, f64, f64),
+    stern: Option<&ovcd_core::stern_form::SternGeometry>,
+) -> R<Hull> {
+    let (length, rise) = bow_rake_of(p, d)?;
+    Hull::build(&HullSpec {
+        loa: l,
+        beam: b,
+        depth: d,
+        bow_rake_length_m: length,
+        bow_rake_rise_m: rise,
+        stern: stern.cloned(),
+    })
+    .map_err(|e| Stop::Raised("ValueError".to_string(), format!("{e}")))
+}
+
+/// What the resistance and squat read from the hull at a draught (issue #448): Cb = ∇ / (L_WL
+/// B_WL T), the waterline length and the midship section area.
+#[derive(Clone, Copy)]
+struct HullAt {
+    cb: f64,
+    lwl: f64,
+    midship_m2: f64,
+}
+
+fn hull_at(hull: &Hull, t: f64, rho: f64) -> R<HullAt> {
+    let none = HullAt {
+        cb: 0.0,
+        lwl: 0.0,
+        midship_m2: 0.0,
+    };
+    if t <= 0.0 {
+        // No draught: nothing to read (the resistance has no curve then).
+        return Ok(none);
+    }
+    let u = match hull.upright(t, rho) {
+        Ok(u) => u,
+        // A draught so small that nothing is immersed (a few times 1e-324 m): as no draught.
+        Err(ovcd_core::sections::SectionsError::NotAfloat) => return Ok(none),
+        Err(e) => return Err(Stop::Raised("ValueError".to_string(), e.to_string())),
+    };
+    Ok(HullAt {
+        cb: u.cb,
+        lwl: u.immersed.l_wl_m,
+        midship_m2: u.immersed.midship_area_m2,
+    })
+}
+
+/// The upright hydrostatics of one draught, as the results give them (issue #448).
+fn upright_json(u: &ovcd_core::sections::Upright) -> Value {
+    let im = &u.immersed;
+    json!({
+        "draught_m": num(u.draught_m),
+        "volume_m3": num(im.volume_m3),
+        "displacement_t": num(u.displacement_t),
+        "kb_m": num(im.kb_m),
+        "lcb_m": num(im.lcb_m),
+        "bm_t_m": num(u.bm_t_m),
+        "bm_l_m": num(u.bm_l_m),
+        "km_t_m": num(u.km_t_m),
+        "km_l_m": num(u.km_l_m),
+        "waterplane_area_m2": num(im.waterplane_area_m2),
+        "lcf_m": num(im.lcf_m),
+        "l_wl_m": num(im.l_wl_m),
+        "b_wl_m": num(im.b_wl_m),
+        "midship_area_m2": num(im.midship_area_m2),
+        "wetted_surface_m2": num(im.wetted_surface_m2),
+        "tpc_t": num(u.tpc_t),
+        "mct_1cm_tm": num(u.mct_1cm_tm),
+        "cb": num(u.cb),
+        "cm": num(u.cm),
+        "cp": num(u.cp),
+        "cwp": num(u.cwp),
+    })
+}
+
+/// The results' `hydrostatics` (the upright values at the laden draught, level; null with no
+/// draught) and `hydrostatic_table` (10 draughts, 0.1 D to D) of a hull (issue #448).
+fn hydrostatics_json(hull: &Hull, t: f64, rho: f64) -> R<(Value, Value)> {
+    let raised = |e: ovcd_core::sections::SectionsError| {
+        Stop::Raised("ValueError".to_string(), e.to_string())
+    };
+    let at = if t > 0.0 {
+        match hull.upright(t, rho) {
+            Ok(u) => upright_json(&u),
+            // A draught so small that nothing is immersed: as no draught.
+            Err(ovcd_core::sections::SectionsError::NotAfloat) => Value::Null,
+            Err(e) => return Err(raised(e)),
+        }
+    } else {
+        Value::Null
+    };
+    let table = hull.hydrostatic_table(rho).map_err(raised)?;
+    Ok((at, Value::Array(table.iter().map(upright_json).collect())))
+}
+
+/// The level draught at which the hull displaces `mass_t` (issue #448); the depth when the whole
+/// hull cannot float it, and 0 with no mass.
+fn level_draught(hull: &Hull, mass_t: f64, rho: f64) -> R<f64> {
+    if mass_t <= 0.0 {
+        return Ok(0.0);
+    }
+    if rho == 0.0 {
+        return Err(Stop::Raised(
+            "ZeroDivisionError".to_string(),
+            "float division by zero".to_string(),
+        ));
+    }
+    if mass_t / rho >= hull.volume_at(hull.spec.depth) {
+        return Ok(hull.spec.depth);
+    }
+    hull.level_draught(mass_t, rho)
+        .map_err(|e| Stop::Raised("ValueError".to_string(), e.to_string()))
+}
 
 /// The Stern Form in the results' `geometry` (issue #350), only when there is one: a square stern
 /// adds no field. `stern_rake_length_m` is the run of a transom or pram stern, which the drawings
@@ -1894,7 +2022,7 @@ fn simulate_gas(
     cargo: &CargoProperties,
     cargo_key: &str,
     (l, b, d0): (f64, f64, f64),
-    (cb, rho): (f64, f64),
+    (hull, cb, rho): (&Hull, f64, f64),
     (self_propelled, stern): (bool, Option<&ovcd_core::stern_form::SternGeometry>),
     rules: &RunRules,
 ) -> R<(Value, Measured)> {
@@ -1973,7 +2101,7 @@ fn simulate_gas(
         stern,
         (l, b, d0),
         design_draught(p, d0)?,
-        (cb, rho),
+        (hull, rho),
     )?;
     // Issue #426: with the IS Code conditions the full load carries the stores and fuel. The fuel
     // is worked out at the design draught, the full-load draught the installed power is sized at,
@@ -1981,12 +2109,21 @@ fn simulate_gas(
     let is_code_options = if is_code(p) {
         let t_design = design_draught(p, d0)?;
         let extra = stern.map_or(0.0, |g| g.extra_wetted_surface(t_design));
-        let disp = cb * l * b * t_design * rho;
+        let disp = hull.volume_at(t_design) * rho;
         Some(ga::IsCodeConditions {
             consumables_t: consumables_full_t(
                 p,
                 self_propelled,
-                &curves(p, l, b, t_design, (cb, extra), disp, rho)?.0,
+                &curves(
+                    p,
+                    l,
+                    b,
+                    t_design,
+                    (hull_at(hull, t_design, rho)?, extra),
+                    disp,
+                    rho,
+                )?
+                .0,
             )?,
             may_sail_without_ballast: may_sail_without_ballast(p, self_propelled),
             user_ballast: user_ballast(p)?,
@@ -2011,6 +2148,9 @@ fn simulate_gas(
             "bow_rake_length_to_depth_ratio",
             ovcd_core::barge_capacity::DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
         )?,
+        // Issue #448: a typed bow rake and rise hold for every candidate depth.
+        bow_rake_length_m: opt_float(p, "bow_rake_length_m")?,
+        bow_rake_rise_m: opt_float(p, "bow_rake_rise_m")?,
         pushed_stern_void_m: get_or(
             p,
             "pushed_stern_void_m",
@@ -2072,6 +2212,13 @@ fn simulate_gas(
         .map_err(|e| Stop::Raised(e.kind.to_string(), e.message))?;
     let r = &f.engine_result;
     let d = f.depth_m;
+    // Issue #448: the hull of the arrangement found, as its sections.
+    let fit_hull = match &r.hull_spec {
+        Some(spec) => {
+            Hull::build(spec).map_err(|e| Stop::Raised("ValueError".to_string(), format!("{e}")))?
+        }
+        None => hull.clone(),
+    };
     let t = if f.payload_t > 0.0 {
         f.draft_at_payload_m
     } else {
@@ -2089,7 +2236,7 @@ fn simulate_gas(
         let cargo = ga::is_code_cargo(r, f.payload_t, l, b, t_max, &options, ic);
         let disp = r.lightship_t + cargo + consumables_t;
         let t = if cargo > 0.0 {
-            py_div(disp, cb * l * b * rho)?
+            level_draught(&fit_hull, disp, rho)?
         } else {
             t
         };
@@ -2097,6 +2244,14 @@ fn simulate_gas(
     } else {
         (f.payload_t, disp, t)
     };
+    // Issue #448: Cb in the results is the hull's at the laden level draught (no cargo: at the
+    // design draught).
+    let laden_cb = if t > 0.0 {
+        hull_at(&fit_hull, t, rho)?.cb
+    } else {
+        cb
+    };
+    let (hydrostatics, hydrostatic_table) = hydrostatics_json(&fit_hull, t, rho)?;
     let deadweight = if is_code(p) {
         cargo_t + consumables_t
     } else {
@@ -2166,17 +2321,18 @@ fn simulate_gas(
         let tanks = ovcd_core::compartments::ballast_tanks(&f.engine_inputs, r);
         let conds = ga::is_code_conditions(r, &f.engine_inputs, cargo_t, &options, ic)
             .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))?;
-        loading_condition_checks(&conds, "error", &mut checks, &mut ids);
+        let warns = ga::light_angle_warns(&options.rules);
+        loading_condition_checks(&conds, "error", warns, &mut checks, &mut ids);
         is_code_stability = is_code_stability_json(&conds, false, &mut ids);
         loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho, false);
         conditions = conds.iter().map(|c| c.condition.clone()).collect();
     } else if f.payload_t > 0.0 && r.gas_basis.is_some() {
         let basis = GasCapacityResult::try_from(r)
             .map_err(|m| Stop::Eval(EvalError::BadInput(m.into())))?;
-        let a = gs::assess(&basis, f.payload_t, cb, rho, gs::criteria_set_for(ruleset))
+        let a = gs::assess(&basis, f.payload_t, rho, gs::criteria_set_for(ruleset))
             .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))?;
         for c in &a.conditions {
-            let k = ga::stability_check(c);
+            let k = ga::gas_stability_check(c, ga::light_angle_warns(&options.rules));
             ids.checks(core::slice::from_ref(&k));
             checks.push(json!({
                 "name": k.name,
@@ -2210,7 +2366,10 @@ fn simulate_gas(
         l,
         b,
         t,
-        (cb, stern.map_or(0.0, |g| g.extra_wetted_surface(t))),
+        (
+            hull_at(&fit_hull, t, rho)?,
+            stern.map_or(0.0, |g| g.extra_wetted_surface(t)),
+        ),
         disp,
         rho,
     )?;
@@ -2260,7 +2419,9 @@ fn simulate_gas(
             "cargo": cargo.name,
             "phase": cargo.phase.key(),
             "self_propelled": self_propelled,
-            "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(cb) },
+            "dims": { "loa_m": num(l), "beam_m": num(b), "depth_m": num(d), "cb": num(laden_cb) },
+            "hydrostatics": hydrostatics,
+            "hydrostatic_table": hydrostatic_table,
             "geometry": geo,
             "drawing": drawing,
             "arrangement": {
@@ -2513,7 +2674,8 @@ fn may_sail_without_ballast(p: &Map<String, Value>, self_propelled: bool) -> boo
 /// What the IS Code conditions of one Option need beyond its params.
 struct IsCodeHull<'a> {
     dims: (f64, f64, f64),
-    cb: f64,
+    /// Issue #448: the hull's sections.
+    hull: &'a Hull,
     rho: f64,
     criteria_set: &'a str,
     lightship: &'a [ovcd_core::loading_conditions::Item],
@@ -2523,7 +2685,6 @@ struct IsCodeHull<'a> {
     consumables_t: f64,
     air_draft_top_m: f64,
     self_propelled: bool,
-    stern: Option<&'a ovcd_core::stern_form::SternGeometry>,
     /// The cargo masses the worst slack condition is searched over (liquid bulk); empty for none.
     slack_candidates_t: &'a [f64],
 }
@@ -2546,7 +2707,7 @@ fn is_code_conditions(
         loa: l,
         beam: b,
         depth: d,
-        block_coefficient: h.cb,
+        hull: h.hull,
         water_density: h.rho,
         criteria_set: h.criteria_set,
         lightship: h.lightship,
@@ -2559,7 +2720,6 @@ fn is_code_conditions(
         may_sail_without_ballast: may_sail,
         air_draft_top_m: h.air_draft_top_m,
         air_draft_limit_m: truthy_float(p, "air_draft_limit_m")?,
-        stern: h.stern,
     };
     let raised = |e: gs::PyError| Stop::Raised(e.type_name().to_string(), e.message().to_string());
     let mut conds = lc::assess(&inputs).map_err(raised)?;
@@ -2670,11 +2830,28 @@ fn loading_conditions_json(
 fn loading_condition_checks(
     conds: &[ovcd_core::loading_conditions::LoadedCondition],
     severity: &str,
+    light_angle_warns: bool,
     checks: &mut Vec<Value>,
     ids: &mut TextIds,
 ) {
-    for k in conds.iter().flat_map(ga::loading_condition_checks) {
+    // Issue #498: a gas Design ("error") downgrades the angle of max GZ alone in the light condition;
+    // a dry-bulk one (its checks are warnings) keeps its checks as they were.
+    let listed: Vec<ovcd_core::checks::Check> = if severity == "error" {
+        ga::loading_condition_checks_of(conds, light_angle_warns)
+    } else {
+        conds
+            .iter()
+            .flat_map(ga::loading_condition_checks)
+            .collect()
+    };
+    for k in listed {
         ids.checks(core::slice::from_ref(&k));
+        // A warning of the check stays a warning (issue #498: the angle of maximum GZ with no ballast).
+        let severity = if k.severity == "warning" {
+            "warning"
+        } else {
+            severity
+        };
         checks.push(
             json!({ "name": k.name, "ok": k.ok, "message": k.message, "severity": severity }),
         );
@@ -2697,7 +2874,7 @@ fn is_code_stability_json(
     let limitations = vec![
         text!(
             "stab-limit-concept-stage",
-            "Concept-stage: prismatic box section, first-order weight heights, no downflooding openings."
+            "Concept-stage: the hull's sections, first-order weight heights, no downflooding openings."
         ),
         text!(
             "stab-limit-no-wind-or-damage",

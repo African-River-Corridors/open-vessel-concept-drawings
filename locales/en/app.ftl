@@ -189,6 +189,20 @@ app-metric-bollard-pull = Bollard pull
 app-metric-service-speed-deep = Service speed, deep water
 app-metric-service-speed-channel = Service speed, channel
 app-metric-battery-energy = Battery energy
+app-metric-block-coefficient = Block coefficient (Cb)
+app-metric-midship-coefficient = Midship coefficient (Cm)
+app-metric-prismatic-coefficient = Prismatic coefficient (Cp)
+app-metric-waterplane-coefficient = Waterplane coefficient (Cwp)
+app-metric-waterline-length = Waterline length
+app-metric-kb = Centre of buoyancy above keel (KB)
+app-metric-bm-transverse = Transverse metacentric radius (BM)
+app-metric-km-transverse = Transverse metacentre above keel (KM)
+app-metric-lcb = Centre of buoyancy from aft end (LCB)
+app-metric-lcf = Centre of flotation from aft end (LCF)
+app-metric-waterplane-area = Waterplane area
+app-metric-wetted-surface = Wetted surface
+app-metric-tpc = Tonnes per centimetre immersion
+app-metric-mct = Moment to change trim 1 cm
 
 ## Rule checks view
 

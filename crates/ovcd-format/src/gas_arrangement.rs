@@ -464,7 +464,8 @@ pub fn run_journey(function: &str, args: &Value) -> Result<Value, EvalError> {
     let o = object_arg(inputs, JOURNEY_INPUT_KEYS)?;
     let need = |name: &str| f64_arg(inputs, name);
     let mut i = JourneyDeratingInputs::new(&capacity, need("loa")?, need("beam")?, need("depth")?);
-    i.block_coefficient = float_or(o, "block_coefficient", i.block_coefficient)?;
+    // Issue #448: read, so a 0.1.0 call does not fail; the hull's sections give the displacement.
+    let _ = float_or(o, "block_coefficient", 0.85)?;
     i.water_density = float_or(o, "water_density", i.water_density)?;
     i.design_depth_m = float_or(o, "design_depth_m", i.design_depth_m)?;
     i.ukc_m = float_or(o, "ukc_m", i.ukc_m)?;

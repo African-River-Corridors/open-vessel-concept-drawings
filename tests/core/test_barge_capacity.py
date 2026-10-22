@@ -56,8 +56,9 @@ def test_gas_golden_example():
     assert abs(r.tank_outer_diameter_m - 7.05) < 0.05
     assert r.tank_outer_diameter_m <= 12.0 + 1e-9          # the rule itself
     assert abs(r.cargo_capacity_t - 1786) < 5
-    assert abs(r.full_load_draft_m - 2.64) < 0.02
-    assert abs(r.air_draft_m - 7.13) < 0.05
+    # Re-pinned (#448); were draught 2.64 m and air draft 7.13 m: the hull's sections, not Cb.
+    assert abs(r.full_load_draft_m - 2.43) < 0.02
+    assert abs(r.air_draft_m - 7.34) < 0.05
     assert abs(r.cargo_zone_length_m - 68.01) < 0.05
     assert r.ok and not r.overloaded
 
@@ -78,8 +79,9 @@ def test_bauxite_golden_example():
     r = _bauxite()
     assert r.phase == "dry_bulk"
     assert abs(r.cargo_capacity_t - 4711) < 5
-    assert abs(r.full_load_draft_m - 4.60) < 0.02
-    assert abs(r.air_draft_m - 4.80) < 0.05
+    # Re-pinned (#448); were draught 4.60 m and air draft 4.80 m: the hull's sections, not Cb.
+    assert abs(r.full_load_draft_m - 4.17) < 0.02
+    assert abs(r.air_draft_m - 5.23) < 0.05
     assert abs(r.cargo_zone_length_m - 69.51) < 0.05
     assert r.ok and not r.overloaded
 

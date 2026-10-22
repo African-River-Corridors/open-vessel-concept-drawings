@@ -49,7 +49,8 @@ def test_stability_uses_the_hull_it_is_given():
     s = HY.calculate_stability(RAKED, BI, TANKS, WEIGHTS, 2000.0, 0.58, 3.5)
     # Re-pinned (issue #413: the free surface takes the fill as a volume ratio; issue #410: hull
     # steel to D, the covering above D in the lightship); was 0.05969187822861491 at ce96e66.
-    assert s.GM_fluid == close(-0.7757945091720747)
+    # Re-pinned (#448: the raked hull's sections); was -0.7757945091720747.
+    assert s.GM_fluid == close(-0.641679990936286)
 
 
 def test_trim_uses_the_hull_it_is_given():
@@ -99,7 +100,8 @@ def test_a_result_rebuilt_with_replace_still_works():
     assert (d.cargo_capacity_t, d.achievable_tonnage_t) == close((4710.765684, 4710.765684))
     gas = dataclasses.replace(B.compute(GAS))
     # Re-pinned (issue #237); were (4.496070691510841, 6.706438965623047, 11.201087654316286) at ce96e66.
-    assert gm_fluid(gas) == close((4.447528112519484, 6.499494396532422, 10.72355412577273))
+    # Re-pinned (#448: the hull's sections); were (4.447528112519484, 6.499494396532422, 10.72355412577273).
+    assert gm_fluid(gas) == close((5.010972757840445, 7.1794700173060155, 11.60946081779351))
     assert ga_adapter.is_gas(gas) is True
 
 
@@ -109,6 +111,8 @@ def test_assess_uses_the_gas_basis_and_density_it_is_given():
     res.gas_basis["weights"].steel_top_down += 100.0
     # Re-pinned (issue #237); were (4.329311723992825, 6.3607094944568106, 10.35664347102438) and
     # (4.329311723992825, 6.416895514461225, 10.35664347102438) at ce96e66.
-    assert gm_fluid(res) == close((4.28684718522825, 6.172666462858952, 9.940701176338345))
+    # Re-pinned (#448: the hull's sections); were (4.28684718522825, 6.172666462858952,
+    # 9.940701176338345) and (4.28684718522825, 6.245181641069995, 9.940701176338345).
+    assert gm_fluid(res) == close((4.837941294106674, 6.8338499053915625, 10.78937027065406))
     res.cargo_density_t_per_m3 = 0.45
-    assert gm_fluid(res) == close((4.28684718522825, 6.245181641069995, 9.940701176338345))
+    assert gm_fluid(res) == close((4.837941294106674, 6.906365083602606, 10.78937027065406))

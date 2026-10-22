@@ -145,9 +145,14 @@ fn a_version_1_dry_bulk_file_gets_only_the_note_about_the_new_hold_inputs() {
     let checked = check(&legacy("v1_dry_bulk_box_hold"), &Profile::built_in());
     assert_eq!(checked.report.errors, Vec::<String>::new());
     let w = &checked.report.warnings;
-    assert_eq!(w.len(), 1, "{w:?}");
+    // Issue #448: and the stored block coefficient, now a result of the hull, is dropped.
+    assert_eq!(w.len(), 2, "{w:?}");
     assert!(
         has(w, "fixed value the engine used before it was an input"),
+        "{w:?}"
+    );
+    assert!(
+        has(w, "the block coefficient now comes from the hull shape"),
         "{w:?}"
     );
     assert!(!has(w, ADN) && !has(w, CAP) && !has(w, OD), "{w:?}");

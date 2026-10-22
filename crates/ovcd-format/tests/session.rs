@@ -445,7 +445,7 @@ fn a_hard_error_on_a_wrong_type_or_choice_is_kept_and_reported() {
     let mut s = starter();
     s.set_input("Option 1", "cargo_containment", json!("barn"))
         .unwrap();
-    s.set_input("Option 1", "block_coefficient", json!("wide"))
+    s.set_input("Option 1", "water_density_t_per_m3", json!("wide"))
         .unwrap();
     assert_eq!(
         input(&s, "Option 1", "cargo_containment").value,
@@ -454,7 +454,7 @@ fn a_hard_error_on_a_wrong_type_or_choice_is_kept_and_reported() {
     let o = &s.evaluate().options[0];
     let scopes: Vec<&Scope> = o.messages.iter().map(|m| &m.scope).collect();
     assert!(scopes.contains(&&Scope::Input("cargo_containment".into())));
-    assert!(scopes.contains(&&Scope::Input("block_coefficient".into())));
+    assert!(scopes.contains(&&Scope::Input("water_density_t_per_m3".into())));
     assert_eq!(session_lines(&s), validate_lines(&s));
 }
 

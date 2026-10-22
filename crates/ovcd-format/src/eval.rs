@@ -1552,10 +1552,21 @@ fn weights(function: &str, args: &Value) -> Result<Value, EvalError> {
     }
 }
 
+/// Issue #448: a raked box whose sections cannot be written, as Python's `ValueError`.
+fn hull_error(e: ovcd_core::hull::hull_form::HullError) -> PyError {
+    PyError {
+        kind: "ValueError",
+        message: e.to_string(),
+    }
+}
+
 fn hydrostatics(function: &str, args: &Value) -> Result<Value, EvalError> {
     match function {
         "find_equilibrium_draft" => {
-            let hull = hull_arg(args)?;
+            let hull = match hull_arg(args)?.sections() {
+                Ok(t) => t,
+                Err(e) => return raised_py(&hull_error(e)),
+            };
             match ovcd_core::hydrostatics::find_equilibrium_draft(
                 &hull,
                 f64_arg(args, "total_weight")?,
@@ -1576,7 +1587,7 @@ fn hydrostatics(function: &str, args: &Value) -> Result<Value, EvalError> {
                 message: ovcd_core::tanks::INT_OVERFLOW_MESSAGE.into(),
             })?;
             let s = ovcd_core::hydrostatics::calculate_stability(
-                &hull,
+                &hull.sections().map_err(hull_error)?,
                 &inputs,
                 &tanks,
                 &weights,
@@ -1597,7 +1608,7 @@ fn hydrostatics(function: &str, args: &Value) -> Result<Value, EvalError> {
         "calculate_trim" => chain_result((|| {
             let (inputs, hull, tanks, weights, _) = barge_chain(args)?;
             let t = ovcd_core::hydrostatics::calculate_trim(
-                &hull,
+                &hull.sections().map_err(hull_error)?,
                 &inputs,
                 &tanks,
                 &weights,
@@ -2245,8 +2256,9 @@ fn resistance_inputs(args: &Value) -> Result<core_resistance::ResistanceInputs, 
             .collect::<Result<_, _>>()?,
     };
     Ok(core_resistance::ResistanceInputs {
-        // The Python API has no Stern Form (issue #350).
+        // The Python API has no Stern Form (issue #350) and no sections (issue #448): B x T.
         wetted_surface_extra_m2: 0.0,
+        midship_area_m2: None,
         loa: f64_or(o, "loa", d.loa)?,
         lwl: f64_or(o, "lwl", d.lwl)?,
         beam: f64_or(o, "beam", d.beam)?,

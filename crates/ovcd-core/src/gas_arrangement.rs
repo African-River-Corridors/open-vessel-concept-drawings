@@ -87,11 +87,17 @@ pub struct FitOptions {
     pub depths: Vec<f64>,
     pub tanks_wide: Vec<i64>,
     pub extra_clearance_m: Vec<f64>,
+    /// Issue #448: Cb only for the IGC 4.28.2 vertical acceleration; the hydrostatics come from
+    /// each candidate's sections.
     pub block_coefficient: f64,
     /// Cap on a tank's outer diameter (m).
     pub max_tank_od_m: f64,
     /// Bow rake as a multiple of the moulded depth of each candidate.
     pub bow_rake_to_depth_ratio: f64,
+    /// Issue #446: a typed bow rake length (m) for every candidate; `None`: the ratio.
+    pub bow_rake_length_m: Option<f64>,
+    /// Issue #446: the keel height at the bow (m); `None`: each candidate's moulded depth.
+    pub bow_rake_rise_m: Option<f64>,
     /// Aft void of a pushed barge (m).
     pub pushed_stern_void_m: f64,
     /// Tanks along the hull, for every candidate.
@@ -208,6 +214,11 @@ impl MeasureSource for CandidateSource<'_> {
             .find(|(n, _)| n == name)
             .map(|(_, v)| v.clone())
     }
+    fn object_input(&self, object: &str, index: usize, name: &str) -> Option<String> {
+        self.measured
+            .object_input(object, index, name)
+            .or_else(|| self.input(name))
+    }
     fn has(&self, m: &MeasureRef) -> bool {
         self.measured.has(m)
     }
@@ -309,6 +320,8 @@ impl Default for FitOptions {
             block_coefficient: 0.85,
             max_tank_od_m: DEFAULT_MAX_TANK_OD_M,
             bow_rake_to_depth_ratio: DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
+            bow_rake_length_m: None,
+            bow_rake_rise_m: None,
             pushed_stern_void_m: DEFAULT_PUSHED_STERN_VOID_M,
             tanks_in_line: DEFAULT_TANKS_IN_LINE,
             tank_support_height_m: DEFAULT_TANK_SUPPORT_HEIGHT_M,
@@ -541,12 +554,85 @@ fn cheap_checks(
     all
 }
 
+/// The criterion name of IS Code 2008 Part A 2.2.3, the angle of maximum GZ.
+const ANGLE_CRITERION: &str = "Angle of max GZ";
+
+/// Whether the condition is one of the two with no ballast that OVCD adds or keeps: "Lightship, no
+/// ballast" of the IS Code conditions and the legacy "Light" (issue #498).
+fn is_light_without_ballast(name: &str) -> bool {
+    name == "Lightship, no ballast" || name == "Light"
+}
+
 /// One stability condition as a check, named and worded as the simulation lists it.
 pub fn stability_check(c: &gs::Condition) -> Check {
+    stability_check_with(c, false)
+}
+
+/// [`stability_check`] for a gas Design.
+///
+/// Issue #498: in a light condition with no ballast, a failure where the angle of maximum GZ
+/// (2.2.3) is the only failing criterion is a warning, not a failure: the bilge emerges early on a
+/// wide, shallow hull, and the vessel can sail light with ballast. IS Code 2.2.3 allows alternative
+/// criteria only with the approval of the Administration, which OVCD does not model, so the
+/// alternative is not taken as a pass. A dry-bulk Design keeps its checks as they were (all its
+/// stability checks are warnings already).
+pub fn gas_stability_check(c: &gs::Condition, warns: bool) -> Check {
+    stability_check_with(c, warns)
+}
+
+/// The Rule that fails the angle of max GZ of every condition in the IS Code Rule Sets of 1.0.0.
+const ANGLE_RULE: &str = "is2008/A.2.2.3/angle-max-gz";
+
+/// Whether the angle of max GZ alone in a light condition with no ballast is a warning for these
+/// Rule Sets (issue #498). It is when the Rule Sets say so: the IS Code Rule that holds the angle
+/// names the kind of loading condition it applies to. A stack whose Rule applies to every
+/// condition (`is2008-a` 1.0.0) keeps the failure, so a file saved before keeps its results. No
+/// Rule Sets (the Python API) means the warning.
+pub fn light_angle_warns(rules: &[RuleSet]) -> bool {
+    let mut found = rules
+        .iter()
+        .flat_map(|set| set.rules.iter())
+        .filter(|r| r.id == ANGLE_RULE)
+        .peekable();
+    if found.peek().is_none() {
+        return true;
+    }
+    found.all(|r| {
+        r.applies_when
+            .conditions
+            .iter()
+            .any(|(input, _)| input == "loading_condition_kind")
+    })
+}
+
+fn stability_check_with(c: &gs::Condition, gas: bool) -> Check {
     let bad: Vec<&gs::Criterion> = c.criteria.iter().filter(|x| !x.ok).collect();
     let gm = Arg::fixed(c.gm_fluid_m, 2);
     let max_gz = Arg::fixed(c.max_gz_m, 2);
     let angle = Arg::fixed(f64::from(c.max_gz_deg), 0);
+    if gas && is_light_without_ballast(&c.name) && bad.len() == 1 && bad[0].name == ANGLE_CRITERION
+    {
+        let value = match bad[0].value {
+            gs::PyNum::Int(i) => i as f64,
+            gs::PyNum::Float(v) => v,
+        };
+        return Check::with_severity(
+            format!("Stability \u{2014} {}", c.name.to_lowercase()),
+            false,
+            text!(
+                "check-stability-light-angle",
+                "GM {gm} m (fluid), max GZ {max_gz} m at {angle}\u{b0} \u{2014} warning, not a failure: \
+                 angle of max GZ {value} < {limit} (IS Code 2.2.3) with no ballast; every other criterion holds. \
+                 Sail light with ballast",
+                gm = gm,
+                max_gz = max_gz,
+                angle = angle,
+                value = Arg::fixed(value, 0),
+                limit = Arg::fixed(bad[0].limit, 0),
+            ),
+            "warning",
+        );
+    }
     let message = if bad.is_empty() {
         text!(
             "check-stability",
@@ -585,8 +671,53 @@ pub fn stability_check(c: &gs::Condition) -> Check {
 
 /// The checks of one IS Code loading condition (issue #426): its stability, and when they fail,
 /// its ballast plan (none meets every criterion) and its air draft.
+/// The checks of every IS Code condition of a Design, in order. The "Lightship, no ballast" warning of
+/// issue #498 also names the ballast the "Ballast, departure" condition needs to meet every criterion.
+pub fn loading_condition_checks_of(conds: &[lc::LoadedCondition], warns: bool) -> Vec<Check> {
+    let ballast = conds
+        .iter()
+        .find(|c| c.role == lc::Role::BallastDeparture && c.ok() && c.ballast_t > 0.0)
+        .map(|c| c.ballast_t);
+    let mut out = Vec::new();
+    for c in conds {
+        let mut checks = loading_condition_checks_with(c, warns);
+        if let (Some(t), Some(first)) = (ballast, checks.first_mut())
+            && c.role == lc::Role::LightshipNoBallast
+            && first.severity == "warning"
+        {
+            let (gm, max_gz, angle) = (
+                Arg::fixed(c.condition.gm_fluid_m, 2),
+                Arg::fixed(c.condition.max_gz_m, 2),
+                Arg::fixed(f64::from(c.condition.max_gz_deg), 0),
+            );
+            let name = first.name.clone();
+            *first = Check::with_severity(
+                name,
+                false,
+                text!(
+                    "check-stability-light-angle-ballast",
+                    "GM {gm} m (fluid), max GZ {max_gz} m at {angle}\u{b0} \u{2014} warning, not a failure: \
+                 angle of max GZ {angle} < 25 (IS Code 2.2.3) with no ballast; every other criterion holds. \
+                 To sail light, take {ballast} t of ballast (the Ballast, departure condition meets every criterion)",
+                    gm = gm,
+                    max_gz = max_gz,
+                    angle = angle,
+                    ballast = Arg::fixed(t, 0),
+                ),
+                "warning",
+            );
+        }
+        out.extend(checks);
+    }
+    out
+}
+
 pub fn loading_condition_checks(c: &lc::LoadedCondition) -> Vec<Check> {
-    let mut out = vec![stability_check(&c.condition)];
+    loading_condition_checks_with(c, false)
+}
+
+fn loading_condition_checks_with(c: &lc::LoadedCondition, gas: bool) -> Vec<Check> {
+    let mut out = vec![stability_check_with(&c.condition, gas)];
     if c.plan_found == Some(false) {
         out.push(Check::new(
             "Ballast plan",
@@ -625,9 +756,15 @@ pub fn is_code_cargo(
     o: &FitOptions,
     ic: &IsCodeConditions,
 ) -> f64 {
-    let room = o.block_coefficient * loa * beam * t_max * o.water_density_t_per_m3
-        - r.lightship_t
-        - ic.consumables_t;
+    // Issue #448: the hull's displacement at the draught cap, from its sections.
+    let _ = (loa, beam);
+    let displaced = r
+        .hull_spec
+        .as_ref()
+        .and_then(|spec| crate::hydrostatics::Hull::build(spec).ok())
+        .map(|h| h.volume_at(t_max))
+        .unwrap_or(0.0);
+    let room = displaced * o.water_density_t_per_m3 - r.lightship_t - ic.consumables_t;
     let room = if room > 0.0 { room } else { 0.0 };
     if room < payload_t { room } else { payload_t }
 }
@@ -660,11 +797,16 @@ pub fn is_code_conditions(
         tanks: crate::compartments::consumables_tanks(inp.beam, 0.0, ic.consumables_t),
         density: 1.0,
     };
+    let Some(spec) = r.hull_spec.as_ref() else {
+        return Ok(Vec::new());
+    };
+    let hull = crate::hydrostatics::Hull::build(spec)
+        .map_err(|e| gs::PyError::Value(alloc::format!("{e}")))?;
     lc::assess(&lc::Inputs {
         loa: inp.loa,
         beam: inp.beam,
         depth: inp.depth,
-        block_coefficient: o.block_coefficient,
+        hull: &hull,
         water_density: o.water_density_t_per_m3,
         criteria_set: gs::criteria_set_for(&o.ruleset),
         lightship: &lightship,
@@ -677,7 +819,6 @@ pub fn is_code_conditions(
         may_sail_without_ballast: ic.may_sail_without_ballast,
         air_draft_top_m: r.air_draft_top_above_keel_m,
         air_draft_limit_m: o.air_draft_limit_m,
-        stern: o.stern_geometry.as_ref(),
     })
 }
 
@@ -730,7 +871,7 @@ fn stability_assessment(
         Some(ic) => is_code_conditions(r, inp, ranked_cargo(r, j, inp, o), o, ic)
             .map(|conds| {
                 (
-                    conds.iter().flat_map(loading_condition_checks).collect(),
+                    loading_condition_checks_of(&conds, light_angle_warns(&o.rules)),
                     conds.into_iter().map(|c| c.condition).collect(),
                 )
             })
@@ -741,7 +882,6 @@ fn stability_assessment(
                 gs::assess(
                     &basis,
                     j.achievable_tonnage_t,
-                    o.block_coefficient,
                     o.water_density_t_per_m3,
                     gs::criteria_set_for(&o.ruleset),
                 )
@@ -749,7 +889,10 @@ fn stability_assessment(
             })
             .map(|a| {
                 (
-                    a.conditions.iter().map(stability_check).collect(),
+                    a.conditions
+                        .iter()
+                        .map(|c| gas_stability_check(c, light_angle_warns(&o.rules)))
+                        .collect(),
                     a.conditions,
                 )
             }),
@@ -812,7 +955,6 @@ pub fn answer_search_checks(f: &ArrangementFit, o: &FitOptions) -> Result<Vec<Ch
         f.beam_m,
         f.depth_m,
         f.t_max_m,
-        o.block_coefficient,
         o.water_density_t_per_m3,
     )?;
     let own: Vec<&str> = r.checks.iter().map(|c| c.name.as_str()).collect();
@@ -844,11 +986,9 @@ fn derate_candidate(
     beam: f64,
     depth: f64,
     t_max: f64,
-    block_coefficient: f64,
     water_density: f64,
 ) -> Result<JourneyDeratingResult, PyError> {
     let mut ji = JourneyDeratingInputs::new(r, loa, beam, depth);
-    ji.block_coefficient = block_coefficient;
     ji.water_density = water_density;
     ji.design_depth_m = t_max;
     ji.ukc_m = 0.0;
@@ -881,6 +1021,8 @@ impl Search<'_> {
         inp.n_tanks_long = nl;
         inp.max_tank_od_m = self.o.max_tank_od_m;
         inp.bow_rake_to_depth_ratio = self.o.bow_rake_to_depth_ratio;
+        inp.bow_rake_length_m = self.o.bow_rake_length_m;
+        inp.bow_rake_rise_m = self.o.bow_rake_rise_m;
         inp.pushed_stern_void_m = self.o.pushed_stern_void_m;
         inp.tank_support_height = self.o.tank_support_height_m;
         inp.dome_height = self.o.tank_dome_height_m;
@@ -1033,15 +1175,7 @@ fn search(s: &mut Search<'_>, t_max: f64, stop_at_first_pass: bool) -> Result<Po
                 }
             }
             for (inp, r) in cands.into_iter().chain(more) {
-                let j = derate_candidate(
-                    &r,
-                    loa,
-                    beam,
-                    d,
-                    t_max,
-                    o.block_coefficient,
-                    o.water_density_t_per_m3,
-                )?;
+                let j = derate_candidate(&r, loa, beam, d, t_max, o.water_density_t_per_m3)?;
                 let cheap = cheap_checks(&r, &j, d, o);
                 // With Rule Sets: the trace before stability (its stability Rules are not yet
                 // evaluated, so they cannot fail here).
@@ -1165,15 +1299,7 @@ pub fn fit(
             })?;
             let inp = s.base_inputs(d, 1, o.tanks_in_line);
             let r = capacity(&inp)?;
-            let j = derate_candidate(
-                &r,
-                loa,
-                beam,
-                d,
-                t_max,
-                o.block_coefficient,
-                o.water_density_t_per_m3,
-            )?;
+            let j = derate_candidate(&r, loa, beam, d, t_max, o.water_density_t_per_m3)?;
             Candidate {
                 cheap_failed: 1,
                 tonnage: 0.0,

@@ -5,12 +5,9 @@
 //! `box_stability::box_gz` at every angle. Below deck-edge immersion a box is wall-sided, so
 //! GZ = sin φ (GM + ½ BM tan² φ) exactly: the wall-sided formula, which follows from the shift of
 //! the two wedges of a section whose sides are vertical at the waterline. The trim is checked against
-//! `hydrostatics::trim` (first-order trim (LCG − LCB) L / BM_L) for a small trim. The rest are
-//! properties.
+//! the first-order trim (LCG − LCB) L / BM_L of the box for a small trim. The rest are properties.
 
 use ovcd_core::box_stability::{ANGLES_DEG, box_gz};
-use ovcd_core::hull::HullGeometry;
-use ovcd_core::hydrostatics::trim;
 use ovcd_core::sections::{
     Gravity, Section, SectionsError, SectionsTable, Waterplane, equilibrium, gz_curve, immersed,
     righting_lever,
@@ -152,8 +149,8 @@ fn an_lcg_forward_of_the_lcb_trims_the_box_by_the_bow_as_the_first_order_trim() 
     };
     let e = equilibrium(&t, mass, g, 0.0, RHO).unwrap();
     let ours = L * libm::tan(e.waterplane.trim_deg.to_radians());
-    let hull = HullGeometry::new(L, B, D, 0.0, 0.0, 0.0, 0.0);
-    let first_order = trim(&hull, draught, &[(mass, lcg)]).trim;
+    // First-order trim (LCG − LCB) L / BM_L, with LCB = L/2 and BM_L = L²/12T for a box.
+    let first_order = (lcg - L / 2.0) * L / (L * L / (12.0 * draught));
     assert!(ours > 0.0 && first_order > 0.0);
     assert!(
         (ours - first_order).abs() / first_order < 0.01,

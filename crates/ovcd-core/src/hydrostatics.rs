@@ -6,65 +6,95 @@
 //! same, including the free surface sum, which adds the same moment once per tank. Truthiness of
 //! `double_bottom_height` follows Python: `None` and `0.0` are false, `NaN` is true.
 
-use libm::fabs;
+use alloc::vec::Vec;
 
-use crate::hull::HullGeometry;
+use alloc::string::ToString;
+
+use libm::{cos, sin};
+
+use crate::hull::hull_form::{HullError, HullFormInputs, HullFormKind, generate};
 use crate::models::{BargeInputs, StabilityResult, TankResult, TrimResult, WeightBreakdown};
 use crate::pressure_vessel::PyError;
+use crate::sections::{
+    Equilibrium, Gravity, SectionsError, SectionsTable, Upright, Waterplane, draught_for_volume,
+    equilibrium, gz_curve, immersed, upright,
+};
+use crate::stern_form::{ApplyError, SternGeometry};
 use crate::tanks::{free_surface_moment_cylindrical, none_operand_error};
 
-/// Find the draft at which displacement equals total weight, by bisection.
-///
-/// The block coefficient accounts for the difference between the moulded hull volume and the
-/// actual displacement volume. `ZeroDivisionError` when `water_density * block_coefficient` is
-/// exactly zero, as in Python.
+/// Find the draft at which displacement equals total weight (issue #448): the upright, level
+/// draught of the hull's sections, by [`draught_for_volume`]. The block coefficient and the
+/// tolerance of the 0.1.0 bisection are still taken and have no effect: the sections are the hull.
+/// A weight the whole hull cannot float gives the bisection's upper bound, 1.5 x `max_draft`.
+/// `ZeroDivisionError` when `water_density` is exactly zero, as in Python.
 pub fn find_equilibrium_draft(
-    hull: &HullGeometry,
+    hull: &SectionsTable,
     total_weight: f64,
     water_density: f64,
     max_draft: f64,
-    block_coefficient: f64,
-    tolerance: f64,
+    _block_coefficient: f64,
+    _tolerance: f64,
 ) -> Result<f64, PyError> {
-    let divisor = water_density * block_coefficient;
-    if divisor == 0.0 {
+    if water_density == 0.0 {
         return Err(PyError {
             kind: "ZeroDivisionError",
             message: "float division by zero".into(),
         });
     }
-    let required_volume = total_weight / divisor;
-
-    let mut lo = 0.0;
-    // Allow some margin to detect overload.
-    let mut hi = max_draft * 1.5;
-
-    for _ in 0..100 {
-        let mid = (lo + hi) / 2.0;
-        let vol = hull.displaced_volume(mid);
-        if fabs(vol - required_volume) < tolerance * hull.beam {
-            return Ok(mid);
-        }
-        if vol < required_volume {
-            lo = mid;
-        } else {
-            hi = mid;
-        }
+    match draught_for_volume(hull, total_weight / water_density) {
+        Ok(t) => Ok(t),
+        Err(SectionsError::Sinks) => Ok(max_draft * 1.5),
+        Err(SectionsError::NotAfloat) => Ok(0.0),
+        Err(e) => Err(PyError {
+            kind: "ValueError",
+            message: e.to_string(),
+        }),
     }
+}
 
-    Ok((lo + hi) / 2.0)
+/// The upright cut of the legacy entry points. A draught with no immersed volume gives zeros, with
+/// the centre of buoyancy at mid-length, as the closed forms did; a NaN draught gives NaN.
+fn upright_or_zero(hull: &SectionsTable, draft: f64, density: f64) -> Upright {
+    if let Ok(u) = upright(hull, draft, density) {
+        return u;
+    }
+    let v = if draft.is_nan() { f64::NAN } else { 0.0 };
+    let mut im = immersed(hull, &Waterplane::upright(0.0));
+    let (first, last) = (hull.sections[0].x, hull.sections[hull.sections.len() - 1].x);
+    im.lcb_m = if draft.is_nan() {
+        f64::NAN
+    } else {
+        (first + last) / 2.0
+    };
+    im.kb_m = v;
+    Upright {
+        draught_m: draft,
+        immersed: im,
+        displacement_t: v,
+        bm_t_m: v,
+        bm_l_m: v,
+        km_t_m: v,
+        km_l_m: v,
+        tpc_t: v,
+        mct_1cm_tm: v,
+        cb: v,
+        cm: v,
+        cp: v,
+        cwp: v,
+    }
 }
 
 /// Intact stability (GM) at the equilibrium draft.
 ///
 /// Legacy chain, kept for the Python API (issue #413). No Design uses it: the gas designs use
-/// `gas_stability::assess` and the trim uses `trim`. Its limits: the block coefficient is applied
-/// to the raked hull volume, so the hull form counts twice; the KG items take the bottom-up hull
-/// steel, so they do not sum to the lightship; one KG for all hull steel at half the depth. The free surface takes the fill as a volume ratio (issue #413).
+/// `gas_stability::assess` and the trim uses `trim`. Its limits: the KG items take the bottom-up
+/// hull steel, so they do not sum to the lightship; one KG for all hull steel at half the depth.
+/// The free surface takes the fill as a volume ratio (issue #413). Issue #448: the hull is its
+/// Sections Table, so the hull form no longer counts twice.
 ///
 /// `TypeError` when `double_bottom_height` is unset: Python adds it to a float.
 pub fn calculate_stability(
-    hull: &HullGeometry,
+    hull: &SectionsTable,
     inputs: &BargeInputs,
     tanks: &TankResult,
     weights: &WeightBreakdown,
@@ -72,15 +102,16 @@ pub fn calculate_stability(
     cargo_density_t: f64,
     draft: f64,
 ) -> Result<StabilityResult, PyError> {
-    let cb = inputs.block_coefficient;
-    let displacement = hull.displaced_volume(draft) * inputs.water_density * cb;
+    // Issue #448: the upright cut of the sections; the 0.1.0 double use of Cb goes.
+    let u = upright_or_zero(hull, draft, inputs.water_density);
+    let displacement = u.displacement_t;
 
     // --- KB ---
-    let kb = hull.KB(draft);
+    let kb = u.immersed.kb_m;
 
     // --- BM ---
-    let bm_t = hull.BM_transverse(draft);
-    let bm_l = hull.BM_longitudinal(draft);
+    let bm_t = u.bm_t_m;
+    let bm_l = u.bm_l_m;
 
     // --- KG (centre of gravity above keel): weighted average of component centres ---
     // Hull steel: approximate CG at depth/2.
@@ -162,71 +193,26 @@ pub fn calculate_stability(
     })
 }
 
-/// Trim from mass items (issue #349): `items` are (mass t, LCG m from the stern). The LCG is the
-/// mass-weighted centre; trim = (LCG - LCB) x L_wp / BM_L, the moment over MTC with MTC = Delta x
-/// BM_L / L_wp, as [`calculate_trim`] has it; positive trim is bow deeper. No mass, or no
-/// waterplane, gives no trim.
-pub fn trim(hull: &HullGeometry, draft: f64, items: &[(f64, f64)]) -> TrimResult {
-    trim_with_stern(hull, draft, items, None)
-}
-
-/// [`trim`] with the Stern Form's correction (issue #350): the volume the stern removes moves the
-/// LCB forward, LCB = (V x LCB_box - M_removed) / (V - V_removed).
-pub fn trim_with_stern(
-    hull: &HullGeometry,
-    draft: f64,
-    items: &[(f64, f64)],
-    stern: Option<&crate::stern_form::SternGeometry>,
-) -> TrimResult {
-    let mut lcb = hull.LCB(draft);
-    if let Some(g) = stern {
-        let (v_cut, m_cut) = g.removed(draft);
-        let v = hull.displaced_volume(draft);
-        if v - v_cut > 0.0 {
-            lcb = (v * lcb - m_cut) / (v - v_cut);
-        }
-    }
-    let total: f64 = items.iter().map(|(m, _)| m).sum();
-    let lcg = if total > 0.0 {
-        items.iter().map(|(m, x)| m * x).sum::<f64>() / total
-    } else {
-        lcb
-    };
-    let bm_l = hull.BM_longitudinal(draft);
-    let trim = if bm_l > 0.0 && total > 0.0 {
-        (lcg - lcb) * hull.waterplane_length(draft) / bm_l
-    } else {
-        0.0
-    };
-    TrimResult {
-        LCG: lcg,
-        LCB: lcb,
-        trim,
-        draft_aft: draft - trim / 2.0,
-        draft_fwd: draft + trim / 2.0,
-    }
-}
-
 /// Longitudinal trim. x is measured from the stern (AP); positive trim is bow deeper.
 ///
 /// Legacy chain, kept for the Python API (issue #413). No Design uses it; the designs use `trim`
-/// with the gas stability's mass items. The block coefficient is applied to the raked hull
-/// volume, so the hull form counts twice.
+/// with the gas stability's mass items. Issue #448: the hull is its Sections Table.
 ///
 /// `TypeError` when a non-tank length is unset, as Python raises it.
 pub fn calculate_trim(
-    hull: &HullGeometry,
+    hull: &SectionsTable,
     inputs: &BargeInputs,
     _tanks: &TankResult,
     weights: &WeightBreakdown,
     cargo_mass: f64,
     draft: f64,
 ) -> Result<TrimResult, PyError> {
-    let cb = inputs.block_coefficient;
-    let displacement = hull.displaced_volume(draft) * inputs.water_density * cb;
+    // Issue #448: the upright cut of the sections.
+    let u = upright_or_zero(hull, draft, inputs.water_density);
+    let displacement = u.displacement_t;
 
     // --- LCB (from AP) ---
-    let lcb = hull.LCB(draft);
+    let lcb = u.immersed.lcb_m;
 
     // --- LCG (from AP) ---
     // Hull steel: approximately at midship.
@@ -271,10 +257,10 @@ pub fn calculate_trim(
     };
 
     // --- Trim ---
-    let bm_l = hull.BM_longitudinal(draft);
+    let bm_l = u.bm_l_m;
 
     let trim = if bm_l > 0.0 && displacement > 0.0 {
-        let l_wp = hull.waterplane_length(draft);
+        let l_wp = u.immersed.l_wl_m;
         (lcg - lcb) * l_wp / bm_l
     } else {
         0.0
@@ -291,4 +277,151 @@ pub fn calculate_trim(
         draft_aft,
         draft_fwd,
     })
+}
+
+// --- The hull from the Sections Table (issue #448, spec 0008) ---------------------------------
+
+/// What a hull is made from: the main dimensions, the raked bow and the Stern Form. A bow rake of
+/// no length is a vertical bow (the box).
+#[derive(Debug, Clone, PartialEq)]
+pub struct HullSpec {
+    pub loa: f64,
+    pub beam: f64,
+    pub depth: f64,
+    pub bow_rake_length_m: f64,
+    pub bow_rake_rise_m: f64,
+    pub stern: Option<SternGeometry>,
+}
+
+/// Why a hull cannot be built.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum BuildError {
+    Hull(HullError),
+    Stern(ApplyError),
+}
+
+impl core::fmt::Display for BuildError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            BuildError::Hull(e) => write!(f, "{e}"),
+            BuildError::Stern(e) => write!(f, "{e}"),
+        }
+    }
+}
+
+/// The hull as its Sections Table, with the hydrostatics the engine reads from it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Hull {
+    pub spec: HullSpec,
+    pub table: SectionsTable,
+}
+
+/// The free-trim floating position at heel 0, and the draughts at the ends and at mid-length (m,
+/// measured square to the base line). Trim is positive by the bow.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Float {
+    pub equilibrium: Equilibrium,
+    pub draught_aft_m: f64,
+    pub draught_mid_m: f64,
+    pub draught_fwd_m: f64,
+    pub trim_m: f64,
+}
+
+/// The draughts of the hydrostatic table: 0.1 D to D in tenths.
+pub const TABLE_ROWS: u32 = 10;
+
+impl Hull {
+    /// Write the Sections Table: the raked box of the spec, then the Stern Form's run. A bow rake
+    /// longer than the hull, or rising above its depth, is cut to the hull: such a short hull is
+    /// all rake (the box hull of the closed forms ignored the rake).
+    pub fn build(spec: &HullSpec) -> Result<Self, BuildError> {
+        let rake = spec.bow_rake_length_m.min(spec.loa);
+        let form = if rake > 0.0 {
+            HullFormKind::RakedBox {
+                bow_rake_length_m: rake,
+                bow_rake_rise_m: spec.bow_rake_rise_m.min(spec.depth),
+                stern_rake_length_m: 0.0,
+                stern_rake_rise_m: 0.0,
+            }
+        } else {
+            HullFormKind::Box
+        };
+        let mut table = generate(&HullFormInputs {
+            length_overall_m: spec.loa,
+            beam_m: spec.beam,
+            moulded_depth_m: spec.depth,
+            form,
+        })
+        .map_err(BuildError::Hull)?;
+        if let Some(g) = &spec.stern {
+            crate::stern_form::apply(g, &mut table).map_err(BuildError::Stern)?;
+        }
+        Ok(Self {
+            spec: spec.clone(),
+            table,
+        })
+    }
+
+    /// The immersed volume below the upright, level waterline `draught` (m³).
+    pub fn volume_at(&self, draught: f64) -> f64 {
+        immersed(&self.table, &Waterplane::upright(draught)).volume_m3
+    }
+
+    /// The upright, level hydrostatics at `draught`.
+    pub fn upright(&self, draught: f64, density: f64) -> Result<Upright, SectionsError> {
+        upright(&self.table, draught, density)
+    }
+
+    /// The upright, level draught at which the hull displaces `mass_t`.
+    pub fn level_draught(&self, mass_t: f64, density: f64) -> Result<f64, SectionsError> {
+        draught_for_volume(&self.table, mass_t / density)
+    }
+
+    /// The free-trim floating position at heel 0 for a mass and its centre of gravity.
+    pub fn float(&self, mass_t: f64, g: Gravity, density: f64) -> Result<Float, SectionsError> {
+        let eq = equilibrium(&self.table, mass_t, g, 0.0, density)?;
+        let wp = eq.waterplane;
+        let theta = wp.trim_deg * (core::f64::consts::PI / 180.0);
+        // Upright, a point (x, 0, z) is on the waterplane when -x sin θ + z cos θ = c.
+        let at = |x: f64| (wp.c + x * sin(theta)) / cos(theta);
+        let (aft, fwd) = (at(0.0), at(self.spec.loa));
+        Ok(Float {
+            equilibrium: eq,
+            draught_aft_m: aft,
+            draught_mid_m: at(self.spec.loa / 2.0),
+            draught_fwd_m: fwd,
+            trim_m: fwd - aft,
+        })
+    }
+
+    /// The GZ curve with free trim at the given heels (degrees), less the free-surface correction.
+    pub fn gz(
+        &self,
+        mass_t: f64,
+        g: Gravity,
+        free_surface_moment_tm: f64,
+        density: f64,
+        angles: impl IntoIterator<Item = i32>,
+    ) -> Result<Vec<(i32, f64)>, SectionsError> {
+        gz_curve(
+            &self.table,
+            mass_t,
+            g,
+            free_surface_moment_tm,
+            density,
+            angles,
+        )
+    }
+
+    /// The upright hydrostatics at [`TABLE_ROWS`] draughts, 0.1 D to D.
+    pub fn hydrostatic_table(&self, density: f64) -> Result<Vec<Upright>, SectionsError> {
+        (1..=TABLE_ROWS)
+            .map(|i| {
+                self.upright(
+                    self.spec.depth * f64::from(i) / f64::from(TABLE_ROWS),
+                    density,
+                )
+            })
+            .collect()
+    }
 }

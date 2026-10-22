@@ -36,7 +36,9 @@ def test_simulate_reads_numbers_written_as_text(text):
     assert out["dims"]["loa_m"] == 80.0                                         # ce96e66
     # Re-pinned (issue #277: the wheelhouse sightline blocks the search); was 1986.5486284249137.
     # Re-pinned (issue #410: the covering above D is in the lightship); was 1392.4601578818447.
-    assert out["results"]["cargo_t"] == pytest.approx(1124.1630064872984, rel=1e-9, abs=1e-9)
+    # Re-pinned (issue #498: the angle of max GZ alone in the light condition is a warning); was
+    # 1124.1630064872984.
+    assert out["results"]["cargo_t"] == pytest.approx(1392.4601578818447, rel=1e-9, abs=1e-9)
 
 
 def test_simulate_reads_every_number_as_text():
@@ -45,9 +47,13 @@ def test_simulate_reads_every_number_as_text():
     # Re-pinned (issue #237); was 2058.228164213275 at ce96e66. Re-pinned (issue #277: the
     # wheelhouse sightline blocks the search); was 2535.1977193509288. Re-pinned (issue #410: the
     # covering above D is in the lightship); was 1763.374037130099.
-    assert out["results"]["cargo_t"] == pytest.approx(1405.8516419707348, rel=1e-9, abs=1e-9)
+    # Re-pinned (issue #498: the angle of max GZ alone in the light condition is a warning); was
+    # 1405.8516419707348.
+    assert out["results"]["cargo_t"] == pytest.approx(1763.374037130099, rel=1e-9, abs=1e-9)
     out = simulate(dict(BOX, lightship_k_t_per_m3="0.1093"))
-    assert out["results"]["cargo_t"] == pytest.approx(2256.166305, rel=1e-9, abs=1e-9)         # ce96e66
+    # Re-pinned (#448: the hull's sections give the volume, not the cb input); was 2256.166305 at
+    # ce96e66.
+    assert out["results"]["cargo_t"] == pytest.approx(2346.1989450000005, rel=1e-9, abs=1e-9)
     out = simulate(dict(BOX, channel=dict(depth_m="5", ukc_m="0.5", bottom_width_m="40")))
     assert out["results"]["draught_max_m"] == pytest.approx(3.2, rel=1e-9, abs=1e-9)           # ce96e66
 
@@ -105,8 +111,12 @@ def test_capacity_takes_nan_and_infinity_as_0_1_0_did():
     """Label: snapshot"""
     nan, inf = float("nan"), float("inf")
     bulk = dict(beam=16.0, depth=6.0, cargo_type="bauxite")
-    assert B.compute(B.BargeCapacityInputs(loa=nan, **bulk)).cargo_capacity_t == 0.0     # ce96e66
-    assert B.compute(B.BargeCapacityInputs(loa=inf, **bulk)).cargo_capacity_t == inf     # ce96e66
+    # ce96e66 gave a cargo of 0.0 for a NaN length and inf for an infinite one. Re-pinned (#448):
+    # the hull is its Sections Table, and a length that is not a finite number writes no sections.
+    for loa in (nan, inf):
+        with pytest.raises(ValueError) as e:
+            B.compute(B.BargeCapacityInputs(loa=loa, **bulk))
+        assert str(e.value) == "length, beam and moulded depth must be positive numbers"
     with pytest.raises(ValueError) as e:
         B.compute(B.BargeCapacityInputs(loa=90.0, beam=nan, depth=6.5, cargo_type="LPG_propane"))
     assert str(e.value) == "cannot convert float NaN to integer"                          # ce96e66

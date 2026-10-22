@@ -104,7 +104,7 @@ propulsor_efficiency_factor:
     n: 0
     basis: 'no in-sample case: the starting estimate'
   shaft_nozzle:
-    value: 0.447
+    value: 0.437
     n: 1
     evidence:
     - case: cds-tanker-110

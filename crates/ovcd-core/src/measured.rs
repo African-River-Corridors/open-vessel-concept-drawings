@@ -51,6 +51,30 @@ pub struct Measured {
     pub depth_over_draught: Option<f64>,
 }
 
+/// The kinds of loading condition an Applicability can name (the object input
+/// `loading_condition_kind`, issue #498): the standard conditions of the IS Code, the condition
+/// OVCD adds for a vessel that may sail without ballast, and the legacy "Light" of the Python API.
+pub const LOADING_CONDITION_KINDS: &[&str] = &["standard", "lightship-no-ballast", "legacy-light"];
+
+/// The kind of a loading condition, from its name as the engine lists it.
+pub fn loading_condition_kind(name: &str) -> &'static str {
+    match name {
+        "Lightship, no ballast" => "lightship-no-ballast",
+        "Light" => "legacy-light",
+        _ => "standard",
+    }
+}
+
+impl Measured {
+    /// The value of an object input of loading condition `index` (`loading_condition_kind`).
+    pub fn object_input(&self, object: &str, index: usize, name: &str) -> Option<String> {
+        (object == ObjectType::LoadingCondition.key() && name == "loading_condition_kind")
+            .then(|| self.conditions.get(index))
+            .flatten()
+            .map(|c| loading_condition_kind(&c.name).to_string())
+    }
+}
+
 /// The deadweight bands, at the thresholds of MARPOL Annex I Reg. 19 (MEPC.117(52)): 19.1, 600
 /// tonnes deadweight and above; 19.2 and 19.6, 5,000 tonnes; 19.3.4, 20,000 tonnes.
 pub const DEADWEIGHT_BANDS: &[&str] = &[

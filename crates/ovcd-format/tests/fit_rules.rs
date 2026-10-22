@@ -56,11 +56,12 @@ fn cargo(r: &Value) -> f64 {
 
 #[test]
 fn a_tighter_rule_loaded_at_run_time_makes_fit_return_a_smaller_passing_arrangement() {
-    // A 90 m hull: on the fixture's 110 m, a tank narrowed by a wider gap is over 7 inner
-    // diameters long (issue #416), so no arrangement would pass at all.
+    // An 80 m hull: on the fixture's 110 m, a tank narrowed by a wider gap is over 7 inner
+    // diameters long (issue #416), so no arrangement would pass at all. Issue #448: on the hull's
+    // sections the 90 m hull used before passes only without the tighter rule.
     let design = variant(
         "gas_igc_2g_self_propelled.vdesign",
-        &[("length_overall_m", json!(90.0))],
+        &[("length_overall_m", json!(80.0))],
     );
     let plain = run(&design, &[]);
     let side = plain["geometry"]["side_clearance_m"].as_f64().unwrap();

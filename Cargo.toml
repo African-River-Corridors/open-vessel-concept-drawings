@@ -22,3 +22,10 @@ ovcd-shell = { path = "crates/ovcd-shell" }
 # float_roundtrip, arbitrary_precision: read every number exactly as written, big ints too.
 # preserve_order: a JSON object keeps its key order, as a Python dict does.
 serde_json = { version = "1", features = ["float_roundtrip", "arbitrary_precision", "preserve_order"] }
+
+# Issue #448: the hydrostatics and GZ curves come from the Sections Table, about 25 times slower
+# unoptimised. Dev and test builds optimise the core, so `cargo test` and the design-impact check
+# (which builds `ovcd` in dev) stay fast. Rust does not reorder or fuse floating-point operations
+# at any opt level, so the results are the same bits.
+[profile.dev.package.ovcd-core]
+opt-level = 3
