@@ -460,10 +460,14 @@ impl MeasureSource for OptionMeasures<'_> {
     }
 
     fn has(&self, measure: &MeasureRef) -> bool {
-        if measure.id == "propulsion.redundancy_28_04" {
-            return self.redundancy_applies();
+        match measure.id.as_str() {
+            "propulsion.redundancy_28_04" => self.redundancy_applies(),
+            // Rules on these are `not evaluated`, with their gaps: the Option has them to name.
+            "wheelhouse.field_of_view"
+            | "wheelhouse.raised_stability"
+            | "formation.coupling_force" => true,
+            _ => self.measured.has(measure),
         }
-        self.measured.has(measure)
     }
 
     fn missing(&self, object: &str) -> Option<String> {

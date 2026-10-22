@@ -80,7 +80,8 @@ fn the_es_trin_limits_are_300_mm_500_mm_for_an_open_hold_and_150_mm() {
         0.5
     );
     assert_eq!(constant("es-trin/4.02(1)/freeboard"), 0.15);
-    for r in &set.rules {
+    // The freeboard Rules of Chapter 4 (the set holds the wheelhouse and speed Rules too, #355).
+    for r in set.rules.iter().filter(|r| r.id.starts_with("es-trin/4.0")) {
         assert_eq!(r.compare, Some(Compare::Ge), "{}", r.id);
         assert_eq!(r.measure.id, "input.min_freeboard_m", "{}", r.id);
         assert!(

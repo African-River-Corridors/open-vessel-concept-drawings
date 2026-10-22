@@ -51,7 +51,13 @@ fn rows(results: &Value, id: &str) -> Vec<Value> {
         .collect()
 }
 
-fn outcome_of(set: &str, version: &str, id: &str, measured: &Measured, option: &ovcd_format::DesignOption) -> Outcome {
+fn outcome_of(
+    set: &str,
+    version: &str,
+    id: &str,
+    measured: &Measured,
+    option: &ovcd_format::DesignOption,
+) -> Outcome {
     let lib = Library::built_in();
     let selection = lib.select(&[(set, version)]).unwrap();
     trace_of(&selection, option, measured)
@@ -67,13 +73,25 @@ fn the_solas_limit_is_two_ship_lengths_or_500_m_whichever_is_less() {
     // SOLAS V/22.1.1, by hand: 2 L, at most 500 m.
     let lib = Library::built_in();
     let set = lib.find("solas-v22", "1.0.0").unwrap();
-    for id in ["solas/V.22.1.1/blind-zone-light", "solas/V.22.1.1/blind-zone-laden"] {
+    for id in [
+        "solas/V.22.1.1/blind-zone-light",
+        "solas/V.22.1.1/blind-zone-laden",
+    ] {
         let rule = set.rule(id).unwrap();
         assert_eq!(rule.compare, Some(Compare::Le), "{id}");
-        assert_eq!(rule.consequence, ovcd_core::rules::Consequence::Warn, "{id}");
+        assert_eq!(
+            rule.consequence,
+            ovcd_core::rules::Consequence::Warn,
+            "{id}"
+        );
         assert_eq!(rule.finding.as_deref(), Some("#543"), "{id}");
         assert!(rule.verified.is_none(), "{id}");
-        let Some(Limit::Formula { shape, coefficients, .. }) = &rule.limit else {
+        let Some(Limit::Formula {
+            shape,
+            coefficients,
+            ..
+        }) = &rule.limit
+        else {
             panic!("{id}: a formula");
         };
         let limit = |l: f64| formula_value(shape, coefficients, |_| Ok(l)).unwrap();
@@ -100,7 +118,11 @@ fn a_coastal_option_is_checked_against_two_lengths_and_the_light_blind_distance_
     assert_eq!(laden[0]["outcome"], "pass", "{laden:?}");
     // A river-only Option does not take the set.
     let river = results(&design(json!({})));
-    assert!(!river["rule_trace"]["rule_sets"].to_string().contains("solas-v22"));
+    assert!(
+        !river["rule_trace"]["rule_sets"]
+            .to_string()
+            .contains("solas-v22")
+    );
 }
 
 #[test]
@@ -119,16 +141,189 @@ fn rheinschpv_is_optional_and_limits_the_laden_blind_distance_to_350_m() {
             blind_distance_laden_m: Some(laden),
             ..Measured::default()
         };
-        outcome_of("rheinschpv", "1.0.0", "rheinschpv/1.07(2)/blind-zone-laden", &measured, &d.options[0])
+        outcome_of(
+            "rheinschpv",
+            "1.0.0",
+            "rheinschpv/1.07(2)/blind-zone-laden",
+            &measured,
+            &d.options[0],
+        )
     };
     assert_eq!(at(350.0), Outcome::Pass);
     assert_eq!(at(350.1), Outcome::Fail);
     assert_eq!(at(0.0), Outcome::Pass);
     // Not in any default stack; a Designer adds it, and it applies.
     let mut d = design(json!({}));
-    assert!(!results(&d)["rule_trace"]["rule_sets"].to_string().contains("rheinschpv"));
+    assert!(
+        !results(&d)["rule_trace"]["rule_sets"]
+            .to_string()
+            .contains("rheinschpv")
+    );
     add_rule_set(&mut d.options[0], &lib, "rheinschpv").unwrap();
     let r = results(&d);
-    assert!(r["rule_trace"]["rule_sets"].to_string().contains("rheinschpv@1.0.0"));
-    assert_eq!(rows(&r, "rheinschpv/1.07(2)/blind-zone-laden")[0]["outcome"], "pass");
+    assert!(
+        r["rule_trace"]["rule_sets"]
+            .to_string()
+            .contains("rheinschpv@1.0.0")
+    );
+    assert_eq!(
+        rows(&r, "rheinschpv/1.07(2)/blind-zone-laden")[0]["outcome"],
+        "pass"
+    );
+}
+
+// --- es-trin-2025: Articles 7.02(2), 5.06(1), 28.04(1)(a), and the Rules the model cannot read ----
+
+#[test]
+fn the_unladen_blind_distance_is_250_m_at_249_and_251() {
+    let d = design(json!({}));
+    let at = |light: f64| {
+        let measured = Measured {
+            blind_distance_light_m: Some(light),
+            ..Measured::default()
+        };
+        outcome_of(
+            "es-trin-2025",
+            "1.0.0",
+            "es-trin/7.02(2)/blind-zone-unladen",
+            &measured,
+            &d.options[0],
+        )
+    };
+    assert_eq!(at(249.0), Outcome::Pass);
+    assert_eq!(at(250.0), Outcome::Pass);
+    assert_eq!(at(251.0), Outcome::Fail);
+    // The margin method has no Blind Distance: the Rule does not apply.
+    assert_eq!(at_missing(&d), Outcome::NotApplicable);
+}
+
+fn at_missing(d: &ovcd_format::Design) -> Outcome {
+    outcome_of(
+        "es-trin-2025",
+        "1.0.0",
+        "es-trin/7.02(2)/blind-zone-unladen",
+        &Measured::default(),
+        &d.options[0],
+    )
+}
+
+#[test]
+fn the_speed_is_13_km_h_at_12_9_and_13_1() {
+    // 13 km/h in knots: 13 / 1.852 = 7.0194 kn.
+    let d = design(json!({}));
+    let at = |kmh: f64| {
+        let measured = Measured {
+            speeds_kn: vec![("Deep water".to_string(), kmh / 1.852)],
+            ..Measured::default()
+        };
+        outcome_of(
+            "es-trin-2025",
+            "1.0.0",
+            "es-trin/5.06(1)/speed-13kmh",
+            &measured,
+            &d.options[0],
+        )
+    };
+    assert_eq!(at(12.9), Outcome::Fail);
+    assert_eq!(at(13.1), Outcome::Pass);
+    assert_eq!(at(13.0), Outcome::Pass);
+    // Another environment only: no value for the deep water, so no pass.
+    let measured = Measured {
+        speeds_kn: vec![("Shallow".to_string(), 12.0)],
+        ..Measured::default()
+    };
+    assert_eq!(
+        outcome_of(
+            "es-trin-2025",
+            "1.0.0",
+            "es-trin/5.06(1)/speed-13kmh",
+            &measured,
+            &d.options[0]
+        ),
+        Outcome::Fail
+    );
+}
+
+#[test]
+fn a_craft_over_110_m_needs_a_bow_thruster_with_one_or_more_propulsors() {
+    let id = "es-trin/28.04(1)(a)/propulsion-redundancy";
+    let run = |loa: f64, thruster: &str| {
+        let r = results(&design(json!({
+            "length_overall_m": loa, "beam_m": 14.0, "moulded_depth_m": 7.0,
+            "propulsor_count": 1, "bow_thruster": thruster
+        })));
+        rows(&r, id)
+    };
+    // 110.0 m is not over 110 m; 110.1 m with no bow thruster fails; with one, passes.
+    assert_eq!(run(110.0, "none")[0]["outcome"], "pass");
+    assert_eq!(run(110.1, "none")[0]["outcome"], "fail");
+    assert_eq!(run(110.1, "channel_jet")[0]["outcome"], "pass");
+    assert_eq!(run(110.1, "tunnel")[0]["outcome"], "pass");
+}
+
+#[test]
+fn the_rules_the_model_cannot_read_are_named_not_passed() {
+    let r = results(&design(json!({})));
+    // The coupling force is for a pushed Formation: a self-propelled Option has no such row.
+    assert!(rows(&r, "es-trin/ESI-III-6.2.1/coupling-force").is_empty());
+    for (id, gap) in [
+        ("es-trin/7.02(3)/field-of-view", "no window geometry"),
+        (
+            "es-trin/7.12(2)/elevating-wheelhouse-stability",
+            "no stability case",
+        ),
+    ] {
+        let row = rows(&r, id);
+        assert_eq!(row.len(), 1, "{id}");
+        assert_eq!(row[0]["outcome"], "not evaluated", "{id}");
+        assert!(
+            row[0]["gap"].as_str().unwrap().contains(gap),
+            "{id}: {}",
+            row[0]
+        );
+    }
+}
+
+#[test]
+fn a_new_self_propelled_option_lists_every_es_trin_rule_and_a_barge_has_no_wheelhouse_rows() {
+    let r = results(&design(json!({})));
+    for id in [
+        "es-trin/4.01(1)/safety-clearance",
+        "es-trin/4.02(1)/freeboard",
+        "es-trin/7.02(2)/blind-zone-unladen",
+        "es-trin/5.06(1)/speed-13kmh",
+        "es-trin/28.04(1)(a)/propulsion-redundancy",
+    ] {
+        let row = rows(&r, id);
+        assert_eq!(row.len(), 1, "{id}");
+        assert_eq!(row[0]["outcome"], "pass", "{id}: {}", row[0]);
+    }
+}
+
+#[test]
+fn a_pushed_barge_has_the_coupling_note_not_evaluated_and_no_wheelhouse_rows() {
+    let mut d = design(json!({}));
+    for (name, input) in &mut d.options[0].inputs {
+        if name == "formation" {
+            input.value = json!({ "kind": "pushed_barge" });
+        }
+    }
+    let r = results(&d);
+    let row = rows(&r, "es-trin/ESI-III-6.2.1/coupling-force");
+    assert_eq!(row[0]["outcome"], "not evaluated");
+    assert!(
+        row[0]["gap"]
+            .as_str()
+            .unwrap()
+            .contains("Formation powering")
+    );
+    for id in [
+        "es-trin/7.02(3)/field-of-view",
+        "es-trin/7.12(2)/elevating-wheelhouse-stability",
+        "es-trin/7.02(2)/blind-zone-unladen",
+        "es-trin/28.04(1)(a)/propulsion-redundancy",
+        "es-trin/5.06(1)/speed-13kmh",
+    ] {
+        assert!(rows(&r, id).is_empty(), "{id}");
+    }
 }

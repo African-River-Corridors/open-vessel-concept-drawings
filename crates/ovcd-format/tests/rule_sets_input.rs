@@ -123,7 +123,13 @@ fn the_schema_lists_the_two_new_inputs_and_not_the_ruleset() {
     );
     assert_eq!(
         sets["default_stack"]["stacks"]["coastal-and-river"]["other"],
-        json!(["is2008-a", "es-trin-2025", "icll-freeboard", "ovcd"])
+        json!([
+            "is2008-a",
+            "es-trin-2025",
+            "icll-freeboard",
+            "solas-v22",
+            "ovcd"
+        ])
     );
     // The app lists each selected set with its status and its unverified blocking Rules.
     let known = sets["known_sets"].as_array().unwrap();
