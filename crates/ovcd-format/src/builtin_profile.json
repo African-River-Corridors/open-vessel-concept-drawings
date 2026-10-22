@@ -26,7 +26,7 @@
       "unit": "-",
       "hard": { "gt": 0, "le": 2 },
       "soft": { "min": 0.2, "max": 0.7 },
-      "basis": "the default moulded depth is this ratio times the beam, at the midpoint of the range in the reference vessels with a published depth: dry bulk and container 0.22 to 0.44 (inland and pushed), liquid 0.22 to 0.38 (inland and pushed), gas 0.44 to 0.66 (nearly all sea-going). Only dry bulk and gas Cargo exist so far; liquid has no Cargo yet. catalogue/depth_rule.md lists every vessel against the rule"
+      "basis": "the default moulded depth is this ratio times the beam, at the midpoint of the range in the reference vessels with a published depth: dry bulk and container 0.22 to 0.44 (inland and pushed), liquid 0.22 to 0.38 (inland and pushed), gas 0.44 to 0.66 (nearly all sea-going). Dry bulk, gas and liquid (crude oil) Cargo exist; the liquid ratio is the one the reference vessels give, until crude oil designs are calibrated. catalogue/depth_rule.md lists every vessel against the rule"
     },
     "length_to_depth_ratio": {
       "unit": "-",

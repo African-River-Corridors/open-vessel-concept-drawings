@@ -3119,7 +3119,7 @@ pub fn new_design(profile: &Profile) -> Result<Design, String> {
 pub const DEPTH_INPUT: &str = "moulded_depth_m";
 
 /// The Cargo groups of the depth rule, as the Defaults Profile names them
-/// (`depth_to_beam_ratio.default_by_cargo_group`). `liquid` has no Cargo yet.
+/// (`depth_to_beam_ratio.default_by_cargo_group`). `liquid` is crude oil (issue #331).
 pub const DEPTH_GROUPS: &[&str] = &["dry_bulk", "liquid", "gas"];
 
 /// The depth rule's Cargo group of a Cargo: a dry-bulk Cargo is `dry_bulk` (the group also holds
