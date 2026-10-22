@@ -52,7 +52,9 @@ lightship.
    weighed ships; the sheets differ from their own sums by up to 28 %); 2.3 would put the bottom-up steel at 0.115,
    but 13 % above the top-down steel. A factor this high says that the plate thicknesses (12, 10 and 10 mm) are thin
    for these hulls: the one number stands for both. It moves the cost (the hull steel line is 43 % higher) and
-   `steel_delta`; the lightship does not change.
+   `steel_delta`; the lightship does not change. The result warns when the two steel masses differ by more than 20 % of
+   the bottom-up steel (Estimate, to calibrate against the reference vessel library; issue #404). The cost keeps pricing
+   the bottom-up steel.
 3. **Tank weight** (`tank_total`, `insulation`): see page 04. This page uses the two values as they come.
 4. **Piping and machinery** = 0.04 × (steel_top_down + tank_total), `weights.rs:170` (Fixed in code).
 5. **Outfitting** = 0.035 × (steel_top_down + tank_total), `weights.rs:173` (Fixed in code).

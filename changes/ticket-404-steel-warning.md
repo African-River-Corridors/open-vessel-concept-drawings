@@ -1,0 +1,2 @@
+<!-- unreleased -->
+- Cost (issue #404): a gas barge result now warns when the top-down hull steel of the lightship and the bottom-up hull steel that the cost prices differ by more than 15 % of the bottom-up steel. The limit is an Estimate, to calibrate against the reference vessel library. The message gives both masses and the delta. The cost keeps pricing the bottom-up steel. Only the `warnings` list changes.
