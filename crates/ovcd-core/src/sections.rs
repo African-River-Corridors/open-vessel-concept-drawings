@@ -1152,15 +1152,40 @@ pub fn gz_curve_from(
     angles: impl IntoIterator<Item = i32>,
     heel0: Option<&Equilibrium>,
 ) -> Result<Vec<(i32, f64)>, SectionsError> {
-    let fsc = free_surface_moment_tm / mass_t;
     let mut out = Vec::new();
     for deg in angles {
-        let heel = f64::from(deg);
-        let lever = match heel0 {
-            Some(eq) if deg == 0 => righting_lever(eq, g),
-            _ => righting_lever(&equilibrium(table, mass_t, g, heel, density)?, g),
-        };
-        out.push((deg, lever - fsc * sin(radians(heel))));
+        out.push((
+            deg,
+            gz_at(
+                table,
+                mass_t,
+                g,
+                free_surface_moment_tm,
+                density,
+                deg,
+                heel0,
+            )?,
+        ));
     }
     Ok(out)
+}
+
+/// The GZ with free trim at one heel (degrees), less the free surface term: one point of
+/// [`gz_curve_from`].
+pub fn gz_at(
+    table: &SectionsTable,
+    mass_t: f64,
+    g: Gravity,
+    free_surface_moment_tm: f64,
+    density: f64,
+    deg: i32,
+    heel0: Option<&Equilibrium>,
+) -> Result<f64, SectionsError> {
+    let fsc = free_surface_moment_tm / mass_t;
+    let heel = f64::from(deg);
+    let lever = match heel0 {
+        Some(eq) if deg == 0 => righting_lever(eq, g),
+        _ => righting_lever(&equilibrium(table, mass_t, g, heel, density)?, g),
+    };
+    Ok(lever - fsc * sin(radians(heel)))
 }

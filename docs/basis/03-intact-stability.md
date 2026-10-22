@@ -94,8 +94,11 @@ IS Code loading conditions (next section). Any other Option uses `assess`. Both 
 12. **Speed.** A GZ curve on the sections costs about 8 ms (raked bow only) to 200 ms (tunnel stern) natively. OVCD
     builds a curve only where a criterion needs it. The automatic ballast plan first screens each trial on the
     criteria known before the curve: the air draft, the fluid GM (0.15 m) and the freeboard
-    (`loading_conditions.rs:294-328`, `:510-523`). A trial that fails one gets no curve. The plan found, or with
-    none the last trial, is worked in full, so no reported number changes.
+    (`loading_conditions.rs:294-328`, `:510-523`). A trial that fails one gets no curve. A trial that passes them gets its
+    curve in blocks of heels (`screened_gz`, issue #567): heels 30 to 40, then 41 to 60, then 25 to 29, then 24
+    down to 0. It stops at the first block that decides a criterion (area 30 to 40, GZ at 30 degrees or more,
+    angle of maximum GZ). The plan found, or with none the last trial, is worked in full, so no reported number
+    changes.
 
 ### IS Code loading conditions (`loading_conditions.rs`)
 
