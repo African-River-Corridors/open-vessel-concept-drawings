@@ -1033,7 +1033,7 @@ impl Search<'_> {
         inp.bow_rake_to_depth_ratio = self.o.bow_rake_to_depth_ratio;
         inp.bow_rake_length_m = self.o.bow_rake_length_m;
         inp.bow_rake_rise_m = self.o.bow_rake_rise_m;
-        inp.hull_shape = self.o.hull_shape;
+        inp.hull_shape = self.o.hull_shape.clone();
         inp.pushed_stern_void_m = self.o.pushed_stern_void_m;
         inp.tank_support_height = self.o.tank_support_height_m;
         inp.dome_height = self.o.tank_dome_height_m;

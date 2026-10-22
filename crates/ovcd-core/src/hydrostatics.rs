@@ -353,10 +353,11 @@ impl Hull {
             beam_m: spec.beam,
             moulded_depth_m: spec.depth,
             form,
-            shape: spec.shape,
+            shape: spec.shape.clone(),
         })
         .map_err(BuildError::Hull)?;
-        if let Some(g) = &spec.stern {
+        // An offsets table holds its own stern (issue #451).
+        if let Some(g) = spec.stern.as_ref().filter(|_| spec.shape.offsets.is_none()) {
             crate::stern_form::apply(g, &mut table).map_err(BuildError::Stern)?;
         }
         Ok(Self {

@@ -126,7 +126,7 @@ fn the_sheer_is_the_parabola_at_each_station_and_moves_nothing_below_the_deck_ed
     };
     for form in [HullFormKind::Box, raked()] {
         let plain = generate(&inputs(form, HullShape::default())).unwrap();
-        let t = generate(&inputs(form, shape)).unwrap();
+        let t = generate(&inputs(form, shape.clone())).unwrap();
         for i in 0..=SHEER_INTERVALS {
             let x = L * f64::from(i) / f64::from(SHEER_INTERVALS);
             assert!(t.sections.iter().any(|s| s.x == x), "a station at {x}");

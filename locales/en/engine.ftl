@@ -136,6 +136,16 @@ check-machinery-fits-under-deck = engine { $height } m + 1.00 m double bottom an
 warn-machinery-power-not-sized = The installed power is not sized yet, so the engines and their room are not in the stern block; type an installed power to place them.
 warn-machinery-no-engine = No engine of the table covers { $kw } kW per engine (the largest is 4,400 kW), so the engine room is not in the stern block.
 
+## crates/ovcd-core/src/offsets.rs
+
+msg-offsets-not-finite = row { $row } of the offsets table holds a value that is not a number
+msg-offsets-too-few-stations = the offsets table needs at least 2 stations, not { $n }
+msg-offsets-x-descending = station { $station } of the offsets table lies aft of the station before it; give the stations in ascending x
+msg-offsets-too-few-points = station { $station } of the offsets table needs at least 2 points
+msg-offsets-off-centre-line = station { $station } of the offsets table does not start and end on the centre line (y = 0)
+msg-offsets-negative-y = station { $station } of the offsets table has a point with y below 0
+msg-offsets-self-crossing = station { $station } of the offsets table crosses itself
+
 ## crates/ovcd-core/src/resistance.rs
 
 check-name-lackenby-fit-subcritical = lackenby fit subcritical
@@ -200,9 +210,20 @@ msg-class-beyond = this length and beam are beyond the largest { $scheme } class
 msg-class-draught-above = `{ $input }` = { $value } is above the draught of class { $class } ({ $limit } m, the top of its range)
 msg-class-clearance-above = `{ $input }` = { $value } is above the lowest bridge clearance of class { $class } ({ $limit } m)
 
+## crates/ovcd-format/src/offsets.rs
+
+msg-offsets-no-table = an offsets Hull Form needs its offsets table (`{ $input }`)
+msg-offsets-bad-row = row { $row } of the offsets table needs the numbers station_x_m, y_m and z_m
+msg-offsets-csv-header = an offsets CSV starts with the header { $header }
+msg-offsets-csv-line = line { $line } of the offsets CSV needs three numbers: station_x_m, y_m, z_m
+
 ## crates/ovcd-format/src/run.rs
 
 msg-convoy-not-available = convoy results not yet available
+
+## crates/ovcd-format/src/session.rs
+
+msg-offsets-resampled = the offsets table has stations of unequal point counts: { $count } station(s) are resampled by arc length to { $points } points, with their own points kept
 
 ## crates/ovcd-format/src/simulate.rs
 
@@ -299,7 +320,7 @@ msg-price-base-date = `{ $input }` must be a date as YYYY, YYYY-MM or YYYY-MM-DD
 msg-string = `{ $input }` must be a string
 msg-number-or-null = `{ $input }` must be a number or null (none)
 msg-bool = `{ $input }` must be true or false
-msg-hull-form-not-built = `{ $input }` = { $value } is not built yet: the engine computes raked_box, v_bottom and chine for now (spec 0008)
+msg-hull-form-not-built = `{ $input }` = { $value } is not built yet: the engine computes raked_box, v_bottom, chine and offsets for now (spec 0008)
 msg-parameter-set = `{ $input }` must be an object of named numbers, or null
 msg-offsets-table = `{ $input }` must be a list of rows with `station_x_m`, `y_m` and `z_m` in metres, or null
 msg-scheme = `{ $input }` = { $value } is not a scheme with a Vessel Class that can define a vessel (see `ovcd schema`)
@@ -314,6 +335,7 @@ msg-formation-count = `{ $input }` must be a whole number for a pushed_convoy
 msg-formation-convoy-only = `{ $input }`: a pushed_convoy holds only `kind`, `abreast` and `in_line`
 msg-hard-range = `{ $input }` = { $value } is out of range: must be { $bound } (hard limit)
 msg-soft-range = `{ $input }` = { $value } is outside the usual range { $min } to { $max } (soft limit); accepted
+msg-offsets-dimension = `{ $input }` = { $typed } differs from the offsets table's { $table }: an offsets hull takes its length, beam and depth from its table
 msg-slender-hull = `{ $input }` = { $length } is { $ratio } times `{ $depth_input }` = { $depth }, over about { $limit }: a very slender hull for its depth (soft limit); accepted
 msg-containment-cargo = `{ $input }` = { $containment } cannot carry { $cargo } ({ $phase }); use { $fits }
 msg-freeboard-depth = `{ $input }` = { $freeboard } must be less than `{ $depth_input }` = { $depth } (hard limit)

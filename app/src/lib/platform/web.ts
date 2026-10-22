@@ -162,6 +162,12 @@ export async function createWebPlatform(): Promise<Platform> {
     },
     setInput: (option, name, value) => change(() => session.set_input(option, name, JSON.stringify(value))),
     resetInput: (option, name) => change(() => session.reset_input(option, name)),
+    importOffsets: async (option) => {
+      const file = await pickFile(".csv");
+      if (!file) return null;
+      const csv = await file.text();
+      return change(() => session.import_offsets(option, csv));
+    },
     setActiveOption: (option) => change(() => session.set_active_option(option)),
     setFormation: (option, kind, abreast, inLine) =>
       change(() => session.set_formation(option, kind, abreast ?? undefined, inLine ?? undefined)),

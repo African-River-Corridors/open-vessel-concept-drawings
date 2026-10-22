@@ -149,6 +149,7 @@ export const saveAs = () => platform().saveAs();
 export const setInput = (option: string, name: string, value: unknown) =>
   platform().setInput(option, name, value);
 export const resetInput = (option: string, name: string) => platform().resetInput(option, name);
+export const importOffsets = (option: string) => platform().importOffsets(option);
 export const setActiveOption = (option: string) => platform().setActiveOption(option);
 export const setFormation = (
   option: string,

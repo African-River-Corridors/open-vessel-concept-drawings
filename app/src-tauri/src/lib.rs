@@ -29,8 +29,8 @@ fn finish(window: &Window, app: &AppState) -> Reply {
 
 /// Smoke-test hook, debug builds only. A native dialog cannot be driven by WebDriver, so when
 /// `OVCD_TEST_DIALOG_DIR` is set, each dialog is answered from a file in that folder instead:
-/// `open.txt`, `save.txt` and `profile.txt` hold the path to pick (no file means the user
-/// cancelled), and `discard.txt` holds `no` to refuse a discard (anything else, or no file,
+/// `open.txt`, `save.txt`, `profile.txt` and `offsets.txt` hold the path to pick (no file means the
+/// user cancelled), and `discard.txt` holds `no` to refuse a discard (anything else, or no file,
 /// agrees). Release builds have no such hook.
 #[cfg(debug_assertions)]
 fn test_answer(file: &str) -> Option<Option<String>> {
@@ -211,6 +211,24 @@ fn set_input(
     finish(&window, &guard)
 }
 
+/// Issue #451: pick an offsets CSV and import it into the Option. Null when the user cancels.
+#[tauri::command]
+async fn import_offsets(
+    app: AppHandle,
+    window: Window,
+    state: State<'_, Shared>,
+    option: String,
+) -> Reply {
+    let Some(path) = pick_file(&app, "offsets.txt", "Offsets table", &["csv"])? else {
+        return Ok(serde_json::Value::Null);
+    };
+    let csv = std::fs::read_to_string(&path)
+        .map_err(|e| format!("cannot read {}: {e}", path.display()))?;
+    let mut guard = lock(&state)?;
+    guard.import_offsets(&option, &csv)?;
+    finish(&window, &guard)
+}
+
 #[tauri::command]
 fn reset_input(window: Window, state: State<Shared>, option: String, name: String) -> Reply {
     let mut guard = lock(&state)?;
@@ -324,6 +342,7 @@ pub fn run() {
             save,
             save_as,
             set_input,
+            import_offsets,
             reset_input,
             set_active_option,
             set_formation,

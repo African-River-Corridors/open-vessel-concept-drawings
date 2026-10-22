@@ -476,6 +476,13 @@ def cases() -> dict[str, dict]:
     out["sweep hull chine gas 90x11.4"] = _inputs(
         "LNG", "type_c_tanks", "self_propelled", 90.0, 11.4, 5.0, hull_form="chine",
         chine_half_breadth_m=4.5, chine_height_m=0.6)
+    # Issue #451: an offsets hull, a raked barge typed as four stations. A base from before the
+    # offsets Hull Form refuses it: the case shows as new.
+    rows = [{"station_x_m": x, "y_m": y, "z_m": z}
+            for x, keel in ((0.0, 1.0), (4.0, 0.0), (69.3, 0.0), (76.5, 3.0))
+            for y, z in ((0.0, keel), (5.7, keel), (5.7, 3.5), (0.0, 3.5))]
+    out["sweep hull offsets 76.5x11.4"] = _inputs(
+        "bauxite", "box_hold", "pushed_barge", 76.5, 11.4, 3.5, hull_form="offsets", hull_offsets=rows)
     return out
 
 

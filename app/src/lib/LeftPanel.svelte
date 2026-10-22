@@ -7,7 +7,7 @@
   // The left panel. The groups, their order, the labels, the choices and the ranges all come from
   // the schema. An input is drawn when the Option holds it, so the panel needs no rule for which
   // inputs a Cargo Containment uses: Rust sends only those that apply.
-  let { snap, schema, evaluation, generation, onPick, onEdit, onReset, onFormation, onOption, onProfile }: {
+  let { snap, schema, evaluation, generation, onPick, onEdit, onReset, onFormation, onImportOffsets, onOption, onProfile }: {
     snap: Snapshot | null;
     schema: Schema | null;
     evaluation: OptionEvaluation | undefined;
@@ -17,6 +17,8 @@
     onEdit: (name: string, value: unknown) => void;
     onReset: (name: string) => void;
     onFormation: (kind: string, abreast: number | null, inLine: number | null) => void;
+    /** Issue #451: import an offsets CSV into the active Option. */
+    onImportOffsets: () => void;
     onOption: (action: "add" | "duplicate" | "rename" | "delete", newName?: string) => void;
     onProfile: (action: "load" | "builtin") => void;
   } = $props();
@@ -123,6 +125,7 @@
             onEdit={(v) => onEdit(spec.name, v)}
             onReset={() => onReset(spec.name)}
             {onFormation}
+            {onImportOffsets}
           />
         {/each}
       </details>

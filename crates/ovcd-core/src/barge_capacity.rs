@@ -1369,7 +1369,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         bow_rake_length_m: rake,
         bow_rake_rise_m: inp.bow_rake_rise_m.unwrap_or(inp.depth),
         stern: inp.stern_geometry.clone(),
-        shape: inp.hull_shape,
+        shape: inp.hull_shape.clone(),
     })
     .map_err(|e| value_error(format!("{e}")))?;
     let rho = inp.water_density;

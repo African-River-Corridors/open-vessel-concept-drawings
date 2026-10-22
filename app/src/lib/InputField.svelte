@@ -5,13 +5,14 @@
   // One input, drawn from its schema entry. It shows what Rust sent and sends back what the user
   // typed or chose. The number the user types stays in the box while it is typed: the box is filled
   // once and not rewritten, so "76." is not turned into "76".
-  let { spec, stored, messages, onEdit, onReset, onFormation }: {
+  let { spec, stored, messages, onEdit, onReset, onFormation, onImportOffsets }: {
     spec: InputSpec;
     stored: StoredInput;
     messages: Message[];
     onEdit: (value: unknown) => void;
     onReset: () => void;
     onFormation: (kind: string, abreast: number | null, inLine: number | null) => void;
+    onImportOffsets: () => void;
   } = $props();
 
   // The box is filled once. When Rust changes the value later (the Vessel Class moved, say) it is
@@ -200,8 +201,11 @@
     <!-- Issue #274: shown, not edited here; the Rule Set commands come with #275. -->
     <span class="summary">{Array.isArray(value) ? value.map((s: { id: string; version: string }) => setText(s)).join("; ") : t("app-none")}</span>
   {:else if spec.kind === "offsets_table"}
-    <!-- Issue #446: shown, not edited here; the import comes with the offsets Hull Form (#451). -->
-    <span class="summary">{value === null ? t("app-none") : t("app-offset-station-count", { count: new Set((value as { station_x_m: number }[]).map((r) => r.station_x_m)).size })}</span>
+    <!-- Issue #451: the station count, and an Import button that reads an offsets CSV. -->
+    <div class="row">
+      <span class="summary">{value === null ? t("app-none") : t("app-offset-station-count", { count: new Set((value as { station_x_m: number }[]).map((r) => r.station_x_m)).size })}</span>
+      <button type="button" data-testid="import-offsets" onclick={onImportOffsets}>{t("app-import-offsets")}</button>
+    </div>
   {/if}
 
   {#each messages as m}

@@ -687,6 +687,43 @@ impl DesignSession {
         Ok(&self.design)
     }
 
+    /// Issue #451: import an offsets CSV into an Option. The Option becomes an `offsets` hull whose
+    /// table is the CSV's rows, and its length, beam and depth take the table's values. Returns the
+    /// warnings (a resampled table); a CSV or table the engine cannot read is refused with its
+    /// reason, and the Option is left as it was.
+    pub fn import_offsets(&mut self, option: &str, csv: &str) -> Result<Vec<String>, String> {
+        let rows = crate::offsets::parse_csv(csv).map_err(|e| e.to_string())?;
+        let imported = ovcd_core::offsets::import(&rows).map_err(|e| e.to_string())?;
+        let d = ovcd_core::offsets::dimensions(&imported.table);
+        let before = self.design.clone();
+        let result = (|| {
+            self.set_input(option, "hull_form", json!("offsets"))?;
+            self.set_input(option, "hull_offsets", crate::offsets::rows_json(&rows))?;
+            self.set_input(option, "length_overall_m", json!(d.length_m))?;
+            self.set_input(option, "beam_m", json!(d.beam_m))?;
+            self.set_input(option, crate::vdesign::DEPTH_INPUT, json!(d.depth_m))?;
+            Ok::<(), String>(())
+        })();
+        if let Err(e) = result {
+            self.design = before;
+            return Err(e);
+        }
+        let mut warnings = Vec::new();
+        if !imported.resampled.is_empty() {
+            warnings.push(
+                ovcd_core::text!(
+                    "msg-offsets-resampled",
+                    "the offsets table has stations of unequal point counts: {count} station(s) are \
+                     resampled by arc length to {points} points, with their own points kept",
+                    count = imported.resampled.len(),
+                    points = imported.points
+                )
+                .to_string(),
+            );
+        }
+        Ok(warnings)
+    }
+
     /// Define the Option by this class (an id, or null for typed dimensions): length, beam and
     /// Formation come from the class, marked `class`; the scheme is the class's. Depth stays typed.
     /// The limits the class fills follow when the Design is normalised.

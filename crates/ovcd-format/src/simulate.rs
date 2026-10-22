@@ -32,7 +32,7 @@ use serde_json::{Map, Value, json};
 const MINUS: &str = "\u{2212}";
 
 /// Why a simulation stopped before it had a result.
-enum Stop {
+pub(crate) enum Stop {
     /// A refusal: the input is outside what this port models.
     Eval(EvalError),
     /// A Python exception that escapes `simulate`.
@@ -1846,7 +1846,30 @@ fn hull_shape_of(p: &Map<String, Value>) -> R<ovcd_core::hull::hull_form::HullSh
         sheer_fwd_m: get_or(p, "sheer_fwd_m", 0.0)?,
         camber_m: get_or(p, "camber_m", 0.0)?,
         bottom,
+        offsets: offsets_of(p)?,
     })
+}
+
+/// The hull of the params as its Sections Table, as the run builds it (issue #451): the Hull
+/// Form, its shape, the raked bow and the Stern Form at the design draught.
+pub(crate) fn hull_table_of(p: &Map<String, Value>) -> R<ovcd_core::sections::SectionsTable> {
+    let (l, b, d) = (need(p, "loa_m")?, need(p, "beam_m")?, need(p, "depth_m")?);
+    let self_propelled = p.get("self_propelled").is_some_and(truthy);
+    let stern = stern_of(p, (l, b, d), design_draught(p, d)?, self_propelled)?;
+    Ok(option_hull(p, (l, b, d), stern.as_ref())?.table)
+}
+
+/// The typed offsets table of an `offsets` Option (issue #451), as its Sections Table; `None` for
+/// any other Hull Form.
+fn offsets_of(p: &Map<String, Value>) -> R<Option<ovcd_core::sections::SectionsTable>> {
+    if p.get("hull_form").and_then(Value::as_str) != Some("offsets") {
+        return Ok(None);
+    }
+    let rows = crate::offsets::rows_of(p.get("hull_offsets").unwrap_or(&Value::Null))
+        .map_err(|e| Stop::Raised("ValueError".to_string(), e.to_string()))?;
+    let table = ovcd_core::offsets::from_rows(&rows)
+        .map_err(|e| Stop::Raised("ValueError".to_string(), format!("{e}")))?;
+    Ok(Some(table))
 }
 
 /// The hull of the Option as its Sections Table (issue #448): the raked bow and the Stern Form.

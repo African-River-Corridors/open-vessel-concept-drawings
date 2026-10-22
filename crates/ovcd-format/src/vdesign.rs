@@ -240,7 +240,7 @@ pub fn table_combinations() -> Vec<[(&'static str, String); 3]> {
 pub const HULL_FORMS: &[&str] = &["box", "raked_box", "v_bottom", "chine", "shipd", "offsets"];
 /// The Hull Forms the engine computes today. The others are inputs only until their generator and
 /// the hydrostatics switch-over land (spec 0008, "Build tickets"); an Option with one is refused.
-pub const BUILT_HULL_FORMS: &[&str] = &["raked_box", "v_bottom", "chine"];
+pub const BUILT_HULL_FORMS: &[&str] = &["raked_box", "v_bottom", "chine", "offsets"];
 /// The Hull Forms with the raked-box bow (every form but `shipd` and `offsets`).
 pub const RAKED_BOW_FORMS: &[&str] = &["box", "raked_box", "v_bottom", "chine"];
 /// The Hull Forms that take a bilge radius.
@@ -4487,8 +4487,8 @@ fn check_value(spec: &InputSpec, v: &Value, profile: &Profile) -> Result<(Value,
             if name == "hull_form" && choices.contains(&s) && !BUILT_HULL_FORMS.contains(&s) {
                 Err(text!(
                     "msg-hull-form-not-built",
-                    "`{input}` = {value} is not built yet: the engine computes raked_box, v_bottom \
-                     and chine for now (spec 0008)",
+                    "`{input}` = {value} is not built yet: the engine computes raked_box, v_bottom, \
+                     chine and offsets for now (spec 0008)",
                     input = input(),
                     value = v.to_string()
                 ))
@@ -4728,6 +4728,68 @@ fn number_ranges(label: &str, name: &str, x: f64, profile: &Profile) -> Result<V
 }
 
 /// Checks across inputs.
+/// Issue #451: an `offsets` Option's table is checked as the engine reads it (each refusal with
+/// its reason), a table of unequal stations is resampled with a warning, and typed L, B and D
+/// that differ from the table's are noted: the run takes the table's.
+fn offsets_checks<'a>(
+    get: &dyn Fn(&str) -> Option<&'a Value>,
+    report: &mut Report,
+    at: &dyn Fn(Text) -> Text,
+) {
+    if get("hull_form").and_then(Value::as_str) != Some("offsets") {
+        return;
+    }
+    let table = get("hull_offsets").unwrap_or(&Value::Null);
+    let rows = match crate::offsets::rows_of(table) {
+        Ok(rows) => rows,
+        Err(e) => {
+            report.error_text(at(e), &["hull_offsets"]);
+            return;
+        }
+    };
+    let imported = match ovcd_core::offsets::import(&rows) {
+        Ok(i) => i,
+        Err(e) => {
+            report.error_text(at(e.text()), &["hull_offsets"]);
+            return;
+        }
+    };
+    if !imported.resampled.is_empty() {
+        report.warning_text(
+            at(text!(
+                "msg-offsets-resampled",
+                "the offsets table has stations of unequal point counts: {count} station(s) are \
+                 resampled by arc length to {points} points, with their own points kept",
+                count = imported.resampled.len(),
+                points = imported.points
+            )),
+            &["hull_offsets"],
+        );
+    }
+    let d = ovcd_core::offsets::dimensions(&imported.table);
+    for (name, value) in [
+        ("length_overall_m", d.length_m),
+        ("beam_m", d.beam_m),
+        (DEPTH_INPUT, d.depth_m),
+    ] {
+        if let Some(typed) = get(name).and_then(Value::as_f64)
+            && typed != value
+        {
+            report.warning_text(
+                at(text!(
+                    "msg-offsets-dimension",
+                    "`{input}` = {typed} differs from the offsets table's {table}: an offsets hull \
+                     takes its length, beam and depth from its table",
+                    input = Arg::input(name),
+                    typed = number(typed),
+                    table = number(value)
+                )),
+                &[name],
+            );
+        }
+    }
+}
+
 fn cross_checks(
     inputs: &[(String, StoredInput)],
     profile: &Profile,
@@ -4803,6 +4865,7 @@ fn cross_checks(
             &["min_freeboard_m", "moulded_depth_m"],
         );
     }
+    offsets_checks(&get, report, at);
     // A count is a whole number.
     for name in [
         "n_holds",

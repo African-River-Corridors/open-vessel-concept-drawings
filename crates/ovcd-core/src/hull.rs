@@ -307,7 +307,7 @@ pub mod hull_form {
 
     /// The bilge radius, sheer and camber of a Hull Form (spec 0008, "Hull Forms", issue #449). All
     /// in metres; 0 (the default) is the square bilge, straight deck edge and flat deck of the box.
-    #[derive(Debug, Clone, Copy, PartialEq, Default)]
+    #[derive(Debug, Clone, PartialEq, Default)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
     pub struct HullShape {
         /// The bilge: an arc of this radius, written as [`BILGE_CHORDS`] chords.
@@ -322,6 +322,10 @@ pub mod hull_form {
         pub camber_m: f64,
         /// The bottom: flat (the box), or a V-bottom or chine bottom (issue #450).
         pub bottom: Bottom,
+        /// The `offsets` Hull Form (issue #451): the typed table is the hull, and the main
+        /// dimensions, the rakes and the shape above do not apply.
+        #[cfg_attr(feature = "serde", serde(skip))]
+        pub offsets: Option<SectionsTable>,
     }
 
     /// The bottom of a Hull Form's section (spec 0008, "Hull Forms"). Angles in degrees, lengths in
@@ -374,7 +378,7 @@ pub mod hull_form {
     }
 
     /// The main dimensions and the Hull Form.
-    #[derive(Debug, Clone, Copy, PartialEq)]
+    #[derive(Debug, Clone, PartialEq)]
     pub struct HullFormInputs {
         pub length_overall_m: f64,
         pub beam_m: f64,
@@ -579,6 +583,9 @@ pub mod hull_form {
 
     /// Write the Sections Table of a Hull Form.
     pub fn generate(inputs: &HullFormInputs) -> Result<SectionsTable, HullError> {
+        if let Some(table) = &inputs.shape.offsets {
+            return Ok(table.clone());
+        }
         let (l, b, d) = (
             inputs.length_overall_m,
             inputs.beam_m,
