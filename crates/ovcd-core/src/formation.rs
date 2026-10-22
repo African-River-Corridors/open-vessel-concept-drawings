@@ -15,6 +15,8 @@ pub const POWER_TOLERANCE: f64 = 0.01;
 
 /// The reference power of the pusher ratios (kW).
 const REF_PUSHER_KW: f64 = 1400.0;
+/// The reference power of the towing tug ratios (kW).
+const REF_TOWING_KW: f64 = 3000.0;
 
 /// The pusher length by the ratio fitted to the reference pushers (an Estimate, research 6.2):
 /// 19.5 x (P / 1,400 kW)^0.67 (m).
@@ -33,6 +35,22 @@ pub fn pusher_draught_m(draught_limit_m: Option<f64>) -> f64 {
         Some(limit) if limit > 0.0 && limit < 2.0 => limit,
         _ => 2.0,
     }
+}
+
+/// The towing tug length by the ratio fitted to the reference tugs (an Estimate, research 7.3 and 10,
+/// issue #361): 23 x (P / 3,000 kW)^0.45 (m).
+pub fn towing_tug_length_m(power_kw: f64) -> f64 {
+    23.0 * pow(power_kw.max(1.0) / REF_TOWING_KW, 0.45)
+}
+
+/// The towing tug beam: its length over 2.5 (an Estimate, as the length).
+pub fn towing_tug_beam_m(length_m: f64) -> f64 {
+    length_m / 2.5
+}
+
+/// The towing tug draught: 0.42 of its beam (an Estimate from the tug sheets).
+pub fn towing_tug_draught_m(beam_m: f64) -> f64 {
+    0.42 * beam_m
 }
 
 /// The pusher's moulded depth (m): its draught plus this (an Estimate; the inputs hold no depth).
@@ -153,4 +171,11 @@ pub fn size_loop(start_kw: f64, mut power_of: impl FnMut(f64) -> f64) -> Sized {
         passes: MAX_PASSES,
         converged: false,
     }
+}
+
+/// The resistance of a tow (spec 0007, issue #361): the barges and the tug are separate hulls, so their
+/// resistances add at each speed, and the Formation resistance allowance multiplies the sum.
+/// `barge_kn` is the resistance of one barge, `barges` the number towed, `tug_kn` the tug's.
+pub fn tow_resistance_kn(barge_kn: f64, barges: u64, tug_kn: f64, allowance: f64) -> f64 {
+    (barges as f64 * barge_kn + tug_kn) * allowance
 }

@@ -63,3 +63,20 @@ fn the_loop_stops_at_five_passes_when_it_does_not_converge() {
     assert_eq!(s.passes, MAX_PASSES);
     assert!(!s.converged);
 }
+
+#[test]
+fn the_towing_tug_ratios_give_their_reference_size_at_3000_kw() {
+    // 23 m at the reference power; the beam is the length over 2.5; the draught 0.42 of the beam.
+    assert!((towing_tug_length_m(3000.0) - 23.0).abs() < 1e-12);
+    assert!((towing_tug_beam_m(23.0) - 9.2).abs() < 1e-12);
+    assert!((towing_tug_draught_m(9.2) - 0.42 * 9.2).abs() < 1e-12);
+    assert!(towing_tug_length_m(4500.0) > towing_tug_length_m(3000.0));
+}
+
+#[test]
+fn the_resistance_of_a_tow_is_the_sum_of_the_parts_times_the_allowance() {
+    // One barge: barge + tug. Three barges: 3 x barge + tug. The allowance multiplies the sum.
+    assert_eq!(tow_resistance_kn(40.0, 1, 10.0, 1.0), 50.0);
+    assert_eq!(tow_resistance_kn(40.0, 3, 10.0, 1.0), 130.0);
+    assert!((tow_resistance_kn(40.0, 1, 10.0, 1.2) - 60.0).abs() < 1e-12);
+}
