@@ -603,7 +603,12 @@ pub fn rule_inputs(option: &DesignOption) -> RuleInputs {
             applicability.push((spec.name.to_string(), v));
         }
     }
-    for name in ["cargo_class", "formation_kind", "length_band", "adn_vessel_type"] {
+    for name in [
+        "cargo_class",
+        "formation_kind",
+        "length_band",
+        "adn_vessel_type",
+    ] {
         if let Some(v) = source.input(name) {
             applicability.push((name.to_string(), v));
         }
