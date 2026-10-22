@@ -260,6 +260,7 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     put("air_draft_limit_m", "air_draft_limit_m");
     put("draught_limit_m", "draught_limit_m");
     put("downflooding_angle_deg", "downflooding_angle_deg");
+    put("downflooding_openings", "downflooding_openings");
     // A null wall thickness asks for the pressure-vessel formula (issue #292); `put` leaves nulls
     // out, and a key left out means the engine's old fixed 25 mm.
     // In the same way a null dome size asks for the dome rule (issue #316), and a null design
@@ -495,7 +496,22 @@ pub fn run_option_with(
             None => {
                 // The capital budget: an output, not hashed, never fed back into the run.
                 let mut v = v;
-                let cost = crate::cost::cost_of(option, &v);
+                if let Some((abreast, in_line)) = crate::convoy::counts(option) {
+                    crate::convoy::add_totals(abreast, in_line, &mut v);
+                }
+                crate::convoy::add_lock_checks(option, &mut v);
+                // Issue #359: the pusher of a pushed barge or convoy, when the Option includes it.
+                crate::formation::add_formation(
+                    option,
+                    &params,
+                    crate::convoy::counts(option).unwrap_or((1, 1)),
+                    &mut v,
+                );
+                let mut cost = crate::cost::cost_of(option, &v);
+                // Issue #552: the budget of a pushed convoy is that of every barge.
+                if let Some((abreast, in_line)) = crate::convoy::counts(option) {
+                    crate::convoy::scale_cost(abreast * in_line, &mut cost);
+                }
                 // The Rule Trace: not hashed either; the stored Rule Set hashes cover the rules.
                 measured.checks = v
                     .get("checks")
@@ -516,10 +532,19 @@ pub fn run_option_with(
                 measured.downflooding_deg = option
                     .input("downflooding_angle_deg")
                     .and_then(|i| i.value.as_f64());
+                measured.downflooding_openings = option
+                    .input("downflooding_openings")
+                    .and_then(|i| i.value.as_array())
+                    .is_some_and(|rows| !rows.is_empty());
                 let sightline = &v["sightline"];
                 measured.blind_distance_light_m = sightline["blind_distance_light_m"].as_f64();
                 measured.blind_distance_laden_m = sightline["blind_distance_laden_m"].as_f64();
-                measured.speeds_kn = v["powering"]["environments"]
+                let speeds_of = if v["powering"].is_null() {
+                    &v["formation"]
+                } else {
+                    &v["powering"]
+                };
+                measured.speeds_kn = speeds_of["environments"]
                     .as_array()
                     .map(|list| {
                         list.iter()
@@ -533,6 +558,10 @@ pub fn run_option_with(
                     })
                     .unwrap_or_default();
                 measured.design_speed_kn = v["powering"]["design_speed_kn"].as_f64();
+                // Issue #359: a pushed Formation with its pusher has its speeds in `formation`.
+                if v["formation"]["environments"].is_array() && v["powering"].is_null() {
+                    measured.design_speed_kn = v["formation"]["design_speed_kn"].as_f64();
+                }
                 measured.lift_enough = v["sightline"]["lift_enough"].as_bool();
                 measured.depth_over_draught = match (
                     option
@@ -548,13 +577,19 @@ pub fn run_option_with(
                     crate::trace::service_area_of(option),
                     &selection.warnings,
                 );
-                if let Some((abreast, in_line)) = crate::convoy::counts(option) {
-                    crate::convoy::add_totals(abreast, in_line, &mut v);
-                }
-                crate::convoy::add_lock_checks(option, &mut v);
+                let v_has_formation = v.get("formation").is_some_and(Value::is_object);
                 if let Some(o) = v.as_object_mut() {
                     o.insert("cost".to_string(), cost);
-                    o.insert("calibration".to_string(), calibration_of(option));
+                    let mut calibration = calibration_of(option);
+                    // Issue #359: the pusher ratios and the allowance are not fitted yet (part 2 of
+                    // #359 does it). The label is outside the hash, so its change moves no hash.
+                    if v_has_formation {
+                        calibration["formation"] = json!({
+                            "state": "uncalibrated",
+                            "basis": "The pusher ratios and the Formation resistance allowance are estimates not yet fitted to the reference pushers; a small pusher can be far from a real one.",
+                        });
+                    }
+                    o.insert("calibration".to_string(), calibration);
                     o.insert("rule_trace".to_string(), rule_trace);
                 }
                 let hash = results_hash(&v);

@@ -73,7 +73,7 @@ pub const BLADE_LOAD_DUCTED_KW_M2: f64 = 500.0;
 pub const WAKE_OPEN_STERN: f64 = 0.20;
 pub const WAKE_TUNNEL: f64 = 0.30;
 /// The gravity the spec turns kN into tonnes with.
-pub const G: f64 = 9.81;
+pub use crate::constants::GRAVITY as G;
 
 /// The largest azimuth unit of the maker range (m): the Schottel SRP 800, 4,200 mm (SCHOTTEL Product
 /// Guide 1125, the SRP table). It caps the default propeller diameter (issue #352).
@@ -144,7 +144,7 @@ pub fn ideal_efficiency(c_t: f64, ducted: bool) -> f64 {
     2.0 / (1.0 + sqrt(1.0 + load.max(0.0)))
 }
 
-const MS_PER_KN: f64 = 1852.0 / 3600.0;
+use crate::constants::KNOTS_TO_MS as MS_PER_KN;
 
 /// The propulsor at each speed (kn), for the total resistance there (kN). A speed of 0 or less, or no
 /// resistance, gives no thrust and no power.

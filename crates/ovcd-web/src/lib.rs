@@ -152,6 +152,18 @@ impl Session {
         ok(export::dxf(&self.state, option, view))
     }
 
+    /// The glTF binary of an Option's Vessel Model (issue #460): the bytes `ovcd export --format gltf`
+    /// writes.
+    pub fn export_gltf(&self, option: &str) -> Js<Vec<u8>> {
+        let design = self.state.session().design();
+        let found = design
+            .options
+            .iter()
+            .find(|o| o.name == option)
+            .ok_or_else(|| err(format!("no Option named '{option}'")))?;
+        ok(ovcd_format::export::option_glb(found))
+    }
+
     /// The mesh hash of an Option's Vessel Model (issue #456), as `ovcd mesh --hash` prints it.
     pub fn mesh_hash(&self, option: &str) -> Js<String> {
         let design = self.state.session().design();

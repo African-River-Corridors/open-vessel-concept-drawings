@@ -200,6 +200,9 @@
   {:else if spec.kind === "rule_sets"}
     <!-- Issue #274: shown, not edited here; the Rule Set commands come with #275. -->
     <span class="summary">{Array.isArray(value) ? value.map((s: { id: string; version: string }) => setText(s)).join("; ") : t("app-none")}</span>
+  {:else if spec.kind === "openings_list"}
+    <!-- Issue #592: shown, not edited here; the openings are typed in the file. -->
+    <span class="summary">{Array.isArray(value) && value.length > 0 ? t("app-opening-count", { count: value.length }) : t("app-none")}</span>
   {:else if spec.kind === "offsets_table"}
     <!-- Issue #451: the station count, and an Import button that reads an offsets CSV. -->
     <div class="row">

@@ -14,7 +14,7 @@ use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
-pub const GRAVITY: f64 = 9.80665;
+pub use crate::constants::{GRAVITY, KNOTS_TO_MS};
 pub const SEAWATER_DENSITY_T_M3: f64 = 1.025;
 
 /// ITTC's stated validity for STAwave-1: waves short relative to the hull.
@@ -138,7 +138,7 @@ pub fn compute(inp: &WaveResistanceInputs) -> Result<WaveResistanceResult, Strin
         0.0
     };
 
-    let v_ms = inp.speed_kn * 0.514444;
+    let v_ms = inp.speed_kn * KNOTS_TO_MS;
     let added_kw = r * v_ms; // kN * m/s = kW, effective (thrust) power
 
     let mut checks: Vec<Check> = Vec::new();

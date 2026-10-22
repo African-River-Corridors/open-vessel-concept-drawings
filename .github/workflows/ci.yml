@@ -226,6 +226,25 @@ jobs:
           git -C "$RUNNER_TEMP/tdfa" checkout -q FETCH_HEAD
           python tools/dxf_crosscheck.py --tdfa-src "$RUNNER_TEMP/tdfa"
 
+  # The Khronos glTF validator on the .glb of every fixture (issue #460, spec 0008 "Phase 2: exports").
+  gltf-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: Build ovcd
+        run: cargo build -p ovcd-cli
+      - name: Install the validator (pinned)
+        run: npm install --no-save --no-package-lock gltf-validator@2.0.0-dev.3.10
+      - name: Every fixture's .glb has no validator error
+        run: node tools/gltf_validate.mjs target/debug/ovcd
+
   release-guard:
     runs-on: ubuntu-latest
     steps:

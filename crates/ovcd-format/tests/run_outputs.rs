@@ -91,6 +91,16 @@ fn a_sloped_hopper_hold_runs_as_the_sloped_hopper_barge() {
     without_cost.as_object_mut().unwrap().remove("rule_trace");
     // And the calibration label (issue #434), which `simulate` does not give either.
     without_cost.as_object_mut().unwrap().remove("calibration");
+    // And the pusher of the Formation (issue #359): `simulate` gives the barge alone, and the notes
+    // of the pusher are not in its `text_ids`.
+    without_cost.as_object_mut().unwrap().remove("formation");
+    if let Some(ids) = without_cost["text_ids"].as_object_mut() {
+        ids.retain(|_, v| {
+            !v["id"]
+                .as_str()
+                .is_some_and(|id| id.contains("-formation-"))
+        });
+    }
     assert_eq!(without_cost, eval("simulate", &case).unwrap()["ok"]);
     // And not the box barge's answer: the hold shapes differ.
     let box_hold = run_option(&starter().options[0]);

@@ -25,6 +25,7 @@ declare module "*/wasm-pkg/ovcd_web.js" {
     drawing_svg(option: string, view: string): string;
     drawing_pdf(option: string, view: string): Uint8Array;
     drawing_dxf(option: string, view: string): Uint8Array;
+    export_gltf(option: string): Uint8Array;
   }
   export function engine_version(): string;
   export default function init(input?: unknown): Promise<unknown>;

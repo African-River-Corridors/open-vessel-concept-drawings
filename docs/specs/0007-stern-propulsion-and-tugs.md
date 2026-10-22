@@ -208,7 +208,7 @@ the `atb` and `towed_barge` Vessel Classes pickable (`vessel_classes.rs` `format
   t = w so that η_H = 1.
 - **Bollard pull** (V = 0): T₀ = κ_b,type × (2ρA)^(1/3) × P_D^(2/3) per unit, the momentum limit of a
   disc; the duct's extra thrust is inside κ_b. With ρ = 1,025 kg/m³ and κ_b = 0.77 this is the Wärtsilä
-  open-propeller estimate 0.9 × (D·P_D)^(2/3) kN (derived). Bollard pull in tonnes = n × T₀ / 9.81.
+  open-propeller estimate 0.9 × (D·P_D)^(2/3) kN (derived). Bollard pull in tonnes = n × T₀ / g, with g = 9.80665 m/s² (the one value of g in the engine, issue #526).
 - **Factors κ_type and κ_b,type** are Defaults Profile values, status `estimate`, fitted in the calibration ticket so
   that the bollard pull per kW of the in-sample reference tugs falls in the research bands (κ_b), and
   that the installed power of the in-sample ships at their stated speed falls in its band (κ), with the

@@ -1005,6 +1005,8 @@ fn a_dry_bulk_design_draws_its_zone_limits_and_forward_equipment_and_no_gas_item
             ("section", &v.midship_section),
         ] {
             let t = texts(view);
+            // A hold in the IS Code conditions has its ballast tanks drawn (issue #426).
+            let ballasted = r["drawing"].get("ballast_spaces").is_some();
             for gas in [
                 "COFFERDAM",
                 "DOME",
@@ -1013,9 +1015,14 @@ fn a_dry_bulk_design_draws_its_zone_limits_and_forward_equipment_and_no_gas_item
                 "VOID (BOTH SIDES)",
                 "DOUBLE BOTTOM",
             ] {
+                if ballasted && (gas == "WBT (BOTH SIDES)" || gas == "DOUBLE BOTTOM") {
+                    continue;
+                }
                 assert!(!t.iter().any(|x| x == gas), "{file} {name}: {gas}");
             }
-            assert!(of_layer(view, "HATCH", "hatch").is_empty(), "{file} {name}");
+            if !ballasted {
+                assert!(of_layer(view, "HATCH", "hatch").is_empty(), "{file} {name}");
+            }
         }
     }
 }

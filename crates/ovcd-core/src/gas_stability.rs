@@ -295,6 +295,7 @@ pub fn assess_num(
             stern: result.stern_geometry.clone(),
             shape: Default::default(),
             downflooding_deg: None,
+            openings: Vec::new(),
         });
     let hull = crate::hydrostatics::Hull::build(&spec)
         .map_err(|e| PyError::Value(alloc::format!("{e}")))?;
@@ -410,6 +411,7 @@ pub fn assess_num(
                 area_0_40: 0.0,
                 area_30_40: 0.0,
                 deck_edge_deg: None,
+                downflooding_deg: None,
                 criteria: vec![criterion(
                     "Floats with freeboard",
                     t,
@@ -644,6 +646,7 @@ mod tests {
             area_0_40: 1.0,
             area_30_40: 1.0,
             deck_edge_deg: None,
+            downflooding_deg: None,
             criteria: Vec::new(),
         }
     }

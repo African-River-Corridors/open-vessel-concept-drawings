@@ -55,6 +55,7 @@ fn no_trim_when_g_is_over_b_and_a_heavy_stern_trims_by_the_stern() {
         stern: None,
         shape: Default::default(),
         downflooding_deg: None,
+        openings: Vec::new(),
     })
     .unwrap();
     let u = hull.upright(3.0, 1.0).unwrap();

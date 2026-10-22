@@ -3,7 +3,7 @@
 import init, { Session } from "../../../wasm-pkg/ovcd_web.js";
 import wasmUrl from "../../../wasm-pkg/ovcd_web_bg.wasm?url";
 import type { Evaluation, Schema, Snapshot } from "../api";
-import type { DrawingFormat, DrawingView, Platform } from "./types";
+import type { DrawingFormat, DrawingView, ModelFormat, Platform } from "./types";
 import { t } from "../i18n.svelte";
 
 const LAST_DESIGN = "ovcd.lastDesign";
@@ -191,6 +191,11 @@ export async function createWebPlatform(): Promise<Platform> {
       if (format === "svg") download(`${base}.svg`, session.drawing_svg(option, view), "image/svg+xml");
       else if (format === "pdf") download(`${base}.pdf`, new Uint8Array(session.drawing_pdf(option, view)), "application/pdf");
       else download(`${base}.dxf`, new Uint8Array(session.drawing_dxf(option, view)), "application/dxf");
+      return true;
+    },
+    exportModel: async (option: string, _format: ModelFormat) => {
+      const base = `${fileNameOf(await currentSnapshot()).replace(/\.vdesign$/, "")}-${option}`;
+      download(`${base}.glb`, new Uint8Array(session.export_gltf(option)), "model/gltf-binary");
       return true;
     },
   };

@@ -210,7 +210,9 @@ fn every_gas_option_has_the_is_code_rows_of_each_loading_condition() {
         for results in results_of(file) {
             let rows = results["rule_trace"]["rows"].as_array().unwrap();
             let conditions = results["stability"]["conditions"].as_array().unwrap();
-            assert_eq!(conditions.len(), 3, "{file}");
+            // The IS Code conditions: full load departure and arrival, ballast departure and arrival, and
+            // and the light condition for a hull that may sail without ballast (issue #426).
+            assert!((4..=5).contains(&conditions.len()), "{file}");
             for c in conditions {
                 for (id, name) in NAMES {
                     let row = rows

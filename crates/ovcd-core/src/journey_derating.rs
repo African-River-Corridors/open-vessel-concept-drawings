@@ -122,6 +122,7 @@ pub fn compute(inp: &JourneyDeratingInputs<'_>) -> Result<JourneyDeratingResult,
             stern: None,
             shape: Default::default(),
             downflooding_deg: None,
+            openings: Vec::new(),
         });
     let hull = Hull::build(&spec).map_err(|e| alloc::format!("{e}"))?;
     let rho = inp.water_density;

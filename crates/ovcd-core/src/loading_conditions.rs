@@ -593,6 +593,7 @@ fn condition_with(
             area_0_40: 0.0,
             area_30_40: 0.0,
             deck_edge_deg: None,
+            downflooding_deg: None,
             criteria: alloc::vec![criterion(
                 "Floats with freeboard",
                 t,
@@ -612,7 +613,11 @@ fn condition_with(
         // Issue #567: a trial of the automatic plan stops as soon as a criterion of the IS Code
         // set is decided (see `screened_gz`); the curve of a trial that is not decided is the
         // whole curve, used as is.
-        let gz_worked = if screen && inp.criteria_set == "IS_CODE_2008" {
+        // No screen with openings listed and no angle typed: the angle of down-flooding is worked
+        // from the heels' waterplanes (issue #592) and can end the areas below 40 degrees.
+        let angle_from_openings =
+            inp.hull.spec.downflooding_deg.is_none() && !inp.hull.spec.openings.is_empty();
+        let gz_worked = if screen && inp.criteria_set == "IS_CODE_2008" && !angle_from_openings {
             match crate::box_stability::screened_gz(
                 inp.hull,
                 disp,

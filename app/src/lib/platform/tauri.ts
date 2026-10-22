@@ -27,4 +27,5 @@ export const tauriPlatform: Platform = {
   noticeSeen: () => invoke<boolean>("notice_seen"),
   acceptNotice: () => invoke<void>("accept_notice"),
   exportDrawing: async () => false,
+  exportModel: async () => false,
 };

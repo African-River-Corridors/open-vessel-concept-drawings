@@ -26,7 +26,7 @@ fn a_new_option_takes_the_factors_of_its_propulsor_type() {
     );
     assert_eq!(
         input(&s, "bollard_pull_factor"),
-        Some((json!(0.975), Source::Default))
+        Some((json!(0.974), Source::Default))
     );
     assert_eq!(
         input(&s, "propulsor_efficiency_factor"),

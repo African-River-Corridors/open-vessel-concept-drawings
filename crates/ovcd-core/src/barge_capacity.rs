@@ -221,6 +221,9 @@ pub struct BargeCapacityInputs {
     /// Issue #282: the angle of down-flooding (degrees) the designer gives; `None`: none given, so
     /// the IS Code areas run to 40 degrees. Below 40 they end there (IS Code Part A 2.2.1).
     pub downflooding_angle_deg: Option<f64>,
+    /// Issue #592: the deck openings the angle is worked from when none is typed; none listed: no
+    /// angle is worked out.
+    pub downflooding_openings: Vec<crate::hydrostatics::Opening>,
     /// Dry-bulk end-bulkhead allowance at each end of the hold (m)
     pub bulk_end_bulkhead_m: f64,
 
@@ -327,6 +330,7 @@ impl BargeCapacityInputs {
             bow_rake_rise_m: None,
             hull_shape: crate::hull::hull_form::HullShape::default(),
             downflooding_angle_deg: None,
+            downflooding_openings: Vec::new(),
             bow_rake_to_depth_ratio: DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
             bulk_end_bulkhead_m: 0.50,
             vessel_type: "IGC_2G".to_string(),
@@ -1400,6 +1404,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         stern: inp.stern_geometry.clone(),
         shape: inp.hull_shape.clone(),
         downflooding_deg: inp.downflooding_angle_deg,
+        openings: inp.downflooding_openings.clone(),
     })
     .map_err(|e| value_error(format!("{e}")))?;
     let rho = inp.water_density;

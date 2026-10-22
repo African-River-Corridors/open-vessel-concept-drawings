@@ -43,6 +43,7 @@ app-yes = yes
 app-no = no
 app-parameter-count = Parameters: { $count }
 app-offset-station-count = Stations: { $count }
+app-opening-count = Openings: { $count }
 app-import-offsets = Import CSV
 app-pass = PASS
 app-fail = FAIL
@@ -133,6 +134,7 @@ app-view-midship = Cross-section
 app-group-stability-propulsion = Stability & Propulsion
 app-view-stability = Intact stability
 app-view-ballast = Ballast tanks
+app-view-convoy = Convoy totals
 app-view-speed-power = Power and speed curves
 app-view-rules = Rule check calculations
 app-group-boq-finance = BOQ & Finance
@@ -289,7 +291,7 @@ app-stab-col-deck-edge = Deck-edge angle
 app-stab-criteria-of = { $condition }: criteria
 app-stab-needs-at-least = needs at least
 app-stab-limitations = Limitations
-app-stab-limit-downflooding = The 0–40° and 30–40° areas run to 40° unless you type an angle of down-flooding below 40° (the input Angle of down-flooding). IS Code 2008 Part A 2.2.1 stops them at that angle when it is less than 40°. The model has no openings with heights, so it cannot work the angle out: with none typed, a hull whose openings immerse sooner can pass when it should fail (finding #282).
+app-stab-limit-downflooding = The 0–40° and 30–40° areas run to 40° unless you type an angle of down-flooding below 40° (the input Angle of down-flooding). IS Code 2008 Part A 2.2.1 stops them at that angle when it is less than 40°. List the deck openings (the input Openings for down-flooding) and the model works the angle out for each loading condition. With neither typed nor listed, a hull whose openings immerse sooner can pass when it should fail (findings #282, #592).
 
 ## Capital budget view
 
@@ -363,3 +365,17 @@ app-ballast-kind-peak = Peak
 app-ballast-side-port = Port
 app-ballast-side-starboard = Starboard
 app-ballast-side-centre = Centre
+
+# The convoy totals (issue #551)
+app-convoy-formation = { $abreast } abreast, { $in_line } in line: { $barges } barges
+app-convoy-quantity = Quantity
+app-convoy-one-barge = One barge
+app-convoy-total = Convoy
+app-convoy-cargo = Cargo
+app-convoy-lightship = Lightship
+app-convoy-deadweight = Deadweight
+app-convoy-displacement = Displacement
+app-convoy-cargo-volume = Cargo volume
+app-convoy-overall-length = Overall length
+app-convoy-overall-beam = Overall beam
+app-convoy-pusher-note = The pusher is not in these totals. It joins them when the pusher is sized.

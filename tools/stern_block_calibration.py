@@ -50,10 +50,16 @@ def run_case(ovcd: Path, base: dict, c: dict) -> dict:
     with tempfile.TemporaryDirectory() as tmp:
         f = Path(tmp) / "case.vdesign"
         f.write_text(json.dumps(d))
+        # A fixture may lack inputs added since: write them in with the values a file saved before had.
+        filled = subprocess.run([str(ovcd), "fill", str(f)], capture_output=True, text=True)
+        if filled.returncode != 0:
+            sys.exit(f"ovcd fill failed on {c['id']}: {filled.stderr[-400:]}")
+        f.write_text(filled.stdout)
         r = subprocess.run([str(ovcd), "run", "--json", str(f)], capture_output=True, text=True)
-    if r.returncode != 0:
-        sys.exit(f"ovcd failed on {c['id']}: {r.stderr[-400:]}")
-    zones = json.loads(r.stdout)["options"][0]["results"]["drawing"]["aft_arrangement"]["zones"]
+    option = json.loads(r.stdout)["options"][0]
+    if option["results"] is None:
+        sys.exit(f"ovcd failed on {c['id']}: {option.get('message')}")
+    zones = option["results"]["drawing"]["aft_arrangement"]["zones"]
     below = [z for z in zones if z[0].startswith(BELOW_DECK)]
     peak = next(z for z in below if z[0].startswith("AFT PEAK"))
     return {"aft_peak": peak[2], "stern_block": max(z[2] for z in below)}

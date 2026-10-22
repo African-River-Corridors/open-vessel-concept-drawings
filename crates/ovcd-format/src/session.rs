@@ -218,6 +218,14 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
                 .collect();
             e.insert("known_sets".into(), Value::Array(known));
         }
+        InputKind::OpeningsList => {
+            e.insert("kind".into(), json!("openings_list"));
+            e.insert("nullable".into(), json!(true));
+            e.insert(
+                "shape".into(),
+                json!({ "type": "rows", "columns": crate::openings::COLUMNS, "unit": "m" }),
+            );
+        }
         InputKind::OffsetsTable => {
             e.insert("kind".into(), json!("offsets_table"));
             e.insert("nullable".into(), json!(true));
