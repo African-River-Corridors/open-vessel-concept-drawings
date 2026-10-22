@@ -241,6 +241,54 @@ Each entry is a before/after table written by `python3 tools/design_impact.py ch
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
 
+### ticket/449-bilge-sheer-camber (2026-10-22)
+
+Between `main d2f66d5` and `this branch ced6ffd`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep optional bilge_radius_m | `checks[14].message` | intact GM 4.12 m >= 0.15 m at the reported cargo 2424 t, draught 3.30 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 4.15 m >= 0.15 m at the reported cargo 2424 t, draught 3.33 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| sweep optional bilge_radius_m | `checks[16].message` | GM 4.12 m (fluid), max GZ 0.88 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.16 m (fluid), max GZ 0.86 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| sweep optional bilge_radius_m | `checks[17].message` | GM 4.13 m (fluid), max GZ 0.87 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.16 m (fluid), max GZ 0.86 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | changed |
+| sweep optional bilge_radius_m | `checks[18].message` | GM 13.57 m (fluid), max GZ 3.63 m at 29° | GM 13.69 m (fluid), max GZ 3.60 m at 29° | changed |
+| sweep optional bilge_radius_m | `checks[19].message` | GM 13.73 m (fluid), max GZ 3.64 m at 29° | GM 13.84 m (fluid), max GZ 3.60 m at 29° | changed |
+| sweep optional bilge_radius_m | `checks[3].message` | freeboard 1.22 m >= required 0.3 m | freeboard 1.19 m >= required 0.3 m | changed |
+| sweep optional camber_m | `checks[16].message` | GM 4.12 m (fluid), max GZ 0.88 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.12 m (fluid), max GZ 1.01 m at 24° — fails: Angle of max GZ 24.000 < 25.0 | changed |
+| sweep optional camber_m | `checks[17].message` | GM 4.13 m (fluid), max GZ 0.87 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.13 m (fluid), max GZ 1.01 m at 24° — fails: Angle of max GZ 24.000 < 25.0 | changed |
+| sweep optional camber_m | `checks[18].message` | GM 13.57 m (fluid), max GZ 3.63 m at 29° | GM 13.57 m (fluid), max GZ 3.64 m at 29° | changed |
+| sweep optional sheer_aft_m | `checks[12].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 1.62 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 1.63 m of 6.00 m | changed |
+| sweep optional sheer_aft_m | `checks[16].message` | GM 4.12 m (fluid), max GZ 0.88 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.12 m (fluid), max GZ 0.90 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| sweep optional sheer_aft_m | `checks[17].message` | GM 4.13 m (fluid), max GZ 0.87 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.13 m (fluid), max GZ 0.89 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
+| sweep optional sheer_aft_m | `checks[18].message` | GM 13.57 m (fluid), max GZ 3.63 m at 29° | GM 13.57 m (fluid), max GZ 3.65 m at 30° | changed |
+| sweep optional sheer_aft_m | `checks[19].message` | GM 13.73 m (fluid), max GZ 3.64 m at 29° | GM 13.73 m (fluid), max GZ 3.65 m at 30° | changed |
+| sweep optional sheer_fwd_m | `checks[16].message` | GM 4.12 m (fluid), max GZ 0.88 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.12 m (fluid), max GZ 1.11 m at 24° — fails: Angle of max GZ 24.000 < 25.0 | changed |
+| sweep optional sheer_fwd_m | `checks[17].message` | GM 4.13 m (fluid), max GZ 0.87 m at 21° — fails: Angle of max GZ 21.000 < 25.0 | GM 4.13 m (fluid), max GZ 1.11 m at 24° — fails: Angle of max GZ 24.000 < 25.0 | changed |
+| sweep optional sheer_fwd_m | `loading_conditions.conditions[1].gz[58][1]` | -0.00361669726603 | 0.26166381687 | +7.33e+03 % |
+| sweep optional sheer_fwd_m | `stability.conditions[1].gz[58][1]` | -0.00361669726603 | 0.26166381687 | +7.33e+03 % |
+| sweep optional camber_m | `loading_conditions.conditions[1].gz[58][1]` | -0.00361669726603 | 0.191628007954 | +5.4e+03 % |
+| sweep optional camber_m | `stability.conditions[1].gz[58][1]` | -0.00361669726603 | 0.191628007954 | +5.4e+03 % |
+| sweep optional sheer_fwd_m | `loading_conditions.conditions[0].gz[58][1]` | 0.00817710125754 | 0.270127782223 | +3.2e+03 % |
+| sweep optional sheer_fwd_m | `stability.conditions[0].gz[58][1]` | 0.00817710125754 | 0.270127782223 | +3.2e+03 % |
+| sweep optional camber_m | `loading_conditions.conditions[0].gz[58][1]` | 0.00817710125754 | 0.203707666159 | +2.39e+03 % |
+| sweep optional camber_m | `stability.conditions[0].gz[58][1]` | 0.00817710125754 | 0.203707666159 | +2.39e+03 % |
+| sweep optional sheer_aft_m | `loading_conditions.conditions[1].gz[58][1]` | -0.00361669726603 | 0.0356911701201 | +1.09e+03 % |
+| sweep optional sheer_aft_m | `stability.conditions[1].gz[58][1]` | -0.00361669726603 | 0.0356911701201 | +1.09e+03 % |
+| sweep optional sheer_fwd_m | `loading_conditions.conditions[0].gz[59][1]` | -0.0249817853209 | 0.234049378852 | +1.04e+03 % |
+| sweep optional sheer_fwd_m | `stability.conditions[0].gz[59][1]` | -0.0249817853209 | 0.234049378852 | +1.04e+03 % |
+| sweep optional sheer_fwd_m | `loading_conditions.conditions[1].gz[57][1]` | 0.0295428017617 | 0.297644281481 | +908 % |
+| sweep optional sheer_fwd_m | `stability.conditions[1].gz[57][1]` | 0.0295428017617 | 0.297644281481 | +908 % |
+| sweep optional camber_m | `loading_conditions.conditions[0].gz[59][1]` | -0.0249817853209 | 0.169284148287 | +778 % |
+| sweep optional camber_m | `stability.conditions[0].gz[59][1]` | -0.0249817853209 | 0.169284148287 | +778 % |
+| sweep optional sheer_fwd_m | `loading_conditions.conditions[1].gz[59][1]` | -0.0368831177163 | 0.225447835058 | +711 % |
+| sweep optional sheer_fwd_m | `stability.conditions[1].gz[59][1]` | -0.0368831177163 | 0.225447835058 | +711 % |
+| sweep optional camber_m | `loading_conditions.conditions[1].gz[57][1]` | 0.0295428017617 | 0.225928244712 | +665 % |
+| sweep optional camber_m | `stability.conditions[1].gz[57][1]` | 0.0295428017617 | 0.225928244712 | +665 % |
+| sweep optional sheer_fwd_m | `loading_conditions.conditions[0].gz[57][1]` | 0.041224614325 | 0.305968873642 | +642 % |
+| sweep optional sheer_fwd_m | `stability.conditions[0].gz[57][1]` | 0.041224614325 | 0.305968873642 | +642 % |
+| sweep optional camber_m | `loading_conditions.conditions[1].gz[59][1]` | -0.0368831177163 | 0.157116828396 | +526 % |
+| sweep optional camber_m | `stability.conditions[1].gz[59][1]` | -0.0368831177163 | 0.157116828396 | +526 % |
+| ... | 2538 more changed quantities | | | |
+
 ### ticket/498-light-warning (2026-10-22)
 
 Between `main aed56a4` and `this branch aa02557`.
