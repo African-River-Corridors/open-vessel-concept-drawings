@@ -86,10 +86,18 @@ fn the_es_trin_limits_are_300_mm_500_mm_for_an_open_hold_and_150_mm() {
         ("es-trin/4.01(2)/safety-clearance-uncovered-holds", 0.5),
     ] {
         match &set.rule(id).unwrap().limit {
-            Some(Limit::Formula { shape, coefficients, operands, .. }) => {
+            Some(Limit::Formula {
+                shape,
+                coefficients,
+                operands,
+                ..
+            }) => {
                 assert_eq!(shape, "at-least", "{id}");
                 assert!(coefficients.contains(&("a".to_string(), clearance)), "{id}");
-                assert!(format!("{operands:?}").contains("input.hatch_coaming_height_m"), "{id}");
+                assert!(
+                    format!("{operands:?}").contains("input.hatch_coaming_height_m"),
+                    "{id}"
+                );
             }
             other => panic!("{id}: {other:?}"),
         }
@@ -98,14 +106,15 @@ fn the_es_trin_limits_are_300_mm_500_mm_for_an_open_hold_and_150_mm() {
     for r in set.rules.iter().filter(|r| r.id.starts_with("es-trin/4.0")) {
         assert_eq!(r.compare, Some(Compare::Ge), "{}", r.id);
         assert_eq!(r.measure.id, "input.min_freeboard_m", "{}", r.id);
-        assert!(
-            r.source.page.ends_with("Chapter 4, p. 17"),
-            "{}",
-            r.id
-        );
+        assert!(r.source.page.ends_with("Chapter 4, p. 17"), "{}", r.id);
     }
     // Only the 150 mm Rule has a second reader; the 4.01 Rules changed after it.
-    assert!(set.rule("es-trin/4.02(1)/freeboard").unwrap().verified.is_some());
+    assert!(
+        set.rule("es-trin/4.02(1)/freeboard")
+            .unwrap()
+            .verified
+            .is_some()
+    );
     assert_eq!(
         set.rule("es-trin/4.01(2)/safety-clearance-uncovered-holds")
             .unwrap()
@@ -241,7 +250,10 @@ fn a_coastal_option_is_checked_against_the_icll_table_and_shows_the_value() {
     let row = row_of(&low, blocked);
     assert_eq!(row["outcome"], "fail");
     assert_eq!(row["consequence"], "block");
-    assert!((row["limit"].as_f64().unwrap() - 0.793).abs() < 1e-9, "{row}");
+    assert!(
+        (row["limit"].as_f64().unwrap() - 0.793).abs() < 1e-9,
+        "{row}"
+    );
     assert!(outcomes(&low, barge).is_empty());
     assert_eq!(outcomes(&sp(0.8), blocked), ["pass"]);
     assert_eq!(outcomes(&sp(0.792), blocked), ["fail"]);
