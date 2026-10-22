@@ -842,12 +842,18 @@ pub fn upright(
     })
 }
 
-/// Steps of the inner solve, on the height `c` for the volume (Illinois secant method). No early
-/// stop, so native and WebAssembly take the same steps and give the same bits.
+/// The most steps of the inner solve, on the height `c` for the volume (Illinois secant method). A
+/// solve stops earlier when the volume is within [`VOLUME_TOLERANCE`] of the target. The stop is a
+/// comparison of numbers the solve computes, so native and WebAssembly stop at the same step and
+/// give the same bits.
 pub const VOLUME_STEPS: u32 = 16;
-/// Steps of the outer solve, on the trim for the longitudinal moment (Illinois secant method). No
-/// early stop.
+/// The inner solve stops when the volume is within this share of the target volume.
+pub const VOLUME_TOLERANCE: f64 = 1e-13;
+/// The most steps of the outer solve, on the trim for the longitudinal moment (Illinois secant
+/// method). A solve stops earlier when the lever is within [`TRIM_TOLERANCE_M`].
 pub const TRIM_STEPS: u32 = 12;
+/// The outer solve stops when B - G along the earth's forward horizontal is within this (m).
+pub const TRIM_TOLERANCE_M: f64 = 1e-11;
 /// The free-trim solve looks for the trim between −10 and +10 degrees.
 pub const TRIM_LIMIT_DEG: f64 = 10.0;
 
@@ -893,14 +899,20 @@ fn c_for_volume(
             }
         }
     }
-    illinois(lo, -target, hi, total - target, VOLUME_STEPS, |c| {
-        integrate(table, &Frame::new(&at(c)), true, w).sums.area - target
-    })
+    illinois(
+        VOLUME_TOLERANCE * target,
+        lo,
+        -target,
+        hi,
+        total - target,
+        VOLUME_STEPS,
+        |c| integrate(table, &Frame::new(&at(c)), true, w).sums.area - target,
+    )
     .0
 }
 
 /// The upright, level draught that immerses `volume` m³ (issue #448): the inner solve of
-/// [`equilibrium`] at heel 0 and trim 0, [`VOLUME_STEPS`] steps, no early stop.
+/// [`equilibrium`] at heel 0 and trim 0, at most [`VOLUME_STEPS`] steps.
 pub fn draught_for_volume(table: &SectionsTable, volume: f64) -> Result<f64, SectionsError> {
     if volume.is_nan() || volume <= 0.0 {
         return Err(SectionsError::NotAfloat);
@@ -913,9 +925,11 @@ pub fn draught_for_volume(table: &SectionsTable, volume: f64) -> Result<f64, Sec
     Ok(c_for_volume(table, 0.0, 0.0, volume, total, &mut w))
 }
 
-/// The Illinois secant method on a bracket `[a, b]` with `f(a) <= 0 <= f(b)`, `f` rising: a fixed
-/// number of steps, no early stop. Gives the last point and what `f` returned there.
+/// The Illinois secant method on a bracket `[a, b]` with `f(a) <= 0 <= f(b)`, `f` rising: at most
+/// `steps` steps, stopping at the first whose residual is within `tol`. Gives the last point and
+/// what `f` returned there.
 fn illinois<T>(
+    tol: f64,
     mut a: f64,
     mut fa: f64,
     mut b: f64,
@@ -936,6 +950,9 @@ where
         };
         let r = f(x);
         let fx = r.residual();
+        if fx.abs() <= tol {
+            return (x, Some(r));
+        }
         if (fx < 0.0) != (fb < 0.0) {
             a = b;
             fa = fb;
@@ -976,8 +993,8 @@ fn dot(a: (f64, f64, f64), b: (f64, f64, f64)) -> f64 {
 
 /// The floating position at a heel with free trim: the height `c` gives ρ∇ = Δ (inner solve), and
 /// the trim puts the centre of buoyancy on the vertical through G in the longitudinal plane (outer
-/// solve, between ±10 degrees). Both are Illinois secant solves with fixed step counts and no early
-/// stop.
+/// solve, between ±10 degrees). Both are Illinois secant solves with a cap on the steps and a stop
+/// at a tolerance.
 pub fn equilibrium(
     table: &SectionsTable,
     mass_t: f64,
@@ -1030,6 +1047,7 @@ pub fn equilibrium(
         return Err(SectionsError::TrimOutOfRange);
     }
     let (_, last) = illinois(
+        TRIM_TOLERANCE_M,
         -TRIM_LIMIT_DEG,
         aft.lever,
         TRIM_LIMIT_DEG,
@@ -1112,12 +1130,37 @@ pub fn gz_curve(
     density: f64,
     angles: impl IntoIterator<Item = i32>,
 ) -> Result<Vec<(i32, f64)>, SectionsError> {
+    gz_curve_from(
+        table,
+        mass_t,
+        g,
+        free_surface_moment_tm,
+        density,
+        angles,
+        None,
+    )
+}
+
+/// [`gz_curve`] with the equilibrium at heel 0 already solved by the caller (the free-trim float
+/// of the same mass and G): the same numbers, one solve less.
+pub fn gz_curve_from(
+    table: &SectionsTable,
+    mass_t: f64,
+    g: Gravity,
+    free_surface_moment_tm: f64,
+    density: f64,
+    angles: impl IntoIterator<Item = i32>,
+    heel0: Option<&Equilibrium>,
+) -> Result<Vec<(i32, f64)>, SectionsError> {
     let fsc = free_surface_moment_tm / mass_t;
     let mut out = Vec::new();
     for deg in angles {
         let heel = f64::from(deg);
-        let eq = equilibrium(table, mass_t, g, heel, density)?;
-        out.push((deg, righting_lever(&eq, g) - fsc * sin(radians(heel))));
+        let lever = match heel0 {
+            Some(eq) if deg == 0 => righting_lever(eq, g),
+            _ => righting_lever(&equilibrium(table, mass_t, g, heel, density)?, g),
+        };
+        out.push((deg, lever - fsc * sin(radians(heel))));
     }
     Ok(out)
 }

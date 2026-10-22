@@ -408,6 +408,27 @@ impl Hull {
         crate::sections::lcb_reach(&self.table, mass_t, density)
     }
 
+    /// [`Hull::gz`] with the heel 0 equilibrium of the same mass and G (from [`Hull::float`]).
+    pub fn gz_from(
+        &self,
+        mass_t: f64,
+        g: Gravity,
+        free_surface_moment_tm: f64,
+        density: f64,
+        angles: impl IntoIterator<Item = i32>,
+        heel0: Option<&crate::sections::Equilibrium>,
+    ) -> Result<Vec<(i32, f64)>, SectionsError> {
+        crate::sections::gz_curve_from(
+            &self.table,
+            mass_t,
+            g,
+            free_surface_moment_tm,
+            density,
+            angles,
+            heel0,
+        )
+    }
+
     /// The GZ curve with free trim at the given heels (degrees), less the free-surface correction.
     pub fn gz(
         &self,

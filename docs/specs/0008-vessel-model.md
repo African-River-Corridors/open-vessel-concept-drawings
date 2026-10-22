@@ -180,8 +180,11 @@ pub struct SectionsTable {
   on the vertical through G in the longitudinal plane (free trim). The inner solve finds `c` for the
   volume by the Illinois secant method in a bracket from the lowest to the highest point of the hull
   along k (the volume is 0 and the whole hull there); the outer solve finds θ for the longitudinal
-  moment by the same method between ±10° (an Option that needs more fails with a message). Fixed step
-  counts (16 inner, 12 outer) and no early stop, so native and WebAssembly give the same bits. A test
+  moment by the same method between ±10° (an Option that needs more fails with a message). Each solve
+  takes at most a fixed number of steps (16 inner, 12 outer) and stops at the first step whose residual
+  is within a tolerance (inner: 1e−13 of the target volume; outer: 1e−11 m of B − G). The stop compares
+  numbers the solve computes, so native and WebAssembly stop at the same step and give the same bits.
+  The heel 0 equilibrium of a condition is solved once and its GZ curve starts from it. A test
   checks the result against an 80 × 60 bisection to 1e−12. (Maintainer decision, 2026-10-21: bisection
   took about 13 s per 61-angle GZ curve on a 41-station hull, too slow for the capacity search; the
   secant solver takes about 1 s and agrees to 2e−15. Newton overshot at heavy trim.)
