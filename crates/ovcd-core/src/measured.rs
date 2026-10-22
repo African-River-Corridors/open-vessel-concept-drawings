@@ -52,6 +52,9 @@ pub struct Measured {
     /// The assumed damages of a liquid bulk hull and what the damaged hull does (issue #341); empty for
     /// every other Cargo.
     pub damage: Vec<DamageVerdict>,
+    /// What the Vessel Model of the design is assembled from (issue #454); `None` when the run gave
+    /// no capacity result. No Measure reads it.
+    pub vessel: Option<crate::vessel_model::VesselModelInputs>,
 }
 
 /// One assumed damage and the outcome: the Measure `stability.damage` is `ok`.

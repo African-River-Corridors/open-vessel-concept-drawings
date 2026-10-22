@@ -1195,6 +1195,12 @@ fn simulate_measured(
     measured.deadweight_t = Some(deadweight);
     // Issue #337: the liquid bulk layout, for the liquid Measures.
     measured.liquid = r.liquid.clone();
+    // Issue #454: what the Vessel Model is assembled from.
+    measured.vessel = Some(ovcd_core::vessel_model::VesselModelInputs {
+        capacity: inp.clone(),
+        result: r.clone(),
+        hull: hull.table.clone(),
+    });
     // Issue #448: Cb and the hydrostatics at the laden level draught; the reported draught is the
     // one at mid-length of the free-trim float when the hull has LCG data (a dry bulk hull with
     // its stern block mass), with the deadweight at the middle of the hold zone.
@@ -2650,6 +2656,11 @@ fn simulate_gas(
                     (s, plane)
                 }),
                 checks: Vec::new(),
+                vessel: Some(ovcd_core::vessel_model::VesselModelInputs {
+                    capacity: f.engine_inputs.clone(),
+                    result: f.engine_result.clone(),
+                    hull: fit_hull.table.clone(),
+                }),
                 ..Measured::default()
             },
         )
