@@ -1,3 +1,6 @@
+<!-- unreleased -->
+- Cargo (issue #342, spec 0006 section 8 row 15): a second oil, diesel fuel to EN 590 (`diesel_en590`, UN 1202), as data rows only: a Cargo row, a grade row (`DIESEL_GRADE`, in Python `CRUDE_GRADES` too), a fixture (`diesel_integral_tanks_pushed.vdesign`) and three design-impact cases. Its values come from the ADN 2025 Table C row for UN 1202, EN 590 (read in full: hazard labels 3+N2+F, type N, open cargo tank, tank walls distinct from the hull, relative density 0.82 to 0.85 at 20 deg C): the flowchart gives type N open with walls distinct from the hull, as that row does, and the `adn-tank` type N Rules apply by their existing applicability. What the table does not state (the flash point, the vapour pressure, the density inside the range) is an estimate with the basis written. It is `development` like crude oil. No Rust code branches on the Cargo: a test finds the new key in `cargo.rs` and `crude_grade.rs` only. Design gap, recorded as the ticket asks: the Table C maximum degree of filling for this cargo is 97 %, and the liquid fill ratio default is 0.98 for every liquid bulk Cargo (the Defaults Profile has no value keyed by Cargo); type 0.97 for diesel until the profile has one. No existing result moves.
+
 <!-- design-impact -->
 ### ticket/342-second-oil (2026-10-22)
 
