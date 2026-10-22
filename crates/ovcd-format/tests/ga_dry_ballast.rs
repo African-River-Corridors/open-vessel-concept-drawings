@@ -11,10 +11,11 @@ fn results(is_code: bool) -> Value {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/dry_bulk_box_hold.vdesign"),
     )
     .expect("fixture");
-    if is_code {
+    // The fixture is saved in the IS Code conditions; the legacy case sets them back.
+    if !is_code {
         let at = text.find("\"loading_conditions\"").expect("the input");
-        let legacy = at + text[at..].find("legacy").expect("legacy");
-        text.replace_range(legacy..legacy + "legacy".len(), "is_code_2008");
+        let code = at + text[at..].find("is_code_2008").expect("is_code_2008");
+        text.replace_range(code..code + "is_code_2008".len(), "legacy");
     }
     let design = fill(&text, &Profile::built_in())
         .design

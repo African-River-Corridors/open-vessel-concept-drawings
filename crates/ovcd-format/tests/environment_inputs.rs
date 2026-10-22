@@ -128,6 +128,9 @@ fn old_files_get_the_fixed_values_keep_their_hashes_and_note_it_once() {
 
 fn results(file: &str, changes: &[(&str, Value)]) -> Value {
     let mut f: Value = serde_json::from_str(&raw_fixture(file)).unwrap();
+    // These tests are about the legacy conditions; the fixtures are saved in the IS Code ones.
+    f["options"][0]["inputs"]["loading_conditions"] =
+        json!({ "value": "legacy", "source": "typed" });
     for (name, value) in changes {
         f["options"][0]["inputs"][*name] = json!({ "value": value, "source": "typed" });
     }

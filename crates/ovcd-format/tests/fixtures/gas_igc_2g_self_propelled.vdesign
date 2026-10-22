@@ -378,7 +378,47 @@
           "source": "default"
         },
         "loading_conditions": {
-          "value": "legacy",
+          "value": "is_code_2008",
+          "source": "default"
+        },
+        "may_sail_without_ballast": {
+          "value": false,
+          "source": "default"
+        },
+        "endurance_h": {
+          "value": 72.0,
+          "source": "default"
+        },
+        "fixed_stores_t": {
+          "value": 10.0,
+          "source": "default"
+        },
+        "ballast_plan": {
+          "value": "least_ballast",
+          "source": "default"
+        },
+        "ballast_departure_double_bottom_fill": {
+          "value": 0.0,
+          "source": "default"
+        },
+        "ballast_departure_peak_fill": {
+          "value": 0.0,
+          "source": "default"
+        },
+        "ballast_departure_wing_fill": {
+          "value": 0.0,
+          "source": "default"
+        },
+        "ballast_arrival_double_bottom_fill": {
+          "value": 0.0,
+          "source": "default"
+        },
+        "ballast_arrival_peak_fill": {
+          "value": 0.0,
+          "source": "default"
+        },
+        "ballast_arrival_wing_fill": {
+          "value": 0.0,
           "source": "default"
         },
         "hull_steel_rate": {
@@ -503,7 +543,7 @@
           "source": "default"
         }
       },
-      "results_hash": "45ae4299a84871440c58b3c7a81427e195370cab312510b1b52e8f895ef1917f"
+      "results_hash": "97150bdc01fcd82a5677f29bab2474539a3f3ef7a0ee7f0c27a9bad65aa22706"
     }
   ],
   "defaults_profile": "built-in"

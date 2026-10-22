@@ -100,6 +100,10 @@ KNOWN_DIFFERENCES: dict = {
                                "issues #396, #397: one midship section B x T and the Schijf first "
                                "critical speed",
     "resistance": "issues #396, #397: one midship section B x T and the Schijf first critical speed",
+    # Issue #526: one g (9.80665 m/s^2) and one knot (1852/3600 m/s) in the resistance, squat and
+    # wave modules. 0.1.0 used 9.81 and 0.5144 in the resistance, and 0.514444 in squat and waves.
+    "squat": "issue #526: the knot is 1852/3600 m/s, not 0.514444",
+    "waves.compute": "issue #526: the knot is 1852/3600 m/s, not 0.514444",
     "electric_energy.compute": "issues #396, #397, #398: the Schijf limit, its 0.95 margin and the "
                                "installed power on the highest battery power",
     # Issue #413: the legacy free surface takes the fill as a volume ratio (the liquid height is

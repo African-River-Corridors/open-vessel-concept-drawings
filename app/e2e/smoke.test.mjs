@@ -507,7 +507,7 @@ describe("OVCD app smoke tests", () => {
   });
 
   it("says that stability is work in development for a dry-bulk Design", async () => {
-    await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    await open(path.join(FIXTURES, "dry_bulk_sloped_hopper.vdesign"), "dry_bulk_sloped_hopper.vdesign");
     await show("Stability & Propulsion", "Intact stability");
     await until("the work-in-development state", async () => (await browser.$$("[data-testid=stability-wip]")).length === 1);
     assert.match(await browser.$("[data-testid=stability-wip]").getText(), /^Work in development\s+Stability is computed for gas cargo only\. Dry-bulk stability is work in development\.$/);
@@ -619,7 +619,7 @@ describe("OVCD app smoke tests", () => {
   });
 
   it("says there are no ballast tanks to show for a Design saved before the IS Code conditions (issue #426)", async () => {
-    await open(path.join(FIXTURES, "gas_igc_2g_exact.vdesign"), "gas_igc_2g_exact.vdesign");
+    await open(path.join(FIXTURES, "dry_bulk_sloped_hopper.vdesign"), "dry_bulk_sloped_hopper.vdesign");
     await show("Stability & Propulsion", "Ballast tanks");
     await until("the note", async () => (await browser.$$("[data-testid=ballast-none]")).length === 1);
     assert.equal((await browser.$$("[data-testid=ballast-tanks]")).length, 0);

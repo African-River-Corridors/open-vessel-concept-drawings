@@ -1117,7 +1117,7 @@
       "basis": "kappa, the factor of the Propulsor type on the ideal disc efficiency: eta_D = kappa x eta_i x eta_R x eta_H (spec 0007). Shafts in nozzles: fitted on the installed power of the in-sample inland ship of calibration/propulsion_cases.yaml (calibration/factors.yaml, propulsor_efficiency_factor; issue #353); it also takes in what the resistance method leaves out. Every other type: 0.80, a starting estimate below the ideal disc, which no real propeller reaches (MAN gives open-water efficiencies of 0.35 to 0.75); no inland ship of those types prints both its power and its speed. Unverified for a pump jet"
     },
     "bollard_pull_factor": {
-      "default_by_propulsor_type": { "azimuth_open": 0.77, "azimuth_ducted": 0.975, "shaft_open": 0.77, "shaft_nozzle": 0.951, "voith_schneider": 0.77, "pump_jet": 0.77 },
+      "default_by_propulsor_type": { "azimuth_open": 0.77, "azimuth_ducted": 0.974, "shaft_open": 0.77, "shaft_nozzle": 0.951, "voith_schneider": 0.77, "pump_jet": 0.77 },
       "unit": "-",
       "hard": { "gt": 0, "le": 2 },
       "soft": { "min": 0.6, "max": 1.2 },

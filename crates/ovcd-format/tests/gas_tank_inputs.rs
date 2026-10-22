@@ -205,6 +205,9 @@ fn the_ranges_refuse_what_the_engine_cannot_compute() {
 
 fn results(file: &str, changes: &[(&str, Value)]) -> Value {
     let mut f: Value = serde_json::from_str(&raw_fixture(file)).unwrap();
+    // These tests are about the legacy conditions; the fixtures are saved in the IS Code ones.
+    f["options"][0]["inputs"]["loading_conditions"] =
+        json!({ "value": "legacy", "source": "typed" });
     for (name, value) in changes {
         f["options"][0]["inputs"][*name] = json!({ "value": value, "source": "typed" });
     }

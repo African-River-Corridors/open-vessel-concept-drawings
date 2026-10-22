@@ -59,16 +59,16 @@ Design-study points, not built ships. Cb implied on LOA (a lower bound). Deliver
 | bulk | 88×16.3×4.3 | 5,151 | 4,051 | 1,100 | 0.835 | 18 | 1,258 | 597 | 2.11 |
 | bulk | 130×16.3×4.3 | 7,610 | 5,862 | 1,748 | 0.835 | 18 | 1,480 | 818 | 1.81 |
 | bulk | 130×17.2×4.3 | 8,030 | 6,210 | 1,820 | 0.835 | 18 | 1,546 | 848 | 1.82 |
-| bulk | 130×19.2×4.3 | 8,964 | 6,987 | 1,977 | 0.835 | 18 | 1,698 | 913 | 1.86 |
-| bulk | 130×22×4.3 | 10,271 | 8,082 | 2,189 | 0.835 | 18 | 1,908 | 1,005 | 1.90 |
+| bulk | 130×19.2×4.3 | 8,964 | 6,987 | 1,977 | 0.835 | 18 | 1,698 | 914 | 1.86 |
+| bulk | 130×22×4.3 | 10,271 | 8,082 | 2,189 | 0.835 | 18 | 1,908 | 1,006 | 1.90 |
 | bulk | 130×24×4.3 | 11,205 | 8,868 | 2,337 | 0.835 | 18 | 2,070 | 1,071 | 1.93 |
-| bulk | 130×26×4.3 | 12,139 | 9,657 | 2,482 | 0.835 | 18 | 2,234 | 1,137 | 1.97 |
-| liquid | 88×16.3×4.2 | 5,032 | 3,956 | 1,076 | 0.835 | 20 | 1,656 | 820 | 2.02 |
+| bulk | 130×26×4.3 | 12,139 | 9,657 | 2,482 | 0.835 | 18 | 2,234 | 1,137 | 1.96 |
+| liquid | 88×16.3×4.2 | 5,032 | 3,956 | 1,076 | 0.835 | 20 | 1,656 | 821 | 2.02 |
 | liquid | 130×16.3×4.2 | 7,433 | 5,575 | 1,858 | 0.835 | 20 | 1,922 | 1,118 | 1.72 |
 | liquid | 130×17.2×4.2 | 7,844 | 5,909 | 1,935 | 0.835 | 20 | 2,043 | 1,159 | 1.76 |
-| liquid | 130×19.2×4.2 | 8,756 | 6,655 | 2,101 | 0.835 | 20 | 2,251 | 1,249 | 1.80 |
+| liquid | 130×19.2×4.2 | 8,756 | 6,655 | 2,101 | 0.835 | 20 | 2,251 | 1,250 | 1.80 |
 | liquid | 130×22×4.2 | 10,032 | 7,706 | 2,326 | 0.835 | 20 | 2,491 | 1,376 | 1.81 |
-| liquid | 130×24×4.2 | 10,944 | 8,461 | 2,483 | 0.835 | 20 | 2,692 | 1,466 | 1.84 |
+| liquid | 130×24×4.2 | 10,944 | 8,461 | 2,483 | 0.835 | 20 | 2,692 | 1,467 | 1.84 |
 | liquid | 130×26×4.2 | 11,856 | 9,220 | 2,636 | 0.835 | 20 | 2,856 | 1,557 | 1.83 |
 
 ## 4. Held-out cases (out of sample)
@@ -356,25 +356,25 @@ Tugs and pushers with a published bollard pull, run through the Propulsor model 
 ### Fitted bollard pull factors
 
 - **azimuth_open:** kappa_b 0.77 (no in-sample case: the open-propeller value (Wartsila, k2 = 1), an estimate)
-- **azimuth_ducted:** kappa_b 0.975 (range 0.917–1.063, n = 3)
+- **azimuth_ducted:** kappa_b 0.974 (range 0.916–1.063, n = 3)
 - **shaft_open:** kappa_b 0.77 (no in-sample case: the open-propeller value (Wartsila, k2 = 1), an estimate)
-- **shaft_nozzle:** kappa_b 0.951 (range 0.939–0.963, n = 2)
+- **shaft_nozzle:** kappa_b 0.951 (range 0.938–0.963, n = 2)
 - **voith_schneider:** kappa_b 0.77 (no in-sample case: the open-propeller value (Wartsila, k2 = 1), an estimate)
 - **pump_jet:** kappa_b 0.77 (no in-sample case: the open-propeller value (Wartsila, k2 = 1), an estimate)
 
 | Case | Type | Sample | Conf. | n × D (m) | P_D per unit (kW) | Published (t) | Model (t) | err % | t per 100 kW published | Band ± % | vs band |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| stan-tug-1606 | shaft_nozzle | in-sample | high | 2 × 1.35 | 429 | 16.0 | 15.8 | -1.3 | 1.79 | ±10 | inside |
-| stan-tug-1907 | shaft_nozzle | in-sample | high | 2 × 1.8 | 859 | 30.0 | 30.4 | 1.3 | 1.68 | ±10 | inside |
-| demi-k | shaft_nozzle | held out | medium | 2 × 1.6 | 620 | 22.0 | 22.4 | 1.9 | 1.70 | ±15 | inside |
-| cds-4115 | shaft_nozzle | held out | medium | 3 × 1.85 | 1,277 | 45.9 | 60.0 | 30.7 | 1.15 | ±15 | **OUTSIDE** ⚠ (accepted: a shallow-draught pusher pulls less per kW than a tug (about 1.15 t per 100 kW, research note sec. 3.5): the rudders and the tunnel behind a nozzle cut the nozzle thrust of a pusher (research note sec. 3.2, from MARIN Report 128, p.14), which the open-water disc does not model) |
-| asd-tug-3212 | azimuth_ducted | in-sample | high | 2 × 3 | 2,327 | 82.4 | 85.1 | 3.3 | 1.63 | ±10 | inside |
-| rsd-tug-2513 | azimuth_ducted | in-sample | high | 2 × 3 | 2,327 | 80.0 | 85.1 | 6.4 | 1.58 | ±10 | inside |
-| aveogan | azimuth_ducted | in-sample | medium | 2 × 2.8 | 2,302 | 88.0 | 80.7 | -8.3 | 1.76 | ±15 | inside |
-| asd-tug-2312 | azimuth_ducted | held out | high | 2 × 2.8 | 1,753 | 70.0 | 67.3 | -3.9 | 1.84 | ±10 | inside |
-| asd-tug-2811 | azimuth_ducted | held out | high | 2 × 2.4 | 1,754 | 60.0 | 60.7 | 1.2 | 1.58 | ±10 | inside |
-| rsd-tug-2513-electric | azimuth_ducted | held out | medium | 2 × 3 | 1,758 | 70.0 | 70.6 | 0.8 | 1.89 | ±15 | inside |
-| capt-joseph-bisso | azimuth_ducted | held out | low | 2 × 2.5 | 2,064 | 68.0 | 69.6 | 2.3 | 1.52 | ±20 | inside |
+| stan-tug-1606 | shaft_nozzle | in-sample | high | 2 × 1.35 | 429 | 16.0 | 15.8 | -1.2 | 1.79 | ±10 | inside |
+| stan-tug-1907 | shaft_nozzle | in-sample | high | 2 × 1.8 | 859 | 30.0 | 30.4 | 1.4 | 1.68 | ±10 | inside |
+| demi-k | shaft_nozzle | held out | medium | 2 × 1.6 | 620 | 22.0 | 22.4 | 2.0 | 1.70 | ±15 | inside |
+| cds-4115 | shaft_nozzle | held out | medium | 3 × 1.85 | 1,277 | 45.9 | 60.0 | 30.8 | 1.15 | ±15 | **OUTSIDE** ⚠ (accepted: a shallow-draught pusher pulls less per kW than a tug (about 1.15 t per 100 kW, research note sec. 3.5): the rudders and the tunnel behind a nozzle cut the nozzle thrust of a pusher (research note sec. 3.2, from MARIN Report 128, p.14), which the open-water disc does not model) |
+| asd-tug-3212 | azimuth_ducted | in-sample | high | 2 × 3 | 2,327 | 82.4 | 85.0 | 3.2 | 1.63 | ±10 | inside |
+| rsd-tug-2513 | azimuth_ducted | in-sample | high | 2 × 3 | 2,327 | 80.0 | 85.0 | 6.3 | 1.58 | ±10 | inside |
+| aveogan | azimuth_ducted | in-sample | medium | 2 × 2.8 | 2,302 | 88.0 | 80.6 | -8.4 | 1.76 | ±15 | inside |
+| asd-tug-2312 | azimuth_ducted | held out | high | 2 × 2.8 | 1,753 | 70.0 | 67.2 | -4.0 | 1.84 | ±10 | inside |
+| asd-tug-2811 | azimuth_ducted | held out | high | 2 × 2.4 | 1,754 | 60.0 | 60.7 | 1.1 | 1.58 | ±10 | inside |
+| rsd-tug-2513-electric | azimuth_ducted | held out | medium | 2 × 3 | 1,758 | 70.0 | 70.5 | 0.8 | 1.89 | ±15 | inside |
+| capt-joseph-bisso | azimuth_ducted | held out | low | 2 × 2.5 | 2,064 | 68.0 | 69.5 | 2.2 | 1.52 | ±20 | inside |
 
 ### Propulsion records that cannot run yet
 
@@ -408,7 +408,7 @@ Inland ships that print both the installed power and a design speed, run through
 | Case | Type | Sample | Conf. | L x B x T (m) | Speed (kn) | Published (kW) | Model (kW) | err % | Band ± % | vs band |
 |---|---|---|---|---|---|---|---|---|---|---|
 | cds-tanker-110 | shaft_nozzle | in-sample | medium | 110 x 11.45 x 3.3 | 9.719 | 1,000 | 999 | -0.1 | ±20 | inside |
-| cds-tanker-135 | shaft_nozzle | held out | medium | 135 x 11.45 x 3.5 | 9.719 | 1,418 | 1,227 | -13.4 | ±20 | inside |
+| cds-tanker-135 | shaft_nozzle | held out | medium | 135 x 11.45 x 3.5 | 9.719 | 1,418 | 1,228 | -13.4 | ±20 | inside |
 
 ### Installed power records that cannot run yet
 
