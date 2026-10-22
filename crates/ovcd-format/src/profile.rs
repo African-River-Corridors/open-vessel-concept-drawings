@@ -329,6 +329,14 @@ impl Profile {
     /// and the `ovcd` set is in every one.
     fn check_default_stacks(&self) -> Result<(), String> {
         for area in crate::vdesign::SERVICE_AREAS {
+            // Issue #339: a `liquid_bulk` list is optional, and holds `ovcd` when it is there.
+            if let Some(list) = self.default_liquid_stack(area)
+                && !list.iter().any(|s| s == "ovcd")
+            {
+                return Err(format!(
+                    "profile default Rule Set stack for {area}, liquid bulk, must hold the `ovcd` set"
+                ));
+            }
             for kind in [true, false] {
                 let stack = self.default_stack(area, kind).ok_or_else(|| {
                     format!(
@@ -462,7 +470,8 @@ impl Profile {
         self.inputs.get(name).and_then(Value::as_object)
     }
 
-    /// The default stacks as the profile writes them: `{ <Service Area>: { gas: [..], other: [..] } }`.
+    /// The default stacks as the profile writes them: `{ <Service Area>: { gas: [..], other: [..],
+    /// liquid_bulk: [..] } }` (`liquid_bulk` may be missing from an older profile).
     pub fn default_stacks_json(&self) -> Value {
         self.entry("rule_sets")
             .and_then(|e| e.get("default_stacks"))
@@ -480,6 +489,31 @@ impl Profile {
             .get(if gas { "gas" } else { "other" })?
             .as_array()?;
         list.iter().map(|v| v.as_str().map(String::from)).collect()
+    }
+
+    /// The default stack of a liquid bulk Cargo (issue #339): the profile's `liquid_bulk` list for the
+    /// Service Area. A profile written before it has none, and then takes its `other` list with the
+    /// liquid Rule Sets of the Service Area put in before `ovcd`: `adn-tank` on any Service Area, and
+    /// `marpol-i` where the vessel goes to sea. `None` when the profile gives no `other` list either.
+    pub fn default_liquid_stack(&self, service_area: &str) -> Option<Vec<String>> {
+        let area = self
+            .entry("rule_sets")?
+            .get("default_stacks")?
+            .get(service_area)?;
+        if let Some(list) = area.get("liquid_bulk").and_then(Value::as_array) {
+            return list.iter().map(|v| v.as_str().map(String::from)).collect();
+        }
+        let mut stack = self.default_stack(service_area, false)?;
+        let at = stack
+            .iter()
+            .position(|s| s == "ovcd")
+            .unwrap_or(stack.len());
+        let mut added = vec!["adn-tank".to_string()];
+        if service_area == "coastal-and-river" {
+            added.push("marpol-i".to_string());
+        }
+        stack.splice(at..at, added);
+        Some(stack)
     }
 
     /// The plain default of an input, if the profile gives one.
