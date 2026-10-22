@@ -1,11 +1,11 @@
 <!-- unreleased -->
 - Design change (issue #526): resistance, squat, waves and the bollard pull take one value of g (9.80665 m/s^2) and one knot (1852/3600 m/s) from one definition (`constants.rs`). Before, the resistance used 9.81 and 0.5144, and squat and waves used 9.80665 and 0.514444, so one speed point mixed both pairs. The speed to metres per second factor moves by 0.01 % and g by 0.03 %: small shifts in resistance, power, squat, wave resistance and bollard pull on every Design with a speed curve. The Python API (`squat`, `waves.compute`) differs from 0.1.0 in the same way and is listed in `KNOWN_DIFFERENCES`.
-- Examples (issue #409): the dry bulk box hold and the two gas example files are saved in the IS Code loading conditions, so their drawings show the ballast waterline and the ballast tanks. The dry bulk example now has a stability result. All stored results hashes are re-stamped.
+- Examples (issue #409): the dry bulk box hold and the two gas example files are saved in the IS Code loading conditions, so their drawings show the ballast waterline and the ballast tanks. The dry bulk example now has a stability result. The fitted bollard pull factor of an azimuth ducted propulsor is 0.974, not 0.975, because the calibration cases now use the shared g (the profile follows the fit). All stored results hashes are re-stamped.
 
 <!-- design-impact -->
 ### ticket/526-one-g-knot (2026-10-22)
 
-Between `main ab89a78` and `this branch 5e9ad0e`.
+Between `main 5febb90` and `this branch 4ed3e6d`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -49,4 +49,4 @@ Between `main ab89a78` and `this branch 5e9ad0e`.
 | sweep optional hull_offsets | `loading_conditions.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
 | sweep optional hull_offsets | `stability.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
 | sweep optional inner_bottom_plate_mm | `loading_conditions.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
-| ... | 108238 more changed quantities | | | |
+| ... | 108276 more changed quantities | | | |
