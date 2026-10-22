@@ -96,6 +96,7 @@ check-aft-end-bulkhead-space = aft end-bulkhead space { $aft } m >= { $min } m (
 check-fwd-end-bulkhead-space-plane-ends = plane tank ends
 check-fwd-end-bulkhead-space-domed-ends = domed tank ends
 check-name-opening-setback = opening setback
+check-opening-distance = distance { $distance } m from the cargo area (end space included) to any entrance or openable window >= { $min } m (cl. 3.3.7 / 3.3.11)
 check-opening-setback = aft separation { $aft } m >= { $min } m from the cargo area to any entrance or openable window (cl. 3.3.7 / 3.3.11)
 check-name-fwd-end-bulkhead-space = fwd end bulkhead space
 check-fwd-end-bulkhead-space = forward end-bulkhead space { $fwd } m >= { $min } m ({ $tank_ends }, cl. 3.5.3)

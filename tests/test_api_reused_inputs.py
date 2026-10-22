@@ -35,8 +35,9 @@ def test_gas_stability_assess_after_the_inputs_object_was_reused():
     # Re-pinned (issue #280: the end space defaults to the type G rule); were (5.010972757840445,
     # 7.1794700173060155, 11.60946081779351) and (4.368132024606091, 6.823567215928239,
     # 12.28163398784297).
-    expected = {90.0: (5.004407999982387, 7.164408365099867, 11.579766350786437),
-                70.0: (4.361845332855657, 6.806132127250956, 12.23869123434108)}
+    # Re-pinned again (issue #381: the opening setback is measured from the cargo area).
+    expected = {90.0: (5.008782640783497, 7.174444292789616, 11.599547988722012),
+                70.0: (4.366034263765853, 6.817748082762562, 12.267290419878801)}
     # The 12 m tank diameter cap of 0.1.0 (it is an input, 16 m by default, since issue #175).
     inp = B.BargeCapacityInputs(loa=90.0, beam=14.8, depth=6.5, cargo_type="LPG_propane",
                                 max_tank_od_m=12.0)

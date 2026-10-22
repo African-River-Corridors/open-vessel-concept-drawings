@@ -171,6 +171,7 @@ fn gas_fit(self_propelled: bool) -> ga::ArrangementFit {
         // The fixture stores the end spaces the engine used before they were inputs (issue #280).
         aft_end_space_m: 0.60,
         fwd_end_space_m: 0.50,
+        opening_setback_from_cargo_area: false,
         ..FitOptions::default()
     };
     // The hull limit of the fixture: depth less the 0.3 m freeboard.

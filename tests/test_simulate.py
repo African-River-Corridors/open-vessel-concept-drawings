@@ -17,7 +17,7 @@ def test_gas_uses_the_search_not_auto():
     # fails the light-condition angle of max GZ); was 1763.
     # Re-pinned (issue #498: the angle of max GZ alone in the light condition is a warning); was 1406.
     # Re-pinned (issue #280: the end space defaults to the type G rule); was 1763.
-    assert abs(simulate(CN_II)["results"]["cargo_t"] - 1774.5) < 1.0
+    assert abs(simulate(CN_II)["results"]["cargo_t"] - 1767.1) < 1.0
 
 
 def test_gas_optimised_depth_matches_snapshot():
@@ -29,7 +29,7 @@ def test_gas_optimised_depth_matches_snapshot():
     # (issue #410: the covering above D is in the lightship); was 1691.
     # Re-pinned (issue #498: the angle of max GZ alone in the light condition is a warning); was 1204.
     # Re-pinned (issue #280); was 1691.
-    assert abs(o["results"]["cargo_t"] - 1702.1) < 1.0
+    assert abs(o["results"]["cargo_t"] - 1694.8) < 1.0
     assert o["arrangement"]["fill_ratio"] == 0.98          # ruleset-driven default
 
 

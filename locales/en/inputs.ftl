@@ -186,6 +186,10 @@ input-aft-end-space-m = Aft end-bulkhead space
 
 input-fwd-end-space-m = Forward end-bulkhead space
 
+input-opening-setback-basis = Opening setback measured from
+choice-opening-setback-basis-tank-end = From the tank end
+choice-opening-setback-basis-cargo-area = From the cargo area
+
 input-tank-wall-thickness-mm = Tank wall thickness (override)
 
 input-optimise-depth = Optimise depth

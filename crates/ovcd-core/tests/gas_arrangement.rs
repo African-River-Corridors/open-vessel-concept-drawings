@@ -32,7 +32,9 @@ fn the_cn_ii_benchmark_is_reproduced() {
     // one-wide arrangement is feasible again; was 1405.8516419707348 with (4, 2, 2).
     // Re-pinned again (issue #280, the end space defaults to the type G rule, 0.20 m); was
     // 2021.2487121368047.
-    assert_eq!(f.payload_t, 2033.4091181911363);
+    // Re-pinned again (issue #381, the opening setback is measured from the cargo area: 0.20 m more
+    // aft separation); was 2033.4091181911363.
+    assert_eq!(f.payload_t, 2025.3032139076731);
     assert_eq!((f.n_tanks, f.n_tanks_wide, f.n_tanks_long), (2, 1, 2));
     // Re-pinned (issue #264); was "volume" under the stepped IGC_2G and "draft" (issue #237): the
     // arrangement that passes stability is smaller, so the volume binds again.
@@ -100,7 +102,7 @@ fn the_smallest_viable_loa_is_found_to_a_tenth_of_a_metre() {
         // (#448) and 39.9 before that. Before that re-pinned (issue #264, a viable length needs an
         // arrangement that passes every check, stability included); was 36.1 (issue #237) and
         // 35.6 under the stepped IGC_2G.
-        37.5
+        37.8
     );
 }
 
@@ -161,15 +163,16 @@ fn a_cap_clearance_a_hair_under_the_rule_is_accepted_not_refused() {
         max_tank_od_m: 8.000000001,
         ..FitOptions::default()
     };
-    // Issue #280: the end spaces took 0.30 m less (2.2 m, not 2.5 m), so the hull is 0.30 m shorter
+    // Issue #280: the end spaces took 0.30 m less (2.2 m, not 2.5 m); issue #381: the aft separation
+    // is 0.20 m more (the setback from the cargo area), so the hull is 0.10 m shorter than before
     // for the same tank.
-    let f = fit(44.95667782, 10.0, "LNG", 4.0, &o).unwrap();
+    let f = fit(45.15667782, 10.0, "LNG", 4.0, &o).unwrap();
     // ce96e66
-    assert_eq!(f.payload_t, 427.50000005420844);
+    assert_eq!(f.payload_t, 427.5000000542083);
     assert_eq!(f.side_clearance_m, 0.9999999995);
     assert_eq!(f.tank_od_m, 8.000000001);
-    assert_eq!(f.containment_inner_volume_m3, 1000.0000001268033);
-    assert_eq!(f.per_tank_volume_m3, 500.00000006340167);
+    assert_eq!(f.containment_inner_volume_m3, 1000.000000126803);
+    assert_eq!(f.per_tank_volume_m3, 500.0000000634015);
     assert_eq!((f.n_tanks, f.candidates_tried), (2, 1));
     assert_eq!(f.binding, "volume");
     // Issue #448: on the hull's sections the Light condition's GZ peaks below 25 degrees (IS Code

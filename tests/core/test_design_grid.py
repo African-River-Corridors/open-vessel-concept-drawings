@@ -25,7 +25,8 @@ def test_base_point_regression_anchor():
     c = g.curve(60)[0]
     assert c.n_tanks_long == 2
     # Re-pinned (issue #280: the end space defaults to the type G rule); was 714.
-    assert round(c.cargo_t) == 726
+    # Re-pinned again (issue #381: the opening setback is measured from the cargo area); was 726.
+    assert round(c.cargo_t) == 718
 
 
 def test_every_cell_has_two_tanks_along_the_hull():
