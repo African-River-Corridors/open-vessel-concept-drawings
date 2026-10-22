@@ -93,7 +93,7 @@ def test_get_cargo_with_a_key_that_is_not_text_is_a_value_error(key):
     with pytest.raises(ValueError) as e:
         cargo.get_cargo(key)
     assert str(e.value) == (f"Unknown cargo type '{key}'. Valid types: LNG, LNG_ethane, "
-                            "LPG_propane, LPG_butane, LPG_mix, bauxite, crude_oil")   # ce96e66 + crude oil (spec 0006)
+                            "LPG_propane, LPG_butane, LPG_mix, bauxite, crude_oil, diesel_en590")   # ce96e66 + the oils (spec 0006)
 
 
 def test_get_cargo_with_an_unhashable_key_is_a_type_error():

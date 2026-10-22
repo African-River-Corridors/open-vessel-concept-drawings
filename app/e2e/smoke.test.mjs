@@ -603,8 +603,9 @@ describe("OVCD app smoke tests", () => {
     // The Cargo picker tags a Cargo that is still in development.
     const options = await browser.$$('select[aria-label="Cargo"] option');
     const labels = await texts(options);
-    assert.ok(labels.includes("Crude oil (work in development)"), labels.join(" | "));
-    assert.ok(labels.every((l) => l === "Crude oil (work in development)" || !l.includes("work in development")), "only crude oil is tagged");
+    const oils = ["Crude oil (work in development)", "Diesel fuel (EN 590) (work in development)"];
+    for (const oil of oils) assert.ok(labels.includes(oil), labels.join(" | "));
+    assert.ok(labels.every((l) => oils.includes(l) || !l.includes("work in development")), "only the oils are tagged");
   });
 
   for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
