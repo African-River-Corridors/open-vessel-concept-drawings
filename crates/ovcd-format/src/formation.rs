@@ -1,16 +1,21 @@
-//! The powering of a pushed Formation with its pusher (issue #359, spec 0007 "Formations").
+//! The powering of a pushed Formation with its pusher (issue #359) or an ATB with its tug (issue
+//! #362), spec 0007 "Formations".
 //!
-//! The Option's inputs describe one barge, and `simulate` runs it as a pushed barge. When the Option
-//! includes its tug (`tug_included`), this module adds the `formation` block to the result: the pusher
-//! sized for the Formation, the Equivalent Hull, the power and the service speed in each environment,
-//! the bollard pull and the coupling force. The result of the barge itself does not change.
+//! The Option's inputs describe one barge, and `simulate` runs it as a pushed barge (an ATB barge
+//! with its Notch). When the Option includes its tug (`tug_included`), this module adds the
+//! `formation` block to the result: the tug sized for the Formation (a pusher by its power, an ATB
+//! tug from the barge), the Equivalent Hull, the power and the service speed in each environment, the
+//! bollard pull and, for a pusher, the coupling force. The result of the barge itself does not
+//! change.
 
 use crate::simulate::formation_curves;
 use crate::text_ids::TextIds;
 use crate::vdesign::DesignOption;
+use ovcd_core::atb::{TugTyped, notch_for_tug, tug_from_barge};
 use ovcd_core::formation::{
-    EquivalentHull, MAX_PASSES, POWER_TOLERANCE, Sized, TugDims, coupling_force_kn,
-    pushed_equivalent_hull, pusher_beam_m, pusher_draught_m, pusher_length_m, size_loop,
+    EquivalentHull, MAX_PASSES, POWER_TOLERANCE, Sized, TugDims, atb_equivalent_hull,
+    coupling_force_kn, pushed_equivalent_hull, pusher_beam_m, pusher_draught_m, pusher_length_m,
+    size_loop,
 };
 use ovcd_core::machinery::{self, MachineryInputs, PowerSource};
 use ovcd_core::powering::{self, PoweringInputs};
@@ -78,6 +83,20 @@ fn tug_inputs(option: &DesignOption) -> Result<TugInputs, String> {
     })
 }
 
+/// How the Formation is joined: the pusher at the stern of barges in line and abreast, or the ATB tug
+/// in the Notch of one barge.
+#[derive(Clone, Copy)]
+enum Join {
+    Pushed {
+        counts: (u64, u64),
+    },
+    /// The tug's dimensions come from the barge, and the Equivalent Hull is shorter by the Notch.
+    Atb {
+        dims: TugDims,
+        notch_depth_m: f64,
+    },
+}
+
 /// What one pass of the sizing found.
 #[derive(Clone)]
 struct Pass {
@@ -97,16 +116,19 @@ fn pass(
     tug: &TugInputs,
     barge: (f64, f64, f64),
     barge_volume_m3: f64,
-    counts: (u64, u64),
+    join: Join,
     rho: f64,
     power_kw: f64,
 ) -> Result<Pass, String> {
-    let dims = TugDims {
-        length_m: tug.length_m.unwrap_or_else(|| pusher_length_m(power_kw)),
-        beam_m: tug.beam_m.unwrap_or_else(|| pusher_beam_m(power_kw)),
-        draught_m: tug
-            .draught_m
-            .unwrap_or_else(|| pusher_draught_m(p.get("draught_limit_m").and_then(Value::as_f64))),
+    let dims = match join {
+        Join::Atb { dims, .. } => dims,
+        Join::Pushed { .. } => TugDims {
+            length_m: tug.length_m.unwrap_or_else(|| pusher_length_m(power_kw)),
+            beam_m: tug.beam_m.unwrap_or_else(|| pusher_beam_m(power_kw)),
+            draught_m: tug.draught_m.unwrap_or_else(|| {
+                pusher_draught_m(p.get("draught_limit_m").and_then(Value::as_f64))
+            }),
+        },
     };
     // The propeller: typed, else the largest the stern allows.
     let k_d = if tug.tunnel { K_D_TUNNEL } else { K_D_OPEN };
@@ -151,7 +173,15 @@ fn pass(
     .map(|i| i.mass_t)
     .sum();
     let lightship_t = hull_steel_t + machinery_t;
-    let hull = pushed_equivalent_hull(barge, barge_volume_m3, counts, &dims, lightship_t / rho);
+    let tug_volume = lightship_t / rho;
+    let hull = match join {
+        Join::Pushed { counts } => {
+            pushed_equivalent_hull(barge, barge_volume_m3, counts, &dims, tug_volume)
+        }
+        Join::Atb { notch_depth_m, .. } => {
+            atb_equivalent_hull(barge, barge_volume_m3, &dims, tug_volume, notch_depth_m)
+        }
+    };
     // The resistance of the Equivalent Hull, times the allowance, at the speeds of the curves.
     let mut curves = formation_curves(
         p,
@@ -214,7 +244,10 @@ pub(crate) fn add_formation(
     let kind = option
         .input("formation")
         .and_then(|i| i.value["kind"].as_str().map(str::to_string));
-    let pushed = matches!(kind.as_deref(), Some("pushed_barge" | "pushed_convoy"));
+    let pushed = matches!(
+        kind.as_deref(),
+        Some("pushed_barge" | "pushed_convoy" | "atb")
+    );
     let included = option
         .input("tug_included")
         .is_some_and(|i| i.value == json!(true));
@@ -223,7 +256,8 @@ pub(crate) fn add_formation(
     }
     let mut ids = TextIds::default();
     let mut notes: Vec<ovcd_core::text::Text> = Vec::new();
-    let block = match build(option, p, counts, v, &mut notes) {
+    let atb = kind.as_deref() == Some("atb");
+    let block = match build(option, p, counts, atb, v, &mut notes) {
         Ok(b) => b,
         Err(message) => json!({ "tug_included": true, "error": message }),
     };
@@ -256,6 +290,7 @@ fn build(
     option: &DesignOption,
     p: &Map<String, Value>,
     counts: (u64, u64),
+    atb: bool,
     v: &mut Value,
     notes: &mut Vec<ovcd_core::text::Text>,
 ) -> Result<Value, String> {
@@ -287,6 +322,34 @@ fn build(
         .max(tug.design_speed_kn + 1.0);
     p2.insert("speed_max_kn".into(), json!(reach));
 
+    // An ATB tug comes from the barge (typed values kept) and its Notch from the tug; a pusher is
+    // sized by its power in the loop.
+    let join = if atb {
+        let dims = tug_from_barge(
+            barge.0,
+            barge.1,
+            TugTyped {
+                length_m: tug.length_m,
+                beam_m: tug.beam_m,
+                draught_m: tug.draught_m,
+            },
+        );
+        let notch = notch_for_tug(
+            &dims,
+            number(option, "notch_depth_m"),
+            number(option, "notch_width_m"),
+        );
+        Join::Atb {
+            dims: TugDims {
+                length_m: dims.length_m,
+                beam_m: dims.beam_m,
+                draught_m: dims.draught_m,
+            },
+            notch_depth_m: notch.depth_m,
+        }
+    } else {
+        Join::Pushed { counts }
+    };
     let mut last: Option<Pass> = None;
     let mut error: Option<String> = None;
     let sized: Sized = size_loop(tug.installed_power_kw.unwrap_or(START_KW), |kw| match pass(
@@ -294,7 +357,7 @@ fn build(
         &tug,
         barge,
         barge_volume,
-        counts,
+        join,
         rho,
         kw,
     ) {
@@ -313,23 +376,32 @@ fn build(
     }
     let r = last.ok_or("the sizing ran no pass")?;
     notes.extend(convergence_note(&sized));
-    notes.push(text!(
-        "note-formation-method-unverified",
-        "The Formation's resistance is that of its Equivalent Hull (the barges and the pusher as one hull) by the single-hull method, times the Formation resistance allowance. The method is unverified."
-    ));
+    if atb {
+        notes.push(text!(
+            "note-atb-method-unverified",
+            "The ATB's resistance is that of its Equivalent Hull (the barge and the tug as one hull, as long as the barge and the tug less the Notch the tug sits in) by the single-hull method, times the Formation resistance allowance. The method is unverified."
+        ));
+    } else {
+        notes.push(text!(
+            "note-formation-method-unverified",
+            "The Formation's resistance is that of its Equivalent Hull (the barges and the pusher as one hull) by the single-hull method, times the Formation resistance allowance. The method is unverified."
+        ));
+    }
     let force = coupling_force_kn(
         r.powering.installed_power_kw,
         r.dims.length_m,
         r.dims.beam_m,
     );
-    notes.push(text!(
-        "note-formation-coupling-force",
-        "Coupling force between the pusher and the pushed craft: {force} kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B {power} kW, L_S {ls} m taken as the pusher length, B_S {bs} m).",
-        force = Arg::fixed(force, 0),
-        power = Arg::fixed(r.powering.installed_power_kw, 0),
-        ls = Arg::fixed(r.dims.length_m, 1),
-        bs = Arg::fixed(r.dims.beam_m, 1),
-    ));
+    if !atb {
+        notes.push(text!(
+            "note-formation-coupling-force",
+            "Coupling force between the pusher and the pushed craft: {force} kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B {power} kW, L_S {ls} m taken as the pusher length, B_S {bs} m).",
+            force = Arg::fixed(force, 0),
+            power = Arg::fixed(r.powering.installed_power_kw, 0),
+            ls = Arg::fixed(r.dims.length_m, 1),
+            bs = Arg::fixed(r.dims.beam_m, 1),
+        ));
+    }
     let environments: Vec<Value> = r
         .powering
         .environments
@@ -364,7 +436,7 @@ fn build(
     if let Some(c) = v.get_mut("convoy").and_then(Value::as_object_mut) {
         c.insert("pusher_included".into(), json!(true));
     }
-    Ok(json!({
+    let mut block = json!({
         "tug_included": true,
         "design_speed_kn": crate::eval::num(tug.design_speed_kn),
         "resistance_allowance": crate::eval::num(tug.allowance),
@@ -399,7 +471,14 @@ fn build(
         "environments": environments,
         "coupling_force_kn": crate::eval::num(force),
         "notes": notes.iter().map(|n| json!(n.en)).collect::<Vec<_>>(),
-    }))
+    });
+    // An ATB has no coupling force (its linkage is rigid and its loads are for the approval items) and
+    // holds its Notch depth; the block of a pushed Formation keeps the keys it had.
+    if let (Join::Atb { notch_depth_m, .. }, Some(o)) = (join, block.as_object_mut()) {
+        o.remove("coupling_force_kn");
+        o.insert("notch_depth_m".into(), crate::eval::num(notch_depth_m));
+    }
+    Ok(block)
 }
 
 #[cfg(test)]

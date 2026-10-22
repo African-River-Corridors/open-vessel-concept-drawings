@@ -222,6 +222,7 @@ check-lock-width = overall beam { $width } m <= lock width { $limit } m
 ## crates/ovcd-format/src/formation.rs
 
 warn-formation-sizing-not-converged = The pusher sizing did not converge in { $passes } passes (the power moved by more than { $tol } %). The power shown is that of the last pass.
+note-atb-method-unverified = The ATB's resistance is that of its Equivalent Hull (the barge and the tug as one hull, as long as the barge and the tug less the Notch the tug sits in) by the single-hull method, times the Formation resistance allowance. The method is unverified.
 note-formation-method-unverified = The Formation's resistance is that of its Equivalent Hull (the barges and the pusher as one hull) by the single-hull method, times the Formation resistance allowance. The method is unverified.
 note-formation-coupling-force = Coupling force between the pusher and the pushed craft: { $force } kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B { $power } kW, L_S { $ls } m taken as the pusher length, B_S { $bs } m).
 
