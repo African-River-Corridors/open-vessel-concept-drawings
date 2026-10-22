@@ -114,7 +114,11 @@ fn the_ballast_conditions_fill_the_double_hull_and_carry_no_cargo() {
     assert!(kinds.contains(&"peak_ballast"));
     let ballast = &conditions(&r)[2];
     assert_eq!(num(&ballast["cargo_t"]), 0.0);
-    assert!(num(&ballast["ballast_t"]) > 0.0);
+    // The automatic plan carries the least ballast that meets every criterion. On the hull's
+    // sections (issue #448) this light crude hull meets them with none, so the plan is found and
+    // may be empty; the box hull before needed some.
+    assert_eq!(ballast["plan_found"], true);
+    assert!(num(&ballast["ballast_t"]) >= 0.0);
     assert!(
         ballast["weights"]
             .as_array()
