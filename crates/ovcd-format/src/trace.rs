@@ -1023,6 +1023,77 @@ pub fn box_trace(
     Ok(trace_json(&trace, DEFAULT_SERVICE_AREA, &[]))
 }
 
+/// The Rule Trace of a self-propelled Option whose measured values the case gives (the evaluation
+/// harness, issue #355). The Option is filled as a new one from `inputs`; the Measures that a run
+/// reads from the results (the Blind Distance, the speed, the propeller ratios) come from `measured`
+/// instead, so a case sets each to either side of a limit without a hull that happens to give it.
+/// `measured` keys: `blind_distance_light_m`, `blind_distance_laden_m`, `speed_deep_water_kmh`,
+/// `design_speed_kn`, `diameter_over_max`, `immersion_over_limit`, `blade_load_over_limit`.
+pub fn stern_trace(
+    inputs: &serde_json::Map<String, Value>,
+    measured_values: &serde_json::Map<String, Value>,
+    library: &Library,
+    chosen: &[(&str, &str)],
+) -> Result<Value, String> {
+    // A harness run asks for a few hundred cases that differ only in the measured values: the filled
+    // Option is made once for each set of typed inputs.
+    static OPTIONS: std::sync::Mutex<Vec<(String, DesignOption)>> =
+        std::sync::Mutex::new(Vec::new());
+    static PROFILE: std::sync::OnceLock<Profile> = std::sync::OnceLock::new();
+    let key = Value::Object(inputs.clone()).to_string();
+    let cached = OPTIONS
+        .lock()
+        .map_err(|_| "the harness cache is poisoned".to_string())?
+        .iter()
+        .find(|(k, _)| *k == key)
+        .map(|(_, o)| o.clone());
+    let option = match cached {
+        Some(o) => o,
+        None => {
+            let mut typed = serde_json::Map::new();
+            for (k, v) in inputs {
+                typed.insert(k.clone(), json!({ "value": v, "source": "typed" }));
+            }
+            let file = json!({
+                "format": "vdesign", "format_version": 3, "engine_version": crate::vdesign::ENGINE_VERSION,
+                "units": "SI", "options": [{ "name": "Option 1", "inputs": typed }]
+            });
+            let filled = crate::vdesign::fill_as_new(
+                &file.to_string(),
+                PROFILE.get_or_init(Profile::built_in),
+            );
+            if !filled.report.errors.is_empty() {
+                return Err(filled.report.errors.join("; "));
+            }
+            let o = filled.design.ok_or("the case has no Design")?.options[0].clone();
+            OPTIONS
+                .lock()
+                .map_err(|_| "the harness cache is poisoned".to_string())?
+                .push((key, o.clone()));
+            o
+        }
+    };
+    let option = &option;
+    let number = |k: &str| measured_values.get(k).and_then(Value::as_f64);
+    let mut measured = Measured {
+        blind_distance_light_m: number("blind_distance_light_m"),
+        blind_distance_laden_m: number("blind_distance_laden_m"),
+        design_speed_kn: number("design_speed_kn"),
+        diameter_over_max: number("diameter_over_max"),
+        immersion_over_limit: number("immersion_over_limit"),
+        blade_load_over_limit: number("blade_load_over_limit"),
+        ..Measured::default()
+    };
+    if let Some(kmh) = number("speed_deep_water_kmh") {
+        measured
+            .speeds_kn
+            .push(("Deep water".to_string(), kmh / 1.852));
+    }
+    let selection = library.select(chosen)?;
+    let trace = trace_of(&selection, option, &measured);
+    Ok(trace_json(&trace, service_area_of(option), &[]))
+}
+
 /// What a liquid bulk layout gives the Rule Trace (the evaluation harness, issue #338): the layout, the
 /// deadweight, and the few inputs the liquid Rules read. It has no Option, so the inputs are the case's.
 struct LiquidMeasures<'a> {

@@ -43,16 +43,25 @@ import yaml
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import rule_mutation  # noqa: E402
-from engine import DEFAULT_SELECT, box_trace, liquid_trace  # noqa: E402
+from engine import DEFAULT_SELECT, box_trace, liquid_trace, stern_case_trace  # noqa: E402
 
 CASES = HERE / "cases"
 MUTANTS = HERE / "mutants.yaml"
 TANK_MUTANTS = HERE / "tank_mutants.yaml"
+STERN_MUTANTS = HERE / "stern_mutants.yaml"
 RESULTS = HERE / "results.md"
 
 #: The sets a liquid bulk (`kind: tank`) case selects (issue #338); `normam-202` is optional, never in a default
 #: stack, so no base case selects it.
 TANK_SELECT = ("adn-tank@1.0.0", "marpol-i@1.0.0")
+#: The sets a stern (`kind: stern`) case selects (issue #355): the Blind Distance, speed, redundancy and propeller
+#: Rules of a self-propelled craft.
+STERN_SELECT = ("es-trin-2025@1.0.0", "solas-v22@1.0.0", "rheinschpv@1.0.0", "ovcd@2.1.0")
+#: The case inputs of a stern case; a case that gives any other is a model gap.
+STERN_INPUTS = {"length_overall_m", "beam_m", "depth_m", "bow_thruster", "propulsor_count",
+                "blind_distance_light_m", "blind_distance_laden_m", "speed_deep_water_kmh", "design_speed_kn",
+                "propeller_diameter_m", "propeller_d_max_m", "propeller_ducted", "aft_draught_light_m",
+                "blade_load_kw_m2"}
 BUCKETS = ("model-gap", "known-limitation", "code-bug", "rule-suspect", "needs-expert")
 #: The trace inputs a box case gives; a case that needs any other input is a model gap.
 BOX_INPUTS = {"form", "vdesign", "length_m", "beam_m", "depth_m", "draught_m", "kg_m",
@@ -68,9 +77,10 @@ def kind_of(case: dict) -> str:
 
 
 def load_cases(cases_dir: Path = CASES, mutants_file: Path | None = MUTANTS,
-               tank_mutants_file: Path | None = TANK_MUTANTS) -> list[dict]:
+               tank_mutants_file: Path | None = TANK_MUTANTS,
+               stern_mutants_file: Path | None = STERN_MUTANTS) -> list[dict]:
     cases = [yaml.safe_load(p.read_text(encoding="utf-8")) for p in sorted(cases_dir.glob("*.yaml"))]
-    for f in (mutants_file, tank_mutants_file):
+    for f in (mutants_file, tank_mutants_file, stern_mutants_file):
         if f is not None and f.exists():
             cases += yaml.safe_load(f.read_text(encoding="utf-8"))["mutants"]
     return cases
@@ -80,6 +90,8 @@ def trace_of(case: dict, rule_sets: tuple[str, ...] = (), select: tuple[str, ...
     i = case["inputs"]
     if kind_of(case) == "tank":
         return liquid_trace(i, rule_sets=rule_sets, select=select)
+    if kind_of(case) == "stern":
+        return stern_case_trace(i, rule_sets=rule_sets, select=select)
     return box_trace(i["beam_m"], i["depth_m"], i["draught_m"], i["kg_m"],
                      free_surface_m=i.get("free_surface_m", 0.0), rule_sets=rule_sets, select=select)
 
@@ -95,7 +107,7 @@ def engine_verdict(row: dict | None) -> str:
 def triage(case: dict, expected: dict, row: dict | None) -> str:
     """The bucket of one disagreement between `expected` (a case's entry for one Rule) and the
     engine's `row` for it."""
-    missing = sorted(set(case["inputs"]) - (TANK_INPUTS if kind_of(case) == "tank" else BOX_INPUTS))
+    missing = sorted(set(case["inputs"]) - {"tank": TANK_INPUTS, "stern": STERN_INPUTS}.get(kind_of(case), BOX_INPUTS))
     if row is None or row["outcome"] in ("not evaluated", "not applicable") or missing:
         return "model-gap"
     if row.get("finding"):
@@ -142,7 +154,8 @@ def evaluate(cases: list[dict], rule_sets: tuple[str, ...] = (),
     disagreements = []
     for case in cases:
         # A liquid bulk case selects the liquid Rule Sets, a box case the one the caller names.
-        ran = run_case(case, rule_sets, TANK_SELECT if kind_of(case) == "tank" else select)
+        kind = kind_of(case)
+        ran = run_case(case, rule_sets, TANK_SELECT if kind == "tank" else STERN_SELECT if kind == "stern" else select)
         for row in ran["trace"]["rows"]:
             if row["rule"] and row["rule"] not in rules:
                 rules[row["rule"]] = {"set": row["rule_sets"][0], "title": row["title"],
@@ -169,15 +182,17 @@ def evaluate(cases: list[dict], rule_sets: tuple[str, ...] = (),
             if r["expected"] == "fail" and r["engine"] == "pass" and r["blocking"]:
                 p["false_passes"].append(case["id"])
     return {"cases": cases, "per": per, "rules": rules, "disagreements": disagreements,
-            "select": list(select), "select_tank": list(TANK_SELECT)}
+            "select": list(select), "select_tank": list(TANK_SELECT), "select_stern": list(STERN_SELECT)}
 
 
 def mutate_rules(result: dict) -> list[dict]:
     """Run every rule-data mutant of the selected sets over the corpus (issue #279)."""
     box = [c for c in result["cases"] if kind_of(c) == "box"]
     tank = [c for c in result["cases"] if kind_of(c) == "tank"]
+    stern = [c for c in result["cases"] if kind_of(c) == "stern"]
     return (rule_mutation.run(box, result["select"], trace_of)
-            + rule_mutation.run(tank, result["select_tank"], trace_of))
+            + rule_mutation.run(tank, result["select_tank"], trace_of)
+            + rule_mutation.run(stern, result["select_stern"], trace_of, expected_only=True, near_only=True))
 
 
 def weak(mutation: list[dict]) -> list[dict]:
@@ -223,6 +238,8 @@ def report(result: dict) -> str:
     mutants = [c for c in cases if "mutant" in c]
     tank_base = [c for c in base if kind_of(c) == "tank"]
     tank_mutants = [c for c in mutants if kind_of(c) == "tank"]
+    stern_base = [c for c in base if kind_of(c) == "stern"]
+    stern_mutants = [c for c in mutants if kind_of(c) == "stern"]
     external = [c for c in base if c["provenance"].get("inputs_basis") == "published"]
     skipped = []
     if MUTANTS.exists():
@@ -230,6 +247,9 @@ def report(result: dict) -> str:
     tank_skipped = []
     if TANK_MUTANTS.exists():
         tank_skipped = yaml.safe_load(TANK_MUTANTS.read_text(encoding="utf-8")).get("skipped", [])
+    stern_skipped = []
+    if STERN_MUTANTS.exists():
+        stern_skipped = yaml.safe_load(STERN_MUTANTS.read_text(encoding="utf-8")).get("skipped", [])
     out = [
         "# Evaluation results",
         "",
@@ -242,10 +262,12 @@ def report(result: dict) -> str:
         "## Summary",
         "",
         f"- Rule Sets selected: {', '.join('`' + s + '`' for s in result['select'])} for the box cases, "
-        f"{', '.join('`' + s + '`' for s in result['select_tank'])} for the liquid bulk cases.",
-        f"- Cases: {len(base)} base cases ({len(tank_base)} liquid bulk) and {len(mutants)} generated boundary mutants "
-        f"({len(tank_mutants)} liquid bulk; {len(skipped)} possible box mutants skipped because no KG on the hull "
-        f"crosses the limit, {len(tank_skipped)} liquid bulk mutants skipped because no layout reaches the limit).",
+        f"{', '.join('`' + s + '`' for s in result['select_tank'])} for the liquid bulk cases, "
+        f"{', '.join('`' + s + '`' for s in result['select_stern'])} for the stern cases.",
+        f"- Cases: {len(base)} base cases ({len(tank_base)} liquid bulk, {len(stern_base)} stern) and {len(mutants)} "
+        f"generated boundary mutants ({len(tank_mutants)} liquid bulk, {len(stern_mutants)} stern; {len(skipped)} "
+        f"possible box mutants skipped because no KG on the hull crosses the limit, {len(tank_skipped)} liquid bulk "
+        f"mutants skipped because no layout reaches the limit, {len(stern_skipped)} stern mutants skipped).",
         f"- Base cases with an external published source for the inputs: **{len(external)}** "
         f"({', '.join('`' + c['id'] + '`' for c in external) or 'none'}; their verdicts are still derived by the "
         f"oracle, the sources give no IS Code 2.2 verdict). Derived entirely by the oracle: "
@@ -320,11 +342,11 @@ def report(result: dict) -> str:
             src = f"inputs: {pv['inputs_source']['locator']} of the paper cited in README.md; limits: {src}"
         out.append(f"| `{c['id']}` | {'published' if pv.get('inputs_basis') == 'published' else 'chosen'} | "
                    f"{pv['verdict_basis']} | {src} |")
-    if skipped or tank_skipped:
+    if skipped or tank_skipped or stern_skipped:
         out += ["", "## Mutants not generated", "",
                 "A limit that no physical input crosses has no mutant (the KG would have to be above the deck; "
                 "a tank limit that no cargo zone inside the hull reaches).", ""]
-        for s in skipped + tank_skipped:
+        for s in skipped + tank_skipped + stern_skipped:
             out.append(f"- `{s['parent']}`, `{s['criterion']}`, {s['side']}, {s['magnitude']} step: {s['reason']}")
     return "\n".join(out) + "\n"
 
@@ -335,9 +357,10 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--cases", type=Path, default=CASES)
     ap.add_argument("--mutants", type=Path, default=MUTANTS)
     ap.add_argument("--tank-mutants", type=Path, default=TANK_MUTANTS)
+    ap.add_argument("--stern-mutants", type=Path, default=STERN_MUTANTS)
     ap.add_argument("--results", type=Path, default=RESULTS)
     args = ap.parse_args(argv[1:])
-    result = evaluate(load_cases(args.cases, args.mutants, args.tank_mutants))
+    result = evaluate(load_cases(args.cases, args.mutants, args.tank_mutants, args.stern_mutants))
     result["mutation"] = mutate_rules(result)
     t = totals(result)
     text = report(result)

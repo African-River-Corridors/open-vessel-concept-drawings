@@ -16,6 +16,7 @@ import yaml
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import box_oracle as oracle  # noqa: E402
+import stern_oracle  # noqa: E402
 import tank_oracle  # noqa: E402
 
 CASES_DIR = HERE.parent / "cases"
@@ -279,6 +280,59 @@ TANK_BASES = [
 ]
 
 
+#: The self-propelled craft of the stern, wheelhouse and propeller Rules (issue #355): particulars and the numbers a
+#: run reads from its results, chosen for this corpus. The verdicts are worked out by `stern_oracle.py` from the
+#: texts of ES-TRIN 2025/1, SOLAS V/22.1.1 and the Rhine Police Regulations.
+STERN_HULL = {"length_overall_m": 100.0, "beam_m": 11.4, "depth_m": 4.5, "bow_thruster": "none", "propulsor_count": 1,
+              "blind_distance_light_m": 200.0, "blind_distance_laden_m": 180.0, "speed_deep_water_kmh": 18.0,
+              "design_speed_kn": 9.7, "propeller_diameter_m": 3.0, "propeller_d_max_m": 3.7,
+              "propeller_ducted": False, "aft_draught_light_m": 3.9, "blade_load_kw_m2": 300.0}
+
+
+def stern_base(id_: str, title: str, note: str, **inputs) -> dict:
+    return {"id": id_, "kind": "stern", "title": title, "note": note, "inputs": {**STERN_HULL, **inputs}}
+
+
+STERN_BASES = [
+    stern_base("stern_ok", "Self-propelled craft of 100 m, inside every limit",
+               "The Blind Distance is 200 m light and 180 m laden, the speed 18 km/h, a 3.0 m propeller in a stern that "
+               "allows 3.7 m, a shaft axis 2.4 m under the lightest aft waterline, and a blade load of 300 kW/m2."),
+    stern_base("stern_blind_249", "Self-propelled craft of 100 m, Blind Distance 249 m unladen",
+               "1 m inside the 250 m of ES-TRIN 7.02(2); the SOLAS limit for 100 m is 200 m, so it warns.",
+               blind_distance_light_m=249.0),
+    stern_base("stern_blind_251", "Self-propelled craft of 100 m, Blind Distance 251 m unladen",
+               "1 m across the 250 m of ES-TRIN 7.02(2).", blind_distance_light_m=251.0),
+    stern_base("stern_slow_12_9", "Self-propelled craft of 100 m, 12.9 km/h in deep water",
+               "0.1 km/h under the 13 km/h of ES-TRIN 5.06(1); it still covers the Design Speed of 9.7 kn "
+               "(17.96 km/h) only if the speed is above it, so that Check fails too.", speed_deep_water_kmh=12.9),
+    stern_base("stern_fast_13_1", "Self-propelled craft of 100 m, 13.1 km/h in deep water",
+               "0.1 km/h over the 13 km/h of ES-TRIN 5.06(1); below the Design Speed of 9.7 kn (17.96 km/h).",
+               speed_deep_water_kmh=13.1),
+    stern_base("stern_110_1_no_thruster", "Single-screw craft of 110.1 m, no bow thruster",
+               "Over 110 m: ES-TRIN 28.04(1)(a) asks for a bow thruster.", length_overall_m=110.1,
+               blind_distance_light_m=210.0, blind_distance_laden_m=190.0),
+    stern_base("stern_110_1_thruster", "Single-screw craft of 110.1 m, with a bow thruster",
+               "Over 110 m with a tunnel bow thruster: 28.04(1)(a) is met.", length_overall_m=110.1,
+               bow_thruster="tunnel", blind_distance_light_m=210.0, blind_distance_laden_m=190.0),
+    stern_base("stern_110_no_thruster", "Single-screw craft of 110.0 m, no bow thruster",
+               "110 m is not over 110 m: 28.04(1)(a) does not ask for a bow thruster.", length_overall_m=110.0,
+               blind_distance_light_m=210.0, blind_distance_laden_m=190.0),
+    stern_base("stern_under_45", "Self-propelled craft of 40 m",
+               "Under 45 m: SOLAS V/22.1.1 does not apply.", length_overall_m=40.0, beam_m=7.0, depth_m=3.0,
+               blind_distance_light_m=60.0, blind_distance_laden_m=50.0),
+    stern_base("stern_260", "Self-propelled craft of 260 m",
+               "Over 250 m the SOLAS limit is the 500 m cap, not two ship lengths; with a tunnel bow thruster for "
+               "ES-TRIN 28.04(1)(a).", length_overall_m=260.0, beam_m=22.9, depth_m=6.0, bow_thruster="tunnel",
+               blind_distance_light_m=240.0, blind_distance_laden_m=300.0),
+    stern_base("stern_ducted", "Self-propelled craft of 100 m with a ducted propeller",
+               "Ducted: the shaft axis must be 0.71 diameters under the water (0.76 open) and the blade load may be "
+               "500 kW/m2 (400 open).", propeller_ducted=True, aft_draught_light_m=3.5, blade_load_kw_m2=450.0),
+    stern_base("stern_weak", "Self-propelled craft of 100 m that fails the propeller Checks",
+               "A 4.2 m propeller in a stern that allows 3.7 m, barely under the water at the light draught, loaded "
+               "at 520 kW/m2.", propeller_diameter_m=4.2, aft_draught_light_m=3.0, blade_load_kw_m2=520.0),
+]
+
+
 def sig(x: float, n: int = 10) -> float:
     return float(f"{x:.{n}g}")
 
@@ -338,9 +392,34 @@ def tank_document(c: dict) -> dict:
     }
 
 
+def stern_document(c: dict) -> dict:
+    """A stern, wheelhouse and propeller case (`kind: stern`): the inputs, and the oracle's verdict for each Rule."""
+    expected = {k: {kk: vv for kk, vv in v.items() if kk != "compare"}
+                for k, v in stern_oracle.verdicts(c["inputs"]).items()}
+    return {
+        "id": c["id"], "title": c["title"], "kind": "stern",
+        "inputs": dict(c["inputs"]),
+        "expected": expected,
+        "provenance": {
+            "verdict_basis": "derived",
+            "inputs_basis": "chosen for this corpus (not from a publication)",
+            "source": "evaluation/oracle/stern_oracle.py (the text of ES-TRIN 2025/1 5.06(1), 7.02(2) and 28.04(1)(a), "
+                      "SOLAS V/22.1.1, Rhine Police Regulations 1.07(2), and the Checks of docs/specs/0007)",
+            "edition": "ES-TRIN 2025/1; SOLAS 1974 Chapter V regulation 22 (MSC.99(73)); RheinSchPV 1994",
+            "locator": "ES-TRIN 5.06(1), 7.02(2), 28.04(1)(a); SOLAS V/22.1.1; RheinSchPV 1.07(2)",
+            "licence": "inputs and oracle: this repository (see LICENSE); the limits are quoted from the texts",
+            "confidence": "high for the verdicts (the oracle states each limit as the text prints it); the case is "
+                          "not an external published example",
+            "note": c["note"],
+        },
+    }
+
+
 def case_document(c: dict) -> dict:
     if c.get("kind") == "tank":
         return tank_document(c)
+    if c.get("kind") == "stern":
+        return stern_document(c)
     r = oracle.assess(c["B"], c["D"], c["T"], c["KG"], c.get("FS", 0.0))
     expected = {}
     for name in oracle.CRITERIA:
@@ -406,7 +485,7 @@ def render(doc: dict) -> str:
 def main(argv: list[str]) -> int:
     check = "--check" in argv
     bad = 0
-    for c in BASE_CASES + TANK_BASES:
+    for c in BASE_CASES + TANK_BASES + STERN_BASES:
         path = CASES_DIR / f"{c['id']}.yaml"
         text = render(case_document(c))
         if check:
