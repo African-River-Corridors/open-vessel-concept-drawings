@@ -507,7 +507,7 @@ describe("OVCD app smoke tests", () => {
   });
 
   it("says that stability is work in development for a dry-bulk Design", async () => {
-    await open(path.join(FIXTURES, "dry_bulk_box_hold.vdesign"), "dry_bulk_box_hold.vdesign");
+    await open(path.join(FIXTURES, "dry_bulk_sloped_hopper.vdesign"), "dry_bulk_sloped_hopper.vdesign");
     await show("Stability & Propulsion", "Intact stability");
     await until("the work-in-development state", async () => (await browser.$$("[data-testid=stability-wip]")).length === 1);
     assert.match(await browser.$("[data-testid=stability-wip]").getText(), /^Work in development\s+Stability is computed for gas cargo only\. Dry-bulk stability is work in development\.$/);
