@@ -38,6 +38,14 @@ def test_half_full_cylinder_segment():
     assert ybar == pytest.approx(2.0 - 4 * 2.0 / (3 * math.pi))
 
 
+def only_the_light_angle_may_fail(a):
+    """Issue #498: in the Light condition (no ballast) a failure where the angle of maximum GZ is the
+    only failing criterion is a warning of `fit`, not a failure. Every other criterion of every
+    condition holds."""
+    return all(c.ok or (c.name == "Light" and [k.name for k in c.criteria if not k.ok] == ["Angle of max GZ"])
+               for c in a.conditions)
+
+
 def test_cn_ii_passes_the_is_code():
     """Changed in issue #237. Under the per-tank rule (IGC 2.4.1.1), the CN II hull with the 16 m
     default tank cap carries 2,943 t in one 13.7 m tank and FAILS the Laden angle of maximum GZ
@@ -49,7 +57,7 @@ def test_cn_ii_passes_the_is_code():
     f = fit(90.0, 14.8, "LPG_propane", 4.4, depths=[6.5], ruleset="IGC_2G", fill_ratio=0.95,
             max_tank_od_m=12.0)
     a = assess(f.engine_result, f.payload_t, criteria_set="IS_CODE_2008")
-    assert a.ok
+    assert only_the_light_angle_may_fail(a)
     assert {c.name for c in a.conditions} == {"Laden", "Half laden", "Light"}
 
 
@@ -63,24 +71,39 @@ def test_cn_ii_at_the_default_16_m_cap_passes_stability_because_the_search_gates
     f = fit(90.0, 14.8, "LPG_propane", 4.4, depths=[6.5], ruleset="IGC_2G", fill_ratio=0.95)
     assert f.feasible and f.failed_checks == []
     a = assess(f.engine_result, f.payload_t, criteria_set="IS_CODE_2008")
-    assert a.ok
+    assert only_the_light_angle_may_fail(a)
 
 
-def test_a_hull_where_nothing_passes_has_a_failing_assessment_and_light_governs_the_note():
-    """The check must be able to fail: on a 60 x 10 x 6 m self-propelled hull every arrangement fails
-    the light condition. `fit` says so (`feasible` false, the failed check named) and the closest
-    candidate it returns fails its own assessment. (Before issue #264 this was a 60 x 7 x 6 m hull; the
-    search now finds a stable smaller arrangement there.)
+def test_a_hull_where_nothing_passes_has_a_failing_assessment():
+    """The check must be able to fail: on a 60 x 20 x 3.5 m self-propelled hull every arrangement
+    fails the stability of more than the light condition. `fit` says so (`feasible` false, the failed
+    checks named) and the closest candidate it returns fails its own assessment. (Before issue #498
+    this was a 60 x 10 x 6 m hull whose only failure was the angle of maximum GZ in the light
+    condition; that is a warning now, see the next test.)
+
+    Label: property
+    """
+    f = fit(60.0, 20.0, "LPG_propane", 3.2, depths=[3.5], ruleset="IGC_2G", fill_ratio=0.98)
+    assert not f.feasible
+    assert f.failed_checks and all(m.startswith("Stability \u2014 ") for m in f.failed_checks)
+    a = assess(f.engine_result, f.payload_t, criteria_set="IS_CODE_2008")
+    assert not a.ok
+    assert not only_the_light_angle_may_fail(a)
+
+
+def test_a_light_condition_that_fails_only_the_angle_of_max_gz_is_feasible_with_a_failing_assessment():
+    """Issue #498: 60 x 10 x 6 m. The Light condition (no ballast) fails IS Code 2.2.3, the angle of
+    maximum GZ, and nothing else. `fit` calls the arrangement feasible; the assessment, as in 0.1.0,
+    still says the Light condition does not pass.
 
     Label: property
     """
     f = fit(60.0, 10.0, "LPG_propane", 5.7, depths=[6.0], ruleset="IGC_2G", fill_ratio=0.98)
-    assert not f.feasible
-    assert [m.split(":")[0] for m in f.failed_checks] == ["Stability \u2014 light"]
+    assert f.feasible and f.failed_checks == []
     a = assess(f.engine_result, f.payload_t, criteria_set="IS_CODE_2008")
-    assert not a.ok
+    assert not a.ok and only_the_light_angle_may_fail(a)
     light = next(c for c in a.conditions if c.name == "Light")
-    assert not light.ok
+    assert [k.name for k in light.criteria if not k.ok] == ["Angle of max GZ"]
 
 
 def test_the_igc_rule_set_uses_the_is_code_and_the_adn_set_is_gone():

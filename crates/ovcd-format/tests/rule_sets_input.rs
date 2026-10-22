@@ -627,7 +627,7 @@ fn the_trace_states_the_scope_with_the_service_area_the_sets_and_the_gaps() {
     let river = scope(&design);
     assert!(
         river.starts_with(
-            "Service Area river-only; Rule Sets is2008-a@1.0.0, es-trin-2025@1.0.0, ovcd@"
+            "Service Area river-only; Rule Sets is2008-a@2.0.0, es-trin-2025@1.0.0, ovcd@"
         ),
         "{river}"
     );

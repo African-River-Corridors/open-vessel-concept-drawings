@@ -491,6 +491,12 @@ impl MeasureSource for OptionMeasures<'_> {
         })
     }
 
+    fn object_input(&self, object: &str, index: usize, name: &str) -> Option<String> {
+        self.measured
+            .object_input(object, index, name)
+            .or_else(|| self.input(name))
+    }
+
     fn input(&self, name: &str) -> Option<String> {
         match name {
             "formation_kind" => {
@@ -869,6 +875,10 @@ impl MeasureSource for BoxMeasures<'_> {
 
     fn input(&self, _name: &str) -> Option<String> {
         None
+    }
+
+    fn object_input(&self, object: &str, index: usize, name: &str) -> Option<String> {
+        self.measured.object_input(object, index, name)
     }
 
     fn has(&self, measure: &MeasureRef) -> bool {

@@ -27,9 +27,11 @@ fn the_cn_ii_benchmark_is_reproduced() {
     // again (issue #277, the wheelhouse sightline blocks the search); was 2832.6643735601965.
     // Re-pinned again (issue #410, the covering above D is in the lightship at its own heights):
     // the one-wide arrangement fails the light-condition angle of max GZ (24 deg < 25 deg), so the
-    // search takes two tanks wide; was 2021.2487121368047 with (2, 1, 2).
-    assert_eq!(f.payload_t, 1405.8516419707348);
-    assert_eq!((f.n_tanks, f.n_tanks_wide, f.n_tanks_long), (4, 2, 2));
+    // search takes two tanks wide; was 2021.2487121368047 with (2, 1, 2). Re-pinned again (issue
+    // #498, the angle of max GZ alone in the light condition with no ballast is a warning): the
+    // one-wide arrangement is feasible again; was 1405.8516419707348 with (4, 2, 2).
+    assert_eq!(f.payload_t, 2021.2487121368047);
+    assert_eq!((f.n_tanks, f.n_tanks_wide, f.n_tanks_long), (2, 1, 2));
     // Re-pinned (issue #264); was "volume" under the stepped IGC_2G and "draft" (issue #237): the
     // arrangement that passes stability is smaller, so the volume binds again.
     assert_eq!(f.binding, "volume");

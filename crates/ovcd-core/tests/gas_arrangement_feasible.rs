@@ -16,17 +16,27 @@ use ovcd_core::gas_arrangement::{
 };
 use ovcd_core::gas_stability::{self as gs, GasCapacityResult};
 
-/// The stability of a returned arrangement, assessed again on its own, not through `fit`.
+/// The stability of a returned arrangement, assessed again on its own, not through `fit`. Issue #498:
+/// the legacy "Light" condition may fail the angle of maximum GZ alone (a warning of the check, not a
+/// failure); every other criterion of every condition must hold.
 fn stability_ok(f: &ArrangementFit) -> bool {
     let basis = GasCapacityResult::try_from(&f.engine_result).unwrap();
-    gs::assess(
+    let assessed = gs::assess(
         &basis,
         f.payload_t,
         gs::DEFAULT_WATER_DENSITY,
         gs::criteria_set_for(&f.ruleset),
     )
-    .unwrap()
-    .ok()
+    .unwrap();
+    assessed.conditions.iter().all(|c| {
+        c.ok()
+            || (c.name == "Light"
+                && c.criteria
+                    .iter()
+                    .filter(|x| !x.ok)
+                    .map(|x| x.name.as_str())
+                    .eq(["Angle of max GZ"]))
+    })
 }
 
 fn options(depth: f64) -> FitOptions {
@@ -73,33 +83,26 @@ fn the_most_cargo_arrangement_fails_stability_and_a_smaller_one_that_passes_is_r
 }
 
 #[test]
-fn a_hull_where_nothing_passes_is_infeasible_and_lists_the_failing_checks() {
-    // 60 x 10 x 6 m LPG propane: every arrangement fails the light stability criteria.
+fn a_light_condition_that_fails_only_the_angle_of_max_gz_is_a_warning_not_a_failure() {
+    // Issue #498. 60 x 10 x 6 m LPG propane: the legacy Light condition (no ballast) fails the angle of
+    // maximum GZ, IS Code 2.2.3, and nothing else. It was infeasible; now the check is a warning and
+    // the arrangement is feasible. The Python assessment (`assess().ok()`) is unchanged: it still
+    // says the Light condition does not pass.
     let f = fit(60.0, 10.0, "LPG_propane", 5.7, &options(6.0)).unwrap();
-    assert!(!f.feasible);
-    assert!(f.payload_t > 0.0, "the closest candidate is still shown");
-    assert!(!f.failed_checks.is_empty());
-    assert!(
-        f.failed_checks
-            .iter()
-            .all(|c| c.starts_with("Stability \u{2014} ")),
-        "{:?}",
-        f.failed_checks
-    );
-    assert!(
-        f.failed_checks
-            .iter()
-            .any(|c| c.starts_with("Stability \u{2014} light")),
-        "{:?}",
-        f.failed_checks
-    );
-    assert!(!stability_ok(&f));
-    // Nothing in the search passes it either: the viable length is beyond this hull's own.
-    assert!(
-        smallest_viable_loa(10.0, "LPG_propane", 5.7, 20.0, 60.0, &options(6.0))
-            .unwrap()
-            .is_infinite()
-    );
+    assert!(f.feasible, "{:?}", f.failed_checks);
+    assert!(f.failed_checks.is_empty(), "{:?}", f.failed_checks);
+    assert!(f.payload_t > 0.0);
+    let basis = GasCapacityResult::try_from(&f.engine_result).unwrap();
+    let strict = gs::assess(
+        &basis,
+        f.payload_t,
+        0.85,
+        gs::DEFAULT_WATER_DENSITY,
+        gs::criteria_set_for(&f.ruleset),
+    )
+    .unwrap();
+    assert!(!strict.ok());
+    assert!(stability_ok(&f));
 }
 
 #[test]

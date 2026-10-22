@@ -227,10 +227,10 @@ fn every_gas_option_has_the_igc_rows_of_each_tank_and_the_is_code_rows() {
             let trace = &results["rule_trace"];
             // The igc-2g version is the one the file stores; the others are fixed here.
             let sets = trace["rule_sets"].as_array().unwrap();
-            assert!(sets[0].as_str().unwrap().starts_with("igc-2g@1."), "{file}");
+            assert!(sets[0].as_str().unwrap().starts_with("igc-2g@"), "{file}");
             assert_eq!(
                 serde_json::json!(sets[1..]),
-                serde_json::json!(["is2008-a@1.0.0", "lr-inland-gas@1.1.0", "ovcd@2.1.0"]),
+                serde_json::json!(["is2008-a@2.0.0", "lr-inland-gas@1.1.0", "ovcd@2.1.0"]),
                 "{file}"
             );
             let rows = trace["rows"].as_array().unwrap();
@@ -264,7 +264,7 @@ fn every_gas_option_has_the_igc_rows_of_each_tank_and_the_is_code_rows() {
                     .any(|r| r["rule"] == "igc/2.7/damage-survival"
                         && r["outcome"] == "not evaluated")
             );
-            assert!(rows.iter().any(|r| r["rule_sets"][0] == "is2008-a@1.0.0"));
+            assert!(rows.iter().any(|r| r["rule_sets"][0] == "is2008-a@2.0.0"));
         }
     }
 }
@@ -284,13 +284,13 @@ fn a_dry_bulk_option_does_not_get_the_igc_rows() {
 
 fn set_1_1() -> RuleSet {
     Library::built_in()
-        .find("igc-2g", "1.1.0")
+        .find("igc-2g", "2.0.0")
         .expect("built in")
         .clone()
 }
 
 #[test]
-fn version_1_1_0_adds_two_unverified_warn_rules_and_changes_none_of_1_0_0() {
+fn version_2_0_0_adds_two_unverified_warn_rules_and_changes_no_rule_of_1_0_0() {
     let (old, new) = (set(), set_1_1());
     for r in &old.rules {
         let n = new.rule(&r.id).expect("kept");
@@ -308,7 +308,7 @@ fn version_1_1_0_adds_two_unverified_warn_rules_and_changes_none_of_1_0_0() {
     ] {
         let r = new.rule(id).unwrap();
         assert_eq!(r.consequence, ovcd_core::rules::Consequence::Warn, "{id}");
-        assert_eq!(r.since, "1.1.0", "{id}");
+        assert_eq!(r.since, "2.0.0", "{id}");
         assert!(
             r.verified.is_none(),
             "{id}: unverified until a second reader"

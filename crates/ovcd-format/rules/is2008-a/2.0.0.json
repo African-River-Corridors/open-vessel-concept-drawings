@@ -1,0 +1,393 @@
+{
+  "$schema": "../rule-set.schema.json",
+  "id": "is2008-a",
+  "family": "is2008",
+  "title": "IS Code 2008, Part A: general intact stability criteria",
+  "version": "2.0.0",
+  "edition": {
+    "document": "2008 IS Code, resolution MSC.267(85)",
+    "edition": "as adopted 4 December 2008",
+    "amendments": "MSC.443(99) and MSC.444(99) read; neither changes Part A 2.2 or 2.3. MSC.413(97) and MSC.414(97) not held",
+    "in_force": "1 July 2010 (Part A mandatory under SOLAS II-1/2.27 and the 1988 Load Lines Protocol)"
+  },
+  "sources": [
+    {
+      "document": "Resolution MSC.267(85), 2008 IS Code",
+      "edition": "adopted 4 December 2008",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.267%2885%29.pdf",
+      "access": "free",
+      "sha256": "d04db58f4af735d3d98221eb3c040fca23739b5d87197dd857279ea22f7f2a13"
+    },
+    {
+      "document": "Resolution MSC.443(99), amendments to Part A",
+      "edition": "adopted 24 May 2018",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.413%2897%29%20and%20MSC.443%2899%29.pdf",
+      "access": "free",
+      "sha256": "fc6ba2df83653560a114638e5c3afbe24e28a96498155a3de75f55ff70ab2cfd"
+    },
+    {
+      "document": "Resolution MSC.444(99), amendments to Part A",
+      "edition": "adopted 24 May 2018",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.414%2897%29%20and%20MSC.444%2899%29.pdf",
+      "access": "free",
+      "sha256": "7a4f3403ba28abb5bdf1bf34d16bf9d9762c49d17d3b49bc397adc8458372194"
+    }
+  ],
+  "status": "draft",
+  "applies_when": {},
+  "includes": [],
+  "known_conflicts": [],
+  "tables": [],
+  "rules": [
+    {
+      "id": "is2008/A.2.2.1/area-0-30",
+      "title": "Area under the GZ curve from 0 to 30 degrees, at least 0.055 m.rad",
+      "origin": "regulation",
+      "source": {
+        "document": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A",
+        "edition": "MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only",
+        "access": "free",
+        "locator": "A.2.2.1",
+        "page": "MSC.267-85.pdf, annex p. 11"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#270"
+      },
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "MSC.267(85); MSC.443(99) and MSC.444(99) read, neither changes Part A 2.2",
+        "locator_read": "A.2.2.1, annex p. 11",
+        "review": "#270"
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "gz.area",
+        "args": {
+          "from_deg": 0,
+          "to_deg": 30
+        }
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.055,
+        "unit": "m.rad"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "is2008/A.2.2.1/area-0-40",
+      "title": "Area under the GZ curve from 0 to 40 degrees, at least 0.09 m.rad",
+      "origin": "regulation",
+      "source": {
+        "document": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A",
+        "edition": "MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only",
+        "access": "free",
+        "locator": "A.2.2.1",
+        "page": "MSC.267-85.pdf, annex p. 11"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#270"
+      },
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "MSC.267(85); MSC.443(99) and MSC.444(99) read, neither changes Part A 2.2",
+        "locator_read": "A.2.2.1, annex p. 11",
+        "review": "#270"
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "gz.area",
+        "args": {
+          "from_deg": 0,
+          "to_deg": 40
+        }
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.09,
+        "unit": "m.rad"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#282",
+      "since": "1.0.0"
+    },
+    {
+      "id": "is2008/A.2.2.1/area-30-40",
+      "title": "Area under the GZ curve from 30 to 40 degrees, at least 0.03 m.rad",
+      "origin": "regulation",
+      "source": {
+        "document": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A",
+        "edition": "MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only",
+        "access": "free",
+        "locator": "A.2.2.1",
+        "page": "MSC.267-85.pdf, annex p. 11"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#270"
+      },
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "MSC.267(85); MSC.443(99) and MSC.444(99) read, neither changes Part A 2.2",
+        "locator_read": "A.2.2.1, annex p. 11",
+        "review": "#270"
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "gz.area",
+        "args": {
+          "from_deg": 30,
+          "to_deg": 40
+        }
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.03,
+        "unit": "m.rad"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#282",
+      "since": "1.0.0"
+    },
+    {
+      "id": "is2008/A.2.2.2/gz-30",
+      "title": "Righting lever at least 0.2 m at a heel of 30 degrees or more",
+      "origin": "regulation",
+      "source": {
+        "document": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A",
+        "edition": "MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only",
+        "access": "free",
+        "locator": "A.2.2.2",
+        "page": "MSC.267-85.pdf, annex p. 11"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#270"
+      },
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "MSC.267(85); MSC.443(99) and MSC.444(99) read, neither changes Part A 2.2",
+        "locator_read": "A.2.2.2, annex p. 11",
+        "review": "#270"
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "gz.max_from",
+        "args": {
+          "from_deg": 30
+        }
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.2,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "is2008/A.2.2.3/angle-max-gz",
+      "title": "Maximum righting lever at a heel of at least 25 degrees",
+      "origin": "regulation",
+      "source": {
+        "document": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A",
+        "edition": "MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only",
+        "access": "free",
+        "locator": "A.2.2.3",
+        "page": "MSC.267-85.pdf, annex p. 12"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#270"
+      },
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "MSC.267(85); MSC.443(99) and MSC.444(99) read, neither changes Part A 2.2",
+        "locator_read": "A.2.2.3, annex p. 12",
+        "review": "#270"
+      },
+      "applies_when": {
+        "loading_condition_kind": [
+          "standard"
+        ]
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "gz.angle_of_max"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 25,
+        "unit": "deg"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "is2008/A.2.2.3/alternative-criteria",
+      "title": "Alternative criteria of equivalent safety where 25 degrees is not practicable: subject to the approval of the Administration, not modelled; never taken as a pass",
+      "origin": "regulation",
+      "source": {
+        "document": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A",
+        "edition": "MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only",
+        "access": "free",
+        "locator": "A.2.2.3",
+        "page": "MSC.267-85.pdf, annex p. 12"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#498"
+      },
+      "verified": false,
+      "applies_when": {
+        "loading_condition_kind": [
+          "lightship-no-ballast",
+          "legacy-light"
+        ]
+      },
+      "kind": "note",
+      "measure": {
+        "id": "gz.angle_of_max"
+      },
+      "tolerance": 0,
+      "consequence": "note",
+      "sizes": false,
+      "evaluated": false,
+      "finding": "#498",
+      "since": "2.0.0",
+      "gap": "IS Code Part A 2.2.3 allows alternative criteria only with the approval of the Administration; OVCD does not model an approval (ADR 0011). The light condition with no ballast is reported by ovcd/stability/light-angle-of-max-gz as a warning"
+    },
+    {
+      "id": "is2008/A.2.2.4/gm0",
+      "title": "Initial metacentric height at least 0.15 m",
+      "origin": "regulation",
+      "source": {
+        "document": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A",
+        "edition": "MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only",
+        "access": "free",
+        "locator": "A.2.2.4",
+        "page": "MSC.267-85.pdf, annex p. 12"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#270"
+      },
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "MSC.267(85); MSC.443(99) and MSC.444(99) read, neither changes Part A 2.2",
+        "locator_read": "A.2.2.4, annex p. 12",
+        "review": "#270"
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "gm0"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.15,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "is2008/A.2.2/condition",
+      "title": "Each loading condition's stability check; false also if it does not float",
+      "origin": "regulation",
+      "source": {
+        "document": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A",
+        "edition": "MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only",
+        "access": "free",
+        "locator": "A.2.2",
+        "page": "MSC.267-85.pdf, annex pp. 11-12"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#272"
+      },
+      "verified": false,
+      "kind": "note",
+      "measure": {
+        "id": "stability.condition_ok"
+      },
+      "consequence": "note",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "is2008/A.2.3/weather",
+      "title": "Severe wind and rolling criterion (weather criterion)",
+      "origin": "regulation",
+      "source": {
+        "document": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A",
+        "edition": "MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only",
+        "access": "free",
+        "locator": "A.2.3",
+        "page": "MSC.267-85.pdf, annex pp. 12-16"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#270"
+      },
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "MSC.267(85); MSC.443(99) and MSC.444(99) read, neither changes Part A 2.3",
+        "locator_read": "A.2.3, annex pp. 12-16",
+        "review": "#270"
+      },
+      "kind": "check",
+      "measure": {
+        "id": "stability.weather"
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "needs the wind heeling lever, the roll angle, the angle of down-flooding and the deck-edge immersion angle",
+      "finding": null,
+      "since": "1.0.0"
+    }
+  ]
+}

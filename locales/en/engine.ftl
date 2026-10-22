@@ -77,8 +77,10 @@ check-name-tank-length-over-diameter = tank length over diameter
 check-tank-length-over-inner-diameter = tank length { $length } m / inner diameter { $diameter } m = { $ratio } <= { $max }
 check-name-freeboard-at-payload = freeboard at payload
 check-freeboard-at-payload = freeboard { $freeboard } m at the carried draught { $draught } m >= required { $required } m
+check-stability-light-angle = GM { $gm } m (fluid), max GZ { $max_gz } m at { $angle }° — warning, not a failure: angle of max GZ { $value } < { $limit } (IS Code 2.2.3) with no ballast; every other criterion holds. Sail light with ballast
 check-stability = GM { $gm } m (fluid), max GZ { $max_gz } m at { $angle }°
 check-stability-fails = GM { $gm } m (fluid), max GZ { $max_gz } m at { $angle }° — fails: { $fails }
+check-stability-light-angle-ballast = GM { $gm } m (fluid), max GZ { $max_gz } m at { $angle }° — warning, not a failure: angle of max GZ { $angle } < 25 (IS Code 2.2.3) with no ballast; every other criterion holds. To sail light, take { $ballast } t of ballast (the Ballast, departure condition meets every criterion)
 check-name-ballast-plan = Ballast plan
 check-no-ballast-plan = { $condition }: no ballast plan meets every criterion, even with every ballast tank full.
 check-name-air-draft = Air draft

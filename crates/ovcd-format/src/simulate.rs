@@ -2331,7 +2331,7 @@ fn simulate_gas(
         let a = gs::assess(&basis, f.payload_t, rho, gs::criteria_set_for(ruleset))
             .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))?;
         for c in &a.conditions {
-            let k = ga::stability_check(c);
+            let k = ga::gas_stability_check(c);
             ids.checks(core::slice::from_ref(&k));
             checks.push(json!({
                 "name": k.name,
@@ -2832,8 +2832,24 @@ fn loading_condition_checks(
     checks: &mut Vec<Value>,
     ids: &mut TextIds,
 ) {
-    for k in conds.iter().flat_map(ga::loading_condition_checks) {
+    // Issue #498: a gas Design ("error") downgrades the angle of max GZ alone in the light condition;
+    // a dry-bulk one (its checks are warnings) keeps its checks as they were.
+    let listed: Vec<ovcd_core::checks::Check> = if severity == "error" {
+        ga::loading_condition_checks_of(conds)
+    } else {
+        conds
+            .iter()
+            .flat_map(ga::loading_condition_checks)
+            .collect()
+    };
+    for k in listed {
         ids.checks(core::slice::from_ref(&k));
+        // A warning of the check stays a warning (issue #498: the angle of maximum GZ with no ballast).
+        let severity = if k.severity == "warning" {
+            "warning"
+        } else {
+            severity
+        };
         checks.push(
             json!({ "name": k.name, "ok": k.ok, "message": k.message, "severity": severity }),
         );

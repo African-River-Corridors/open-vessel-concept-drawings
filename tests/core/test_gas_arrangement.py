@@ -22,8 +22,10 @@ def test_cn_ii_benchmark_is_reproduced():
     Label: snapshot
     """
     f = fit(90.0, 14.8, "LPG_propane", 4.4, depths=[6.5], ruleset="IGC_2G", fill_ratio=0.95)
-    assert abs(f.payload_t - 1405.85) < 1.0
-    assert f.n_tanks_wide == 2
+    # Re-pinned again (issue #498: the angle of max GZ alone in the light condition with no ballast is
+    # a warning, so the one-wide arrangement is feasible again): 2,021.25 t, one tank wide.
+    assert abs(f.payload_t - 2021.25) < 1.0
+    assert f.n_tanks_wide == 1
 
 
 def test_search_beats_the_auto_seed_on_cn_ii():
@@ -124,7 +126,8 @@ def test_snapshot_120x18_is_two_8m_tanks_abreast():
 # re-pinned both to the printed values; they were 1692.4687453268486 and 2921.887266646023.
 # Issue #410 (the covering above D is in the lightship) re-pinned (90, 14.8) to the printed value;
 # it was 1614.9482417833697.
-SNAPSHOT_16 = [((90, 14.8), 1204.2783981854238), ((120, 18.0), 2957.2540744793505)]
+# Issue #498 re-pinned (90, 14.8) to the printed value 1614.9482417833697.
+SNAPSHOT_16 = [((90, 14.8), 1614.9482417833697), ((120, 18.0), 2957.2540744793505)]
 
 
 @pytest.mark.parametrize("dims,expected", SNAPSHOT_16)

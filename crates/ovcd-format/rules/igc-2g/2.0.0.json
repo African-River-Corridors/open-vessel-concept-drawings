@@ -3,7 +3,7 @@
   "id": "igc-2g",
   "family": "igc",
   "title": "IGC Code as amended, ship type 2G: tank location and Type C tank walls",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "edition": {
     "document": "IGC Code, resolution MSC.370(93)",
     "edition": "as adopted 22 May 2014, in force 1 January 2016",
@@ -70,7 +70,7 @@
   "includes": [
     {
       "id": "is2008-a",
-      "version": "1.0.0"
+      "version": "2.0.0"
     }
   ],
   "known_conflicts": [],
@@ -566,7 +566,7 @@
       "sizes": false,
       "evaluated": true,
       "finding": "#317",
-      "since": "1.1.0"
+      "since": "2.0.0"
     },
     {
       "id": "igc/6.4.1.1/steel-design-temperature",
@@ -599,7 +599,7 @@
       "sizes": false,
       "evaluated": true,
       "finding": "#317",
-      "since": "1.1.0",
+      "since": "2.0.0",
       "applies_when": {
         "tank_material": [
           "9Ni",
@@ -639,7 +639,7 @@
       "sizes": false,
       "evaluated": false,
       "finding": "#317",
-      "since": "1.1.0",
+      "since": "2.0.0",
       "applies_when": {
         "tank_material": [
           "S690QL1"
@@ -673,7 +673,7 @@
       "sizes": false,
       "evaluated": false,
       "finding": "#417",
-      "since": "1.1.0",
+      "since": "2.0.0",
       "gap": "the model has no machinery, accommodation or store spaces to segregate the hold spaces from; the arrangement search places the tanks in one hold"
     },
     {
@@ -702,7 +702,7 @@
       "sizes": false,
       "evaluated": false,
       "finding": "#417",
-      "since": "1.1.0",
+      "since": "2.0.0",
       "gap": "the model has no division between the hold and the adjoining spaces; the end bulkhead space (lr-inland 3.5.3) is checked, the fire class is not"
     },
     {
@@ -731,7 +731,7 @@
       "sizes": false,
       "evaluated": false,
       "finding": "#417",
-      "since": "1.1.0",
+      "since": "2.0.0",
       "gap": "the model does not place accommodation, service spaces or control stations; the aft block sits outside the cargo area by construction"
     },
     {
@@ -760,7 +760,7 @@
       "sizes": false,
       "evaluated": true,
       "finding": "#417",
-      "since": "1.1.0"
+      "since": "2.0.0"
     },
     {
       "id": "igc/3.2.4.1/side-opening-distance",
@@ -799,7 +799,7 @@
       "sizes": false,
       "evaluated": true,
       "finding": "#417",
-      "since": "1.1.0"
+      "since": "2.0.0"
     }
   ]
 }

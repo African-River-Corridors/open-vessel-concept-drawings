@@ -490,16 +490,19 @@ fn json_results_are_what_simulate_answers_for_a_self_propelled_gas_hull() {
     // wheelhouse sightline blocks the search); was 2832.6643735601965 and 1893.6869533634328.
     // Re-pinned again (issue #410, the covering above D is in the lightship; the one-wide
     // arrangement fails the light-condition angle of max GZ); was 2021.2487121368047 and
-    // 1604.5823133024817.
+    // 1604.5823133024817. Re-pinned again (issue #498, the angle of max GZ alone in the light
+    // condition with no ballast is a warning; the one-wide arrangement is feasible again): was
+    // 1405.8516419707348 and 1509.0556682648712; the lightship is what the code prints now (the
+    // stern and covering inputs of the issues since #410 moved it from 1604.5823133024817).
     let r = &results["results"];
     assert_close(
         r["cargo_t"].as_f64().unwrap(),
-        1405.8516419707348,
+        2021.2487121368047,
         "cargo_t",
     );
     assert_close(
         r["lightship_t"].as_f64().unwrap(),
-        1509.0556682648712,
+        1583.438359298561,
         "lightship_t",
     );
     // Re-pinned (issue #264); was "tank volume" (stepped IGC_2G) and "draught — Draught limit" (issue #237).
