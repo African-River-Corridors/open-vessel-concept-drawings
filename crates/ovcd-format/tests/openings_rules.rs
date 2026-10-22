@@ -147,11 +147,19 @@ fn the_inland_rules_are_the_two_metre_clauses_and_the_cofferdam_clause_is_gone()
         lib.find("lr-inland-gas", "1.1.0").unwrap(),
         lib.find("lr-inland-gas", "2.0.0").unwrap(),
     );
-    // 1.1.0 is kept as it was; 2.0.0 drops 3.6.13 (type C liquid cargo, not type G) and keeps the rest.
-    assert!(old.rule("lr-inland/3.6.13/cofferdam").is_some());
-    assert!(new.rule("lr-inland/3.6.13/cofferdam").is_none());
+    // 1.1.0 is kept as it was; 2.0.0 drops 3.6.13 (type C liquid cargo, not type G) and, since issue
+    // #381, `lr-inland/3.3.7/opening-setback` (the aft separation, not the distance to an opening),
+    // and keeps the rest.
+    let dropped = [
+        "lr-inland/3.6.13/cofferdam",
+        "lr-inland/3.3.7/opening-setback",
+    ];
+    for id in dropped {
+        assert!(old.rule(id).is_some(), "{id}");
+        assert!(new.rule(id).is_none(), "{id}");
+    }
     for r in &old.rules {
-        if r.id != "lr-inland/3.6.13/cofferdam" {
+        if !dropped.contains(&r.id.as_str()) {
             assert!(new.rule(&r.id).is_some(), "{} is kept", r.id);
         }
     }
@@ -269,16 +277,17 @@ fn a_typed_opening_that_breaks_a_rule_fails_that_rule_only() {
 
 #[test]
 fn a_deep_cofferdam_with_a_door_on_its_aft_bulkhead_fails_the_opening_rule() {
-    // Issue #381: the aft separation is max(cofferdam, opening setback), so a deep cofferdam gives
-    // 3 m and the old Rule passes, though a door on the cofferdam's aft bulkhead is not 2 m from the
-    // cargo area. The typed distance of the door says so.
+    // Issue #381: the aft separation used to be max(cofferdam, opening setback), so a deep cofferdam
+    // gave 3 m and the old Rule passed, though a door on the cofferdam's aft bulkhead is not 2 m from
+    // the cargo area. Now the separation is the cofferdam plus the setback, and the typed distance of
+    // the door says the door is too near.
     let design = new_gas_design("LNG", json!({ "entrance_distance_m": 0.5 }));
     let deep = compute(&GasSeparationInputs {
         cofferdam_m: 3.0,
         ..GasSeparationInputs::default()
     })
     .unwrap();
-    assert_eq!(deep.aft_separation_m, 3.0);
+    assert_eq!(deep.aft_separation_m, 5.0);
     let measured = Measured {
         separation: Some((deep, false)),
         ..Measured::default()
@@ -297,7 +306,6 @@ fn a_deep_cofferdam_with_a_door_on_its_aft_bulkhead_fails_the_opening_rule() {
             .outcome
     };
     use ovcd_core::rule_trace::Outcome;
-    assert_eq!(outcome("lr-inland/3.3.7/opening-setback"), Outcome::Pass);
     assert_eq!(outcome("lr-inland/3.3.11/opening-setback"), Outcome::Fail);
     assert_eq!(outcome("lr-inland/3.3.7/entrance-setback"), Outcome::Fail);
 }

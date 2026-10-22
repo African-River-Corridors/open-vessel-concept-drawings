@@ -43,6 +43,12 @@ pub struct GasSeparationInputs {
     pub cofferdam_m: f64,
     pub opening_setback_m: f64,
     pub fwd_end_bulkhead_m: f64,
+    /// Issue #381: `true` measures the opening setback from the cargo area, whose boundary is the aft
+    /// face of the end space (the cofferdam stands inside the cargo area, ADN 1.2.1), as 3.3.7 and
+    /// 3.3.11 do: the aft separation is the end space plus the setback. `false` is the earlier
+    /// reading, the setback measured from the tank end, so the end space counts toward it (the aft
+    /// separation is the greater of the two). A file saved before keeps `false`.
+    pub setback_from_cargo_area: bool,
     /// Kept so older callers still build. No check reads it: the end-bulkhead space is keyed to the
     /// tank end shape, as 3.5.3 says, not to the tank kind (issue #281).
     pub is_pressure_tank: bool,
@@ -62,6 +68,7 @@ impl Default for GasSeparationInputs {
             cofferdam_m: default_end_space(false),
             opening_setback_m: OPENING_SETBACK_M,
             fwd_end_bulkhead_m: default_end_space(false),
+            setback_from_cargo_area: true,
             is_pressure_tank: true,
             plane_tank_ends: false,
             side_clearance_m: 0.0,
@@ -108,7 +115,11 @@ fn py_max(a: f64, b: f64) -> f64 {
 /// Resolve the aft and forward separations, with the rules as checks. `Err` is a `ValueError`.
 pub fn compute(inp: &GasSeparationInputs) -> Result<GasSeparationResult, String> {
     inp.validate()?;
-    let aft = py_max(inp.cofferdam_m, inp.opening_setback_m);
+    let aft = if inp.setback_from_cargo_area {
+        inp.cofferdam_m + inp.opening_setback_m
+    } else {
+        py_max(inp.cofferdam_m, inp.opening_setback_m)
+    };
     let fwd = inp.fwd_end_bulkhead_m;
     let service = py_max(0.0, aft - inp.cofferdam_m);
 
@@ -136,17 +147,33 @@ pub fn compute(inp: &GasSeparationInputs) -> Result<GasSeparationResult, String>
                 },
             ),
         ),
-        Check::new(
-            "opening_setback",
-            aft >= OPENING_SETBACK_M - 1e-9,
-            text!(
-                "check-opening-setback",
-                "aft separation {aft} m >= {min} m from the cargo area to any entrance or openable \
-                 window (cl. 3.3.7 / 3.3.11)",
-                aft = Arg::fixed(aft, 2),
-                min = Arg::fixed(OPENING_SETBACK_M, 2),
-            ),
-        ),
+        if inp.setback_from_cargo_area {
+            // Issue #381: the distance from the cargo area (the aft face of the end space) to the
+            // first opening, not the aft separation from the tank end.
+            Check::new(
+                "opening_setback",
+                service >= OPENING_SETBACK_M - 1e-9,
+                text!(
+                    "check-opening-distance",
+                    "distance {distance} m from the cargo area (end space included) to any entrance or \
+                     openable window >= {min} m (cl. 3.3.7 / 3.3.11)",
+                    distance = Arg::fixed(service, 2),
+                    min = Arg::fixed(OPENING_SETBACK_M, 2),
+                ),
+            )
+        } else {
+            Check::new(
+                "opening_setback",
+                aft >= OPENING_SETBACK_M - 1e-9,
+                text!(
+                    "check-opening-setback",
+                    "aft separation {aft} m >= {min} m from the cargo area to any entrance or openable \
+                     window (cl. 3.3.7 / 3.3.11)",
+                    aft = Arg::fixed(aft, 2),
+                    min = Arg::fixed(OPENING_SETBACK_M, 2),
+                ),
+            )
+        },
         Check::new(
             "fwd_end_bulkhead_space",
             fwd >= floor - 1e-9,

@@ -1205,6 +1205,12 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         value: "\"legacy\"",
     },
     // Issue #313: a file saved before the IGC allowable stress keeps the stress it was worked with.
+    // Issue #381: a file saved before measured the setback from the tank end.
+    LegacyFixedJson {
+        name: "opening_setback_basis",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        value: "\"tank_end\"",
+    },
     LegacyFixedJson {
         name: "tank_allowable_stress_basis",
         applies_to: AppliesTo::Only("type_c_tanks"),
@@ -1245,6 +1251,11 @@ pub const OPENING_SIDE_DISTANCE_M: f64 = 5.0;
 /// Whether a dry-bulk hold sails covered or open (issue #428): ES-TRIN 4.01(2) asks for a larger
 /// safety clearance for a vessel that sails with its holds uncovered.
 pub const HOLD_COVERINGS: &[&str] = &["covered", "open"];
+
+/// Where the opening setback of a gas hull is measured from (issue #381): `tank_end`, the earlier
+/// reading, where the end space counts toward the 2.00 m; `cargo_area`, where the cargo area ends at
+/// the aft face of the end space and the setback is added to it (LR 3.3.7 and 3.3.11).
+pub const OPENING_SETBACK_BASES: &[&str] = &["tank_end", "cargo_area"];
 
 /// The Service Areas of an Option (spec 0004, "Service Area and default stacks"; ADR 0011).
 /// `ocean-only` is not offered.
@@ -2179,6 +2190,13 @@ pub const INPUTS: &[InputSpec] = &[
         "fwd_end_space_m",
         "Forward end-bulkhead space",
         NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "opening_setback_basis",
+        "Opening setback measured from",
+        InputKind::Choice(OPENING_SETBACK_BASES),
         "type_c_tanks",
         Group::GasTanks,
     ),

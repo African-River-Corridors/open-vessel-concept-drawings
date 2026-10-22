@@ -17,11 +17,11 @@ fn the_quickstart_propane_barge_matches_python() {
     // Re-pinned (issue #237); was 1156.0677139049296 under the stepped IGC_2G. Re-pinned again (issue
     // #280, the end space defaults to the type G rule, 0.20 m, not 0.60 m aft and 0.50 m forward);
     // was 1405.8516419707348.
-    assert_eq!(r.cargo_capacity_t, 1414.3023010352383);
+    assert_eq!(r.cargo_capacity_t, 1408.66852832557);
     // Re-pinned (issue #237); was 2.3053150177001953.
     // Re-pinned (#448); was 2.574557304382324.
     // Re-pinned again (issue #280); was 2.4156399922106404.
-    assert_eq!(r.full_load_draft_m, 2.4250828172594217);
+    assert_eq!(r.full_load_draft_m, 2.4187877904714594);
     assert_eq!(r.n_tanks_wide, Some(2));
     assert!(r.ok());
 }

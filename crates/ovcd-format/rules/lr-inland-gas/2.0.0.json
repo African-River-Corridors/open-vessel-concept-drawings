@@ -69,42 +69,6 @@
   ],
   "rules": [
     {
-      "id": "lr-inland/3.3.7/opening-setback",
-      "title": "Engine room and accommodation entrances at least 2.00 m from the cargo area",
-      "origin": "class",
-      "source": {
-        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
-        "edition": "July 2022 as the code cites it; read in the November 2015 edition, and in an unofficial copy of the July 2022 section, which have the same clauses",
-        "locator": "3.3.7",
-        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 254",
-        "access": "free",
-        "also": [
-          "3.3.11"
-        ]
-      },
-      "codified": {
-        "by": "agent",
-        "date": "2026-10-21",
-        "review": "#272"
-      },
-      "verified": false,
-      "kind": "limit",
-      "measure": {
-        "id": "separation.aft"
-      },
-      "compare": "ge",
-      "limit": {
-        "value": 2.0,
-        "unit": "m"
-      },
-      "tolerance": 1e-09,
-      "consequence": "block",
-      "sizes": true,
-      "evaluated": true,
-      "finding": "#381",
-      "since": "1.0.0"
-    },
-    {
       "id": "lr-inland/3.5.3/end-space",
       "title": "Space between the tanks and the hold end bulkhead: 0.20 m, or 0.50 m for plane ends",
       "origin": "class",

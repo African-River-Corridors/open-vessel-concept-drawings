@@ -131,6 +131,9 @@ pub struct FitOptions {
     /// shape (`gas_separation::default_end_space`), or the Option's own values (issue #280).
     pub aft_end_space_m: f64,
     pub fwd_end_space_m: f64,
+    /// Issue #381: the opening setback is measured from the cargo area (the aft separation is the end
+    /// space plus the setback); `false`: from the tank end, as before.
+    pub opening_setback_from_cargo_area: bool,
     /// Fixed tank wall thickness (mm); `None`: the pressure-vessel formula gives it (issue #292).
     pub tank_wall_thickness_mm: Option<f64>,
     /// The Cargo-dependent tank design values: pressure, steel, insulation, structure factor.
@@ -349,6 +352,7 @@ impl Default for FitOptions {
             tank_dome_wall_thickness_mm: 0.0,
             aft_end_space_m: crate::gas_separation::default_end_space(false),
             fwd_end_space_m: crate::gas_separation::default_end_space(false),
+            opening_setback_from_cargo_area: true,
             tank_wall_thickness_mm: Some(DEFAULT_TANK_WALL_THICKNESS_MM),
             tank_design: TankDesign::default(),
             water_density_t_per_m3: DEFAULT_WATER_DENSITY,
@@ -1054,10 +1058,14 @@ impl Search<'_> {
         inp.tank_dome_wall_thickness_mm = self.o.tank_dome_wall_thickness_mm;
         // Issue #280: end spaces of the Option's own, when they are not the engine's default.
         let default_space = crate::gas_separation::default_end_space(false);
-        if self.o.aft_end_space_m != default_space || self.o.fwd_end_space_m != default_space {
+        if self.o.aft_end_space_m != default_space
+            || self.o.fwd_end_space_m != default_space
+            || !self.o.opening_setback_from_cargo_area
+        {
             inp.separation = Some(crate::gas_separation::GasSeparationInputs {
                 cofferdam_m: self.o.aft_end_space_m,
                 fwd_end_bulkhead_m: self.o.fwd_end_space_m,
+                setback_from_cargo_area: self.o.opening_setback_from_cargo_area,
                 ..Default::default()
             });
         }

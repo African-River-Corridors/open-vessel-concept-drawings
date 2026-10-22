@@ -775,6 +775,11 @@
       "soft": { "min": 0.2, "max": 1.0 },
       "basis": "the space between the cargo tanks and the forward end bulkhead of the cargo area: the type G rule for domed tank ends, 0.20 m (0.50 m for plane ends), from Lloyd's Register inland waterways rules Pt 4 Ch 4 3.5.3 and ADN 2025 9.3.1.11.3(a). The engine used 0.50 m before (issue #280); a saved file that stores no value keeps 0.50 m"
     },
+    "opening_setback_basis": {
+      "default": "cargo_area",
+      "status": "estimate",
+      "basis": "Where the 2.00 m setback of entrances and openable windows from the cargo area (Lloyd's Register inland waterways rules Pt 4 Ch 4 3.3.7 and 3.3.11) is measured from. cargo_area: from the aft face of the aft end space, the cofferdam standing inside the cargo area (ADN 1.2.1), so the aft separation is the end space plus the setback. tank_end: from the tank end, so the end space counts toward the setback (the earlier reading, issue #381). A saved file that stores no value keeps tank_end"
+    },
     "tank_wall_thickness_mm": {
       "default": null,
       "unit": "mm",

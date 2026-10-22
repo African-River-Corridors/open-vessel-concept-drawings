@@ -2331,6 +2331,12 @@ fn simulate_gas(
             "fwd_end_space_m",
             ovcd_core::gas_separation::default_end_space(false),
         )?,
+        // Issue #381: a key left out measures the setback from the cargo area; a file saved before
+        // keeps `tank_end` through its legacy value.
+        opening_setback_from_cargo_area: p
+            .get("opening_setback_basis")
+            .and_then(Value::as_str)
+            .is_none_or(|b| b != "tank_end"),
         tank_wall_thickness_mm: tank_wall_of(p)?,
         tank_design: tank_design_of(p)?,
         water_density_t_per_m3: rho,

@@ -169,6 +169,10 @@
           "value": 0.5,
           "source": "default"
         },
+        "opening_setback_basis": {
+          "value": "tank_end",
+          "source": "default"
+        },
         "tank_wall_thickness_mm": {
           "value": 25.0,
           "source": "default"

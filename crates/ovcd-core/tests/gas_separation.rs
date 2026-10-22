@@ -30,6 +30,8 @@ fn the_defaults_are_the_type_g_rule_for_domed_ends() {
     assert_eq!(i.cofferdam_m, 0.20);
     assert_eq!(i.opening_setback_m, 2.00);
     assert_eq!(i.fwd_end_bulkhead_m, 0.20);
+    // Issue #381: the setback is measured from the cargo area.
+    assert!(i.setback_from_cargo_area);
     assert!(i.is_pressure_tank);
     assert_eq!(i.side_clearance_m, 0.0);
     assert_eq!(i.double_bottom_m, 0.0);
@@ -38,11 +40,12 @@ fn the_defaults_are_the_type_g_rule_for_domed_ends() {
 #[test]
 fn golden_defaults() {
     let r = compute(&GasSeparationInputs::default()).unwrap();
-    assert_eq!(r.aft_separation_m, 2.0);
+    // Issue #381: the aft separation is the end space plus the 2.00 m setback from the cargo area.
+    assert_eq!(r.aft_separation_m, 2.2);
     assert_eq!(r.fwd_separation_m, 0.2);
     assert_eq!(r.cofferdam_m, 0.2);
-    assert_eq!(r.service_space_m, 1.8);
-    assert_eq!(r.total_length_taken_m, 2.2);
+    assert_eq!(r.service_space_m, 2.0);
+    assert_eq!(r.total_length_taken_m, 2.4000000000000004);
     assert!(r.ok());
     assert_eq!(r.warnings, vec![CLAUSE_WARNING]);
     let names: Vec<&str> = r.checks.iter().map(|c| c.name.as_str()).collect();
@@ -60,8 +63,8 @@ fn golden_defaults() {
     );
     assert_eq!(
         r.checks[1].message,
-        "aft separation 2.00 m >= 2.00 m from the cargo area to any entrance or openable \
-         window (cl. 3.3.7 / 3.3.11)"
+        "distance 2.00 m from the cargo area (end space included) to any entrance or openable \
+         window >= 2.00 m (cl. 3.3.7 / 3.3.11)"
     );
     assert_eq!(
         r.checks[2].message,
@@ -77,8 +80,8 @@ fn a_thin_aft_space_fails_and_the_setback_still_governs_aft() {
     })
     .unwrap();
     assert!(!r.ok());
-    assert_eq!(r.aft_separation_m, 2.0);
-    assert_eq!(r.service_space_m, 1.9);
+    assert_eq!(r.aft_separation_m, 2.1);
+    assert_eq!(r.service_space_m, 2.0);
     assert_eq!(
         r.checks[0].message,
         "aft end-bulkhead space 0.10 m >= 0.20 m (domed tank ends, cl. 3.5.3)"
@@ -115,21 +118,21 @@ fn a_short_setback_fails_the_opening_check() {
     })
     .unwrap();
     assert!(!r.ok());
-    assert_eq!(r.aft_separation_m, 1.0);
-    assert_eq!(r.service_space_m, 0.8);
-    assert_eq!(r.total_length_taken_m, 1.2);
+    assert_eq!(r.aft_separation_m, 1.2);
+    assert_eq!(r.service_space_m, 1.0);
+    assert_eq!(r.total_length_taken_m, 1.4);
 }
 
 #[test]
-fn a_cofferdam_wider_than_the_setback_leaves_no_service_space() {
+fn a_wider_cofferdam_adds_to_the_separation_and_the_service_space_stays_the_setback() {
     let r = compute(&GasSeparationInputs {
         cofferdam_m: 3.0,
         ..Default::default()
     })
     .unwrap();
-    assert_eq!(r.aft_separation_m, 3.0);
-    assert_eq!(r.service_space_m, 0.0);
-    assert_eq!(r.total_length_taken_m, 3.2);
+    assert_eq!(r.aft_separation_m, 5.0);
+    assert_eq!(r.service_space_m, 2.0);
+    assert_eq!(r.total_length_taken_m, 5.2);
 }
 
 /// Issue #215: the inland type-G floors are gone. Clearances given in the inputs add no check, however
@@ -145,7 +148,7 @@ fn as_designed_clearances_add_no_check() {
     })
     .unwrap();
     assert!(!r.ok());
-    assert_eq!(r.total_length_taken_m, 2.3);
+    assert_eq!(r.total_length_taken_m, 2.5);
     let names: Vec<&str> = r.checks.iter().map(|c| c.name.as_str()).collect();
     assert_eq!(
         names,
@@ -253,4 +256,43 @@ fn zero_separations_are_valid_and_fail_their_checks() {
     .unwrap();
     let oks: Vec<bool> = r.checks.iter().map(|c| c.ok).collect();
     assert_eq!(oks, [false, false, false]);
+}
+
+// --- Issue #381: the setback measured from the cargo area ---
+
+#[test]
+fn a_deep_cofferdam_no_longer_stands_in_for_the_setback_to_the_openings() {
+    // 3.3.7 and 3.3.11 measure from the cargo area, which holds the cofferdam. A 3.00 m cofferdam
+    // with a 1.00 m setback put the first opening 1.00 m from the cargo area: it fails. Measured from
+    // the tank end (the earlier reading) the aft separation was 3.00 m and it passed.
+    let inputs = |from_cargo_area| GasSeparationInputs {
+        cofferdam_m: 3.0,
+        opening_setback_m: 1.0,
+        setback_from_cargo_area: from_cargo_area,
+        ..Default::default()
+    };
+    let earlier = compute(&inputs(false)).unwrap();
+    assert_eq!(earlier.aft_separation_m, 3.0);
+    assert!(
+        earlier
+            .checks
+            .iter()
+            .find(|c| c.name == "opening_setback")
+            .unwrap()
+            .ok
+    );
+    let now = compute(&inputs(true)).unwrap();
+    assert_eq!(now.aft_separation_m, 4.0);
+    assert_eq!(now.service_space_m, 1.0);
+    let check = now
+        .checks
+        .iter()
+        .find(|c| c.name == "opening_setback")
+        .unwrap();
+    assert!(!check.ok);
+    assert_eq!(
+        check.message,
+        "distance 1.00 m from the cargo area (end space included) to any entrance or openable \
+         window >= 2.00 m (cl. 3.3.7 / 3.3.11)"
+    );
 }

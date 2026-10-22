@@ -506,7 +506,8 @@ fn json_results_are_what_simulate_answers_for_a_self_propelled_gas_hull() {
         "depth_m": 6.5, "cb": 0.85, "freeboard_min_m": 0.3, "draught_limit_m": 4.4,
         "self_propelled": true, "ruleset": "IGC_2G", "fill_ratio": 0.95, "max_tank_od_m": 16.0,
         "optimise_depth": false, "eta_d": 0.45, "speed_max_kn": 10.0,
-        "aft_end_space_m": 0.6, "fwd_end_space_m": 0.5
+        "aft_end_space_m": 0.6, "fwd_end_space_m": 0.5,
+        "opening_setback_basis": "tank_end"
     }));
     expected["drawing"].as_object_mut().unwrap().remove("tank");
     assert_eq!(results, &expected);

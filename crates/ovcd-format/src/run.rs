@@ -152,6 +152,7 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
         "tank_dome_wall_thickness_mm",
         "aft_end_space_m",
         "fwd_end_space_m",
+        "opening_setback_basis",
         "tank_wall_thickness_mm",
         "lpg_carriage_condition",
         "lpg_loading_limit_basis",
