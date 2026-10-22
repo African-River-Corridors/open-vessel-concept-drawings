@@ -157,11 +157,18 @@ describe("OVCD app smoke tests", () => {
   it("gives the meshes of the open Design with the mesh hash of ovcd mesh --hash (issue #457)", async () => {
     const file = path.join(FIXTURES, "dry_bulk_box_hold.vdesign");
     const native = execFileSync(process.env.OVCD_CLI, ["mesh", "--hash", file], { encoding: "utf8" }).split("\t")[1].trim();
-    const got = await browser.executeAsync((done) => {
+    const got = await browser.execute(async () => {
       const invoke = window.__TAURI_INTERNALS__.invoke;
-      Promise.all([invoke("mesh_groups", { option: "Option 1" }), invoke("mesh_buffers", { option: "Option 1" }), invoke("section_at", { option: "Option 1", x: 30 })])
-        .then(([g, buf, s]) => done({ hash: g.hash, bytes: buf.byteLength, vertices: g.vertex_count, indices: g.index_count, rings: s.rings.length }))
-        .catch((e) => done({ error: String(e) }));
+      try {
+        const [g, buf, s] = await Promise.all([
+          invoke("mesh_groups", { option: "Option 1" }),
+          invoke("mesh_buffers", { option: "Option 1" }),
+          invoke("section_at", { option: "Option 1", x: 30 }),
+        ]);
+        return { hash: g.hash, bytes: buf.byteLength, vertices: g.vertex_count, indices: g.index_count, rings: s.rings.length };
+      } catch (e) {
+        return { error: String(e) };
+      }
     });
     assert.equal(got.error, undefined);
     assert.equal(got.hash, native);
