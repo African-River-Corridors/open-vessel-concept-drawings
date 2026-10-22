@@ -1,0 +1,200 @@
+name: App and web checks
+
+# Checks that no pull request has to wait for (issue #565). None of them is a required check; `test`,
+# `release-guard`, `drawing-crosscheck` and `app-e2e` stay in ci.yml and run on every pull request.
+#
+#   web-parity, web-app   On a pull request only when the web front end or the web build changes; on every
+#                         push to main that changes them; and every day (07:17 UTC), so an engine change that
+#                         breaks the WebAssembly build is found within a day.
+#   app-linux, app-windows  Only on request (workflow_dispatch) for now. A later change puts them in the
+#                         daily run, when most open pull requests have merged.
+#
+# A failed daily run opens an issue (the last job), so a regression found the next day is not lost.
+
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - "crates/ovcd-web/**"
+      - "tools/build_web.sh"
+      - "tools/web_parity.mjs"
+      - ".github/workflows/app-checks.yml"
+  push:
+    branches: ["main"]
+    paths:
+      - "app/**"
+      - "crates/ovcd-web/**"
+      - "tools/build_web.sh"
+      - "tools/web_parity.mjs"
+      - ".github/workflows/app-checks.yml"
+  schedule:
+    - cron: "17 7 * * *" # every day, 07:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: app-checks-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # The web build (issue #245): the wasm Design session gives the same results hash as native
+  # `ovcd run --json` for every fixture. The wasm-bindgen CLI is the version the crate pins.
+  web-parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: The pinned wasm-bindgen version
+        id: wb
+        run: echo "version=$(sed -n 's/^wasm-bindgen = "=\([0-9.]*\)".*/\1/p' crates/ovcd-web/Cargo.toml)" >> "$GITHUB_OUTPUT"
+      - name: wasm-bindgen CLI (cached)
+        id: cli
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/wasm-bindgen
+          key: wasm-bindgen-cli-${{ steps.wb.outputs.version }}-${{ runner.os }}
+      - name: Install wasm-bindgen CLI
+        if: steps.cli.outputs.cache-hit != 'true'
+        run: cargo install wasm-bindgen-cli --version "${{ steps.wb.outputs.version }}" --locked
+      - name: Build the web package
+        run: bash tools/build_web.sh
+      - name: Build ovcd
+        run: cargo build -p ovcd-cli
+      - name: Results-hash parity, wasm against native
+        run: node tools/web_parity.mjs
+
+  # The web app (issue #246): the web build of the front end over the wasm Design session, in
+  # headless Chrome. The wasm-bindgen CLI is the version the ovcd-web crate pins.
+  web-app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: The pinned wasm-bindgen version
+        id: wb
+        run: echo "version=$(sed -n 's/^wasm-bindgen = "=\([0-9.]*\)".*/\1/p' crates/ovcd-web/Cargo.toml)" >> "$GITHUB_OUTPUT"
+      - name: wasm-bindgen CLI (cached)
+        id: cli
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/wasm-bindgen
+          key: wasm-bindgen-cli-${{ steps.wb.outputs.version }}-${{ runner.os }}
+      - name: Install wasm-bindgen CLI
+        if: steps.cli.outputs.cache-hit != 'true'
+        run: cargo install wasm-bindgen-cli --version "${{ steps.wb.outputs.version }}" --locked
+      - name: Build the web package
+        run: bash tools/build_web.sh
+      - name: Build ovcd
+        run: cargo build -p ovcd-cli
+      - name: Front end (type check, desktop build, web build)
+        working-directory: app
+        run: |
+          npm ci
+          npm run build
+          npm run build:web
+      - name: Web smoke test (headless Chrome)
+        working-directory: app
+        env:
+          # The smoke test saves each view in each language, light and dark, here (spec 0005).
+          OVCD_WEB_SHOTS: ${{ runner.temp }}/web-screenshots
+        run: bash e2e/run-web.sh
+      - name: Upload the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-screenshots
+          path: ${{ runner.temp }}/web-screenshots
+          if-no-files-found: warn
+
+  # The desktop app (spec 0002). Kept out of the fast gate: it needs Node and the Tauri system
+  # libraries, and the workspace's default members must build without them.
+  app-linux:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: Tauri system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential libxdo-dev libssl-dev \
+            libayatana-appindicator3-dev librsvg2-dev
+      - name: Front end (type check and build)
+        working-directory: app
+        run: |
+          npm ci
+          npm run build
+      - name: App crate (clippy, tests)
+        run: |
+          cargo clippy -p ovcd-app --all-targets -- -D warnings
+          cargo test -p ovcd-app
+
+  # The Windows build only has to compile: there is no installer yet.
+  app-windows:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: Front end (type check and build)
+        working-directory: app
+        run: |
+          npm ci
+          npm run build
+      - name: Compile the app crate
+        run: cargo build -p ovcd-app
+
+
+  # A failed daily run opens one issue, or adds a comment to the one that is open.
+  daily-failure:
+    if: failure() && github.event_name == 'schedule'
+    needs: [web-parity, web-app]
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Daily app and web checks failed"
+          body="The daily run of \`app-checks.yml\` failed: $RUN"
+          n=$(gh issue list --repo "${{ github.repository }}" --state open --search "\"$title\" in:title" --json number -q '.[0].number')
+          if [ -n "$n" ]; then
+            gh issue comment "$n" --repo "${{ github.repository }}" --body "$body"
+          else
+            gh issue create --repo "${{ github.repository }}" --title "$title" --body "$body" --label needs-triage
+          fi
