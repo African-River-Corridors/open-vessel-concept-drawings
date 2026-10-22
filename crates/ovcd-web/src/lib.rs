@@ -151,4 +151,15 @@ impl Session {
     pub fn drawing_dxf(&self, option: &str, view: &str) -> Js<Vec<u8>> {
         ok(export::dxf(&self.state, option, view))
     }
+
+    /// The mesh hash of an Option's Vessel Model (issue #456), as `ovcd mesh --hash` prints it.
+    pub fn mesh_hash(&self, option: &str) -> Js<String> {
+        let design = self.state.session().design();
+        let found = design
+            .options
+            .iter()
+            .find(|o| o.name == option)
+            .ok_or_else(|| err(format!("no Option named '{option}'")))?;
+        ok(ovcd_format::option_meshes(found).map(|m| ovcd_format::mesh_hash(&m)))
+    }
 }

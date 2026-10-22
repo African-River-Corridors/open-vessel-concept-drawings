@@ -44,7 +44,8 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from changelog_fragments import (fragment_holds, fragment_problems, write_impact)  # noqa: E402
+from changelog_fragments import (CHANGES, fragment_holds, fragment_problems, fragments, split,  # noqa: E402
+                                 write_impact)
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "target" / "design-impact"
@@ -723,11 +724,15 @@ def compare(before: dict[str, dict], after: dict[str, dict]) -> list[dict]:
     return sorted(rows, key=lambda r: (-size(r), r["case"], r["quantity"]))
 
 
+def _cell(s) -> str:
+    return str(s).replace("|", "\\|").replace("\n", " ")
+
+
 def table(rows: list[dict]) -> str:
     shown = rows[:MAX_ROWS]
     lines = ["| Case | Quantity | Before | After | Change |", "|---|---|---|---|---|"]
     for r in shown:
-        cell = lambda s: str(s).replace("|", "\\|").replace("\n", " ")
+        cell = _cell
         lines.append(f"| {cell(r['case'])} | `{cell(r['quantity'])}` | {cell(show(r['before']))} "
                      f"| {cell(show(r['after']))} | {cell(r['change'])} |")
     if len(rows) > len(shown):
@@ -974,10 +979,51 @@ def changelog_has(tbl: str) -> bool:
     return CHANGELOG.exists() and tbl in CHANGELOG.read_text(encoding="utf-8")
 
 
-def recorded(tbl: str) -> bool:
-    """Whether the table is recorded: in a changelog fragment (changes/*.md) or, during the move to
-    fragments (issue #560), in CHANGELOG.md."""
-    return fragment_holds(tbl) or changelog_has(tbl)
+_ROW = re.compile(r"^\| (?P<case>.*?) \| `(?P<quantity>.*)` \| .* \|$")
+_MORE = re.compile(r"^\| \.\.\. \| (?P<n>\d+) more changed quantities \|")
+
+
+def table_rows(text: str) -> tuple[set[tuple[str, str]], int] | None:
+    """The (case, quantity) pairs a design-impact table names, and how many more it says it left out
+    ("... | N more changed quantities"). None when the text holds no table."""
+    if "| Case | Quantity |" not in text:
+        return None
+    pairs, more = set(), 0
+    for line in text.splitlines():
+        m = _MORE.match(line)
+        if m:
+            more += int(m["n"])
+            continue
+        m = _ROW.match(line)
+        if m and m["case"] != "Case":
+            pairs.add((m["case"], m["quantity"]))
+    return pairs, more
+
+
+def names_the_moved_rows(text: str, rows: list[dict]) -> bool:
+    """Whether the table in `text` names the rows that `rows` move (issue #625). The numbers may be from
+    an earlier base: a merge that moves other hashes changes every table's "before" column, and the
+    quantities this branch moves stay the same. The table lists at most MAX_ROWS rows, biggest first, and
+    counts the rest, so: every row it lists is a moved row, and its listed and counted rows together are
+    as many as the moved rows. With MAX_ROWS or fewer moved rows that means the same set."""
+    got = table_rows(text)
+    if got is None:
+        return False
+    named, more = got
+    moved = {(_cell(r["case"]), _cell(r["quantity"])) for r in rows}
+    return named <= moved and len(named) + more == len(moved)
+
+
+def fragment_names(rows: list[dict], folder: Path = CHANGES) -> bool:
+    """Whether the design-impact part of some fragment names the moved rows."""
+    return any(names_the_moved_rows(split(p.read_text(encoding="utf-8"))[1], rows) for p in fragments(folder))
+
+
+def recorded(tbl: str, rows: list[dict] | None = None) -> bool:
+    """Whether the change is recorded: a changelog fragment (changes/*.md) holds this table, or, when
+    `rows` is given, names the rows it moves (issue #625); or, during the move to fragments (issue #560),
+    CHANGELOG.md holds the table."""
+    return fragment_holds(tbl) or changelog_has(tbl) or (rows is not None and fragment_names(rows))
 
 
 def merge_group_problems(base_sha: str) -> list[str]:
@@ -1078,8 +1124,8 @@ def main() -> int:
                   + "\n  ".join(bad), file=sys.stderr)
             return 1
         return 0
-    if args.mode == "gate" and rows and ahead and not recorded(tbl):
-        print("design_impact: this branch moves designs but no changelog fragment holds the table above.\n"
+    if args.mode == "gate" and rows and ahead and not recorded(tbl, rows):
+        print("design_impact: this branch moves designs but no changelog fragment names the rows moved above.\n"
               "  Run: python3 tools/design_impact.py changelog   and commit changes/<branch>.md", file=sys.stderr)
         return 1
     return 0

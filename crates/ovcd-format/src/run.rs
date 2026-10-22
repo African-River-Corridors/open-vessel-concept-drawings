@@ -378,6 +378,13 @@ pub fn option_hull_table(
 pub fn option_vessel_model(
     option: &DesignOption,
 ) -> Result<ovcd_core::vessel_model::VesselModel, String> {
+    vessel_run(option).map(|(model, _)| model)
+}
+
+/// The Vessel Model of an Option and the results of its run.
+fn vessel_run(
+    option: &DesignOption,
+) -> Result<(ovcd_core::vessel_model::VesselModel, Value), String> {
     let params = simulate_params_of(option)?;
     let library = Library::built_in();
     let selection = stack_for(&library, option, &[])?;
@@ -392,12 +399,76 @@ pub fn option_vessel_model(
             None => measured
                 .vessel
                 .as_ref()
-                .map(ovcd_core::vessel_model::assemble)
+                .map(|inputs| (ovcd_core::vessel_model::assemble(inputs), v.clone()))
                 .ok_or_else(|| "the run gave no Vessel Model".to_string()),
         },
         Outcome::Raised(kind, message) => Err(format!("{kind}: {message}")),
         Outcome::Refused(message) => Err(message),
     }
+}
+
+/// The floating positions of a run as `(name, aft draught, forward draught)`: each loading
+/// condition, or each stability condition, or with neither the loaded and light draughts, level.
+fn waterlines(results: &Value) -> Vec<(String, f64, f64)> {
+    for key in ["loading_conditions", "stability"] {
+        let list: Vec<(String, f64, f64)> = results[key]["conditions"]
+            .as_array()
+            .map(|cs| {
+                cs.iter()
+                    .filter_map(|c| {
+                        let mid = c["draught_m"].as_f64();
+                        Some((
+                            c["name"].as_str()?.to_string(),
+                            c["draught_aft_m"].as_f64().or(mid)?,
+                            c["draught_fwd_m"].as_f64().or(mid)?,
+                        ))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        if !list.is_empty() {
+            return list;
+        }
+    }
+    [("Loaded", "draught_m"), ("Light", "light_draught_m")]
+        .into_iter()
+        .filter_map(|(name, key)| {
+            let t = results["results"][key].as_f64()?;
+            Some((name.to_string(), t, t))
+        })
+        .collect()
+}
+
+/// The meshes of an Option's Vessel Model (issue #456): the hull, decks, bulkheads, Spaces and the
+/// waterline of each floating position, one group each.
+pub fn option_meshes(option: &DesignOption) -> Result<ovcd_core::mesh::Mesh, String> {
+    let (model, results) = vessel_run(option)?;
+    Ok(ovcd_core::mesh::vessel_meshes(
+        &model,
+        &waterlines(&results),
+    ))
+}
+
+/// The mesh hash of the parity check (spec 0008, "Mesh hash"): SHA-256 of the f32 position bytes,
+/// the u32 index bytes (little-endian) and the group table (layer, id, start, count). Not in the
+/// results hash (ADR 0018).
+pub fn mesh_hash(mesh: &ovcd_core::mesh::Mesh) -> String {
+    let mut h = Sha256::new();
+    for p in &mesh.positions {
+        h.update(p.to_le_bytes());
+    }
+    for i in &mesh.indices {
+        h.update(i.to_le_bytes());
+    }
+    for g in &mesh.groups {
+        for text in [&g.layer, &g.id] {
+            h.update((text.len() as u32).to_le_bytes());
+            h.update(text.as_bytes());
+        }
+        h.update(g.start.to_le_bytes());
+        h.update(g.count.to_le_bytes());
+    }
+    h.finalize().iter().map(|b| format!("{b:02x}")).collect()
 }
 
 /// Compute one Option and check it against its default stack of Rule Sets from `library`, plus the

@@ -440,6 +440,7 @@ pub fn assess_num(
             water_density,
             criteria_set,
             None,
+            None,
         )?;
         c.name = name.to_string();
         c.cargo_t = cargo;

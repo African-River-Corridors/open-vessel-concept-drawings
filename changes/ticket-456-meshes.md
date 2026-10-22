@@ -1,0 +1,2 @@
+<!-- unreleased -->
+- Vessel Model (issue #456): meshes from the core (`ovcd_core::mesh`). The hull is a closed mesh of the ruled quads, slot walls, step faces and end caps; there are deck and waterline strips, bulkheads, and each Space as its prism. Each part is one group. `ovcd mesh --hash <file>` prints the SHA-256 mesh hash of each Option (`ovcd_format::mesh_hash`), and the web parity check compares it with the WebAssembly session (`Session.mesh_hash`). The mesh is not in the results hash (ADR 0018), so no results hash moves.
