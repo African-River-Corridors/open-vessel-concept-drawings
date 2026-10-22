@@ -124,3 +124,14 @@ A band miss is a warning, never a failure; `--check` prints one annotation per t
 - Cb: make it a required Brief input; default per Hull family from the implied values
   (box barge ≈ 0.93–0.97).
 - Power: hold until a built-vessel speed–power point exists; report the margin explicitly.
+
+## Tank-barge lightship (issue #330)
+
+`tank_lightship_inputs.yaml` declares the subset of the 41 tank-barge records that k is fitted on, the
+records left out of it with the reason, and the outfit coefficients (all Estimates). `python3
+tools/fit_tank_lightship.py` writes `tank_lightship.yaml`: k, the implied lightship and the model error of
+every record, in-sample and held out. The other records stay held out: run, compared, never fitted. A
+record gives a deadweight, not a lightship, so each lightship is implied with the box-barge block
+coefficient (an assumption), and k is an Estimate. The held-out error is large; it is reported, not
+tuned away. The Rust constants in `crates/ovcd-core/src/liquid_bulk/lightship.rs` equal the generated file,
+and a test keeps them equal.

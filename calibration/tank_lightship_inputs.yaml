@@ -1,0 +1,62 @@
+# The declared inputs of the tank-barge lightship method (issue #330, spec 0006 section 3.3).
+# Hand-written. `python3 tools/fit_tank_lightship.py` reads this file, `cases.yaml` and `factors.yaml`
+# and writes `tank_lightship.yaml` (generated, do not edit). The Rust constants in
+# `crates/ovcd-core/src/liquid_bulk/lightship.rs` equal the generated values; a test keeps them equal.
+#
+# The method: lightship = k x LOA x B x D  +  outfit.
+#   k is fitted on the declared subset below. A case gives a published deadweight at a draught, not a
+#   lightship, so its lightship is implied: Cb x LOA x B x T x rho - DWT, with Cb the box-barge block
+#   coefficient on LOA of `factors.yaml` (an assumption: a tank barge is a raked box, as in the dry
+#   barge fit). That implied lightship is itself an estimate, so k is an Estimate.
+#   outfit (pumps, piping, vents and gauging, heating) is worked out from the cargo volume with the
+#   coefficients below and taken out of the implied lightship before k is fitted, so the outfit is not
+#   counted twice. A case with no heating is assumed unheated.
+
+# The cases k is fitted on. Every other tank-barge record is held out: run, compared, never fitted.
+# Chosen: confidence `medium`, a published deadweight at a stated draught (not a cargo capacity),
+# and no flag that says the figures do not fit a plain double-skin barge.
+fit_subset:
+  - meb-rob20-belmax
+  - meb-rob07-mh4001
+  - kirby-10071-200x35
+  - kirby-10201-200x35
+  - kirby-10083-200x35
+  - kirby-10074-195x35
+  - cgbm-102-200x35
+  - mer-13-200x35
+  - kirby-301-250x50
+  - kirby-407-263x54
+  - hfl-406-297x54
+  - kirby-27773-297x54
+  - kirby-32300b-297x54
+  - ctco-358-297x54
+  - htco-3064-320x50
+
+# Cases that could have been in the subset and were left out, with the reason.
+left_out:
+  meb-rob17-nerida: "depth 2.0 m, a very shallow river hull; its implied k is twice the others"
+  cms-1601-222x54: "the record flags DWT / LBT as low (heavy tanks, possibly LPG, unconfirmed)"
+
+# Held-out records that are listed but not scored: the record itself says the hull is not a plain
+# double-skin tank barge, or that its deadweight row is not at the stated draught.
+not_scored:
+  winna-wilson-461x90: "record flags an implied Cb of 1.459 (impossible) and an unclear hull type (Kirby 'Dry Bulk', 150,000 bbl)"
+  miss-dott-o-463x82: "record flags an unclear hull type (Kirby 'Dry Bulk', 150,000 bbl) and a 9 ft row far below the table's draughts"
+
+# Outfit, t per m3 of cargo tank volume (gross), and t per kW of installed heating. ESTIMATES: no
+# published weight was found for any of them (docs/research/crude-oil/03-design-practice.md 4.1:
+# "Outfit for pumps, heating and piping: no published weights found. Use maker data at the next stage").
+# The values are engineering judgement of the right order; replace them with maker data.
+outfit:
+  pumps_t_per_m3:
+    value: 0.004
+    basis: "Estimate. Two to four diesel or deepwell pump sets per barge (03-design-practice.md 4.1, proxies) at a few tonnes each, on a 4,000 m3 barge. No published weight."
+  piping_t_per_m3:
+    value: 0.010
+    basis: "Estimate. Cargo headers, valves and manifolds (03-design-practice.md 2.4). No published weight."
+  vents_gauging_t_per_m3:
+    value: 0.002
+    basis: "Estimate. Vent heads, flame screens and gauging, one set per tank. No published weight."
+  heating_t_per_kw:
+    value: 0.006
+    basis: "Estimate. Thermal-fluid heater and in-tank coils (03-design-practice.md 1.2: 6 to 8 MMBTU/h per 30,000 bbl barge). No published weight."
