@@ -58,6 +58,9 @@ pub struct Measured {
     /// What the Vessel Model of the design is assembled from (issue #454); `None` when the run gave
     /// no capacity result. No Measure reads it.
     pub vessel: Option<crate::vessel_model::VesselModelInputs>,
+    /// The assumed damages of MARPOL Annex I regulation 28 (issue #341), for a liquid bulk hull under that
+    /// Rule Set; empty for every other design.
+    pub marpol_damage: Vec<DamageVerdict>,
 }
 
 /// One assumed damage and the outcome: the Measure `stability.damage` is `ok`.
@@ -225,6 +228,9 @@ impl Measured {
             ObjectType::BallastTank => self.liquid_names(SpaceKind::is_ballast),
             ObjectType::SlopTank => self.liquid_names(|k| k == SpaceKind::Slop),
             ObjectType::DamageCase => self.damage.iter().map(|d| d.name.clone()).collect(),
+            ObjectType::MarpolDamageCase => {
+                self.marpol_damage.iter().map(|d| d.name.clone()).collect()
+            }
         }
     }
 
@@ -266,7 +272,7 @@ impl Measured {
             | "option.slop_capacity_share" => self.liquid.is_some(),
             "option.deadweight" => self.deadweight_t.is_some(),
             // The Rule on a hull with no damage computed is `not evaluated` with the reason (`missing`).
-            "stability.damage" => true,
+            "stability.damage" | "stability.damage_marpol" => true,
             "wheelhouse.blind_distance" => match m.args.iter().find(|(k, _)| k == "condition") {
                 Some((_, ArgValue::Text(c))) if c == "light" => {
                     self.blind_distance_light_m.is_some()
@@ -309,9 +315,13 @@ impl Measured {
         if let Some(v) = self.liquid_value(m, index) {
             return v;
         }
-        if m.id == "stability.damage" {
-            return self
-                .damage
+        if m.id == "stability.damage" || m.id == "stability.damage_marpol" {
+            let set = if m.id == "stability.damage" {
+                &self.damage
+            } else {
+                &self.marpol_damage
+            };
+            return set
                 .get(index)
                 .map(|d| MeasureValue::Bool(d.outcome.ok))
                 .ok_or_else(|| format!("no damage case {index}"));

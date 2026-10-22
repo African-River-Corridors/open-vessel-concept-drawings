@@ -1347,8 +1347,9 @@ fn simulate_measured(
             loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho, true);
             // Issue #341: the assumed damages of ADN 9.3.x.15 on the laden departure condition.
             if let Some(liquid) = r.liquid.as_ref() {
-                measured.damage =
-                    crate::liquid::damage_verdicts(&hull, liquid, cargo_key, rho, &conds);
+                let marpol = rules.sets.iter().any(|s| s.id == "marpol-i");
+                (measured.damage, measured.marpol_damage) =
+                    crate::liquid::damage_verdicts(&hull, liquid, cargo_key, rho, &conds, marpol);
             }
             // The liquid conditions stay out of the Rule Trace until the liquid Rule Sets exist: the
             // IS Code Rule Set would block a low-freeboard tank barge on seagoing criteria.
@@ -1459,6 +1460,7 @@ fn simulate_measured(
                     &r,
                     cargo_key,
                     &measured.damage,
+                    &measured.marpol_damage,
                 ),
                 (&r.stern_block_items, &r.trim_conditions),
             ),
@@ -1475,6 +1477,7 @@ fn with_liquid(
     r: &BargeCapacityResult,
     cargo_key: &str,
     damage: &[ovcd_core::measured::DamageVerdict],
+    marpol_damage: &[ovcd_core::measured::DamageVerdict],
 ) -> Value {
     if let (Some(l), Some(o)) = (r.liquid.as_ref(), v.as_object_mut()) {
         o.insert(
@@ -1487,6 +1490,12 @@ fn with_liquid(
         // Issue #341: what each assumed damage does (unhashed: it is an output of the Rule Trace's input).
         if !damage.is_empty() {
             o.insert("damage".to_string(), crate::liquid::damage_json(damage));
+        }
+        if !marpol_damage.is_empty() {
+            o.insert(
+                "marpol_damage".to_string(),
+                crate::liquid::damage_json(marpol_damage),
+            );
         }
     }
     v
