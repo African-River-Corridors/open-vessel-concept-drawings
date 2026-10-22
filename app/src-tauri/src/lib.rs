@@ -139,6 +139,44 @@ fn evaluate(state: State<Shared>) -> Reply {
     Ok(lock(&state)?.evaluate_json())
 }
 
+/// Issue #457: the mesh vertex data of an Option, as raw bytes (no JSON for vertex data): the
+/// vertex and index counts (u32), then the positions (f32, x y z per vertex) and the indices (u32,
+/// three per triangle), all little-endian.
+#[tauri::command]
+fn mesh_buffers(option: String, state: State<Shared>) -> Result<tauri::ipc::Response, String> {
+    let (positions, indices) = lock(&state)?.mesh_buffers(&option)?;
+    let mut bytes = Vec::with_capacity(8 + 4 * (positions.len() + indices.len()));
+    bytes.extend_from_slice(&(positions.len() as u32).to_le_bytes());
+    bytes.extend_from_slice(&(indices.len() as u32).to_le_bytes());
+    for p in positions {
+        bytes.extend_from_slice(&p.to_le_bytes());
+    }
+    for i in indices {
+        bytes.extend_from_slice(&i.to_le_bytes());
+    }
+    Ok(tauri::ipc::Response::new(bytes))
+}
+
+#[tauri::command]
+fn mesh_groups(option: String, state: State<Shared>) -> Reply {
+    lock(&state)?.mesh_groups(&option)
+}
+
+#[tauri::command]
+fn section_at(option: String, x: f64, state: State<Shared>) -> Reply {
+    lock(&state)?.section_at(&option, x)
+}
+
+#[tauri::command]
+fn space_info(option: String, name: String, state: State<Shared>) -> Reply {
+    lock(&state)?.space_info(&option, &name)
+}
+
+#[tauri::command]
+fn waterlines(option: String, state: State<Shared>) -> Reply {
+    lock(&state)?.waterlines(&option)
+}
+
 /// `null` when the user cancels.
 #[tauri::command]
 async fn new_file(app: AppHandle, window: Window, state: State<'_, Shared>) -> Reply {
@@ -354,6 +392,11 @@ pub fn run() {
             use_built_in_profile,
             notice_seen,
             accept_notice,
+            mesh_buffers,
+            mesh_groups,
+            section_at,
+            space_info,
+            waterlines,
         ])
         .on_window_event(|window, event| {
             // The unsaved-changes guard on close: ask first, then close for real.

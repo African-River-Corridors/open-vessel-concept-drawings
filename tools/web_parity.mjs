@@ -144,6 +144,23 @@ for (const f of files) {
   s.free();
 }
 
+// Issue #457: how long a 100 m barge's meshes take to reach the caller (first call, with the run).
+{
+  const s = new Session();
+  s.open_text("dry.vdesign", readFileSync(join(fixtures, "dry_bulk_box_hold.vdesign"), "utf8"));
+  const option = JSON.parse(s.snapshot()).active_option;
+  s.set_input(option, "length_overall_m", "100");
+  const t0 = performance.now();
+  const positions = s.mesh_positions(option);
+  const indices = s.mesh_indices(option);
+  const groups = JSON.parse(s.mesh_groups(option));
+  const ms = performance.now() - t0;
+  const typed = positions instanceof Float32Array && indices instanceof Uint32Array;
+  console.log(`meshes of a 100 m barge: ${ms.toFixed(0)} ms, ${indices.length / 3} triangles, ${groups.groups.length} groups, typed ${typed ? "ok" : "FAIL"}`);
+  if (!typed) bad++;
+  s.free();
+}
+
 console.log(`engine ${engine_version()}`);
 const widths = [0, 1, 2, 3, 4].map((c) => Math.max(...rows.map((r) => String(r[c]).length)));
 for (const r of rows) console.log(r.map((v, c) => String(v).padEnd(widths[c])).join("  "));

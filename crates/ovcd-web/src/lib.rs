@@ -165,13 +165,38 @@ impl Session {
     }
 
     /// The mesh hash of an Option's Vessel Model (issue #456), as `ovcd mesh --hash` prints it.
-    pub fn mesh_hash(&self, option: &str) -> Js<String> {
-        let design = self.state.session().design();
-        let found = design
-            .options
-            .iter()
-            .find(|o| o.name == option)
-            .ok_or_else(|| err(format!("no Option named '{option}'")))?;
-        ok(ovcd_format::option_meshes(found).map(|m| ovcd_format::mesh_hash(&m)))
+    pub fn mesh_hash(&mut self, option: &str) -> Js<String> {
+        let groups = ok(self.state.mesh_groups(option))?;
+        Ok(groups["hash"].as_str().unwrap_or_default().to_string())
+    }
+
+    /// Issue #457: the mesh positions of an Option, x y z per vertex, as a Float32Array.
+    pub fn mesh_positions(&mut self, option: &str) -> Js<Vec<f32>> {
+        ok(self.state.mesh_buffers(option).map(|(p, _)| p))
+    }
+
+    /// The mesh indices of an Option, three per triangle, as a Uint32Array.
+    pub fn mesh_indices(&mut self, option: &str) -> Js<Vec<u32>> {
+        ok(self.state.mesh_buffers(option).map(|(_, i)| i))
+    }
+
+    /// The mesh group table and hash of an Option, as JSON.
+    pub fn mesh_groups(&mut self, option: &str) -> Js<String> {
+        ok(self.state.mesh_groups(option)).map(|v| v.to_string())
+    }
+
+    /// The hull's section outline at `x`, as JSON.
+    pub fn section_at(&mut self, option: &str, x: f64) -> Js<String> {
+        ok(self.state.section_at(option, x)).map(|v| v.to_string())
+    }
+
+    /// A Space's name, kind, volume and centroid, as JSON.
+    pub fn space_info(&mut self, option: &str, name: &str) -> Js<String> {
+        ok(self.state.space_info(option, name)).map(|v| v.to_string())
+    }
+
+    /// The waterline of each floating position, as JSON.
+    pub fn waterlines(&mut self, option: &str) -> Js<String> {
+        ok(self.state.waterlines(option)).map(|v| v.to_string())
     }
 }

@@ -298,6 +298,8 @@ jobs:
         run: |
           npm ci
           npx tauri build --debug --no-bundle
+      - name: Build the CLI (the smoke tests compare its mesh hash, issue #457)
+        run: cargo build -p ovcd-cli
       - name: Smoke tests
         working-directory: app
         env:

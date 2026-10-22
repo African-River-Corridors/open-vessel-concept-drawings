@@ -28,10 +28,10 @@ pub use eval::{ENTRY_POINTS, EvalError, eval, parse_case};
 pub use ga::{CONVOY_NO_VIEWS, GaViews, ga_views, ga_views_for, ga_views_named, ga_views_of};
 pub use profile::Profile;
 pub use run::{
-    CONVOY_NOT_AVAILABLE, HashStatus, RunOption, RunOutcome, UNHASHED_KEYS, canonical_json,
-    hash_warning, mesh_hash, option_hull_table, option_meshes, option_vessel_model, results_hash,
-    run_design, run_design_with, run_option, run_option_with, simulate_params_of, stamp,
-    summary_lines,
+    CONVOY_NOT_AVAILABLE, HashStatus, RunOption, RunOutcome, UNHASHED_KEYS, VesselRun, Waterline,
+    canonical_json, hash_warning, mesh_hash, option_hull_table, option_meshes, option_vessel_model,
+    option_vessel_run, results_hash, run_design, run_design_with, run_option, run_option_with,
+    simulate_params_of, stamp, summary_lines,
 };
 pub use session::{
     DesignSession, Evaluation, Message, OpenReport, OptionEvaluation, Scope, Severity, input_schema,

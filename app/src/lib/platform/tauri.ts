@@ -1,7 +1,18 @@
 // The desktop implementation: today's Tauri commands, unchanged.
 import { invoke } from "@tauri-apps/api/core";
 import type { Evaluation, Schema, Snapshot } from "../api";
-import type { Platform } from "./types";
+import type { MeshGroup, Platform, SectionOutline, SpaceInfo, Waterline } from "./types";
+
+/** The raw bytes of `mesh_buffers`: two u32 counts, then the f32 positions and the u32 indices. */
+function splitBuffers(buf: ArrayBuffer): { positions: Float32Array; indices: Uint32Array } {
+  const head = new DataView(buf, 0, 8);
+  const np = head.getUint32(0, true);
+  const ni = head.getUint32(4, true);
+  return {
+    positions: new Float32Array(buf.slice(8, 8 + 4 * np)),
+    indices: new Uint32Array(buf.slice(8 + 4 * np, 8 + 4 * (np + ni))),
+  };
+}
 
 export const tauriPlatform: Platform = {
   kind: "tauri",
@@ -28,4 +39,12 @@ export const tauriPlatform: Platform = {
   acceptNotice: () => invoke<void>("accept_notice"),
   exportDrawing: async () => false,
   exportModel: async () => false,
+  meshes: async (option) => {
+    const { positions, indices } = splitBuffers(await invoke<ArrayBuffer>("mesh_buffers", { option }));
+    const g = await invoke<{ hash: string; groups: MeshGroup[] }>("mesh_groups", { option });
+    return { positions, indices, groups: g.groups, hash: g.hash };
+  },
+  sectionAt: (option, x) => invoke<SectionOutline>("section_at", { option, x }),
+  spaceInfo: (option, name) => invoke<SpaceInfo>("space_info", { option, name }),
+  waterlines: (option) => invoke<Waterline[]>("waterlines", { option }),
 };
