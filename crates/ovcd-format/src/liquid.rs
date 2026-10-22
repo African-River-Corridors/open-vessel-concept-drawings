@@ -124,6 +124,15 @@ fn drawing_space_json(s: &Space) -> Value {
     v
 }
 
+/// The ballast tanks of a dry bulk hull for the drawing, as `drawing.ballast_spaces` (issue #426).
+/// Kept out of the results hash with the rest of `drawing`.
+pub(crate) fn ballast_drawing_value(tanks: &[Space]) -> (&'static str, Value) {
+    (
+        "ballast_spaces",
+        Value::Array(tanks.iter().map(drawing_space_json).collect()),
+    )
+}
+
 /// The `drawing` values of a liquid Option: the layout the general arrangement will draw. Kept out
 /// of the results hash with the rest of `drawing`.
 pub(crate) fn drawing_values(r: &BargeCapacityResult) -> Vec<(&'static str, Value)> {

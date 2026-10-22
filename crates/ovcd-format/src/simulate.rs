@@ -1285,6 +1285,8 @@ fn simulate_measured(
     // Issue #426: the IS Code conditions, with the ballast tanks of the hold arrangement.
     let mut is_code_stability = Value::Null;
     let mut loading_conditions = Value::Null;
+    // Issue #426: the ballast tanks of a dry bulk hull, for the drawing (not hashed).
+    let mut ballast_drawing: Option<(&'static str, Value)> = None;
     // Issue #332 (spec 0006): the liquid bulk conditions are the IS Code ones with the cargo tanks
     // of the layout, and the worst slack-tank condition besides.
     if is_code(p) && phase == CargoClass::LiquidBulk {
@@ -1340,6 +1342,7 @@ fn simulate_measured(
             })
         };
         let tanks = ovcd_core::compartments::ballast_tanks(&inp, &r);
+        ballast_drawing = Some(crate::liquid::ballast_drawing_value(&tanks));
         let conds = is_code_conditions(
             p,
             &IsCodeHull {
@@ -1378,6 +1381,7 @@ fn simulate_measured(
         (phase != CargoClass::LiquidBulk).then_some(&inp),
     );
     dry_parts.extend(crate::liquid::drawing_values(&r));
+    dry_parts.extend(ballast_drawing);
     if let Some(g) = stern {
         dry_parts.push(("stern", stern_drawing(g)));
     }
