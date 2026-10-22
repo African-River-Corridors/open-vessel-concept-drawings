@@ -49,6 +49,13 @@ jobs:
         run: bash tools/gates.sh
       # Calibration Bands (issue #119): one warning annotation per case outside its band. A band miss
       # never fails the build; a crash does. It takes about a second, so it stays in this job.
+      - name: Upload the nextest times (JUnit)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextest-junit
+          path: target/nextest/pr/junit.xml
+          if-no-files-found: ignore
       - name: Calibration against the Calibration Bands (warning only)
         run: python -m vessel_designer.calibration --check
       # Evaluation harness (issue #184): known designs with known verdicts per rule, run against the

@@ -712,9 +712,17 @@ def measure() -> tuple[str, str, int, list[dict], bool, int | None]:
         git("worktree", "add", "-q", "--detach", str(base_tree), base_sha)
         try:
             base_total = case_count_at(base_tree)
+            t0 = time.time()
             base_bin = build(base_tree, ROOT / "target" / "design-impact-base", fresh=True)
+            t1 = time.time()
             head_bin = build(ROOT, ROOT / "target")
-            before, after = run_all(base_bin, case_set), run_all(head_bin, case_set)
+            t2 = time.time()
+            before = run_all(base_bin, case_set)
+            t3 = time.time()
+            after = run_all(head_bin, case_set)
+            t4 = time.time()
+            print(f"design_impact: seconds: build base {t1 - t0:.0f}, build this tree {t2 - t1:.0f}, "
+                  f"run base {t3 - t2:.0f}, run this tree {t4 - t3:.0f}", file=sys.stderr)
             # Fail closed: a check that computed nothing on either side proves nothing.
             for label, side in (("base", before), ("this tree", after)):
                 if not any("results" in v for v in side.values()):
