@@ -624,6 +624,121 @@ fn a_ballast_waterline_is_drawn_when_the_results_have_a_ballast_condition_apart_
     );
 }
 
+/// The results of a self-propelled Option as a new Design gets it: the new stern, machinery and a
+/// lifting wheelhouse, every input from the Defaults Profile.
+fn new_self_propelled(cargo: &str) -> Value {
+    let raw = serde_json::json!({
+        "format": "vdesign", "format_version": 3, "engine_version": "0.2.4", "units": "SI",
+        "options": [{ "name": "Option 1", "inputs": {
+            "cargo": { "value": cargo, "source": "typed" },
+            "hull_form": { "value": "raked_box", "source": "typed" },
+            "formation": { "value": { "kind": "self_propelled" }, "source": "typed" },
+            "length_overall_m": { "value": 76.5, "source": "typed" },
+            "beam_m": { "value": 11.4, "source": "typed" },
+            "moulded_depth_m": { "value": 3.5, "source": "typed" }
+        }}]
+    });
+    let filled = ovcd_format::fill_as_new(&raw.to_string(), &Profile::built_in());
+    assert_eq!(filled.report.errors, Vec::<String>::new());
+    match run_design(&filled.design.unwrap()).remove(0).outcome {
+        RunOutcome::Results { results, .. } => results,
+        other => panic!("{other:?}"),
+    }
+}
+
+#[test]
+fn the_tunnel_stern_the_raised_wheelhouse_and_the_blind_distance_are_drawn_from_the_results() {
+    // Issue #356. A tunnel stern: the crown along the run in the elevation, each tunnel in the plan,
+    // both hidden. The lifting wheelhouse raised, as a thin chain outline. The Blind Distances in
+    // the notes.
+    let r = new_self_propelled("bauxite");
+    assert_eq!(r["geometry"]["stern_form"], "tunnel");
+    let v = views(&r);
+    let crown: Vec<f64> = r["drawing"]["stern"]["profile"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|p| p[1].as_f64().unwrap())
+        .collect();
+    let drawn: Vec<Vec<f64>> = of_layer(&v.side_elevation, "HIDDEN", "polyline")
+        .iter()
+        .map(|e| {
+            e["points_m"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|p| p[1].as_f64().unwrap())
+                .collect()
+        })
+        .collect();
+    assert!(
+        drawn
+            .iter()
+            .any(|ys| ys.len() == crown.len() && ys.iter().zip(&crown).all(|(a, b)| close(*a, *b))),
+        "the tunnel crown"
+    );
+    let tunnels = r["drawing"]["stern"]["tunnel_sections"]
+        .as_array()
+        .unwrap()
+        .len();
+    let closed = of_layer(&v.plan, "HIDDEN", "polyline")
+        .iter()
+        .filter(|e| e["closed"] == true && e["points_m"].as_array().unwrap().len() == 4)
+        .filter(|e| {
+            let x1 = e["points_m"][1][0].as_f64().unwrap();
+            close(
+                x1,
+                r["drawing"]["stern"]["profile"]
+                    .as_array()
+                    .unwrap()
+                    .last()
+                    .unwrap()[0]
+                    .as_f64()
+                    .unwrap(),
+            )
+        })
+        .count();
+    assert_eq!(closed, tunnels, "one outline for each tunnel");
+    let a = &r["drawing"]["aft_arrangement"];
+    let (floor, top) = (
+        a["wheelhouse_floor_raised_m"].as_f64().unwrap(),
+        a["wheelhouse_top_raised_m"].as_f64().unwrap(),
+    );
+    assert!(a["wheelhouse_lift_m"].as_f64().unwrap() > 0.0);
+    let raised = of_layer(&v.side_elevation, "CENTRE", "polyline")
+        .iter()
+        .filter(|e| {
+            let ys: Vec<f64> = e["points_m"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|p| p[1].as_f64().unwrap())
+                .collect();
+            ys.iter().any(|y| close(*y, floor)) && ys.iter().any(|y| close(*y, top))
+        })
+        .count();
+    assert_eq!(raised, 1, "the raised wheelhouse");
+    assert!(v.side_elevation.to_string().contains("RAISED"));
+    let notes = v.side_elevation["notes"].to_string();
+    assert!(
+        notes.contains("BLIND DISTANCE AHEAD OF THE BOW: LIGHT 250.0 M, LADEN"),
+        "{notes}"
+    );
+}
+
+#[test]
+fn a_legacy_stern_draws_none_of_it() {
+    // A file saved before the new stern has no tunnel, no lift and no blind distance to draw.
+    let (_, r) = computed("gas_igc_2g_self_propelled.vdesign").remove(0);
+    let v = views(&r);
+    assert!(
+        !v.side_elevation["notes"]
+            .to_string()
+            .contains("BLIND DISTANCE")
+    );
+    assert!(!v.side_elevation.to_string().contains("RAISED"));
+}
+
 #[test]
 fn a_hull_without_a_shield_draws_none() {
     let (_, mut r) = computed("gas_igc_2g_exact.vdesign").remove(0);

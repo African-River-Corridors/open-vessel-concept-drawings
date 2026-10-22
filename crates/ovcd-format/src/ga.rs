@@ -136,6 +136,10 @@ struct Hull {
     depth: f64,
     draught: f64,
     light_draught: Option<f64>,
+    /// The tunnel stern, when the Option has one.
+    tunnel_stern: Option<TunnelStern>,
+    /// The Blind Distance light and laden, and the limit.
+    blind: Option<(f64, f64, f64)>,
     /// The Option's name, for the title block (`None` when the caller gives none).
     option_name: Option<String>,
     /// The Rule Sets the Option was checked against (`rule_trace.rule_sets`), as `id@version`.
@@ -184,7 +188,55 @@ struct Aft {
     wheelhouse_width: f64,
     wheelhouse_floor: f64,
     wheelhouse_top: f64,
+    /// The wheelhouse raised for the sightline (`wheelhouse_floor_raised_m` and
+    /// `wheelhouse_top_raised_m`), when it is lifted (issue #356).
+    wheelhouse_raised: Option<(f64, f64)>,
     block_top: f64,
+}
+
+/// The tunnel stern, from `drawing.stern` (issue #356): the tunnel crown along the run, and the
+/// athwartships extent of each tunnel at the transom.
+struct TunnelStern {
+    /// (x, height above the keel) of the crown, from the transom to the end of the run.
+    crown: Vec<[f64; 2]>,
+    /// (y of the port edge, y of the starboard edge) of each tunnel.
+    tunnels: Vec<(f64, f64)>,
+}
+
+fn read_tunnel_stern(results: &Value) -> Option<TunnelStern> {
+    if results["geometry"]["stern_form"] != "tunnel" {
+        return None;
+    }
+    let stern = results.get("drawing")?.get("stern")?;
+    let points = |v: &Value| -> Option<Vec<[f64; 2]>> {
+        v.as_array()?
+            .iter()
+            .map(|p| Some([p.get(0)?.as_f64()?, p.get(1)?.as_f64()?]))
+            .collect()
+    };
+    let crown = points(stern.get("profile")?)?;
+    let tunnels = stern
+        .get("tunnel_sections")?
+        .as_array()?
+        .iter()
+        .filter_map(|t| {
+            let pts = points(t)?;
+            let lo = pts.iter().map(|p| p[0]).fold(f64::INFINITY, f64::min);
+            let hi = pts.iter().map(|p| p[0]).fold(f64::NEG_INFINITY, f64::max);
+            (lo.is_finite() && hi > lo).then_some((lo, hi))
+        })
+        .collect();
+    (crown.len() > 1).then_some(TunnelStern { crown, tunnels })
+}
+
+/// The Blind Distances of the sightline, light and laden, and their limit (`sightline`, issue #356).
+fn read_blind(results: &Value) -> Option<(f64, f64, f64)> {
+    let s = results.get("sightline")?;
+    Some((
+        s.get("blind_distance_light_m")?.as_f64()?,
+        s.get("blind_distance_laden_m")?.as_f64()?,
+        s.get("limit_m")?.as_f64()?,
+    ))
 }
 
 /// Text in the plain capitals a note or a field allows: an em dash becomes a hyphen, an underscore a
@@ -267,6 +319,14 @@ fn read_aft(results: &Value) -> Option<Aft> {
         wheelhouse_width: n("wheelhouse_width_m")?,
         wheelhouse_floor: n("wheelhouse_floor_lowered_m")?,
         wheelhouse_top: n("wheelhouse_top_lowered_m")?,
+        wheelhouse_raised: n("wheelhouse_lift_m")
+            .filter(|lift| *lift > 0.0)
+            .and_then(|_| {
+                Some((
+                    n("wheelhouse_floor_raised_m")?,
+                    n("wheelhouse_top_raised_m")?,
+                ))
+            }),
         block_top: n("block_top_lowered_m")?,
     })
 }
@@ -412,6 +472,8 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
         draught,
         light_draught: num_at(results, &["results", "light_draught_m"])
             .filter(|t| *t > 0.0 && *t < depth),
+        tunnel_stern: read_tunnel_stern(results),
+        blind: read_blind(results),
         option_name: None,
         rule_sets: results["rule_trace"]["rule_sets"]
             .as_array()
@@ -1143,6 +1205,27 @@ fn zones(c: &mut Canvas, h: &Hull, view: View, labels: &mut Vec<(String, [f64; 2
     }
 }
 
+/// The tunnel stern, hidden under the hull: in elevation the tunnel crown along the run, in plan the
+/// outline of each tunnel from the transom to the end of the run (issue #356).
+fn tunnel_stern(c: &mut Canvas, h: &Hull, view: View) {
+    let Some(t) = &h.tunnel_stern else {
+        return;
+    };
+    match view {
+        View::Elevation => c.polyline("HIDDEN", &t.crown, false),
+        View::Plan => {
+            let run = t.crown.last().map_or(0.0, |p| p[0]);
+            for (lo, hi) in &t.tunnels {
+                c.polyline(
+                    "HIDDEN",
+                    &[[0.0, *lo], [run, *lo], [run, *hi], [0.0, *hi]],
+                    true,
+                );
+            }
+        }
+    }
+}
+
 /// The bulkheads between the holds of a dry bulk hull: `holds - 1` of them, evenly spaced along the
 /// cargo zone (the volume model counts the end bulkheads and these, `n_holds + 1` in all). In
 /// elevation they stand from the inner bottom to the deck; in plan they cross the hold.
@@ -1230,6 +1313,26 @@ fn aft_block(c: &mut Canvas, h: &Hull, view: View) {
                 ],
                 true,
             );
+            // The wheelhouse raised for the sightline: a thin chain outline, named RAISED. Only an
+            // Option with a sightline result (the new stern) draws it: the drawings of a file saved
+            // before stay as they were.
+            if let (Some((floor, top)), true) = (a.wheelhouse_raised, h.blind.is_some()) {
+                c.polyline(
+                    "CENTRE",
+                    &[
+                        [a.wheelhouse_x0, floor],
+                        [a.wheelhouse_x1, floor],
+                        [a.wheelhouse_x1, top],
+                        [a.wheelhouse_x0, top],
+                    ],
+                    true,
+                );
+                c.leader(
+                    &label!("draw-wheelhouse-raised", "RAISED"),
+                    [a.wheelhouse_x1, top],
+                    [a.wheelhouse_x1 + 4.0 * k, top + 6.0 * k],
+                );
+            }
             // the thrusters, in the steering flat
             let r =
                 (a.thruster_room * THRUSTER_R_ELEVATION_OF_ROOM).min(THRUSTER_R_ELEVATION_MAX_M);
@@ -1443,6 +1546,7 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
     aft_block(&mut c, h, View::Elevation);
     zones(&mut c, h, View::Elevation, &mut labels);
     hold_bulkheads(&mut c, h, View::Elevation, &mut labels);
+    tunnel_stern(&mut c, h, View::Elevation);
     // Issue #409: the top of the structure and the loaded air draft under it.
     if let Some(top) = h.air_top {
         c.line("ZONE", [0.0, top], [h.loa, top], None);
@@ -1589,6 +1693,7 @@ fn plan(h: &Hull, n: u32) -> Canvas {
     let mut labels: Vec<(String, [f64; 2])> = Vec::new();
     zones(&mut c, h, View::Plan, &mut labels);
     hold_bulkheads(&mut c, h, View::Plan, &mut labels);
+    tunnel_stern(&mut c, h, View::Plan);
     let overshoot = 4.0 * c.k;
     c.centre_line([-overshoot, 0.0], [h.loa + overshoot, 0.0]);
     if !c.try_dim_horizontal([0.0, y0], [h.loa, y0], -DIM_OFFSET_MM) {
@@ -2108,6 +2213,15 @@ fn document(
     }
     if let Some(sets) = rule_sets_note(&h.rule_sets) {
         notes.push(sets);
+    }
+    if let Some((light, laden, limit)) = h.blind {
+        notes.push(label!(
+            "draw-note-blind-distance",
+            "BLIND DISTANCE AHEAD OF THE BOW: LIGHT {light} M, LADEN {laden} M, LIMIT {limit} M.",
+            light = fixed(light, 1),
+            laden = fixed(laden, 1),
+            limit = fixed(limit, 0)
+        ));
     }
     notes.push(label!(
         "draw-note-scope",
