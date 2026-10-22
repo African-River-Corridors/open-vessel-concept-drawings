@@ -241,7 +241,7 @@
   });
 </script>
 
-<div class="model" data-testid="model3d" data-status={status}>
+<div class="model" data-testid="model3d" data-status={status} data-problem={problem || undefined}>
   {#if status === "failed"}
     <p class="note">{t("app-3d-failed", { why: problem })}</p>
   {:else}

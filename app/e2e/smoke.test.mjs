@@ -650,7 +650,7 @@ describe("OVCD app smoke tests", () => {
     await show("Drawings", "3D");
     await until("the 3D view", async () => (await (await browser.$("[data-testid=model3d]")).getAttribute("data-status")) !== "loading", 60000);
     const status = await (await browser.$("[data-testid=model3d]")).getAttribute("data-status");
-    assert.ok(status === "ready" || status === "no-webgl", status);
+    assert.ok(status === "ready" || status === "no-webgl", `${status}: ${await (await browser.$("[data-testid=model3d]")).getAttribute("data-problem")}`);
     if (status === "no-webgl") assert.equal((await browser.$$("[data-testid=model3d-no-webgl]")).length, 1);
     // The Space list works either way; the layer toggles need the canvas.
     assert.ok((await browser.$$("[data-testid=model3d-spaces] tbody tr")).length >= 3, "the Spaces are listed");
