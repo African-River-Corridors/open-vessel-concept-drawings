@@ -13,6 +13,8 @@ const TOLERANCE_M: f64 = 1e-6;
 const FIXTURES: &[&str] = &[
     "crude_integral_tanks_pushed.vdesign",
     "crude_integral_tanks_self_propelled.vdesign",
+    // coastal: slop tanks and a pump room
+    "crude_integral_tanks_coastal.vdesign",
 ];
 
 fn computed(name: &str) -> Vec<(String, Value)> {

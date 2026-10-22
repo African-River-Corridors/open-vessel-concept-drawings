@@ -1358,51 +1358,82 @@ fn hold_bulkheads(c: &mut Canvas, h: &Hull, view: View, labels: &mut Vec<(String
     ));
 }
 
-/// Labels that stand above the hull in rows, each over its target: a label takes the lowest row where
-/// its text clears the texts before it, and where its leader clears the texts of the rows under it.
-/// `targets` are (text, target point, x of the label point); the leaders run up to `base`.
+/// The most a label point is moved along its row to clear a neighbour, in millimetres of paper. The
+/// leader then slants instead of running straight up.
+const ROW_SHIFT_MAX_MM: f64 = 40.0;
+
+/// Labels that stand above the hull in rows, each over its target. A label takes the lowest row where its
+/// text can stand clear of the texts already there, moved along the row (the leader slants) by no more than
+/// `ROW_SHIFT_MAX_MM`; a row past the last is empty, so the search ends. A label whose leader would run
+/// through the text of a lower row goes up a row first. `targets` are (text, target point); the leaders run up
+/// from `base`. The text stands to the left of the label point in the forward half of the hull, so that it
+/// keeps clear of the column of labels beyond the bow.
 fn labels_in_rows(c: &mut Canvas, mut targets: Vec<(String, [f64; 2])>, base: f64, loa: f64) {
     targets.sort_by(|a, b| a.1[0].total_cmp(&b.1[0]));
     let gap = LABEL_CLEAR_MM * c.k;
-    // the text spans (x start, x end) of each row
+    let reach = ROW_SHIFT_MAX_MM * c.k;
+    // the text spans (x from, x to) of each row
     let mut rows: Vec<Vec<(f64, f64)>> = Vec::new();
     for (text, target) in targets {
-        // The text stands to the left of the label point in the forward half, so that it keeps clear
-        // of the column of labels beyond the bow.
         let width = (LEADER_TEXT_GAP_MM + text_width_mm(&text)) * c.k;
         let left = target[0] > loa / 2.0;
-        let start = if left {
-            target[0] - 2.0 * c.k
-        } else {
-            target[0] + 2.0 * c.k
+        // the label point, and the span of the text, for a shift along the row
+        let span_at = |shift: f64| {
+            let point = if left {
+                target[0] - 2.0 * c.k - shift
+            } else {
+                target[0] + 2.0 * c.k + shift
+            };
+            let span = if left {
+                (point - width, point)
+            } else {
+                (point, point + width)
+            };
+            (point, span)
         };
-        let (from, end) = if left {
-            (start - width, start)
-        } else {
-            (start, start + width)
+        // The shifts to try on a row: none, then just clear of each text already there.
+        let place = |r: usize| -> Option<f64> {
+            let spans: &[(f64, f64)] = rows.get(r).map_or(&[], Vec::as_slice);
+            let mut shifts = vec![0.0];
+            for sp in spans {
+                let natural = span_at(0.0).0;
+                shifts.push(if left {
+                    natural - (sp.0 - gap)
+                } else {
+                    sp.1 + gap - natural
+                });
+            }
+            shifts.sort_by(f64::total_cmp);
+            shifts
+                .into_iter()
+                .filter(|s| *s >= 0.0 && *s <= reach)
+                .find(|s| {
+                    let (_, span) = span_at(*s);
+                    spans
+                        .iter()
+                        .all(|sp| sp.1 + gap <= span.0 || span.1 + gap <= sp.0)
+                })
         };
-        let clear = |span: &(f64, f64)| span.1 + gap <= from || end + gap <= span.0;
-        let leader_clear = |span: &(f64, f64)| target[0] < span.0 - gap || target[0] > span.1 + gap;
-        // The row at which the label's leader also clears the texts under it; failing that, the lowest row
-        // where only the text clears. A row past the last one is empty, so the search ends there.
-        let fits_text = |r: usize| rows.get(r).is_none_or(|spans| spans.iter().all(clear));
-        let fits_leader = |r: usize| {
-            rows.iter()
-                .take(r)
-                .all(|lower| lower.iter().all(leader_clear))
+        let leader_clear = |r: usize| {
+            rows.iter().take(r).all(|lower| {
+                lower
+                    .iter()
+                    .all(|sp| target[0] < sp.0 - gap || target[0] > sp.1 + gap)
+            })
         };
-        let row = (0..=rows.len())
-            .find(|&r| fits_text(r) && fits_leader(r))
-            .or_else(|| (0..=rows.len()).find(|&r| fits_text(r)))
-            .unwrap_or(rows.len());
+        let (row, shift) = (0..=rows.len())
+            .find_map(|r| place(r).filter(|_| leader_clear(r)).map(|s| (r, s)))
+            .or_else(|| (0..=rows.len()).find_map(|r| place(r).map(|s| (r, s))))
+            .unwrap_or((rows.len(), 0.0));
+        let (point, span) = span_at(shift);
         if row >= rows.len() {
             rows.resize(row + 1, Vec::new());
         }
-        rows[row].push((from, end));
+        rows[row].push(span);
         c.leader(
             &text,
             target,
-            [start, base + (row as f64 + 1.0) * LABEL_STEP_MM * c.k],
+            [point, base + (row as f64 + 1.0) * LABEL_STEP_MM * c.k],
         );
     }
 }

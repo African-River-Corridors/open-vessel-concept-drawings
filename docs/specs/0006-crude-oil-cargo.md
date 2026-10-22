@@ -92,7 +92,7 @@ phase 2 compartment model** (ADR 0016), not a one-off.
 | Stability | Standard loading conditions: departure laden, arrival laden (10 % consumables), ballast, and the worst slack-tank condition. Free surface for rectangular slack tanks, split by the centreline bulkhead. Reuses the box GZ and the IS Code 2008 Part A criteria after they move out of the gas module. | 03 |
 | Damage stability | `not evaluated` rows (ADN 9.3.x.15, MARPOL Reg. 28) until a damage Measure exists. | 03, 09 |
 | Freeboard | ICLL Type A (coastal) and ES-TRIN (inland) as Rules; the depth rule group `liquid` (D/B 0.30) gives the default depth. | 01, 08 |
-| Drawings | A cargo-tank arm in `ga.rs`: tanks P/S with numbers, centreline and transverse bulkheads, wing ballast hatched, cofferdams, pump room or deepwell pump symbols, midship section with inner hull. No pipe routing. | 11 |
+| Drawings | A cargo-tank arm in `ga.rs`: tanks P/S with numbers, centreline and transverse bulkheads, wing ballast hatched, cofferdams, the pump room (a deepwell pump has no symbol: the model has no size for one), midship section with inner hull. No pipe routing. | 11 |
 | Cost | A cost item list per containment. Cargo tank list: tank steel, coating area, pumps, piping, heating, vents, gauging. Lump sums first, BOQ lines in the BOQ phase. | 10 |
 | App | Crude oil shows "work in development" until damage stability and the oil Rule Sets are in. | — |
 
