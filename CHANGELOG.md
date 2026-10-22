@@ -243,6 +243,54 @@ Each entry is a before/after table written by `python3 tools/design_impact.py ch
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
 
+### ticket/412-forming-allowance (2026-10-22)
+
+Between `main a7f710b` and `this branch 5db719f`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| sweep CN-derived liquid 1 (88x16.3) | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 3.60 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 3.59 m of 6.00 m | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[22].message` | freeboard 2.96 m at the carried draught 2.74 m >= required 0.3 m | freeboard 2.93 m at the carried draught 2.77 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[23].message` | GM 5.98 m (fluid), max GZ 2.56 m at 29° | GM 5.90 m (fluid), max GZ 2.52 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[24].message` | GM 5.99 m (fluid), max GZ 2.55 m at 29° | GM 5.91 m (fluid), max GZ 2.52 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[25].message` | GM 12.81 m (fluid), max GZ 3.49 m at 28° | GM 12.49 m (fluid), max GZ 3.47 m at 28° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[26].message` | GM 12.90 m (fluid), max GZ 3.49 m at 27° | GM 12.58 m (fluid), max GZ 3.46 m at 28° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[3].message` | freeboard 2.96 m >= required 0.3 m | freeboard 2.93 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | blind distance ahead of the bow 2755.3 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 6.00 m of 6.00 m | blind distance ahead of the bow 2747.3 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 6.00 m of 6.00 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[23].message` | freeboard 2.54 m at the carried draught 3.16 m >= required 0.3 m | freeboard 2.51 m at the carried draught 3.19 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[24].message` | GM 3.81 m (fluid), max GZ 1.56 m at 26° | GM 3.74 m (fluid), max GZ 1.52 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[25].message` | GM 3.81 m (fluid), max GZ 1.56 m at 26° | GM 3.74 m (fluid), max GZ 1.52 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[26].message` | GM 10.64 m (fluid), max GZ 2.94 m at 25° | GM 10.32 m (fluid), max GZ 2.90 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[27].message` | GM 10.69 m (fluid), max GZ 2.94 m at 25° | GM 10.37 m (fluid), max GZ 2.90 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[4].message` | freeboard 2.54 m >= required 0.3 m | freeboard 2.51 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `warnings[1]` | The blind distance needs 10.10 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | The blind distance needs 10.08 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 5.52 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 5.51 m of 6.00 m | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[22].message` | freeboard 2.63 m at the carried draught 3.07 m >= required 0.3 m | freeboard 2.60 m at the carried draught 3.10 m >= required 0.3 m | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[23].message` | GM 5.75 m (fluid), max GZ 2.30 m at 27° | GM 5.67 m (fluid), max GZ 2.26 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[24].message` | GM 5.75 m (fluid), max GZ 2.30 m at 27° | GM 5.68 m (fluid), max GZ 2.27 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[25].message` | GM 13.80 m (fluid), max GZ 3.67 m at 27° | GM 13.44 m (fluid), max GZ 3.64 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[26].message` | GM 13.88 m (fluid), max GZ 3.67 m at 27° | GM 13.51 m (fluid), max GZ 3.64 m at 27° | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `checks[3].message` | freeboard 2.63 m >= required 0.3 m | freeboard 2.60 m >= required 0.3 m | changed |
+| sweep default depth gas 90x14 | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.97 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.96 m of 6.00 m | changed |
+| sweep default depth gas 90x14 | `checks[22].message` | freeboard 4.89 m at the carried draught 2.81 m >= required 0.3 m | freeboard 4.88 m at the carried draught 2.82 m >= required 0.3 m | changed |
+| sweep default depth gas 90x14 | `checks[23].message` | GM 3.05 m (fluid), max GZ 1.90 m at 40° | GM 3.02 m (fluid), max GZ 1.89 m at 40° | changed |
+| sweep default depth gas 90x14 | `checks[24].message` | GM 3.04 m (fluid), max GZ 1.89 m at 40° | GM 3.02 m (fluid), max GZ 1.88 m at 40° | changed |
+| sweep default depth gas 90x14 | `checks[25].message` | GM 7.06 m (fluid), max GZ 2.13 m at 28° | GM 6.97 m (fluid), max GZ 2.12 m at 28° | changed |
+| sweep default depth gas 90x14 | `checks[26].message` | GM 7.09 m (fluid), max GZ 2.13 m at 27° | GM 7.00 m (fluid), max GZ 2.11 m at 27° | changed |
+| sweep default depth gas 90x14 | `checks[3].message` | freeboard 4.89 m >= required 0.3 m | freeboard 4.88 m >= required 0.3 m | changed |
+| sweep gas IGC_2G 60x10 | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.48 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 4.47 m of 6.00 m | changed |
+| sweep gas IGC_2G 60x10 | `checks[22].message` | freeboard 2.70 m at the carried draught 2.80 m >= required 0.3 m | freeboard 2.67 m at the carried draught 2.83 m >= required 0.3 m | changed |
+| sweep gas IGC_2G 60x10 | `checks[23].message` | GM 0.61 m (fluid), max GZ 0.62 m at 35° | GM 0.58 m (fluid), max GZ 0.59 m at 35° | changed |
+| sweep gas IGC_2G 60x10 | `checks[24].message` | GM 0.59 m (fluid), max GZ 0.61 m at 35° | GM 0.56 m (fluid), max GZ 0.58 m at 35° | changed |
+| sweep gas IGC_2G 60x10 | `checks[25].message` | GM 1.85 m (fluid), max GZ 0.89 m at 33° | GM 1.75 m (fluid), max GZ 0.87 m at 33° | changed |
+| sweep gas IGC_2G 60x10 | `checks[26].message` | GM 1.84 m (fluid), max GZ 0.88 m at 32° | GM 1.74 m (fluid), max GZ 0.85 m at 32° | changed |
+| sweep gas IGC_2G 60x10 | `checks[3].message` | freeboard 2.70 m >= required 0.3 m | freeboard 2.67 m >= required 0.3 m | changed |
+| sweep gas IGC_2G 90x14 | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 5.47 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 5.46 m of 6.00 m | changed |
+| sweep gas IGC_2G 90x14 | `checks[22].message` | freeboard 3.04 m at the carried draught 2.46 m >= required 0.3 m | freeboard 3.02 m at the carried draught 2.48 m >= required 0.3 m | changed |
+| sweep gas IGC_2G 90x14 | `checks[23].message` | GM 3.97 m (fluid), max GZ 1.89 m at 30° | GM 3.91 m (fluid), max GZ 1.87 m at 30° | changed |
+| sweep gas IGC_2G 90x14 | `checks[24].message` | GM 3.98 m (fluid), max GZ 1.89 m at 30° | GM 3.92 m (fluid), max GZ 1.87 m at 30° | changed |
+| ... | 71785 more changed quantities | | | |
+
 ### ticket/449-bilge-sheer-camber (2026-10-22)
 
 Between `main d2f66d5` and `this branch ced6ffd`.
@@ -482,53 +530,6 @@ Between `main 251daf5` and `this branch 052469e`.
 | sweep gas carriage LPG_butane fully_refrigerated | `checks[14].message` | cofferdam 0.60 m >= 0.60 m (cl. 3.6.13) | aft end-bulkhead space 0.60 m >= 0.20 m (domed tank ends, cl. 3.5.3) | changed |
 | sweep gas carriage LPG_butane fully_refrigerated | `checks[14].name` | cofferdam min width | aft end bulkhead space | changed |
 | ... | 158 more changed quantities | | | |
-### ticket/412-forming-allowance (2026-10-22)
-
-Between `main 251daf5` and `this branch 7cad470`.
-
-| Case | Quantity | Before | After | Change |
-|---|---|---|---|---|
-| sweep CN-derived liquid 1 (88x16.3) | `checks[22].message` | freeboard 3.04 m at the carried draught 2.66 m >= required 0.3 m | freeboard 3.01 m at the carried draught 2.69 m >= required 0.3 m | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `checks[23].message` | GM 5.74 m (fluid), max GZ 2.48 m at 29° | GM 5.66 m (fluid), max GZ 2.44 m at 28° | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `checks[24].message` | GM 5.76 m (fluid), max GZ 2.48 m at 29° | GM 5.68 m (fluid), max GZ 2.45 m at 28° | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `checks[25].message` | GM 13.12 m (fluid), max GZ 3.45 m at 27° | GM 12.79 m (fluid), max GZ 3.42 m at 27° | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `checks[26].message` | GM 13.24 m (fluid), max GZ 3.45 m at 27° | GM 12.90 m (fluid), max GZ 3.42 m at 27° | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `checks[3].message` | freeboard 3.04 m >= required 0.3 m | freeboard 3.01 m >= required 0.3 m | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[14].message` | blind distance ahead of the bow 2767.3 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 6.00 m of 6.00 m | blind distance ahead of the bow 2759.4 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 6.00 m of 6.00 m | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[23].message` | freeboard 2.58 m at the carried draught 3.12 m >= required 0.3 m | freeboard 2.55 m at the carried draught 3.15 m >= required 0.3 m | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[24].message` | GM 3.59 m (fluid), max GZ 1.50 m at 25° | GM 3.52 m (fluid), max GZ 1.46 m at 25° | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[25].message` | GM 3.60 m (fluid), max GZ 1.50 m at 25° | GM 3.53 m (fluid), max GZ 1.46 m at 25° | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[26].message` | GM 10.79 m (fluid), max GZ 2.91 m at 25° | GM 10.45 m (fluid), max GZ 2.87 m at 25° | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[27].message` | GM 8.51 m (fluid), max GZ 3.13 m at 30° | GM 10.52 m (fluid), max GZ 2.87 m at 25° | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[4].message` | freeboard 2.58 m >= required 0.3 m | freeboard 2.55 m >= required 0.3 m | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[3].ballast[0].fill` | 1 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[3].ballast[0].free_surface_moment_tm` | 0 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[3].ballast[0].lcg_m` | 69.936 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[3].ballast[0].mass_t` | 482.379157333 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[3].ballast[0].name` | DB1P | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[3].ballast[0].tcg_m` | -4.075 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[3].ballast[0].vcg_m` | 0.293333333333 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[3].ballast[1].fill` | 1 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[3].ballast[1].free_surface_moment_tm` | 0 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[3].ballast[1].lcg_m` | 69.936 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[3].ballast[1].mass_t` | 482.379157333 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[3].ballast[1].name` | DB1S | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[3].ballast[1].tcg_m` | 4.075 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[3].ballast[1].vcg_m` | 0.293333333333 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[3].ballast[0].fill` | 1 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[3].ballast[0].free_surface_moment_tm` | 0 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[3].ballast[0].lcg_m` | 69.936 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[3].ballast[0].mass_t` | 482.379157333 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[3].ballast[0].name` | DB1P | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[3].ballast[0].tcg_m` | -4.075 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[3].ballast[0].vcg_m` | 0.293333333333 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[3].ballast[1].fill` | 1 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[3].ballast[1].free_surface_moment_tm` | 0 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[3].ballast[1].lcg_m` | 69.936 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[3].ballast[1].mass_t` | 482.379157333 | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[3].ballast[1].name` | DB1S | absent | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[3].ballast[1].tcg_m` | 4.075 | absent | changed |
-| ... | 69702 more changed quantities | | | |
 
 ### ticket/331-integral-tanks (2026-10-22)
 
