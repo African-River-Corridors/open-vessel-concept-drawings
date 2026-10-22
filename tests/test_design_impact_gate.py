@@ -22,11 +22,12 @@ FAKE_CARGO = textwrap.dedent('''\
     mkdir -p "$CARGO_TARGET_DIR/debug"
     exe="$CARGO_TARGET_DIR/debug/ovcd"
     factor=$(cat factor.txt)
+    extra=$(cat extra.txt 2>/dev/null || echo 0)
     cat > "$exe" <<EOS
     #!/bin/sh
     case "\\$1" in
       fill) if [ "$factor" = dead ]; then echo "error: refused" >&2; exit 1; fi; if [ "\\$2" = --as-new ]; then shift; fi; cp "\\$2" "\\$3" ;;
-      run) echo '{"options":[{"name":"x","results":{"results":{"cargo_t":$factor,"governs":"hold"},"checks":[]}}]}' ;;
+      run) echo '{"options":[{"name":"x","results":{"results":{"cargo_t":$factor,"governs":"hold","extra":$extra},"checks":[]}}]}' ;;
     esac
     EOS
     chmod +x "$exe"
@@ -99,7 +100,7 @@ def test_a_moving_branch_without_the_changelog_table_fails(tmp_path):
     r = fx.run()
     assert r.returncode == 1
     assert "design change" in r.stdout
-    assert "no changelog fragment holds the table" in r.stderr
+    assert "no changelog fragment names the rows moved" in r.stderr
 
 
 def test_the_same_branch_passes_once_the_changelog_holds_the_table(tmp_path):
@@ -127,7 +128,8 @@ def test_the_old_form_still_passes_during_the_move(tmp_path):
     assert "### feature" in (fx.root / "CHANGELOG.md").read_text()
 
 
-def test_a_table_for_an_older_move_does_not_cover_a_new_one(tmp_path):
+def test_a_table_for_the_same_rows_passes_when_the_numbers_are_older(tmp_path):
+    """Issue #625: a merge on main changes the "before" numbers; the rows the branch moves are the same."""
     fx = branch(tmp_path)
     fx.write("factor.txt", "11\n")
     fx.commit("move")
@@ -135,7 +137,56 @@ def test_a_table_for_an_older_move_does_not_cover_a_new_one(tmp_path):
     fx.commit("changelog")
     fx.write("factor.txt", "12\n")
     fx.commit("move again")
+    r = fx.run()
+    assert r.returncode == 0, r.stderr
+
+
+def test_a_table_that_lacks_a_moved_row_fails(tmp_path):
+    fx = branch(tmp_path)
+    fx.write("factor.txt", "11\n")
+    fx.commit("move")
+    fx.run("changelog")
+    fx.commit("changelog")
+    fx.write("extra.txt", "5\n")  # a second quantity moves
+    fx.commit("move another row")
+    r = fx.run()
+    assert r.returncode == 1
+    assert "no changelog fragment names the rows moved" in r.stderr
+
+
+def test_a_table_that_names_a_row_that_does_not_move_fails(tmp_path):
+    fx = branch(tmp_path)
+    fx.write("factor.txt", "11\n")
+    fx.write("extra.txt", "5\n")
+    fx.commit("move two rows")
+    fx.run("changelog")
+    fx.commit("changelog")
+    (fx.root / "extra.txt").write_text("0\n")  # the second row stops moving
+    fx.commit("back")
     assert fx.run().returncode == 1
+
+
+def test_a_fragment_with_no_table_fails(tmp_path):
+    fx = branch(tmp_path)
+    fx.write("factor.txt", "11\n")
+    fx.commit("move")
+    (fx.root / "changes").mkdir()
+    fx.write("changes/feature.md", "<!-- unreleased -->\n- A change.\n")
+    fx.commit("a fragment without a table")
+    assert fx.run().returncode == 1
+
+
+def test_the_table_parser_and_the_matcher_with_a_long_table():
+    sys.path.insert(0, str(ROOT / "tools"))
+    import design_impact as di
+    rows = [{"case": f"c{i}", "quantity": f"q|{i}", "before": 1, "after": 2, "change": "+100 %"} for i in range(di.MAX_ROWS + 7)]
+    text = di.table(rows)
+    named, more = di.table_rows(text)
+    assert len(named) == di.MAX_ROWS and more == 7
+    assert di.names_the_moved_rows(text, rows)
+    assert not di.names_the_moved_rows(text, rows[:-1])  # one fewer moved row than the table counts
+    assert not di.names_the_moved_rows(text, rows + [dict(rows[0], case="new")])  # one more
+    assert di.table_rows("no table here") is None
 
 
 def test_a_failed_base_build_fails_the_gate(tmp_path):
