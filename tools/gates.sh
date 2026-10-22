@@ -26,6 +26,13 @@
 #
 # OVCD_PYTHON picks the Python for steps 3, 6 and 7 (default python3).
 # GATES_NEXTEST_PROFILE picks `pr` (default) or `nightly`.
+#
+# CI runs the steps in parallel jobs (issue #561). GATES_STEPS is a comma list of step groups: `lint`
+# (steps 1 to 3), `rust` (step 4), `rules` (steps 4a and 5), `impact` (step 6) and `pytest` (step 7).
+# It is unset for the whole gate. A group that is named runs in full; a name that is not a group fails.
+# GATES_PARTITION=k/N runs partition k of N of the Rust tests (cargo nextest --partition hash:k/N);
+# the doctests run with partition 1. The required CI check `test` passes only when every group ran
+# in a job that passed.
 set -euo pipefail
 
 fail() { echo "gates: FAIL: $*" >&2; exit 1; }
@@ -45,6 +52,10 @@ WASM_TARGET="wasm32-unknown-unknown"
 PROFILE="${GATES_NEXTEST_PROFILE:-pr}"
 EXPECTED_STEPS=8
 steps_run=0
+steps_wanted=0
+GROUPS_ALL="lint rust rules impact pytest"
+SELECTED="${GATES_STEPS:-all}"
+PARTITION="${GATES_PARTITION:-}"
 
 need git
 need mktemp
@@ -62,6 +73,16 @@ case "$PROFILE" in
   nightly) PYTEST_SELECT=() ;;
   *) fail "GATES_NEXTEST_PROFILE must be pr or nightly, not '$PROFILE'" ;;
 esac
+if [ "$SELECTED" != all ]; then
+  for g in ${SELECTED//,/ }; do
+    case " $GROUPS_ALL " in *" $g "*) ;; *) fail "GATES_STEPS names '$g', which is not one of: $GROUPS_ALL" ;; esac
+  done
+fi
+case "$PARTITION" in
+  "" | [1-9]/[1-9]) ;;
+  *) fail "GATES_PARTITION must look like 2/4, not '$PARTITION'" ;;
+esac
+selected() { [ "$SELECTED" = all ] || case ",$SELECTED," in *",$1,"*) return 0 ;; *) return 1 ;; esac; }
 [ -d "$(rustc --print target-libdir --target "$WASM_TARGET" 2>/dev/null)" ] \
   || fail "the $WASM_TARGET target is not installed (rustup target add $WASM_TARGET)"
 "$PY" -c "import pytest" 2>/dev/null || fail "pytest is not importable by $PY (pip install -e '.[dev]')"
@@ -70,7 +91,9 @@ esac
 # Note: "$@" runs inside `||`, so bash ignores `set -e` in it. A step that is a shell function
 # must return non-zero on every failure itself (see cargo_test_without_python).
 step() {
-  local name="$1"; shift
+  local group="$1" name="$2"; shift 2
+  selected "$group" || { echo "gates: skipped (not in GATES_STEPS): $name"; return 0; }
+  steps_wanted=$((steps_wanted + 1))
   local start=$SECONDS
   echo "::group::gates: $name"
   "$@" || { echo "::endgroup::"; fail "$name"; }
@@ -91,9 +114,14 @@ cargo_test_without_python() {
   done
   # Explicit `|| return 1`: `step` calls this function inside `||`, where bash ignores `set -e`,
   # so without it a failing cargo test would fall through and the step would report ok.
+  local part=()
+  [ -z "$PARTITION" ] || part=(--partition "hash:$PARTITION")
   PATH="$shims:$PATH" OVCD_PYTHON="$shims/python3" \
-    cargo nextest run --profile "$PROFILE" --all-features --no-tests=fail || return 1
-  PATH="$shims:$PATH" OVCD_PYTHON="$shims/python3" cargo test --doc --all-features || return 1
+    cargo nextest run --profile "$PROFILE" --all-features --no-tests=fail ${part[@]+"${part[@]}"} || return 1
+  # The doctests are not partitioned: they run once, with the first partition.
+  case "$PARTITION" in
+    "" | 1/*) PATH="$shims:$PATH" OVCD_PYTHON="$shims/python3" cargo test --doc --all-features || return 1 ;;
+  esac
   if [ -e "$marker" ]; then
     echo "gates: cargo test called Python:" >&2
     cat "$marker" >&2
@@ -101,14 +129,20 @@ cargo_test_without_python() {
   fi
 }
 
-step "cargo fmt --check" cargo fmt --all --check
-step "clippy -D warnings" cargo clippy --all-targets --all-features -- -D warnings
-step "clippy ovcd-py -D warnings" env PYO3_PYTHON="$PY" cargo clippy -p ovcd-py --all-targets --all-features -- -D warnings
-step "cargo test (no Python)" cargo_test_without_python
-step "Rule Set gate" cargo run -q -p ovcd-cli -- rules --provenance
-step "WebAssembly build of ovcd-core and ovcd-web" cargo build -p ovcd-core -p ovcd-web --all-features --target "$WASM_TARGET"
-step "design impact" "$PY" tools/design_impact.py gate
-step "pytest" "$PY" -m pytest -q -n auto ${PYTEST_SELECT[@]+"${PYTEST_SELECT[@]}"}
+step lint "cargo fmt --check" cargo fmt --all --check
+step lint "clippy -D warnings" cargo clippy --all-targets --all-features -- -D warnings
+step lint "clippy ovcd-py -D warnings" env PYO3_PYTHON="$PY" cargo clippy -p ovcd-py --all-targets --all-features -- -D warnings
+step rust "cargo test (no Python)" cargo_test_without_python
+step rules "Rule Set gate" cargo run -q -p ovcd-cli -- rules --provenance
+step rules "WebAssembly build of ovcd-core and ovcd-web" cargo build -p ovcd-core -p ovcd-web --all-features --target "$WASM_TARGET"
+step impact "design impact" "$PY" tools/design_impact.py gate
+step pytest "pytest" "$PY" -m pytest -q -n auto ${PYTEST_SELECT[@]+"${PYTEST_SELECT[@]}"}
 
-[ "$steps_run" -eq "$EXPECTED_STEPS" ] || fail "only $steps_run of $EXPECTED_STEPS steps ran"
-echo "gates: all $EXPECTED_STEPS steps passed in $SECONDS s"
+if [ "$SELECTED" = all ]; then
+  [ "$steps_run" -eq "$EXPECTED_STEPS" ] || fail "only $steps_run of $EXPECTED_STEPS steps ran"
+  echo "gates: all $EXPECTED_STEPS steps passed in $SECONDS s"
+else
+  [ "$steps_wanted" -gt 0 ] && [ "$steps_run" -eq "$steps_wanted" ] \
+    || fail "only $steps_run of $steps_wanted selected steps ran (GATES_STEPS=$SELECTED)"
+  echo "gates: the $steps_run steps of $SELECTED passed in $SECONDS s"
+fi

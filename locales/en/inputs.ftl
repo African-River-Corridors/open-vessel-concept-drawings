@@ -180,6 +180,10 @@ input-weather-shield-thickness-mm = Weather shield plate thickness
 
 input-weather-shield-clearance-m = Weather shield clearance over the tanks
 
+input-tank-forming-allowance-pct = Tank plate forming allowance
+
+input-tank-dome-wall-thickness-mm = Tank dome wall thickness
+
 input-tank-wall-thickness-mm = Tank wall thickness (override)
 
 input-optimise-depth = Optimise depth

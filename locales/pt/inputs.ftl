@@ -207,6 +207,12 @@ input-weather-shield-thickness-mm = Espessura da chapa da cobertura de proteçã
 input-weather-shield-clearance-m = Folga da cobertura de proteção sobre os tanques
 
 # status: draft
+input-tank-forming-allowance-pct = Sobreespessura de conformação da chapa do tanque
+
+# status: draft
+input-tank-dome-wall-thickness-mm = Espessura da parede do domo do tanque
+
+# status: draft
 input-tank-wall-thickness-mm = Espessura da parede do tanque (substituição)
 
 # status: draft

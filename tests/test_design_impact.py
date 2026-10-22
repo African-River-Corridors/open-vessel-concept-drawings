@@ -165,7 +165,7 @@ def test_publish_replaces_its_own_block_in_the_pr_body(tmp_path, monkeypatch):
 
 def test_the_fast_gate_runs_the_check_and_counts_it():
     gates = (ROOT / "tools" / "gates.sh").read_text(encoding="utf-8")
-    assert 'step "design impact" "$PY" tools/design_impact.py gate' in gates
+    assert 'step impact "design impact" "$PY" tools/design_impact.py gate' in gates
     steps = [line for line in gates.splitlines() if line.startswith("step ")]
     expected = next(line for line in gates.splitlines() if line.startswith("EXPECTED_STEPS="))
     assert expected == f"EXPECTED_STEPS={len(steps)}"

@@ -165,6 +165,14 @@
           "value": 1.5,
           "source": "default"
         },
+        "tank_forming_allowance_pct": {
+          "value": 0.0,
+          "source": "default"
+        },
+        "tank_dome_wall_thickness_mm": {
+          "value": 0.0,
+          "source": "default"
+        },
         "tank_wall_thickness_mm": {
           "value": 25.0,
           "source": "default"
