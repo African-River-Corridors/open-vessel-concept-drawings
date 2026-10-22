@@ -10,7 +10,8 @@ If anything moved, the report holds a before/after table.
     python3 tools/design_impact.py report [--publish --pr N]   report only, never fails on a change
     python3 tools/design_impact.py gate                        report, and fail when a change is
                                                                missing from CHANGELOG.md
-    python3 tools/design_impact.py changelog [--key NAME]      write the table into CHANGELOG.md
+    python3 tools/design_impact.py changelog [--key NAME]      write the table into changes/<branch>.md
+                                                               (--legacy: into CHANGELOG.md, as before)
     python3 tools/design_impact.py publish-artifact DIR --head-sha SHA --head-repo OWNER/NAME
                                                                publish a report built by a pull request
                                                                workflow (used for fork pull requests)
@@ -41,6 +42,9 @@ import time
 from pathlib import Path
 
 import yaml
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from changelog_fragments import (fragment_holds, fragment_problems, write_impact)  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "target" / "design-impact"
@@ -911,6 +915,34 @@ def changelog_has(tbl: str) -> bool:
     return CHANGELOG.exists() and tbl in CHANGELOG.read_text(encoding="utf-8")
 
 
+def recorded(tbl: str) -> bool:
+    """Whether the table is recorded: in a changelog fragment (changes/*.md) or, during the move to
+    fragments (issue #560), in CHANGELOG.md."""
+    return fragment_holds(tbl) or changelog_has(tbl)
+
+
+def merge_group_problems(base_sha: str) -> list[str]:
+    """What is wrong with the changelog records of a merge group. The combined table of several pull
+    requests equals none of their fragments, so a merge group is not held to one table. The group must
+    still record its change: it adds at least one fragment, or changes CHANGELOG.md, and every fragment
+    it adds is well formed. The pull request run is the strict check (issue #560)."""
+    added = git("diff", "--name-only", "--diff-filter=AM", f"{base_sha}...HEAD", "--", "changes", "CHANGELOG.md",
+                check=False).splitlines()
+    new = [ROOT / n for n in added if n.startswith("changes/") and n.endswith(".md") and not n.endswith("README.md")]
+    out = []
+    for path in new:
+        out += [f"{path.name}: {why}" for why in fragment_problems(path.read_text(encoding="utf-8"))]
+    if not new and "CHANGELOG.md" not in added:
+        out.append("the merge group moves designs but adds no changelog fragment and does not change CHANGELOG.md")
+    return out
+
+
+def write_fragment(tbl: str, key: str, base: str, head: str) -> Path:
+    """Write the entry into this branch's fragment (changes/<branch>.md), keeping its bullets."""
+    today = datetime.date.today().isoformat()
+    return write_impact(key, f"### {key} ({today})\n\nBetween `{base}` and `{head}`.\n\n{tbl}\n")
+
+
 def write_changelog(tbl: str, key: str, base: str, head: str) -> None:
     """Add (or replace, by `key`) one entry under "Design changes", newest first.
 
@@ -950,6 +982,8 @@ def main() -> int:
     ap.add_argument("--publish", action="store_true", help="report: put the report in the PR body and set the label")
     ap.add_argument("--pr", type=int, help="the pull request number for --publish")
     ap.add_argument("--key", help="changelog entry name (default: the branch)")
+    ap.add_argument("--legacy", action="store_true",
+                    help="changelog: write the entry into CHANGELOG.md, not a fragment (the old form)")
     args = ap.parse_args()
     if args.mode == "publish-artifact":
         if not (args.artifact_dir and args.head_sha and args.head_repo):
@@ -965,18 +999,29 @@ def main() -> int:
         publish(text, bool(rows), args.pr)
     if args.mode == "changelog":
         if not rows:
-            print("design_impact: no design change; nothing to write to CHANGELOG.md")
+            print("design_impact: no design change; nothing to write to the changelog")
             return 0
-        write_changelog(tbl, args.key or branch_key(), base, head)
-        print(f"design_impact: wrote CHANGELOG.md ({args.key or branch_key()})")
+        key = args.key or branch_key()
+        if args.legacy:
+            write_changelog(tbl, key, base, head)
+            print(f"design_impact: wrote CHANGELOG.md ({key})")
+        else:
+            print(f"design_impact: wrote {write_fragment(tbl, key, base, head).relative_to(ROOT)}")
         return 0
     if args.mode == "gate" and base_total is not None and total < base_total:
         print(f"design_impact: this branch runs {total} cases but the base commit runs {base_total}. "
               "Removing cases weakens the check; keep every case, or ask a maintainer.", file=sys.stderr)
         return 1
-    if args.mode == "gate" and rows and ahead and not changelog_has(tbl):
-        print("design_impact: this branch moves designs but CHANGELOG.md does not hold the table above.\n"
-              "  Run: python3 tools/design_impact.py changelog   and commit CHANGELOG.md", file=sys.stderr)
+    if args.mode == "gate" and rows and ahead and os.environ.get("GITHUB_EVENT_NAME") == "merge_group":
+        bad = merge_group_problems(base_sha=base.split()[-1])
+        if bad:
+            print("design_impact: the merge group moves designs and its changelog records are not in order:\n  "
+                  + "\n  ".join(bad), file=sys.stderr)
+            return 1
+        return 0
+    if args.mode == "gate" and rows and ahead and not recorded(tbl):
+        print("design_impact: this branch moves designs but no changelog fragment holds the table above.\n"
+              "  Run: python3 tools/design_impact.py changelog   and commit changes/<branch>.md", file=sys.stderr)
         return 1
     return 0
 
