@@ -346,6 +346,19 @@ pub(crate) fn capacity_result_from_json(
             })
         }
     };
+    // Issue #448: the hull the result was worked on. The JSON holds no Stern Form, and its
+    // dimensions only in a gas basis.
+    let bow_rake = o.opt_f64("bow_rake_length_m")?;
+    let hull_spec = gas_basis
+        .as_ref()
+        .map(|b| ovcd_core::hydrostatics::HullSpec {
+            loa: b.inputs.loa,
+            beam: b.inputs.beam,
+            depth: b.inputs.depth,
+            bow_rake_length_m: bow_rake.unwrap_or(0.0),
+            bow_rake_rise_m: b.inputs.depth,
+            stern: None,
+        });
     Ok(BargeCapacityResult {
         cargo_type: o.string("cargo_type")?,
         phase: CargoClass::from_key(&o.string("phase")?).map_err(EvalError::BadInput)?,
@@ -400,6 +413,7 @@ pub(crate) fn capacity_result_from_json(
         stern_block_items: Vec::new(),
         trim_conditions: Vec::new(),
         stern_geometry: None,
+        hull_spec,
         sightline: None,
         blind_distance_laden_m: None,
         checks: o.checks("checks")?,
@@ -424,6 +438,11 @@ mod tests {
             // The tank values of the Rule Trace are not written to JSON (issue #271).
             let mut written = result.clone();
             written.tank_rules = None;
+            // Issue #448: the JSON holds the hull's dimensions only in a gas basis, so a dry
+            // result comes back with no hull.
+            if written.gas_basis.is_none() {
+                written.hull_spec = None;
+            }
             assert_eq!(back, written, "{cargo}");
         }
     }

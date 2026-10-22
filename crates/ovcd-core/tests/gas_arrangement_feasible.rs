@@ -22,7 +22,6 @@ fn stability_ok(f: &ArrangementFit) -> bool {
     gs::assess(
         &basis,
         f.payload_t,
-        0.85,
         gs::DEFAULT_WATER_DENSITY,
         gs::criteria_set_for(&f.ruleset),
     )
@@ -41,7 +40,8 @@ fn options(depth: f64) -> FitOptions {
 #[test]
 fn the_most_cargo_arrangement_fails_stability_and_a_smaller_one_that_passes_is_returned() {
     // 110 x 11.4 x 6.0 m LPG propane, draught cap 5.7 m. Only the base arrangement (no extra side
-    // clearance) is searched: it is the one the old `fit` returned (2,808 t) and it fails laden stability.
+    // clearance) is searched: it is the one the old `fit` returned (2,808 t) and it fails stability
+    // (laden on the Cb box; light on the hull's sections, issue #448).
     let only_most_cargo = FitOptions {
         extra_clearance_m: vec![],
         ..options(6.0)
@@ -53,7 +53,7 @@ fn the_most_cargo_arrangement_fails_stability_and_a_smaller_one_that_passes_is_r
         worst
             .failed_checks
             .iter()
-            .any(|c| c.starts_with("Stability \u{2014} laden")),
+            .any(|c| c.starts_with("Stability \u{2014} ")),
         "{:?}",
         worst.failed_checks
     );
@@ -253,7 +253,10 @@ fn the_is_code_cargo_is_the_payload_less_the_consumables_only_when_the_draught_b
     let ic = o.is_code.as_ref().unwrap();
     let f = fit(110.0, 11.4, "LPG_propane", 5.7, &options(6.0)).unwrap();
     let r = &f.engine_result;
-    let room = 0.85 * 110.0 * 11.4 * 5.7 * gs::DEFAULT_WATER_DENSITY - r.lightship_t - 60.0;
+    // Issue #448: the hull's displacement at the draught cap, from its sections (it was
+    // 0.85 x L x B x T).
+    let hull = ovcd_core::hydrostatics::Hull::build(r.hull_spec.as_ref().unwrap()).unwrap();
+    let room = hull.volume_at(5.7) * gs::DEFAULT_WATER_DENSITY - r.lightship_t - 60.0;
     // A payload above the room left by the stores and fuel is cut to it.
     assert_eq!(
         is_code_cargo(r, room + 100.0, 110.0, 11.4, 5.7, &o, ic),

@@ -89,7 +89,8 @@ fn a_dry_bulk_result_has_no_tank_geometry_and_no_tank_count_across() {
     let (gi, gr) = to_ga(&i, &r, None, true).unwrap();
     assert_eq!(gi.n_tanks_wide, None);
     assert!(gr.tanks.is_none());
-    assert_eq!(gr.draft, 4.603855133056641);
+    // Re-pinned (#448); was 4.603855133056641.
+    assert_eq!(gr.draft, 4.174619567699056);
     assert_eq!(gi.inputs.tug_length, 0.0);
 }
 

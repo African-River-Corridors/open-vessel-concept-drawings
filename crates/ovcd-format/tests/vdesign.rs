@@ -149,8 +149,8 @@ fn check_refuses_a_file_that_leaves_out_optional_inputs_and_names_them() {
     assert!(
         has(
             &e,
-            "Option 'A': inputs not stored in the file: cargo_containment, block_coefficient, \
-             min_freeboard_m, lightship_factor_t_per_m3, propulsive_efficiency"
+            "Option 'A': inputs not stored in the file: cargo_containment, min_freeboard_m, \
+             lightship_factor_t_per_m3, propulsive_efficiency"
         ),
         "{e:?}"
     );
@@ -199,12 +199,12 @@ fn a_profile_edit_never_changes_the_inputs_of_a_filled_file() {
 fn a_stored_default_is_kept_even_when_the_profile_now_says_otherwise() {
     let inputs = with(
         required("bauxite"),
-        "block_coefficient",
-        json!({ "value": 0.9, "source": "default" }),
+        "water_density_t_per_m3",
+        json!({ "value": 1.02, "source": "default" }),
     );
     assert_eq!(
-        used(inputs, "block_coefficient"),
-        (json!(0.9), Source::Default)
+        used(inputs, "water_density_t_per_m3"),
+        (json!(1.02), Source::Default)
     );
 }
 
@@ -409,10 +409,10 @@ fn every_built_in_default_lies_inside_its_own_soft_range() {
 #[test]
 fn a_profile_with_a_default_outside_its_hard_range_is_refused() {
     let mut p: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
-    p["inputs"]["block_coefficient"]["default"] = json!(1.5);
+    p["inputs"]["water_density_t_per_m3"]["default"] = json!(1.5);
     let err = Profile::from_json(&p.to_string()).unwrap_err();
     assert!(
-        err.contains("`block_coefficient` = 1.5 is out of range"),
+        err.contains("`water_density_t_per_m3` = 1.5 is out of range"),
         "{err}"
     );
 }
@@ -567,16 +567,13 @@ fn a_soft_range_includes_both_ends() {
 #[test]
 fn a_profile_soft_range_with_min_equal_to_max_is_accepted() {
     let profile = edited_profile(|p| {
-        p["inputs"]["block_coefficient"]["soft"] = json!({ "min": 0.85, "max": 0.85 });
+        p["inputs"]["water_density_t_per_m3"]["soft"] = json!({ "min": 1.0, "max": 1.0 });
     })
     .expect("min == max is a valid soft range");
     let checked = check(&design_with(required("bauxite")), &profile);
-    assert!(!has(
-        &checked.report.warnings,
-        "`block_coefficient` = 0.85 is outside"
-    ));
+    assert!(!has(&checked.report.warnings, "`water_density_t_per_m3` ="));
     let err = edited_profile(|p| {
-        p["inputs"]["block_coefficient"]["soft"] = json!({ "min": 0.9, "max": 0.85 });
+        p["inputs"]["water_density_t_per_m3"]["soft"] = json!({ "min": 1.05, "max": 1.0 });
     })
     .unwrap_err();
     assert!(err.contains("min above max"), "{err}");
@@ -647,8 +644,8 @@ fn show_writes_a_formation_as_a_person_reads_it() {
     assert_eq!(show(&json!("bauxite")), "bauxite");
 }
 
-// A profile may tighten a hard range but never loosen it. Built-in: `block_coefficient` is
-// `>= 0.3, <= 1`; `propulsive_efficiency` is `> 0, < 1`.
+// A profile may tighten a hard range but never loosen it. Built-in: `water_density_t_per_m3` is
+// `>= 0.9, <= 1.1`; `propulsive_efficiency` is `> 0, < 1`.
 
 fn loads_with_hard(name: &str, hard: Value) -> bool {
     let mut p: Value = serde_json::from_str(Profile::built_in_text()).unwrap();
@@ -665,11 +662,11 @@ fn loads_with_hard(name: &str, hard: Value) -> bool {
 #[test]
 fn a_profile_hard_range_is_refused_when_it_admits_a_value_the_built_in_refuses() {
     let looser = [
-        ("block_coefficient", json!({ "gt": 0, "le": 1 })),
-        ("block_coefficient", json!({ "ge": 0.3, "le": 1.5 })),
+        ("water_density_t_per_m3", json!({ "gt": 0.8, "le": 1.1 })),
+        ("water_density_t_per_m3", json!({ "ge": 0.9, "le": 1.5 })),
         (
-            "block_coefficient",
-            json!({ "ge": 0.25, "gt": 0.2, "le": 1 }),
+            "water_density_t_per_m3",
+            json!({ "ge": 0.85, "gt": 0.8, "le": 1.1 }),
         ),
         ("propulsive_efficiency", json!({ "gt": 0, "lt": 2 })),
         // Same value, but the bound now admits it: `>= 0` where the built-in says `> 0`.
@@ -684,24 +681,24 @@ fn a_profile_hard_range_is_refused_when_it_admits_a_value_the_built_in_refuses()
 #[test]
 fn a_profile_hard_range_that_admits_only_values_the_built_in_admits_loads() {
     let tighter = [
-        ("block_coefficient", json!({ "ge": 0.3, "le": 1 })),
-        ("block_coefficient", json!({ "gt": 0.3, "le": 0.9 })),
+        ("water_density_t_per_m3", json!({ "ge": 0.9, "le": 1.1 })),
+        ("water_density_t_per_m3", json!({ "gt": 0.9, "le": 1.05 })),
         // Both bounds apply, so the tighter one governs, whichever kind it is.
         (
-            "block_coefficient",
-            json!({ "gt": 0.1, "ge": 0.4, "le": 1 }),
+            "water_density_t_per_m3",
+            json!({ "gt": 0.5, "ge": 0.95, "le": 1.1 }),
         ),
         (
-            "block_coefficient",
-            json!({ "gt": 0.4, "ge": 0.1, "le": 1 }),
+            "water_density_t_per_m3",
+            json!({ "gt": 0.95, "ge": 0.5, "le": 1.1 }),
         ),
         (
-            "block_coefficient",
-            json!({ "ge": 0.3, "lt": 2, "le": 0.9 }),
+            "water_density_t_per_m3",
+            json!({ "ge": 0.9, "lt": 2, "le": 1.05 }),
         ),
         (
-            "block_coefficient",
-            json!({ "ge": 0.3, "lt": 0.9, "le": 2 }),
+            "water_density_t_per_m3",
+            json!({ "ge": 0.9, "lt": 1.05, "le": 2 }),
         ),
         // Two bounds at the same value: the strict one governs.
         (

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Design change (issue #448, spec 0008): hydrostatics and stability come from the hull's Sections Table (the raked bow and the Stern Form), not from a box with a block coefficient. Draught: the level draught of the sections, or at free trim (Illinois secant, 16/12 steps, trim within 10 degrees) where the hull has LCG data; the reported `draught_m` is then the mid-length draught. KM_T is the upright cut's; GZ is the sections' free-trim curve. The main path, the IS Code and legacy loading conditions, `gas_stability::assess`, journey de-rating, the gas arrangement search, resistance and squat take the hull's displacement, Cb, L_WL and midship area. **Cb is a result** (V / (L_WL B_WL T) at the laden level draught, ES-TRIN 2025/1 Article 1.01, 4.9): `block_coefficient` leaves format v3, and a file that stores it opens with one warning per Option. New result keys `hydrostatics` (the upright values at the laden level draught) and `hydrostatic_table` (10 draughts, 0.1 D to D), shown in the app's results. A condition with no balance within 10 degrees of trim keeps its level draught and fails `trim_in_range`. The Design session no longer runs the engine on each edit (it stamped a hash it never read). The shaft-nozzle propulsor efficiency factor is refitted, 0.447 to 0.437 (the calibration harness writes it). Weights and the resistance wetted surface stay box-based. In a Design the midship section is the hull's own, so the `midship_coefficient` input of #425 has no effect there (it applies in the Python API); #535 takes it out of format v3. Python API: the legacy functions take the sections (Cb no longer counts twice); a NaN or infinite length is refused ("length, beam and moulded depth must be positive numbers"; 0.1.0 gave 0 t and inf t). Design impact: 224 of 224 cases move (`main e706115`; #546 since then adds liquid Measures only). Cb reads 0.79 to 0.99 (median 0.96). Dry bulk: 72 of 107 carry more cargo, median +13.3 %, up to +16.9 % (a draught-bound hold had the volume of Cb 0.85); 4 self-propelled 90 x 14 m cases now fail `trim_in_range` in the Laden condition, which they passed before. Gas: 91 of 99 feasible before and after; 7 carry more cargo (up to +27 %, the draught-bound channel cases). Crude oil: 17 of 18 feasible before and after; no case carries more cargo. Many more hulls now fail IS Code 2008 Part A 2.2.3 (angle of maximum GZ of at least 25 degrees) in the Light condition, narrow ones too (#498). Fixture and legacy hashes re-stamped from `ovcd run`.
 - Rules (issue #337, spec 0006 section 5.3): the liquid bulk Measures, in the registry and read from the `LiquidBulkResult` only (`Measured::liquid`). `hull.double_side_width` (m), `hull.double_bottom_height` (m) and `hull.lbh` (m3; L x B x H as ADN 2025 9.3.2.11.1 (a) defines it for the tank capacity table: the overall length of the hull, the extreme breadth and the moulded depth) are on the hull object; `cargo-tank.volume` (m3) and `cargo-tank.length` (m) are on the cargo tank object, one per cargo tank (a port and a starboard tank beside a centreline bulkhead are two); `option.deadweight` (t), `option.cargo_capacity_m3` (the gross volume of the cargo tanks, slop excluded) and `option.slop_capacity_share` (the slop tanks over the cargo and slop tanks) are on the Option. The hull, cargo tank, ballast tank and slop tank objects now list the Spaces of the layout. A Rule on a liquid Measure is `not applicable` for a Design with no liquid layout. All are `unverified`. No Rule Set uses them yet, so no result and no Rule Trace moves; the loading condition Measures (`gz.*`, `gm0`) are unchanged.
 - Stability (issue #332, spec 0006 sections 2 and 4): a crude oil run has the IS Code loading conditions with its cargo tanks, and a worst slack-tank condition. `loading_conditions` and `stability` are in the results of an `integral_tanks` Option (they were absent). The four conditions of IS Code 2008 Part B 3.4.1.2 are those of the dry bulk path: departure and arrival laden (10 % stores and fuel on arrival), ballast departure and arrival with the double bottom, peak and wing ballast Spaces, and "Lightship, no ballast" where the vessel may sail that way. The cargo is spread alike over the tanks of the layout (`loading_conditions::LiquidCargo`): a tank at 98 % or more is nominally full and has no free surface; a slack tank has the free surface of its section, rho x l x b^3 / 12, a quarter as much with a centreline bulkhead. The worst slack-tank condition (`assess_slack`, the new role `slack_cargo`, named "Slack cargo tanks, worst case") is the departure condition with the tanks filled alike to the part load, from 5 % to 95 % of the gross volume in steps of 5 %, whose fluid GM is the lowest. Every liquid condition lists its weights and where they are (`weights`: the lightship, the cargo, the stores and fuel, each ballast tank; their sum is the displacement and their mean KG is the condition's KG). Gas and dry bulk results are unchanged: the `weights` key is for liquid conditions only. The checks are warnings, and the liquid conditions stay out of the Rule Trace until the liquid Rule Sets exist (the angle of maximum GZ of a low-freeboard barge at light and slack loads misses 25 degrees, as for dry bulk, issue #498). The evaluation harness has two liquid cases in the `box` form with free surface (`liquid_slack`, `liquid_slack_centreline`), written by the oracle from closed forms: 0 false passes, 0 false fails. A warning that stability is computed with the IS Code conditions only replaces the one of the first crude oil ticket (`warn-liquid-legacy-conditions`). The design-impact cases of crude oil move (the table below); no other case moves.
 - OVCD Checks of the stern, second slice (issue #355, part): three Rules folded into the unreleased `ovcd` 2.1.0 (minor, Rules added; no Measure is dropped or changed): `ovcd/powering/installed-covers-design-speed` (the lowest service speed of any environment over the Design Speed is at least 1, `block`), `ovcd/wheelhouse/lift-enough` (the lift the Blind Distance needs is within the maximum lift, a check, `block`) and `ovcd/powering/shallow-water-validity` (h/T of the design channel at least 2.0, `warn`, method-validity). New Measures `powering.speed_over_design`, `wheelhouse.lift_enough` and `powering.depth_over_draught`, read from the result's `powering` and `sightline` blocks and the channel input, so a candidate of the arrangement search has none and the fit is unchanged. The other OVCD Checks of the spec table wait for outputs the results do not carry: propeller fits the stern, immersion at the light draught and blade load (propulsor outputs), machinery fits and tug proportions (machinery and tug outputs). The stored hash of `ovcd` 2.1.0 changed (it is a draft), so the fixtures store the new one. No result moves.
@@ -236,6 +237,54 @@ Notes:
 Each entry is a before/after table written by `python3 tools/design_impact.py changelog` when a
 branch moved the results of the fixed design set. No sign-off is needed; the entries are kept so
 a change can be traced later. Newest first.
+
+### ticket/448-sections-hydrostatics (2026-10-22)
+
+Between `main e706115` and `this branch 52d6517`.
+
+| Case | Quantity | Before | After | Change |
+|---|---|---|---|---|
+| calibration amaggi-box-2000 | `checks[10].message` | GM 6.02 m (fluid), max GZ 1.76 m at 25° | GM 6.49 m (fluid), max GZ 1.84 m at 25° | changed |
+| calibration amaggi-box-2000 | `checks[11].message` | GM 15.42 m (fluid), max GZ 2.76 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | GM 15.82 m (fluid), max GZ 2.80 m at 23° — fails: Angle of max GZ 23.000 < 25.0 | changed |
+| calibration amaggi-box-2000 | `checks[5].message` | intact GM 1.38 m >= 0.15 m at the reported cargo 1665 t, draught 3.56 m (first-order box; cargo KG of the full hold; KG_light @0.5D) | intact GM 1.53 m >= 0.15 m at the reported cargo 1861 t, draught 3.56 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
+| calibration amaggi-box-2000 | `checks[7].message` | GM 1.38 m (fluid), max GZ 0.23 m at 13° — fails: Area 0–40° 0.074 < 0.09, Area 30–40° -0.006 < 0.03, GZ at ≥ 30° 0.047 < 0.2, Angle of max GZ 13.000 < 25.0 | GM 1.53 m (fluid), max GZ 0.26 m at 13° — fails: Area 30–40° 0.002 < 0.03, GZ at ≥ 30° 0.091 < 0.2, Angle of max GZ 13.000 < 25.0 | changed |
+| calibration amaggi-box-2000 | `checks[8].message` | GM 1.38 m (fluid), max GZ 0.23 m at 13° — fails: Area 0–40° 0.074 < 0.09, Area 30–40° -0.006 < 0.03, GZ at ≥ 30° 0.047 < 0.2, Angle of max GZ 13.000 < 25.0 | GM 1.53 m (fluid), max GZ 0.26 m at 13° — fails: Area 30–40° 0.002 < 0.03, GZ at ≥ 30° 0.091 < 0.2, Angle of max GZ 13.000 < 25.0 | changed |
+| calibration amaggi-box-2000 | `checks[9].message` | GM 6.02 m (fluid), max GZ 1.76 m at 25° | GM 6.49 m (fluid), max GZ 1.84 m at 25° | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].b_wl_m` | absent | 10.67 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].bm_l_m` | absent | 589.989963648 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].bm_t_m` | absent | 22.3580973134 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].cb` | absent | 0.993767697113 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].cm` | absent | 1 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].cp` | absent | 0.993767697113 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].cwp` | absent | 1 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].displacement_t` | absent | 248.168399864 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].draught_m` | absent | 0.427 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].kb_m` | absent | 0.213946313785 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].km_l_m` | absent | 590.203909962 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].km_t_m` | absent | 22.5720436272 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].l_wl_m` | absent | 54.8112 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].lcb_m` | absent | 27.235157051 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].lcf_m` | absent | 27.4056 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].mct_1cm_tm` | absent | 26.7129464807 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].midship_area_m2` | absent | 4.55609 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].tpc_t` | absent | 5.84835504 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].volume_m3` | absent | 248.168399864 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].waterplane_area_m2` | absent | 584.835504 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[0].wetted_surface_m2` | absent | 637.215301819 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[1].b_wl_m` | absent | 10.67 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[1].bm_l_m` | absent | 304.255931468 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[1].bm_t_m` | absent | 11.2478514497 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[1].cb` | absent | 0.987688847884 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[1].cm` | absent | 1 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[1].cp` | absent | 0.987688847884 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[1].cwp` | absent | 1 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[1].displacement_t` | absent | 499.449520416 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[1].draught_m` | absent | 0.854 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[1].kb_m` | absent | 0.428774128888 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[1].km_l_m` | absent | 304.684705597 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[1].km_t_m` | absent | 11.6766255786 | changed |
+| calibration amaggi-box-2000 | `hydrostatic_table[1].l_wl_m` | absent | 55.4944 | changed |
+| ... | 229868 more changed quantities | | | |
 
 ### ticket/332-liquid-conditions (2026-10-22)
 

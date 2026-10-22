@@ -121,7 +121,6 @@ fn new_writes_one_option_with_engine_version_and_si_inputs() {
         "moulded_depth_m",
         "formation",
         "cargo_containment",
-        "block_coefficient",
         "min_freeboard_m",
         "propulsive_efficiency",
         "max_speed_kn",
@@ -151,9 +150,9 @@ fn defaulted_inputs_are_marked_and_distinguishable_from_typed_ones() {
         assert_eq!(inputs[name]["source"], "typed", "{name}: {}", inputs[name]);
     }
     // Everything else came from the built-in Defaults Profile, at its stated values.
-    // Issue #350: the block coefficient's default is none (the rule of the hull and its stern).
+    // Issue #446: the bow rake length's default is none (the bow rake over depth rule).
     assert_eq!(
-        inputs["block_coefficient"],
+        inputs["bow_rake_length_m"],
         json!({ "value": null, "source": "default" })
     );
     assert_eq!(
@@ -256,14 +255,16 @@ fn hard_range_breach_is_refused_with_the_stated_message() {
 }
 
 #[test]
-fn block_coefficient_above_one_is_a_hard_error() {
+fn a_water_density_above_its_hard_maximum_is_a_hard_error() {
     let mut inputs = required_inputs();
-    inputs["block_coefficient"] = json!(1.2);
-    let out = validate_inputs("cb-hard", inputs);
+    inputs["water_density_t_per_m3"] = json!(1.2);
+    let out = validate_inputs("rho-hard", inputs);
     assert!(!out.status.success());
     let text = stdout(&out);
     assert!(
-        text.contains("`block_coefficient` = 1.2 is out of range: must be <= 1 (hard limit)"),
+        text.contains(
+            "`water_density_t_per_m3` = 1.2 is out of range: must be <= 1.1 (hard limit)"
+        ),
         "{text}"
     );
 }
@@ -515,20 +516,22 @@ fn channel_clearance_is_checked_against_its_default_when_not_typed() {
 }
 
 #[test]
-fn block_coefficient_below_point_three_is_a_hard_error_and_point_three_passes() {
+fn a_water_density_below_its_hard_minimum_is_a_hard_error_and_the_minimum_passes() {
     let mut inputs = required_inputs();
-    inputs["block_coefficient"] = json!(0.29);
-    let out = validate_inputs("cb-floor", inputs);
+    inputs["water_density_t_per_m3"] = json!(0.89);
+    let out = validate_inputs("rho-floor", inputs);
     assert!(!out.status.success());
     let text = stdout(&out);
     assert!(
-        text.contains("`block_coefficient` = 0.29 is out of range: must be >= 0.3 (hard limit)"),
+        text.contains(
+            "`water_density_t_per_m3` = 0.89 is out of range: must be >= 0.9 (hard limit)"
+        ),
         "{text}"
     );
     let mut inputs = required_inputs();
-    inputs["block_coefficient"] = json!(0.3);
+    inputs["water_density_t_per_m3"] = json!(0.9);
     inputs["channel_bottom_width_m"] = json!(60.0);
-    let out = validate_inputs("cb-floor-boundary", inputs);
+    let out = validate_inputs("rho-floor-boundary", inputs);
     let text = stdout(&out);
     assert!(out.status.success(), "{text}");
     assert!(text.contains("0 error(s)"), "{text}");
@@ -613,11 +616,11 @@ fn a_profile_may_not_loosen_a_hard_range() {
     let design = dir.join("d.vdesign");
     write_json(&design, &design_with(required_inputs()));
     for hard in [
-        json!({ "gt": 0, "le": 1 }),
-        json!({ "ge": 0.3 }),
+        json!({ "gt": 0, "le": 1.1 }),
+        json!({ "ge": 0.9 }),
         json!(null),
     ] {
-        let profile = profile_with_hard(&dir, "block_coefficient", hard.clone());
+        let profile = profile_with_hard(&dir, "water_density_t_per_m3", hard.clone());
         let out = ovcd(&[
             "validate",
             "--profile",
@@ -627,8 +630,8 @@ fn a_profile_may_not_loosen_a_hard_range() {
         assert!(!out.status.success(), "{hard}: {}", stdout(&out));
         assert!(
             stderr(&out).contains(
-                "profile loosens the hard range of `block_coefficient`; it must be >= 0.3 \
-                 and <= 1 at least (a profile may tighten a hard range, never loosen it)"
+                "profile loosens the hard range of `water_density_t_per_m3`; it must be >= 0.9 \
+                 and <= 1.1 at least (a profile may tighten a hard range, never loosen it)"
             ),
             "{hard}: {}",
             stderr(&out)
@@ -640,8 +643,11 @@ fn a_profile_may_not_loosen_a_hard_range() {
 fn a_profile_may_tighten_a_hard_range() {
     let dir = temp_dir("profile-tighten");
     let (design, _) = new_design(&dir);
-    for hard in [json!({ "gt": 0.3, "le": 1 }), json!({ "ge": 0.5, "lt": 1 })] {
-        let profile = profile_with_hard(&dir, "block_coefficient", hard.clone());
+    for hard in [
+        json!({ "gt": 0.9, "le": 1.1 }),
+        json!({ "ge": 0.95, "lt": 1.1 }),
+    ] {
+        let profile = profile_with_hard(&dir, "water_density_t_per_m3", hard.clone());
         let out = ovcd(&[
             "validate",
             "--profile",
@@ -662,7 +668,7 @@ fn a_profile_may_tighten_a_hard_range() {
 
 fn edited_profile(dir: &Path) -> PathBuf {
     let mut profile: Value = serde_json::from_slice(&ovcd(&["profile"]).stdout).unwrap();
-    profile["inputs"]["block_coefficient"]["default"] = json!(0.9);
+    profile["inputs"]["water_density_t_per_m3"]["default"] = json!(1.02);
     profile["inputs"]["min_freeboard_m"]["default"] = json!(0.5);
     let path = dir.join("edited.profile.json");
     write_json(&path, &profile);
@@ -865,8 +871,9 @@ fn validate_opens_a_version_1_adn_g_file_as_igc_2g_and_warns() {
     assert!(
         // Three for the version 1 changes, one for the dome diameter a version 1 file lacks (issue
         // #237), one for the hull end input a version 1 file lacks, one for the LPG carriage
-        // condition the file lacks (issue #292: read as fully pressurised).
-        stdout(&out).contains("0 error(s), 6 warning(s)"),
+        // condition the file lacks (issue #292: read as fully pressurised), one for the block
+        // coefficient the file stores, now a result of the hull (issue #448).
+        stdout(&out).contains("0 error(s), 7 warning(s)"),
         "{}",
         stdout(&out)
     );

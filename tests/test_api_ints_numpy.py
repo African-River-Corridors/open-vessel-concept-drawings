@@ -57,16 +57,19 @@ def test_journey_derating_takes_ints_and_numpy_numbers(kind):
     cap = B.compute(B.BargeCapacityInputs(loa=100.0, beam=16.0, depth=6.0, cargo_type="bauxite"))
     d = J.compute(J.JourneyDeratingInputs(capacity=cap, loa=make(100), beam=make(16), depth=make(6),
                                           design_depth_m=make(5), ukc_m=make(1)))
-    # ce96e66: achievable 3889.5246000318816 t, draft-bound, floated at 4
+    # ce96e66: achievable 3889.5246000318816 t, draft-bound, floated at 4. Re-pinned (#448): the
+    # hull's sections give the volume at the draught, so it carries 4439.924600031882 t.
     assert (d.cargo_capacity_t, d.achievable_tonnage_t, d.binding_limit,
-            d.draft_at_achievable_m) == (4710.765684, 3889.5246000318816, "draft", 4)
+            d.draft_at_achievable_m) == (4710.765684, 4439.924600031882, "draft", 4)
 
 
 def test_equilibrium_draft_takes_numpy_numbers():
     """Label: snapshot"""
     hull = H.HullGeometry(90, 15, 7, 0, 7, 0, 7)
-    # ce96e66: 5.92591667175293 (block coefficient np.float32(0.5), exactly 0.5)
-    assert HY.find_equilibrium_draft(hull, np.int64(4000), 1, 7, np.float32(0.5)) == 5.92591667175293
+    # ce96e66: 5.92591667175293 (block coefficient np.float32(0.5), exactly 0.5). Re-pinned (#448):
+    # the hull's sections give the volume and the block coefficient has no effect, so the box
+    # floats at W / (rho L B) = 4000 / (90 x 15).
+    assert HY.find_equilibrium_draft(hull, np.int64(4000), 1, 7, np.float32(0.5)) == 4000 / (90 * 15)
 
 
 @pytest.mark.parametrize("kind", INT_KINDS)

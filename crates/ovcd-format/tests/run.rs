@@ -100,7 +100,8 @@ fn glossary_names_map_to_engine_names() {
     assert_eq!(p["loa_m"], json!(76.5));
     assert_eq!(p["beam_m"], json!(11.4));
     assert_eq!(p["depth_m"], json!(3.5));
-    assert!(p.contains_key("cb") && p.contains_key("freeboard_min_m"));
+    // Issue #448: Cb is a result of the hull's sections, not a param.
+    assert!(!p.contains_key("cb") && p.contains_key("freeboard_min_m"));
     assert!(p.contains_key("lightship_k_t_per_m3"));
     assert!(p.contains_key("eta_d") && p.contains_key("speed_max_kn"));
     // No channel depth: no channel at all.

@@ -37,10 +37,6 @@
           "value": "integral_tanks",
           "source": "typed"
         },
-        "block_coefficient": {
-          "value": null,
-          "source": "default"
-        },
         "midship_coefficient": {
           "value": 1.0,
           "source": "default"
@@ -367,7 +363,7 @@
           "source": "default"
         }
       },
-      "results_hash": "5cbbe77d31ef89ed1287dca253cb9dfdc93c1fa627950d956737645ce1da489a"
+      "results_hash": "641a714681241cbc29d48982192a274a1d6cac560f7a18565b37e95510126ba7"
     }
   ],
   "defaults_profile": "built-in"

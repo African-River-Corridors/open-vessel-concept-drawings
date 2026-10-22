@@ -809,6 +809,20 @@ fn c_for_volume(
     .0
 }
 
+/// The upright, level draught that immerses `volume` m³ (issue #448): the inner solve of
+/// [`equilibrium`] at heel 0 and trim 0, [`VOLUME_STEPS`] steps, no early stop.
+pub fn draught_for_volume(table: &SectionsTable, volume: f64) -> Result<f64, SectionsError> {
+    if volume.is_nan() || volume <= 0.0 {
+        return Err(SectionsError::NotAfloat);
+    }
+    let total = immersed(table, &Waterplane::upright(f64::MAX / 4.0)).volume_m3;
+    if volume >= total {
+        return Err(SectionsError::Sinks);
+    }
+    let mut w = Work::default();
+    Ok(c_for_volume(table, 0.0, 0.0, volume, total, &mut w))
+}
+
 /// The Illinois secant method on a bracket `[a, b]` with `f(a) <= 0 <= f(b)`, `f` rising: a fixed
 /// number of steps, no early stop. Gives the last point and what `f` returned there.
 fn illinois<T>(

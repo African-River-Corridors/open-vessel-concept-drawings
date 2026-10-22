@@ -162,14 +162,9 @@ fn a_dry_bulk_run_uses_the_one_density_everywhere() {
         "dry_bulk_box_hold",
         &[("water_density_t_per_m3", json!(RHO))],
     );
-    let dims = |v: &Value| {
-        (
-            n(v, "dims", "loa_m"),
-            n(v, "dims", "beam_m"),
-            n(v, "dims", "cb"),
-        )
-    };
-    let (l, b, cb) = dims(&sea);
+    // Issue #448: the displacement at the laden draught comes from the hull's sections,
+    // `hydrostatics.volume_m3` times this density.
+    let floated = |v: &Value| n(v, "hydrostatics", "volume_m3") * RHO;
     // Draught bound (this hull): the cargo is what floats to the draught limit at this density.
     assert!(
         sea["results"]["governs"]
@@ -179,25 +174,25 @@ fn a_dry_bulk_run_uses_the_one_density_everywhere() {
     );
     let t_max = n(&sea, "results", "draught_max_m");
     close(
-        n(&sea, "results", "cargo_t") + n(&sea, "results", "lightship_t"),
-        cb * l * b * t_max * RHO,
-        1e-12,
-        "cargo floats to the limit",
-    );
-    close(
         n(&sea, "results", "draught_m"),
         t_max,
-        1e-12,
+        1e-9,
         "draught at the limit",
     );
     close(
+        n(&sea, "results", "cargo_t") + n(&sea, "results", "lightship_t"),
+        floated(&sea),
+        1e-9,
+        "cargo floats to the limit",
+    );
+    close(
         n(&sea, "results", "cargo_weight_bound_t") + n(&sea, "results", "lightship_t"),
-        cb * l * b * t_max * RHO,
-        1e-12,
+        floated(&sea),
+        1e-9,
         "weight bound",
     );
     // Volume bound (a part-filled hold): the displacement is lightship plus cargo whatever the
-    // density, so the draught times the density does not change.
+    // density, so denser water floats the same mass higher.
     let part = [("hold_fill_ratio", json!(0.3))];
     let v1 = results("dry_bulk_box_hold", &part);
     let v2 = results(
@@ -206,18 +201,14 @@ fn a_dry_bulk_run_uses_the_one_density_everywhere() {
     );
     assert_eq!(v2["results"]["governs"], "hold volume");
     close(
-        n(&v2, "results", "draught_m") * RHO,
-        n(&v1, "results", "draught_m"),
-        1e-12,
-        "laden draught x density",
+        floated(&v2),
+        n(&v1, "hydrostatics", "volume_m3"),
+        1e-9,
+        "laden displacement",
     );
-    // The capacity core (light draught by bisection, to 0.001 m) reads the same density.
-    let tol = 3e-3;
-    assert!(
-        (n(&sea, "results", "light_draught_m") * RHO - n(&one, "results", "light_draught_m")).abs()
-            < tol,
-        "light draught"
-    );
+    assert!(n(&v2, "results", "draught_m") < n(&v1, "results", "draught_m"));
+    // The capacity core reads the same density: the light hull floats higher too.
+    assert!(n(&sea, "results", "light_draught_m") < n(&one, "results", "light_draught_m"));
     // The resistance curves read it too: the deep-water frictional resistance depends on it.
     assert_ne!(sea["curves"], one["curves"]);
 }
@@ -227,37 +218,37 @@ fn a_gas_run_uses_the_one_density_in_the_capacity_the_journey_and_the_stability(
     let file = "gas_igc_2g_self_propelled";
     let one = results(file, &[]);
     let sea = results(file, &[("water_density_t_per_m3", json!(RHO))]);
-    let (l, b, cb) = (
-        n(&sea, "dims", "loa_m"),
-        n(&sea, "dims", "beam_m"),
-        n(&sea, "dims", "cb"),
-    );
-    // Capacity core: the laden draught is where lightship plus cargo floats, with this density.
+    // Capacity core: the laden draught is where lightship plus cargo floats, with this density
+    // (issue #448: the hull's sections at that draught).
     close(
-        n(&sea, "results", "draught_m") * RHO,
-        n(&sea, "results", "displacement_t") / (cb * l * b),
+        n(&sea, "hydrostatics", "volume_m3") * RHO,
+        n(&sea, "results", "displacement_t"),
         3e-3,
-        "laden draught",
+        "laden displacement",
     );
-    // Stability: each condition's draught is its displacement over cb L B and the same density.
+    // Stability: each condition floats higher in the denser water.
     let conditions = sea["stability"]["conditions"].as_array().unwrap();
     assert!(!conditions.is_empty());
-    for c in conditions {
-        close(
-            c["draught_m"].as_f64().unwrap() * RHO,
-            c["displacement_t"].as_f64().unwrap() / (cb * l * b),
-            1e-12,
-            "stability draught",
-        );
-    }
     let before = one["stability"]["conditions"].as_array().unwrap();
+    for (c, b) in conditions.iter().zip(before) {
+        if c["displacement_t"] == b["displacement_t"] {
+            assert!(
+                c["draught_m"].as_f64().unwrap() < b["draught_m"].as_f64().unwrap(),
+                "{}",
+                c["name"]
+            );
+        }
+    }
     assert_ne!(before[0]["draught_m"], conditions[0]["draught_m"]);
     // Journey de-rating: with a draught limit that binds, the cargo is what floats to the limit.
+    // Issue #448: the limit is 0.3 m under the laden draught in this water (it was a fixed 2.2 m,
+    // which the hull's sections no longer reach).
+    let limit = ((n(&sea, "results", "draught_m") - 0.3) * 100.0).floor() / 100.0;
     let limited = results(
         file,
         &[
             ("water_density_t_per_m3", json!(RHO)),
-            ("draught_limit_m", json!(2.2)),
+            ("draught_limit_m", json!(limit)),
         ],
     );
     assert!(
@@ -269,8 +260,14 @@ fn a_gas_run_uses_the_one_density_in_the_capacity_the_journey_and_the_stability(
         limited["results"]["governs"]
     );
     close(
+        n(&limited, "results", "draught_m"),
+        limit,
+        1e-9,
+        "journey draught",
+    );
+    close(
         n(&limited, "results", "cargo_t") + n(&limited, "results", "lightship_t"),
-        cb * l * b * 2.2 * RHO,
+        n(&limited, "hydrostatics", "volume_m3") * RHO,
         1e-9,
         "journey cargo",
     );

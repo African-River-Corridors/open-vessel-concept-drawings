@@ -46,6 +46,8 @@ check-air-draft-condition-ballasted-light = ballasted light
 check-air-draft-condition-light = light
 check-name-air-draft-within-limit = air draft within limit
 check-air-draft-within-limit = { $condition } air draft { $governing } m <= limit { $limit } m (laden is { $laden } m and is NOT the governing case)
+check-name-trim-in-range = trim in range
+check-trim-in-range = the hull floats within { $limit } degrees of trim ({ $conditions })
 warn-barge-pushed = PUSHED barge: crew, battery and propulsion are on the tug and are NOT in this hull's lightship, capacity or air draft. The tug is a separate vessel and must be costed and air-draft-gated separately.
 check-name-gm-positive = gm positive
 check-gm-positive = hopper intact GM { $gm } m >= 0.15 m (first-order; KG_light @0.5D)
@@ -98,7 +100,7 @@ warn-separation-clauses = Separation clauses are cited from the classification r
 
 ## crates/ovcd-core/src/gas_stability.rs
 
-stab-limit-concept-stage = Concept-stage: prismatic box section, first-order weight heights, no downflooding openings.
+stab-limit-concept-stage = Concept-stage: the hull's sections, first-order weight heights, no downflooding openings.
 stab-limit-no-wind-or-damage = No wind heel and no damage stability. Both are needed before approval: damage stability by ADN 9.3.1.15 and IGC 2.7, wind heel by the IS Code 2008 weather criterion (Part A 2.3).
 stab-limit-stern-block-mass = The self-propelled stern block's mass is not in the gas lightship, so KG and displacement leave it out; the true GM could be lower.
 stab-limit-weight-split = Weight split sums to { $split } t vs lightship { $lightship } t.
@@ -197,7 +199,7 @@ msg-convoy-not-available = convoy results not yet available
 
 warn-channel-no-bottom-width = The channel has a depth but no bottom width, so squat, the Schijf limiting speed and the blockage are not checked and the speed curves are for deep water only. The draught limit still uses the depth. Give the channel bottom width to check them.
 check-name-intact-gm-at-reported-cargo = intact gm at reported cargo
-check-intact-gm-reported-cargo = intact GM { $gm } m >= 0.15 m at the reported cargo { $cargo } t, draught { $draught } m (first-order box; cargo KG of the full hold; KG_light @0.5D)
+check-intact-gm-reported-cargo = intact GM { $gm } m >= 0.15 m at the reported cargo { $cargo } t, draught { $draught } m (first-order; cargo KG of the full hold; KG_light @0.5D)
 warn-liquid-legacy-conditions = Stability is computed for liquid bulk cargo with the IS Code loading conditions only.
 name-governs-draught = draught — { $limit }
 check-feasible-arrangement = No arrangement passes every check on this hull. The closest one is shown. It fails: { $fails }.
@@ -257,6 +259,7 @@ msg-results-hash-text = `results_hash` must be text
 msg-ruleset-exact-renamed = IGC_2G_EXACT is now IGC_2G: the same per-tank rule of IGC 2.4.1.1
 msg-ruleset-per-tank = IGC_2G now uses the per-tank rule of IGC 2.4.1.1 (d(Vc) from the gross volume of each tank, dome included, measured plate to plate per 2.4.2), so results may change
 msg-input-note = `{ $input }`: { $note }
+msg-block-coefficient-dropped = `{ $input }`: the block coefficient now comes from the hull shape; the stored value was dropped
 msg-v1-adn-g = `{ $input }` ADN_G is no longer offered (the engine applies IGC rules only to gas tanks); this version 1 file was opened as IGC_2G
 msg-v1-tank-cap = `{ $input }` is no longer an input (there is no tank volume cap); it was dropped
 msg-v1-max-tank-od = this version 1 file has no `{ $input }`; it now uses the default { $value } m (version 1 used a fixed 12 m cap, so results may change)

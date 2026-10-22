@@ -6,6 +6,7 @@
 
 use ovcd_core::compartments::{Space, SpaceKind};
 use ovcd_core::gas_stability::PyError;
+use ovcd_core::hydrostatics::{Hull, HullSpec};
 use ovcd_core::liquid_bulk::{LiquidBulkInputs, PumpArrangement, compute};
 use ovcd_core::loading_conditions::{
     BallastPlan, Consumables, Inputs, Item, LiquidCargo, Role, assess, assess_slack,
@@ -65,6 +66,22 @@ fn cargo_fn(
     move |m| c.at(m)
 }
 
+/// The box L x B x D as its Sections Table (issue #448).
+fn box_hull() -> &'static Hull {
+    static HULL: std::sync::OnceLock<Hull> = std::sync::OnceLock::new();
+    HULL.get_or_init(|| {
+        Hull::build(&HullSpec {
+            loa: L,
+            beam: B,
+            depth: D,
+            bow_rake_length_m: 0.0,
+            bow_rake_rise_m: D,
+            stern: None,
+        })
+        .unwrap()
+    })
+}
+
 fn conditions(
     centreline: bool,
     cargo_fraction: f64,
@@ -79,7 +96,7 @@ fn conditions(
         loa: L,
         beam: B,
         depth: D,
-        block_coefficient: 0.9,
+        hull: box_hull(),
         water_density: 1.0,
         criteria_set: "IS_CODE_2008",
         lightship: &lightship,
@@ -96,7 +113,6 @@ fn conditions(
         may_sail_without_ballast: false,
         air_draft_top_m: 6.0,
         air_draft_limit_m: None,
-        stern: None,
     };
     let mut conds = assess(&inp).unwrap();
     conds.extend(assess_slack(&inp, slack).unwrap());

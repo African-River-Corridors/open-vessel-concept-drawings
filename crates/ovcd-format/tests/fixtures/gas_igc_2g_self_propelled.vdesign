@@ -37,10 +37,6 @@
           "value": "type_c_tanks",
           "source": "typed"
         },
-        "block_coefficient": {
-          "value": 0.85,
-          "source": "default"
-        },
         "midship_coefficient": {
           "value": 1.0,
           "source": "default"
@@ -471,7 +467,7 @@
           "source": "default"
         }
       },
-      "results_hash": "0e48fca0382beb343c9d5dbce97133e8b2475be118bcbf9bca90840e1fbd5d8c"
+      "results_hash": "97127e8b481ee01b5da792799b183c85fce5e0fd641e9ebd230785857dbf3867"
     }
   ],
   "defaults_profile": "built-in"

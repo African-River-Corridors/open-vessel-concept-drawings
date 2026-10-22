@@ -154,26 +154,19 @@ fn the_bank_slope_widens_the_channel_section_in_the_blockage_ratio() {
     }
 }
 
-/// Issue #425: the midship section is B x T x Cm. Cm = 1 is the default (the same results as
-/// leaving it out); a lower Cm gives a blockage ratio in the same proportion.
+/// Issue #425: the midship section is B x T x Cm where no hull section is given. Issue #448: a
+/// Design gives the hull's own midship section from its sections, so the blockage ratio is the
+/// sections' and Cm does not move it (#535 takes the input out of format v3).
 #[test]
-fn the_midship_coefficient_scales_the_blockage_ratio_and_one_is_the_default() {
+fn the_hull_section_sets_the_blockage_ratio_and_the_midship_coefficient_does_not() {
     let channel = json!({ "depth_m": 6.0, "bottom_width_m": 60.0 });
     let bare = sim(hopper(json!({ "channel": channel })));
-    let one = sim(hopper(
-        json!({ "channel": channel, "midship_coefficient": 1.0 }),
-    ));
-    assert_eq!(bare, one);
-    for cm in [0.5, 0.8, 0.95] {
+    assert!(num(&channel_env(&bare)["blockage"]) > 0.0);
+    for cm in [0.5, 0.8, 0.95, 1.0] {
         let v = sim(hopper(
             json!({ "channel": channel, "midship_coefficient": cm }),
         ));
-        close(
-            num(&channel_env(&v)["blockage"]),
-            cm * num(&channel_env(&bare)["blockage"]),
-            &format!("Cm {cm}"),
-        );
-        assert_ne!(v, bare, "Cm {cm}");
+        assert_eq!(v, bare, "Cm {cm}");
     }
 }
 
@@ -433,14 +426,14 @@ fn the_channel_limit_is_its_depth_less_the_under_keel_clearance() {
 
 /// Worked out: the hold volume binds when the volume bound is at most the weight bound, so a tie
 /// reports `hold volume`. The draught limit that makes the weight bound equal the volume bound is
-/// found here to the last bit, with the arithmetic `simulate` uses: cb x l x b x t - lightship.
+/// found here to the last bit. Issue #448: the weight bound is the hull's displacement at the
+/// draught limit less the lightship, so the limit is found by bisection on its bits, with the
+/// weight bound `simulate` reports.
 #[test]
 fn a_tie_between_volume_and_weight_bound_is_reported_as_the_hold_volume() {
-    // Not every hull has a draught limit that gives the tie to the last bit (the product and the
+    // Not every hull has a draught limit that gives the tie to the last bit (the volume and the
     // subtraction round), so try lengths from 60 m up until one has.
-    let (cb, b) = (0.9_f64, 11.0_f64);
     for loa in 60..=100 {
-        let l = f64::from(loa);
         let barge = |extra: Value| {
             let mut p = hopper(json!({ "self_propelled": false, "loa_m": loa }));
             for (k, v) in extra.as_object().unwrap() {
@@ -448,23 +441,37 @@ fn a_tie_between_volume_and_weight_bound_is_reported_as_the_hold_volume() {
             }
             p
         };
-        let base = sim(barge(json!({ "draught_limit_m": 1.9 })));
-        let ls = num(&base["results"]["lightship_t"]);
-        let volume = num(&base["results"]["cargo_volume_bound_t"]);
-        let guess = (volume + ls) / (cb * l * b);
-        for step in -8_i64..=8 {
-            let t = f64::from_bits((guess.to_bits() as i64 + step) as u64);
-            if cb * l * b * t * 1.0 - ls != volume {
-                continue;
-            }
-            let v = sim(barge(json!({ "draught_limit_m": t })));
-            assert_eq!(
-                v["results"]["cargo_weight_bound_t"],
-                v["results"]["cargo_volume_bound_t"]
-            );
-            assert_eq!(v["results"]["governs"], "hold volume", "loa {loa}");
-            return;
+        let weight = |t: f64| {
+            num(&sim(barge(json!({ "draught_limit_m": t })))["results"]["cargo_weight_bound_t"])
+        };
+        let volume =
+            num(&sim(barge(json!({ "draught_limit_m": 1.9 })))["results"]["cargo_volume_bound_t"]);
+        // The weight bound rises with the draught limit: bisect on the bits of positive floats,
+        // which order as the numbers do.
+        // Below the hull's own limit, depth less freeboard: 4 - 0.3 m.
+        let (mut lo, mut hi) = (0.5_f64.to_bits(), 3.6_f64.to_bits());
+        if weight(f64::from_bits(lo)) >= volume || weight(f64::from_bits(hi)) <= volume {
+            continue;
         }
+        while hi - lo > 1 {
+            let mid = lo + (hi - lo) / 2;
+            if weight(f64::from_bits(mid)) < volume {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        let t = f64::from_bits(hi);
+        if weight(t) != volume {
+            continue;
+        }
+        let v = sim(barge(json!({ "draught_limit_m": t })));
+        assert_eq!(
+            v["results"]["cargo_weight_bound_t"],
+            v["results"]["cargo_volume_bound_t"]
+        );
+        assert_eq!(v["results"]["governs"], "hold volume", "loa {loa}");
+        return;
     }
     panic!("no hull from 60 to 100 m has an exact tie");
 }
@@ -595,7 +602,10 @@ fn a_hull_that_carries_nothing_reports_its_light_draught() {
         "no cargo area (hull shorter than its fixed end spaces)"
     );
     let light = num(&v["results"]["light_draught_m"]);
-    assert!(light > 0.0);
+    // Issue #448: with no tanks the lightship is 0 t, so the hull floats at no draught. The old
+    // bisection stopped at its first close-enough midpoint, a draught of a few micrometres.
+    assert_eq!(v["results"]["lightship_t"], json!(0.0));
+    assert_eq!(light, 0.0);
     assert_eq!(v["results"]["draught_m"], json!(light));
     assert_eq!(v["checks"][0]["name"], "Cargo > 0");
     assert_eq!(v["checks"][0]["ok"], json!(false));

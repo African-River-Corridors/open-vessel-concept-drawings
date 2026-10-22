@@ -426,26 +426,120 @@ pub(crate) fn box_condition_at(
         let heel = box_gz(b, d, t, kg, f64::from(a))?;
         gz.push((a, heel - fsc * sin(radians(f64::from(a)))?));
     }
-    let (max_gz_deg, max_gz) = max_by_gz(&gz);
     let deck_edge = degrees(libm::atan(div(2.0 * (d - t), b)?));
+    condition_from_curve(gz, t, kg, gm_solid, fsc, Some(deck_edge), criteria_set)
+}
+
+/// A condition that has no GZ curve because one criterion already fails it: the hull does not float
+/// with freeboard, or (issue #448) the free-trim float finds no balance within the trim solver's
+/// range. Its GM is -1 and it holds only that criterion.
+pub(crate) fn failed_condition(draught: f64, kg: f64, failed: Criterion) -> Condition {
+    Condition {
+        name: String::new(),
+        cargo_t: 0.0,
+        cargo_is_int: false,
+        fill_fraction: 0.0,
+        displacement_t: 0.0,
+        draught_m: draught,
+        kg_m: kg,
+        gm_solid_m: -1.0,
+        free_surface_m: 0.0,
+        gm_fluid_m: -1.0,
+        gz: Vec::new(),
+        max_gz_m: 0.0,
+        max_gz_deg: 0,
+        area_0_27: 0.0,
+        area_0_30: 0.0,
+        area_0_40: 0.0,
+        area_30_40: 0.0,
+        deck_edge_deg: None,
+        criteria: vec![failed],
+    }
+}
+
+/// The criterion a condition fails when the free-trim float finds no balance within the trim
+/// solver's range (issue #448).
+pub(crate) fn trim_out_of_range() -> Criterion {
+    criterion(
+        "Trim within the solver's range",
+        crate::sections::TRIM_LIMIT_DEG,
+        crate::sections::TRIM_LIMIT_DEG,
+        false,
+        "the hull would trim more than 10 degrees",
+    )
+}
+
+/// One condition of a hull from its sections (issue #448): the free-trim GZ curve at G on the
+/// 1 degree grid, less `free_surface_m x sin(phi)`, then the areas and the criteria. `draught`,
+/// `gm_solid` and the deck edge angle are the caller's, from the upright cut at the equilibrium.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn hull_condition(
+    hull: &crate::hydrostatics::Hull,
+    mass_t: f64,
+    g: crate::sections::Gravity,
+    draught: f64,
+    gm_solid: f64,
+    free_surface_m: f64,
+    density: f64,
+    criteria_set: &str,
+) -> Result<Condition, PyError> {
+    let gz = match hull.gz(mass_t, g, free_surface_m * mass_t, density, ANGLES_DEG) {
+        Ok(gz) => gz,
+        // At some heel the free-trim float finds no balance (G above the longitudinal
+        // metacentre): the condition fails, with no curve.
+        Err(crate::sections::SectionsError::TrimOutOfRange) => {
+            let mut c = failed_condition(draught, g.kg_m, trim_out_of_range());
+            c.gm_solid_m = gm_solid;
+            c.free_surface_m = free_surface_m;
+            c.gm_fluid_m = gm_solid - free_surface_m;
+            return Ok(c);
+        }
+        Err(e) => return Err(PyError::Value(e.to_string())),
+    };
+    let (b, d) = (hull.spec.beam, hull.spec.depth);
+    let deck_edge = degrees(libm::atan(div(2.0 * (d - draught), b)?));
+    condition_from_curve(
+        gz,
+        draught,
+        g.kg_m,
+        gm_solid,
+        free_surface_m,
+        Some(deck_edge),
+        criteria_set,
+    )
+}
+
+/// One condition from its GZ curve (issue #448): the areas, the angle of maximum GZ and the criteria
+/// of `criteria_set`. The curve already holds the free surface correction. The identity fields
+/// (`name`, cargo, fill, displacement) are left empty or zero for the caller to set.
+pub(crate) fn condition_from_curve(
+    gz: Vec<(i32, f64)>,
+    draught: f64,
+    kg: f64,
+    gm_solid: f64,
+    free_surface_m: f64,
+    deck_edge_deg: Option<f64>,
+    criteria_set: &str,
+) -> Result<Condition, PyError> {
+    let (max_gz_deg, max_gz) = max_by_gz(&gz);
     let mut c = Condition {
         name: String::new(),
         cargo_t: 0.0,
         cargo_is_int: false,
         fill_fraction: 0.0,
         displacement_t: 0.0,
-        draught_m: t,
+        draught_m: draught,
         kg_m: kg,
         gm_solid_m: gm_solid,
-        free_surface_m: fsc,
-        gm_fluid_m: gm_solid - fsc,
+        free_surface_m,
+        gm_fluid_m: gm_solid - free_surface_m,
         max_gz_m: max_gz,
         max_gz_deg,
         area_0_27: area(&gz, 0, 27),
         area_0_30: area(&gz, 0, CRITERIA_ANGLES_DEG[0]),
         area_0_40: area(&gz, 0, CRITERIA_ANGLES_DEG[1]),
         area_30_40: area(&gz, CRITERIA_ANGLES_DEG[0], CRITERIA_ANGLES_DEG[1]),
-        deck_edge_deg: Some(deck_edge),
+        deck_edge_deg,
         gz,
         criteria: Vec::new(),
     };

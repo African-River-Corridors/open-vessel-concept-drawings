@@ -87,11 +87,17 @@ pub struct FitOptions {
     pub depths: Vec<f64>,
     pub tanks_wide: Vec<i64>,
     pub extra_clearance_m: Vec<f64>,
+    /// Issue #448: Cb only for the IGC 4.28.2 vertical acceleration; the hydrostatics come from
+    /// each candidate's sections.
     pub block_coefficient: f64,
     /// Cap on a tank's outer diameter (m).
     pub max_tank_od_m: f64,
     /// Bow rake as a multiple of the moulded depth of each candidate.
     pub bow_rake_to_depth_ratio: f64,
+    /// Issue #446: a typed bow rake length (m) for every candidate; `None`: the ratio.
+    pub bow_rake_length_m: Option<f64>,
+    /// Issue #446: the keel height at the bow (m); `None`: each candidate's moulded depth.
+    pub bow_rake_rise_m: Option<f64>,
     /// Aft void of a pushed barge (m).
     pub pushed_stern_void_m: f64,
     /// Tanks along the hull, for every candidate.
@@ -309,6 +315,8 @@ impl Default for FitOptions {
             block_coefficient: 0.85,
             max_tank_od_m: DEFAULT_MAX_TANK_OD_M,
             bow_rake_to_depth_ratio: DEFAULT_BOW_RAKE_TO_DEPTH_RATIO,
+            bow_rake_length_m: None,
+            bow_rake_rise_m: None,
             pushed_stern_void_m: DEFAULT_PUSHED_STERN_VOID_M,
             tanks_in_line: DEFAULT_TANKS_IN_LINE,
             tank_support_height_m: DEFAULT_TANK_SUPPORT_HEIGHT_M,
@@ -625,9 +633,15 @@ pub fn is_code_cargo(
     o: &FitOptions,
     ic: &IsCodeConditions,
 ) -> f64 {
-    let room = o.block_coefficient * loa * beam * t_max * o.water_density_t_per_m3
-        - r.lightship_t
-        - ic.consumables_t;
+    // Issue #448: the hull's displacement at the draught cap, from its sections.
+    let _ = (loa, beam);
+    let displaced = r
+        .hull_spec
+        .as_ref()
+        .and_then(|spec| crate::hydrostatics::Hull::build(spec).ok())
+        .map(|h| h.volume_at(t_max))
+        .unwrap_or(0.0);
+    let room = displaced * o.water_density_t_per_m3 - r.lightship_t - ic.consumables_t;
     let room = if room > 0.0 { room } else { 0.0 };
     if room < payload_t { room } else { payload_t }
 }
@@ -660,11 +674,16 @@ pub fn is_code_conditions(
         tanks: crate::compartments::consumables_tanks(inp.beam, 0.0, ic.consumables_t),
         density: 1.0,
     };
+    let Some(spec) = r.hull_spec.as_ref() else {
+        return Ok(Vec::new());
+    };
+    let hull = crate::hydrostatics::Hull::build(spec)
+        .map_err(|e| gs::PyError::Value(alloc::format!("{e}")))?;
     lc::assess(&lc::Inputs {
         loa: inp.loa,
         beam: inp.beam,
         depth: inp.depth,
-        block_coefficient: o.block_coefficient,
+        hull: &hull,
         water_density: o.water_density_t_per_m3,
         criteria_set: gs::criteria_set_for(&o.ruleset),
         lightship: &lightship,
@@ -677,7 +696,6 @@ pub fn is_code_conditions(
         may_sail_without_ballast: ic.may_sail_without_ballast,
         air_draft_top_m: r.air_draft_top_above_keel_m,
         air_draft_limit_m: o.air_draft_limit_m,
-        stern: o.stern_geometry.as_ref(),
     })
 }
 
@@ -741,7 +759,6 @@ fn stability_assessment(
                 gs::assess(
                     &basis,
                     j.achievable_tonnage_t,
-                    o.block_coefficient,
                     o.water_density_t_per_m3,
                     gs::criteria_set_for(&o.ruleset),
                 )
@@ -812,7 +829,6 @@ pub fn answer_search_checks(f: &ArrangementFit, o: &FitOptions) -> Result<Vec<Ch
         f.beam_m,
         f.depth_m,
         f.t_max_m,
-        o.block_coefficient,
         o.water_density_t_per_m3,
     )?;
     let own: Vec<&str> = r.checks.iter().map(|c| c.name.as_str()).collect();
@@ -844,11 +860,9 @@ fn derate_candidate(
     beam: f64,
     depth: f64,
     t_max: f64,
-    block_coefficient: f64,
     water_density: f64,
 ) -> Result<JourneyDeratingResult, PyError> {
     let mut ji = JourneyDeratingInputs::new(r, loa, beam, depth);
-    ji.block_coefficient = block_coefficient;
     ji.water_density = water_density;
     ji.design_depth_m = t_max;
     ji.ukc_m = 0.0;
@@ -881,6 +895,8 @@ impl Search<'_> {
         inp.n_tanks_long = nl;
         inp.max_tank_od_m = self.o.max_tank_od_m;
         inp.bow_rake_to_depth_ratio = self.o.bow_rake_to_depth_ratio;
+        inp.bow_rake_length_m = self.o.bow_rake_length_m;
+        inp.bow_rake_rise_m = self.o.bow_rake_rise_m;
         inp.pushed_stern_void_m = self.o.pushed_stern_void_m;
         inp.tank_support_height = self.o.tank_support_height_m;
         inp.dome_height = self.o.tank_dome_height_m;
@@ -1033,15 +1049,7 @@ fn search(s: &mut Search<'_>, t_max: f64, stop_at_first_pass: bool) -> Result<Po
                 }
             }
             for (inp, r) in cands.into_iter().chain(more) {
-                let j = derate_candidate(
-                    &r,
-                    loa,
-                    beam,
-                    d,
-                    t_max,
-                    o.block_coefficient,
-                    o.water_density_t_per_m3,
-                )?;
+                let j = derate_candidate(&r, loa, beam, d, t_max, o.water_density_t_per_m3)?;
                 let cheap = cheap_checks(&r, &j, d, o);
                 // With Rule Sets: the trace before stability (its stability Rules are not yet
                 // evaluated, so they cannot fail here).
@@ -1165,15 +1173,7 @@ pub fn fit(
             })?;
             let inp = s.base_inputs(d, 1, o.tanks_in_line);
             let r = capacity(&inp)?;
-            let j = derate_candidate(
-                &r,
-                loa,
-                beam,
-                d,
-                t_max,
-                o.block_coefficient,
-                o.water_density_t_per_m3,
-            )?;
+            let j = derate_candidate(&r, loa, beam, d, t_max, o.water_density_t_per_m3)?;
             Candidate {
                 cheap_failed: 1,
                 tonnage: 0.0,

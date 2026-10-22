@@ -3,8 +3,9 @@
 //!
 //! Label: property
 
-use ovcd_core::barge_capacity::{BargeCapacityInputs, compute};
+use ovcd_core::barge_capacity::{BargeCapacityInputs, BargeCapacityResult, compute};
 use ovcd_core::ga_adapter::to_ga;
+use ovcd_core::gas_arrangement::{FitOptions, fit};
 use ovcd_core::gas_stability::{GasCapacityResult, assess};
 
 fn gas() -> BargeCapacityInputs {
@@ -36,22 +37,35 @@ fn the_air_draft_flag_follows_the_limit() {
 
 #[test]
 fn the_stability_flag_is_the_gas_stability_verdict() {
-    // One result that passes and one that fails, both with a gas basis.
-    let mut seen = (false, false);
+    // One result that passes and one that fails, both with a gas basis. Issue #448: on the hull's
+    // sections the default arrangements below fail (the Light condition's GZ peaks below 25
+    // degrees, #498), so the passing one is the arrangement `fit` finds for 110 x 11.4 x 6 m.
+    let mut cases: Vec<(BargeCapacityInputs, BargeCapacityResult)> = Vec::new();
     for (loa, beam, depth) in [(90.0, 14.8, 6.5), (90.0, 11.4, 6.5), (110.0, 16.0, 4.0)] {
         let mut i = BargeCapacityInputs::new(loa, beam, depth);
         i.cargo_type = "LPG_propane".into();
         let r = compute(&i).unwrap();
+        cases.push((i, r));
+    }
+    let o = FitOptions {
+        depths: vec![6.0],
+        fill_ratio: 0.98,
+        ..FitOptions::default()
+    };
+    let f = fit(110.0, 11.4, "LPG_propane", 5.7, &o).unwrap();
+    assert!(f.feasible, "{:?}", f.failed_checks);
+    cases.push((f.engine_inputs.clone(), f.engine_result.clone()));
+    let mut seen = (false, false);
+    for (i, r) in &cases {
         let a = assess(
-            &GasCapacityResult::try_from(&r).unwrap(),
+            &GasCapacityResult::try_from(r).unwrap(),
             r.cargo_capacity_t,
-            i.block_coefficient,
             i.water_density,
             "IS_CODE_2008",
         )
         .unwrap();
-        let flag = to_ga(&i, &r, None, true).unwrap().1.stability_ok;
-        assert_eq!(flag, a.ok(), "{loa} x {beam} x {depth}");
+        let flag = to_ga(i, r, None, true).unwrap().1.stability_ok;
+        assert_eq!(flag, a.ok(), "{} x {} x {}", i.loa, i.beam, i.depth);
         if flag {
             seen.0 = true;
         } else {

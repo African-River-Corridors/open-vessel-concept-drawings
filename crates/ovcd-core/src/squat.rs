@@ -43,6 +43,8 @@ pub struct SquatInputs {
     /// 0 means estimated from Cb x L x B x T.
     pub displacement_m3: f64,
     pub safety_margin_m: f64,
+    /// Issue #448: the hull's own midship section area (m²); `None`: B x T.
+    pub midship_area_m2: Option<f64>,
 }
 
 impl SquatInputs {
@@ -59,6 +61,7 @@ impl SquatInputs {
             channel_area_m2: 0.0,
             displacement_m3: 0.0,
             safety_margin_m: DEFAULT_SAFETY_MARGIN_M,
+            midship_area_m2: None,
         }
     }
 
@@ -147,11 +150,13 @@ pub fn compute(inp: &SquatInputs) -> Result<SquatResult, String> {
         inp.block_coefficient * inp.lpp_m * inp.beam_m * inp.draft_m
     };
     // Issue #396: the same midship section and blockage ratio as the resistance.
-    let midship = crate::confined_water::midship_section_area(
-        inp.beam_m,
-        inp.draft_m,
-        inp.midship_coefficient,
-    );
+    let midship = inp
+        .midship_area_m2
+        .unwrap_or(crate::confined_water::midship_section_area(
+            inp.beam_m,
+            inp.draft_m,
+            inp.midship_coefficient,
+        ));
     let blockage = crate::confined_water::blockage_ratio(midship, inp.channel_area_m2);
     let fnh = if inp.water_depth_m > 0.0 {
         v_ms / libm::sqrt(GRAVITY * inp.water_depth_m)
@@ -297,6 +302,27 @@ pub fn max_speed_for_ukc(
     v_hi_kn: f64,
     tol_kn: f64,
 ) -> Result<f64, String> {
+    max_speed_for_ukc_with(
+        (draft_m, beam_m, lpp_m),
+        water_depth_m,
+        channel_area_m2,
+        (block_coefficient, None),
+        safety_margin_m,
+        v_hi_kn,
+        tol_kn,
+    )
+}
+
+/// [`max_speed_for_ukc`] with the hull's own midship section area (issue #448; `None`: B x T).
+pub fn max_speed_for_ukc_with(
+    (draft_m, beam_m, lpp_m): (f64, f64, f64),
+    water_depth_m: f64,
+    channel_area_m2: f64,
+    (block_coefficient, midship_area_m2): (f64, Option<f64>),
+    safety_margin_m: f64,
+    v_hi_kn: f64,
+    tol_kn: f64,
+) -> Result<f64, String> {
     let static_ukc = water_depth_m - draft_m;
     if static_ukc <= safety_margin_m {
         return Ok(0.0);
@@ -307,6 +333,7 @@ pub fn max_speed_for_ukc(
             block_coefficient,
             water_depth_m,
             channel_area_m2,
+            midship_area_m2,
             ..SquatInputs::new(v, draft_m, beam_m, lpp_m)
         };
         Ok(compute(&inp)?.dynamic_ukc_m)
