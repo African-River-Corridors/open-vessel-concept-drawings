@@ -151,6 +151,9 @@ struct Hull {
     air_top: Option<f64>,
     /// The number of holds of a dry bulk hull (`drawing.hold_count`); 0 for a gas hull.
     holds: usize,
+    /// The hull's own starboard half-section at mid-length, keel to deck edge, as [y, z]
+    /// (`drawing.midship_outline`, issue #450); `None` for the rectangle.
+    midship_outline: Option<Vec<[f64; 2]>>,
     /// The forward separation and the service space of a gas hull (`drawing.separation`).
     fwd_separation: Option<(f64, f64)>,
     bow_rake: f64,
@@ -495,6 +498,13 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
             .filter(|a| *a > 0.0)
             .map(|a| draught + a),
         holds: num_at(results, &["drawing", "hold_count"]).map_or(0, |n| n.max(0.0) as usize),
+        midship_outline: results["drawing"]["midship_outline"]
+            .as_array()
+            .map(|list| {
+                list.iter()
+                    .filter_map(|p| Some([p.get(0)?.as_f64()?, p.get(1)?.as_f64()?]))
+                    .collect()
+            }),
         fwd_separation: num_at(results, &["drawing", "separation", "fwd_separation_m"]).zip(
             num_at(results, &["drawing", "separation", "service_space_m"]),
         ),
@@ -1863,14 +1873,36 @@ fn section_deck_line(c: &mut Canvas, h: &Hull) {
     c.line("OUTLINE", [x, h.depth], [half, h.depth], None);
 }
 
+/// The hull's outline in the midship section, from the port deck edge round the keel to the
+/// starboard deck edge: the hull's own half-section mirrored (issue #450), else the rectangle. A
+/// point on a straight line between its neighbours is left out, so a flat bottom is one line.
+fn midship_outline(h: &Hull) -> Vec<[f64; 2]> {
+    let half = h.beam / 2.0;
+    let Some(starboard) = h.midship_outline.as_ref().filter(|p| p.len() >= 2) else {
+        return vec![[-half, h.depth], [-half, 0.0], [half, 0.0], [half, h.depth]];
+    };
+    let mut pts: Vec<[f64; 2]> = starboard.iter().rev().map(|p| [-p[0], p[1]]).collect();
+    pts.extend(starboard.iter().skip(usize::from(starboard[0][0] == 0.0)));
+    let mut out: Vec<[f64; 2]> = Vec::with_capacity(pts.len());
+    for p in pts {
+        if out.last() == Some(&p) {
+            continue;
+        }
+        if let [.., a, b] = out[..] {
+            let cross = (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]);
+            if cross == 0.0 {
+                out.pop();
+            }
+        }
+        out.push(p);
+    }
+    out
+}
+
 fn midship_section(h: &Hull, n: u32) -> Canvas {
     let mut c = Canvas::new(n);
     let half = h.beam / 2.0;
-    c.polyline(
-        "OUTLINE",
-        &[[-half, h.depth], [-half, 0.0], [half, 0.0], [half, h.depth]],
-        false,
-    );
+    c.polyline("OUTLINE", &midship_outline(h), false);
     section_deck_line(&mut c, h);
     c.line("WATER", [-half, h.draught], [half, h.draught], None);
     if let Some(t) = h.light_draught {

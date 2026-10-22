@@ -462,6 +462,13 @@ def cases() -> dict[str, dict]:
     # takes the place of the midship coefficient case: Cm is a result, no longer an input.
     out["sweep hull midship section in a channel 80x11.4"] = _inputs(
         "bauxite", "box_hold", "self_propelled", 80.0, 11.4, 4.0, **_DEEP_CHANNEL)
+    # Issue #450: the V-bottom and chine Hull Forms on a gas hull (a transom stern; a tunnel stern
+    # needs a flat bottom). A base from before them refuses the form: the case shows as new.
+    out["sweep hull v_bottom gas 90x11.4"] = _inputs(
+        "LNG", "type_c_tanks", "self_propelled", 90.0, 11.4, 5.0, hull_form="v_bottom")
+    out["sweep hull chine gas 90x11.4"] = _inputs(
+        "LNG", "type_c_tanks", "self_propelled", 90.0, 11.4, 5.0, hull_form="chine",
+        chine_half_breadth_m=4.5, chine_height_m=0.6)
     return out
 
 

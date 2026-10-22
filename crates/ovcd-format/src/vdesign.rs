@@ -240,7 +240,7 @@ pub fn table_combinations() -> Vec<[(&'static str, String); 3]> {
 pub const HULL_FORMS: &[&str] = &["box", "raked_box", "v_bottom", "chine", "shipd", "offsets"];
 /// The Hull Forms the engine computes today. The others are inputs only until their generator and
 /// the hydrostatics switch-over land (spec 0008, "Build tickets"); an Option with one is refused.
-pub const BUILT_HULL_FORMS: &[&str] = &["raked_box"];
+pub const BUILT_HULL_FORMS: &[&str] = &["raked_box", "v_bottom", "chine"];
 /// The Hull Forms with the raked-box bow (every form but `shipd` and `offsets`).
 pub const RAKED_BOW_FORMS: &[&str] = &["box", "raked_box", "v_bottom", "chine"];
 /// The Hull Forms that take a bilge radius.
@@ -4466,8 +4466,8 @@ fn check_value(spec: &InputSpec, v: &Value, profile: &Profile) -> Result<(Value,
             if name == "hull_form" && choices.contains(&s) && !BUILT_HULL_FORMS.contains(&s) {
                 Err(text!(
                     "msg-hull-form-not-built",
-                    "`{input}` = {value} is not built yet: the engine computes only raked_box for \
-                     now (spec 0008)",
+                    "`{input}` = {value} is not built yet: the engine computes raked_box, v_bottom \
+                     and chine for now (spec 0008)",
                     input = input(),
                     value = v.to_string()
                 ))

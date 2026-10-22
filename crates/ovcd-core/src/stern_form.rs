@@ -399,7 +399,9 @@ impl fmt::Display for ApplyError {
             ),
             ApplyError::TunnelOutsideBottom { section } => write!(
                 f,
-                "the tunnels do not fit the flat bottom of section {section}"
+                "the tunnels do not fit the flat bottom of section {section}: a tunnel stern needs a flat \
+                 bottom wider than the tunnels, so a V-bottom or chine hull takes a transom or a pram \
+                 stern"
             ),
             ApplyError::Sections(e) => write!(f, "{e}"),
         }

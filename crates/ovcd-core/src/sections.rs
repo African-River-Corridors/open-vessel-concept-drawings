@@ -129,6 +129,35 @@ impl fmt::Display for SectionsError {
 }
 
 impl SectionsTable {
+    /// The half-section at `x` on the ruled surface between the Sections either side, and its deck
+    /// edge height (spec 0008, "the section outline at that x"). At a Station, that Section; at two
+    /// Sections sharing an x, the first. `x` outside the table takes the end Section.
+    pub fn section_at(&self, x: f64) -> (Section, f64) {
+        let ss = &self.sections;
+        let last = ss.len() - 1;
+        if x <= ss[0].x {
+            return (ss[0].clone(), self.depth_at_side[0]);
+        }
+        if x >= ss[last].x {
+            return (ss[last].clone(), self.depth_at_side[last]);
+        }
+        let j = ss.iter().position(|s| s.x > x).unwrap_or(last);
+        let (a, b) = (&ss[j - 1], &ss[j]);
+        if a.x == x {
+            return (a.clone(), self.depth_at_side[j - 1]);
+        }
+        let u = (x - a.x) / (b.x - a.x);
+        let lerp = |p: f64, q: f64| p + u * (q - p);
+        let points = a
+            .points
+            .iter()
+            .zip(&b.points)
+            .map(|(p, q)| (lerp(p.0, q.0), lerp(p.1, q.1)))
+            .collect();
+        let edge = lerp(self.depth_at_side[j - 1], self.depth_at_side[j]);
+        (Section { x, points }, edge)
+    }
+
     /// A checked table: at least two Sections, x ascending, one deck edge height per Section, the
     /// same point count (at least two) on every Section, each half-section from and to the centre
     /// line with `y >= 0`, and no two edges of a half-section crossing.
