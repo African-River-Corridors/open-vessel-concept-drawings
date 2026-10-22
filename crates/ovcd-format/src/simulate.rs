@@ -1323,7 +1323,7 @@ fn simulate_measured(
         // no conditions to assess.
         if let Some((lightship, liquid)) = ovcd_core::loading_conditions::liquid_model(&r) {
             let cargo_at = |m: f64| liquid.at(m);
-            let tanks = ovcd_core::compartments::ballast_tanks(&inp, &r);
+            let tanks = clipped_ballast_tanks(&inp, &r, &hull);
             let slack = liquid.slack_masses_t();
             let conds = is_code_conditions(
                 p,
@@ -1371,8 +1371,12 @@ fn simulate_measured(
                 free_surface_moment_tm: 0.0,
             })
         };
-        let tanks = ovcd_core::compartments::ballast_tanks(&inp, &r);
-        ballast_drawing = Some(crate::liquid::ballast_drawing_value(&tanks));
+        let raw = ovcd_core::compartments::ballast_tanks(&inp, &r);
+        ballast_drawing = Some(crate::liquid::ballast_drawing_value(&raw));
+        let tanks: Vec<_> = raw
+            .iter()
+            .map(|t| ovcd_core::compartments::clip(t, &hull.table))
+            .collect();
         let conds = is_code_conditions(
             p,
             &IsCodeHull {
@@ -1905,7 +1909,31 @@ fn hull_shape_of(p: &Map<String, Value>) -> R<ovcd_core::hull::hull_form::HullSh
         bottom,
         offsets: offsets_of(p)?,
         shipd: shipd_of(p)?,
+        notch: notch_of(p)?,
     })
+}
+
+/// The Notch of an ATB barge (issue #362): typed, or half the tug's length deep and the tug's beam
+/// and 0.30 m wide, the tug itself typed or 0.28 of the barge's length and 0.53 of its beam. `None`
+/// for any other Formation.
+fn notch_of(p: &Map<String, Value>) -> R<Option<ovcd_core::stern_form::Notch>> {
+    if !p.get("atb").is_some_and(truthy) {
+        return Ok(None);
+    }
+    let tug = ovcd_core::atb::tug_from_barge(
+        need(p, "loa_m")?,
+        need(p, "beam_m")?,
+        ovcd_core::atb::TugTyped {
+            length_m: opt_float(p, "tug_length_m")?,
+            beam_m: opt_float(p, "tug_beam_m")?,
+            draught_m: opt_float(p, "tug_draught_m")?,
+        },
+    );
+    Ok(Some(ovcd_core::atb::notch_for_tug(
+        &tug,
+        opt_float(p, "notch_depth_m")?,
+        opt_float(p, "notch_width_m")?,
+    )))
 }
 
 /// The hull of the params as its Sections Table, as the run builds it (issue #451): the Hull
@@ -2518,7 +2546,7 @@ fn simulate_gas(
     let mut loading_conditions = Value::Null;
     if let Some(ic) = options.is_code.as_ref().filter(|_| r.gas_basis.is_some()) {
         // The same conditions the search checked the arrangement in.
-        let tanks = ovcd_core::compartments::ballast_tanks(&f.engine_inputs, r);
+        let tanks = clipped_ballast_tanks(&f.engine_inputs, r, &fit_hull);
         let conds = ga::is_code_conditions(r, &f.engine_inputs, cargo_t, &options, ic)
             .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))?;
         let warns = ga::light_angle_warns(&options.rules);
@@ -2841,7 +2869,7 @@ fn consumables_full_t(p: &Map<String, Value>, self_propelled: bool, curves: &Val
 /// group (the double bottom, the peaks, the wing tanks), both sides alike.
 fn ballast_plans(
     p: &Map<String, Value>,
-    tanks: &[ovcd_core::compartments::Space],
+    tanks: &[ovcd_core::compartments::ClippedSpace],
 ) -> R<[ovcd_core::loading_conditions::BallastPlan; 2]> {
     use ovcd_core::loading_conditions::BallastPlan;
     Ok(match user_ballast(p)? {
@@ -2888,7 +2916,7 @@ struct IsCodeHull<'a> {
     lightship: &'a [ovcd_core::loading_conditions::Item],
     full_cargo_t: f64,
     cargo_at: &'a dyn Fn(f64) -> Result<ovcd_core::loading_conditions::CargoAt, gs::PyError>,
-    ballast_tanks: &'a [ovcd_core::compartments::Space],
+    ballast_tanks: &'a [ovcd_core::compartments::ClippedSpace],
     consumables_t: f64,
     air_draft_top_m: f64,
     self_propelled: bool,
@@ -2936,18 +2964,30 @@ fn is_code_conditions(
     Ok(conds)
 }
 
+/// The ballast tanks of a capacity result, clipped by the hull (issue #455).
+fn clipped_ballast_tanks(
+    inp: &BargeCapacityInputs,
+    r: &BargeCapacityResult,
+    hull: &Hull,
+) -> Vec<ovcd_core::compartments::ClippedSpace> {
+    ovcd_core::compartments::ballast_tanks(inp, r)
+        .iter()
+        .map(|t| ovcd_core::compartments::clip(t, &hull.table))
+        .collect()
+}
+
 /// The ballast tanks as the results list them: name, kind, side, capacity and centroid full.
-fn ballast_tanks_json(tanks: &[ovcd_core::compartments::Space], rho: f64) -> Value {
+fn ballast_tanks_json(tanks: &[ovcd_core::compartments::ClippedSpace], rho: f64) -> Value {
     Value::Array(
         tanks
             .iter()
             .map(|t| {
                 let f = t.fill(1.0);
                 json!({
-                    "name": t.name,
-                    "kind": t.kind.key(),
-                    "side": t.side.key(),
-                    "capacity_m3": num(t.volume_m3()),
+                    "name": t.space.name,
+                    "kind": t.space.kind.key(),
+                    "side": t.space.side.key(),
+                    "capacity_m3": num(t.volume_m3),
                     "capacity_t": num(t.capacity_t(rho)),
                     "lcg_m": num(f.lcg_m),
                     "tcg_m": num(f.tcg_m),
@@ -3012,12 +3052,12 @@ fn loaded_condition_json(
 /// The `loading_conditions` block of the results.
 fn loading_conditions_json(
     conds: &[ovcd_core::loading_conditions::LoadedCondition],
-    tanks: &[ovcd_core::compartments::Space],
+    tanks: &[ovcd_core::compartments::ClippedSpace],
     consumables_t: f64,
     rho: f64,
     with_weights: bool,
 ) -> Value {
-    let capacity_m3 = ovcd_core::compartments::total_volume_m3(tanks);
+    let capacity_m3 = tanks.iter().fold(0.0, |a, t| a + t.volume_m3);
     json!({
         "set": "IMO IS Code 2008, Part B 3.4.1.2",
         "ok": conds.iter().all(|c| c.ok()),

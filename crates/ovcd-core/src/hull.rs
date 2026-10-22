@@ -330,6 +330,10 @@ pub mod hull_form {
         /// whole hull; the rakes, the Stern Form and the shape above do not apply.
         #[cfg_attr(feature = "serde", serde(skip))]
         pub shipd: Option<crate::shipd::ShipdParameters>,
+        /// The Notch of an ATB barge (issue #362): cut into the Sections Table after the Stern Form.
+        /// None: no Notch.
+        #[cfg_attr(feature = "serde", serde(skip))]
+        pub notch: Option<crate::stern_form::Notch>,
     }
 
     /// The bottom of a Hull Form's section (spec 0008, "Hull Forms"). Angles in degrees, lengths in

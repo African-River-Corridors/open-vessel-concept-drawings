@@ -5,8 +5,8 @@
 //! No new inputs: [`assemble`] takes what the engine already placed. The hull is the Option's
 //! Sections Table. The Spaces are the hold or tank layout, `compartments::ballast_tanks` (double
 //! bottom, wing tanks, peaks), the gas separation and the machinery spaces of the aft block. The
-//! bulkheads are the ones the general arrangement draws. Each Space keeps its prism volume and
-//! centroid until the hull clips it (issue #455).
+//! bulkheads are the ones the general arrangement draws. Each Space is clipped by the hull (issue
+//! #455): a Space wholly inside keeps its prism volume and centroid.
 //!
 //! No result reads the model, so it moves no results hash.
 
@@ -17,7 +17,7 @@ use alloc::vec::Vec;
 
 use crate::barge_capacity::{BargeCapacityInputs, BargeCapacityResult};
 use crate::cargo::CargoClass;
-use crate::compartments::{ClippedSpace, Side, Space, SpaceKind, ballast_tanks};
+use crate::compartments::{ClippedSpace, Side, Space, SpaceKind, ballast_tanks, clip};
 use crate::sections::SectionsTable;
 
 /// What the model is assembled from: the capacity inputs and result the run worked with, and the
@@ -74,7 +74,7 @@ pub fn assemble(inp: &VesselModelInputs) -> VesselModel {
         hull: inp.hull.clone(),
         decks: decks(c, &spaces),
         bulkheads: bulkheads(c, r),
-        spaces: spaces.into_iter().map(ClippedSpace::prism).collect(),
+        spaces: spaces.iter().map(|s| clip(s, &inp.hull)).collect(),
         frames: Vec::new(),
     }
 }
