@@ -1617,19 +1617,25 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     }
     // Issue #448: a hull with a trim analysis says when the free-trim float found no balance.
     if !is_gas && !stern_block_items.is_empty() {
+        // Issue #549: when it fails, the cause is that no trim balances the load (the deck goes under
+        // first), not the trim limit, so the message says that.
+        let message = if trim_out_of_range.is_empty() {
+            text!(
+                "check-trim-in-range",
+                "the hull floats within {limit} degrees of trim (every condition)",
+                limit = Arg::fixed(crate::sections::TRIM_LIMIT_DEG, 0),
+            )
+        } else {
+            text!(
+                "check-trim-no-balance",
+                "no trim balances the load ({conditions})",
+                conditions = trim_out_of_range.join(", "),
+            )
+        };
         checks.push(Check::new(
             "trim_in_range",
             trim_out_of_range.is_empty(),
-            text!(
-                "check-trim-in-range",
-                "the hull floats within {limit} degrees of trim ({conditions})",
-                limit = Arg::fixed(crate::sections::TRIM_LIMIT_DEG, 0),
-                conditions = if trim_out_of_range.is_empty() {
-                    "every condition".to_string()
-                } else {
-                    trim_out_of_range.join(", ")
-                },
-            ),
+            message,
         ));
     }
     let mut warnings: Vec<Text> = match &aft {
