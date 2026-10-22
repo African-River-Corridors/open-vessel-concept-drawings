@@ -537,6 +537,73 @@ pub(crate) fn trim_out_of_range() -> Criterion {
     )
 }
 
+/// What [`screened_gz`] found.
+pub(crate) enum Screened {
+    /// A criterion of the IS Code 2008 set fails whatever the rest of the curve is.
+    Fails,
+    /// No criterion was decided early: the whole curve, by angle.
+    Curve(Vec<(i32, f64)>),
+}
+
+/// The GZ curve on the 1 degree grid, worked in blocks of heels so that a trial that fails the IS
+/// Code 2008 stability criteria stops early (issue #567). It stops only when a criterion is
+/// already decided by the heels worked, so no number a caller reports changes: the criteria of
+/// each block are the criteria of [`criteria`] on the same points.
+///
+/// - Heels 30 to 40: the area 30 to 40 degrees (at least 0.030 m rad) needs only these.
+/// - Heels 41 to 60: the greatest GZ at 30 degrees or more (at least 0.20 m) needs only these.
+/// - Heels 25 to 29, then 24 down to 0: the angle of maximum GZ is below 25 degrees as soon as a
+///   heel under 25 has a GZ at least the greatest at 25 or more (the first of equal GZ is the
+///   maximum).
+///
+/// A heel with no trim balance fails the condition too, as in [`hull_condition`].
+pub(crate) fn screened_gz(
+    hull: &crate::hydrostatics::Hull,
+    mass_t: f64,
+    g: crate::sections::Gravity,
+    free_surface_moment_tm: f64,
+    density: f64,
+    heel0: Option<&crate::sections::Equilibrium>,
+) -> Result<Screened, PyError> {
+    use crate::sections::SectionsError::TrimOutOfRange;
+    let mut gz: Vec<(i32, f64)> = Vec::with_capacity(61);
+    // Every `Err` here is a heel with no balance, or an error the full curve would also give.
+    macro_rules! at {
+        ($deg:expr) => {
+            match hull.gz_at(mass_t, g, free_surface_moment_tm, density, $deg, heel0) {
+                Ok(v) => gz.push(($deg, v)),
+                Err(TrimOutOfRange) => return Ok(Screened::Fails),
+                Err(e) => return Err(PyError::Value(e.to_string())),
+            }
+        };
+    }
+    let [a30, a40] = CRITERIA_ANGLES_DEG;
+    for deg in a30..=a40 {
+        at!(deg);
+    }
+    if area(&gz, a30, a40) < 0.030 {
+        return Ok(Screened::Fails);
+    }
+    for deg in a40 + 1..=*ANGLES_DEG.end() {
+        at!(deg);
+    }
+    if py_max(gz.iter().map(|p| p.1)) < 0.20 {
+        return Ok(Screened::Fails);
+    }
+    for deg in 25..a30 {
+        at!(deg);
+    }
+    let high = py_max(gz.iter().map(|p| p.1));
+    for deg in (0..25).rev() {
+        at!(deg);
+        if gz[gz.len() - 1].1 >= high {
+            return Ok(Screened::Fails);
+        }
+    }
+    gz.sort_by_key(|p| p.0);
+    Ok(Screened::Curve(gz))
+}
+
 /// One condition of a hull from its sections (issue #448): the free-trim GZ curve at G on the
 /// 1 degree grid, less `free_surface_m x sin(phi)`, then the areas and the criteria. `draught`,
 /// `gm_solid` and the deck edge angle are the caller's, from the upright cut at the equilibrium.
@@ -551,14 +618,20 @@ pub(crate) fn hull_condition(
     density: f64,
     criteria_set: &str,
     heel0: Option<&crate::sections::Equilibrium>,
+    gz_worked: Option<Vec<(i32, f64)>>,
 ) -> Result<Condition, PyError> {
-    let gz = match hull.gz_from(
-        mass_t,
-        g,
-        free_surface_m * mass_t,
-        density,
-        ANGLES_DEG,
-        heel0,
+    let gz = match gz_worked.map_or_else(
+        || {
+            hull.gz_from(
+                mass_t,
+                g,
+                free_surface_m * mass_t,
+                density,
+                ANGLES_DEG,
+                heel0,
+            )
+        },
+        Ok,
     ) {
         Ok(gz) => gz,
         // At some heel the free-trim float finds no balance (G above the longitudinal

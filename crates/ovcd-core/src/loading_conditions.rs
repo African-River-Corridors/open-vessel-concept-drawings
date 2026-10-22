@@ -607,16 +607,36 @@ fn condition_with(
             .map_err(to_py)?
             .km_t_m
             - kg;
+        let fs_m = div(fs_moment, disp)?;
+        // Issue #567: a trial of the automatic plan stops as soon as a criterion of the IS Code
+        // set is decided (see `screened_gz`); the curve of a trial that is not decided is the
+        // whole curve, used as is.
+        let gz_worked = if screen && inp.criteria_set == "IS_CODE_2008" {
+            match crate::box_stability::screened_gz(
+                inp.hull,
+                disp,
+                g,
+                fs_m * disp,
+                inp.water_density,
+                heel0.as_ref(),
+            )? {
+                crate::box_stability::Screened::Fails => return Ok(None),
+                crate::box_stability::Screened::Curve(gz) => Some(gz),
+            }
+        } else {
+            None
+        };
         hull_condition(
             inp.hull,
             disp,
             g,
             t,
             gm_solid,
-            div(fs_moment, disp)?,
+            fs_m,
             inp.water_density,
             inp.criteria_set,
             heel0.as_ref(),
+            gz_worked,
         )?
     };
     c.name = role.name().to_string();
