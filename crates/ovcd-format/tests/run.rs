@@ -128,16 +128,17 @@ fn a_channel_with_a_depth_is_described_to_the_engine() {
 }
 
 #[test]
-fn a_convoy_has_no_params_and_no_results() {
+fn a_convoy_runs_as_one_pushed_barge_and_gets_totals() {
     let mut design = starter();
     let o = &mut design.options[0];
     let slot = o.inputs.iter_mut().find(|(n, _)| n == "formation").unwrap();
     slot.1.value = json!({ "kind": "pushed_convoy", "abreast": 2, "in_line": 2 });
-    assert_eq!(simulate_params_of(o), Err(CONVOY_NOT_AVAILABLE.to_string()));
-    assert_eq!(
-        run_option(o),
-        RunOutcome::NotAvailable(CONVOY_NOT_AVAILABLE.to_string())
-    );
+    let p = simulate_params_of(o).unwrap();
+    assert_eq!(p["self_propelled"], json!(false));
+    let RunOutcome::Results { results, .. } = run_option(o) else {
+        panic!("a convoy has results");
+    };
+    assert_eq!(results["convoy"]["barges"], json!(4));
 }
 
 #[test]
@@ -197,17 +198,6 @@ fn fill_that_writes_a_hash_sets_the_engine_version_to_this_engine() {
     let design = c.design.unwrap();
     assert!(design.options[0].results_hash.is_some());
     assert_eq!(design.engine_version, ovcd_format::vdesign::ENGINE_VERSION);
-}
-
-#[test]
-fn fill_keeps_the_old_engine_version_when_it_writes_no_hash() {
-    // A convoy has no results, so no hash is written, so the version is not claimed.
-    let mut option = raw_option("A", None);
-    option["inputs"]["formation"] = json!({"kind": "pushed_convoy", "abreast": 2, "in_line": 2});
-    let c = fill(&raw_file("0.1.0", json!([option])), &Profile::built_in());
-    let design = c.design.unwrap();
-    assert!(design.options[0].results_hash.is_none());
-    assert_eq!(design.engine_version, "0.1.0");
 }
 
 #[test]
@@ -293,12 +283,15 @@ fn each_outcome_has_its_own_status_word() {
 }
 
 #[test]
-fn a_stored_hash_on_a_convoy_is_not_checked() {
+fn a_stored_hash_on_a_convoy_is_checked_like_any_other() {
     let mut design = starter();
     let o = &mut design.options[0];
     let slot = o.inputs.iter_mut().find(|(n, _)| n == "formation").unwrap();
     slot.1.value = json!({ "kind": "pushed_convoy", "abreast": 2, "in_line": 2 });
-    assert_eq!(run_design(&design)[0].hash_status, HashStatus::NotChecked);
+    assert!(matches!(
+        run_design(&design)[0].hash_status,
+        HashStatus::Differs { .. }
+    ));
     design.options[0].results_hash = None;
     assert_eq!(run_design(&design)[0].hash_status, HashStatus::NotStored);
 }
