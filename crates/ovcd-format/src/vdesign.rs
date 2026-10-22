@@ -303,6 +303,10 @@ pub const GAS_WING_TANK_HEIGHT_RATIO: f64 = 0.66;
 /// The weather shield over the tanks (issue #410): fixed in the engine before format v3.
 pub const GAS_WEATHER_SHIELD_THICKNESS_MM: f64 = 6.0;
 pub const GAS_WEATHER_SHIELD_CLEARANCE_M: f64 = 1.5;
+/// The tank forming allowance and the dome wall (issue #412). The engine weighed neither, so a file
+/// saved before them keeps 0 (no allowance, no dome mass) and its results do not move.
+pub const GAS_TANK_FORMING_ALLOWANCE_PCT: f64 = 0.0;
+pub const GAS_TANK_DOME_WALL_THICKNESS_MM: f64 = 0.0;
 pub const GAS_TANK_WALL_THICKNESS_MM: f64 = 25.0;
 
 /// The Cargo-dependent tank design values fixed in the engine before they were inputs (issue #292;
@@ -573,6 +577,18 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
         applies_to: AppliesTo::Only("type_c_tanks"),
         formations: None,
         value: GAS_WEATHER_SHIELD_CLEARANCE_M,
+    },
+    LegacyFixed {
+        name: "tank_forming_allowance_pct",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: GAS_TANK_FORMING_ALLOWANCE_PCT,
+    },
+    LegacyFixed {
+        name: "tank_dome_wall_thickness_mm",
+        applies_to: AppliesTo::Only("type_c_tanks"),
+        formations: None,
+        value: GAS_TANK_DOME_WALL_THICKNESS_MM,
     },
     LegacyFixed {
         name: "tank_wall_thickness_mm",
@@ -2119,6 +2135,20 @@ pub const INPUTS: &[InputSpec] = &[
     only(
         "weather_shield_clearance_m",
         "Weather shield clearance over the tanks",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_forming_allowance_pct",
+        "Tank plate forming allowance",
+        NUM,
+        "type_c_tanks",
+        Group::GasTanks,
+    ),
+    only(
+        "tank_dome_wall_thickness_mm",
+        "Tank dome wall thickness",
         NUM,
         "type_c_tanks",
         Group::GasTanks,

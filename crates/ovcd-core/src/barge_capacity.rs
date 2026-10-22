@@ -40,7 +40,7 @@ use crate::tanks::{INT_OVERFLOW_MESSAGE, calculate_tank_arrangement_wide};
 use crate::text;
 use crate::text::{Arg, Text};
 
-use crate::weights::calculate_weights;
+use crate::weights::{TankMassOptions, calculate_weights_with, dome_items};
 
 /// Default cap on a gas tank's outer diameter (m). It is a design limit of this tool, not a rule of
 /// the IGC Code: above it the engine goes to more tanks across the beam. The cap is an input
@@ -101,6 +101,12 @@ pub const DEFAULT_WING_TANK_HEIGHT_RATIO: f64 = 0.66;
 pub const DEFAULT_WEATHER_SHIELD_THICKNESS_MM: f64 = 6.0;
 /// Default clearance from the tank top to the weather shield top (m, issue #410).
 pub const DEFAULT_WEATHER_SHIELD_CLEARANCE_M: f64 = 1.5;
+/// Default forming allowance on the tank plate, as a share of the required thickness (%, issue
+/// #412). An Estimate: IGC 4.23.2.1.1 makes the calculated thickness a minimum after forming, so
+/// the plate as ordered is thicker; the Code gives no figure for the thinning.
+pub const DEFAULT_TANK_FORMING_ALLOWANCE_PCT: f64 = 5.0;
+/// Default wall of a tank dome (mm, issue #412). An Estimate: the thickness of the tank wall.
+pub const DEFAULT_TANK_DOME_WALL_THICKNESS_MM: f64 = 25.0;
 /// Default aft void of a pushed barge (m).
 pub const DEFAULT_PUSHED_STERN_VOID_M: f64 = 3.0;
 
@@ -257,6 +263,10 @@ pub struct BargeCapacityInputs {
     pub weather_shield_thickness_mm: f64,
     /// Clearance from the tank top to the weather shield top (m, issue #410).
     pub weather_shield_clearance_m: f64,
+    /// Forming allowance on the tank plate, % of the required thickness (issue #412).
+    pub tank_forming_allowance_pct: f64,
+    /// Wall thickness of each tank's dome (mm); 0: the dome has no mass (issue #412).
+    pub tank_dome_wall_thickness_mm: f64,
 
     // --- Liquid bulk branch ---
     /// The cargo tank layout of a liquid bulk Cargo (crude oil). `None` for gas and dry bulk; a liquid
@@ -334,6 +344,10 @@ impl BargeCapacityInputs {
             weather_shield_thickness_mm: DEFAULT_WEATHER_SHIELD_THICKNESS_MM,
             weather_shield_clearance_m: DEFAULT_WEATHER_SHIELD_CLEARANCE_M,
             liquid: None,
+            // The legacy API weighs neither (issue #412); a Design takes the Estimates of the
+            // Defaults Profile, which `simulate` passes in.
+            tank_forming_allowance_pct: 0.0,
+            tank_dome_wall_thickness_mm: 0.0,
             hold_type: "sloped_hopper".to_string(),
             lightship_k_t_per_m3: None,
             wing_void_width: 1.0,
@@ -471,6 +485,9 @@ pub struct BargeCapacityResult {
     /// Gas only: the converged arrangement, for gas stability.
     /// Issue #348: the stern block's mass items when they are in the lightship (empty otherwise).
     pub stern_block_items: Vec<crate::weights::MassItem>,
+    /// Issue #412: the tank domes as a lightship item (already in `lightship_t`); empty for a hull
+    /// without gas tanks or a dome with no wall. The gas stability takes it with the covering.
+    pub dome_items: Vec<crate::weights::MassItem>,
     /// Issue #349: the trim of a dry-bulk hull, laden and light, when the stern block is in the
     /// lightship (empty otherwise; a gas hull has it per stability condition).
     pub trim_conditions: Vec<(&'static str, crate::models::TrimResult)>,
@@ -610,6 +627,7 @@ struct Detail {
     gas_basis: Option<GasBasis>,
     tank_rules: Option<TankRuleValues>,
     liquid: Option<LiquidBulkResult>,
+    dome_items: Vec<crate::weights::MassItem>,
 }
 
 /// (cargo volume, lightship, top above keel, detail) of a volume branch. `n_total` is the exact
@@ -810,7 +828,14 @@ fn gas_volumetric(
     let (tanks, n_total) = tanks.expect("the loop runs at least once");
 
     let hull = HullGeometry::new(inp.loa, inp.beam, inp.depth, 0.0, 0.0, 0.0, 0.0);
-    let weights = calculate_weights(&bi, &hull, &tanks)?;
+    // Issue #412: the plate as ordered and the domes, in the lightship.
+    let mass_opts = TankMassOptions {
+        forming_allowance_pct: inp.tank_forming_allowance_pct,
+        dome_wall_thickness_mm: inp.tank_dome_wall_thickness_mm,
+        dome_diameter_m: dome.0,
+    };
+    let weights = calculate_weights_with(&bi, &hull, &tanks, &mass_opts)?;
+    let dome_mass_items = dome_items(&bi, &tanks, &mass_opts)?;
     let lightship = weights.lightship;
     let h_top = db + inp.tank_support_height + tanks.outer_diameter + dome.1;
     let detail = Detail {
@@ -863,6 +888,7 @@ fn gas_volumetric(
             tanks: tanks.clone(),
             weights,
         }),
+        dome_items: dome_mass_items,
         ..Detail::default()
     };
     Ok(Volumetric {
@@ -1696,6 +1722,7 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         gas_basis: detail.gas_basis,
         liquid: detail.liquid,
         stern_block_items: stern_block_items.clone(),
+        dome_items: detail.dome_items,
         trim_conditions,
         sightline,
         blind_distance_laden_m,
