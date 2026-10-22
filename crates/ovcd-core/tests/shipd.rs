@@ -1,16 +1,20 @@
-//! Seam: `ovcd_core::shipd`, the ShipD-style parametric hull without bulbs (issue #452, spec 0008
+//! Seam: `ovcd_core::shipd`, the ShipD-style parametric hull (issues #452 and #453, spec 0008
 //! "ShipD-style hull").
 //!
 //! Label: sourced - the Ship-D dataset (Bagazinski and Ahmed 2024, Harvard Dataverse,
 //! doi:10.7910/DVN/MMGAUS, V1, CC0 1.0): the input vectors and the measures of the committed
 //! sample in `calibration/shipd/` (see its `SOURCE.md`), and the 49 constraints of
 //! `HullParameterization_ConstraintsOverview.pdf`. The constraint tests are properties: each
-//! vector breaks exactly the constraint it is named for.
+//! vector breaks exactly the constraint it is named for. The sections of every sampled hull are a
+//! property of the generator, not a sourced number.
 
 use ovcd_core::shipd::{
-    BENCHMARK, CONSTRAINTS, DESIGN, DRAUGHT_FRACTIONS, NAMES, Shape, ShipdError, ShipdParameters,
-    check, measures, sections,
+    BENCHMARK, CONSTRAINTS, DESIGN, DRAUGHT_FRACTIONS, FilletRow, NAMES, Shape, ShipdError,
+    ShipdParameters, check, measures, sections,
 };
+
+/// The set of the sample that has bulbs.
+const BULB_SET: &str = "Constrained_Randomized_Set_1";
 
 const SAMPLE: &str = include_str!("../../../calibration/shipd/sample.csv");
 const REFERENCE: &str = include_str!("../../../calibration/shipd/reference.csv");
@@ -135,17 +139,11 @@ fn the_bow_keel_intersection_is_never_aft_of_the_stem() {
 }
 
 #[test]
-fn without_bulbs_the_bulb_constraints_hold_and_a_bulb_is_refused() {
+fn without_bulbs_the_bulb_constraints_hold_and_a_constraint_failure_says_which() {
     let (_, _, v) = sample(0);
     let (l, b, d) = dims(&v);
     let g = Shape::new(&ShipdParameters(v), l, b, d).constraints();
     assert!(g[36..].iter().all(|&x| x == -1.0));
-    let mut bulb = v;
-    bulb[31] = 1.0;
-    assert_eq!(
-        sections(&ShipdParameters(bulb), l, b, d, DESIGN),
-        Err(ShipdError::Bulb)
-    );
     let mut bad = v;
     bad[1] = 0.54;
     match sections(&ShipdParameters(bad), l, b, d, DESIGN) {
@@ -155,6 +153,181 @@ fn without_bulbs_the_bulb_constraints_hold_and_a_bulb_is_refused() {
             assert!(format!("{}", ShipdError::Constraints(c)).contains("constraint 0"));
         }
         other => panic!("{other:?}"),
+    }
+}
+
+/// The sampled hull of the bulb set with this dataset row (from 0).
+fn bulb_hull(row: &str) -> [f64; 45] {
+    SAMPLE
+        .lines()
+        .skip(1)
+        .map(|l| l.split(',').collect::<Vec<_>>())
+        .find(|c| c[0] == BULB_SET && c[1] == row)
+        .map(|c| {
+            c[2..]
+                .iter()
+                .map(|x| x.parse().unwrap())
+                .collect::<Vec<f64>>()
+        })
+        .unwrap()
+        .try_into()
+        .unwrap()
+}
+
+/// A bulb hull of the sample that passes all 49 constraints, with both bulbs, a keel radius and a
+/// deadrise: the base of the vectors below.
+const BULB_BASE: &str = "763";
+
+/// For each bulb constraint (36 to 48): the parameters changed so that it alone fails. They are
+/// properties of the constraint, not values of a hull: some are outside the dataset's ranges.
+const BULB_BREAKS: [(usize, &[(usize, f64)]); 13] = [
+    // Lower vertical radius of the bow bulb above the keel radius.
+    (36, &[(6, 0.45), (34, 1.95)]),
+    // Length radius of the bow bulb above the keel radius.
+    (37, &[(10, 0.3), (34, 0.45)]),
+    // Bow bulb wider than the hull at its widest.
+    (38, &[(35, 1.05)]),
+    // Bow bulb aft of the midship breadth at the base.
+    (
+        39,
+        &[
+            (15, -0.382_917_448_672_108),
+            (16, 0.188_279_147_586_32),
+            (36, -0.179_374_403_752_875),
+            (33, 0.987_446_092_802_853),
+            (6, 0.382_095_008_535_314),
+        ],
+    ),
+    // Bow bulb aft of the midship breadth at its vertex.
+    (40, &[(1, 0.2), (6, 0.6)]),
+    // Bow bulb aft of the midship breadth at the design draught.
+    (41, &[(1, 0.15)]),
+    // Lower vertical radius of the stern bulb above the keel radius.
+    (
+        42,
+        &[
+            (10, 0.065_632_494_589_89),
+            (41, 0.754_085_010_252_78),
+            (42, 0.054_612_292_726_761),
+        ],
+    ),
+    // Length radius of the stern bulb above the keel radius.
+    (43, &[(10, 0.05)]),
+    // Stern bulb wider than the hull at its widest.
+    (44, &[(42, 1.05)]),
+    // Stern bulb higher than the stern-keel intersection.
+    (45, &[(23, 0.0)]),
+    // Stern bulb forward of the midship breadth at the base.
+    (46, &[(38, -0.7), (40, -1.0)]),
+    // Stern bulb forward of the midship breadth at its height.
+    (47, &[(6, 0.65)]),
+    // Stern bulb forward of the midship breadth at its vertex.
+    (
+        48,
+        &[
+            (24, 0.271_969_637_418_438),
+            (25, -0.757_362_170_835_696),
+            (26, 0.233_209_404_998_068),
+            (38, 0.287_677_963_188_439),
+            (43, -0.126_428_023_088_338),
+            (39, 0.081_331_340_369_569_6),
+        ],
+    ),
+];
+
+#[test]
+fn each_bulb_constraint_fails_alone_for_its_vector() {
+    let base = bulb_hull(BULB_BASE);
+    assert!(failures(base).is_empty(), "the base passes");
+    for (index, changes) in BULB_BREAKS {
+        let mut v = base;
+        for &(j, x) in changes {
+            v[j] = x;
+        }
+        assert_eq!(
+            failures(v),
+            vec![index],
+            "{index} ({}): {changes:?}",
+            CONSTRAINTS[index]
+        );
+    }
+}
+
+#[test]
+fn a_bulb_needs_a_zero_deadrise_or_a_positive_keel_radius() {
+    // With a deadrise and a keel radius that is not positive, every bulb row that compares with
+    // the keel fails (the dataset's code does the same by branch); with no deadrise, none does.
+    let base = bulb_hull(BULB_BASE);
+    let mut v = base;
+    v[10] = -0.3;
+    assert_eq!(failures(v), vec![36, 37, 38, 42, 43, 44, 45]);
+    let mut v = base;
+    v[8] = 0.0;
+    assert!(failures(v).is_empty());
+    v[10] = -0.3;
+    assert!(
+        !failures(v).iter().any(|i| (36..=38).contains(i)),
+        "{:?}",
+        failures(v)
+    );
+}
+
+#[test]
+fn a_bulb_hull_sections_are_closed_and_simple_at_every_station() {
+    // Every hull of the bulb set in the sample, at a Design's cut: `SectionsTable::new` refuses a
+    // section that crosses itself, has a negative half-breadth or does not start and end on the
+    // centre line.
+    let mut n = 0;
+    for line in SAMPLE.lines().skip(1) {
+        let c: Vec<&str> = line.split(',').collect();
+        if c[0] != BULB_SET {
+            continue;
+        }
+        let v: Vec<f64> = c[2..].iter().map(|x| x.parse().unwrap()).collect();
+        let v: [f64; 45] = v.try_into().unwrap();
+        let (l, b, d) = dims(&v);
+        let t = sections(&ShipdParameters(v), l, b, d, DESIGN)
+            .unwrap_or_else(|e| panic!("{} {}: {e}", c[0], c[1]));
+        let last = t.sections[0].points.len() - 1;
+        for s in &t.sections {
+            assert_eq!(s.points[last], (0.0, d), "{} {}", c[0], c[1]);
+            assert!(s.points.iter().all(|p| p.0 >= 0.0 && p.0.is_finite()));
+        }
+        assert!(t.sections.windows(2).all(|w| w[0].x < w[1].x));
+        n += 1;
+    }
+    assert_eq!(n, 100);
+}
+
+#[test]
+fn a_bulb_leads_the_stem_and_trails_the_stern_by_its_length() {
+    // At the height of its widest part the bow bulb's leading edge is `Lbb LOA` forward of the stem
+    // at the design draught, and the stern bulb's trailing edge is `Lsb LOA` aft of where it starts.
+    // The tolerance is rounding only.
+    let v = bulb_hull(BULB_BASE);
+    let (l, b, d) = dims(&v);
+    let shape = Shape::new(&ShipdParameters(v), l, b, d);
+    let wl = v[6] * d;
+    let fp = shape.bow_profile(wl);
+    let bow = shape.waterline(v[34] * wl, FilletRow::Definition);
+    assert!(
+        (bow.span().0 - (fp - l * v[33])).abs() < 1e-9,
+        "{:?}",
+        bow.span()
+    );
+    let top = wl * v[40];
+    let start = v[38] * v[2] * l + (l - v[1] * l - v[2] * l) + v[1] * l;
+    let stern = shape.waterline(v[41] * top, FilletRow::Definition);
+    assert!(
+        (stern.span().1 - (start + l * v[39])).abs() < 1e-9,
+        "{:?}",
+        stern.span()
+    );
+    // The Sections Table has a station at each of those two x.
+    let t = sections(&ShipdParameters(v), l, b, d, DESIGN).unwrap();
+    for x in [fp - l * v[33], start + l * v[39]] {
+        let at = l - x;
+        assert!(t.sections.iter().any(|s| (s.x - at).abs() < 1e-9), "{at}");
     }
 }
 

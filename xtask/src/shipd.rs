@@ -1,15 +1,16 @@
 //! The ShipD benchmark (spec 0008, "Benchmark against the dataset", issue #452).
 //!
 //! `shipd-sample` draws, with a fixed seed, 100 hulls from each of the Ship-D dataset's Constrained
-//! Randomized Sets 2 and 3 that pass the constraints, and writes their input vectors and the
-//! dataset's measures at its ten draughts to `calibration/shipd/`. `shipd-benchmark` builds each
+//! Randomized Sets 2 and 3 (no bulbs) and Set 1 (a bulb at the bow, the stern or both) that pass
+//! the constraints, and writes their input vectors and the dataset's measures at its ten draughts
+//! to `calibration/shipd/`. `shipd-benchmark` builds each
 //! sampled hull's Sections Table at L = 10 m, measures it at the same draughts and writes the
 //! comparison to `calibration/shipd/report.md`.
 
 use crate::{Result, root};
 use ovcd_core::shipd::{
-    BENCHMARK, DESIGN, DRAUGHT_FRACTIONS, Measures, NAMES, Resolution, ShipdParameters, check,
-    measures, sections,
+    BENCHMARK, DESIGN, DRAUGHT_FRACTIONS, FilletRow, Measures, NAMES, Resolution, ShipdParameters,
+    check, measures, sections,
 };
 use std::fmt::Write as _;
 use std::path::Path;
@@ -17,10 +18,16 @@ use std::path::Path;
 /// The sample's seed and size per set.
 const SEED: u64 = 452;
 const PER_SET: usize = 100;
-const SETS: [&str; 2] = [
+const SETS: [&str; 3] = [
     "Constrained_Randomized_Set_2",
     "Constrained_Randomized_Set_3",
+    "Constrained_Randomized_Set_1",
 ];
+
+/// Set 1 is sampled among the hulls with a bulb; the others among the hulls without one.
+fn with_bulb(set: &str) -> bool {
+    set.ends_with("Set_1")
+}
 /// The dataset's measure files, in the order of the `Measures` fields.
 const QUANTITIES: [&str; 7] = ["Volume", "Area_WP", "LCB", "LCF", "Ixx", "Iyy", "WL_Length"];
 
@@ -101,11 +108,20 @@ pub(crate) fn sample(args: &[String]) -> Result {
             order.swap(i, j);
         }
         let mut taken = 0;
+        let (mut seen, mut failed, mut only_vertex) = (0, 0, 0);
         for &r in &order {
             let v: Vec<f64> = rows[r].iter().map(|c| number(c)).collect::<Result<_>>()?;
             let p = ShipdParameters(v.clone().try_into().map_err(|_| "45 values")?);
             let (loa, beam, depth) = (v[0], v[3] * v[0], v[4] * v[0]);
-            if !check(&p, loa, beam, depth).is_empty() || v[31] != 0.0 || v[32] != 0.0 {
+            if (v[31] != 0.0 || v[32] != 0.0) != with_bulb(set) {
+                continue;
+            }
+            seen += 1;
+            let failures = check(&p, loa, beam, depth);
+            if !failures.is_empty() {
+                failed += 1;
+                // The dataset's code has the sign of this row the other way round.
+                only_vertex += usize::from(failures.iter().all(|f| f.index == 40));
                 continue;
             }
             let _ = write!(sample, "{set},{r}");
@@ -125,6 +141,10 @@ pub(crate) fn sample(args: &[String]) -> Result {
                 break;
             }
         }
+        println!(
+            "{set}: {taken} taken after {seen} hulls of the kind; {failed} of them fail the \
+             constraints, {only_vertex} of those on index 40 only"
+        );
         if taken < PER_SET {
             return Err(format!("{set}: only {taken} hulls pass the constraints"));
         }
@@ -193,9 +213,8 @@ fn fields(m: &Measures) -> [f64; 7] {
     ]
 }
 
-/// The worst difference of one hull per quantity, as a share of its limit (1 = at the limit), and
-/// the draught where it is.
-pub(crate) fn compare(h: &Hull, r: Resolution) -> Result<[(f64, f64, f64, f64); 7]> {
+/// The hull's measures at the dataset's draughts, at cut `r`.
+fn measured(h: &Hull, r: Resolution) -> Result<Vec<Measures>> {
     let v = &h.p.0;
     let (loa, beam, depth) = (v[0], v[3] * v[0], v[4] * v[0]);
     let table = sections(&h.p, loa, beam, depth, r).map_err(|e| e.to_string())?;
@@ -205,7 +224,13 @@ pub(crate) fn compare(h: &Hull, r: Resolution) -> Result<[(f64, f64, f64, f64); 
         .iter()
         .map(|f| f.min(1.0 - 1e-9) * depth)
         .collect();
-    let ours = measures(&table, loa, &draughts);
+    Ok(measures(&table, loa, &draughts))
+}
+
+/// The worst difference of one hull per quantity, as a share of its limit (1 = at the limit), and
+/// the draught where it is.
+pub(crate) fn compare(h: &Hull, r: Resolution) -> Result<[(f64, f64, f64, f64); 7]> {
+    let ours = measured(h, r)?;
     let mut worst = [(0.0, 0.0, 0.0, 0.0); 7];
     for (k, (o, r)) in ours.iter().zip(&h.reference).enumerate() {
         for (q, (a, b)) in fields(o).iter().zip(fields(r)).enumerate() {
@@ -242,8 +267,10 @@ fn table(hulls: &[Hull], r: Resolution) -> Result<Table> {
                 pass += 1;
             } else {
                 let _ = write!(outside, "| {set} | {} |", h.row);
+                let mut draughts = Vec::new();
                 for (q, x) in w.iter().enumerate() {
                     if x.0 > 1.0 {
+                        draughts.push(x.1);
                         let _ = write!(
                             outside,
                             " {} at T/Dd {:.2}: OVCD {:.6}, dataset {:.6} ({:.2} x the limit);",
@@ -251,7 +278,15 @@ fn table(hulls: &[Hull], r: Resolution) -> Result<Table> {
                         );
                     }
                 }
-                outside.push_str(" |\n");
+                // Where in the draught range the hull is outside.
+                let at = if draughts.iter().all(|d| *d <= 0.25) {
+                    "low draught: the immersed volume is small"
+                } else if draughts.iter().all(|d| *d >= 1.0) {
+                    "deck level: the waterplane at the deck"
+                } else {
+                    "between"
+                };
+                let _ = writeln!(outside, " | {at} |");
             }
             for (q, x) in w.iter().enumerate() {
                 if x.0 <= 1.0 {
@@ -277,11 +312,67 @@ fn table(hulls: &[Hull], r: Resolution) -> Result<Table> {
     Ok((head + &rows, outside, counts))
 }
 
+/// The share of each bulb hull's volume that the dataset's curvature row moves, and the hulls
+/// where it changes whether the hull passes.
+fn fillet_section(hulls: &[Hull]) -> Result<String> {
+    let literal = Resolution {
+        fillet_row: FilletRow::DatasetCode,
+        ..BENCHMARK
+    };
+    let mut moved = 0;
+    let mut n = 0;
+    let mut rows = String::new();
+    let mut worst = 0.0_f64;
+    for h in hulls.iter().filter(|h| with_bulb(&h.set)) {
+        n += 1;
+        let (a, b) = (measured(h, BENCHMARK)?, measured(h, literal)?);
+        let diff = a
+            .iter()
+            .zip(&b)
+            .map(|(x, y)| (x.volume - y.volume).abs() / y.volume.abs())
+            .fold(0.0_f64, f64::max);
+        worst = worst.max(diff);
+        let (wa, wb) = (compare(h, BENCHMARK)?, compare(h, literal)?);
+        let (pa, pb) = (wa.iter().all(|x| x.0 <= 1.0), wb.iter().all(|x| x.0 <= 1.0));
+        if diff > 1e-3 {
+            moved += 1;
+        }
+        if diff > 1e-3 || pa != pb {
+            let _ = writeln!(
+                rows,
+                "| {} | {} | {:.3} % | {} | {} |",
+                h.set,
+                h.row,
+                100.0 * diff,
+                if pa { "pass" } else { "outside" },
+                if pb { "pass" } else { "outside" }
+            );
+        }
+    }
+    let mut out = format!(
+        "\n## The fillet row\n\nThe quartic fillet between a bulb and the hull has one curvature \
+         condition. OVCD writes it from the definition (no curvature at the bulb end). The dataset's \
+         code writes `6 x^2` where the second derivative has `6 x`. Of the {n} bulb hulls, {moved} \
+         differ in volume by more than 0.1 % between the two rows (largest {:.3} %); each is listed, \
+         with whether it passes under each row.\n\n",
+        100.0 * worst
+    );
+    if rows.is_empty() {
+        out.push_str("None differ.\n");
+    } else {
+        out.push_str(
+            "| Set | Row | Volume difference | Definition | Dataset row |\n|---|---|---|---|---|\n",
+        );
+        out.push_str(&rows);
+    }
+    Ok(out)
+}
+
 pub(crate) fn benchmark() -> Result {
     let dir = folder();
     let hulls = load(&dir)?;
     let mut report = format!(
-        "# ShipD benchmark\n\nWritten by `cargo run -p xtask -- shipd-benchmark` (issue #452, spec 0008 \
+        "# ShipD benchmark\n\nWritten by `cargo run -p xtask -- shipd-benchmark` (issues #452 and #453, spec 0008 \
          \"Benchmark against the dataset\"). The sample and its source are in `SOURCE.md`.\n\n\
          Each sampled hull is built at L = 10 m as OVCD's ShipD-style Sections Table ({} even stations \
          plus the knuckles and the ends of each height's waterline; points at {} even heights plus \
@@ -305,9 +396,10 @@ pub(crate) fn benchmark() -> Result {
     if outside.is_empty() {
         report.push_str("None.\n");
     } else {
-        report.push_str("| Set | Row | Outside the limit |\n|---|---|---|\n");
+        report.push_str("| Set | Row | Outside the limit | Where |\n|---|---|---|---|\n");
         report.push_str(&outside);
     }
+    report.push_str(&fillet_section(&hulls)?);
     let (rows, _, _) = table(&hulls, DESIGN)?;
     let _ = write!(
         report,
@@ -318,9 +410,10 @@ pub(crate) fn benchmark() -> Result {
     );
     std::fs::write(dir.join("report.md"), &report).map_err(|e| e.to_string())?;
     print!("{report}");
-    for (pass, n) in counts {
-        if 100 * pass < 95 * n {
-            return Err(format!("{pass} of {n} hulls pass: below 95 %"));
+    // The spec's pass line is for the sets without bulbs; Set 1 lists each hull outside.
+    for (set, (pass, n)) in SETS.iter().zip(counts) {
+        if !with_bulb(set) && 100 * pass < 95 * n {
+            return Err(format!("{set}: {pass} of {n} hulls pass: below 95 %"));
         }
     }
     Ok(())

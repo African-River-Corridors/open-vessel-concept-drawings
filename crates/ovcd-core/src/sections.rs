@@ -18,7 +18,7 @@
 
 use alloc::vec::Vec;
 use core::fmt;
-use libm::{cos, sin, sqrt};
+use libm::{cos, fabs, sin, sqrt};
 
 /// One Station of the hull: the starboard half-section from the keel point on the centre line
 /// `(0, z_keel)`, round the bottom and the side to the deck edge, and across the deck to the centre
@@ -223,8 +223,22 @@ fn crosses_itself(pts: &[(f64, f64)]) -> bool {
     for i in 0..n.saturating_sub(1) {
         for j in (i + 2)..n.saturating_sub(1) {
             let (a, b, c, d) = (pts[i], pts[i + 1], pts[j], pts[j + 1]);
-            let (d1, d2) = (orient(a, b, c), orient(a, b, d));
-            let (d3, d4) = (orient(c, d, a), orient(c, d, b));
+            // Edges on one straight line (a flat of bottom, a straight side) differ by rounding
+            // only: a point within 1e-12 of the other edge's line is on it, not across it.
+            let scale = [a, b, c, d]
+                .iter()
+                .fold(1.0_f64, |m, p| m.max(fabs(p.0)).max(fabs(p.1)));
+            let side = |p: (f64, f64), q: (f64, f64), r: (f64, f64)| {
+                let len = sqrt((q.0 - p.0) * (q.0 - p.0) + (q.1 - p.1) * (q.1 - p.1));
+                let o = orient(p, q, r);
+                if len == 0.0 || fabs(o) <= 1e-12 * scale * len {
+                    0.0
+                } else {
+                    o
+                }
+            };
+            let (d1, d2) = (side(a, b, c), side(a, b, d));
+            let (d3, d4) = (side(c, d, a), side(c, d, b));
             if d1 * d2 < 0.0 && d3 * d4 < 0.0 {
                 return true;
             }

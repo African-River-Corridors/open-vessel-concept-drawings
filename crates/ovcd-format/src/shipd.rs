@@ -1,4 +1,5 @@
-//! The `shipd_parameters` input at the format's edge (issue #452, spec 0008 "ShipD-style hull"):
+//! The `shipd_parameters` input at the format's edge (issues #452 and #453, spec 0008 "ShipD-style
+//! hull"):
 //! the object of the dataset's header names read into `ShipdParameters`, and the checks a Design
 //! gets for it.
 
@@ -40,21 +41,13 @@ pub fn parameters_of(
 }
 
 /// The messages of an Option's ShipD parameters: one error per failed constraint, with its index
-/// and name, and an error for a bulb (built with #453).
+/// and name.
 pub fn messages(v: &Value, dims: (f64, f64, f64)) -> Vec<Text> {
     let p = match parameters_of(v, dims) {
         Ok(p) => p,
         Err(e) => return vec![e],
     };
     let mut out = Vec::new();
-    if p.0[31] != 0.0 || p.0[32] != 0.0 {
-        out.push(text!(
-            "msg-shipd-bulb",
-            "`{input}`: a ShipD hull with a bulbous bow or stern is not built yet (bit_BB and bit_SB \
-             must be 0)",
-            input = text::Arg::input("shipd_parameters")
-        ));
-    }
     let (l, b, d) = dims;
     for f in ovcd_core::shipd::check(&p, l, b, d) {
         out.push(text!(
