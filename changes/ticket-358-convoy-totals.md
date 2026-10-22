@@ -1,7 +1,7 @@
 <!-- design-impact -->
 ### ticket/358-convoy-totals-fix (2026-10-22)
 
-Between `main c4dd7c9` and `this branch 1860619`.
+Between `main 54e0b1f` and `this branch 1efe004`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
