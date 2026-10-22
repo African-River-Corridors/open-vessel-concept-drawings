@@ -4,7 +4,7 @@
 <!-- design-impact -->
 ### ticket/359-formation-powering-1 (2026-10-22)
 
-Between `main 5d5ec18` and `this branch 78d628b`.
+Between `main f9f99bb` and `this branch 74b6e30`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -48,4 +48,4 @@ Between `main 5d5ec18` and `this branch 78d628b`.
 | calibration canal-box-200x25x12-pb2230 | `formation.equivalent_hull.block_coefficient` | absent | 0.888731283183 | changed |
 | calibration canal-box-200x25x12-pb2230 | `formation.equivalent_hull.draught_m` | absent | 2.7432 | changed |
 | calibration canal-box-200x25x12-pb2230 | `formation.equivalent_hull.length_m` | absent | 65.8895597403 | changed |
-| ... | 2942 more changed quantities | | | |
+| ... | 3097 more changed quantities | | | |
