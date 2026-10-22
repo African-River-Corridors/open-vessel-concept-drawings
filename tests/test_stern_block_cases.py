@@ -14,6 +14,7 @@ def _cases():
 
 
 def test_at_least_five_fitted_ships_each_with_a_source_hash_and_a_method():
+    """Label: property"""
     cases = _cases()
     assert sum(c["fit"] for c in cases) >= 5
     for c in cases:
@@ -24,11 +25,13 @@ def test_at_least_five_fitted_ships_each_with_a_source_hash_and_a_method():
 
 
 def test_a_ship_kept_out_of_the_fit_says_why():
+    """Label: property"""
     for c in _cases():
         assert c["fit"] or c["excluded"]
 
 
 def test_the_stern_block_band_exists_for_every_confidence():
+    """Label: property"""
     bands = yaml.safe_load((CAL / "bands.yaml").read_text(encoding="utf-8"))["bands"]["stern_block_m"]
     assert set(bands["pct"]) == {"high", "medium", "low"}
     assert {c["confidence"] for c in _cases()} <= set(bands["pct"])
