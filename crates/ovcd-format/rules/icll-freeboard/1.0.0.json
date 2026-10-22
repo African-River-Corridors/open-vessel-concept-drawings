@@ -3466,7 +3466,7 @@
   "rules": [
     {
       "id": "icll/28(1)/type-a-tabular-freeboard",
-      "title": "Freeboard at least the tabular type A freeboard of table 28.1 for the ship length (barges: regulation 27(14)); corrections of regulations 29 to 40 are not applied",
+      "title": "Freeboard at least the tabular type A freeboard of table 28.1, for a self-propelled vessel; the table is read at the length overall, which is at least the regulation's length L (regulation 3(1)), so the check is the stricter one; barges: regulation 27(14); corrections of regulations 29 to 40 are not applied",
       "origin": "regulation",
       "source": {
         "document": "Protocol of 1988 to the ICLL 1966, as revised by resolution MSC.143(77)",
@@ -3499,7 +3499,57 @@
       "sizes": false,
       "evaluated": true,
       "finding": "#428",
-      "since": "1.0.0"
+      "since": "1.0.0",
+      "applies_when": {
+        "formation_kind": [
+          "self_propelled"
+        ]
+      }
+    },
+    {
+      "id": "icll/28(1)/type-a-tabular-freeboard-barge",
+      "title": "Freeboard of a barge with no propulsion of its own: the tabular type A freeboard of table 28.1 at the length overall is shown as a warning. Regulation 27(14)(c) lets an unmanned barge with only small gasketed access openings take a freeboard 25 % less, and regulation 30 can raise the value, so the tabular value is not a hard limit; corrections of regulations 29 to 40 are not applied",
+      "origin": "regulation",
+      "source": {
+        "document": "Protocol of 1988 to the ICLL 1966, as revised by resolution MSC.143(77)",
+        "edition": "as revised by MSC.143(77), adopted 5 June 2003",
+        "locator": "28(1)",
+        "page": "MSC.143-77.pdf, annex pp. 42-44 (table 28.1)",
+        "access": "free",
+        "also": [
+          "27(14)"
+        ]
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#428"
+      },
+      "verified": false,
+      "kind": "table",
+      "measure": {
+        "id": "input.min_freeboard_m"
+      },
+      "compare": "ge",
+      "limit": {
+        "table": "icll-type-a-freeboard",
+        "at": "input.length_overall_m",
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#428",
+      "since": "1.0.0",
+      "applies_when": {
+        "formation_kind": [
+          "pushed_barge",
+          "pushed_convoy",
+          "atb",
+          "towed_barge"
+        ]
+      }
     }
   ]
 }
