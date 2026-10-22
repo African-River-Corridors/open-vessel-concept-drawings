@@ -1,0 +1,805 @@
+{
+  "$schema": "../rule-set.schema.json",
+  "id": "igc-2g",
+  "family": "igc",
+  "title": "IGC Code as amended, ship type 2G: tank location and Type C tank walls",
+  "version": "2.0.0",
+  "edition": {
+    "document": "IGC Code, resolution MSC.370(93)",
+    "edition": "as adopted 22 May 2014, in force 1 January 2016",
+    "amendments": "MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106), MSC.566(109) read; none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+    "in_force": "1 January 2016; applies to ships whose keels are laid on or after 1 July 2016"
+  },
+  "sources": [
+    {
+      "document": "Resolution MSC.370(93), IGC Code (complete revised text)",
+      "edition": "adopted 22 May 2014",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.370%2893%29.pdf",
+      "access": "free",
+      "sha256": "f01e4864b6236fad4dd3d663fbb917603092eb3c30eeee50b81135be1aa8a2e2"
+    },
+    {
+      "document": "Resolution MSC.411(97), IGC Code amendments",
+      "edition": "adopted 25 November 2016",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.411%2897%29.pdf",
+      "access": "free",
+      "sha256": "96af92a23367a6f6c3aae25f281bd596d4fc7b4b3e03f8e3ecb22670bd0c8d8d"
+    },
+    {
+      "document": "Resolution MSC.441(99), IGC Code amendments",
+      "edition": "adopted 24 May 2018",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.441%2899%29.pdf",
+      "access": "free",
+      "sha256": "db5204c3c65d6e6bfc39919171bb2e6eedb6cafd2cef3e6562c1535310dba455"
+    },
+    {
+      "document": "Resolution MSC.476(102), IGC Code amendments",
+      "edition": "adopted 11 November 2020",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.476%28102%29.pdf",
+      "access": "free",
+      "sha256": "54ccaf3e3bffb5dbcdc712dae6e12f4dfab156f633c0ff9d13c645739403bb92"
+    },
+    {
+      "document": "Resolution MSC.492(104), IGC Code amendments",
+      "edition": "adopted 8 October 2021",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.492%28104%29.pdf",
+      "access": "free",
+      "sha256": "b3910bbca5af465ef42fb63a7607170f93058bac2e17b6e3f3d44d15b9ade206"
+    },
+    {
+      "document": "Resolution MSC.523(106), IGC Code amendments",
+      "edition": "adopted 10 November 2022",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.523%28106%29.pdf",
+      "access": "free",
+      "sha256": "320993986065c19b015268f0cc2ac1723fe6cad87c6d6136c7aed74f3d8cc2d7"
+    },
+    {
+      "document": "Resolution MSC.566(109), IGC Code amendments",
+      "edition": "adopted 6 December 2024",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.566%28109%29.pdf",
+      "access": "free",
+      "sha256": "f62a31c2dede4a53869a7e56b1cf12aad35f5980112fafb0e385ba8bf77e6126"
+    }
+  ],
+  "status": "draft",
+  "applies_when": {
+    "cargo_containment": [
+      "type_c_tanks"
+    ]
+  },
+  "includes": [
+    {
+      "id": "is2008-a",
+      "version": "2.0.0"
+    }
+  ],
+  "known_conflicts": [],
+  "tables": [
+    {
+      "id": "igc-d-vc",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "locator": "2.4.1.1",
+        "page": "MSC.370-93.pdf, annex pp. 20-21"
+      },
+      "input": {
+        "name": "Vc",
+        "unit": "m3"
+      },
+      "unit": "m",
+      "rows": [
+        {
+          "when": {
+            "le": 1000
+          },
+          "shape": "const",
+          "a": 0.8
+        },
+        {
+          "when": {
+            "gt": 1000,
+            "lt": 5000
+          },
+          "shape": "a+v*b/c",
+          "a": 0.75,
+          "b": 0.2,
+          "c": 4000
+        },
+        {
+          "when": {
+            "ge": 5000,
+            "lt": 30000
+          },
+          "shape": "a+v/c",
+          "a": 0.8,
+          "c": 25000
+        },
+        {
+          "when": {
+            "ge": 30000
+          },
+          "shape": "const",
+          "a": 2.0
+        }
+      ]
+    },
+    {
+      "id": "igc-min-thickness",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "locator": "4.23.2.1.2",
+        "page": "MSC.370-93.pdf, annex p. 64"
+      },
+      "input": {
+        "name": "tank material"
+      },
+      "unit": "mm",
+      "rows": [
+        {
+          "when": {
+            "in": [
+              "9Ni",
+              "S690QL1"
+            ]
+          },
+          "shape": "const",
+          "a": 5.0
+        },
+        {
+          "when": {
+            "in": [
+              "304L",
+              "316L"
+            ]
+          },
+          "shape": "const",
+          "a": 3.0
+        }
+      ]
+    },
+    {
+      "id": "igc-factor-a",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "locator": "4.23.3.1",
+        "page": "MSC.370-93.pdf, annex p. 66"
+      },
+      "input": {
+        "name": "tank material"
+      },
+      "unit": "-",
+      "rows": [
+        {
+          "when": {
+            "in": [
+              "9Ni",
+              "S690QL1"
+            ]
+          },
+          "shape": "const",
+          "a": 3.0
+        },
+        {
+          "when": {
+            "in": [
+              "304L",
+              "316L"
+            ]
+          },
+          "shape": "const",
+          "a": 3.5
+        }
+      ]
+    },
+    {
+      "id": "igc-factor-b",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "locator": "4.23.3.1",
+        "page": "MSC.370-93.pdf, annex p. 66"
+      },
+      "input": {
+        "name": "tank material"
+      },
+      "unit": "-",
+      "rows": [
+        {
+          "when": {
+            "in": [
+              "9Ni",
+              "S690QL1",
+              "304L",
+              "316L"
+            ]
+          },
+          "shape": "const",
+          "a": 1.5
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "igc/2.4.1.2/side-clearance",
+      "title": "Cargo tank side distance from the outer shell, at least d(Vc) less the insulation",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "2.4.1.2",
+        "page": "MSC.370-93.pdf, annex pp. 20-21",
+        "access": "free",
+        "also": [
+          "2.4.1.1",
+          "2.4.2"
+        ]
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#271"
+      },
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "MSC.370(93) with MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23",
+        "locator_read": "2.4.1.2 with 2.4.1.1 and 2.4.2, annex pp. 20-21",
+        "review": "#271"
+      },
+      "kind": "formula",
+      "measure": {
+        "id": "tank.side_gap"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "less-input",
+        "of": {
+          "table": "igc-d-vc",
+          "at": "tank.vc"
+        },
+        "less": "tank.insulation",
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "block",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "igc/2.4.1.2/bottom-clearance",
+      "title": "Cargo tank bottom distance: the greater of B/15 (at most 2 m) and d(Vc), less the insulation",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "2.4.1.2",
+        "page": "MSC.370-93.pdf, annex pp. 20-21",
+        "access": "free",
+        "also": [
+          "2.3.1.2.3",
+          "2.4.1.1",
+          "2.4.2"
+        ]
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#271"
+      },
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "MSC.370(93) with MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23",
+        "locator_read": "2.4.1.2 with 2.3.1.2.3, 2.4.1.1 and 2.4.2, annex pp. 20-21",
+        "review": "#271"
+      },
+      "kind": "formula",
+      "measure": {
+        "id": "tank.bottom_gap"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "max-capped-less",
+        "x": "input.beam_m",
+        "a": 0,
+        "b": 1,
+        "c": 15,
+        "hi": 2,
+        "of": {
+          "table": "igc-d-vc",
+          "at": "tank.vc"
+        },
+        "less": "tank.insulation",
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "block",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "igc/4.23.2.1.2/min-thickness",
+      "title": "Minimum shell and head thickness after forming, by steel class",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "4.23.2.1.2",
+        "page": "MSC.370-93.pdf, annex p. 64",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#271"
+      },
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "MSC.370(93) with MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23",
+        "locator_read": "4.23.2.1.2, annex p. 64",
+        "review": "#271"
+      },
+      "kind": "table",
+      "measure": {
+        "id": "tank.wall_thickness"
+      },
+      "compare": "ge",
+      "limit": {
+        "table": "igc-min-thickness",
+        "at": "tank.material",
+        "unit": "mm"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "igc/4.23.2.1.3/weld-factor",
+      "title": "Welded joint efficiency factor 0.95 (up to 1 on other considerations)",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "4.23.2.1.3",
+        "page": "MSC.370-93.pdf, annex p. 64",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#271"
+      },
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "MSC.370(93) with MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23",
+        "locator_read": "4.23.2.1.3, annex p. 64",
+        "review": "#271"
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "tank.weld_factor"
+      },
+      "compare": "le",
+      "limit": {
+        "value": 0.95,
+        "unit": "-"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "igc/4.23.2.1.3/weld-factor-max",
+      "title": "Welded joint efficiency factor never above 1",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "4.23.2.1.3",
+        "page": "MSC.370-93.pdf, annex p. 64",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#271"
+      },
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "MSC.370(93) with MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23",
+        "locator_read": "4.23.2.1.3, annex p. 64",
+        "review": "#271"
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "tank.weld_factor"
+      },
+      "compare": "le",
+      "limit": {
+        "value": 1.0,
+        "unit": "-"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "igc/4.23.3.1/allowable-stress",
+      "title": "Allowable stress at most the lesser of Rm/A and Re/B; warn: legacy 285 MPa files",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "4.23.3.1",
+        "page": "MSC.370-93.pdf, annex p. 66",
+        "access": "free",
+        "also": [
+          "4.18.1.3"
+        ]
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#271"
+      },
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "MSC.370(93) with MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23",
+        "locator_read": "4.23.3.1 with 4.18.1.3, annex p. 66",
+        "review": "#271"
+      },
+      "kind": "formula",
+      "measure": {
+        "id": "tank.allowable_stress"
+      },
+      "compare": "le",
+      "limit": {
+        "shape": "lesser-ratio",
+        "rm": "tank.rm",
+        "re": "tank.re",
+        "a": {
+          "table": "igc-factor-a",
+          "at": "tank.material"
+        },
+        "b": {
+          "table": "igc-factor-b",
+          "at": "tank.material"
+        },
+        "unit": "MPa"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#313",
+      "since": "1.0.0"
+    },
+    {
+      "id": "igc/2.7/damage-survival",
+      "title": "Survival after the assumed damage",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "2.7",
+        "page": "MSC.370-93.pdf, annex p. 31",
+        "access": "free",
+        "also": [
+          "2.3",
+          "2.5",
+          "2.6"
+        ]
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#271"
+      },
+      "verified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "edition_held": "MSC.370(93) with MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23",
+        "locator_read": "2.7, annex p. 31",
+        "review": "#271"
+      },
+      "kind": "check",
+      "measure": {
+        "id": "stability.damage"
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "damage stability is not modelled",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "igc/4.23.1.2/min-design-pressure",
+      "title": "Design vapour pressure not less than Po = 0.2 + A C (rho_r)^1.5 MPa",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "4.23.1.2",
+        "page": "MSC.370-93.pdf, annex p. 63",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#317"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "tank.design_pressure"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "at-least",
+        "x": "tank.dynamic_pressure_term",
+        "a": 0.2,
+        "b": 1.0,
+        "c": 1.0,
+        "lo": 0.2,
+        "unit": "MPa"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#317",
+      "since": "1.1.0"
+    },
+    {
+      "id": "igc/6.4.1.1/steel-design-temperature",
+      "title": "The tank steel is one Table 6.3 permits down to -165 C (9 % Ni, austenitic): the design temperature is not lower",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "6.4.1.1",
+        "page": "MSC.370-93.pdf, annex pp. 95-98 (Table 6.3, p. 98)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#317"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "tank.design_temperature"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": -165.0,
+        "unit": "C"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#317",
+      "since": "1.1.0",
+      "applies_when": {
+        "tank_material": [
+          "9Ni",
+          "304L",
+          "316L"
+        ]
+      }
+    },
+    {
+      "id": "igc/6.4.1.1/steel-by-approval",
+      "title": "A high-strength carbon-manganese steel (yield above 410 N/mm2) is by approval of the Administration, not by Table 6.1 to 6.3",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "6.4.1.1",
+        "page": "MSC.370-93.pdf, annex pp. 95-98 (Table 6.3, p. 98)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-21",
+        "review": "#317"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "tank.design_temperature"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": -165.0,
+        "unit": "C"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "finding": "#317",
+      "since": "1.1.0",
+      "applies_when": {
+        "tank_material": [
+          "S690QL1"
+        ]
+      },
+      "gap": "S690QL1 has a specified minimum yield stress of 690 N/mm2; the tables of 6.4.1 cover carbon-manganese steel up to 410 N/mm2 (notes to Tables 6.1 and 6.2: higher strengths may be approved by the Administration). No permitted design temperature can be read from the text"
+    },
+    {
+      "id": "igc/3.1.1/hold-space-segregation",
+      "title": "Hold spaces are segregated from machinery, accommodation, service spaces, control stations, chain lockers, domestic water tanks and stores",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "3.1.1",
+        "page": "MSC.370-93.pdf, annex pp. 32-33",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#417"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "arrangement.hold_space_segregation"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "finding": "#417",
+      "since": "1.1.0",
+      "gap": "the model has no machinery, accommodation or store spaces to segregate the hold spaces from; the arrangement search places the tanks in one hold"
+    },
+    {
+      "id": "igc/3.1.2/hold-space-segregation-means",
+      "title": "Segregation by a cofferdam, an oil fuel tank or an A-60 gastight bulkhead (or A-0 where there is no source of ignition)",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "3.1.2",
+        "page": "MSC.370-93.pdf, annex pp. 32-33",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#417"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "arrangement.hold_space_segregation"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "finding": "#417",
+      "since": "1.1.0",
+      "gap": "the model has no division between the hold and the adjoining spaces; the end bulkhead space (lr-inland 3.5.3) is checked, the fire class is not"
+    },
+    {
+      "id": "igc/3.2.1/no-accommodation-in-cargo-area",
+      "title": "No accommodation space, service space or control station within the cargo area",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "3.2.1",
+        "page": "MSC.370-93.pdf, annex pp. 32-33",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#417"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "arrangement.accommodation_outside_cargo_area"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "finding": "#417",
+      "since": "1.1.0",
+      "gap": "the model does not place accommodation, service spaces or control stations; the aft block sits outside the cargo area by construction"
+    },
+    {
+      "id": "igc/3.2.4.1/front-openings",
+      "title": "Entrances, air inlets and openings of the deckhouse do not face the cargo area",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "3.2.4.1",
+        "page": "MSC.370-93.pdf, annex pp. 32-33",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#417"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "openings.front_clear"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#417",
+      "since": "1.1.0"
+    },
+    {
+      "id": "igc/3.2.4.1/side-opening-distance",
+      "title": "Side openings at least 4 % of L (not less than 3 m, not more than 5 m) from the deckhouse end facing the cargo area",
+      "origin": "regulation",
+      "source": {
+        "document": "IGC Code, resolution MSC.370(93), as amended",
+        "edition": "IGC Code as adopted by MSC.370(93), amended by MSC.411(97), MSC.441(99), MSC.476(102), MSC.492(104), MSC.523(106) and MSC.566(109); none changes 2.3, 2.4 or 4.23; MSC.492(104) replaces 2.7.1.1",
+        "locator": "3.2.4.1",
+        "page": "MSC.370-93.pdf, annex pp. 32-33",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#417"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "input.deckhouse_side_opening_distance_m"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "clamp",
+        "x": "input.length_overall_m",
+        "a": 0.0,
+        "b": 0.04,
+        "c": 1.0,
+        "lo": 3.0,
+        "hi": 5.0,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#417",
+      "since": "1.1.0"
+    }
+  ]
+}

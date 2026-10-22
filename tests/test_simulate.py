@@ -15,7 +15,8 @@ def test_gas_uses_the_search_not_auto():
     # stepped IGC_2G. Re-pinned (issue #277: the wheelhouse sightline blocks the search); was 2535.
     # Re-pinned (issue #410: the covering above D is in the lightship; the one-wide arrangement
     # fails the light-condition angle of max GZ); was 1763.
-    assert abs(simulate(CN_II)["results"]["cargo_t"] - 1406) < 1.0
+    # Re-pinned (issue #498: the angle of max GZ alone in the light condition is a warning); was 1406.
+    assert abs(simulate(CN_II)["results"]["cargo_t"] - 1763) < 1.0
 
 
 def test_gas_optimised_depth_matches_snapshot():
@@ -25,7 +26,8 @@ def test_gas_optimised_depth_matches_snapshot():
                       fill_ratio=None, optimise_depth=True))
     # Re-pinned (issue #277: the wheelhouse sightline blocks the search); was 1738. Re-pinned
     # (issue #410: the covering above D is in the lightship); was 1691.
-    assert abs(o["results"]["cargo_t"] - 1204) < 1.0
+    # Re-pinned (issue #498: the angle of max GZ alone in the light condition is a warning); was 1204.
+    assert abs(o["results"]["cargo_t"] - 1691) < 1.0
     assert o["arrangement"]["fill_ratio"] == 0.98          # ruleset-driven default
 
 
@@ -60,23 +62,29 @@ def test_gas_stability_is_assessed_for_three_conditions():
     """
     o = simulate(CN_II)
     assert [c["name"] for c in o["stability"]["conditions"]] == ["Laden", "Half laden", "Light"]
-    assert o["stability"]["ok"]
+    # Issue #498: the Light condition (no ballast) fails the angle of max GZ alone: the stability
+    # block, as in 0.1.0, says the criteria are not all met, but the check of that condition is a
+    # warning, and the arrangement is feasible.
+    failing = {c["name"]: [k["name"] for k in c["criteria"] if not k["ok"]] for c in o["stability"]["conditions"]}
+    assert failing == {"Laden": [], "Half laden": [], "Light": ["Angle of max GZ"]}
+    assert o["arrangement"]["feasible"]
     assert sum(c["name"].startswith("Stability") for c in o["checks"]) == 3
 
 
 def test_tender_gas_barge_shows_failed_stability_checks():
     """Label: property
     """
-    # 60 x 10 x 6 m, self-propelled: no arrangement passes the light condition (issue #264: with a
-    # beam of 7 m, pushed, the search now finds a stable smaller arrangement, so that hull is not used).
-    o = simulate(dict(CN_II, loa_m=60, beam_m=10.0, depth_m=6.0, draught_limit_m=None,
+    # 60 x 20 x 3.5 m, self-propelled: no arrangement passes the laden and half laden conditions
+    # (issue #264: with a beam of 7 m, pushed, the search finds a stable smaller arrangement; issue
+    # #498: at 60 x 10 x 6 m only the light condition's angle of max GZ fails, a warning now).
+    o = simulate(dict(CN_II, loa_m=60, beam_m=20.0, depth_m=3.5, draught_limit_m=3.2,
                       ruleset="IGC_2G", fill_ratio=0.98, self_propelled=True))
     assert not o["stability"]["ok"]
     assert any(c["name"].startswith("Stability") and not c["ok"] for c in o["checks"])
     assert not o["arrangement"]["feasible"]
     feasible = next(c for c in o["checks"] if c["name"] == "Feasible arrangement")
     assert not feasible["ok"] and "No arrangement passes every check" in feasible["message"]
-    assert "Stability \u2014 light" in feasible["message"]
+    assert "Stability \u2014 laden" in feasible["message"]
 
 
 def test_box_barge_unchanged():

@@ -173,7 +173,13 @@ fn a_file_saved_before_gets_the_default_stack_marked_default_with_one_warning_an
         // Each entry holds the built-in version and its content hash, marked default.
         let lib = Library::built_in();
         for e in sets.value.as_array().unwrap() {
-            let set = lib.latest(e["id"].as_str().unwrap()).unwrap();
+            // A file saved before keeps the IS Code and IGC sets as they were (issue #498).
+            let set = match e["id"].as_str().unwrap() {
+                "is2008-a" => lib.find("is2008-a", "1.0.0"),
+                "igc-2g" => lib.find("igc-2g", "1.1.0"),
+                id => lib.latest(id),
+            }
+            .unwrap();
             assert_eq!(e["version"], set.version.as_str());
             assert_eq!(e["hash"], set.hash.as_str());
             assert_eq!(e["source"], "default");
@@ -627,7 +633,7 @@ fn the_trace_states_the_scope_with_the_service_area_the_sets_and_the_gaps() {
     let river = scope(&design);
     assert!(
         river.starts_with(
-            "Service Area river-only; Rule Sets is2008-a@1.0.0, es-trin-2025@1.0.0, ovcd@"
+            "Service Area river-only; Rule Sets is2008-a@2.0.0, es-trin-2025@1.0.0, ovcd@"
         ),
         "{river}"
     );

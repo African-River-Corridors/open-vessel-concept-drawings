@@ -27,9 +27,11 @@ fn the_cn_ii_benchmark_is_reproduced() {
     // again (issue #277, the wheelhouse sightline blocks the search); was 2832.6643735601965.
     // Re-pinned again (issue #410, the covering above D is in the lightship at its own heights):
     // the one-wide arrangement fails the light-condition angle of max GZ (24 deg < 25 deg), so the
-    // search takes two tanks wide; was 2021.2487121368047 with (2, 1, 2).
-    assert_eq!(f.payload_t, 1405.8516419707348);
-    assert_eq!((f.n_tanks, f.n_tanks_wide, f.n_tanks_long), (4, 2, 2));
+    // search takes two tanks wide; was 2021.2487121368047 with (2, 1, 2). Re-pinned again (issue
+    // #498, the angle of max GZ alone in the light condition with no ballast is a warning): the
+    // one-wide arrangement is feasible again; was 1405.8516419707348 with (4, 2, 2).
+    assert_eq!(f.payload_t, 2021.2487121368047);
+    assert_eq!((f.n_tanks, f.n_tanks_wide, f.n_tanks_long), (2, 1, 2));
     // Re-pinned (issue #264); was "volume" under the stepped IGC_2G and "draft" (issue #237): the
     // arrangement that passes stability is smaller, so the volume binds again.
     assert_eq!(f.binding, "volume");
@@ -91,10 +93,11 @@ fn the_smallest_viable_loa_is_found_to_a_tenth_of_a_metre() {
     let o = FitOptions::for_smallest_viable_loa();
     assert_eq!(
         smallest_viable_loa(12.0, "LNG", 3.0, 20.0, 120.0, &o).unwrap(),
-        // Re-pinned (#448); was 39.9. Before that re-pinned (issue #264, a viable length needs an
+        // Re-pinned (#498, the light condition's angle of max GZ alone is a warning); was 41.7
+        // (#448) and 39.9 before that. Before that re-pinned (issue #264, a viable length needs an
         // arrangement that passes every check, stability included); was 36.1 (issue #237) and
         // 35.6 under the stepped IGC_2G.
-        41.7
+        37.9
     );
 }
 
@@ -165,15 +168,10 @@ fn a_cap_clearance_a_hair_under_the_rule_is_accepted_not_refused() {
     assert_eq!((f.n_tanks, f.candidates_tried), (2, 1));
     assert_eq!(f.binding, "volume");
     // Issue #448: on the hull's sections the Light condition's GZ peaks below 25 degrees (IS Code
-    // 2008 Part A 2.2.3; wide shallow hulls, #498), so the arrangement is not feasible. The
-    // clearance on the cap is still accepted: stability is the one failed check.
-    assert!(!f.feasible);
-    assert_eq!(f.failed_checks.len(), 1, "{:?}", f.failed_checks);
-    assert!(
-        f.failed_checks[0].starts_with("Stability \u{2014} light"),
-        "{:?}",
-        f.failed_checks
-    );
+    // 2008 Part A 2.2.3). Issue #498: with no ballast that criterion alone is a warning, so the
+    // arrangement is feasible and the clearance on the cap is accepted.
+    assert!(f.feasible, "{:?}", f.failed_checks);
+    assert!(f.failed_checks.is_empty(), "{:?}", f.failed_checks);
 }
 
 // --- Issue #175: tank outer diameter cap and length over diameter, under both IGC rulesets ---

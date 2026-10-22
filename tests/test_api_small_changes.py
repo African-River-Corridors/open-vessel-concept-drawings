@@ -36,7 +36,9 @@ def test_simulate_reads_numbers_written_as_text(text):
     assert out["dims"]["loa_m"] == 80.0                                         # ce96e66
     # Re-pinned (issue #277: the wheelhouse sightline blocks the search); was 1986.5486284249137.
     # Re-pinned (issue #410: the covering above D is in the lightship); was 1392.4601578818447.
-    assert out["results"]["cargo_t"] == pytest.approx(1124.1630064872984, rel=1e-9, abs=1e-9)
+    # Re-pinned (issue #498: the angle of max GZ alone in the light condition is a warning); was
+    # 1124.1630064872984.
+    assert out["results"]["cargo_t"] == pytest.approx(1392.4601578818447, rel=1e-9, abs=1e-9)
 
 
 def test_simulate_reads_every_number_as_text():
@@ -45,7 +47,9 @@ def test_simulate_reads_every_number_as_text():
     # Re-pinned (issue #237); was 2058.228164213275 at ce96e66. Re-pinned (issue #277: the
     # wheelhouse sightline blocks the search); was 2535.1977193509288. Re-pinned (issue #410: the
     # covering above D is in the lightship); was 1763.374037130099.
-    assert out["results"]["cargo_t"] == pytest.approx(1405.8516419707348, rel=1e-9, abs=1e-9)
+    # Re-pinned (issue #498: the angle of max GZ alone in the light condition is a warning); was
+    # 1405.8516419707348.
+    assert out["results"]["cargo_t"] == pytest.approx(1763.374037130099, rel=1e-9, abs=1e-9)
     out = simulate(dict(BOX, lightship_k_t_per_m3="0.1093"))
     # Re-pinned (#448: the hull's sections give the volume, not the cb input); was 2256.166305 at
     # ce96e66.

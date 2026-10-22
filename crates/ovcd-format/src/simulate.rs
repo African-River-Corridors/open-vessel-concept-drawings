@@ -1281,7 +1281,7 @@ fn simulate_measured(
                     slack_candidates_t: &slack,
                 },
             )?;
-            loading_condition_checks(&conds, "warning", &mut checks, &mut ids);
+            loading_condition_checks(&conds, "warning", false, &mut checks, &mut ids);
             is_code_stability = is_code_stability_json(&conds, true, &mut ids);
             loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho, true);
             // The liquid conditions stay out of the Rule Trace until the liquid Rule Sets exist: the
@@ -1322,7 +1322,7 @@ fn simulate_measured(
                 slack_candidates_t: &[],
             },
         )?;
-        loading_condition_checks(&conds, "warning", &mut checks, &mut ids);
+        loading_condition_checks(&conds, "warning", false, &mut checks, &mut ids);
         is_code_stability = is_code_stability_json(&conds, false, &mut ids);
         loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho, false);
         // The dry bulk conditions stay out of the Rule Trace: the IS Code Rule Set would block a
@@ -2321,7 +2321,8 @@ fn simulate_gas(
         let tanks = ovcd_core::compartments::ballast_tanks(&f.engine_inputs, r);
         let conds = ga::is_code_conditions(r, &f.engine_inputs, cargo_t, &options, ic)
             .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))?;
-        loading_condition_checks(&conds, "error", &mut checks, &mut ids);
+        let warns = ga::light_angle_warns(&options.rules);
+        loading_condition_checks(&conds, "error", warns, &mut checks, &mut ids);
         is_code_stability = is_code_stability_json(&conds, false, &mut ids);
         loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho, false);
         conditions = conds.iter().map(|c| c.condition.clone()).collect();
@@ -2331,7 +2332,7 @@ fn simulate_gas(
         let a = gs::assess(&basis, f.payload_t, rho, gs::criteria_set_for(ruleset))
             .map_err(|e| Stop::Raised(e.type_name().to_string(), e.message().to_string()))?;
         for c in &a.conditions {
-            let k = ga::stability_check(c);
+            let k = ga::gas_stability_check(c, ga::light_angle_warns(&options.rules));
             ids.checks(core::slice::from_ref(&k));
             checks.push(json!({
                 "name": k.name,
@@ -2829,11 +2830,28 @@ fn loading_conditions_json(
 fn loading_condition_checks(
     conds: &[ovcd_core::loading_conditions::LoadedCondition],
     severity: &str,
+    light_angle_warns: bool,
     checks: &mut Vec<Value>,
     ids: &mut TextIds,
 ) {
-    for k in conds.iter().flat_map(ga::loading_condition_checks) {
+    // Issue #498: a gas Design ("error") downgrades the angle of max GZ alone in the light condition;
+    // a dry-bulk one (its checks are warnings) keeps its checks as they were.
+    let listed: Vec<ovcd_core::checks::Check> = if severity == "error" {
+        ga::loading_condition_checks_of(conds, light_angle_warns)
+    } else {
+        conds
+            .iter()
+            .flat_map(ga::loading_condition_checks)
+            .collect()
+    };
+    for k in listed {
         ids.checks(core::slice::from_ref(&k));
+        // A warning of the check stays a warning (issue #498: the angle of maximum GZ with no ballast).
+        let severity = if k.severity == "warning" {
+            "warning"
+        } else {
+            severity
+        };
         checks.push(
             json!({ "name": k.name, "ok": k.ok, "message": k.message, "severity": severity }),
         );

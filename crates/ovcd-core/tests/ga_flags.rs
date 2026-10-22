@@ -39,7 +39,7 @@ fn the_air_draft_flag_follows_the_limit() {
 fn the_stability_flag_is_the_gas_stability_verdict() {
     // One result that passes and one that fails, both with a gas basis. Issue #448: on the hull's
     // sections the default arrangements below fail (the Light condition's GZ peaks below 25
-    // degrees, #498), so the passing one is the arrangement `fit` finds for 110 x 11.4 x 6 m.
+    // degrees, #498), so the passing one is the arrangement `fit` finds for 100 x 16 x 6 m.
     let mut cases: Vec<(BargeCapacityInputs, BargeCapacityResult)> = Vec::new();
     for (loa, beam, depth) in [(90.0, 14.8, 6.5), (90.0, 11.4, 6.5), (110.0, 16.0, 4.0)] {
         let mut i = BargeCapacityInputs::new(loa, beam, depth);
@@ -52,7 +52,7 @@ fn the_stability_flag_is_the_gas_stability_verdict() {
         fill_ratio: 0.98,
         ..FitOptions::default()
     };
-    let f = fit(110.0, 11.4, "LPG_propane", 5.7, &o).unwrap();
+    let f = fit(100.0, 16.0, "LPG_propane", 5.7, &o).unwrap();
     assert!(f.feasible, "{:?}", f.failed_checks);
     cases.push((f.engine_inputs.clone(), f.engine_result.clone()));
     let mut seen = (false, false);

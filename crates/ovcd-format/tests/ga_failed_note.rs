@@ -15,9 +15,11 @@ fn gas_self_propelled() -> Value {
 }
 
 /// A hull on which no arrangement passes every check (issue #264): the closest one is drawn and
-/// its failed checks make the note. 60 x 10 x 6 m LPG propane fails light stability.
+/// its failed checks make the note. 60 x 20 x 3.5 m LPG propane fails the stability of the full load
+/// and ballast conditions (issue #498: 60 x 10 x 6 m, whose only failure was the angle of max GZ with
+/// no ballast, is feasible now, with a warning).
 fn gas_nothing_passes() -> Value {
-    gas_hull("LPG_propane", 60.0, 10.0, 6.0)
+    gas_hull("LPG_propane", 60.0, 20.0, 3.5)
 }
 
 fn gas_hull(cargo: &str, loa: f64, beam: f64, depth: f64) -> Value {

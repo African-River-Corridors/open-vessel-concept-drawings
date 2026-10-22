@@ -120,7 +120,7 @@ fn a_file_saved_before_reads_the_smallest_distances_the_rules_allow_with_one_not
 fn the_igc_side_opening_limit_is_4_percent_of_l_between_3_and_5_m() {
     // IGC 3.2.4.1, by hand: 4 % of L, not less than 3 m, not more than 5 m.
     let lib = Library::built_in();
-    let set = lib.find("igc-2g", "1.1.0").unwrap();
+    let set = lib.find("igc-2g", "2.0.0").unwrap();
     let rule = set.rule("igc/3.2.4.1/side-opening-distance").unwrap();
     assert_eq!(rule.compare, Some(Compare::Ge));
     let Some(Limit::Formula {
@@ -193,7 +193,7 @@ fn a_new_gas_option_meets_the_opening_rules_and_names_the_ones_the_model_cannot_
         let results = results_of(&new_gas_design(cargo, json!({})));
         let sets = results["rule_trace"]["rule_sets"].to_string();
         assert!(
-            sets.contains("lr-inland-gas@2.0.0") && sets.contains("igc-2g@1.1.0"),
+            sets.contains("lr-inland-gas@2.0.0") && sets.contains("igc-2g@2.0.0"),
             "{sets}"
         );
         for id in [

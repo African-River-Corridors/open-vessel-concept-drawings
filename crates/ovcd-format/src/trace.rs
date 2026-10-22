@@ -68,12 +68,37 @@ pub fn default_stack_ids(containment: Option<&str>) -> Vec<&'static str> {
 /// The `rule_sets` a file saved before the input existed is read with: the stack the engine checked
 /// every Option against then (issue #274), whatever the profile's default stacks are now.
 pub fn legacy_rule_sets(containment: Option<&str>) -> Value {
-    rule_sets_of(
-        default_stack_ids(containment)
-            .into_iter()
-            .map(String::from)
-            .collect(),
-    )
+    let library = crate::rule_set::built_in();
+    let sets: Vec<Value> = default_stack_ids(containment)
+        .into_iter()
+        .filter_map(|id| {
+            // The IS Code and IGC sets held every light condition to the angle of max GZ until
+            // issue #498; a file saved before keeps that version, so its results do not move.
+            match legacy_version(id) {
+                Some(version) => library.find(id, version),
+                None => library.latest(id),
+            }
+        })
+        .map(|set| {
+            json!({
+                "id": set.id,
+                "version": set.version,
+                "hash": set.hash,
+                "source": "default",
+            })
+        })
+        .collect();
+    Value::Array(sets)
+}
+
+/// The version of a set a file saved before `rule_sets` existed is read with, when it is not the
+/// highest.
+fn legacy_version(id: &str) -> Option<&'static str> {
+    match id {
+        "is2008-a" => Some("1.0.0"),
+        "igc-2g" => Some("1.1.0"),
+        _ => None,
+    }
 }
 
 /// The default `rule_sets` input for a Service Area and a Cargo Containment, from the profile's
@@ -491,6 +516,12 @@ impl MeasureSource for OptionMeasures<'_> {
         })
     }
 
+    fn object_input(&self, object: &str, index: usize, name: &str) -> Option<String> {
+        self.measured
+            .object_input(object, index, name)
+            .or_else(|| self.input(name))
+    }
+
     fn input(&self, name: &str) -> Option<String> {
         match name {
             "formation_kind" => {
@@ -869,6 +900,10 @@ impl MeasureSource for BoxMeasures<'_> {
 
     fn input(&self, _name: &str) -> Option<String> {
         None
+    }
+
+    fn object_input(&self, object: &str, index: usize, name: &str) -> Option<String> {
+        self.measured.object_input(object, index, name)
     }
 
     fn has(&self, measure: &MeasureRef) -> bool {

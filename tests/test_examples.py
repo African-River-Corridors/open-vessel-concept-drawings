@@ -14,4 +14,6 @@ def test_quickstart_runs(capsys):
     # again (issue #277: the wheelhouse sightline blocks the search); was 2,833 t. Re-pinned again
     # (issue #410: the covering above D is in the lightship; one tank abreast fails the
     # light-condition angle of max GZ); was 1 tank abreast and 2,021 t.
-    assert "Searched   : 2 tank(s) abreast" in out and "1,406 t" in out
+    # Re-pinned again (issue #498: the angle of max GZ alone in the light condition is a warning, so
+    # one tank abreast is feasible again); was 2 tanks abreast and 1,406 t.
+    assert "Searched   : 1 tank(s) abreast" in out and "2,021 t" in out
