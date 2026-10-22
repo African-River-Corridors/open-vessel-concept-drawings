@@ -174,8 +174,32 @@ fn the_space_volumes_are_the_capacities_the_results_give() {
                 g["cargo_zone_length_m"].as_f64().unwrap(),
             );
             let hold = 0.5 * (wt + wb) * h * l;
+            let prism: f64 = model
+                .spaces
+                .iter()
+                .filter(|s| s.space.kind == SpaceKind::CargoHold)
+                .map(|s| s.space.volume_m3())
+                .sum();
+            assert!(
+                (prism - hold).abs() <= 1e-9 * hold,
+                "{at}: holds {prism} vs {hold}"
+            );
+            // Issue #455: the hull, closed at the deck, clips off the coaming part. A box hull
+            // over the cargo zone leaves the trapezoid from the inner bottom to the deck; a hull
+            // with no parallel body (ShipD, offsets) leaves less.
+            let d = results["dims"]["depth_m"].as_f64().unwrap();
+            let db = results["drawing"]["double_bottom_m"].as_f64().unwrap();
+            let w_deck = wb + (wt - wb) * (d - db) / h;
+            let below = 0.5 * (wb + w_deck) * (d - db) * l;
             let v = volume(SpaceKind::CargoHold);
-            assert!((v - hold).abs() <= 1e-9 * hold, "{at}: holds {v} vs {hold}");
+            if file.starts_with("dry") {
+                assert!(
+                    (v - below).abs() <= 1e-9 * below,
+                    "{at}: holds {v} vs {below}"
+                );
+            } else {
+                assert!(v <= below * (1.0 + 1e-9), "{at}: holds {v} vs {below}");
+            }
             checked[0] += 1;
         }
         if let Some(gross) = results["liquid"]["cargo_gross_m3"].as_f64() {

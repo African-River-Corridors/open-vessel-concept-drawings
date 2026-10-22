@@ -4,7 +4,7 @@
 //! weights, and KG as their mass-weighted mean) and IS Code 2008 (MSC.267(85)) Part B 3.1.2 (a tank
 //! filled to 98 % or more is nominally full and has no free surface correction).
 
-use ovcd_core::compartments::{Space, SpaceKind};
+use ovcd_core::compartments::{ClippedSpace, SpaceKind};
 use ovcd_core::gas_stability::PyError;
 use ovcd_core::hydrostatics::{Hull, HullSpec};
 use ovcd_core::liquid_bulk::{LiquidBulkInputs, PumpArrangement, compute};
@@ -17,7 +17,7 @@ const B: f64 = 11.4;
 const D: f64 = 3.6;
 const RHO_CARGO: f64 = 0.87;
 
-fn layout(centreline: bool) -> (Vec<Item>, LiquidCargo, Vec<Space>) {
+fn layout(centreline: bool) -> (Vec<Item>, LiquidCargo, Vec<ClippedSpace>) {
     let r = compute(&LiquidBulkInputs {
         loa_m: L,
         beam_m: B,
@@ -49,6 +49,7 @@ fn layout(centreline: bool) -> (Vec<Item>, LiquidCargo, Vec<Space>) {
         .iter()
         .filter(|s| s.kind.is_ballast())
         .cloned()
+        .map(ClippedSpace::prism)
         .collect();
     (
         items,

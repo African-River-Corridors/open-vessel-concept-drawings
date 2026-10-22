@@ -111,6 +111,18 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     put("loa_m", "length_overall_m");
     put("beam_m", "beam_m");
     put("depth_m", "moulded_depth_m");
+    // Issue #362: the tug and the Notch of an ATB, each typed or none.
+    if kind == "atb" {
+        for name in [
+            "tug_length_m",
+            "tug_beam_m",
+            "tug_draught_m",
+            "notch_depth_m",
+            "notch_width_m",
+        ] {
+            put(name, name);
+        }
+    }
     // Issue #448: the bow of the Hull Form; Cb is a result, not an input.
     put("bow_rake_length_m", "bow_rake_length_m");
     put("bow_rake_rise_m", "bow_rake_rise_m");
@@ -274,6 +286,10 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     };
     p.insert("vessel".into(), json!(vessel));
     p.insert("self_propelled".into(), json!(kind == "self_propelled"));
+    // Issue #362: the barge of an ATB has a Notch (see the tug and Notch inputs above).
+    if kind == "atb" {
+        p.insert("atb".into(), json!(true));
+    }
     // The channel is described only when it has a depth: without one the engine ignores it.
     if let Some(depth) = get("channel_depth_m")
         && !depth.is_null()

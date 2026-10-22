@@ -4,11 +4,12 @@
 //! evenly with a bulkhead between each two, the ballast tanks of `compartments::ballast_tanks`
 //! unchanged, an inner bottom at the double-bottom height and no frames. Label: sourced - closed
 //! form, the hold prisms sum to the volume model's hold volume (section area times cargo zone
-//! length, `containment_inner_volume_m3`).
+//! length, `containment_inner_volume_m3`), and the hull clips them at the deck: the trapezoid from
+//! the inner bottom to the deck times the cargo zone length (issue #455).
 
 use ovcd_core::barge_capacity::{BargeCapacityInputs, compute};
 use ovcd_core::compartments::{SpaceKind, ballast_tanks};
-use ovcd_core::hull::hull_form::{HullFormInputs, HullFormKind, HullShape, generate};
+use ovcd_core::hydrostatics::Hull;
 use ovcd_core::vessel_model::{VesselModelInputs, assemble};
 
 fn dry_bulk(n_holds: i64) -> VesselModelInputs {
@@ -17,14 +18,8 @@ fn dry_bulk(n_holds: i64) -> VesselModelInputs {
     i.hold_type = "sloped_hopper".to_string();
     i.n_holds = n_holds;
     let r = compute(&i).unwrap();
-    let hull = generate(&HullFormInputs {
-        length_overall_m: 80.0,
-        beam_m: 11.4,
-        moulded_depth_m: 4.0,
-        form: HullFormKind::Box,
-        shape: HullShape::default(),
-    })
-    .unwrap();
+    // The hull the result was worked on: the raked bow of the inputs.
+    let hull = Hull::build(r.hull_spec.as_ref().unwrap()).unwrap().table;
     VesselModelInputs {
         capacity: i,
         result: r,
@@ -46,9 +41,21 @@ fn a_dry_bulk_barge_has_its_holds_bulkheads_ballast_tanks_and_decks() {
             .filter(|s| s.space.kind == SpaceKind::CargoHold)
             .collect();
         assert_eq!(holds.len(), n as usize);
-        let v: f64 = holds.iter().map(|s| s.volume_m3).sum();
+        // The prisms are the volume model's hold, to the coaming top.
+        let prism: f64 = holds.iter().map(|s| s.space.volume_m3()).sum();
         let want = r.containment_inner_volume_m3.unwrap();
-        assert!((v - want).abs() <= 1e-12 * want, "{v} vs {want}");
+        assert!((prism - want).abs() <= 1e-12 * want, "{prism} vs {want}");
+        // The hull (closed at the deck) clips the coaming part off: the trapezoid to the deck.
+        let (db, d) = (inp.capacity.double_bottom_height_bulk, 4.0);
+        let (wt, wb, h) = (
+            r.hold_top_width_m.unwrap(),
+            r.hold_bottom_width_m.unwrap(),
+            r.hold_height_m.unwrap(),
+        );
+        let w_deck = wb + (wt - wb) * (d - db) / h;
+        let below = 0.5 * (wb + w_deck) * (d - db) * r.cargo_zone_length_m.unwrap();
+        let v: f64 = holds.iter().map(|s| s.volume_m3).sum();
+        assert!((v - below).abs() <= 1e-12 * below, "{v} vs {below}");
         // One bulkhead at each end of the cargo zone and one between each two holds.
         let (x0, x1) = (holds[0].space.x_aft, holds[holds.len() - 1].space.x_fwd);
         for h in &holds[1..] {
@@ -79,9 +86,15 @@ fn a_dry_bulk_barge_has_its_holds_bulkheads_ballast_tanks_and_decks() {
                 ("inner_bottom", inp.capacity.double_bottom_height_bulk)
             ]
         );
-        // A prism's centroid is at its mid-length.
-        for s in &m.spaces {
+        // A Space the hull does not cut keeps its prism centroid, at mid-length; the fore peak in
+        // the bow rake is cut.
+        for s in m.spaces.iter().filter(|s| !s.is_cut()) {
             assert_eq!(s.centroid_m.0, (s.space.x_aft + s.space.x_fwd) / 2.0);
         }
+        assert!(
+            m.spaces
+                .iter()
+                .any(|s| s.space.name == "FP1C" && s.is_cut())
+        );
     }
 }

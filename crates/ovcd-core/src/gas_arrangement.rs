@@ -816,7 +816,16 @@ pub fn is_code_conditions(
         return Ok(Vec::new());
     };
     let cargo_at = |m: f64| cargo.at(m);
-    let tanks = crate::compartments::ballast_tanks(inp, r);
+    let Some(spec) = r.hull_spec.as_ref() else {
+        return Ok(Vec::new());
+    };
+    let hull = crate::hydrostatics::Hull::build(spec)
+        .map_err(|e| gs::PyError::Value(alloc::format!("{e}")))?;
+    // Issue #455: the ballast tanks as the hull clips them.
+    let tanks: Vec<_> = crate::compartments::ballast_tanks(inp, r)
+        .iter()
+        .map(|t| crate::compartments::clip(t, &hull.table))
+        .collect();
     let ballast_plans = match &ic.user_ballast {
         Some([departure, arrival]) => [departure.plan(&tanks), arrival.plan(&tanks)],
         None => [lc::BallastPlan::Auto, lc::BallastPlan::Auto],
@@ -827,11 +836,6 @@ pub fn is_code_conditions(
         tanks: crate::compartments::consumables_tanks(inp.beam, 0.0, ic.consumables_t),
         density: 1.0,
     };
-    let Some(spec) = r.hull_spec.as_ref() else {
-        return Ok(Vec::new());
-    };
-    let hull = crate::hydrostatics::Hull::build(spec)
-        .map_err(|e| gs::PyError::Value(alloc::format!("{e}")))?;
     lc::assess(&lc::Inputs {
         loa: inp.loa,
         beam: inp.beam,
