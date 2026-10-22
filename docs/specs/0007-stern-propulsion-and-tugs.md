@@ -476,8 +476,7 @@ Taken with the maintainer, 2026-10-20:
 
 Open (for the build, not blocking):
 
-- The SOLAS V/22 45 m threshold waits for numeric Applicability (spec 0004 out of scope); the Rule is
-  `warn` until then.
+- The SOLAS V/22 45 m threshold is the derived input `length_band` (spec 0004, #543); the Rule is `warn`.
 - The calibration bands are estimates; the maintainer may change them in `bands.yaml`.
 - Engine-room length has no built-ship case; measuring scaled general arrangements is a follow-up.
 
