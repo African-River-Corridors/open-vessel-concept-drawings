@@ -1,0 +1,132 @@
+{
+  "$schema": "../rule-set.schema.json",
+  "id": "es-trin-2025",
+  "family": "es-trin",
+  "title": "ES-TRIN 2025/1: safety clearance and freeboard (Chapter 4)",
+  "version": "1.0.0",
+  "edition": {
+    "document": "ES-TRIN, Edition 2025/1",
+    "edition": "Edition 2025/1 (English, signed)",
+    "in_force": "adopted by CESNI on 17 October 2024; proposed in force 1 January 2026"
+  },
+  "sources": [
+    {
+      "document": "ES-TRIN Edition 2025/1 (English, signed)",
+      "edition": "2025/1",
+      "url": "https://www.cesni.eu/wp-content/uploads/2024/11/ES_TRIN_2025_signed_en.pdf",
+      "access": "free",
+      "sha256": "c69f9e216bf3a487ed02b9e20eca263f5ac45ce2271349c4c73d40474cfd0c3d"
+    }
+  ],
+  "status": "draft",
+  "applies_when": {},
+  "includes": [],
+  "known_conflicts": [],
+  "tables": [],
+  "rules": [
+    {
+      "id": "es-trin/4.01(1)/safety-clearance",
+      "title": "Safety clearance at least 300 mm",
+      "origin": "regulation",
+      "source": {
+        "document": "ES-TRIN, European standard laying down technical requirements for inland navigation vessels",
+        "edition": "Edition 2025/1",
+        "locator": "4.01(1)",
+        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 4, p. 16",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#428"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "input.min_freeboard_m"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.3,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#428",
+      "since": "1.0.0"
+    },
+    {
+      "id": "es-trin/4.01(2)/safety-clearance-uncovered-holds",
+      "title": "Safety clearance at least 500 mm for vessels that sail with their holds uncovered",
+      "origin": "regulation",
+      "source": {
+        "document": "ES-TRIN, European standard laying down technical requirements for inland navigation vessels",
+        "edition": "Edition 2025/1",
+        "locator": "4.01(2)",
+        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 4, p. 16",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#428"
+      },
+      "verified": false,
+      "applies_when": {
+        "hold_covering": [
+          "open"
+        ]
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "input.min_freeboard_m"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.5,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#428",
+      "since": "1.0.0"
+    },
+    {
+      "id": "es-trin/4.02(1)/freeboard",
+      "title": "Freeboard of a vessel with a continuous deck, without sheer and superstructures, at least 150 mm",
+      "origin": "regulation",
+      "source": {
+        "document": "ES-TRIN, European standard laying down technical requirements for inland navigation vessels",
+        "edition": "Edition 2025/1",
+        "locator": "4.02(1)",
+        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 4, p. 16",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#428"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "input.min_freeboard_m"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.15,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#428",
+      "since": "1.0.0"
+    }
+  ]
+}

@@ -65,6 +65,17 @@ pub fn default_stack_ids(containment: Option<&str>) -> Vec<&'static str> {
     }
 }
 
+/// The `rule_sets` a file saved before the input existed is read with: the stack the engine checked
+/// every Option against then (issue #274), whatever the profile's default stacks are now.
+pub fn legacy_rule_sets(containment: Option<&str>) -> Value {
+    rule_sets_of(
+        default_stack_ids(containment)
+            .into_iter()
+            .map(String::from)
+            .collect(),
+    )
+}
+
 /// The default `rule_sets` input for a Service Area and a Cargo Containment, from the profile's
 /// default stacks (the built-in stack when the profile gives none): each set at its highest built-in
 /// version, marked `default`, with the content hash of that version.
@@ -80,6 +91,12 @@ pub fn default_rule_sets(
             .map(String::from)
             .collect()
     });
+    rule_sets_of(ids)
+}
+
+/// The `rule_sets` entries for set ids: each at its highest built-in version, with its hash, marked
+/// `default`.
+fn rule_sets_of(ids: Vec<String>) -> Value {
     let library = crate::rule_set::built_in();
     let sets: Vec<Value> = ids
         .iter()
