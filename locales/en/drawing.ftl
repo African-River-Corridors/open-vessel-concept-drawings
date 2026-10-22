@@ -8,20 +8,25 @@
 
 draw-double-bottom = DOUBLE BOTTOM
 draw-wbt-both-sides = WBT (BOTH SIDES)
-draw-dome = DOME
 draw-weather-shield = WEATHER SHIELD
+draw-dome = DOME
 draw-cofferdam = COFFERDAM
+draw-service-space = SERVICE SPACE
+draw-fwd-separation = FWD SEPARATION
 draw-fwd-equip = FWD EQUIP.
+draw-holds = HOLDS ({ $count })
 draw-thrusters = THRUSTERS ({ $count })
 draw-wheelhouse-block-top = WHEELHOUSE, BLOCK TOP { $height }
 draw-containers-block-top = CONTAINERS ({ $abreast } x { $rows }), BLOCK TOP { $height }
 draw-wheelhouse = WHEELHOUSE
 draw-containers = CONTAINERS ({ $abreast } x { $rows })
+draw-air-draft = AIR DRAFT { $draught }
 draw-loa = LOA { $length }
 draw-depth = DEPTH { $depth }
 draw-freeboard = FREEBOARD { $freeboard }
 draw-draught = DRAUGHT { $draught }
 draw-light-draught = LIGHT DRAUGHT { $draught }
+draw-ballast-draught = BALLAST DRAUGHT { $draught }
 draw-beam = BEAM { $beam }
 draw-void-both-sides = VOID (BOTH SIDES)
 draw-cradle = CRADLE
@@ -38,7 +43,7 @@ draw-fails-count = DESIGN FAILS { $count } CHECKS
 draw-note-dimensions = { $view }. DIMENSIONS IN METRES.
 draw-view-side-elevation = SIDE ELEVATION
 draw-view-plan = PLAN
-draw-view-midship-section = MIDSHIP SECTION
+draw-view-midship-section = TYPICAL SECTION
 
 ## otd/src/furniture.rs
 

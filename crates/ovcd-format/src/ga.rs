@@ -128,6 +128,15 @@ struct Hull {
     depth: f64,
     draught: f64,
     light_draught: Option<f64>,
+    /// The draught of the "Ballast, departure" condition, when the results have the IS Code loading
+    /// conditions (`loading_conditions`).
+    ballast_draught: Option<f64>,
+    /// The top of the structure above the keel, loaded: the draught and the loaded air draft.
+    air_top: Option<f64>,
+    /// The number of holds of a dry bulk hull (`drawing.hold_count`); 0 for a gas hull.
+    holds: usize,
+    /// The forward separation and the service space of a gas hull (`drawing.separation`).
+    fwd_separation: Option<(f64, f64)>,
     bow_rake: f64,
     stern_rake: f64,
     bow_void: f64,
@@ -385,6 +394,21 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
         draught,
         light_draught: num_at(results, &["results", "light_draught_m"])
             .filter(|t| *t > 0.0 && *t < depth),
+        ballast_draught: results["loading_conditions"]["conditions"]
+            .as_array()
+            .and_then(|list| {
+                list.iter()
+                    .find(|c| c["role"] == "ballast_departure")
+                    .and_then(|c| c["draught_m"].as_f64())
+            })
+            .filter(|t| *t > 0.0 && *t < depth),
+        air_top: num_at(results, &["results", "air_draft_loaded_m"])
+            .filter(|a| *a > 0.0)
+            .map(|a| draught + a),
+        holds: num_at(results, &["drawing", "hold_count"]).map_or(0, |n| n.max(0.0) as usize),
+        fwd_separation: num_at(results, &["drawing", "separation", "fwd_separation_m"]).zip(
+            num_at(results, &["drawing", "separation", "service_space_m"]),
+        ),
         bow_rake: num_at(results, &["geometry", "bow_rake_length_m"])
             .unwrap_or(0.0)
             .max(0.0),
@@ -473,6 +497,14 @@ impl Hull {
             }
             _ => None,
         }
+    }
+
+    /// The ballast waterline, when it stands apart from the light and the loaded waterlines on the
+    /// paper (at least 1 mm from each at the scale `k`, metres per millimetre).
+    fn ballast_line(&self, k: f64) -> Option<f64> {
+        let t = self.ballast_draught?;
+        let apart = |other: f64| (t - other).abs() >= k;
+        (apart(self.draught) && self.light_draught.is_none_or(apart)).then_some(t)
     }
 
     /// The weather shield over the tanks, as the weights carry it (`weights.rs`): (the level its
@@ -1056,11 +1088,67 @@ fn zones(c: &mut Canvas, h: &Hull, view: View, labels: &mut Vec<(String, [f64; 2
             [mid + 2.0 * c.k, lo - 6.0 * c.k],
         );
     }
+    // Issue #409: the service space between the cofferdam and the cargo zone, and the forward
+    // separation, the end-bulkhead space ahead of the last tank, from the separation result.
+    if let (Some((cofferdam, aft)), Some((fwd, service))) = (h.separation, h.fwd_separation) {
+        if service > 0.0 {
+            let mid = x0 - aft + cofferdam + service / 2.0;
+            // above the hull: under it the cofferdam's label and the LOA dimension stand
+            c.leader(
+                &label!("draw-service-space", "SERVICE SPACE"),
+                [mid, hi],
+                [mid + 2.0 * c.k, hi + 6.0 * c.k],
+            );
+        }
+        if fwd > 0.0 && x1 + fwd < h.loa {
+            let (a, b) = across(x1 + fwd);
+            c.line("HIDDEN", a, b, None);
+            labels.push((
+                label!("draw-fwd-separation", "FWD SEPARATION"),
+                [x1 + fwd / 2.0, hi],
+            ));
+        }
+    }
     if h.bow_void > 0.0 {
         let mid = h.loa - h.bow_void / 2.0;
         // named in the column of the bow labels, with the others, so that the texts keep apart
         labels.push((label!("draw-fwd-equip", "FWD EQUIP."), [mid, hi]));
     }
+}
+
+/// The bulkheads between the holds of a dry bulk hull: `holds - 1` of them, evenly spaced along the
+/// cargo zone (the volume model counts the end bulkheads and these, `n_holds + 1` in all). In
+/// elevation they stand from the inner bottom to the deck; in plan they cross the hold.
+fn hold_bulkheads(c: &mut Canvas, h: &Hull, view: View, labels: &mut Vec<(String, [f64; 2])>) {
+    let Containment::Hold {
+        top_width,
+        inner_bottom,
+        ..
+    } = &h.containment
+    else {
+        return;
+    };
+    if h.holds < 2 {
+        return;
+    }
+    let (x0, x1) = (h.stern_void, h.loa - h.bow_void);
+    for i in 1..h.holds {
+        let x = x0 + (x1 - x0) * i as f64 / h.holds as f64;
+        match view {
+            View::Elevation => c.line("HIDDEN", [x, *inner_bottom], [x, h.depth], None),
+            View::Plan => c.line("HIDDEN", [x, -top_width / 2.0], [x, top_width / 2.0], None),
+        }
+    }
+    // named at the middle of the forward hold, nearest the column of labels
+    let mid = x1 - (x1 - x0) / (2.0 * h.holds as f64);
+    let y = match view {
+        View::Elevation => (inner_bottom + h.depth) / 2.0,
+        View::Plan => top_width / 4.0,
+    };
+    labels.push((
+        label!("draw-holds", "HOLDS ({count})", count = h.holds),
+        [mid, y],
+    ));
 }
 
 /// The aft block of a self-propelled hull, from `drawing.aft_arrangement`; nothing for a pushed
@@ -1259,6 +1347,14 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
             Some("chain_double_dashed"),
         );
     }
+    if let Some(t) = h.ballast_line(c.k) {
+        c.line(
+            "WATER",
+            [h.stern_x_at_height(t), t],
+            [h.x_at_height(t), t],
+            Some("dashed"),
+        );
+    }
     // the hold or the tanks, hidden under the deck
     match &h.containment {
         Containment::Hold {
@@ -1319,6 +1415,19 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
     elevation_gas_detail(&mut c, h, &mut labels);
     aft_block(&mut c, h, View::Elevation);
     zones(&mut c, h, View::Elevation, &mut labels);
+    hold_bulkheads(&mut c, h, View::Elevation, &mut labels);
+    // Issue #409: the top of the structure and the loaded air draft under it.
+    if let Some(top) = h.air_top {
+        c.line("ZONE", [0.0, top], [h.loa, top], None);
+        labels.push((
+            label!(
+                "draw-air-draft",
+                "AIR DRAFT {draught}",
+                draught = metres(top - h.draught)
+            ),
+            [h.loa, top],
+        ));
+    }
     if !c.try_dim_horizontal([0.0, 0.0], [h.loa, 0.0], -DIM_OFFSET_MM) {
         labels.push((
             label!("draw-loa", "LOA {length}", length = metres(h.loa)),
@@ -1354,6 +1463,16 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
             label!(
                 "draw-light-draught",
                 "LIGHT DRAUGHT {draught}",
+                draught = metres(t)
+            ),
+            [h.x_at_height(t), t],
+        ));
+    }
+    if let Some(t) = h.ballast_line(c.k) {
+        labels.push((
+            label!(
+                "draw-ballast-draught",
+                "BALLAST DRAUGHT {draught}",
                 draught = metres(t)
             ),
             [h.x_at_height(t), t],
@@ -1442,6 +1561,7 @@ fn plan(h: &Hull, n: u32) -> Canvas {
     aft_block(&mut c, h, View::Plan);
     let mut labels: Vec<(String, [f64; 2])> = Vec::new();
     zones(&mut c, h, View::Plan, &mut labels);
+    hold_bulkheads(&mut c, h, View::Plan, &mut labels);
     let overshoot = 4.0 * c.k;
     c.centre_line([-overshoot, 0.0], [h.loa + overshoot, 0.0]);
     if !c.try_dim_horizontal([0.0, y0], [h.loa, y0], -DIM_OFFSET_MM) {
@@ -1624,6 +1744,9 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
     if let Some(t) = h.light_draught {
         c.line("WATER", [-half, t], [half, t], Some("chain_double_dashed"));
     }
+    if let Some(t) = h.ballast_line(c.k) {
+        c.line("WATER", [-half, t], [half, t], Some("dashed"));
+    }
     let mut labels: Vec<(String, [f64; 2])> = Vec::new();
     match &h.containment {
         Containment::Hold {
@@ -1761,6 +1884,30 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
             [-half, t],
         ));
     }
+    if let Some(t) = h.ballast_line(c.k) {
+        labels.push((
+            label!(
+                "draw-ballast-draught",
+                "BALLAST DRAUGHT {draught}",
+                draught = metres(t)
+            ),
+            [-half, t],
+        ));
+    }
+    // Issue #409: the top of the structure and the loaded air draft under it, on the right.
+    if let Some(top) = h.air_top {
+        c.line("ZONE", [-half, top], [half, top], None);
+        if !c.try_dim_vertical([half, h.draught], [half, top], -3.0 * DIM_OFFSET_MM) {
+            labels.push((
+                label!(
+                    "draw-air-draft",
+                    "AIR DRAFT {draught}",
+                    draught = metres(top - h.draught)
+                ),
+                [-half, top],
+            ));
+        }
+    }
     // The labels stand in one column to the left of the hull. The right side holds the dimensions,
     // and a leader from beyond them would run through their lines and figures.
     c.label_column(-half - 2.0 * DIM_OFFSET_MM * c.k, &mut labels);
@@ -1859,8 +2006,14 @@ fn fits(window: [f64; 4], n: u32, strip: f64) -> bool {
     (window[2] - window[0]) * k <= fw + 1e-9 && (window[3] - window[1]) * k <= fh + 1e-9
 }
 
-/// Build one view at the largest scale at which everything fits.
-fn document(h: &Hull, title: &str, build: fn(&Hull, u32) -> Canvas) -> Result<Value, String> {
+/// Build one view at the largest scale at which everything fits, no larger than 1:`from` (the common
+/// scale of the three views, issue #409). Gives the document and the ratio it was drawn at.
+fn document(
+    h: &Hull,
+    title: &str,
+    build: fn(&Hull, u32) -> Canvas,
+    from: u32,
+) -> Result<(Value, u32), String> {
     let mut notes = vec![label!(
         "draw-note-dimensions",
         "{view}. DIMENSIONS IN METRES.",
@@ -1875,7 +2028,7 @@ fn document(h: &Hull, title: &str, build: fn(&Hull, u32) -> Canvas) -> Result<Va
     }
     notes.extend(failed_notes(&h.failed_checks));
     let strip = strip_mm(notes.len());
-    for n in RATIOS {
+    for n in RATIOS.into_iter().filter(|n| *n >= from) {
         let canvas = build(h, n);
         let window = window_of(&canvas);
         if !fits(window, n, strip) {
@@ -1898,41 +2051,61 @@ fn document(h: &Hull, title: &str, build: fn(&Hull, u32) -> Canvas) -> Result<Va
         .iter()
         .map(|n| json!({"name": n}))
         .collect();
-        return Ok(json!({
-            "standard_version": "1.0",
-            "sheet": {"size": "A3", "orientation": "landscape"},
-            "layers": layers,
-            "status": "concept",
-            "strips": [{"id": "notes", "edge": "bottom", "size_mm": strip, "content": "notes"}],
-            "notes": notes,
-            "viewports": [{
-                "id": "main",
-                "frame": {"x_mm": fx, "y_mm": fy, "width_mm": fw, "height_mm": fh},
-                "window": {"xmin_m": window[0], "ymin_m": window[1], "xmax_m": window[2], "ymax_m": window[3]},
-                "scale": "fit",
-                "scale_bar": {},
-                "entities": canvas.entities,
-            }],
-        }));
+        return Ok((
+            json!({
+                "standard_version": "1.0",
+                "sheet": {"size": "A3", "orientation": "landscape"},
+                "layers": layers,
+                "status": "concept",
+                "strips": [{"id": "notes", "edge": "bottom", "size_mm": strip, "content": "notes"}],
+                "notes": notes,
+                "viewports": [{
+                    "id": "main",
+                    "frame": {"x_mm": fx, "y_mm": fy, "width_mm": fw, "height_mm": fh},
+                    "window": {"xmin_m": window[0], "ymin_m": window[1], "xmax_m": window[2], "ymax_m": window[3]},
+                    "scale": n,
+                    "scale_bar": {},
+                    "entities": canvas.entities,
+                }],
+            }),
+            n,
+        ));
     }
     Err("the hull does not fit any scale of the standard on an A3 sheet".to_string())
 }
 
 /// The three views of an Option's results (the `simulate` result object).
+///
+/// The side elevation and the plan, which show the same length, are drawn at one scale: the largest
+/// at which both fit (issue #409), so that a length scaled off one view is the same off the other.
+/// The typical section is a detail of the cargo containment: at the scale of the hull it would be a
+/// few millimetres wide, so it keeps the largest scale at which it fits and says so in its scale
+/// bar.
 pub fn ga_views(results: &Value) -> Result<GaViews, String> {
     let hull = read_hull(results)?;
+    let elevation_title = label!("draw-view-side-elevation", "SIDE ELEVATION");
+    let plan_title = label!("draw-view-plan", "PLAN");
+    // A view that needs a smaller scale than the other sets the scale for both; drawing a view at a
+    // smaller scale can change its labels, so the search runs until the two agree.
+    let mut common = RATIOS[0];
+    let (elevation, plan_view) = loop {
+        let e = document(&hull, &elevation_title, side_elevation, common)?;
+        let p = document(&hull, &plan_title, plan, common)?;
+        if e.1 == p.1 {
+            break (e.0, p.0);
+        }
+        common = e.1.max(p.1);
+    };
+    let (section, _) = document(
+        &hull,
+        &label!("draw-view-midship-section", "TYPICAL SECTION"),
+        midship_section,
+        RATIOS[0],
+    )?;
     Ok(GaViews {
-        side_elevation: document(
-            &hull,
-            &label!("draw-view-side-elevation", "SIDE ELEVATION"),
-            side_elevation,
-        )?,
-        plan: document(&hull, &label!("draw-view-plan", "PLAN"), plan)?,
-        midship_section: document(
-            &hull,
-            &label!("draw-view-midship-section", "MIDSHIP SECTION"),
-            midship_section,
-        )?,
+        side_elevation: elevation,
+        plan: plan_view,
+        midship_section: section,
     })
 }
 

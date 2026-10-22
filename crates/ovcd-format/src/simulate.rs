@@ -503,6 +503,7 @@ fn structure_json(
             "hatch_coaming_height_m",
             dry.map_or(Value::Null, |i| num(i.coaming_height)),
         ),
+        ("hold_count", dry.map_or(Value::Null, |i| json!(i.n_holds))),
         (
             "tank_support_height_m",
             basis.map_or(Value::Null, |b| num(b.tank_support_height)),

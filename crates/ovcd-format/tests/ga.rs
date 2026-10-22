@@ -457,6 +457,165 @@ fn the_weather_shield_is_drawn_dashed_from_the_wing_plate_to_the_tank_top_plus_t
     }
 }
 
+fn x_lines<'a>(document: &'a Value, layer: &str) -> Vec<f64> {
+    of_layer(document, layer, "line")
+        .iter()
+        .filter(|e| {
+            close(
+                e["from_m"][0].as_f64().unwrap(),
+                e["to_m"][0].as_f64().unwrap(),
+            )
+        })
+        .map(|e| e["from_m"][0].as_f64().unwrap())
+        .collect()
+}
+
+#[test]
+fn the_elevation_and_the_plan_are_drawn_at_one_scale() {
+    // Issue #409: a length scaled off one view is the same off the other.
+    for (file, r) in all_fixtures().into_iter().map(|(f, _, r)| (f, r)) {
+        let v = views(&r);
+        assert_eq!(
+            v.side_elevation["viewports"][0]["scale"], v.plan["viewports"][0]["scale"],
+            "{file}"
+        );
+        assert!(v.plan["viewports"][0]["scale"].is_number(), "{file}");
+    }
+}
+
+#[test]
+fn the_section_is_labelled_a_typical_section() {
+    let (_, r) = computed("gas_igc_2g_exact.vdesign").remove(0);
+    let notes = views(&r).midship_section["notes"].to_string();
+    assert!(notes.contains("TYPICAL SECTION"), "{notes}");
+}
+
+#[test]
+fn the_top_of_the_structure_is_drawn_at_the_draught_plus_the_air_draft() {
+    // Issue #409: a dashed line at the top of the structure, and the air draft named.
+    for file in GAS.iter().chain(DRY) {
+        let (_, r) = computed(file).remove(0);
+        let top = r["results"]["draught_m"].as_f64().unwrap()
+            + r["results"]["air_draft_loaded_m"].as_f64().unwrap();
+        let v = views(&r);
+        for (name, view) in [
+            ("elevation", &v.side_elevation),
+            ("section", &v.midship_section),
+        ] {
+            let at = of_layer(view, "ZONE", "line")
+                .iter()
+                .filter(|e| close(e["from_m"][1].as_f64().unwrap(), top))
+                .count();
+            assert_eq!(
+                at, 1,
+                "{file}: the line at the top of the structure in the {name}"
+            );
+            // The air draft is a dimension from the waterline to the line, or, with no room for
+            // one, a label that names it.
+            let dim = entities(view).iter().any(|e| {
+                e["type"] == "dimension"
+                    && close(e["to"]["point_m"][1].as_f64().unwrap_or(f64::NAN), top)
+            });
+            assert!(
+                dim || view.to_string().contains("AIR DRAFT"),
+                "{file}: {name} gives the air draft"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_gas_plan_shows_the_forward_separation_and_the_service_space() {
+    for file in GAS {
+        let (_, r) = computed(file).remove(0);
+        let sep = &r["drawing"]["separation"];
+        let (fwd, service) = (
+            sep["fwd_separation_m"].as_f64().unwrap(),
+            sep["service_space_m"].as_f64().unwrap(),
+        );
+        let x1 = r["dims"]["loa_m"].as_f64().unwrap()
+            - r["geometry"]["bow_void_length_m"].as_f64().unwrap();
+        let v = views(&r);
+        for (name, view) in [("elevation", &v.side_elevation), ("plan", &v.plan)] {
+            assert!(
+                x_lines(view, "HIDDEN").iter().any(|x| close(*x, x1 + fwd)),
+                "{file}: the forward end bulkhead in the {name}"
+            );
+            let text = view.to_string();
+            assert!(text.contains("FWD SEPARATION"), "{file}: {name}");
+            assert_eq!(
+                text.contains("SERVICE SPACE"),
+                service > 0.0,
+                "{file}: {name}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_dry_bulk_hull_shows_a_bulkhead_between_each_two_holds() {
+    for file in DRY {
+        let (_, r) = computed(file).remove(0);
+        let holds = r["drawing"]["hold_count"].as_u64().unwrap() as usize;
+        assert!(holds >= 2, "{file}");
+        let (x0, x1) = (
+            r["geometry"]["stern_void_length_m"].as_f64().unwrap(),
+            r["dims"]["loa_m"].as_f64().unwrap()
+                - r["geometry"]["bow_void_length_m"].as_f64().unwrap(),
+        );
+        let v = views(&r);
+        for (name, view) in [("elevation", &v.side_elevation), ("plan", &v.plan)] {
+            let xs = x_lines(view, "HIDDEN");
+            for i in 1..holds {
+                let x = x0 + (x1 - x0) * i as f64 / holds as f64;
+                assert!(
+                    xs.iter().any(|a| close(*a, x)),
+                    "{file}: bulkhead {i} in the {name}"
+                );
+            }
+            assert!(
+                view.to_string().contains(&format!("HOLDS ({holds})")),
+                "{file}: {name}"
+            );
+        }
+        // A gas hull has none.
+    }
+    let (_, gas) = computed("gas_igc_2g_exact.vdesign").remove(0);
+    assert!(gas["drawing"]["hold_count"].is_null());
+    assert!(!views(&gas).plan.to_string().contains("HOLDS"));
+}
+
+#[test]
+fn a_ballast_waterline_is_drawn_when_the_results_have_a_ballast_condition_apart_from_the_others() {
+    // Issue #409. The IS Code loading conditions give a "Ballast, departure" draught. It is drawn
+    // when it stands at least 1 mm from the light and the loaded waterlines at the scale of the view.
+    let (_, mut r) = computed("gas_igc_2g_exact.vdesign").remove(0);
+    r["loading_conditions"] = serde_json::json!({"conditions": [
+        {"role": "ballast_departure", "draught_m": 1.655}
+    ]});
+    let v = views(&r);
+    for (name, view) in [
+        ("elevation", &v.side_elevation),
+        ("section", &v.midship_section),
+    ] {
+        let at = of_layer(view, "WATER", "line")
+            .iter()
+            .filter(|e| close(e["from_m"][1].as_f64().unwrap(), 1.655))
+            .count();
+        assert_eq!(at, 1, "{name}");
+        assert!(view.to_string().contains("BALLAST DRAUGHT"), "{name}");
+    }
+    // Next to the light waterline it is not drawn twice.
+    let light = r["results"]["light_draught_m"].as_f64().unwrap();
+    r["loading_conditions"]["conditions"][0]["draught_m"] = serde_json::json!(light + 0.001);
+    assert!(
+        !views(&r)
+            .side_elevation
+            .to_string()
+            .contains("BALLAST DRAUGHT")
+    );
+}
+
 #[test]
 fn a_hull_without_a_shield_draws_none() {
     let (_, mut r) = computed("gas_igc_2g_exact.vdesign").remove(0);
