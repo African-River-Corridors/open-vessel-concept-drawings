@@ -219,6 +219,12 @@ check-lock-length = overall length { $length } m <= lock length { $limit } m
 check-name-within-lock-width = within lock width
 check-lock-width = overall beam { $width } m <= lock width { $limit } m
 
+## crates/ovcd-format/src/formation.rs
+
+warn-formation-sizing-not-converged = The pusher sizing did not converge in { $passes } passes (the power moved by more than { $tol } %). The power shown is that of the last pass.
+note-formation-method-unverified = The Formation's resistance is that of its Equivalent Hull (the barges and the pusher as one hull) by the single-hull method, times the Formation resistance allowance. The method is unverified.
+note-formation-coupling-force = Coupling force between the pusher and the pushed craft: { $force } kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B { $power } kW, L_S { $ls } m taken as the pusher length, B_S { $bs } m).
+
 ## crates/ovcd-format/src/offsets.rs
 
 msg-offsets-no-table = an offsets Hull Form needs its offsets table (`{ $input }`)
