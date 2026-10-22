@@ -4,7 +4,14 @@ import type { Evaluation, Schema, Snapshot } from "../api";
 import type { MeshGroup, Platform, SectionOutline, SpaceInfo, Waterline } from "./types";
 
 /** The raw bytes of `mesh_buffers`: two u32 counts, then the f32 positions and the u32 indices. */
-function splitBuffers(buf: ArrayBuffer): { positions: Float32Array; indices: Uint32Array } {
+/** What the webview gives for a raw response: an ArrayBuffer, or (when the IPC falls back to JSON) an array of bytes. */
+function asBuffer(raw: ArrayBuffer | ArrayLike<number>): ArrayBuffer {
+  if (raw instanceof ArrayBuffer) return raw;
+  return Uint8Array.from(raw as ArrayLike<number>).buffer;
+}
+
+function splitBuffers(raw: ArrayBuffer | ArrayLike<number>): { positions: Float32Array; indices: Uint32Array } {
+  const buf = asBuffer(raw);
   const head = new DataView(buf, 0, 8);
   const np = head.getUint32(0, true);
   const ni = head.getUint32(4, true);
@@ -40,7 +47,7 @@ export const tauriPlatform: Platform = {
   exportDrawing: async () => false,
   exportModel: async () => false,
   meshes: async (option) => {
-    const { positions, indices } = splitBuffers(await invoke<ArrayBuffer>("mesh_buffers", { option }));
+    const { positions, indices } = splitBuffers(await invoke<ArrayBuffer | number[]>("mesh_buffers", { option }));
     const g = await invoke<{ hash: string; groups: MeshGroup[] }>("mesh_groups", { option });
     return { positions, indices, groups: g.groups, hash: g.hash };
   },
