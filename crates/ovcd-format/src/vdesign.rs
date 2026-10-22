@@ -1513,6 +1513,8 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("raked_box", "Raked box"),
     ("covered", "Covered"),
     ("open", "Open"),
+    ("tank_end", "From the tank end"),
+    ("cargo_area", "From the cargo area"),
     ("river-only", "River only"),
     ("coastal-and-river", "Coastal and river"),
     ("v_bottom", "V-bottom"),
