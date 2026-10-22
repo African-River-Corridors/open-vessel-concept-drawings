@@ -441,6 +441,10 @@ def cases() -> dict[str, dict]:
     # coefficient case: the block coefficient is a result, no longer an input.
     out["sweep hull long bow rake 90x14"] = _inputs(
         "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5, bow_rake_length_m=20.0)
+    # Issue #535: the hull's own midship section sets the blockage in a shallow, narrow channel. It
+    # takes the place of the midship coefficient case: Cm is a result, no longer an input.
+    out["sweep hull midship section in a channel 80x11.4"] = _inputs(
+        "bauxite", "box_hold", "self_propelled", 80.0, 11.4, 4.0, **_DEEP_CHANNEL)
     return out
 
 
