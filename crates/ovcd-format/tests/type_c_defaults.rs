@@ -226,10 +226,17 @@ fn the_table_values_reach_the_results_and_the_wall_is_the_formula_on_the_steel_d
                 .clone()
         };
         let num = |v: &Value| v.as_f64().unwrap();
-        assert_eq!(
-            num(&tank["design_pressure_mpa"]),
-            num(&want("tank_design_pressure_mpa"))
-        );
+        // Fully refrigerated LPG has no fixed value: the IGC minimum of the tank (issue #577).
+        if want("tank_design_pressure_mpa").is_null() {
+            assert_eq!(carriage, "fully_refrigerated");
+            let p = num(&tank["design_pressure_mpa"]);
+            assert!(p > 0.2 && p < 0.6, "{cargo}: {p}");
+        } else {
+            assert_eq!(
+                num(&tank["design_pressure_mpa"]),
+                num(&want("tank_design_pressure_mpa"))
+            );
+        }
         assert_eq!(
             tank["design_temperature_c"].as_f64(),
             want("tank_design_temperature_c").as_f64()
@@ -687,4 +694,64 @@ fn a_tank_calibration_case_uses_the_structure_factor_of_the_profile() {
             .unwrap_or_else(|| panic!("{id}"));
         assert_eq!(hit.value, &json!(factor), "{id}");
     }
+}
+
+/// Every outcome of the IGC 4.23.1.2 minimum design pressure Rule in a Rule Trace, as
+/// (outcome, margin).
+fn min_pressure_outcomes(v: &Value, out: &mut Vec<(String, f64)>) {
+    match v {
+        Value::Object(o) => {
+            if o.get("rule").and_then(Value::as_str) == Some("igc/4.23.1.2/min-design-pressure") {
+                out.push((
+                    o["outcome"].as_str().unwrap().to_string(),
+                    o["margin"].as_f64().unwrap(),
+                ));
+            }
+            o.values().for_each(|x| min_pressure_outcomes(x, out));
+        }
+        Value::Array(a) => a.iter().for_each(|x| min_pressure_outcomes(x, out)),
+        _ => {}
+    }
+}
+
+/// Label: property. The default design pressure of fully refrigerated LPG is the IGC 4.23.1.2
+/// minimum of the design's own tank (issue #577): it grows with the tank length, and the Rule is met
+/// with no margin to spare.
+#[test]
+fn fully_refrigerated_lpg_takes_the_igc_minimum_of_its_own_tank() {
+    let mut last = 0.0;
+    for length in [60.0, 85.0, 110.0] {
+        let mut s = new_session("LPG_butane", "fully_refrigerated");
+        s.set_input("Option 1", "length_overall_m", json!(length))
+            .unwrap();
+        assert_eq!(
+            stored(&s, "tank_design_pressure_mpa").unwrap(),
+            (Value::Null, Source::Default)
+        );
+        let r = results_of(&s);
+        let p = r["drawing"]["tank"]["design_pressure_mpa"]
+            .as_f64()
+            .unwrap();
+        assert!(p > last, "{length} m: {p} is not above {last}");
+        last = p;
+        let mut found = Vec::new();
+        min_pressure_outcomes(&r["rule_trace"], &mut found);
+        assert!(!found.is_empty(), "{length} m: the Rule was not evaluated");
+        for (outcome, margin) in found {
+            assert_eq!(outcome, "pass", "{length} m");
+            assert!(margin.abs() < 1e-12, "{length} m: margin {margin}");
+        }
+    }
+}
+
+/// Label: property. A typed design pressure is kept, and the Rule then judges it.
+#[test]
+fn a_typed_design_pressure_replaces_the_igc_minimum() {
+    let mut s = new_session("LPG_butane", "fully_refrigerated");
+    s.set_input("Option 1", "tank_design_pressure_mpa", json!(0.7))
+        .unwrap();
+    let p = results_of(&s)["drawing"]["tank"]["design_pressure_mpa"]
+        .as_f64()
+        .unwrap();
+    assert_eq!(p, 0.7);
 }

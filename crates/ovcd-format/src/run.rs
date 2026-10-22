@@ -252,11 +252,13 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     put("draught_limit_m", "draught_limit_m");
     // A null wall thickness asks for the pressure-vessel formula (issue #292); `put` leaves nulls
     // out, and a key left out means the engine's old fixed 25 mm.
-    // In the same way a null dome size asks for the dome rule (issue #316).
+    // In the same way a null dome size asks for the dome rule (issue #316), and a null design
+    // pressure for the IGC 4.23.1.2 minimum of each tank (issue #577).
     for name in [
         "tank_wall_thickness_mm",
         "tank_dome_height_m",
         "tank_dome_diameter_m",
+        "tank_design_pressure_mpa",
     ] {
         if get(name).is_some_and(|v| v.is_null()) {
             p.insert(name.to_string(), Value::Null);

@@ -2044,7 +2044,7 @@ pub const INPUTS: &[InputSpec] = &[
     only(
         "tank_design_pressure_mpa",
         "Tank design pressure (MARVS)",
-        NUM,
+        NUM_OR_NONE,
         "type_c_tanks",
         Group::GasTanks,
     ),

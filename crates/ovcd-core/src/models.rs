@@ -97,6 +97,11 @@ pub struct BargeInputs {
     pub tank_material_density: f64,
     /// Design pressure (MPa)
     pub design_pressure: f64,
+    /// Issue #577: take the design pressure as the IGC 4.23.1.2 minimum of each tank, Po = 0.2 +
+    /// A C (rho_r)^1.5, worked out from the tank's own outer diameter and length, the allowable
+    /// stress of the wall formula and the liquid density (`liquid_pressure_density`). `design_pressure`
+    /// is then not read. `false`: the typed `design_pressure`.
+    pub design_pressure_igc_minimum: bool,
     /// Issue #374: the dimensionless acceleration a of the IGC 4.28.1.2 liquid pressure, Pgd =
     /// a x Z x rho / 1.02e5 MPa, added to the design pressure in the wall formula (IGC 4.23.2.2,
     /// 4.13.2.4). `None`: the vapour pressure only, as the original engine did.
@@ -211,6 +216,7 @@ impl BargeInputs {
             liquid_pressure_density: 0.0,
             tank_material_density: 7.85,
             design_pressure: 0.5,
+            design_pressure_igc_minimum: false,
             weld_efficiency: 0.95,
             tank_structure_factor: 1.30,
             insulation_thickness: 350.0,

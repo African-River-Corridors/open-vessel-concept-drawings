@@ -190,11 +190,19 @@ fn fit_options(o: &Map<String, Value>, base: FitOptions) -> Result<FitOptions, E
             f.tank_wall_thickness_mm = Some(float_or(o, "tank_wall_thickness_mm", 0.0)?);
         }
     }
-    f.tank_design.design_pressure_mpa = float_or(
-        o,
-        "tank_design_pressure_mpa",
-        f.tank_design.design_pressure_mpa,
-    )?;
+    // `null` asks for the IGC 4.23.1.2 minimum of each tank (issue #577).
+    match o.get("tank_design_pressure_mpa") {
+        None => {}
+        Some(Value::Null) => f.tank_design.design_pressure_igc_minimum = true,
+        Some(_) => {
+            f.tank_design.design_pressure_igc_minimum = false;
+            f.tank_design.design_pressure_mpa = float_or(
+                o,
+                "tank_design_pressure_mpa",
+                f.tank_design.design_pressure_mpa,
+            )?;
+        }
+    }
     if let Some(v) = o.get("tank_material") {
         f.tank_design.material = v
             .as_str()

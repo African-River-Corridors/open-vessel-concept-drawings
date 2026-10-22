@@ -128,8 +128,11 @@ pub enum LiquidPressure {
 /// (`None`: the pressure-vessel formula gives it).
 #[derive(Debug, Clone, PartialEq)]
 pub struct TankDesign {
-    /// Design pressure, MARVS (MPa).
+    /// Design pressure, MARVS (MPa). Not read when `design_pressure_igc_minimum` is set.
     pub design_pressure_mpa: f64,
+    /// Issue #577: the design pressure is the IGC 4.23.1.2 minimum of the tank, worked out from its
+    /// own size (`BargeInputs::design_pressure_igc_minimum`).
+    pub design_pressure_igc_minimum: bool,
     /// Material key of `pressure_vessel::TANK_MATERIAL_DATABASE`.
     pub material: String,
     /// Allowable stress (MPa); `None`: the material's own.
@@ -150,6 +153,7 @@ impl Default for TankDesign {
     fn default() -> Self {
         Self {
             design_pressure_mpa: DEFAULT_TANK_DESIGN_PRESSURE_MPA,
+            design_pressure_igc_minimum: false,
             material: DEFAULT_TANK_MATERIAL.to_string(),
             allowable_stress_mpa: None,
             insulation_thickness_mm: DEFAULT_TANK_INSULATION_MM,
@@ -727,6 +731,7 @@ fn gas_volumetric(
     base.n_tanks_long = inp.n_tanks_long;
     base.tank_wall_thickness = inp.tank_wall_thickness;
     base.design_pressure = inp.tank_design.design_pressure_mpa;
+    base.design_pressure_igc_minimum = inp.tank_design.design_pressure_igc_minimum;
     base.tank_head_type = inp.tank_design.head_type.clone();
     // Issue #374: the design liquid pressure (IGC 4.23.2.2, 4.28.1.2) joins the wall formula.
     let (accel, rho) =
@@ -869,7 +874,7 @@ fn gas_volumetric(
                 yield_strength_mpa: mat.yield_strength,
                 outer_diameter_m: tanks.outer_diameter,
                 overall_length_m: tanks.overall_tank_length,
-                design_pressure_mpa: bi.design_pressure,
+                design_pressure_mpa: tanks.design_pressure,
                 design_temperature_c: inp.tank_design.design_temperature_c,
                 liquid_density_t_per_m3: bi.liquid_pressure_density / 1000.0,
             }
