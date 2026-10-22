@@ -496,6 +496,10 @@ def cases() -> dict[str, dict]:
     out["sweep hull chine gas 90x11.4"] = _inputs(
         "LNG", "type_c_tanks", "self_propelled", 90.0, 11.4, 5.0, hull_form="chine",
         chine_half_breadth_m=4.5, chine_height_m=0.6)
+    # Issue #362: an ATB barge has a Notch; the tug and the Notch come from the barge. The base
+    # runs the same Formation as a barge without it: the case shows as changed.
+    out["sweep atb notch 100x20"] = _inputs(
+        "bauxite", "box_hold", "atb", 100.0, 20.0, 6.0)
     # Issue #451: an offsets hull, a raked barge typed as four stations. A base from before the
     # offsets Hull Form refuses it: the case shows as new.
     rows = [{"station_x_m": x, "y_m": y, "z_m": z}
