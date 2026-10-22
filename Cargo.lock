@@ -49,7 +49,7 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
 name = "arc-rules"
-version = "0.2.4"
+version = "0.3.0"
 dependencies = [
  "serde_json",
  "sha2 0.11.1",
@@ -2228,7 +2228,7 @@ dependencies = [
 
 [[package]]
 name = "ovcd-app"
-version = "0.2.4"
+version = "0.3.0"
 dependencies = [
  "ovcd-shell",
  "serde_json",
@@ -2239,7 +2239,7 @@ dependencies = [
 
 [[package]]
 name = "ovcd-cli"
-version = "0.2.4"
+version = "0.3.0"
 dependencies = [
  "otd",
  "ovcd-format",
@@ -2248,7 +2248,7 @@ dependencies = [
 
 [[package]]
 name = "ovcd-core"
-version = "0.2.4"
+version = "0.3.0"
 dependencies = [
  "arc-rules",
  "libm",
@@ -2257,7 +2257,7 @@ dependencies = [
 
 [[package]]
 name = "ovcd-format"
-version = "0.2.4"
+version = "0.3.0"
 dependencies = [
  "arc-rules",
  "fluent-bundle",
@@ -2271,7 +2271,7 @@ dependencies = [
 
 [[package]]
 name = "ovcd-py"
-version = "0.2.4"
+version = "0.3.0"
 dependencies = [
  "ovcd-format",
  "pyo3",
@@ -2279,7 +2279,7 @@ dependencies = [
 
 [[package]]
 name = "ovcd-shell"
-version = "0.2.4"
+version = "0.3.0"
 dependencies = [
  "otd",
  "ovcd-core",
@@ -2289,7 +2289,7 @@ dependencies = [
 
 [[package]]
 name = "ovcd-web"
-version = "0.2.4"
+version = "0.3.0"
 dependencies = [
  "otd",
  "ovcd-format",
@@ -4714,7 +4714,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.2.4"
+version = "0.3.0"
 dependencies = [
  "ovcd-core",
 ]
