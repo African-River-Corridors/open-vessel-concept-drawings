@@ -11,7 +11,7 @@
 
 use std::collections::HashMap;
 
-use ovcd_core::compartments::{Side, Space, SpaceKind};
+use ovcd_core::compartments::{Side, Space, SpaceKind, clip};
 use ovcd_core::hull::hull_form::{Bottom, HullFormInputs, HullFormKind, HullShape, generate};
 use ovcd_core::mesh::{Mesh, hull_mesh, space_mesh, waterline_mesh};
 use ovcd_core::sections::{SectionsTable, Waterplane, immersed};
@@ -207,9 +207,99 @@ fn a_space_prism_is_closed_and_has_its_volume() {
         x_fwd: 45.0,
         section: vec![(1.0, 0.0), (5.7, 0.0), (5.7, 1.2), (1.0, 1.2)],
     };
-    let m = space_mesh(&s);
+    let m = space_mesh(
+        &clip(&s, &hull(HullFormKind::Box, HullShape::default())),
+        &hull(HullFormKind::Box, HullShape::default()),
+    );
     assert_closed(&m, "space");
     assert!((m.volume() - s.volume_m3()).abs() <= 1e-6 * s.volume_m3());
+}
+
+/// A wing tank in the bow rake, whose bottom lies below the rising keel, and one in the stern rake.
+fn cut_spaces() -> Vec<Space> {
+    let section = vec![(1.0, 0.0), (5.7, 0.0), (5.7, 1.2), (1.0, 1.2)];
+    [(70.0, 80.0, "FP"), (0.0, 10.0, "AP"), (62.0, 78.0, "MID")]
+        .into_iter()
+        .map(|(x_aft, x_fwd, name)| Space {
+            name: name.into(),
+            kind: SpaceKind::WingBallast,
+            side: Side::Starboard,
+            x_aft,
+            x_fwd,
+            section: section.clone(),
+        })
+        .collect()
+}
+
+/// Whether the point (y, z) is inside the half-section (or within 1e-4 of its boundary).
+fn inside_half_section(points: &[(f64, f64)], y: f64, z: f64) -> bool {
+    let n = points.len();
+    let mut inside = false;
+    let mut near = f64::INFINITY;
+    for i in 0..n {
+        let (p, q) = (points[i], points[(i + 1) % n]);
+        if (p.1 > z) != (q.1 > z) && y < p.0 + (z - p.1) * (q.0 - p.0) / (q.1 - p.1) {
+            inside = !inside;
+        }
+        let (dy, dz) = (q.0 - p.0, q.1 - p.1);
+        let t =
+            (((y - p.0) * dy + (z - p.1) * dz) / (dy * dy + dz * dz).max(1e-300)).clamp(0.0, 1.0);
+        near = near.min(libm::sqrt(
+            (y - p.0 - t * dy) * (y - p.0 - t * dy) + (z - p.1 - t * dz) * (z - p.1 - t * dz),
+        ));
+    }
+    inside || near < 1e-4
+}
+
+#[test]
+fn a_space_the_hull_cuts_is_a_closed_mesh_inside_the_hull_with_its_volume() {
+    // Issue #633: the prism of a Space that sticks out of the hull is not its mesh. The mesh lies
+    // inside the hull (every vertex in the hull's section at its x, to 1e-4 m) and holds the clipped
+    // Space's volume within the ruled-quad error of the hull between its sections.
+    let table = hull(raked(), HullShape::default());
+    for s in cut_spaces() {
+        let c = clip(&s, &table);
+        assert!(c.is_cut(), "{} is cut by the hull", s.name);
+        assert!(c.volume_m3 < s.volume_m3() - 1e-3, "{}", s.name);
+        let m = space_mesh(&c, &table);
+        assert_closed(&m, &s.name);
+        // The raked box is piecewise ruled from straight edges: the mesh volume is the clipped volume.
+        assert!(
+            (m.volume() - c.volume_m3).abs() <= 1e-4 * c.volume_m3,
+            "{}: mesh {} vs {}",
+            s.name,
+            m.volume(),
+            c.volume_m3
+        );
+        for k in 0..m.positions.len() / 3 {
+            let [x, y, z] = m.vertex(k as u32);
+            let (section, _) = table.section_at(x);
+            assert!(
+                inside_half_section(&section.points, y.abs(), z),
+                "{}: vertex {x} {y} {z} is outside the hull",
+                s.name
+            );
+        }
+    }
+}
+
+#[test]
+fn a_space_wholly_inside_the_hull_keeps_its_prism_mesh() {
+    let table = hull(raked(), HullShape::default());
+    let s = Space {
+        name: "DB".into(),
+        kind: SpaceKind::DoubleBottomBallast,
+        side: Side::Starboard,
+        x_aft: 10.0,
+        x_fwd: 50.0,
+        section: vec![(1.0, 0.0), (5.7, 0.0), (5.7, 1.2), (1.0, 1.2)],
+    };
+    let c = clip(&s, &table);
+    assert!(!c.is_cut());
+    let m = space_mesh(&c, &table);
+    assert_closed(&m, "DB");
+    assert!((m.volume() - s.volume_m3()).abs() <= 1e-6 * s.volume_m3());
+    assert_eq!(m.positions.len(), 3 * 8, "the prism's eight corners");
 }
 
 #[test]

@@ -26,7 +26,7 @@ use alloc::string::{String, ToString};
 use alloc::vec;
 use alloc::vec::Vec;
 
-use crate::compartments::Space;
+use crate::compartments::{ClippedSpace, Space};
 use crate::sections::{Section, SectionsTable};
 use crate::vessel_model::{Bulkhead, Deck, VesselModel};
 
@@ -348,7 +348,7 @@ pub fn bulkhead_mesh(table: &SectionsTable, bulkhead: &Bulkhead) -> Mesh {
 }
 
 /// A Space as its closed prism.
-pub fn space_mesh(space: &Space) -> Mesh {
+fn prism_mesh(space: &Space) -> Mesh {
     let r = &space.section;
     let n = r.len();
     let (xa, xf) = (space.x_aft, space.x_fwd);
@@ -367,6 +367,57 @@ pub fn space_mesh(space: &Space) -> Mesh {
     b.mesh()
 }
 
+/// The sections of `table` from `x0` to `x1` as a table of its own: the ruled section at each end and
+/// every Section between (two at a step).
+fn slab(table: &SectionsTable, x0: f64, x1: f64) -> SectionsTable {
+    let ss = &table.sections;
+    let (lo, hi) = (x0.max(ss[0].x), x1.min(ss[ss.len() - 1].x));
+    let mut rows: Vec<(Section, f64)> = vec![table.section_at(lo)];
+    for (s, d) in ss.iter().zip(&table.depth_at_side) {
+        if s.x > lo && s.x < hi {
+            rows.push((s.clone(), *d));
+        }
+    }
+    rows.push(table.section_at(hi));
+    // Section_at gives the Section aft of a step; the end must be where it is asked.
+    rows[0].0.x = lo;
+    let last = rows.len() - 1;
+    rows[last].0.x = hi;
+    let (sections, depths) = rows.into_iter().unzip();
+    SectionsTable::new(sections, depths).expect("a slice of a valid table is valid")
+}
+
+/// A Space as its closed mesh inside the hull (issue #633): the prism where the hull does not cut
+/// it, else the hull's own solid over the Space's length, cut by each side of the Space's section
+/// (so the mesh lies inside the hull and holds the Space's volume, to the ruled-quad error).
+pub fn space_mesh(clipped: &ClippedSpace, table: &SectionsTable) -> Mesh {
+    let space = &clipped.space;
+    if !clipped.is_cut() {
+        return prism_mesh(space);
+    }
+    let mut m = hull_mesh(&slab(table, space.x_aft, space.x_fwd));
+    let r = &space.section;
+    let n = r.len();
+    // The section runs counter-clockwise or clockwise: the outward normal of an edge follows.
+    let area: f64 = (0..n)
+        .map(|i| {
+            let (p, q) = (r[i], r[(i + 1) % n]);
+            p.0 * q.1 - q.0 * p.1
+        })
+        .sum();
+    let turn = if area >= 0.0 { 1.0 } else { -1.0 };
+    for i in 0..n {
+        let (p, q) = (r[i], r[(i + 1) % n]);
+        let (ny, nz) = (turn * (q.1 - p.1), -turn * (q.0 - p.0));
+        let d = ny * p.0 + nz * p.1;
+        m = clip_by(&m, |v| ny * v[1] + nz * v[2] - d);
+        if m.indices.is_empty() {
+            break;
+        }
+    }
+    m
+}
+
 /// Every mesh of the model in a fixed order, one group each: the hull, the decks, the bulkheads,
 /// the Spaces, and the waterline of each floating position `(name, aft draught, forward draught)`.
 pub fn vessel_meshes(model: &VesselModel, waterlines: &[(String, f64, f64)]) -> Mesh {
@@ -379,7 +430,7 @@ pub fn vessel_meshes(model: &VesselModel, waterlines: &[(String, f64, f64)]) -> 
         m.append("bulkhead", &b.name, &bulkhead_mesh(&model.hull, b));
     }
     for s in &model.spaces {
-        m.append("space", &s.space.name, &space_mesh(&s.space));
+        m.append("space", &s.space.name, &space_mesh(s, &model.hull));
     }
     for (name, aft, fwd) in waterlines {
         m.append("waterline", name, &waterline_mesh(&model.hull, *aft, *fwd));
@@ -405,7 +456,7 @@ fn cross(o: (f64, f64), a: (f64, f64), b: (f64, f64)) -> f64 {
 /// Triangles of a simple counter-clockwise polygon by ear clipping, as index triples. A polygon with
 /// no area gives none. A corner on a straight edge is clipped as a flat ear when no other ear is
 /// left, so every edge of the polygon is in a triangle.
-pub fn ear_clip(ring: &[(f64, f64)]) -> Vec<[usize; 3]> {
+fn ear_clip(ring: &[(f64, f64)]) -> Vec<[usize; 3]> {
     let scale = ring
         .iter()
         .fold(0.0_f64, |m, p| m.max(p.0.abs()).max(p.1.abs()))
@@ -448,4 +499,150 @@ pub fn ear_clip(ring: &[(f64, f64)]) -> Vec<[usize; 3]> {
     }
     out.push([idx[0], idx[1], idx[2]]);
     out
+}
+
+/// The part of the closed mesh `hull` where `side(p) <= 0` (a function that is linear along each
+/// edge, such as the height above a plane), with the cut closed by a lid. A vertex on the plane is
+/// inside. The cut points are shared by the two triangles of an edge, so the result is closed; the
+/// lid is the outline of the cut by ear clipping, wound to match the outline. A mesh wholly inside is
+/// returned whole (with no lid); one wholly outside gives an empty mesh. Work in f64 from the f32
+/// positions, cast to f32 once.
+pub fn clip_by(hull: &Mesh, side: impl Fn([f64; 3]) -> f64) -> Mesh {
+    let n = hull.positions.len() / 3;
+    let height: Vec<f64> = (0..n as u32).map(|i| side(hull.vertex(i))).collect();
+    let mut out = Mesh::default();
+    let mut kept: BTreeMap<u32, u32> = BTreeMap::new();
+    let mut cuts: BTreeMap<(u32, u32), u32> = BTreeMap::new();
+    let mut take = |out: &mut Mesh, i: u32| -> u32 {
+        let next = (out.positions.len() / 3) as u32;
+        *kept.entry(i).or_insert_with(|| {
+            let k = 3 * i as usize;
+            out.positions.extend_from_slice(&hull.positions[k..k + 3]);
+            next
+        })
+    };
+    // The vertex where the edge a-b crosses the plane, once for each edge.
+    let mut cut = |out: &mut Mesh, a: u32, b: u32| -> u32 {
+        let key = (a.min(b), a.max(b));
+        if let Some(&i) = cuts.get(&key) {
+            return i;
+        }
+        let (lo, hi) = key;
+        let (pa, pb) = (hull.vertex(lo), hull.vertex(hi));
+        let (ha, hb) = (height[lo as usize], height[hi as usize]);
+        let t = ha / (ha - hb);
+        let p = [
+            pa[0] + t * (pb[0] - pa[0]),
+            pa[1] + t * (pb[1] - pa[1]),
+            pa[2] + t * (pb[2] - pa[2]),
+        ];
+        let i = (out.positions.len() / 3) as u32;
+        out.positions.extend(p.map(|v| v as f32));
+        cuts.insert(key, i);
+        i
+    };
+    for t in hull.indices.as_chunks::<3>().0 {
+        let inside = t.map(|i| height[i as usize] <= 0.0);
+        match inside.iter().filter(|b| **b).count() {
+            3 => {
+                let tri = t.map(|i| take(&mut out, i));
+                out.indices.extend(tri);
+            }
+            0 => {}
+            _ => {
+                // Sutherland-Hodgman against the plane: the polygon of 3 or 4 points.
+                let mut poly: Vec<u32> = Vec::new();
+                for k in 0..3 {
+                    let (a, b) = (t[k], t[(k + 1) % 3]);
+                    let (ia, ib) = (inside[k], inside[(k + 1) % 3]);
+                    if ia {
+                        poly.push(take(&mut out, a));
+                    }
+                    if ia != ib && height[a as usize] != 0.0 && height[b as usize] != 0.0 {
+                        poly.push(cut(&mut out, a, b));
+                    }
+                }
+                for k in 1..poly.len().saturating_sub(1) {
+                    let tri = [poly[0], poly[k], poly[k + 1]];
+                    if tri[0] != tri[1] && tri[1] != tri[2] && tri[2] != tri[0] {
+                        out.indices.extend(tri);
+                    }
+                }
+            }
+        }
+    }
+    lid(&mut out);
+    out
+}
+
+/// Close the open outline of `m` (edges in one triangle only, with no opposite) with triangles.
+fn lid(m: &mut Mesh) {
+    let mut edges: BTreeMap<(u32, u32), i32> = BTreeMap::new();
+    for t in m.indices.as_chunks::<3>().0 {
+        for (a, b) in [(t[0], t[1]), (t[1], t[2]), (t[2], t[0])] {
+            *edges.entry((a, b)).or_default() += 1;
+        }
+    }
+    // The lid runs each outline edge the other way: b to a.
+    let mut next: BTreeMap<u32, Vec<u32>> = BTreeMap::new();
+    for (&(a, b), &c) in &edges {
+        if c > 0 && !edges.contains_key(&(b, a)) {
+            next.entry(b).or_default().push(a);
+        }
+    }
+    let mut starts: Vec<u32> = next.keys().copied().collect();
+    starts.sort_unstable();
+    for s in starts {
+        while let Some(first) = next.get_mut(&s).and_then(Vec::pop) {
+            let mut ring = vec![s];
+            let mut at = first;
+            while at != s {
+                ring.push(at);
+                match next.get_mut(&at).and_then(Vec::pop) {
+                    Some(n) => at = n,
+                    None => break,
+                }
+            }
+            if ring.len() < 3 {
+                continue;
+            }
+            // Project the ring along the dominant axis of its (Newell) normal, keeping the
+            // handedness: (x, y), (y, z) or (z, x).
+            let mut nrm = [0.0_f64; 3];
+            for i in 0..ring.len() {
+                let (p, q) = (m.vertex(ring[i]), m.vertex(ring[(i + 1) % ring.len()]));
+                nrm[0] += (p[1] - q[1]) * (p[2] + q[2]);
+                nrm[1] += (p[2] - q[2]) * (p[0] + q[0]);
+                nrm[2] += (p[0] - q[0]) * (p[1] + q[1]);
+            }
+            let axis = (0..3)
+                .max_by(|&a, &b| nrm[a].abs().total_cmp(&nrm[b].abs()))
+                .unwrap_or(2);
+            let (u, v) = [(1, 2), (2, 0), (0, 1)][axis];
+            let pts: Vec<(f64, f64)> = ring
+                .iter()
+                .map(|&i| {
+                    let p = m.vertex(i);
+                    (p[u], p[v])
+                })
+                .collect();
+            let area: f64 = (0..pts.len())
+                .map(|i| {
+                    let (p, q) = (pts[i], pts[(i + 1) % pts.len()]);
+                    p.0 * q.1 - q.0 * p.1
+                })
+                .sum();
+            let mirrored = area < 0.0;
+            let flat: Vec<(f64, f64)> = if mirrored {
+                pts.iter().map(|&(x, y)| (x, -y)).collect()
+            } else {
+                pts
+            };
+            for tri in ear_clip(&flat) {
+                // Mirrored or not, a triangle runs the way the ring does.
+                let [a, b, c] = tri.map(|k| ring[k]);
+                m.indices.extend([a, b, c]);
+            }
+        }
+    }
 }
