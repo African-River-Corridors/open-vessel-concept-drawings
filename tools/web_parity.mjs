@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Hash parity (issue #245): every Option of every .vdesign fixture gets the same results hash from
-// the wasm Design session as from native `ovcd run --json`, and the same Rule Trace (issue #269).
+// the wasm Design session as from native `ovcd run --json`, and the same Rule Trace (issue #269),
+// and the same mesh hash as native `ovcd mesh --hash` (issue #456).
 // No npm dependencies.
 //
 //   bash tools/build_web.sh && cargo build -p ovcd-cli && node tools/web_parity.mjs
@@ -22,6 +23,18 @@ if (!existsSync(bin)) throw new Error(`no native ovcd at ${bin}: run cargo build
 const { default: init, Session, engine_version } = await import(join(pkg, "ovcd_web.js"));
 await init({ module_or_path: readFileSync(join(pkg, "ovcd_web_bg.wasm")) });
 
+// `ovcd mesh --hash`: name -> mesh hash, or "-" when the Option has no meshes.
+function nativeMeshes(file) {
+  const r = spawnSync(bin, ["mesh", "--hash", file], { encoding: "utf8", maxBuffer: 1 << 24 });
+  if (r.error) throw r.error;
+  const out = new Map();
+  for (const line of r.stdout.split("\n").filter((l) => l.length > 0)) {
+    const [name, hash] = line.split("\t");
+    out.set(name, hash);
+  }
+  return out;
+}
+
 function native(file) {
   const r = spawnSync(bin, ["run", "--json", file], { encoding: "utf8", maxBuffer: 1 << 28 });
   if (r.error) throw r.error;
@@ -33,6 +46,7 @@ const webStatus = (s) => (s === "not_available" ? "not_yet_supported" : s);
 const rows = [];
 let bad = 0;
 let compared = 0;
+let meshCompared = 0;
 const files = readdirSync(fixtures).filter((f) => f.endsWith(".vdesign")).sort();
 if (files.length === 0) throw new Error("no fixtures found");
 
@@ -42,6 +56,21 @@ for (const f of files) {
   const s = new Session();
   s.open_text(f, readFileSync(path, "utf8"));
   const web = JSON.parse(s.evaluate());
+  // Issue #456: the mesh hash of each Option, native against WebAssembly. Not the results hash.
+  const natMesh = nativeMeshes(path);
+  for (const o of web.options) {
+    let wm;
+    try {
+      wm = s.mesh_hash(o.name);
+    } catch {
+      wm = "-";
+    }
+    const nm = natMesh.get(o.name) ?? "(missing)";
+    const verdict = nm === wm ? "equal" : "MISMATCH";
+    if (verdict === "MISMATCH") bad++;
+    if (nm !== "-") meshCompared++;
+    rows.push([f, `${o.name} (mesh)`, nm, wm, verdict]);
+  }
   s.free();
   if (nat.options.length !== web.options.length) {
     rows.push([f, "(option count)", String(nat.options.length), String(web.options.length), "MISMATCH"]);
@@ -89,8 +118,8 @@ for (const f of files) {
 console.log(`engine ${engine_version()}`);
 const widths = [0, 1, 2, 3, 4].map((c) => Math.max(...rows.map((r) => String(r[c]).length)));
 for (const r of rows) console.log(r.map((v, c) => String(v).padEnd(widths[c])).join("  "));
-console.log(`${compared} hashes compared, ${bad} problems`);
-if (bad > 0 || compared === 0) {
+console.log(`${compared} hashes and ${meshCompared} mesh hashes compared, ${bad} problems`);
+if (bad > 0 || compared === 0 || meshCompared === 0) {
   console.error("web parity: FAIL");
   process.exit(1);
 }
