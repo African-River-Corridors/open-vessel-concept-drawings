@@ -253,19 +253,7 @@
           "value": null,
           "source": "default"
         },
-        "lock_length_m": {
-          "value": null,
-          "source": "default"
-        },
-        "lock_width_m": {
-          "value": null,
-          "source": "default"
-        },
         "downflooding_angle_deg": {
-          "value": null,
-          "source": "default"
-        },
-        "downflooding_openings": {
           "value": null,
           "source": "default"
         },
@@ -467,7 +455,7 @@
           "source": "default"
         }
       },
-      "results_hash": "1d05163784cc0c83668e16e719462d792f51a8508f8354c642c4c64cbc64f81f"
+      "results_hash": "e2cce4b6d3eda448f778b5c3b15dc8ea0e9c2fefd0cf7d0e91b71ca490e6264e"
     }
   ],
   "defaults_profile": "built-in"

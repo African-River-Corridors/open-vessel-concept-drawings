@@ -265,10 +265,14 @@ the `atb` and `towed_barge` Vessel Classes pickable (`vessel_classes.rs` `format
 
 - **Layout** (Hekkenberg 2013 §4.2.4, sourced as a method): the stern block length is the longest of
   (a) the below-deck machinery run, (b) the deck items and (c) the stern run where the propulsors sit.
-  - Below deck, aft to forward: the aft peak with the steering gear (1.5 m, estimate), the drive room
+  - Below deck, aft to forward: the aft peak with the steering gear (2.5 m, estimate), the drive room
     (azimuth: today's thruster room; shaft: the shaft run inside the stern), the engine room (A 1.0 m +
     engine + gearbox + C 0.8 m, A and C estimates), the genset or battery room when the Power Source
-    has one, the gas valve unit room (gas-fuelled, as today).
+    has one, the gas valve unit room (gas-fuelled, as today). The drive room (or shaft run) and the engine
+    room are drawn 1.4 times as long (estimate) for the rooms the layout does not draw: switchboard room,
+    workshop, stores, auxiliaries and access. The 2.5 m and the 1.4 are fitted to the measured stern blocks
+    of 23 built ships (issue #365, `calibration/stern_block_results.md`); before that the aft peak was
+    1.5 m and the factor 1.0, and the layout was 4.7 m (28 %) too short on average.
   - Engines abreast, one per shaft; gensets abreast, N+1 (as today's gas rule).
   - Engine length from a sourced table (Cat 3512C and 3516C, Cummins QSK60, Everllence 12V/16V/20V
     175D; research §4.2): the first engine whose rating covers P_B per engine. Below 955 kW per engine

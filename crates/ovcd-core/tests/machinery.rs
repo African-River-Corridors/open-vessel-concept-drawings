@@ -101,11 +101,12 @@ fn the_rooms_follow_the_power_source() {
     assert_eq!(labels(DieselElectric)[2], "GENSET ROOM");
     assert_eq!(labels(BatteryHybrid)[3], "BATTERY ROOM");
     assert_eq!(labels(BatteryElectric).len(), 2);
-    // A diesel engine room: A + engine + gearbox + C.
+    // A diesel engine room: A + engine + gearbox + C, drawn 1.4 times as long (issue #365).
     let m = shaft(DieselMechanical);
     let e = m.engine.clone().unwrap();
     assert!(
-        (m.engine_room_x1_m - m.engine_room_x0_m - (1.0 + e.length_m + 1.2 + 0.8)).abs() < 1e-12
+        (m.engine_room_x1_m - m.engine_room_x0_m - 1.4 * (1.0 + e.length_m + 1.2 + 0.8)).abs()
+            < 1e-12
     );
     assert_eq!(m.n_engines, 2);
     // The hybrid's battery room: 2,000 kWh / 70 kWh/m3 over (depth - 1 m) x (beam - 2 m).
@@ -168,7 +169,8 @@ fn the_stern_block_lengthens_with_power_and_the_cargo_zone_shortens_by_as_much()
     };
     let grow = block(&high) - block(&low);
     // 500 to 2,000 kW per engine: the small-engine rule to the Cat 3516C.
-    let expected = 3.761 - 2.59 * libm::cbrt(500.0 / 955.0);
+    // The engine room is drawn 1.4 times as long as its parts (issue #365).
+    let expected = 1.4 * (3.761 - 2.59 * libm::cbrt(500.0 / 955.0));
     assert!((grow - expected).abs() < 1e-9, "{grow}");
     let zone = |r: &ovcd_core::barge_capacity::BargeCapacityResult| r.cargo_zone_length_m.unwrap();
     assert!((zone(&low) - zone(&high) - grow).abs() < 1e-9);

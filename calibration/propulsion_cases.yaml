@@ -382,3 +382,731 @@ not_yet_runnable_installed_power_cases:
     source_file: vessels/shiptech-greenstream/shiptech-lng-greenstream.html
     sha256: ddc0d7c213f71cf58d11123862f9b4fc56c2fa8b4997e3beb50b0096144a77e0
     not_yet_runnable: "no speed and no propeller diameter are printed, and 500 kW may be per drive or the total"
+
+# Stern-block cases (issue #365): built ships and published standard designs with the length of the stern
+# block (aft end of the hull to the forward bulkhead of the last machinery space below the main deck) and
+# the aft peak, MEASURED from the general arrangement on the maker's or designer's sheet. Every length is
+# DERIVED, not printed: the scale is the stated LOA over the drawn hull ends (frame spacing as a check
+# where the sheet shows frames), and `tol_m` is the reading tolerance. The sheets are in a built-ship
+# reference library (`source_file` is relative to it, with its SHA-256), outside the repo (ADR 0001); only the derived lengths and the citation are given here (the
+# sheets are copyrighted, and no image is reproduced).
+#
+# The run (tools/stern_block_calibration.py): a self-propelled Design of the stated LOA, beam and depth
+# with the stated propulsors and installed power, through the machinery layout of spec 0007 (#352); the
+# modelled stern block is the end of the last machinery zone below deck.
+#   run_as_type     shaft_nozzle for a shaft drive (the layout only needs shaft or not); azimuth_ducted
+#                   for every other drive (the drive room is then the azimuth room of the stern block)
+#   power_source    diesel_mechanical, or diesel_electric where the source says so
+#   propeller_diameter_m  printed where `diameter_basis` is `source`; otherwise an estimate (0.65 x the
+#                   draught). It sets only the shaft run (2 x D) of a shaft drive.
+#   depth_m         printed, or the draught + 1.0 m where `depth_basis` says so (it enters only the
+#                   warning that an engine fits under the deck)
+# `fit: false` keeps a ship out of the fit (the reason is in `excluded`); it is still run and shown.
+stern_block_case:
+  - id: G01-damen-asd-tug-2111-electric
+    vessel: "ASD Tug 2111 E (concept design)"
+    kind: tug
+    confidence: high
+    loa_m: 21.02
+    beam_m: 10.81
+    depth_m: 4.12
+    draught_m: 5.25
+    installed_power_kw: 4394
+    power_basis: "total propulsion power, 2 electric pods; 1x Cat C32 genset 1140 kVA; battery 4820 kWh"
+    n_engines: 1
+    drive_published: "pod"
+    run_as_type: azimuth_ducted
+    power_source: battery_hybrid
+    propeller_diameter_m: 3.41
+    diameter_basis: "estimate: 0.65 x draught (not printed; unused by a drive room)"
+    observed: {aft_peak_m: null, stern_block_m: 13.76}
+    tol_m: 0.35
+    fit: false
+    excluded: "concept, battery-hybrid with one genset; battery room dominates"
+    method: "scale: profile: LOA 21.02 over drawn fender extremes; page 2, below-main-deck plan (frames) + profile (scale)"
+    source: "Damen product sheet: ASD Tug 2111 E (concept)"
+    source_file: sources/G01-damen-asd-tug-2111-electric.pdf
+    sha256: e767055d9012bf47b496c97ffa53d342f681ae150e88605945cb47514358cc3e
+    url: "https://medialibrary.damen.com/m/3ed28052cd583c76/original/product-sheet-asd-tug-2111-electric.pdf"
+    retrieved: 2026-10-20
+  - id: G02-damen-asd-tug-2312
+    vessel: "ASD Tug 2312 (standard design, stock-built)"
+    kind: tug
+    confidence: high
+    loa_m: 22.81
+    beam_m: 12.03
+    depth_m: 4.4
+    draught_m: 5.6
+    installed_power_kw: 3804
+    power_basis: "2x Cat 3512C TA HD/D, bkW"
+    n_engines: 2
+    drive_published: "azimuth"
+    run_as_type: azimuth_ducted
+    power_source: diesel_mechanical
+    propeller_diameter_m: 3.64
+    diameter_basis: "estimate: 0.65 x draught (not printed; unused by a drive room)"
+    observed: {aft_peak_m: 1.55, stern_block_m: 13.34}
+    tol_m: 0.35
+    fit: true
+    method: "scale: profile: LOA 22.81 over drawn fender extremes; frames 0 (x=259) and 30 (x=1072) agree in plan and profile; page 2, below-main-deck plan + profile check"
+    source: "Damen product sheet: ASD Tug 2312"
+    source_file: sources/G02-damen-asd-tug-2312.pdf
+    sha256: 723df006e1b6d67aae87bcb4bda1a6c5bac728b3301675deb9f884aef0f4a843
+    url: "https://medialibrary.damen.com/m/3af6181ffda336e0/original/product-sheet-asd-tug-2312.pdf"
+    retrieved: 2026-10-20
+  - id: G03-damen-asd-tug-2811
+    vessel: "ASD Tug 2811 (standard design, stock-built)"
+    kind: tug
+    confidence: high
+    loa_m: 28.57
+    beam_m: 11.43
+    depth_m: 4.6
+    draught_m: 4.65
+    installed_power_kw: 3806
+    power_basis: "2x Cat 3512C TA HD/D, bkW"
+    n_engines: 2
+    drive_published: "azimuth"
+    run_as_type: azimuth_ducted
+    power_source: diesel_mechanical
+    propeller_diameter_m: 3.02
+    diameter_basis: "estimate: 0.65 x draught (not printed; unused by a drive room)"
+    observed: {aft_peak_m: 1.58, stern_block_m: 19.84}
+    tol_m: 0.35
+    fit: true
+    method: "scale: profile: LOA 28.57 over drawn fender extremes; profile frames 0 (x=200) to 40 (x=1275); page 2, below-main-deck plan (labelled rooms, frames) + profile (scale)"
+    source: "Damen product sheet: ASD Tug 2811"
+    source_file: sources/G03-damen-asd-tug-2811.pdf
+    sha256: 4c84eb656e84750093d15c4628a845ee573afa06977ea574ab8b0d9cf2621cf8
+    url: "https://medialibrary.damen.com/m/30d0cbcb260b6e57/original/product-sheet-asd-tug-2811.pdf"
+    retrieved: 2026-10-20
+  - id: G04-damen-asd-tug-3212
+    vessel: "ASD Tug 3212 (standard design, stock-built)"
+    kind: tug
+    confidence: high
+    loa_m: 32.7
+    beam_m: 12.82
+    depth_m: 5.35
+    draught_m: 5.9
+    installed_power_kw: 5050
+    power_basis: "2x Cat 3516C TA HD/D, bkW"
+    n_engines: 2
+    drive_published: "azimuth"
+    run_as_type: azimuth_ducted
+    power_source: diesel_mechanical
+    propeller_diameter_m: 3.84
+    diameter_basis: "estimate: 0.65 x draught (not printed; unused by a drive room)"
+    observed: {aft_peak_m: 1.8, stern_block_m: 22.61}
+    tol_m: 0.35
+    fit: true
+    method: "scale: profile: LOA 32.70 over drawn fender extremes; profile frames 0 (x=184) to 55 (x=1191); page 2, below-main-deck plan (labelled rooms, frames) + profile (scale)"
+    source: "Damen product sheet: ASD Tug 3212"
+    source_file: sources/G04-damen-asd-tug-3212.pdf
+    sha256: a1dff4dcad62383dedac990954af455539970a4ab9890cc408ad8d606a8cd759
+    url: "https://medialibrary.damen.com/m/7e9a03d1101991f8/original/product-sheet-asd-tug-3212.pdf"
+    retrieved: 2026-10-20
+  - id: G05-damen-rsd-tug-2513
+    vessel: "RSD Tug 2513 (standard design, yard no. 515031, stock-built)"
+    kind: tug
+    confidence: high
+    loa_m: 24.73
+    beam_m: 13.13
+    depth_m: 4.95
+    draught_m: 6.2
+    installed_power_kw: 5050
+    power_basis: "2x Cat 3516C TA HD/D, bkW"
+    n_engines: 2
+    drive_published: "azimuth"
+    run_as_type: azimuth_ducted
+    power_source: diesel_mechanical
+    propeller_diameter_m: 4.03
+    diameter_basis: "estimate: 0.65 x draught (not printed; unused by a drive room)"
+    observed: {aft_peak_m: 1.97, stern_block_m: 19.0}
+    tol_m: 0.4
+    fit: true
+    method: "scale: profile: LOA 24.73 over drawn fender extremes; frames 0 (x=233) to 35 (x=1137); page 2, below-main-deck plan (labelled rooms, frames) + profile (scale)"
+    source: "Damen product sheet: RSD Tug 2513"
+    source_file: sources/G05-damen-rsd-tug-2513.pdf
+    sha256: 7ede9a8965daa67f16e9ee990cfa8d2b7fecea3a9f49de214609efd831e193ad
+    url: "https://medialibrary.damen.com/m/242dfd92d3a4c088/original/product-sheet-rsd-tug-2513.pdf"
+    retrieved: 2026-10-20
+  - id: G06-damen-rsd-tug-2513-electric
+    vessel: "RSD Tug 2513 Electric (design)"
+    kind: tug
+    confidence: high
+    loa_m: 24.73
+    beam_m: 13.13
+    depth_m: 4.95
+    draught_m: 6.5
+    installed_power_kw: 3700
+    power_basis: "2x Ramme TW 1400r_L electric motors, total bkW; 2x Cat C32TA gensets 1175 kVA; battery max 2782 kWh"
+    n_engines: 2
+    drive_published: "azimuth"
+    run_as_type: azimuth_ducted
+    power_source: battery_hybrid
+    propeller_diameter_m: 4.23
+    diameter_basis: "estimate: 0.65 x draught (not printed; unused by a drive room)"
+    observed: {aft_peak_m: 1.97, stern_block_m: 22.3}
+    tol_m: 0.35
+    fit: false
+    excluded: "battery-hybrid, battery room 6.6 m"
+    method: "scale: profile: LOA 24.73 over drawn fender extremes; frames 0 (x=170) to 35 (x=1188); page 2, below-main-deck plan (labelled rooms, frames) + profile (scale)"
+    source: "Damen product sheet: RSD Tug 2513 Electric"
+    source_file: sources/G06-damen-rsd-tug-2513-electric.pdf
+    sha256: 13f44354f0f786b97929a3e386521c9b94d720070131eb5cf422e3ab0ec019cb
+    url: "https://medialibrary.damen.com/m/77f42872a6013e58/original/product-sheet-rsd-tug-2513-electric.pdf"
+    retrieved: 2026-10-20
+  - id: G07-damen-stan-tug-1606
+    vessel: "Stan Tug 1606 (standard design)"
+    kind: tug
+    confidence: high
+    loa_m: 16.76
+    beam_m: 5.94
+    depth_m: 2.54
+    draught_m: 2.25
+    installed_power_kw: 894
+    power_basis: "2x Cat C18 TA/A, bkW"
+    n_engines: 2
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.35
+    diameter_basis: "source"
+    observed: {aft_peak_m: 2.16, stern_block_m: 8.57}
+    tol_m: 0.3
+    fit: true
+    method: "scale: profile: LOA 16.76 over drawn extremes (transom fender to stem); plan/profile ratio 0.987 from station labels 0 and 7; page 2, below-main-deck plan (labelled rooms) + profile (scale)"
+    source: "Damen product sheet: Stan Tug 1606"
+    source_file: sources/G07-damen-stan-tug-1606.pdf
+    sha256: 5930ea53f8453e6833e50f027da66e8c50587a5c3f0bb10fd52d5fa55a3fed3f
+    url: "https://medialibrary.damen.com/m/6f16341d89af7432/original/Stan-Tug-1606.pdf"
+    retrieved: 2026-10-20
+  - id: G08-damen-stan-tug-1907
+    vessel: "Stan Tug 1907 (standard design)"
+    kind: tug
+    confidence: high
+    loa_m: 19.54
+    beam_m: 7.74
+    depth_m: 3.39
+    draught_m: 2.95
+    installed_power_kw: 1790
+    power_basis: "2x Cat C32 TTA ACERT, bkW"
+    n_engines: 2
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.8
+    diameter_basis: "source"
+    observed: {aft_peak_m: 2.92, stern_block_m: 10.23}
+    tol_m: 0.3
+    fit: true
+    method: "scale: profile: LOA 19.54 over drawn extremes (fenders); plan and profile frames 0 and 25 coincide; page 2, below-main-deck plan (labelled rooms) + profile (scale)"
+    source: "Damen product sheet: Stan Tug 1907"
+    source_file: sources/G08-damen-stan-tug-1907.pdf
+    sha256: 74972a934d0533aaad43d761f9a5c1e1f5d467f224737a5134b793655f29ac81
+    url: "https://medialibrary.damen.com/m/7dde9d62914b385a/original/Stan-Tug-1907.pdf"
+    retrieved: 2026-10-20
+  - id: G20-cds-4115-pusher
+    vessel: "CDS 4115 (SD) River Pusher (class; first unit Veronica V, 2025)"
+    kind: pusher
+    confidence: high
+    loa_m: 41.0
+    beam_m: 15.5
+    depth_m: 3.29
+    depth_basis: "draught + 1.0 m (not printed)"
+    draught_m: 2.29
+    installed_power_kw: 3990
+    power_basis: "3x 1330 kW Yanmar 6EY22AW @ 900 rpm (p.2)"
+    n_engines: 3
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.85
+    diameter_basis: "source"
+    observed: {aft_peak_m: 5.04, stern_block_m: 20.86}
+    tol_m: 0.4
+    fit: true
+    method: "scale: stated LOA over drawn hull ends at centreline (no fenders); check: frames 0->80 = 1383 px gives 0.495 m/frame, i.e. 500 mm spacing; page 2, tank-top plan \"TANK TOP 600 A.B.\" (frame numbers 0-80 printed on centreline)"
+    source: "Concordia Damen brochure: CDS 4115 (SD) River Pusher"
+    source_file: sources/G20-cd-4115-sd-pusher-brochure.pdf
+    sha256: 508c05bfeb65069186c96b78a119d101f5c75f667de971776682cf2aafc390d0
+    url: "https://concordiadamen.com/wp-content/uploads/2024/05/CDS-4115-SD-River-Pusher-vouwvel-2405-plano.pdf"
+    retrieved: 2026-10-20
+  - id: G21-cds-riverbuster-1909
+    vessel: "CDS Riverbuster 1909"
+    kind: pusher
+    confidence: high
+    loa_m: 19.0
+    beam_m: 9.08
+    depth_m: 2.9
+    depth_basis: "draught + 1.0 m (not printed)"
+    draught_m: 1.9
+    installed_power_kw: 1500
+    power_basis: "2x Volvo T16, total 1,500 kW (p.2)"
+    n_engines: 2
+    drive_published: "azimuth"
+    run_as_type: azimuth_ducted
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.23
+    diameter_basis: "estimate: 0.65 x draught (not printed; unused by a drive room)"
+    observed: {aft_peak_m: 1.0, stern_block_m: 11.07}
+    tol_m: 0.4
+    fit: true
+    method: "scale: stated LOA over drawn hull ends; check 34.2 px/frame -> 0.505 m frame spacing; page 2, below-main-deck plan (middle right; frame numbers 0-38)"
+    source: "Concordia Damen brochure: CDS Riverbuster 1909"
+    source_file: sources/G21-cd-riverbuster-1909-brochure.pdf
+    sha256: ce7bf693b4a7b285e56019565aa4464b483df3d67d7b5dabd24ffeb42c01f96f
+    url: "https://concordiadamen.com/wp-content/uploads/2024/05/CDS-Riverbuster-1909-vouwvel-2405-plano.pdf"
+    retrieved: 2026-10-20
+  - id: G22-cds-dry-cargo-110
+    vessel: "CDS Dry Cargo 110 (type; drawing shows \"Sayonara\")"
+    kind: self-propelled_dry_bulk
+    confidence: medium
+    loa_m: 110.0
+    beam_m: 11.45
+    depth_m: 3.75
+    draught_m: 3.75
+    installed_power_kw: 1000
+    power_basis: "aft ship 2x 500 kW permanent-magnet motors; front gensets 1x 600 + 2x 300 kW; option 2x 500 kW diesel aft (p.2)"
+    n_engines: 2
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_electric
+    propeller_diameter_m: 2.44
+    diameter_basis: "estimate: 0.65 x draught (not printed; unused by a drive room)"
+    observed: {aft_peak_m: null, stern_block_m: 15.68}
+    tol_m: 0.5
+    fit: false
+    excluded: "gensets in the fore ship; aft ship holds motors only"
+    method: "scale: stated LOA over drawn hull ends; check 10 frames = 168.4 px -> 0.50 m spacing; page 2, tank-top plan (bottom), frame numbers on centreline"
+    source: "Concordia Damen brochure: CDS Dry Cargo 110"
+    source_file: sources/G22-cd-dry-cargo-110-brochure.pdf
+    sha256: 90bc54be15e43699b5b2ebf59fd8ce9d763e04af7d1b82fcd91690781e1ae820
+    url: "https://concordiadamen.com/wp-content/uploads/2024/05/CDS-Dry-Cargo-110-vouwvel-2405-plano.pdf"
+    retrieved: 2026-10-20
+  - id: G23-cds-tanker-110
+    vessel: "CDS 110 Tanker (type; delivered units include Blue Anouska and sisters)"
+    kind: oil_or_chemical_tank_vessel
+    confidence: high
+    loa_m: 110.0
+    beam_m: 11.45
+    depth_m: 4.9
+    draught_m: 3.3
+    installed_power_kw: 1000
+    power_basis: "2x 500 kW Caterpillar C18 @ 1800 rpm, Reintjes WAF 364 L 6.048:1 (p.2)"
+    n_engines: 2
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.5
+    diameter_basis: "source"
+    observed: {aft_peak_m: 2.5, stern_block_m: 18.0}
+    tol_m: 0.25
+    fit: true
+    method: "scale: drawing dimension fr 0-36 = 18,000 mm = 611 px (0.02946 m/px); LOA over hull ends gives 0.02957 (0.4 % apart); page 2, tank-top plan and profile; dimensioned \"36x500=18000\" and cofferdam \"880\""
+    source: "Concordia Damen brochure: CDS 110 Tanker"
+    source_file: sources/G23-cd-tanker-110-brochure.pdf
+    sha256: a8dfb747c6e21e204c5b24ad4217a5219aa9aa72826641632c4fdc6c13eb733c
+    url: "https://concordiadamen.com/wp-content/uploads/2024/06/BRP-CON-005-2404-CDS-110-Tanker-vouwvel-05.pdf"
+    retrieved: 2026-10-20
+  - id: G24-cds-tanker-135
+    vessel: "CDS 135 Tanker (type; delivered unit Gambler)"
+    kind: oil_or_chemical_tank_vessel
+    confidence: high
+    loa_m: 135.0
+    beam_m: 11.45
+    depth_m: 4.95
+    draught_m: 3.5
+    installed_power_kw: 1418
+    power_basis: "2x 709 kW Caterpillar C32 @ 1800 rpm, Masson MMW gearbox (p.2)"
+    n_engines: 2
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.6
+    diameter_basis: "source"
+    observed: {aft_peak_m: 2.5, stern_block_m: 18.0}
+    tol_m: 0.25
+    fit: true
+    method: "scale: drawing dimension fr 0-36 = 18,000 mm = 497.5 px; LOA check (4837-1105) x 0.03618 = 135.0 m; page 2, tank-top plan and profile; dimensioned \"36x500=18000\" and cofferdam \"800\""
+    source: "Concordia Damen brochure: CDS 135 Tanker"
+    source_file: sources/G24-cd-tanker-135-brochure.pdf
+    sha256: 9acb7d5b10c5521eef595e79cd07d56381bdd2583471847ba34d22938860e2ea
+    url: "https://concordiadamen.com/wp-content/uploads/2024/05/CDS-Tanker-135-vouwvel-2405-plano.pdf"
+    retrieved: 2026-10-20
+  - id: G25-iwai-nw1-push-boat
+    vessel: "NW-1 Push Boat PB (DST design for IWAI)"
+    kind: pusher
+    confidence: high
+    loa_m: 26.0
+    beam_m: 12.0
+    depth_m: 2.4
+    draught_m: 1.6
+    installed_power_kw: 1500
+    power_basis: "3 propellers in nozzles, 'diesel marine engine 500 kW in rating A' each; delivered total 1350 kW (p.2)"
+    n_engines: 3
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.45
+    diameter_basis: "source"
+    observed: {aft_peak_m: 2.65, stern_block_m: 15.6}
+    tol_m: 0.3
+    fit: true
+    method: "scale: stated L 26.0 m over hull ends 228.9 pt (0.1136 m/pt); axis 52.8 pt per 10 frames -> 0.60 m frames, 43.4 frames = 26.0 m; page 5, GENERAL ARRANGEMENT PB, tank deck plan (vector; axis in 0.6 m frames, 0-50)"
+    source: "NW-1 standardised design: Push Boat PB (2017)"
+    source_file: sources/G25-iwai-nw1-push-boat.pdf
+    sha256: a3766d8436cbd46d2c7adcc8ecc98b7be89d20942b625ed41b28d4598cdbafc1
+    url: "https://web.archive.org/web/20231207044401id_/https://iwai.nic.in/sites/default/files/899984454Push%20Boat.pdf"
+    retrieved: 2026-10-22
+  - id: H06-iwai-nw1-bulk-carrier-b1
+    vessel: "NW-1 Bulk Carrier B1 (DST design for IWAI)"
+    kind: self-propelled_dry_bulk
+    confidence: high
+    loa_m: 110.0
+    beam_m: 12.0
+    depth_m: 3.7
+    draught_m: 2.8
+    installed_power_kw: 1000
+    power_basis: "2x 500 kW rating A; delivered total 900 kW (p.2)"
+    n_engines: 2
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.45
+    diameter_basis: "source"
+    observed: {aft_peak_m: 4.25, stern_block_m: 14.41}
+    tol_m: 0.4
+    fit: true
+    method: "scale: axis 26.4 pt per 10 frames; 0.60 m frames as on the push boat (G25) -> 0.2273 m/pt; check vs L: drawn bow tip ~581.8 pt gives 111.3 m (1.2 % long); page 5, GENERAL ARRANGEMENT B1, tank deck (vector; axis in frames, labels every 10)"
+    source: "NW-1 standardised design: Bulk Carrier B1, 110 x 12 m (2017)"
+    source_file: sources/H06-iwai-nw1-bulk-carrier-b1.pdf
+    sha256: 57e4dfece62bb884addd7e517a3884cc24083f7a73461e45127b62731b236e3a
+    url: "https://web.archive.org/web/20250124095933/http://iwai.nic.in/sites/default/files/447255124Bulk%20Carrier%20B1.pdf"
+    retrieved: 2026-10-22
+  - id: G35-iwai-nw1-liquid-bulk-t1
+    vessel: "NW-1 Liquid Bulk T1 (DST design for IWAI)"
+    kind: oil_or_chemical_tank_vessel
+    confidence: high
+    loa_m: 110.0
+    beam_m: 12.0
+    depth_m: 3.7
+    draught_m: 2.8
+    installed_power_kw: 1000
+    power_basis: "2x 500 kW rating A; delivered total 900 kW (p.2)"
+    n_engines: 2
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.45
+    diameter_basis: "estimate: estimate: same design set as H06"
+    observed: {aft_peak_m: 4.26, stern_block_m: 14.4}
+    tol_m: 0.3
+    fit: true
+    method: "scale: axis 3.52 pt per frame, 0.6 m frames -> 0.17045 m/pt; L check 110 m = 645 pt -> bow at ~750 pt, drawn ~752 pt; page 6, GAP T1, tank deck (vector)"
+    source: "NW-1 standardised design: Liquid Bulk T1"
+    source_file: sources/G35-iwai-nw1-liquid-bulk-t1.pdf
+    sha256: d2443ee3c01e2b182299f14b8780925d0849789e718270a8b131fc428ddc5d9a
+    url: "https://web.archive.org/web/20231207043302id_/https://iwai.nic.in/sites/default/files/220776393Liquid%20Bulk%20%20T1.pdf"
+    retrieved: 2026-10-22
+  - id: G28-iwai-nw1-lng-carrier-1
+    vessel: "NW-1 LNG Carrier 1 (DST design for IWAI), 4x 600 m3 Type C"
+    kind: gas_tanker
+    confidence: high
+    loa_m: 90.0
+    beam_m: 14.5
+    depth_m: 4.2
+    draught_m: 2.3
+    installed_power_kw: 1000
+    power_basis: "2x 500 kW dual-fuel (diesel-LNG) rating A; delivered total 900 kW (p.2)"
+    n_engines: 2
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.45
+    diameter_basis: "estimate: estimate: same design set as H06"
+    observed: {aft_peak_m: 3.61, stern_block_m: 15.02}
+    tol_m: 0.3
+    fit: true
+    method: "scale: axis 146.6 px per 10 frames, 0.6 m frames -> 0.04093 m/px; page 5, tank deck (rendered 300 dpi; hull lines are not straight vector segments)"
+    source: "NW-1 standardised design: LNG carrier 1"
+    source_file: sources/G28-iwai-nw1-lng-carrier-1.pdf
+    sha256: ec305ad15984e75e33e65bb964d3512f86734df74951fd8611d66a6d803261a6
+    url: "https://web.archive.org/web/20231207050030id_/https://iwai.nic.in/sites/default/files/4751257537LNG%20carrier%201.pdf"
+    retrieved: 2026-10-22
+  - id: G26-iwai-nw1-bulk-carrier-b2
+    vessel: "NW-1 Bulk Carrier B2 (DST design for IWAI)"
+    kind: self-propelled_dry_bulk
+    confidence: high
+    loa_m: 110.0
+    beam_m: 12.0
+    depth_m: 4.3
+    draught_m: 2.8
+    installed_power_kw: 1000
+    power_basis: "2x 500 kW rating A; delivered total 900 kW (p.2)"
+    n_engines: 2
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.45
+    diameter_basis: "source"
+    observed: {aft_peak_m: 3.0, stern_block_m: 14.4}
+    tol_m: 0.3
+    fit: true
+    method: "scale: frame axis labels fit x = 219.62 + 7.335 per frame (resid 0.13 px), 0.6 m frames; check vs L: 183.3 frames gives bow tip at 1564 px, drawn ~1565; page 6, TANKDECK plan (vector; frame axis 0-183)"
+    source: "NW-1 standardised design: Bulk Carrier B2"
+    source_file: sources/G26-iwai-nw1-bulk-carrier-b2.pdf
+    sha256: 14243a96c4a77186d4a5e07b82af3b1bcef5a096124fc12a937cea5c9bbe2ff9
+    url: "https://web.archive.org/web/20231207045148id_/https://iwai.nic.in/sites/default/files/6838798175Bulk%20Carrier%20B2.pdf"
+    retrieved: 2026-10-22
+  - id: G27-iwai-nw1-bulk-carrier-b3
+    vessel: "NW-1 Bulk Carrier B3 (DST design for IWAI), short hull"
+    kind: self-propelled_dry_bulk
+    confidence: high
+    loa_m: 92.0
+    beam_m: 12.0
+    depth_m: 3.7
+    draught_m: 2.8
+    installed_power_kw: 1000
+    power_basis: "2x 500 kW rating A; delivered total 900 kW (p.2)"
+    n_engines: 2
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.45
+    diameter_basis: "source"
+    observed: {aft_peak_m: 2.98, stern_block_m: 14.39}
+    tol_m: 0.3
+    fit: true
+    method: "scale: frame axis labels fit x = 217.48 + 7.3345 per frame (resid 0.14 px), 0.6 m frames; check vs L: 153.3 frames gives bow tip at 1342 px, drawn ~1342; page 5, TANKDECK plan (vector; frame axis 0-153)"
+    source: "NW-1 standardised design: Bulk Carrier B3"
+    source_file: sources/G27-iwai-nw1-bulk-carrier-b3.pdf
+    sha256: 78ec44dcfff38b64188eb08650015d81549043e8cc2c49d8c9378a63412b04fb
+    url: "https://web.archive.org/web/20231207035409id_/https://iwai.nic.in/sites/default/files/9658252450Bulk%20Carrier%20B3.pdf"
+    retrieved: 2026-10-22
+  - id: G29-iwai-nw1-lng-carrier-2
+    vessel: "NW-1 LNG Carrier 2 (DST design for IWAI), 4x 335 m3 Type C tanks, 92 m"
+    kind: gas_tanker
+    confidence: high
+    loa_m: 92.0
+    beam_m: 12.0
+    depth_m: 3.7
+    draught_m: 2.1
+    installed_power_kw: 1000
+    power_basis: "2x 500 kW dual-fuel (diesel-LNG) rating A; delivered total 900 kW (p.2)"
+    n_engines: 2
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.45
+    diameter_basis: "source"
+    observed: {aft_peak_m: 2.99, stern_block_m: 14.39}
+    tol_m: 0.3
+    fit: true
+    method: "scale: frame axis labels fit x = 241.90 + 7.334 per frame (resid 0.11 px), 0.6 m frames; check vs L: 153.3 frames gives bow tip at 1366 px, drawn ~1365; page 6, TANKDECK plan (vector; frame axis 0-153)"
+    source: "NW-1 standardised design: LNG carrier 2"
+    source_file: sources/G29-iwai-nw1-lng-carrier-2.pdf
+    sha256: df0264b166d2325e39fc38c0301c60128d452654a57c2e6e698c3040d7f81dff
+    url: "https://web.archive.org/web/20231207040746id_/https://iwai.nic.in/sites/default/files/3697232822LNG%20carrier%202.pdf"
+    retrieved: 2026-10-22
+  - id: G30-iwai-nw1-lng-powered-bulk-carrier
+    vessel: "NW-1 LNG-powered Bulk Carrier B_LNG (DST design for IWAI)"
+    kind: self-propelled_dry_bulk
+    confidence: high
+    loa_m: 110.0
+    beam_m: 12.0
+    depth_m: 3.7
+    draught_m: 2.8
+    installed_power_kw: 1000
+    power_basis: "2x 500 kW dual-fuel rating A; delivered total 900 kW (p.2)"
+    n_engines: 2
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.45
+    diameter_basis: "source"
+    observed: {aft_peak_m: null, stern_block_m: 14.39}
+    tol_m: 0.3
+    fit: true
+    method: "scale: frame axis labels fit x = 219.63 + 7.335 per frame (resid 0.15 px), 0.6 m frames; check vs L: bow tip 1564 px, drawn ~1565; page 6, TANKDECK plan (vector; frame axis 0-183)"
+    source: "NW-1 standardised design: LNG powered bulk carrier"
+    source_file: sources/G30-iwai-nw1-lng-powered-bulk-carrier.pdf
+    sha256: f38dc33e4e716ba787d55580cac7ba60941cacd21f57295c1e19d949e2e07ba5
+    url: "https://web.archive.org/web/20231207034505id_/https://iwai.nic.in/sites/default/files/7287990133LNG%20powered%20bulk%20Carrier.pdf"
+    retrieved: 2026-10-22
+  - id: G31-iwai-nw1-container-co1
+    vessel: "NW-1 Container Carrier CO1 (DST design for IWAI), 208 TEU"
+    kind: self-propelled_dry_bulk
+    confidence: high
+    loa_m: 110.0
+    beam_m: 12.0
+    depth_m: 3.7
+    draught_m: 2.5
+    installed_power_kw: 1000
+    power_basis: "2x 500 kW rating A; delivered total 900 kW (p.2)"
+    n_engines: 2
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.45
+    diameter_basis: "source"
+    observed: {aft_peak_m: 2.99, stern_block_m: 15.58}
+    tol_m: 0.3
+    fit: true
+    method: "scale: frame axis labels fit x = 219.71 + 7.334 per frame (resid 0.11 px), 0.6 m frames; check vs L: bow tip 1564 px, drawn ~1565; page 6, TANKDECK plan (vector; frame axis 0-183)"
+    source: "NW-1 standardised design: Container CO1"
+    source_file: sources/G31-iwai-nw1-container-co1.pdf
+    sha256: d94d7cc5f8a3e1be28a4f0fceb1faf666d3751cf7574ac1af3ddf73c5d4742f4
+    url: "https://web.archive.org/web/20231207050635id_/https://iwai.nic.in/sites/default/files/3905768482Container%20CO1.pdf"
+    retrieved: 2026-10-22
+  - id: G36-iwai-nw1-liquid-bulk-t2
+    vessel: "NW-1 Liquid Bulk T2 (DST design for IWAI), 12 cargo tanks"
+    kind: oil_or_chemical_tank_vessel
+    confidence: high
+    loa_m: 110.0
+    beam_m: 12.0
+    depth_m: 3.7
+    draught_m: 2.8
+    installed_power_kw: 1000
+    power_basis: "2x 500 kW rating A; delivered total 900 kW (p.2)"
+    n_engines: 2
+    drive_published: "shaft"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.45
+    diameter_basis: "source"
+    observed: {aft_peak_m: 2.99, stern_block_m: 14.39}
+    tol_m: 0.3
+    fit: true
+    method: "scale: frame axis labels fit x = 219.67 + 7.335 per frame (resid 0.14 px), 0.6 m frames; check vs L: bow tip 1564 px, drawn ~1565; page 6, TANKDECK plan (vector; frame axis 0-183)"
+    source: "NW-1 standardised design: Liquid Bulk T2"
+    source_file: sources/G36-iwai-nw1-liquid-bulk-t2.pdf
+    sha256: b85d57da47c46d84a74f3a5f9d01618a47298c666a9d725a5a544682c4c4c5a9
+    url: "https://web.archive.org/web/20231207024715id_/https://iwai.nic.in/sites/default/files/174037731Liquid%20Bulk%20T2.pdf"
+    retrieved: 2026-10-22
+  - id: G41-meb-rd63
+    vessel: "Project RD63 dry cargo vessel-pusher"
+    kind: self-propelled_dry_bulk
+    confidence: medium
+    loa_m: 85.7
+    beam_m: 17.0
+    depth_m: 2.9
+    draught_m: 1.8
+    installed_power_kw: 1492
+    power_basis: "2 x 746 kW ME"
+    n_engines: 2
+    drive_published: "shaft (2 FPP 1.6 m in rotary nozzles)"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.6
+    diameter_basis: "source"
+    observed: {aft_peak_m: 4.5, stern_block_m: 11.0}
+    tol_m: 1.0
+    fit: true
+    method: "scale: hull ends on profile; LOA 85.70 (frames 0..150 = 686 px, a check: ~0.57 m spacing); page None, profile + main-deck / below-deck plan (MEB web GA, ~760 px wide)"
+    source: "MEB Project RD63 GA image"
+    source_file: sources/G41-meb-RD63-ga.png
+    sha256: c7120bb7d98efc033b819c3fd85a7b9a5383ba1f847859e6053d3cb2457f2b62
+    url: "https://www.mebspb.com/projects/images/RD63.png"
+    retrieved: 2026-10-22
+  - id: G42-meb-rt18
+    vessel: "Project RT18 bunkering tanker"
+    kind: oil_or_chemical_tank_vessel
+    confidence: low
+    loa_m: 61.29
+    beam_m: 10.0
+    depth_m: 2.6
+    draught_m: 2.0
+    installed_power_kw: 442
+    power_basis: "2 x 221 kW ME"
+    n_engines: 2
+    drive_published: "not stated on page"
+    run_as_type: azimuth_ducted
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.3
+    diameter_basis: "estimate: 0.65 x draught (not printed; unused by a drive room)"
+    observed: {aft_peak_m: 2.5, stern_block_m: 12.1}
+    tol_m: 1.5
+    fit: false
+    excluded: "low confidence (±1.5 m): ER boundaries unclear"
+    method: "scale: hull ends on below-deck plan; LOA 61.29 (frame spacing check 6.25 px = 0.55 m); page None, profile + main-deck / below-deck plan (MEB web GA, ~760 px wide)"
+    source: "MEB Project RT18 GA image"
+    source_file: sources/G42-meb-RT18-ga.png
+    sha256: 367a35b02399e3e0c83bab596c81a980e3fa52b649f2bff86503839537b56d65
+    url: "https://www.mebspb.com/projects/images/RT18.png"
+    retrieved: 2026-10-22
+  - id: G43-meb-tg04
+    vessel: "Portovyj-1 (Project TG04) river icebreaking tug"
+    kind: tug
+    confidence: medium
+    loa_m: 20.45
+    beam_m: 6.0
+    depth_m: 2.4
+    draught_m: 1.8
+    installed_power_kw: 442
+    power_basis: "2 x 221 kW Scania DI12 59M"
+    n_engines: 2
+    drive_published: "not stated on page"
+    run_as_type: azimuth_ducted
+    power_source: diesel_mechanical
+    propeller_diameter_m: 1.17
+    diameter_basis: "estimate: 0.65 x draught (not printed; unused by a drive room)"
+    observed: {aft_peak_m: 3.0, stern_block_m: 9.8}
+    tol_m: 0.6
+    fit: true
+    method: "scale: hull ends incl. fenders on profile; LOA 20.45 (frames: 8.5 px = 0.40 m); page None, profile + main-deck / below-deck plan (MEB web GA, ~760 px wide)"
+    source: "MEB Project TG04 GA image"
+    source_file: sources/G43-meb-TG04-ga.png
+    sha256: bdd10ab3936624aede65d8400992d80bb1aa0d3e8a896077ff6ddc4118ebe117
+    url: "https://www.mebspb.com/projects/images/TG04.png"
+    retrieved: 2026-10-22
+  - id: G48-meb-rsd49
+    vessel: "Neva-Lider type (Project RSD49)"
+    kind: self-propelled_dry_bulk
+    confidence: low
+    loa_m: 139.95
+    beam_m: 16.5
+    depth_m: 6.0
+    draught_m: 3.6
+    installed_power_kw: 2400
+    power_basis: "2 x 1200 kW ME"
+    n_engines: 2
+    drive_published: "shaft (2 FPP + 2 rudders)"
+    run_as_type: shaft_nozzle
+    power_source: diesel_mechanical
+    propeller_diameter_m: 2.34
+    diameter_basis: "estimate: 0.65 x draught (not printed; unused by a drive room)"
+    observed: {aft_peak_m: 5.1, stern_block_m: 16.3}
+    tol_m: 1.5
+    fit: false
+    excluded: "low confidence (±1.5 m): ER boundaries unclear"
+    method: "scale: hull ends on plan; LOA 139.95; page None, profile + main-deck / below-deck plan (MEB web GA, ~760 px wide)"
+    source: "MEB Project RSD49 GA image"
+    source_file: sources/G48-meb-RSD49-ga.png
+    sha256: 8cfc5d35755c20809ef131f4b8a7c3b230483bf65eb34430a156c1a17efcf3f1
+    url: "https://www.mebspb.com/projects/images/RSD49.png"
+    retrieved: 2026-10-22
+  - id: G52-meb-rsd54
+    vessel: "Project RSD54 open-deck dry cargo"
+    kind: self-propelled_dry_bulk
+    confidence: medium
+    loa_m: 115.0
+    beam_m: 16.5
+    depth_m: 4.6
+    draught_m: 3.6
+    installed_power_kw: 1600
+    power_basis: "2 x 800 kW ME"
+    n_engines: 2
+    drive_published: "rudder-propeller"
+    run_as_type: azimuth_ducted
+    power_source: diesel_mechanical
+    propeller_diameter_m: 2.34
+    diameter_basis: "estimate: 0.65 x draught (not printed; unused by a drive room)"
+    observed: {aft_peak_m: null, stern_block_m: 9.6}
+    tol_m: 0.6
+    fit: true
+    method: "scale: hull ends on plan; LOA 115.00; page None, profile + main-deck / below-deck plan (MEB web GA, ~760 px wide)"
+    source: "MEB Project RSD54 GA image"
+    source_file: sources/G52-meb-RSD54-ga.png
+    sha256: 5278780bc47b6efd8b3bba3f9527d79c9a12162bd92845180376ebbcdc789fc2
+    url: "https://www.mebspb.com/projects/images/RSD54.png"
+    retrieved: 2026-10-22

@@ -63,7 +63,8 @@ CONFIDENCES = ("high", "medium", "low")
 def test_every_figure_has_a_band_for_every_confidence_with_its_basis():
     """Label: property
     """
-    assert set(BANDS["bands"]) == {"lightship_t", "dwt_t", "bollard_pull_t", "installed_power_kw"}
+    assert set(BANDS["bands"]) == {"lightship_t", "dwt_t", "bollard_pull_t", "installed_power_kw",
+                                          "stern_block_m"}
     for figure, band in BANDS["bands"].items():
         assert set(band["pct"]) == set(CONFIDENCES), figure
         assert band["basis"].strip(), figure
