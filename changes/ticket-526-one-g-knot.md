@@ -5,18 +5,17 @@
 <!-- design-impact -->
 ### ticket/526-one-g-knot (2026-10-22)
 
-Between `main ae3413f` and `this branch 995351a`.
+Between `main ab89a78` and `this branch 5e9ad0e`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
+| sweep crude channel 90x14 | `checks[5].message` | Channel: service 7.5 kn <= 0.95 x Schijf limit 8.07 kn | Channel: service 7.5 kn <= 0.95 x Schijf limit 8.06 kn | changed |
 | sweep hopper channel 60x10 | `checks[15].message` | Channel: service 9.0 kn <= 0.95 x Schijf limit 9.69 kn | Channel: service 9.0 kn <= 0.95 x Schijf limit 9.68 kn | changed |
 | sweep optional channel_under_keel_clearance_m | `checks[6].message` | Channel: service 4.0 kn <= 0.95 x Schijf limit 4.25 kn | Channel: service 4.0 kn <= 0.95 x Schijf limit 4.24 kn | changed |
 | sweep CN-derived liquid 2 (130x16.3) | `loading_conditions.conditions[0].gz[57][1]` | -8.211692023e-05 | -8.30334010178e-05 | -1.12 % |
 | sweep CN-derived liquid 2 (130x16.3) | `stability.conditions[0].gz[57][1]` | -8.211692023e-05 | -8.30334010178e-05 | -1.12 % |
-| sweep box self-propelled 60x10 | `loading_conditions.conditions[0].gz[58][1]` | -0.00111066694586 | -0.00110656896303 | +0.369 % |
-| sweep box self-propelled 60x10 | `stability.conditions[0].gz[58][1]` | -0.00111066694586 | -0.00110656896303 | +0.369 % |
-| sweep default depth dry bulk 90x14 | `loading_conditions.conditions[2].draught_fwd_m` | -0.0112909877947 | -0.0113033891485 | -0.11 % |
-| sweep default depth dry bulk 90x14 | `stability.conditions[2].draught_fwd_m` | -0.0112909877947 | -0.0113033891485 | -0.11 % |
+| sweep box self-propelled 60x10 | `loading_conditions.conditions[0].gz[58][1]` | -0.000988771695421 | -0.000984665289963 | +0.415 % |
+| sweep box self-propelled 60x10 | `stability.conditions[0].gz[58][1]` | -0.000988771695421 | -0.000984665289963 | +0.415 % |
 | sweep gas IGC_2G 60x10 | `loading_conditions.conditions[1].gz[59][1]` | 0.000803167014991 | 0.000802304002826 | -0.107 % |
 | sweep gas IGC_2G 60x10 | `stability.conditions[1].gz[59][1]` | 0.000803167014991 | 0.000802304002826 | -0.107 % |
 | sweep gas IGC_2G_EXACT 60x10 | `loading_conditions.conditions[1].gz[59][1]` | 0.000803167014991 | 0.000802304002826 | -0.107 % |
@@ -49,4 +48,5 @@ Between `main ae3413f` and `this branch 995351a`.
 | sweep optional hopper_slope_h_per_v | `stability.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
 | sweep optional hull_offsets | `loading_conditions.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
 | sweep optional hull_offsets | `stability.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
-| ... | 108239 more changed quantities | | | |
+| sweep optional inner_bottom_plate_mm | `loading_conditions.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
+| ... | 108238 more changed quantities | | | |
