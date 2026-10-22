@@ -4,7 +4,7 @@
 <!-- design-impact -->
 ### ticket/342-second-oil (2026-10-22)
 
-Between `main 33e1cb2` and `this branch 1d7b946`.
+Between `main 5d5ec18` and `this branch d6efec6`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
