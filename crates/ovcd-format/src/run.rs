@@ -507,7 +507,11 @@ pub fn run_option_with(
                     crate::convoy::counts(option).unwrap_or((1, 1)),
                     &mut v,
                 );
-                let cost = crate::cost::cost_of(option, &v);
+                let mut cost = crate::cost::cost_of(option, &v);
+                // Issue #552: the budget of a pushed convoy is that of every barge.
+                if let Some((abreast, in_line)) = crate::convoy::counts(option) {
+                    crate::convoy::scale_cost(abreast * in_line, &mut cost);
+                }
                 // The Rule Trace: not hashed either; the stored Rule Set hashes cover the rules.
                 measured.checks = v
                     .get("checks")
