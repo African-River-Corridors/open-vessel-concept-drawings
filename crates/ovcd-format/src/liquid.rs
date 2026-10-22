@@ -276,3 +276,30 @@ pub(crate) fn damage_json(verdicts: &[ovcd_core::measured::DamageVerdict]) -> Va
             .collect(),
     )
 }
+
+/// The `oil_outflow` block of the results: OM of MARPOL Annex I regulation 23 and what it is made of (unhashed,
+/// with the rest of the Rule Trace inputs).
+pub(crate) fn oil_outflow_json(o: &ovcd_core::liquid_bulk::oil_outflow::OilOutflow) -> Value {
+    json!({
+        "cargo_volume_m3": num(o.c_m3),
+        "nominal_density_kg_per_m3": num(o.rho_n),
+        "mean_side_outflow_m3": num(o.oms_m3),
+        "mean_bottom_outflow_tide_0_m3": num(o.omb_0_m3),
+        "mean_bottom_outflow_tide_minus_2_5_m3": num(o.omb_25_m3),
+        "mean_bottom_outflow_m3": num(o.omb_m3),
+        "mean_outflow_parameter": num(o.om),
+        "limit": num(o.limit),
+        "ratio": num(o.ratio()),
+        "tanks": o.tanks.iter().map(|t| json!({
+            "name": t.name,
+            "oil_m3": num(t.oil_m3),
+            "side_probability_port": num(t.ps_port),
+            "side_probability_starboard": num(t.ps_starboard),
+            "bottom_probability_port": num(t.pb_port),
+            "bottom_probability_starboard": num(t.pb_starboard),
+            "bottom_outflow_tide_0_m3": num(t.ob_0_m3),
+            "bottom_outflow_tide_minus_2_5_m3": num(t.ob_25_m3),
+            "capture_factor": num(t.cdb),
+        })).collect::<Vec<_>>(),
+    })
+}

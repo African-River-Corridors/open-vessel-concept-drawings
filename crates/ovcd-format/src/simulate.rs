@@ -1358,6 +1358,22 @@ fn simulate_measured(
                 (measured.damage, measured.marpol_damage) =
                     crate::liquid::damage_verdicts(&hull, liquid, cargo_key, rho, &conds, marpol);
             }
+            // Issue #341: the mean oil outflow of MARPOL Annex I regulation 23, at the draught of the full load.
+            if let Some(liquid) = r.liquid.as_ref()
+                && rules.sets.iter().any(|s| s.id == "marpol-i")
+            {
+                measured.oil_outflow = ovcd_core::liquid_bulk::oil_outflow::oil_outflow(
+                    &liquid.spaces,
+                    &ovcd_core::liquid_bulk::oil_outflow::OilOutflowInputs {
+                        length_m: l,
+                        beam_m: b,
+                        depth_m: d,
+                        draught_m: t_level,
+                        deadweight_t: deadweight,
+                        overpressure_kpa: 5.0,
+                    },
+                );
+            }
             // The liquid conditions stay out of the Rule Trace until the liquid Rule Sets exist: the
             // IS Code Rule Set would block a low-freeboard tank barge on seagoing criteria.
         }
@@ -1472,6 +1488,7 @@ fn simulate_measured(
                     cargo_key,
                     &measured.damage,
                     &measured.marpol_damage,
+                    measured.oil_outflow.as_ref(),
                 ),
                 (&r.stern_block_items, &r.trim_conditions),
             ),
@@ -1489,6 +1506,7 @@ fn with_liquid(
     cargo_key: &str,
     damage: &[ovcd_core::measured::DamageVerdict],
     marpol_damage: &[ovcd_core::measured::DamageVerdict],
+    oil_outflow: Option<&ovcd_core::liquid_bulk::oil_outflow::OilOutflow>,
 ) -> Value {
     if let (Some(l), Some(o)) = (r.liquid.as_ref(), v.as_object_mut()) {
         o.insert(
@@ -1501,6 +1519,12 @@ fn with_liquid(
         // Issue #341: what each assumed damage does (unhashed: it is an output of the Rule Trace's input).
         if !damage.is_empty() {
             o.insert("damage".to_string(), crate::liquid::damage_json(damage));
+        }
+        if let Some(oo) = oil_outflow {
+            o.insert(
+                "oil_outflow".to_string(),
+                crate::liquid::oil_outflow_json(oo),
+            );
         }
         if !marpol_damage.is_empty() {
             o.insert(

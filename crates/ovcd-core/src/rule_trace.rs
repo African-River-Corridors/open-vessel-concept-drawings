@@ -32,10 +32,12 @@ pub enum ObjectType {
     DamageCase,
     /// One assumed damage of MARPOL Annex I regulation 28 (issue #341): its extents reach the cargo tanks.
     MarpolDamageCase,
+    /// The mean oil outflow of a liquid bulk hull (MARPOL Annex I regulation 23, issue #341): one object.
+    OilOutflow,
 }
 
 impl ObjectType {
-    pub const ALL: [ObjectType; 9] = [
+    pub const ALL: [ObjectType; 10] = [
         ObjectType::Option,
         ObjectType::Hull,
         ObjectType::Tank,
@@ -45,6 +47,7 @@ impl ObjectType {
         ObjectType::SlopTank,
         ObjectType::DamageCase,
         ObjectType::MarpolDamageCase,
+        ObjectType::OilOutflow,
     ];
 
     /// The object type of a key, or `None` for a key OVCD does not declare.
@@ -63,6 +66,7 @@ impl ObjectType {
             ObjectType::SlopTank => "slop-tank",
             ObjectType::DamageCase => "damage-case",
             ObjectType::MarpolDamageCase => "marpol-damage-case",
+            ObjectType::OilOutflow => "oil-outflow",
         }
     }
 }
@@ -202,6 +206,24 @@ pub static MEASURES: &[MeasureDef] = &[
         value: ValueKind::Number,
         args: &[],
         method: "The deadweight of the run: the displacement at the reported draught less the lightship, so the weight-bound or volume-bound cargo plus the stores and fuel",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
+        id: "cargo-tank.marpol_length_ratio",
+        unit: "-",
+        object: ObjectType::CargoTank,
+        value: ValueKind::Number,
+        args: &[],
+        method: "The length of the cargo tank over the longest tank MARPOL Annex I regulation 23.3.2 allows: 10 m or the formula of 23.3.2.1 to 23.3.2.3 (by the bulkheads of the tanks abreast and bi/B), whichever is the greater; at most 1 meets it",
+        method_status: MethodStatus::Unverified,
+    },
+    MeasureDef {
+        id: "oil_outflow.ratio",
+        unit: "-",
+        object: ObjectType::OilOutflow,
+        value: ValueKind::Number,
+        args: &[],
+        method: "The mean oil outflow parameter OM of MARPOL Annex I regulation 23 (damaged tank method: side and bottom damage probabilities of 23.8 and 23.9, outflow by pressure balance of 23.7, combined by 23.5) over the largest OM that 23.3.1 allows for the cargo volume: at most 1 meets it",
         method_status: MethodStatus::Unverified,
     },
     MeasureDef {

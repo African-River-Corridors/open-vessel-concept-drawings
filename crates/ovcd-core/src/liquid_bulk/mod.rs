@@ -26,6 +26,7 @@ pub mod damage;
 mod free_surface;
 mod layout;
 pub mod lightship;
+pub mod oil_outflow;
 
 pub use free_surface::TankFreeSurface;
 
@@ -155,6 +156,8 @@ pub struct LiquidBulkResult {
     pub double_bottom_height_m: f64,
     /// The overall length of the hull (m): the L of ADN 2025 9.3.2.11.1 (d).
     pub loa_m: f64,
+    /// The extreme breadth of the hull (m).
+    pub beam_m: f64,
     /// L x B x H of the hull (m³), as ADN 2025 9.3.2.11.1 (a) defines it for the tank capacity table:
     /// L the overall length of the hull, B the extreme breadth, H the moulded depth within the cargo
     /// area (`hull.lbh`).
@@ -277,6 +280,7 @@ pub fn compute(inp: &LiquidBulkInputs) -> Result<LiquidBulkResult, PyError> {
         free_surface: free_surface::of_tanks(&spaces),
         tanks_in_line,
         loa_m: inp.loa_m,
+        beam_m: inp.beam_m,
         double_side_width_m: inp.double_side_m,
         double_bottom_height_m: inp.double_bottom_m,
         lbh_m3: inp.loa_m * inp.beam_m * inp.depth_m,

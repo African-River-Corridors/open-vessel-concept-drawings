@@ -303,14 +303,53 @@
       "since": "1.0.0"
     },
     {
+      "id": "marpol/23.3.2/cargo-tank-length",
+      "title": "Length of each cargo tank of an oil tanker of less than 5,000 tonnes deadweight, delivered on or after 1 January 2010: at most 10 m or the value of 23.3.2.1 to 23.3.2.3 (by the longitudinal bulkheads and bi/B), whichever is the greater, shown as the tank length over that limit",
+      "origin": "regulation",
+      "source": {
+        "document": "MARPOL Annex I, resolution MEPC.117(52), the revised Annex I (regulations 19 and 29)",
+        "edition": "adopted 15 October 2004, in force 1 January 2007",
+        "locator": "23.3.2",
+        "page": "MEPC.117-52.pdf, annex pp. 36 to 37",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "deadweight_band": [
+          "under-600-t",
+          "600-to-5000-t"
+        ]
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "cargo-tank.marpol_length_ratio"
+      },
+      "compare": "le",
+      "limit": {
+        "value": 1.0,
+        "unit": "-"
+      },
+      "tolerance": 1e-09,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
       "id": "marpol/23/accidental-oil-outflow",
-      "title": "Accidental oil outflow performance (oil tankers delivered on or after 1 January 2010)",
+      "title": "Accidental oil outflow performance of an oil tanker delivered on or after 1 January 2010: the mean oil outflow parameter OM of 23.3.1 at most 0.015 for a cargo volume up to 200,000 m3 (0.012 from 400,000 m3), shown as OM over that limit",
       "origin": "regulation",
       "source": {
         "document": "MARPOL Annex I, resolution MEPC.117(52), the revised Annex I (regulations 19 and 29)",
         "edition": "adopted 15 October 2004, in force 1 January 2007",
         "locator": "23",
-        "page": "MEPC.117-52.pdf, annex p. 35",
+        "page": "MEPC.117-52.pdf, annex pp. 35 to 44",
         "access": "free"
       },
       "codified": {
@@ -325,14 +364,19 @@
           "20000-t-and-above"
         ]
       },
-      "kind": "check",
+      "kind": "limit",
       "measure": {
-        "id": "option.oil_outflow_mean"
+        "id": "oil_outflow.ratio"
       },
+      "compare": "le",
+      "limit": {
+        "value": 1.0,
+        "unit": "-"
+      },
+      "tolerance": 1e-09,
       "consequence": "warn",
       "sizes": false,
-      "evaluated": false,
-      "gap": "above the first release size band (5,000 tonnes deadweight and over; decision D1 of spec 0006): listed, not evaluated; the oil outflow Measure comes with the damage ticket",
+      "evaluated": true,
       "finding": null,
       "since": "1.0.0"
     },
