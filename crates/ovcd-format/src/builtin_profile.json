@@ -144,12 +144,12 @@
       "unit": "m",
       "hard": { "ge": 0 },
       "soft": { "min": 0.15, "max": 1.5 },
-      "basis": "the safety clearance: the least distance from the plane of maximum draught to the deck at side or to the lowest opening. 0.3 m is ES-TRIN 2025/1 Article 4.01(1), at least 300 mm; the rules of the Service Area check the value (es-trin-2025 for a river, icll-freeboard for a coast, in the default stacks). It is not an ICLL freeboard: for a long coastal hull the ICLL type A table value is far larger (984 mm at 90 m). It must also be less than the moulded depth (hard)"
+      "basis": "the safety clearance: the least distance from the plane of maximum draught to the deck at side. For an open hold the Rules add the hatch coaming height, because ES-TRIN 2025/1 Article 4.01 measures to the lowest point that is not watertight. 0.3 m is ES-TRIN 2025/1 Article 4.01(1), at least 300 mm; the rules of the Service Area check the value (es-trin-2025 for a river, icll-freeboard for a coast, in the default stacks). It is not an ICLL freeboard: for a long coastal hull the ICLL type A table value is far larger (984 mm at 90 m). It must also be less than the moulded depth (hard)"
     },
     "hold_covering": {
       "default": "covered",
       "status": "estimate",
-      "basis": "Whether the holds sail covered or open. ES-TRIN 2025/1 Article 4.01(2) asks for a safety clearance of at least 500 mm for a vessel that sails with its holds uncovered, and the es-trin-2025 Rule for it applies only to an open hold. No source says which a barge does; the default is covered, so a new Option is checked against 300 mm. Type open for an uncovered hold. A file saved before reads covered"
+      "basis": "Whether the holds sail covered or open. ES-TRIN 2025/1 Article 4.01(2) asks for a safety clearance of at least 500 mm for a vessel that sails with its holds uncovered, and the es-trin-2025 Rule for it applies only to an open hold, measured to the top of the hatch coaming. The same Article applies where an opening cannot be closed spray-proof and weathertight: type open for that case too. No source says which a barge does; the default is covered, so a new Option is checked against 300 mm. Type open for an uncovered hold. A file saved before reads covered"
     },
     "bow_rake_length_to_depth_ratio": {
       "default": 1.6,
@@ -166,7 +166,7 @@
       "basis": "carried over from the original engine: the aft void of a pushed barge, which has no stern block (the crew, battery and propulsion are on the tug). Used for a pushed Formation only"
     },
     "lightship_factor_t_per_m3": {
-      "default_by_cargo_containment": { "box_hold": 0.1093, "integral_tanks": 0.1141 },
+      "default_by_cargo_containment": { "box_hold": 0.1086, "integral_tanks": 0.1134 },
       "unit": "t/m3",
       "hard": { "gt": 0, "le": 1 },
       "soft": { "min": 0.08, "max": 0.15 },
@@ -308,17 +308,17 @@
           },
           {
             "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_refrigerated" },
-            "value": 0.55,
+            "value": null,
             "status": "estimate",
             "source": "IGC Code, MSC.370(93), 4.23.1.2 (annex p. 63-64, as read): the design vapour pressure is not less than Po = 0.2 + A C (rho_r)^1.5 MPa, with A = 0.00185 (sigma_m / 55)^2 and C the greatest of h, 0.75 b and 0.45 l",
-            "basis": "No source gives a design pressure for a fully refrigerated LPG Type C tank; the vapour pressure of the cold cargo is near atmospheric, so the IGC minimum of 4.23.1.2 sets it. That minimum depends on the tank length (C = 0.45 l for a long tank), so one value cannot be the minimum for every tank. 0.55 MPa is at or above the minimum for the three LPG Cargos in 9 % nickel steel (sigma_m the allowable stress, 230 MPa) up to a tank of about 45 m overall length, which is a hull of up to about 120 m. It is conservative for shorter tanks (60 m hull: minimum 0.33 MPa), whose wall it makes thicker than the minimum needs. A saved file that stores a value keeps it"
+            "basis": "The IGC 4.23.1.2 minimum of each tank, worked out for the design (like the dome rule): Po = 0.2 + A C (rho_r)^1.5 MPa, with A = 0.00185 (sigma_m / 55)^2, sigma_m the allowable stress of the wall formula, C the greatest of the tank outer diameter, 0.75 times it and 0.45 times the overall tank length, and rho_r the liquid density at the design temperature (t/m3). The vapour pressure of the cold cargo is near atmospheric, so no source gives a design pressure for a fully refrigerated LPG Type C tank, and the minimum sets it. The tank size does not depend on the wall, so the value needs no iteration. For 9 % nickel steel it is 0.33 MPa for a 12 m tank and about 0.54 MPa for a 45 m tank of butane. A saved file that stores a value keeps it; a file saved before this default keeps its own"
           }
         ]
       },
       "unit": "MPa",
       "hard": { "gt": 0, "le": 5 },
       "soft": { "min": 0.1, "max": 2.5 },
-      "basis": "The design pressure of the tank, the maximum allowable relief valve setting (MARVS), in MPa (1 MPa = 10 bar). It sets the wall thickness through the pressure-vessel formula. The engine adds no liquid head. The default depends on the Cargo and, for LPG, the carriage condition"
+      "basis": "The design pressure of the tank, the maximum allowable relief valve setting (MARVS), in MPa (1 MPa = 10 bar). It sets the wall thickness through the pressure-vessel formula. The engine adds no liquid head. The default depends on the Cargo and, for LPG, the carriage condition. none: the IGC 4.23.1.2 minimum of each tank, worked out for the design (fully refrigerated LPG)"
     },
     "tank_design_temperature_c": {
       "default_by_table": {
@@ -810,6 +810,13 @@
       "hard": { "gt": 0, "le": 1000 },
       "soft": { "min": 3.0, "max": 40.0 },
       "basis": "catalogue air drafts span 3.0 to 35.5 m"
+    },
+    "downflooding_angle_deg": {
+      "default": null,
+      "unit": "deg",
+      "hard": { "gt": 0, "le": 90 },
+      "soft": { "min": 20.0, "max": 60.0 },
+      "basis": "the angle of heel at which an opening through which progressive flooding may take place is immersed (IS Code 2008, MSC.267(85), Part B 2.2.3.5, which says it for pontoons: not an opening closed by a watertight manhole cover or a vent fitted with an automatic closure; Part A 2.2.1 names the angle without a definition). The engine has no openings with heights, so it cannot work this out: type it from the general arrangement. none: no angle given, so the IS Code areas of Part A 2.2.1 run to 40 degrees; an angle below 40 degrees ends the areas 0-40 and 30-40 there"
     },
     "draught_limit_m": {
       "default": null,

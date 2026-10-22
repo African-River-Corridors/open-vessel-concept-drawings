@@ -83,8 +83,8 @@
       "since": "1.0.0"
     },
     {
-      "id": "is2008/A.2.2.1/area-0-40",
-      "title": "Area under the GZ curve from 0 to 40 degrees, at least 0.09 m.rad",
+      "id": "is2008/A.2.2.1/area-to-40-or-downflooding",
+      "title": "Area under the GZ curve from 0 to 40 degrees, or to the angle of down-flooding if that is less than 40 degrees, at least 0.09 m.rad",
       "origin": "regulation",
       "source": {
         "document": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A",
@@ -107,7 +107,7 @@
       },
       "kind": "limit",
       "measure": {
-        "id": "gz.area",
+        "id": "gz.area_to_downflooding",
         "args": {
           "from_deg": 0,
           "to_deg": 40
@@ -122,12 +122,12 @@
       "consequence": "block",
       "sizes": false,
       "evaluated": true,
-      "finding": "#282",
+      "finding": null,
       "since": "1.0.0"
     },
     {
-      "id": "is2008/A.2.2.1/area-30-40",
-      "title": "Area under the GZ curve from 30 to 40 degrees, at least 0.03 m.rad",
+      "id": "is2008/A.2.2.1/area-30-to-40-or-downflooding",
+      "title": "Area under the GZ curve from 0 to 40 degrees, or to the angle of down-flooding if that is less than 40 degrees, at least 0.09 m.rad",
       "origin": "regulation",
       "source": {
         "document": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A",
@@ -150,7 +150,7 @@
       },
       "kind": "limit",
       "measure": {
-        "id": "gz.area",
+        "id": "gz.area_to_downflooding",
         "args": {
           "from_deg": 30,
           "to_deg": 40
@@ -165,8 +165,46 @@
       "consequence": "block",
       "sizes": false,
       "evaluated": true,
-      "finding": "#282",
+      "finding": null,
       "since": "1.0.0"
+    },
+    {
+      "id": "is2008/A.2.2.1/downflooding-angle-not-given",
+      "title": "No angle of down-flooding given: the areas 0-40 and 30-40 run to 40 degrees, though Part A 2.2.1 ends them at the angle of down-flooding where that is less than 40 degrees",
+      "origin": "regulation",
+      "source": {
+        "document": "International Code on Intact Stability, 2008 (2008 IS Code), resolution MSC.267(85), Part A",
+        "edition": "MSC.267(85), adopted 4 December 2008; amendments MSC.443(99) and MSC.444(99) read, they change the Introduction (1.2, 2.27 to 2.31) only",
+        "access": "free",
+        "locator": "A.2.2.1",
+        "page": "MSC.267-85.pdf, annex p. 11"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#282"
+      },
+      "verified": false,
+      "applies_when": {
+        "downflooding_angle": [
+          "not-typed"
+        ]
+      },
+      "kind": "note",
+      "measure": {
+        "id": "gz.area_to_downflooding",
+        "args": {
+          "from_deg": 0,
+          "to_deg": 40
+        }
+      },
+      "tolerance": 0,
+      "consequence": "note",
+      "sizes": false,
+      "evaluated": false,
+      "finding": "#282",
+      "since": "2.0.0",
+      "gap": "The engine has no openings with heights, so it cannot work out the angle at which an opening immerses (IS Code Part A 2.2.1; the meaning of the angle is in Part B 2.2.3.5). Type it as the input downflooding_angle_deg. With none typed the areas run to 40 degrees, so a design may pass 2.2.1 where it fails with the angle"
     },
     {
       "id": "is2008/A.2.2.2/gz-30",

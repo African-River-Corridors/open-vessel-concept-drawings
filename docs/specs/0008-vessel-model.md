@@ -180,8 +180,11 @@ pub struct SectionsTable {
   on the vertical through G in the longitudinal plane (free trim). The inner solve finds `c` for the
   volume by the Illinois secant method in a bracket from the lowest to the highest point of the hull
   along k (the volume is 0 and the whole hull there); the outer solve finds θ for the longitudinal
-  moment by the same method between ±10° (an Option that needs more fails with a message). Fixed step
-  counts (16 inner, 12 outer) and no early stop, so native and WebAssembly give the same bits. A test
+  moment by the same method between ±10° (an Option that needs more fails with a message). Each solve
+  takes at most a fixed number of steps (16 inner, 12 outer) and stops at the first step whose residual
+  is within a tolerance (inner: 1e−13 of the target volume; outer: 1e−11 m of B − G). The stop compares
+  numbers the solve computes, so native and WebAssembly stop at the same step and give the same bits.
+  The heel 0 equilibrium of a condition is solved once and its GZ curve starts from it. A test
   checks the result against an 80 × 60 bisection to 1e−12. (Maintainer decision, 2026-10-21: bisection
   took about 13 s per 61-angle GZ curve on a 41-station hull, too slow for the capacity search; the
   secant solver takes about 1 s and agrees to 2e−15. Newton overshot at heavy trim.)
@@ -317,6 +320,17 @@ https://doi.org/10.7910/DVN/MMGAUS, Harvard Dataverse, V1, licence CC0 1.0 (from
   why.
 - **Two tickets.** The hull without bulbs first (`bit_BB` = `bit_SB` = 0); the bulbs second. Inland and
   coastal hulls rarely have bulbs.
+- **Bulbs as built (#453).** Each bulb is an ellipsoid with its widest part at the height `Hbb` of the
+  design draught (`Hsb` of its own height `HSBOA` times the design draught, for the stern bulb), where its
+  half-width is `Bbb` (`Bsb`) of the midship half-breadth. At each height below the design draught the
+  waterline runs along the bulb to the half-width the hull's waterline reaches at the bulb's widest part,
+  with a quartic fillet between: it matches value and slope at both ends and has no curvature at the bulb
+  end. The dataset's code writes that curvature row with `6 x^2` where the second derivative has `6 x`; OVCD
+  writes the definition, and the benchmark report lists the hulls where the two differ. The stern bulb
+  starts `Kappa_SB` of `Ls` along the stern taper (the code and its comment say `Ls`; the overview PDF says
+  `Lb`). The constraint rows 36 to 48 follow the constraints PDF; the dataset's code has the sign of row 40
+  the other way round, and OVCD follows the PDF. A bulb needs a zero deadrise or a positive keel radius. The
+  Set 1 sample passes the pass rule of #452 for most of its hulls; each hull outside is in the report.
 
 **Benchmark against the dataset.**
 

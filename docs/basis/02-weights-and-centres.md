@@ -67,7 +67,7 @@ top-down steel 865.8 t, bottom-up steel 568.7 t (delta 297.1 t), tank total 446.
 `bulk_volumetric` (`barge_capacity.rs:610`) has two methods, chosen by hold type.
 
 - **Box hold** (`box`, `container`), `barge_capacity.rs:652-660` (Method):
-  lightship = k × LOA × B × D. k comes from the Defaults Profile (`lightship_factor_t_per_m3`, box hold 0.1093
+  lightship = k × LOA × B × D. k comes from the Defaults Profile (`lightship_factor_t_per_m3`, box hold 0.1086
   t/m³, `builtin_profile.json:80`). The app has no container hold, so only the box k is used.
 - **Sloped hopper** (`sloped_hopper`), `barge_capacity.rs:634-651` (Method, carried over from the original engine):
   - hull steel = 0.10 t/m³ × LOA × B × D.
@@ -144,7 +144,7 @@ Trim = (LCG − LCB) × L_wp / BM_L.
 `src/vessel_designer/calibration.py` (`fit_factors`, line 107) fits the factors from `calibration/cases.yaml` and
 writes `calibration/factors.yaml`. Held-out cases are left out of the fit.
 
-- **k per hold type** = mean of observed lightship / (LOA × B × D). Box 0.1093 t/m³ (n = 3, range 0.095–0.1223);
+- **k per hold type** = mean of observed lightship / (LOA × B × D). Box 0.1086 t/m³ (n = 2, range 0.095–0.1223);
   container 0.1711 t/m³ (n = 1).
 - **Box-barge Cb on LOA** = mean of (observed DWT + lightship) / (LOA × B × T × ρ). 0.928 (n = 7, range
   0.883–0.995, 2 cases excluded). Where a case has no observed lightship, the fit uses k × L·B·D
@@ -181,7 +181,7 @@ writes `calibration/factors.yaml`. Held-out cases are left out of the fit.
 | WC-A22 | Number of holds | 3; sets n + 1 transverse bulkheads | Estimate | Profile, original engine | `barge_capacity.rs:242`, `643` | Small effect |
 | WC-A23 | Hold geometry in the hopper steel | wing void, double bottom, slope, coaming | See page 06 | Page 06 | `barge_capacity.rs:615-631` | See page 06 |
 | WC-A24 | Box-hold lightship | k × LOA × B × D | Method | Fit to Reference Vessels (`calibration/results.md`) | `barge_capacity.rs:652-660` | See WC-A25 |
-| WC-A25 | k, box hold | 0.1093 t/m³ | Estimate | Fitted: 3 published lightships, in-sample, range 0.095–0.1223 (`calibration/factors.yaml`) | `builtin_profile.json:80-81`; `simulate.rs:716-719` | Unknown; out of sample, deck barges −6 %, pontoons −27 % |
+| WC-A25 | k, box hold | 0.1086 t/m³ | Estimate | Fitted: 2 published lightships, in-sample, range 0.095–0.1223 (`calibration/factors.yaml`) | `builtin_profile.json:80-81`; `simulate.rs:716-719` | Unknown; out of sample, deck barges −6 %, pontoons −27 % |
 | WC-A26 | k, container hold | 0.1711 t/m³ | Estimate | One case, in-sample (`calibration/factors.yaml`) | Calibration only; no app path | Unknown |
 | WC-A27 | Deck barge and pontoon | No factor; run as box | Method | `calibration/README.md` | Calibration only | Pontoon lightship low (non-conservative on cargo) |
 | WC-A28 | Sloped-hopper lightship | Build-up of WC-A16 to WC-A21 | Method | Original engine; no hopper case. On box barges it gave 31–111 % high (`calibration/README.md`, pass 1) | `barge_capacity.rs:634-651` | Unknown; likely high (conservative on cargo) |
@@ -214,7 +214,7 @@ From the Defaults Profile (`crates/ovcd-format/src/builtin_profile.json`). Names
 | Input | Default | Unit | Where the default comes from |
 |---|---|---|---|
 | `block_coefficient` | 0.85 | – | Profile; basis cites calibrated box barges 0.883–0.995 |
-| `lightship_factor_t_per_m3` | 0.1093 (box hold) | t/m³ | `calibration/factors.yaml`, box fit |
+| `lightship_factor_t_per_m3` | 0.1086 (box hold) | t/m³ | `calibration/factors.yaml`, box fit |
 | `water_density_t_per_m3` | 1.0 | t/m³ | Fresh water, original engine |
 | `wing_tank_height_ratio` | 0.66 | – | Original engine; sets the wing plate level and so the covering items |
 | `tank_support_height_m` | 0.5 | m | Original engine; sets the wing tank top and the tank KG |

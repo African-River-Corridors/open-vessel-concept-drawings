@@ -293,6 +293,9 @@ pub struct HullSpec {
     pub stern: Option<SternGeometry>,
     /// Issue #449: bilge radius, sheer and camber.
     pub shape: HullShape,
+    /// Issue #282: the angle of down-flooding, degrees, typed by the designer; `None`: none given, so
+    /// the IS Code areas to 40 degrees run to 40. Below 40 they end there (IS Code Part A 2.2.1).
+    pub downflooding_deg: Option<f64>,
 }
 
 /// Why a hull cannot be built.
@@ -406,6 +409,48 @@ impl Hull {
     /// trim range (issue #549).
     pub fn lcb_reach(&self, mass_t: f64, density: f64) -> Result<(f64, f64), SectionsError> {
         crate::sections::lcb_reach(&self.table, mass_t, density)
+    }
+
+    /// The GZ at one heel, as [`Hull::gz_from`] gives it.
+    pub fn gz_at(
+        &self,
+        mass_t: f64,
+        g: Gravity,
+        free_surface_moment_tm: f64,
+        density: f64,
+        deg: i32,
+        heel0: Option<&crate::sections::Equilibrium>,
+    ) -> Result<f64, SectionsError> {
+        crate::sections::gz_at(
+            &self.table,
+            mass_t,
+            g,
+            free_surface_moment_tm,
+            density,
+            deg,
+            heel0,
+        )
+    }
+
+    /// [`Hull::gz`] with the heel 0 equilibrium of the same mass and G (from [`Hull::float`]).
+    pub fn gz_from(
+        &self,
+        mass_t: f64,
+        g: Gravity,
+        free_surface_moment_tm: f64,
+        density: f64,
+        angles: impl IntoIterator<Item = i32>,
+        heel0: Option<&crate::sections::Equilibrium>,
+    ) -> Result<Vec<(i32, f64)>, SectionsError> {
+        crate::sections::gz_curve_from(
+            &self.table,
+            mass_t,
+            g,
+            free_surface_moment_tm,
+            density,
+            angles,
+            heel0,
+        )
     }
 
     /// The GZ curve with free trim at the given heels (degrees), less the free-surface correction.

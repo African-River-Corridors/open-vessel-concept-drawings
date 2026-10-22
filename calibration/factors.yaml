@@ -3,10 +3,10 @@
 # Do not edit: add or correct cases, then re-run.
 lightship_k_t_per_m3:
   box:
-    value: 0.1093
+    value: 0.1086
     min: 0.095
     max: 0.1223
-    n: 3
+    n: 2
     evidence:
     - case: para-mississippi-2200
       k: 0.095
@@ -14,9 +14,6 @@ lightship_k_t_per_m3:
     - case: danube-barge-77
       k: 0.1223
       confidence: medium
-    - case: us-hopper-195x35-generic
-      k: 0.1105
-      confidence: low
   container:
     value: 0.1711
     min: 0.1711
@@ -27,23 +24,23 @@ lightship_k_t_per_m3:
       k: 0.1711
       confidence: medium
 block_coefficient_box_barge_on_loa:
-  value: 0.928
-  min: 0.883
-  max: 0.995
+  value: 0.927
+  min: 0.882
+  max: 0.994
   n: 7
   evidence:
   - case: amaggi-box-2000
-    cb: 0.995
+    cb: 0.994
   - case: mcdonough-195x35x12
-    cb: 0.896
+    cb: 0.895
   - case: jeffboat-am2100
-    cb: 0.893
+    cb: 0.892
   - case: cargill-amazon-jumbo
-    cb: 0.971
+    cb: 0.97
   - case: europa-iib-rdb06
-    cb: 0.883
+    cb: 0.882
   - case: europa-iib-1635ou
-    cb: 0.917
+    cb: 0.916
   - case: danube-barge-77
     cb: 0.94
   excluded:

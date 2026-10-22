@@ -158,6 +158,7 @@ dry_barge:
     observed: {lightship_t: 267}   # 280-310 short tons = 254-281 t; midpoint
     source: "Practitioner statements (eng-tips / proz.com answers via search summary): lightship 280-310 st; light draft 1 ft 6 in - 1 ft 10 in. Not a primary source."
     confidence: low
+    exclude_from_fit: "forum source, not used in the fit"
 
   - id: cbc-1951-deck-195x35
     hold_type: deck

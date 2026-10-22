@@ -99,8 +99,7 @@ wins.
 
 **Objects.** A Measure is computed for one object of one **object type**: `option`, `hull`, `tank`
 (a Type C gas cargo tank), `loading-condition`, and one type per liquid bulk tank role:
-`cargo-tank`, `ballast-tank`, `slop-tank` (spec 0006 §5.2, #336), and `damage-case` (one assumed damage of a
-liquid bulk hull, spec 0006, #341). A Rule on cargo tanks so never reaches a ballast or slop tank. An Option has one `option` and one `hull`, zero or more `tank`s, and zero or more
+`cargo-tank`, `ballast-tank`, `slop-tank` (spec 0006 §5.2, #336), `damage-case` (one assumed damage of the ADN extents) and `marpol-damage-case` (one assumed damage of MARPOL Annex I Reg. 28), both on a liquid bulk hull, spec 0006, #341). A Rule on cargo tanks so never reaches a ballast or slop tank. An Option has one `option` and one `hull`, zero or more `tank`s, and zero or more
 `loading-condition`s. Objects of one type are listed in a fixed order (tank 1, 2, …; loading conditions
 in the order the engine builds them), so a trace is the same on every run and platform.
 
@@ -333,7 +332,7 @@ The model, the schema, the loader, the content hash, the library, Applicability 
 a domain-free crate, `arc-rules`, that a second tool shares. OVCD registers its side with it:
 
 - **Object types are string keys** (`option`, `hull`, `tank`, `loading-condition`, `cargo-tank`,
-  `ballast-tank`, `slop-tank`, `damage-case`). The caller declares them; `option` is OVCD's design object.
+  `ballast-tank`, `slop-tank`, `damage-case`, `marpol-damage-case`). The caller declares them; `option` is OVCD's design object.
 - **The caller passes in** the Measure registry, the applicability vocabulary and the formula shapes
   (`less-input`, `clamp`, `at-least`, `max-capped-less`, `lesser-ratio` are OVCD's). The table row
   shapes `const`, `a+v*b/c` and `a+v/c` are the kernel's.
@@ -734,8 +733,8 @@ clauses). "Fixed" means a merged change already did what the disposition asks.
 | allowable stress f | lesser of Rm/A, Re/B | `igc/4.23.3.1/allowable-stress` | Formula verified; material strengths cited (#313), unverified by a second reader. Fixed: S690QL1 default 256.7 MPa (#313) |
 | shell and head thickness formulas | t = PR/(fE − 0.6P) and two head forms | Measure `tank.wall_thickness` | No checkable source (paywalled pressure-vessel code): unverified |
 | `gas_stability` area 0–30° | ≥ 0.055 m·rad | `is2008/A.2.2.1/area-0-30` | Cited, matches |
-| `gas_stability` area 0–40° | ≥ 0.090 m·rad, always to 40° | `is2008/A.2.2.1/area-0-40` | Cited, measure differs (no down-flooding angle): finding |
-| `gas_stability` area 30–40° | ≥ 0.030 m·rad | `is2008/A.2.2.1/area-30-40` | Cited, matches (same down-flooding note) |
+| `gas_stability` area 0–40° | ≥ 0.090 m·rad, to 40° or the typed down-flooding angle if less (#282) | `is2008/A.2.2.1/area-to-40-or-downflooding` (`is2008-a` 2.0.0; 1.0.0 has `area-0-40`) | Cited, matches; a note row says when no angle is typed |
+| `gas_stability` area 30–40° | ≥ 0.030 m·rad, to 40° or the typed angle if less (#282) | `is2008/A.2.2.1/area-30-to-40-or-downflooding` (`is2008-a` 2.0.0; 1.0.0 has `area-30-40`) | Cited, matches (same note) |
 | `gas_stability` GZ at 30° or more | ≥ 0.20 m | `is2008/A.2.2.2/gz-30` | Cited, matches |
 | `gas_stability` angle of max GZ | ≥ 25° | `is2008/A.2.2.3/angle-max-gz` | Cited, matches |
 | `gas_stability` GM0 | ≥ 0.15 m | `is2008/A.2.2.4/gm0` | Cited, matches |

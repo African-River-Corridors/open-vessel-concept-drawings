@@ -11,7 +11,7 @@ lightship ±15 / 20 / 30 % and deadweight ±7.5 / 10 / 15 % at high / medium / l
 basis are therefore its figure plus its confidence. `results.md` shows each calibrated result against
 its band and marks cases outside it. `python -m vessel_designer.calibration --check` prints one
 `::warning` annotation per case outside its band; CI runs it. **A band miss is a warning, never a
-failure**, while the model is in development; a crash still fails. The errors of the first 12 cases
+failure**, while the model is in development; a crash still fails. The errors of the first 11 cases
 are **in-sample**: the factors in `factors.yaml` were fitted to the same cases (the container factor to
 one case). The errors of held-out cases are **out of sample** (next section).
 To add a case, give it a `confidence`; it is banded from then on.
@@ -29,6 +29,16 @@ cases are marked today (1 high, 50 medium, 39 low). They are not yet agreed. Not
   draught, or figures that cannot all be true together (the case notes say which).
 
 A case whose figures disagree is `low` or is excluded from a fit with its reason written on the case.
+
+## When a band blocks a release
+
+A calibration case outside its band is a warning on every run (above). It **blocks a release** unless the
+CHANGELOG entry of that release explains it. `python -m vessel_designer.calibration --release-check <version>`
+reads the `## <version>` section of `CHANGELOG.md` and fails when a case outside its band is neither named in
+that section nor already explained in its case file (`accepted_miss` for tank and propulsion cases,
+`exclude_from_fit_cb` for dry barge cases left out of the Cb fit). The `calibration-bands` job of `release.yml`
+runs it with the version of `pyproject.toml`, so a failure stops the release. Name a case by its id, with the
+reason, in the release entry: a band miss that a release knowingly ships is then on the record.
 
 ## Web source checksums
 
@@ -60,6 +70,7 @@ research note suggested (`note_suggests`).
   DWT. Left out, it is 1.000.
 - **`not_yet_runnable_cases`** (tank, gas and the motor container point) have no hull model in the
   calibration path. `results.md` lists their figures and the reason; they are never run.
+- **`exclude_from_fit`** (a reason) drops a case from every fit (k and Cb); it is still run and banded. The forum-sourced hopper `us-hopper-195x35-generic` has it (issue #431).
 - **`cross_check_only`** and **`exclude_from_fit_cb`** cases are shown in section 4 of `results.md`
   but left out of its summary. A cross-check has no band.
 - A figure the source does not give is left out of the case. Nothing is estimated or filled in.
@@ -133,9 +144,9 @@ in `tank_barge_bands.yaml`, starting values for the maintainer, equal to the dry
 
 - **Barge lightship by hold type.** `BargeCapacityInputs.hold_type` = `box` | `container` uses
   k × L·B·D; `sloped_hopper` (the default) keeps the ported build-up unchanged. k is fitted by the
-  harness into `factors.yaml` — box 0.109 t/m³ (n = 3, range 0.095–0.122), container 0.171 (n = 1,
+  harness into `factors.yaml` — box 0.109 t/m³ (n = 2, range 0.095–0.122), container 0.171 (n = 1,
   **one point: in-sample, not validated**).
-- **Box-barge Cb = 0.928 on LOA** (n = 7, range 0.883–0.995), fitted the same way. Two cases
+- **Box-barge Cb = 0.927 on LOA** (n = 7, range 0.882–0.994), fitted the same way. Two cases
   excluded with reasons recorded.
 - Result on the cases: box-barge lightship within −11 % to +15 %; deadweight within −8 % to +6 %
   on the fitted cases. These are **in-sample** errors. The next real lightship is the first

@@ -17,5 +17,5 @@ cli="$(wasm-bindgen --version | awk '{print $2}')"
 
 cargo build --target wasm32-unknown-unknown --release -p ovcd-web
 rm -rf "$OUT"
-wasm-bindgen --target web --out-dir "$OUT" target/wasm32-unknown-unknown/release/ovcd_web.wasm
+wasm-bindgen --target web --out-dir "$OUT" "${CARGO_TARGET_DIR:-target}"/wasm32-unknown-unknown/release/ovcd_web.wasm
 echo "build_web: wrote $OUT (wasm-bindgen $cli)"

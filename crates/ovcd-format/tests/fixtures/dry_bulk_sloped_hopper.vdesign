@@ -217,6 +217,10 @@
           "value": null,
           "source": "default"
         },
+        "downflooding_angle_deg": {
+          "value": null,
+          "source": "default"
+        },
         "channel_depth_m": {
           "value": null,
           "source": "default"
@@ -339,7 +343,7 @@
           "source": "default"
         }
       },
-      "results_hash": "fd41f0e219523ba2aa4e03a5f67a6e41ece069d3af03309b4581ba5389c3a9cb"
+      "results_hash": "baf0a3ab9f1f1f118a573fd1208ea1a63e68d5707de677c432938a0a5a3dbfb8"
     }
   ],
   "defaults_profile": "built-in"

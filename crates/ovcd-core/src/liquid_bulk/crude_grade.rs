@@ -145,8 +145,70 @@ pub static DEFAULT_GRADE: CrudeGrade = CrudeGrade {
     },
 };
 
-/// Every grade, by Cargo key. One for now; a second oil is a data row (spec 0006 section 8, ticket 15).
-pub static CRUDE_GRADES: [(&str, &CrudeGrade); 1] = [(CRUDE_OIL_KEY, &DEFAULT_GRADE)];
+/// The Cargo key of the diesel fuel grade.
+pub const DIESEL_KEY: &str = "diesel_en590";
+
+/// Diesel fuel complying with EN 590, UN 1202: the second oil, a data row (spec 0006 section 8, ticket 15).
+/// Source read: ADN 2025, ECE/TRANS/351, 3.2.3.2 Table C, the row UN 1202 "DIESEL FUEL complying with
+/// standard EN 590:2013 + A1:2017": Class 3, classification code F1, packing group III, hazard labels
+/// 3+N2+F, tank vessel type N, cargo tank design 4 (open), cargo tank type 3 (walls distinct from the outer
+/// hull), maximum degree of filling 97 %, relative density at 20 deg C 0.82 to 0.85. The flowchart flags
+/// below give type N open with walls distinct from the hull, which is what that row says.
+pub static DIESEL_GRADE: CrudeGrade = CrudeGrade {
+    name: "Diesel fuel (EN 590)",
+    density_kg_m3: Graded {
+        value: 835.0,
+        status: Status::Estimate,
+        basis: "Middle of the relative density range 0.82 to 0.85 at 20 deg C that ADN 2025 Table C gives for UN 1202 diesel fuel to EN 590",
+    },
+    density_reference_c: 20.0,
+    design_density_kg_m3: Graded {
+        value: 850.0,
+        status: Status::Estimate,
+        basis: "The top of the ADN 2025 Table C relative density range (0.85) for UN 1202 diesel fuel to EN 590; a tank is not designed for a denser cargo than the one the table names",
+    },
+    sour: Graded {
+        value: false,
+        status: Status::Sourced,
+        basis: "ADN 2025 3.2.3.2 Table C, UN 1202 EN 590 row: not UN 3494, and type N in column 6",
+    },
+    cmr: Graded {
+        value: Flag::No,
+        status: Status::Sourced,
+        basis: "ADN 2025 3.2.3.2 Table C, UN 1202 EN 590 row, column 5: hazard labels 3+N2+F, no CMR",
+    },
+    benzene_over_10_percent: Graded {
+        value: Flag::No,
+        status: Status::Sourced,
+        basis: "ADN 2025 3.2.3.2 Table C, UN 1202 EN 590 row, column 6: type N; more than 10 % benzene would give type C (3.2.3.3 flowchart)",
+    },
+    aquatic: Graded {
+        value: Aquatic::N2,
+        status: Status::Sourced,
+        basis: "ADN 2025 3.2.3.2 Table C, UN 1202 EN 590 row, column 5: hazard labels 3+N2+F",
+    },
+    flash_point_below_23c: Graded {
+        value: Flag::No,
+        status: Status::Estimate,
+        basis: "The flash point of EN 590 diesel was not read here; Table C gives this row open cargo tanks (column 7: 4), which the 3.2.3.3 flowchart allows only for a flash point of 23 deg C or more",
+    },
+    vapour_pressure_50c_at_least_1kpa: Graded {
+        value: Flag::No,
+        status: Status::Estimate,
+        basis: "The vapour pressure of diesel was not read here. The flowchart reads this flag only for aquatic toxicity N1, and this grade is N2, so it does not change the type",
+    },
+    pour_point_c: None,
+    carriage_temperature_c: None,
+    vapour_pressure_class: Graded {
+        value: VapourPressureClass::Low,
+        status: Status::Estimate,
+        basis: "ADN 2025 Table C gives the row open cargo tanks (column 7: 4), so the vapour pressure is low",
+    },
+};
+
+/// Every grade, by Cargo key: crude oil, and diesel fuel as the second oil.
+pub static CRUDE_GRADES: [(&str, &CrudeGrade); 2] =
+    [(CRUDE_OIL_KEY, &DEFAULT_GRADE), (DIESEL_KEY, &DIESEL_GRADE)];
 
 /// The grade of a Cargo, if it has one.
 pub fn grade_of(cargo_key: &str) -> Option<&'static CrudeGrade> {

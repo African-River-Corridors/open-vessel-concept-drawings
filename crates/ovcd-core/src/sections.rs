@@ -5,6 +5,11 @@
 //! the full section is a simple polygon. Between two Stations the hull is the ruled surface that joins
 //! point `i` of one Section to point `i` of the next.
 //!
+//! A slotted Section (the Notch of an ATB barge, issue #465) starts and ends at `y = y_in > 0`: a slot
+//! of half width `y_in` on the centre line. The slot wall closes the half, so the full section is two
+//! simple polygons, starboard and port, and every cut sums over the two. A ruled interval joins two
+//! slotted or two whole Sections, never one of each: a slot ends at a step.
+//!
 //! The cut of one full section by the waterplane is a Sutherland-Hodgman clip against one half plane,
 //! and the shoelace formula gives its area and first moments exactly. Along the length, each interval
 //! is first split where a point line crosses the waterplane, and then integrated by Simpson's rule with
@@ -18,7 +23,7 @@
 
 use alloc::vec::Vec;
 use core::fmt;
-use libm::{cos, sin, sqrt};
+use libm::{cos, fabs, sin, sqrt};
 
 /// One Station of the hull: the starboard half-section from the keel point on the centre line
 /// `(0, z_keel)`, round the bottom and the side to the deck edge, and across the deck to the centre
@@ -27,7 +32,8 @@ use libm::{cos, sin, sqrt};
 pub struct Section {
     /// Station, m from the aft end.
     pub x: f64,
-    /// Half-section `(y >= 0, z)`, keel at `y = 0` first, deck at the centre line last.
+    /// Half-section `(y >= 0, z)`, keel at `y = 0` first, deck at the centre line last. A slotted
+    /// half-section starts and ends at the slot edge `y = y_in` instead.
     pub points: Vec<(f64, f64)>,
 }
 
@@ -59,8 +65,11 @@ pub enum SectionsError {
         expected: usize,
         found: usize,
     },
-    /// A half-section does not start and end on the centre line (`y = 0`).
+    /// A half-section does not start and end at one y: both on the centre line (`y = 0`), or both on
+    /// the edge of a slot.
     OffCentreLine { section: usize },
+    /// A ruled interval joins a slotted and a whole Section: a slot must end at a step.
+    SlotWithoutStep { section: usize },
     /// A point lies to port of the centre line.
     NegativeY { section: usize, point: usize },
     /// Two edges of a half-section cross.
@@ -105,7 +114,12 @@ impl fmt::Display for SectionsError {
             ),
             SectionsError::OffCentreLine { section } => write!(
                 f,
-                "section {section} does not start and end on the centre line (y = 0)"
+                "section {section} does not start and end on the centre line (y = 0) or on one slot edge"
+            ),
+            SectionsError::SlotWithoutStep { section } => write!(
+                f,
+                "section {section} and the section before it join a slotted and a whole section; a \
+                 slot must end at a step (two sections at one x)"
             ),
             SectionsError::NegativeY { section, point } => {
                 write!(f, "point {point} of section {section} has y below 0")
@@ -160,7 +174,8 @@ impl SectionsTable {
 
     /// A checked table: at least two Sections, x ascending, one deck edge height per Section, the
     /// same point count (at least two) on every Section, each half-section from and to the centre
-    /// line with `y >= 0`, and no two edges of a half-section crossing.
+    /// line (or from and to one slot edge) with `y >= 0`, no two edges of a half-section crossing,
+    /// and no ruled interval from a slotted to a whole Section.
     pub fn new(sections: Vec<Section>, depth_at_side: Vec<f64>) -> Result<Self, SectionsError> {
         if sections.len() < 2 {
             return Err(SectionsError::TooFewSections {
@@ -194,7 +209,7 @@ impl SectionsTable {
                     found: s.points.len(),
                 });
             }
-            if s.points[0].0 != 0.0 || s.points[s.points.len() - 1].0 != 0.0 {
+            if s.points[0].0 != s.points[s.points.len() - 1].0 {
                 return Err(SectionsError::OffCentreLine { section: i });
             }
             if let Some(point) = s.points.iter().position(|p| p.0 < 0.0) {
@@ -203,12 +218,20 @@ impl SectionsTable {
             if crosses_itself(&s.points) {
                 return Err(SectionsError::SelfCrossing { section: i });
             }
+            if i > 0 && s.x > sections[i - 1].x && slotted(s) != slotted(&sections[i - 1]) {
+                return Err(SectionsError::SlotWithoutStep { section: i });
+            }
         }
         Ok(Self {
             sections,
             depth_at_side,
         })
     }
+}
+
+/// True when the half-section starts off the centre line: a slot.
+fn slotted(s: &Section) -> bool {
+    s.points[0].0 > 0.0
 }
 
 /// `(b - a) x (c - a)`.
@@ -223,8 +246,22 @@ fn crosses_itself(pts: &[(f64, f64)]) -> bool {
     for i in 0..n.saturating_sub(1) {
         for j in (i + 2)..n.saturating_sub(1) {
             let (a, b, c, d) = (pts[i], pts[i + 1], pts[j], pts[j + 1]);
-            let (d1, d2) = (orient(a, b, c), orient(a, b, d));
-            let (d3, d4) = (orient(c, d, a), orient(c, d, b));
+            // Edges on one straight line (a flat of bottom, a straight side) differ by rounding
+            // only: a point within 1e-12 of the other edge's line is on it, not across it.
+            let scale = [a, b, c, d]
+                .iter()
+                .fold(1.0_f64, |m, p| m.max(fabs(p.0)).max(fabs(p.1)));
+            let side = |p: (f64, f64), q: (f64, f64), r: (f64, f64)| {
+                let len = sqrt((q.0 - p.0) * (q.0 - p.0) + (q.1 - p.1) * (q.1 - p.1));
+                let o = orient(p, q, r);
+                if len == 0.0 || fabs(o) <= 1e-12 * scale * len {
+                    0.0
+                } else {
+                    o
+                }
+            };
+            let (d1, d2) = (side(a, b, c), side(a, b, d));
+            let (d3, d4) = (side(c, d, a), side(c, d, b));
             if d1 * d2 < 0.0 && d3 * d4 < 0.0 {
                 return true;
             }
@@ -388,23 +425,34 @@ struct Work {
     wet: Vec<bool>,
     f: Vec<f64>,
     clipped: Vec<(f64, f64)>,
+    /// Where the second polygon of a slotted section starts in `poly` (`poly.len()` when whole).
+    split: usize,
     /// `(s, y, z)` of each crossing of the waterline.
     crossings: Vec<(f64, f64, f64)>,
     xs: Vec<f64>,
 }
 
 /// Write the full section of the half-section `(1 − t) a + t b` (exact at both ends): the half, then
-/// its mirror back to the keel.
-fn fill_full(dst: &mut Vec<(f64, f64)>, a: &[(f64, f64)], b: &[(f64, f64)], t: f64) {
+/// its mirror back to the keel. A slotted half is closed by its slot wall, and its whole mirror
+/// follows as the second polygon. Gives where the second polygon starts (`dst.len()` when whole).
+fn fill_full(
+    dst: &mut Vec<(f64, f64)>,
+    a: &[(f64, f64)],
+    b: &[(f64, f64)],
+    t: f64,
+    slot: bool,
+) -> usize {
     let n = a.len();
     dst.clear();
     for (p, q) in a.iter().zip(b) {
         dst.push(((1.0 - t) * p.0 + t * q.0, (1.0 - t) * p.1 + t * q.1));
     }
-    for i in (1..n - 1).rev() {
+    let mirrored = if slot { 0..n } else { 1..n - 1 };
+    for i in mirrored.rev() {
         let (y, z) = dst[i];
         dst.push((-y, z));
     }
+    if slot { n } else { dst.len() }
 }
 
 /// Cut the full section in `w.poly` at station `x`. `w.wet` says which vertices are immersed (fixed
@@ -418,47 +466,55 @@ fn cut(fr: &Frame, x: f64, w: &mut Work, area_only: bool) -> Cut {
     w.crossings.clear();
     let (poly, tan, wet, f) = (&w.poly, &w.tan, &w.wet, &w.f);
     let mut out = Cut::default();
-    for i in 0..n {
-        let j = (i + 1) % n;
-        let (p, q) = (poly[i], poly[j]);
-        if wet[i] {
-            w.clipped.push(p);
-        }
-        if wet[i] && wet[j] {
-            if !area_only {
-                out.girth += piece(p, q, tan[i], tan[j]);
+    // One polygon, or two for a slotted section; each closes on itself.
+    let rings = [(0, w.split), (w.split, n)];
+    let mut ends = [0; 2];
+    for (r, &(start, end)) in rings.iter().enumerate() {
+        for i in start..end {
+            let j = if i + 1 == end { start } else { i + 1 };
+            let (p, q) = (poly[i], poly[j]);
+            if wet[i] {
+                w.clipped.push(p);
             }
-        } else if wet[i] != wet[j] {
-            let t = if f[i] == f[j] {
-                0.5
-            } else {
-                (f[i] / (f[i] - f[j])).clamp(0.0, 1.0)
-            };
-            let r = (p.0 + t * (q.0 - p.0), p.1 + t * (q.1 - p.1));
-            w.clipped.push(r);
-            if !area_only {
-                let tr = (
-                    tan[i].0 + t * (tan[j].0 - tan[i].0),
-                    tan[i].1 + t * (tan[j].1 - tan[i].1),
-                );
-                out.girth += if wet[i] {
-                    piece(p, r, tan[i], tr)
+            if wet[i] && wet[j] {
+                if !area_only {
+                    out.girth += piece(p, q, tan[i], tan[j]);
+                }
+            } else if wet[i] != wet[j] {
+                let t = if f[i] == f[j] {
+                    0.5
                 } else {
-                    piece(r, q, tr, tan[j])
+                    (f[i] / (f[i] - f[j])).clamp(0.0, 1.0)
                 };
-                w.crossings.push((fr.uy * r.0 + fr.uz * r.1, r.0, r.1));
+                let r = (p.0 + t * (q.0 - p.0), p.1 + t * (q.1 - p.1));
+                w.clipped.push(r);
+                if !area_only {
+                    let tr = (
+                        tan[i].0 + t * (tan[j].0 - tan[i].0),
+                        tan[i].1 + t * (tan[j].1 - tan[i].1),
+                    );
+                    out.girth += if wet[i] {
+                        piece(p, r, tan[i], tr)
+                    } else {
+                        piece(r, q, tr, tan[j])
+                    };
+                    w.crossings.push((fr.uy * r.0 + fr.uz * r.1, r.0, r.1));
+                }
             }
         }
+        ends[r] = w.clipped.len();
     }
     let (mut a, mut my, mut mz) = (0.0, 0.0, 0.0);
-    let m = w.clipped.len();
-    for i in 0..m {
-        let ((y0, z0), (y1, z1)) = (w.clipped[i], w.clipped[(i + 1) % m]);
-        let c = y0 * z1 - y1 * z0;
-        a += c;
-        if !area_only {
-            my += (y0 + y1) * c;
-            mz += (z0 + z1) * c;
+    for (start, end) in [(0, ends[0]), (ends[0], ends[1])] {
+        let m = end - start;
+        for i in 0..m {
+            let ((y0, z0), (y1, z1)) = (w.clipped[start + i], w.clipped[start + (i + 1) % m]);
+            let c = y0 * z1 - y1 * z0;
+            a += c;
+            if !area_only {
+                my += (y0 + y1) * c;
+                mz += (z0 + z1) * c;
+            }
         }
     }
     out.area = a / 2.0;
@@ -532,6 +588,8 @@ struct Interval<'a> {
     x1: f64,
     a: &'a [(f64, f64)],
     b: &'a [(f64, f64)],
+    /// Both Sections are slotted (a checked table never joins a slotted and a whole one).
+    slot: bool,
 }
 
 impl<'a> Interval<'a> {
@@ -541,16 +599,18 @@ impl<'a> Interval<'a> {
             x1: s1.x,
             a: &s0.points,
             b: &s1.points,
+            slot: slotted(s0),
         }
     }
 
     /// Put the full section at `x` into `w.poly`.
     fn section_at(&self, x: f64, w: &mut Work) {
-        fill_full(
+        w.split = fill_full(
             &mut w.poly,
             self.a,
             self.b,
             (x - self.x0) / (self.x1 - self.x0),
+            self.slot,
         );
     }
 
@@ -562,7 +622,8 @@ impl<'a> Interval<'a> {
         for (p, q) in self.a.iter().zip(self.b) {
             w.tan.push(((q.0 - p.0) / h, (q.1 - p.1) / h));
         }
-        for i in (1..n - 1).rev() {
+        let mirrored = if self.slot { 0..n } else { 1..n - 1 };
+        for i in mirrored.rev() {
             let (ty, tz) = w.tan[i];
             w.tan.push((-ty, tz));
         }
@@ -576,7 +637,7 @@ impl<'a> Interval<'a> {
         w.xs.clear();
         w.xs.push(self.x0);
         for (i, (p, q)) in self.a.iter().zip(self.b).enumerate() {
-            let mirror = i > 0 && i < n - 1;
+            let mirror = self.slot || (i > 0 && i < n - 1);
             for (pp, qq) in [(*p, *q), ((-p.0, p.1), (-q.0, q.1))]
                 .into_iter()
                 .take(if mirror { 2 } else { 1 })
@@ -781,12 +842,18 @@ pub fn upright(
     })
 }
 
-/// Steps of the inner solve, on the height `c` for the volume (Illinois secant method). No early
-/// stop, so native and WebAssembly take the same steps and give the same bits.
+/// The most steps of the inner solve, on the height `c` for the volume (Illinois secant method). A
+/// solve stops earlier when the volume is within [`VOLUME_TOLERANCE`] of the target. The stop is a
+/// comparison of numbers the solve computes, so native and WebAssembly stop at the same step and
+/// give the same bits.
 pub const VOLUME_STEPS: u32 = 16;
-/// Steps of the outer solve, on the trim for the longitudinal moment (Illinois secant method). No
-/// early stop.
+/// The inner solve stops when the volume is within this share of the target volume.
+pub const VOLUME_TOLERANCE: f64 = 1e-13;
+/// The most steps of the outer solve, on the trim for the longitudinal moment (Illinois secant
+/// method). A solve stops earlier when the lever is within [`TRIM_TOLERANCE_M`].
 pub const TRIM_STEPS: u32 = 12;
+/// The outer solve stops when B - G along the earth's forward horizontal is within this (m).
+pub const TRIM_TOLERANCE_M: f64 = 1e-11;
 /// The free-trim solve looks for the trim between −10 and +10 degrees.
 pub const TRIM_LIMIT_DEG: f64 = 10.0;
 
@@ -832,14 +899,20 @@ fn c_for_volume(
             }
         }
     }
-    illinois(lo, -target, hi, total - target, VOLUME_STEPS, |c| {
-        integrate(table, &Frame::new(&at(c)), true, w).sums.area - target
-    })
+    illinois(
+        VOLUME_TOLERANCE * target,
+        lo,
+        -target,
+        hi,
+        total - target,
+        VOLUME_STEPS,
+        |c| integrate(table, &Frame::new(&at(c)), true, w).sums.area - target,
+    )
     .0
 }
 
 /// The upright, level draught that immerses `volume` m³ (issue #448): the inner solve of
-/// [`equilibrium`] at heel 0 and trim 0, [`VOLUME_STEPS`] steps, no early stop.
+/// [`equilibrium`] at heel 0 and trim 0, at most [`VOLUME_STEPS`] steps.
 pub fn draught_for_volume(table: &SectionsTable, volume: f64) -> Result<f64, SectionsError> {
     if volume.is_nan() || volume <= 0.0 {
         return Err(SectionsError::NotAfloat);
@@ -852,9 +925,11 @@ pub fn draught_for_volume(table: &SectionsTable, volume: f64) -> Result<f64, Sec
     Ok(c_for_volume(table, 0.0, 0.0, volume, total, &mut w))
 }
 
-/// The Illinois secant method on a bracket `[a, b]` with `f(a) <= 0 <= f(b)`, `f` rising: a fixed
-/// number of steps, no early stop. Gives the last point and what `f` returned there.
+/// The Illinois secant method on a bracket `[a, b]` with `f(a) <= 0 <= f(b)`, `f` rising: at most
+/// `steps` steps, stopping at the first whose residual is within `tol`. Gives the last point and
+/// what `f` returned there.
 fn illinois<T>(
+    tol: f64,
     mut a: f64,
     mut fa: f64,
     mut b: f64,
@@ -875,6 +950,9 @@ where
         };
         let r = f(x);
         let fx = r.residual();
+        if fx.abs() <= tol {
+            return (x, Some(r));
+        }
         if (fx < 0.0) != (fb < 0.0) {
             a = b;
             fa = fb;
@@ -915,8 +993,8 @@ fn dot(a: (f64, f64, f64), b: (f64, f64, f64)) -> f64 {
 
 /// The floating position at a heel with free trim: the height `c` gives ρ∇ = Δ (inner solve), and
 /// the trim puts the centre of buoyancy on the vertical through G in the longitudinal plane (outer
-/// solve, between ±10 degrees). Both are Illinois secant solves with fixed step counts and no early
-/// stop.
+/// solve, between ±10 degrees). Both are Illinois secant solves with a cap on the steps and a stop
+/// at a tolerance.
 pub fn equilibrium(
     table: &SectionsTable,
     mass_t: f64,
@@ -969,6 +1047,7 @@ pub fn equilibrium(
         return Err(SectionsError::TrimOutOfRange);
     }
     let (_, last) = illinois(
+        TRIM_TOLERANCE_M,
         -TRIM_LIMIT_DEG,
         aft.lever,
         TRIM_LIMIT_DEG,
@@ -1051,12 +1130,62 @@ pub fn gz_curve(
     density: f64,
     angles: impl IntoIterator<Item = i32>,
 ) -> Result<Vec<(i32, f64)>, SectionsError> {
-    let fsc = free_surface_moment_tm / mass_t;
+    gz_curve_from(
+        table,
+        mass_t,
+        g,
+        free_surface_moment_tm,
+        density,
+        angles,
+        None,
+    )
+}
+
+/// [`gz_curve`] with the equilibrium at heel 0 already solved by the caller (the free-trim float
+/// of the same mass and G): the same numbers, one solve less.
+pub fn gz_curve_from(
+    table: &SectionsTable,
+    mass_t: f64,
+    g: Gravity,
+    free_surface_moment_tm: f64,
+    density: f64,
+    angles: impl IntoIterator<Item = i32>,
+    heel0: Option<&Equilibrium>,
+) -> Result<Vec<(i32, f64)>, SectionsError> {
     let mut out = Vec::new();
     for deg in angles {
-        let heel = f64::from(deg);
-        let eq = equilibrium(table, mass_t, g, heel, density)?;
-        out.push((deg, righting_lever(&eq, g) - fsc * sin(radians(heel))));
+        out.push((
+            deg,
+            gz_at(
+                table,
+                mass_t,
+                g,
+                free_surface_moment_tm,
+                density,
+                deg,
+                heel0,
+            )?,
+        ));
     }
     Ok(out)
+}
+
+/// The GZ with free trim at one heel (degrees), less the free surface term: one point of
+/// [`gz_curve_from`].
+pub fn gz_at(
+    table: &SectionsTable,
+    mass_t: f64,
+    g: Gravity,
+    free_surface_moment_tm: f64,
+    density: f64,
+    deg: i32,
+    heel0: Option<&Equilibrium>,
+) -> Result<f64, SectionsError> {
+    let fsc = free_surface_moment_tm / mass_t;
+    let heel = f64::from(deg);
+    let lever = match heel0 {
+        Some(eq) if deg == 0 => righting_lever(eq, g),
+        _ => righting_lever(&equilibrium(table, mass_t, g, heel, density)?, g),
+    };
+    Ok(lever - fsc * sin(radians(heel)))
 }

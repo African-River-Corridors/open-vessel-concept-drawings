@@ -34,6 +34,7 @@ choice-cargo-lpg-butane = LPG (Butane)
 choice-cargo-lpg-mix = LPG (60/40 Propane/Butane)
 choice-cargo-bauxite = Bauxite
 choice-cargo-crude-oil = Crude oil
+choice-cargo-diesel-en590 = Diesel fuel (EN 590)
 
 input-hull-form = Hull Form
 choice-hull-form-box = Box
@@ -445,6 +446,8 @@ input-wheelhouse-max-lift-m = Wheelhouse maximum lift
 input-air-draft-limit-m = Air-draft limit
 
 input-draught-limit-m = Draught limit
+
+input-downflooding-angle-deg = Angle of down-flooding
 
 input-channel-depth-m = Channel depth
 

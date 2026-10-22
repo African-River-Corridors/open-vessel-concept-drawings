@@ -36,8 +36,11 @@ def test_gas_stability_assess_after_the_inputs_object_was_reused():
     # 7.1794700173060155, 11.60946081779351) and (4.368132024606091, 6.823567215928239,
     # 12.28163398784297).
     # Re-pinned again (issue #381: the opening setback is measured from the cargo area).
-    expected = {90.0: (5.008782640783497, 7.174444292789616, 11.599547988722012),
-                70.0: (4.366034263765853, 6.817748082762562, 12.267290419878801)}
+    # Re-pinned (#567: the equilibrium solves stop at a tolerance); were 5.008782640783497 (90 m,
+    # Laden) and 6.817748082762562 (70 m, Half laden). The values do not depend on the order or the
+    # number of earlier calls.
+    expected = {90.0: (5.008782640783499, 7.174444292789616, 11.599547988722012),
+                70.0: (4.366034263765853, 6.8177480827625585, 12.267290419878801)}
     # The 12 m tank diameter cap of 0.1.0 (it is an input, 16 m by default, since issue #175).
     inp = B.BargeCapacityInputs(loa=90.0, beam=14.8, depth=6.5, cargo_type="LPG_propane",
                                 max_tank_od_m=12.0)
@@ -60,3 +63,20 @@ def test_is_gas_after_the_inputs_object_was_reused():
     inp.cargo_type = "LPG_propane"
     assert ga_adapter.is_gas(gas) is True
     assert ga_adapter.is_gas(bulk) is False
+
+
+def test_gas_stability_does_not_depend_on_earlier_calls():
+    """The equilibrium solves start from the same state whatever ran before (issue #567): the same
+    inputs give the same bits in any order and after any number of earlier calls.
+
+    Label: property"""
+    def run(order):
+        inp = B.BargeCapacityInputs(loa=90.0, beam=14.8, depth=6.5, cargo_type="LPG_propane",
+                                    max_tank_od_m=12.0)
+        res = {}
+        for loa in order:
+            inp.loa = loa
+            res[loa] = B.compute(inp)
+        return {loa: tuple(c.gm_fluid_m for c in gas_stability.assess(res[loa], 1500.0).conditions)
+                for loa in sorted(order)}
+    assert run([90.0, 70.0]) == run([70.0, 90.0]) == run([90.0, 70.0, 90.0, 70.0])

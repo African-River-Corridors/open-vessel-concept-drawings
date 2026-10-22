@@ -82,6 +82,11 @@ Each pull request adds one file, `changes/<branch>.md` (the format is in `change
 - Your own bullets for `## Unreleased` go under a `<!-- unreleased -->` line.
 - When designs move, `python3 tools/design_impact.py changelog` writes the before/after table into the same
   file, under a `<!-- design-impact -->` line, and keeps your bullets. Commit the file.
+- **The gate matches rows, not numbers** (issue #625). A fragment passes when its table names the (case, quantity) rows
+  the branch moves; the numbers may be from an earlier base, so a merge on main does not force a regenerate. It fails
+  when a moved row is missing, the table names a row that does not move, or there is no table. A table lists at most
+  40 rows and counts the rest, so with more than 40 moved rows the check is: every listed row moves, and listed plus
+  counted rows equal the moved rows. Regenerate when you change what the branch moves. The merge-group check is unchanged.
 - **New branches use fragments.** During the move, the design-impact gate also accepts the table in
   `CHANGELOG.md` (`changelog --legacy` writes it there), so an open branch need not move. A follow-up turns
   that off once the open pull requests have merged.
@@ -138,10 +143,16 @@ Installers are built and published only on purpose (issue #173; `tools/release_p
 
 During development the app makes 0.2.x patch releases only. Version 0.3 is reserved for the first release shared with expert reviewers, and any minor bump needs the maintainer.
 
+- **A calibration case outside its band** blocks a release unless that release's `CHANGELOG.md` entry names it
+  and says why (`calibration/README.md`, "When a band blocks a release"). The `calibration-bands` job of
+  `release.yml` checks it; run `python -m vessel_designer.calibration --release-check <version>` before the bump.
 - **A version bump.** A merge to `main` that changes `version` in `pyproject.toml` publishes the
   pre-release `v<version>`, tagged at that commit. Bump the version in every place the version test
   names, run `python3 tools/changelog_collect.py` (it moves the fragments into `CHANGELOG.md`), and add a
   `## <version>` section to `CHANGELOG.md` (its text is the release notes; the release fails without it). A `v*` tag pushed by hand does the same.
+- **PyPI** (issue #1). `publish-pypi.yml` runs on a `v*` tag pushed by hand (a tag made with `GITHUB_TOKEN` starts no workflow).
+  It runs the release gate, builds the sdist, then the `publish` job waits for the maintainer to approve the `pypi`
+  environment and uploads the gate's wheels with trusted publishing. There is no token.
 - **A test-release tag.** `git tag test-<name> <commit> && git push origin test-<name>` publishes a
   pre-release named after the tag, with the `Unreleased` notes. It is for trying a build; the commit need
   not be on `main`. Delete old test releases by hand when they are no longer needed.

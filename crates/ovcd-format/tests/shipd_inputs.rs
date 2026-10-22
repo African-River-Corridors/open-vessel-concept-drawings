@@ -1,4 +1,4 @@
-//! Seam: the `shipd` Hull Form in a Design (issue #452): a new Option of it runs, its parameters
+//! Seam: the `shipd` Hull Form in a Design (issues #452 and #453): a new Option of it runs, its parameters
 //! are checked as the engine reads them, and its L, B and D are the Option's.
 //!
 //! The tests run in the legacy loading conditions to keep CI fast: a ShipD Design in the default IS
@@ -54,7 +54,7 @@ fn a_new_shipd_option_takes_the_profile_hull_and_runs() {
 }
 
 #[test]
-fn a_failed_constraint_and_a_bulb_are_named() {
+fn a_failed_constraint_is_named() {
     let filled = fill_as_new(
         &design("bauxite", "pushed_barge", json!({})),
         &Profile::built_in(),
@@ -63,14 +63,78 @@ fn a_failed_constraint_and_a_bulb_are_named() {
     let params = &mut d["options"][0]["inputs"]["shipd_parameters"]["value"];
     params["Lb"] = json!(0.6);
     params["Ls"] = json!(0.6);
-    params["bit_BB"] = json!(1.0);
     let checked = check(&d.to_string(), &Profile::built_in());
     let errors = checked.report.errors.join("\n");
     assert!(
         errors.contains("fails ShipD constraint 0 (bow and stern tapers within LOA)"),
         "{errors}"
     );
-    assert!(errors.contains("bit_BB and bit_SB must be 0"), "{errors}");
+}
+
+/// The parameters of a hull with both bulbs, from the committed benchmark sample (Set 1, dataset
+/// row 763), as the `shipd_parameters` object, and the Option's dimensions at 80 m.
+fn bulb_hull() -> (Value, [f64; 3]) {
+    let sample = include_str!("../../../calibration/shipd/sample.csv");
+    let names: Vec<&str> = sample.lines().next().unwrap().split(',').skip(2).collect();
+    let line = sample
+        .lines()
+        .find(|l| l.starts_with("Constrained_Randomized_Set_1,763,"))
+        .unwrap();
+    let v: Vec<f64> = line
+        .split(',')
+        .skip(2)
+        .map(|c| c.parse().unwrap())
+        .collect();
+    let mut o = serde_json::Map::new();
+    for (n, x) in names.iter().zip(&v) {
+        if !["LOA", "Bd", "Dd"].contains(n) {
+            o.insert((*n).to_string(), json!(x));
+        }
+    }
+    (Value::Object(o), [80.0, v[3] * 80.0, v[4] * 80.0])
+}
+
+#[test]
+fn a_shipd_option_with_a_bulb_runs_and_is_checked_as_the_engine_reads_it() {
+    let (params, [l, b, d]) = bulb_hull();
+    let text = design(
+        "bauxite",
+        "pushed_barge",
+        json!({ "length_overall_m": l, "beam_m": b, "moulded_depth_m": d, "shipd_parameters": params }),
+    );
+    let filled = fill_as_new(&text, &Profile::built_in())
+        .design
+        .unwrap()
+        .to_text();
+    let checked = check(&filled, &Profile::built_in());
+    assert_eq!(checked.report.errors, Vec::<String>::new());
+    match run(&text) {
+        RunOutcome::Results { results, .. } => {
+            let cb = results["hydrostatics"]["cb"].as_f64().unwrap();
+            assert!(cb > 0.2 && cb < 0.95, "a shaped hull with bulbs: Cb {cb}");
+        }
+        other => panic!("{other:?}"),
+    }
+    // A bulb that breaks a constraint is named by it: a bow bulb wider than the hull (index 38).
+    let mut bad = params_of(&filled);
+    bad["Bbb"] = json!(1.05);
+    let broken = text_with(&filled, &bad);
+    let errors = check(&broken, &Profile::built_in())
+        .report
+        .errors
+        .join("\n");
+    assert!(errors.contains("fails ShipD constraint 38"), "{errors}");
+}
+
+fn params_of(text: &str) -> Value {
+    let d: Value = serde_json::from_str(text).unwrap();
+    d["options"][0]["inputs"]["shipd_parameters"]["value"].clone()
+}
+
+fn text_with(text: &str, params: &Value) -> String {
+    let mut d: Value = serde_json::from_str(text).unwrap();
+    d["options"][0]["inputs"]["shipd_parameters"]["value"] = params.clone();
+    d.to_string()
 }
 
 #[test]

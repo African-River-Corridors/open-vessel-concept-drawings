@@ -3,6 +3,7 @@
   import StaleWhy from "./StaleWhy.svelte";
   import HullView from "./HullView.svelte";
   import SpeedPower from "./views/SpeedPower.svelte";
+  import Ballast from "./views/Ballast.svelte";
   import Stability from "./views/Stability.svelte";
   import RuleChecks, { type RuleTrace } from "./views/RuleChecks.svelte";
   import CapitalBudget from "./views/CapitalBudget.svelte";
@@ -36,6 +37,7 @@
       label: "app-group-stability-propulsion",
       views: [
         { id: "stability", label: "app-view-stability" },
+        { id: "ballast", label: "app-view-ballast" },
         { id: "speed-power", label: "app-view-speed-power" },
         { id: "rules", label: "app-view-rules" },
       ],
@@ -51,7 +53,7 @@
   ];
   const HULL = ["side", "plan", "midship"];
   /** Views that show results of the Option, and so can be out of date. */
-  const FROM_RESULTS = [...HULL, "stability", "speed-power", "rules", "capital"];
+  const FROM_RESULTS = [...HULL, "stability", "ballast", "speed-power", "rules", "capital"];
   type HullKey = "side" | "plan" | "midship";
 
   let groupId = $state(GROUPS[0].id);
@@ -151,6 +153,14 @@
         {#key JSON.stringify([active, stabilityOf(results)])}
           <Stability {ids} stability={stabilityOf(results)} marks={(results as { stability_marks?: never }).stability_marks} />
         {/key}
+      {/if}
+    {:else if current === "ballast"}
+      {#if message}
+        <p class="note">{message}</p>
+      {:else if !results}
+        <p class="note">{t("app-no-results-show")}</p>
+      {:else}
+        <Ballast {ids} loading={(results as { loading_conditions?: never }).loading_conditions} />
       {/if}
     {:else if current === "rules"}
       {#if message}

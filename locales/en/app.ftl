@@ -132,6 +132,7 @@ app-view-plan = Plan
 app-view-midship = Cross-section
 app-group-stability-propulsion = Stability & Propulsion
 app-view-stability = Intact stability
+app-view-ballast = Ballast tanks
 app-view-speed-power = Power and speed curves
 app-view-rules = Rule check calculations
 app-group-boq-finance = BOQ & Finance
@@ -288,7 +289,7 @@ app-stab-col-deck-edge = Deck-edge angle
 app-stab-criteria-of = { $condition }: criteria
 app-stab-needs-at-least = needs at least
 app-stab-limitations = Limitations
-app-stab-limit-downflooding = The 0–40° and 30–40° areas always run to 40°. IS Code 2008 Part A 2.2.1 stops them at the down-flooding angle when it is less than 40°, and the model has no down-flooding angle yet, so a hull whose openings immerse sooner can pass when it should fail (finding #282).
+app-stab-limit-downflooding = The 0–40° and 30–40° areas run to 40° unless you type an angle of down-flooding below 40° (the input Angle of down-flooding). IS Code 2008 Part A 2.2.1 stops them at that angle when it is less than 40°. The model has no openings with heights, so it cannot work the angle out: with none typed, a hull whose openings immerse sooner can pass when it should fail (finding #282).
 
 ## Capital budget view
 
@@ -338,3 +339,27 @@ app-splash-state = State
 app-splash-starting-engine = Starting the engine
 app-splash-notice = Its results are not verified. Known engineering findings are under review. There is no warranty.
 app-cost-internals = Tank internals: { $percent }% of the tank structure surplus is priced at the tank shell rate. This share is an assumption (an Estimate, no source read); the rest is priced at the supports rate.
+
+# The ballast view (issue #426)
+app-ballast-none = No ballast tanks to show. They are listed for a Design that is checked in the IS Code loading conditions.
+app-ballast-count = { $count } ballast tanks
+app-ballast-capacity = Capacity { $m3 } m³, { $t } t of water
+app-ballast-of = { $condition }: { $mass } t of ballast
+app-ballast-no-plan = No ballast plan meets every criterion in this condition, even with every ballast tank full.
+app-ballast-col-tank = Tank
+app-ballast-col-kind = Kind
+app-ballast-col-side = Side
+app-ballast-col-capacity-m3 = Capacity
+app-ballast-col-capacity-t = Capacity
+app-ballast-col-fill = Fill
+app-ballast-col-mass = Mass
+app-ballast-col-lcg = LCG
+app-ballast-col-tcg = TCG
+app-ballast-col-vcg = VCG
+app-ballast-col-free-surface = Free surface moment
+app-ballast-kind-double-bottom = Double bottom
+app-ballast-kind-wing = Wing
+app-ballast-kind-peak = Peak
+app-ballast-side-port = Port
+app-ballast-side-starboard = Starboard
+app-ballast-side-centre = Centre

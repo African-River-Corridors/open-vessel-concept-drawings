@@ -114,14 +114,14 @@ and the resistance wetted surface (Step 6). They can disagree a little with the 
   uses Simpson's rule. This is exact (to rounding) for a prismatic interval and for the upright raked box.
   Displacement `Δ = ρ × ∇`, in t. Label: Method.
 - **Level draught.** `draught_for_volume` (`sections.rs:814`) finds the upright, level draught for a volume. It
-  uses the Illinois secant method, 16 steps, with no early stop (`VOLUME_STEPS`, line 757). The bracket runs from
+  uses the Illinois secant method, at most 16 steps, stopping when the volume is within 1e-13 of the target (`VOLUME_STEPS`, `VOLUME_TOLERANCE`). The bracket runs from
   the keel to the top of the hull. Label: Method.
 - A load that needs the whole hull volume or more has no draught. The draught is then set to `D`.
   `overloaded` is true when `W / ρ` is more than the volume to the deck (`barge_capacity.rs:1223-1235`).
 - **Free trim.** A dry bulk hull with its stern block in the lightship has mass items along the hull. Its Laden and
   Light conditions float at free trim (`Hull::float`, `hydrostatics.rs:372`; `sections::equilibrium`,
-  `sections.rs:891`). The inner solve finds the volume (16 steps). The outer solve finds the trim that puts the
-  centre of buoyancy under G (12 steps, `TRIM_STEPS`, line 760). The trim stays within ±10° (`TRIM_LIMIT_DEG`,
+  `sections.rs:891`). The inner solve finds the volume (at most 16 steps). The outer solve finds the trim that puts the
+  centre of buoyancy under G (at most 12 steps, `TRIM_STEPS`; it stops when B - G is within 1e-11 m). The trim stays within ±10° (`TRIM_LIMIT_DEG`,
   line 762). The draught is the one at mid-length. The draughts aft and forward are at `x = 0` and `x = L`,
   square to the base line. Label: Method.
 - If no trim within ±10° balances the hull, the condition keeps its level draught. The check `trim_in_range` then
@@ -223,7 +223,7 @@ The resistance wetted surface stays box-based: `(L_WL B + 2 L_WL T) × 1.02`, pl
 | HF-A27 | Cb range | Removed (#448). There is no `Cb` input to range. The squat still refuses `Cb` outside 0.3 to 1.0 (HF-A53) | — | — | — | — |
 | HF-A28 | Use of Cb | Removed (#448). The volume comes from the sections, not from `Cb L B T` | — | — | — | — |
 | HF-A29 | Water density | 1.0 t/m³ (fresh). Hard 0.9 to 1.1; soft 0.99 to 1.03 | Estimate | Fresh water; sea water about 1.025 | profile `water_density_t_per_m3`; `simulate.rs:669` | In sea water, draught 2.5 % too deep: conservative |
-| HF-A30 | Draught solver | Illinois secant method, 16 steps, no early stop; bracket from the keel to the top of the hull | Fixed in code | Fixed step count, so native and WebAssembly give the same bits | `sections.rs:757`, `:782-826` | Negligible |
+| HF-A30 | Draught solver | Illinois secant method, at most 16 steps, stop at 1e-13 of the target volume; bracket from the keel to the top of the hull | Fixed in code | Step cap and tolerance are fixed, so native and WebAssembly stop at the same step and give the same bits | `sections.rs:757`, `:782-826` | Negligible |
 | HF-A31 | Draught clamp | `T ≤ D`; `overloaded` when `W / ρ` is more than the volume of the sections to the deck | Fixed in code (OVCD Check) | Physical | `barge_capacity.rs:1223-1235` | None |
 | HF-A32 | Freeboard | `F = D − T`, at the side, at mid-length, with no sheer or camber | Method | Plane of maximum draught to the deck at side | `barge_capacity.rs:1298`; `simulate.rs:1248` | With trim, the freeboard at the deeper end is less: non-conservative |
 | HF-A33 | Minimum freeboard | 0.3 m; must be less than `D` | Estimate | Carried over; no source given | profile `min_freeboard_m` | Area 08 |
@@ -250,7 +250,7 @@ The resistance wetted surface stays box-based: `(L_WL B + 2 L_WL T) × 1.02`, pl
 | HF-A54 | Resistance midship area | The hull's own, as HF-A50 | Method | Cut of the sections | `resistance.rs:395-402`; `simulate.rs:370` | Small (area 07) |
 | HF-A55 | Wetted surface | `(L_WL B + 2 L_WL T) × 1.02`, plus the area the Stern Form adds. Still box-based; it does not use the sections | Fixed in code | "1.02 rake form factor"; no source | `resistance.rs:345-349` | Area 07. Out of scope of #448 |
 | HF-A56 | Volume integration | Each section clipped by the waterplane (Sutherland–Hodgman), shoelace area and moments; Simpson's rule along the length, split where an edge crosses the waterplane | Method | Standard polygon geometry (spec 0008) | `sections.rs:645` `immersed` | Exact to rounding for prismatic intervals and the upright raked box. Small for the Stern Form's curved run |
-| HF-A57 | Free-trim float | Inner solve on the volume (16 steps), outer solve on the trim (12 steps), Illinois secant method, no early stop | Method | Free-floating equilibrium; G and B on one vertical | `sections.rs:757-762`, `:891-951`; `hydrostatics.rs:372-386` | Negligible inside the bracket |
+| HF-A57 | Free-trim float | Inner solve on the volume (at most 16 steps), outer solve on the trim (at most 12 steps), Illinois secant method, each stopping at a tolerance | Method | Free-floating equilibrium; G and B on one vertical | `sections.rs:757-762`, `:891-951`; `hydrostatics.rs:372-386` | Negligible inside the bracket |
 | HF-A58 | Trim limit | The trim is searched within ±10°. No balance there: the condition keeps its level draught and fails `trim_in_range` (dry bulk) or the criterion "Trim within the solver's range" (area 03) | Fixed in code (OVCD Check) | An end would go under before 10° on these hulls | `sections.rs:762`, `:937-941`; `barge_capacity.rs:1274-1283`, `:1461-1476` | Conservative: the condition fails |
 | HF-A59 | Where the hull floats at free trim | Dry bulk with a stern block (Laden, Light); the IS Code conditions; the legacy gas conditions with a stern block. Every other condition floats level | Fixed in code | Free trim needs the mass items along the hull | `barge_capacity.rs:1241-1296`; `loading_conditions.rs:448-506`; `gas_stability.rs:329-385` | Unknown where a level hull would trim |
 | HF-A60 | Cb, a result | `∇ / (L_WL B_WL T)` at the laden level draught; at the design draught when there is no draught | Method | ES-TRIN 2025/1 Art. 1.01, 4.9 | `sections.rs:736`; `simulate.rs:1232`, `:2085-2090` | None; it is reported, and read by the squat and the IGC acceleration |

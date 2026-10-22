@@ -428,7 +428,7 @@ app-stab-needs-at-least = exige pelo menos
 # status: draft
 app-stab-limitations = Limitações
 # status: draft
-app-stab-limit-downflooding = As áreas de 0–40° e 30–40° vão sempre até 40°. O Código IS 2008, parte A 2.2.1, termina-as no ângulo de alagamento progressivo quando este é menor que 40°, e o modelo ainda não tem esse ângulo, por isso um casco cujas aberturas submergem antes pode passar quando deveria falhar (constatação #282).
+app-stab-limit-downflooding = As áreas de 0–40° e 30–40° vão até 40° a menos que se digite um ângulo de alagamento progressivo menor que 40° (a entrada Ângulo de alagamento progressivo). O Código IS 2008, parte A 2.2.1, termina-as nesse ângulo quando ele é menor que 40°. O modelo não tem aberturas com alturas, por isso não calcula o ângulo: sem ele, um casco cujas aberturas submergem antes pode passar quando deveria falhar (constatação #282).
 
 ## Vista do orçamento de capital
 

@@ -317,6 +317,41 @@ pub fn area(gz: &[(i32, f64)], a0: i32, a1: i32) -> f64 {
     }))
 }
 
+/// The area under the GZ curve from `a0` degrees to `a1` degrees, `a1` not a whole number of degrees:
+/// the trapezoid over the whole degrees, and the last part from the last whole degree to `a1` with
+/// GZ interpolated linearly (issue #282, IS Code Part A 2.2.1 up to the angle of down-flooding).
+pub fn area_to(gz: &[(i32, f64)], a0: i32, a1: f64) -> f64 {
+    let whole = libm::floor(a1) as i32;
+    let mut total = area(gz, a0, whole);
+    if f64::from(whole) < a1
+        && let (Some(&(_, g0)), Some(&(_, g1))) = (
+            gz.iter().find(|&&(d, _)| d == whole),
+            gz.iter().find(|&&(d, _)| d == whole + 1),
+        )
+    {
+        let frac = a1 - f64::from(whole);
+        let g_end = g0 + (g1 - g0) * frac;
+        total += 0.5 * (g0 + g_end) * radians(frac);
+    }
+    total
+}
+
+/// The angle where the IS Code areas 0-40 and 30-40 end (issue #282, Part A 2.2.1): 40 degrees, or
+/// the angle of down-flooding where that is below 40 degrees. `None`: 40.
+pub fn area_end_deg(downflooding_deg: Option<f64>) -> f64 {
+    let top = f64::from(CRITERIA_ANGLES_DEG[1]);
+    downflooding_deg.map_or(top, |a| if a < top { a } else { top })
+}
+
+/// An angle as a criterion name prints it: whole degrees plain, else one decimal.
+fn degrees_name(angle: f64) -> String {
+    if angle == libm::floor(angle) {
+        crate::pyfmt::fixed(angle, 0)
+    } else {
+        crate::pyfmt::fixed(angle, 1)
+    }
+}
+
 pub(crate) fn criterion(name: &str, value: f64, limit: f64, ok: bool, source: &str) -> Criterion {
     Criterion {
         name: name.to_string(),
@@ -327,8 +362,32 @@ pub(crate) fn criterion(name: &str, value: f64, limit: f64, ok: bool, source: &s
     }
 }
 
+#[cfg(test)]
 pub(crate) fn criteria(cset: &str, c: &Condition) -> Result<Vec<Criterion>, PyError> {
+    criteria_with(cset, c, None)
+}
+
+/// The criteria of `cset`, the two areas to 40 degrees ending at the angle of down-flooding where
+/// that is below 40 degrees (issue #282); the criteria are named for that angle.
+fn criteria_with(
+    cset: &str,
+    c: &Condition,
+    downflooding_deg: Option<f64>,
+) -> Result<Vec<Criterion>, PyError> {
     if cset == "IS_CODE_2008" {
+        let end = area_end_deg(downflooding_deg);
+        let top = f64::from(CRITERIA_ANGLES_DEG[1]);
+        let (name_0_40, name_30_40) = if end < top {
+            (
+                format!("Area 0\u{2013}{}\u{b0}", degrees_name(end)),
+                format!("Area 30\u{2013}{}\u{b0}", degrees_name(end)),
+            )
+        } else {
+            (
+                "Area 0\u{2013}40\u{b0}".to_string(),
+                "Area 30\u{2013}40\u{b0}".to_string(),
+            )
+        };
         let src = "IMO IS Code 2008, Part A 2.2";
         let gz_30_plus = py_max(
             c.gz.iter()
@@ -345,14 +404,14 @@ pub(crate) fn criteria(cset: &str, c: &Condition) -> Result<Vec<Criterion>, PyEr
                 &s(".1"),
             ),
             criterion(
-                "Area 0\u{2013}40\u{b0}",
+                &name_0_40,
                 c.area_0_40,
                 0.090,
                 c.area_0_40 >= 0.090,
                 &s(".1"),
             ),
             criterion(
-                "Area 30\u{2013}40\u{b0}",
+                &name_30_40,
                 c.area_30_40,
                 0.030,
                 c.area_30_40 >= 0.030,
@@ -427,7 +486,16 @@ pub(crate) fn box_condition_at(
         gz.push((a, heel - fsc * sin(radians(f64::from(a)))?));
     }
     let deck_edge = degrees(libm::atan(div(2.0 * (d - t), b)?));
-    condition_from_curve(gz, t, kg, gm_solid, fsc, Some(deck_edge), criteria_set)
+    condition_from_curve(
+        gz,
+        t,
+        kg,
+        gm_solid,
+        fsc,
+        Some(deck_edge),
+        criteria_set,
+        None,
+    )
 }
 
 /// A condition that has no GZ curve because one criterion already fails it: the hull does not float
@@ -469,6 +537,87 @@ pub(crate) fn trim_out_of_range() -> Criterion {
     )
 }
 
+/// What [`screened_gz`] found.
+pub(crate) enum Screened {
+    /// A criterion of the IS Code 2008 set fails whatever the rest of the curve is.
+    Fails,
+    /// No criterion was decided early: the whole curve, by angle.
+    Curve(Vec<(i32, f64)>),
+}
+
+/// The GZ curve on the 1 degree grid, worked in blocks of heels so that a trial that fails the IS
+/// Code 2008 stability criteria stops early (issue #567). It stops only when a criterion is
+/// already decided by the heels worked, so no number a caller reports changes: the criteria of
+/// each block are the criteria of [`criteria`] on the same points.
+///
+/// - Heels 30 to 40: the area 30 to 40 degrees (at least 0.030 m rad), to the angle of down-flooding
+///   where that is below 40, needs only these.
+/// - Heels 41 to 60: the greatest GZ at 30 degrees or more (at least 0.20 m) needs only these.
+/// - Heels 25 to 29, then 24 down to 0: the angle of maximum GZ is below 25 degrees as soon as a
+///   heel under 25 has a GZ at least the greatest at 25 or more (the first of equal GZ is the
+///   maximum).
+///
+/// A heel with no trim balance fails the condition too, as in [`hull_condition`].
+pub(crate) fn screened_gz(
+    hull: &crate::hydrostatics::Hull,
+    mass_t: f64,
+    g: crate::sections::Gravity,
+    free_surface_moment_tm: f64,
+    density: f64,
+    heel0: Option<&crate::sections::Equilibrium>,
+) -> Result<Screened, PyError> {
+    use crate::sections::SectionsError::TrimOutOfRange;
+    let mut gz: Vec<(i32, f64)> = Vec::with_capacity(61);
+    // Every `Err` here is a heel with no balance, or an error the full curve would also give.
+    macro_rules! at {
+        ($deg:expr) => {
+            match hull.gz_at(mass_t, g, free_surface_moment_tm, density, $deg, heel0) {
+                Ok(v) => gz.push(($deg, v)),
+                Err(TrimOutOfRange) => return Ok(Screened::Fails),
+                Err(e) => return Err(PyError::Value(e.to_string())),
+            }
+        };
+    }
+    let [a30, a40] = CRITERIA_ANGLES_DEG;
+    for deg in a30..=a40 {
+        at!(deg);
+    }
+    // The area 30 to 40 degrees ends at the angle of down-flooding where it is below 40 (issue
+    // #282): a hull with one is screened on that area, so the screen never rejects a trial the
+    // criteria accept.
+    let end = area_end_deg(hull.spec.downflooding_deg);
+    let area_30_40 = if end < f64::from(a40) {
+        if end > f64::from(a30) {
+            area_to(&gz, a30, end)
+        } else {
+            0.0
+        }
+    } else {
+        area(&gz, a30, a40)
+    };
+    if area_30_40 < 0.030 {
+        return Ok(Screened::Fails);
+    }
+    for deg in a40 + 1..=*ANGLES_DEG.end() {
+        at!(deg);
+    }
+    if py_max(gz.iter().map(|p| p.1)) < 0.20 {
+        return Ok(Screened::Fails);
+    }
+    for deg in 25..a30 {
+        at!(deg);
+    }
+    let high = py_max(gz.iter().map(|p| p.1));
+    for deg in (0..25).rev() {
+        at!(deg);
+        if gz[gz.len() - 1].1 >= high {
+            return Ok(Screened::Fails);
+        }
+    }
+    gz.sort_by_key(|p| p.0);
+    Ok(Screened::Curve(gz))
+}
+
 /// One condition of a hull from its sections (issue #448): the free-trim GZ curve at G on the
 /// 1 degree grid, less `free_surface_m x sin(phi)`, then the areas and the criteria. `draught`,
 /// `gm_solid` and the deck edge angle are the caller's, from the upright cut at the equilibrium.
@@ -482,8 +631,22 @@ pub(crate) fn hull_condition(
     free_surface_m: f64,
     density: f64,
     criteria_set: &str,
+    heel0: Option<&crate::sections::Equilibrium>,
+    gz_worked: Option<Vec<(i32, f64)>>,
 ) -> Result<Condition, PyError> {
-    let gz = match hull.gz(mass_t, g, free_surface_m * mass_t, density, ANGLES_DEG) {
+    let gz = match gz_worked.map_or_else(
+        || {
+            hull.gz_from(
+                mass_t,
+                g,
+                free_surface_m * mass_t,
+                density,
+                ANGLES_DEG,
+                heel0,
+            )
+        },
+        Ok,
+    ) {
         Ok(gz) => gz,
         // At some heel the free-trim float finds no balance (G above the longitudinal
         // metacentre): the condition fails, with no curve.
@@ -506,12 +669,14 @@ pub(crate) fn hull_condition(
         free_surface_m,
         Some(deck_edge),
         criteria_set,
+        hull.spec.downflooding_deg,
     )
 }
 
 /// One condition from its GZ curve (issue #448): the areas, the angle of maximum GZ and the criteria
 /// of `criteria_set`. The curve already holds the free surface correction. The identity fields
 /// (`name`, cargo, fill, displacement) are left empty or zero for the caller to set.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn condition_from_curve(
     gz: Vec<(i32, f64)>,
     draught: f64,
@@ -520,8 +685,27 @@ pub(crate) fn condition_from_curve(
     free_surface_m: f64,
     deck_edge_deg: Option<f64>,
     criteria_set: &str,
+    downflooding_deg: Option<f64>,
 ) -> Result<Condition, PyError> {
     let (max_gz_deg, max_gz) = max_by_gz(&gz);
+    // Issue #282: the areas 0-40 and 30-40 end at the angle of down-flooding where it is below 40.
+    let end = area_end_deg(downflooding_deg);
+    let top = f64::from(CRITERIA_ANGLES_DEG[1]);
+    let (area_0_40, area_30_40) = if end < top {
+        (
+            area_to(&gz, 0, end),
+            if end > f64::from(CRITERIA_ANGLES_DEG[0]) {
+                area_to(&gz, CRITERIA_ANGLES_DEG[0], end)
+            } else {
+                0.0
+            },
+        )
+    } else {
+        (
+            area(&gz, 0, CRITERIA_ANGLES_DEG[1]),
+            area(&gz, CRITERIA_ANGLES_DEG[0], CRITERIA_ANGLES_DEG[1]),
+        )
+    };
     let mut c = Condition {
         name: String::new(),
         cargo_t: 0.0,
@@ -537,13 +721,13 @@ pub(crate) fn condition_from_curve(
         max_gz_deg,
         area_0_27: area(&gz, 0, 27),
         area_0_30: area(&gz, 0, CRITERIA_ANGLES_DEG[0]),
-        area_0_40: area(&gz, 0, CRITERIA_ANGLES_DEG[1]),
-        area_30_40: area(&gz, CRITERIA_ANGLES_DEG[0], CRITERIA_ANGLES_DEG[1]),
+        area_0_40,
+        area_30_40,
         deck_edge_deg,
         gz,
         criteria: Vec::new(),
     };
-    c.criteria = criteria(criteria_set, &c)?;
+    c.criteria = criteria_with(criteria_set, &c, downflooding_deg)?;
     Ok(c)
 }
 
@@ -578,4 +762,88 @@ pub fn box_condition(
     )?;
     c.name = "Box".to_string();
     Ok(c)
+}
+
+#[cfg(test)]
+mod screen_tests {
+    use super::*;
+    use crate::hull::hull_form::HullShape;
+    use crate::hydrostatics::{Hull, HullSpec};
+    use crate::sections::Gravity;
+
+    /// Label: property. A trial the screen stops fails the IS Code 2008 criteria, with the angle of
+    /// down-flooding where the hull has one (or finds no trim balance), and a trial it does not stop gives the whole curve, bit for bit.
+    #[test]
+    fn the_screen_stops_only_a_trial_that_fails_and_otherwise_gives_the_whole_curve() {
+        let (mut stopped, mut worked) = (0, 0);
+        for (beam, angle) in [
+            (9.0, None),
+            (11.4, None),
+            (14.0, None),
+            (11.4, Some(35.0)),
+            (14.0, Some(28.0)),
+        ] {
+            for depth in [4.5] {
+                for rake in [0.0, 10.0] {
+                    let hull = Hull::build(&HullSpec {
+                        loa: 76.5,
+                        beam,
+                        depth,
+                        bow_rake_length_m: rake,
+                        bow_rake_rise_m: depth * 0.8,
+                        stern: None,
+                        shape: HullShape::default(),
+                        downflooding_deg: angle,
+                    })
+                    .unwrap();
+                    for fill in [0.3, 0.55, 0.7] {
+                        for kg_share in [0.4, 0.7, 1.0] {
+                            let mass = hull.volume_at(depth) * fill;
+                            let g = Gravity {
+                                lcg_m: 38.0,
+                                tcg_m: 0.0,
+                                kg_m: depth * kg_share,
+                            };
+                            for fs in [0.0, 30.0] {
+                                let fs_moment = fs * mass / 20.0;
+                                let full = hull.gz_from(mass, g, fs_moment, 1.0, ANGLES_DEG, None);
+                                let screened = screened_gz(&hull, mass, g, fs_moment, 1.0, None);
+                                match (full, screened.unwrap()) {
+                                    (Err(_), Screened::Fails) => stopped += 1,
+                                    (Err(e), Screened::Curve(_)) => panic!("{e}"),
+                                    (Ok(gz), Screened::Fails) => {
+                                        let c = condition_from_curve(
+                                            gz,
+                                            1.0,
+                                            g.kg_m,
+                                            1.0,
+                                            fs_moment / mass,
+                                            None,
+                                            "IS_CODE_2008",
+                                            angle,
+                                        )
+                                        .unwrap();
+                                        assert!(!c.ok(), "{beam} {depth} {rake} {fill} {kg_share}");
+                                        stopped += 1;
+                                    }
+                                    (Ok(gz), Screened::Curve(c)) => {
+                                        assert_eq!(
+                                            gz, c,
+                                            "{beam} {depth} {rake} {fill} {kg_share}"
+                                        );
+                                        worked += 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // The test is not vacuous: both outcomes occur.
+        assert!(
+            stopped > 20 && worked > 20,
+            "{stopped} stopped, {worked} worked"
+        );
+    }
 }

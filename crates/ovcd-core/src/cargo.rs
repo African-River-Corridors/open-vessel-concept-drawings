@@ -95,7 +95,7 @@ pub struct CargoProperties {
 }
 
 /// `CARGO_DATABASE`: (type key, properties), in the Python dict's insertion order.
-pub static CARGO_DATABASE: [(&str, CargoProperties); 7] = [
+pub static CARGO_DATABASE: [(&str, CargoProperties); 8] = [
     (
         "LNG",
         CargoProperties {
@@ -176,6 +176,18 @@ pub static CARGO_DATABASE: [(&str, CargoProperties); 7] = [
             temperature: 15.0,
             pressure: 0.0,
             description: "Crude oil, default grade (density at 15 C; see liquid_bulk::crude_grade)",
+            phase: CargoClass::LiquidBulk,
+            status: CargoStatus::Development,
+        },
+    ),
+    (
+        "diesel_en590",
+        CargoProperties {
+            name: "Diesel fuel (EN 590)",
+            density: 835.0,
+            temperature: 20.0,
+            pressure: 0.0,
+            description: "Diesel fuel to EN 590, UN 1202 (density at 20 C, middle of ADN Table C 0.82 to 0.85; see liquid_bulk::crude_grade)",
             phase: CargoClass::LiquidBulk,
             status: CargoStatus::Development,
         },

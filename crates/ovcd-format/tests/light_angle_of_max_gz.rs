@@ -70,7 +70,17 @@ fn is2008_a_2_0_0_applies_2_2_3_to_the_standard_conditions_and_keeps_1_0_0_as_it
         lib.find("is2008-a", "1.0.0").unwrap(),
         lib.find("is2008-a", "2.0.0").unwrap(),
     );
-    for r in &old.rules {
+    // Issue #282: the two areas to 40 degrees are replaced by the ones that end at the angle of
+    // down-flooding, under new ids (the Measure changes).
+    let replaced = ["is2008/A.2.2.1/area-0-40", "is2008/A.2.2.1/area-30-40"];
+    for id in replaced {
+        assert!(old.rule(id).is_some() && new.rule(id).is_none(), "{id}");
+    }
+    for r in old
+        .rules
+        .iter()
+        .filter(|r| !replaced.contains(&r.id.as_str()))
+    {
         let n = new.rule(&r.id).expect("kept");
         if r.id == "is2008/A.2.2.3/angle-max-gz" {
             // Only the Applicability changes: the limit, the Measure and the consequence do not.

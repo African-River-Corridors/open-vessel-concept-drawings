@@ -13,7 +13,7 @@
 //! over the net volume V = 1200 and M_z the vertical moment less 47.5 x 0.5, over V.
 
 use libm::{cos, sin, sqrt, tan};
-use ovcd_core::damage_stability::{AdnCriteria, Floats, FloodedBox, assess, righting_lever_at};
+use ovcd_core::damage_stability::{DamageCriteria, Floats, FloodedBox, assess, righting_lever_at};
 use ovcd_core::hull::hull_form::{HullFormInputs, HullFormKind, HullShape, generate};
 use ovcd_core::sections::{Gravity, SectionsTable, equilibrium};
 
@@ -82,7 +82,7 @@ fn a_flooded_double_bottom_at_mid_length_sinks_the_hull_bodily_by_the_lost_volum
         gravity(),
         1.0,
         s,
-        &AdnCriteria::ADN_2025,
+        &DamageCriteria::ADN_2025,
     );
     assert_eq!(out.floats, Floats::Yes);
     // symmetric about the centre line and about mid-length: no heel, no trim
@@ -128,7 +128,7 @@ fn a_flooded_space_with_no_permeability_changes_nothing() {
         gravity(),
         1.0,
         s,
-        &AdnCriteria::ADN_2025,
+        &DamageCriteria::ADN_2025,
     );
     assert!((out.waterplane_c_m - eq.waterplane.c).abs() < 1e-6);
     assert!(out.heel_deg.abs() < 1e-6);
@@ -187,7 +187,15 @@ fn a_one_sided_damage_floats_where_the_volume_and_the_two_levers_balance_by_an_i
     let t = hull();
     let s = start(&t);
     let boxes = [flooded((15.0, 25.0), (4.0, 5.0), (0.0, 4.0), 0.95, "WB")];
-    let out = assess(&t, &boxes, MASS, gravity(), 1.0, s, &AdnCriteria::ADN_2025);
+    let out = assess(
+        &t,
+        &boxes,
+        MASS,
+        gravity(),
+        1.0,
+        s,
+        &DamageCriteria::ADN_2025,
+    );
     assert_eq!(out.floats, Floats::Yes);
     // heels to starboard (the damaged side) and trims by the stern (the lost buoyancy is aft of LCF)
     assert!(
@@ -222,7 +230,7 @@ fn the_verdict_is_the_criteria_applied_to_the_numbers_it_reports() {
         vec![flooded((15.0, 25.0), (4.0, 5.0), (0.0, 4.0), 0.95, "WB")],
         vec![flooded((5.0, 55.0), (-5.0, 5.0), (0.0, 4.0), 0.95, "ALL")],
     ] {
-        let c = AdnCriteria::ADN_2025;
+        let c = DamageCriteria::ADN_2025;
         let out = assess(&t, &boxes, MASS, gravity(), 1.0, s, &c);
         let want = out.floats == Floats::Yes
             && out.heel_deg.abs() <= c.max_heel_deg
@@ -232,7 +240,7 @@ fn the_verdict_is_the_criteria_applied_to_the_numbers_it_reports() {
     }
     // a harsher damage fails a criterion that a milder one meets: flooding the whole hull sinks it
     let all = [flooded((0.0, 60.0), (-5.0, 5.0), (0.0, 4.0), 0.95, "ALL")];
-    let out = assess(&t, &all, MASS, gravity(), 1.0, s, &AdnCriteria::ADN_2025);
+    let out = assess(&t, &all, MASS, gravity(), 1.0, s, &DamageCriteria::ADN_2025);
     assert!(!out.ok);
     assert_ne!(out.floats, Floats::Yes);
     // and the mild one passes
@@ -243,7 +251,7 @@ fn the_verdict_is_the_criteria_applied_to_the_numbers_it_reports() {
         gravity(),
         1.0,
         s,
-        &AdnCriteria::ADN_2025,
+        &DamageCriteria::ADN_2025,
     );
     assert!(mild.ok, "{mild:?}");
 }
@@ -355,4 +363,215 @@ fn a_ballast_space_is_cut_at_the_bulkheads_of_the_tanks_beside_it_and_a_window_f
     assert!(side.iter().any(|f| f == &["WB1S/2"]), "{side:?}");
     // no damage floods the whole length of the wing tank at once
     assert!(side.iter().all(|f| f.len() <= 2));
+}
+
+// ---- MARPOL Annex I regulation 28 (issue #341) ----
+// Label: sourced - MEPC.117(52), regulation 28.2 (extents), 28.3.2 and 28.3.3 (criteria), worked by hand here.
+
+use ovcd_core::liquid_bulk::damage::{MarpolExtents, marpol_damage_cases};
+
+/// 28.2.1 and 28.2.2 by hand for L = 90 m, B = 14 m: 90^(2/3) = 20.083, a third is 6.694 m (under 14.5 m and
+/// over 5 m); B/5 = 2.8 m (under 11.5 m); B/6 = 2.333 m (under 10 m and 5 m); B/15 = 0.9333 m (under 6 m).
+#[test]
+fn the_marpol_extents_follow_regulation_28_2_by_hand() {
+    let e = MarpolExtents::of(90.0, 14.0);
+    assert!((e.side_long_m - 6.6943).abs() < 1e-3, "{e:?}");
+    assert_eq!(e.side_inboard_m, 2.8);
+    assert!((e.bottom_fwd_long_m - 6.6943).abs() < 1e-3);
+    assert!((e.bottom_fwd_width_m - 14.0 / 6.0).abs() < 1e-12);
+    assert_eq!(e.bottom_aft_long_m, 5.0);
+    assert!((e.bottom_aft_width_m - 14.0 / 6.0).abs() < 1e-12);
+    assert!((e.bottom_height_m - 14.0 / 15.0).abs() < 1e-12);
+    // the caps: a very large hull takes the metre limits (L = 400 m: (1/3) 400^(2/3) = 18.8 m, over 14.5 m)
+    let big = MarpolExtents::of(400.0, 120.0);
+    assert_eq!(big.side_long_m, 14.5);
+    assert_eq!(big.side_inboard_m, 11.5);
+    assert_eq!(big.bottom_fwd_width_m, 10.0);
+    assert_eq!(big.bottom_aft_width_m, 5.0);
+    assert_eq!(big.bottom_height_m, 6.0);
+}
+
+/// The MARPOL side damage reaches the cargo tanks: the strip is B/5 = 2.0 m deep for a hull 10 m wide (3.0 to
+/// 5.0 m from the centre line), so the cargo tank "IN" (4.0 to 3.9 m, 1.0 m inboard of the side) floods at 95 %
+/// with the wing tank, not at 0 as under the ADN extents.
+#[test]
+fn the_marpol_side_damage_reaches_the_cargo_tanks() {
+    let spaces = vec![
+        space(
+            "OUT",
+            SpaceKind::CargoTank,
+            (10.0, 50.0),
+            (0.0, 3.9),
+            (0.0, 4.0),
+        ),
+        space(
+            "IN",
+            SpaceKind::CargoTank,
+            (10.0, 50.0),
+            (3.9, 4.0),
+            (0.0, 4.0),
+        ),
+        space(
+            "WB",
+            SpaceKind::WingBallast,
+            (10.0, 50.0),
+            (4.0, 5.0),
+            (0.0, 4.0),
+        ),
+    ];
+    let cases = marpol_damage_cases(&spaces, 60.0, 10.0);
+    let side: Vec<Vec<String>> = cases
+        .iter()
+        .filter(|c| c.name.starts_with("side"))
+        .map(|c| c.flooded.iter().map(|f| f.name.clone()).collect())
+        .collect();
+    assert!(!side.is_empty());
+    for f in &side {
+        assert!(
+            f.contains(&"WB".to_string()) && f.contains(&"IN".to_string()),
+            "{f:?}"
+        );
+    }
+    assert!(
+        cases
+            .iter()
+            .flat_map(|c| c.flooded.iter())
+            .all(|f| (f.permeability - 0.95).abs() < 1e-12)
+    );
+}
+
+/// 28.1.3: at 150 m or less the damage is between adjacent bulkheads, so it never floods two bays of a
+/// wing tank when both bays are longer than the damage; 28.1.1: above 150 m it is anywhere in the length.
+#[test]
+fn a_hull_of_150_m_or_less_floods_one_bay_and_a_longer_hull_floods_across_a_bulkhead() {
+    let make = |loa: f64| {
+        vec![
+            space(
+                "T1",
+                SpaceKind::CargoTank,
+                (10.0, 60.0),
+                (0.0, 4.0),
+                (0.7, 4.0),
+            ),
+            space(
+                "T2",
+                SpaceKind::CargoTank,
+                (60.0, 110.0),
+                (0.0, 4.0),
+                (0.7, 4.0),
+            ),
+            space(
+                "W",
+                SpaceKind::WingBallast,
+                (10.0, loa - 10.0),
+                (4.0, 5.0),
+                (0.0, 4.0),
+            ),
+        ]
+    };
+    let two_bays = |spaces: &[ovcd_core::compartments::Space], loa: f64| {
+        marpol_damage_cases(spaces, loa, 10.0)
+            .iter()
+            .filter(|c| c.name.starts_with("side"))
+            .any(|c| {
+                c.flooded.iter().any(|f| f.name == "W/1")
+                    && c.flooded.iter().any(|f| f.name == "W/2")
+            })
+    };
+    // 120 m: bays of 50 m, the damage is (1/3) 120^(2/3) = 8.2 m: one bay at a time
+    assert!(!two_bays(&make(120.0), 120.0));
+    // 160 m: the damage is anywhere in the length, so it can straddle the bulkhead at 60 m
+    let spaces = vec![
+        space(
+            "T1",
+            SpaceKind::CargoTank,
+            (10.0, 80.0),
+            (0.0, 4.0),
+            (0.7, 4.0),
+        ),
+        space(
+            "T2",
+            SpaceKind::CargoTank,
+            (80.0, 150.0),
+            (0.0, 4.0),
+            (0.7, 4.0),
+        ),
+        space(
+            "W",
+            SpaceKind::WingBallast,
+            (10.0, 150.0),
+            (4.0, 5.0),
+            (0.0, 4.0),
+        ),
+    ];
+    assert!(two_bays(&spaces, 160.0));
+}
+
+/// 28.2.2: the bottom damage is B/6 wide: a bottom space 2.0 m wide at the centre line is reached, and a
+/// double bottom compartment more than B/15 above the base line is not.
+#[test]
+fn the_marpol_bottom_damage_is_b_over_6_wide_and_b_over_15_high() {
+    let spaces = vec![
+        space(
+            "DB",
+            SpaceKind::DoubleBottomBallast,
+            (10.0, 50.0),
+            (-5.0, 5.0),
+            (0.0, 0.5),
+        ),
+        space(
+            "HIGH",
+            SpaceKind::PumpRoom,
+            (10.0, 50.0),
+            (-5.0, 5.0),
+            (1.0, 2.0),
+        ),
+    ];
+    // B = 15 m: height 1.0 m (the pump room starts at 1.0 m: not reached), width 2.5 m
+    let cases = marpol_damage_cases(&spaces, 60.0, 15.0);
+    let bottom: Vec<_> = cases
+        .iter()
+        .filter(|c| c.name.starts_with("bottom"))
+        .collect();
+    assert!(!bottom.is_empty());
+    assert!(
+        bottom
+            .iter()
+            .all(|c| c.flooded.iter().all(|f| f.name == "DB"))
+    );
+}
+
+/// 28.3.3: a range of 20 degrees beyond the equilibrium, a lever of 0.1 m and 0.0175 m.rad within it. The
+/// closed-form box of the ADN test above has a flooded double bottom: it meets the ADN criteria and also these.
+#[test]
+fn the_marpol_criteria_need_the_range_the_lever_and_the_area() {
+    use ovcd_core::damage_stability::DamageCriteria;
+    let t = hull();
+    let s = start(&t);
+    let flood = [flooded((27.5, 32.5), (-5.0, 5.0), (0.0, 1.0), 0.95, "DB")];
+    let m = assess(
+        &t,
+        &flood,
+        MASS,
+        gravity(),
+        1.0,
+        s,
+        &DamageCriteria::MARPOL_I_28,
+    );
+    assert_eq!(m.floats, Floats::Yes);
+    assert!(m.ok, "{m:?}");
+    // the curve is read to the equilibrium plus 20 degrees
+    assert!(
+        (m.end_deg - (m.heel_deg.abs() + 20.0)).abs() < 1e-6,
+        "{m:?}"
+    );
+    assert!(m.max_gz_m >= 0.1 && m.area_m_rad >= 0.0175);
+    // the same hull with a stricter lever fails the verdict and not the float
+    let strict = DamageCriteria {
+        min_gz_m: 5.0,
+        ..DamageCriteria::MARPOL_I_28
+    };
+    let n = assess(&t, &flood, MASS, gravity(), 1.0, s, &strict);
+    assert_eq!(n.floats, Floats::Yes);
+    assert!(!n.ok);
 }

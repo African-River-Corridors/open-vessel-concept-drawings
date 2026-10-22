@@ -124,6 +124,15 @@ fn drawing_space_json(s: &Space) -> Value {
     v
 }
 
+/// The ballast tanks of a dry bulk hull for the drawing, as `drawing.ballast_spaces` (issue #426).
+/// Kept out of the results hash with the rest of `drawing`.
+pub(crate) fn ballast_drawing_value(tanks: &[Space]) -> (&'static str, Value) {
+    (
+        "ballast_spaces",
+        Value::Array(tanks.iter().map(drawing_space_json).collect()),
+    )
+}
+
 /// The `drawing` values of a liquid Option: the layout the general arrangement will draw. Kept out
 /// of the results hash with the rest of `drawing`.
 pub(crate) fn drawing_values(r: &BargeCapacityResult) -> Vec<(&'static str, Value)> {
@@ -138,38 +147,44 @@ pub(crate) fn drawing_values(r: &BargeCapacityResult) -> Vec<(&'static str, Valu
     )]
 }
 
-/// Issue #341: the assumed damages of the hull and what each does to the laden departure condition, by the
-/// ADN extents of the vessel type of the Cargo (9.3.2.15.1 for type C, 9.3.3.15.1 for type N). Empty when the
-/// Cargo has no ADN type or the departure condition has no floating position.
+/// Issue #341: the assumed damages of the hull and what each does to the laden departure condition.
+///
+/// The first list is by the ADN extents of the vessel type of the Cargo (9.3.2.15.1 for type C, 9.3.3.15.1 for
+/// type N); it is empty when the Cargo has no ADN type. The second is by the extents of MARPOL Annex I
+/// regulation 28.2, worked out only when `marpol` is true (the Rule Set is in the stack). Both are empty when the
+/// departure condition has no floating position.
 pub(crate) fn damage_verdicts(
     hull: &ovcd_core::hydrostatics::Hull,
     liquid: &LiquidBulkResult,
     cargo_key: &str,
     density: f64,
     conditions: &[ovcd_core::loading_conditions::LoadedCondition],
-) -> Vec<ovcd_core::measured::DamageVerdict> {
-    use ovcd_core::damage_stability::{AdnCriteria, assess};
-    use ovcd_core::liquid_bulk::damage::{AdnExtents, damage_cases};
+    marpol: bool,
+) -> (
+    Vec<ovcd_core::measured::DamageVerdict>,
+    Vec<ovcd_core::measured::DamageVerdict>,
+) {
+    use ovcd_core::damage_stability::{DamageCriteria, assess};
+    use ovcd_core::liquid_bulk::damage::{
+        AdnExtents, DamageCase, damage_cases, marpol_damage_cases,
+    };
     use ovcd_core::loading_conditions::Role;
     use ovcd_core::sections::Gravity;
-    let Some(adn) = crate::trace::adn_vessel_type_of(cargo_key) else {
-        return Vec::new();
-    };
-    let extents = if adn == adn_vessel_type::AdnVesselType::C {
-        AdnExtents::TYPE_C
-    } else {
-        AdnExtents::TYPE_N
-    };
+    let adn = crate::trace::adn_vessel_type_of(cargo_key);
+    if adn.is_none() && !marpol {
+        return (Vec::new(), Vec::new());
+    }
+    let none = || (Vec::new(), Vec::new());
     let Some(laden) = conditions
         .iter()
         .find(|c| c.role == Role::FullLoadDeparture)
     else {
-        return Vec::new();
+        return none();
     };
     // The mass and its centre of gravity: the weights of the condition. The damage does not change either.
     let mass: f64 = laden.weights.iter().map(|(_, i)| i.mass_t).sum();
     if mass.is_nan() || mass <= 0.0 {
-        return Vec::new();
+        return none();
     }
     let g = Gravity {
         lcg_m: laden
@@ -187,28 +202,50 @@ pub(crate) fn damage_verdicts(
             / mass,
     };
     let Ok(float) = hull.float(mass, g, density) else {
-        return Vec::new();
+        return none();
     };
     let start = (
         float.equilibrium.waterplane.c,
         float.equilibrium.waterplane.trim_deg,
     );
-    damage_cases(&liquid.spaces, hull.spec.loa, hull.spec.beam, &extents)
-        .into_iter()
-        .map(|case| ovcd_core::measured::DamageVerdict {
-            flooded: case.flooded.iter().map(|f| f.name.clone()).collect(),
-            outcome: assess(
-                &hull.table,
-                &case.flooded,
-                mass,
-                g,
-                density,
-                start,
-                &AdnCriteria::ADN_2025,
-            ),
-            name: case.name,
-        })
-        .collect()
+    let verdicts = |cases: Vec<DamageCase>, criteria: &DamageCriteria| {
+        cases
+            .into_iter()
+            .map(|case| ovcd_core::measured::DamageVerdict {
+                flooded: case.flooded.iter().map(|f| f.name.clone()).collect(),
+                outcome: assess(
+                    &hull.table,
+                    &case.flooded,
+                    mass,
+                    g,
+                    density,
+                    start,
+                    criteria,
+                ),
+                name: case.name,
+            })
+            .collect::<Vec<_>>()
+    };
+    let by_adn = adn.map_or_else(Vec::new, |t| {
+        let extents = if t == adn_vessel_type::AdnVesselType::C {
+            AdnExtents::TYPE_C
+        } else {
+            AdnExtents::TYPE_N
+        };
+        verdicts(
+            damage_cases(&liquid.spaces, hull.spec.loa, hull.spec.beam, &extents),
+            &DamageCriteria::ADN_2025,
+        )
+    });
+    let by_marpol = if marpol {
+        verdicts(
+            marpol_damage_cases(&liquid.spaces, hull.spec.loa, hull.spec.beam),
+            &DamageCriteria::MARPOL_I_28,
+        )
+    } else {
+        Vec::new()
+    };
+    (by_adn, by_marpol)
 }
 
 /// The `damage` block of the results: what each assumed damage does (unhashed, with the rest of the

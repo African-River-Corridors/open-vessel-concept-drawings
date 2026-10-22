@@ -24,6 +24,9 @@ pub struct Measured {
     pub conditions: Vec<Condition>,
     /// The deadweight, t: for the derived input `deadweight_band`. `None` when there is none.
     pub deadweight_t: Option<f64>,
+    /// The angle of down-flooding the designer gave, degrees (issue #282): the IS Code areas to 40
+    /// degrees end there when it is below 40. `None`: none given.
+    pub downflooding_deg: Option<f64>,
     /// The Type C tank values the IGC Rules read; `None` but for a gas barge.
     pub tank: Option<TankRuleValues>,
     /// The gas cargo-area separation and whether its tanks have plane ends; `None` but for a gas
@@ -52,6 +55,12 @@ pub struct Measured {
     /// The assumed damages of a liquid bulk hull and what the damaged hull does (issue #341); empty for
     /// every other Cargo.
     pub damage: Vec<DamageVerdict>,
+    /// What the Vessel Model of the design is assembled from (issue #454); `None` when the run gave
+    /// no capacity result. No Measure reads it.
+    pub vessel: Option<crate::vessel_model::VesselModelInputs>,
+    /// The assumed damages of MARPOL Annex I regulation 28 (issue #341), for a liquid bulk hull under that
+    /// Rule Set; empty for every other design.
+    pub marpol_damage: Vec<DamageVerdict>,
 }
 
 /// One assumed damage and the outcome: the Measure `stability.damage` is `ok`.
@@ -106,6 +115,18 @@ pub fn deadweight_band(dw_t: f64) -> &'static str {
         DEADWEIGHT_BANDS[2]
     } else {
         DEADWEIGHT_BANDS[3]
+    }
+}
+
+/// The values of the derived input `downflooding_angle` (issue #282).
+pub const DOWNFLOODING_ANGLES: &[&str] = &["typed", "not-typed"];
+
+/// `typed` when the designer gave an angle of down-flooding, else `not-typed`.
+pub fn downflooding_angle_value(angle: Option<f64>) -> &'static str {
+    if angle.is_some() {
+        DOWNFLOODING_ANGLES[0]
+    } else {
+        DOWNFLOODING_ANGLES[1]
     }
 }
 
@@ -207,6 +228,9 @@ impl Measured {
             ObjectType::BallastTank => self.liquid_names(SpaceKind::is_ballast),
             ObjectType::SlopTank => self.liquid_names(|k| k == SpaceKind::Slop),
             ObjectType::DamageCase => self.damage.iter().map(|d| d.name.clone()).collect(),
+            ObjectType::MarpolDamageCase => {
+                self.marpol_damage.iter().map(|d| d.name.clone()).collect()
+            }
         }
     }
 
@@ -248,7 +272,7 @@ impl Measured {
             | "option.slop_capacity_share" => self.liquid.is_some(),
             "option.deadweight" => self.deadweight_t.is_some(),
             // The Rule on a hull with no damage computed is `not evaluated` with the reason (`missing`).
-            "stability.damage" => true,
+            "stability.damage" | "stability.damage_marpol" => true,
             "wheelhouse.blind_distance" => match m.args.iter().find(|(k, _)| k == "condition") {
                 Some((_, ArgValue::Text(c))) if c == "light" => {
                     self.blind_distance_light_m.is_some()
@@ -291,9 +315,13 @@ impl Measured {
         if let Some(v) = self.liquid_value(m, index) {
             return v;
         }
-        if m.id == "stability.damage" {
-            return self
-                .damage
+        if m.id == "stability.damage" || m.id == "stability.damage_marpol" {
+            let set = if m.id == "stability.damage" {
+                &self.damage
+            } else {
+                &self.marpol_damage
+            };
+            return set
                 .get(index)
                 .map(|d| MeasureValue::Bool(d.outcome.ok))
                 .ok_or_else(|| format!("no damage case {index}"));
@@ -456,6 +484,21 @@ impl Measured {
                     return Err("`gz.area` needs from_deg below to_deg".to_string());
                 }
                 Ok(MeasureValue::Number(area(&c.gz, from, to)))
+            }
+            "gz.area_to_downflooding" => {
+                let (from, to) = (deg(m, "from_deg")?, deg(m, "to_deg")?);
+                if from >= to {
+                    return Err("`gz.area_to_downflooding` needs from_deg below to_deg".to_string());
+                }
+                // Up to `to_deg`, or the angle of down-flooding where that is less (IS Code Part A
+                // 2.2.1). An angle not above `from_deg` leaves no area.
+                let end =
+                    crate::box_stability::area_end_deg(self.downflooding_deg).min(f64::from(to));
+                Ok(MeasureValue::Number(if end > f64::from(from) {
+                    crate::box_stability::area_to(&c.gz, from, end)
+                } else {
+                    0.0
+                }))
             }
             "gz.max_from" => {
                 let from = deg(m, "from_deg")?;

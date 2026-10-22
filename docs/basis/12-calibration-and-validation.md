@@ -41,7 +41,7 @@ record of each one.
 
 | Set | File | Records | Run | What is compared |
 |---|---|---|---|---|
-| Dry barges, in-sample | `cases.yaml`, `dry_barge` | 12 | 12 | Lightship, deadweight at a stated draught |
+| Dry barges, in-sample | `cases.yaml`, `dry_barge` | 11 | 11 | Lightship, deadweight at a stated draught |
 | Dry barges, held out | `cases.yaml`, `dry_barge` | 78 (box 32, deck 21, pontoon 25) | 78 (3 are cross-checks, no band) | Lightship, deadweight |
 | Held out, not runnable | `cases.yaml`, `not_yet_runnable_cases` | 48 (41 tank barges, 6 gas barges, 1 motor container vessel) | 0 | Listed with their figures and the reason |
 | Inland motor vessels | `cn_yangtze_gb38030_draft_2018.yaml` | 20 design points (7 bulk, 7 liquid, 6 container) | 14 (bulk and liquid) | Installed power against computed delivered power; no band |
@@ -52,7 +52,7 @@ record of each one.
 Sources (`sources.yaml`): 8 stored documents (`sources`: Chinese inland standard ship-type series and their
 consultation-draft notes), each with a checksum, size, store key and licence; and 107 web records
 (`web_sources`, ids `S`, `T`, `M`, `K`, `W`, `C`, `D`, `J`, `P`), each with a title, URL, access date and,
-for most, a note. The web records carry no checksum. The 12 in-sample cases cite free-text sources (a thesis,
+for most, a note. The web records carry no checksum. The 11 in-sample cases cite free-text sources (a thesis,
 journal papers, trade press, designer pages, and for one case, practitioner statements found by search). The
 126 held-out records cite a `web_sources` id. Label: **Sourced default** for each published figure, at the
 confidence the case states.
@@ -63,12 +63,12 @@ confidence the case states.
 `held_out` marker first, so a held-out case can never move a factor. Label: **Method**.
 
 - Lightship factor k per hold type: the mean of lightship ÷ (L × B × D) over cases with a published lightship.
-  Box: 0.1093 t/m³ (n = 3, range 0.095 to 0.1223). Container: 0.1711 t/m³ (n = 1).
+  Box: 0.1086 t/m³ (n = 2, range 0.095 to 0.1223). Container: 0.1711 t/m³ (n = 1).
 - Box-barge block coefficient on LOA: the mean of (DWT + lightship) ÷ (L × B × T × ρ) over box cases with a
-  draught and a DWT, less the cases marked `exclude_from_fit_cb`. Cb = 0.928 (n = 7, range 0.883 to 0.995;
+  draught and a DWT, less the cases marked `exclude_from_fit_cb`. Cb = 0.927 (n = 7, range 0.882 to 0.994;
   2 excluded because they imply Cb above 1).
 
-The 12 first cases are **in-sample**: their errors come from the same cases the factors were fitted to. All
+The 11 first cases are **in-sample**: their errors come from the same cases the factors were fitted to. All
 126 later records are **held out** (62 from a research note, 64 from follow-up research; tests check the
 split). Their errors are **out of sample**. Deck and pontoon barges have no model of their own. They run as box
 barges (`run_as: box`), with the box k and the box Cb. `run_barge` (line 155) runs each case twice: as ported
@@ -180,9 +180,9 @@ with the original code.
 | CV-A05 | Band, tank steel weight | ±15 / 20 / 30 % | Fixed in code | Proposed with issue #292 | `_assess_tanks` | Unknown |
 | CV-A06 | Band acceptance | Inside when abs(error) ≤ band; a miss is a warning, never a failure; a crash fails | Fixed in code | ADR 0010; issue #119 | `BandCheck.inside`, `main_check` | Non-conservative: a large error never stops a merge |
 | CV-A07 | Confidence of a case | high / medium / low, set by the person who adds the case | Estimate | Judgement recorded in each case; no written criteria for the levels | Every band | Unknown: the band depends on it |
-| CV-A08 | Lightship factor k, box hold | 0.1093 t/m³, mean of 3 cases (0.095 to 0.1223) | Estimate | `factors.yaml`, in-sample fit; one of the 3 points rests on practitioner statements (low confidence) | Calibrated runs; Defaults Profile `lightship_factor_t_per_m3` for a box hold | Unknown; held-out deck barges agree (mean error −6.3 %), pontoons do not (−27.0 %) |
+| CV-A08 | Lightship factor k, box hold | 0.1086 t/m³, mean of 2 cases (0.095 to 0.1223) | Estimate | `factors.yaml`, in-sample fit; the third point, which rested on practitioner statements (a forum, low confidence), was dropped (issue #431) | Calibrated runs; Defaults Profile `lightship_factor_t_per_m3` for a box hold | Unknown; held-out deck barges agree (mean error −6.3 %), pontoons do not (−27.0 %) |
 | CV-A09 | Lightship factor k, container hold | 0.1711 t/m³, 1 case | Estimate | `factors.yaml`; one point, in-sample, not validated | Calibrated runs | Unknown |
-| CV-A10 | Box-barge Cb on LOA | 0.928, mean of 7 cases (0.883 to 0.995) | Estimate | `factors.yaml`; 2 cases excluded (imply Cb above 1) | Calibrated runs only | Unknown; held-out box DWT agrees (30 of 30 inside) |
+| CV-A10 | Box-barge Cb on LOA | 0.927, mean of 7 cases (0.882 to 0.994) | Estimate | `factors.yaml`; 2 cases excluded (imply Cb above 1) | Calibrated runs only | Unknown; held-out box DWT agrees (30 of 30 inside) |
 | CV-A11 | Ported baseline | Sloped-hopper build-up and Cb 0.85 | Fixed in code | The original engine, kept for comparison | `run_barge` | Not a result; for comparison only |
 | CV-A12 | Water density for predicted DWT | 1.000 t/m³; 1.025 where the source gives a sea-going or saltwater figure (22 cases) | Fixed in code | The case's `water_density_t_m3` | `_rho_of` | Small: 2.5 % on DWT |
 | CV-A13 | Deck and pontoon barges | Run as box (box k, box Cb) | Fixed in code | No deck or pontoon model exists | `_run_hold_type` | Pontoons: lightship low, DWT high (non-conservative on capacity) |
@@ -210,7 +210,7 @@ by a pull request:
 - `OVCD_CALIBRATION_DIR` (environment): the calibration folder when the package runs from an installed wheel.
 
 The fitted k for a box hold reaches users as the Defaults Profile default of `lightship_factor_t_per_m3`
-(0.1093 t/m³, soft range 0.08 to 0.15), which the user can change.
+(0.1086 t/m³, soft range 0.08 to 0.15), which the user can change.
 
 ## Limits and known findings
 

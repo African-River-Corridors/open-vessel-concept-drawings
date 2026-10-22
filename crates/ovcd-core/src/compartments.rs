@@ -36,6 +36,16 @@ pub enum SpaceKind {
     Cofferdam,
     /// A pump room: the cargo pumps below deck.
     PumpRoom,
+    /// A dry cargo hold (issue #454): the hold of a dry bulk hull, or the hold that houses the Type C
+    /// tanks of a gas hull.
+    CargoHold,
+    /// An empty space with no other use: the service space of a gas hull's aft separation.
+    Void,
+    /// A machinery space below deck: a thruster, drive, engine, genset, gas valve unit or battery
+    /// room.
+    Machinery,
+    /// The empty aft peak of a self-propelled hull, with the steering gear.
+    PeakVoid,
 }
 
 impl SpaceKind {
@@ -49,6 +59,10 @@ impl SpaceKind {
             SpaceKind::Slop => "slop",
             SpaceKind::Cofferdam => "cofferdam",
             SpaceKind::PumpRoom => "pump_room",
+            SpaceKind::CargoHold => "cargo_hold",
+            SpaceKind::Void => "void",
+            SpaceKind::Machinery => "machinery",
+            SpaceKind::PeakVoid => "peak_void",
         }
     }
 
@@ -105,6 +119,29 @@ pub struct Space {
     pub x_fwd: f64,
     /// The cross-section, (y, z) corners in order. A simple polygon.
     pub section: Vec<(f64, f64)>,
+}
+
+/// A Space with its volume and centroid inside the hull (spec 0008, "One compartment model"). Until
+/// the hull clips it (issue #455) these are the prism's.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ClippedSpace {
+    pub space: Space,
+    pub volume_m3: f64,
+    /// The centroid (x, y, z), m in hull axes.
+    pub centroid_m: (f64, f64, f64),
+}
+
+impl ClippedSpace {
+    /// The Space as its prism: the section's area times the length, at the section's centroid and
+    /// mid-length.
+    pub fn prism(space: Space) -> Self {
+        let (area, cy, cz) = area_centroid(&space.section);
+        Self {
+            volume_m3: area * space.length(),
+            centroid_m: ((space.x_aft + space.x_fwd) / 2.0, cy, cz),
+            space,
+        }
+    }
 }
 
 /// The liquid in a Space at one fill.
@@ -245,7 +282,7 @@ pub(crate) fn poly(side: Side, corners: &[(f64, f64)]) -> Vec<(f64, f64)> {
 }
 
 /// A pair of Spaces, port and starboard, named `<prefix>1P` and `<prefix>1S`.
-fn pair(
+pub(crate) fn pair(
     prefix: &str,
     kind: SpaceKind,
     (x_aft, x_fwd): (f64, f64),

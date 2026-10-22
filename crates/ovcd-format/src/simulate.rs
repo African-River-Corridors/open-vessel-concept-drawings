@@ -708,11 +708,17 @@ fn tank_design_of(p: &Map<String, Value>) -> R<ovcd_core::barge_capacity::TankDe
         head_type,
         liquid_pressure,
         design_temperature_c,
-        design_pressure_mpa: get_or(
-            p,
-            "tank_design_pressure_mpa",
-            b::DEFAULT_TANK_DESIGN_PRESSURE_MPA,
-        )?,
+        // Issue #577: `null` is the IGC 4.23.1.2 minimum of each tank, worked out by the core.
+        design_pressure_mpa: if design_pressure_by_rule(p) {
+            b::DEFAULT_TANK_DESIGN_PRESSURE_MPA
+        } else {
+            get_or(
+                p,
+                "tank_design_pressure_mpa",
+                b::DEFAULT_TANK_DESIGN_PRESSURE_MPA,
+            )?
+        },
+        design_pressure_igc_minimum: design_pressure_by_rule(p),
         material,
         allowable_stress_mpa: allowable,
         insulation_thickness_mm: get_or(
@@ -722,6 +728,13 @@ fn tank_design_of(p: &Map<String, Value>) -> R<ovcd_core::barge_capacity::TankDe
         )?,
         structure_factor: get_or(p, "tank_structure_factor", b::DEFAULT_TANK_STRUCTURE_FACTOR)?,
     })
+}
+
+/// Whether the design pressure is asked for as the IGC 4.23.1.2 minimum of each tank (issue #577):
+/// `tank_design_pressure_mpa` is `null`.
+fn design_pressure_by_rule(p: &Map<String, Value>) -> bool {
+    p.get("tank_design_pressure_mpa")
+        .is_some_and(Value::is_null)
 }
 
 /// The stress the engine used for `material` before the IGC check (issue #313), when it differs from
@@ -801,6 +814,13 @@ fn lpg_loading(p: &Map<String, Value>, cargo: &str, fill: f64) -> R<Loading> {
             "IGC 15.5.2: 45 C, the air temperature of the ambient design conditions (15.1.4)",
         )
     } else {
+        if design_pressure_by_rule(p) {
+            return bad(
+                "`params.tank_design_pressure_mpa` must be a number for a fully pressurised LPG \
+                 Cargo: the MARVS sets the loading temperature (IGC 15.1.3.1)"
+                    .to_string(),
+            );
+        }
         let marvs_bar = get_or(
             p,
             "tank_design_pressure_mpa",
@@ -924,18 +944,20 @@ fn tank_report(
             .map(|m| m.allowable_stress)
     });
     let text = |key: &str| p.get(key).cloned().unwrap_or(Value::Null);
+    // The pressure in force: the typed one, or the IGC minimum the core worked out for the tank.
+    let design_pressure = r
+        .gas_basis
+        .as_ref()
+        .map_or(design.design_pressure_mpa, |b| b.tanks.design_pressure);
     Value::Object(
         [
             ("lpg_carriage_condition", text("lpg_carriage_condition")),
-            ("design_pressure_mpa", num(design.design_pressure_mpa)),
+            ("design_pressure_mpa", num(design_pressure)),
             ("liquid_pressure", text("tank_liquid_pressure")),
             ("liquid_pressure_accel", opt_num(liquid.0)),
             ("liquid_pressure_density_kg_m3", num(liquid.1)),
             ("liquid_pressure_mpa", num(pgd)),
-            (
-                "internal_pressure_mpa",
-                num(design.design_pressure_mpa + pgd),
-            ),
+            ("internal_pressure_mpa", num(design_pressure + pgd)),
             ("design_temperature_c", text("tank_design_temperature_c")),
             ("material", json!(design.material)),
             ("head_type", json!(design.head_type)),
@@ -1096,6 +1118,7 @@ fn simulate_measured(
     inp.bow_rake_length_m = Some(rake_length);
     inp.bow_rake_rise_m = Some(rake_rise);
     inp.hull_shape = hull_shape_of(p)?;
+    inp.downflooding_angle_deg = opt_float(p, "downflooding_angle_deg")?;
     inp.aft_design = aft_design_of(p)?;
     inp.stern_block_mass = stern_mass_of(p)?;
     inp.stern_geometry = stern.cloned();
@@ -1195,6 +1218,12 @@ fn simulate_measured(
     measured.deadweight_t = Some(deadweight);
     // Issue #337: the liquid bulk layout, for the liquid Measures.
     measured.liquid = r.liquid.clone();
+    // Issue #454: what the Vessel Model is assembled from.
+    measured.vessel = Some(ovcd_core::vessel_model::VesselModelInputs {
+        capacity: inp.clone(),
+        result: r.clone(),
+        hull: hull.table.clone(),
+    });
     // Issue #448: Cb and the hydrostatics at the laden level draught; the reported draught is the
     // one at mid-length of the free-trim float when the hull has LCG data (a dry bulk hull with
     // its stern block mass), with the deadweight at the middle of the hold zone.
@@ -1285,6 +1314,8 @@ fn simulate_measured(
     // Issue #426: the IS Code conditions, with the ballast tanks of the hold arrangement.
     let mut is_code_stability = Value::Null;
     let mut loading_conditions = Value::Null;
+    // Issue #426: the ballast tanks of a dry bulk hull, for the drawing (not hashed).
+    let mut ballast_drawing: Option<(&'static str, Value)> = None;
     // Issue #332 (spec 0006): the liquid bulk conditions are the IS Code ones with the cargo tanks
     // of the layout, and the worst slack-tank condition besides.
     if is_code(p) && phase == CargoClass::LiquidBulk {
@@ -1316,8 +1347,9 @@ fn simulate_measured(
             loading_conditions = loading_conditions_json(&conds, &tanks, consumables_t, rho, true);
             // Issue #341: the assumed damages of ADN 9.3.x.15 on the laden departure condition.
             if let Some(liquid) = r.liquid.as_ref() {
-                measured.damage =
-                    crate::liquid::damage_verdicts(&hull, liquid, cargo_key, rho, &conds);
+                let marpol = rules.sets.iter().any(|s| s.id == "marpol-i");
+                (measured.damage, measured.marpol_damage) =
+                    crate::liquid::damage_verdicts(&hull, liquid, cargo_key, rho, &conds, marpol);
             }
             // The liquid conditions stay out of the Rule Trace until the liquid Rule Sets exist: the
             // IS Code Rule Set would block a low-freeboard tank barge on seagoing criteria.
@@ -1340,6 +1372,7 @@ fn simulate_measured(
             })
         };
         let tanks = ovcd_core::compartments::ballast_tanks(&inp, &r);
+        ballast_drawing = Some(crate::liquid::ballast_drawing_value(&tanks));
         let conds = is_code_conditions(
             p,
             &IsCodeHull {
@@ -1378,6 +1411,7 @@ fn simulate_measured(
         (phase != CargoClass::LiquidBulk).then_some(&inp),
     );
     dry_parts.extend(crate::liquid::drawing_values(&r));
+    dry_parts.extend(ballast_drawing);
     if let Some(g) = stern {
         dry_parts.push(("stern", stern_drawing(g)));
     }
@@ -1426,6 +1460,7 @@ fn simulate_measured(
                     &r,
                     cargo_key,
                     &measured.damage,
+                    &measured.marpol_damage,
                 ),
                 (&r.stern_block_items, &r.trim_conditions),
             ),
@@ -1442,6 +1477,7 @@ fn with_liquid(
     r: &BargeCapacityResult,
     cargo_key: &str,
     damage: &[ovcd_core::measured::DamageVerdict],
+    marpol_damage: &[ovcd_core::measured::DamageVerdict],
 ) -> Value {
     if let (Some(l), Some(o)) = (r.liquid.as_ref(), v.as_object_mut()) {
         o.insert(
@@ -1454,6 +1490,12 @@ fn with_liquid(
         // Issue #341: what each assumed damage does (unhashed: it is an output of the Rule Trace's input).
         if !damage.is_empty() {
             o.insert("damage".to_string(), crate::liquid::damage_json(damage));
+        }
+        if !marpol_damage.is_empty() {
+            o.insert(
+                "marpol_damage".to_string(),
+                crate::liquid::damage_json(marpol_damage),
+            );
         }
     }
     v
@@ -1914,6 +1956,7 @@ fn option_hull(
         bow_rake_rise_m: rise,
         stern: stern.cloned(),
         shape: hull_shape_of(p)?,
+        downflooding_deg: opt_float(p, "downflooding_angle_deg")?,
     })
     .map_err(|e| Stop::Raised("ValueError".to_string(), format!("{e}")))
 }
@@ -2287,6 +2330,7 @@ fn simulate_gas(
         bow_rake_length_m: opt_float(p, "bow_rake_length_m")?,
         bow_rake_rise_m: opt_float(p, "bow_rake_rise_m")?,
         hull_shape: hull_shape_of(p)?,
+        downflooding_angle_deg: opt_float(p, "downflooding_angle_deg")?,
         pushed_stern_void_m: get_or(
             p,
             "pushed_stern_void_m",
@@ -2650,6 +2694,11 @@ fn simulate_gas(
                     (s, plane)
                 }),
                 checks: Vec::new(),
+                vessel: Some(ovcd_core::vessel_model::VesselModelInputs {
+                    capacity: f.engine_inputs.clone(),
+                    result: f.engine_result.clone(),
+                    hull: fit_hull.table.clone(),
+                }),
                 ..Measured::default()
             },
         )

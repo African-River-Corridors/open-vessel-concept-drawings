@@ -146,6 +146,35 @@ pub fn calculate_tank_arrangement_wide(
 
     let outer_radius = outer_diameter / 2.0;
 
+    // Issue #577: the design pressure is the IGC 4.23.1.2 minimum of this tank: Po = 0.2 + A C
+    // (rho_r)^1.5, with C from the outer diameter and the overall tank length (neither depends on
+    // the wall, so there is nothing to iterate) and sigma_m the allowable stress of the wall formula.
+    let design_pressure = if inputs.design_pressure_igc_minimum {
+        let bow = inputs.bow_non_tank_length.ok_or_else(none_operand_error)?;
+        let stern = inputs
+            .stern_non_tank_length
+            .ok_or_else(none_operand_error)?;
+        let tank_length_total = inputs.loa
+            - bow
+            - stern
+            - ((i128::from(inputs.n_tanks_long) - 1) as f64) * inputs.tank_gap_longitudinal;
+        let overall = div_count(tank_length_total, inputs.n_tanks_long)?;
+        let sigma = match inputs.tank_allowable_stress {
+            Some(f) => f,
+            None => {
+                crate::pressure_vessel::get_tank_material(&inputs.tank_material)?.allowable_stress
+            }
+        };
+        0.2 + crate::pressure_vessel::igc_dynamic_pressure_term_mpa(
+            sigma,
+            outer_diameter,
+            overall,
+            inputs.liquid_pressure_density / 1000.0,
+        )
+    } else {
+        inputs.design_pressure
+    };
+
     // --- Wall thickness determination ---
     let (wall_cyl_mm, wall_head_mm) = match inputs.tank_wall_thickness {
         // User-provided fixed thickness.
@@ -162,7 +191,7 @@ pub fn calculate_tank_arrangement_wide(
             };
             calculate_wall_thicknesses_with(
                 formula_diameter,
-                inputs.design_pressure
+                design_pressure
                     + liquid_pressure_mpa(
                         inputs.liquid_pressure_accel,
                         formula_diameter,
@@ -298,7 +327,7 @@ pub fn calculate_tank_arrangement_wide(
         tank_top_above_keel,
         cylinder_wall_thickness: wall_cyl_mm,
         head_wall_thickness: wall_head_mm,
-        design_pressure: inputs.design_pressure,
+        design_pressure,
         tank_material: if inputs.tank_wall_thickness.is_none() {
             inputs.tank_material.clone()
         } else {

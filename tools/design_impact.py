@@ -44,7 +44,8 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from changelog_fragments import (fragment_holds, fragment_problems, write_impact)  # noqa: E402
+from changelog_fragments import (CHANGES, fragment_holds, fragment_problems, fragments, split,  # noqa: E402
+                                 write_impact)
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "target" / "design-impact"
@@ -53,7 +54,7 @@ START, END = "<!-- design-impact:start -->", "<!-- design-impact:end -->"
 # Top-level results keys that are not results (drawing geometry, what a view marks). The results hash
 # leaves them out too: UNHASHED_KEYS in crates/ovcd-format/src/run.rs. tests/test_design_impact_unhashed_keys.py
 # checks that the two lists agree.
-UNHASHED_KEYS = ("drawing", "stability_marks", "cost_masses", "cost", "text_ids", "rule_trace", "calibration", "damage")
+UNHASHED_KEYS = ("drawing", "stability_marks", "cost_masses", "cost", "text_ids", "rule_trace", "calibration", "damage", "marpol_damage")
 
 LABEL = "design-change"
 MAX_ROWS = 40
@@ -172,6 +173,10 @@ OPTIONAL_INPUT_CASES = (
     # Where the opening setback is measured from (issue #381), set to the Defaults Profile value.
     ("opening_setback_basis", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"opening_setback_basis": "cargo_area"}),
+    # The angle of down-flooding (issue #282): an angle of 40 degrees or more ends no area sooner, so
+    # a design that types one has the same results as one that gives none.
+    ("downflooding_angle_deg", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"downflooding_angle_deg": 60.0}),
     # The aft block inputs (issue #4, slice 4), set to their defaults in the same way. A self-propelled
     # hull carries the block; the unit counts default by Cargo phase (gas 1 battery and 2
     # accommodation units, dry bulk 2 and 1), so each has a gas and a dry case.
@@ -466,6 +471,14 @@ def cases() -> dict[str, dict]:
         "crude_oil", "integral_tanks", "self_propelled", 90.0, 14.0, 4.5, service_area="coastal-and-river")
     out["sweep crude carries nothing (draught limit)"] = _inputs(
         "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5, draught_limit_m=0.3)
+    # Diesel fuel, the second oil (issue #342): a data row, so one pushed hull, one coastal self-propelled
+    # hull and one that carries nothing are enough to show its results (type N open, density 835).
+    out["sweep diesel pushed 90x14"] = _inputs(
+        "diesel_en590", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5)
+    out["sweep diesel coastal service 90x14"] = _inputs(
+        "diesel_en590", "integral_tanks", "self_propelled", 90.0, 14.0, 4.5, service_area="coastal-and-river")
+    out["sweep diesel carries nothing (draught limit)"] = _inputs(
+        "diesel_en590", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5, draught_limit_m=0.3)
     # One case for each optional input.
     for name, cargo, containment, formation, loa, beam, depth, extra in OPTIONAL_INPUT_CASES:
         out[f"sweep optional {name}"] = _inputs(cargo, containment, formation, loa, beam, depth, **extra)
@@ -497,7 +510,26 @@ def cases() -> dict[str, dict]:
     out["sweep hull shipd 80x14"] = _inputs(
         "bauxite", "box_hold", "pushed_barge", 80.0, 14.0, 4.5, hull_form="shipd",
         loading_conditions="legacy")
+    # Issue #453: a ShipD-style hull with a bow bulb and a stern bulb (dataset row 763 of Set 1,
+    # from the benchmark sample), in the legacy loading conditions. A base from before the bulbs
+    # refuses it: the case shows as new.
+    names, hull = _shipd_bulb_hull("Constrained_Randomized_Set_1", "763")
+    out["sweep hull shipd bulbs 80 m"] = _inputs(
+        "bauxite", "box_hold", "pushed_barge", 80.0, hull["Bd"] * 80.0, hull["Dd"] * 80.0,
+        hull_form="shipd", loading_conditions="legacy",
+        shipd_parameters={n: hull[n] for n in names if n not in ("LOA", "Bd", "Dd")})
     return out
+
+
+def _shipd_bulb_hull(set_name: str, row: str):
+    """The 45 ShipD parameters of one row of the committed benchmark sample, by header name."""
+    lines = (ROOT / "calibration" / "shipd" / "sample.csv").read_text().splitlines()
+    names = lines[0].split(",")[2:]
+    for line in lines[1:]:
+        cells = line.split(",")
+        if cells[0] == set_name and cells[1] == row:
+            return names, dict(zip(names, (float(c) for c in cells[2:])))
+    raise SystemExit(f"design_impact: no row {row} of {set_name} in calibration/shipd/sample.csv")
 
 
 # --- running ovcd -------------------------------------------------------------------------------
@@ -688,11 +720,15 @@ def compare(before: dict[str, dict], after: dict[str, dict]) -> list[dict]:
     return sorted(rows, key=lambda r: (-size(r), r["case"], r["quantity"]))
 
 
+def _cell(s) -> str:
+    return str(s).replace("|", "\\|").replace("\n", " ")
+
+
 def table(rows: list[dict]) -> str:
     shown = rows[:MAX_ROWS]
     lines = ["| Case | Quantity | Before | After | Change |", "|---|---|---|---|---|"]
     for r in shown:
-        cell = lambda s: str(s).replace("|", "\\|").replace("\n", " ")
+        cell = _cell
         lines.append(f"| {cell(r['case'])} | `{cell(r['quantity'])}` | {cell(show(r['before']))} "
                      f"| {cell(show(r['after']))} | {cell(r['change'])} |")
     if len(rows) > len(shown):
@@ -939,10 +975,51 @@ def changelog_has(tbl: str) -> bool:
     return CHANGELOG.exists() and tbl in CHANGELOG.read_text(encoding="utf-8")
 
 
-def recorded(tbl: str) -> bool:
-    """Whether the table is recorded: in a changelog fragment (changes/*.md) or, during the move to
-    fragments (issue #560), in CHANGELOG.md."""
-    return fragment_holds(tbl) or changelog_has(tbl)
+_ROW = re.compile(r"^\| (?P<case>.*?) \| `(?P<quantity>.*)` \| .* \|$")
+_MORE = re.compile(r"^\| \.\.\. \| (?P<n>\d+) more changed quantities \|")
+
+
+def table_rows(text: str) -> tuple[set[tuple[str, str]], int] | None:
+    """The (case, quantity) pairs a design-impact table names, and how many more it says it left out
+    ("... | N more changed quantities"). None when the text holds no table."""
+    if "| Case | Quantity |" not in text:
+        return None
+    pairs, more = set(), 0
+    for line in text.splitlines():
+        m = _MORE.match(line)
+        if m:
+            more += int(m["n"])
+            continue
+        m = _ROW.match(line)
+        if m and m["case"] != "Case":
+            pairs.add((m["case"], m["quantity"]))
+    return pairs, more
+
+
+def names_the_moved_rows(text: str, rows: list[dict]) -> bool:
+    """Whether the table in `text` names the rows that `rows` move (issue #625). The numbers may be from
+    an earlier base: a merge that moves other hashes changes every table's "before" column, and the
+    quantities this branch moves stay the same. The table lists at most MAX_ROWS rows, biggest first, and
+    counts the rest, so: every row it lists is a moved row, and its listed and counted rows together are
+    as many as the moved rows. With MAX_ROWS or fewer moved rows that means the same set."""
+    got = table_rows(text)
+    if got is None:
+        return False
+    named, more = got
+    moved = {(_cell(r["case"]), _cell(r["quantity"])) for r in rows}
+    return named <= moved and len(named) + more == len(moved)
+
+
+def fragment_names(rows: list[dict], folder: Path = CHANGES) -> bool:
+    """Whether the design-impact part of some fragment names the moved rows."""
+    return any(names_the_moved_rows(split(p.read_text(encoding="utf-8"))[1], rows) for p in fragments(folder))
+
+
+def recorded(tbl: str, rows: list[dict] | None = None) -> bool:
+    """Whether the change is recorded: a changelog fragment (changes/*.md) holds this table, or, when
+    `rows` is given, names the rows it moves (issue #625); or, during the move to fragments (issue #560),
+    CHANGELOG.md holds the table."""
+    return fragment_holds(tbl) or changelog_has(tbl) or (rows is not None and fragment_names(rows))
 
 
 def merge_group_problems(base_sha: str) -> list[str]:
@@ -1043,8 +1120,8 @@ def main() -> int:
                   + "\n  ".join(bad), file=sys.stderr)
             return 1
         return 0
-    if args.mode == "gate" and rows and ahead and not recorded(tbl):
-        print("design_impact: this branch moves designs but no changelog fragment holds the table above.\n"
+    if args.mode == "gate" and rows and ahead and not recorded(tbl, rows):
+        print("design_impact: this branch moves designs but no changelog fragment names the rows moved above.\n"
               "  Run: python3 tools/design_impact.py changelog   and commit changes/<branch>.md", file=sys.stderr)
         return 1
     return 0

@@ -50,9 +50,10 @@ known engineering findings are under review in the open
   raked bow and the stern form, with a bilge radius, sheer and camber when set. The draught, trim, GM and
   GZ come from these sections, and the block coefficient is a result, not an input. The weights and
   the resistance wetted surface still use a box hull. Known limitation: the 0 to 40 degree and
-  30 to 40 degree areas of IS Code 2008 Part A 2.2.1 always run to 40 degrees. The text stops them at
-  the down-flooding angle when it is less, and the model has no down-flooding angle yet, so a hull whose
-  openings immerse before 40 degrees can pass when it should fail
+  30 to 40 degree areas of IS Code 2008 Part A 2.2.1 run to 40 degrees unless you type an angle of
+  down-flooding below 40 degrees (the input `downflooding_angle_deg`). The text stops them at that angle
+  when it is less, and the model has no openings with heights to work the angle out, so with none typed a
+  hull whose openings immerse before 40 degrees can pass when it should fail
   ([#282](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/282)).
 - **Journey de-rating.** Cargo per trip when the channel, not the hull, limits the draught
   (`core.journey_derating`).

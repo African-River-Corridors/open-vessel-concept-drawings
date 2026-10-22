@@ -1,6 +1,6 @@
 //! The ShipD-style parametric hull (spec 0008, "ShipD-style hull", issue #452): a Sections Table
-//! generator written for OVCD from the definitions of the Ship-D hull parameterisation, without
-//! bulbs.
+//! generator written for OVCD from the definitions of the Ship-D hull parameterisation, with the
+//! bow and stern bulbs (issue #453).
 //!
 //! Sources, read for this module: Bagazinski, N. J., and Ahmed, F., "Ship-D: Ship Hull Dataset for
 //! Design Optimization Using Machine Learning", Proc. ASME IDETC/CIE 2023 (arXiv:2305.08279, v2);
@@ -39,8 +39,33 @@
 //! - Constraints (`input_Constraints` and the four functions it joins): the values `g`, satisfied
 //!   when `g <= 0`, in the PDF's order. The PDF writes "> 1" for "is strictly positive" (indices 3
 //!   to 5 and 31 to 33); the reading is "> 0" (`g = -Rc`, and so on). Index 1 compares `WL` with `Dd`
-//!   as lengths. The thirteen bulb constraints (36 to 48) are -1 when there is no bulb; the bulbs
-//!   (and the bases of `Kappa_SB` and `Bbb` that the PDFs disagree on) come with #453.
+//!   as lengths. The thirteen bulb constraints (36 to 48) are -1 when there is no bulb.
+//! - Bulbs (`GenBulbForms`, `BB_profile`, `halfBeam_BB`, `SB_profile`, `halfBeam_SB`,
+//!   `gen_waterline_bow_BB`, `gen_waterline_stern_SB`, `BulbformConstraints`): each bulb is an
+//!   ellipsoid of its own. Its widest part is at the height `Hbb WL` (`Hsb HSBOA WL` for the stern
+//!   bulb), where the half-width is `Bbb` (`Bsb`) of the midship half-breadth at that height (the
+//!   overview PDF's reading; the code's comment says "of Bd at the FP"). Above that height the
+//!   vertical radius is the rest of the design draught (`(1 - Hbb) WL`), below it the height itself,
+//!   so the bulb closes at the keel line and at `WL` (`HSBOA WL`). It leads the bow `Lbb LOA` forward
+//!   of the stem at the design draught, with its widest part `Lbbm` of that length from the front
+//!   (`Lbbm` negative puts it behind the stem). The stern bulb starts at `Kappa_SB Ls` aft of the
+//!   start of the stern taper: the code and its comment take `Ls`, the overview PDF says "of Lb";
+//!   the reading is `Ls`, since the bulb must start on the stern taper. At each height below the
+//!   design draught the waterline runs along the bulb to the half-width the hull's own waterline
+//!   reaches at the bulb's widest part, with a quartic fillet between: it starts and ends where the
+//!   fraction `Rbb / 2` (`Rsb / 2`) of the shorter of the two distances lies each side of the
+//!   crossing, matches value and slope to the bulb and to the hull at its two ends, and has no
+//!   curvature at the bulb end of the bow fillet and at the bulb end of the stern fillet. The
+//!   dataset's code writes that last row with `6 x^2` where the second derivative has `6 x`; the row
+//!   is written here from the definition of the curvature, and the hulls where the difference shows
+//!   are in the benchmark report. Where the bulb is wider than the hull at a height, so that the two
+//!   waterlines never meet, the waterline is the wider of the hull's and the bulb's narrowed to the
+//!   hull's half-breadth.
+//! - The bulb constraints (36 to 48): the index order follows the constraints PDF; for the three
+//!   "forward of `DELTA_BOW`" rows the code's order is at the base, at the design draught, at the
+//!   vertex, the PDF's is at the base, at the vertex, at the design draught. All three must hold, so
+//!   only the label differs. A bulb needs a zero deadrise or a positive keel radius (rows 36 to 38
+//!   and 42 to 44 are 1, a failure, otherwise): the dataset's code does this by branch.
 //!
 //! Axes: the dataset's x runs aft from the stem; OVCD's runs forward from the aft end, so a
 //! Section's x is `L - x_ShipD`.
@@ -177,8 +202,6 @@ pub struct ConstraintFailure {
 pub enum ShipdError {
     /// The parameters fail these constraints.
     Constraints(Vec<ConstraintFailure>),
-    /// A bulb is asked for; the bulbs come with #453.
-    Bulb,
     /// Length, beam or depth is not a positive finite number, or a parameter is not finite.
     NotFinite,
     /// The sections the generator wrote were refused.
@@ -196,7 +219,6 @@ impl fmt::Display for ShipdError {
                 }
                 Ok(())
             }
-            ShipdError::Bulb => write!(f, "a ShipD hull with a bulb is not built yet"),
             ShipdError::NotFinite => {
                 write!(
                     f,
@@ -295,6 +317,219 @@ fn vertex(a: f64, b: f64) -> f64 {
     if a == 0.0 { -1.0 } else { -b / (2.0 * a) }
 }
 
+/// A bulb's ellipsoid, bow or stern (`GenBulbForms`): its widest part is at height `rz_lo`, its
+/// vertical radius is `rz_up` above that and `rz_lo` below it.
+#[derive(Debug, Clone, Copy)]
+struct Bulb {
+    /// Where the bulb leaves the hull: the stem at the design draught (bow), `SBs` (stern).
+    start: f64,
+    rz_up: f64,
+    rz_lo: f64,
+    /// The half-width of its widest part.
+    ry: f64,
+    /// The x radius of the end ellipse, and the x of the widest part.
+    rx: f64,
+    cx: f64,
+    /// The fillet radius, as a fraction.
+    fillet: f64,
+    /// The bulb exists below this height.
+    top: f64,
+}
+
+impl Bulb {
+    fn root(&self, z: f64) -> f64 {
+        let r = if z >= self.rz_lo {
+            self.rz_up
+        } else {
+            self.rz_lo
+        };
+        if r <= 0.0 {
+            return 0.0;
+        }
+        let t = (z - self.rz_lo) / r;
+        sqrt(fabs(1.0 - t * t))
+    }
+
+    /// The x radius of the end ellipse at height `z`.
+    fn rx_at(&self, z: f64) -> f64 {
+        self.root(z) * self.rx
+    }
+
+    /// The half-width of the widest part at height `z`.
+    fn ry_at(&self, z: f64) -> f64 {
+        self.root(z) * self.ry
+    }
+
+    /// The half-width at `x`; `aft` is true for the stern bulb, whose end ellipse is aft of `cx`.
+    fn half_width(&self, z: f64, x: f64, aft: bool) -> f64 {
+        let (ry, rx) = (self.ry_at(z), self.rx_at(z));
+        if (aft && x <= self.cx) || (!aft && x >= self.cx) || rx <= 0.0 {
+            return ry;
+        }
+        let t = (x - self.cx) / rx;
+        sqrt(fabs(1.0 - t * t)) * ry
+    }
+
+    /// The slope `dy/dx` of the end ellipse at `x`.
+    fn slope(&self, z: f64, x: f64, aft: bool) -> f64 {
+        let (ry, rx) = (self.ry_at(z), self.rx_at(z));
+        if (aft && x <= self.cx) || (!aft && x >= self.cx) || rx <= 0.0 {
+            return 0.0;
+        }
+        let t = (x - self.cx) / rx;
+        -ry * t / (rx * sqrt(fabs(1.0 - t * t)))
+    }
+}
+
+/// The quartic `c0 + c1 t + c2 t^2 + c3 t^3 + c4 t^4` that starts at `(0, ya)` with slope `da` and no
+/// curvature, and ends at `(h, yb)` with slope `db`.
+fn quartic(ya: f64, da: f64, yb: f64, db: f64, h: f64) -> [f64; 5] {
+    let a = yb - ya - da * h;
+    let b = db - da;
+    [
+        ya,
+        da,
+        0.0,
+        (4.0 * a - h * b) / (h * h * h),
+        (h * b - 3.0 * a) / (h * h * h * h),
+    ]
+}
+
+fn quartic_at(c: &[f64; 5], t: f64) -> f64 {
+    c[0] + t * (c[1] + t * (c[2] + t * (c[3] + t * c[4])))
+}
+
+/// The smallest x in `[lo, hi]` where `f` is 0: the first sign change on an even grid, then
+/// bisection.
+fn first_root(f: impl Fn(f64) -> f64, lo: f64, hi: f64) -> Option<f64> {
+    const N: u32 = 256;
+    let (mut xa, mut fa) = (lo, f(lo));
+    if fa == 0.0 {
+        return Some(lo);
+    }
+    for i in 1..=N {
+        let xb = lo + (hi - lo) * f64::from(i) / f64::from(N);
+        let fb = f(xb);
+        if fb == 0.0 || (fa < 0.0) != (fb < 0.0) {
+            let (mut a, mut b, mut fa) = (xa, xb, fa);
+            for _ in 0..60 {
+                let m = 0.5 * (a + b);
+                let fm = f(m);
+                if (fm < 0.0) == (fa < 0.0) {
+                    a = m;
+                    fa = fm;
+                } else {
+                    b = m;
+                }
+            }
+            return Some(0.5 * (a + b));
+        }
+        (xa, fa) = (xb, fb);
+    }
+    None
+}
+
+/// The fillet between a bulb and the hull at one height: bulb to `xr0`, the quartic to `xr1`, the
+/// hull from there. The coefficients are in `t = x - xr0` (bow) or `t = xr1 - x` (stern).
+#[derive(Debug, Clone, Copy)]
+struct Fillet {
+    xr0: f64,
+    xr1: f64,
+    coef: [f64; 5],
+    /// The coefficients are in x itself (the dataset's row), not in the local `t`.
+    absolute: bool,
+}
+
+impl Fillet {
+    fn at(&self, x: f64, bow: bool) -> f64 {
+        if self.absolute {
+            quartic_at(&self.coef, x)
+        } else if bow {
+            quartic_at(&self.coef, x - self.xr0)
+        } else {
+            quartic_at(&self.coef, self.xr1 - x)
+        }
+    }
+}
+
+/// Which curvature row closes the fillet's quartic.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FilletRow {
+    /// No curvature at the bulb end: the second derivative `12 a x^2 + 6 b x + 2 c`.
+    Definition,
+    /// The dataset's code as written: `12 a x^2 + 6 b x^2 + 2 c` at the same end. For the
+    /// benchmark report only: it shows which hulls the difference reaches.
+    DatasetCode,
+}
+
+/// The quartic in x through `(x0, y0)` and `(x1, y1)` with slopes `d0`, `d1` and the dataset's
+/// curvature row at `xc` (`6 x^2` where the second derivative has `6 x`): the five-by-five system
+/// solved by elimination with row pivoting.
+fn quartic_dataset_row(x0: f64, y0: f64, d0: f64, x1: f64, y1: f64, d1: f64, xc: f64) -> [f64; 5] {
+    let (c0, c1) = (x0 * x0 * x0, x1 * x1 * x1);
+    let mut m = [
+        [c0 * x0, c0, x0 * x0, x0, 1.0, y0],
+        [c1 * x1, c1, x1 * x1, x1, 1.0, y1],
+        [4.0 * c0, 3.0 * x0 * x0, 2.0 * x0, 1.0, 0.0, d0],
+        [4.0 * c1, 3.0 * x1 * x1, 2.0 * x1, 1.0, 0.0, d1],
+        [12.0 * xc * xc, 6.0 * xc * xc, 2.0, 0.0, 0.0, 0.0],
+    ];
+    for c in 0..5 {
+        let mut p = c;
+        for r in c + 1..5 {
+            if fabs(m[r][c]) > fabs(m[p][c]) {
+                p = r;
+            }
+        }
+        m.swap(c, p);
+        let pivot = m[c];
+        for row in m.iter_mut().skip(c + 1) {
+            let f = row[c] / pivot[c];
+            for (v, p) in row.iter_mut().zip(pivot).skip(c) {
+                *v -= f * p;
+            }
+        }
+    }
+    let mut a = [0.0; 5];
+    for c in (0..5).rev() {
+        let mut v = m[c][5];
+        for k in c + 1..5 {
+            v -= m[c][k] * a[k];
+        }
+        a[c] = v / m[c][c];
+    }
+    // a is [x^4 .. 1]: the highest power first; `quartic_at` takes the lowest first.
+    [a[4], a[3], a[2], a[1], a[0]]
+}
+
+/// The waterline of the hull at one height: where it starts and ends, the midbody half-breadth and
+/// the fillets of the bulbs at that height.
+#[derive(Debug, Clone)]
+pub struct Waterline {
+    z: f64,
+    start: f64,
+    end: f64,
+    y_mid: f64,
+    bow: BowLine,
+    stern: SternLine,
+}
+
+#[derive(Debug, Clone, Copy)]
+enum BowLine {
+    /// No bulb at this height.
+    Plain,
+    /// The bulb and the hull meet: a fillet between.
+    Filleted(Fillet),
+    /// The bulb is wider than the hull at every x: the wider of the hull's and the narrowed bulb's.
+    Wider,
+}
+
+#[derive(Debug, Clone, Copy)]
+enum SternLine {
+    Plain,
+    Filleted(Fillet),
+}
+
 /// The ShipD hull at its dimensions (m): every curve of the definitions, in the dataset's x (aft from
 /// the stem).
 #[derive(Debug, Clone)]
@@ -325,7 +560,9 @@ pub struct Shape {
     rc_trans: f64,
     mid: CrossSection,
     transom: CrossSection,
-    bulb: bool,
+    beta: f64,
+    bb: Option<Bulb>,
+    sb: Option<Bulb>,
 }
 
 impl Shape {
@@ -388,7 +625,7 @@ impl Shape {
         let rc_trans = v[29] * bc_trans;
         let rk_trans = v[30] * dd * (1.0 - v[23]);
         let transom = CrossSection::new(sk_z, rk_trans, v[27], bc_trans, rc_trans, (bs, dd));
-        Self {
+        let mut shape = Self {
             loa,
             lb,
             ls,
@@ -415,8 +652,41 @@ impl Shape {
             rc_trans,
             mid,
             transom,
-            bulb: v[31] != 0.0 || v[32] != 0.0,
+            beta: v[8],
+            bb: None,
+            sb: None,
+        };
+        let wl = shape.wl;
+        if v[31] != 0.0 {
+            let fp = shape.bow_profile(wl);
+            let zc = v[34] * wl;
+            shape.bb = Some(Bulb {
+                start: fp,
+                rz_up: (1.0 - v[34]) * wl,
+                rz_lo: zc,
+                ry: shape.mid.half_breadth(zc) * v[35],
+                rx: v[33] * loa * (1.0 - v[36]),
+                cx: fp - loa * v[33] * v[36],
+                fillet: v[37],
+                top: wl,
+            });
         }
+        if v[32] != 0.0 {
+            let start = v[38] * ls + shape.lm + shape.lb;
+            let top = wl * v[40];
+            let zc = v[41] * top;
+            shape.sb = Some(Bulb {
+                start,
+                rz_up: (1.0 - v[41]) * top,
+                rz_lo: zc,
+                ry: shape.mid.half_breadth(zc) * v[42],
+                rx: v[39] * loa * (1.0 - v[43]),
+                cx: start + loa * v[39] * v[43],
+                fillet: v[44],
+                top,
+            });
+        }
+        shape
     }
 
     fn bowrise(&self, z: f64) -> f64 {
@@ -452,8 +722,15 @@ impl Shape {
         sqrt(z / self.sternrise) + self.lb + self.lm + self.ls * self.kappa_stern
     }
 
-    /// The x of the stern at height `z`: the stern rise below `SK_z`, the transom above.
+    /// The x of the stern at height `z`: the stern rise below `SK_z`, the transom above (the start
+    /// of the stern bulb, where it has one).
     pub fn stern_profile(&self, z: f64) -> f64 {
+        // With a stern bulb the taper leads into the bulb: it ends where the bulb starts.
+        if let Some(b) = &self.sb
+            && z <= b.top
+        {
+            return b.start;
+        }
         if z <= self.sk.1 {
             self.sternrise_x(z)
         } else {
@@ -477,36 +754,167 @@ impl Shape {
         }
     }
 
+    /// The cubic waterline of the bow at height `z`: from the stem (0, slope `tan drift`) to the
+    /// midship half-breadth (slope 0) at `delta_bow`.
+    fn bow_y(&self, x: f64, z: f64) -> f64 {
+        let x_bow = self.bow_profile(z);
+        let h = self.delta_bow(z) - x_bow;
+        let s = (x - x_bow) / h;
+        let m = tan(self.drift(z));
+        self.mid.half_breadth(z) * s * s * (3.0 - 2.0 * s) + m * h * s * (1.0 - s) * (1.0 - s)
+    }
+
+    fn bow_dydx(&self, x: f64, z: f64) -> f64 {
+        let x_bow = self.bow_profile(z);
+        let h = self.delta_bow(z) - x_bow;
+        let s = (x - x_bow) / h;
+        let m = tan(self.drift(z));
+        self.mid.half_breadth(z) * 6.0 * s * (1.0 - s) / h + m * (1.0 - s) * (1.0 - 3.0 * s)
+    }
+
+    /// Whether the stern taper at height `z` is an ellipse (else a parabola).
+    fn stern_ellipse(&self, z: f64) -> bool {
+        if z >= self.sk.1 { self.ep_t } else { self.ep_s }
+    }
+
+    /// The stern waterline at height `z`: from the midship half-breadth at `delta_stern` to the
+    /// transom's, a quarter ellipse or a parabola.
+    fn stern_y(&self, x: f64, z: f64) -> f64 {
+        let y_mid = self.mid.half_breadth(z);
+        let y_t = self.transom_half_breadth(z);
+        let d = self.delta_stern(z);
+        let u = (x - d) / (self.stern_profile(z) - d);
+        if self.stern_ellipse(z) {
+            (y_mid - y_t) * sqrt(fabs(1.0 - u * u)) + y_t
+        } else {
+            y_mid + (y_t - y_mid) * u * u
+        }
+    }
+
+    fn stern_dydx(&self, x: f64, z: f64) -> f64 {
+        let y_mid = self.mid.half_breadth(z);
+        let y_t = self.transom_half_breadth(z);
+        let d = self.delta_stern(z);
+        let span = self.stern_profile(z) - d;
+        let u = (x - d) / span;
+        if self.stern_ellipse(z) {
+            -(y_mid - y_t) * u / (span * sqrt(fabs(1.0 - u * u)))
+        } else {
+            2.0 * (y_t - y_mid) * u / span
+        }
+    }
+
+    /// The x on the stern waterline at height `z` where its half-breadth is `y`.
+    fn stern_x_at(&self, y: f64, z: f64) -> f64 {
+        let y_mid = self.mid.half_breadth(z);
+        let y_t = self.transom_half_breadth(z);
+        let d = self.delta_stern(z);
+        let span = self.stern_profile(z) - d;
+        let k = if y_mid > y_t {
+            ((y - y_t) / (y_mid - y_t)).clamp(0.0, 1.0)
+        } else {
+            1.0
+        };
+        let u = if self.stern_ellipse(z) {
+            sqrt(1.0 - k * k)
+        } else {
+            sqrt(1.0 - k)
+        };
+        d + span * u
+    }
+
+    /// The waterline at height `z` (the bulbs, where there are bulbs below `z`, are in it).
+    pub fn waterline(&self, z: f64, row: FilletRow) -> Waterline {
+        let y_mid = self.mid.half_breadth(z);
+        let bb = self.bb.filter(|b| z > 0.0 && z < b.top);
+        let sb = self.sb.filter(|b| z > 0.0 && z < b.top);
+        let start = match &bb {
+            Some(b) => b.cx - b.rx_at(z),
+            None => self.bow_profile(z),
+        };
+        let end = match &sb {
+            Some(b) => b.cx + b.rx_at(z),
+            None => self.stern_profile(z),
+        };
+        let bow = match &bb {
+            None => BowLine::Plain,
+            Some(b) => {
+                let x2 = self.delta_bow(z);
+                let y_b = b.ry_at(z);
+                let lo = self.bow_profile(z).max(start);
+                match first_root(|x| self.bow_y(x, z) - y_b, lo, x2) {
+                    None => BowLine::Wider,
+                    Some(x_int) => {
+                        let dx = fabs((x_int - start).min(x2 - x_int));
+                        let (xr0, xr1) = (x_int - dx * b.fillet / 2.0, x_int + dx * b.fillet / 2.0);
+                        let h = xr1 - xr0;
+                        let (y0, d0) = (b.half_width(z, xr0, false), b.slope(z, xr0, false));
+                        let (y1, d1) = (self.bow_y(xr1, z), self.bow_dydx(xr1, z));
+                        let (coef, absolute) = if h <= 0.0 {
+                            ([0.0; 5], false)
+                        } else if row == FilletRow::DatasetCode {
+                            (quartic_dataset_row(xr0, y0, d0, xr1, y1, d1, xr0), true)
+                        } else {
+                            (quartic(y0, d0, y1, d1, h), false)
+                        };
+                        BowLine::Filleted(Fillet {
+                            xr0,
+                            xr1,
+                            coef,
+                            absolute,
+                        })
+                    }
+                }
+            }
+        };
+        let stern = match &sb {
+            None => SternLine::Plain,
+            Some(b) => {
+                let x1 = self.delta_stern(z);
+                let y_b = b.ry_at(z);
+                let x_int = if y_b >= y_mid {
+                    b.start
+                } else {
+                    self.stern_x_at(y_b, z)
+                };
+                let dx = fabs((x_int - x1).min(end - x_int));
+                let (xr0, xr1) = (x_int - dx * b.fillet / 2.0, x_int + dx * b.fillet / 2.0);
+                let h = xr1 - xr0;
+                let (y0, d0) = (self.stern_y(xr0, z), self.stern_dydx(xr0, z));
+                let (y1, d1) = (b.half_width(z, xr1, true), b.slope(z, xr1, true));
+                let (coef, absolute) = if h <= 0.0 {
+                    ([0.0; 5], false)
+                } else if row == FilletRow::DatasetCode {
+                    (quartic_dataset_row(xr0, y0, d0, xr1, y1, d1, xr1), true)
+                } else {
+                    // In `t = xr1 - x`, running from the bulb to the hull.
+                    (quartic(y1, -d1, y0, -d0, h), false)
+                };
+                SternLine::Filleted(Fillet {
+                    xr0,
+                    xr1,
+                    coef,
+                    absolute,
+                })
+            }
+        };
+        Waterline {
+            z,
+            start,
+            end,
+            y_mid,
+            bow,
+            stern,
+        }
+    }
+
     /// The half-breadth at (x_ShipD, z); 0 outside the hull.
     pub fn half_breadth(&self, x: f64, z: f64) -> f64 {
         if !(0.0..=self.dd).contains(&z) {
             return 0.0;
         }
-        let (x_bow, x_stern) = (self.bow_profile(z), self.stern_profile(z));
-        if x <= x_bow || x >= x_stern {
-            return 0.0;
-        }
-        let y_mid = self.mid.half_breadth(z);
-        let (d_bow, d_stern) = (self.delta_bow(z), self.delta_stern(z));
-        if x < d_bow {
-            // The cubic from the stem (0, slope tan drift) to the midship half-breadth (slope 0).
-            let h = d_bow - x_bow;
-            let s = (x - x_bow) / h;
-            let m = tan(self.drift(z));
-            return y_mid * s * s * (3.0 - 2.0 * s) + m * h * s * (1.0 - s) * (1.0 - s);
-        }
-        if x <= d_stern {
-            return y_mid;
-        }
-        let y_t = self.transom_half_breadth(z);
-        let span = x_stern - d_stern;
-        let u = (x - d_stern) / span;
-        let ellipse = if z >= self.sk.1 { self.ep_t } else { self.ep_s };
-        if ellipse {
-            (y_mid - y_t) * sqrt(fabs(1.0 - u * u)) + y_t
-        } else {
-            y_mid + (y_t - y_mid) * u * u
-        }
+        self.waterline(z, FilletRow::Definition)
+            .half_breadth(self, x)
     }
 
     /// The 49 constraint values `g` (satisfied when `g <= 0`), in the dataset's order.
@@ -564,6 +972,40 @@ impl Shape {
         g[33] = -t.chine.1;
         g[34] = t.chine_bottom.0 - self.bc_trans;
         g[35] = t.keel_tangent.0 - t.chine_bottom.0;
+        let mid_half = |z: f64| self.mid.half_breadth(z);
+        // A bulb needs a zero deadrise or a positive keel radius.
+        let bulb_rows = |b: &Bulb| {
+            if self.beta == 0.0 {
+                (-1.0, -1.0, b.ry - mid_half(b.rz_lo))
+            } else if self.rk > 0.0 {
+                (b.rz_lo - self.rk, b.ry - self.rk, b.ry - mid_half(b.rz_lo))
+            } else {
+                (1.0, 1.0, 1.0)
+            }
+        };
+        if let Some(b) = &self.bb {
+            (g[36], g[37], g[38]) = bulb_rows(b);
+            g[39] = b.cx - self.delta_bow(0.0);
+            let zv = vertex(self.delta_bow[0], self.delta_bow[1]);
+            if (0.0..=self.wl).contains(&zv) {
+                g[40] = b.cx - self.delta_bow(zv);
+            }
+            g[41] = b.cx - self.delta_bow(self.wl);
+        }
+        if let Some(b) = &self.sb {
+            (g[42], g[43], g[44]) = bulb_rows(b);
+            g[45] = if self.beta == 0.0 || self.rk > 0.0 {
+                b.top - self.sk.1
+            } else {
+                1.0
+            };
+            g[46] = self.delta_stern(0.0) - b.cx;
+            g[47] = self.delta_stern(b.top) - b.cx;
+            let zv = vertex(self.delta_stern[0], self.delta_stern[1]);
+            if (0.0..=b.top).contains(&zv) {
+                g[48] = self.delta_stern(zv) - b.cx;
+            }
+        }
         g
     }
 
@@ -595,6 +1037,15 @@ impl Shape {
                 z.push(k);
             }
         }
+        // The bulbs: the height of the widest part, the top, and a hair below the top (where the
+        // waterline still has the bulb).
+        for b in [&self.bb, &self.sb].into_iter().flatten() {
+            for k in [b.rz_lo, b.top, b.top - 1e-9 * dd] {
+                if k > 0.0 && k <= dd {
+                    z.push(k);
+                }
+            }
+        }
         // Just above `SK_z` the transom begins: the waterline ends at the transom's half-breadth,
         // which may jump from 0 (a flat transom bottom).
         let above = self.sk.1 + 1e-9 * dd;
@@ -607,6 +1058,62 @@ impl Shape {
     }
 }
 
+impl Waterline {
+    /// Where the waterline starts and ends (x_ShipD): the stem or the bulb's leading edge, the
+    /// stern or the stern bulb's trailing edge.
+    pub fn span(&self) -> (f64, f64) {
+        (self.start, self.end)
+    }
+
+    /// The half-breadth at `x` on this waterline of `s`; 0 outside it.
+    pub fn half_breadth(&self, s: &Shape, x: f64) -> f64 {
+        let z = self.z;
+        if x <= self.start || x >= self.end {
+            return 0.0;
+        }
+        let y = if x < s.delta_bow(z) {
+            match (&self.bow, &s.bb) {
+                (BowLine::Filleted(f), Some(b)) => {
+                    if x <= f.xr0 {
+                        b.half_width(z, x, false)
+                    } else if x < f.xr1 {
+                        f.at(x, true)
+                    } else {
+                        s.bow_y(x, z)
+                    }
+                }
+                (BowLine::Wider, Some(b)) => {
+                    let bulb = b.half_width(z, x, false).min(self.y_mid);
+                    let hull = if x >= s.bow_profile(z) {
+                        s.bow_y(x, z)
+                    } else {
+                        0.0
+                    };
+                    bulb.max(hull)
+                }
+                _ => s.bow_y(x, z),
+            }
+        } else if x <= s.delta_stern(z) {
+            self.y_mid
+        } else {
+            match (&self.stern, &s.sb) {
+                (SternLine::Filleted(f), Some(b)) => {
+                    if x <= f.xr0 {
+                        s.stern_y(x, z)
+                    } else if x < f.xr1 {
+                        f.at(x, false)
+                    } else {
+                        b.half_width(z, x, true)
+                    }
+                }
+                _ => s.stern_y(x, z),
+            }
+        };
+        // A fillet may dip a hair below the centre line.
+        y.max(0.0)
+    }
+}
+
 /// How finely the generator cuts the hull: even stations over the length, even height levels, and
 /// whether each height's waterline ends get a station of their own.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -614,6 +1121,8 @@ pub struct Resolution {
     pub stations: u32,
     pub levels: u32,
     pub waterline_ends: bool,
+    /// The curvature row of the bulb fillets.
+    pub fillet_row: FilletRow,
 }
 
 /// A Design's cut: coarse enough that its hydrostatics and GZ curves stay fast. The benchmark's
@@ -622,6 +1131,7 @@ pub const DESIGN: Resolution = Resolution {
     stations: 41,
     levels: 20,
     waterline_ends: false,
+    fillet_row: FilletRow::Definition,
 };
 
 /// The benchmark's cut: fine enough that the comparison is of the shape, not of the cut.
@@ -629,6 +1139,7 @@ pub const BENCHMARK: Resolution = Resolution {
     stations: 101,
     levels: 200,
     waterline_ends: true,
+    fillet_row: FilletRow::Definition,
 };
 
 /// The constraints `p` fails at these dimensions, with their index and name.
@@ -662,14 +1173,15 @@ pub fn sections(
         return Err(ShipdError::NotFinite);
     }
     let shape = Shape::new(p, loa, beam, depth);
-    if shape.bulb {
-        return Err(ShipdError::Bulb);
-    }
     let failures = check(p, loa, beam, depth);
     if !failures.is_empty() {
         return Err(ShipdError::Constraints(failures));
     }
     let heights = shape.heights(r.levels.max(1));
+    let lines: Vec<Waterline> = heights
+        .iter()
+        .map(|&z| shape.waterline(z, r.fillet_row))
+        .collect();
     // Stations in the dataset's x: even ones, the knuckles, and each waterline's two ends.
     let n = r.stations.max(2) - 1;
     let mut xs: Vec<f64> = (0..=n).map(|i| loa * f64::from(i) / f64::from(n)).collect();
@@ -681,16 +1193,20 @@ pub fn sections(
         shape.kappa_bow * shape.lb,
         shape.lb + shape.lm + shape.ls * shape.kappa_stern,
     ]);
+    // A bulb's start, its widest part and its tip (at the height of its widest part).
+    for b in [&shape.bb, &shape.sb].into_iter().flatten() {
+        xs.extend([b.cx, b.start, b.cx - b.rx, b.cx + b.rx]);
+    }
     if r.waterline_ends {
-        for &z in &heights[1..] {
-            xs.push(shape.bow_profile(z));
-            xs.push(shape.stern_profile(z));
+        for l in &lines[1..] {
+            xs.push(l.start);
+            xs.push(l.end);
         }
     }
     // The stem or the stern may reach a little past the ends of LOA where a rake bulges (the
-    // definitions allow it): the hull keeps those stations.
-    let (lo, hi) = heights.iter().fold((0.0_f64, loa), |(lo, hi), &z| {
-        (lo.min(shape.bow_profile(z)), hi.max(shape.stern_profile(z)))
+    // definitions allow it), and a bulb reaches past the stem: the hull keeps those stations.
+    let (lo, hi) = lines.iter().fold((0.0_f64, loa), |(lo, hi), l| {
+        (lo.min(l.start), hi.max(l.end))
     });
     xs.extend([lo, hi]);
     xs.retain(|x| x.is_finite() && (lo..=hi).contains(x));
@@ -706,8 +1222,8 @@ pub fn sections(
             // the deck at the centre line.
             let mut points = Vec::with_capacity(heights.len() + 2);
             points.push((0.0, 0.0));
-            for &z in &heights {
-                points.push((shape.half_breadth(x, z), z));
+            for (l, &z) in lines.iter().zip(&heights) {
+                points.push((l.half_breadth(&shape, x), z));
             }
             points.push((0.0, dd));
             Section { x: loa - x, points }
@@ -753,4 +1269,57 @@ pub fn measures(table: &SectionsTable, loa: f64, draughts: &[f64]) -> Vec<Measur
             }
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Label: property. The fillet's quartic has the values, the slopes and the curvature it is
+    /// given at its two ends, for any such data.
+    #[test]
+    fn the_quartic_meets_its_five_conditions() {
+        let cases = [
+            (0.2, 0.5, 0.35, -0.1, 0.4),
+            (0.0, 0.0, 0.3, 0.0, 1.0),
+            (0.31, -2.0, 0.05, 3.0, 0.07),
+        ];
+        for (ya, da, yb, db, h) in cases {
+            let c = quartic(ya, da, yb, db, h);
+            let d1 = |t: f64| c[1] + t * (2.0 * c[2] + t * (3.0 * c[3] + t * 4.0 * c[4]));
+            let d2 = |t: f64| 2.0 * c[2] + t * (6.0 * c[3] + t * 12.0 * c[4]);
+            let tol = 1e-9;
+            assert!((quartic_at(&c, 0.0) - ya).abs() < tol);
+            assert!((quartic_at(&c, h) - yb).abs() < tol, "{c:?}");
+            assert!((d1(0.0) - da).abs() < tol);
+            assert!((d1(h) - db).abs() < 1e-7 * (1.0 + db.abs()), "{c:?}");
+            assert!(d2(0.0).abs() < tol);
+        }
+    }
+
+    /// Label: property. The dataset's row is not the curvature condition: with the same data its
+    /// quartic has the same values and slopes, and a second derivative at the chosen end that is
+    /// not 0 (the row has `6 x^2` where the derivative has `6 x`).
+    #[test]
+    fn the_dataset_row_meets_its_four_conditions_and_not_the_curvature_one() {
+        let (x0, y0, d0, x1, y1, d1) = (4.1, 0.2, 0.5, 4.5, 0.35, -0.1);
+        let c = quartic_dataset_row(x0, y0, d0, x1, y1, d1, x0);
+        let slope = |x: f64| c[1] + x * (2.0 * c[2] + x * (3.0 * c[3] + x * 4.0 * c[4]));
+        let curv = |x: f64| 2.0 * c[2] + x * (6.0 * c[3] + x * 12.0 * c[4]);
+        assert!((quartic_at(&c, x0) - y0).abs() < 1e-7);
+        assert!((quartic_at(&c, x1) - y1).abs() < 1e-7);
+        assert!((slope(x0) - d0).abs() < 1e-6);
+        assert!((slope(x1) - d1).abs() < 1e-6);
+        assert!(curv(x0).abs() > 1e-3, "{}", curv(x0));
+    }
+
+    /// Label: property. The first root of a function is the smallest, and none is found where
+    /// there is none.
+    #[test]
+    fn first_root_finds_the_smallest_root() {
+        let f = |x: f64| (x - 1.0) * (x - 2.0) * (x - 3.0);
+        let r = first_root(f, 0.0, 4.0).unwrap();
+        assert!((r - 1.0).abs() < 1e-9, "{r}");
+        assert!(first_root(|x| x * x + 1.0, -2.0, 2.0).is_none());
+    }
 }

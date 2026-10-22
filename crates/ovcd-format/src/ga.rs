@@ -384,6 +384,19 @@ fn read_draw_spaces(results: &Value) -> Result<Vec<DrawSpace>, String> {
     let list = results["drawing"]["liquid_tanks"]["spaces"]
         .as_array()
         .ok_or("the results have no `drawing.liquid_tanks.spaces`")?;
+    draw_spaces_of(list)
+}
+
+/// The ballast Spaces of a dry bulk hull (`drawing.ballast_spaces`); none when the results have no
+/// IS Code loading conditions (issue #426).
+fn read_ballast_spaces(results: &Value) -> Result<Vec<DrawSpace>, String> {
+    match results["drawing"]["ballast_spaces"].as_array() {
+        Some(list) => draw_spaces_of(list),
+        None => Ok(Vec::new()),
+    }
+}
+
+fn draw_spaces_of(list: &[Value]) -> Result<Vec<DrawSpace>, String> {
     list.iter()
         .map(|v| {
             let text = |key: &str| {
@@ -435,6 +448,9 @@ enum Containment {
         inner_bottom: f64,
         /// The hatch coaming above the deck (`drawing.hatch_coaming_height_m`).
         coaming: f64,
+        /// The double bottom, wing and peak ballast tanks (`drawing.ballast_spaces`), if the
+        /// results have them.
+        ballast: Vec<DrawSpace>,
     },
     /// Type C tanks: horizontal cylinders with hemispherical heads.
     Tanks {
@@ -538,6 +554,7 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
                 bottom_width: geo("hold_bottom_width_m")?,
                 inner_bottom: drawing("double_bottom_m")?,
                 coaming: drawing("hatch_coaming_height_m")?,
+                ballast: read_ballast_spaces(results)?,
             }
         }
         CargoClass::LiquidBulk => Containment::Liquid {
@@ -1496,6 +1513,70 @@ fn liquid_labels(c: &mut Canvas, h: &Hull, view: View, labels: &mut Vec<(String,
     labels_in_rows(c, above, top + 2.0 * c.k, h.loa);
 }
 
+/// The ballast tanks of a dry bulk hull (`drawing.ballast_spaces`): the wing tanks hatched in plan,
+/// the double bottom named in elevation. The section draws them in [`hold_ballast_section`].
+fn hold_ballast(c: &mut Canvas, h: &Hull, view: View, labels: &mut Vec<(String, [f64; 2])>) {
+    let Containment::Hold { ballast, .. } = &h.containment else {
+        return;
+    };
+    for sp in ballast {
+        let (lo, hi) = sp.extent();
+        match (sp.kind.as_str(), view) {
+            ("wing_ballast", View::Plan) => {
+                c.hatch(
+                    "HATCH",
+                    &[
+                        [sp.x_aft, lo[0]],
+                        [sp.x_fwd, lo[0]],
+                        [sp.x_fwd, hi[0]],
+                        [sp.x_aft, hi[0]],
+                    ],
+                    "lines",
+                );
+                if sp.side == "port" {
+                    labels.push((
+                        label!("draw-wbt-both-sides", "WBT (BOTH SIDES)"),
+                        [sp.mid_x(), (lo[0] + hi[0]) / 2.0],
+                    ));
+                }
+            }
+            ("double_bottom_ballast", View::Elevation) if sp.side == "port" => labels.push((
+                label!("draw-double-bottom", "DOUBLE BOTTOM"),
+                [sp.x_fwd - 3.0 * c.k, (lo[1] + hi[1]) / 2.0],
+            )),
+            _ => {}
+        }
+    }
+}
+
+/// The double bottom and wing ballast tanks of a dry bulk hull at the middle of its cargo zone,
+/// hatched and named, as the liquid bulk section does.
+fn hold_ballast_section(c: &mut Canvas, h: &Hull, labels: &mut Vec<(String, [f64; 2])>) {
+    let Containment::Hold { ballast, .. } = &h.containment else {
+        return;
+    };
+    let cut = (h.stern_void + h.loa - h.bow_void) / 2.0;
+    for sp in ballast.iter().filter(|s| {
+        (s.kind == "double_bottom_ballast" || s.kind == "wing_ballast")
+            && s.x_aft <= cut
+            && s.x_fwd > cut
+    }) {
+        c.polyline("OUTLINE", &sp.section, true);
+        c.hatch("HATCH", &sp.section, "lines");
+        let (lo, hi) = sp.extent();
+        let mid = [(lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0];
+        match sp.kind.as_str() {
+            "double_bottom_ballast" if sp.side == "port" => {
+                labels.push((label!("draw-double-bottom", "DOUBLE BOTTOM"), mid));
+            }
+            "wing_ballast" if sp.side == "port" => {
+                labels.push((label!("draw-wbt-both-sides", "WBT (BOTH SIDES)"), mid));
+            }
+            _ => {}
+        }
+    }
+}
+
 /// The typical section of a liquid bulk hull, at the first cargo tank: the cargo tanks, with the
 /// centreline bulkhead where the tank is split, the double bottom and the double side hatched.
 fn liquid_section(
@@ -1868,6 +1949,7 @@ fn side_elevation(h: &Hull, n: u32) -> Canvas {
     aft_block(&mut c, h, View::Elevation);
     zones(&mut c, h, View::Elevation, &mut labels);
     hold_bulkheads(&mut c, h, View::Elevation, &mut labels);
+    hold_ballast(&mut c, h, View::Elevation, &mut labels);
     liquid_labels(&mut c, h, View::Elevation, &mut labels);
     tunnel_stern(&mut c, h, View::Elevation);
     // Issue #409: the top of the structure and the loaded air draft under it.
@@ -2045,6 +2127,7 @@ fn plan(h: &Hull, n: u32) -> Canvas {
     let mut labels: Vec<(String, [f64; 2])> = Vec::new();
     zones(&mut c, h, View::Plan, &mut labels);
     hold_bulkheads(&mut c, h, View::Plan, &mut labels);
+    hold_ballast(&mut c, h, View::Plan, &mut labels);
     liquid_labels(&mut c, h, View::Plan, &mut labels);
     tunnel_stern(&mut c, h, View::Plan);
     let overshoot = 4.0 * c.k;
@@ -2261,6 +2344,7 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
             bottom_width,
             inner_bottom,
             coaming,
+            ..
         } => {
             let bottom = *inner_bottom;
             // the inner bottom across the hull; the hold side runs on up to the coaming top, where
@@ -2292,6 +2376,7 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
                 ],
                 false,
             );
+            hold_ballast_section(&mut c, h, &mut labels);
         }
         Containment::Liquid { spaces, heating } => {
             liquid_section(&mut c, spaces, *heating, &mut labels);

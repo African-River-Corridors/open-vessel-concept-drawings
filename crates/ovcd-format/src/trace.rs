@@ -379,6 +379,11 @@ pub const DERIVED_INPUTS: &[(&str, &[&str])] = &[
     ("adn_vessel_type", &["N_open", "N_closed", "C"]),
     // Issue #543: the length overall, in the bands of SOLAS V/22.1 and ES-TRIN 28.02.
     ("length_band", LENGTH_BANDS),
+    // Issue #282: whether the Option gives an angle of down-flooding.
+    (
+        "downflooding_angle",
+        ovcd_core::measured::DOWNFLOODING_ANGLES,
+    ),
 ];
 
 pub use ovcd_core::measured::{DEADWEIGHT_BANDS, LENGTH_BANDS, deadweight_band, length_band};
@@ -535,7 +540,9 @@ impl MeasureSource for OptionMeasures<'_> {
         if object == ObjectType::Tank && gas && self.measured.tank.is_none() {
             return Some("no tank fits the hull, so there is no tank to check".to_string());
         }
-        if object == ObjectType::DamageCase && self.measured.damage.is_empty() {
+        if (object == ObjectType::DamageCase && self.measured.damage.is_empty())
+            || (object == ObjectType::MarpolDamageCase && self.measured.marpol_damage.is_empty())
+        {
             return Some(
                 "the damage cases were not computed: the laden departure condition has no floating position"
                     .to_string(),
@@ -573,6 +580,16 @@ impl MeasureSource for OptionMeasures<'_> {
                 let cargo = self.option.input("cargo")?.value.as_str()?;
                 let props = ovcd_core::cargo::get_cargo(cargo).ok()?;
                 return Some(cargo_class_value(props.phase).to_string());
+            }
+            "downflooding_angle" => {
+                return Some(
+                    ovcd_core::measured::downflooding_angle_value(
+                        self.option
+                            .input("downflooding_angle_deg")
+                            .and_then(|i| i.value.as_f64()),
+                    )
+                    .to_string(),
+                );
             }
             "length_band" => {
                 return self
@@ -620,6 +637,7 @@ pub fn rule_inputs(option: &DesignOption) -> RuleInputs {
         "cargo_class",
         "formation_kind",
         "length_band",
+        "downflooding_angle",
         "adn_vessel_type",
     ] {
         if let Some(v) = source.input(name) {
@@ -1042,9 +1060,11 @@ impl MeasureSource for LiquidMeasures<'_> {
     }
 
     fn missing(&self, object: &str) -> Option<String> {
-        (ObjectType::from_key(object) == Some(ObjectType::DamageCase)).then(|| {
-            "the layout case has no loading condition, so no damage is computed".to_string()
-        })
+        matches!(
+            ObjectType::from_key(object),
+            Some(ObjectType::DamageCase | ObjectType::MarpolDamageCase)
+        )
+        .then(|| "the layout case has no loading condition, so no damage is computed".to_string())
     }
 }
 

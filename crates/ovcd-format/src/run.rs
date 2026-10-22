@@ -250,13 +250,16 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     put("speed_max_kn", "max_speed_kn");
     put("air_draft_limit_m", "air_draft_limit_m");
     put("draught_limit_m", "draught_limit_m");
+    put("downflooding_angle_deg", "downflooding_angle_deg");
     // A null wall thickness asks for the pressure-vessel formula (issue #292); `put` leaves nulls
     // out, and a key left out means the engine's old fixed 25 mm.
-    // In the same way a null dome size asks for the dome rule (issue #316).
+    // In the same way a null dome size asks for the dome rule (issue #316), and a null design
+    // pressure for the IGC 4.23.1.2 minimum of each tank (issue #577).
     for name in [
         "tank_wall_thickness_mm",
         "tank_dome_height_m",
         "tank_dome_diameter_m",
+        "tank_design_pressure_mpa",
     ] {
         if get(name).is_some_and(|v| v.is_null()) {
             p.insert(name.to_string(), Value::Null);
@@ -312,7 +315,7 @@ pub use arc_rules::load::canonical_json;
 /// out of the results hash, so adding to one never changes a saved hash, and `tools/design_impact.py`
 /// leaves them out of its comparison (it holds the same list; `tests/test_design_impact_unhashed_keys.py` checks
 /// that the two lists agree).
-pub const UNHASHED_KEYS: [&str; 8] = [
+pub const UNHASHED_KEYS: [&str; 9] = [
     "drawing",
     "stability_marks",
     "cost_masses",
@@ -321,6 +324,7 @@ pub const UNHASHED_KEYS: [&str; 8] = [
     "rule_trace",
     "calibration",
     "damage",
+    "marpol_damage",
 ];
 
 /// SHA-256 of the canonical JSON of `results`, without the [`UNHASHED_KEYS`].
@@ -350,6 +354,105 @@ pub fn option_hull_table(
         crate::simulate::Stop::Raised(_, message) => message,
         crate::simulate::Stop::Eval(e) => e.to_string(),
     })
+}
+
+/// The Vessel Model of an Option (issue #454): the hull, decks, bulkheads and Spaces of the design
+/// the run computes, with the built-in Rule Sets. A convoy, or an Option that cannot be computed,
+/// gives the message of the outputs panel.
+pub fn option_vessel_model(
+    option: &DesignOption,
+) -> Result<ovcd_core::vessel_model::VesselModel, String> {
+    vessel_run(option).map(|(model, _)| model)
+}
+
+/// The Vessel Model of an Option and the results of its run.
+fn vessel_run(
+    option: &DesignOption,
+) -> Result<(ovcd_core::vessel_model::VesselModel, Value), String> {
+    let params = simulate_params_of(option)?;
+    let library = Library::built_in();
+    let selection = stack_for(&library, option, &[])?;
+    let rules = RunRules {
+        sets: selection.sets.iter().map(|s| (*s).clone()).collect(),
+        inputs: rule_inputs(option),
+    };
+    let (outcome, measured) = simulate_params_measured(&params, &rules);
+    match outcome {
+        Outcome::Result(v) => match v.get("error").and_then(Value::as_str) {
+            Some(message) => Err(message.to_string()),
+            None => measured
+                .vessel
+                .as_ref()
+                .map(|inputs| (ovcd_core::vessel_model::assemble(inputs), v.clone()))
+                .ok_or_else(|| "the run gave no Vessel Model".to_string()),
+        },
+        Outcome::Raised(kind, message) => Err(format!("{kind}: {message}")),
+        Outcome::Refused(message) => Err(message),
+    }
+}
+
+/// The floating positions of a run as `(name, aft draught, forward draught)`: each loading
+/// condition, or each stability condition, or with neither the loaded and light draughts, level.
+fn waterlines(results: &Value) -> Vec<(String, f64, f64)> {
+    for key in ["loading_conditions", "stability"] {
+        let list: Vec<(String, f64, f64)> = results[key]["conditions"]
+            .as_array()
+            .map(|cs| {
+                cs.iter()
+                    .filter_map(|c| {
+                        let mid = c["draught_m"].as_f64();
+                        Some((
+                            c["name"].as_str()?.to_string(),
+                            c["draught_aft_m"].as_f64().or(mid)?,
+                            c["draught_fwd_m"].as_f64().or(mid)?,
+                        ))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        if !list.is_empty() {
+            return list;
+        }
+    }
+    [("Loaded", "draught_m"), ("Light", "light_draught_m")]
+        .into_iter()
+        .filter_map(|(name, key)| {
+            let t = results["results"][key].as_f64()?;
+            Some((name.to_string(), t, t))
+        })
+        .collect()
+}
+
+/// The meshes of an Option's Vessel Model (issue #456): the hull, decks, bulkheads, Spaces and the
+/// waterline of each floating position, one group each.
+pub fn option_meshes(option: &DesignOption) -> Result<ovcd_core::mesh::Mesh, String> {
+    let (model, results) = vessel_run(option)?;
+    Ok(ovcd_core::mesh::vessel_meshes(
+        &model,
+        &waterlines(&results),
+    ))
+}
+
+/// The mesh hash of the parity check (spec 0008, "Mesh hash"): SHA-256 of the f32 position bytes,
+/// the u32 index bytes (little-endian) and the group table (layer, id, start, count). Not in the
+/// results hash (ADR 0018).
+pub fn mesh_hash(mesh: &ovcd_core::mesh::Mesh) -> String {
+    let mut h = Sha256::new();
+    for p in &mesh.positions {
+        h.update(p.to_le_bytes());
+    }
+    for i in &mesh.indices {
+        h.update(i.to_le_bytes());
+    }
+    for g in &mesh.groups {
+        for text in [&g.layer, &g.id] {
+            h.update((text.len() as u32).to_le_bytes());
+            h.update(text.as_bytes());
+        }
+        h.update(g.start.to_le_bytes());
+        h.update(g.count.to_le_bytes());
+    }
+    h.finalize().iter().map(|b| format!("{b:02x}")).collect()
 }
 
 /// Compute one Option and check it against its default stack of Rule Sets from `library`, plus the
@@ -400,6 +503,9 @@ pub fn run_option_with(
                     .map(crate::trace::with_check_verdicts)
                     .unwrap_or_default();
                 // Issue #355: the Blind Distance and the speed the Rules of the stern read.
+                measured.downflooding_deg = option
+                    .input("downflooding_angle_deg")
+                    .and_then(|i| i.value.as_f64());
                 let sightline = &v["sightline"];
                 measured.blind_distance_light_m = sightline["blind_distance_light_m"].as_f64();
                 measured.blind_distance_laden_m = sightline["blind_distance_laden_m"].as_f64();

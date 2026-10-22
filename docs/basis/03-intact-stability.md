@@ -94,8 +94,11 @@ IS Code loading conditions (next section). Any other Option uses `assess`. Both 
 12. **Speed.** A GZ curve on the sections costs about 8 ms (raked bow only) to 200 ms (tunnel stern) natively. OVCD
     builds a curve only where a criterion needs it. The automatic ballast plan first screens each trial on the
     criteria known before the curve: the air draft, the fluid GM (0.15 m) and the freeboard
-    (`loading_conditions.rs:294-328`, `:510-523`). A trial that fails one gets no curve. The plan found, or with
-    none the last trial, is worked in full, so no reported number changes.
+    (`loading_conditions.rs:294-328`, `:510-523`). A trial that fails one gets no curve. A trial that passes them gets its
+    curve in blocks of heels (`screened_gz`, issue #567): heels 30 to 40, then 41 to 60, then 25 to 29, then 24
+    down to 0. It stops at the first block that decides a criterion (area 30 to 40, GZ at 30 degrees or more,
+    angle of maximum GZ). The plan found, or with none the last trial, is worked in full, so no reported number
+    changes.
 
 ### IS Code loading conditions (`loading_conditions.rs`)
 
@@ -129,7 +132,7 @@ tank centre, a stores item, the fill read as a height fraction). See the triage 
 |---|---|---|---|---|---|---|
 | IS-A01 | Heel angle grid | 0° to 60°, 1° step | Fixed in code | Port of the original engine | `gas_stability.rs:28` `ANGLES_DEG` | Unknown: a curve with its peak or vanishing angle above 60° is cut |
 | IS-A02 | Section for GZ | The hull's Sections Table: raked bow and Stern Form, closed at the deck; free trim at every heel | Method | Spec 0008; constant-displacement free-heel, free-trim calculation | `hull_condition`, `box_stability.rs:476`; `sections::gz_curve`, `sections.rs:976` | Unknown: no reserve buoyancy from coaming or domes (conservative); sheer, camber and bilge radius only when set (#449) |
-| IS-A03 | Heeled waterline | Illinois secant method: 16 steps on the volume, 12 steps on the trim, no early stop | Method | Free-floating equilibrium at each heel | `sections.rs:757-762`, `:891-951` | Small (numerical) |
+| IS-A03 | Heeled waterline | Illinois secant method: at most 16 steps on the volume, at most 12 steps on the trim, each stopping at a tolerance | Method | Free-floating equilibrium at each heel | `sections.rs:757-762`, `:891-951` | Small (numerical) |
 | IS-A04 | Submerged shape | Each section clipped (Sutherland–Hodgman), shoelace area and moments; Simpson's rule along the length | Method | Standard polygon geometry | `sections::immersed`, `sections.rs:645` | Small (numerical) |
 | IS-A05 | Draught | From the sections: at free trim (mid-length) with LCG data, else level | Method | Hull hydrostatics (area 01) | `gas_stability.rs:326-385`; `loading_conditions.rs:448-506` | Small for the modelled shape |
 | IS-A06 | KB | Centre of buoyancy of the upright, level cut at T | Method | Exact polygon integration | `sections::upright`, `sections.rs:724` | Negligible for the modelled shape |

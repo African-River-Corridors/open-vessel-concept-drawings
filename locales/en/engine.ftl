@@ -240,7 +240,6 @@ msg-offsets-resampled = the offsets table has stations of unequal point counts: 
 
 msg-shipd-no-parameters = a ShipD Hull Form needs its parameters (`{ $input }`)
 msg-shipd-missing = `{ $input }` needs the ShipD parameter { $name }
-msg-shipd-bulb = `{ $input }`: a ShipD hull with a bulbous bow or stern is not built yet (bit_BB and bit_SB must be 0)
 msg-shipd-constraint = `{ $input }` fails ShipD constraint { $index } ({ $name })
 
 ## crates/ovcd-format/src/simulate.rs
