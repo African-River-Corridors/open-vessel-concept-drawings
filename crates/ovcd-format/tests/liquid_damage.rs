@@ -279,3 +279,84 @@ fn the_marpol_rule_has_one_row_for_each_marpol_damage_and_only_under_the_coastal
     let river = results(&raw_fixture("crude_integral_tanks_pushed"));
     assert!(river.get("marpol_damage").is_none());
 }
+
+/// MARPOL Annex I regulation 23 (issue #341): OM is worked out under the `marpol-i` stack, shown in the
+/// `oil_outflow` block (outside the results hash), and the Rule reads OM over its limit, for 5,000 tonnes
+/// deadweight and above only. The method is checked against the explanatory notes' tank barge in
+/// `ovcd-core/tests/oil_outflow.rs`.
+#[test]
+fn the_oil_outflow_rule_reads_om_over_its_limit_for_5000_tonnes_deadweight_and_above() {
+    let small = results(&raw_fixture("crude_integral_tanks_coastal"));
+    let o = &small["oil_outflow"];
+    let (om, limit, ratio) = (
+        o["mean_outflow_parameter"].as_f64().unwrap(),
+        o["limit"].as_f64().unwrap(),
+        o["ratio"].as_f64().unwrap(),
+    );
+    assert!(om > 0.0 && (ratio - om / limit).abs() < 1e-12);
+    assert_eq!(limit, 0.015);
+    // under 5,000 t the Rule does not apply (23.3.2, the tank length, is the rule of that size)
+    let rows = damage_rows(&small, "marpol/23/accidental-oil-outflow");
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0]["outcome"], "not applicable");
+    // a long wide hull has 5,000 t and over: the row is a verdict on OM over its limit
+    let big = results(&typed(
+        "crude_integral_tanks_coastal",
+        &[
+            ("length_overall_m", json!(130.0)),
+            ("beam_m", json!(20.0)),
+            ("moulded_depth_m", json!(7.0)),
+        ],
+    ));
+    let rows = damage_rows(&big, "marpol/23/accidental-oil-outflow");
+    assert_eq!(rows.len(), 1);
+    let row = rows[0];
+    assert_ne!(row["outcome"], "not applicable", "{row}");
+    let ratio = big["oil_outflow"]["ratio"].as_f64().unwrap();
+    assert!((row["value"].as_f64().unwrap() - ratio).abs() < 1e-12);
+    let want = if ratio <= 1.0 { "pass" } else { "warn" };
+    assert_eq!(row["outcome"], want);
+    // not in the results hash
+    assert!(ovcd_format::UNHASHED_KEYS.contains(&"oil_outflow"));
+    // a river stack has no MARPOL Rule Set, so no block
+    assert!(
+        results(&raw_fixture("crude_integral_tanks_pushed"))
+            .get("oil_outflow")
+            .is_none()
+    );
+}
+
+/// MARPOL Annex I regulation 23.3.2 (issue #341): under 5,000 t deadweight each cargo tank is held to the
+/// length of 23.3.2.1 to 23.3.2.3; the Rule has one row for each cargo tank and reads the length over that
+/// limit. The formula is worked by hand in `ovcd-core/tests/oil_outflow.rs`.
+#[test]
+fn the_cargo_tank_length_rule_has_one_row_for_each_cargo_tank_under_5000_tonnes() {
+    let r = results(&raw_fixture("crude_integral_tanks_coastal"));
+    let rows = damage_rows(&r, "marpol/23.3.2/cargo-tank-length");
+    let tanks = r["liquid"]["tanks"].as_array().map_or(0, Vec::len);
+    assert!(
+        rows.len() >= 4,
+        "{} rows ({tanks} tanks listed)",
+        rows.len()
+    );
+    for row in &rows {
+        assert_eq!(row["object_type"], "cargo-tank");
+        let ratio = row["value"].as_f64().unwrap();
+        let want = if ratio <= 1.0 + 1e-9 { "pass" } else { "warn" };
+        assert_eq!(row["outcome"], want, "{row}");
+    }
+    // 5,000 t and over: the length rule is not applicable
+    let big = results(&typed(
+        "crude_integral_tanks_coastal",
+        &[
+            ("length_overall_m", json!(130.0)),
+            ("beam_m", json!(20.0)),
+            ("moulded_depth_m", json!(7.0)),
+        ],
+    ));
+    assert!(
+        damage_rows(&big, "marpol/23.3.2/cargo-tank-length")
+            .iter()
+            .all(|row| row["outcome"] == "not applicable")
+    );
+}

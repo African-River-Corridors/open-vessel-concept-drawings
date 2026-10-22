@@ -329,7 +329,7 @@ pub use arc_rules::load::canonical_json;
 /// out of the results hash, so adding to one never changes a saved hash, and `tools/design_impact.py`
 /// leaves them out of its comparison (it holds the same list; `tests/test_design_impact_unhashed_keys.py` checks
 /// that the two lists agree).
-pub const UNHASHED_KEYS: [&str; 9] = [
+pub const UNHASHED_KEYS: [&str; 10] = [
     "drawing",
     "stability_marks",
     "cost_masses",
@@ -339,6 +339,7 @@ pub const UNHASHED_KEYS: [&str; 9] = [
     "calibration",
     "damage",
     "marpol_damage",
+    "oil_outflow",
 ];
 
 /// SHA-256 of the canonical JSON of `results`, without the [`UNHASHED_KEYS`].

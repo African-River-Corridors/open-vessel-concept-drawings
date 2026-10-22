@@ -63,6 +63,9 @@ pub struct Measured {
     /// The assumed damages of MARPOL Annex I regulation 28 (issue #341), for a liquid bulk hull under that
     /// Rule Set; empty for every other design.
     pub marpol_damage: Vec<DamageVerdict>,
+    /// The mean oil outflow of MARPOL Annex I regulation 23 (issue #341), for a liquid bulk hull under that
+    /// Rule Set; `None` for every other design.
+    pub oil_outflow: Option<crate::liquid_bulk::oil_outflow::OilOutflow>,
 }
 
 /// One assumed damage and the outcome: the Measure `stability.damage` is `ok`.
@@ -183,6 +186,7 @@ impl Measured {
             "cargo-tank.length",
             "cargo-tank.vessel_lbh",
             "cargo-tank.vessel_length",
+            "cargo-tank.marpol_length_ratio",
             "option.cargo_capacity_m3",
             "option.slop_capacity_share",
         ];
@@ -206,6 +210,14 @@ impl Measured {
             "cargo-tank.length" => tank().and_then(|t| number(t.length())),
             "cargo-tank.vessel_lbh" => tank().and_then(|_| number(l.lbh_m3)),
             "cargo-tank.vessel_length" => tank().and_then(|_| number(l.loa_m)),
+            "cargo-tank.marpol_length_ratio" => tank().and_then(|t| {
+                crate::liquid_bulk::oil_outflow::max_cargo_tank_length_m(
+                    &l.spaces, index, l.loa_m, l.beam_m,
+                )
+                .map(|max| t.length() / max)
+                .ok_or_else(|| format!("no cargo tank {index}"))
+                .and_then(number)
+            }),
             "option.cargo_capacity_m3" => number(l.cargo_gross_m3),
             _ => number(l.slop_share_actual),
         })
@@ -233,6 +245,10 @@ impl Measured {
             ObjectType::BallastTank => self.liquid_names(SpaceKind::is_ballast),
             ObjectType::SlopTank => self.liquid_names(|k| k == SpaceKind::Slop),
             ObjectType::DamageCase => self.damage.iter().map(|d| d.name.clone()).collect(),
+            ObjectType::OilOutflow => match self.oil_outflow {
+                Some(_) => alloc::vec![String::from("mean oil outflow")],
+                None => Vec::new(),
+            },
             ObjectType::MarpolDamageCase => {
                 self.marpol_damage.iter().map(|d| d.name.clone()).collect()
             }
@@ -273,11 +289,12 @@ impl Measured {
             | "cargo-tank.length"
             | "cargo-tank.vessel_lbh"
             | "cargo-tank.vessel_length"
+            | "cargo-tank.marpol_length_ratio"
             | "option.cargo_capacity_m3"
             | "option.slop_capacity_share" => self.liquid.is_some(),
             "option.deadweight" => self.deadweight_t.is_some(),
             // The Rule on a hull with no damage computed is `not evaluated` with the reason (`missing`).
-            "stability.damage" | "stability.damage_marpol" => true,
+            "stability.damage" | "stability.damage_marpol" | "oil_outflow.ratio" => true,
             "wheelhouse.blind_distance" => match m.args.iter().find(|(k, _)| k == "condition") {
                 Some((_, ArgValue::Text(c))) if c == "light" => {
                     self.blind_distance_light_m.is_some()
@@ -330,6 +347,16 @@ impl Measured {
                 .get(index)
                 .map(|d| MeasureValue::Bool(d.outcome.ok))
                 .ok_or_else(|| format!("no damage case {index}"));
+        }
+        if m.id == "oil_outflow.ratio" {
+            return self
+                .oil_outflow
+                .as_ref()
+                .map(|o| MeasureValue::Number(o.ratio()))
+                .ok_or_else(|| {
+                    "the oil outflow was not computed: the layout has no cargo volume or no deadweight"
+                        .to_string()
+                });
         }
         if m.id == "option.deadweight" {
             return self

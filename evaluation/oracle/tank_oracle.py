@@ -62,6 +62,18 @@ def band(dw: float) -> str:
     return "5000-t-and-above"
 
 
+def marpol_tank_length_limit(i: dict) -> float:
+    """MARPOL Annex I Reg. 23.3.2: 10 m or the formula, whichever is the greater. The case has one tank across
+    (23.3.2.1: (0.5 bi/B + 0.1) L, not above 0.2 L) or two with a centre line bulkhead (23.3.2.2:
+    (0.25 bi/B + 0.15) L); bi is the double side width."""
+    ratio = i["double_side_m"] / i["beam_m"]
+    if i["centreline_bulkhead"]:
+        formula = (0.25 * ratio + 0.15) * i["loa_m"]
+    else:
+        formula = min((0.5 * ratio + 0.1) * i["loa_m"], 0.2 * i["loa_m"])
+    return max(10.0, formula)
+
+
 #: The tolerance of the Rules whose limit is worked out (a table row, a formula): 1e-9 in the unit of the
 #: limit, as in the Rule Sets. A constant limit has none.
 TOL = 1e-9
@@ -107,6 +119,10 @@ def verdicts(i: dict) -> dict:
     if i["service_area"] == "coastal-and-river":
         out["marpol/29/slop-tank-capacity"] = _entry(
             "MARPOL Annex I Reg. 29.2.3", "slop tank capacity share", "-", "ge", lay["slop_share"], 0.03, TOL)
+        if i["deadweight_t"] < 5000.0:
+            out["marpol/23.3.2/cargo-tank-length"] = _entry(
+                "MARPOL Annex I Reg. 23.3.2", "cargo tank length over its limit", "-", "le",
+                lay["tank_length_m"] / marpol_tank_length_limit(i), 1.0, TOL)
         if band(i["deadweight_t"]) == "600-to-5000-t":
             out["marpol/19.6.1/double-bottom-depth"] = _entry(
                 "MARPOL Annex I Reg. 19.6.1", "double bottom depth", "m", "ge", i["double_bottom_m"],
@@ -132,6 +148,8 @@ def _zone_for_length(i: dict, length: float) -> float:
 
 def move(i: dict, rule_id: str, target: float) -> tuple[str, float]:
     """The input (name, value) that makes `rule_id`'s governing value equal `target`."""
+    if rule_id == "marpol/23.3.2/cargo-tank-length":
+        return "zone_fwd_m", _zone_for_length(i, target * marpol_tank_length_limit(i))
     if rule_id.endswith("/cargo-tank-capacity"):
         lay = layout(i)
         length = target / (lay["tank_breadth_m"] * lay["tank_height_m"])

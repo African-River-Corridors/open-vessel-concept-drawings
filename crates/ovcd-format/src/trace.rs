@@ -541,6 +541,12 @@ impl MeasureSource for OptionMeasures<'_> {
         if object == ObjectType::Tank && gas && self.measured.tank.is_none() {
             return Some("no tank fits the hull, so there is no tank to check".to_string());
         }
+        if object == ObjectType::OilOutflow && self.measured.oil_outflow.is_none() {
+            return Some(
+                "the oil outflow was not computed: the layout has no cargo volume or no deadweight"
+                    .to_string(),
+            );
+        }
         if (object == ObjectType::DamageCase && self.measured.damage.is_empty())
             || (object == ObjectType::MarpolDamageCase && self.measured.marpol_damage.is_empty())
         {
@@ -1067,7 +1073,7 @@ impl MeasureSource for LiquidMeasures<'_> {
     fn missing(&self, object: &str) -> Option<String> {
         matches!(
             ObjectType::from_key(object),
-            Some(ObjectType::DamageCase | ObjectType::MarpolDamageCase)
+            Some(ObjectType::DamageCase | ObjectType::MarpolDamageCase | ObjectType::OilOutflow)
         )
         .then(|| "the layout case has no loading condition, so no damage is computed".to_string())
     }

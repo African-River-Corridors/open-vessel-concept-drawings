@@ -106,7 +106,7 @@ cargo tank has the verdict of its worst tank.
   publication) and `oracle/mutants.py` writes `tank_mutants.yaml`: for each evaluated Rule of each base case, the
   input that moves the Rule's governing value (the double side, the double bottom, the cofferdam, the slop share,
   or the cargo zone for a tank's volume and length) set one step inside and one step across the limit, with a big
-  and a small step. A limit that no cargo zone inside the hull reaches has no boundary case (`skipped`).
+  and a small step. A limit that no cargo zone inside the hull reaches has no boundary case (`skipped`). The oracle has `marpol/23.3.2/cargo-tank-length` (under 5,000 t deadweight: the tank length over the limit of 23.3.2.1 and 23.3.2.2). It has no `marpol/23/accidental-oil-outflow`: the mean oil outflow needs the draught, which a case does not give, so that Rule's two mutants are the known weak corpus (`ovcd-core/tests/oil_outflow.rs` checks its method on the published tank barge of Res. MEPC.122(52)).
 - The rule-data mutation runs over these cases for `adn-tank` and `marpol-i`. The base cases are chosen so that every
   row of the capacity and length tables, and each of the 0.76 m minimum and the formula of Reg. 19.6, governs
   somewhere: no mutant goes unnoticed.
