@@ -708,11 +708,17 @@ fn tank_design_of(p: &Map<String, Value>) -> R<ovcd_core::barge_capacity::TankDe
         head_type,
         liquid_pressure,
         design_temperature_c,
-        design_pressure_mpa: get_or(
-            p,
-            "tank_design_pressure_mpa",
-            b::DEFAULT_TANK_DESIGN_PRESSURE_MPA,
-        )?,
+        // Issue #577: `null` is the IGC 4.23.1.2 minimum of each tank, worked out by the core.
+        design_pressure_mpa: if design_pressure_by_rule(p) {
+            b::DEFAULT_TANK_DESIGN_PRESSURE_MPA
+        } else {
+            get_or(
+                p,
+                "tank_design_pressure_mpa",
+                b::DEFAULT_TANK_DESIGN_PRESSURE_MPA,
+            )?
+        },
+        design_pressure_igc_minimum: design_pressure_by_rule(p),
         material,
         allowable_stress_mpa: allowable,
         insulation_thickness_mm: get_or(
@@ -722,6 +728,13 @@ fn tank_design_of(p: &Map<String, Value>) -> R<ovcd_core::barge_capacity::TankDe
         )?,
         structure_factor: get_or(p, "tank_structure_factor", b::DEFAULT_TANK_STRUCTURE_FACTOR)?,
     })
+}
+
+/// Whether the design pressure is asked for as the IGC 4.23.1.2 minimum of each tank (issue #577):
+/// `tank_design_pressure_mpa` is `null`.
+fn design_pressure_by_rule(p: &Map<String, Value>) -> bool {
+    p.get("tank_design_pressure_mpa")
+        .is_some_and(Value::is_null)
 }
 
 /// The stress the engine used for `material` before the IGC check (issue #313), when it differs from
@@ -801,6 +814,13 @@ fn lpg_loading(p: &Map<String, Value>, cargo: &str, fill: f64) -> R<Loading> {
             "IGC 15.5.2: 45 C, the air temperature of the ambient design conditions (15.1.4)",
         )
     } else {
+        if design_pressure_by_rule(p) {
+            return bad(
+                "`params.tank_design_pressure_mpa` must be a number for a fully pressurised LPG \
+                 Cargo: the MARVS sets the loading temperature (IGC 15.1.3.1)"
+                    .to_string(),
+            );
+        }
         let marvs_bar = get_or(
             p,
             "tank_design_pressure_mpa",
@@ -924,18 +944,20 @@ fn tank_report(
             .map(|m| m.allowable_stress)
     });
     let text = |key: &str| p.get(key).cloned().unwrap_or(Value::Null);
+    // The pressure in force: the typed one, or the IGC minimum the core worked out for the tank.
+    let design_pressure = r
+        .gas_basis
+        .as_ref()
+        .map_or(design.design_pressure_mpa, |b| b.tanks.design_pressure);
     Value::Object(
         [
             ("lpg_carriage_condition", text("lpg_carriage_condition")),
-            ("design_pressure_mpa", num(design.design_pressure_mpa)),
+            ("design_pressure_mpa", num(design_pressure)),
             ("liquid_pressure", text("tank_liquid_pressure")),
             ("liquid_pressure_accel", opt_num(liquid.0)),
             ("liquid_pressure_density_kg_m3", num(liquid.1)),
             ("liquid_pressure_mpa", num(pgd)),
-            (
-                "internal_pressure_mpa",
-                num(design.design_pressure_mpa + pgd),
-            ),
+            ("internal_pressure_mpa", num(design_pressure + pgd)),
             ("design_temperature_c", text("tank_design_temperature_c")),
             ("material", json!(design.material)),
             ("head_type", json!(design.head_type)),
