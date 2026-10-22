@@ -346,8 +346,8 @@ pub(crate) fn capacity_result_from_json(
             })
         }
     };
-    // Issue #448: the hull the result was worked on. The JSON holds no Stern Form, and its
-    // dimensions only in a gas basis.
+    // Issue #448: the hull the result was worked on. The JSON holds no Stern Form or hull shape
+    // (#449), and its dimensions only in a gas basis.
     let bow_rake = o.opt_f64("bow_rake_length_m")?;
     let hull_spec = gas_basis
         .as_ref()
@@ -358,6 +358,7 @@ pub(crate) fn capacity_result_from_json(
             bow_rake_length_m: bow_rake.unwrap_or(0.0),
             bow_rake_rise_m: b.inputs.depth,
             stern: None,
+            shape: Default::default(),
         });
     Ok(BargeCapacityResult {
         cargo_type: o.string("cargo_type")?,

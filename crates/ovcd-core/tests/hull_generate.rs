@@ -6,7 +6,9 @@
 //! also checked against `RakedBox::LCB` (fixed for the stern rake in issue #414). The box is the closed form of
 //! `tests/sections.rs`.
 
-use ovcd_core::hull::hull_form::{HullError, HullFormInputs, HullFormKind, RakedBox, generate};
+use ovcd_core::hull::hull_form::{
+    HullError, HullFormInputs, HullFormKind, HullShape, RakedBox, generate,
+};
 use ovcd_core::sections::{Waterplane, immersed, upright};
 
 const L: f64 = 60.0;
@@ -28,6 +30,7 @@ fn raked_inputs(bl: f64, br: f64, sl: f64, sr: f64) -> HullFormInputs {
             stern_rake_length_m: sl,
             stern_rake_rise_m: sr,
         },
+        shape: HullShape::default(),
     }
 }
 
@@ -118,6 +121,7 @@ fn a_raked_box_with_no_rakes_is_the_box() {
         beam_m: B,
         moulded_depth_m: D,
         form: HullFormKind::Box,
+        shape: HullShape::default(),
     })
     .unwrap();
     assert_eq!(flat, bx);

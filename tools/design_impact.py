@@ -300,12 +300,12 @@ OPTIONAL_INPUT_CASES = (
       for name, value in (("deckhouse_front_opening", False), ("deckhouse_side_opening_distance_m", 5.0),
                           ("entrance_distance_m", 2.0), ("engine_room_vent_inlet_distance_m", 2.0),
                           ("funnel_outlet_distance_m", 2.0))),
-    # The Hull Form parameters (issue #446), set to their defaults on a raked box. Inputs only until
-    # the hydrostatics switch-over (#448): each shows no change. A base from before them refuses the
-    # input and leaves it out.
+    # The Hull Form parameters (issue #446) on a raked box: the bilge radius, sheer and camber (#449)
+    # with a value, so each shows what it moves; the rest at their defaults, inputs only until their
+    # generator. A base from before them refuses the input and leaves it out.
     *((name, "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5, {name: value})
-      for name, value in (("bow_rake_length_m", None), ("bow_rake_rise_m", None), ("bilge_radius_m", 0.0),
-                          ("sheer_aft_m", 0.0), ("sheer_fwd_m", 0.0), ("camber_m", 0.0),
+      for name, value in (("bow_rake_length_m", None), ("bow_rake_rise_m", None), ("bilge_radius_m", 1.0),
+                          ("sheer_aft_m", 0.5), ("sheer_fwd_m", 1.0), ("camber_m", 0.3),
                           ("deadrise_deg", 5.0), ("keel_half_width_m", 0.5),
                           ("chine_half_breadth_m", None), ("chine_height_m", None),
                           ("shipd_parameters", None), ("hull_offsets", None))),

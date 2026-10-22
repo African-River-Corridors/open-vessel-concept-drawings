@@ -22,6 +22,7 @@ fn spec(rake: f64) -> HullSpec {
         bow_rake_length_m: rake,
         bow_rake_rise_m: D,
         stern: None,
+        shape: Default::default(),
     }
 }
 

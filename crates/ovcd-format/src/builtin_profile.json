@@ -79,7 +79,7 @@
       "hard": { "ge": 0, "le": 15 },
       "soft": { "min": 0.0, "max": 1.5 },
       "status": "estimate",
-      "basis": "The radius of the bilge, from 0 (a square bilge) to half the beam. 0: the square bilge of today's box; a starting value, not from a source (spec 0008 leaves the default to the bilge radius ticket, #449). A file saved before keeps 0. Inputs only until the generator of this Hull Form."
+      "basis": "The radius of the bilge, from 0 (a square bilge) to half the beam. 0: the square bilge of today's box, kept as the default so no Design moves; a starting value, not from a source. The generator writes the arc as 16 chords per quarter circle; the hull's sections and so its hydrostatics take it (issue #449). A file saved before keeps 0."
     },
     "sheer_aft_m": {
       "default": 0.0,
@@ -87,7 +87,7 @@
       "hard": { "ge": 0, "le": 10 },
       "soft": { "min": 0.0, "max": 2.0 },
       "status": "estimate",
-      "basis": "The rise of the deck edge above the moulded depth at the aft end: a parabola, zero at mid-length (spec 0008, \"Hull Forms\"). 0: a straight deck edge, today's box. A file saved before keeps 0. Inputs only until the generator of this Hull Form."
+      "basis": "The rise of the deck edge above the moulded depth at the aft end: a parabola, zero at mid-length (spec 0008, \"Hull Forms\"). 0: a straight deck edge, today's box. The hull's sections take it above the deck edge, so the GZ past deck immersion moves; the freeboard stays at mid-length, where the sheer is 0 (issue #449). A file saved before keeps 0."
     },
     "sheer_fwd_m": {
       "default": 0.0,
@@ -95,7 +95,7 @@
       "hard": { "ge": 0, "le": 10 },
       "soft": { "min": 0.0, "max": 2.0 },
       "status": "estimate",
-      "basis": "The rise of the deck edge above the moulded depth at the forward end: a parabola, zero at mid-length (spec 0008, \"Hull Forms\"). 0: a straight deck edge, today's box. A file saved before keeps 0. Inputs only until the generator of this Hull Form."
+      "basis": "The rise of the deck edge above the moulded depth at the forward end: a parabola, zero at mid-length (spec 0008, \"Hull Forms\"). 0: a straight deck edge, today's box. The hull's sections take it above the deck edge, so the GZ past deck immersion moves; the freeboard stays at mid-length, where the sheer is 0 (issue #449). A file saved before keeps 0."
     },
     "camber_m": {
       "default": 0.0,
@@ -103,7 +103,7 @@
       "hard": { "ge": 0, "le": 5 },
       "soft": { "min": 0.0, "max": 0.5 },
       "status": "estimate",
-      "basis": "The rise of the deck at the centre line above the deck edge: a parabola across the deck (spec 0008, \"Hull Forms\"). 0: a flat deck, today's box. A file saved before keeps 0. Inputs only until the generator of this Hull Form."
+      "basis": "The rise of the deck at the centre line above the deck edge: a parabola across the deck (spec 0008, \"Hull Forms\"). 0: a flat deck, today's box. The generator writes it as 16 chords on each half; the hull's sections take it above the deck edge, so the GZ past deck immersion moves (issue #449). A file saved before keeps 0."
     },
     "deadrise_deg": {
       "default": 5.0,

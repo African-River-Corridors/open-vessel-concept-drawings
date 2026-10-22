@@ -12,7 +12,7 @@ use alloc::string::ToString;
 
 use libm::{cos, sin};
 
-use crate::hull::hull_form::{HullError, HullFormInputs, HullFormKind, generate};
+use crate::hull::hull_form::{HullError, HullFormInputs, HullFormKind, HullShape, generate};
 use crate::models::{BargeInputs, StabilityResult, TankResult, TrimResult, WeightBreakdown};
 use crate::pressure_vessel::PyError;
 use crate::sections::{
@@ -291,6 +291,8 @@ pub struct HullSpec {
     pub bow_rake_length_m: f64,
     pub bow_rake_rise_m: f64,
     pub stern: Option<SternGeometry>,
+    /// Issue #449: bilge radius, sheer and camber.
+    pub shape: HullShape,
 }
 
 /// Why a hull cannot be built.
@@ -351,6 +353,7 @@ impl Hull {
             beam_m: spec.beam,
             moulded_depth_m: spec.depth,
             form,
+            shape: spec.shape,
         })
         .map_err(BuildError::Hull)?;
         if let Some(g) = &spec.stern {
