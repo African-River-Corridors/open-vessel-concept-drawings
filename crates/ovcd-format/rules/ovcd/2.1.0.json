@@ -961,6 +961,82 @@
       "evaluated": true,
       "finding": null,
       "since": "2.1.0"
+    },
+    {
+      "id": "ovcd/powering/installed-covers-design-speed",
+      "title": "The installed power gives at least the Design Speed in every environment",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#355"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "powering.speed_over_design"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 1.0,
+        "unit": "-"
+      },
+      "tolerance": 1e-09,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "2.1.0"
+    },
+    {
+      "id": "ovcd/wheelhouse/lift-enough",
+      "title": "The lift the Blind Distance needs is within the maximum lift of the wheelhouse",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#355"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "wheelhouse.lift_enough"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "2.1.0"
+    },
+    {
+      "id": "ovcd/powering/shallow-water-validity",
+      "title": "The design channel is at least twice as deep as the loaded draught (h/T of 2.0 or more), where the shallow-water method is valid",
+      "origin": "method-validity",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#355"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "powering.depth_over_draught"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 2.0,
+        "unit": "-"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "2.1.0"
     }
   ]
 }

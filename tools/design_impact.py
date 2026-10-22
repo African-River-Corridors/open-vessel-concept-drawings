@@ -293,7 +293,7 @@ OPTIONAL_INPUT_CASES = (
          {"id": "is2008-a", "version": "1.0.0", "source": "default",
           "hash": "cfab2d1cda90d0cfda8edbf0955082345cd30ef2d102c9840e8d4feab5297e37"},
          {"id": "ovcd", "version": "2.1.0", "source": "default",
-          "hash": "7a4b82e2b709ae694076787156efe9ad57b4916829085128330e4366e6e5295a"}]}),
+          "hash": "ae5c977aa5908851a1afdfc8a4e43d0e11eb2e5ba0736b7c96cf03be6ab08942"}]}),
     # The typed openings (issue #417), set to their defaults on a self-propelled gas barge. They feed
     # Rules (the Rule Trace is not hashed), not the results; the same results as leaving them out. A
     # base from before them refuses the input and leaves it out.
