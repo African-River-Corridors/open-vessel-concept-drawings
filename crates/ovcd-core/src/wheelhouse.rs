@@ -132,9 +132,23 @@ pub fn assess(
         Some(z) => (z - eye_lowered_m).max(0.0),
         None => f64::INFINITY,
     };
-    let used = needed.min(max_lift_m.max(0.0));
-    let eye = eye_lowered_m + used;
-    let blind = blind_distance(eye_x, eye, obstructions, bow_x, w);
+    let cap = max_lift_m.max(0.0);
+    let mut used = needed.min(cap);
+    let mut eye = eye_lowered_m + used;
+    let mut blind = blind_distance(eye_x, eye, obstructions, bow_x, w);
+    // The solve meets the limit exactly, so rounding can leave the blind distance a hair above it.
+    // Raise the lift by the smallest doubling step that brings it to the limit or below, within the
+    // maximum lift. A fixed step sequence keeps native and WebAssembly bit-identical.
+    let mut step = 1e-12 * eye.abs().max(1.0);
+    for _ in 0..64 {
+        if !(blind > limit_m && used < cap) {
+            break;
+        }
+        used = (used + step).min(cap);
+        eye = eye_lowered_m + used;
+        blind = blind_distance(eye_x, eye, obstructions, bow_x, w);
+        step *= 2.0;
+    }
     Sightline {
         limit_m,
         lift_needed_m: needed,
