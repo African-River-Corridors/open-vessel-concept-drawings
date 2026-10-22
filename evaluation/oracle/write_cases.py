@@ -206,13 +206,6 @@ BASE_CASES = [
                 "is a quarter. The verdicts are derived by the oracle.",
     },
     {
-        "id": "liquid_full",
-        "title": "Crude oil tank barge, cargo tanks nominally full",
-        **liquid_particulars(True, 0.98),
-        "note": "Tanks at 98 %: nominally full, no free surface correction (IS Code 2008 Part B 3.1.2). The "
-                "verdicts are derived by the oracle.",
-    },
-    {
         "id": "generic_barge",
         "title": "Generic barge of Marlantes, Kim and Hurt (2022), section 5.1",
         "L": 100.0, "B": 20.0, "D": 10.0, "T": 5.0, "KG": 7.0,

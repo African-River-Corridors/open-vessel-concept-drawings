@@ -142,7 +142,7 @@ Every source is opened and read before a number from it is used. Cite or skip.
    surface correction rho x n x l x b^3 / 12 over the displacement for a slack tank (a tank at 98 % or more is
    nominally full and has none, IS Code 2008 Part B 3.1.2). `liquid_slack` has no centreline bulkhead and fails
    the angle of maximum GZ; `liquid_slack_centreline` is the same hull with one (a quarter of the free
-   surface moment) and passes; `liquid_full` has no free surface. They use the `kind: box` form with
+   surface moment) and passes. They use the `kind: box` form with
    `free_surface_m`, so the box oracle and the engine's `box_condition` are the same as for the other cases. The
    verdicts are derived by the oracle and the inputs are particulars chosen for the corpus, not a publication.
 
