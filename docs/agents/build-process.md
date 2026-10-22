@@ -82,6 +82,11 @@ Each pull request adds one file, `changes/<branch>.md` (the format is in `change
 - Your own bullets for `## Unreleased` go under a `<!-- unreleased -->` line.
 - When designs move, `python3 tools/design_impact.py changelog` writes the before/after table into the same
   file, under a `<!-- design-impact -->` line, and keeps your bullets. Commit the file.
+- **The gate matches rows, not numbers** (issue #625). A fragment passes when its table names the (case, quantity) rows
+  the branch moves; the numbers may be from an earlier base, so a merge on main does not force a regenerate. It fails
+  when a moved row is missing, the table names a row that does not move, or there is no table. A table lists at most
+  40 rows and counts the rest, so with more than 40 moved rows the check is: every listed row moves, and listed plus
+  counted rows equal the moved rows. Regenerate when you change what the branch moves. The merge-group check is unchanged.
 - **New branches use fragments.** During the move, the design-impact gate also accepts the table in
   `CHANGELOG.md` (`changelog --legacy` writes it there), so an open branch need not move. A follow-up turns
   that off once the open pull requests have merged.
