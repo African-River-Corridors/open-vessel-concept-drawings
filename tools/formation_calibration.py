@@ -171,6 +171,21 @@ def main(argv: list[str]) -> int:
         if stale:
             print("formation_calibration: stale:", ", ".join(stale))
             return 1
+        # The Defaults Profile takes the fitted allowance for a pushed barge and a pushed convoy.
+        profile = (ROOT / "crates/ovcd-format/src/builtin_profile.json").read_text(encoding="utf-8")
+        entry = json.loads(profile)
+        found = []
+        def walk(x):
+            if isinstance(x, dict):
+                if "formation_resistance_allowance" in x:
+                    found.append(x["formation_resistance_allowance"]["default_by_formation"])
+                for v in x.values():
+                    walk(v)
+        walk(entry)
+        fitted = yaml.safe_load(out["formation_factors.yaml"])["formation_resistance_allowance"]["pushed_convoy"]["value"]
+        if not found or any(abs(found[0][k] - fitted) > 0.01 for k in ("pushed_barge", "pushed_convoy")):
+            print("formation_calibration: the Defaults Profile does not take the fitted allowance", fitted)
+            return 1
         print("formation_calibration: up to date")
     else:
         print(report)
