@@ -157,7 +157,7 @@ describe("OVCD app smoke tests", () => {
   // The views, by top tab. Every view is checked for scrolling and photographed.
   const GROUPS = [
     ["Drawings", ["Side elevation", "Plan", "Cross-section"]],
-    ["Stability & Propulsion", ["Intact stability", "Power and speed curves", "Rule check calculations"]],
+    ["Stability & Propulsion", ["Intact stability", "Ballast tanks", "Power and speed curves", "Rule check calculations"]],
     ["BOQ & Finance", ["BOQ", "Capital budget"]],
   ];
   const tab = (label) => browser.$(`//button[@role="tab" and normalize-space()="${label}"]`);
@@ -606,6 +606,23 @@ describe("OVCD app smoke tests", () => {
     const oils = ["Crude oil (work in development)", "Diesel fuel (EN 590) (work in development)"];
     for (const oil of oils) assert.ok(labels.includes(oil), labels.join(" | "));
     assert.ok(labels.every((l) => oils.includes(l) || !l.includes("work in development")), "only the oils are tagged");
+  });
+
+  it("lists the ballast tanks and the ballast plan of a Design in the IS Code conditions (issue #426)", async () => {
+    await open(path.join(FIXTURES, "crude_integral_tanks_coastal.vdesign"), "crude_integral_tanks_coastal.vdesign");
+    await show("Stability & Propulsion", "Ballast tanks");
+    await until("the ballast tanks", async () => (await browser.$$("[data-testid=ballast-tanks] tbody tr")).length === 6);
+    assert.match(await browser.$("[data-testid=ballast-summary]").getText(), /^6 ballast tanks\s+Capacity /);
+    const headings = await texts(await browser.$$("[data-testid=ballast-condition]"));
+    assert.ok(headings.some((h) => h.startsWith("Ballast, departure: ") && h.endsWith(" t of ballast")), headings.join(" | "));
+    assert.equal((await browser.$$("[data-testid=ballast-none]")).length, 0);
+  });
+
+  it("says there are no ballast tanks to show for a Design saved before the IS Code conditions (issue #426)", async () => {
+    await open(path.join(FIXTURES, "gas_igc_2g_exact.vdesign"), "gas_igc_2g_exact.vdesign");
+    await show("Stability & Propulsion", "Ballast tanks");
+    await until("the note", async () => (await browser.$$("[data-testid=ballast-none]")).length === 1);
+    assert.equal((await browser.$$("[data-testid=ballast-tanks]")).length, 0);
   });
 
   for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
