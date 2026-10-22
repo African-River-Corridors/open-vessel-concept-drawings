@@ -250,7 +250,8 @@ fn the_lightship_is_the_hull_plus_the_outfit_items() {
     let sum: f64 = items.iter().map(|i| i["mass_t"].as_f64().unwrap()).sum();
     // A pushed barge: the stern block is on the tug, so the lightship is the sum of the items.
     assert!((r["results"]["lightship_t"].as_f64().unwrap() - sum).abs() < 1e-9);
-    let hull = TANK_LIGHTSHIP_K_T_PER_M3 * 76.5 * 11.4 * 3.5;
+    // The fixture stores the lightship factor it was saved with (0.1141); the Defaults Profile has moved on.
+    let hull = 0.1141 * 76.5 * 11.4 * 3.5;
     assert!((items[0]["mass_t"].as_f64().unwrap() - hull).abs() < 1e-9);
 }
 

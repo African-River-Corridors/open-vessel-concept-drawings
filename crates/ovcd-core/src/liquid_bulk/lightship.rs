@@ -17,7 +17,7 @@ use crate::loading_conditions::Item;
 /// `tools/fit_tank_lightship.py` on 15 records, see `calibration/tank_lightship.yaml`. The default of
 /// `LiquidBulkInputs::lightship_k_t_per_m3`: the Defaults Profile holds it as the input
 /// `lightship_factor_t_per_m3` for `integral_tanks`, and a test keeps the two equal.
-pub const TANK_LIGHTSHIP_K_T_PER_M3: f64 = 0.1141;
+pub const TANK_LIGHTSHIP_K_T_PER_M3: f64 = 0.1134;
 /// The cargo pumps, t per m³ of tank volume. Estimate: no published weight.
 pub const PUMPS_T_PER_M3: f64 = 0.004;
 /// Cargo piping, valves and manifolds, t per m³ of tank volume. Estimate: no published weight.
