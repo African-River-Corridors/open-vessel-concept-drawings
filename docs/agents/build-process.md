@@ -33,7 +33,8 @@ ticket whose blockers are all closed, and no other. For each ticket:
    the address). Then start the next ticket's reading and tests. Do not watch CI. Branch protection
    requires `test` and `release-guard` green on the head commit, so auto-merge cannot land red code. The
    design-impact check is part of `test`: it reports whether designs moved, and fails only when a change
-   is missing from `CHANGELOG.md` (run `python3 tools/design_impact.py changelog`). Branch protection is
+   is missing from the changelog (run `python3 tools/design_impact.py changelog`, which writes your fragment;
+   see "Changelog fragments" below). Branch protection is
    not strict, so a PR needs a rebase only for a real conflict, not each time `main` moves. If CI goes
    red, auto-merge waits: fix it when you see it.
 5. **Merge.** Auto-merge (step 4) squash-merges with the repo-local address, so the commit on `main` carries it and not
@@ -72,6 +73,31 @@ Only `test` and `release-guard` are required. Keep the others from making a pull
 A failed daily run of `app-checks.yml` or `web-parity.yml` opens an issue (or comments on the open one).
 WebAssembly parity is a gate (`.config/nextest.toml`, `docs/agents/slow-tests.md`), so it stays on every pull
 request that can change the engine.
+## Changelog fragments
+
+A pull request never edits `CHANGELOG.md`: that file made every two open pull requests conflict (issue #560).
+Each pull request adds one file, `changes/<branch>.md` (the format is in `changes/README.md`):
+
+- Your own bullets for `## Unreleased` go under a `<!-- unreleased -->` line.
+- When designs move, `python3 tools/design_impact.py changelog` writes the before/after table into the same
+  file, under a `<!-- design-impact -->` line, and keeps your bullets. Commit the file.
+- **New branches use fragments.** During the move, the design-impact gate also accepts the table in
+  `CHANGELOG.md` (`changelog --legacy` writes it there), so an open branch need not move. A follow-up turns
+  that off once the open pull requests have merged.
+- A version-bump pull request runs `python3 tools/changelog_collect.py`: it moves every fragment into
+  `CHANGELOG.md` and deletes the files. The release notes still come from `CHANGELOG.md`.
+- `python3 tools/changelog_collect.py --check` tests that every fragment is well formed.
+
+### The merge queue
+
+GitHub's merge queue merges in batches. `ci.yml` also runs on `merge_group`, so `test` and `release-guard` run
+on the commit of a merge group. In a merge group the design-impact check cannot compare one table with the
+combined change of several pull requests. Under `merge_group` it checks that the group adds at least one
+well-formed fragment (or changes `CHANGELOG.md`) when designs move. The pull request run stays the strict check:
+it must hold the table of that pull request.
+
+- A pull request that moves no hash can batch with others.
+- A pull request that moves hashes can queue too, because its own pull request run already checked its table.
 
 ## After the build: adversarial review
 
@@ -113,8 +139,8 @@ During development the app makes 0.2.x patch releases only. Version 0.3 is reser
 
 - **A version bump.** A merge to `main` that changes `version` in `pyproject.toml` publishes the
   pre-release `v<version>`, tagged at that commit. Bump the version in every place the version test
-  names, and add a `## <version>` section to `CHANGELOG.md` (its text is the release notes; the release
-  fails without it). A `v*` tag pushed by hand does the same.
+  names, run `python3 tools/changelog_collect.py` (it moves the fragments into `CHANGELOG.md`), and add a
+  `## <version>` section to `CHANGELOG.md` (its text is the release notes; the release fails without it). A `v*` tag pushed by hand does the same.
 - **A test-release tag.** `git tag test-<name> <commit> && git push origin test-<name>` publishes a
   pre-release named after the tag, with the `Unreleased` notes. It is for trying a build; the commit need
   not be on `main`. Delete old test releases by hand when they are no longer needed.
@@ -177,7 +203,7 @@ header; the check covers any file with a long float literal, except the files li
 
 **Re-pinning a snapshot after an agreed engineering change.** Never hand-edit the value and never
 loosen a tolerance. Change the code. Run the code, print the new value, and paste that value into
-the test. The before/after table that `tools/design_impact.py` writes into `CHANGELOG.md` (run
+the test. The before/after table that `tools/design_impact.py` writes into your changelog fragment (run
 `python3 tools/design_impact.py changelog`) is the record that the change moved the numbers. Say in
 the PR body which snapshots moved and why. A sourced test is not re-pinned this way: it needs a new
 source.

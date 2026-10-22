@@ -35,6 +35,7 @@ TESTS = ROOT / "tests"
 
 # Tests of the tooling. They pin no engineering number.
 INFRASTRUCTURE = {
+    "test_changelog_fragments.py",
     "test_design_impact*.py",
     "test_workflows*.py",
     "test_gates_fail_closed.py",

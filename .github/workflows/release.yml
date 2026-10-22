@@ -85,6 +85,7 @@ jobs:
             --ignore=tests/test_release_guard.py --ignore-glob='tests/test_gates*.py' \
             --ignore=tests/test_pystr_tables.py --ignore=tests/test_vdesign_edge_sweep.py \
             --ignore-glob='tests/test_design_impact*.py' --ignore-glob='tests/test_workflows*.py' \
+            --ignore=tests/test_changelog_fragments.py \
             --ignore=tests/test_test_labels.py --ignore-glob='tests/test_gen_*.py' \
             --ignore=tests/test_website_app_dist.py --ignore=tests/test_rule_set_schema.py \
             --deselect=tests/test_api_small_changes.py::test_the_core_modules_no_longer_claim_to_run_in_pyodide \

@@ -8,6 +8,9 @@ on:
     branches: ["main"]
     tags: ["v*", "test-*"]
   pull_request:
+  # The merge queue (issue #560): the required checks run on the merge group's commit as well. The
+  # group's design-impact check looks for well-formed changelog fragments, not one equal table.
+  merge_group:
   workflow_dispatch:
   workflow_call: # the release workflow runs these same two jobs as its gate
 
@@ -130,8 +133,12 @@ jobs:
           EVENT: ${{ github.event_name }}
           BASE: ${{ github.base_ref }}
           BEFORE: ${{ github.event.before }}
+          GROUP_BASE: ${{ github.event.merge_group.base_sha }}
         run: |
-          if [ "$EVENT" = pull_request ] && git diff --quiet "origin/$BASE...HEAD" -- evaluation/; then
+          if [ "$EVENT" = merge_group ] && git cat-file -e "$GROUP_BASE^{commit}" 2>/dev/null \
+               && git diff --quiet "$GROUP_BASE" HEAD -- evaluation/; then
+            echo "No change under evaluation/ in this merge group: the check runs nightly."
+          elif [ "$EVENT" = pull_request ] && git diff --quiet "origin/$BASE...HEAD" -- evaluation/; then
             echo "No change under evaluation/: the check runs nightly."
           elif [ "$EVENT" = push ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null \
                && git diff --quiet "$BEFORE" HEAD -- evaluation/; then
