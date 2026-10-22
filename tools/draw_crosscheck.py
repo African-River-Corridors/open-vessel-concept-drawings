@@ -77,11 +77,6 @@ def main() -> int:
                 if "convoy results not yet available" in proc.stderr and json.loads(proc.stdout or "{}") == {}:
                     print(f"{fixture.name}: no views (convoy), as expected")
                     continue
-                # A crude oil Option has no drawing until the drawing ticket of spec 0006 (#333); the
-                # message is the expected one. Remove this branch with that ticket.
-                if "a liquid bulk Cargo has no drawing yet" in proc.stderr:
-                    print(f"{fixture.name}: no views (liquid bulk, drawings not built yet), as expected")
-                    continue
                 problems.append(f"{fixture.name}: ovcd draw --document failed: {proc.stderr.strip()[:300]}")
                 continue
             for option, views in json.loads(proc.stdout).items():

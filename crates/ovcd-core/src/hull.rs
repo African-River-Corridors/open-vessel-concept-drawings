@@ -12,7 +12,7 @@ pub mod hull_form {
     use alloc::vec;
     use alloc::vec::Vec;
     use core::fmt;
-    use libm::{cos, pow, sin, sqrt};
+    use libm::{acos, atan2, cos, pow, sin, sqrt, tan};
 
     /// Box barge hull with bottom rakes (`HullGeometry` in Python). All lengths in metres.
     #[derive(Debug, Clone, Copy, PartialEq)]
@@ -320,6 +320,35 @@ pub mod hull_form {
         /// The rise of the deck at the centre line above the deck edge: a parabola across the deck,
         /// written as [`CAMBER_CHORDS`] chords on each half.
         pub camber_m: f64,
+        /// The bottom: flat (the box), or a V-bottom or chine bottom (issue #450).
+        pub bottom: Bottom,
+    }
+
+    /// The bottom of a Hull Form's section (spec 0008, "Hull Forms"). Angles in degrees, lengths in
+    /// metres, heights above the keel.
+    #[derive(Debug, Clone, Copy, PartialEq, Default)]
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    pub enum Bottom {
+        /// A flat bottom to a square (or round, with a bilge radius) bilge.
+        #[default]
+        Flat,
+        /// `v_bottom`: a flat keel of half-width `keel_half_width_m`, then the bottom at the
+        /// deadrise to a chine at the side, then a vertical side.
+        VBottom {
+            deadrise_deg: f64,
+            keel_half_width_m: f64,
+        },
+        /// `chine`: a flat keel of half-width `keel_half_width_m`, the bottom to a chine at
+        /// `chine_half_breadth_m` (none: the side) and `chine_height_m` (none: where the deadrise
+        /// line meets the chine half-breadth), then a straight side to the deck edge at the side.
+        /// With a typed chine height the bottom runs straight from the keel to the chine, and the
+        /// deadrise sets only the default height.
+        Chine {
+            deadrise_deg: f64,
+            keel_half_width_m: f64,
+            chine_half_breadth_m: Option<f64>,
+            chine_height_m: Option<f64>,
+        },
     }
 
     /// Chords per quarter circle of the bilge.
@@ -370,6 +399,20 @@ pub mod hull_form {
         NegativeShape,
         /// The bilge radius is more than half the beam or more than the moulded depth.
         BilgeRadius { radius_m: f64, limit_m: f64 },
+        /// The deadrise is not from 0 to less than 90 degrees.
+        Deadrise { deg: f64 },
+        /// The flat keel is wider than the beam.
+        KeelOutsideBeam {
+            keel_half_width_m: f64,
+            half_beam_m: f64,
+        },
+        /// The chine is not between the flat keel and the side.
+        ChineOutsideBeam {
+            half_breadth_m: f64,
+            half_beam_m: f64,
+        },
+        /// The chine is above the moulded depth.
+        ChineAboveDepth { height_m: f64, depth_m: f64 },
         /// The sections the generator wrote were refused.
         Sections(SectionsError),
     }
@@ -398,6 +441,30 @@ pub mod hull_form {
                     f,
                     "a bilge radius of {radius_m} m is more than {limit_m} m, half the beam or the moulded depth"
                 ),
+                HullError::Deadrise { deg } => {
+                    write!(
+                        f,
+                        "a deadrise of {deg} degrees must be from 0 to less than 90"
+                    )
+                }
+                HullError::KeelOutsideBeam {
+                    keel_half_width_m,
+                    half_beam_m,
+                } => write!(
+                    f,
+                    "a keel half-width of {keel_half_width_m} m is more than half the beam, {half_beam_m} m"
+                ),
+                HullError::ChineOutsideBeam {
+                    half_breadth_m,
+                    half_beam_m,
+                } => write!(
+                    f,
+                    "a chine half-breadth of {half_breadth_m} m is not between the flat keel and half the beam, {half_beam_m} m"
+                ),
+                HullError::ChineAboveDepth { height_m, depth_m } => write!(
+                    f,
+                    "a chine height of {height_m} m is above the moulded depth of {depth_m} m"
+                ),
                 HullError::Sections(e) => write!(f, "{e}"),
             }
         }
@@ -415,10 +482,25 @@ pub mod hull_form {
     /// rectangle when the shape is 0, else with the bilge arc and the cambered deck. Every Section of
     /// one hull gets the same point count. Where the bilge radius is more than the height of the side
     /// (a rake end near the deck) the arc takes that height.
-    fn box_half(half_beam: f64, z_keel: f64, z_edge: f64, shape: &HullShape) -> Vec<(f64, f64)> {
+    fn box_half(
+        half_beam: f64,
+        z_keel: f64,
+        z_edge: f64,
+        shape: &HullShape,
+        chine: Option<Chine>,
+    ) -> Vec<(f64, f64)> {
         let b = half_beam;
         let mut pts = vec![(0.0, z_keel)];
-        if shape.bilge_radius_m > 0.0 {
+        if let Some(c) = chine {
+            let keel = (c.keel_half_width_m, z_keel);
+            let corner = (c.half_breadth_m, (z_keel + c.height_m).min(z_edge));
+            pts.push(keel);
+            if shape.bilge_radius_m > 0.0 {
+                pts.extend(fillet(keel, corner, (b, z_edge), shape.bilge_radius_m));
+            } else {
+                pts.push(corner);
+            }
+        } else if shape.bilge_radius_m > 0.0 {
             let r = shape.bilge_radius_m.min(z_edge - z_keel).max(0.0);
             let (cy, cz) = (b - r, z_keel + r);
             let n = BILGE_CHORDS;
@@ -443,6 +525,49 @@ pub mod hull_form {
             pts.push((0.0, z_edge));
         }
         pts
+    }
+
+    /// The bottom of a V-bottom or chine section, resolved: the flat keel, and the chine above the
+    /// keel.
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    struct Chine {
+        keel_half_width_m: f64,
+        half_breadth_m: f64,
+        height_m: f64,
+    }
+
+    /// The corner `p` between the straight lines from `a` and to `d`, rounded by an arc of radius
+    /// `r` tangent to both, as [`BILGE_CHORDS`] chords. Where the lines are too short for the
+    /// radius, the arc takes the largest radius that fits; a straight or empty corner is `p` itself.
+    fn fillet(a: (f64, f64), p: (f64, f64), d: (f64, f64), r: f64) -> Vec<(f64, f64)> {
+        let n = BILGE_CHORDS;
+        let (la, ld) = (
+            sqrt(pow(p.0 - a.0, 2.0) + pow(p.1 - a.1, 2.0)),
+            sqrt(pow(d.0 - p.0, 2.0) + pow(d.1 - p.1, 2.0)),
+        );
+        let corner = vec![p; n as usize + 1];
+        if la <= 0.0 || ld <= 0.0 {
+            return corner;
+        }
+        let u = ((p.0 - a.0) / la, (p.1 - a.1) / la);
+        let v = ((d.0 - p.0) / ld, (d.1 - p.1) / ld);
+        // The turn from u to v, counter-clockwise (the bottom turns up into the side).
+        let turn = acos((u.0 * v.0 + u.1 * v.1).clamp(-1.0, 1.0));
+        if turn <= 0.0 {
+            return corner;
+        }
+        let half = tan(turn / 2.0);
+        let r = r.min(la.min(ld) / half);
+        let t = r * half;
+        let t1 = (p.0 - u.0 * t, p.1 - u.1 * t);
+        let c = (t1.0 - u.1 * r, t1.1 + u.0 * r);
+        let a0 = atan2(t1.1 - c.1, t1.0 - c.0);
+        (0..=n)
+            .map(|j| {
+                let a = a0 + turn * f64::from(j) / f64::from(n);
+                (c.0 + r * cos(a), c.1 + r * sin(a))
+            })
+            .collect()
     }
 
     /// The keel height at `x` on the keel line through `keel` (stations ascending): linear between.
@@ -518,6 +643,7 @@ pub mod hull_form {
                 limit_m: limit,
             });
         }
+        let chine = resolve_bottom(&shape.bottom, b / 2.0, d)?;
         // A sheered half gets evenly spaced Stations, so the deck edge follows the parabola; the
         // keel there is on the keel line (a straight rake stays straight).
         let mut stations = keel.clone();
@@ -545,10 +671,65 @@ pub mod hull_form {
             .zip(&edges)
             .map(|(&(x, z), &edge)| Section {
                 x,
-                points: box_half(b / 2.0, z, edge, shape),
+                points: box_half(b / 2.0, z, edge, shape, chine),
             })
             .collect();
         SectionsTable::new(sections, edges).map_err(HullError::Sections)
+    }
+
+    /// The keel and chine of a V-bottom or chine bottom, checked; `None` for a flat bottom.
+    fn resolve_bottom(
+        bottom: &Bottom,
+        half_beam: f64,
+        depth: f64,
+    ) -> Result<Option<Chine>, HullError> {
+        let (deadrise, keel, breadth, height) = match *bottom {
+            Bottom::Flat => return Ok(None),
+            Bottom::VBottom {
+                deadrise_deg,
+                keel_half_width_m,
+            } => (deadrise_deg, keel_half_width_m, None, None),
+            Bottom::Chine {
+                deadrise_deg,
+                keel_half_width_m,
+                chine_half_breadth_m,
+                chine_height_m,
+            } => (
+                deadrise_deg,
+                keel_half_width_m,
+                chine_half_breadth_m,
+                chine_height_m,
+            ),
+        };
+        if !(deadrise.is_finite() && (0.0..90.0).contains(&deadrise)) {
+            return Err(HullError::Deadrise { deg: deadrise });
+        }
+        if !non_negative(keel) || keel > half_beam {
+            return Err(HullError::KeelOutsideBeam {
+                keel_half_width_m: keel,
+                half_beam_m: half_beam,
+            });
+        }
+        let breadth = breadth.unwrap_or(half_beam);
+        if !breadth.is_finite() || breadth < keel || breadth > half_beam {
+            return Err(HullError::ChineOutsideBeam {
+                half_breadth_m: breadth,
+                half_beam_m: half_beam,
+            });
+        }
+        let height = height
+            .unwrap_or_else(|| (breadth - keel) * tan(deadrise * (core::f64::consts::PI / 180.0)));
+        if !non_negative(height) || height > depth {
+            return Err(HullError::ChineAboveDepth {
+                height_m: height,
+                depth_m: depth,
+            });
+        }
+        Ok(Some(Chine {
+            keel_half_width_m: keel,
+            half_breadth_m: breadth,
+            height_m: height,
+        }))
     }
 
     impl RakedBox {

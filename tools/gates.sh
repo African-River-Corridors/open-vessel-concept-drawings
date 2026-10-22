@@ -20,6 +20,7 @@
 #   5. the WebAssembly build of ovcd-core and ovcd-web (ovcd-web builds the pinned otd crate too)
 #   6. the design-impact check (before/after on main; fails only if a change is missing from
 #      CHANGELOG.md)
+#   6a. the stored results hashes of the fixture designs (tools/check_fixture_hashes.py)
 #   7. pytest against the shipped package, on every core (pytest-xdist). The `pr` profile leaves out
 #      the tests marked `slow`; `nightly` runs them too. docs/agents/slow-tests.md lists every test
 #      the `pr` profile leaves out.
@@ -50,7 +51,7 @@ cd "$(dirname "$0")/.."
 PY="${OVCD_PYTHON:-python3}"
 WASM_TARGET="wasm32-unknown-unknown"
 PROFILE="${GATES_NEXTEST_PROFILE:-pr}"
-EXPECTED_STEPS=8
+EXPECTED_STEPS=9
 steps_run=0
 steps_wanted=0
 GROUPS_ALL="lint rust rules impact pytest"
@@ -129,12 +130,23 @@ cargo_test_without_python() {
   fi
 }
 
+# The stored results hashes of the fixture designs match what the code gives. The release gate
+# also runs this check on Windows, macOS and WebAssembly; here it runs on the PR runner, with a debug build
+# of `ovcd`, so a wrong stored hash cannot reach main, alone or together with another pull request.
+fixture_hashes() {
+  cargo build -q -p ovcd-cli || return 1
+  local target
+  target="$(cargo metadata --format-version 1 --no-deps | "$PY" -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])')" || return 1
+  "$PY" tools/check_fixture_hashes.py "$target/debug/ovcd"
+}
+
 step lint "cargo fmt --check" cargo fmt --all --check
 step lint "clippy -D warnings" cargo clippy --all-targets --all-features -- -D warnings
 step lint "clippy ovcd-py -D warnings" env PYO3_PYTHON="$PY" cargo clippy -p ovcd-py --all-targets --all-features -- -D warnings
 step rust "cargo test (no Python)" cargo_test_without_python
 step rules "Rule Set gate" cargo run -q -p ovcd-cli -- rules --provenance
 step rules "WebAssembly build of ovcd-core and ovcd-web" cargo build -p ovcd-core -p ovcd-web --all-features --target "$WASM_TARGET"
+step impact "fixture results hashes" fixture_hashes
 step impact "design impact" "$PY" tools/design_impact.py gate
 step pytest "pytest" "$PY" -m pytest -q -n auto ${PYTEST_SELECT[@]+"${PYTEST_SELECT[@]}"}
 

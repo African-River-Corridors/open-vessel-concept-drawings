@@ -68,10 +68,6 @@ def main() -> int:
             if proc.returncode != 0:
                 if "convoy results not yet available" in proc.stderr:
                     continue
-                # A crude oil Option has no drawing until the drawing ticket of spec 0006 (#333).
-                # Remove this branch with that ticket.
-                if "a liquid bulk Cargo has no drawing yet" in proc.stderr:
-                    continue
                 problems.append(f"{fixture.name}: ovcd draw failed: {proc.stderr.strip()[:300]}")
                 continue
             for document in sorted(out.glob("*.drawing.json")):
