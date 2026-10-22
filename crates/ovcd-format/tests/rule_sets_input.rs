@@ -128,6 +128,7 @@ fn the_schema_lists_the_two_new_inputs_and_not_the_ruleset() {
             "es-trin-2025",
             "icll-freeboard",
             "solas-v22",
+            "abs-barges",
             "ovcd"
         ])
     );

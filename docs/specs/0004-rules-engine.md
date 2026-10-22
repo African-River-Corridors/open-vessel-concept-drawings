@@ -448,6 +448,8 @@ One row per Rule per object, in selection order, then the set's rule order, then
 | Dry bulk and others | `is2008-a` (its rows are `not evaluated` until intact stability covers every Cargo, roadmap phase 1); `ovcd` |
 | Liquid bulk (crude oil, #339) | the dry bulk stack with `adn-tank` (any Service Area), and on `coastal-and-river` also `marpol-i` and the freeboard sets (`icll-freeboard`, `solas-v22`); `normam-202` is never in a default stack; `ovcd` |
 
+On `coastal-and-river` every stack also holds `abs-barges` (issue #363: two note rows for an ATB Formation, none for any other).
+
 - **Target stacks (later specs, not built here).** River only adds an inland class stability set (BV
   NR217 Pt B Ch 2 Sec 2 [4.1], which has the same three numbers as ADN 9.3.1.14.2) and ES-TRIN 2025/1
   Chapter 4 freeboard and safety clearance as a reference. Coastal and river adds IS Code 2008 Part B
