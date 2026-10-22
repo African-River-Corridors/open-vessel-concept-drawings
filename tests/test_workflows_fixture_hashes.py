@@ -152,10 +152,15 @@ def test_the_release_gate_runs_it_on_windows_and_both_macs():
     assert not any("--no-fail" in r or "|| true" in r for r in runs)
 
 
-def test_the_pull_request_gate_does_not_run_it():
-    for name in ("ci.yml",):
-        assert "check_fixture_hashes" not in (ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
-    assert "check_fixture_hashes" not in (ROOT / "tools" / "gates.sh").read_text(encoding="utf-8")
+def test_the_pull_request_gate_runs_it_natively_through_gates_sh():
+    """a wrong stored hash shipped on main, because only the release gate ran the check. The
+    fast gate runs it on Linux, in the `impact` group, so it runs on every pull request and merge group.
+    The cross-platform runs stay in release.yml."""
+    gates = (ROOT / "tools" / "gates.sh").read_text(encoding="utf-8")
+    assert 'step impact "fixture results hashes" fixture_hashes' in gates
+    assert "tools/check_fixture_hashes.py" in gates
+    ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    assert "check_fixture_hashes" not in ci            # it is in gates.sh, not a second place
 
 
 def test_the_release_gate_runs_it_on_webassembly_with_a_pinned_wasmtime():

@@ -53,4 +53,13 @@ def test_the_rust_tests_run_in_every_partition_once():
 def test_every_step_of_the_script_names_a_group():
     steps = [l.split()[1] for l in GATES.splitlines() if l.startswith("step ")]
     groups = set(re.search(r'GROUPS_ALL="([^"]*)"', GATES).group(1).split())
-    assert len(steps) == 8 and set(steps) == groups
+    assert len(steps) == 9 and set(steps) == groups
+
+
+def test_the_required_checks_also_run_for_a_merge_group():
+    on = CI.get("on", CI.get(True))        # YAML reads a bare `on` as the boolean True
+    assert "merge_group" in on
+    assert "test" in CI["jobs"] and "release-guard" in CI["jobs"]
+    # A merge group is never cancelled by a newer one: its concurrency group is its own run id.
+    group = CI["concurrency"]["group"]
+    assert "github.run_id" in group and "event_name == 'pull_request'" in group

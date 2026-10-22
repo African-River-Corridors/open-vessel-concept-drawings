@@ -69,7 +69,7 @@ their own group and note, so the liquid inputs are `liquid_tanks_in_line` and `l
 |---|---|---|
 | `double_side_m` | the governing Rule's minimum for the Option (`sizes: true`) | Rule Sets in §5 |
 | `double_bottom_m` | same | same |
-| `liquid_tanks_in_line` | the smallest count that meets the tank volume and length limits (4 until `fit` works it out) | same |
+| `liquid_tanks_in_line` | the smallest count that meets the tank volume and length limits (the profile default is 4; `fit` works out the count for a hull, issue #340) | same |
 | `centreline_bulkhead` | on when a tank would be wider than 0.70 B | ADN 9.3.x.13, BV NR217 (02 §8.5) |
 | `cofferdam_m` | 0.60 | ADN 9.3.x.11.3 |
 | `pump_arrangement` | `deepwell` (one pump per tank) | 03 §2.3; works for UN 1267 and 3494 |
@@ -92,7 +92,7 @@ phase 2 compartment model** (ADR 0016), not a one-off.
 | Stability | Standard loading conditions: departure laden, arrival laden (10 % consumables), ballast, and the worst slack-tank condition. Free surface for rectangular slack tanks, split by the centreline bulkhead. Reuses the box GZ and the IS Code 2008 Part A criteria after they move out of the gas module. | 03 |
 | Damage stability | `not evaluated` rows (ADN 9.3.x.15, MARPOL Reg. 28) until a damage Measure exists. | 03, 09 |
 | Freeboard | ICLL Type A (coastal) and ES-TRIN (inland) as Rules; the depth rule group `liquid` (D/B 0.30) gives the default depth. | 01, 08 |
-| Drawings | A cargo-tank arm in `ga.rs`: tanks P/S with numbers, centreline and transverse bulkheads, wing ballast hatched, cofferdams, pump room or deepwell pump symbols, midship section with inner hull. No pipe routing. | 11 |
+| Drawings | A cargo-tank arm in `ga.rs`: tanks P/S with numbers, centreline and transverse bulkheads, wing ballast hatched, cofferdams, the pump room (a deepwell pump has no symbol: the model has no size for one), midship section with inner hull. No pipe routing. | 11 |
 | Cost | A cost item list per containment. Cargo tank list: tank steel, coating area, pumps, piping, heating, vents, gauging. Lump sums first, BOQ lines in the BOQ phase. | 10 |
 | App | Crude oil shows "work in development" until damage stability and the oil Rule Sets are in. | — |
 
@@ -181,7 +181,7 @@ Filed as #328 to #342, in the order of this table (ticket n = #327 + n). "None" 
 | 10 | Measures of §5.3 | none | #269, 3 |
 | 11 | Rule Sets `adn-tank`, `marpol-i`, `icll-type-a` 1.0.0, `unverified`, as `warn`; harness boundary cases | warnings only | 10; #273, #278 |
 | 12 | Default Rule Set stacks for liquid bulk by Service Area | default stack | #274, #275 |
-| 13 | `fit` for liquid bulk (tanks in line, double hull from the governing Rule) | `fit` results | #276, #277 |
+| 13 | `fit` for liquid bulk (tanks in line, double hull from the governing Rule): `liquid_fit` in `ovcd-format`, and the `liquid_fit` entry of the evaluation API | `fit` results only; no `run` calls it | #276, #277 |
 | 14 | Damage stability Measure (ADN extents first), then oil outflow | new checks | 5, 11 |
 | 15 | Second oil (product, vegetable oil): data rows only | new Cargo only | 2–11 |
 

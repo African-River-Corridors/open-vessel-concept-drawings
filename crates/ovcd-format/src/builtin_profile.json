@@ -71,7 +71,7 @@
       "hard": { "ge": 0, "le": 15 },
       "soft": { "min": 0.0, "max": 1.5 },
       "status": "estimate",
-      "basis": "The radius of the bilge, from 0 (a square bilge) to half the beam. 0: the square bilge of today's box, kept as the default so no Design moves; a starting value, not from a source. The generator writes the arc as 16 chords per quarter circle; the hull's sections and so its hydrostatics take it (issue #449). A file saved before keeps 0."
+      "basis": "The radius of the bilge, from 0 (a square bilge) to half the beam. 0: a square bilge with a chine bar or angle, which BV NR217 (June 2025) Pt B Ch 5 Sec 2 [2.2.2] and LR Rules for Inland Waterways Ships (Nov 2015) Pt 4 Ch 1 5.4.3 and Ch 6 3.4.3 permit; no rule gives a default value, so the default stays the square bilge of today's box (issue #450). The generator writes the arc as 16 chords per quarter circle; the hull's sections and so its hydrostatics take it (issue #449). A file saved before keeps 0."
     },
     "sheer_aft_m": {
       "default": 0.0,
@@ -103,7 +103,7 @@
       "hard": { "ge": 0, "le": 45 },
       "soft": { "min": 0.0, "max": 25.0 },
       "status": "estimate",
-      "basis": "For a V-bottom or chine hull: the angle of the bottom to the horizontal. 5 degrees: a starting value for a shallow-draught hull, not from a source; the V-bottom and chine ticket (#450) proposes the value with its basis (spec 0008, \"Decisions taken and open questions\"). Inputs only until the generator of this Hull Form."
+      "basis": "For a V-bottom or chine hull: the angle of the bottom to the horizontal. 5 degrees: a starting value for a shallow-draught hull, not from a source; no source held gives a value, so it stays an estimate for the maintainer to set (spec 0008, \"Decisions taken and open questions\"). The hull's sections take it (issue #450)."
     },
     "keel_half_width_m": {
       "default": 0.5,
@@ -111,7 +111,7 @@
       "hard": { "ge": 0, "le": 15 },
       "soft": { "min": 0.0, "max": 2.0 },
       "status": "estimate",
-      "basis": "For a V-bottom or chine hull: half the width of the flat keel on the centre line, from which the bottom rises at the deadrise. 0.5 m: a starting value, not from a source; the V-bottom and chine ticket (#450) proposes the value with its basis. Inputs only until the generator of this Hull Form."
+      "basis": "For a V-bottom or chine hull: half the width of the flat keel on the centre line, from which the bottom rises at the deadrise. 0.5 m: a starting value, not from a source; no source held gives a value, so it stays an estimate for the maintainer to set. The hull's sections take it (issue #450). A tunnel stern needs a flat bottom wider than its tunnels."
     },
     "chine_half_breadth_m": {
       "default": null,
@@ -119,7 +119,7 @@
       "hard": { "ge": 0, "le": 15 },
       "soft": { "min": 0.0, "max": 12.0 },
       "status": "estimate",
-      "basis": "For a chine hull: the distance of the chine from the centre line. none: half the beam, a hard chine at the side. Inputs only until the generator of this Hull Form."
+      "basis": "For a chine hull: the distance of the chine from the centre line. none: half the beam, a hard chine at the side, which is the V-bottom. A straight side runs from the chine to the deck edge at half the beam (issue #450)."
     },
     "chine_height_m": {
       "default": null,
@@ -127,7 +127,7 @@
       "hard": { "ge": 0, "le": 30 },
       "soft": { "min": 0.0, "max": 5.0 },
       "status": "estimate",
-      "basis": "For a chine hull: the height of the chine above base. none: where the bottom at the deadrise meets the chine half-breadth. Inputs only until the generator of this Hull Form."
+      "basis": "For a chine hull: the height of the chine above base. none: where the bottom at the deadrise meets the chine half-breadth. With a typed height the bottom runs straight from the flat keel to the chine, and the deadrise sets only the default height (issue #450)."
     },
     "shipd_parameters": {
       "default": null,

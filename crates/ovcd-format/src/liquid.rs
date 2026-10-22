@@ -111,6 +111,19 @@ pub(crate) fn liquid_json(l: &LiquidBulkResult, cargo_key: &str) -> Value {
     })
 }
 
+/// A Space for the drawing: the Space as the results give it, with its cross-section corners
+/// (`section_m`, (y, z) in metres), which the general arrangement draws.
+fn drawing_space_json(s: &Space) -> Value {
+    let mut v = space_json(s);
+    v["section_m"] = Value::Array(
+        s.section
+            .iter()
+            .map(|(y, z)| json!([num(*y), num(*z)]))
+            .collect(),
+    );
+    v
+}
+
 /// The `drawing` values of a liquid Option: the layout the general arrangement will draw. Kept out
 /// of the results hash with the rest of `drawing`.
 pub(crate) fn drawing_values(r: &BargeCapacityResult) -> Vec<(&'static str, Value)> {
@@ -120,7 +133,7 @@ pub(crate) fn drawing_values(r: &BargeCapacityResult) -> Vec<(&'static str, Valu
     vec![(
         "liquid_tanks",
         json!({
-            "spaces": l.spaces.iter().map(space_json).collect::<Vec<_>>(),
+            "spaces": l.spaces.iter().map(drawing_space_json).collect::<Vec<_>>(),
         }),
     )]
 }

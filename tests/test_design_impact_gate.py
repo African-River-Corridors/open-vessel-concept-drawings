@@ -39,7 +39,8 @@ class Fixture:
         self.root = tmp / "repo"
         (self.root / "tools").mkdir(parents=True)
         (self.root / "calibration").mkdir()
-        shutil.copy(ROOT / "tools" / "design_impact.py", self.root / "tools")
+        for module in ("design_impact.py", "changelog_fragments.py"):
+            shutil.copy(ROOT / "tools" / module, self.root / "tools")
         for name in ("cases.yaml", "cn_yangtze_gb38030_draft_2018.yaml"):
             shutil.copy(ROOT / "calibration" / name, self.root / "calibration")
         (self.root / "factor.txt").write_text("10\n")
@@ -66,8 +67,8 @@ class Fixture:
     def write(self, rel, text):
         (self.root / rel).write_text(text)
 
-    def run(self, mode="gate"):
-        return subprocess.run([sys.executable, "tools/design_impact.py", mode], cwd=self.root,
+    def run(self, mode="gate", *more):
+        return subprocess.run([sys.executable, "tools/design_impact.py", mode, *more], cwd=self.root,
                               env=self.env, capture_output=True, text=True)
 
 
@@ -93,7 +94,7 @@ def test_a_moving_branch_without_the_changelog_table_fails(tmp_path):
     r = fx.run()
     assert r.returncode == 1
     assert "design change" in r.stdout
-    assert "CHANGELOG.md does not hold the table" in r.stderr
+    assert "no changelog fragment holds the table" in r.stderr
 
 
 def test_the_same_branch_passes_once_the_changelog_holds_the_table(tmp_path):
@@ -102,10 +103,22 @@ def test_the_same_branch_passes_once_the_changelog_holds_the_table(tmp_path):
     fx.commit("move results")
     assert fx.run().returncode == 1
     w = fx.run("changelog")
-    assert w.returncode == 0 and "wrote CHANGELOG.md" in w.stdout
+    assert w.returncode == 0 and "wrote changes/feature.md" in w.stdout
     fx.commit("changelog")
     r = fx.run()
     assert r.returncode == 0, r.stderr
+    assert "### feature" in (fx.root / "changes" / "feature.md").read_text()
+
+
+def test_the_old_form_still_passes_during_the_move(tmp_path):
+    """Issue #560: a table in CHANGELOG.md (the form of an open branch) is accepted as well."""
+    fx = branch(tmp_path)
+    fx.write("factor.txt", "11\n")
+    fx.commit("move results")
+    w = fx.run("changelog", "--legacy")
+    assert w.returncode == 0 and "wrote CHANGELOG.md" in w.stdout
+    fx.commit("changelog")
+    assert fx.run().returncode == 0
     assert "### feature" in (fx.root / "CHANGELOG.md").read_text()
 
 
