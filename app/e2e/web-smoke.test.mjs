@@ -12,6 +12,7 @@ import { serve } from "./web-server.mjs";
 
 const here = import.meta.dirname;
 const FIXTURE = path.resolve(here, "../../crates/ovcd-format/tests/fixtures/gas_igc_2g_self_propelled.vdesign");
+const BALLAST_FIXTURE = path.resolve(here, "../../crates/ovcd-format/tests/fixtures/crude_integral_tanks_coastal.vdesign");
 const DRY_FIXTURE = path.resolve(here, "../../crates/ovcd-format/tests/fixtures/dry_bulk_box_hold.vdesign");
 const DIST = path.resolve(here, "../dist-web-test");
 const CLI = process.env.OVCD_CLI;
@@ -99,6 +100,35 @@ describe("OVCD web smoke tests", () => {
     // The Design is kept: a reload brings it back.
     await b.url(`${origin}/ovcd/app`);
     await until(b, "the restored Design", async () => (await b.$("header")).getText().then((t) => t.includes("gas_igc_2g_self_propelled.vdesign")));
+  });
+
+  it("lists the ballast tanks and the ballast plan of a Design in the IS Code conditions (issue #426)", async () => {
+    const b = await start();
+    await b.url(`${origin}/ovcd/app`);
+    await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+    await (await b.$("button=I understand")).click();
+    await until(b, "results", async () => (await outputs(b)).isExisting());
+    await b.execute(() => {
+      HTMLInputElement.prototype.click = function () {};
+    });
+    await (await b.$("button=Open")).click();
+    const picker = await b.$("[data-testid=file-picker]");
+    await picker.waitForExist({ timeout: 5000 });
+    await picker.setValue(BALLAST_FIXTURE);
+    await until(b, "the file name", async () => (await b.$("header")).getText().then((t) => t.includes("crude_integral_tanks_coastal.vdesign")));
+    const tab = (label) => b.$(`//button[@role="tab" and normalize-space()="${label}"]`);
+    await (await tab("Stability & Propulsion")).click();
+    await (await tab("Ballast tanks")).click();
+    await until(b, "the ballast tanks", async () => (await b.$$("[data-testid=ballast-tanks] tbody tr")).length === 6);
+    assert.match(await (await b.$("[data-testid=ballast-summary]")).getText(), /^6 ballast tanks\s+Capacity /);
+    const headings = [];
+    for (const h of await b.$$("[data-testid=ballast-condition]")) headings.push(await h.getText());
+    assert.ok(headings.some((h) => h.startsWith("Ballast, departure: ") && h.endsWith(" t of ballast")), headings.join(" | "));
+    if (SHOTS) {
+      fs.mkdirSync(SHOTS, { recursive: true });
+      await new Promise((r) => setTimeout(r, 800));
+      await b.saveScreenshot(path.join(SHOTS, "web-ballast-tanks.png"));
+    }
   });
 
   it("gives the same results hashes and saved bytes in every language, and keeps the choice", async () => {
