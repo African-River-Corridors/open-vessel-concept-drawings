@@ -110,7 +110,13 @@ pub fn default_rule_sets(
     containment: Option<&str>,
 ) -> Value {
     let gas = containment == Some("type_c_tanks");
-    let ids: Vec<String> = profile.default_stack(service_area, gas).unwrap_or_else(|| {
+    // Issue #339: a liquid bulk Cargo Containment has its own stack, with the liquid Rule Sets.
+    let found = if containment == Some("integral_tanks") {
+        profile.default_liquid_stack(service_area)
+    } else {
+        profile.default_stack(service_area, gas)
+    };
+    let ids: Vec<String> = found.unwrap_or_else(|| {
         default_stack_ids(containment)
             .into_iter()
             .map(String::from)

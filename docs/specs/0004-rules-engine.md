@@ -433,7 +433,9 @@ One row per Rule per object, in selection order, then the set's rule order, then
 - **Since format version 3** (#274, with the ADR 0012 hull block) an Option stores `service_area` and
   `rule_sets`, and the run checks the stored sets at the stored versions.
 - **Where the stacks live (#275).** In the Defaults Profile, input `rule_sets`, key `default_stacks`:
-  per Service Area, a `gas` list (a Type C tank Cargo Containment) and an `other` list of set ids. A new
+  per Service Area, a `gas` list (a Type C tank Cargo Containment), an `other` list and, since #339, a
+  `liquid_bulk` list (the `integral_tanks` Cargo Containment; a profile without it takes `other` with
+  `adn-tank`, and `marpol-i` on coastal-and-river, put in before `ovcd`) of set ids. A new
   Option takes each set at its highest built-in version. A profile copy may change them; the `ovcd` set
   must be in each. Changing the Service Area or the Cargo resets the `default` entries of `rule_sets` and
   keeps the `typed` ones (a typed entry takes the place of the default one with its id).
@@ -445,6 +447,7 @@ One row per Rule per object, in selection order, then the set's rule order, then
 |---|---|
 | Gas | `igc-2g`, which includes `is2008-a`; `lr-inland-gas` (draft, unverified, until the IGC chapter 3 rules replace it); `ovcd` |
 | Dry bulk and others | `is2008-a` (its rows are `not evaluated` until intact stability covers every Cargo, roadmap phase 1); `ovcd` |
+| Liquid bulk (crude oil, #339) | the dry bulk stack with `adn-tank` (any Service Area), and on `coastal-and-river` also `marpol-i` and the freeboard sets (`icll-freeboard`, `solas-v22`); `normam-202` is never in a default stack; `ovcd` |
 
 - **Target stacks (later specs, not built here).** River only adds an inland class stability set (BV
   NR217 Pt B Ch 2 Sec 2 [4.1], which has the same three numbers as ADN 9.3.1.14.2) and ES-TRIN 2025/1

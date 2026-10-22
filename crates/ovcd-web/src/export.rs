@@ -1,10 +1,10 @@
 //! Drawing export of one Option: the hull view documents of its results, as SVG (font embedded),
 //! PDF and DXF. Plain Rust, no wasm types, so it is tested natively. It holds no geometry: the
-//! documents come from `ga_views_of`, as in `ovcd_shell::views`.
+//! documents come from `ga_views_named`, as in `ovcd_shell::views`.
 
 use ovcd_draw::render::{dxf::to_dxf, pdf::to_pdf, svg::SvgOptions, svg::to_svg};
 use ovcd_draw::{NoFiles, Normalised, RunResult, run_value};
-use ovcd_format::ga_views_of;
+use ovcd_format::ga_views_named;
 use ovcd_shell::AppState;
 use serde_json::Value;
 
@@ -20,7 +20,7 @@ fn document(state: &AppState, option: &str, view: &str) -> Result<Value, String>
         .outcome
         .as_ref()
         .ok_or_else(|| "The Option has an error, so there are no views.".to_string())?;
-    let views = ga_views_of(outcome)?;
+    let views = ga_views_named(outcome, Some(option))?;
     match view {
         "side" => Ok(views.side_elevation),
         "plan" => Ok(views.plan),

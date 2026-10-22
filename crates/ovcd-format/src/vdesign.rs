@@ -420,13 +420,6 @@ pub const LEGACY_FIXED_INPUTS: &[LegacyFixed] = &[
         formations: None,
         value: ovcd_core::gas_separation::OPENING_SETBACK_M,
     },
-    // Issue #425: a file saved before takes the midship section as B x T, so Cm = 1.
-    LegacyFixed {
-        name: "midship_coefficient",
-        applies_to: AppliesTo::All,
-        formations: None,
-        value: ovcd_core::confined_water::DEFAULT_MIDSHIP_COEFFICIENT,
-    },
     // Issue #446 (spec 0008): a file saved before has a square bilge, no sheer and no camber.
     LegacyFixed {
         name: "bilge_radius_m",
@@ -1818,14 +1811,6 @@ pub const INPUTS: &[InputSpec] = &[
             "type_c_tanks",
             "integral_tanks",
         ]),
-        false,
-        Group::HullAndContainment,
-    ),
-    // Issue #425: the midship section area is B x T x Cm.
-    spec(
-        "midship_coefficient",
-        "Midship coefficient",
-        NUM,
         false,
         Group::HullAndContainment,
     ),
@@ -3628,6 +3613,7 @@ fn read_design(
             }
         }
         migrate_block_coefficient(name, &mut m, report);
+        migrate_midship_coefficient(name, &mut m, report);
         let inputs = &m;
         let mut option = read_option(name, inputs, profile, missing, report);
         match raw.get("results_hash") {
@@ -3727,6 +3713,25 @@ fn migrate_block_coefficient(name: &str, inputs: &mut Map<String, Value>, report
                 ),
             ),
             &["block_coefficient"],
+        );
+    }
+}
+
+/// Issue #535: the midship section is the hull's own, from its sections (#448), so Cm is a result,
+/// not an input. A file that stores `midship_coefficient` (version 3 is not yet released) is read
+/// with it dropped, with one warning per Option.
+fn migrate_midship_coefficient(name: &str, inputs: &mut Map<String, Value>, report: &mut Report) {
+    if inputs.remove("midship_coefficient").is_some() {
+        report.migration_note(
+            of_option(
+                name,
+                text!(
+                    "msg-midship-coefficient-dropped",
+                    "`{input}`: the midship coefficient now comes from the hull shape; the stored value was dropped",
+                    input = Arg::input("midship_coefficient")
+                ),
+            ),
+            &["midship_coefficient"],
         );
     }
 }

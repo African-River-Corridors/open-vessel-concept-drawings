@@ -49,14 +49,6 @@
     "cargo_containment": {
       "default_by_cargo_phase": { "dry_bulk": "box_hold", "liquid_gas": "type_c_tanks", "liquid_bulk": "integral_tanks" }
     },
-    "midship_coefficient": {
-      "default": 1.0,
-      "unit": "-",
-      "hard": { "gt": 0, "le": 1 },
-      "soft": { "min": 0.9, "max": 1.0 },
-      "status": "estimate",
-      "basis": "The midship section area over B x T. The section area is B x T x Cm; it sets the blockage ratio in squat, the shallow-water resistance and the limiting speed. 1: a full rectangle, the section the engine always used; a barge midship section is close to it. A shaped hull may type a lower value. No source held gives a value of Cm"
-    },
     "bow_rake_length_m": {
       "default": null,
       "unit": "m",
@@ -189,15 +181,17 @@
       "default_stacks": {
         "river-only": {
           "gas": ["igc-2g", "is2008-a", "lr-inland-gas", "es-trin-2025", "ovcd"],
-          "other": ["is2008-a", "es-trin-2025", "ovcd"]
+          "other": ["is2008-a", "es-trin-2025", "ovcd"],
+          "liquid_bulk": ["is2008-a", "es-trin-2025", "adn-tank", "ovcd"]
         },
         "coastal-and-river": {
           "gas": ["igc-2g", "is2008-a", "lr-inland-gas", "es-trin-2025", "icll-freeboard", "solas-v22", "ovcd"],
-          "other": ["is2008-a", "es-trin-2025", "icll-freeboard", "solas-v22", "ovcd"]
+          "other": ["is2008-a", "es-trin-2025", "icll-freeboard", "solas-v22", "ovcd"],
+          "liquid_bulk": ["is2008-a", "es-trin-2025", "icll-freeboard", "solas-v22", "adn-tank", "marpol-i", "ovcd"]
         }
       },
       "status": "estimate",
-      "basis": "The Rule Set stack a new Option takes, by Service Area and Cargo (gas: a Type C tank Cargo Containment; other: the rest), each set at its highest built-in version with its content hash, marked default (spec 0004, \"Service Area and default stacks\"). River only adds ES-TRIN 2025/1 safety clearance and freeboard (es-trin-2025); coastal and river adds the ICLL type A tabular freeboard (icll-freeboard) and the SOLAS V/22 blind distance (solas-v22, issue #355) and keeps ES-TRIN, as a coastal vessel also sails on rivers and the strictest governs (issue #428). Target stacks (later specs): river only adds an inland class stability set; coastal and river adds IS Code Part B 2.2 for barges. A file saved before holds none and is read as the river-only stack, which is what the engine checked"
+      "basis": "The Rule Set stack a new Option takes, by Service Area and Cargo (gas: a Type C tank Cargo Containment; other: the rest), each set at its highest built-in version with its content hash, marked default (spec 0004, \"Service Area and default stacks\"). Liquid bulk (crude oil in integral tanks, spec 0006) takes the other stack and adds the liquid Rule Sets: ADN 2025 (adn-tank) on any Service Area, and MARPOL Annex I (marpol-i) with the ICLL freeboard where the vessel goes to sea; normam-202, a national set, is never in a default stack (issue #339). River only adds ES-TRIN 2025/1 safety clearance and freeboard (es-trin-2025); coastal and river adds the ICLL type A tabular freeboard (icll-freeboard) and the SOLAS V/22 blind distance (solas-v22, issue #355) and keeps ES-TRIN, as a coastal vessel also sails on rivers and the strictest governs (issue #428). Target stacks (later specs): river only adds an inland class stability set; coastal and river adds IS Code Part B 2.2 for barges. A file saved before holds none and is read as the river-only stack, which is what the engine checked"
     },
     "lpg_carriage_condition": {
       "default": "fully_pressurised",

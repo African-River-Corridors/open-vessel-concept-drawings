@@ -56,6 +56,25 @@ fn design(
     d.to_string()
 }
 
+/// A self-propelled Option as a new Design gets it: every input from the Defaults Profile, so the
+/// stern, the machinery and the wheelhouse are the new ones.
+fn self_propelled_new(cargo: &str, dims: (f64, f64, f64)) -> String {
+    let raw = serde_json::json!({
+        "format": "vdesign", "format_version": 3, "engine_version": "0.2.4", "units": "SI",
+        "options": [{ "name": "Option 1", "inputs": {
+            "cargo": { "value": cargo, "source": "typed" },
+            "hull_form": { "value": "raked_box", "source": "typed" },
+            "formation": { "value": { "kind": "self_propelled" }, "source": "typed" },
+            "length_overall_m": { "value": dims.0, "source": "typed" },
+            "beam_m": { "value": dims.1, "source": "typed" },
+            "moulded_depth_m": { "value": dims.2, "source": "typed" }
+        }}]
+    });
+    let filled = ovcd_format::fill_as_new(&raw.to_string(), &Profile::built_in());
+    assert_eq!(filled.report.errors, Vec::<String>::new());
+    filled.design.expect("a Design").to_text()
+}
+
 /// The Designs checked: every fixture in both formations, the two cases of the issue (LNG 90 x 18 x 7 m
 /// pushed, LNG 76.5 x 11.4 x 3.5 m in both formations) and bauxite in a box hold in both formations.
 fn designs() -> Vec<(String, String)> {
@@ -83,6 +102,14 @@ fn designs() -> Vec<(String, String)> {
             Some("LNG"),
         ),
     ));
+    // Issue #356: a self-propelled Option with a new stern (a tunnel stern, a lifting wheelhouse), as
+    // the Defaults Profile gives it, for dry bulk and for gas.
+    for (cargo, dims) in [("bauxite", (76.5, 11.4, 3.5)), ("LNG", (90.0, 14.8, 6.5))] {
+        out.push((
+            format!("{cargo} self_propelled with the Defaults Profile stern"),
+            self_propelled_new(cargo, dims),
+        ));
+    }
     let crowded = Some((76.5, 11.4, 3.5));
     for formation in ["pushed_barge", "self_propelled"] {
         out.push((
