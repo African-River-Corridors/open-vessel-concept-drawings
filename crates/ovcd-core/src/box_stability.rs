@@ -749,3 +749,79 @@ pub fn box_condition(
     c.name = "Box".to_string();
     Ok(c)
 }
+
+#[cfg(test)]
+mod screen_tests {
+    use super::*;
+    use crate::hull::hull_form::HullShape;
+    use crate::hydrostatics::{Hull, HullSpec};
+    use crate::sections::Gravity;
+
+    /// Label: property. A trial the screen stops fails the IS Code 2008 criteria (or finds no trim
+    /// balance), and a trial it does not stop gives the whole curve, bit for bit.
+    #[test]
+    fn the_screen_stops_only_a_trial_that_fails_and_otherwise_gives_the_whole_curve() {
+        let (mut stopped, mut worked) = (0, 0);
+        for beam in [9.0, 11.4, 14.0] {
+            for depth in [4.5] {
+                for rake in [0.0, 10.0] {
+                    let hull = Hull::build(&HullSpec {
+                        loa: 76.5,
+                        beam,
+                        depth,
+                        bow_rake_length_m: rake,
+                        bow_rake_rise_m: depth * 0.8,
+                        stern: None,
+                        shape: HullShape::default(),
+                    })
+                    .unwrap();
+                    for fill in [0.3, 0.55, 0.7] {
+                        for kg_share in [0.4, 0.7, 1.0] {
+                            let mass = hull.volume_at(depth) * fill;
+                            let g = Gravity {
+                                lcg_m: 38.0,
+                                tcg_m: 0.0,
+                                kg_m: depth * kg_share,
+                            };
+                            for fs in [0.0, 30.0] {
+                                let fs_moment = fs * mass / 20.0;
+                                let full = hull.gz_from(mass, g, fs_moment, 1.0, ANGLES_DEG, None);
+                                let screened = screened_gz(&hull, mass, g, fs_moment, 1.0, None);
+                                match (full, screened.unwrap()) {
+                                    (Err(_), Screened::Fails) => stopped += 1,
+                                    (Err(e), Screened::Curve(_)) => panic!("{e}"),
+                                    (Ok(gz), Screened::Fails) => {
+                                        let c = condition_from_curve(
+                                            gz,
+                                            1.0,
+                                            g.kg_m,
+                                            1.0,
+                                            fs_moment / mass,
+                                            None,
+                                            "IS_CODE_2008",
+                                        )
+                                        .unwrap();
+                                        assert!(!c.ok(), "{beam} {depth} {rake} {fill} {kg_share}");
+                                        stopped += 1;
+                                    }
+                                    (Ok(gz), Screened::Curve(c)) => {
+                                        assert_eq!(
+                                            gz, c,
+                                            "{beam} {depth} {rake} {fill} {kg_share}"
+                                        );
+                                        worked += 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // The test is not vacuous: both outcomes occur.
+        assert!(
+            stopped > 20 && worked > 20,
+            "{stopped} stopped, {worked} worked"
+        );
+    }
+}
