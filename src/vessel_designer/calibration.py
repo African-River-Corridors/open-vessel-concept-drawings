@@ -111,9 +111,10 @@ def fit_factors(cases: list) -> dict:
     Cb (box barges, on LOA): mean of (observed DWT + lightship) / (L.B.T.rho) over cases with
     a draught and DWT, not excluded; lightship = observed, else the fitted k.
 
-    Held-out cases (a truthy `held_out`) are dropped first, here, so no caller can fit on them.
+    Held-out cases (a truthy `held_out`) and cases with `exclude_from_fit` (a one-line reason) are dropped
+    first, here, so no caller can fit on them.
     """
-    cases = [c for c in cases if not _is_held_out(c)]
+    cases = [c for c in cases if not _is_held_out(c) and not c.get("exclude_from_fit")]
     k = {}
     for ht in sorted({c["hold_type"] for c in cases}):
         pts = [(c["id"], c["observed"]["lightship_t"] / lbd(c), c["confidence"])
@@ -246,7 +247,7 @@ def _band_check(c: dict, figure: str, model: float) -> BandCheck:
     obs = c["observed"][figure]
     return _Banded(case=c["id"], figure=figure, observed=obs, model=model, err_pct=pct(model, obs),
                      band_pct=float(band["pct"][c["confidence"]]), confidence=c["confidence"],
-                     basis=band["basis"], excluded=c.get("exclude_from_fit_cb"),
+                     basis=band["basis"], excluded=c.get("exclude_from_fit_cb") or c.get("exclude_from_fit"),
                      held_out=c.get("held_out") or None, group=_group(c))
 
 
@@ -955,7 +956,7 @@ def _status(c: dict, b: BandCheck | None) -> tuple[str, str]:
         return "–", "cross-check, no band"
     if b is None:
         return "–", "no band (not a DWT)"
-    tag = " (excluded)" if c.get("exclude_from_fit_cb") else ""
+    tag = " (excluded)" if c.get("exclude_from_fit_cb") or c.get("exclude_from_fit") else ""
     return (f"±{b.band_pct:g} ({b.confidence})",
             ("inside" if b.inside else "**OUTSIDE** ⚠") + tag)
 
@@ -1131,7 +1132,7 @@ def report() -> str:
         c, o = r.case, r.case["observed"]
         if not c.get("draught_m"):
             continue
-        infit = "yes" if c["id"] in fit_ids else ("excluded" if c.get("exclude_from_fit_cb") else "no")
+        infit = "yes" if c["id"] in fit_ids else ("excluded" if c.get("exclude_from_fit_cb") or c.get("exclude_from_fit") else "no")
         out.append(f"| {c['id']} | {c['draught_m']} | {fmt(o.get('dwt_t'))} | {fmt(r.dwt_ported)} | "
                    f"{fmt(pct(r.dwt_ported, o.get('dwt_t')), 1)} | {fmt(r.dwt_cal)} | "
                    f"{fmt(pct(r.dwt_cal, o.get('dwt_t')), 1)} | {infit} | "

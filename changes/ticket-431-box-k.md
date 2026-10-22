@@ -1,11 +1,11 @@
 <!-- unreleased -->
-- Design change (issue #431, the maintainer decision): the forum-sourced box-barge point `us-hopper-195x35-generic` (practitioner statements, not a primary source) is dropped from `calibration/cases.yaml`. The fitted box lightship factor k goes from 0.1093 t/m3 (n = 3) to 0.1086 (n = 2); the fitted box-barge Cb on LOA from 0.928 to 0.927; the tank lightship factor fitted from it from 0.1141 to 0.1134. The Defaults Profile follows: `lightship_factor_t_per_m3` is 0.1086 for a box hold and 0.1134 for integral tanks, and the engine constant for integral tanks is 0.1134. A new dry bulk or liquid Option without a typed factor has a hull lightship term 0.6 % lower (0.1086 against 0.1093). 93 of 230 case designs move (table below). A file that stores its own factor keeps its results hash.
+- Design change (issue #431, the maintainer decision): the forum-sourced box-barge point `us-hopper-195x35-generic` (practitioner statements, not a primary source) is dropped from every fit: its case stays in `calibration/cases.yaml` with the new field `exclude_from_fit` (reason: forum source, not used in the fit), so it is still run and banded. The fitted box lightship factor k goes from 0.1093 t/m3 (n = 3) to 0.1086 (n = 2); the fitted box-barge Cb on LOA from 0.928 to 0.927; the tank lightship factor fitted from it from 0.1141 to 0.1134. The Defaults Profile follows: `lightship_factor_t_per_m3` is 0.1086 for a box hold and 0.1134 for integral tanks, and the engine constant for integral tanks is 0.1134. A new dry bulk or liquid Option without a typed factor has a hull lightship term 0.6 % lower (0.1086 against 0.1093). 93 of 230 case designs move (table below). A file that stores its own factor keeps its results hash.
 - Calibration (issue #431): a calibration case outside its band blocks a release unless the CHANGELOG entry of that release names it and says why, or its case file already records why (`accepted_miss`, `exclude_from_fit_cb`). `python -m vessel_designer.calibration --release-check <version>` checks it, and the `calibration-bands` job of `release.yml` runs it. At this commit 20 cases outside their band have no recorded reason: the next release entry must name them.
 
 <!-- design-impact -->
 ### ticket/431-box-k (2026-10-22)
 
-Between `main b7ae9d6` and `this branch c1a6cbc`.
+Between `main b7ae9d6` and `this branch 9286a90`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -49,4 +49,4 @@ Between `main b7ae9d6` and `this branch c1a6cbc`.
 | calibration canal-box-200x35x13-cby400 | `checks[11].message` | GM 17.56 m (fluid), max GZ 2.92 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | GM 17.68 m (fluid), max GZ 2.92 m at 22° — fails: Angle of max GZ 22.000 < 25.0 | changed |
 | calibration canal-box-200x35x13-cby400 | `checks[5].message` | intact GM 2.09 m >= 0.15 m at the reported cargo 1381 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | intact GM 2.08 m >= 0.15 m at the reported cargo 1383 t, draught 2.74 m (first-order; cargo KG of the full hold; KG_light @0.5D) | changed |
 | calibration canal-box-200x35x13-cby400 | `checks[9].message` | GM 6.58 m (fluid), max GZ 1.90 m at 26° | GM 6.60 m (fluid), max GZ 1.91 m at 25° | changed |
-| ... | 77499 more changed quantities | | | |
+| ... | 78287 more changed quantities | | | |

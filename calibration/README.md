@@ -70,6 +70,7 @@ research note suggested (`note_suggests`).
   DWT. Left out, it is 1.000.
 - **`not_yet_runnable_cases`** (tank, gas and the motor container point) have no hull model in the
   calibration path. `results.md` lists their figures and the reason; they are never run.
+- **`exclude_from_fit`** (a reason) drops a case from every fit (k and Cb); it is still run and banded. The forum-sourced hopper `us-hopper-195x35-generic` has it (issue #431).
 - **`cross_check_only`** and **`exclude_from_fit_cb`** cases are shown in section 4 of `results.md`
   but left out of its summary. A cross-check has no band.
 - A figure the source does not give is left out of the case. Nothing is estimated or filled in.

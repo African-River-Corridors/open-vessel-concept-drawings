@@ -13,7 +13,7 @@
 
 Each observed figure has a band, set per figure and per confidence of the case (`bands.yaml`): lightship ±15 / 20 / 30 % and deadweight ±7.5 / 10 / 15 % at high / medium / low confidence. The band applies to the *Calibrated* result. **The errors in sections 1 and 2 are in-sample:** the fitted factors (k per hold type, box-barge Cb) were fitted to the same cases, and the container factor rests on one case, so a result inside its band is not a validation. **The errors in section 4 are out of sample:** those cases were never used in a fit. A case outside its band is marked **OUTSIDE** and raises a CI warning annotation: **warning only, it never fails the build.** A lightship given only as an upper bound has no band. Section 3 compares the core with a design note, not a published figure, and has no band.
 
-12 of 13 in-sample calibrated results are inside their band.
+13 of 14 in-sample calibrated results are inside their band.
 67 of 87 held-out calibrated results are inside their band (section 4; cases excluded for an impossible figure are not counted).
 
 ## 1. Push barges — lightship
@@ -31,6 +31,7 @@ Each observed figure has a band, set per figure and per confidence of the case (
 | danube-barge-77 | box | medium | 290 | 534 | 84.2 | 258 | -11.2 | 285 | -1.9 | 511 | 76.1 | ±20 (medium) | inside |
 | victor-83-container-barge | container | medium | 455 | 595 | 30.7 | 455 | 0.0 | 319 | -29.9 | 585 | 28.4 | ±20 (medium) | inside |
 | stretch-hopper-light | box | high | ≤514 (light draught, Cb=1) | 496 | – | 259 | – | 286 | – | 401 | – | – | – |
+| us-hopper-195x35-generic | box | low | 267 | 498 | 86.4 | 262 | -1.7 | 290 | 8.6 | 393 | 47.2 | ±30 (low) | inside |
 
 Note: where a case is in the k fit, its calibrated error is in-sample.
 
