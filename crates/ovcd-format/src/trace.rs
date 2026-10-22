@@ -370,9 +370,11 @@ pub const DERIVED_INPUTS: &[(&str, &[&str])] = &[
     ("deadweight_band", DEADWEIGHT_BANDS),
     // Issue #338: the ADN Tank Vessel Type of the Cargo, from its Crude Grade (ADN 2025 3.2.3.3).
     ("adn_vessel_type", &["N_open", "N_closed", "C"]),
+    // Issue #543: the length overall, in the bands of SOLAS V/22.1 and ES-TRIN 28.02.
+    ("length_band", LENGTH_BANDS),
 ];
 
-pub use ovcd_core::measured::{DEADWEIGHT_BANDS, deadweight_band};
+pub use ovcd_core::measured::{DEADWEIGHT_BANDS, LENGTH_BANDS, deadweight_band, length_band};
 
 /// The ADN Tank Vessel Type of a Cargo, from its Crude Grade; `None` for a Cargo with no grade.
 pub fn adn_vessel_type_of(
@@ -559,6 +561,14 @@ impl MeasureSource for OptionMeasures<'_> {
                 let props = ovcd_core::cargo::get_cargo(cargo).ok()?;
                 return Some(cargo_class_value(props.phase).to_string());
             }
+            "length_band" => {
+                return self
+                    .option
+                    .input("length_overall_m")?
+                    .value
+                    .as_f64()
+                    .map(|l| length_band(l).to_string());
+            }
             "deadweight_band" => {
                 return self
                     .measured
@@ -593,7 +603,7 @@ pub fn rule_inputs(option: &DesignOption) -> RuleInputs {
             applicability.push((spec.name.to_string(), v));
         }
     }
-    for name in ["cargo_class", "formation_kind", "adn_vessel_type"] {
+    for name in ["cargo_class", "formation_kind", "length_band", "adn_vessel_type"] {
         if let Some(v) = source.input(name) {
             applicability.push((name.to_string(), v));
         }
