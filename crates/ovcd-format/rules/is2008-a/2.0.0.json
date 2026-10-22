@@ -204,7 +204,7 @@
       "evaluated": false,
       "finding": "#282",
       "since": "2.0.0",
-      "gap": "The engine has no openings with heights, so it cannot work out the angle at which an opening immerses (IS Code Part A 2.2.1; the meaning of the angle is in Part B 2.2.3.5). Type it as the input downflooding_angle_deg. With none typed the areas run to 40 degrees, so a design may pass 2.2.1 where it fails with the angle"
+      "gap": "The areas run to 40 degrees because no angle of down-flooding is typed (the input downflooding_angle_deg) and no deck openings are listed (the input downflooding_openings, from which the engine works the angle at which the lowest opening immerses; IS Code Part A 2.2.1, the meaning of the angle in Part B 2.2.3.5). A design may pass 2.2.1 where it fails with the angle"
     },
     {
       "id": "is2008/A.2.2.2/gz-30",

@@ -96,6 +96,7 @@ fn box_hull() -> &'static Hull {
             stern: None,
             shape: Default::default(),
             downflooding_deg: None,
+            openings: Vec::new(),
         })
         .unwrap()
     })
@@ -225,4 +226,43 @@ fn a_user_plan_is_used_as_given() {
     let c = assess(&inputs(&LIGHT, &tanks, [plan, BallastPlan::Auto], 0.0)).unwrap();
     assert_eq!(c[2].plan_found, None);
     assert!((c[2].ballast_t - 0.25 * L * B).abs() < 1e-6);
+}
+
+#[test]
+fn an_automatic_plan_with_openings_listed_works_the_angle_of_down_flooding_in_every_condition() {
+    // Issue #592: the trial screen of the automatic plan is off when openings are listed and no angle
+    // is typed, so the condition the plan finds has its worked angle, as one worked in full.
+    static HULL: std::sync::OnceLock<Hull> = std::sync::OnceLock::new();
+    let hull = HULL.get_or_init(|| {
+        Hull::build(&HullSpec {
+            loa: L,
+            beam: B,
+            depth: D,
+            bow_rake_length_m: 0.0,
+            bow_rake_rise_m: D,
+            stern: None,
+            shape: Default::default(),
+            downflooding_deg: None,
+            openings: vec![ovcd_core::hydrostatics::Opening {
+                x_m: L / 2.0,
+                y_m: B / 2.0,
+                height_above_deck_m: 0.0,
+            }],
+        })
+        .unwrap()
+    });
+    let tanks = db_pair();
+    let mut inp = inputs(&LIGHT, &tanks, [BallastPlan::Auto, BallastPlan::Auto], 20.0);
+    inp.hull = hull;
+    let found = assess(&inp).unwrap();
+    for c in &found {
+        assert!(
+            c.condition
+                .downflooding_deg
+                .is_some_and(|a| a > 0.0 && a < 90.0),
+            "{}: {:?}",
+            c.condition.name,
+            c.condition.downflooding_deg
+        );
+    }
 }

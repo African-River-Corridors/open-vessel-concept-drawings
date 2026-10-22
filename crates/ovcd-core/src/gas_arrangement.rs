@@ -102,6 +102,8 @@ pub struct FitOptions {
     pub hull_shape: crate::hull::hull_form::HullShape,
     /// Issue #282: the angle of down-flooding the designer gives (degrees); `None`: none.
     pub downflooding_angle_deg: Option<f64>,
+    /// Issue #592: the deck openings the angle is worked from when none is typed.
+    pub downflooding_openings: Vec<crate::hydrostatics::Opening>,
     /// Aft void of a pushed barge (m).
     pub pushed_stern_void_m: f64,
     /// Tanks along the hull, for every candidate.
@@ -225,8 +227,11 @@ impl MeasureSource for CandidateSource<'_> {
         }
         if name == "downflooding_angle" {
             return Some(
-                crate::measured::downflooding_angle_value(self.measured.downflooding_deg)
-                    .to_string(),
+                crate::measured::downflooding_angle_value(
+                    self.measured.downflooding_deg,
+                    self.measured.downflooding_openings,
+                )
+                .to_string(),
             );
         }
         self.inputs
@@ -259,6 +264,7 @@ fn candidate_measured(
         conditions,
         deadweight_t: Some(j.achievable_tonnage_t),
         downflooding_deg: inp.downflooding_angle_deg,
+        downflooding_openings: !inp.downflooding_openings.is_empty(),
         tank: r.tank_rules.clone(),
         separation: r.separation.clone().map(|s| (s, plane)),
         checks: checks
@@ -346,6 +352,7 @@ impl Default for FitOptions {
             bow_rake_rise_m: None,
             hull_shape: crate::hull::hull_form::HullShape::default(),
             downflooding_angle_deg: None,
+            downflooding_openings: Vec::new(),
             pushed_stern_void_m: DEFAULT_PUSHED_STERN_VOID_M,
             tanks_in_line: DEFAULT_TANKS_IN_LINE,
             tank_support_height_m: DEFAULT_TANK_SUPPORT_HEIGHT_M,
@@ -1059,6 +1066,7 @@ impl Search<'_> {
         inp.bow_rake_rise_m = self.o.bow_rake_rise_m;
         inp.hull_shape = self.o.hull_shape.clone();
         inp.downflooding_angle_deg = self.o.downflooding_angle_deg;
+        inp.downflooding_openings = self.o.downflooding_openings.clone();
         inp.pushed_stern_void_m = self.o.pushed_stern_void_m;
         inp.tank_support_height = self.o.tank_support_height_m;
         inp.dome_height = self.o.tank_dome_height_m;

@@ -80,6 +80,7 @@ fn box_hull() -> &'static Hull {
             stern: None,
             shape: Default::default(),
             downflooding_deg: None,
+            openings: Vec::new(),
         })
         .unwrap()
     })

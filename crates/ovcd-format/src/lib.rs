@@ -11,6 +11,7 @@ pub mod gas_stability;
 mod liquid;
 mod objects;
 pub mod offsets;
+pub mod openings;
 pub mod profile;
 pub mod rule_set;
 mod run;

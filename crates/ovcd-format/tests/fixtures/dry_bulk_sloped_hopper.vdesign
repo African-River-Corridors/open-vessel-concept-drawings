@@ -229,6 +229,10 @@
           "value": null,
           "source": "default"
         },
+        "downflooding_openings": {
+          "value": null,
+          "source": "default"
+        },
         "channel_depth_m": {
           "value": null,
           "source": "default"

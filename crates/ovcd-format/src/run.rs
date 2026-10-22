@@ -260,6 +260,7 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     put("air_draft_limit_m", "air_draft_limit_m");
     put("draught_limit_m", "draught_limit_m");
     put("downflooding_angle_deg", "downflooding_angle_deg");
+    put("downflooding_openings", "downflooding_openings");
     // A null wall thickness asks for the pressure-vessel formula (issue #292); `put` leaves nulls
     // out, and a key left out means the engine's old fixed 25 mm.
     // In the same way a null dome size asks for the dome rule (issue #316), and a null design
@@ -516,6 +517,10 @@ pub fn run_option_with(
                 measured.downflooding_deg = option
                     .input("downflooding_angle_deg")
                     .and_then(|i| i.value.as_f64());
+                measured.downflooding_openings = option
+                    .input("downflooding_openings")
+                    .and_then(|i| i.value.as_array())
+                    .is_some_and(|rows| !rows.is_empty());
                 let sightline = &v["sightline"];
                 measured.blind_distance_light_m = sightline["blind_distance_light_m"].as_f64();
                 measured.blind_distance_laden_m = sightline["blind_distance_laden_m"].as_f64();

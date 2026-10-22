@@ -816,7 +816,11 @@
       "unit": "deg",
       "hard": { "gt": 0, "le": 90 },
       "soft": { "min": 20.0, "max": 60.0 },
-      "basis": "the angle of heel at which an opening through which progressive flooding may take place is immersed (IS Code 2008, MSC.267(85), Part B 2.2.3.5, which says it for pontoons: not an opening closed by a watertight manhole cover or a vent fitted with an automatic closure; Part A 2.2.1 names the angle without a definition). The engine has no openings with heights, so it cannot work this out: type it from the general arrangement. none: no angle given, so the IS Code areas of Part A 2.2.1 run to 40 degrees; an angle below 40 degrees ends the areas 0-40 and 30-40 there"
+      "basis": "the angle of heel at which an opening through which progressive flooding may take place is immersed (IS Code 2008, MSC.267(85), Part B 2.2.3.5, which says it for pontoons: not an opening closed by a watertight manhole cover or a vent fitted with an automatic closure; Part A 2.2.1 names the angle without a definition). Type it from the general arrangement, or list the deck openings (`downflooding_openings`) and the engine works it out for each loading condition; a typed angle wins. none: no angle typed, so the IS Code areas of Part A 2.2.1 run to 40 degrees; an angle below 40 degrees ends the areas 0-40 and 30-40 there"
+    },
+    "downflooding_openings": {
+      "default": null,
+      "basis": "the deck openings through which progressive flooding may take place: engine room vent inlets and air intakes, entrances, deckhouse openings, hatches not closed weathertight (IS Code 2008, MSC.267(85), Part B 2.2.3.5: not an opening closed by a watertight manhole cover or a vent fitted with an automatic closure). One row each: x_m from the aft end, y_m across from the centre line (either side), height_above_deck_m above the deck at the side. With no angle typed, the engine works the angle of down-flooding for each loading condition from these: the heel, from the hull's sections at the free-trim equilibrium, at which the lowest opening is immersed. A typed angle wins. none: no openings listed, so the angle is the typed one, if any (issue #592)"
     },
     "draught_limit_m": {
       "default": null,

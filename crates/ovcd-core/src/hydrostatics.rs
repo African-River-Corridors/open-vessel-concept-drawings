@@ -281,6 +281,21 @@ pub fn calculate_trim(
 
 // --- The hull from the Sections Table (issue #448, spec 0008) ---------------------------------
 
+/// A GZ curve and the angle at which the lowest opening is immersed.
+pub type GzWithDownflooding = (Vec<(i32, f64)>, Option<f64>);
+
+/// A deck opening through which progressive flooding may take place (issue #592): its place along
+/// the hull, across it and its height above the deck.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Opening {
+    /// From the aft end, m.
+    pub x_m: f64,
+    /// Across from the centre line, m, either side (the hull is symmetric).
+    pub y_m: f64,
+    /// Above the deck at the side, m.
+    pub height_above_deck_m: f64,
+}
+
 /// What a hull is made from: the main dimensions, the raked bow and the Stern Form. A bow rake of
 /// no length is a vertical bow (the box).
 #[derive(Debug, Clone, PartialEq)]
@@ -296,6 +311,9 @@ pub struct HullSpec {
     /// Issue #282: the angle of down-flooding, degrees, typed by the designer; `None`: none given, so
     /// the IS Code areas to 40 degrees run to 40. Below 40 they end there (IS Code Part A 2.2.1).
     pub downflooding_deg: Option<f64>,
+    /// Issue #592: the openings the angle of down-flooding is worked from when none is typed. None
+    /// listed: no angle is worked out.
+    pub openings: Vec<Opening>,
 }
 
 /// Why a hull cannot be built.
@@ -455,6 +473,40 @@ impl Hull {
             angles,
             heel0,
         )
+    }
+
+    /// The GZ curve of [`Hull::gz_from`] with the waterplane at each heel, and the angle at which the
+    /// lowest of the hull's openings is immersed (issue #592; `None` with no opening, or none under
+    /// water in the heels given).
+    pub fn gz_with_downflooding(
+        &self,
+        mass_t: f64,
+        g: Gravity,
+        free_surface_moment_tm: f64,
+        density: f64,
+        angles: impl IntoIterator<Item = i32>,
+        heel0: Option<&crate::sections::Equilibrium>,
+    ) -> Result<GzWithDownflooding, SectionsError> {
+        let (gz, planes) = crate::sections::gz_curve_with_planes(
+            &self.table,
+            mass_t,
+            g,
+            free_surface_moment_tm,
+            density,
+            angles,
+            heel0,
+        )?;
+        let points: Vec<crate::sections::OpeningPoint> = self
+            .spec
+            .openings
+            .iter()
+            .map(|o| crate::sections::OpeningPoint {
+                x_m: o.x_m,
+                y_m: o.y_m,
+                z_m: self.spec.depth + o.height_above_deck_m,
+            })
+            .collect();
+        Ok((gz, crate::sections::opening_immersion_deg(&planes, &points)))
     }
 
     /// The GZ curve with free trim at the given heels (degrees), less the free-surface correction.

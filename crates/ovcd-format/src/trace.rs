@@ -35,6 +35,7 @@ pub fn measure_info(id: &str) -> Option<MeasureInfo> {
         | InputKind::VesselClass
         | InputKind::ParameterSet
         | InputKind::OffsetsTable
+        | InputKind::OpeningsList
         | InputKind::RuleSets => return None,
     };
     // Parsed once: a run asks this for every input.
@@ -587,6 +588,10 @@ impl MeasureSource for OptionMeasures<'_> {
                         self.option
                             .input("downflooding_angle_deg")
                             .and_then(|i| i.value.as_f64()),
+                        self.option
+                            .input("downflooding_openings")
+                            .and_then(|i| i.value.as_array())
+                            .is_some_and(|rows| !rows.is_empty()),
                     )
                     .to_string(),
                 );

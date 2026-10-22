@@ -52,9 +52,12 @@ known engineering findings are under review in the open
   the resistance wetted surface still use a box hull. Known limitation: the 0 to 40 degree and
   30 to 40 degree areas of IS Code 2008 Part A 2.2.1 run to 40 degrees unless you type an angle of
   down-flooding below 40 degrees (the input `downflooding_angle_deg`). The text stops them at that angle
-  when it is less, and the model has no openings with heights to work the angle out, so with none typed a
-  hull whose openings immerse before 40 degrees can pass when it should fail
-  ([#282](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/282)).
+  when it is less. List the deck openings with their heights (the input `downflooding_openings`) and the
+  model works the angle out for each loading condition, from the hull's sections at the free-trim
+  equilibrium; a typed angle wins. With neither typed nor listed, a hull whose openings immerse before
+  40 degrees can pass when it should fail
+  ([#282](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/282),
+  [#592](https://github.com/African-River-Corridors/open-vessel-concept-drawings/issues/592)).
 - **Journey de-rating.** Cargo per trip when the channel, not the hull, limits the draught
   (`core.journey_derating`).
 - **Resistance, squat, waves and power** in deep and confined shallow water (`core.resistance`,
