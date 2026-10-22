@@ -411,6 +411,27 @@ impl Hull {
         crate::sections::lcb_reach(&self.table, mass_t, density)
     }
 
+    /// The GZ at one heel, as [`Hull::gz_from`] gives it.
+    pub fn gz_at(
+        &self,
+        mass_t: f64,
+        g: Gravity,
+        free_surface_moment_tm: f64,
+        density: f64,
+        deg: i32,
+        heel0: Option<&crate::sections::Equilibrium>,
+    ) -> Result<f64, SectionsError> {
+        crate::sections::gz_at(
+            &self.table,
+            mass_t,
+            g,
+            free_surface_moment_tm,
+            density,
+            deg,
+            heel0,
+        )
+    }
+
     /// [`Hull::gz`] with the heel 0 equilibrium of the same mass and G (from [`Hull::float`]).
     pub fn gz_from(
         &self,
