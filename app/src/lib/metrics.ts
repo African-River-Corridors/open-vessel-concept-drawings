@@ -53,6 +53,8 @@ export const MAIN: Metric[] = [
   { label: "app-metric-air-draft-loaded", unit: "m", quantity: "length", path: ["results", "air_draft_loaded_m"] },
   { label: "app-metric-air-draft-light", unit: "m", quantity: "length", path: ["results", "air_draft_light_m"] },
   { label: "app-metric-depth-to-draught", quantity: "ratio", path: ["results", "h_over_T"] },
+  // Issue #275: the Service Area, the Rule Sets and what was not checked.
+  { label: "app-metric-scope", quantity: "text", path: ["rule_trace", "scope"] },
 ];
 
 /** Shown only for an Option that has a tank arrangement (a gas Cargo). */

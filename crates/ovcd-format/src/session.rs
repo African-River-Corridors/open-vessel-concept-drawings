@@ -196,6 +196,27 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
                     "source_values": crate::vdesign::RULE_SET_SOURCES,
                 }),
             );
+            // What the app shows beside each selected set: its status and the blocking Rules not
+            // yet verified against their text (a read-only list).
+            let known: Vec<Value> = crate::rule_set::built_in()
+                .sets()
+                .iter()
+                .map(|set| {
+                    let unverified = set
+                        .rules
+                        .iter()
+                        .filter(|r| {
+                            r.consequence == ovcd_core::rules::Consequence::Block
+                                && r.verified.is_none()
+                        })
+                        .count();
+                    json!({
+                        "id": set.id, "version": set.version, "status": set.status.key(),
+                        "unverified_blocking": unverified,
+                    })
+                })
+                .collect();
+            e.insert("known_sets".into(), Value::Array(known));
         }
         InputKind::OffsetsTable => {
             e.insert("kind".into(), json!("offsets_table"));
@@ -228,13 +249,12 @@ fn input_entry(spec: &crate::vdesign::InputSpec, profile: &Profile) -> Value {
         e.insert("default_rule".into(), depth_rule(profile));
     }
     if name == "rule_sets" {
-        // A rule, not a value: the default stack follows the Cargo Containment (issue #274).
+        // A rule, not a value: the default stack follows the Service Area and the Cargo Containment (issues #274, #275).
         e.insert(
             "default_stack".into(),
             json!({
-                "by": "cargo_containment",
-                "type_c_tanks": crate::trace::default_stack_ids(Some("type_c_tanks")),
-                "other": crate::trace::default_stack_ids(None),
+                "by": ["service_area", "cargo_containment"],
+                "stacks": profile.default_stacks_json(),
                 "version": "the highest built-in version of each set",
             }),
         );
@@ -660,6 +680,10 @@ impl DesignSession {
             _ => self.put(i, name, value),
         }
         self.normalise();
+        // Issue #275: the default Rule Sets follow the Service Area and the Cargo; typed ones stay.
+        if matches!(name, "cargo" | "cargo_containment" | "service_area") {
+            crate::trace::refresh_default_rule_sets(&mut self.design.options[i], &self.profile);
+        }
         Ok(&self.design)
     }
 
@@ -841,6 +865,32 @@ impl DesignSession {
 
     /// Put an input back to its default from the Defaults Profile (marked default). A required
     /// input has no default.
+    /// Add a Rule Set to an Option, as `typed` (issue #275). `spec` is `id@version`, or `id` for its
+    /// highest built-in version.
+    pub fn add_rule_set(&mut self, option: &str, spec: &str) -> Result<&Design, String> {
+        let i = self.index_of(option)?;
+        crate::trace::add_rule_set(
+            &mut self.design.options[i],
+            crate::rule_set::built_in(),
+            spec,
+        )?;
+        self.normalise();
+        Ok(&self.design)
+    }
+
+    /// Remove a Rule Set from an Option. The `ovcd` set stays; a set that a selected set includes
+    /// stays while that set is selected.
+    pub fn remove_rule_set(&mut self, option: &str, id: &str) -> Result<&Design, String> {
+        let i = self.index_of(option)?;
+        crate::trace::remove_rule_set(
+            &mut self.design.options[i],
+            crate::rule_set::built_in(),
+            id,
+        )?;
+        self.normalise();
+        Ok(&self.design)
+    }
+
     pub fn reset_input(&mut self, option: &str, name: &str) -> Result<&Design, String> {
         let spec = INPUTS
             .iter()
@@ -1070,18 +1120,6 @@ impl DesignSession {
                 "cargo" => "cargo_phase".to_string(),
                 _ => by_name,
             };
-            // Issue #274: the default stack of Rule Sets follows the Cargo Containment, so a stack
-            // still on its default is dropped and the next fill works it out again. A typed stack
-            // stays.
-            if by_name == "cargo_containment" {
-                let option = &mut self.design.options[i];
-                if option
-                    .input("rule_sets")
-                    .is_some_and(|s| s.source == Source::Default)
-                {
-                    option.inputs.retain(|(n, _)| n != "rule_sets");
-                }
-            }
             for (input, by, _) in KEYED_DEFAULTS {
                 if *by == by_name {
                     let option = &mut self.design.options[i];

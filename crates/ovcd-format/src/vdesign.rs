@@ -3746,7 +3746,11 @@ fn read_option(
         // Issue #274: for `rule_sets` that is the default stack of the Cargo Containment, which the
         // engine checked every Option against.
         let legacy = if spec.name == "rule_sets" {
+            // What the engine always checked, whatever the profile says: the built-in river-only
+            // stack.
             Some(crate::trace::default_rule_sets(
+                &Profile::built_in(),
+                crate::trace::DEFAULT_SERVICE_AREA,
                 containment.as_ref().and_then(Value::as_str),
             ))
         } else {
@@ -3900,11 +3904,18 @@ fn default_for(
     if name == DEPTH_INPUT {
         return depth_default(inputs, profile);
     }
-    // Issue #274: the default stack of the Cargo Containment, at the highest built-in versions.
+    // Issues #274 and #275: the default stack of the Service Area and the Cargo Containment, from the
+    // profile, at the highest built-in versions.
     if name == "rule_sets" {
-        return Ok(
-            got("cargo_containment").map(|c| crate::trace::default_rule_sets(Some(c.as_str())))
-        );
+        let area = got("service_area");
+        return Ok(got("cargo_containment").map(|c| {
+            crate::trace::default_rule_sets(
+                profile,
+                area.as_deref()
+                    .unwrap_or(crate::trace::DEFAULT_SERVICE_AREA),
+                Some(c.as_str()),
+            )
+        }));
     }
     if TABLE_DEFAULTS.contains(&name) {
         return table_default_for(name, inputs, profile);

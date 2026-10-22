@@ -601,3 +601,69 @@ fn a_run_checks_the_stored_rule_sets_and_names_a_missing_or_changed_one() {
     );
     assert!(stdout(&out).contains("Results hash"), "{}", stdout(&out));
 }
+
+/// Issue #275: `fill` adds and removes Rule Sets, and `run` states the scope.
+#[test]
+fn fill_adds_and_removes_rule_sets_and_run_states_the_scope() {
+    let dir = temp_dir("rule-set-flags");
+    let file = starter(&dir);
+    let stack = |path: &Path| -> Vec<(String, String, String)> {
+        read_json(path)["options"][0]["inputs"]["rule_sets"]["value"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|e| {
+                let t = |k: &str| e[k].as_str().unwrap().to_string();
+                (t("id"), t("version"), t("source"))
+            })
+            .collect()
+    };
+    // Add an older version of the `ovcd` set: it replaces the default one, marked typed.
+    let added = dir.join("added.vdesign");
+    let out = ovcd(&["fill", "--add-rule-set", "ovcd@1.0.0", p(&file), p(&added)]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert!(stack(&added).contains(&("ovcd".into(), "1.0.0".into(), "typed".into())));
+    // `ovcd` cannot be removed; a refusal writes nothing.
+    let refused = dir.join("refused.vdesign");
+    let out = ovcd(&["fill", "--remove-rule-set", "ovcd", p(&file), p(&refused)]);
+    assert!(!out.status.success());
+    assert!(
+        stderr(&out).contains("cannot be removed"),
+        "{}",
+        stderr(&out)
+    );
+    assert!(!refused.exists());
+    // An unknown set is refused too.
+    let out = ovcd(&[
+        "fill",
+        "--add-rule-set",
+        "nope@1.0.0",
+        p(&file),
+        p(&refused),
+    ]);
+    assert!(
+        stderr(&out).contains("not in this engine"),
+        "{}",
+        stderr(&out)
+    );
+    // The run says its scope, in the summary and in `--json`.
+    let out = ovcd(&["run", p(&file)]);
+    assert!(
+        stdout(&out).contains("Scope: Service Area river-only; Rule Sets is2008-a@"),
+        "{}",
+        stdout(&out)
+    );
+    assert!(
+        stdout(&out).contains("no statutory technical code was checked, only these Rule Sets"),
+        "{}",
+        stdout(&out)
+    );
+    let out = ovcd(&["run", "--json", p(&file)]);
+    let json: Value = serde_json::from_str(&stdout(&out)).unwrap();
+    assert!(
+        json["options"][0]["results"]["rule_trace"]["scope"]
+            .as_str()
+            .unwrap()
+            .starts_with("Service Area river-only;")
+    );
+}
