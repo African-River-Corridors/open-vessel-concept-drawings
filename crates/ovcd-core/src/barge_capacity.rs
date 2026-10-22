@@ -975,6 +975,26 @@ fn bulk_volumetric(
 /// KG of the bulk hull: the lightship at 0.5 x moulded depth (the stern block items at their own
 /// heights) and the cargo at the centroid of the filled trapezoidal hold above the double bottom.
 /// `hold` is the hold's top width, bottom width and height.
+/// One condition with no trim balance, in a sentence: where its LCG is, and the furthest LCB the hull
+/// reaches at that displacement (issue #549). The sentence is English built here, as the failed
+/// criteria of a stability check are.
+fn lcb_note(name: &str, lcg: f64, reach: Option<(f64, f64)>) -> String {
+    use crate::pyfmt::fixed;
+    match reach {
+        Some((_, fwd)) if lcg > fwd => format!(
+            "{name}: LCG {} m is forward of the furthest LCB the hull reaches ({} m)",
+            fixed(lcg, 2),
+            fixed(fwd, 2)
+        ),
+        Some((aft, _)) if lcg < aft => format!(
+            "{name}: LCG {} m is aft of the furthest LCB the hull reaches ({} m)",
+            fixed(lcg, 2),
+            fixed(aft, 2)
+        ),
+        _ => format!("{name}: LCG {} m", fixed(lcg, 2)),
+    }
+}
+
 fn bulk_kg(
     inp: &BargeCapacityInputs,
     (w_top, w_bot, h): (f64, f64, f64),
@@ -1397,7 +1417,8 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     // middle of the hold zone. Issue #448: the free-trim float of the sections; the draught is the
     // one at mid-length. An Option with no LCG data floats level.
     let mut trim_conditions = Vec::new();
-    let mut trim_out_of_range: Vec<&str> = Vec::new();
+    // The conditions with no trim balance: the name, and what is said about the LCG and the LCB.
+    let mut trim_out_of_range: Vec<(&str, String)> = Vec::new();
     let (mut draft, mut light_draft) = (level(total_weight)?, level(lightship)?);
     if !is_gas && !stern_block_items.is_empty() {
         let block = crate::weights::total_mass(&stern_block_items);
@@ -1434,7 +1455,9 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
                 // No balance within the trim solver's range: the hull would trim so far that an
                 // end goes under. The condition keeps its level draught and fails a check.
                 Err(crate::sections::SectionsError::TrimOutOfRange) => {
-                    trim_out_of_range.push(name);
+                    // Issue #549: say what the hull cannot reach: its LCB runs only so far.
+                    let reach = hull.lcb_reach(mass, rho).ok();
+                    trim_out_of_range.push((name, lcb_note(name, lcg, reach)));
                     continue;
                 }
                 Err(e) => return Err(value_error(e.to_string())),
@@ -1617,19 +1640,29 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     }
     // Issue #448: a hull with a trim analysis says when the free-trim float found no balance.
     if !is_gas && !stern_block_items.is_empty() {
+        // Issue #549: when it fails, the cause is that no trim balances the load (the deck goes under
+        // first), not the trim limit, so the message says that.
+        let message = if trim_out_of_range.is_empty() {
+            text!(
+                "check-trim-in-range",
+                "the hull floats within {limit} degrees of trim (every condition)",
+                limit = Arg::fixed(crate::sections::TRIM_LIMIT_DEG, 0),
+            )
+        } else {
+            text!(
+                "check-trim-no-balance",
+                "no trim balances the load: {conditions}",
+                conditions = trim_out_of_range
+                    .iter()
+                    .map(|(_, note)| note.as_str())
+                    .collect::<Vec<_>>()
+                    .join("; "),
+            )
+        };
         checks.push(Check::new(
             "trim_in_range",
             trim_out_of_range.is_empty(),
-            text!(
-                "check-trim-in-range",
-                "the hull floats within {limit} degrees of trim ({conditions})",
-                limit = Arg::fixed(crate::sections::TRIM_LIMIT_DEG, 0),
-                conditions = if trim_out_of_range.is_empty() {
-                    "every condition".to_string()
-                } else {
-                    trim_out_of_range.join(", ")
-                },
-            ),
+            message,
         ));
     }
     let mut warnings: Vec<Text> = match &aft {
