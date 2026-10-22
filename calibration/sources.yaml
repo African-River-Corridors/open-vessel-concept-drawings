@@ -852,3 +852,87 @@ web_sources:
   retrieved: '2026-10-22'
   sha256: 1e7aa5299a2cc3e5ee619adc1f24d21e1b4a32ee65e6f1acdee4053a0fa14372
   note: "Each tank 28.4 m long, light weight 240 t, cargo weight 1,140 t. Tank weight record, issue #317"
+- id: M15
+  title: "Marine Engineering Bureau (MEB), Project ROB21"
+  url: https://mebspb.com/oile/ROB21e.html
+  accessed: '2026-10-22'
+  retrieved: '2026-10-22'
+  sha256: 2695a52ce79ca01da14c811183c08511b6f7ffe2179d144959b43b80b17a66b3
+  note: "Designer's project page. Read in full on 2026-10-22 (crude oil tank barge calibration, issue #335)"
+- id: M16
+  title: "Marine Engineering Bureau (MEB), Project RT63"
+  url: https://mebspb.com/oile/RT63e.html
+  accessed: '2026-10-22'
+  retrieved: '2026-10-22'
+  sha256: 28a915f82b53c2dab16c66738de9c88e5961c411e68a7d833b8d1ecdeae28d8c
+  note: "Designer's project page. Read in full on 2026-10-22 (issue #335)"
+- id: M17
+  title: "Marine Engineering Bureau (MEB), Project 005ROB04"
+  url: https://mebspb.com/oile/005ROB04e.html
+  accessed: '2026-10-22'
+  retrieved: '2026-10-22'
+  sha256: abdbfb153b7c109c1113edd3a2e3bf3e91900ee33279e8c42a4c888f4ee6985b
+  note: "Designer's project page. Read in full on 2026-10-22 (issue #335)"
+- id: M18
+  title: "Marine Engineering Bureau (MEB), Project RST27"
+  url: https://mebspb.com/oile/RST27e.html
+  accessed: '2026-10-22'
+  retrieved: '2026-10-22'
+  sha256: 9e1dd01e60cfb019a786d342626afdd9b3c213e16b0295a9fe4e810586b6ea6f
+  note: "Designer's project page with the list of built hulls. Read in full on 2026-10-22 (issue #335)"
+- id: M19
+  title: "Marine Engineering Bureau (MEB), Project RST12"
+  url: https://mebspb.com/oile/RST12e.html
+  accessed: '2026-10-22'
+  retrieved: '2026-10-22'
+  sha256: 19fcaff65a257315e8197894e45eef9d49f0debd86ea3e177fb4414e781d7bdd
+  note: "Designer's project page. Read in full on 2026-10-22 (issue #335)"
+- id: M20
+  title: "Marine Engineering Bureau (MEB), Project RST25"
+  url: https://mebspb.com/oile/RST25e.html
+  accessed: '2026-10-22'
+  retrieved: '2026-10-22'
+  sha256: 36ecad0b65599c13107785c2b62a064a8e07a1e2e30b4ce15b58d4cdf9d99a51
+  note: "Designer's project page with the list of built hulls. Read in full on 2026-10-22 (issue #335)"
+- id: M21
+  title: "Marine Engineering Bureau (MEB), Project 005RST01"
+  url: https://mebspb.com/oile/005RST01e.html
+  accessed: '2026-10-22'
+  retrieved: '2026-10-22'
+  sha256: dd049a6c797a8c941d63da87fd245cc243c02462da1f1270bec3821cd312e352
+  note: "Designer's project page. Read in full on 2026-10-22 (issue #335)"
+- id: M22
+  title: "Marine Engineering Bureau (MEB), Project RST05"
+  url: https://mebspb.com/oile/RST05e.html
+  accessed: '2026-10-22'
+  retrieved: '2026-10-22'
+  sha256: 8704f38db579b599a3c5b6ce4955f6d9eb009013b802205b895ea2f5de70fe66
+  note: "Designer's project page with the list of built hulls. Read in full on 2026-10-22 (issue #335)"
+- id: M23
+  title: "Marine Engineering Bureau (MEB), Project RST11"
+  url: https://mebspb.com/oile/RST11e.html
+  accessed: '2026-10-22'
+  retrieved: '2026-10-22'
+  sha256: 66a7c50f47b53209e0e6df1a164774caff86a9c9f302e6dd36c677c7946834b4
+  note: "Designer's project page with the list of built hulls. Read in full on 2026-10-22 (issue #335)"
+- id: M24
+  title: "Marine Engineering Bureau (MEB), Project ST19"
+  url: https://mebspb.com/oile/ST19e.html
+  accessed: '2026-10-22'
+  retrieved: '2026-10-22'
+  sha256: 057895e4a22d9c4ac29919fab0c66627cca9d96203d349d09717f8ea78b142be
+  note: "Designer's project page with the list of built hulls. Read in full on 2026-10-22 (issue #335)"
+- id: M25
+  title: "Marine Engineering Bureau (MEB), Project RST43C"
+  url: https://meb.com.ua/oil/RST43C-e.html
+  accessed: '2026-10-22'
+  retrieved: '2026-10-22'
+  sha256: 8fc62f7ddced72f0419377cdfce205eef6a7a3359e4139d61a2d3ac734e50011
+  note: "Designer's project page, on the designer's other domain: mebspb.com has no page for this project. Read in full on 2026-10-22 (issue #335)"
+- id: R1
+  title: "RINA, The Naval Architect, 29 Aug 2025: Damen hybrid-electric tanker takes to the Rhine (CDS Tanker 110, mts Generation)"
+  url: https://rina.org.uk/publications/the-naval-architect/damen-hybrid-electric-tanker-takes-to-the-rhine
+  accessed: '2026-10-22'
+  retrieved: '2026-10-22'
+  sha256: 590df1a713d0eb6bef2194535d5938c30189bd3470c3cc048b241516e91cc258
+  note: "Trade press article. The address redirects to www.rina.org.uk/Damen-hybrid-electric-tanker-takes-to-the-Rhine.html; the hash is of the bytes served after the redirect. Read in full on 2026-10-22 (issue #335)"

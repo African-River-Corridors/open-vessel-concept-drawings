@@ -290,6 +290,159 @@ def warnings_for(checks: list[BandCheck]) -> list[str]:
     return lines
 
 
+# --- Tank-barge cases (issue #335) -----------------------------------------------------------------
+# A tank barge: lightship = k x L x B x D + outfit (`tank_lightship.yaml`, issue #330), and the deadweight
+# at the stated draught is the box-barge Cb x L x B x T x rho less that lightship. It runs every
+# `hold_type: tank` record of cases.yaml and the vessels of `tank_barge_cases.yaml`. The k-fit subset
+# (`tank_lightship_inputs.yaml`) is in-sample; every other case is out of sample. The pass measures; it
+# does not tune.
+
+def _load_tank_barge_cases() -> dict:
+    return yaml.safe_load((CAL / "tank_barge_cases.yaml").read_text(encoding="utf-8"))
+
+
+def _load_tank_barge_bands() -> dict:
+    return yaml.safe_load((CAL / "tank_barge_bands.yaml").read_text(encoding="utf-8"))["bands"]
+
+
+def _load_tank_lightship() -> tuple[dict, dict]:
+    """(the generated `tank_lightship.yaml`, the declared `tank_lightship_inputs.yaml`)."""
+    return (yaml.safe_load((CAL / "tank_lightship.yaml").read_text(encoding="utf-8")),
+            yaml.safe_load((CAL / "tank_lightship_inputs.yaml").read_text(encoding="utf-8")))
+
+
+def _tank_barge_records(cases: dict | None = None) -> list[dict]:
+    """Every tank-barge record: the `hold_type: tank` ones of cases.yaml (in either of its lists), then
+    the reference vessels of tank_barge_cases.yaml."""
+    cases = cases if cases is not None else load_cases()
+    found = [c for key in ("dry_barge", "not_yet_runnable_cases") for c in cases.get(key, [])
+             if c.get("hold_type") == "tank"]
+    return found + list(_load_tank_barge_cases()["tank_barge"])
+
+
+def _tank_outfit_t(volume_m3: float, outfit: dict, heating_kw: float = 0.0) -> float:
+    """The outfit (t): pumps, piping, vents and gauging over the tank volume, and the heating. `outfit`
+    is the `outfit` block of tank_lightship.yaml. Equal to `liquid_bulk::lightship::outfit_t` of the core."""
+    per_m3 = sum(outfit[k]["value"] for k in ("pumps_t_per_m3", "piping_t_per_m3", "vents_gauging_t_per_m3"))
+    return volume_m3 * per_m3 + heating_kw * outfit["heating_t_per_kw"]["value"]
+
+
+@dataclass
+class _TankBargeRow:
+    case: dict
+    sample: str                      # "in-sample" (in the k fit) | "held out" | "not scored"
+    ls_model: float | None           # None when the record has no tank volume or depth
+    dwt_model: float | None          # None when the record has no draught
+    banded: str | None = None        # why the case has no band, when it has none
+
+
+def _run_tank_barge(c: dict, f: dict, tank_lightship: dict, inputs: dict) -> _TankBargeRow:
+    """One tank-barge record through the tank-barge model. `f` is the fitted factors (the box-barge Cb)."""
+    o = c["observed"]
+    L, B, D, T = c["loa_m"], c["beam_m"], c.get("depth_m"), c.get("draught_m")
+    k = tank_lightship["tank_lightship_k_t_per_m3"]["value"]
+    cb = f["block_coefficient_box_barge_on_loa"]["value"]
+    ls = None
+    if D and "tank_capacity_m3" in o:
+        ls = k * L * B * D + _tank_outfit_t(o["tank_capacity_m3"], tank_lightship["outfit"])
+    dwt = cb * L * B * T * _rho_of(c) - ls if (T and ls is not None) else None
+    if c["id"] in inputs.get("not_scored", {}):
+        sample, why = "not scored", inputs["not_scored"][c["id"]]
+    else:
+        sample = "in-sample" if c["id"] in inputs["fit_subset"] else "held out"
+        why = c.get("not_banded") or c.get("cross_check_only")
+    return _TankBargeRow(case=c, sample=sample, ls_model=ls, dwt_model=dwt, banded=why)
+
+
+def _tank_barge_rows(cases: dict | None = None) -> list[_TankBargeRow]:
+    cases = cases if cases is not None else load_cases()
+    f = fit_factors(cases["dry_barge"])
+    tank_lightship, inputs = _load_tank_lightship()
+    return [_run_tank_barge(c, f, tank_lightship, inputs) for c in _tank_barge_records(cases)]
+
+
+def _assess_tank_barges(cases: dict | None = None) -> list[BandCheck]:
+    """Every tank-barge figure that has a published value and a band: the deadweight at the stated
+    draught (a published deadweight, not a cargo capacity), and a lightship when a record gives one."""
+    bands = _load_tank_barge_bands()
+    out = []
+    for r in _tank_barge_rows(cases):
+        c, o = r.case, r.case["observed"]
+        if r.banded:
+            continue
+        for fig, model in (("lightship_t", r.ls_model), ("dwt_t", r.dwt_model)):
+            if fig not in o or model is None:
+                continue
+            band = bands[fig]
+            out.append(_Banded(case=c["id"], figure=fig, observed=o[fig], model=model,
+                               err_pct=pct(model, o[fig]), band_pct=float(band["pct"][c["confidence"]]),
+                               confidence=c["confidence"], basis=band["basis"],
+                               held_out=c.get("held_out") if r.sample == "held out" else None,
+                               group="tank barge"))
+    return out
+
+
+def _tank_barge_warnings_for(checks: list[BandCheck]) -> list[str]:
+    """One annotation per tank-barge result outside its band."""
+    bands = _load_tank_barge_bands()
+    lines = []
+    for b in checks:
+        if b.inside:
+            continue
+        label = bands[b.figure]["label"].lower()
+        lines.append(github_warning(
+            f"{b.case}: modelled {label} is {b.err_pct:+.1f} % from the published {b.observed:g} t "
+            f"(model {b.model:,.0f} t), outside ±{b.band_pct:g} % ({b.confidence} confidence, "
+            f"{'held-out' if b.held_out else 'in-sample'})",
+            title="Calibration band", file="calibration/tank_barge_cases.yaml"))
+    return lines
+
+
+def _tank_barge_section() -> list[str]:
+    bands = _load_tank_barge_bands()
+    tank_lightship, inputs = _load_tank_lightship()
+    rows = _tank_barge_rows()
+    checks = _assess_tank_barges()
+    k = tank_lightship["tank_lightship_k_t_per_m3"]
+    out = ["", "## 5a. Tank barges (issue #335)", "",
+           "Every `hold_type: tank` record of `cases.yaml` and the reference vessels of "
+           "`tank_barge_cases.yaml`, run through the tank-barge model: lightship = k × L·B·D + outfit "
+           f"(k = {k['value']} t/m³, an Estimate; outfit coefficients are Estimates), and the deadweight at "
+           "the stated draught is the box-barge Cb × L·B·T·ρ less that lightship. Bands are in "
+           "`tank_barge_bands.yaml`: starting values for the maintainer, equal to the dry-barge bands. "
+           f"**The {len(inputs['fit_subset'])} cases of the k-fit subset are in-sample** (k was fitted on "
+           "them, from the same deadweights); every other case is out of sample. A **self-propelled** vessel "
+           "has no band: the model has no machinery, accommodation or fuel, so its deadweight comes out too "
+           "high by about that weight. A cargo capacity is not a deadweight, so it is shown against the "
+           "predicted deadweight and has no band. A band miss is a warning only.", "",
+           "| Case | Conf. | Sample | T (m) | Published (t) | Model lightship (t) | Model DWT (t) | err % | "
+           "Band ± % | vs band | Note |", "|---|---|---|---|---|---|---|---|---|---|---|"]
+    for r in rows:
+        c, o = r.case, r.case["observed"]
+        if "dwt_t" in o:
+            pub = fmt(o["dwt_t"])
+        elif "cargo_capacity_t" in o:
+            pub = f"{fmt(o['cargo_capacity_t'])} (cargo)"
+        else:
+            pub = "–"
+        compared = o.get("dwt_t", o.get("cargo_capacity_t"))
+        err = pct(r.dwt_model, compared) if r.dwt_model is not None and compared else None
+        cells = _band_cells(checks, c["id"], "dwt_t")
+        note = r.banded or ("in the k fit" if r.sample == "in-sample" else "")
+        out.append(f"| {c['id']} | {c['confidence']} | {r.sample} | {fmt(c.get('draught_m'), 2)} | {pub} | "
+                   f"{fmt(r.ls_model)} | {fmt(r.dwt_model)} | {fmt(err, 1)} | {cells[0]} | {cells[1]} | {note} |")
+    banded = [b for b in checks if b.figure == "dwt_t"]
+    out += ["", "| Sample | Banded n | Mean err % | Mean abs err % | Range % | Inside band |", "|---|---|---|---|---|---|"]
+    for label, pick in (("in-sample (k-fit subset)", lambda b: not b.held_out), ("out of sample", lambda b: bool(b.held_out))):
+        st = _summary_stats([b for b in banded if pick(b)])
+        if st is None:
+            out.append(f"| {label} | 0 | – | – | – | – |")
+        else:
+            out.append(f"| {label} | {st['n']} | {st['mean']:+.1f} | {st['mean_abs']:.1f} | "
+                       f"{st['min']:+.1f} to {st['max']:+.1f} | {st['inside']} of {st['n']} |")
+    return out
+
+
 # --- Type C tank cases (issue #292) --------------------------------------------------------------
 # One cargo tank, run through the tank maths only (no hull): `calibration/tank_cases.yaml`, with its
 # own bands in `tank_bands.yaml`. Every case is held out: it is never used to fit a factor. The
@@ -712,13 +865,16 @@ def main_check() -> int:
     tank_checks = _assess_tanks()
     for line in _tank_warnings_for(tank_checks):
         print(line)
+    tank_barge_checks = _assess_tank_barges()
+    for line in _tank_barge_warnings_for(tank_barge_checks):
+        print(line)
     propulsion_checks = _assess_propulsion()
     for line in _propulsion_warnings_for(propulsion_checks):
         print(line)
     power_checks = _assess_installed_power()
     for line in _installed_power_warnings_for(power_checks):
         print(line)
-    every = checks + tank_checks + propulsion_checks + power_checks
+    every = checks + tank_checks + tank_barge_checks + propulsion_checks + power_checks
     outside = sum(1 for b in every if not b.inside)
     print(f"calibration: {len(every)} results against their bands, {outside} outside (warning only)")
     return 0
@@ -956,6 +1112,7 @@ def report() -> str:
                    f"{fmt(m.power_kw)} | {fmt(m.delivered_kw)} | {fmt(ratio, 2)} |")
     out += _held_out_section(held_cases, held_rows, cases.get("not_yet_runnable_cases", []), all_checks)
     out += _tank_section()
+    out += _tank_barge_section()
     out += _propulsion_section()
     out += _installed_power_section()
     return "\n".join(out) + "\n"
