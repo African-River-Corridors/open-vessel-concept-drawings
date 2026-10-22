@@ -340,6 +340,8 @@ fn short_hash(hash: &str) -> &str {
 /// §5.2), with their values. The engine works them out; a user never types them.
 pub const DERIVED_INPUTS: &[(&str, &[&str])] = &[
     ("cargo_class", &["gas", "dry_bulk", "liquid_bulk"]),
+    // Issue #355: the Formation's kind, read from the `formation` input.
+    ("formation_kind", crate::vdesign::FORMATION_KINDS),
     ("deadweight_band", DEADWEIGHT_BANDS),
 ];
 
@@ -379,6 +381,42 @@ pub struct OptionMeasures<'a> {
     pub measured: &'a Measured,
 }
 
+impl OptionMeasures<'_> {
+    /// Whether ES-TRIN 28.04(1)(a) can be read from the inputs: a self-propelled Option with a
+    /// specified Propulsor.
+    fn redundancy_applies(&self) -> bool {
+        let kind = self
+            .option
+            .input("formation")
+            .and_then(|i| i.value.get("kind"))
+            .and_then(Value::as_str);
+        let propulsor = self
+            .option
+            .input("propulsor_type")
+            .and_then(|i| i.value.as_str());
+        kind == Some("self_propelled") && propulsor.is_some_and(|p| p != "unspecified")
+    }
+
+    /// ES-TRIN 28.04(1)(a), from the inputs: a craft of 110 m or less is not covered; a longer one
+    /// needs a multi-propeller system or a single propeller, each with a bow thruster. Equal power,
+    /// independence and a thruster that works unladen are assumed.
+    fn redundancy(&self) -> Result<bool, String> {
+        let number = |n: &str| self.option.input(n).and_then(|i| i.value.as_f64());
+        let loa = number("length_overall_m").ok_or("the Option has no length overall")?;
+        if loa <= 110.0 {
+            return Ok(true);
+        }
+        let thruster = self
+            .option
+            .input("bow_thruster")
+            .and_then(|i| i.value.as_str())
+            .is_some_and(|t| t != "none");
+        // One propulsor or more, with a bow thruster that is controlled from the wheelhouse: the
+        // same condition in this model.
+        Ok(thruster && number("propulsor_count").unwrap_or(1.0) >= 1.0)
+    }
+}
+
 impl MeasureSource for OptionMeasures<'_> {
     fn def(&self, id: &str) -> Option<MeasureInfo> {
         measure_info(id)
@@ -404,6 +442,9 @@ impl MeasureSource for OptionMeasures<'_> {
                 _ => Err(format!("`{name}` has no value")),
             };
         }
+        if m.id == "propulsion.redundancy_28_04" {
+            return self.redundancy().map(MeasureValue::Bool);
+        }
         if m.id == "openings.front_clear" {
             // Issue #417: read from the typed input; no opening on the front means it is clear.
             return match self
@@ -419,7 +460,14 @@ impl MeasureSource for OptionMeasures<'_> {
     }
 
     fn has(&self, measure: &MeasureRef) -> bool {
-        self.measured.has(measure)
+        match measure.id.as_str() {
+            "propulsion.redundancy_28_04" => self.redundancy_applies(),
+            // Rules on these are `not evaluated`, with their gaps: the Option has them to name.
+            "wheelhouse.field_of_view"
+            | "wheelhouse.raised_stability"
+            | "formation.coupling_force" => true,
+            _ => self.measured.has(measure),
+        }
     }
 
     fn missing(&self, object: &str) -> Option<String> {
@@ -445,6 +493,15 @@ impl MeasureSource for OptionMeasures<'_> {
 
     fn input(&self, name: &str) -> Option<String> {
         match name {
+            "formation_kind" => {
+                return self
+                    .option
+                    .input("formation")?
+                    .value
+                    .get("kind")?
+                    .as_str()
+                    .map(str::to_string);
+            }
             "cargo_class" => {
                 let cargo = self.option.input("cargo")?.value.as_str()?;
                 let props = ovcd_core::cargo::get_cargo(cargo).ok()?;
@@ -480,8 +537,10 @@ pub fn rule_inputs(option: &DesignOption) -> RuleInputs {
             applicability.push((spec.name.to_string(), v));
         }
     }
-    if let Some(v) = source.input("cargo_class") {
-        applicability.push(("cargo_class".to_string(), v));
+    for name in ["cargo_class", "formation_kind"] {
+        if let Some(v) = source.input(name) {
+            applicability.push((name.to_string(), v));
+        }
     }
     let mut measures = Vec::new();
     for spec in INPUTS {

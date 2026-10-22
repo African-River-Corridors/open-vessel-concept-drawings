@@ -2,7 +2,7 @@
   "$schema": "../rule-set.schema.json",
   "id": "es-trin-2025",
   "family": "es-trin",
-  "title": "ES-TRIN 2025/1: safety clearance and freeboard (Chapter 4)",
+  "title": "ES-TRIN 2025/1: safety clearance and freeboard (Chapter 4), wheelhouse view and speed (Chapters 5, 7), craft over 110 m (Chapter 28)",
   "version": "1.0.0",
   "edition": {
     "document": "ES-TRIN, Edition 2025/1",
@@ -126,6 +126,219 @@
       "sizes": false,
       "evaluated": true,
       "finding": "#428",
+      "since": "1.0.0"
+    },
+    {
+      "id": "es-trin/7.02(2)/blind-zone-unladen",
+      "title": "Area of obstructed vision ahead of the vessel, unladen with half its supplies and without ballast, at most 250 m",
+      "origin": "regulation",
+      "source": {
+        "document": "ES-TRIN, European standard laying down technical requirements for inland navigation vessels",
+        "edition": "Edition 2025/1",
+        "locator": "7.02(2)",
+        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 7, p. 31",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#355"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "wheelhouse.blind_distance",
+        "args": {
+          "condition": "light"
+        }
+      },
+      "compare": "le",
+      "limit": {
+        "value": 250.0,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#355",
+      "since": "1.0.0"
+    },
+    {
+      "id": "es-trin/5.06(1)/speed-13kmh",
+      "title": "Speed in relation to the water at least 13 km/h, laden, in deep water; not for a pusher operating solo",
+      "origin": "regulation",
+      "source": {
+        "document": "ES-TRIN, European standard laying down technical requirements for inland navigation vessels",
+        "edition": "Edition 2025/1",
+        "locator": "5.06(1)",
+        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 5, p. 24",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#355"
+      },
+      "verified": false,
+      "applies_when": {
+        "formation_kind": [
+          "self_propelled",
+          "pushed_barge",
+          "pushed_convoy",
+          "atb",
+          "towed_barge"
+        ]
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "powering.speed_through_water_kmh",
+        "args": {
+          "environment": "Deep water"
+        }
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 13.0,
+        "unit": "km/h"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#355",
+      "since": "1.0.0"
+    },
+    {
+      "id": "es-trin/28.04(1)(a)/propulsion-redundancy",
+      "title": "A craft over 110 m has two propulsors and a bow thruster, or one propulsor and a bow thruster with its own power that lets it proceed after a breakdown",
+      "origin": "regulation",
+      "source": {
+        "document": "ES-TRIN, European standard laying down technical requirements for inland navigation vessels",
+        "edition": "Edition 2025/1",
+        "locator": "28.04(1)(a)",
+        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 28, p. 202",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#355"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "propulsion.redundancy_28_04"
+      },
+      "tolerance": 0,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#355",
+      "since": "1.0.0"
+    },
+    {
+      "id": "es-trin/7.02(3)/field-of-view",
+      "title": "Helmsman's field of unobstructed vision at least 240 degrees, 140 degrees in the forward semicircle",
+      "origin": "regulation",
+      "source": {
+        "document": "ES-TRIN, European standard laying down technical requirements for inland navigation vessels",
+        "edition": "Edition 2025/1",
+        "locator": "7.02(3)",
+        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 7, p. 31",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#355"
+      },
+      "verified": false,
+      "applies_when": {
+        "formation_kind": [
+          "self_propelled"
+        ]
+      },
+      "kind": "check",
+      "measure": {
+        "id": "wheelhouse.field_of_view"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "the model has no window geometry",
+      "finding": "#355",
+      "since": "1.0.0"
+    },
+    {
+      "id": "es-trin/7.12(2)/elevating-wheelhouse-stability",
+      "title": "An elevating wheelhouse does not endanger the stability of the vessel",
+      "origin": "regulation",
+      "source": {
+        "document": "ES-TRIN, European standard laying down technical requirements for inland navigation vessels",
+        "edition": "Edition 2025/1",
+        "locator": "7.12(2)",
+        "page": "ES_TRIN_2025_signed_en.pdf, Chapter 7, p. 37",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#355"
+      },
+      "verified": false,
+      "applies_when": {
+        "formation_kind": [
+          "self_propelled"
+        ]
+      },
+      "kind": "check",
+      "measure": {
+        "id": "wheelhouse.raised_stability"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "the model has no stability case with the wheelhouse raised",
+      "finding": "#355",
+      "since": "1.0.0"
+    },
+    {
+      "id": "es-trin/ESI-III-6.2.1/coupling-force",
+      "title": "Coupling force between a pusher and pushed craft, F = 270 P_B L_S / B_S x 10^-3 kN, as the tensile strength to size the coupling",
+      "origin": "regulation",
+      "source": {
+        "document": "ES-TRIN, European standard laying down technical requirements for inland navigation vessels",
+        "edition": "Edition 2025/1",
+        "locator": "ESI-III-6.2.1",
+        "page": "ES_TRIN_2025_signed_en.pdf, ESI-III-6, section 2.1",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#355"
+      },
+      "verified": false,
+      "applies_when": {
+        "formation_kind": [
+          "pushed_barge",
+          "pushed_convoy",
+          "atb"
+        ]
+      },
+      "kind": "note",
+      "measure": {
+        "id": "formation.coupling_force"
+      },
+      "tolerance": 0,
+      "consequence": "note",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "the Formation powering, with the power of the pusher and the dimensions of the pushed craft, is not built",
+      "finding": "#355",
       "since": "1.0.0"
     }
   ]
