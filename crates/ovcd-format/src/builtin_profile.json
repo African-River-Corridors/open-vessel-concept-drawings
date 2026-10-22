@@ -308,9 +308,10 @@
           },
           {
             "when": { "cargo": ["LPG_propane", "LPG_butane", "LPG_mix"], "lpg_carriage_condition": "fully_refrigerated" },
-            "value": 0.4,
+            "value": 0.55,
             "status": "estimate",
-            "basis": "No source gives a design pressure for a fully refrigerated LPG Type C tank. Taken as for LNG bunker tanks, 4 bar; the vapour pressure of the cold cargo is near atmospheric, so this is a margin, not a calculation"
+            "source": "IGC Code, MSC.370(93), 4.23.1.2 (annex p. 63-64, as read): the design vapour pressure is not less than Po = 0.2 + A C (rho_r)^1.5 MPa, with A = 0.00185 (sigma_m / 55)^2 and C the greatest of h, 0.75 b and 0.45 l",
+            "basis": "No source gives a design pressure for a fully refrigerated LPG Type C tank; the vapour pressure of the cold cargo is near atmospheric, so the IGC minimum of 4.23.1.2 sets it. That minimum depends on the tank length (C = 0.45 l for a long tank), so one value cannot be the minimum for every tank. 0.55 MPa is at or above the minimum for the three LPG Cargos in 9 % nickel steel (sigma_m the allowable stress, 230 MPa) up to a tank of about 45 m overall length, which is a hull of up to about 120 m. It is conservative for shorter tanks (60 m hull: minimum 0.33 MPa), whose wall it makes thicker than the minimum needs. A saved file that stores a value keeps it"
           }
         ]
       },
