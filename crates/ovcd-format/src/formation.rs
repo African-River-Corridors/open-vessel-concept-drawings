@@ -390,12 +390,6 @@ fn build(
             "machinery_t": crate::eval::num(r.machinery_t),
             "lightship_t": crate::eval::num(r.lightship_t),
         },
-        // The ratios of the pusher and the Formation allowance are not calibrated yet (part 2 of #359
-        // fits them to the reference pushers), as the lightship says in `calibration` (#434).
-        "calibration": {
-            "state": "uncalibrated",
-            "basis": "The pusher ratios and the Formation resistance allowance are estimates not yet fitted to the reference pushers; a small pusher can be far from a real one."
-        },
         "sizing": {
             "passes": sized.passes,
             "converged": sized.converged,

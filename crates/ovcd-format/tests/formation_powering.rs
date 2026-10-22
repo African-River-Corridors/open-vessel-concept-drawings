@@ -191,3 +191,21 @@ fn the_speed_of_the_formation_reaches_the_rules_that_read_it() {
     );
     assert!(r["rule_trace"]["rows"].is_array());
 }
+
+#[test]
+fn the_formation_says_it_is_uncalibrated_outside_the_results_hash() {
+    // As the lightship does (issue #434): the label is in `calibration`, which is not hashed, so
+    // the calibration of part 2 flips it without moving a hash.
+    let r = results(convoy(2, 2), true, &[]);
+    assert_eq!(r["calibration"]["formation"]["state"], "uncalibrated");
+    assert!(r["formation"].get("calibration").is_none());
+    let mut relabelled = r.clone();
+    relabelled["calibration"]["formation"]["state"] = json!("calibrated");
+    assert_eq!(
+        ovcd_format::results_hash(&r),
+        ovcd_format::results_hash(&relabelled)
+    );
+    // A pushed convoy without its pusher has no such label.
+    let bare = results(convoy(2, 2), false, &[]);
+    assert!(bare["calibration"].get("formation").is_none());
+}

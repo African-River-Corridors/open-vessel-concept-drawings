@@ -568,9 +568,19 @@ pub fn run_option_with(
                     crate::trace::service_area_of(option),
                     &selection.warnings,
                 );
+                let v_has_formation = v.get("formation").is_some_and(Value::is_object);
                 if let Some(o) = v.as_object_mut() {
                     o.insert("cost".to_string(), cost);
-                    o.insert("calibration".to_string(), calibration_of(option));
+                    let mut calibration = calibration_of(option);
+                    // Issue #359: the pusher ratios and the allowance are not fitted yet (part 2 of
+                    // #359 does it). The label is outside the hash, so its change moves no hash.
+                    if v_has_formation {
+                        calibration["formation"] = json!({
+                            "state": "uncalibrated",
+                            "basis": "The pusher ratios and the Formation resistance allowance are estimates not yet fitted to the reference pushers; a small pusher can be far from a real one.",
+                        });
+                    }
+                    o.insert("calibration".to_string(), calibration);
                     o.insert("rule_trace".to_string(), rule_trace);
                 }
                 let hash = results_hash(&v);
