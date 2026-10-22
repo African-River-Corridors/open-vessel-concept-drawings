@@ -1,0 +1,766 @@
+{
+  "$schema": "../rule-set.schema.json",
+  "id": "adn-tank",
+  "family": "adn",
+  "title": "ADN 2025, tank vessels of type C and type N carrying crude oil: vessel type, double hull, cofferdams, cargo tank capacity and length, intact stability, damage stability and pump room",
+  "version": "1.0.0",
+  "edition": {
+    "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+    "edition": "ADN 2025 (ECE/TRANS/351, Vol. I and II), applicable from 1 January 2025; the printed page numbers below are the page footers of the text (PDF page = printed page + 24)",
+    "amendments": "none read: ADN 2025 is the text; the 2027 edition is not in force",
+    "in_force": "1 January 2025"
+  },
+  "sources": [
+    {
+      "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+      "edition": "2025, ECE/TRANS/351 (copied from an earlier session; the original URL is not verified)",
+      "url": "https://digitallibrary.un.org/record/4092124",
+      "access": "free",
+      "sha256": "3ee6a1eba8408bea00099fce1a352fc142cc5352774696f384ac5523ea5267b9"
+    }
+  ],
+  "status": "draft",
+  "applies_when": {
+    "cargo_class": [
+      "liquid_bulk"
+    ],
+    "service_area": [
+      "river-only",
+      "coastal-and-river"
+    ]
+  },
+  "includes": [],
+  "known_conflicts": [],
+  "tables": [
+    {
+      "id": "adn-tank-capacity",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "locator": "9.3.2.11.1(a)",
+        "page": "adn.pdf, printed p. 546 (9.3.3.11.1(a): p. 587, the same table)"
+      },
+      "input": {
+        "name": "L x B x H of the tank vessel",
+        "unit": "m3"
+      },
+      "unit": "m3",
+      "rows": [
+        {
+          "when": {
+            "le": 600
+          },
+          "shape": "a+v*b/c",
+          "a": 0.0,
+          "b": 0.3,
+          "c": 1.0
+        },
+        {
+          "when": {
+            "gt": 600,
+            "le": 3750
+          },
+          "shape": "a+v*b/c",
+          "a": 141.9,
+          "b": 0.0635,
+          "c": 1.0
+        },
+        {
+          "when": {
+            "gt": 3750
+          },
+          "shape": "const",
+          "a": 380.0
+        }
+      ]
+    },
+    {
+      "id": "adn-tank-length",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "locator": "9.3.2.11.1(d)",
+        "page": "adn.pdf, printed p. 547 (9.3.3.11.1(d): p. 588, the same text)"
+      },
+      "input": {
+        "name": "length of the vessel",
+        "unit": "m"
+      },
+      "unit": "m",
+      "rows": [
+        {
+          "when": {
+            "le": 50
+          },
+          "shape": "const",
+          "a": 10.0
+        },
+        {
+          "when": {
+            "gt": 50
+          },
+          "shape": "a+v*b/c",
+          "a": 0.0,
+          "b": 0.2,
+          "c": 1.0
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "adn/3.2.3.3/vessel-type",
+      "title": "The ADN Tank Vessel Type of the Cargo, from its data: type C, type N closed or type N open (an unknown flag, and UN 3494 sour crude oil, give type C)",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "3.2.3.3",
+        "page": "adn.pdf, printed p. 249",
+        "access": "free",
+        "also": [
+          "3.2.3.2"
+        ]
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "kind": "note",
+      "measure": {
+        "id": "option.adn_vessel_type"
+      },
+      "consequence": "note",
+      "evaluated": true,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.2.11.1(a)/cargo-tank-capacity",
+      "title": "Capacity of each cargo tank not more than the table value for L x B x H (up to 600 m3: 0.3 x L x B x H; 600 to 3,750: 180 + (L x B x H - 600) x 0.0635; above 3,750: 380 m3)",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.2.11.1(a)",
+        "page": "adn.pdf, printed p. 546",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "C"
+        ]
+      },
+      "kind": "table",
+      "measure": {
+        "id": "cargo-tank.volume"
+      },
+      "compare": "le",
+      "limit": {
+        "table": "adn-tank-capacity",
+        "at": "cargo-tank.vessel_lbh",
+        "unit": "m3"
+      },
+      "tolerance": 1e-09,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.2.11.1(d)/cargo-tank-length",
+      "title": "Length of each cargo tank not more than 10.00 m for a vessel of 50.00 m or less, and 0.20 L for a longer one (not for independent built-in cylindrical tanks with L/D of 7 or less)",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.2.11.1(d)",
+        "page": "adn.pdf, printed p. 547",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "C"
+        ]
+      },
+      "kind": "table",
+      "measure": {
+        "id": "cargo-tank.length"
+      },
+      "compare": "le",
+      "limit": {
+        "table": "adn-tank-length",
+        "at": "cargo-tank.vessel_length",
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.2.11.3(a)/cofferdam-width",
+      "title": "Cofferdams between the cargo tanks and the accommodation, engine rooms and service spaces outside the cargo area (or the vessel's ends) at least 0.60 m wide",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.2.11.3(a)",
+        "page": "adn.pdf, printed p. 548",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "C"
+        ]
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "input.cofferdam_m"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.6,
+        "unit": "m"
+      },
+      "tolerance": 0.0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.2.11.7/wing-width-min",
+      "title": "Distance from the side wall of the vessel to the longitudinal bulkhead of the cargo tanks (double hull, integral tanks) at least 1.00 m (0.80 m with the listed reinforcements, not modelled)",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.2.11.7",
+        "page": "adn.pdf, printed p. 549",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "C"
+        ]
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "hull.double_side_width"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 1.0,
+        "unit": "m"
+      },
+      "tolerance": 0.0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.2.11.7/double-bottom-depth",
+      "title": "Mean depth of the double bottom at least 0.70 m",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.2.11.7",
+        "page": "adn.pdf, printed p. 549",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "C"
+        ]
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "hull.double_bottom_height"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.7,
+        "unit": "m"
+      },
+      "tolerance": 0.0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.2.11.7/double-bottom-min",
+      "title": "Depth of the double bottom never less than 0.60 m (0.50 m below the suction wells, not modelled)",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.2.11.7",
+        "page": "adn.pdf, printed p. 549",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "C"
+        ]
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "hull.double_bottom_height"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.6,
+        "unit": "m"
+      },
+      "tolerance": 0.0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.2.14.2/intact-wide-tanks",
+      "title": "Intact stability for a vessel with cargo tanks wider than 0.70 B: GZ at least 0.10 m and area at least 0.024 m.rad up to the first non-weathertight opening or 27 degrees, GM at least 0.10 m, with all free surfaces, at every stage of loading and unloading",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.2.14.2",
+        "page": "adn.pdf, printed p. 553",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "C"
+        ]
+      },
+      "kind": "check",
+      "measure": {
+        "id": "stability.wide_tanks"
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "needs the cargo tank breadth over the beam, and the stability to the first non-weathertight opening, at every stage of loading and unloading and for every density the loading conditions leave out",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.2.15.1/damage-stability",
+      "title": "Survival after the assumed side and bottom damage (side: 0.10 L long and 0.79 m deep; bottom: 3.00 m wide and 0.59 m high), with the criteria of 9.3.2.15.2",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.2.15.1",
+        "page": "adn.pdf, printed p. 554",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "C"
+        ]
+      },
+      "kind": "check",
+      "measure": {
+        "id": "stability.damage"
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "damage stability is not modelled: the damage Measure is the ticket after the liquid Rule Sets",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.2.17.6/pump-room-below-deck",
+      "title": "A service space below deck in the cargo area is not used as a cargo pump room, except where the listed conditions are met; no pump room below deck for UN 3494 sour crude oil (Table C column 14)",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.2.17.6",
+        "page": "adn.pdf, printed p. 557",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "C"
+        ]
+      },
+      "kind": "check",
+      "measure": {
+        "id": "arrangement.pump_room_below_deck"
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "needs the pump arrangement and the sour flag of the Crude Grade as one Measure; the conditions of the exception (cofferdam or A-60 bulkhead, ventilation, gas detection) are equipment the model does not hold",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.3.11.1(a)/cargo-tank-capacity",
+      "title": "Capacity of each cargo tank not more than the table value for L x B x H (up to 600 m3: 0.3 x L x B x H; 600 to 3,750: 180 + (L x B x H - 600) x 0.0635; above 3,750: 380 m3)",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.3.11.1(a)",
+        "page": "adn.pdf, printed p. 587",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "N_open",
+          "N_closed"
+        ]
+      },
+      "kind": "table",
+      "measure": {
+        "id": "cargo-tank.volume"
+      },
+      "compare": "le",
+      "limit": {
+        "table": "adn-tank-capacity",
+        "at": "cargo-tank.vessel_lbh",
+        "unit": "m3"
+      },
+      "tolerance": 1e-09,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.3.11.1(d)/cargo-tank-length",
+      "title": "Length of each cargo tank not more than 10.00 m for a vessel of 50.00 m or less, and 0.20 L for a longer one (not for independent built-in cylindrical tanks with L/D of 7 or less)",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.3.11.1(d)",
+        "page": "adn.pdf, printed p. 588",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "N_open",
+          "N_closed"
+        ]
+      },
+      "kind": "table",
+      "measure": {
+        "id": "cargo-tank.length"
+      },
+      "compare": "le",
+      "limit": {
+        "table": "adn-tank-length",
+        "at": "cargo-tank.vessel_length",
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.3.11.3(a)/cofferdam-width",
+      "title": "Cofferdams between the cargo tanks and the accommodation, engine rooms and service spaces outside the cargo area (or the vessel's ends) at least 0.60 m wide",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.3.11.3(a)",
+        "page": "adn.pdf, printed p. 588",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "N_open",
+          "N_closed"
+        ]
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "input.cofferdam_m"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.6,
+        "unit": "m"
+      },
+      "tolerance": 0.0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.3.11.7/wing-width-min",
+      "title": "Space between the wall of the vessel and the wall of the cargo tanks at least 0.60 m (independent tanks, or double hull with integral tanks)",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.3.11.7",
+        "page": "adn.pdf, printed p. 589",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "N_open",
+          "N_closed"
+        ]
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "hull.double_side_width"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.6,
+        "unit": "m"
+      },
+      "tolerance": 0.0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.3.11.7/double-bottom-depth",
+      "title": "Space between the bottom of the vessel and the bottom of the cargo tanks at least 0.50 m (0.40 m under the pump sumps, not modelled)",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.3.11.7",
+        "page": "adn.pdf, printed p. 589",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "N_open",
+          "N_closed"
+        ]
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "hull.double_bottom_height"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 0.5,
+        "unit": "m"
+      },
+      "tolerance": 0.0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.3.14.2/intact-wide-tanks",
+      "title": "Intact stability for a vessel with cargo tanks wider than 0.70 B: GZ at least 0.10 m and area at least 0.024 m.rad up to the first non-weathertight opening or 27 degrees, GM at least 0.10 m, with all free surfaces",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.3.14.2",
+        "page": "adn.pdf, printed p. 594",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "N_open",
+          "N_closed"
+        ]
+      },
+      "kind": "check",
+      "measure": {
+        "id": "stability.wide_tanks"
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "needs the cargo tank breadth over the beam, and the stability to the first non-weathertight opening, at every stage of loading and unloading",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.3.15.1/damage-stability",
+      "title": "Survival after the assumed side and bottom damage for independent tanks and double hull (side 0.10 L long and 0.59 m deep; bottom 3.00 m wide and 0.49 m high)",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.3.15.1",
+        "page": "adn.pdf, printed p. 594",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "N_open",
+          "N_closed"
+        ]
+      },
+      "kind": "check",
+      "measure": {
+        "id": "stability.damage"
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "damage stability is not modelled: the damage Measure is the ticket after the liquid Rule Sets",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "adn/9.3.3.17.6/pump-room-below-deck",
+      "title": "A service space below deck in the cargo area is not used as a cargo pump room, except where the listed conditions are met",
+      "origin": "regulation",
+      "source": {
+        "document": "ADN 2025, European Agreement concerning the International Carriage of Dangerous Goods by Inland Waterways",
+        "edition": "2025, ECE/TRANS/351",
+        "locator": "9.3.3.17.6",
+        "page": "adn.pdf, printed p. 597",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "applies_when": {
+        "adn_vessel_type": [
+          "N_open",
+          "N_closed"
+        ]
+      },
+      "kind": "check",
+      "measure": {
+        "id": "arrangement.pump_room_below_deck"
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "needs the pump arrangement as a Measure; the conditions of the exception are equipment the model does not hold",
+      "finding": null,
+      "since": "1.0.0"
+    }
+  ]
+}

@@ -1,0 +1,187 @@
+{
+  "$schema": "../rule-set.schema.json",
+  "id": "normam-202",
+  "family": "normam",
+  "title": "NORMAM-202/DPC (Brazil), new vessels carrying petroleum on inland waters: the double bottom and the double side, with damage stability and the opening setback listed as not evaluated; an optional national Rule Set, never in a default stack",
+  "version": "1.0.0",
+  "edition": {
+    "document": "NORMAM-202/DPC, Normas da Autoridade Marítima para Embarcações Empregadas na Navegação Interior, chapter 5 section III (alcohol, petroleum and derivatives)",
+    "edition": "1ª Revisão (2023, Portaria DPC/DGN/MB 186, in force 1 October 2025) with Modificação 1 (Portaria 188) and Modificação 2 (Portaria 196)",
+    "in_force": "1 October 2025"
+  },
+  "sources": [
+    {
+      "document": "NORMAM-202/DPC, Normas da Autoridade Marítima para Embarcações Empregadas na Navegação Interior, chapter 5 section III (alcohol, petroleum and derivatives)",
+      "edition": "1ª Revisão 2023, with Mod. 1 and Mod. 2 (to 19 December 2025)",
+      "url": "https://www.marinha.mil.br/sites/default/files/atos-normativos/dpc/normam/normam-202.pdf",
+      "access": "free",
+      "sha256": "fc6416029011e64f792df0f328968b1c92e885fe789f518cca6ca34d375f8185"
+    }
+  ],
+  "status": "draft",
+  "applies_when": {
+    "cargo_class": [
+      "liquid_bulk"
+    ]
+  },
+  "includes": [],
+  "known_conflicts": [],
+  "tables": [],
+  "rules": [
+    {
+      "id": "normam/5.23.6(a)(II)/double-bottom",
+      "title": "Distance from the cargo tank surfaces to the bottom at least B/15 or 0.76 m, whichever is greater",
+      "origin": "national-practice",
+      "source": {
+        "document": "NORMAM-202/DPC, Normas da Autoridade Marítima para Embarcações Empregadas na Navegação Interior, chapter 5 section III (alcohol, petroleum and derivatives)",
+        "edition": "1ª Revisão (2023), with Modificações 1 and 2",
+        "locator": "5.23.6 (a)(II)",
+        "page": "normam-202.pdf, printed p. 5-36",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "hull.double_bottom_height"
+      },
+      "compare": "ge",
+      "limit": {
+        "shape": "at-least",
+        "x": "input.beam_m",
+        "a": 0.0,
+        "b": 1.0,
+        "c": 15.0,
+        "lo": 0.76,
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "normam/5.23.6(a)(II)/double-side",
+      "title": "Distance from the cargo tank surfaces to the side at least 1.00 m",
+      "origin": "national-practice",
+      "source": {
+        "document": "NORMAM-202/DPC, Normas da Autoridade Marítima para Embarcações Empregadas na Navegação Interior, chapter 5 section III (alcohol, petroleum and derivatives)",
+        "edition": "1ª Revisão (2023), with Modificações 1 and 2",
+        "locator": "5.23.6 (a)(II)",
+        "page": "normam-202.pdf, printed p. 5-36",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "kind": "limit",
+      "measure": {
+        "id": "hull.double_side_width"
+      },
+      "compare": "ge",
+      "limit": {
+        "value": 1.0,
+        "unit": "m"
+      },
+      "tolerance": 0.0,
+      "consequence": "warn",
+      "sizes": true,
+      "evaluated": true,
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "normam/5.23.8/standard-damage",
+      "title": "Survival after the standard damage: side B/5 or 11.5 m deep, bottom B/6 or 10 m wide and B/15 or 6 m high, with the longitudinal extents of 5.23.8; the cargo tanks flood",
+      "origin": "national-practice",
+      "source": {
+        "document": "NORMAM-202/DPC, Normas da Autoridade Marítima para Embarcações Empregadas na Navegação Interior, chapter 5 section III (alcohol, petroleum and derivatives)",
+        "edition": "1ª Revisão (2023), with Modificações 1 and 2",
+        "locator": "5.23.8",
+        "page": "normam-202.pdf, printed p. 5-37",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "stability.damage"
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "damage stability and oil outflow are not modelled",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "normam/5.23.9/damage-criteria",
+      "title": "Damage stability criteria: positive GZ range of at least 20 degrees beyond equilibrium, area at least 0.0175 m.rad, residual GZ at least 0.1 m, final heel at most 25 degrees",
+      "origin": "national-practice",
+      "source": {
+        "document": "NORMAM-202/DPC, Normas da Autoridade Marítima para Embarcações Empregadas na Navegação Interior, chapter 5 section III (alcohol, petroleum and derivatives)",
+        "edition": "1ª Revisão (2023), with Modificações 1 and 2",
+        "locator": "5.23.9",
+        "page": "normam-202.pdf, printed p. 5-38",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "stability.damage"
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "damage stability is not modelled",
+      "finding": null,
+      "since": "1.0.0"
+    },
+    {
+      "id": "normam/5.23.3(l)/opening-setback",
+      "title": "Openings of accommodation and spaces with flames or sparks at least 4 m from the cargo area; no accommodation or service space in the cargo area",
+      "origin": "national-practice",
+      "source": {
+        "document": "NORMAM-202/DPC, Normas da Autoridade Marítima para Embarcações Empregadas na Navegação Interior, chapter 5 section III (alcohol, petroleum and derivatives)",
+        "edition": "1ª Revisão (2023), with Modificações 1 and 2",
+        "locator": "5.23.3 (l)",
+        "page": "normam-202.pdf, printed p. 5-28",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#338"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "arrangement.opening_setback"
+      },
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": false,
+      "gap": "the model has no opening positions",
+      "finding": null,
+      "since": "1.0.0"
+    }
+  ]
+}

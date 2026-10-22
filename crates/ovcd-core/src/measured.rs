@@ -103,6 +103,8 @@ impl Measured {
             "hull.lbh",
             "cargo-tank.volume",
             "cargo-tank.length",
+            "cargo-tank.vessel_lbh",
+            "cargo-tank.vessel_length",
             "option.cargo_capacity_m3",
             "option.slop_capacity_share",
         ];
@@ -124,6 +126,8 @@ impl Measured {
             "hull.lbh" => number(l.lbh_m3),
             "cargo-tank.volume" => tank().and_then(|t| number(t.volume_m3())),
             "cargo-tank.length" => tank().and_then(|t| number(t.length())),
+            "cargo-tank.vessel_lbh" => tank().and_then(|_| number(l.lbh_m3)),
+            "cargo-tank.vessel_length" => tank().and_then(|_| number(l.loa_m)),
             "option.cargo_capacity_m3" => number(l.cargo_gross_m3),
             _ => number(l.slop_share_actual),
         })
@@ -185,6 +189,8 @@ impl Measured {
             | "hull.lbh"
             | "cargo-tank.volume"
             | "cargo-tank.length"
+            | "cargo-tank.vessel_lbh"
+            | "cargo-tank.vessel_length"
             | "option.cargo_capacity_m3"
             | "option.slop_capacity_share" => self.liquid.is_some(),
             "option.deadweight" => self.deadweight_t.is_some(),

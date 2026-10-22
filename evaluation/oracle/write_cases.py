@@ -16,6 +16,7 @@ import yaml
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import box_oracle as oracle  # noqa: E402
+import tank_oracle  # noqa: E402
 
 CASES_DIR = HERE.parent / "cases"
 
@@ -216,6 +217,68 @@ BASE_CASES = [
 ]
 
 
+#: The crude oil tank barges of the liquid bulk Rules (issue #338): a hull, a cargo zone and a layout,
+#: chosen for this corpus. The verdicts are worked out by `tank_oracle.py` from the text of ADN 2025 and
+#: MARPOL Annex I, never typed here. `adn_vessel_type` is a given particular (the type a Crude Grade
+#: derives), `deadweight_t` too.
+TANK_HULL = {"loa_m": 76.5, "beam_m": 11.4, "depth_m": 3.5, "zone_aft_m": 3.0, "zone_fwd_m": 40.0}
+TANK_LAYOUT = {"double_side_m": 1.2, "double_bottom_m": 0.9, "tanks_in_line": 3, "centreline_bulkhead": False,
+               "cofferdam_m": 0.8, "pump_room_m": 0.0, "slop_share": 0.0}
+ADN = ["adn-tank@1.0.0"]
+BOTH = ["adn-tank@1.0.0", "marpol-i@1.0.0"]
+
+
+def tank_base(id_: str, title: str, note: str, *, sets: list[str], area: str = "river-only", adn: str = "C",
+              dw: float = 1500.0, **inputs) -> dict:
+    return {"id": id_, "kind": "tank", "title": title, "note": note,
+            "inputs": {**TANK_HULL, **TANK_LAYOUT, **inputs, "deadweight_t": dw, "service_area": area,
+                       "adn_vessel_type": adn, "rule_sets": sets}}
+
+
+TANK_BASES = [
+    tank_base("tank_river_c", "Crude oil tank barge, river service, ADN type C, within every limit",
+              "A hull whose double side, double bottom, cofferdams, tank volume and tank length all meet ADN 9.3.2.11. "
+              "L x B x H is 3,052 m3: the second row of the capacity table.", sets=ADN),
+    tank_base("tank_river_n", "Crude oil tank barge, river service, ADN type N closed",
+              "A double side of 0.80 m and a double bottom of 0.70 m: below type C, above type N (9.3.3.11.7).",
+              sets=ADN, adn="N_closed", double_side_m=0.8, double_bottom_m=0.7),
+    tank_base("tank_river_n_small", "Crude oil tank barge of 20 m, river service, ADN type N closed",
+              "The same 20 m hull as tank_river_small under 9.3.3.11: a double side of 0.70 m and a double bottom of "
+              "0.60 m.", sets=ADN, adn="N_closed", loa_m=20.0, beam_m=10.0, depth_m=3.0, zone_aft_m=3.0,
+              zone_fwd_m=13.5, tanks_in_line=1, cofferdam_m=0.7, double_side_m=0.7, double_bottom_m=0.6, dw=250.0),
+    tank_base("tank_river_n_wide5", "Crude oil tank barge, river service, ADN type N open, five wide tanks",
+              "The 100 m hull of tank_river_wide5 under 9.3.3.11: L x B x H is 3,990 m3, so a tank may hold 380 m3.",
+              sets=ADN, adn="N_open", loa_m=100.0, zone_fwd_m=85.0, tanks_in_line=5, double_side_m=0.7,
+              double_bottom_m=0.6, dw=2500.0),
+    tank_base("tank_river_wide5", "Crude oil tank barge, river service, ADN type C, five wide tanks",
+              "L x B x H is 3,990 m3, above the 3,750 of the capacity table, so a tank may hold 380 m3; each tank here "
+              "holds a little less.", sets=ADN, loa_m=100.0, zone_fwd_m=85.0, tanks_in_line=5, dw=2500.0),
+    tank_base("tank_river_wide4", "Crude oil tank barge, river service, ADN type C, four long wide tanks",
+              "Tanks 18 m long (the limit is 0.20 L = 20 m) that hold more than 380 m3: the capacity limit fails.",
+              sets=ADN, loa_m=100.0, zone_fwd_m=78.0, tanks_in_line=4, dw=2500.0),
+    tank_base("tank_river_small", "Crude oil tank barge of 20 m, river service, ADN type C",
+              "A vessel of 50 m or less: a tank is not longer than 10.00 m, and L x B x H is 600 m3, the first row of "
+              "the capacity table.", sets=ADN, loa_m=20.0, beam_m=10.0, depth_m=3.0, zone_aft_m=3.0, zone_fwd_m=13.5,
+              tanks_in_line=1, cofferdam_m=0.7, double_side_m=1.0, double_bottom_m=0.7, dw=250.0),
+    tank_base("tank_coastal_c",
+              "Crude oil tank barge, coastal and river service, 1,500 tonnes deadweight, ADN type C and MARPOL Annex I",
+              "Below 5,000 tonnes deadweight, so Reg. 19.6 applies. The beam is 10 m (B/15 is under 0.76 m) and the "
+              "deadweight small (0.4 + 2.4 DW / 20,000 is under 0.76 m): the 0.76 m minimum governs both MARPOL limits; "
+              "ADN type C (1.00 m, 0.70 m) governs the double side, MARPOL the double bottom.",
+              sets=BOTH, area="coastal-and-river", beam_m=10.0, slop_share=0.04),
+    tank_base("tank_coastal_wide",
+              "Crude oil tank barge, coastal and river service, 4,000 tonnes deadweight, 14 m beam",
+              "B/15 is 0.93 m and 0.4 + 2.4 DW / 20,000 is 0.88 m: the formulas of Reg. 19.6 govern, not the 0.76 m "
+              "minimum.", sets=BOTH, area="coastal-and-river", beam_m=14.0, slop_share=0.04, dw=4000.0,
+              double_side_m=1.2, double_bottom_m=1.0),
+    tank_base("tank_coastal_short",
+              "Crude oil tank barge, coastal and river service, below ADN type C and MARPOL Reg. 19.6",
+              "A hull that fails the double side, double bottom, cofferdam, tank length and slop share limits.",
+              sets=BOTH, area="coastal-and-river", double_side_m=0.9, double_bottom_m=0.7, cofferdam_m=0.5,
+              slop_share=0.02, tanks_in_line=2, zone_fwd_m=50.0, dw=3000.0),
+]
+
+
 def sig(x: float, n: int = 10) -> float:
     return float(f"{x:.{n}g}")
 
@@ -252,7 +315,32 @@ def same(a, b, rel: float = 1e-6, abs_: float = 1e-5) -> bool:
     return first_difference(a, b, rel, abs_) is None
 
 
+def tank_document(c: dict) -> dict:
+    """A liquid bulk layout case (`kind: tank`): the inputs, and the oracle's verdict for each Rule."""
+    expected = {k: {kk: vv for kk, vv in v.items() if kk != "compare"}
+                for k, v in tank_oracle.verdicts(c["inputs"]).items()}
+    return {
+        "id": c["id"], "title": c["title"], "kind": "tank",
+        "inputs": dict(c["inputs"]),
+        "expected": expected,
+        "provenance": {
+            "verdict_basis": "derived",
+            "inputs_basis": "chosen for this corpus (not from a publication)",
+            "source": "evaluation/oracle/tank_oracle.py (the text of ADN 2025 9.3.2.11 and 9.3.3.11, and MARPOL "
+                      "Annex I Reg. 19.6 and 29, read in the rule-source library)",
+            "edition": "ADN 2025 (ECE/TRANS/351); MARPOL Annex I as revised by MEPC.117(52)",
+            "locator": "ADN 9.3.2.11.1, 9.3.2.11.3, 9.3.2.11.7, 9.3.3.11.1, 9.3.3.11.3, 9.3.3.11.7; MARPOL 19.6.1, 19.6.2, 29",
+            "licence": "inputs and oracle: this repository (see LICENSE); the limits are quoted from the texts",
+            "confidence": "high for the verdicts (the oracle states each limit as the text prints it and is checked "
+                          "by hand in tests/test_evaluation_oracle.py); the case is not an external published example",
+            "note": c["note"],
+        },
+    }
+
+
 def case_document(c: dict) -> dict:
+    if c.get("kind") == "tank":
+        return tank_document(c)
     r = oracle.assess(c["B"], c["D"], c["T"], c["KG"], c.get("FS", 0.0))
     expected = {}
     for name in oracle.CRITERIA:
@@ -318,7 +406,7 @@ def render(doc: dict) -> str:
 def main(argv: list[str]) -> int:
     check = "--check" in argv
     bad = 0
-    for c in BASE_CASES:
+    for c in BASE_CASES + TANK_BASES:
         path = CASES_DIR / f"{c['id']}.yaml"
         text = render(case_document(c))
         if check:

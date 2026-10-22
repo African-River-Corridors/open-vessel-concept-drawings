@@ -343,9 +343,19 @@ pub const DERIVED_INPUTS: &[(&str, &[&str])] = &[
     // Issue #355: the Formation's kind, read from the `formation` input.
     ("formation_kind", crate::vdesign::FORMATION_KINDS),
     ("deadweight_band", DEADWEIGHT_BANDS),
+    // Issue #338: the ADN Tank Vessel Type of the Cargo, from its Crude Grade (ADN 2025 3.2.3.3).
+    ("adn_vessel_type", &["N_open", "N_closed", "C"]),
 ];
 
 pub use ovcd_core::measured::{DEADWEIGHT_BANDS, deadweight_band};
+
+/// The ADN Tank Vessel Type of a Cargo, from its Crude Grade; `None` for a Cargo with no grade.
+pub fn adn_vessel_type_of(
+    cargo: &str,
+) -> Option<ovcd_core::liquid_bulk::adn_vessel_type::AdnVesselType> {
+    use ovcd_core::liquid_bulk::{adn_vessel_type as adn, crude_grade};
+    crude_grade::grade_of(cargo).map(|g| adn::derive(&adn::AdnFlags::of(g)).vessel_type)
+}
 
 /// The `cargo_class` value of a Cargo Class.
 pub fn cargo_class_value(class: ovcd_core::cargo::CargoClass) -> &'static str {
@@ -445,6 +455,17 @@ impl MeasureSource for OptionMeasures<'_> {
         if m.id == "propulsion.redundancy_28_04" {
             return self.redundancy().map(MeasureValue::Bool);
         }
+        if m.id == "option.adn_vessel_type" {
+            // Issue #338: the type the Crude Grade of the Cargo gives, and the branch that decided it.
+            let cargo = self
+                .option
+                .input("cargo")
+                .and_then(|i| i.value.as_str())
+                .ok_or_else(|| "the Option has no Cargo".to_string())?;
+            return adn_vessel_type_of(cargo)
+                .map(|t| MeasureValue::Text(t.key().to_string()))
+                .ok_or_else(|| "the Cargo has no ADN Tank Vessel Type".to_string());
+        }
         if m.id == "openings.front_clear" {
             // Issue #417: read from the typed input; no opening on the front means it is clear.
             return match self
@@ -513,6 +534,10 @@ impl MeasureSource for OptionMeasures<'_> {
                     .deadweight_t
                     .map(|dw| deadweight_band(dw).to_string());
             }
+            "adn_vessel_type" => {
+                let cargo = self.option.input("cargo")?.value.as_str()?;
+                return adn_vessel_type_of(cargo).map(|t| t.key().to_string());
+            }
             _ => {}
         }
         self.option
@@ -537,7 +562,7 @@ pub fn rule_inputs(option: &DesignOption) -> RuleInputs {
             applicability.push((spec.name.to_string(), v));
         }
     }
-    for name in ["cargo_class", "formation_kind"] {
+    for name in ["cargo_class", "formation_kind", "adn_vessel_type"] {
         if let Some(v) = source.input(name) {
             applicability.push((name.to_string(), v));
         }
@@ -899,4 +924,110 @@ pub fn box_trace(
         },
     );
     Ok(trace_json(&trace, DEFAULT_SERVICE_AREA, &[]))
+}
+
+/// What a liquid bulk layout gives the Rule Trace (the evaluation harness, issue #338): the layout, the
+/// deadweight, and the few inputs the liquid Rules read. It has no Option, so the inputs are the case's.
+struct LiquidMeasures<'a> {
+    measured: &'a Measured,
+    /// The numeric inputs (`beam_m`, `length_overall_m`, `cofferdam_m`), by the name of the `input.<name>`
+    /// Measure that reads them.
+    numbers: &'a [(&'static str, f64)],
+    service_area: &'a str,
+    adn_vessel_type: &'a str,
+}
+
+impl MeasureSource for LiquidMeasures<'_> {
+    fn def(&self, id: &str) -> Option<MeasureInfo> {
+        measure_info(id)
+    }
+
+    fn objects(&self, object: &str) -> Vec<String> {
+        self.measured.objects_by_key(object, "Option")
+    }
+
+    fn value(&self, m: &MeasureRef, index: usize) -> Result<MeasureValue, String> {
+        if let Some(name) = m.id.strip_prefix("input.") {
+            return self
+                .numbers
+                .iter()
+                .find(|(n, _)| *n == name)
+                .map(|(_, v)| MeasureValue::Number(*v))
+                .ok_or_else(|| format!("the layout case has no input `{name}`"));
+        }
+        if m.id == "option.adn_vessel_type" {
+            return Ok(MeasureValue::Text(self.adn_vessel_type.to_string()));
+        }
+        self.measured.value(m, index)
+    }
+
+    fn input(&self, name: &str) -> Option<String> {
+        match name {
+            "cargo_class" => Some("liquid_bulk".to_string()),
+            "service_area" => Some(self.service_area.to_string()),
+            "adn_vessel_type" => Some(self.adn_vessel_type.to_string()),
+            "deadweight_band" => self
+                .measured
+                .deadweight_t
+                .map(|dw| deadweight_band(dw).to_string()),
+            _ => None,
+        }
+    }
+
+    fn has(&self, measure: &MeasureRef) -> bool {
+        self.measured.has(measure)
+    }
+}
+
+/// The inputs of [`liquid_trace`]: a hull, a cargo zone and a tank layout, as the evaluation harness
+/// writes a case.
+#[derive(Debug, Clone)]
+pub struct LiquidTraceCase {
+    pub loa_m: f64,
+    pub beam_m: f64,
+    pub depth_m: f64,
+    pub zone_aft_m: f64,
+    pub zone_fwd_m: f64,
+    pub layout: ovcd_core::liquid_bulk::LiquidLayout,
+    pub cargo_density_t_m3: f64,
+    pub deadweight_t: f64,
+    pub service_area: String,
+    pub adn_vessel_type: String,
+}
+
+/// The Rule Trace of a liquid bulk layout under the sets `chosen` of `library`, as `trace_json` writes
+/// it. The harness compares its rows with a case's expected verdicts, keyed by rule id.
+pub fn liquid_trace(
+    case: &LiquidTraceCase,
+    library: &Library,
+    chosen: &[(&str, &str)],
+) -> Result<Value, String> {
+    let inputs = ovcd_core::liquid_bulk::LiquidBulkInputs::of(
+        (case.loa_m, case.beam_m, case.depth_m),
+        (case.zone_aft_m, case.zone_fwd_m),
+        case.cargo_density_t_m3,
+        &case.layout,
+    );
+    let liquid = ovcd_core::liquid_bulk::compute(&inputs).map_err(|e| e.message)?;
+    let measured = Measured {
+        liquid: Some(liquid),
+        deadweight_t: Some(case.deadweight_t),
+        ..Measured::default()
+    };
+    let selection = library.select(chosen)?;
+    let numbers = [
+        ("beam_m", case.beam_m),
+        ("length_overall_m", case.loa_m),
+        ("cofferdam_m", case.layout.cofferdam_m),
+    ];
+    let trace = evaluate(
+        &selection.sets,
+        &LiquidMeasures {
+            measured: &measured,
+            numbers: &numbers,
+            service_area: &case.service_area,
+            adn_vessel_type: &case.adn_vessel_type,
+        },
+    );
+    Ok(trace_json(&trace, &case.service_area, &[]))
 }

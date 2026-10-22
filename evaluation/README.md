@@ -58,8 +58,8 @@ The steps: a constant limit moves by the big step of its unit, above the engine'
 coefficient, a table value, or a constant in another unit moves by 1 % of its value. A table's `when`
 bounds say where a row applies; they do not move.
 
-The whole harness, rule mutation included, runs in about a second, so it stays in the pull-request gate
-(`--check`, in the `test` job).
+The whole harness, rule mutation included, runs in about ten seconds (a debug build of the engine), so it
+stays in the pull-request gate (`--check`, in the `test` job).
 
 ## Boundary mutants
 
@@ -85,6 +85,35 @@ brings the deck edge under sooner, and the oracle finds the depth by bisection).
 all six criteria is recorded for every mutant, from the oracle. When no KG on the hull (between keel and
 deck) crosses a limit, as for box A (whose margins are large), the mutant is not made and `results.md`
 lists it.
+
+## Liquid bulk cases (`kind: tank`, issue #338)
+
+The liquid bulk Rule Sets (`adn-tank`, `marpol-i`) are tested the same way, with their own oracle. A `kind: tank`
+case gives a crude oil layout: `loa_m`, `beam_m`, `depth_m`, the cargo zone (`zone_aft_m`, `zone_fwd_m`), the
+layout (`double_side_m`, `double_bottom_m`, `tanks_in_line`, `centreline_bulkhead`, `cofferdam_m`, `pump_room_m`,
+`slop_share`), the particulars `deadweight_t`, `service_area` and `adn_vessel_type`, and the sets it selects
+(`rule_sets`). The runner calls the engine's `liquid_trace` (`engine.py`): the layout is worked out by the core,
+the Rule Trace is the one a run writes. `expected` is keyed by rule id, as for the box cases: a Rule with a row per
+cargo tank has the verdict of its worst tank.
+
+- `oracle/tank_oracle.py` is independent (standard library only). It lays the tanks out from the case's inputs and
+  works out each limit from the text, not from the Rule Set data: the ADN capacity table as printed (180 + (L x B x
+  H - 600) x 0.0635), the tank length limit, the cofferdam, the double side and bottom of type C (1.00 m, 0.70 m
+  and 0.60 m) and type N (0.60 m, 0.50 m), MARPOL Reg. 19.6.1 and 19.6.2 for tankers of 600 to under 5,000 tonnes
+  deadweight on coastal service, and Reg. 29 (3 per cent). A Rule whose limit is worked out (a table row, a
+  formula) has a tolerance of 1e-9 in the unit of the limit, in the Rule Set and in the oracle.
+- `oracle/write_cases.py` writes the base cases (`TANK_BASES`: a hull, a layout and the particulars; none is from a
+  publication) and `oracle/mutants.py` writes `tank_mutants.yaml`: for each evaluated Rule of each base case, the
+  input that moves the Rule's governing value (the double side, the double bottom, the cofferdam, the slop share,
+  or the cargo zone for a tank's volume and length) set one step inside and one step across the limit, with a big
+  and a small step. A limit that no cargo zone inside the hull reaches has no boundary case (`skipped`).
+- The rule-data mutation runs over these cases for `adn-tank` and `marpol-i`. The base cases are chosen so that every
+  row of the capacity and length tables, and each of the 0.76 m minimum and the formula of Reg. 19.6, governs
+  somewhere: no mutant goes unnoticed.
+- The Rules of these sets enter as `warn`, so a disagreement is a false fail, a warning, never a false pass.
+- Not evaluated: ADN 9.3.x.14.2 and 9.3.x.15.1 (stability), 9.3.x.17.6 (pump room), MARPOL Reg. 19.3, 19.7, 23, 27
+  and 28 (above 5,000 tonnes, collision bulkhead, outflow, stability) and NORMAM-202 5.23.3, 5.23.8 and 5.23.9; each
+  says what is missing in its `gap`.
 
 ## Why phase 0 uses particulars
 

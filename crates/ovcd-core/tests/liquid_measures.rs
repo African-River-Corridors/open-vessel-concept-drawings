@@ -79,6 +79,21 @@ fn the_cargo_tank_measures_by_tank() {
     assert!(m.value(&r, 2).is_err());
 }
 
+// The per-tank copies of the hull's numbers, so a Rule on one cargo tank can read a table on its own object.
+#[test]
+fn a_cargo_tank_carries_the_hull_numbers_its_rules_read() {
+    let m = measured(true, 0.0);
+    for i in 0..4 {
+        assert_eq!(at(&m, "cargo-tank.vessel_lbh", i), 2400.0);
+        assert_eq!(at(&m, "cargo-tank.vessel_length", i), 60.0);
+    }
+    let r = MeasureRef {
+        id: "cargo-tank.vessel_lbh".to_string(),
+        args: Vec::new(),
+    };
+    assert!(m.value(&r, 4).is_err());
+}
+
 #[test]
 fn the_option_measures() {
     let m = measured(true, 0.05);
@@ -104,6 +119,8 @@ fn no_liquid_layout_no_liquid_measure() {
         "hull.lbh",
         "cargo-tank.volume",
         "cargo-tank.length",
+        "cargo-tank.vessel_lbh",
+        "cargo-tank.vessel_length",
         "option.cargo_capacity_m3",
         "option.slop_capacity_share",
         "option.deadweight",
