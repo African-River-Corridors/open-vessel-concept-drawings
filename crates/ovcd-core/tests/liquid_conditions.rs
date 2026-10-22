@@ -78,6 +78,7 @@ fn box_hull() -> &'static Hull {
             bow_rake_rise_m: D,
             stern: None,
             shape: Default::default(),
+            downflooding_deg: None,
         })
         .unwrap()
     })

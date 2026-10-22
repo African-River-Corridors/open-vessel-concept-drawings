@@ -1096,6 +1096,7 @@ fn simulate_measured(
     inp.bow_rake_length_m = Some(rake_length);
     inp.bow_rake_rise_m = Some(rake_rise);
     inp.hull_shape = hull_shape_of(p)?;
+    inp.downflooding_angle_deg = opt_float(p, "downflooding_angle_deg")?;
     inp.aft_design = aft_design_of(p)?;
     inp.stern_block_mass = stern_mass_of(p)?;
     inp.stern_geometry = stern.cloned();
@@ -1914,6 +1915,7 @@ fn option_hull(
         bow_rake_rise_m: rise,
         stern: stern.cloned(),
         shape: hull_shape_of(p)?,
+        downflooding_deg: opt_float(p, "downflooding_angle_deg")?,
     })
     .map_err(|e| Stop::Raised("ValueError".to_string(), format!("{e}")))
 }
@@ -2287,6 +2289,7 @@ fn simulate_gas(
         bow_rake_length_m: opt_float(p, "bow_rake_length_m")?,
         bow_rake_rise_m: opt_float(p, "bow_rake_rise_m")?,
         hull_shape: hull_shape_of(p)?,
+        downflooding_angle_deg: opt_float(p, "downflooding_angle_deg")?,
         pushed_stern_void_m: get_or(
             p,
             "pushed_stern_void_m",

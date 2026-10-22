@@ -293,6 +293,9 @@ pub struct HullSpec {
     pub stern: Option<SternGeometry>,
     /// Issue #449: bilge radius, sheer and camber.
     pub shape: HullShape,
+    /// Issue #282: the angle of down-flooding, degrees, typed by the designer; `None`: none given, so
+    /// the IS Code areas to 40 degrees run to 40. Below 40 they end there (IS Code Part A 2.2.1).
+    pub downflooding_deg: Option<f64>,
 }
 
 /// Why a hull cannot be built.

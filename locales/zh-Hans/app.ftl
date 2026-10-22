@@ -425,7 +425,7 @@ app-stab-needs-at-least = 至少需要
 # status: draft
 app-stab-limitations = 局限
 # status: draft
-app-stab-limit-downflooding = 0–40° 和 30–40° 面积始终计算到 40°。IS 规则 2008 A 部分 2.2.1 规定,当进水角小于 40° 时面积计算到进水角为止;模型尚无进水角,因此开口较早浸没的船体可能本应不合格却判为合格(发现 #282)。
+app-stab-limit-downflooding = 除非输入小于 40° 的进水角(输入项“进水角”),0–40° 和 30–40° 面积都计算到 40°。IS 规则 2008 A 部分 2.2.1 规定,当进水角小于 40° 时面积计算到进水角为止。模型没有带高度的开口,无法自行算出进水角:未输入时,开口较早浸没的船体可能本应不合格却判为合格(发现 #282)。
 
 ## Capital budget view
 

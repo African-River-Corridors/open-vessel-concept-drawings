@@ -359,6 +359,7 @@ pub(crate) fn capacity_result_from_json(
             bow_rake_rise_m: b.inputs.depth,
             stern: None,
             shape: Default::default(),
+            downflooding_deg: None,
         });
     Ok(BargeCapacityResult {
         cargo_type: o.string("cargo_type")?,

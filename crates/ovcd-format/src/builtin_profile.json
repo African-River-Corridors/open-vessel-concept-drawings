@@ -811,6 +811,13 @@
       "soft": { "min": 3.0, "max": 40.0 },
       "basis": "catalogue air drafts span 3.0 to 35.5 m"
     },
+    "downflooding_angle_deg": {
+      "default": null,
+      "unit": "deg",
+      "hard": { "gt": 0, "le": 90 },
+      "soft": { "min": 20.0, "max": 60.0 },
+      "basis": "the angle of heel at which an opening through which progressive flooding may take place is immersed (IS Code 2008, MSC.267(85), Part B 2.2.3.5, which says it for pontoons: not an opening closed by a watertight manhole cover or a vent fitted with an automatic closure; Part A 2.2.1 names the angle without a definition). The engine has no openings with heights, so it cannot work this out: type it from the general arrangement. none: no angle given, so the IS Code areas of Part A 2.2.1 run to 40 degrees; an angle below 40 degrees ends the areas 0-40 and 30-40 there"
+    },
     "draught_limit_m": {
       "default": null,
       "unit": "m",

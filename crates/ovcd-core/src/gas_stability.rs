@@ -294,6 +294,7 @@ pub fn assess_num(
             bow_rake_rise_m: d,
             stern: result.stern_geometry.clone(),
             shape: Default::default(),
+            downflooding_deg: None,
         });
     let hull = crate::hydrostatics::Hull::build(&spec)
         .map_err(|e| PyError::Value(alloc::format!("{e}")))?;
