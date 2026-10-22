@@ -447,6 +447,44 @@
       "gap": "the Formation powering, with the power of the pusher and the dimensions of the pushed craft, is not built",
       "finding": "#355",
       "since": "1.0.0"
+    },
+    {
+      "id": "es-trin/21.05(2)/no-downstream-towing-over-86m",
+      "title": "A craft of length L exceeding 86 m shall not be authorised for towing downstream",
+      "origin": "regulation",
+      "source": {
+        "document": "ES-TRIN, European standard laying down technical requirements for inland navigation vessels",
+        "edition": "Edition 2025/1",
+        "locator": "21.05(2)",
+        "page": "ES_TRIN_2025_signed_en.pdf, Article 21.05 (contents p. 174)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-23",
+        "review": "#361"
+      },
+      "verified": false,
+      "applies_when": {
+        "formation_kind": [
+          "towed_barge"
+        ]
+      },
+      "kind": "limit",
+      "measure": {
+        "id": "input.length_overall_m"
+      },
+      "compare": "le",
+      "limit": {
+        "value": 86.0,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#361",
+      "since": "1.0.0"
     }
   ]
 }
