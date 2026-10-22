@@ -245,7 +245,7 @@ a change can be traced later. Newest first.
 
 ### ticket/412-forming-allowance (2026-10-22)
 
-Between `main a7f710b` and `this branch 5db719f`.
+Between `main b338d03` and `this branch 6f5e0bb`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
