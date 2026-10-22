@@ -21,6 +21,8 @@
     delivery: number;
     unit_total: number;
     checks: { name: string; ok: boolean; message: string; severity: string }[];
+    /** The share of the tank structure surplus priced at the tank shell rate (issue #402): an assumption. */
+    tank_internals?: { fraction: number; status: string; source: string | null } | null;
     from_design: string[];
     core_default: string[];
     /** The two hull steel figures (issue #401): the lightship's top-down one, the budget's bottom-up one. */
@@ -115,6 +117,10 @@
       {t("app-cost-from-design", { masses: cost.from_design.length > 0 ? list(cost.from_design) : t("app-none") })}
       {#if cost.core_default.length > 0}{t("app-cost-core-defaults", { masses: list(cost.core_default) })}{/if}
     </p>
+
+    {#if cost.tank_internals}
+      <p class="note" data-testid="cost-tank-internals">{t("app-cost-internals", { percent: num(cost.tank_internals.fraction * 100, 0, 1) })}</p>
+    {/if}
 
     {#if failing.length > 0}
       <ul class="checks" data-testid="cost-checks">

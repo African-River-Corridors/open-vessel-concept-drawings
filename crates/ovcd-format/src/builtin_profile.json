@@ -1443,6 +1443,13 @@
       "hard": { "ge": 0, "le": 1000000000 },
       "basis": "example rate for saddles, anti-flotation and internals. Not a market quote: replace with your own"
     },
+    "tank_internals_fraction": {
+      "default": 0.5,
+      "unit": "-",
+      "hard": { "ge": 0, "le": 1 },
+      "status": "estimate",
+      "basis": "The share of the tank structure surplus (tank shells x (structure factor - 1)) that is stiffeners and ring frames in tank steel, priced at the tank shell rate; the rest, the saddles, is priced at the supports rate. An assumption: no source read gives the split (the rule-source library has no component breakdown of a marine Type C tank). A sourced value replaces it when found. 0 prices the whole surplus at the supports rate, as before (issue #402)"
+    },
     "insulation_rate": {
       "default": 4000.0,
       "unit": "per t",

@@ -517,6 +517,8 @@ input-cargo-heating-rate-per-kw = Cargo heating rate
 
 input-vents-gauging-lump = Vents and gauging
 
+input-tank-internals-fraction = Tank internals share of the structure surplus
+
 input-currency = Currency
 
 input-price-base-date = Price base date

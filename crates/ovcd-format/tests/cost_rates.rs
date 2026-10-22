@@ -551,3 +551,72 @@ fn a_file_saved_before_the_two_inputs_opens_with_usd_and_no_date() {
         }
     }
 }
+
+// --- Tank internals (issue #402) -------------------------------------------------------------
+
+#[test]
+fn with_a_share_of_0_the_cost_is_todays_cost_and_a_share_moves_it_by_the_rate_difference() {
+    let (mut s, first) = {
+        let s = open(&raw_fixture("gas_igc_2g_exact"));
+        let first = s.design().options[0].name.clone();
+        (s, first)
+    };
+    s.set_input(&first, "tank_internals_fraction", json!(0.0))
+        .unwrap();
+    let zero = results(&s, 0)["cost"].clone();
+    // Today's pricing: the whole surplus at the supports rate.
+    let surplus = zero["masses"]["tank_supports_t"].as_f64().unwrap();
+    let r = example_rates().unwrap();
+    assert_eq!(zero["tank_internals"]["fraction"], json!(0.0));
+    s.set_input(&first, "tank_internals_fraction", json!(0.5))
+        .unwrap();
+    let half = results(&s, 0)["cost"].clone();
+    // Half of the surplus moves from the supports rate to the tank shell rate.
+    let moved = 0.5 * surplus;
+    assert!((half["masses"]["tank_supports_t"].as_f64().unwrap() - (surplus - moved)).abs() < 1e-9);
+    let delta = half["barge_subtotal"].as_f64().unwrap() - zero["barge_subtotal"].as_f64().unwrap();
+    let want = moved * (r.tank_shell_rate - r.tank_supports_rate);
+    assert!((delta - want).abs() <= 3.0, "{delta} vs {want}");
+    assert!(delta > 0.0);
+}
+
+#[test]
+fn the_results_say_the_share_is_an_estimate_with_no_source() {
+    let cost = results(&open(&raw_fixture("gas_igc_2g_exact")), 0)["cost"].clone();
+    let t = &cost["tank_internals"];
+    assert_eq!(t["status"], json!("estimate"));
+    assert!(t["source"].is_null());
+    assert!(t["basis"].as_str().unwrap().contains("not a sourced value"));
+    assert_eq!(t["fraction"], json!(0.5));
+}
+
+#[test]
+fn the_share_changes_no_hash_and_a_file_saved_before_keeps_its_cost() {
+    let (mut s, first) = {
+        let s = open(&raw_fixture("gas_igc_2g_exact"));
+        let first = s.design().options[0].name.clone();
+        (s, first)
+    };
+    let before = results(&s, 0);
+    s.set_input(&first, "tank_internals_fraction", json!(0.9))
+        .unwrap();
+    assert_eq!(results_hash(&before), results_hash(&results(&s, 0)));
+    // A file with no such input reads it as 0: the old pricing.
+    let mut v: Value = serde_json::from_str(&raw_fixture("gas_igc_2g_exact")).unwrap();
+    for o in v["options"].as_array_mut().unwrap() {
+        o["inputs"]
+            .as_object_mut()
+            .unwrap()
+            .remove("tank_internals_fraction");
+    }
+    let old = open(&v.to_string());
+    let c = results(&old, 0)["cost"].clone();
+    assert_eq!(c["tank_internals"]["fraction"], json!(0.0));
+    assert_eq!(
+        old.design().options[0]
+            .input("tank_internals_fraction")
+            .unwrap()
+            .source,
+        ovcd_format::Source::Default
+    );
+}

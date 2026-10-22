@@ -503,3 +503,6 @@ app-splash-state = Estado
 app-splash-starting-engine = Iniciando el motor
 # status: draft
 app-splash-notice = Sus resultados no están verificados. Hay hallazgos de ingeniería conocidos en revisión. No hay garantía.
+
+# status: draft
+app-cost-internals = Internos del tanque: el { $percent }% del excedente de estructura se valora a la tarifa de la envolvente. Esta proporción es una suposición (una estimación, sin fuente leída); el resto se valora a la tarifa de los soportes.

@@ -49,7 +49,11 @@ What OVCD does **not** compute today:
    - Weather shield = (top + two sides + two ends) area × 6 mm × 7.85 t/m³ (lines 124-149).
    - Tank shells = shell volume × tank material density (`crates/ovcd-core/src/tanks.rs`, lines 213-222).
    - Tank supports = tank shells × (tank structure factor − 1) (`weights.rs`, line 77). This mass also holds
-     the tank stiffeners and ring frames (comment, line 76).
+     the tank stiffeners and ring frames (comment, line 76). The budget prices it in two parts (issue #402):
+     the share `tank_internals_fraction` (default 0.5) at the tank shell rate, as stiffeners and ring frames in
+     tank steel, and the rest at the supports rate, as saddles. **The share is an assumption, an Estimate with
+     no source read:** the rule-source library has no component breakdown of a marine Type C tank. The results
+     say so (`cost.tank_internals`), and so does the app. The lightship does not change.
    - Insulation = outer surface area × insulation thickness × 60 kg/m³ (`tanks.rs`, lines 225-234).
    - Piping and machinery = 0.04 × (top-down steel + tank total) (`weights.rs`, line 170).
    - Outfitting = 0.035 × (top-down steel + tank total) (`weights.rs`, line 173).
@@ -82,7 +86,7 @@ Id prefix `CB` (cost and budget).
 | CB-A02 | Price base date | None stated | Fixed in code | No date in the rates file or the profile | — | Unknown |
 | CB-A03 | Hull steel rate | 2,500 per t fabricated | Estimate | "Not a market quote" (profile basis) | `builtin_profile.json` lines 647-652; `barge_cost.rs` lines 349, 360 | Unknown |
 | CB-A04 | Tank shell rate | 10,000 per t | Estimate | Example; same for every tank material | profile lines 653-658; `barge_cost.rs` line 351 | Unknown; non-conservative for 9 % Ni if it is low, conservative for carbon-manganese steel if high |
-| CB-A05 | Tank supports rate | 2,000 per t | Estimate | Example: "saddles, anti-flotation and internals" | profile lines 659-664; `barge_cost.rs` line 352 | Likely non-conservative (the mass includes tank internals) |
+| CB-A05 | Tank supports rate | 2,000 per t | Estimate | Example: "saddles, anti-flotation and internals" | profile lines 659-664; `barge_cost.rs` line 352 | Smaller effect since #402: the stiffeners and ring frames part is priced at the tank shell rate |
 | CB-A06 | Insulation rate | 4,000 per t installed | Estimate | Example, "per tonne equivalent" | profile lines 665-670; `barge_cost.rs` line 353 | Unknown; at 60 kg/m³ this is 240 per m³ of insulation |
 | CB-A07 | Piping and machinery rate | 4,500 per t | Estimate | Example | profile lines 671-676; `barge_cost.rs` line 355 | Unknown |
 | CB-A08 | Outfitting rate (barge) | 4,000 per t | Estimate | Example | profile lines 677-682; `barge_cost.rs` line 356 | Unknown |
@@ -119,6 +123,7 @@ Id prefix `CB` (cost and budget).
 | CB-A39 | Top-down steel rate | 0.10 t/m³ of L × B × moulded depth | Fixed in code | `BargeInputs::new` default | `models.rs` line 212; `weights.rs` line 163 | Unknown; drives CB-A37 and CB-A38 |
 | CB-A40 | Weather shield | 6 mm plate; top 1.5 m above the tank top | Fixed in code | `BargeInputs::new` default | `models.rs` lines 185-186; `weights.rs` lines 124-149 | Unknown |
 | CB-A41 | Tank supports mass | tank shells × (tank structure factor − 1); default factor 1.3, 1.12 for fully pressurised LPG | Estimate | Profile table (one published tank for 1.12; 1.3 carried over) | `builtin_profile.json` lines 303-320; `weights.rs` line 77 | Unknown |
+| CB-A41a | Tank internals share | `tank_internals_fraction` 0.5 of the structure surplus priced at the tank shell rate, the rest at the supports rate | Estimate | An assumption: no source read gives the split (issue #402) | `cost.rs` `cost_of`; `builtin_profile.json` | Unknown; 0 gives the earlier pricing |
 | CB-A42 | Insulation density | 60 kg/m³ | Fixed in code | `BargeInputs::new` default | `models.rs` line 203; `tanks.rs` line 233 | Unknown |
 | CB-A43 | Hull shape for the masses | Box, no rakes | Fixed in code | `HullGeometry::new(..., 0, 0, 0, 0)` | `barge_capacity.rs` line 570 | Unknown |
 | CB-A44 | Check `masses_positive` | Error if min(tank shell, hull steel) ≤ 0 | Method | Other masses are not checked | `barge_cost.rs` lines 374-384 | — |
@@ -187,8 +192,9 @@ mass factors, only the tank structure factor is an input. The currency and the t
 2. Should the hull steel line use the top-down steel (the lightship basis) or the bottom-up steel?
 3. Is one tank shell rate per tonne fair across 9 % Ni, 304L, 316L and S690QL1 steels, or should the rate key on
    the tank material?
-4. The tank supports mass includes tank stiffeners and ring frames in tank material. Should those go to the tank
-   shell rate, with only saddles at the supports rate?
+4. The budget now prices an assumed half (`tank_internals_fraction` 0.5) of the tank structure surplus at the tank
+   shell rate (stiffeners and ring frames) and the rest at the supports rate (saddles). What share of a marine
+   Type C tank's structure surplus is stiffeners and ring frames, and where is it published?
 5. Should insulation be priced per m² of insulated surface at a given thickness, not per tonne?
 6. Is a yard margin of 10 % on barge plus tug, with delivery outside it, a fair split? Should engineering,
    class, trials, profit and contingency be separate lines?
