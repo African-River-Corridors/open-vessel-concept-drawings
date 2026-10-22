@@ -8,9 +8,8 @@
 //! section and the Schijf limit (#396, #397), a residuary fit continuous at Fn 0.20 (#399), the
 //! speed governing labels (#400).
 //!
-//! This module keeps the Python constants, g = 9.81 m/s^2 and 1 kn = 0.5144 m/s. [`crate::squat`]
-//! and [`crate::waves`] use g = 9.80665 m/s^2 and 1 kn = 0.514444 m/s, so a speed point mixes the
-//! two (issue #433). Making them one would move results; it is not done here.
+//! g and the knot come from [`crate::constants`], the same values as [`crate::squat`] and
+//! [`crate::waves`] (issue #526). The Python original used g = 9.81 m/s^2 and 1 kn = 0.5144 m/s.
 //!
 //! Python behaviours copied exactly:
 //! - the speed grid is built by repeated addition, then `round(s, 1)` (half to even, on the exact
@@ -44,8 +43,7 @@ use alloc::vec::Vec;
 pub const LACKENBY_FNH_MAX: f64 = 0.95;
 
 // --- Physical constants ---
-pub const GRAVITY: f64 = 9.81; // m/s^2
-pub const KNOTS_TO_MS: f64 = 0.5144; // 1 knot = 0.5144 m/s
+pub use crate::constants::{GRAVITY, KNOTS_TO_MS};
 pub const KW_PER_KN_MS: f64 = 1.0; // 1 kN x 1 m/s = 1 kW
 
 /// Tug propulsion characteristics.

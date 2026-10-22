@@ -210,7 +210,7 @@ Through the evaluation API only (`crates/ovcd-format/src/eval.rs`, not from a De
 | WR-A22 | Barrass blockage validity | s ≤ 0.35 (warning) | Fixed in code | Code notes | `squat.rs` l.215 | Unknown; warning lost on the Design path |
 | WR-A23 | Method spread | ≤ 50 % (warning) | Fixed in code | Design choice | `squat.rs` l.229 | None on results |
 | WR-A24 | Squat safety margin | 0.15 m below the squatted keel | Estimate | Profile: "carried over from the original engine" | Profile `squat_safety_margin_m`; `squat.rs` l.23; `resistance.rs` l.101 | Unknown |
-| WR-A25 | Gravity and knot | 9.80665 m/s², 0.514444 m/s (squat, waves); 9.81, 0.5144 (resistance) | Fixed in code | Two ports | `squat.rs` l.20, l.136; `resistance.rs` l.34–35 | Small (under 0.1 %) |
+| WR-A25 | Gravity and knot | 9.80665 m/s², 1852/3600 m/s (resistance, squat, waves) | Fixed in code | One definition (issue #526) | `constants.rs` | Negligible |
 | WR-A26 | Squat-limited speed search | Bisection, 0 to 20 kn, tolerance 0.01 kn | Fixed in code | Design choice | `resistance.rs` l.608–617 | Small; above 20 kn not searched |
 | WR-A27 | Where squat applies | Not deep water, depth > 0 | Fixed in code | Design choice | `resistance.rs` `squat_applies` l.294 | None |
 | WR-A28 | Draught for squat | Loaded draught of the Option only | Fixed in code | Design choice | `simulate.rs` `curves` | Non-conservative for trim by the bow |

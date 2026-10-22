@@ -44,7 +44,7 @@ path also gives:
 1. **Speed grid.** Speeds run from a minimum to a maximum by a fixed step. The grid is built by repeated
    addition and then rounded to 0.1 kn, so a step of 0.25 kn gives 2.0, 2.2, 2.5, 2.8 (`resistance.rs:567-573`).
    The app uses 1.0 kn to `max_speed_kn` in steps of 0.5 kn (`simulate.rs:338-340`). Label: Fixed in code.
-2. **Speed through water.** V = (speed over ground + current) × 0.5144 m/s per kn. The current always opposes
+2. **Speed through water.** V = (speed over ground + current) × 0.514444 m/s per kn (1852/3600). The current always opposes
    the vessel (`resistance.rs:445-447`). Label: Fixed in code.
 3. **Wetted surface.** S = Lwl × (B + 2T) × 1.02, unless the API caller gives S (`resistance.rs:308-313`,
    `660-664`). In the app, Lwl = LOA (`simulate.rs:327`). Label: Fixed in code.
@@ -109,8 +109,8 @@ path also gives:
 
 | Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
 |---|---|---|---|---|---|---|
-| RP-A01 | Gravity (resistance) | 9.81 m/s² | Fixed in code | Standard value; squat and waves use 9.80665 | `resistance.rs:34` | Negligible |
-| RP-A02 | Knot to m/s | 0.5144 (squat and waves use 0.514444) | Fixed in code | Standard value, rounded | `resistance.rs:35` | Negligible |
+| RP-A01 | Gravity (resistance, squat, waves) | 9.80665 m/s² | Fixed in code | Standard acceleration (3rd CGPM, 1901; source not held); one definition in `constants.rs` (issue #526) | `constants.rs` | Negligible |
+| RP-A02 | Knot to m/s | 1852/3600 = 0.514444 | Fixed in code | The international nautical mile is 1852 m (source not held); one definition in `constants.rs` (issue #526) | `constants.rs` | Negligible |
 | RP-A03 | Frictional line | ITTC 1957, Cf = 0.075/(log10 Rn − 2)² | Method | ITTC 1957 friction line, named in `core/resistance.py:9` | `resistance.rs:324-331` | Unknown; standard line |
 | RP-A04 | Low-Rn fallback | Cf = 0.008 if Rn < 1e5 | Fixed in code | None stated ("laminar fallback") | `resistance.rs:327-329` | Not reached at real sizes |
 | RP-A05 | Kinematic viscosity | 1.19e-6 m²/s (salt), 1.14e-6 m²/s (fresh) | Fixed in code | None stated; near 15 °C water | `resistance.rs:316-322` | Conservative in warm water (Cf too high) |

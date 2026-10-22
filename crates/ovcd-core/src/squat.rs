@@ -18,7 +18,7 @@ use alloc::string::{String, ToString};
 use alloc::vec;
 use alloc::vec::Vec;
 
-pub const GRAVITY: f64 = 9.80665;
+pub use crate::constants::{GRAVITY, KNOTS_TO_MS};
 
 /// Under-keel clearance kept below the squatted keel: a working margin, not a standard's number.
 pub const DEFAULT_SAFETY_MARGIN_M: f64 = 0.15;
@@ -143,7 +143,7 @@ fn py_max(a: f64, b: f64) -> f64 {
 /// Maximum squat by two methods; the larger is adopted. `Err` carries Python's `ValueError` text.
 pub fn compute(inp: &SquatInputs) -> Result<SquatResult, String> {
     inp.validate()?;
-    let v_ms = inp.speed_through_water_kn * 0.514444;
+    let v_ms = inp.speed_through_water_kn * KNOTS_TO_MS;
     let vol = if inp.displacement_m3 != 0.0 {
         inp.displacement_m3
     } else {

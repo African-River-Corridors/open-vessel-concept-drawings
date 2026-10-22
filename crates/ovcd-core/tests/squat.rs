@@ -30,7 +30,8 @@ fn the_laden_motor_grounds_at_six_knots_in_a_4_8_m_channel() {
     let r = compute(&cn_ii(6.0)).unwrap();
     assert_eq!(r.method, "Barrass II");
     assert!((r.squat_m - 0.68531955807082).abs() < 1e-12);
-    assert!((r.squat_icorels_m.unwrap() - 0.34486994034316343).abs() < 1e-12);
+    assert!((r.squat_icorels_m.unwrap() - 0.34487061183974793).abs() < 1e-12);
+    // Re-pinned (issue #526); was 0.34486994034316343.
     assert!(r.grounds);
     assert!(!r.ok());
     assert_eq!(
