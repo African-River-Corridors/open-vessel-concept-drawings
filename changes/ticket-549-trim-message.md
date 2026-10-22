@@ -1,5 +1,5 @@
 <!-- unreleased -->
-- Design change (issue #549): when `trim_in_range` fails, its message says "no trim balances the load", names the condition, and gives its LCG and the furthest LCB the hull reaches (for example "Laden: LCG 53.78 m is forward of the furthest LCB the hull reaches (50.24 m)"), not the 10 degree limit, because the cause is that the deck goes under before any trim balances the load. The verdict does not change. Six dry bulk sweep Options (self-propelled, 90 x 14 m) show the new text; the message when the check passes is the same.
+- Design change (issue #549): when `trim_in_range` fails, its message says "no trim balances the load", names the condition, and gives its LCG and the furthest LCB the hull reaches (for example "Laden: LCG 53.78 m is forward of the furthest LCB the hull reaches (50.24 m)"), not the 10 degree limit, because the cause is that the deck goes under before any trim balances the load. The verdict does not change. Seven dry bulk sweep Options (self-propelled, 80 to 90 m long) show the new text; the message when the check passes is the same.
 
 <!-- design-impact -->
 ### ticket/549-trim-message (2026-10-22)
