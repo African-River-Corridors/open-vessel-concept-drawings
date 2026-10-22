@@ -1,5 +1,6 @@
 <script lang="ts">
-  // The capital budget of one Option, as the Design session gives it (the core's `barge_cost`): the
+  // The capital budget of one Option, as the Design session gives it (the core's `barge_cost`; a tank barge's
+  // cargo tank items are lump sums, issue #334): the
   // barge and tug breakdowns, subtotals, yard margin, delivery and unit total, in the rates' currency.
   // A Formation with no tug (self-propelled, issue #403) has an empty tug breakdown: it is not shown.
   // The app adds nothing up. Below the tables: which masses came from this design, which are the
@@ -32,6 +33,11 @@
   /** The core's budget items, by id (Message Ids `app-cost-item-…`). An item not listed shows under the core's name. */
   const ITEMS = [
     "hull_steel",
+    "tank_coating",
+    "cargo_pumps",
+    "cargo_piping",
+    "cargo_heating",
+    "vents_gauging",
     "type_c_tanks",
     "tank_supports",
     "insulation",
@@ -69,7 +75,7 @@
 </script>
 
 <div class="budget" data-testid="capital-budget">
-  {#if phase !== "liquid_gas"}
+  {#if phase !== "liquid_gas" && phase !== "liquid_bulk"}
     <div data-testid="capital-budget-wip">
       <h3 class="wip">{t("app-work-in-development")}</h3>
       <p class="note">{t("app-cost-wip")}</p>

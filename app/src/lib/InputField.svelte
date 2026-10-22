@@ -143,7 +143,7 @@
   {:else if spec.kind === "choice" || spec.kind === "cargo"}
     <select aria-label={label} class:invalid={hasError} value={String(value)} onchange={(e) => onEdit(e.currentTarget.value)}>
       {#each spec.choices ?? [] as c (c.value)}
-        <option value={c.value}>{schemaText.choice(spec.name, c.value, c.label)}</option>
+        <option value={c.value}>{spec.kind === "cargo" && c.status === "development" ? t("app-cargo-development", { name: schemaText.choice(spec.name, c.value, c.label) }) : schemaText.choice(spec.name, c.value, c.label)}</option>
       {/each}
     </select>
   {:else if spec.kind === "formation"}

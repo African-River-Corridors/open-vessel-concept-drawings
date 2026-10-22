@@ -291,10 +291,10 @@ fn heating_adds_a_lightship_item() {
 fn a_self_propelled_crude_hull_has_its_stern_block_and_its_stability() {
     let r = results(&raw_fixture("crude_integral_tanks_self_propelled"));
     assert!(r["drawing"]["aft_arrangement"].is_object());
-    // The conditions are in the results (`liquid_conditions_results.rs` tests them); the capital
-    // budget is not: the Capital budget view shows Work in development.
+    // The conditions are in the results (`liquid_conditions_results.rs` tests them), and so is the
+    // capital budget of the cargo tank items (`liquid_cost.rs` tests it, issue #334).
     assert!(r["stability"]["conditions"].is_array());
-    assert!(r["cost_masses"].is_null());
+    assert!(r["cost_masses"]["liquid"].is_object());
 }
 
 #[test]

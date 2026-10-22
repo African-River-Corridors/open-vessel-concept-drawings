@@ -9,6 +9,8 @@ use crate::vdesign::{
     COST_RATES_BASIS, COST_RATES_BASIS_USER, DesignOption, Source, cost_prices_basis,
 };
 use ovcd_core::barge_cost::{BargeCostInputs, BargeCostRates, BargeCostResult, compute_for};
+use ovcd_core::liquid_bulk::LiquidBulkResult;
+use ovcd_core::liquid_bulk::cost::{self as liquid_cost, CostQuantities, LiquidCostRates};
 use ovcd_core::models::WeightBreakdown;
 use serde_json::{Value, json};
 
@@ -43,6 +45,57 @@ pub fn rates_of(option: &DesignOption) -> Option<BargeCostRates> {
         set(&mut rates, option.input(name)?.value.as_f64()?);
     }
     Some(rates)
+}
+
+/// The cargo tank rates of a tank barge, as `(input name, how to set it)`: the inputs of the
+/// `integral_tanks` containment (issue #334). The yard margin and the other rates are the 14 above.
+type SetLiquidRate = fn(&mut LiquidCostRates, f64);
+pub const LIQUID_RATE_INPUTS: [(&str, SetLiquidRate); 5] = [
+    ("tank_coating_rate", |r, v| r.tank_coating_rate = v),
+    ("cargo_pump_lump", |r, v| r.cargo_pump_lump = v),
+    ("cargo_piping_lump", |r, v| r.cargo_piping_lump = v),
+    ("cargo_heating_rate_per_kw", |r, v| {
+        r.heating_rate_per_kw = v
+    }),
+    ("vents_gauging_lump", |r, v| r.vents_gauging_lump = v),
+];
+
+/// The cargo tank rates of an Option; `None` if one is missing or not a number.
+fn liquid_rates_of(option: &DesignOption) -> Option<LiquidCostRates> {
+    let mut rates = LiquidCostRates {
+        tank_coating_rate: 0.0,
+        cargo_pump_lump: 0.0,
+        cargo_piping_lump: 0.0,
+        heating_rate_per_kw: 0.0,
+        vents_gauging_lump: 0.0,
+    };
+    for (name, set) in LIQUID_RATE_INPUTS {
+        set(&mut rates, option.input(name)?.value.as_f64()?);
+    }
+    Some(rates)
+}
+
+/// The `cost_masses` of a tank barge: what its cargo tank items are priced on.
+pub fn liquid_masses(l: &LiquidBulkResult) -> Value {
+    let q = liquid_cost::quantities(l);
+    json!({
+        "liquid": {
+            "hull_steel_t": q.hull_steel_t,
+            "coating_area_m2": q.coating_area_m2,
+            "cargo_tank_count": q.cargo_tank_count,
+            "heating_kw": q.heating_kw,
+        }
+    })
+}
+
+fn liquid_quantities_of(m: &Value) -> Option<CostQuantities> {
+    let l = m.get("liquid")?;
+    Some(CostQuantities {
+        hull_steel_t: l["hull_steel_t"].as_f64()?,
+        coating_area_m2: l["coating_area_m2"].as_f64()?,
+        cargo_tank_count: u32::try_from(l["cargo_tank_count"].as_u64()?).ok()?,
+        heating_kw: l["heating_kw"].as_f64()?,
+    })
 }
 
 /// The masses and which of them come from the design, as `simulate` reports them.
@@ -172,6 +225,7 @@ fn rates_kind(option: &DesignOption) -> &'static str {
     let typed = RATE_INPUTS
         .iter()
         .map(|(name, _)| name)
+        .chain(LIQUID_RATE_INPUTS.iter().map(|(name, _)| name))
         .chain(["currency"].iter())
         .any(|name| {
             option
@@ -224,9 +278,13 @@ fn result_json(
 }
 
 /// The `cost` of an Option: the budget, or `null` when the results have no masses (a Cargo that is not
-/// gas, or a gas hull that holds no arrangement) or the figures cannot be rounded.
+/// gas or liquid bulk, or a gas hull that holds no arrangement) or the figures cannot be rounded. One
+/// function for both containments: a tank barge's cargo tank items, a gas barge's Type C items (issue #334).
 pub fn cost_of(option: &DesignOption, results: &Value) -> Value {
     let masses = &results["cost_masses"];
+    if masses.get("liquid").is_some() {
+        return liquid_cost_of(option, results);
+    }
     let (Some(inputs), Some(rates)) = (masses_of(masses), rates_of(option)) else {
         return Value::Null;
     };
@@ -241,6 +299,74 @@ pub fn cost_of(option: &DesignOption, results: &Value) -> Value {
         }
         Err(_) => Value::Null,
     }
+}
+
+/// The budget of a tank barge. The tug (hull steel, battery, propulsion) keeps the core's defaults, as
+/// for a gas barge; a self-propelled hull has its own battery energy and Installed Power.
+fn liquid_cost_of(option: &DesignOption, results: &Value) -> Value {
+    let masses = &results["cost_masses"];
+    let (Some(q), Some(liquid_rates), Some(rates)) = (
+        liquid_quantities_of(masses),
+        liquid_rates_of(option),
+        rates_of(option),
+    ) else {
+        return Value::Null;
+    };
+    let tug = has_tug(option);
+    let mut inputs = BargeCostInputs::default();
+    let mut from_design: Vec<&str> = Vec::new();
+    if !tug {
+        // The Installed Power the engine sized, and the battery it has (none: no battery).
+        let power = &results["powering"];
+        if let Some(kw) = power["installed_power_kw"].as_f64() {
+            inputs.propulsion_kw = kw;
+            inputs.battery_kwh = power["battery_energy_kwh"].as_f64().unwrap_or(0.0);
+            from_design.extend(["battery_kwh", "propulsion_kw"]);
+        }
+    }
+    match liquid_cost::compute(&q, &liquid_rates, &inputs, &rates, tug) {
+        Ok(r) => {
+            let date = option
+                .input("price_base_date")
+                .and_then(|i| i.value.as_str());
+            let mut m = liquid_masses_json(&q, &inputs, &from_design);
+            m["steel"] = Value::Null;
+            result_json(&r, &m, tug, rates_kind(option), date)
+        }
+        Err(_) => Value::Null,
+    }
+}
+
+/// The quantities and the tug and powering figures of a tank barge, as `result_json` reads them.
+fn liquid_masses_json(q: &CostQuantities, m: &BargeCostInputs, from_design: &[&str]) -> Value {
+    let all = [
+        ("hull_steel_t", q.hull_steel_t),
+        ("coating_area_m2", q.coating_area_m2),
+        ("cargo_tank_count", f64::from(q.cargo_tank_count)),
+        ("heating_kw", q.heating_kw),
+        ("tug_hull_steel_t", m.tug_hull_steel_t),
+        ("battery_kwh", m.battery_kwh),
+        ("propulsion_kw", m.propulsion_kw),
+    ];
+    let design: Vec<&str> = [
+        "hull_steel_t",
+        "coating_area_m2",
+        "cargo_tank_count",
+        "heating_kw",
+    ]
+    .into_iter()
+    .chain(from_design.iter().copied())
+    .collect();
+    let core_default: Vec<&str> = all
+        .iter()
+        .map(|(n, _)| *n)
+        .filter(|n| !design.contains(n))
+        .collect();
+    json!({
+        "masses": all.iter().map(|(n, v)| ((*n).to_string(), json!(v))).collect::<serde_json::Map<_, _>>(),
+        "from_design": design,
+        "core_default": core_default,
+    })
 }
 
 /// Whether the Option's Formation has a tug: every one but `self_propelled`.

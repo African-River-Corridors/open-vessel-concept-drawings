@@ -593,6 +593,20 @@ describe("OVCD app smoke tests", () => {
     assert.equal((await browser.$$("[data-testid=cost-unit-total]")).length, 0, "no budget table");
   });
 
+  it("shows the capital budget of a crude oil Design with its cargo tank items, and tags the Cargo as work in development", async () => {
+    await open(path.join(FIXTURES, "crude_integral_tanks_pushed.vdesign"), "crude_integral_tanks_pushed.vdesign");
+    await show("BOQ & Finance", "Capital budget");
+    await until("the budget", async () => (await browser.$$("[data-testid=cost-unit-total]")).length === 1);
+    assert.equal((await browser.$$("[data-testid=capital-budget-wip]")).length, 0);
+    const barge = await browser.$("[data-testid=cost-barge]").getText();
+    for (const row of ["Hull steel", "Tank coating", "Cargo pumps", "Cargo piping", "Cargo heating", "Vents and gauging"]) assert.ok(barge.includes(row), row);
+    // The Cargo picker tags a Cargo that is still in development.
+    const options = await browser.$$('select[aria-label="Cargo"] option');
+    const labels = await texts(options);
+    assert.ok(labels.includes("Crude oil (work in development)"), labels.join(" | "));
+    assert.ok(labels.every((l) => l === "Crude oil (work in development)" || !l.includes("work in development")), "only crude oil is tagged");
+  });
+
   for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
     it(`says the bill of quantities comes in a later phase (${cargo})`, async () => {
       await open(path.join(FIXTURES, fixture), fixture);

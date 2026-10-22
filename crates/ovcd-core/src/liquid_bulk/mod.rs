@@ -20,6 +20,7 @@ use crate::loading_conditions::Item;
 use crate::pressure_vessel::PyError;
 
 pub mod adn_vessel_type;
+pub mod cost;
 pub mod crude_grade;
 mod free_surface;
 mod layout;

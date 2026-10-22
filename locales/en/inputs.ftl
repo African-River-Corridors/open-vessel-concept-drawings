@@ -505,6 +505,16 @@ input-yard-margin-fraction = Yard margin
 
 input-delivery-lump = Delivery
 
+input-tank-coating-rate = Tank coating rate
+
+input-cargo-pump-lump = Cargo pump
+
+input-cargo-piping-lump = Cargo piping
+
+input-cargo-heating-rate-per-kw = Cargo heating rate
+
+input-vents-gauging-lump = Vents and gauging
+
 input-currency = Currency
 
 input-price-base-date = Price base date
