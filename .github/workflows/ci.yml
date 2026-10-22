@@ -22,40 +22,97 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Fast gate (spec 0001): one fail-closed script, tools/gates.sh. Target under 5 minutes. It runs
-  # the `pr` profile; the tests it leaves out run in nightly.yml (docs/agents/slow-tests.md).
-  test:
+
+  # Fast gate (spec 0001): one fail-closed script, tools/gates.sh. It is split across parallel jobs
+  # (issue #561) with GATES_STEPS and GATES_PARTITION, and the job named `test` at the end is the
+  # required check: it passes only when every part passed. The Rust tests run in four partitions; the
+  # tests the `pr` profile leaves out run in nightly.yml (docs/agents/slow-tests.md).
+  gate-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/gate-env
+        with:
+          cache-key: gate-lint
+      - name: Lint, Rule Set gate and WebAssembly build
+        env:
+          GATES_STEPS: lint,rules
+        run: bash tools/gates.sh
+
+  gate-rust:
+    name: gate-rust (${{ matrix.part }}/4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/gate-env
+        with:
+          cache-key: gate-rust
+      - name: Rust tests, partition ${{ matrix.part }} of 4
+        env:
+          GATES_STEPS: rust
+          GATES_PARTITION: ${{ matrix.part }}/4
+        run: bash tools/gates.sh
+      - name: Upload the nextest times (JUnit)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextest-junit-${{ matrix.part }}
+          path: target/nextest/pr/junit.xml
+          if-no-files-found: ignore
+
+  gate-impact:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # the design-impact check diffs against the merge base
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/gate-env
         with:
-          python-version: "3.12"
-      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
-        run: rustup toolchain install
-      - uses: Swatinem/rust-cache@v2
-      - name: Install cargo-nextest (pinned)
-        uses: taiki-e/install-action@v2
+          cache-key: gate-impact
+      # The answers of a commit for the case set are always the same, so the newest saved ones are
+      # restored and the base commit's answers are not worked out again when they are there
+      # (tools/design_impact.py, issue #561). A run saves its own answers under its commit.
+      - name: Restore the saved design-impact answers
+        uses: actions/cache/restore@v4
         with:
-          tool: cargo-nextest@0.9.100
-      - name: Install the Python package (maturin builds the extension, so Rust comes first)
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e '.[dev]'
-      - name: Fast gate
+          path: ${{ runner.temp }}/design-impact-cache
+          key: design-impact-${{ github.sha }}
+          restore-keys: design-impact-
+      - name: Design impact
+        env:
+          GATES_STEPS: impact
+          DESIGN_IMPACT_CACHE: ${{ runner.temp }}/design-impact-cache
+        run: bash tools/gates.sh
+      - name: Save the design-impact answers
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/design-impact-cache
+          key: design-impact-${{ github.sha }}
+
+  gate-python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the mutants check diffs against the base branch
+      - uses: ./.github/actions/gate-env
+        with:
+          cache-key: gate-python
+      - name: pytest
+        env:
+          GATES_STEPS: pytest
         run: bash tools/gates.sh
       # Calibration Bands (issue #119): one warning annotation per case outside its band. A band miss
-      # never fails the build; a crash does. It takes about a second, so it stays in this job.
-      - name: Upload the nextest times (JUnit)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: nextest-junit
-          path: target/nextest/pr/junit.xml
-          if-no-files-found: ignore
+      # never fails the build; a crash does. It takes about a second.
       - name: Calibration against the Calibration Bands (warning only)
         run: python -m vessel_designer.calibration --check
       # Evaluation harness (issue #184): known designs with known verdicts per rule, run against the
@@ -65,18 +122,47 @@ jobs:
       - name: Evaluation harness (a false pass fails the build)
         run: python evaluation/run.py --check
       # The boundary mutants are generated (issue #184) and take about 3 minutes to generate again.
-      # They change only with evaluation/, so a PR that changes nothing there skips the check; every
-      # other run, and the nightly run, does it (issue #481, docs/agents/slow-tests.md).
+      # They change only with evaluation/, so a run that changes nothing there skips the check: a PR
+      # is compared with its base branch, a push to main with the commit before it. A tag, a manual
+      # run and the nightly run do it every time (issue #481, docs/agents/slow-tests.md).
       - name: The mutants file is what the generator writes (when evaluation/ changes)
         env:
           EVENT: ${{ github.event_name }}
           BASE: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
         run: |
           if [ "$EVENT" = pull_request ] && git diff --quiet "origin/$BASE...HEAD" -- evaluation/; then
             echo "No change under evaluation/: the check runs nightly."
+          elif [ "$EVENT" = push ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null \
+               && git diff --quiet "$BEFORE" HEAD -- evaluation/; then
+            echo "No change under evaluation/ in this push: the check runs nightly."
           else
             python evaluation/oracle/mutants.py --check
           fi
+
+  # The required check. It is named `test`, as branch protection and release.yml expect. It passes only
+  # when every part of the gate passed; a skipped, cancelled or missing part fails it.
+  test:
+    if: always()
+    needs: [gate-lint, gate-rust, gate-impact, gate-python]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every part of the gate passed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "$RESULTS"
+          python3 - <<'PY'
+          import json, os, sys
+          needs = json.loads(os.environ["RESULTS"])
+          expected = {"gate-lint", "gate-rust", "gate-impact", "gate-python"}
+          if set(needs) != expected:
+              sys.exit(f"the parts of the gate are {sorted(needs)}, not {sorted(expected)}")
+          bad = {n: v["result"] for n, v in needs.items() if v["result"] != "success"}
+          if bad:
+              sys.exit(f"the gate failed: {bad}")
+          PY
 
   # The web build (issue #245): the wasm Design session gives the same results hash as native
   # `ovcd run --json` for every fixture. The wasm-bindgen CLI is the version the crate pins.

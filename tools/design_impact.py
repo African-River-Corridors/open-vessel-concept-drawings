@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import hashlib
 import datetime
 import importlib.util
 import json
@@ -501,6 +502,40 @@ def run_case(binary: Path, name: str, typed: dict, tmp: Path) -> dict:
     return {"results": option["results"]}
 
 
+# The answers of one commit for one case set are the same every time, so a CI run keeps them (issue #561).
+# DESIGN_IMPACT_CACHE names a folder; the workflow restores the newest one and saves it again. A file is
+# named by the commit and a digest of the case set, so a different case set never reads another's answers.
+# Only a clean checkout writes one: answers of a tree with edits belong to no commit.
+def cases_digest(case_set: dict[str, dict]) -> str:
+    return hashlib.sha256(json.dumps(case_set, sort_keys=True).encode()).hexdigest()[:16]
+
+
+def _cache_file(sha: str, digest: str) -> Path | None:
+    folder = os.environ.get("DESIGN_IMPACT_CACHE")
+    return Path(folder) / f"{sha}-{digest}.json" if folder else None
+
+
+def load_cached(sha: str, digest: str) -> dict[str, dict] | None:
+    path = _cache_file(sha, digest)
+    if path is None or not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError:
+        return None
+    if data.get("commit") != sha or data.get("digest") != digest or not isinstance(data.get("answers"), dict):
+        return None
+    return data["answers"]
+
+
+def save_cached(sha: str, digest: str, answers: dict[str, dict]) -> None:
+    path = _cache_file(sha, digest)
+    if path is None or git("status", "--porcelain", "--untracked-files=no"):
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"commit": sha, "digest": digest, "answers": answers}), encoding="utf-8")
+
+
 def run_all(binary: Path, case_set: dict[str, dict]) -> dict[str, dict]:
     """Every case through one binary. The cases run in parallel, each in its own folder: each is its
     own `ovcd` process, so the answers do not depend on the order (issue #448: a gas Design on the
@@ -712,17 +747,21 @@ def measure() -> tuple[str, str, int, list[dict], bool, int | None]:
         git("worktree", "add", "-q", "--detach", str(base_tree), base_sha)
         try:
             base_total = case_count_at(base_tree)
+            digest = cases_digest(case_set)
+            cached = load_cached(base_sha, digest)
             t0 = time.time()
-            base_bin = build(base_tree, ROOT / "target" / "design-impact-base", fresh=True)
+            base_bin = None if cached else build(base_tree, ROOT / "target" / "design-impact-base", fresh=True)
             t1 = time.time()
             head_bin = build(ROOT, ROOT / "target")
             t2 = time.time()
-            before = run_all(base_bin, case_set)
+            before = cached if cached else run_all(base_bin, case_set)
             t3 = time.time()
             after = run_all(head_bin, case_set)
             t4 = time.time()
+            save_cached(git("rev-parse", "HEAD"), digest, after)
             print(f"design_impact: seconds: build base {t1 - t0:.0f}, build this tree {t2 - t1:.0f}, "
-                  f"run base {t3 - t2:.0f}, run this tree {t4 - t3:.0f}", file=sys.stderr)
+                  f"run base {t3 - t2:.0f}{' (cached)' if cached else ''}, run this tree {t4 - t3:.0f}",
+                  file=sys.stderr)
             # Fail closed: a check that computed nothing on either side proves nothing.
             for label, side in (("base", before), ("this tree", after)):
                 if not any("results" in v for v in side.values()):

@@ -187,6 +187,54 @@ def test_a_clippy_warning_in_ovcd_py_fails_the_gate(repo_copy):
 
 def test_the_gate_lints_ovcd_py_and_counts_the_step():
     text = GATES.read_text(encoding="utf-8")
-    assert 'step "clippy ovcd-py -D warnings"' in text and "-p ovcd-py" in text
+    assert 'step lint "clippy ovcd-py -D warnings"' in text and "-p ovcd-py" in text
     steps = [line for line in text.splitlines() if line.startswith("step ")]
     assert f"EXPECTED_STEPS={len(steps)}" in text
+
+
+# ---------- step groups and partitions (issue #561) ----------
+
+def _stub_gates(tmp_path, **env):
+    """gates.sh with a do-nothing cargo, rustc and Python: every step passes without running anything."""
+    libdir = tmp_path / "wasm-libdir"
+    libdir.mkdir()
+    path = _path_with_only(tmp_path, GATES_TOOLS)
+    bin_dir = Path(path)
+    (bin_dir / "cargo").write_text("#!/bin/sh\nexit 0\n")
+    (bin_dir / "rustc").write_text(f'#!/bin/sh\necho "{libdir}"\n')
+    (bin_dir / "py-stub").write_text("#!/bin/sh\nexit 0\n")
+    for stub in ("cargo", "rustc", "py-stub"):
+        (bin_dir / stub).chmod(0o755)
+    return _gates(path, OVCD_PYTHON=str(bin_dir / "py-stub"), **env)
+
+
+def test_a_group_name_that_is_not_a_group_fails_before_any_step(tmp_path):
+    """Label: property"""
+    r = _stub_gates(tmp_path, GATES_STEPS="lint,tests")
+    assert r.returncode != 0
+    assert "GATES_STEPS names 'tests'" in r.stderr
+    assert "gates: ok:" not in r.stdout
+
+
+def test_a_partition_that_is_not_k_of_n_fails(tmp_path):
+    """Label: property"""
+    r = _stub_gates(tmp_path, GATES_PARTITION="two")
+    assert r.returncode != 0
+    assert "GATES_PARTITION must look like 2/4" in r.stderr
+
+
+def test_a_named_group_runs_all_its_steps_and_no_others(tmp_path):
+    """Label: property"""
+    r = _stub_gates(tmp_path, GATES_STEPS="lint")
+    assert r.returncode == 0, r.stderr
+    assert r.stdout.count("gates: ok:") == 3
+    assert "gates: ok: pytest" not in r.stdout
+    assert "the 3 steps of lint passed" in r.stdout
+
+
+def test_the_whole_gate_still_counts_every_step(tmp_path):
+    """Label: property"""
+    r = _stub_gates(tmp_path)
+    assert r.returncode == 0, r.stderr
+    assert r.stdout.count("gates: ok:") == 8
+    assert "all 8 steps passed" in r.stdout
