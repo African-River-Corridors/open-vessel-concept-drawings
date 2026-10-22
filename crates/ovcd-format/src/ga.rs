@@ -280,6 +280,10 @@ enum Containment {
         wing_width: Option<f64>,
         wing_gap: Option<f64>,
         wing_ratio: Option<f64>,
+        /// The weather shield over the tanks: plate thickness (mm) and clearance from the tank top
+        /// to the shield top (`drawing`), if the results have them (issue #407).
+        shield_thickness: Option<f64>,
+        shield_clearance: Option<f64>,
         /// `drawing.tank.overall_tank_length_m`: the core's length of one tank, heads included.
         tank_length: f64,
         /// The gaps between tanks the core laid them out with (`drawing.tank`).
@@ -340,6 +344,8 @@ fn read_hull(results: &Value) -> Result<Hull, String> {
                 wing_width: num_at(results, &["drawing", "wing_tank_width_m"]),
                 wing_gap: num_at(results, &["drawing", "wing_tank_gap_m"]),
                 wing_ratio: num_at(results, &["drawing", "wing_tank_height_ratio"]),
+                shield_thickness: num_at(results, &["drawing", "weather_shield_thickness_mm"]),
+                shield_clearance: num_at(results, &["drawing", "weather_shield_clearance_m"]),
                 tank_length: need(results, &["drawing", "tank", "overall_tank_length_m"])?,
                 gap_long: need(results, &["drawing", "tank", "tank_gap_longitudinal_m"])?,
                 gap_across: need(results, &["drawing", "tank", "tank_gap_transverse_m"])?,
@@ -467,6 +473,26 @@ impl Hull {
             }
             _ => None,
         }
+    }
+
+    /// The weather shield over the tanks, as the weights carry it (`weights.rs`): (the level its
+    /// sides stand on, its top). It stands on the wing plate, or on the deck where the Moulded Depth is
+    /// higher; its top is the tank top plus the clearance. `None` without a shield, without a wing
+    /// tank, with a wing tank as high as the tank, or when the top is not above the deck (issue #407).
+    fn weather_shield(&self) -> Option<(f64, f64)> {
+        let Containment::Tanks {
+            od,
+            wing_ratio: Some(ratio),
+            shield_thickness: Some(t),
+            shield_clearance: Some(clearance),
+            ..
+        } = &self.containment
+        else {
+            return None;
+        };
+        let (_, _, wing_top) = self.wing_tank()?;
+        let top = self.tank_bottom()? + od + clearance;
+        (*t > 0.0 && *ratio < 1.0 && top > self.depth).then_some((wing_top.max(self.depth), top))
     }
 
     /// The double bottom of a gas hull (zero: none).
@@ -956,6 +982,15 @@ fn elevation_gas_detail(c: &mut Canvas, h: &Hull, labels: &mut Vec<(String, [f64
             label!("draw-wbt-both-sides", "WBT (BOTH SIDES)"),
             [x1, (db + top) / 2.0],
         ));
+    }
+    if let Some((foot, top)) = h.weather_shield() {
+        // The enclosure over the tanks: not structural, so dashed (issue #407).
+        c.polyline(
+            "ZONE",
+            &[[x0, foot], [x0, top], [x1, top], [x1, foot]],
+            false,
+        );
+        labels.push((label!("draw-weather-shield", "WEATHER SHIELD"), [x1, top]));
     }
     if let (Some((rise, half_base)), Some((length, starts, _))) = (h.dome(), h.tank_layout()) {
         let r = od / 2.0;
@@ -1504,6 +1539,18 @@ fn section_gas_detail(
                 [-half + w + gap / 2.0, mid],
             ));
         }
+    }
+    // the weather shield: its sides stand on the wing plate (or the deck), its top spans the beam
+    if let Some((foot, top)) = h.weather_shield() {
+        c.polyline(
+            "ZONE",
+            &[[-half, foot], [-half, top], [half, top], [half, foot]],
+            false,
+        );
+        labels.push((
+            label!("draw-weather-shield", "WEATHER SHIELD"),
+            [-half, top],
+        ));
     }
     // a cradle under each tank: the underside arc, a little outside the tank, and its two legs
     let radius = r + CRADLE_CLEARANCE_M;

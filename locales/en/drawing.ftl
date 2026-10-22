@@ -9,6 +9,7 @@
 draw-double-bottom = DOUBLE BOTTOM
 draw-wbt-both-sides = WBT (BOTH SIDES)
 draw-dome = DOME
+draw-weather-shield = WEATHER SHIELD
 draw-cofferdam = COFFERDAM
 draw-fwd-equip = FWD EQUIP.
 draw-thrusters = THRUSTERS ({ $count })

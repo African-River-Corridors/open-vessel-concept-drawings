@@ -86,6 +86,8 @@ const GAS_ONLY: &[&str] = &[
     "dome_height_m",
     "wing_tank_width_m",
     "wing_tank_gap_m",
+    "weather_shield_thickness_mm",
+    "weather_shield_clearance_m",
     "opening_setback_m",
     "fwd_end_bulkhead_m",
     "separation",
@@ -197,6 +199,15 @@ fn gas_geometry_has_the_core_values() {
         basis.inputs.wing_tank_width.unwrap()
     );
     assert_eq!(f(&g["wing_tank_gap_m"]), basis.inputs.wing_tank_gap);
+    // Issue #407: the weather shield the weights carry.
+    assert_eq!(
+        f(&g["weather_shield_thickness_mm"]),
+        basis.inputs.weather_shield_thickness
+    );
+    assert_eq!(
+        f(&g["weather_shield_clearance_m"]),
+        basis.inputs.weather_shield_clearance
+    );
     // Issue #406: the tank lengths and the gaps the core laid the tanks out with.
     let t = &g["tank"];
     assert_eq!(

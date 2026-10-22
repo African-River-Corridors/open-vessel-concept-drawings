@@ -411,6 +411,68 @@ fn the_drawn_wing_tank_top_is_the_wing_plate_level_even_above_the_deck() {
 }
 
 #[test]
+fn the_weather_shield_is_drawn_dashed_from_the_wing_plate_to_the_tank_top_plus_the_clearance() {
+    // Issue #407: the weights carry a shield over the tanks (sides and ends on the wing plate, or on
+    // the deck where the Moulded Depth is higher; its top the tank top plus the clearance). The
+    // drawing shows it dashed, in the section and the elevation, from the results' own values.
+    for file in GAS {
+        for (_, r) in computed(file) {
+            let d = &r["drawing"];
+            let (t, clearance) = (
+                d["weather_shield_thickness_mm"].as_f64().unwrap(),
+                d["weather_shield_clearance_m"].as_f64().unwrap(),
+            );
+            assert!(t > 0.0, "{file}: the fixture has a shield");
+            let depth = r["dims"]["depth_m"].as_f64().unwrap();
+            let od = r["geometry"]["tank_outer_diameter_m"].as_f64().unwrap();
+            let bottom = d["double_bottom_m"].as_f64().unwrap()
+                + d["tank_support_height_m"].as_f64().unwrap();
+            let top = bottom + od + clearance;
+            let foot = wing_plate_level(&r).max(depth);
+            assert!(top > foot, "{file}: the shield stands above its foot");
+            let v = views(&r);
+            for (name, view) in [
+                ("section", &v.midship_section),
+                ("elevation", &v.side_elevation),
+            ] {
+                let shield: Vec<&Value> = of_layer(view, "ZONE", "polyline")
+                    .into_iter()
+                    .filter(|e| {
+                        let ys: Vec<f64> = e["points_m"]
+                            .as_array()
+                            .unwrap()
+                            .iter()
+                            .map(|p| p[1].as_f64().unwrap())
+                            .collect();
+                        ys.len() == 4
+                            && close(ys[0], foot)
+                            && close(ys[1], top)
+                            && close(ys[2], top)
+                            && close(ys[3], foot)
+                    })
+                    .collect();
+                assert_eq!(shield.len(), 1, "{file}: the shield in the {name}");
+            }
+        }
+    }
+}
+
+#[test]
+fn a_hull_without_a_shield_draws_none() {
+    let (_, mut r) = computed("gas_igc_2g_exact.vdesign").remove(0);
+    r["drawing"]["weather_shield_thickness_mm"] = serde_json::json!(0.0);
+    let v = views(&r);
+    for view in [&v.midship_section, &v.side_elevation] {
+        assert!(
+            of_layer(view, "ZONE", "polyline")
+                .iter()
+                .all(|e| e["points_m"].as_array().unwrap().len() != 4),
+            "no shield"
+        );
+    }
+}
+
+#[test]
 fn a_dome_is_drawn_only_at_the_diameter_the_results_give() {
     // Issue #406: no drawing proportion stands in for the core's dome diameter.
     let (_, r) = computed("gas_igc_2g_exact.vdesign").remove(0);

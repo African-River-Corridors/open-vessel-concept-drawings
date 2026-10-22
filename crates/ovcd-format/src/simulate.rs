@@ -524,6 +524,14 @@ fn structure_json(
             basis.map_or(Value::Null, |b| num(b.wing_tank_height_ratio)),
         ),
         (
+            "weather_shield_thickness_mm",
+            basis.map_or(Value::Null, |b| num(b.weather_shield_thickness)),
+        ),
+        (
+            "weather_shield_clearance_m",
+            basis.map_or(Value::Null, |b| num(b.weather_shield_clearance)),
+        ),
+        (
             "opening_setback_m",
             if is_gas {
                 num(sep_in.opening_setback_m)
