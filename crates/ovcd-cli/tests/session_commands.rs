@@ -30,7 +30,7 @@ fn fixtures() -> Vec<PathBuf> {
         .filter(|p| p.extension().is_some_and(|e| e == "vdesign"))
         .collect();
     files.sort();
-    assert_eq!(files.len(), 10, "the ten example Designs");
+    assert_eq!(files.len(), 11, "the eleven example Designs");
     files
 }
 

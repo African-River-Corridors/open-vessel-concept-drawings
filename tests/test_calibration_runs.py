@@ -9,7 +9,9 @@ from vessel_designer.calibration import CAL, report
 
 
 def _snapshot(folder):
-    return {p.name: (p.stat().st_mtime_ns, p.read_bytes()) for p in sorted(folder.iterdir())}
+    # Every file under the folder, by its path in it: the folder has sub-folders (calibration/shipd).
+    return {str(p.relative_to(folder)): (p.stat().st_mtime_ns, p.read_bytes())
+            for p in sorted(folder.rglob("*")) if p.is_file()}
 
 
 def test_report_covers_every_case():

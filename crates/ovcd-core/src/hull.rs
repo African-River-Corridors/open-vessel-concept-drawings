@@ -326,6 +326,10 @@ pub mod hull_form {
         /// dimensions, the rakes and the shape above do not apply.
         #[cfg_attr(feature = "serde", serde(skip))]
         pub offsets: Option<SectionsTable>,
+        /// The `shipd` Hull Form (issue #452): the ShipD-style hull of these parameters is the
+        /// whole hull; the rakes, the Stern Form and the shape above do not apply.
+        #[cfg_attr(feature = "serde", serde(skip))]
+        pub shipd: Option<crate::shipd::ShipdParameters>,
     }
 
     /// The bottom of a Hull Form's section (spec 0008, "Hull Forms"). Angles in degrees, lengths in
@@ -419,6 +423,9 @@ pub mod hull_form {
         ChineAboveDepth { height_m: f64, depth_m: f64 },
         /// The sections the generator wrote were refused.
         Sections(SectionsError),
+        /// The ShipD parameters fail a constraint, ask for a bulb, or are not finite (the Design's
+        /// checks name which).
+        Shipd,
     }
 
     impl fmt::Display for HullError {
@@ -470,6 +477,10 @@ pub mod hull_form {
                     "a chine height of {height_m} m is above the moulded depth of {depth_m} m"
                 ),
                 HullError::Sections(e) => write!(f, "{e}"),
+                HullError::Shipd => write!(
+                    f,
+                    "the ShipD parameters cannot make a hull: see the checks of `shipd_parameters`"
+                ),
             }
         }
     }
@@ -593,6 +604,10 @@ pub mod hull_form {
         );
         if !(positive(l) && positive(b) && positive(d)) {
             return Err(HullError::Dimension);
+        }
+        if let Some(p) = &inputs.shape.shipd {
+            return crate::shipd::sections(p, l, b, d, crate::shipd::DESIGN)
+                .map_err(|_| HullError::Shipd);
         }
         // Stations and keel heights, aft to forward.
         let keel: Vec<(f64, f64)> = match inputs.form {

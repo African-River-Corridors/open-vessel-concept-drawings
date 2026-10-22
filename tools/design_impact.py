@@ -488,6 +488,12 @@ def cases() -> dict[str, dict]:
             for y, z in ((0.0, keel), (5.7, keel), (5.7, 3.5), (0.0, 3.5))]
     out["sweep hull offsets 76.5x11.4"] = _inputs(
         "bauxite", "box_hold", "pushed_barge", 76.5, 11.4, 3.5, hull_form="offsets", hull_offsets=rows)
+    # Issue #452: a ShipD-style hull with the Defaults Profile's parameters, in the legacy loading
+    # conditions (the IS Code ballast search on its sections takes about 21 s, #567). A base from
+    # before the shipd Hull Form refuses it: the case shows as new.
+    out["sweep hull shipd 80x14"] = _inputs(
+        "bauxite", "box_hold", "pushed_barge", 80.0, 14.0, 4.5, hull_form="shipd",
+        loading_conditions="legacy")
     return out
 
 

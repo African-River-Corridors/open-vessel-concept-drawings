@@ -14,6 +14,7 @@ pub mod profile;
 pub mod rule_set;
 mod run;
 pub mod session;
+pub mod shipd;
 mod simulate;
 mod text_ids;
 pub mod trace;

@@ -48,6 +48,7 @@ pub mod resistance;
 pub mod rule_trace;
 pub mod rules;
 pub mod sections;
+pub mod shipd;
 pub mod squat;
 pub mod stern_form;
 pub mod tanks;

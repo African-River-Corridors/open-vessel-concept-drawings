@@ -356,8 +356,12 @@ impl Hull {
             shape: spec.shape.clone(),
         })
         .map_err(BuildError::Hull)?;
-        // An offsets table holds its own stern (issue #451).
-        if let Some(g) = spec.stern.as_ref().filter(|_| spec.shape.offsets.is_none()) {
+        // An offsets table or a ShipD hull holds its own stern (issues #451, #452).
+        if let Some(g) = spec
+            .stern
+            .as_ref()
+            .filter(|_| spec.shape.offsets.is_none() && spec.shape.shipd.is_none())
+        {
             crate::stern_form::apply(g, &mut table).map_err(BuildError::Stern)?;
         }
         Ok(Self {

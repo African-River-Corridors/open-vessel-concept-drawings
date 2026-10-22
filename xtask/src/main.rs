@@ -3,6 +3,12 @@
 //! - `mutants [--base <ref>] [--out <file>]`: run cargo-mutants on the `ovcd-core` code this branch
 //!   changed and write a short killed / survived / timeout report.
 //! - `gates`: run the fail-closed fast gate, `tools/gates.sh`.
+//! - `shipd-sample <dataset folder>`: draw the fixed-seed ShipD benchmark sample from a local copy
+//!   of the Ship-D dataset into `calibration/shipd/` (issue #452).
+//! - `shipd-benchmark`: compare OVCD's ShipD-style hulls with the sample and write
+//!   `calibration/shipd/report.md`.
+
+mod shipd;
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
@@ -12,7 +18,13 @@ fn main() -> ExitCode {
     let result = match args.first().map(String::as_str) {
         Some("mutants") => mutants(&args[1..]),
         Some("gates") => gates(),
-        _ => Err("usage: cargo xtask <mutants [--base <ref>] [--out <file>] | gates>".into()),
+        Some("shipd-sample") => shipd::sample(&args[1..]),
+        Some("shipd-benchmark") => shipd::benchmark(),
+        _ => Err(
+            "usage: cargo xtask <mutants [--base <ref>] [--out <file>] | gates | \
+                  shipd-sample <dataset folder> | shipd-benchmark>"
+                .into(),
+        ),
     };
     match result {
         Ok(()) => ExitCode::SUCCESS,
@@ -23,9 +35,9 @@ fn main() -> ExitCode {
     }
 }
 
-type Result<T = ()> = std::result::Result<T, String>;
+pub(crate) type Result<T = ()> = std::result::Result<T, String>;
 
-fn root() -> PathBuf {
+pub(crate) fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .expect("xtask lives one level below the repo root")
