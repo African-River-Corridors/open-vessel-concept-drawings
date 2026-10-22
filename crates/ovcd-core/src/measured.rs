@@ -97,6 +97,22 @@ pub fn deadweight_band(dw_t: f64) -> &'static str {
     }
 }
 
+/// The length bands, at the thresholds of SOLAS V/22.1 (ships of not less than 45 m) and ES-TRIN
+/// 28.02 (craft whose length exceeds 110 m).
+pub const LENGTH_BANDS: &[&str] = &["under-45-m", "45-to-110-m", "over-110-m"];
+
+/// The band of a length overall, m. 45 m is in the band that starts at 45 ("not less than");
+/// 110 m is in the band below 110 ("exceeds").
+pub fn length_band(loa_m: f64) -> &'static str {
+    if loa_m < 45.0 {
+        LENGTH_BANDS[0]
+    } else if loa_m <= 110.0 {
+        LENGTH_BANDS[1]
+    } else {
+        LENGTH_BANDS[2]
+    }
+}
+
 fn arg(m: &MeasureRef, name: &str) -> Result<f64, String> {
     match m.args.iter().find(|(k, _)| k == name) {
         Some((_, ArgValue::Number(x))) => Ok(*x),

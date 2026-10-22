@@ -10,7 +10,7 @@ use ovcd_core::rule_trace::{
 };
 use ovcd_core::rules::MeasureRef;
 use ovcd_format::rule_set::{Library, load};
-use ovcd_format::trace::{deadweight_band, measure_info};
+use ovcd_format::trace::{deadweight_band, length_band, measure_info};
 use serde_json::{Value, json};
 
 fn coeffs(pairs: &[(&str, f64)]) -> Vec<(String, f64)> {
@@ -108,6 +108,16 @@ fn the_deadweight_bands_split_where_marpol_reg_19_does() {
     assert_eq!(deadweight_band(5000.0), "5000-to-20000-t");
     assert_eq!(deadweight_band(19999.999), "5000-to-20000-t");
     assert_eq!(deadweight_band(20000.0), "20000-t-and-above");
+}
+
+#[test]
+fn the_length_bands_split_where_solas_v_22_and_es_trin_28_do() {
+    // SOLAS V/22.1: "ships of not less than 45 m"; ES-TRIN 28.02: "craft whose length L exceeds 110 m".
+    assert_eq!(length_band(0.0), "under-45-m");
+    assert_eq!(length_band(44.999), "under-45-m");
+    assert_eq!(length_band(45.0), "45-to-110-m");
+    assert_eq!(length_band(110.0), "45-to-110-m");
+    assert_eq!(length_band(110.001), "over-110-m");
 }
 
 #[test]

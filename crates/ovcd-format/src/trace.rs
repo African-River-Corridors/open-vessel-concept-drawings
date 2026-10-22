@@ -368,9 +368,11 @@ pub const DERIVED_INPUTS: &[(&str, &[&str])] = &[
     // Issue #355: the Formation's kind, read from the `formation` input.
     ("formation_kind", crate::vdesign::FORMATION_KINDS),
     ("deadweight_band", DEADWEIGHT_BANDS),
+    // Issue #543: the length overall, in the bands of SOLAS V/22.1 and ES-TRIN 28.02.
+    ("length_band", LENGTH_BANDS),
 ];
 
-pub use ovcd_core::measured::{DEADWEIGHT_BANDS, deadweight_band};
+pub use ovcd_core::measured::{DEADWEIGHT_BANDS, LENGTH_BANDS, deadweight_band, length_band};
 
 /// The `cargo_class` value of a Cargo Class.
 pub fn cargo_class_value(class: ovcd_core::cargo::CargoClass) -> &'static str {
@@ -538,6 +540,14 @@ impl MeasureSource for OptionMeasures<'_> {
                 let props = ovcd_core::cargo::get_cargo(cargo).ok()?;
                 return Some(cargo_class_value(props.phase).to_string());
             }
+            "length_band" => {
+                return self
+                    .option
+                    .input("length_overall_m")?
+                    .value
+                    .as_f64()
+                    .map(|l| length_band(l).to_string());
+            }
             "deadweight_band" => {
                 return self
                     .measured
@@ -568,7 +578,7 @@ pub fn rule_inputs(option: &DesignOption) -> RuleInputs {
             applicability.push((spec.name.to_string(), v));
         }
     }
-    for name in ["cargo_class", "formation_kind"] {
+    for name in ["cargo_class", "formation_kind", "length_band"] {
         if let Some(v) = source.input(name) {
             applicability.push((name.to_string(), v));
         }

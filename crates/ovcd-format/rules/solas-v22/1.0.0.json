@@ -26,7 +26,7 @@
   "rules": [
     {
       "id": "solas/V.22.1.1/blind-zone-light",
-      "title": "The view of the sea surface from the conning position is obscured by no more than two ship lengths or 500 m, whichever is less, ahead of the bow: light condition (the Regulation is for ships of 45 m and more; a warning for every length until the rule data can say a length; only the distance ahead of the bow is checked, not the 10 degrees on either side or the blind sectors of V/22.1.2)",
+      "title": "The view of the sea surface from the conning position is obscured by no more than two ship lengths or 500 m, whichever is less, ahead of the bow: light condition (it applies to ships of not less than 45 m, read as a length overall of 45 m and more, and to ships built on or after 1 July 1998, which is not modelled; only the distance ahead of the bow is checked, not the 10 degrees on either side or the blind sectors of V/22.1.2)",
       "origin": "regulation",
       "source": {
         "document": "SOLAS 1974 as amended by resolution MSC.99(73)",
@@ -63,12 +63,17 @@
       "consequence": "warn",
       "sizes": false,
       "evaluated": true,
-      "finding": "#543",
-      "since": "1.0.0"
+      "since": "1.0.0",
+      "applies_when": {
+        "length_band": [
+          "45-to-110-m",
+          "over-110-m"
+        ]
+      }
     },
     {
       "id": "solas/V.22.1.1/blind-zone-laden",
-      "title": "The same, laden (the Regulation is for ships of 45 m and more; a warning for every length until the rule data can say a length; only the distance ahead of the bow is checked, not the 10 degrees on either side or the blind sectors of V/22.1.2)",
+      "title": "The same, laden (it applies to ships of not less than 45 m, read as a length overall of 45 m and more, and to ships built on or after 1 July 1998, which is not modelled; only the distance ahead of the bow is checked, not the 10 degrees on either side or the blind sectors of V/22.1.2)",
       "origin": "regulation",
       "source": {
         "document": "SOLAS 1974 as amended by resolution MSC.99(73)",
@@ -105,8 +110,13 @@
       "consequence": "warn",
       "sizes": false,
       "evaluated": true,
-      "finding": "#543",
-      "since": "1.0.0"
+      "since": "1.0.0",
+      "applies_when": {
+        "length_band": [
+          "45-to-110-m",
+          "over-110-m"
+        ]
+      }
     }
   ]
 }
