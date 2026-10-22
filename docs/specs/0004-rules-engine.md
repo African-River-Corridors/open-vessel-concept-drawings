@@ -152,7 +152,7 @@ citation.
 **Applicability.** A conjunction of conditions `input ∈ {values}` over the Option's inputs: `cargo`,
 `cargo_containment`, `service_area`, `lpg_carriage_condition`, `tank_head_type`, and any other enumerated
 input the schema names. It is the same form on a Rule Set (`applies_when`) and on a Rule
-(`applies_when`). Three **derived inputs** are read-only: the engine works them out and a user never
+(`applies_when`). Four **derived inputs** are read-only: the engine works them out and a user never
 types them (spec 0006 §5.2, #336):
 
 - `service_area`: `river-only` or `coastal-and-river`. Since format version 3 (#274) it is an input of
@@ -164,11 +164,15 @@ types them (spec 0006 §5.2, #336):
   result's deadweight, at the thresholds of MARPOL Annex I Reg. 19 ("x tonnes deadweight and above" is
   in the band that starts at x). So the 5,000 t switch of the MARPOL construction rules stays
   `input ∈ {values}`.
+- `length_band`: `under-45-m`, `45-to-110-m`, `over-110-m`, from the length overall of the Option, at
+  the thresholds of SOLAS V/22.1 ("not less than 45 m": 45 m is in the band that starts at 45) and
+  ES-TRIN 28.02 ("exceeds 110 m": 110 m is in the band below). The length overall stands in for the
+  length the Regulations define; the two differ by a few per cent (#543).
 
 The loader refuses an Applicability that names an input it cannot name (a number input, an unknown
 name) or a value the input does not have, so a typo never makes a Rule silently not apply. There is no expression language: no `or` inside a condition list across inputs, no
-arithmetic, no thresholds. A rule-book condition on a number (a ship length of 24 m or more) is a
-`check` Rule or waits for the Applicability Rules that are out of scope.
+arithmetic, no thresholds. A rule-book condition on a number is a band of a derived input (`deadweight_band`, `length_band`) when
+the thresholds are known, else a `check` Rule.
 
 **Requirement.** The Rules of all selected Rule Sets with the same Measure instance, the same object and
 the same direction. `check` Rules on one Measure form one Requirement. `note` Rules form none.
@@ -621,7 +625,8 @@ the end-bulkhead condition (#281), the 0–40° area without a down-flooding ang
 
 - New rules or rule sets beyond today's (BV NR217, ES-TRIN, IS Code Part B, ICLL, ADN, IGC 1G and 3G):
   each comes as its own data file and harness cases after this spec.
-- Applicability Rules (who is in or out of SOLAS or ICLL by length, tonnage or propulsion).
+- Applicability Rules beyond the derived bands (who is in or out of SOLAS or ICLL by tonnage or
+  propulsion, a free numeric threshold).
 - Any fix of a finding. Each is decided on its own issue, as a design change.
 - Damage stability, the weather criterion and the down-flooding angle as Measures (roadmap phases 1
   and 2). Here they are only `not evaluated` rows.

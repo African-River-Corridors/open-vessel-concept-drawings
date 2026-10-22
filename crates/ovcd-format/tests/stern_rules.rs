@@ -84,7 +84,16 @@ fn the_solas_limit_is_two_ship_lengths_or_500_m_whichever_is_less() {
             ovcd_core::rules::Consequence::Warn,
             "{id}"
         );
-        assert_eq!(rule.finding.as_deref(), Some("#543"), "{id}");
+        assert_eq!(rule.finding, None, "{id}");
+        // Issue #543: ships of not less than 45 m, read as a length overall.
+        assert_eq!(
+            rule.applies_when.conditions,
+            vec![(
+                "length_band".to_string(),
+                vec!["45-to-110-m".to_string(), "over-110-m".to_string()]
+            )],
+            "{id}"
+        );
         assert!(rule.verified.is_none(), "{id}");
         let Some(Limit::Formula {
             shape,
@@ -123,6 +132,30 @@ fn a_coastal_option_is_checked_against_two_lengths_and_the_light_blind_distance_
             .to_string()
             .contains("solas-v22")
     );
+}
+
+#[test]
+fn a_craft_under_45_m_is_outside_solas_v_22_and_one_of_45_m_is_inside() {
+    // Issue #543: the Rules apply from a length overall of 45 m. The coastal Option takes the set
+    // at both lengths; the Rules have no row below 45 m and a row at 45 m.
+    for (loa, applies) in [(44.9, false), (45.0, true), (110.0, true), (140.0, true)] {
+        let r = results(&design(
+            json!({ "service_area": "coastal-and-river", "length_overall_m": loa }),
+        ));
+        let all = r["rule_trace"]["rows"].as_array().unwrap();
+        for id in [
+            "solas/V.22.1.1/blind-zone-light",
+            "solas/V.22.1.1/blind-zone-laden",
+        ] {
+            let mine: Vec<&Value> = all.iter().filter(|row| row["rule"] == id).collect();
+            assert!(!mine.is_empty(), "{loa} m: no row for {id}");
+            assert_eq!(
+                mine.iter().any(|row| row["outcome"] != "not applicable"),
+                applies,
+                "{loa} m: {id}"
+            );
+        }
+    }
 }
 
 #[test]
