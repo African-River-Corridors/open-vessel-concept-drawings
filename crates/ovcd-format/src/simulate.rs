@@ -2555,7 +2555,7 @@ fn simulate_gas(
         stability = json!({
             "criteria_set": set_label,
             "ok": a.ok(),
-            "governing": a.governing().name,
+            "lowest_gm_condition": a.lowest_gm().name,
             "limitations": a.limitations,
             "conditions": a
                 .conditions
@@ -3082,16 +3082,16 @@ fn loading_condition_checks(
 }
 
 /// The `stability` block of the IS Code conditions, in the shape of the legacy gas one: the
-/// governing condition is the one with the lowest fluid GM, the first of equal.
+/// lowest-GM condition is the one with the lowest fluid GM, the first of equal.
 fn is_code_stability_json(
     conds: &[ovcd_core::loading_conditions::LoadedCondition],
     with_weights: bool,
     ids: &mut TextIds,
 ) -> Value {
-    let mut governing = &conds[0].condition;
+    let mut lowest = &conds[0].condition;
     for c in &conds[1..] {
-        if c.condition.gm_fluid_m < governing.gm_fluid_m {
-            governing = &c.condition;
+        if c.condition.gm_fluid_m < lowest.gm_fluid_m {
+            lowest = &c.condition;
         }
     }
     let limitations = vec![
@@ -3115,7 +3115,7 @@ fn is_code_stability_json(
     json!({
         "criteria_set": "IMO IS Code 2008, Part A 2.2",
         "ok": conds.iter().all(|c| c.ok()),
-        "governing": governing.name,
+        "lowest_gm_condition": lowest.name,
         "limitations": limitations,
         "conditions": conds.iter().map(|c| loaded_condition_json(c, with_weights)).collect::<Vec<_>>(),
     })

@@ -137,9 +137,8 @@ meets its Requirement and never falls when Rules are added (#482). A differentia
 evaluator with the Lean oracle (`crates/arc-rules/tests/lean_oracle.rs`). It runs in the weekly Lean job, when
 `ARC_RULES_LEAN_ORACLE` names the built oracle.
 
-Do not confuse this with two older uses of the word "governing" in a result: the stability loading condition with
-the lowest fluid GM (`stability.governing`), and the light air draft ("Air draft (empty, governing)"). Both name
-a result, not a Rule. Renaming them moves results hashes and is not done (#430).
+Do not confuse this with the older use of the word "governing" in a result: the stability loading condition with
+the lowest fluid GM, now the key `stability.lowest_gm_condition` (#534). It names a result, not a Rule.
 
 ### 6. Which Rule Sets a Design is checked against
 
@@ -358,7 +357,7 @@ a new version.
   evaluated. The numbers of the old clause (0.80 m side, 0.60 m double bottom) were removed in #215.
 - The IS Code applies to ships of 24 m in length and over (Part A 1.1.1). OVCD applies the Rules to every gas
   Design: it cannot write a length condition as Applicability.
-- The word "governing" names a Rule in the trace and a result in two places (section 5).
+- The word "governing" names a Rule in the trace (section 5); the older result key was renamed in #534.
 
 ## Evidence
 
