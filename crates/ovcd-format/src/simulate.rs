@@ -2296,6 +2296,7 @@ fn simulate_gas(
                     (s, plane)
                 }),
                 checks: Vec::new(),
+                ..Measured::default()
             },
         )
     })

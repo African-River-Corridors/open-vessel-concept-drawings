@@ -232,6 +232,8 @@ fn candidate_measured(
             .iter()
             .map(|c| (c.name.replace('_', " "), c.ok))
             .collect(),
+        // The wheelhouse and the powering are worked out for the answer, not for a candidate.
+        ..Measured::default()
     }
 }
 

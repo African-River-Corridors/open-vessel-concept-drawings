@@ -1,0 +1,112 @@
+{
+  "$schema": "../rule-set.schema.json",
+  "id": "solas-v22",
+  "family": "solas",
+  "title": "SOLAS Chapter V, regulation 22: navigation bridge visibility (blind distance ahead of the bow)",
+  "version": "1.0.0",
+  "edition": {
+    "document": "SOLAS 1974 as amended by resolution MSC.99(73), revised Chapter V",
+    "edition": "MSC.99(73), adopted 5 December 2000",
+    "in_force": "1 July 2002"
+  },
+  "sources": [
+    {
+      "document": "Resolution MSC.99(73): adoption of amendments to SOLAS 1974 (revised Chapter V)",
+      "edition": "adopted 5 December 2000",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.99(73).pdf",
+      "access": "free",
+      "sha256": "56b99dbabc74c732ba297b8ae0906de1839ed64978d4c6b06b01b945c99ab4b3"
+    }
+  ],
+  "status": "draft",
+  "applies_when": {},
+  "includes": [],
+  "known_conflicts": [],
+  "tables": [],
+  "rules": [
+    {
+      "id": "solas/V.22.1.1/blind-zone-light",
+      "title": "The view of the sea surface from the conning position is obscured by no more than two ship lengths or 500 m, whichever is less, ahead of the bow: light condition (the Regulation is for ships of 45 m and more; a warning for every length until the rule data can say a length; only the distance ahead of the bow is checked, not the 10 degrees on either side or the blind sectors of V/22.1.2)",
+      "origin": "regulation",
+      "source": {
+        "document": "SOLAS 1974 as amended by resolution MSC.99(73)",
+        "edition": "MSC.99(73), adopted 5 December 2000",
+        "locator": "V.22.1.1",
+        "page": "MSC.99-73.pdf, Regulation 22 (annex p. 133)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#355"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "wheelhouse.blind_distance",
+        "args": {
+          "condition": "light"
+        }
+      },
+      "compare": "le",
+      "limit": {
+        "shape": "clamp",
+        "x": "input.length_overall_m",
+        "a": 0.0,
+        "b": 2.0,
+        "c": 1.0,
+        "lo": 0.0,
+        "hi": 500.0,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#543",
+      "since": "1.0.0"
+    },
+    {
+      "id": "solas/V.22.1.1/blind-zone-laden",
+      "title": "The same, laden (the Regulation is for ships of 45 m and more; a warning for every length until the rule data can say a length; only the distance ahead of the bow is checked, not the 10 degrees on either side or the blind sectors of V/22.1.2)",
+      "origin": "regulation",
+      "source": {
+        "document": "SOLAS 1974 as amended by resolution MSC.99(73)",
+        "edition": "MSC.99(73), adopted 5 December 2000",
+        "locator": "V.22.1.1",
+        "page": "MSC.99-73.pdf, Regulation 22 (annex p. 133)",
+        "access": "free"
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#355"
+      },
+      "verified": false,
+      "kind": "formula",
+      "measure": {
+        "id": "wheelhouse.blind_distance",
+        "args": {
+          "condition": "laden"
+        }
+      },
+      "compare": "le",
+      "limit": {
+        "shape": "clamp",
+        "x": "input.length_overall_m",
+        "a": 0.0,
+        "b": 2.0,
+        "c": 1.0,
+        "lo": 0.0,
+        "hi": 500.0,
+        "unit": "m"
+      },
+      "tolerance": 0,
+      "consequence": "warn",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#543",
+      "since": "1.0.0"
+    }
+  ]
+}
