@@ -54,6 +54,8 @@ class Fixture:
                     "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.com",
                     "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.com"}
         self.env.pop("GITHUB_STEP_SUMMARY", None)
+        # The CI event (merge_group in the merge queue) changes the gate; a fixture repo is not that event.
+        self.env.pop("GITHUB_EVENT_NAME", None)
         self.git("init", "-q", "-b", "main")
         self.commit("base")
 
