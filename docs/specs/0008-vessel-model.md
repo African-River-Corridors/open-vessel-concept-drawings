@@ -471,6 +471,12 @@ pub struct Mesh {
 - **Capytaine:** a Python test, skipped when Capytaine is not installed, loads the STL with
   `--below <condition>` and checks that Capytaine reports the hull as closed and its displaced volume
   within 1 % of OVCD's.
+- **Panel mesh and offsets (#461):** the STL and OBJ are in hull axes (x forward from the aft end, y to
+  starboard, z up from the base line), metres, welded as f32 (vertices a nanometre apart are one point in a
+  file). With `--below <condition>` the hull is cut at that condition's waterline (the trimmed plane of its
+  aft and forward draughts) and the cut is closed by a lid, counter-clockwise seen from above; the cut points
+  are shared by the two triangles of an edge, so the mesh stays closed. The offsets CSV is the Sections Table
+  in the import format of #451, one row for each point, a blank line between stations.
 - STEP and IFC come later, through an adapter (phase 6 or later).
 
 ### File ownership and hand-over

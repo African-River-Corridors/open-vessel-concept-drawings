@@ -89,11 +89,13 @@ Usage:
   ovcd draw [--profile <profile.json>] [--option <name>] --document <file.vdesign>
       Print the drawing documents only, as JSON, so that they can be built with another
       implementation of the standard.
-  ovcd export [--profile <profile.json>] --format gltf [--option <name>] (-o <file> | --hash) <file.vdesign>
-      Write the Vessel Model of an Option (spec 0008, issue #460): `--format gltf` is a glTF 2.0
-      binary (.glb) with one node for each layer and each Space. `-o` names the file; `--option`
-      picks the Option (the only one, when there is one). `--hash` prints the SHA-256 of each
-      Option's bytes instead, for the web parity check.
+  ovcd export [--profile <profile.json>] --format gltf|stl|obj|offsets-csv [--option <name>] [--below <condition>] (-o <file> | --hash) <file.vdesign>
+      Write the Vessel Model of an Option (spec 0008, issues #460 and #461): `gltf` is a glTF 2.0
+      binary (.glb) with one node for each layer and each Space; `stl` (binary) and `obj` are the
+      closed hull to the deck, outward normals, watertight, and with `--below <condition>` the part
+      under that loading condition's waterline with a lid; `offsets-csv` is the Sections Table in
+      the import format. `-o` names the file; `--option` picks the Option (the only one, when there
+      is one). `--hash` prints the SHA-256 of each Option's bytes instead, for the web parity check.
   ovcd mesh [--profile <profile.json>] --hash <file.vdesign>
       Print the mesh hash of each Option (spec 0008, issue #456): the SHA-256 of the meshes of its
       Vessel Model (hull, decks, bulkheads, Spaces, waterlines). The web parity check compares it
@@ -592,7 +594,7 @@ fn validate(args: &[&str]) -> Result<bool, String> {
 /// that is not yet supported (a convoy) is not a failure.
 /// `ovcd export`: the Vessel Model of an Option as a file, or its hash (issue #460).
 fn export(args: &[&str]) -> Result<(), String> {
-    let (mut format, mut option, mut out, mut hash) = (None, None, None, false);
+    let (mut format, mut option, mut out, mut hash, mut below) = (None, None, None, false, None);
     let mut rest = Vec::new();
     let mut it = args.iter();
     while let Some(&a) = it.next() {
@@ -600,13 +602,17 @@ fn export(args: &[&str]) -> Result<(), String> {
             "--format" => format = Some(*it.next().ok_or("--format needs a name")?),
             "--option" => option = Some(*it.next().ok_or("--option needs a name")?),
             "-o" => out = Some(*it.next().ok_or("-o needs a file")?),
+            "--below" => below = Some(*it.next().ok_or("--below needs a condition name")?),
             "--hash" => hash = true,
             a => rest.push(a),
         }
     }
-    let format = format.ok_or("give --format gltf")?;
-    if format != "gltf" {
-        return Err(format!("unknown format `{format}` (use gltf)"));
+    let format = format.ok_or("give --format gltf, stl, obj or offsets-csv")?;
+    if !ovcd_format::export::FORMATS.contains(&format) {
+        return Err(format!(
+            "unknown format `{format}` (use {})",
+            ovcd_format::export::FORMATS.join(", ")
+        ));
     }
     let flags = parse_flags(&rest, false, false, false)?;
     let [path] = flags.files.as_slice() else {
@@ -632,7 +638,7 @@ fn export(args: &[&str]) -> Result<(), String> {
     }
     if hash {
         for o in chosen {
-            match ovcd_format::export::option_glb(o) {
+            match ovcd_format::export::option_export(format, o, below) {
                 Ok(b) => println!("{}	{}", o.name, ovcd_format::export::bytes_hash(&b)),
                 Err(e) => println!("{}	-	{e}", o.name),
             }
@@ -642,7 +648,7 @@ fn export(args: &[&str]) -> Result<(), String> {
     let [one] = chosen.as_slice() else {
         return Err("the file has more than one Option: give --option <name>".into());
     };
-    let bytes = ovcd_format::export::option_glb(one)?;
+    let bytes = ovcd_format::export::option_export(format, one, below)?;
     let file = out.ok_or("give -o <file>")?;
     std::fs::write(file, &bytes).map_err(|e| format!("cannot write {file}: {e}"))?;
     println!("{file}: {} bytes", bytes.len());

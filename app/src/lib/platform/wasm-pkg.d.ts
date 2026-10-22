@@ -33,6 +33,7 @@ declare module "*/wasm-pkg/ovcd_web.js" {
     section_at(option: string, x: number): string;
     space_info(option: string, name: string): string;
     waterlines(option: string): string;
+    export_model(option: string, format: string, below: string): Uint8Array;
   }
   export function engine_version(): string;
   export default function init(input?: unknown): Promise<unknown>;

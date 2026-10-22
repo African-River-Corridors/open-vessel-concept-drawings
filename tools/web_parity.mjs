@@ -47,9 +47,11 @@ const webStatus = (s) => (s === "not_available" ? "not_yet_supported" : s);
 const rows = [];
 let bad = 0;
 let compared = 0;
-// `ovcd export --format gltf --hash`: name -> SHA-256 of the .glb bytes, or "-".
-function nativeGlb(file) {
-  const r = spawnSync(bin, ["export", "--format", "gltf", "--hash", file], { encoding: "utf8", maxBuffer: 1 << 24 });
+const EXPORT_FORMATS = ["gltf", "stl", "obj", "offsets-csv"];
+
+// `ovcd export --format <f> --hash`: name -> SHA-256 of the bytes, or "-".
+function nativeGlb(file, format) {
+  const r = spawnSync(bin, ["export", "--format", format, "--hash", file], { encoding: "utf8", maxBuffer: 1 << 24 });
   if (r.error) throw r.error;
   const out = new Map();
   for (const line of r.stdout.split("\n").filter((l) => l.length > 0)) {
@@ -85,20 +87,22 @@ for (const f of files) {
     if (nm !== "-") meshCompared++;
     rows.push([f, `${o.name} (mesh)`, nm, wm, verdict]);
   }
-  // Issue #460: the .glb bytes of each Option, native against WebAssembly.
-  const natGlb = nativeGlb(path);
-  for (const o of web.options) {
-    let wg;
-    try {
-      wg = createHash("sha256").update(Buffer.from(s.export_gltf(o.name))).digest("hex");
-    } catch {
-      wg = "-";
+  // Issues #460 and #461: the bytes of each export of each Option, native against WebAssembly.
+  for (const format of EXPORT_FORMATS) {
+    const natGlb = nativeGlb(path, format);
+    for (const o of web.options) {
+      let wg;
+      try {
+        wg = createHash("sha256").update(Buffer.from(s.export_model(o.name, format, ""))).digest("hex");
+      } catch {
+        wg = "-";
+      }
+      const ng = natGlb.get(o.name) ?? "(missing)";
+      const verdict = ng === wg ? "equal" : "MISMATCH";
+      if (verdict === "MISMATCH") bad++;
+      if (ng !== "-") glbCompared++;
+      rows.push([f, `${o.name} (${format})`, ng, wg, verdict]);
     }
-    const ng = natGlb.get(o.name) ?? "(missing)";
-    const verdict = ng === wg ? "equal" : "MISMATCH";
-    if (verdict === "MISMATCH") bad++;
-    if (ng !== "-") glbCompared++;
-    rows.push([f, `${o.name} (glb)`, ng, wg, verdict]);
   }
   s.free();
   if (nat.options.length !== web.options.length) {
@@ -164,7 +168,7 @@ for (const f of files) {
 console.log(`engine ${engine_version()}`);
 const widths = [0, 1, 2, 3, 4].map((c) => Math.max(...rows.map((r) => String(r[c]).length)));
 for (const r of rows) console.log(r.map((v, c) => String(v).padEnd(widths[c])).join("  "));
-console.log(`${compared} hashes, ${meshCompared} mesh hashes and ${glbCompared} glb hashes compared, ${bad} problems`);
+console.log(`${compared} hashes, ${meshCompared} mesh hashes and ${glbCompared} export hashes compared, ${bad} problems`);
 if (bad > 0 || compared === 0 || meshCompared === 0 || glbCompared === 0) {
   console.error("web parity: FAIL");
   process.exit(1);
