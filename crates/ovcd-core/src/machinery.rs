@@ -59,8 +59,15 @@ impl PowerSource {
 
 /// The rates and lengths of spec 0007 "Machinery space and mass".
 pub mod rates {
-    /// Aft peak with the steering gear (m), estimate.
-    pub const AFT_PEAK_M: f64 = 1.5;
+    /// Aft peak with the steering gear (m), estimate: the low end of the built shaft-driven inland
+    /// ships (2.5 to 5.0 m); azimuth tugs have 1.5 to 2.0 m. Fitted to built ships (issue #365,
+    /// `calibration/stern_block_results.md`); it was 1.5.
+    pub const AFT_PEAK_M: f64 = 2.5;
+    /// The factor on the drive room (or shaft run) plus the engine room, for the rooms the layout does
+    /// not draw (switchboard room, workshop, stores, auxiliaries and the access between them),
+    /// estimate: least-squares fit 1.42 to built ships (issue #365). The shaft mass, the engine
+    /// widths and the gas rooms do not take it.
+    pub const ROOM_ALLOWANCE_FACTOR: f64 = 1.4;
     /// Engine room space aft of the engines (A) and the clearance to the forward bulkhead (C) (m),
     /// estimates.
     pub const ENGINE_ROOM_A_M: f64 = 1.0;
@@ -249,13 +256,15 @@ pub fn arrange(
     } else {
         drive_room_m
     };
+    // The room drawn is the drive room or shaft run times the allowance; the shaft itself is `drive`.
+    let drive_room = ROOM_ALLOWANCE_FACTOR * drive;
     let label = if inp.shaft_drive() {
         "SHAFT RUN"
     } else {
         "DRIVE ROOM"
     };
-    zones.push((label.to_string(), x, x + drive));
-    x += drive;
+    zones.push((label.to_string(), x, x + drive_room));
+    x += drive_room;
     let drive_room_x1_m = x;
     let mut shaft_length_m = if inp.shaft_drive() { drive } else { 0.0 };
 
@@ -265,7 +274,7 @@ pub fn arrange(
     let engine_room = |e: &Engine, extra: f64, x: f64| {
         (
             x,
-            x + ENGINE_ROOM_A_M + e.length_m + extra + ENGINE_ROOM_C_M,
+            x + ROOM_ALLOWANCE_FACTOR * (ENGINE_ROOM_A_M + e.length_m + extra + ENGINE_ROOM_C_M),
         )
     };
     match inp.power_source {
