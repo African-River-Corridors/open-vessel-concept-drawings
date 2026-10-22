@@ -25,7 +25,7 @@ def test_cn_ii_benchmark_is_reproduced():
     # Re-pinned again (issue #498: the angle of max GZ alone in the light condition with no ballast is
     # a warning, so the one-wide arrangement is feasible again): 2,021.25 t, one tank wide.
     # Re-pinned again (issue #280: the end space defaults to the type G rule, 0.20 m): 2,033.41 t.
-    assert abs(f.payload_t - 2033.41) < 1.0
+    assert abs(f.payload_t - 2025.30) < 1.0
     assert f.n_tanks_wide == 1
 
 
@@ -96,7 +96,9 @@ def test_payload_never_exceeds_the_draught_cap():
 # to the printed values 1667.1735160692485 and 1691.1903238505604; they were 859 and 1204.
 # Issue #280 (the end space defaults to the type G rule) re-pinned all four to the printed values
 # 1677.3919953648792, 1702.1071766984594, 1900.5758634769286 and 2967.9842015072713.
-SNAPSHOT = [((90, 12.9), 1677), ((90, 14.8), 1702), ((90, 18.0), 1901), ((120, 18.0), 2968)]
+# Issue #381 (the opening setback is measured from the cargo area) re-pinned all four to the printed
+# values 1670.580303723772, 1694.82927479986, 1893.3032219800957 and 2960.8309821262383.
+SNAPSHOT = [((90, 12.9), 1671), ((90, 14.8), 1695), ((90, 18.0), 1893), ((120, 18.0), 2961)]
 
 
 @pytest.mark.parametrize("dims,expected", SNAPSHOT)
@@ -133,7 +135,8 @@ def test_snapshot_120x18_is_two_8m_tanks_abreast():
 # it was 1614.9482417833697.
 # Issue #498 re-pinned (90, 14.8) to the printed value 1614.9482417833697.
 # Issue #280 re-pinned both to the printed values 1624.664228865461 and 2967.9842015072713.
-SNAPSHOT_16 = [((90, 14.8), 1624.664228865461), ((120, 18.0), 2967.9842015072713)]
+# Issue #381 re-pinned both to the printed values 1618.1877295647867 and 2960.8309821262383.
+SNAPSHOT_16 = [((90, 14.8), 1618.1877295647867), ((120, 18.0), 2960.8309821262383)]
 
 
 @pytest.mark.parametrize("dims,expected", SNAPSHOT_16)

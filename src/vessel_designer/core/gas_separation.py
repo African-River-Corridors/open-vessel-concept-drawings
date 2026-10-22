@@ -30,10 +30,12 @@ removed in issue #215. Gas tanks are sized under IGC only; the side clearance is
 WHAT GOVERNS AFT. The A-60 bulkhead carries no width, so on its own it would take no
 length. The binding number is the 2,00 m setback of any openable entrance or window
 (3.3.11) and of the engine-room entrance (3.3.7) from the cargo area. A deckhouse whose
-front bulkhead is flush with the cargo area cannot have a door or a window in it. So the
-DESIGN RULE ADOPTED HERE is a 2,00 m aft separation, built as a 0,60 m cofferdam plus
-1,40 m of service space, which satisfies the bulkhead rule, the cofferdam convention and
-the opening setback at once. Override it if a designer places the openings elsewhere.
+front bulkhead is flush with the cargo area cannot have a door or a window in it. The cargo
+area includes the cofferdam (the aft end space, ADN 1.2.1), so since issue #381 the DESIGN RULE
+ADOPTED HERE is an aft separation of the end space plus the 2,00 m setback: 0,20 m + 2,00 m by
+default, with the service space the 2,00 m from the cargo area to the first opening (0.1.0 took
+the greater of the two, measured from the tank end). Override it if a designer places the
+openings elsewhere.
 
 OPEN: the clause numbers above are the classification-society implementation. Confirm them
 against the ADN text itself before relying on them for a design.

@@ -39,7 +39,7 @@ def test_simulate_reads_numbers_written_as_text(text):
     # Re-pinned (issue #498: the angle of max GZ alone in the light condition is a warning); was
     # 1124.1630064872984.
     # Re-pinned (issue #280: the end space defaults to the type G rule); was 1392.4601578818447.
-    assert out["results"]["cargo_t"] == pytest.approx(1403.5875742592928, rel=1e-9, abs=1e-9)
+    assert out["results"]["cargo_t"] == pytest.approx(1396.169296674328, rel=1e-9, abs=1e-9)
 
 
 def test_simulate_reads_every_number_as_text():
@@ -51,7 +51,7 @@ def test_simulate_reads_every_number_as_text():
     # Re-pinned (issue #498: the angle of max GZ alone in the light condition is a warning); was
     # 1405.8516419707348.
     # Re-pinned (issue #280); was 1763.374037130099.
-    assert out["results"]["cargo_t"] == pytest.approx(1774.5014535075468, rel=1e-9, abs=1e-9)
+    assert out["results"]["cargo_t"] == pytest.approx(1767.0831759225819, rel=1e-9, abs=1e-9)
     out = simulate(dict(BOX, lightship_k_t_per_m3="0.1093"))
     # Re-pinned (#448: the hull's sections give the volume, not the cb input); was 2256.166305 at
     # ce96e66.

@@ -169,6 +169,9 @@ OPTIONAL_INPUT_CASES = (
      {"aft_end_space_m": 0.2}),
     ("fwd_end_space_m", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"fwd_end_space_m": 0.2}),
+    # Where the opening setback is measured from (issue #381), set to the Defaults Profile value.
+    ("opening_setback_basis", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
+     {"opening_setback_basis": "cargo_area"}),
     # The aft block inputs (issue #4, slice 4), set to their defaults in the same way. A self-propelled
     # hull carries the block; the unit counts default by Cargo phase (gas 1 battery and 2
     # accommodation units, dry bulk 2 and 1), so each has a gas and a dry case.

@@ -95,8 +95,8 @@ def test_capacity_takes_whole_tank_counts_in_any_form(wide, long):
     r = B.compute(B.BargeCapacityInputs(loa=100, beam=16, depth=6, cargo_type="LNG",
                                         n_tanks_wide=wide, n_tanks_long=long))
     # Re-pinned (issue #237: the per-tank d(Vc) of IGC 2.4.1.1, dome in Vc); was 1347.0976687711673
-    # (ce96e66) under the stepped IGC_2G. Re-pinned (issue #280); was 1607.3557980997896.
-    assert (r.cargo_capacity_t, r.n_tanks_wide) == (1615.3515323212844, 2)
+    # (ce96e66) under the stepped IGC_2G. Re-pinned (issue #280); was 1607.3557980997896. Re-pinned (issue #381); was 1615.3515323212844.
+    assert (r.cargo_capacity_t, r.n_tanks_wide) == (1610.0210428402877, 2)
 
 
 def test_a_float32_input_computes_to_float32_accuracy():

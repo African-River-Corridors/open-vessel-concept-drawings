@@ -14,12 +14,14 @@ def test_golden_defaults():
         numbers not yet checked against the ADN text)
     """
     r = compute(GasSeparationInputs())
-    assert abs(r.aft_separation_m - 2.00) < 1e-9
+    # Issue #381: the opening setback is measured from the cargo area, so the aft separation is the
+    # end space plus the 2,00 m setback.
+    assert abs(r.aft_separation_m - 2.20) < 1e-9
     # Issue #280: the end space defaults to the type G rule, 0.20 m (was 0.60 aft and 0.50 forward).
     assert abs(r.cofferdam_m - 0.20) < 1e-9
-    assert abs(r.service_space_m - 1.80) < 1e-9
+    assert abs(r.service_space_m - 2.00) < 1e-9
     assert abs(r.fwd_separation_m - 0.20) < 1e-9
-    assert abs(r.total_length_taken_m - 2.20) < 1e-9
+    assert abs(r.total_length_taken_m - 2.40) < 1e-9
     assert r.ok
 
 

@@ -45,7 +45,7 @@ fn golden_defaults() {
     assert_eq!(r.fwd_separation_m, 0.2);
     assert_eq!(r.cofferdam_m, 0.2);
     assert_eq!(r.service_space_m, 2.0);
-    assert_eq!(r.total_length_taken_m, 2.4000000000000004);
+    assert!((r.total_length_taken_m - 2.4).abs() < 1e-12);
     assert!(r.ok());
     assert_eq!(r.warnings, vec![CLAUSE_WARNING]);
     let names: Vec<&str> = r.checks.iter().map(|c| c.name.as_str()).collect();
