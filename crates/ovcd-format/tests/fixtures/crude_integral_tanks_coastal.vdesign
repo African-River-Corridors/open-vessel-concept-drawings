@@ -37,14 +37,6 @@
           "value": "integral_tanks",
           "source": "typed"
         },
-        "block_coefficient": {
-          "value": null,
-          "source": "default"
-        },
-        "midship_coefficient": {
-          "value": 1.0,
-          "source": "default"
-        },
         "bow_rake_length_m": {
           "value": null,
           "source": "default"
@@ -333,6 +325,26 @@
           "value": 200000.0,
           "source": "default"
         },
+        "tank_coating_rate": {
+          "value": 40.0,
+          "source": "default"
+        },
+        "cargo_pump_lump": {
+          "value": 150000.0,
+          "source": "default"
+        },
+        "cargo_piping_lump": {
+          "value": 400000.0,
+          "source": "default"
+        },
+        "cargo_heating_rate_per_kw": {
+          "value": 500.0,
+          "source": "default"
+        },
+        "vents_gauging_lump": {
+          "value": 25000.0,
+          "source": "default"
+        },
         "currency": {
           "value": "USD",
           "source": "default"
@@ -397,7 +409,7 @@
           "source": "default"
         }
       },
-      "results_hash": "e558580258457d522da7e253f9e924aade907f6f2df9640f9ac759a2c4675fc1"
+      "results_hash": "2b2463441ac73fc5a40818323a83cde107ea93525c8eaefcfef169321a8c97dc"
     }
   ],
   "defaults_profile": "built-in"

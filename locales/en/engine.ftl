@@ -119,6 +119,13 @@ check-name-utilisation-reasonable = utilisation reasonable
 check-utilisation-reasonable = volume utilisation { $utilisation } >= floor { $floor }
 warn-journey-draft-bound = Draft-bound: shed { $shed } t of { $capacity } t volume capacity to float at T_max = { $t_max } m (full-load draft { $full_load_draft } m).
 
+## crates/ovcd-core/src/liquid_bulk/cost.rs
+
+check-name-quantities-present = quantities present
+check-tank-quantities-present = cargo tank quantities present
+check-name-tank-items-are-lump-sums = tank items are lump sums
+check-tank-items-are-lump-sums = the cargo tank items are lump sums from the tank layout, not a bill of quantities
+
 ## crates/ovcd-core/src/machinery.rs
 
 warn-machinery-battery-not-sized = The battery energy of the hybrid is not sized yet, so the battery room is not in the stern block.

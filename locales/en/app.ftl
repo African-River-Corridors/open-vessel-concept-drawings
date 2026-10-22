@@ -148,6 +148,7 @@ app-fit = Fit
 app-zoom-fitted = fitted
 app-zoom-zoomed = zoomed
 app-work-in-development = Work in development
+app-cargo-development = { $name } (work in development)
 
 ## Bottom panel
 
@@ -290,7 +291,7 @@ app-stab-limit-downflooding = The 0–40° and 30–40° areas always run to 40�
 
 ## Capital budget view
 
-app-cost-wip = The capital budget is computed for gas cargo only. A dry-bulk budget is work in development.
+app-cost-wip = The capital budget is computed for gas cargo and crude oil only. A dry-bulk budget is work in development.
 app-cost-none = There is no capital budget for this Option, because the hull holds no tank arrangement to cost.
 app-cost-currency = All amounts are in { $currency }.
 app-cost-prices-current = Current estimates.
@@ -311,6 +312,11 @@ app-cost-check-failed = Check failed: { $check }.
 app-cost-note = Note: { $check }.
 app-cost-item-hull-steel = Hull steel
 app-cost-steel-delta = Priced: { $bottom_up } t bottom-up. The lightship uses { $top_down } t top-down, a difference of { $delta } t.
+app-cost-item-tank-coating = Tank coating
+app-cost-item-cargo-pumps = Cargo pumps
+app-cost-item-cargo-piping = Cargo piping
+app-cost-item-cargo-heating = Cargo heating
+app-cost-item-vents-gauging = Vents and gauging
 app-cost-item-type-c-tanks = Type C tanks
 app-cost-item-tank-supports = Tank supports
 app-cost-item-insulation = Insulation

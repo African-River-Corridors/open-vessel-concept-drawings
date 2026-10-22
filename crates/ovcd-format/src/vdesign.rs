@@ -2940,6 +2940,42 @@ pub const INPUTS: &[InputSpec] = &[
         Group::CostRates,
     ),
     spec("delivery_lump", "Delivery", NUM, false, Group::CostRates),
+    // Issue #334: the cargo tank items of a tank barge's budget.
+    only(
+        "tank_coating_rate",
+        "Tank coating rate",
+        NUM,
+        "integral_tanks",
+        Group::CostRates,
+    ),
+    only(
+        "cargo_pump_lump",
+        "Cargo pump",
+        NUM,
+        "integral_tanks",
+        Group::CostRates,
+    ),
+    only(
+        "cargo_piping_lump",
+        "Cargo piping",
+        NUM,
+        "integral_tanks",
+        Group::CostRates,
+    ),
+    only(
+        "cargo_heating_rate_per_kw",
+        "Cargo heating rate",
+        NUM,
+        "integral_tanks",
+        Group::CostRates,
+    ),
+    only(
+        "vents_gauging_lump",
+        "Vents and gauging",
+        NUM,
+        "integral_tanks",
+        Group::CostRates,
+    ),
     // Issue #429: the currency of the rates and the date they are priced at.
     spec("currency", "Currency", TEXT, false, Group::CostRates),
     spec(
