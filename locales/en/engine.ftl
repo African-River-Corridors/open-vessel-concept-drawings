@@ -212,13 +212,6 @@ msg-class-beyond = this length and beam are beyond the largest { $scheme } class
 msg-class-draught-above = `{ $input }` = { $value } is above the draught of class { $class } ({ $limit } m, the top of its range)
 msg-class-clearance-above = `{ $input }` = { $value } is above the lowest bridge clearance of class { $class } ({ $limit } m)
 
-## crates/ovcd-format/src/offsets.rs
-
-msg-offsets-no-table = an offsets Hull Form needs its offsets table (`{ $input }`)
-msg-offsets-bad-row = row { $row } of the offsets table needs the numbers station_x_m, y_m and z_m
-msg-offsets-csv-header = an offsets CSV starts with the header { $header }
-msg-offsets-csv-line = line { $line } of the offsets CSV needs three numbers: station_x_m, y_m, z_m
-
 ## crates/ovcd-format/src/gas_fuel.rs
 
 check-name-cargo-as-fuel = cargo as fuel
@@ -227,6 +220,13 @@ check-cargo-as-fuel-other = only methane (LNG) vapour may fuel an engine in a ma
 check-name-boil-off-within-gas-use = boil-off within gas use
 check-boil-off-within-gas-use = boil-off { $boil } kg/h <= gas use { $used } kg/h at the service speed
 check-boil-off-exceeds-gas-use = boil-off { $boil } kg/h > gas use { $used } kg/h at the service speed: the excess needs reliquefaction, pressure accumulation or thermal oxidation, as venting is not acceptable (IGC Code 7.1.1, 7.1.3)
+
+## crates/ovcd-format/src/offsets.rs
+
+msg-offsets-no-table = an offsets Hull Form needs its offsets table (`{ $input }`)
+msg-offsets-bad-row = row { $row } of the offsets table needs the numbers station_x_m, y_m and z_m
+msg-offsets-csv-header = an offsets CSV starts with the header { $header }
+msg-offsets-csv-line = line { $line } of the offsets CSV needs three numbers: station_x_m, y_m, z_m
 
 ## crates/ovcd-format/src/run.rs
 
