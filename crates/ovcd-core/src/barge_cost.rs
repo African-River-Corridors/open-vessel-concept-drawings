@@ -377,7 +377,7 @@ pub fn compute_for(
     rt: &BargeCostRates,
     tug: bool,
 ) -> Result<BargeCostResult, ComputeError> {
-    let mut barge: Vec<(&'static str, f64)> = alloc::vec![
+    let barge: Vec<(&'static str, f64)> = alloc::vec![
         (
             "hull_steel",
             (inp.hull_steel_t + inp.wing_plate_t + inp.weather_shield_t) * rt.hull_steel_rate,
@@ -390,27 +390,6 @@ pub fn compute_for(
         ("outfitting", inp.outfitting_t * rt.outfitting_rate),
         ("paint_anodes_misc", rt.paint_anodes_misc),
     ];
-    let powering = [
-        ("battery", inp.battery_kwh * rt.battery_rate_per_kwh),
-        ("propulsion", inp.propulsion_kw * rt.propulsion_rate_per_kw),
-        ("wheelhouse_accommodation", rt.wheelhouse_accom_lump),
-    ];
-    let tug: Vec<(&'static str, f64)> = if tug {
-        let mut rows = alloc::vec![("hull_steel", inp.tug_hull_steel_t * rt.hull_steel_rate)];
-        rows.extend(powering);
-        rows.push(("outfitting", rt.tug_outfitting_lump));
-        rows
-    } else {
-        barge.extend(powering);
-        Vec::new()
-    };
-    let barge_values: Vec<f64> = barge.iter().map(|(_, v)| *v).collect();
-    let tug_values: Vec<f64> = tug.iter().map(|(_, v)| *v).collect();
-    let b_sub = py_sum(&barge_values);
-    let t_sub = py_sum(&tug_values);
-    let margin = rt.yard_margin_fraction * (b_sub + t_sub);
-    let total = b_sub + t_sub + margin + rt.delivery_lump;
-
     let checks = alloc::vec![
         Check::new(
             "masses_positive",
@@ -438,6 +417,41 @@ pub fn compute_for(
             "warning",
         ),
     ];
+    assemble(barge, inp, rt, tug, checks)
+}
+
+/// The budget from the barge items of one containment: the part every containment shares. The
+/// powering items (battery, propulsion, wheelhouse and accommodation) are the tug's when there is a
+/// tug and the vessel's own when there is not; the yard margin and the delivery follow. The caller
+/// gives the barge items and the checks of its containment (issue #334).
+pub fn assemble(
+    mut barge: Vec<(&'static str, f64)>,
+    inp: &BargeCostInputs,
+    rt: &BargeCostRates,
+    tug: bool,
+    checks: Vec<Check>,
+) -> Result<BargeCostResult, ComputeError> {
+    let powering = [
+        ("battery", inp.battery_kwh * rt.battery_rate_per_kwh),
+        ("propulsion", inp.propulsion_kw * rt.propulsion_rate_per_kw),
+        ("wheelhouse_accommodation", rt.wheelhouse_accom_lump),
+    ];
+    let tug: Vec<(&'static str, f64)> = if tug {
+        let mut rows = alloc::vec![("hull_steel", inp.tug_hull_steel_t * rt.hull_steel_rate)];
+        rows.extend(powering);
+        rows.push(("outfitting", rt.tug_outfitting_lump));
+        rows
+    } else {
+        barge.extend(powering);
+        Vec::new()
+    };
+    let barge_values: Vec<f64> = barge.iter().map(|(_, v)| *v).collect();
+    let tug_values: Vec<f64> = tug.iter().map(|(_, v)| *v).collect();
+    let b_sub = py_sum(&barge_values);
+    let t_sub = py_sum(&tug_values);
+    let margin = rt.yard_margin_fraction * (b_sub + t_sub);
+    let total = b_sub + t_sub + margin + rt.delivery_lump;
+
     // Python builds these in this order, so the first figure that cannot round is the error.
     let round_all =
         |rows: &[(&'static str, f64)]| -> Result<Vec<(&'static str, PyInt)>, ComputeError> {

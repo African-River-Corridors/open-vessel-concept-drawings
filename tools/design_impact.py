@@ -285,9 +285,6 @@ OPTIONAL_INPUT_CASES = (
      {"currency": "USD"}),
     ("price_base_date", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"price_base_date": None}),
-    # The midship coefficient (issue #425), set to its default: the same results as leaving it out.
-    ("midship_coefficient", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5,
-     {"midship_coefficient": 1.0}),
     # The rules block (issue #274): the Service Area, and the Rule Sets stored with their content
     # hashes. Both are checked, not computed: the results do not move. A stale hash only warns. A base
     # from before them refuses the input and leaves it out.
@@ -332,6 +329,17 @@ OPTIONAL_INPUT_CASES = (
      {"heating_kw_per_m3": 0.3}),
     ("liquid_fill_ratio", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
      {"liquid_fill_ratio": 0.9}),
+    # The cargo tank cost rates (issue #334): they move the capital budget, not the hashed results.
+    ("tank_coating_rate", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"tank_coating_rate": 80.0}),
+    ("cargo_pump_lump", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"cargo_pump_lump": 300000.0}),
+    ("cargo_piping_lump", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"cargo_piping_lump": 800000.0}),
+    ("cargo_heating_rate_per_kw", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"cargo_heating_rate_per_kw": 1000.0}),
+    ("vents_gauging_lump", "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5,
+     {"vents_gauging_lump": 50000.0}),
 )
 
 
@@ -450,6 +458,10 @@ def cases() -> dict[str, dict]:
     # coefficient case: the block coefficient is a result, no longer an input.
     out["sweep hull long bow rake 90x14"] = _inputs(
         "bauxite", "sloped_hopper_hold", "self_propelled", 90.0, 14.0, 4.5, bow_rake_length_m=20.0)
+    # Issue #535: the hull's own midship section sets the blockage in a shallow, narrow channel. It
+    # takes the place of the midship coefficient case: Cm is a result, no longer an input.
+    out["sweep hull midship section in a channel 80x11.4"] = _inputs(
+        "bauxite", "box_hold", "self_propelled", 80.0, 11.4, 4.0, **_DEEP_CHANNEL)
     return out
 
 

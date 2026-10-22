@@ -37,10 +37,6 @@
           "value": "integral_tanks",
           "source": "typed"
         },
-        "midship_coefficient": {
-          "value": 1.0,
-          "source": "default"
-        },
         "bow_rake_length_m": {
           "value": null,
           "source": "default"
@@ -385,6 +381,26 @@
           "value": 200000.0,
           "source": "default"
         },
+        "tank_coating_rate": {
+          "value": 40.0,
+          "source": "default"
+        },
+        "cargo_pump_lump": {
+          "value": 150000.0,
+          "source": "default"
+        },
+        "cargo_piping_lump": {
+          "value": 400000.0,
+          "source": "default"
+        },
+        "cargo_heating_rate_per_kw": {
+          "value": 500.0,
+          "source": "default"
+        },
+        "vents_gauging_lump": {
+          "value": 25000.0,
+          "source": "default"
+        },
         "currency": {
           "value": "USD",
           "source": "default"
@@ -407,6 +423,18 @@
               "id": "is2008-a",
               "version": "1.0.0",
               "hash": "cfab2d1cda90d0cfda8edbf0955082345cd30ef2d102c9840e8d4feab5297e37",
+              "source": "default"
+            },
+            {
+              "id": "es-trin-2025",
+              "version": "1.0.0",
+              "hash": "a37a0c98b24d77e205b4cc04d4803b2de27912ba81232cc695a1984ef8e58d6a",
+              "source": "default"
+            },
+            {
+              "id": "adn-tank",
+              "version": "1.0.0",
+              "hash": "3cb3b601baf2fdb61303681630d79f173bd56dc8ceaa86c24c154487551fe215",
               "source": "default"
             },
             {
