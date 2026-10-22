@@ -4,7 +4,7 @@
 import type { Platform } from "./types";
 
 declare const __OVCD_WEB__: boolean;
-export type { Platform, DrawingFormat, DrawingView } from "./types";
+export type { Platform, DrawingFormat, DrawingView, ModelFormat } from "./types";
 
 let current: Platform | null = null;
 

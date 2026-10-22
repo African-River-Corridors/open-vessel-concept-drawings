@@ -5,6 +5,7 @@ pub mod class_input;
 mod convoy;
 mod cost;
 mod eval;
+pub mod export;
 mod formation;
 pub mod ga;
 mod gas_arrangement;
