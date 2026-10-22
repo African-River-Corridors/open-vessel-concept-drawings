@@ -42,7 +42,7 @@ What OVCD does **not** compute today:
    (`crates/ovcd-format/src/simulate.rs`, line 1095). Label: **Method** (masses), **Fixed in code** (tug).
 2. **How each mass is derived** (`crates/ovcd-core/src/weights.rs`, `calculate_weights`). Label: **Method**,
    with the factors below as **Fixed in code** or **Estimate**:
-   - Hull steel (bottom-up) = plating × structure factor. Plating = Σ (area × thickness × 7.85 t/m³) for
+   - Hull steel (bottom-up) = plating × structure factor (2.3 on a gas barge, an Estimate; see page 02). Plating = Σ (area × thickness × 7.85 t/m³) for
      bottom, side, deck and rakes (lines 51-72).
    - Wing plate = deck-thickness plate over the beam less the tank chord cut-outs in the tank zone, full beam
      outside it, plus any side extension (lines 81-122).
@@ -115,7 +115,7 @@ Id prefix `CB` (cost and budget).
 | CB-A31 | Rounding | Whole currency units, half to even, each figure rounded alone | Method | Python `round()` parity | `barge_cost.rs` lines 401-412 | None (≤ 1 unit per line) |
 | CB-A32 | Contingency, escalation, owner's costs | None | Fixed in code | Not modelled | — | Non-conservative |
 | CB-A33 | Hull steel mass basis | Bottom-up plating × structure factor; the lightship uses top-down steel instead | Method | `weights.rs` lines 166 and 176 | `cost.rs` line 76 | Unknown; the two steel masses differ by `steel_delta` |
-| CB-A34 | Hull structure factor | 1.4 × plating | Fixed in code | `BargeInputs::new` default; not an input on the gas path | `models.rs` line 210; `weights.rs` line 69 | Unknown |
+| CB-A34 | Hull structure factor | 2.3 × plating on a gas barge (issue #401, step 2) | Estimate | `GAS_HULL_STRUCTURE_FACTOR`, fitted to about 0.115 t/m³ of L × B × D against the reference vessel library (designer estimates); `BargeInputs::new` keeps 1.4 for the legacy API; not an input on the gas path | `models.rs` line 210; `weights.rs` line 69 | Unknown |
 | CB-A35 | Plate thicknesses | Bottom 12 mm, side 10 mm, deck 10 mm; rakes the mean of bottom and side | Fixed in code | `BargeInputs::new` default | `models.rs` lines 207-209; `weights.rs` lines 52-63 | Unknown |
 | CB-A36 | Hull steel density | 7.85 t/m³ | Fixed in code | Carbon steel | `models.rs` line 211 | None of note |
 | CB-A37 | Piping and machinery mass | 0.04 × (top-down steel + tank total) | Fixed in code | `BargeInputs::new` default | `models.rs` line 217; `weights.rs` line 170 | Unknown |

@@ -42,8 +42,15 @@ lightship.
    - steel_top_down = 0.10 t/m³ × V_m.
 2. **Bottom-up steel** (Method, all values Fixed in code), `weights.rs:56-149`, `166`. Plating area × thickness ×
    7.85 t/m³, for bottom (12 mm), side (10 mm), deck (10 mm) and rakes (mean of bottom and side). Internal
-   structure = plating × (1.4 − 1). Add the wing plate and the weather shield (6 mm). This figure is reported
+   structure = plating × (2.3 − 1) for a gas barge (issue #401, step 2: see the next paragraph; the legacy API keeps 1.4). Add the wing plate and the weather shield (6 mm). This figure is reported
    (`steel_bottom_up`, `steel_delta`) and goes to the cost masses. It is **not** in the lightship.
+   Step 2 of issue #401 (Estimate): the gas hull's structure factor is 2.3, not 1.4 (`GAS_HULL_STRUCTURE_FACTOR` in
+   `barge_capacity.rs`). It puts the bottom-up steel near 0.115 t/m³ of L × B × D (median over the 107 case
+   designs that have both steel figures; range 0.076 to 0.135), between the top-down rate of 0.10 and the 0.145 that
+   the reference vessel library gives for 92 to 110 m dry bulk and tank vessels (designer estimates, not weighed
+   ships; the sheets differ from their own sums by up to 28 %). A factor this high says that the plate thicknesses
+   (12, 10 and 10 mm) are thin for these hulls: the one number stands for both. It moves the cost (the hull steel
+   line is 64 % higher) and `steel_delta`; the lightship does not change.
 3. **Tank weight** (`tank_total`, `insulation`): see page 04. This page uses the two values as they come.
 4. **Piping and machinery** = 0.04 × (steel_top_down + tank_total), `weights.rs:170` (Fixed in code).
 5. **Outfitting** = 0.035 × (steel_top_down + tank_total), `weights.rs:173` (Fixed in code).
@@ -166,7 +173,7 @@ writes `calibration/factors.yaml`. Held-out cases are left out of the fit.
 | WC-A07 | Tank steel, internals, insulation | From the tank calculation | See page 04 | Page 04 | `weights.rs:75-79` | See page 04 |
 | WC-A08 | Hull steel density | 7.85 t/m³ | Fixed in code | Carbon steel | `models.rs:211`; `weights.rs:49` | Small effect; bottom-up only |
 | WC-A09 | Gas plate thicknesses | bottom 12 mm, side 10 mm, deck 10 mm | Fixed in code | Original engine; no source | `models.rs:207-209`; `weights.rs:52-59` | Bottom-up and cost only |
-| WC-A10 | Gas structure factor | internal structure = plating × (1.4 − 1) | Fixed in code | Original engine; no source | `models.rs:210`; `weights.rs:69` | Bottom-up and cost only |
+| WC-A10 | Gas structure factor | internal structure = plating × (2.3 − 1) | Estimate | Fitted to 0.115 t/m³ of L × B × D (issue #401, step 2); the legacy API keeps 1.4 | `models.rs:210`; `weights.rs:69` | Bottom-up and cost only |
 | WC-A11 | Rake plating thickness | mean of bottom and side thickness | Fixed in code | Original engine | `weights.rs:62-63` | None in the gas branch: the hull has no rakes (`barge_capacity.rs:570`) |
 | WC-A12 | Wing plate | deck thickness × (B − n_wide × chord) × tank zone + B × end zones, plus side extension above D | Method | Original engine | `weights.rs:81-122` | Bottom-up and cost only |
 | WC-A13 | Weather shield | 6 mm; top 1.5 m above tank top; top, sides and ends of the tank zone | Fixed in code | Original engine | `models.rs:185-186`; `weights.rs:124-149` | Bottom-up and cost only |
