@@ -135,6 +135,12 @@ fn truthy_float(p: &Map<String, Value>, key: &str) -> R<Option<f64>> {
 }
 
 /// A number param that may be left out or null (`None`); 0 is a number.
+/// The deck openings of the angle of down-flooding (issue #592); none when the input is null.
+fn openings_of(p: &Map<String, Value>) -> R<Vec<ovcd_core::hydrostatics::Opening>> {
+    crate::openings::openings_of(p.get("downflooding_openings").unwrap_or(&Value::Null))
+        .map_err(|e| Stop::Raised("ValueError".to_string(), e.to_string()))
+}
+
 fn opt_float(p: &Map<String, Value>, key: &str) -> R<Option<f64>> {
     match p.get(key) {
         None | Some(Value::Null) => Ok(None),
@@ -1119,6 +1125,7 @@ fn simulate_measured(
     inp.bow_rake_rise_m = Some(rake_rise);
     inp.hull_shape = hull_shape_of(p)?;
     inp.downflooding_angle_deg = opt_float(p, "downflooding_angle_deg")?;
+    inp.downflooding_openings = openings_of(p)?;
     inp.aft_design = aft_design_of(p)?;
     inp.stern_block_mass = stern_mass_of(p)?;
     inp.stern_geometry = stern.cloned();
@@ -1985,6 +1992,7 @@ fn option_hull(
         stern: stern.cloned(),
         shape: hull_shape_of(p)?,
         downflooding_deg: opt_float(p, "downflooding_angle_deg")?,
+        openings: openings_of(p)?,
     })
     .map_err(|e| Stop::Raised("ValueError".to_string(), format!("{e}")))
 }
@@ -2359,6 +2367,7 @@ fn simulate_gas(
         bow_rake_rise_m: opt_float(p, "bow_rake_rise_m")?,
         hull_shape: hull_shape_of(p)?,
         downflooding_angle_deg: opt_float(p, "downflooding_angle_deg")?,
+        downflooding_openings: openings_of(p)?,
         pushed_stern_void_m: get_or(
             p,
             "pushed_stern_void_m",
@@ -2738,7 +2747,7 @@ fn simulate_gas(
 fn simulate_condition(c: &ovcd_core::gas_stability::Condition) -> Value {
     let full = condition_json(c);
     let pick = |k: &str| full.get(k).cloned().unwrap_or(Value::Null);
-    json!({
+    let mut condition = json!({
         "name": pick("name"),
         "cargo_t": pick("cargo_t"),
         "fill": pick("fill_fraction"),
@@ -2753,7 +2762,13 @@ fn simulate_condition(c: &ovcd_core::gas_stability::Condition) -> Value {
         "deck_edge_deg": pick("deck_edge_deg"),
         "gz": pick("gz"),
         "criteria": pick("criteria"),
-    })
+    });
+    // Issue #592: the angle of down-flooding the criteria were worked with, only where there is
+    // one, so a Design with none keeps its results (and hash).
+    if let Some(a) = c.downflooding_deg {
+        condition["downflooding_deg"] = json!(a);
+    }
+    condition
 }
 
 /// What one `simulate` call came to.
@@ -3143,4 +3158,36 @@ fn is_code_stability_json(
         "limitations": limitations,
         "conditions": conds.iter().map(|c| loaded_condition_json(c, with_weights)).collect::<Vec<_>>(),
     })
+}
+
+// --- Issue #359: what the Formation powering reads of the single-hull resistance ------------------
+
+/// The resistance of an Equivalent Hull and its power curves, by the method of the single hull
+/// (`resistance_of`, `powering_curves`). `Err` is the engine's refusal as text; `None` with no draught.
+pub(crate) fn formation_curves(
+    p: &Map<String, Value>,
+    (l, b, t): (f64, f64, f64),
+    cb: f64,
+    disp: f64,
+    rho: f64,
+) -> Result<Option<Vec<ovcd_core::powering::EnvironmentCurve>>, String> {
+    let stop_text = |s: Stop| match s {
+        Stop::Raised(kind, message) => format!("{kind}: {message}"),
+        Stop::Eval(e) => e.to_string(),
+    };
+    // An Equivalent Hull has no sections: its waterline length is its length, and Am = B x T x Cm.
+    let cm = get_or(
+        p,
+        "midship_coefficient",
+        ovcd_core::confined_water::DEFAULT_MIDSHIP_COEFFICIENT,
+    )
+    .map_err(stop_text)?;
+    let hull = HullAt {
+        cb,
+        lwl: l,
+        midship_m2: b * t * cm,
+    };
+    resistance_of(p, l, b, t, (hull, 0.0), disp, rho)
+        .map(|r| r.map(|r| powering_curves(&r)))
+        .map_err(stop_text)
 }

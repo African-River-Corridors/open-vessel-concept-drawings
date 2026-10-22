@@ -166,7 +166,7 @@ tank centre, a stores item, the fill read as a height fraction). See the triage 
 | IS-A34 | Angle of max GZ | ≥ 25°, integer degree of the global maximum on 0°–60° | Rule (unverified) | Part A 2.2.3 (the alternative criteria clause is not modelled) | `gas_stability.rs:468` | Grid error 1° |
 | IS-A35 | Initial GM | GM fluid ≥ 0.15 m | Rule (unverified) | Part A 2.2.4 | `gas_stability.rs:476` | Matches the text |
 | IS-A36 | Comparison | value ≥ limit, no tolerance | Fixed in code | Spec 0004 keeps it as tolerance 0 | `gas_stability.rs:444`–`:479` | — |
-| IS-A37 | Down-flooding angle | None; areas always run to 40° | Fixed in code | Known limitation, finding #282; limitation line "no downflooding openings" | `gas_stability.rs:627`–`:629`, `:793` | Non-conservative |
+| IS-A37 | Down-flooding angle | Typed (#282), or the heel where the lowest listed deck opening is immersed, per condition (#592); none typed or listed: the areas run to 40° | Method | Part A 2.2.1; the opening is as Part B 2.2.3.5 says; with neither typed nor listed, a known limitation (finding #282) | `gas_stability.rs:627`–`:629`, `:793` | Non-conservative |
 | IS-A38 | Weather criterion (Part A 2.3) | Not evaluated; limitation line "No wind heel" | Fixed in code | Needs the wind heeling lever | `gas_stability.rs:795` | Non-conservative |
 | IS-A39 | Deck-edge angle | atan(2 (D − T)/B), T at mid-length, reported only | Method | Upright box geometry | `box_stability.rs:500` | — |
 | IS-A40 | Area 0–27° | Computed and reported; no criterion | Fixed in code | Left from the removed ADN set (#175) | `gas_stability.rs:626` | None (no use) |

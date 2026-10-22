@@ -1,0 +1,25 @@
+# ATB reference vessels (issue #362, spec 0007 "Formations"): the published particulars the ATB powering
+# is compared with. Values stated by the cited source; barge depth and draught are not stated and are
+# the estimates marked below. The Aurora bollard pull (97 short tons at 4,560 hp) stays out: it is far
+# above every other tug (2.6 t / 100 kW) and probably copied from the Aveogan sheet
+# (docs/research/stern-and-tugs.md, 7.3).
+# The comparison is `crates/ovcd-format/tests/atb_powering.rs`, `the_atb_powering_against_the_reference_vessels`.
+atbs:
+  - name: "Aveogan / Oliver Leavitt (AT-12842)"
+    source: "vessels/crowley-atb-12842-40085 (research note sec. 10)"
+    tug: {length_m: 39.0, beam_m: 12.8, draught_m: 5.64, propulsor: "2 Z-drives, 2.8 m (run as ducted)"}
+    barge: {length_m: 121.9, beam_m: 25.9, depth_m: 7.9}   # depth: estimate
+    installed_power_hp: 6700
+    service_speed_kn: 11
+  - name: "550 Class"
+    source: "vessels/crowley-550-class-atb (research note sec. 10)"
+    tug: {length_m: 37.1, beam_m: 12.8, propulsor: "twin FPP (run as open)"}
+    barge: {length_m: 145.4, beam_m: 22.6, depth_m: 7.0}   # depth: estimate
+    installed_power_hp: 9280
+    service_speed_kn: 12
+  - name: "Kim M. Bouchard"
+    source: "vessels/pm-bouchard-atb-kim-donna (research note sec. 10)"
+    tug: {length_m: 45.7, beam_m: 15.2, propulsor: "twin shaft in nozzles, 3.76 m"}
+    barge: {length_m: 191.4, beam_m: 27.6, depth_m: 9.0}   # beam: estimate (tug beam over 0.55); depth: estimate
+    installed_power_hp: 10000
+    service_speed_kn: 12   # estimate: the sheet gives no speed

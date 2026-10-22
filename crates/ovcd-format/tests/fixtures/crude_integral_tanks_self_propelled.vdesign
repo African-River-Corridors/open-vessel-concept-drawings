@@ -265,6 +265,10 @@
           "value": null,
           "source": "default"
         },
+        "downflooding_openings": {
+          "value": null,
+          "source": "default"
+        },
         "channel_depth_m": {
           "value": null,
           "source": "default"
@@ -463,7 +467,7 @@
           "source": "default"
         }
       },
-      "results_hash": "427440bf3b726ac0194648ef48d16908c2bc7be322b48acbe196ce2023403f85"
+      "results_hash": "1d05163784cc0c83668e16e719462d792f51a8508f8354c642c4c64cbc64f81f"
     }
   ],
   "defaults_profile": "built-in"

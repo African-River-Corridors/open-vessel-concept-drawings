@@ -5,6 +5,7 @@ import type { Evaluation, Schema, Snapshot } from "../api";
 
 export type DrawingView = "side" | "plan" | "midship";
 export type DrawingFormat = "svg" | "pdf" | "dxf";
+export type ModelFormat = "gltf";
 
 export interface Platform {
   /** "tauri" for the desktop app, "web" for the browser build. */
@@ -33,4 +34,6 @@ export interface Platform {
   acceptNotice(): Promise<void>;
   /** Save one drawing view as a file. Resolves false when this platform cannot (the desktop app, for now). */
   exportDrawing(option: string, view: DrawingView, format: DrawingFormat): Promise<boolean>;
+  /** Issue #460: the Option's Vessel Model as a glTF binary, saved as a file. */
+  exportModel(option: string, format: ModelFormat): Promise<boolean>;
 }

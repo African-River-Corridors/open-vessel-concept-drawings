@@ -939,6 +939,12 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::All,
         value: "null",
     },
+    // Issue #592: a file saved before lists no openings.
+    LegacyFixedJson {
+        name: "downflooding_openings",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
     // Issue #429: a file saved before costs in USD, with no price base date.
     LegacyFixedJson {
         name: "currency",
@@ -1403,6 +1409,9 @@ pub enum InputKind {
     ParameterSet,
     /// Issue #446: an offsets table, rows of `station_x_m`, `y_m`, `z_m`, or null.
     OffsetsTable,
+    /// Issue #592: the deck openings of the angle of down-flooding, rows of `x_m`, `y_m`,
+    /// `height_above_deck_m`, or null.
+    OpeningsList,
     /// Issue #429: a text. A `nullable` one takes `null` for "none". `currency` and
     /// `price_base_date` each have their own form (see [`check_text`]).
     Text {
@@ -2784,6 +2793,13 @@ pub const INPUTS: &[InputSpec] = &[
         "downflooding_angle_deg",
         "Angle of down-flooding",
         NUM_OR_NONE,
+        false,
+        Group::LoadingConditions,
+    ),
+    spec(
+        "downflooding_openings",
+        "Openings for down-flooding",
+        InputKind::OpeningsList,
         false,
         Group::LoadingConditions,
     ),
@@ -4625,6 +4641,18 @@ fn check_value(spec: &InputSpec, v: &Value, profile: &Profile) -> Result<(Value,
                 input = input()
             )),
         },
+        InputKind::OpeningsList => match v {
+            Value::Null => Ok((Value::Null, vec![])),
+            Value::Array(rows) if rows.iter().all(crate::openings::is_row) => {
+                Ok((v.clone(), vec![]))
+            }
+            _ => Err(text!(
+                "msg-openings-list",
+                "`{input}` must be a list of openings with `x_m`, `y_m` and `height_above_deck_m` in \
+                 metres, or null",
+                input = input()
+            )),
+        },
         InputKind::Text { nullable } => check_text(name, v, nullable).map(|v| (v, vec![])),
         InputKind::VesselScheme => match v {
             Value::Null => Ok((Value::Null, vec![])),
@@ -4906,6 +4934,28 @@ fn shipd_checks<'a>(
 }
 
 /// Checks across inputs.
+/// Issue #592: the openings of the angle of down-flooding lie within the hull: along its length,
+/// within its breadth, not below the deck.
+fn openings_checks<'a>(
+    get: &dyn Fn(&str) -> Option<&'a Value>,
+    report: &mut Report,
+    at: &dyn Fn(Text) -> Text,
+) {
+    let Some(list) = get("downflooding_openings") else {
+        return;
+    };
+    let Ok(openings) = crate::openings::openings_of(list) else {
+        return;
+    };
+    let dim = |n: &str| get(n).and_then(Value::as_f64);
+    let (Some(l), Some(b)) = (dim("length_overall_m"), dim("beam_m")) else {
+        return;
+    };
+    for m in crate::openings::range_problems(&openings, (l, b)) {
+        report.error_text(at(m), &["downflooding_openings"]);
+    }
+}
+
 fn cross_checks(
     inputs: &[(String, StoredInput)],
     profile: &Profile,
@@ -4982,6 +5032,7 @@ fn cross_checks(
         );
     }
     offsets_checks(&get, report, at);
+    openings_checks(&get, report, at);
     shipd_checks(&get, report, at);
     // A count is a whole number.
     for name in [
@@ -5253,7 +5304,7 @@ pub(crate) fn check_profile_defaults(profile: &Profile) -> Result<(), String> {
 }
 
 /// A number as a message writes it (Rust `{x}`).
-fn number(x: f64) -> Arg {
+pub(crate) fn number(x: f64) -> Arg {
     Arg::num(x, format!("{x}"))
 }
 

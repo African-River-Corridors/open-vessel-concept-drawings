@@ -16,7 +16,8 @@ fn one_metre_head_seas_on_the_example_hull() {
     assert!((r.added_resistance_kn - 8.560418792202103).abs() < 1e-12);
     assert_eq!(r.heading_factor, 1.0);
     assert!((r.bow_waterline_length_m - 17.46).abs() < 1e-12);
-    assert!((r.added_power_kw - 37.43277672365276).abs() < 1e-12);
+    assert!((r.added_power_kw - 37.43280906301265).abs() < 1e-12);
+    // Re-pinned (issue #526); was 37.43277672365276.
     assert!(r.ok());
     assert_eq!(
         r.checks[2].message,

@@ -63,7 +63,8 @@ fn a_gas_design_carries_the_gz_points_of_every_loading_condition() {
 
 #[test]
 fn a_dry_bulk_design_carries_no_stability() {
-    let results = results_of("dry_bulk_box_hold");
+    // Saved in the legacy conditions; a dry bulk design in the IS Code ones does carry it.
+    let results = results_of("dry_bulk_sloped_hopper");
     assert!(results["stability"].is_null());
 }
 
@@ -78,7 +79,7 @@ fn a_gas_design_carries_the_criteria_angles_the_view_marks() {
 
 #[test]
 fn a_dry_bulk_design_has_no_marks() {
-    assert!(results_of("dry_bulk_box_hold")["stability_marks"].is_null());
+    assert!(results_of("dry_bulk_sloped_hopper")["stability_marks"].is_null());
 }
 
 /// The stored hash of each example matches (checked in `results_of`), and no unhashed key changes a

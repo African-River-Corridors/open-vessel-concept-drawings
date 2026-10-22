@@ -219,6 +219,13 @@ check-lock-length = overall length { $length } m <= lock length { $limit } m
 check-name-within-lock-width = within lock width
 check-lock-width = overall beam { $width } m <= lock width { $limit } m
 
+## crates/ovcd-format/src/formation.rs
+
+warn-formation-sizing-not-converged = The pusher sizing did not converge in { $passes } passes (the power moved by more than { $tol } %). The power shown is that of the last pass.
+note-atb-method-unverified = The ATB's resistance is that of its Equivalent Hull (the barge and the tug as one hull, as long as the barge and the tug less the Notch the tug sits in) by the single-hull method, times the Formation resistance allowance. The method is unverified.
+note-formation-method-unverified = The Formation's resistance is that of its Equivalent Hull (the barges and the pusher as one hull) by the single-hull method, times the Formation resistance allowance. The method is unverified.
+note-formation-coupling-force = Coupling force between the pusher and the pushed craft: { $force } kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B { $power } kW, L_S { $ls } m taken as the pusher length, B_S { $bs } m).
+
 ## crates/ovcd-format/src/gas_fuel.rs
 
 check-name-cargo-as-fuel = cargo as fuel
@@ -234,6 +241,13 @@ msg-offsets-no-table = an offsets Hull Form needs its offsets table (`{ $input }
 msg-offsets-bad-row = row { $row } of the offsets table needs the numbers station_x_m, y_m and z_m
 msg-offsets-csv-header = an offsets CSV starts with the header { $header }
 msg-offsets-csv-line = line { $line } of the offsets CSV needs three numbers: station_x_m, y_m, z_m
+
+## crates/ovcd-format/src/openings.rs
+
+msg-openings-bad-row = opening { $row } needs the numbers x_m, y_m and height_above_deck_m
+msg-opening-x = opening { $row }: x_m = { $value } is outside the hull (0 to { $limit } m)
+msg-opening-y = opening { $row }: y_m = { $value } is outside the breadth ({ $limit } m each side)
+msg-opening-height = opening { $row }: height_above_deck_m = { $value } is below the deck
 
 ## crates/ovcd-format/src/run.rs
 
@@ -351,6 +365,7 @@ msg-bool = `{ $input }` must be true or false
 msg-hull-form-not-built = `{ $input }` = { $value } is not built yet: the engine computes raked_box, v_bottom, chine, offsets and shipd for now (spec 0008)
 msg-parameter-set = `{ $input }` must be an object of named numbers, or null
 msg-offsets-table = `{ $input }` must be a list of rows with `station_x_m`, `y_m` and `z_m` in metres, or null
+msg-openings-list = `{ $input }` must be a list of openings with `x_m`, `y_m` and `height_above_deck_m` in metres, or null
 msg-scheme = `{ $input }` = { $value } is not a scheme with a Vessel Class that can define a vessel (see `ovcd schema`)
 msg-class-cannot-define = `{ $input }` = { $value } cannot define a vessel: class { $class } gives no length or beam, or its Formation ({ $formation }) is not one a Design has
 msg-class-unknown = `{ $input }` = { $value } is not a Vessel Class (see `ovcd schema`)

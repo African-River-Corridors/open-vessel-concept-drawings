@@ -7,6 +7,7 @@ use ovcd_core::aft_arrangement::PyException;
 use ovcd_core::pyfmt::round_to;
 use ovcd_core::resistance::{ResistanceInputs, TugInputs, compute, residuary_ratio};
 
+#[track_caller]
 fn close(a: f64, b: f64) {
     assert!((a - b).abs() <= 1e-9 * b.abs().max(1.0), "{a} vs {b}");
 }
@@ -24,7 +25,7 @@ fn the_default_barge_has_three_environments_and_the_river_binds() {
     let binding = r.binding_environment().unwrap();
     assert_eq!(binding.name, "Confined shallow river");
     // Re-pinned (issues #396, #397); was 66.18578807734983.
-    close(r.binding_power_at_service_kw(), 66.60443130757577);
+    close(r.binding_power_at_service_kw(), 66.62353332273348); // Re-pinned (issue #526); was 66.60443130757577.
     assert!(r.ok());
 }
 
@@ -41,7 +42,7 @@ fn service_speed_and_what_governs_it() {
     assert_eq!(sea.squat_limited_speed_knots, None);
     assert_eq!(sea.speed_curve.len(), 21);
     // Re-pinned (issues #396, #397); was 10.827543883575197.
-    close(river.limiting_speed_knots.unwrap(), 3.798949005299152);
+    close(river.limiting_speed_knots.unwrap(), 3.7979721547433143); // Re-pinned (issue #526); was 3.798949005299152.
     assert_eq!(river.service_speed_knots, 2.5);
     assert_eq!(river.service_speed_governed_by, "squat");
     close(river.squat_limited_speed_knots.unwrap(), 3.779296875);
@@ -59,13 +60,13 @@ fn one_speed_point_in_the_river() {
     let p = &r.environments[1].speed_curve[3];
     assert_eq!(p.speed_knots, 3.5);
     assert_eq!(p.speed_through_water_knots, 4.5);
-    close(p.froude_number, 0.06610342521903137);
+    close(p.froude_number, 0.0661204272309043); // Re-pinned (issue #526); was 0.06610342521903137.
     // Re-pinned (issues #396, #397); was 1.1194701507773603.
-    close(p.resistance_shallow_factor, 1.1306399397755689);
+    close(p.resistance_shallow_factor, 1.1307143778418693); // Re-pinned (issue #526); was 1.1306399397755689.
     // Re-pinned (issues #396, #397); was 27.688735115992472.
-    close(p.resistance_total_kn, 27.965006286472686);
+    close(p.resistance_total_kn, 27.97135258441169); // Re-pinned (issue #526); was 27.965006286472686.
     // Re-pinned (issues #396, #397); was 142.43085343666527.
-    close(p.delivered_power_kw, 143.85199233761548);
+    close(p.delivered_power_kw, 143.8970694064735); // Re-pinned (issue #526); was 143.85199233761548.
     close(p.squat_m, 0.5020177291974529);
     assert!(p.squat_limited);
     assert!(p.power_available);
@@ -223,11 +224,11 @@ fn a_supplied_wetted_area_is_used_not_computed() {
     let r = compute(&inp).unwrap();
     assert_eq!(r.wetted_surface_area, 3000.0);
     let p = &r.environments[0].speed_curve[0];
-    close(p.resistance_frictional_kn, 3.3525227670168434);
-    close(p.resistance_total_kn, 3.6877750437185277);
-    close(r.environments[0].power_at_service_kw, 1497.2142889390188);
+    close(p.resistance_frictional_kn, 3.353060408280518); // Re-pinned (issue #526); was 3.3525227670168434.
+    close(p.resistance_total_kn, 3.6883664491085697); // Re-pinned (issue #526); was 3.6877750437185277.
+    close(r.environments[0].power_at_service_kw, 1497.6469210106857); // Re-pinned (issue #526); was 1497.2142889390188.
     // Re-pinned (issues #396, #397); was 43.258685017875706.
-    close(r.environments[1].power_at_service_kw, 43.53230804416717);
+    close(r.environments[1].power_at_service_kw, 43.54479302139443); // Re-pinned (issue #526); was 43.53230804416717.
 }
 
 #[test]
@@ -246,10 +247,10 @@ fn a_channel_can_govern_the_service_speed() {
     // Re-pinned (issues #396, #397) with the wider channel; were 8.4 kn, 8.884025674746445 kn,
     // 0.4896, 65 points and 1522.048057913056 kW.
     assert_eq!(c.service_speed_knots, 5.2);
-    close(c.limiting_speed_knots.unwrap(), 5.501113013453215);
+    close(c.limiting_speed_knots.unwrap(), 5.499698473458753); // Re-pinned (issue #526); was 5.501113013453215.
     close(c.blockage_ratio, 0.26181818181818184);
     assert_eq!(c.speed_curve.len(), 33);
-    close(c.power_at_service_kw, 246.57198379488898);
+    close(c.power_at_service_kw, 246.66201596243954); // Re-pinned (issue #526); was 246.57198379488898.
     assert_eq!(
         r.checks[0].message,
         "Cut: service 5.2 kn <= 0.95 x Schijf limit 5.50 kn"
@@ -265,9 +266,9 @@ fn a_zero_area_channel_is_ok_with_a_failed_blockage_check() {
     assert_eq!(e.service_speed_knots, 2.0);
     close(
         e.speed_curve[0].resistance_shallow_factor,
-        1.0092189211920222,
+        1.0092248501754257, // Re-pinned (issue #526); was 1.0092189211920222.
     );
-    close(e.speed_curve[0].resistance_total_kn, 5.6943116973673265);
+    close(e.speed_curve[0].resistance_total_kn, 5.695258347800304); // Re-pinned (issue #526); was 5.6943116973673265.
     assert_eq!(r.checks[1].name, "blockage_in_range[Zero]");
     assert!(!r.checks[1].ok);
     assert_eq!(
@@ -284,7 +285,7 @@ fn a_channel_exactly_filled_by_the_hull_fails_the_blockage_check() {
     assert_eq!(e.blockage_ratio, 1.0);
     close(
         e.speed_curve[0].resistance_shallow_factor,
-        1.045183224284105,
+        1.0452076559136751, // Re-pinned (issue #526); was 1.045183224284105.
     );
     assert!(!r.checks[1].ok);
     assert_eq!(
@@ -302,16 +303,16 @@ fn the_wave_heading_changes_the_added_resistance() {
     let r = compute(&with_envs(vec![e.clone()])).unwrap();
     let p = &r.environments[0].speed_curve[0];
     // Re-pinned (issues #396, #397); was 30.581921358527396.
-    close(p.resistance_total_kn, 30.582327201001185);
+    close(p.resistance_total_kn, 30.583240090968854); // Re-pinned (issue #526); was 30.582327201001185.
     // Re-pinned (issues #396, #397); was 69.91706820811774.
-    close(p.delivered_power_kw, 69.91799605420003);
+    close(p.delivered_power_kw, 69.9261242573757); // Re-pinned (issue #526); was 69.91799605420003.
     assert_eq!(r.environments[0].service_speed_knots, 11.0);
     e.wave_heading_deg_off_bow = 0.0;
     let head = compute(&with_envs(vec![e])).unwrap();
     // Re-pinned (issues #396, #397); was 38.89178587876913.
     close(
         head.environments[0].speed_curve[0].resistance_total_kn,
-        38.89219172124292,
+        38.89310461121059, // Re-pinned (issue #526); was 38.89219172124292.
     );
 }
 
@@ -327,10 +328,10 @@ fn a_zero_propulsive_efficiency_gives_zero_fuel_and_still_returns() {
     // Python returns normally; fuel and power follow the zero-eta branch.
     let r = compute(&inp).unwrap();
     let p = &r.environments[0].speed_curve[0];
-    close(p.delivered_power_kw, 5.80479393641576);
-    close(p.fuel_litres_per_nm, 0.6697839157402801);
+    close(p.delivered_power_kw, 5.80622646418671); // Re-pinned (issue #526); was 5.80479393641576.
+    close(p.fuel_litres_per_nm, 0.6699492074061588); // Re-pinned (issue #526); was 0.6697839157402801.
     // Re-pinned (issues #396, #397); was 29.783604634807425.
-    close(r.environments[1].power_at_service_kw, 29.971994088409097);
+    close(r.environments[1].power_at_service_kw, 29.980589995230066); // Re-pinned (issue #526); was 29.971994088409097.
 }
 
 #[test]
@@ -345,7 +346,7 @@ fn zero_speed_over_ground_in_a_current_has_zero_fuel_per_mile() {
     let p = &r.environments[0].speed_curve[0];
     assert_eq!(p.speed_knots, 0.0);
     assert_eq!(p.fuel_litres_per_nm, 0.0);
-    close(p.resistance_total_kn, 1.5626058510450285);
+    close(p.resistance_total_kn, 1.562855424134167); // Re-pinned (issue #526); was 1.5626058510450285.
     assert_eq!(r.environments[0].speed_curve.len(), 25);
     assert_eq!(r.environments[0].service_speed_knots, 11.0);
 }
@@ -382,13 +383,13 @@ fn a_laminar_hull_uses_the_ittc_fallback_friction() {
     };
     let r = compute(&inp).unwrap();
     let p = &r.environments[0].speed_curve[0];
-    let want = 4.979645907838903e-08;
+    let want = 4.9805064333322376e-8; // Re-pinned (issue #526); was 4.979645907838903e-08.
     assert!(
         (p.resistance_frictional_kn - want).abs() <= 1e-12,
         "{}",
         p.resistance_frictional_kn
     );
-    close(p.resistance_total_kn, 5.477610498622793e-08);
+    close(p.resistance_total_kn, 5.4785570766654616e-8); // Re-pinned (issue #526); was 5.477610498622793e-08.
     assert_eq!(r.environments[0].service_speed_knots, 3.0);
 }
 
@@ -422,7 +423,7 @@ fn equal_service_speeds_bind_to_the_first_environment() {
     assert_eq!(r.environments[1].service_speed_knots, 4.5);
     assert_eq!(r.binding_environment().unwrap().name, "First");
     // Re-pinned (issues #396, #397); was 142.69389106055436.
-    close(r.binding_power_at_service_kw(), 143.42648336242655);
+    close(r.binding_power_at_service_kw(), 143.46923053279744); // Re-pinned (issue #526); was 143.42648336242655.
 }
 
 // --- Knife edges: the comparison sits exactly on its bound. ---
@@ -430,7 +431,7 @@ fn equal_service_speeds_bind_to_the_first_environment() {
 #[test]
 fn froude_number_exactly_0_2_uses_the_residuary_fit_above_the_bound() {
     let mut e = deep("Fast");
-    e.current_speed_knots = 11.615028223089526;
+    e.current_speed_knots = 11.61152729484097; // Re-pinned (issue #526); was 11.615028223089526.
     let inp = ResistanceInputs {
         speed_min_knots: 2.0,
         speed_max_knots: 2.0,
@@ -441,16 +442,16 @@ fn froude_number_exactly_0_2_uses_the_residuary_fit_above_the_bound() {
     let p = &r.environments[0].speed_curve[0];
     assert_eq!(p.froude_number, 0.2);
     // Re-pinned (issue #399); was 27.529869204463804.
-    close(p.resistance_residuary_kn, 32.86276119841476);
+    close(p.resistance_residuary_kn, 32.8522486102697); // Re-pinned (issue #526); was 32.86276119841476.
     // Re-pinned (issue #399); was 211.06233056755585.
-    close(p.resistance_total_kn, 216.39522256150678);
+    close(p.resistance_total_kn, 216.3259991071046); // Re-pinned (issue #526); was 216.39522256150678.
     assert!(!r.checks[0].ok);
 }
 
 #[test]
 fn depth_froude_number_exactly_0_95_keeps_the_subcritical_factor() {
     let mut e = env("E", 6.5, 300.0, 340.0);
-    e.current_speed_knots = 12.747344562397966;
+    e.current_speed_knots = 12.74355247366163; // Re-pinned (issue #526); was 12.747344562397966.
     let inp = ResistanceInputs {
         speed_min_knots: 2.0,
         speed_max_knots: 2.0,
@@ -464,7 +465,7 @@ fn depth_froude_number_exactly_0_95_keeps_the_subcritical_factor() {
     close(p.resistance_shallow_factor, 6.124961538461538);
     // Re-pinned (issues #396, #397); was 1499.7916759260709.
     // Re-pinned (issue #399); was 1504.3955804159937.
-    close(p.resistance_total_kn, 1542.3339836642363);
+    close(p.resistance_total_kn, 1541.8404333967535); // Re-pinned (issue #526); was 1542.3339836642363.
 }
 
 #[test]
@@ -495,8 +496,8 @@ fn a_dynamic_clearance_exactly_on_the_margin_is_not_squat_limited() {
 #[test]
 fn a_service_speed_exactly_at_95_percent_of_the_limit_passes() {
     // Issue #397: the width that puts 0.95 x the Schijf limit on 5.0 kn (was 17.386400075809654
-    // under the old limit formula).
-    let mut e = env("Cut", 5.0, 93.3280161725555, 113.3280161725555);
+    // under the old limit formula; 93.3280161725555 before issue #526 made g and the knot one value).
+    let mut e = env("Cut", 5.0, 93.36437485725504, 113.36437485725504);
     e.apply_squat_limit = false;
     let inp = ResistanceInputs {
         speed_step_knots: 0.1,
@@ -516,14 +517,14 @@ fn a_service_speed_exactly_at_95_percent_of_the_limit_passes() {
 fn power_exactly_equal_to_the_engine_power_passes() {
     let inp = ResistanceInputs {
         tug: TugInputs {
-            engine_power_kw: 299.1120265395556,
+            engine_power_kw: 299.1861151580319, // Re-pinned (issue #526); was 299.1120265395556.
             ..TugInputs::default()
         },
         ..with_envs(vec![deep("Deep")])
     };
     let r = compute(&inp).unwrap();
     assert_eq!(r.environments[0].service_speed_knots, 6.0);
-    close(r.environments[0].power_at_service_kw, 299.1120265395556);
+    close(r.environments[0].power_at_service_kw, 299.1861151580319);
     assert!(r.checks[0].ok);
     assert!(r.ok());
 }
@@ -548,7 +549,7 @@ fn squat_does_not_apply_at_depth_exactly_zero() {
 fn ittc_friction_is_turbulent_at_reynolds_exactly_1e5() {
     let inp = ResistanceInputs {
         loa: 0.25,
-        lwl: 0.22161741835147747,
+        lwl: 0.22159827213822894, // Re-pinned (issue #526); was 0.22161741835147747.
         beam: 0.1,
         draft: 0.05,
         speed_min_knots: 1.0,
@@ -562,9 +563,9 @@ fn ittc_friction_is_turbulent_at_reynolds_exactly_1e5() {
     };
     let r = compute(&inp).unwrap();
     let p = &r.environments[0].speed_curve[0];
-    assert_eq!(p.resistance_frictional_kn, 4.984536e-05);
+    assert_eq!(p.resistance_frictional_kn, 4.984966666666667e-5); // Re-pinned (issue #526); was 4.984536e-05.
     // Re-pinned (issue #399); was 6.615974179695845e-05.
-    assert_eq!(p.resistance_total_kn, 6.760809550673473e-05);
+    assert_eq!(p.resistance_total_kn, 6.762638571296078e-5); // Re-pinned (issue #526); was 6.760809550673473e-05.
 }
 
 #[test]
@@ -584,7 +585,7 @@ fn the_shallow_water_factor_is_one_when_the_draft_is_zero() {
     let r = compute(&inp).unwrap();
     let p = &r.environments[0].speed_curve[0];
     assert_eq!(p.resistance_shallow_factor, 1.0);
-    assert_eq!(p.resistance_total_kn, 38.784599026937556);
+    assert_eq!(p.resistance_total_kn, 38.791045133259054); // Re-pinned (issue #526); was 38.784599026937556.
 }
 
 // --- Issue #399: the residuary fit is continuous at Fn 0.20. ---

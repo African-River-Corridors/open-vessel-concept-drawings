@@ -295,6 +295,10 @@ pub struct Condition {
     pub area_0_40: f64,
     pub area_30_40: f64,
     pub deck_edge_deg: Option<f64>,
+    /// Issue #592: the angle of down-flooding worked from the Design's openings (the heel where the
+    /// lowest is immersed) in this condition; `None`: none worked (a typed angle is the Option's
+    /// input, not held here).
+    pub downflooding_deg: Option<f64>,
     pub criteria: Vec<Criterion>,
 }
 
@@ -521,6 +525,7 @@ pub(crate) fn failed_condition(draught: f64, kg: f64, failed: Criterion) -> Cond
         area_0_40: 0.0,
         area_30_40: 0.0,
         deck_edge_deg: None,
+        downflooding_deg: None,
         criteria: vec![failed],
     }
 }
@@ -634,20 +639,34 @@ pub(crate) fn hull_condition(
     heel0: Option<&crate::sections::Equilibrium>,
     gz_worked: Option<Vec<(i32, f64)>>,
 ) -> Result<Condition, PyError> {
-    let gz = match gz_worked.map_or_else(
-        || {
-            hull.gz_from(
-                mass_t,
-                g,
-                free_surface_m * mass_t,
-                density,
-                ANGLES_DEG,
-                heel0,
-            )
-        },
-        Ok,
-    ) {
-        Ok(gz) => gz,
+    // Issue #592: with no angle typed and openings listed, the angle is where the lowest opening
+    // is immersed at this condition's own equilibrium. A typed angle wins.
+    let typed = hull.spec.downflooding_deg;
+    let worked = if let Some(gz) = gz_worked {
+        // A trial worked by the screen (issue #567) has no openings: the screen is off for them.
+        Ok((gz, None))
+    } else if typed.is_none() && !hull.spec.openings.is_empty() {
+        hull.gz_with_downflooding(
+            mass_t,
+            g,
+            free_surface_m * mass_t,
+            density,
+            ANGLES_DEG,
+            heel0,
+        )
+    } else {
+        hull.gz_from(
+            mass_t,
+            g,
+            free_surface_m * mass_t,
+            density,
+            ANGLES_DEG,
+            heel0,
+        )
+        .map(|gz| (gz, None))
+    };
+    let (gz, computed) = match worked {
+        Ok(w) => w,
         // At some heel the free-trim float finds no balance (G above the longitudinal
         // metacentre): the condition fails, with no curve.
         Err(crate::sections::SectionsError::TrimOutOfRange) => {
@@ -661,7 +680,7 @@ pub(crate) fn hull_condition(
     };
     let (b, d) = (hull.spec.beam, hull.spec.depth);
     let deck_edge = degrees(libm::atan(div(2.0 * (d - draught), b)?));
-    condition_from_curve(
+    let mut c = condition_from_curve(
         gz,
         draught,
         g.kg_m,
@@ -669,8 +688,11 @@ pub(crate) fn hull_condition(
         free_surface_m,
         Some(deck_edge),
         criteria_set,
-        hull.spec.downflooding_deg,
-    )
+        typed.or(computed),
+    )?;
+    // The field holds the worked angle only: a typed one is the Option's input (issue #592).
+    c.downflooding_deg = computed;
+    Ok(c)
 }
 
 /// One condition from its GZ curve (issue #448): the areas, the angle of maximum GZ and the criteria
@@ -724,6 +746,7 @@ pub(crate) fn condition_from_curve(
         area_0_40,
         area_30_40,
         deck_edge_deg,
+        downflooding_deg,
         gz,
         criteria: Vec::new(),
     };
@@ -794,6 +817,7 @@ mod screen_tests {
                         stern: None,
                         shape: HullShape::default(),
                         downflooding_deg: angle,
+                        openings: Vec::new(),
                     })
                     .unwrap();
                     for fill in [0.3, 0.55, 0.7] {

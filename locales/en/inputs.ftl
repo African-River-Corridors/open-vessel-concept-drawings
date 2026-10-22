@@ -453,6 +453,8 @@ input-lock-width-m = Lock width
 
 input-downflooding-angle-deg = Angle of down-flooding
 
+input-downflooding-openings = Openings for down-flooding
+
 input-channel-depth-m = Channel depth
 
 input-channel-under-keel-clearance-m = Under-keel clearance

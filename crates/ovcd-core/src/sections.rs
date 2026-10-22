@@ -1189,3 +1189,74 @@ pub fn gz_at(
     };
     Ok(lever - fsc * sin(radians(heel)))
 }
+
+/// An opening through which the hull may flood, as a point in hull axes: x from the aft end, y
+/// across from the centre line (either side), z above the base line (m).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct OpeningPoint {
+    pub x_m: f64,
+    pub y_m: f64,
+    pub z_m: f64,
+}
+
+/// A GZ curve and the waterplane of the equilibrium at each of its heels.
+pub type GzWithPlanes = (Vec<(i32, f64)>, Vec<(i32, Waterplane)>);
+
+/// The GZ at each of `angles` and the waterplane of the equilibrium there: what [`gz_curve`] gives,
+/// with the floating position the angle of down-flooding needs.
+pub fn gz_curve_with_planes(
+    table: &SectionsTable,
+    mass_t: f64,
+    g: Gravity,
+    free_surface_moment_tm: f64,
+    density: f64,
+    angles: impl IntoIterator<Item = i32>,
+    heel0: Option<&Equilibrium>,
+) -> Result<GzWithPlanes, SectionsError> {
+    let fsc = free_surface_moment_tm / mass_t;
+    let (mut gz, mut planes) = (Vec::new(), Vec::new());
+    for deg in angles {
+        let heel = f64::from(deg);
+        let eq = match heel0 {
+            Some(eq) if deg == 0 => *eq,
+            _ => equilibrium(table, mass_t, g, heel, density)?,
+        };
+        gz.push((deg, righting_lever(&eq, g) - fsc * sin(radians(heel))));
+        planes.push((deg, eq.waterplane));
+    }
+    Ok((gz, planes))
+}
+
+/// The heel (degrees, to the side the opening is on) at which the lowest of `openings` is first
+/// immersed, from the waterplanes of the equilibria at whole degrees in ascending order: linear
+/// between the two degrees either side of the crossing. `Some(0.0)` when one is immersed upright;
+/// `None` when none is immersed within the planes, or there is no opening. An opening off the
+/// centre line counts on its own side: the hull is symmetric, so the mirror point stands for it.
+pub fn opening_immersion_deg(
+    planes: &[(i32, Waterplane)],
+    openings: &[OpeningPoint],
+) -> Option<f64> {
+    let depth = |wp: &Waterplane| {
+        let fr = Frame::new(wp);
+        openings
+            .iter()
+            .flat_map(|o| [(o.y_m.abs(), o.z_m), (-o.y_m.abs(), o.z_m)].map(|p| fr.f(o.x_m, p)))
+            .fold(f64::INFINITY, f64::min)
+    };
+    let mut prev: Option<(f64, f64)> = None;
+    for (deg, wp) in planes {
+        let v = depth(wp);
+        if !v.is_finite() {
+            return None;
+        }
+        let d = f64::from(*deg);
+        if v < 0.0 {
+            return Some(match prev {
+                Some((pd, pv)) => pd + (d - pd) * pv / (pv - v),
+                None => d,
+            });
+        }
+        prev = Some((d, v));
+    }
+    None
+}

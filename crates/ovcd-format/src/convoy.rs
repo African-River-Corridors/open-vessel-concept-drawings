@@ -73,6 +73,51 @@ pub(crate) fn add_totals(abreast: u64, in_line: u64, v: &mut Value) {
     }
 }
 
+/// Make the `cost` block of a pushed convoy the budget of every barge (issue #552). The block the
+/// budget gives is one barge with its tug. The barge items and their subtotal are multiplied by the
+/// number of barges; the tug stays as it is, one tug for the whole convoy (the pusher joins with #359);
+/// the yard margin is the same fraction of the new subtotals (worked out from the rounded subtotals, so it can differ by a unit from a figure worked out from the unrounded ones); the delivery stays one lump. The block of
+/// one barge is kept beside it as `one_barge`, so a reader can see the basis. A budget that is `null`
+/// stays `null`. `barges` is the count.
+pub(crate) fn scale_cost(barges: u64, cost: &mut Value) {
+    if !cost.is_object() {
+        return;
+    }
+    let one_barge = cost.clone();
+    // One barge is the budget as it is: no figure is worked out again, so none is rounded again.
+    if barges <= 1 {
+        cost["barges"] = json!(barges);
+        cost["one_barge"] = one_barge;
+        return;
+    }
+    let n = barges as f64;
+    let whole = |v: &Value| v.as_f64();
+    let (Some(barge_sub), Some(tug_sub), Some(fraction), Some(delivery)) = (
+        whole(&cost["barge_subtotal"]),
+        whole(&cost["tug_subtotal"]),
+        whole(&cost["yard_margin_fraction"]),
+        whole(&cost["delivery"]),
+    ) else {
+        return;
+    };
+    let scaled_sub = barge_sub * n;
+    // The core's own rounding: Python's round, half to even, to a whole amount.
+    let margin = (fraction * (scaled_sub + tug_sub)).round_ties_even();
+    let total = scaled_sub + tug_sub + margin + delivery;
+    if let Some(items) = cost["barge"].as_array_mut() {
+        for item in items {
+            if let Some(a) = item["amount"].as_f64() {
+                item["amount"] = json!((a * n) as i64);
+            }
+        }
+    }
+    cost["barge_subtotal"] = json!(scaled_sub as i64);
+    cost["yard_margin"] = json!(margin as i64);
+    cost["unit_total"] = json!(total as i64);
+    cost["barges"] = json!(barges);
+    cost["one_barge"] = one_barge;
+}
+
 /// The Waterway Limit checks of the lock, on the overall size of the Formation: a self-propelled
 /// hull and a pushed barge are one hull; a pushed convoy is `abreast` x `in_line` barges. An ATB or
 /// a tow is not checked yet. Nothing is added when the Option gives no lock.

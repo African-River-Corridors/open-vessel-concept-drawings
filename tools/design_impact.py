@@ -511,6 +511,12 @@ def cases() -> dict[str, dict]:
     # runs the same Formation as a barge without it: the case shows as changed.
     out["sweep atb notch 100x20"] = _inputs(
         "bauxite", "box_hold", "atb", 100.0, 20.0, 6.0)
+    # Issue #592: the angle of down-flooding worked from a deck opening at the side, amidships: a
+    # gas Design whose opening immerses before 40 degrees in some condition. A base from before the
+    # input refuses it: the case shows as new.
+    out["sweep downflooding opening gas 90x11.4"] = _inputs(
+        "LNG", "type_c_tanks", "self_propelled", 90.0, 11.4, 5.0,
+        downflooding_openings=[{"x_m": 45.0, "y_m": 5.7, "height_above_deck_m": 0.0}])
     # Issue #451: an offsets hull, a raked barge typed as four stations. A base from before the
     # offsets Hull Form refuses it: the case shows as new.
     rows = [{"station_x_m": x, "y_m": y, "z_m": z}

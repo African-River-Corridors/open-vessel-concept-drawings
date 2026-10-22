@@ -143,3 +143,80 @@ fn the_overall_size_is_checked_against_the_lock() {
         "name-check-lock-width"
     );
 }
+
+/// The results of a crude oil tank barge fixture run as a pushed convoy of `abreast` x `in_line`.
+fn crude_convoy(abreast: u64, in_line: u64) -> Value {
+    let mut f: Value = serde_json::from_str(&raw("crude_integral_tanks_pushed")).unwrap();
+    f["options"][0]["inputs"]["formation"] = json!({
+        "value": { "kind": "pushed_convoy", "abreast": abreast, "in_line": in_line },
+        "source": "typed",
+    });
+    let (session, _) = DesignSession::open(&f.to_string(), Profile::built_in()).unwrap();
+    match session.evaluate().options[0].outcome.as_ref().unwrap() {
+        RunOutcome::Results { results, .. } => results.clone(),
+        other => panic!("{other:?}"),
+    }
+}
+
+/// Issue #552. Label: property: the budget of a 2 x 3 convoy is that of six barges and one tug, and
+/// the budget of one barge is still given.
+#[test]
+fn a_two_by_three_convoys_budget_is_six_barges_and_one_tug() {
+    let r = crude_convoy(2, 3);
+    let one = crude_convoy(1, 1);
+    let (c, o) = (&r["cost"], &one["cost"]);
+    assert!(c.is_object(), "the crude oil convoy has a budget");
+    assert_eq!(c["barges"], 6);
+    // The barge items and their subtotal are six times one barge's.
+    assert_eq!(
+        num(c, &["barge_subtotal"]),
+        6.0 * num(o, &["barge_subtotal"])
+    );
+    let (items, one_items) = (
+        c["barge"].as_array().unwrap(),
+        o["barge"].as_array().unwrap(),
+    );
+    assert_eq!(items.len(), one_items.len());
+    for (a, b) in items.iter().zip(one_items) {
+        assert_eq!(a["item"], b["item"]);
+        assert_eq!(
+            num(a, &["amount"]),
+            6.0 * num(b, &["amount"]),
+            "{}",
+            a["item"]
+        );
+    }
+    // One tug for the convoy, and the margin and the total follow from the new subtotals.
+    assert_eq!(c["tug"], o["tug"]);
+    assert_eq!(c["tug_subtotal"], o["tug_subtotal"]);
+    let margin = (num(c, &["yard_margin_fraction"])
+        * (num(c, &["barge_subtotal"]) + num(c, &["tug_subtotal"])))
+    .round_ties_even();
+    assert_eq!(num(c, &["yard_margin"]), margin);
+    assert_eq!(
+        num(c, &["unit_total"]),
+        num(c, &["barge_subtotal"]) + num(c, &["tug_subtotal"]) + margin + num(c, &["delivery"])
+    );
+    // The cost of one barge is kept, as the budget of a convoy of one barge gives it.
+    assert_eq!(c["one_barge"]["barge_subtotal"], o["barge_subtotal"]);
+    assert_eq!(c["one_barge"]["unit_total"], o["unit_total"]);
+    // A convoy of one barge is that barge's budget.
+    assert_eq!(o["barges"], 1);
+    assert_eq!(o["unit_total"], o["one_barge"]["unit_total"]);
+}
+
+/// Issue #552. Label: property: a pushed barge, which is no convoy, keeps its budget as it was.
+#[test]
+fn a_pushed_barge_has_no_convoy_budget_keys() {
+    let mut f: Value = serde_json::from_str(&raw("crude_integral_tanks_pushed")).unwrap();
+    let (session, _) = DesignSession::open(&f.to_string(), Profile::built_in()).unwrap();
+    f["x"] = Value::Null;
+    match session.evaluate().options[0].outcome.as_ref().unwrap() {
+        RunOutcome::Results { results, .. } => {
+            assert!(results["cost"].is_object());
+            assert!(results["cost"].get("one_barge").is_none());
+            assert!(results["cost"].get("barges").is_none());
+        }
+        other => panic!("{other:?}"),
+    }
+}

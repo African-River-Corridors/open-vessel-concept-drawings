@@ -100,7 +100,7 @@ def test_property_added_power_is_resistance_times_speed():
     """Label: property
     """
     r = compute(WaveResistanceInputs(significant_wave_height_m=1.2, **SEA))
-    assert abs(r.added_power_kw - r.added_resistance_kn * 8.5 * 0.514444) < 1e-9
+    assert abs(r.added_power_kw - r.added_resistance_kn * 8.5 * (1852 / 3600)) < 1e-9
 
 
 # --- feasibility: the validity limits must fire -----------------------------------------
