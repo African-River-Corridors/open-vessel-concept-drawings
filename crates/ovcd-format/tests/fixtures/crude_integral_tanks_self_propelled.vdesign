@@ -410,6 +410,18 @@
               "source": "default"
             },
             {
+              "id": "es-trin-2025",
+              "version": "1.0.0",
+              "hash": "a37a0c98b24d77e205b4cc04d4803b2de27912ba81232cc695a1984ef8e58d6a",
+              "source": "default"
+            },
+            {
+              "id": "adn-tank",
+              "version": "1.0.0",
+              "hash": "3cb3b601baf2fdb61303681630d79f173bd56dc8ceaa86c24c154487551fe215",
+              "source": "default"
+            },
+            {
               "id": "ovcd",
               "version": "2.1.0",
               "hash": "7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96",
