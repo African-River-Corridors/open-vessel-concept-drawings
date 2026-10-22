@@ -5,7 +5,7 @@
 <!-- design-impact -->
 ### ticket/526-one-g-knot (2026-10-22)
 
-Between `main 5febb90` and `this branch 4ed3e6d`.
+Between `main f9f99bb` and `this branch 981dde7`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -49,4 +49,4 @@ Between `main 5febb90` and `this branch 4ed3e6d`.
 | sweep optional hull_offsets | `loading_conditions.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
 | sweep optional hull_offsets | `stability.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
 | sweep optional inner_bottom_plate_mm | `loading_conditions.conditions[1].gz[57][1]` | 0.00114481196123 | 0.00114364597197 | -0.102 % |
-| ... | 108276 more changed quantities | | | |
+| ... | 108802 more changed quantities | | | |
