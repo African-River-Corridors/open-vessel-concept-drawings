@@ -196,7 +196,7 @@ def test_the_freshness_check_fails_on_a_stale_copy(tmp_path, capsys):
         assert name in _stale_files(fresh, old), name
 
 
-def test_every_web_source_has_a_checksum_or_says_why_not():
+def test_every_web_source_records_whether_its_checksum_was_achieved():
     """Label: property
     """
     import re
@@ -207,4 +207,4 @@ def test_every_web_source_has_a_checksum_or_says_why_not():
             assert re.fullmatch(r"[0-9a-f]{64}", s["sha256"]), s["id"]
             assert s.get("retrieved"), s["id"]
         else:
-            assert s.get("checksum_note"), s["id"]
+            assert s.get("checksum_attempted") and s.get("checksum_failed"), s["id"]

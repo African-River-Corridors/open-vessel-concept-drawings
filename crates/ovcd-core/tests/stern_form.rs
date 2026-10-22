@@ -12,7 +12,7 @@
 //! Label: sourced - spec 0007 "Stern geometry" (Heuser in Rotteveel 2019 sec. 2.3.1; MAN d/D below about 0.65); closed form, transom; the strip integrals, the pram chord error B h L / 6 n² and the tunnel chord deficit (r²/2)(2a0 − K sin(2a0/K)) are worked here.
 
 use ovcd_core::hull::HullGeometry;
-use ovcd_core::hull::hull_form::{HullFormInputs, HullFormKind, generate};
+use ovcd_core::hull::hull_form::{HullFormInputs, HullFormKind, HullShape, generate};
 use ovcd_core::sections::{SectionsTable, upright};
 use ovcd_core::stern_form::{
     HullDims, RUN_INTERVALS, SternForm, SternFormInputs, SternGeometry, TUNNEL_CHORDS, apply,
@@ -254,6 +254,7 @@ fn square_stern_table() -> SectionsTable {
             stern_rake_length_m: 0.0,
             stern_rake_rise_m: 0.0,
         },
+        shape: HullShape::default(),
     })
     .unwrap()
 }

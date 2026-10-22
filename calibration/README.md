@@ -32,10 +32,15 @@ A case whose figures disagree is `low` or is excluded from a fit with its reason
 
 ## Web source checksums
 
-Each entry of `web_sources` in `sources.yaml` carries `retrieved` (the date the page was fetched again) and
-`sha256` (of the bytes served). A page that has changed since gives a different hash, so the entry shows it. An
-entry with no `sha256` has a `checksum_note` that says why. On 2026-10-22, 107 of 110 pages were fetched; the
-other three could not be, and are listed in their entries.
+A checksum of each web source must be **attempted**. It need not succeed. Each entry of `web_sources` in
+`sources.yaml` records which happened:
+
+- **achieved:** `retrieved` (the date the page was fetched) and `sha256` (of the bytes served). A page that has
+  changed since gives a different hash, so the entry shows it.
+- **not achieved:** `checksum_attempted` (the date) and `checksum_failed` (the reason).
+
+A missing checksum raises no warning and fails no gate. On 2026-10-22, 107 of 110 pages were fetched; the other
+three (S14, K10, P1) have the second form.
 
 ## Held-out cases (issue #3)
 

@@ -42,8 +42,10 @@ There is one hull model: the **Sections Table** (ADR 0012, spec 0008). Every hyd
    `crates/ovcd-format/src/eval.rs`). The hull is the **raked box** of `hull.rs`, with flat-bottom rakes at bow and
    stern. It is turned into sections (`RakedBox::sections`, `hull.rs:433`) before any integration. Label: Method.
 
-The Sections Table holds offsets at stations. The other Hull Form inputs of spec 0008 (bilge radius, sheer, camber,
-deadrise, keel half-width, chine) are inputs only. No hull uses them yet (#449, #450).
+The Sections Table holds offsets at stations. The bilge radius (16 chords per quarter circle), sheer (a parabola, 0 at
+mid-length, with 8 more stations on each sheered half) and camber (a parabola, 16 chords on each half) shape it
+(#449); all three default to 0. The other Hull Form inputs of spec 0008 (deadrise, keel half-width, chine) are inputs
+only. No hull uses them yet (#450).
 
 Two parts of the engine still use a box `L × B × D` with no rakes: the weights (`barge_capacity.rs:776`, area 02)
 and the resistance wetted surface (Step 6). They can disagree a little with the sections.
@@ -193,7 +195,7 @@ The resistance wetted surface stays box-based: `(L_WL B + 2 L_WL T) × 1.02`, pl
 | Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
 |---|---|---|---|---|---|---|
 | HF-A01 | Length for hydrostatics | The sections run over the length overall `L`. `Cb`, squat `Lpp` and resistance `Lwl` take the waterline length `L_WL` at the draught | Method | Spec 0008; ES-TRIN 2025/1 Art. 1.01, 4.9 for `Cb` | `hydrostatics.rs:328-354`; `simulate.rs:365`, `:1651-1668` | Small. The weights still use `L` (area 02) |
-| HF-A02 | Section shape | Rectangle of width `B`, vertical sides, flat bottom, square bilge; less the bow rake and the Stern Form cuts | Fixed in code | Concept barge form; spec 0008 | `hydrostatics.rs:328-354`; `hull.rs` `RakedBox::sections` (433) | Small for box barges. No bilge radius, sheer or camber yet (#449): unknown for shaped hulls |
+| HF-A02 | Section shape | Rectangle of width `B`, vertical sides, flat bottom, square bilge; less the bow rake and the Stern Form cuts | Fixed in code | Concept barge form; spec 0008 | `hydrostatics.rs:328-354`; `hull.rs` `RakedBox::sections` (433) | Small for box barges. A bilge radius, sheer and camber are inputs (#449), 0 by default: unknown for a shaped hull left at 0 |
 | HF-A03 | Default Moulded Depth | `D = round(r × B, 1 mm)`, `r` by Cargo group | Estimate | `depth_to_beam_ratio` basis; `catalogue/depth_rule.md` | `vdesign.rs` `depth_default` (2478) | Unknown. Rule minus published depth runs from −50 % to +47 % on the reference vessels |
 | HF-A04 | D/B, dry bulk and container | 0.33 | Estimate | Midpoint of reference vessels, stated as 0.22 to 0.44 | profile `depth_to_beam_ratio.default_by_cargo_group` | Unknown; 20 inland vessels span 0.22 to 0.49 |
 | HF-A05 | D/B, liquid | 0.30 | Estimate | Stated as 0.22 to 0.38; no Cargo uses it | profile | None today |
@@ -282,12 +284,12 @@ The resistance wetted surface stays box-based: `(L_WL B + 2 L_WL T) × 1.02`, pl
 
 `block_coefficient` is no longer an input (#448). A file that stores it is read with the value dropped, and one
 warning per Option. The coefficients Cb, Cm, Cp and Cwp are results. The stern rake of a pushed barge is not an
-input. The bilge radius, sheer, camber and the V-bottom and chine values are inputs, but no hull uses them yet.
+input. The V-bottom and chine values are inputs, but no hull uses them yet.
 
 ## Limits and known findings
 
-- The Sections Table holds only the raked box and the Stern Form. It has no bilge radius, sheer or camber (#449),
-  and no V-bottom or chine (#450).
+- The Sections Table holds the raked box, the Stern Form, and a bilge radius, sheer and camber (#449, all 0 by
+  default). It has no V-bottom or chine (#450). The freeboard is read at mid-length, where the sheer is 0.
 - The weights and the resistance wetted surface still use a box (`barge_capacity.rs:776`, `resistance.rs:345-349`).
   They can disagree a little with the sections until a later ticket.
 - Free trim needs the mass items along the hull. A dry bulk hull without a stern block floats level. The gas

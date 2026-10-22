@@ -128,7 +128,7 @@ tank centre, a stores item, the fill read as a height fraction). See the triage 
 | Id | Item | Value or method | Label | Source or basis | Where applied | If it is wrong |
 |---|---|---|---|---|---|---|
 | IS-A01 | Heel angle grid | 0° to 60°, 1° step | Fixed in code | Port of the original engine | `gas_stability.rs:28` `ANGLES_DEG` | Unknown: a curve with its peak or vanishing angle above 60° is cut |
-| IS-A02 | Section for GZ | The hull's Sections Table: raked bow and Stern Form, closed at the deck; free trim at every heel | Method | Spec 0008; constant-displacement free-heel, free-trim calculation | `hull_condition`, `box_stability.rs:476`; `sections::gz_curve`, `sections.rs:976` | Unknown: no reserve buoyancy from sheer, coaming or domes (conservative); no bilge radius (#449) |
+| IS-A02 | Section for GZ | The hull's Sections Table: raked bow and Stern Form, closed at the deck; free trim at every heel | Method | Spec 0008; constant-displacement free-heel, free-trim calculation | `hull_condition`, `box_stability.rs:476`; `sections::gz_curve`, `sections.rs:976` | Unknown: no reserve buoyancy from coaming or domes (conservative); sheer, camber and bilge radius only when set (#449) |
 | IS-A03 | Heeled waterline | Illinois secant method: 16 steps on the volume, 12 steps on the trim, no early stop | Method | Free-floating equilibrium at each heel | `sections.rs:757-762`, `:891-951` | Small (numerical) |
 | IS-A04 | Submerged shape | Each section clipped (Sutherland–Hodgman), shoelace area and moments; Simpson's rule along the length | Method | Standard polygon geometry | `sections::immersed`, `sections.rs:645` | Small (numerical) |
 | IS-A05 | Draught | From the sections: at free trim (mid-length) with LCG data, else level | Method | Hull hydrostatics (area 01) | `gas_stability.rs:326-385`; `loading_conditions.rs:448-506` | Small for the modelled shape |
@@ -209,7 +209,8 @@ Form) reaches it through the sections (area 01). `block_coefficient` is no longe
 - **Loading conditions.** Three conditions with no consumables or ballast. Part A 2.1.1 points to the standard
   conditions of Part B 3.4; IGC 2.2.2 adds loading and unloading stages.
 - **Hull shape.** The GZ comes from the hull's sections at free trim (#448). The sections hold the raked bow and
-  the Stern Form only: no bilge radius, sheer or camber (#449), and no buoyancy above the deck (coamings, domes).
+  the Stern Form, and the bilge radius, sheer and camber when set (#449, 0 by default). No buoyancy above the deck
+  (coamings, domes).
 - **Trim limit.** The free-trim search stays within ±10°. A condition that needs more fails, with no curve.
 - **Speed.** A GZ curve on a tunnel stern takes about 200 ms natively. OVCD builds curves only where a criterion
   needs them.

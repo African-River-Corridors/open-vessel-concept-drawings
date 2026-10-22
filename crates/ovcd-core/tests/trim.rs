@@ -53,6 +53,7 @@ fn no_trim_when_g_is_over_b_and_a_heavy_stern_trims_by_the_stern() {
         bow_rake_length_m: 0.0,
         bow_rake_rise_m: 5.0,
         stern: None,
+        shape: Default::default(),
     })
     .unwrap();
     let u = hull.upright(3.0, 1.0).unwrap();
