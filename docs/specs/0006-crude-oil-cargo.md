@@ -69,7 +69,7 @@ their own group and note, so the liquid inputs are `liquid_tanks_in_line` and `l
 |---|---|---|
 | `double_side_m` | the governing Rule's minimum for the Option (`sizes: true`) | Rule Sets in §5 |
 | `double_bottom_m` | same | same |
-| `liquid_tanks_in_line` | the smallest count that meets the tank volume and length limits (4 until `fit` works it out) | same |
+| `liquid_tanks_in_line` | the smallest count that meets the tank volume and length limits (the profile default is 4; `fit` works out the count for a hull, issue #340) | same |
 | `centreline_bulkhead` | on when a tank would be wider than 0.70 B | ADN 9.3.x.13, BV NR217 (02 §8.5) |
 | `cofferdam_m` | 0.60 | ADN 9.3.x.11.3 |
 | `pump_arrangement` | `deepwell` (one pump per tank) | 03 §2.3; works for UN 1267 and 3494 |
@@ -181,7 +181,7 @@ Filed as #328 to #342, in the order of this table (ticket n = #327 + n). "None" 
 | 10 | Measures of §5.3 | none | #269, 3 |
 | 11 | Rule Sets `adn-tank`, `marpol-i`, `icll-type-a` 1.0.0, `unverified`, as `warn`; harness boundary cases | warnings only | 10; #273, #278 |
 | 12 | Default Rule Set stacks for liquid bulk by Service Area | default stack | #274, #275 |
-| 13 | `fit` for liquid bulk (tanks in line, double hull from the governing Rule) | `fit` results | #276, #277 |
+| 13 | `fit` for liquid bulk (tanks in line, double hull from the governing Rule): `liquid_fit` in `ovcd-format`, and the `liquid_fit` entry of the evaluation API | `fit` results only; no `run` calls it | #276, #277 |
 | 14 | Damage stability Measure (ADN extents first), then oil outflow | new checks | 5, 11 |
 | 15 | Second oil (product, vegetable oil): data rows only | new Cargo only | 2–11 |
 
