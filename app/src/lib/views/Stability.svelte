@@ -40,7 +40,7 @@
   interface StabilityResults {
     criteria_set: string;
     ok: boolean;
-    governing: string;
+    lowest_gm_condition: string;
     limitations: string[];
     conditions: Condition[];
   }
@@ -54,7 +54,7 @@
 
   /** The tokens now in force; read again at the start of every draw. */
   let tok: ChartTokens = currentTokens();
-  const governing = (c: Condition) => c.name === stability?.governing;
+  const governing = (c: Condition) => c.name === stability?.lowest_gm_condition;
   /** The colour of a condition's curve: the governing one is --ink, the others --accent. */
   const colour = (c: Condition) => (governing(c) ? tok.ink : tok.accent);
   /** The dash pattern of a condition's curve: solid for the governing one, then one pattern each. */
@@ -330,11 +330,11 @@
     <div class="chartbox" data-testid="stability-chart">
       <div class="legend">
         {#each stability.conditions as c, i (c.name)}
-          <span class="item" class:governing-item={c.name === stability.governing} data-condition={c.name}>
-            <svg class="swatch" class:gov-swatch={c.name === stability.governing} width="28" height="8" viewBox="0 0 28 8" aria-hidden="true">
-              <line x1="0" y1="4" x2="28" y2="4" stroke-width={c.name === stability.governing ? 2 : 1.5} stroke-dasharray={dash(c, i).join(" ") || undefined} />
+          <span class="item" class:governing-item={c.name === stability.lowest_gm_condition} data-condition={c.name}>
+            <svg class="swatch" class:gov-swatch={c.name === stability.lowest_gm_condition} width="28" height="8" viewBox="0 0 28 8" aria-hidden="true">
+              <line x1="0" y1="4" x2="28" y2="4" stroke-width={c.name === stability.lowest_gm_condition ? 2 : 1.5} stroke-dasharray={dash(c, i).join(" ") || undefined} />
             </svg>
-            <strong>{tr(c.name)}</strong>{#if c.name === stability.governing}<span class="govtag">{t("app-stab-governs")}</span>{/if}
+            <strong>{tr(c.name)}</strong>{#if c.name === stability.lowest_gm_condition}<span class="govtag">{t("app-stab-governs")}</span>{/if}
             {t("app-stab-legend", { gm: r(c.gm_fluid_m, 2), gz: r(c.max_gz_m, 2), angle: r(c.max_gz_deg, 0) })}
           </span>
         {/each}
@@ -351,7 +351,7 @@
       <p class="summary">
         <span class="tag {stability.ok ? 'ok' : 'fail'}">{t(stability.ok ? "app-pass" : "app-fail")}</span>
         <strong>{tr(stability.criteria_set)}</strong>
-        <span class="dim">{t("app-stab-governing")} <strong>{tr(stability.governing)}</strong></span>
+        <span class="dim">{t("app-stab-governing")} <strong>{tr(stability.lowest_gm_condition)}</strong></span>
       </p>
 
       <table class="conditions">
@@ -365,10 +365,10 @@
         </thead>
         <tbody>
           {#each stability.conditions as c (c.name)}
-            <tr class:governing={c.name === stability.governing} data-governing={c.name === stability.governing}>
+            <tr class:governing={c.name === stability.lowest_gm_condition} data-governing={c.name === stability.lowest_gm_condition}>
               <th>
                 {tr(c.name)}
-                {#if c.name === stability.governing}<span class="gov">{t("app-stab-governs")}</span>{/if}
+                {#if c.name === stability.lowest_gm_condition}<span class="gov">{t("app-stab-governs")}</span>{/if}
               </th>
               {#each COLUMNS as col (col.label)}
                 {@const v = col.get(c)}

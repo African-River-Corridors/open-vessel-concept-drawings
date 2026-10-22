@@ -54,7 +54,7 @@ fn a_gas_design_carries_the_gz_points_of_every_loading_condition() {
         assert!(c["gm_fluid_m"].is_number(), "{name}");
         assert!(!c["criteria"].as_array().unwrap().is_empty(), "{name}");
     }
-    let governing = stability["governing"].as_str().unwrap();
+    let governing = stability["lowest_gm_condition"].as_str().unwrap();
     assert!(
         names.contains(&governing),
         "the governing condition is one of the conditions"

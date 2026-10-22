@@ -106,7 +106,7 @@ impl StabilityAssessment {
     }
 
     /// The condition with the lowest fluid GM; the first of equal.
-    pub fn governing(&self) -> &Condition {
+    pub fn lowest_gm(&self) -> &Condition {
         let mut best = &self.conditions[0];
         for c in &self.conditions[1..] {
             if c.gm_fluid_m < best.gm_fluid_m {
