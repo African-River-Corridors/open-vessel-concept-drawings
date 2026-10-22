@@ -239,5 +239,5 @@ def test_the_whole_gate_still_counts_every_step(tmp_path):
     """Label: property"""
     r = _stub_gates(tmp_path)
     assert r.returncode == 0, r.stderr
-    assert r.stdout.count("gates: ok:") == 8
-    assert "all 8 steps passed" in r.stdout
+    assert r.stdout.count("gates: ok:") == 9
+    assert "all 9 steps passed" in r.stdout
