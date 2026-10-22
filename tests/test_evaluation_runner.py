@@ -133,7 +133,7 @@ def test_the_grid_error_tolerances_are_above_what_the_engine_shows():
     """Label: property - on every case and mutant the engine's value is within the grid tolerance of
     the oracle's, so a verdict outside the tolerance is one the engine must get right."""
     worst = {k: 0.0 for k in CRITERIA}
-    for case in runner.load_cases():
+    for case in box_cases():
         for k, r in runner.run_case(case)["rows"].items():
             worst[k] = max(worst[k], abs(r["engine_value"] - r["expected_value"]))
     for k, w in worst.items():
@@ -151,6 +151,11 @@ def test_the_mutants_file_is_what_the_generator_writes():
 
 
 # --- triage (issue #278): one fixture per bucket ----------------------------------------------------
+
+def box_cases() -> list:
+    """The stability (box) cases and mutants: the liquid bulk ones are tested in test_tank_oracle.py."""
+    return [c for c in runner.load_cases() if runner.kind_of(c) == "box"]
+
 
 def _case(name="box_b"):
     return yaml.safe_load((EVAL / "cases" / f"{name}.yaml").read_text(encoding="utf-8"))
@@ -258,7 +263,10 @@ def test_the_real_corpus_notices_every_mutant_of_is2008_a():
     """Label: property - every limit of `is2008-a`, moved one step either way, changes at least one
     case's verdict: the corpus is not weak anywhere."""
     text = (EVAL / "results.md").read_text(encoding="utf-8")
-    assert "- Mutants run: 12. Not noticed by any case: 0." in text
+    # 12 of `is2008-a`, and the mutants of the liquid bulk sets (issue #338): none is weak.
+    assert "Not noticed by any case: 0." in text
+    section = text.split("## Rule mutation", 1)[1].split("\n## ", 1)[0]
+    assert sum(1 for line in section.splitlines() if line.startswith("| `is2008/")) == 12
 
 
 def test_a_limit_no_case_comes_near_is_a_weak_corpus_warning(tmp_path):
@@ -277,7 +285,7 @@ def test_a_limit_no_case_comes_near_is_a_weak_corpus_warning(tmp_path):
              "since": "1.0.0"}
             for slug, value in (("gm-low", 0.15), ("gm-high", 5.0))],
     })
-    cases = runner.load_cases()
+    cases = box_cases()
     result = rule_mutation.run(cases, ["weak-fixture@1.0.0"], runner.trace_of, (fixture,))
     weak = sorted((m["rule"], m["side"]) for m in result if not m["noticed_by"])
     assert weak == [("weak/x/gm-high", "above"), ("weak/x/gm-high", "below")]

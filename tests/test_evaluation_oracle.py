@@ -22,7 +22,9 @@ from vessel_designer.core.gas_stability import assess, box_gz  # noqa: E402
 sys.path.insert(0, str(ROOT / "evaluation"))
 from engine import box_condition  # noqa: E402
 
-CASES = sorted((ROOT / "evaluation" / "cases").glob("*.yaml"))
+# The box cases; the liquid bulk (`kind: tank`) cases have their own tests in `tests/test_tank_oracle.py`.
+CASES = sorted(p for p in (ROOT / "evaluation" / "cases").glob("*.yaml")
+               if yaml.safe_load(p.read_text(encoding="utf-8")).get("kind") == "box")
 SHORT = ["area_0_30", "area_0_40", "area_30_40", "gz_30_plus", "angle_max_gz", "gm"]
 #: The case files key `expected` by rule id (issue #278).
 KEYS = ["is2008/A.2.2.1/area-0-30", "is2008/A.2.2.1/area-0-40", "is2008/A.2.2.1/area-30-40",
