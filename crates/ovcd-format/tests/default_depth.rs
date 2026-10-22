@@ -98,7 +98,7 @@ fn a_profile_that_leaves_out_a_cargo_groups_ratio_is_refused() {
 }
 
 #[test]
-fn every_cargo_of_the_format_has_a_group_and_crude_oil_is_the_liquid_one() {
+fn every_cargo_of_the_format_has_a_group_and_the_oils_are_the_liquid_ones() {
     let mut seen = Vec::new();
     for (key, props) in ovcd_core::cargo::CARGO_DATABASE.iter() {
         let g = depth_group(key).unwrap_or_else(|| panic!("{key} has no depth group"));
@@ -114,8 +114,8 @@ fn every_cargo_of_the_format_has_a_group_and_crude_oil_is_the_liquid_one() {
         seen.push(g);
     }
     assert!(seen.contains(&"dry_bulk") && seen.contains(&"gas"));
-    // Crude oil (spec 0006) is the one liquid bulk Cargo, with the `liquid` depth ratio.
-    assert_eq!(seen.iter().filter(|g| **g == "liquid").count(), 1);
+    // Crude oil and diesel fuel (spec 0006) are the liquid bulk Cargos, with the `liquid` depth ratio.
+    assert_eq!(seen.iter().filter(|g| **g == "liquid").count(), 2);
     assert_eq!(depth_group("no-such-cargo"), None);
 }
 

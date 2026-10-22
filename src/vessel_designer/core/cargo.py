@@ -93,6 +93,17 @@ CARGO_DATABASE: Dict[str, CargoProperties] = {
         phase="liquid_bulk",
         status="development",
     ),
+    "diesel_en590": CargoProperties(
+        name="Diesel fuel (EN 590)",
+        # Density at 20 C: the middle of the relative density range 0.82 to 0.85 that ADN 2025
+        # Table C gives for UN 1202 diesel fuel to EN 590. The grade data is CRUDE_GRADES below.
+        density=835.0,
+        temperature=20.0,
+        pressure=0.0,
+        description="Diesel fuel to EN 590, UN 1202 (density at 20 C, middle of ADN Table C 0.82 to 0.85; see liquid_bulk::crude_grade)",
+        phase="liquid_bulk",
+        status="development",
+    ),
 }
 
 
@@ -158,6 +169,39 @@ CRUDE_GRADES: Dict[str, CrudeGrade] = {
         pour_point_c=None,
         carriage_temperature_c=None,
         vapour_pressure_class=Graded("low", "estimate", "spec 0006 section 3.1"),
+    ),
+    "diesel_en590": CrudeGrade(
+        name="Diesel fuel (EN 590)",
+        density_kg_m3=Graded(
+            835.0, "estimate",
+            "Middle of the relative density range 0.82 to 0.85 at 20 deg C that ADN 2025 Table C gives for UN 1202 diesel fuel to EN 590"),
+        density_reference_c=20.0,
+        design_density_kg_m3=Graded(
+            850.0, "estimate",
+            "The top of the ADN 2025 Table C relative density range (0.85) for UN 1202 diesel fuel to EN 590; a tank is not designed for a denser cargo than the one the table names"),
+        sour=Graded(
+            False, "sourced",
+            "ADN 2025 3.2.3.2 Table C, UN 1202 EN 590 row: not UN 3494, and type N in column 6"),
+        cmr=Graded(
+            "no", "sourced",
+            "ADN 2025 3.2.3.2 Table C, UN 1202 EN 590 row, column 5: hazard labels 3+N2+F, no CMR"),
+        benzene_over_10_percent=Graded(
+            "no", "sourced",
+            "ADN 2025 3.2.3.2 Table C, UN 1202 EN 590 row, column 6: type N; more than 10 % benzene would give type C (3.2.3.3 flowchart)"),
+        aquatic=Graded(
+            "n2", "sourced",
+            "ADN 2025 3.2.3.2 Table C, UN 1202 EN 590 row, column 5: hazard labels 3+N2+F"),
+        flash_point_below_23c=Graded(
+            "no", "estimate",
+            "The flash point of EN 590 diesel was not read here; Table C gives this row open cargo tanks (column 7: 4), which the 3.2.3.3 flowchart allows only for a flash point of 23 deg C or more"),
+        vapour_pressure_50c_at_least_1kpa=Graded(
+            "no", "estimate",
+            "The vapour pressure of diesel was not read here. The flowchart reads this flag only for aquatic toxicity N1, and this grade is N2, so it does not change the type"),
+        pour_point_c=None,
+        carriage_temperature_c=None,
+        vapour_pressure_class=Graded(
+            "low", "estimate",
+            "ADN 2025 Table C gives the row open cargo tanks (column 7: 4), so the vapour pressure is low"),
     ),
 }
 

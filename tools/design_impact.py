@@ -463,6 +463,14 @@ def cases() -> dict[str, dict]:
         "crude_oil", "integral_tanks", "self_propelled", 90.0, 14.0, 4.5, service_area="coastal-and-river")
     out["sweep crude carries nothing (draught limit)"] = _inputs(
         "crude_oil", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5, draught_limit_m=0.3)
+    # Diesel fuel, the second oil (issue #342): a data row, so one pushed hull, one coastal self-propelled
+    # hull and one that carries nothing are enough to show its results (type N open, density 835).
+    out["sweep diesel pushed 90x14"] = _inputs(
+        "diesel_en590", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5)
+    out["sweep diesel coastal service 90x14"] = _inputs(
+        "diesel_en590", "integral_tanks", "self_propelled", 90.0, 14.0, 4.5, service_area="coastal-and-river")
+    out["sweep diesel carries nothing (draught limit)"] = _inputs(
+        "diesel_en590", "integral_tanks", "pushed_barge", 90.0, 14.0, 4.5, draught_limit_m=0.3)
     # One case for each optional input.
     for name, cargo, containment, formation, loa, beam, depth, extra in OPTIONAL_INPUT_CASES:
         out[f"sweep optional {name}"] = _inputs(cargo, containment, formation, loa, beam, depth, **extra)

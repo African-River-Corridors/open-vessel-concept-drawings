@@ -32,10 +32,10 @@ def test_the_python_crude_grades_equal_the_rust_ones():
         assert py == row["grade"], row["key"]
 
 
-def test_crude_oil_is_in_development_and_every_other_cargo_is_released():
+def test_a_liquid_bulk_cargo_is_in_development_and_every_other_cargo_is_released():
     """Label: property"""
     for key, props in cargo.CARGO_DATABASE.items():
-        assert props.status == ("development" if key == "crude_oil" else "released"), key
+        assert props.status == ("development" if props.phase == "liquid_bulk" else "released"), key
 
 
 def test_every_grade_value_has_a_status_and_a_basis():
