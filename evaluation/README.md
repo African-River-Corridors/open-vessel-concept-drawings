@@ -111,9 +111,12 @@ cargo tank has the verdict of its worst tank.
   row of the capacity and length tables, and each of the 0.76 m minimum and the formula of Reg. 19.6, governs
   somewhere: no mutant goes unnoticed.
 - The Rules of these sets enter as `warn`, so a disagreement is a false fail, a warning, never a false pass.
-- Not evaluated: ADN 9.3.x.14.2 and 9.3.x.15.1 (stability), 9.3.x.17.6 (pump room), MARPOL Reg. 19.3, 19.7, 23, 27
+- Not evaluated: ADN 9.3.x.14.2 (stability), 9.3.x.17.6 (pump room), MARPOL Reg. 19.3, 19.7, 23, 27
   and 28 (above 5,000 tonnes, collision bulkhead, outflow, stability) and NORMAM-202 5.23.3, 5.23.8 and 5.23.9; each
   says what is missing in its `gap`.
+- ADN 9.3.x.15.1 (damage stability) is evaluated in a run (issue #341), where the damages come from the laden
+  departure condition. A `tank` case has no loading condition, so its row is `not evaluated` with that reason, and
+  the harness has no case for it; `crates/ovcd-core/tests/damage_stability.rs` checks the calculation against closed forms.
 
 ## Why phase 0 uses particulars
 

@@ -49,6 +49,18 @@ pub struct Measured {
     pub lift_enough: Option<bool>,
     /// The depth of the design channel over the loaded draught (h/T); `None` with no channel.
     pub depth_over_draught: Option<f64>,
+    /// The assumed damages of a liquid bulk hull and what the damaged hull does (issue #341); empty for
+    /// every other Cargo.
+    pub damage: Vec<DamageVerdict>,
+}
+
+/// One assumed damage and the outcome: the Measure `stability.damage` is `ok`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DamageVerdict {
+    pub name: String,
+    /// The compartments the damage floods.
+    pub flooded: Vec<String>,
+    pub outcome: crate::damage_stability::DamageOutcome,
 }
 
 /// The kinds of loading condition an Applicability can name (the object input
@@ -194,6 +206,7 @@ impl Measured {
             ObjectType::CargoTank => self.liquid_names(|k| k == SpaceKind::CargoTank),
             ObjectType::BallastTank => self.liquid_names(SpaceKind::is_ballast),
             ObjectType::SlopTank => self.liquid_names(|k| k == SpaceKind::Slop),
+            ObjectType::DamageCase => self.damage.iter().map(|d| d.name.clone()).collect(),
         }
     }
 
@@ -234,6 +247,8 @@ impl Measured {
             | "option.cargo_capacity_m3"
             | "option.slop_capacity_share" => self.liquid.is_some(),
             "option.deadweight" => self.deadweight_t.is_some(),
+            // The Rule on a hull with no damage computed is `not evaluated` with the reason (`missing`).
+            "stability.damage" => true,
             "wheelhouse.blind_distance" => match m.args.iter().find(|(k, _)| k == "condition") {
                 Some((_, ArgValue::Text(c))) if c == "light" => {
                     self.blind_distance_light_m.is_some()
@@ -275,6 +290,13 @@ impl Measured {
         }
         if let Some(v) = self.liquid_value(m, index) {
             return v;
+        }
+        if m.id == "stability.damage" {
+            return self
+                .damage
+                .get(index)
+                .map(|d| MeasureValue::Bool(d.outcome.ok))
+                .ok_or_else(|| format!("no damage case {index}"));
         }
         if m.id == "option.deadweight" {
             return self

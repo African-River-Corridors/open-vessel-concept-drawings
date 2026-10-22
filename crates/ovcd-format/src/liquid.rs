@@ -137,3 +137,105 @@ pub(crate) fn drawing_values(r: &BargeCapacityResult) -> Vec<(&'static str, Valu
         }),
     )]
 }
+
+/// Issue #341: the assumed damages of the hull and what each does to the laden departure condition, by the
+/// ADN extents of the vessel type of the Cargo (9.3.2.15.1 for type C, 9.3.3.15.1 for type N). Empty when the
+/// Cargo has no ADN type or the departure condition has no floating position.
+pub(crate) fn damage_verdicts(
+    hull: &ovcd_core::hydrostatics::Hull,
+    liquid: &LiquidBulkResult,
+    cargo_key: &str,
+    density: f64,
+    conditions: &[ovcd_core::loading_conditions::LoadedCondition],
+) -> Vec<ovcd_core::measured::DamageVerdict> {
+    use ovcd_core::damage_stability::{AdnCriteria, assess};
+    use ovcd_core::liquid_bulk::damage::{AdnExtents, damage_cases};
+    use ovcd_core::loading_conditions::Role;
+    use ovcd_core::sections::Gravity;
+    let Some(adn) = crate::trace::adn_vessel_type_of(cargo_key) else {
+        return Vec::new();
+    };
+    let extents = if adn == adn_vessel_type::AdnVesselType::C {
+        AdnExtents::TYPE_C
+    } else {
+        AdnExtents::TYPE_N
+    };
+    let Some(laden) = conditions
+        .iter()
+        .find(|c| c.role == Role::FullLoadDeparture)
+    else {
+        return Vec::new();
+    };
+    // The mass and its centre of gravity: the weights of the condition. The damage does not change either.
+    let mass: f64 = laden.weights.iter().map(|(_, i)| i.mass_t).sum();
+    if mass.is_nan() || mass <= 0.0 {
+        return Vec::new();
+    }
+    let g = Gravity {
+        lcg_m: laden
+            .weights
+            .iter()
+            .map(|(_, i)| i.mass_t * i.lcg_m)
+            .sum::<f64>()
+            / mass,
+        tcg_m: 0.0,
+        kg_m: laden
+            .weights
+            .iter()
+            .map(|(_, i)| i.mass_t * i.kcg_m)
+            .sum::<f64>()
+            / mass,
+    };
+    let Ok(float) = hull.float(mass, g, density) else {
+        return Vec::new();
+    };
+    let start = (
+        float.equilibrium.waterplane.c,
+        float.equilibrium.waterplane.trim_deg,
+    );
+    damage_cases(&liquid.spaces, hull.spec.loa, hull.spec.beam, &extents)
+        .into_iter()
+        .map(|case| ovcd_core::measured::DamageVerdict {
+            flooded: case.flooded.iter().map(|f| f.name.clone()).collect(),
+            outcome: assess(
+                &hull.table,
+                &case.flooded,
+                mass,
+                g,
+                density,
+                start,
+                &AdnCriteria::ADN_2025,
+            ),
+            name: case.name,
+        })
+        .collect()
+}
+
+/// The `damage` block of the results: what each assumed damage does (unhashed, with the rest of the
+/// Rule Trace inputs).
+pub(crate) fn damage_json(verdicts: &[ovcd_core::measured::DamageVerdict]) -> Value {
+    Value::Array(
+        verdicts
+            .iter()
+            .map(|d| {
+                let o = &d.outcome;
+                json!({
+                    "name": d.name,
+                    "flooded": d.flooded,
+                    "floats": match o.floats {
+                        ovcd_core::damage_stability::Floats::Yes => "yes",
+                        ovcd_core::damage_stability::Floats::Sinks => "sinks",
+                        ovcd_core::damage_stability::Floats::NoEquilibrium => "no equilibrium",
+                    },
+                    "heel_deg": num(o.heel_deg),
+                    "trim_deg": num(o.trim_deg),
+                    "draught_mid_m": num(o.draught_mid_m),
+                    "range_end_deg": num(o.end_deg),
+                    "max_gz_m": num(o.max_gz_m),
+                    "area_m_rad": num(o.area_m_rad),
+                    "ok": o.ok,
+                })
+            })
+            .collect(),
+    )
+}

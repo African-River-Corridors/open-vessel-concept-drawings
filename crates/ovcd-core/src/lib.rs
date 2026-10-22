@@ -19,6 +19,7 @@ pub mod cargo;
 pub mod checks;
 pub mod compartments;
 pub mod confined_water;
+pub mod damage_stability;
 pub mod design_grid;
 pub mod electric_energy;
 pub mod ga_adapter;
