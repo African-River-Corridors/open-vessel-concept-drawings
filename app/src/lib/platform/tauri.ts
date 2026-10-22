@@ -14,6 +14,7 @@ export const tauriPlatform: Platform = {
   saveAs: () => invoke<Snapshot | null>("save_as"),
   setInput: (option, name, value) => invoke<Snapshot>("set_input", { option, name, value }),
   resetInput: (option, name) => invoke<Snapshot>("reset_input", { option, name }),
+  importOffsets: (option) => invoke<Snapshot | null>("import_offsets", { option }),
   setActiveOption: (option) => invoke<Snapshot>("set_active_option", { option }),
   setFormation: (option, kind, abreast, inLine) =>
     invoke<Snapshot>("set_formation", { option, kind, abreast, inLine }),

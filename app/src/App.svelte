@@ -256,6 +256,7 @@
         edit(() => api.setInput(option, name, value), typeof value !== "number");
       }}
       onReset={(name) => { const option = active; edit(() => api.resetInput(option, name), true); }}
+      onImportOffsets={() => { const option = active; command(() => api.importOffsets(option)); }}
       onFormation={(kind, abreast, inLine) => {
         const option = active;
         edit(() => api.setFormation(option, kind, abreast, inLine), false);

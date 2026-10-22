@@ -208,7 +208,7 @@ fn every_profile_default_of_a_hull_form_parameter_is_inside_its_ranges() {
 
 #[test]
 fn a_hull_form_with_no_generator_yet_gets_the_not_built_message() {
-    for form in ["shipd", "offsets", "box"] {
+    for form in ["shipd", "box"] {
         let checked = check(&hand(form).to_string(), &Profile::built_in());
         assert!(
             checked

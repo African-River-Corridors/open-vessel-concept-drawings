@@ -43,6 +43,7 @@ app-yes = yes
 app-no = no
 app-parameter-count = Parameters: { $count }
 app-offset-station-count = Stations: { $count }
+app-import-offsets = Import CSV
 app-pass = PASS
 app-fail = FAIL
 app-out-of-date = out of date

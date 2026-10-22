@@ -92,6 +92,11 @@ impl Session {
         self.edit(|s| s.set_input(option, name, value))
     }
 
+    /// Issue #451: import an offsets CSV into an Option.
+    pub fn import_offsets(&mut self, option: &str, csv: &str) -> Js<String> {
+        self.edit(|s| s.import_offsets(option, csv))
+    }
+
     pub fn reset_input(&mut self, option: &str, name: &str) -> Js<String> {
         self.edit(|s| s.reset_input(option, name))
     }

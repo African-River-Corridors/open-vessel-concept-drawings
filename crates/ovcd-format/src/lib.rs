@@ -9,6 +9,7 @@ mod gas_arrangement;
 pub mod gas_stability;
 mod liquid;
 mod objects;
+pub mod offsets;
 pub mod profile;
 pub mod rule_set;
 mod run;
@@ -23,8 +24,8 @@ pub use ga::{GaViews, ga_views, ga_views_for, ga_views_named, ga_views_of};
 pub use profile::Profile;
 pub use run::{
     CONVOY_NOT_AVAILABLE, HashStatus, RunOption, RunOutcome, UNHASHED_KEYS, canonical_json,
-    hash_warning, results_hash, run_design, run_design_with, run_option, run_option_with,
-    simulate_params_of, stamp, summary_lines,
+    hash_warning, option_hull_table, results_hash, run_design, run_design_with, run_option,
+    run_option_with, simulate_params_of, stamp, summary_lines,
 };
 pub use session::{
     DesignSession, Evaluation, Message, OpenReport, OptionEvaluation, Scope, Severity, input_schema,

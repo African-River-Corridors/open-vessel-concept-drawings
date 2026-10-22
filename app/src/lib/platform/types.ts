@@ -19,6 +19,8 @@ export interface Platform {
   saveAs(): Promise<Snapshot | null>;
   setInput(option: string, name: string, value: unknown): Promise<Snapshot>;
   resetInput(option: string, name: string): Promise<Snapshot>;
+  /** Issue #451: pick an offsets CSV and import it into the Option; null when the user cancels. */
+  importOffsets(option: string): Promise<Snapshot | null>;
   setActiveOption(option: string): Promise<Snapshot>;
   setFormation(option: string, kind: string, abreast: number | null, inLine: number | null): Promise<Snapshot>;
   addOption(): Promise<Snapshot>;

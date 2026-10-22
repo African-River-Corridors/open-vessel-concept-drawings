@@ -298,9 +298,9 @@ fn an_optional_limit_takes_null_for_none_but_not_zero() {
 
 #[test]
 fn a_hull_form_with_no_generator_yet_is_refused_as_not_built() {
-    // Issue #446: every Hull Form of spec 0008 is a choice; raked_box, v_bottom and chine (#450)
-    // are computed for now.
-    for form in ["box", "shipd", "offsets"] {
+    // Issue #446: every Hull Form of spec 0008 is a choice; raked_box, v_bottom, chine (#450) and
+    // offsets (#451) are computed for now.
+    for form in ["box", "shipd"] {
         let e = errors(with(required("bauxite"), "hull_form", json!(form)));
         assert!(has(&e, "is not built yet"), "{form}: {e:?}");
     }

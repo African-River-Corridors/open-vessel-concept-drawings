@@ -137,7 +137,7 @@
     "hull_offsets": {
       "default": null,
       "status": "estimate",
-      "basis": "For an offsets hull: the typed or imported offsets table, one row per point (station_x_m, y_m, z_m), keel to deck centre line at each station (spec 0008, \"Offsets table\"). none: no table; the import comes with #451."
+      "basis": "For an offsets hull: the typed or imported offsets table, one row per point (station_x_m, y_m, z_m), keel to deck centre line at each station (spec 0008, \"Offsets table\"). none: no table. `ovcd hull import` or the app's Import button reads an offsets CSV into it, and the Option's length, beam and depth take the table's values (issue #451)."
     },
     "min_freeboard_m": {
       "default": 0.3,

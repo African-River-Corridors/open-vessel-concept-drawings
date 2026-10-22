@@ -24,6 +24,11 @@ Usage:
       Prints to stdout when no file is given.
       --class defines the Option by a standard Vessel Class (see `ovcd schema`, input
       `vessel_class`): length, beam and Formation come from the class and are marked \"class\".
+  ovcd hull import [--profile <profile.json>] <file.csv> --option <name> <in.vdesign> [<out.vdesign>]
+      Import an offsets table (spec 0008): the CSV header station_x_m,y_m,z_m, one row per point
+      from the keel round to the deck on the centre line, stations in ascending x, blank lines
+      allowed. The Option becomes an offsets hull with that table, and its length, beam and depth
+      take the table's values. Prints to stdout when no output file is given; never overwrites.
   ovcd fill [--profile <profile.json>] [--rule-set <file>]... [--add-rule-set <id>@<version>]...
             [--remove-rule-set <id>]... [--as-new] <in.vdesign> [<out.vdesign>]
       Write every input a hand-written Design leaves out in, as used and marked \"default\",
@@ -123,6 +128,7 @@ fn main() -> ExitCode {
         ["new", rest @ ..] => report(new(rest), "new"),
         ["rules", rest @ ..] => report(rules(rest), "rules"),
         ["fill", rest @ ..] => report(fill(rest), "fill"),
+        ["hull", "import", rest @ ..] => report(hull_import(rest), "hull import"),
         ["validate", rest @ ..] => match validate(rest) {
             Ok(ok) => {
                 if ok {
@@ -477,6 +483,44 @@ fn fill(args: &[&str]) -> Result<(), String> {
         }
     }
     let text = design.to_text();
+    match output {
+        None => {
+            print!("{text}");
+            Ok(())
+        }
+        Some(path) => write_new(path, &text),
+    }
+}
+
+/// Issue #451: `ovcd hull import <file.csv> --option <name> <in.vdesign> [<out.vdesign>]`.
+fn hull_import(args: &[&str]) -> Result<(), String> {
+    let (mut option, mut rest) = (None, Vec::new());
+    let mut it = args.iter();
+    while let Some(&a) = it.next() {
+        match a {
+            "--option" => option = Some(*it.next().ok_or("--option needs an Option name")?),
+            _ => rest.push(a),
+        }
+    }
+    let option = option.ok_or("give the Option with --option <name>")?;
+    let flags = parse_flags(&rest, false, false, false)?;
+    let (csv, input, output) = match flags.files.as_slice() {
+        [csv, input] => (*csv, *input, None),
+        [csv, input, output] => (*csv, *input, Some(*output)),
+        _ => {
+            return Err(
+                "give the offsets CSV and one .vdesign file, and optionally an output file".into(),
+            );
+        }
+    };
+    let profile = load_profile(flags.profile)?;
+    let csv_text = std::fs::read_to_string(csv).map_err(|e| format!("cannot read {csv}: {e}"))?;
+    let text = std::fs::read_to_string(input).map_err(|e| format!("cannot read {input}: {e}"))?;
+    let (mut session, _) = ovcd_format::DesignSession::open(&text, profile)?;
+    for w in session.import_offsets(option, &csv_text)? {
+        eprintln!("warning: {w}");
+    }
+    let text = session.save()?;
     match output {
         None => {
             print!("{text}");

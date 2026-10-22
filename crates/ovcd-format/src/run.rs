@@ -129,6 +129,9 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     ] {
         put(name, name);
     }
+    // Issue #451: an offsets hull is its typed table, and its L, B and D are the table's.
+    put("hull_form", "hull_form");
+    put("hull_offsets", "hull_offsets");
     put("freeboard_min_m", "min_freeboard_m");
     put("lightship_k_t_per_m3", "lightship_factor_t_per_m3");
     put("fill_ratio", "fill_ratio");
@@ -283,6 +286,14 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
         put_ch("current_kn", "channel_current_kn");
         p.insert("channel".into(), Value::Object(ch));
     }
+    if p.get("hull_form").and_then(Value::as_str) == Some("offsets")
+        && let Some(d) =
+            crate::offsets::dimensions_of(p.get("hull_offsets").unwrap_or(&Value::Null))
+    {
+        p.insert("loa_m".to_string(), json!(d.length_m));
+        p.insert("beam_m".to_string(), json!(d.beam_m));
+        p.insert("depth_m".to_string(), json!(d.depth_m));
+    }
     Ok(p)
 }
 
@@ -322,6 +333,18 @@ pub fn results_hash(results: &Value) -> String {
 /// Compute one Option.
 pub fn run_option(option: &DesignOption) -> RunOutcome {
     run_option_with(option, &Library::built_in(), &[])
+}
+
+/// The hull of an Option as its Sections Table, as the run builds it (issue #451; the offsets
+/// export of #461 reads it too).
+pub fn option_hull_table(
+    option: &DesignOption,
+) -> Result<ovcd_core::sections::SectionsTable, String> {
+    let params = simulate_params_of(option)?;
+    crate::simulate::hull_table_of(&params).map_err(|e| match e {
+        crate::simulate::Stop::Raised(_, message) => message,
+        crate::simulate::Stop::Eval(e) => e.to_string(),
+    })
 }
 
 /// Compute one Option and check it against its default stack of Rule Sets from `library`, plus the

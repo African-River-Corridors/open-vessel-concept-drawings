@@ -168,6 +168,14 @@ impl AppState {
         Ok(())
     }
 
+    /// Issue #451: import an offsets CSV into an Option (see `DesignSession::import_offsets`). A
+    /// resampled table's warning shows with the Design's messages.
+    pub fn import_offsets(&mut self, option: &str, csv: &str) -> Result<(), String> {
+        self.session.import_offsets(option, csv)?;
+        self.dirty = true;
+        Ok(())
+    }
+
     pub fn reset_input(&mut self, option: &str, name: &str) -> Result<(), String> {
         self.session.reset_input(option, name)?;
         self.dirty = true;

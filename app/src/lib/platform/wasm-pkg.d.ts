@@ -12,6 +12,7 @@ declare module "*/wasm-pkg/ovcd_web.js" {
     saved(name: string): string;
     is_dirty(): boolean;
     set_input(option: string, name: string, value_json: string): string;
+    import_offsets(option: string, csv: string): string;
     reset_input(option: string, name: string): string;
     set_active_option(option: string): string;
     set_formation(option: string, kind: string, abreast?: number, in_line?: number): string;
