@@ -16,6 +16,7 @@ def _cases():
 
 
 def test_every_case_names_its_source_hash_and_each_assumed_figure():
+    """Label: property"""
     for c in _cases()["formation_case"]:
         assert len(c["sha256"]) == 64 and len(c["barge_sha256"]) == 64
         assert c["source_file"] and c["published"] and c["observed"]["installed_power_kw"] > 0
@@ -25,16 +26,19 @@ def test_every_case_names_its_source_hash_and_each_assumed_figure():
 
 
 def test_a_case_that_cannot_run_says_why():
+    """Label: property"""
     for c in _cases()["not_yet_runnable_formation_cases"]:
         assert c["published"] and c["not_yet_runnable"]
 
 
 def test_at_least_one_case_is_held_out_and_one_is_fitted():
+    """Label: property"""
     cases = _cases()["formation_case"]
     assert any(c.get("held_out") for c in cases) and any(not c.get("held_out") for c in cases)
 
 
 def test_the_defaults_profile_takes_the_fitted_allowance():
+    """Label: property"""
     fitted = yaml.safe_load((CAL / "formation_factors.yaml").read_text(encoding="utf-8"))
     value = fitted["formation_resistance_allowance"]["pushed_convoy"]["value"]
     profile = json.loads((ROOT / "crates/ovcd-format/src/builtin_profile.json").read_text(encoding="utf-8"))
