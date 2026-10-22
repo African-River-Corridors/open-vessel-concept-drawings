@@ -1,7 +1,7 @@
 """Fork pull requests get the design-impact label and report (ticket 132), safely.
 
-`design-impact.yml` measures with a read-only token and keeps an artifact. `design-impact-publish.yml`
-(`workflow_run`) publishes it with trusted code from the default branch. These tests read both
+The `gate-impact` job of `ci.yml` measures with a read-only token and keeps an artifact.
+`design-impact-publish.yml` (`workflow_run`) publishes it with trusted code from the default branch. These tests read both
 workflows, and run `publish_artifact` against hostile artifacts.
 """
 import json
@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import design_impact as di  # noqa: E402
 
-MEASURE = ROOT / ".github" / "workflows" / "design-impact.yml"
+MEASURE = ROOT / ".github" / "workflows" / "ci.yml"
 PUBLISH = ROOT / ".github" / "workflows" / "design-impact-publish.yml"
 
 
@@ -28,19 +28,23 @@ def workflow(path: Path) -> dict:
 
 # ---------- the workflows ----------
 
-def test_the_measuring_workflow_runs_for_every_pull_request_with_a_read_only_token():
+def test_the_report_comes_from_the_ci_gate_impact_job_with_a_read_only_token():
     wf = workflow(MEASURE)
     assert "pull_request" in wf["on"] and "pull_request_target" not in wf["on"]
     assert wf["permissions"] == {"contents": "read"}
-    for job in wf["jobs"].values():
-        assert "if" not in job, "fork pull requests must be measured too"
-        assert "permissions" not in job
-        assert "secrets" not in str(job).replace("secrets.GITHUB_TOKEN", "")
+    job = wf["jobs"]["gate-impact"]
+    assert "if" not in job, "fork pull requests must be measured too"
+    assert "permissions" not in job
+    text = yaml.safe_dump(job)
+    assert "secrets" not in text.replace("secrets.GITHUB_TOKEN", "")
+    assert "pr.txt" in text and "upload-artifact" in text and "name: design-impact" in text
+    # the cases run once: no second workflow measures them
+    assert not (ROOT / ".github" / "workflows" / "design-impact.yml").exists()
 
 
 def test_the_publisher_runs_after_the_measuring_workflow_and_never_on_pull_request_target():
     wf = workflow(PUBLISH)
-    assert wf["on"] == {"workflow_run": {"workflows": ["Design impact"], "types": ["completed"]}}
+    assert wf["on"] == {"workflow_run": {"workflows": ["CI"], "types": ["completed"]}}
     assert wf["permissions"]["pull-requests"] == "write" and wf["permissions"]["issues"] == "write"
     assert "pull_request_target" not in wf["on"]
 
@@ -60,10 +64,15 @@ def test_the_publisher_never_checks_out_or_runs_pull_request_code():
     assert "ARTIFACT_DIR" in run_text and "bash" not in run_text and "source " not in run_text
 
 
-def test_the_publisher_only_acts_on_a_successful_pull_request_run():
+def test_the_publisher_acts_on_a_finished_pull_request_run_passed_or_failed():
     job = workflow(PUBLISH)["jobs"]["publish"]
     assert "workflow_run.event == 'pull_request'" in job["if"]
-    assert "conclusion == 'success'" in job["if"]
+    assert '"success"' in job["if"] and '"failure"' in job["if"] and "cancelled" not in job["if"]
+    steps = job["steps"]
+    download = next(s for s in steps if "download-artifact" in s.get("uses", ""))
+    assert download["continue-on-error"] is True
+    publish = next(s for s in steps if "publish-artifact" in s.get("run", ""))
+    assert "outcome == 'success'" in publish["if"]
 
 
 # ---------- the artifact is untrusted ----------

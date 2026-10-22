@@ -172,11 +172,13 @@ def test_the_fast_gate_runs_the_check_and_counts_it():
 
 
 def test_the_pull_request_workflow_only_measures_and_keeps_an_artifact():
-    text = (ROOT / ".github" / "workflows" / "design-impact.yml").read_text(encoding="utf-8")
-    assert "design_impact.py report" in text and "--publish" not in text
+    text = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    assert "GATES_STEPS: impact" in text and "--publish" not in text
     assert "pull-requests: write" not in text and "issues: write" not in text   # runs fork code: read only
     assert "pull_request_target" not in text
     assert "upload-artifact" in text and "pr.txt" in text
+    # the report workflow is gone: the cases run once, in the gate (issue #571)
+    assert not (ROOT / ".github" / "workflows" / "design-impact.yml").exists()
 
 
 def versioned_ovcd(tmp_path: Path, name: str, reads: tuple) -> Path:
