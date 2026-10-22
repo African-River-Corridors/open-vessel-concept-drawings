@@ -88,6 +88,28 @@ pub fn pushed_equivalent_hull(
     }
 }
 
+/// The Equivalent Hull of an ATB (spec 0007, issue #362): the barge and the tug as one hull, of
+/// length barge length + tug length - the Notch depth (the tug sits in the Notch), the barge's beam
+/// and draught, and the block coefficient of the displaced volumes (the barge's, which the Notch has
+/// already taken its share from, and the tug's) over L x B x T.
+pub fn atb_equivalent_hull(
+    (barge_l, barge_b, barge_t): (f64, f64, f64),
+    barge_volume_m3: f64,
+    tug: &TugDims,
+    tug_volume_m3: f64,
+    notch_depth_m: f64,
+) -> EquivalentHull {
+    let length_m = barge_l + tug.length_m - notch_depth_m;
+    let volume = barge_volume_m3 + tug_volume_m3;
+    EquivalentHull {
+        length_m,
+        beam_m: barge_b,
+        draught_m: barge_t,
+        block_coefficient: volume / (length_m * barge_b * barge_t),
+        displaced_volume_m3: volume,
+    }
+}
+
 /// The coupling force between a pusher and the pushed craft (ES-TRIN 2025/1, ESI-III-6, 2.1):
 /// F_SB = 270 x P_B x L_S / B_S x 10^-3 kN, with P_B the installed power (kW), L_S the distance from
 /// the stern of the pusher to the coupling point (m) and B_S the width of the pushing craft (m).

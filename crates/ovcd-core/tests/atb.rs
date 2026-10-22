@@ -136,3 +136,21 @@ fn a_notch_of_zero_gives_the_plain_barge_bit_for_bit() {
         );
     }
 }
+
+#[test]
+fn the_atb_equivalent_hull_has_the_displaced_volumes_over_its_box() {
+    // Label: sourced - spec 0007: length = barge + tug - notch depth, the barge's beam and draught,
+    // block coefficient = the displaced volumes over L x B x T.
+    use ovcd_core::formation::{TugDims, atb_equivalent_hull};
+    let tug = TugDims {
+        length_m: 28.0,
+        beam_m: 10.6,
+        draught_m: 4.5,
+    };
+    let eh = atb_equivalent_hull((100.0, 20.0, 6.0), 9_000.0, &tug, 600.0, 14.0);
+    close(eh.length_m, 114.0, "length");
+    close(eh.beam_m, 20.0, "beam");
+    close(eh.draught_m, 6.0, "draught");
+    close(eh.displaced_volume_m3, 9_600.0, "volume");
+    close(eh.block_coefficient, 9_600.0 / (114.0 * 20.0 * 6.0), "Cb");
+}
