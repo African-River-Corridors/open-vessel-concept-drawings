@@ -90,7 +90,7 @@ fn a_barge_that_does_not_float_gets_one_failed_criterion_and_no_curve() {
     // 2008 Part A 2.2.3, at least 25 degrees); was ok at 27 degrees.
     assert!(!light.ok());
     // lowest fluid GM; the two that do not float tie at -1, and the first of them wins
-    assert_eq!(a.governing().name, "Laden");
+    assert_eq!(a.lowest_gm().name, "Laden");
 }
 
 #[test]

@@ -6,9 +6,8 @@
 //! writes them (the shortest text that reads back exactly). The core uses the pure-Rust `libm`, so
 //! the same inputs give the same bytes on every platform.
 //!
-//! A pushed convoy is valid in a file but has no results yet: it gets
-//! [`CONVOY_NOT_AVAILABLE`] and no numbers. A single self-propelled Hull and a single pushed
-//! barge (without its pusher) are computed.
+//! A single self-propelled Hull, a single pushed barge (without its pusher) and a pushed convoy
+//! (one barge and the totals of every barge, without the pusher) are computed.
 
 use crate::rule_set::Library;
 use crate::simulate::{Outcome, RunRules, simulate_params_measured};
@@ -96,9 +95,7 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
     let get = |name: &str| option.input(name).map(|i| i.value.clone());
     let formation = get("formation").unwrap_or(Value::Null);
     let kind = formation.get("kind").and_then(Value::as_str).unwrap_or("");
-    if kind == "pushed_convoy" {
-        return Err(CONVOY_NOT_AVAILABLE.to_string());
-    }
+    // A pushed convoy is run as one pushed barge; `run_option_with` adds the totals (issue #358).
     let mut p = Map::new();
     let mut put = |key: &str, name: &str| {
         if let Some(v) = get(name)
@@ -480,7 +477,6 @@ pub fn run_option_with(
 ) -> RunOutcome {
     let params = match simulate_params_of(option) {
         Ok(p) => p,
-        Err(m) if m == CONVOY_NOT_AVAILABLE => return RunOutcome::NotAvailable(m),
         Err(m) => return RunOutcome::Failed(m),
     };
     // The Rule Sets of the run: the gas arrangement search keeps only candidates that meet them.
@@ -552,6 +548,10 @@ pub fn run_option_with(
                     crate::trace::service_area_of(option),
                     &selection.warnings,
                 );
+                if let Some((abreast, in_line)) = crate::convoy::counts(option) {
+                    crate::convoy::add_totals(abreast, in_line, &mut v);
+                }
+                crate::convoy::add_lock_checks(option, &mut v);
                 if let Some(o) = v.as_object_mut() {
                     o.insert("cost".to_string(), cost);
                     o.insert("calibration".to_string(), calibration_of(option));
@@ -699,6 +699,24 @@ pub fn summary_lines(name: &str, results: &Value) -> Vec<String> {
         f(dims, &["depth_m"], 1),
         f(dims, &["cb"], 3),
     )];
+    // Issue #358: a pushed convoy, and its totals. The numbers that follow are one barge's.
+    let convoy = &results["convoy"];
+    if convoy.is_object() {
+        let t = &convoy["totals"];
+        lines.push(format!(
+            "  Convoy: {} abreast x {} in line = {} barges, overall {} x {} m; cargo {} t, \
+             lightship {} t, deadweight {} t (the pusher is not in the totals). \
+             The numbers below are of one barge.",
+            convoy["abreast"],
+            convoy["in_line"],
+            convoy["barges"],
+            f(t, &["overall_length_m"], 1),
+            f(t, &["overall_beam_m"], 1),
+            f(t, &["cargo_t"], 1),
+            f(t, &["lightship_t"], 1),
+            f(t, &["deadweight_t"], 1),
+        ));
+    }
     lines.push(format!(
         "  Cargo: {} t ({})",
         f(r, &["cargo_t"], 1),

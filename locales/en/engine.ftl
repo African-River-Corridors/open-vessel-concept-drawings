@@ -212,6 +212,13 @@ msg-class-beyond = this length and beam are beyond the largest { $scheme } class
 msg-class-draught-above = `{ $input }` = { $value } is above the draught of class { $class } ({ $limit } m, the top of its range)
 msg-class-clearance-above = `{ $input }` = { $value } is above the lowest bridge clearance of class { $class } ({ $limit } m)
 
+## crates/ovcd-format/src/convoy.rs
+
+check-name-within-lock-length = within lock length
+check-lock-length = overall length { $length } m <= lock length { $limit } m
+check-name-within-lock-width = within lock width
+check-lock-width = overall beam { $width } m <= lock width { $limit } m
+
 ## crates/ovcd-format/src/offsets.rs
 
 msg-offsets-no-table = an offsets Hull Form needs its offsets table (`{ $input }`)
@@ -263,6 +270,8 @@ name-check-cargo = Cargo > 0
 name-check-feasible-arrangement = Feasible arrangement
 name-check-tank-length = tank length over diameter
 name-check-ok = OK
+name-check-lock-length = within lock length
+name-check-lock-width = within lock width
 name-curve-deep-water = Deep water
 name-governs-hold-volume = hold volume
 name-governs-tank-volume = tank volume

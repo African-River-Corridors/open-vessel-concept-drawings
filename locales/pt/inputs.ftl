@@ -336,6 +336,12 @@ input-wheelhouse-max-lift-m = Elevação máxima da casa do leme
 input-air-draft-limit-m = Limite de calado aéreo
 
 # status: draft
+input-lock-length-m = Comprimento da eclusa
+
+# status: draft
+input-lock-width-m = Largura da eclusa
+
+# status: draft
 input-draught-limit-m = Limite de calado
 
 # status: draft

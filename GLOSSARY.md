@@ -516,9 +516,9 @@ governs, and no Rule loosens another. "Governing" is kept for this sense only.
 _Avoid_: controlling rule, binding rule; "governing condition" (say lowest-GM Loading Condition);
 "governing air draft" (say light Air Draft)
 
-One exception, in names only: the result key `stability.governing` and the check name "Air draft (empty,
-governing)" keep the old word. In a result key, "governing" means the lowest-GM Loading Condition, and in that
-check name the light Air Draft. Renaming them moves results hashes, so it is a separate design change.
+The result key that names the lowest-GM Loading Condition is `stability.lowest_gm_condition` (it was
+`stability.governing`, renamed in #534). The check "Air draft (empty, governing)" was removed in #421; the light
+Air Draft is checked by `air draft within limit`.
 
 **Rules Kernel**:
 The domain-free part of the rules engine, the `arc-rules` crate: the Rule Set format and loader, the

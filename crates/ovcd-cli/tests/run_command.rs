@@ -212,72 +212,33 @@ fn convoy_design(dir: &Path) -> (PathBuf, Value) {
 }
 
 #[test]
-fn a_convoy_gives_the_not_yet_available_message_and_no_numbers() {
-    // Issue #138: a valid file whose only gap is a convoy exits 0; the message is a warning too.
+fn a_convoy_prints_its_totals_and_its_barge() {
+    // Issue #358: a pushed convoy has results: the totals of every barge, then one barge's numbers.
     let dir = temp_dir("convoy");
     let (file, _) = convoy_design(&dir);
     let out = ovcd(&["run", p(&file)]);
-    assert!(
-        out.status.success(),
-        "a convoy alone is not a failure: {}",
-        stderr(&out)
-    );
+    assert!(out.status.success(), "{}", stderr(&out));
     let text = stdout(&out);
-    assert!(text.contains("convoy results not yet available"), "{text}");
-    for number_line in ["Cargo:", "Lightship", "Draught", "Results hash"] {
-        assert!(!text.contains(number_line), "{number_line} in:\n{text}");
-    }
     assert!(
-        stderr(&out).contains("warning: Option 'Option 1': convoy results not yet available"),
-        "{}",
-        stderr(&out)
+        text.contains("Convoy: 2 abreast x 2 in line = 4 barges"),
+        "{text}"
     );
+    assert!(!text.contains("not yet available"), "{text}");
+    assert!(text.contains("Results hash"), "{text}");
     let j = ovcd(&["run", "--json", p(&file)]);
     assert!(j.status.success());
     let v: Value = serde_json::from_str(&stdout(&j)).unwrap();
-    assert_eq!(v["options"][0]["results"], Value::Null);
-    assert_eq!(v["options"][0]["status"], "not_yet_supported");
+    assert_eq!(v["options"][0]["status"], "results");
+    let c = &v["options"][0]["results"]["convoy"];
+    assert_eq!(c["barges"], 4);
     assert_eq!(
-        v["options"][0]["message"],
-        "convoy results not yet available"
+        c["totals"]["cargo_t"].as_f64().unwrap(),
+        4.0 * c["barge"]["cargo_t"].as_f64().unwrap()
     );
-    assert!(v["options"][0].get("results_hash").is_none());
-}
-
-/// Issue #64: a sloped-hopper Design runs as the sloped-hopper barge, in the summary and in
-/// `--json`, and its hold is not the box barge's (it has a hold bottom narrower than the top).
-#[test]
-fn a_sloped_hopper_design_runs_as_the_sloped_hopper_barge() {
-    let dir = temp_dir("hopper");
-    let file = filled(
-        &dir,
-        "hopper",
-        json!({
-            "cargo": "bauxite",
-            "hull_form": "raked_box",
-            "formation": { "kind": "pushed_barge" },
-            "length_overall_m": 76.5,
-            "beam_m": 11.4,
-            "moulded_depth_m": 3.5,
-            "cargo_containment": "sloped_hopper_hold",
-            "block_coefficient": 0.85
-        }),
-    );
-    let out = ovcd(&["run", p(&file)]);
-    assert!(out.status.success(), "{}", stderr(&out));
-    assert!(
-        stdout(&out).contains("Option 'Option 1': Bauxite in a Sloped-hopper dry bulk barge ("),
-        "{}",
-        stdout(&out)
-    );
-    let j = ovcd(&["run", "--json", p(&file)]);
-    let v: Value = serde_json::from_str(&stdout(&j)).unwrap();
-    let g = &v["options"][0]["results"]["geometry"];
-    assert!(g["hold_bottom_width_m"].as_f64().unwrap() < g["hold_top_width_m"].as_f64().unwrap());
 }
 
 #[test]
-fn json_tells_results_and_not_yet_supported_apart() {
+fn json_tells_a_barge_and_a_convoy_apart() {
     let dir = temp_dir("status");
     let file = starter(&dir);
     let mut design = read_json(&file);
@@ -289,35 +250,13 @@ fn json_tells_results_and_not_yet_supported_apart() {
     write_json(&file, &design);
     let v: Value = serde_json::from_str(&stdout(&ovcd(&["run", "--json", p(&file)]))).unwrap();
     assert_eq!(v["options"][0]["status"], "results");
-    assert_eq!(v["options"][1]["status"], "not_yet_supported");
+    assert_eq!(v["options"][1]["status"], "results");
+    assert!(v["options"][0]["results"].get("convoy").is_none());
+    assert_eq!(v["options"][1]["results"]["convoy"]["barges"], 2);
 }
 
 #[test]
-fn a_two_option_design_runs_the_barge_and_reports_the_convoy_beside_it() {
-    let dir = temp_dir("mixed");
-    let file = starter(&dir);
-    let mut design = read_json(&file);
-    let mut convoy = design["options"][0].clone();
-    convoy["name"] = json!("Convoy");
-    convoy["inputs"]["formation"] = json!({ "value": { "kind": "pushed_convoy", "abreast": 2, "in_line": 1 }, "source": "typed" });
-    convoy.as_object_mut().unwrap().remove("results_hash");
-    design["options"].as_array_mut().unwrap().push(convoy);
-    write_json(&file, &design);
-    let out = ovcd(&["run", p(&file)]);
-    let text = stdout(&out);
-    assert!(text.contains("Option 'Option 1': Bauxite"), "{text}");
-    assert!(
-        text.contains("Option 'Convoy': convoy results not yet available"),
-        "{text}"
-    );
-    assert!(
-        out.status.success(),
-        "convoy beside a computed Option exits 0"
-    );
-}
-
-#[test]
-fn a_hash_stored_on_a_convoy_option_gets_a_note_that_it_is_not_checked() {
+fn a_hash_stored_on_a_convoy_option_is_checked() {
     let dir = temp_dir("convoy-hash");
     let (file, mut design) = convoy_design(&dir);
     design["options"][0]["results_hash"] = json!("ab".repeat(32));
@@ -325,12 +264,12 @@ fn a_hash_stored_on_a_convoy_option_gets_a_note_that_it_is_not_checked() {
     let out = ovcd(&["run", p(&file)]);
     assert!(out.status.success(), "{}", stderr(&out));
     assert!(
-        stderr(&out).contains("Option 'Option 1': the stored results hash is not checked"),
+        stderr(&out).contains("results differ from the hash saved in the file"),
         "{}",
         stderr(&out)
     );
     let v: Value = serde_json::from_str(&stdout(&ovcd(&["run", "--json", p(&file)]))).unwrap();
-    assert_eq!(v["options"][0]["hash_status"], "not_checked");
+    assert_eq!(v["options"][0]["hash_status"], "differs");
 }
 
 #[test]

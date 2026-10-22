@@ -270,6 +270,10 @@ input-wheelhouse-max-lift-m = 驾驶室最大升高量
 # status: draft
 input-air-draft-limit-m = 水上高度限值
 # status: draft
+input-lock-length-m = 船闸长度
+# status: draft
+input-lock-width-m = 船闸宽度
+# status: draft
 input-draught-limit-m = 吃水限值
 # status: draft
 input-channel-depth-m = 航道水深

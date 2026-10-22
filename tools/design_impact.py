@@ -72,7 +72,7 @@ ENTRIES_AT = "\n### "
 # --- the fixed case set -------------------------------------------------------------------------
 
 def _inputs(cargo, containment, formation, loa, beam, depth, **more):
-    d = {"cargo": cargo, "hull_form": "raked_box", "formation": {"kind": formation},
+    d = {"cargo": cargo, "hull_form": "raked_box", "formation": formation if isinstance(formation, dict) else {"kind": formation},
          "length_overall_m": loa, "beam_m": beam, "moulded_depth_m": depth,
          "cargo_containment": containment}
     if depth is None:               # left out: the Defaults Profile's rule gives it
@@ -177,6 +177,9 @@ OPTIONAL_INPUT_CASES = (
     # a design that types one has the same results as one that gives none.
     ("downflooding_angle_deg", "LPG_propane", "type_c_tanks", "self_propelled", 110.0, 11.4, 6.0,
      {"downflooding_angle_deg": 60.0}),
+    # The lock (issue #358): the check of the overall size.
+    ("lock_length_m", "bauxite", "box_hold", "self_propelled", 90.0, 14.0, 4.5, {"lock_length_m": 85.0}),
+    ("lock_width_m", "bauxite", "box_hold", "pushed_barge", 90.0, 14.0, 4.5, {"lock_width_m": 13.0}),
     # The aft block inputs (issue #4, slice 4), set to their defaults in the same way. A self-propelled
     # hull carries the block; the unit counts default by Cargo phase (gas 1 battery and 2
     # accommodation units, dry bulk 2 and 1), so each has a gas and a dry case.
@@ -448,6 +451,13 @@ def cases() -> dict[str, dict]:
         "LPG_propane", "type_c_tanks", "self_propelled", 12.0, 4.0, 2.0)
     out["sweep gas carries nothing (draught limit)"] = _inputs(
         "LPG_propane", "type_c_tanks", "self_propelled", 90.0, 14.0, 5.5, draught_limit_m=0.5)
+    # A pushed convoy (issue #358): its totals, and its overall size against a lock it just fits and
+    # one it does not.
+    out["sweep box convoy 2x3"] = _inputs(
+        "bauxite", "box_hold", {"kind": "pushed_convoy", "abreast": 2, "in_line": 3}, 76.5, 11.4, 3.5)
+    out["sweep box convoy 2x3 in a lock"] = _inputs(
+        "bauxite", "box_hold", {"kind": "pushed_convoy", "abreast": 2, "in_line": 3}, 76.5, 11.4, 3.5,
+        lock_length_m=230.0, lock_width_m=22.0)
     out["sweep box lightship over the draught limit"] = _inputs(
         "bauxite", "box_hold", "pushed_barge", 60.0, 10.0, 4.5, draught_limit_m=0.3)
     # A left-out moulded depth is the Cargo's ratio times the beam (issue #120): one case for each Cargo

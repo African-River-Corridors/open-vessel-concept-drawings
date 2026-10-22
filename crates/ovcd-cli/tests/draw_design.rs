@@ -123,7 +123,7 @@ fn a_convoy_gets_no_drawings_and_the_outputs_panel_message() {
     ]);
     assert!(!ok);
     assert!(
-        stderr.contains("convoy results not yet available"),
+        stderr.contains("no drawings of a pushed convoy yet"),
         "{stderr}"
     );
     assert!(!dir.exists(), "nothing is written");

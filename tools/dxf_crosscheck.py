@@ -66,7 +66,7 @@ def main() -> int:
             out = tmp / fixture.stem
             proc = subprocess.run([args.ovcd, "draw", "--out", str(out), str(fixture)], capture_output=True, text=True)
             if proc.returncode != 0:
-                if "convoy results not yet available" in proc.stderr:
+                if "no drawings of a pushed convoy yet" in proc.stderr:
                     continue
                 problems.append(f"{fixture.name}: ovcd draw failed: {proc.stderr.strip()[:300]}")
                 continue

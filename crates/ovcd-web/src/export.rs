@@ -124,9 +124,9 @@ mod tests {
     }
 
     #[test]
-    fn a_convoy_gives_the_not_available_message() {
+    fn a_convoy_gives_the_no_drawings_message() {
         let state = open("pushed_convoy.vdesign");
         let err = svg(&state, &first_option(&state), "side").unwrap_err();
-        assert_eq!(err, ovcd_format::CONVOY_NOT_AVAILABLE);
+        assert_eq!(err, ovcd_format::CONVOY_NO_VIEWS);
     }
 }

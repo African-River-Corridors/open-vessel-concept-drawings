@@ -825,6 +825,22 @@
       "soft": { "min": 0.8, "max": 12.0 },
       "basis": "catalogue single-hull draughts span 1.0 to 9 m"
     },
+    "lock_length_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 1000 },
+      "soft": { "min": 20.0, "max": 400.0 },
+      "status": "estimate",
+      "basis": "none: no lock limit is checked. A Waterway Limit: the usable length of the lock chamber. The overall length of the Formation must not exceed it (issue #358): a self-propelled hull, a pushed barge, or a pushed convoy (barges in line x barge length, without its pusher yet). An ATB or a tow is not checked yet. A file saved before keeps none"
+    },
+    "lock_width_m": {
+      "default": null,
+      "unit": "m",
+      "hard": { "gt": 0, "le": 100 },
+      "soft": { "min": 5.0, "max": 60.0 },
+      "status": "estimate",
+      "basis": "none: no lock limit is checked. A Waterway Limit: the usable width of the lock chamber. The overall beam of the Formation (a pushed convoy: barges abreast x barge beam) must not exceed it (issue #358); an ATB or a tow is not checked yet. A file saved before keeps none"
+    },
     "channel_depth_m": {
       "default": null,
       "unit": "m",

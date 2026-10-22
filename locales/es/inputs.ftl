@@ -336,6 +336,12 @@ input-wheelhouse-max-lift-m = Elevación máxima del puente de gobierno
 input-air-draft-limit-m = Límite de calado aéreo
 
 # status: draft
+input-lock-length-m = Longitud de la esclusa
+
+# status: draft
+input-lock-width-m = Anchura de la esclusa
+
+# status: draft
 input-draught-limit-m = Límite de calado
 
 # status: draft

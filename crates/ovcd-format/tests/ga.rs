@@ -7,9 +7,7 @@ mod dxf_reader;
 use ovcd_core::pyfmt::fixed;
 use ovcd_draw::entities::Shape;
 use ovcd_draw::{NoFiles, Normalised, RunResult, run_value};
-use ovcd_format::{
-    CONVOY_NOT_AVAILABLE, GaViews, Profile, RunOutcome, check, ga_views_of, run_design,
-};
+use ovcd_format::{CONVOY_NO_VIEWS, GaViews, Profile, RunOutcome, check, ga_views_of, run_design};
 use serde_json::Value;
 use std::path::Path;
 
@@ -396,7 +394,7 @@ fn a_convoy_gets_no_views_and_the_message_of_the_outputs_panel() {
     let checked = check(&fixture("pushed_convoy.vdesign"), &Profile::built_in());
     let runs = run_design(&checked.design.unwrap());
     let outcome = &runs[0].outcome;
-    assert_eq!(ga_views_of(outcome), Err(CONVOY_NOT_AVAILABLE.to_string()));
+    assert_eq!(ga_views_of(outcome), Err(CONVOY_NO_VIEWS.to_string()));
     assert_eq!(
         ga_views_of(&RunOutcome::Failed("Cargo does not fit".into())),
         Err("Cargo does not fit".to_string())

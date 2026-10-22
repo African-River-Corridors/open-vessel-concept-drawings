@@ -910,6 +910,17 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::All,
         value: "null",
     },
+    // Issue #358: a file saved before checked no lock.
+    LegacyFixedJson {
+        name: "lock_length_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
+    LegacyFixedJson {
+        name: "lock_width_m",
+        applies_to: AppliesTo::All,
+        value: "null",
+    },
     // Issue #274 (spec 0004): a file saved before holds no Service Area; every Option was checked
     // as river-only.
     LegacyFixedJson {
@@ -2749,6 +2760,22 @@ pub const INPUTS: &[InputSpec] = &[
     spec(
         "draught_limit_m",
         "Draught limit",
+        NUM_OR_NONE,
+        false,
+        Group::WaterwayLimits,
+    ),
+    // Issue #358: a lock chamber the convoy must fit. The overall size of a convoy is checked
+    // against them; none: no check.
+    spec(
+        "lock_length_m",
+        "Lock length",
+        NUM_OR_NONE,
+        false,
+        Group::WaterwayLimits,
+    ),
+    spec(
+        "lock_width_m",
+        "Lock width",
         NUM_OR_NONE,
         false,
         Group::WaterwayLimits,
