@@ -240,6 +240,18 @@ pub(crate) fn add_formation(
     }
 }
 
+/// The warning of a sizing that stopped at the fifth pass without converging.
+fn convergence_note(sized: &Sized) -> Option<ovcd_core::text::Text> {
+    (!sized.converged).then(|| {
+        text!(
+            "warn-formation-sizing-not-converged",
+            "The pusher sizing did not converge in {passes} passes (the power moved by more than {tol} %). The power shown is that of the last pass.",
+            passes = Arg::Count(MAX_PASSES as i64),
+            tol = Arg::fixed(POWER_TOLERANCE * 100.0, 0),
+        )
+    })
+}
+
 fn build(
     option: &DesignOption,
     p: &Map<String, Value>,
@@ -300,14 +312,7 @@ fn build(
         return Err(e);
     }
     let r = last.ok_or("the sizing ran no pass")?;
-    if !sized.converged {
-        notes.push(text!(
-            "warn-formation-sizing-not-converged",
-            "The pusher sizing did not converge in {passes} passes (the power moved by more than {tol} %). The power shown is that of the last pass.",
-            passes = Arg::Count(MAX_PASSES as i64),
-            tol = Arg::fixed(POWER_TOLERANCE * 100.0, 0),
-        ));
-    }
+    notes.extend(convergence_note(&sized));
     notes.push(text!(
         "note-formation-method-unverified",
         "The Formation's resistance is that of its Equivalent Hull (the barges and the pusher as one hull) by the single-hull method, times the Formation resistance allowance. The method is unverified."
@@ -385,6 +390,12 @@ fn build(
             "machinery_t": crate::eval::num(r.machinery_t),
             "lightship_t": crate::eval::num(r.lightship_t),
         },
+        // The ratios of the pusher and the Formation allowance are not calibrated yet (part 2 of #359
+        // fits them to the reference pushers), as the lightship says in `calibration` (#434).
+        "calibration": {
+            "state": "uncalibrated",
+            "basis": "The pusher ratios and the Formation resistance allowance are estimates not yet fitted to the reference pushers; a small pusher can be far from a real one."
+        },
         "sizing": {
             "passes": sized.passes,
             "converged": sized.converged,
@@ -395,4 +406,35 @@ fn build(
         "coupling_force_kn": crate::eval::num(force),
         "notes": notes.iter().map(|n| json!(n.en)).collect::<Vec<_>>(),
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_sizing_that_stopped_at_five_passes_gives_a_warning_with_a_message_id() {
+        let stopped = Sized {
+            power_kw: 1000.0,
+            passes: MAX_PASSES,
+            converged: false,
+        };
+        let note = convergence_note(&stopped).expect("a warning");
+        assert_eq!(
+            note.msg.as_ref().unwrap().id,
+            "warn-formation-sizing-not-converged"
+        );
+        assert!(
+            note.en.contains("did not converge in 5 passes"),
+            "{}",
+            note.en
+        );
+        // A sizing that converged gives none.
+        let done = Sized {
+            converged: true,
+            passes: 3,
+            ..stopped
+        };
+        assert!(convergence_note(&done).is_none());
+    }
 }
