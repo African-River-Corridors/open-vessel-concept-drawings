@@ -4,7 +4,7 @@
 <!-- design-impact -->
 ### ticket/464-gas-consumption (2026-10-22)
 
-Between `main f9f99bb` and `this branch 7f99086`.
+Between `main b68ecb7` and `this branch ad7d92a`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -14,7 +14,7 @@ Between `main f9f99bb` and `this branch 7f99086`.
 | sweep CN-derived liquid 1 (88x16.3) | `checks[28].name` | absent | cargo as fuel | changed |
 | sweep CN-derived liquid 1 (88x16.3) | `checks[28].ok` | absent | False | changed |
 | sweep CN-derived liquid 1 (88x16.3) | `checks[28].severity` | absent | warning | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `powering.environments[0].fuel_gas_kg_per_h` | absent | 89.548911849 | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `powering.environments[0].fuel_gas_kg_per_h` | absent | 89.5686094878 | changed |
 | sweep CN-derived liquid 1 (88x16.3) | `powering.environments[0].fuel_gas_kj_per_kwh` | absent | 8862 | changed |
 | sweep CN-derived liquid 1 (88x16.3) | `powering.fuel_gas.alternator_efficiency` | absent | 0.955 | changed |
 | sweep CN-derived liquid 1 (88x16.3) | `powering.fuel_gas.basis` | absent | Wartsila 20DF Product Guide 1/2018 p. 3-1 (6L20DF, gas mode, 160 kW per cylinder), a published dual-fuel genset of the same size class: a stand-in Estimate until a maker's sheet for the chosen genset is found | changed |
@@ -25,8 +25,8 @@ Between `main f9f99bb` and `this branch 7f99086`.
 | sweep CN-derived liquid 2 (130x16.3) | `checks[29].name` | absent | cargo as fuel | changed |
 | sweep CN-derived liquid 2 (130x16.3) | `checks[29].ok` | absent | False | changed |
 | sweep CN-derived liquid 2 (130x16.3) | `checks[29].severity` | absent | warning | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `powering.environments[0].fuel_gas_kg_per_h` | absent | 125.485782034 | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `powering.environments[0].fuel_gas_kj_per_kwh` | absent | 8714.91159013 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `powering.environments[0].fuel_gas_kg_per_h` | absent | 125.508350798 | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `powering.environments[0].fuel_gas_kj_per_kwh` | absent | 8714.65666838 | changed |
 | sweep CN-derived liquid 2 (130x16.3) | `powering.fuel_gas.alternator_efficiency` | absent | 0.955 | changed |
 | sweep CN-derived liquid 2 (130x16.3) | `powering.fuel_gas.basis` | absent | Wartsila 20DF Product Guide 1/2018 p. 3-1 (6L20DF, gas mode, 160 kW per cylinder), a published dual-fuel genset of the same size class: a stand-in Estimate until a maker's sheet for the chosen genset is found | changed |
 | sweep CN-derived liquid 2 (130x16.3) | `powering.fuel_gas.lower_calorific_value_kj_per_kg` | absent | 49620 | changed |
@@ -36,8 +36,8 @@ Between `main f9f99bb` and `this branch 7f99086`.
 | sweep CN-derived liquid 3 (130x17.2) | `checks[28].name` | absent | cargo as fuel | changed |
 | sweep CN-derived liquid 3 (130x17.2) | `checks[28].ok` | absent | False | changed |
 | sweep CN-derived liquid 3 (130x17.2) | `checks[28].severity` | absent | warning | changed |
-| sweep CN-derived liquid 3 (130x17.2) | `powering.environments[0].fuel_gas_kg_per_h` | absent | 129.899255111 | changed |
-| sweep CN-derived liquid 3 (130x17.2) | `powering.environments[0].fuel_gas_kj_per_kwh` | absent | 8664.72562546 | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `powering.environments[0].fuel_gas_kg_per_h` | absent | 129.922498711 | changed |
+| sweep CN-derived liquid 3 (130x17.2) | `powering.environments[0].fuel_gas_kj_per_kwh` | absent | 8664.45951741 | changed |
 | sweep CN-derived liquid 3 (130x17.2) | `powering.fuel_gas.alternator_efficiency` | absent | 0.955 | changed |
 | sweep CN-derived liquid 3 (130x17.2) | `powering.fuel_gas.basis` | absent | Wartsila 20DF Product Guide 1/2018 p. 3-1 (6L20DF, gas mode, 160 kW per cylinder), a published dual-fuel genset of the same size class: a stand-in Estimate until a maker's sheet for the chosen genset is found | changed |
 | sweep CN-derived liquid 3 (130x17.2) | `powering.fuel_gas.lower_calorific_value_kj_per_kg` | absent | 49620 | changed |
@@ -47,5 +47,5 @@ Between `main f9f99bb` and `this branch 7f99086`.
 | sweep default depth gas 90x14 | `boil_off.cargo_temperature_c` | absent | -162 | changed |
 | sweep default depth gas 90x14 | `boil_off.conductivity_w_per_mk` | absent | 0.026 | changed |
 | sweep default depth gas 90x14 | `boil_off.evaluated` | absent | True | changed |
-| sweep default depth gas 90x14 | `boil_off.gas_use_kg_per_h` | absent | 66.6649223077 | changed |
-| ... | 1170 more changed quantities | | | |
+| sweep default depth gas 90x14 | `boil_off.gas_use_kg_per_h` | absent | 66.6792680576 | changed |
+| ... | 1192 more changed quantities | | | |
