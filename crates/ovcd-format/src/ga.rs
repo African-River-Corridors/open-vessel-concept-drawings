@@ -2263,16 +2263,9 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
             coaming,
         } => {
             let bottom = *inner_bottom;
-            // the inner bottom across the hull, and the coaming above the deck on each side
+            // the inner bottom across the hull; the hold side runs on up to the coaming top, where
+            // the volume model takes the top width
             c.line("OUTLINE", [-half, bottom], [half, bottom], None);
-            for side in [-1.0, 1.0] {
-                c.line(
-                    "OUTLINE",
-                    [side * top_width / 2.0, h.depth],
-                    [side * top_width / 2.0, h.depth + coaming],
-                    None,
-                );
-            }
             labels.push((
                 label!(
                     "draw-inner-bottom",
@@ -2292,10 +2285,10 @@ fn midship_section(h: &Hull, n: u32) -> Canvas {
             c.polyline(
                 "OUTLINE",
                 &[
-                    [-top_width / 2.0, h.depth],
+                    [-top_width / 2.0, h.depth + coaming],
                     [-bottom_width / 2.0, bottom],
                     [bottom_width / 2.0, bottom],
-                    [top_width / 2.0, h.depth],
+                    [top_width / 2.0, h.depth + coaming],
                 ],
                 false,
             );

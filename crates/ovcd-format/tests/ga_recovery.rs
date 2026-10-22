@@ -395,27 +395,29 @@ fn the_hold_floor_is_the_inner_bottom_not_depth_less_hold_height() {
             "{file}: the inner bottom across the hull"
         );
         let top_w = f(&r["geometry"]["hold_top_width_m"]);
-        let coamings: Vec<_> = section_lines
-            .iter()
-            .filter(|e| {
-                let (a, b) = ends(e);
-                close(a.0, b.0)
-                    && close(a.1.min(b.1), depth)
-                    && close(a.1.max(b.1), depth + coaming)
-            })
-            .collect();
-        assert_eq!(
-            coamings.len(),
-            2,
-            "{file}: two coaming sides in the section"
-        );
+        // The hold side runs on up to the coaming top (#408), where the volume model takes the top
+        // width: the section holds no separate vertical coaming line.
         assert!(
-            coamings
-                .iter()
-                .all(|e| close(ends(e).0.0.abs(), top_w / 2.0))
+            section_lines.iter().all(|e| {
+                let (a, b) = ends(e);
+                !(close(a.0, b.0) && close(a.1.min(b.1), depth))
+            }),
+            "{file}: no vertical coaming line in the section"
         );
-        // the hold polyline in section ends on the inner bottom
         let hold_section = of_layer(&v.midship_section, "OUTLINE", "polyline");
+        let top_corners = hold_section
+            .iter()
+            .filter(|p| points(p).len() == 4)
+            .flat_map(|p| points(p))
+            .filter(|q| close(q.1, depth + coaming))
+            .collect::<Vec<_>>();
+        assert_eq!(
+            top_corners.len(),
+            2,
+            "{file}: two corners at the coaming top"
+        );
+        assert!(top_corners.iter().all(|q| close(q.0.abs(), top_w / 2.0)));
+        // the hold polyline in section ends on the inner bottom
         assert!(
             hold_section
                 .iter()
