@@ -82,7 +82,8 @@ sources:
 
 # Web pages the held-out cases cite (issue #3). Unlike the stored files above they are not kept in S3: the
 # url is the page as read on the accessed date. A case's  starts with its id here.
-# Each web source has `retrieved` and `sha256` (of the bytes served), or a `checksum_note` that says why not.
+# A checksum of each web source is attempted, and may fail. An entry holds either `retrieved` and `sha256` (of the
+# bytes served), or `checksum_attempted` (the date) and `checksum_failed` (the reason). Nothing gates on it.
 web_sources:
 - id: S1
   title: "Canal Barge Company, spec sheet CBC 1951-1954"
@@ -178,7 +179,8 @@ web_sources:
   title: "VL Maritime Services, Barges (all types), detailed specification tables"
   url: https://www.vlmaritime.com/barges/
   accessed: '2026-10-16'
-  checksum_note: "the server answered 503 on 2026-10-22 after three tries"
+  checksum_attempted: '2026-10-22'
+  checksum_failed: "the server answered 503 three times"
   note: "Broker page"
 - id: S15
   title: "Jenkins Marine, JML 5019 flat-top pontoon barge spec sheet"
@@ -462,7 +464,8 @@ web_sources:
   title: "Kirby Corporation barge database, KIRBY 27773"
   url: https://web.archive.org/web/20231119061500/https://vesselinfo.kirbycorp.com/BargeInfo/Details/164554
   accessed: '2026-10-16'
-  checksum_note: "the connection was refused on 2026-10-22 after three tries"
+  checksum_attempted: '2026-10-22'
+  checksum_failed: "the connection was refused three times"
   note: "Wayback capture; the live site is unreachable from the machine used for the research"
 - id: K11
   title: "Kirby Corporation barge database, KIRBY 32300B"
@@ -797,7 +800,8 @@ web_sources:
   title: "Senjanovic et al., Structure design of cargo tanks in river liquefied gas carriers, DESIGN 2006 (Design Society)"
   url: https://datainformed.designsociety.org/download-publication/19022/STRUCTURE+DESIGN+OF+CARGO+TANKS+IN+RIVER+LIQUEFIED+GAS+CARRIERS
   accessed: '2026-10-16'
-  checksum_note: "the TLS certificate of the site did not verify on 2026-10-22; the page was not fetched"
+  checksum_attempted: '2026-10-22'
+  checksum_failed: "the TLS certificate of the site did not verify; the page was not fetched"
   note: "Read with curl; a TLS error stops some browsers. Used for the first tank case (issue #292)"
 - id: P2
   title: "Seo and Lee, J. Mar. Sci. Eng. 2026, 14, 821 (a 5,000 m3 liquid CO2 Type C tank design study)"
