@@ -83,6 +83,8 @@ export interface InputSpec extends Ranges {
   default_source?: string;
   kind: "number" | "bool" | "choice" | "cargo" | "formation" | "vessel_scheme" | "vessel_class" | "parameter_set" | "offsets_table" | "text" | "rule_sets";
   nullable?: boolean;
+  /** For `rule_sets`: each built-in Rule Set with its status and unverified blocking Rules. */
+  known_sets?: { id: string; version: string; status: string; unverified_blocking: number }[];
   choices?: Choice[];
   default?: unknown;
   default_by?: { by: string; values: Record<string, unknown> };

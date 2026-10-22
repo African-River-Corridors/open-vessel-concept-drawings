@@ -546,6 +546,10 @@ pub fn summary_lines(name: &str, results: &Value) -> Vec<String> {
             f(tank, &["design_pressure_mpa"], 2),
         ));
     }
+    // Issue #275: the scope of the check, from the Rule Trace.
+    if let Some(scope) = results["rule_trace"]["scope"].as_str() {
+        lines.push(format!("  Scope: {scope}"));
+    }
     // A failed warning is not a failure: it is listed apart (issue #418). A check with no severity
     // is an error.
     let checks = results["checks"].as_array().cloned().unwrap_or_default();

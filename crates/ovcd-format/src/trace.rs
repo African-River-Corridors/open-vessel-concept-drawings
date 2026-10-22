@@ -4,7 +4,7 @@
 use crate::profile::Profile;
 use crate::rule_set::{Library, Selection};
 use crate::simulate::Measured;
-use crate::vdesign::{DesignOption, INPUTS, InputKind};
+use crate::vdesign::{DesignOption, INPUTS, InputKind, Source, StoredInput};
 use ovcd_core::gas_arrangement::RuleInputs;
 use ovcd_core::rule_trace::{
     ArgDef, MeasureInfo, MeasureSource, MeasureValue, MethodStatus, ObjectType, Outcome, Trace,
@@ -65,12 +65,24 @@ pub fn default_stack_ids(containment: Option<&str>) -> Vec<&'static str> {
     }
 }
 
-/// The default `rule_sets` input for a Cargo Containment: the default stack at the highest built-in
-/// version of each set, each marked `default`, with the content hash of that version.
-pub fn default_rule_sets(containment: Option<&str>) -> Value {
+/// The default `rule_sets` input for a Service Area and a Cargo Containment, from the profile's
+/// default stacks (the built-in stack when the profile gives none): each set at its highest built-in
+/// version, marked `default`, with the content hash of that version.
+pub fn default_rule_sets(
+    profile: &Profile,
+    service_area: &str,
+    containment: Option<&str>,
+) -> Value {
+    let gas = containment == Some("type_c_tanks");
+    let ids: Vec<String> = profile.default_stack(service_area, gas).unwrap_or_else(|| {
+        default_stack_ids(containment)
+            .into_iter()
+            .map(String::from)
+            .collect()
+    });
     let library = crate::rule_set::built_in();
-    let sets: Vec<Value> = default_stack_ids(containment)
-        .into_iter()
+    let sets: Vec<Value> = ids
+        .iter()
         .filter_map(|id| library.latest(id))
         .map(|set| {
             json!({
@@ -82,6 +94,126 @@ pub fn default_rule_sets(containment: Option<&str>) -> Value {
         })
         .collect();
     Value::Array(sets)
+}
+
+/// The entries of an Option's `rule_sets` input (empty when it has none).
+fn rule_set_entries(option: &DesignOption) -> Vec<Value> {
+    option
+        .input("rule_sets")
+        .and_then(|i| i.value.as_array().cloned())
+        .unwrap_or_default()
+}
+
+/// Write the Option's `rule_sets`. The input is marked `typed` when any entry is `typed`, else
+/// `default`. The stored results hash is dropped: the stack changed.
+fn write_rule_sets(option: &mut DesignOption, list: Vec<Value>) {
+    let typed = list.iter().any(|e| e["source"] == "typed");
+    let stored = StoredInput {
+        value: Value::Array(list),
+        source: if typed {
+            Source::Typed
+        } else {
+            Source::Default
+        },
+    };
+    match option.inputs.iter_mut().find(|(n, _)| n == "rule_sets") {
+        Some((_, slot)) => *slot = stored,
+        None => option.inputs.push(("rule_sets".into(), stored)),
+    }
+    option.results_hash = None;
+}
+
+/// Reset the `default` entries of the Option's `rule_sets` to the default stack of its Service Area
+/// and Cargo Containment, from `profile`, and keep the `typed` ones (a typed entry replaces the
+/// default one with its id). Issue #275: the Service Area or the Cargo changed.
+pub fn refresh_default_rule_sets(option: &mut DesignOption, profile: &Profile) {
+    if option.input("rule_sets").is_none() {
+        return;
+    }
+    let containment = option
+        .input("cargo_containment")
+        .and_then(|i| i.value.as_str())
+        .map(String::from);
+    let mut list = default_rule_sets(profile, service_area_of(option), containment.as_deref())
+        .as_array()
+        .cloned()
+        .unwrap_or_default();
+    for typed in rule_set_entries(option)
+        .into_iter()
+        .filter(|e| e["source"] == "typed")
+    {
+        match list.iter().position(|e| e["id"] == typed["id"]) {
+            Some(at) => list[at] = typed,
+            None => list.push(typed),
+        }
+    }
+    write_rule_sets(option, list);
+}
+
+/// Add a set to the Option's `rule_sets`, as `typed`, at `id@version`. Another version of the same
+/// id is replaced. Refused when the library lacks the set, or the selection that results is refused
+/// (an include cycle, two versions of one set, one rule id with two meanings).
+pub fn add_rule_set(
+    option: &mut DesignOption,
+    library: &Library,
+    spec: &str,
+) -> Result<(), String> {
+    let set = library
+        .lookup(spec)
+        .ok_or_else(|| format!("Rule Set `{spec}` is not in this engine"))?;
+    let mut list = rule_set_entries(option);
+    let entry = json!({
+        "id": set.id, "version": set.version, "hash": set.hash, "source": "typed",
+    });
+    match list.iter().position(|e| e["id"] == json!(set.id)) {
+        Some(at) => list[at] = entry,
+        None => list.push(entry),
+    }
+    check_selection(library, &list)?;
+    write_rule_sets(option, list);
+    Ok(())
+}
+
+/// Remove a set from the Option's `rule_sets`. The `ovcd` set cannot be removed, and a set that a
+/// selected set `includes` cannot be removed while that set is selected.
+pub fn remove_rule_set(
+    option: &mut DesignOption,
+    library: &Library,
+    id: &str,
+) -> Result<(), String> {
+    if id == "ovcd" {
+        return Err("the `ovcd` Rule Set cannot be removed".to_string());
+    }
+    let mut list = rule_set_entries(option);
+    let at = list
+        .iter()
+        .position(|e| e["id"] == json!(id))
+        .ok_or_else(|| format!("Rule Set `{id}` is not selected"))?;
+    for other in &list {
+        let (oid, over) = (other["id"].as_str(), other["version"].as_str());
+        if let (Some(oid), Some(over)) = (oid, over)
+            && oid != id
+            && library
+                .find(oid, over)
+                .is_some_and(|s| s.includes.iter().any(|i| i.id == id))
+        {
+            return Err(format!(
+                "Rule Set `{id}` is required by {oid}@{over}, which is selected"
+            ));
+        }
+    }
+    list.remove(at);
+    write_rule_sets(option, list);
+    Ok(())
+}
+
+/// The selection of the stored sets must be accepted by the library.
+fn check_selection(library: &Library, list: &[Value]) -> Result<(), String> {
+    let pairs: Vec<(&str, &str)> = list
+        .iter()
+        .filter_map(|e| Some((e["id"].as_str()?, e["version"].as_str()?)))
+        .collect();
+    library.select(&pairs).map(|_| ())
 }
 
 /// The Service Area of an Option: its input, or the default.
@@ -425,7 +557,19 @@ pub fn trace_json(t: &Trace, service_area: &str, warnings: &[String]) -> Value {
             names.join(", ")
         )
     };
+    // The scope of the result (spec 0004, "Service Area and default stacks"; ADR 0011): the Service
+    // Area, the sets, what was not checked, and the verdict with its not evaluated Rules.
+    let not_checked = if service_area == "river-only" {
+        "no statutory technical code was checked, only these Rule Sets"
+    } else {
+        "only these Rule Sets were checked, not a statutory technical code"
+    };
+    let scope = format!(
+        "Service Area {service_area}; Rule Sets {}; {not_checked}. {summary}",
+        t.sets.join(", ")
+    );
     json!({
+        "scope": scope,
         "rule_sets": t.sets,
         "service_area": service_area,
         "warnings": warnings,

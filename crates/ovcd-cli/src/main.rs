@@ -24,13 +24,17 @@ Usage:
       Prints to stdout when no file is given.
       --class defines the Option by a standard Vessel Class (see `ovcd schema`, input
       `vessel_class`): length, beam and Formation come from the class and are marked \"class\".
-  ovcd fill [--profile <profile.json>] [--rule-set <file>]... [--as-new] <in.vdesign> [<out.vdesign>]
+  ovcd fill [--profile <profile.json>] [--rule-set <file>]... [--add-rule-set <id>@<version>]...
+            [--remove-rule-set <id>]... [--as-new] <in.vdesign> [<out.vdesign>]
       Write every input a hand-written Design leaves out in, as used and marked \"default\",
       from the Defaults Profile. Prints to stdout when no output file is given; never
       overwrites a file. Writes nothing and exits 1 if there is any hard error.
       An input that was added after the first files (see ADR 0007) takes the fixed value the
       engine used before it existed, so an old file keeps its results. --as-new takes the
       Defaults Profile value instead, as a new Design does: use it for a file you write now.
+      --add-rule-set adds a Rule Set to every Option, marked \"typed\" (a loaded --rule-set file
+      may supply it); --remove-rule-set removes one. The `ovcd` set stays, and so does a set that a
+      selected set includes.
   ovcd validate [--profile <profile.json>] [--rule-set <file>]... [--inputs] <file.vdesign>
       List hard errors and soft warnings without running. --inputs also lists every input
       as used, typed or default. Exits 1 if there is any hard error. A file must store
@@ -155,6 +159,8 @@ fn usage_error(command: &str, msg: &str) -> ExitCode {
 struct Flags<'a> {
     profile: Option<&'a str>,
     rule_sets: Vec<&'a str>,
+    add_rule_sets: Vec<&'a str>,
+    remove_rule_sets: Vec<&'a str>,
     inputs: bool,
     json: bool,
     as_new: bool,
@@ -170,6 +176,8 @@ fn parse_flags<'a>(
     let mut flags = Flags {
         profile: None,
         rule_sets: Vec::new(),
+        add_rule_sets: Vec::new(),
+        remove_rule_sets: Vec::new(),
         inputs: false,
         json: false,
         as_new: false,
@@ -186,6 +194,17 @@ fn parse_flags<'a>(
                 flags
                     .rule_sets
                     .push(it.next().ok_or("--rule-set needs a file")?);
+            }
+            // Issue #275: only `fill` writes a Design, so only `fill` takes them.
+            "--add-rule-set" if allow_as_new => {
+                flags
+                    .add_rule_sets
+                    .push(it.next().ok_or("--add-rule-set needs <id>@<version>")?);
+            }
+            "--remove-rule-set" if allow_as_new => {
+                flags
+                    .remove_rule_sets
+                    .push(it.next().ok_or("--remove-rule-set needs a set id")?);
             }
             "--inputs" if allow_inputs => flags.inputs = true,
             "--json" if allow_json => flags.json = true,
@@ -422,8 +441,8 @@ fn fill(args: &[&str]) -> Result<(), String> {
         _ => return Err("give one .vdesign file, and optionally an output file".into()),
     };
     let profile = load_profile(flags.profile)?;
-    // Checked now; `fill` computes nothing, so nothing reads the sets.
-    load_rule_sets(&flags.rule_sets)?;
+    // `fill` computes nothing; the sets are read for `--add-rule-set` and `--remove-rule-set`.
+    let (library, _) = load_rule_sets(&flags.rule_sets)?;
     let text = std::fs::read_to_string(input).map_err(|e| format!("cannot read {input}: {e}"))?;
     let filled = if flags.as_new {
         ovcd_format::fill_as_new(&text, &profile)
@@ -437,8 +456,8 @@ fn fill(args: &[&str]) -> Result<(), String> {
     for w in &r.warnings {
         eprintln!("warning: {w}");
     }
-    let design = match (&filled.design, r.is_ok()) {
-        (Some(design), true) => design,
+    let mut design = match (&filled.design, r.is_ok()) {
+        (Some(design), true) => design.clone(),
         _ => {
             return Err(format!(
                 "{} error(s); nothing written",
@@ -446,6 +465,17 @@ fn fill(args: &[&str]) -> Result<(), String> {
             ));
         }
     };
+    // Issue #275: add or remove Rule Sets in every Option; a refusal writes nothing.
+    for option in &mut design.options {
+        for spec in &flags.add_rule_sets {
+            ovcd_format::trace::add_rule_set(option, &library, spec)
+                .map_err(|e| format!("Option '{}': {e}", option.name))?;
+        }
+        for id in &flags.remove_rule_sets {
+            ovcd_format::trace::remove_rule_set(option, &library, id)
+                .map_err(|e| format!("Option '{}': {e}", option.name))?;
+        }
+    }
     let text = design.to_text();
     match output {
         None => {

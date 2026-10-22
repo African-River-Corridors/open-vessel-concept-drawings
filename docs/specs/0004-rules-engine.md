@@ -428,6 +428,11 @@ One row per Rule per object, in selection order, then the set's rule order, then
   selected.
 - **Since format version 3** (#274, with the ADR 0012 hull block) an Option stores `service_area` and
   `rule_sets`, and the run checks the stored sets at the stored versions.
+- **Where the stacks live (#275).** In the Defaults Profile, input `rule_sets`, key `default_stacks`:
+  per Service Area, a `gas` list (a Type C tank Cargo Containment) and an `other` list of set ids. A new
+  Option takes each set at its highest built-in version. A profile copy may change them; the `ovcd` set
+  must be in each. Changing the Service Area or the Cargo resets the `default` entries of `rule_sets` and
+  keeps the `typed` ones (a typed entry takes the place of the default one with its id).
 - **Default stacks built in this spec.** The sets that exist after this spec are the same for both
   Service Areas. The input still goes in now, so files record where the vessel operates, and the stacks
   can diverge as sets land, with no further format change.
