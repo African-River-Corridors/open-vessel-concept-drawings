@@ -115,7 +115,7 @@ fn every_check_of_a_result_reports_exactly_one_rule() {
         "feasible geometry",
         "air draft within limit",
         "intact gm at reported cargo",
-        "cofferdam min width",
+        "aft end bulkhead space",
         "wheelhouse sees over cargo",
         "Feasible arrangement",
     ] {

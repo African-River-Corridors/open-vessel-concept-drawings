@@ -361,6 +361,43 @@
       "evaluated": true,
       "finding": "#381",
       "since": "2.0.0"
+    },
+    {
+      "id": "lr-inland/3.5.3/aft-end-space",
+      "title": "Space between the tanks and the aft hold end bulkhead: 0.20 m, or 0.50 m for plane ends (replaces the type C cofferdam width, #280)",
+      "origin": "class",
+      "source": {
+        "document": "Lloyd's Register, Rules and Regulations for the Classification of Inland Waterways Ships, Pt 4 Ch 4 Sec 3",
+        "edition": "July 2022 as the code cites it; read in the November 2015 edition, and in an unofficial copy of the July 2022 section, which have the same clauses",
+        "locator": "3.5.3",
+        "page": "LR-IWW-Rules-Nov2015.pdf, PDF p. 255",
+        "access": "free",
+        "also": [
+          "ADN 2025 9.3.1.11.3(a)"
+        ]
+      },
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-22",
+        "review": "#280"
+      },
+      "verified": false,
+      "kind": "table",
+      "measure": {
+        "id": "separation.cofferdam"
+      },
+      "compare": "ge",
+      "limit": {
+        "table": "lr-end-space",
+        "at": "separation.tank_end",
+        "unit": "m"
+      },
+      "tolerance": 1e-09,
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": "#280",
+      "since": "2.0.0"
     }
   ]
 }

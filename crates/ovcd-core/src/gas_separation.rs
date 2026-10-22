@@ -9,6 +9,10 @@ use crate::text;
 use crate::text::{Arg, Text};
 
 // Rule constants, each with its clause in the Python file.
+/// The default aft end-bulkhead space (`cofferdam_m`). 0.60 m is the width of the cofferdam of the
+/// type C (liquid cargo) part, 3.6.13; it is not a limit on a gas Design (issue #280), whose rule is
+/// the end-bulkhead space of 3.5.3 (see [`END_BULKHEAD_SPACE_M`]). It stays the default so no
+/// arrangement changes.
 pub const COFFERDAM_MIN_M: f64 = 0.60;
 pub const OPENING_SETBACK_M: f64 = 2.00;
 /// The space between the cargo tanks and the hold end bulkhead where the tanks have plane ends
@@ -103,14 +107,21 @@ pub fn compute(inp: &GasSeparationInputs) -> Result<GasSeparationResult, String>
     };
 
     let checks = alloc::vec![
+        // Issue #280: the type G clause 3.5.3 (ADN 9.3.1.11.3(a)), not the type C cofferdam of
+        // 3.6.13. The A-60 class of the bulkhead to the spaces outside the cargo area is not checked.
         Check::new(
-            "cofferdam_min_width",
-            inp.cofferdam_m >= COFFERDAM_MIN_M - 1e-9,
+            "aft_end_bulkhead_space",
+            inp.cofferdam_m >= floor - 1e-9,
             text!(
-                "check-cofferdam-min-width",
-                "cofferdam {cofferdam} m >= {min} m (cl. 3.6.13)",
-                cofferdam = Arg::fixed(inp.cofferdam_m, 2),
-                min = Arg::fixed(COFFERDAM_MIN_M, 2),
+                "check-aft-end-bulkhead-space",
+                "aft end-bulkhead space {aft} m >= {min} m ({tank_ends}, cl. 3.5.3)",
+                aft = Arg::fixed(inp.cofferdam_m, 2),
+                min = Arg::fixed(floor, 2),
+                tank_ends = if inp.plane_tank_ends {
+                    Text::fixed("check-fwd-end-bulkhead-space-plane-ends", "plane tank ends")
+                } else {
+                    Text::fixed("check-fwd-end-bulkhead-space-domed-ends", "domed tank ends")
+                },
             ),
         ),
         Check::new(

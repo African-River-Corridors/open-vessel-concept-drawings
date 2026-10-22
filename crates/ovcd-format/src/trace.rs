@@ -683,7 +683,7 @@ pub const CHECK_RULES: &[(&str, &str)] = &[
         "wheelhouse sees over cargo",
         "ovcd/aft-block/wheelhouse-sightline",
     ),
-    ("cofferdam min width", "lr-inland/3.6.13/cofferdam"),
+    ("aft end bulkhead space", "lr-inland/3.5.3/aft-end-space"),
     ("opening setback", "lr-inland/3.3.7/opening-setback"),
     ("fwd end bulkhead space", "lr-inland/3.5.3/end-space"),
     // The checks only the arrangement search makes (`fit`, #277).
