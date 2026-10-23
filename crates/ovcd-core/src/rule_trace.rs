@@ -337,7 +337,7 @@ pub static MEASURES: &[MeasureDef] = &[
         object: ObjectType::Option,
         value: ValueKind::Number,
         args: &[],
-        method: "ES-TRIN ESI-III-6 2.1: F_SB = 270 x P_B x L_S / B_S x 10^-3 kN for a pusher and its pushed craft; the Formation powering is not built",
+        method: "ES-TRIN ESI-III-6 2.1: F_SB = 270 x P_B x L_S / B_S x 10^-3 kN for a pusher and its pushed craft, with P_B the pusher's installed power and L_S, B_S the pusher's length and beam, from the Formation powering",
         method_status: MethodStatus::Unverified,
     },
     MeasureDef {

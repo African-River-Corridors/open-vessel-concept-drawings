@@ -432,8 +432,7 @@
       "applies_when": {
         "formation_kind": [
           "pushed_barge",
-          "pushed_convoy",
-          "atb"
+          "pushed_convoy"
         ]
       },
       "kind": "note",
@@ -443,9 +442,8 @@
       "tolerance": 0,
       "consequence": "note",
       "sizes": false,
-      "evaluated": false,
-      "gap": "the Formation powering, with the power of the pusher and the dimensions of the pushed craft, is not built",
-      "finding": "#355",
+      "evaluated": true,
+      "finding": null,
       "since": "1.0.0"
     },
     {

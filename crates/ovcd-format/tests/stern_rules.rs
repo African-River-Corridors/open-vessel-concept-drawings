@@ -334,7 +334,7 @@ fn a_new_self_propelled_option_lists_every_es_trin_rule_and_a_barge_has_no_wheel
 }
 
 #[test]
-fn a_pushed_barge_has_the_coupling_note_not_evaluated_and_no_wheelhouse_rows() {
+fn a_pushed_barge_has_the_coupling_note_and_no_wheelhouse_rows() {
     let mut d = design(json!({}));
     for (name, input) in &mut d.options[0].inputs {
         if name == "formation" {
@@ -342,14 +342,16 @@ fn a_pushed_barge_has_the_coupling_note_not_evaluated_and_no_wheelhouse_rows() {
         }
     }
     let r = results(&d);
+    // The coupling force is a note with the value of the Formation block, when it has its pusher
+    // (`formation_powering.rs` checks both sides).
     let row = rows(&r, "es-trin/ESI-III-6.2.1/coupling-force");
-    assert_eq!(row[0]["outcome"], "not evaluated");
-    assert!(
-        row[0]["gap"]
-            .as_str()
-            .unwrap()
-            .contains("Formation powering")
-    );
+    match r["formation"]["coupling_force_kn"].as_f64() {
+        Some(force) => {
+            assert_eq!(row[0]["outcome"], "note", "{}", row[0]);
+            assert_eq!(row[0]["value"].as_f64(), Some(force));
+        }
+        None => assert!(row.is_empty(), "{row:?}"),
+    }
     for id in [
         "es-trin/7.02(3)/field-of-view",
         "es-trin/7.12(2)/elevating-wheelhouse-stability",
