@@ -53,6 +53,59 @@
 - Design change (issue #426, part 3): the IS Code 2008 loading conditions are the default, and the gas arrangement search checks its candidates in them. A new Option gets `loading_conditions = is_code_2008` (the four conditions of Part B 3.4.1.2, with stores and fuel and water ballast, and "Lightship, no ballast" where the vessel may sail that way); a file saved before keeps `legacy`, and every fixture and legacy results hash still matches. With the IS Code conditions, `fit` judges each candidate by them (stability, ballast plan and air draft of each condition, by the same core functions the results use, `gas_arrangement::is_code_conditions` and `is_code_cargo`) and ranks it by the cargo it carries with its stores and fuel aboard. The Python API keeps the legacy search. The stores and fuel are now worked out before the search, at the design draught (the draught the installed power is sized at); part 2 used the answer's draught. Design impact (194 cases, `main b8e3059`): 190 move, most only by the new `loading_conditions` and `stability` blocks. Gas: 87 of 90 keep their arrangement and cargo. On main, run with `is_code_2008`, none of the 86 feasible gas answers fails an IS Code condition, so the 43 of 89 failures PR #440 found no longer occur (`fit` has changed since: #418, #422, #277). Three gas cases move: the two 110 x 24 m wide hulls become feasible (a 3-wide arrangement, 4,161 t to 3,011 t; before, no arrangement passed and the closest failed the sightline), and the 200 x 12 m hull, infeasible both before and after, shows a different closest candidate (4,333 t to 2,111 t). Every feasible gas answer meets every IS Code condition (86 of 86). Dry bulk: 7 of 103 cases carry up to 0.75 % less cargo (a self-propelled, draught-bound hold now carries its stores and fuel); their condition checks stay warnings. Tests: `trim_results` now sets `legacy`, as its point is the legacy trim fields.
 - Docs (issue #433, the parts outside the rules lane's files): the head thickness formulas no longer cite ASME UG-27, which is the cylindrical shell paragraph; the head paragraph is not in the rule-source library, so none is cited (Rust and Python). The `resistance.rs` header no longer says nothing is fixed in the port, and states that it keeps g = 9.81 m/s^2 and 1 kn = 0.5144 m/s while `squat.rs` and `waves.rs` use 9.80665 and 0.514444 (making them one would move results; not done). The LPG mix density comment uses butane at 600, the value the blend is worked out with (it said 601). Comments only: no result moves.
 
+## 0.3.0 (2026-10-22)
+
+0.3.0 is a developer pre-release. It is not for expert review: the first release shared with expert reviewers is 0.4. The Rule Sets it freezes are drafts, and most of their Rules are unverified (the table below).
+
+Highlights, since 0.2.4. This is a draft for the maintainer to edit; the full list is in the entries below and in `## Design changes`.
+
+- Crude oil and diesel. Liquid bulk is built: crude oil and diesel fuel (EN 590) are Cargoes, with integral tank hulls, a capital budget, the IS Code loading conditions with cargo tanks, a worst slack-tank condition, three drawing views, and a tank-barge calibration.
+- Rules for liquid bulk. Three new Rule Sets (`adn-tank`, `marpol-i`, `normam-202`), ADN 9.3.2.15 and MARPOL Annex I Reg. 28 damage stability, and a default Rule Set stack by Service Area.
+- Rules for freeboard, stern and wheelhouse. New Rule Sets `es-trin-2025` and `icll-freeboard`; the stern and wheelhouse Rules; typed openings and their Rules (a trial).
+- Hull Forms. The hull gives its own Sections Table. New Hull Forms: V-bottom, chine, offsets, and `shipd` with bulbs. Bilge radius, sheer and camber shape the hull. Hydrostatics and stability read the Sections Table, with the raked bow and the Stern Form.
+- Vessel Model. The Vessel Model of an Option is assembled from the Sections Table, with the Notch of an ATB barge.
+- Gas barges. The tank plate as ordered and its dome are weighed; the weather shield is an input; the default design pressure of fully refrigerated LPG is the IGC minimum of each tank; the ballast plan has an app view and a drawing; the IS Code 2008 loading conditions are the default.
+- Cost. New Cost rates inputs: `currency`, `price_base_date`, `tank_internals_fraction` and `midship_coefficient` (an Estimate). The bottom-up hull steel of a gas barge, which the budget prices, uses a structure factor of 2.0 (an Estimate), so it is near the top-down steel of the lightship (0.10 t/m3 of L x B x D); the unit total of a gas barge is 3 to 12 % higher. A result warns when the two steel masses differ by more than 20 % (3 of 107 gas case designs).
+- Calibration. A calibration case outside its band blocks a release unless this entry names it (see below). The forum-sourced box-barge point is left out of the fit, so the box k and Cb move a little.
+- Speed. The equilibrium solves stop at a tolerance, and a ballast trial stops at the first criterion its heels decide.
+- Release and build. The package can be published to PyPI from a `v*` tag with trusted publishing (the maintainer pushes the tag). The design-impact check matches moved rows. Dependency fixes: `pyo3` 0.29 and `certifi` 2026.10.19.
+
+Calibration cases outside their band (issue #431). These 20 results are known for this release. Each is a held-out case, never used in a fit, that runs as a box barge because the core has no deck or pontoon model (`calibration/README.md`). No case has been investigated one by one, so each cause below is a likely cause, not confirmed.
+
+- `cbc-1951-deck-195x35` (lightship): likely cause, not confirmed: a deck barge runs as a box hull, and the box k and box Cb may not carry over.
+- `cbc-2762-deck-276x55` (lightship and deadweight): likely cause, not confirmed: a deck barge runs as a box hull, and the box k and box Cb may not carry over.
+- `cbc-julius-deck-300x100` (deadweight): likely cause, not confirmed: a deck barge runs as a box hull, and the box k and box Cb may not carry over.
+- `vl-deck-345ft` (deadweight): likely cause, not confirmed: a deck barge runs as a box hull, and the box k and box Cb may not carry over.
+- `meb-dcb26-78x16.5` (deadweight): likely cause, not confirmed: a deck barge runs as a box hull, and the box k and box Cb may not carry over.
+- `vl-pontoon-33.7x7.8x2.0` (lightship): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `vl-pontoon-30.0x11.2x2.5` (lightship): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `vl-pontoon-50.0x12.0x2.8` (lightship): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `vl-pontoon-80.0x24.0x5.0` (lightship): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `wilcarry-250-45x8` (lightship and deadweight): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `wilcarry-300-36x8` (lightship and deadweight): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `wilcarry-350-33x9.5` (lightship and deadweight): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `wilcarry-1750-45x20` (lightship and deadweight): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `wilcarry-501-30x11.2` (lightship): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+- `wilcarry-1711-50x18.8` (lightship): likely cause, not confirmed: a flat-top pontoon runs as a box hold.
+
+Rule Sets released with 0.3.0 (13). From this release each listed file never changes; a fix is a new version. Every one is `draft`. A Rule marked unverified has not been checked against the text of its source; the last column says who checked the others (an AI agent checks against the edition held; it is not a review by a person).
+
+| Rule Set | Version | Status | Rules | Unverified | Checked, by |
+|---|---|---|---|---|---|
+| `is2008-a` | 2.0.0 | draft | 10 | 3 | 7 (agent) |
+| `adn-tank` | 1.0.0 | draft | 18 | 18 | 0 |
+| `marpol-i` | 1.0.0 | draft | 10 | 10 | 0 |
+| `normam-202` | 1.0.0 | draft | 5 | 5 | 0 |
+| `es-trin-2025` | 1.0.0 | draft | 11 | 10 | 1 (agent) |
+| `icll-freeboard` | 1.0.0 | draft | 2 | 2 | 0 |
+| `rheinschpv` | 1.0.0 | draft | 1 | 1 | 0 |
+| `solas-v22` | 1.0.0 | draft | 2 | 2 | 0 |
+| `igc-2g` | 1.1.0 | draft | 15 | 8 | 7 (agent) |
+| `igc-2g` | 2.0.0 | draft | 15 | 8 | 7 (agent) |
+| `lr-inland-gas` | 2.0.0 | draft | 9 | 8 | 1 (agent) |
+| `ovcd` | 2.0.0 | draft | 33 | 33 | 0 |
+| `ovcd` | 2.1.0 | draft | 43 | 43 | 0 |
+
 ## 0.2.4 (2026-10-21)
 
 Highlights, since 0.2.3:

@@ -25,6 +25,71 @@
       "id": "ovcd",
       "version": "1.0.0",
       "hash": "5adbe7690118388ec86aca7c22e835e7ae46ee5134df4d66e71eb9ae2b20e6d3"
+    },
+    {
+      "id": "is2008-a",
+      "version": "2.0.0",
+      "hash": "c8fb5651866ea1f2e9d8197a866b320e3b6ab33e398e4d926b9158bc82e7d7a2"
+    },
+    {
+      "id": "adn-tank",
+      "version": "1.0.0",
+      "hash": "3c73961fe949a0a2088322a68fa66cb20115870967db94d4593d5a532c73e783"
+    },
+    {
+      "id": "marpol-i",
+      "version": "1.0.0",
+      "hash": "a772892514c9d0679f2bff1b0dd0c053193f8281234720b9eec994d055dea7ac"
+    },
+    {
+      "id": "normam-202",
+      "version": "1.0.0",
+      "hash": "1af20632798a7e5d0cc68ee1e7e0b73d1da3cc522c9806a8429b8ecfac312632"
+    },
+    {
+      "id": "es-trin-2025",
+      "version": "1.0.0",
+      "hash": "a8cee485520c1a31097634932f0c774d10008476e5264d00d8b2b270c81cf035"
+    },
+    {
+      "id": "icll-freeboard",
+      "version": "1.0.0",
+      "hash": "746c3556daa85242bcbcce64cf52bd65319bfe092dfc0b1698324d0797d39d28"
+    },
+    {
+      "id": "rheinschpv",
+      "version": "1.0.0",
+      "hash": "c0c05473f0cb4625c199b29af967d82bf098db5dd08546adb8edefb071bf2cdc"
+    },
+    {
+      "id": "solas-v22",
+      "version": "1.0.0",
+      "hash": "75030377beb5e74d6641cd536669159dea2dccf2e884f2372786d0b880f1b0fc"
+    },
+    {
+      "id": "igc-2g",
+      "version": "1.1.0",
+      "hash": "196cc7e876e97855f9f3d90705ba9cd350bdc883f9a5c5e5c69aec45cce07460"
+    },
+    {
+      "id": "igc-2g",
+      "version": "2.0.0",
+      "hash": "bdab7d84a4e89aa293f241f752bffb67725ebd1c51b98f5bd264c124e759b2b5"
+    },
+    {
+      "id": "lr-inland-gas",
+      "version": "2.0.0",
+      "hash": "d48daf283c393b48dfd37441bac44b573718d44b1fc93d2d6291d77ee76e4564"
+    },
+    {
+      "id": "ovcd",
+      "version": "2.0.0",
+      "hash": "f31d3b7886b1cdaddf369f1a7e5f43f4257dc177079991b5fe7c5e59892deb5b"
+    },
+    {
+      "id": "ovcd",
+      "version": "2.1.0",
+      "hash": "7daa76a269bcad107d2e87ca16df70669aa985aab05473296555b853124cce96"
     }
   ]
 }

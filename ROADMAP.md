@@ -46,7 +46,7 @@ runs against the engine on every pull request ([#184](https://github.com/African
 
 In order. Each phase builds on the one before; dates depend on contributors.
 
-**Versions:** 0.2.x during development. 0.3 is the first release we share with expert reviewers; it ships at the end of Vessel Model phase 1 (below), with `.vdesign` format version 3. 1.0 is the trusted analysis tool. The other phases are not tied to version numbers.
+**Versions:** 0.2.x and 0.3.x during development; 0.3 is a developer pre-release. 0.4 is the first release we share with expert reviewers; it ships at the end of Vessel Model phase 1 (below), with `.vdesign` format version 3. 1.0 is the trusted analysis tool. The other phases are not tied to version numbers.
 
 | Phase | Theme | Main work | What users get |
 |---|---|---|---|
