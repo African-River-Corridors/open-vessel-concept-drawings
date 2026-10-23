@@ -18,7 +18,15 @@ fn weights() -> WeightBreakdown {
     i.n_tanks_long = 2;
     i.double_bottom_height = Some(0.5);
     i.post_init().unwrap();
-    let hull = HullGeometry::new(i.loa, i.beam, i.depth, i.bow_rake_length, 6.5, i.stern_rake_length, 6.5);
+    let hull = HullGeometry::new(
+        i.loa,
+        i.beam,
+        i.depth,
+        i.bow_rake_length,
+        6.5,
+        i.stern_rake_length,
+        6.5,
+    );
     let (tanks, _) = calculate_tank_arrangement_wide(&i).unwrap();
     calculate_weights(&i, &hull, &tanks).unwrap()
 }
@@ -51,9 +59,21 @@ fn a_warning_above_the_limit_on_either_sign_with_both_figures_and_the_delta() {
         assert_eq!(t.msg.as_ref().unwrap().id, "warn-steel-mass-disagreement");
         let en = t.to_string();
         let w = with_gap(pct);
-        assert!(en.contains(&format!("{:.1} t of hull steel (top-down)", w.steel_top_down)), "{en}");
-        assert!(en.contains(&format!("prices {:.1} t (bottom-up)", w.steel_bottom_up)), "{en}");
-        assert!(en.contains(&format!("differ by {:.1} t", w.steel_delta)), "{en}");
+        assert!(
+            en.contains(&format!(
+                "{:.1} t of hull steel (top-down)",
+                w.steel_top_down
+            )),
+            "{en}"
+        );
+        assert!(
+            en.contains(&format!("prices {:.1} t (bottom-up)", w.steel_bottom_up)),
+            "{en}"
+        );
+        assert!(
+            en.contains(&format!("differ by {:.1} t", w.steel_delta)),
+            "{en}"
+        );
         assert!(en.contains("20 % limit (an Estimate)"), "{en}");
     }
 }
