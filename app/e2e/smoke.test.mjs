@@ -165,7 +165,8 @@ describe("OVCD app smoke tests", () => {
           invoke("mesh_buffers", { option: "Option 1" }),
           invoke("section_at", { option: "Option 1", x: 30 }),
         ]);
-        return { hash: g.hash, bytes: buf.byteLength, vertices: g.vertex_count, indices: g.index_count, rings: s.rings.length };
+        // The raw bytes arrive as an ArrayBuffer, or as an array of bytes when the IPC falls back to JSON.
+        return { hash: g.hash, bytes: buf.byteLength ?? buf.length, vertices: g.vertex_count, indices: g.index_count, rings: s.rings.length };
       } catch (e) {
         return { error: String(e) };
       }

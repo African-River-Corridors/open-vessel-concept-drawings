@@ -3,13 +3,13 @@ import { invoke } from "@tauri-apps/api/core";
 import type { Evaluation, Schema, Snapshot } from "../api";
 import type { MeshGroup, Platform, SectionOutline, SpaceInfo, Waterline } from "./types";
 
-/** The raw bytes of `mesh_buffers`: two u32 counts, then the f32 positions and the u32 indices. */
 /** What the webview gives for a raw response: an ArrayBuffer, or (when the IPC falls back to JSON) an array of bytes. */
 function asBuffer(raw: ArrayBuffer | ArrayLike<number>): ArrayBuffer {
   if (raw instanceof ArrayBuffer) return raw;
   return Uint8Array.from(raw as ArrayLike<number>).buffer;
 }
 
+/** The raw bytes of `mesh_buffers`: two u32 counts, then the f32 positions and the u32 indices. */
 function splitBuffers(raw: ArrayBuffer | ArrayLike<number>): { positions: Float32Array; indices: Uint32Array } {
   const buf = asBuffer(raw);
   const head = new DataView(buf, 0, 8);
