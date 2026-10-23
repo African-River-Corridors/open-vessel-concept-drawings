@@ -277,3 +277,56 @@ fn the_coupling_force_rule_is_a_note_with_the_formation_value() {
     assert!(atb["formation"].get("coupling_force_kn").is_none());
     assert!(coupling_rows(&atb).is_empty());
 }
+
+fn speed_rows(r: &Value) -> Vec<Value> {
+    r["rule_trace"]["rows"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|row| {
+            row["rule"] == "es-trin/5.06(1)/speed-13kmh" && row["outcome"] != "not applicable"
+        })
+        .cloned()
+        .collect()
+}
+
+#[test]
+fn the_es_trin_speed_rule_reads_the_formation_speed_in_deep_water() {
+    // ES-TRIN 2025/1 5.06(1): at least 13 km/h through the water. A pushed Formation with its pusher
+    // reads the deep water service speed of the Formation (km/h = kn x 1.852).
+    for formation in [json!({ "kind": "pushed_barge" }), convoy(2, 2)] {
+        let r = results_with(formation.clone(), true, &[], &["es-trin-2025"]);
+        let deep = r["formation"]["environments"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|e| e["name"] == "Deep water")
+            .unwrap_or_else(|| panic!("{formation}: no deep water"));
+        let kmh = deep["service_speed_kn"].as_f64().unwrap() * 1.852;
+        let rows = speed_rows(&r);
+        assert_eq!(rows.len(), 1, "{formation}: {rows:?}");
+        assert!(
+            (rows[0]["value"].as_f64().unwrap() - kmh).abs() < 1e-9,
+            "{formation}"
+        );
+        assert_eq!(
+            rows[0]["outcome"],
+            if kmh >= 13.0 { "pass" } else { "fail" }
+        );
+        // Without its pusher the barge has no speed, and the Rule does not apply.
+        let alone = results_with(formation.clone(), false, &[], &["es-trin-2025"]);
+        assert!(speed_rows(&alone).is_empty(), "{formation}");
+    }
+    // Both sides of 13 km/h (7.019 kn): a pusher sized to 7.1 kn passes, one sized to 6.9 kn fails.
+    for (knots, outcome) in [(7.1, "pass"), (6.9, "fail")] {
+        let r = results_with(
+            json!({ "kind": "pushed_barge" }),
+            true,
+            &[("tug_design_speed_kn", json!(knots))],
+            &["es-trin-2025"],
+        );
+        let rows = speed_rows(&r);
+        assert_eq!(rows.len(), 1, "{knots} kn");
+        assert_eq!(rows[0]["outcome"], outcome, "{knots} kn: {}", rows[0]);
+    }
+}
