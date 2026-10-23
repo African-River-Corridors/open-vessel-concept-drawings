@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { remote } from "webdriverio";
 
 const here = import.meta.dirname;
@@ -151,6 +152,29 @@ describe("OVCD app smoke tests", () => {
     assert.match(await cargoOutput(), /^2,346\.2/);
     assert.match(await outputsText(), /Displacement\s*2,679\.8/);
     assert.equal(await (await browser.$("[data-testid=engine-version]")).getText(), `Engine ${appVersion}`);
+  });
+
+  it("gives the meshes of the open Design with the mesh hash of ovcd mesh --hash (issue #457)", async () => {
+    const file = path.join(FIXTURES, "dry_bulk_box_hold.vdesign");
+    const native = execFileSync(process.env.OVCD_CLI, ["mesh", "--hash", file], { encoding: "utf8" }).split("\t")[1].trim();
+    const got = await browser.execute(async () => {
+      const invoke = window.__TAURI_INTERNALS__.invoke;
+      try {
+        const [g, buf, s] = await Promise.all([
+          invoke("mesh_groups", { option: "Option 1" }),
+          invoke("mesh_buffers", { option: "Option 1" }),
+          invoke("section_at", { option: "Option 1", x: 30 }),
+        ]);
+        // The raw bytes arrive as an ArrayBuffer, or as an array of bytes when the IPC falls back to JSON.
+        return { hash: g.hash, bytes: buf.byteLength ?? buf.length, vertices: g.vertex_count, indices: g.index_count, rings: s.rings.length };
+      } catch (e) {
+        return { error: String(e) };
+      }
+    });
+    assert.equal(got.error, undefined);
+    assert.equal(got.hash, native);
+    assert.equal(got.bytes, 8 + 4 * (3 * got.vertices + got.indices));
+    assert.ok(got.rings >= 1);
   });
 
   const HULL_TABS = { side: "Side elevation", plan: "Plan", midship: "Cross-section" };

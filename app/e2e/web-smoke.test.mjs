@@ -25,6 +25,12 @@ const nativeHashes = () =>
     (o) => [o.name, o.results_hash],
   );
 
+const nativeMeshHashes = (file) =>
+  execFileSync(CLI, ["mesh", "--hash", file], { encoding: "utf8" })
+    .split("\n")
+    .filter((l) => l.length > 0)
+    .map((l) => l.split("\t").slice(0, 2));
+
 const chrome = (extra = {}) => ({
   browserName: "chrome",
   "wdio:enforceWebDriverClassic": true,
@@ -93,6 +99,17 @@ describe("OVCD web smoke tests", () => {
       return ev.options.map((o) => [o.name, o.outcome.results_hash]);
     });
     assert.deepEqual(ours, nativeHashes());
+    // Issue #457: the meshes reach the front end typed, with the mesh hash of `ovcd mesh --hash`.
+    const meshes = await b.execute(async () => {
+      const ev = await window.__ovcdPlatform.evaluate();
+      return Promise.all(
+        ev.options.map(async (o) => {
+          const m = await window.__ovcdPlatform.meshes(o.name);
+          return [o.name, m.hash, m.positions instanceof Float32Array && m.indices instanceof Uint32Array];
+        }),
+      );
+    });
+    assert.deepEqual(meshes, nativeMeshHashes(FIXTURE).map(([n, h]) => [n, h, true]));
     if (SHOTS) {
       fs.mkdirSync(SHOTS, { recursive: true });
       await new Promise((r) => setTimeout(r, 800));
@@ -101,6 +118,30 @@ describe("OVCD web smoke tests", () => {
     // The Design is kept: a reload brings it back.
     await b.url(`${origin}/ovcd/app`);
     await until(b, "the restored Design", async () => (await b.$("header")).getText().then((t) => t.includes("gas_igc_2g_self_propelled.vdesign")));
+  });
+
+  it("gives a 100 m barge's meshes, a section, a Space and the waterlines (issue #457)", async () => {
+    const b = await start();
+    await b.url(`${origin}/ovcd/app`);
+    await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+    await (await b.$("button=I understand")).click();
+    await until(b, "results", async () => (await outputs(b)).isExisting());
+    const r = await b.execute(async () => {
+      const p = window.__ovcdPlatform;
+      const option = (await p.snapshot()).active_option;
+      await p.setInput(option, "length_overall_m", 100);
+      const t0 = performance.now();
+      const m = await p.meshes(option);
+      const ms = performance.now() - t0;
+      const space = m.groups.find((g) => g.layer === "space");
+      const info = await p.spaceInfo(option, space.id);
+      const section = await p.sectionAt(option, 50);
+      const lines = await p.waterlines(option);
+      return { ms, triangles: m.indices.length / 3, info, section, lines, groups: m.groups.length };
+    });
+    console.log(`web: a 100 m barge's meshes reached the front end in ${r.ms.toFixed(0)} ms (${r.triangles} triangles, ${r.groups} groups)`);
+    assert.ok(r.triangles > 0 && r.info.volume_m3 > 0 && r.lines.length > 0);
+    assert.ok(r.section.rings.length >= 1 && r.section.x_m === 50);
   });
 
   it("lists the ballast tanks and the ballast plan of a Design in the IS Code conditions (issue #426)", async () => {

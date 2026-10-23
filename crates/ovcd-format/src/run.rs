@@ -377,13 +377,29 @@ pub fn option_hull_table(
 pub fn option_vessel_model(
     option: &DesignOption,
 ) -> Result<ovcd_core::vessel_model::VesselModel, String> {
-    vessel_run(option).map(|(model, _)| model)
+    option_vessel_run(option).map(|run| run.model)
 }
 
-/// The Vessel Model of an Option and the results of its run.
-fn vessel_run(
-    option: &DesignOption,
-) -> Result<(ovcd_core::vessel_model::VesselModel, Value), String> {
+/// One floating position of a run, for its waterline: the draughts (m) and the trim (m, by the bow
+/// positive).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Waterline {
+    pub name: String,
+    pub draught_m: f64,
+    pub draught_aft_m: f64,
+    pub draught_fwd_m: f64,
+    pub trim_m: f64,
+}
+
+/// The Vessel Model of an Option and the waterlines of its run (issues #454, #457).
+#[derive(Debug, Clone, PartialEq)]
+pub struct VesselRun {
+    pub model: ovcd_core::vessel_model::VesselModel,
+    pub waterlines: Vec<Waterline>,
+}
+
+/// Run an Option for its Vessel Model and waterlines.
+pub fn option_vessel_run(option: &DesignOption) -> Result<VesselRun, String> {
     let params = simulate_params_of(option)?;
     let library = Library::built_in();
     let selection = stack_for(&library, option, &[])?;
@@ -398,7 +414,10 @@ fn vessel_run(
             None => measured
                 .vessel
                 .as_ref()
-                .map(|inputs| (ovcd_core::vessel_model::assemble(inputs), v.clone()))
+                .map(|inputs| VesselRun {
+                    model: ovcd_core::vessel_model::assemble(inputs),
+                    waterlines: waterlines(&v),
+                })
                 .ok_or_else(|| "the run gave no Vessel Model".to_string()),
         },
         Outcome::Raised(kind, message) => Err(format!("{kind}: {message}")),
@@ -406,21 +425,25 @@ fn vessel_run(
     }
 }
 
-/// The floating positions of a run as `(name, aft draught, forward draught)`: each loading
-/// condition, or each stability condition, or with neither the loaded and light draughts, level.
-fn waterlines(results: &Value) -> Vec<(String, f64, f64)> {
+/// The floating positions of a run: each loading condition, or each stability condition, or with
+/// neither the loaded and light draughts, level.
+fn waterlines(results: &Value) -> Vec<Waterline> {
     for key in ["loading_conditions", "stability"] {
-        let list: Vec<(String, f64, f64)> = results[key]["conditions"]
+        let list: Vec<Waterline> = results[key]["conditions"]
             .as_array()
             .map(|cs| {
                 cs.iter()
                     .filter_map(|c| {
-                        let mid = c["draught_m"].as_f64();
-                        Some((
-                            c["name"].as_str()?.to_string(),
-                            c["draught_aft_m"].as_f64().or(mid)?,
-                            c["draught_fwd_m"].as_f64().or(mid)?,
-                        ))
+                        let mid = c["draught_m"].as_f64()?;
+                        let aft = c["draught_aft_m"].as_f64().unwrap_or(mid);
+                        let fwd = c["draught_fwd_m"].as_f64().unwrap_or(mid);
+                        Some(Waterline {
+                            name: c["name"].as_str()?.to_string(),
+                            draught_m: mid,
+                            draught_aft_m: aft,
+                            draught_fwd_m: fwd,
+                            trim_m: c["trim_m"].as_f64().unwrap_or(fwd - aft),
+                        })
                     })
                     .collect()
             })
@@ -433,19 +456,33 @@ fn waterlines(results: &Value) -> Vec<(String, f64, f64)> {
         .into_iter()
         .filter_map(|(name, key)| {
             let t = results["results"][key].as_f64()?;
-            Some((name.to_string(), t, t))
+            Some(Waterline {
+                name: name.to_string(),
+                draught_m: t,
+                draught_aft_m: t,
+                draught_fwd_m: t,
+                trim_m: 0.0,
+            })
         })
         .collect()
 }
 
-/// The meshes of an Option's Vessel Model (issue #456): the hull, decks, bulkheads, Spaces and the
-/// waterline of each floating position, one group each.
+impl VesselRun {
+    /// The meshes of the model (issue #456): the hull, decks, bulkheads, Spaces and the waterline of
+    /// each floating position, one group each.
+    pub fn meshes(&self) -> ovcd_core::mesh::Mesh {
+        let lines: Vec<(String, f64, f64)> = self
+            .waterlines
+            .iter()
+            .map(|w| (w.name.clone(), w.draught_aft_m, w.draught_fwd_m))
+            .collect();
+        ovcd_core::mesh::vessel_meshes(&self.model, &lines)
+    }
+}
+
+/// The meshes of an Option's Vessel Model (issue #456).
 pub fn option_meshes(option: &DesignOption) -> Result<ovcd_core::mesh::Mesh, String> {
-    let (model, results) = vessel_run(option)?;
-    Ok(ovcd_core::mesh::vessel_meshes(
-        &model,
-        &waterlines(&results),
-    ))
+    option_vessel_run(option).map(|run| run.meshes())
 }
 
 /// The mesh hash of the parity check (spec 0008, "Mesh hash"): SHA-256 of the f32 position bytes,

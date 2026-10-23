@@ -5,7 +5,7 @@
 //! This module has no Tauri types, so it is tested like any other Rust. It holds no calculation,
 //! validation or default logic: every answer comes from [`DesignSession`].
 
-use crate::views;
+use crate::{vessel, views};
 use ovcd_core::text::{Arg, Msg};
 use ovcd_format::{DesignSession, HashStatus, Profile, RunOutcome, msg_json};
 use serde_json::{Value, json};
@@ -21,6 +21,8 @@ pub struct AppState {
     /// What changed when an old file was read as the current inputs, at open: one note per change,
     /// kept with the Option it is about, so a rename or a delete of that Option follows (issue #436).
     migration_notes: Vec<Note>,
+    /// The run of the Option the 3D view last asked about (issue #457), until that Option changes.
+    vessel: Option<vessel::Kept>,
 }
 
 /// One migration note: the Option it is about (none for a note about the file), the message without
@@ -101,6 +103,7 @@ impl AppState {
             active_option,
             hash_changed: Vec::new(),
             migration_notes: Vec::new(),
+            vessel: None,
         })
     }
 
@@ -134,6 +137,7 @@ impl AppState {
                     Note::from_report(text, msg)
                 })
                 .collect(),
+            vessel: None,
         })
     }
 
@@ -147,6 +151,37 @@ impl AppState {
 
     pub fn session(&self) -> &DesignSession {
         &self.session
+    }
+
+    /// The kept run of the Option named `option` for the 3D view, run again when the Option changed.
+    fn vessel(&mut self, option: &str) -> Result<&vessel::Kept, String> {
+        vessel::kept(&mut self.vessel, &self.session.design().options, option)
+    }
+
+    /// The mesh vertex data of an Option (issue #457): positions (f32, x y z per vertex) and
+    /// indices (u32, three per triangle).
+    pub fn mesh_buffers(&mut self, option: &str) -> Result<(Vec<f32>, Vec<u32>), String> {
+        self.vessel(option).map(vessel::buffers)
+    }
+
+    /// The mesh group table and hash of an Option.
+    pub fn mesh_groups(&mut self, option: &str) -> Result<Value, String> {
+        self.vessel(option).map(vessel::groups)
+    }
+
+    /// The hull's section outline of an Option at `x`.
+    pub fn section_at(&mut self, option: &str, x: f64) -> Result<Value, String> {
+        self.vessel(option).map(|k| vessel::section(k, x))
+    }
+
+    /// A Space's name, kind, volume and centroid.
+    pub fn space_info(&mut self, option: &str, name: &str) -> Result<Value, String> {
+        self.vessel(option).and_then(|k| vessel::space(k, name))
+    }
+
+    /// The waterline of each floating position of an Option.
+    pub fn waterlines(&mut self, option: &str) -> Result<Value, String> {
+        self.vessel(option).map(vessel::waterlines)
     }
 
     /// The evaluation as JSON for the front end: the session's own, with the hull views (SVG) added

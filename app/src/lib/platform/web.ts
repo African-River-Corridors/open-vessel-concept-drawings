@@ -3,7 +3,7 @@
 import init, { Session } from "../../../wasm-pkg/ovcd_web.js";
 import wasmUrl from "../../../wasm-pkg/ovcd_web_bg.wasm?url";
 import type { Evaluation, Schema, Snapshot } from "../api";
-import type { DrawingFormat, DrawingView, ModelFormat, Platform } from "./types";
+import type { DrawingFormat, DrawingView, MeshGroup, ModelFormat, Platform, SectionOutline, SpaceInfo, Waterline } from "./types";
 import { t } from "../i18n.svelte";
 
 const LAST_DESIGN = "ovcd.lastDesign";
@@ -198,6 +198,18 @@ export async function createWebPlatform(): Promise<Platform> {
       download(`${base}.glb`, new Uint8Array(session.export_gltf(option)), "model/gltf-binary");
       return true;
     },
+    meshes: async (option) => {
+      const g = JSON.parse(session.mesh_groups(option)) as { hash: string; groups: MeshGroup[] };
+      return {
+        positions: session.mesh_positions(option),
+        indices: session.mesh_indices(option),
+        groups: g.groups,
+        hash: g.hash,
+      };
+    },
+    sectionAt: (option, x) => call<SectionOutline>(() => session.section_at(option, x)),
+    spaceInfo: (option, name) => call<SpaceInfo>(() => session.space_info(option, name)),
+    waterlines: (option) => call<Waterline[]>(() => session.waterlines(option)),
   };
   // The smoke test reads results through this; only a build in test mode has it.
   if (import.meta.env.MODE === "test") (window as unknown as { __ovcdPlatform: Platform }).__ovcdPlatform = platform;

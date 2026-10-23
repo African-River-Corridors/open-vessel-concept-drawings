@@ -26,6 +26,13 @@ declare module "*/wasm-pkg/ovcd_web.js" {
     drawing_pdf(option: string, view: string): Uint8Array;
     drawing_dxf(option: string, view: string): Uint8Array;
     export_gltf(option: string): Uint8Array;
+    mesh_hash(option: string): string;
+    mesh_positions(option: string): Float32Array;
+    mesh_indices(option: string): Uint32Array;
+    mesh_groups(option: string): string;
+    section_at(option: string, x: number): string;
+    space_info(option: string, name: string): string;
+    waterlines(option: string): string;
   }
   export function engine_version(): string;
   export default function init(input?: unknown): Promise<unknown>;
