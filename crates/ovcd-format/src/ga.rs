@@ -36,7 +36,10 @@ macro_rules! label {
 
 mod arrangement;
 
+mod tug;
+
 pub use arrangement::{NO_ARRANGEMENT_PLAN, arrangement_plan_for, arrangement_plan_named};
+pub use tug::{NO_TUG_GA, tug_ga_for, tug_ga_named};
 
 /// The three views of one Option, as drawing documents.
 #[derive(Debug, Clone, PartialEq)]

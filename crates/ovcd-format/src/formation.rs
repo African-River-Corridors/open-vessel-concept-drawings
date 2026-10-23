@@ -118,6 +118,8 @@ struct Pass {
     machinery_t: f64,
     lightship_t: f64,
     powering: powering::Powering,
+    /// The tug's machinery spaces and engines, for its GA (`drawing.tug`).
+    arranged: machinery::Machinery,
 }
 
 /// The curves of a tow: at each speed of the barge's curves, `barges` barges and the tug add, times the
@@ -305,6 +307,7 @@ fn pass(
         machinery_t,
         lightship_t,
         powering: powering::compute(&inputs, &curves),
+        arranged,
     })
 }
 
@@ -621,6 +624,7 @@ fn build(
         }
     }
     notes.extend(notes2);
+    add_tug_drawing(&tug, &r, kind, &block, v);
     Ok(block)
 }
 
@@ -714,6 +718,67 @@ fn sightline(
         "blind_distance_laden_m": num(laden_m),
         "enough": s.enough,
     })))
+}
+
+/// The tug as its GA needs it (`drawing.tug`, issue #360): its size, its propulsors, the machinery
+/// spaces and engines of its sizing, and its wheelhouse. `drawing` is not in the results hash.
+fn add_tug_drawing(tug: &TugInputs, r: &Pass, kind: Kind, block: &Value, v: &mut Value) {
+    use ovcd_core::aft_arrangement::{
+        DEFAULT_WHEELHOUSE_HEIGHT_M, DEFAULT_WHEELHOUSE_LENGTH_M, DEFAULT_WHEELHOUSE_MAX_LIFT_M,
+        DEFAULT_WHEELHOUSE_WIDTH_M,
+    };
+    use ovcd_core::formation::PUSHER_WHEELHOUSE_AT;
+    let m = &r.arranged;
+    let zones: Vec<Value> = m
+        .zones
+        .iter()
+        .map(|(label, x0, x1)| json!({ "label": label, "x_aft_m": x0, "x_fwd_m": x1 }))
+        .collect();
+    let engine = m.engine.as_ref().map(|e| {
+        json!({
+            "model": e.model,
+            "count": m.n_engines,
+            "length_m": e.length_m,
+            "width_m": e.width_m,
+            "height_m": e.height_m,
+        })
+    });
+    let x1 = PUSHER_WHEELHOUSE_AT * r.dims.length_m;
+    let raised = block["sightline"]["floor_raised_above_water_m"]
+        .as_f64()
+        .map(|f| f + r.dims.draught_m);
+    let drawing = json!({
+        "kind": match kind {
+            Kind::Pushed => "pusher",
+            Kind::Atb => "atb_tug",
+            Kind::Towed => "towing_tug",
+        },
+        "length_m": r.dims.length_m,
+        "beam_m": r.dims.beam_m,
+        "draught_m": r.dims.draught_m,
+        "depth_m": r.dims.depth_m(),
+        "propulsor_type": tug.propulsor.key(),
+        "propulsor_count": tug.count,
+        "propeller_diameter_m": r.diameter_m,
+        "tunnel": tug.tunnel,
+        "zones": zones,
+        "engine": engine,
+        "engine_room_m": [m.engine_room_x0_m, m.engine_room_x1_m],
+        "shaft_length_m": m.shaft_length_m,
+        "wheelhouse": {
+            "x_aft_m": x1 - DEFAULT_WHEELHOUSE_LENGTH_M,
+            "x_fwd_m": x1,
+            "width_m": DEFAULT_WHEELHOUSE_WIDTH_M.min(r.dims.beam_m),
+            "height_m": DEFAULT_WHEELHOUSE_HEIGHT_M,
+            "floor_above_keel_m": r.dims.depth_m(),
+            "elevating": tug.elevating,
+            "max_lift_m": if tug.elevating { DEFAULT_WHEELHOUSE_MAX_LIFT_M } else { 0.0 },
+            "floor_raised_above_keel_m": raised,
+        },
+    });
+    if let Some(Value::Object(d)) = v.get_mut("drawing") {
+        d.insert("tug".into(), drawing);
+    }
 }
 
 /// The Notch and the tug of an ATB as the drawings need them (`drawing.atb`, issue #363): from the

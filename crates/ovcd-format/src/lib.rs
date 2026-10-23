@@ -27,8 +27,9 @@ pub mod vdesign;
 
 pub use eval::{ENTRY_POINTS, EvalError, eval, parse_case};
 pub use ga::{
-    CONVOY_NO_VIEWS, GaViews, NO_ARRANGEMENT_PLAN, arrangement_plan_for, arrangement_plan_named,
-    ga_views, ga_views_for, ga_views_named, ga_views_of,
+    CONVOY_NO_VIEWS, GaViews, NO_ARRANGEMENT_PLAN, NO_TUG_GA, arrangement_plan_for,
+    arrangement_plan_named, ga_views, ga_views_for, ga_views_named, ga_views_of, tug_ga_for,
+    tug_ga_named,
 };
 pub use profile::Profile;
 pub use run::{
