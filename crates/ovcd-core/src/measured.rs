@@ -54,6 +54,9 @@ pub struct Measured {
     pub lift_enough: Option<bool>,
     /// The depth of the design channel over the loaded draught (h/T); `None` with no channel.
     pub depth_over_draught: Option<f64>,
+    /// The coupling force between the pusher and the pushed craft (kN, ES-TRIN ESI-III-6 2.1);
+    /// `None` without a pushed Formation that includes its pusher.
+    pub coupling_force_kn: Option<f64>,
     /// The assumed damages of a liquid bulk hull and what the damaged hull does (issue #341); empty for
     /// every other Cargo.
     pub damage: Vec<DamageVerdict>,
@@ -310,12 +313,12 @@ impl Measured {
             }
             "wheelhouse.lift_enough" => self.lift_enough.is_some(),
             "powering.depth_over_draught" => self.depth_over_draught.is_some(),
+            "formation.coupling_force" => self.coupling_force_kn.is_some(),
             // Worked out from the Option's inputs, not from the result: the Option's own source
             // answers them. A candidate of the search has none.
             "propulsion.redundancy_28_04"
             | "wheelhouse.field_of_view"
             | "wheelhouse.raised_stability"
-            | "formation.coupling_force"
             | "formation.separate_vessels"
             | "formation.notch_wing_walls" => false,
             _ => true,
@@ -411,6 +414,12 @@ impl Measured {
                 .lift_enough
                 .map(MeasureValue::Bool)
                 .ok_or_else(|| "the result has no raised wheelhouse".to_string());
+        }
+        if m.id == "formation.coupling_force" {
+            return self
+                .coupling_force_kn
+                .map(MeasureValue::Number)
+                .ok_or_else(|| "the Formation does not include its pusher".to_string());
         }
         if m.id == "powering.depth_over_draught" {
             return self

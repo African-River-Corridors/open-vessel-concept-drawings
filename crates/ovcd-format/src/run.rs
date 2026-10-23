@@ -604,6 +604,8 @@ pub fn run_option_with(
                     measured.design_speed_kn = v["formation"]["design_speed_kn"].as_f64();
                 }
                 measured.lift_enough = v["sightline"]["lift_enough"].as_bool();
+                // A pushed Formation with its pusher: the coupling force of ES-TRIN ESI-III-6 2.1.
+                measured.coupling_force_kn = v["formation"]["coupling_force_kn"].as_f64();
                 measured.depth_over_draught = match (
                     option
                         .input("channel_depth_m")

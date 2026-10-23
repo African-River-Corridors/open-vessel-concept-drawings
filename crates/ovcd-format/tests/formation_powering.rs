@@ -16,6 +16,16 @@ fn raw(name: &str) -> String {
 
 /// The results of the convoy fixture as `kind` with `tug_included`, and `changes` typed.
 fn results(formation: Value, tug_included: bool, changes: &[(&str, Value)]) -> Value {
+    results_with(formation, tug_included, changes, &[])
+}
+
+/// As [`results`], with the Rule Sets `add` added to the Option's stack.
+fn results_with(
+    formation: Value,
+    tug_included: bool,
+    changes: &[(&str, Value)],
+    add: &[&str],
+) -> Value {
     let mut f: Value = serde_json::from_str(&raw("pushed_convoy")).unwrap();
     let inputs = &mut f["options"][0]["inputs"];
     inputs["formation"] = json!({ "value": formation, "source": "typed" });
@@ -27,7 +37,11 @@ fn results(formation: Value, tug_included: bool, changes: &[(&str, Value)]) -> V
         .as_object_mut()
         .unwrap()
         .remove("results_hash");
-    let (session, _) = DesignSession::open(&f.to_string(), Profile::built_in()).unwrap();
+    let (mut session, _) = DesignSession::open(&f.to_string(), Profile::built_in()).unwrap();
+    let name = session.design().options[0].name.clone();
+    for set in add {
+        session.add_rule_set(&name, set).unwrap();
+    }
     match session.evaluate().options[0].outcome.as_ref().unwrap() {
         RunOutcome::Results { results, .. } => results.clone(),
         other => panic!("{other:?}"),
@@ -208,4 +222,58 @@ fn the_formation_says_it_is_uncalibrated_outside_the_results_hash() {
     // A pushed convoy without its pusher has no such label.
     let bare = results(convoy(2, 2), false, &[]);
     assert!(bare["calibration"].get("formation").is_none());
+}
+
+fn coupling_rows(r: &Value) -> Vec<Value> {
+    r["rule_trace"]["rows"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|row| {
+            row["rule"] == "es-trin/ESI-III-6.2.1/coupling-force"
+                && row["outcome"] != "not applicable"
+        })
+        .cloned()
+        .collect()
+}
+
+#[test]
+fn the_coupling_force_rule_is_a_note_with_the_formation_value() {
+    // ES-TRIN 2025/1 ESI-III-6 2.1, by hand from the block: 270 x P_B x L_S / B_S x 10^-3 kN. The
+    // fixture stores its Rule Sets; ES-TRIN is added.
+    let results = |formation: Value, tug: bool, more: &[(&str, Value)]| {
+        results_with(formation, tug, more, &["es-trin-2025"])
+    };
+    for formation in [json!({ "kind": "pushed_barge" }), convoy(2, 2)] {
+        let r = results(formation.clone(), true, &[]);
+        let f = &r["formation"];
+        let force = 270.0 * num(f, &["tug", "installed_power_kw"]) * num(f, &["tug", "length_m"])
+            / num(f, &["tug", "beam_m"])
+            * 1e-3;
+        let rows = coupling_rows(&r);
+        assert_eq!(rows.len(), 1, "{formation}: {rows:?}");
+        assert_eq!(rows[0]["outcome"], "note", "{formation}");
+        assert!(
+            (rows[0]["value"].as_f64().unwrap() - force).abs() < 1e-9,
+            "{formation}: {} {force}",
+            rows[0]["value"]
+        );
+        assert_eq!(rows[0]["unit"], "kN");
+        // Without its pusher the Formation has no force, and the Rule does not apply.
+        let alone = results(formation.clone(), false, &[]);
+        assert!(coupling_rows(&alone).is_empty(), "{formation}");
+    }
+    // An ATB's linkage is rigid: no coupling force and no row.
+    let atb = results(
+        json!({ "kind": "atb" }),
+        true,
+        &[
+            ("tug_stern_form", json!("transom")),
+            ("tug_propulsor_type", json!("azimuth_ducted")),
+            ("formation_resistance_allowance", json!(1.05)),
+            ("tug_design_speed_kn", json!(11.0)),
+        ],
+    );
+    assert!(atb["formation"].get("coupling_force_kn").is_none());
+    assert!(coupling_rows(&atb).is_empty());
 }
