@@ -1,7 +1,7 @@
 # Spec 0008: Vessel Model, phases 1 and 2: hull sections, hydrostatics, 3D view and exports
 
 Status: **agreed with the maintainer, 2026-10-21.** Decision records: ADR 0012 (accepted with this spec)
-and ADR 0018. Parent issue: see "Build tickets".
+and ADR 0018. Amended 2026-10-23 by ADR 0020 (the equilibrium solves stop at a tolerance). Parent issue: see "Build tickets".
 
 ## Problem Statement
 
@@ -184,7 +184,9 @@ pub struct SectionsTable {
   takes at most a fixed number of steps (16 inner, 12 outer) and stops at the first step whose residual
   is within a tolerance (inner: 1e−13 of the target volume; outer: 1e−11 m of B − G). The stop compares
   numbers the solve computes, so native and WebAssembly stop at the same step and give the same bits.
-  The heel 0 equilibrium of a condition is solved once and its GZ curve starts from it. A test
+  The heel 0 equilibrium of a condition is solved once and its GZ curve starts from it. (Amendment,
+  2026-10-23, ADR 0020: this tolerance stop replaces the first rule, "fixed step counts and no early
+  stop". Results moved by about 1e−16, and every results hash moved once.) A test
   checks the result against an 80 × 60 bisection to 1e−12. (Maintainer decision, 2026-10-21: bisection
   took about 13 s per 61-angle GZ curve on a 41-station hull, too slow for the capacity search; the
   secant solver takes about 1 s and agrees to 2e−15. Newton overshot at heavy trim.)
