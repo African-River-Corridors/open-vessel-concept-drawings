@@ -2,9 +2,10 @@
 # Do not edit: add or correct cases, then re-run.
 formation_resistance_allowance:
   pushed_convoy:
-    value: 1.599
+    value: 1.598
+    status: estimate
     n: 1
     evidence:
     - case: sdp-4600
-    basis: fitted to the in-sample pushers of formation_cases.yaml; an Estimate (the
-      sources print no convoy speed)
+    basis: 'Fitted to 1 vessel; the convoy speed is assumed (7 kn), because the sources
+      print no convoy speed; held-out miss: cds-4115 -12.4 %.'

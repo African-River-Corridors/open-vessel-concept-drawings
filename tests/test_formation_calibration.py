@@ -34,3 +34,14 @@ def test_at_least_one_case_is_held_out_and_one_is_fitted():
     """Label: property"""
     cases = _cases()["formation_case"]
     assert any(c.get("held_out") for c in cases) and any(not c.get("held_out") for c in cases)
+
+
+def test_the_fitted_allowance_is_an_estimate_that_states_its_basis():
+    """Label: property"""
+    fit = yaml.safe_load((CAL / "formation_factors.yaml").read_text(encoding="utf-8"))
+    pushed = fit["formation_resistance_allowance"]["pushed_convoy"]
+    held = [c for c in _cases()["formation_case"] if c.get("held_out")]
+    assert pushed["status"] == "estimate"
+    assert pushed["basis"].startswith(f"Fitted to {pushed['n']} vessel")
+    assert "assumed" in pushed["basis"] and "kn" in pushed["basis"]
+    assert all(c["id"] in pushed["basis"] for c in held)
