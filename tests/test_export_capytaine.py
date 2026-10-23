@@ -48,6 +48,7 @@ def _conditions(binary: str, fixture: Path):
 @pytest.mark.parametrize("fixture", ["gas_igc_2g_exact", "gas_igc_2g_self_propelled",
                                      "crude_integral_tanks_pushed"])
 def test_the_clipped_hull_is_closed_and_holds_the_displaced_volume(fixture, tmp_path):
+    """Label: property"""
     binary = _ovcd()
     path = FIXTURES / f"{fixture}.vdesign"
     conditions = _conditions(binary, path)
