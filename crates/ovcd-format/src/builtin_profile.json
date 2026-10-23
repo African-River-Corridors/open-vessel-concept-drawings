@@ -1436,12 +1436,12 @@
       "basis": "The Blind Distance over the convoy (ES-TRIN 7.02(2)), as sightline_method for a new Option"
     },
     "formation_resistance_allowance": {
-      "default_by_formation": { "pushed_barge": 1.0, "pushed_convoy": 1.0, "atb": 1.05, "towed_barge": 1.0 },
+      "default_by_formation": { "pushed_barge": 1.6, "pushed_convoy": 1.6, "atb": 1.05, "towed_barge": 1.0 },
       "unit": "-",
       "hard": { "gt": 0, "le": 3 },
-      "soft": { "min": 0.8, "max": 1.5 },
+      "soft": { "min": 0.8, "max": 2.0 },
       "status": "estimate",
-      "basis": "The Formation's resistance over that of its Equivalent Hull: an ATB 1.05, from \"rigidly linked ... 5 % increase in resistance compared to equivalent ships\" (Yanakiev 2025 Table 3), applied to ATBs as an estimate; pushed and towed 1.00, estimates the convoy calibration (#359) sets (spec 0007)"
+      "basis": "The Formation's resistance over that of its Equivalent Hull: an ATB 1.05, from \"rigidly linked ... 5 % increase in resistance compared to equivalent ships\" (Yanakiev 2025 Table 3), applied to ATBs as an estimate; pushed 1.6, an estimate: fitted to one vessel, so that the pusher the Formation loop sizes for the SDP 4600 convoy (16 barges) has its published power; the convoy speed is assumed at 7 kn, because the sources print no convoy speed; the held-out CDS 4115 misses by -12.4 % (calibration/formation_cases.yaml, calibration/formation_results.md); towed 1.00, an estimate with no calibration (spec 0007)"
     },
     "notch_depth_m": {
       "default": null,

@@ -1,0 +1,70 @@
+# Formation calibration cases (issue #359, part 2; spec 0007 "Calibration and evaluation"): pushers
+# with a published installed power and a published convoy, run through the whole engine as a pushed
+# convoy with the pusher sized by the Formation loop (`formation.tug.installed_power_kw`), against the
+# published power. The vessels are those of docs/research/stern-and-tugs.md sec. 6.2 and 10.
+#
+# Every figure marked `published` is as the source prints it. Every figure marked `assumed` or `derived`
+# is a modelling choice and says why; the report repeats them. The sources do not print a convoy speed
+# for most pushers, so these cases are WEAK evidence: the fitted allowance is an Estimate, not a result.
+#
+# The run (tools/formation_calibration.py):
+#   barge          length, beam, depth of ONE barge, and how many abreast and in line
+#   dwt_t_per_barge  the deadweight of one barge at its loaded draught (the tool finds the draught that
+#                  gives it); or `draught_m` where the source gives no deadweight
+#   speed_kn       the Design Speed of the Formation (through the water, deep water)
+#   observed.installed_power_kw  the published installed power of the pusher
+#
+# The in-sample cases fit `formation_resistance_allowance` (calibration/formation_factors.yaml); a case
+# with `held_out` is run and banded, never used in the fit. Bands: bands.yaml, `installed_power_kw`.
+formation_case:
+  - id: sdp-4600
+    vessel: "SDP 4600 class pusher (8 units, Hidrovias do Brasil)"
+    kind: pusher
+    confidence: medium
+    barge: {length_m: 61.0, beam_m: 15.0, depth_m: 4.27, abreast: 4, in_line: 4}
+    barge_basis: "published: 16 hopper barges, each 61 m x 15 m x 4.27 m, in a four-by-four convoy (Baird)"
+    dwt_t_per_barge: 3000.0
+    dwt_basis: "derived: the source gives 'a 16 barge flotilla of 48.000 dwt', so 3,000 t a barge"
+    speed_kn: 7.0
+    speed_basis: "assumed: the source gives no convoy speed (13.2 kn is the pusher alone on trials); taken as the 7 kn design speed of the CDS 4115 below"
+    observed: {installed_power_kw: 5369.0}
+    published: "total power of 7200 bHP with three azimuthing Schottel fix pitch propellers in nozzles driven by Wartsila / ABB diesel electric; 16 barge flotilla of 48.000 dwt capacity (7,200 bhp at 0.7457 kW)"
+    source_file: vessels/mex-hidrovias-pushboats-2014/mex-worlds-most-powerful-push-boats.html
+    sha256: a48f67624b967eea4954edbc45a3422b596319631f394a3db27272e83c42f8bf
+    url: https://maritime-executive.com/corporate/Delivery-of-Worlds-Most-Powerful-Push-Boats-2014-03-17
+    barge_source_file: vessels/baird-hidrovias-rapide4500/baird-paraguay-push-boats.html
+    barge_sha256: fbff37eb9aeb7870930f0034cebf2e6cbe781597a29d0e25b53b12aa990f4e9f
+    retrieved: 2026-10-20
+
+  - id: cds-4115
+    vessel: "CDS 4115 River Pusher (Veronica V)"
+    kind: pusher
+    confidence: low
+    held_out: "the barges are not printed, and the fit takes the better-sourced SDP 4600"
+    barge: {length_m: 80.0, beam_m: 12.0, depth_m: 3.0, abreast: 4, in_line: 3}
+    barge_basis: "derived: the source gives 12 barges as a 281 m x 48 m combination with the 41 m pusher, so 4 abreast of 12 m and 3 in line of (281 - 41) / 3 = 80 m; the barge depth is assumed"
+    draught_m: 2.29
+    draught_basis: "assumed: no barge draught is printed; taken as the maximum draught of the pusher (7.5 ft)"
+    speed_kn: 7.0
+    speed_basis: "published: design speed 7 knots"
+    observed: {installed_power_kw: 3990.0}
+    published: "powered by three diesel direct driven engines (generating abt. 1330 kW each); push-barge configurations up to 20 barges (290 m long x 60 m wide); design speed 7 knots; with 12 barges the combination will measure 281 m x 48 m"
+    source_file: vessels/cd-4115-sd-pusher-brochure/CDS-4115-SD-River-Pusher-vouwvel-2405-plano.pdf
+    sha256: 508c05bfeb65069186c96b78a119d101f5c75f667de971776682cf2aafc390d0
+    url: https://concordiadamen.com/wp-content/uploads/2024/05/CDS-4115-SD-River-Pusher-vouwvel-2405-plano.pdf
+    barge_source_file: vessels/mt-veronica-v-pusher/maritimetechnology-veronica-v.html
+    barge_sha256: 7ee1484c42707a8ed9fcfdcb38ed6c668cab7b3bcbba4aca616c08a2436db418
+    retrieved: 2026-10-20
+
+not_yet_runnable_formation_cases:
+  - id: rapide-4600-z3
+    published: "mega convoys of thirty-five barges, each with a deadweight of over 2,000 tonnes; three gensets each 1,670 ekW (5,010 ekW); convoys about 299 m long (Baird)"
+    source_file: vessels/ral-hidrovias-rapide-4600-z3/ral-hidrovias-pusher-2023.html
+    sha256: 5c0e2da409dcc6002c3a006d228cee443b2d8c73da5f787592695ad75b06ffbd
+    not_yet_runnable: "the barge size and the layout of the 35 barges are not printed"
+  - id: rapide-4000-z3
+    published: "16 barges, 61.0 x 13.75 m, max draft 4.5 m"
+    not_yet_runnable: "no installed power is printed"
+  - id: hermasa-rapide-3000-z2
+    published: "up to 20 barges, 32,000 t grain total; two Z-drives"
+    not_yet_runnable: "the barge size is not printed and the unit is on order, not built"
