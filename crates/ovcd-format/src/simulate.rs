@@ -2973,7 +2973,7 @@ fn is_code_conditions(
     // The consumables tanks sit on the bottom at the aft end, in the stern block.
     let consumables = lc::Consumables {
         full_t: h.consumables_t,
-        tanks: ovcd_core::compartments::consumables_tanks(b, 0.0, h.consumables_t),
+        tanks: ovcd_core::compartments::consumables_tanks(b, 0.0, h.consumables_t, &h.hull.table),
         density: 1.0,
     };
     let may_sail = may_sail_without_ballast(p, h.self_propelled);

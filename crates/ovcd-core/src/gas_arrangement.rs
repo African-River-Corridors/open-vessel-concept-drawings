@@ -840,7 +840,7 @@ pub fn is_code_conditions(
     // The consumables tanks sit on the bottom at the aft end, in the stern block.
     let consumables = lc::Consumables {
         full_t: ic.consumables_t,
-        tanks: crate::compartments::consumables_tanks(inp.beam, 0.0, ic.consumables_t),
+        tanks: crate::compartments::consumables_tanks(inp.beam, 0.0, ic.consumables_t, &hull.table),
         density: 1.0,
     };
     lc::assess(&lc::Inputs {

@@ -125,8 +125,9 @@ pub struct CargoAt {
 pub struct Consumables {
     /// The full mass (t).
     pub full_t: f64,
-    /// The tanks that hold them, filled in step. Empty: no consumables.
-    pub tanks: Vec<Space>,
+    /// The tanks that hold them, as the hull clips them (issue #631), filled in step. Empty: no
+    /// consumables.
+    pub tanks: Vec<ClippedSpace>,
     /// The density the tanks are filled with (t/m³).
     pub density: f64,
 }
@@ -372,7 +373,7 @@ fn consumables_at(c: &Consumables, fraction: f64) -> (Vec<Item>, f64) {
     if c.full_t <= 0.0 || fraction <= 0.0 || c.tanks.is_empty() {
         return (Vec::new(), 0.0);
     }
-    let volume: f64 = c.tanks.iter().map(Space::volume_m3).sum();
+    let volume: f64 = c.tanks.iter().map(|t| t.volume_m3).sum();
     let tank_fill = if volume > 0.0 {
         (c.full_t * fraction / (c.density * volume)).min(1.0)
     } else {

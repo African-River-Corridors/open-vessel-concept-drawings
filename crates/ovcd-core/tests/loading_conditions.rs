@@ -71,7 +71,7 @@ fn inputs<'a>(
         cargo_at: &cargo_at,
         consumables: Consumables {
             full_t: consumables_t,
-            tanks: consumables_tanks(B, 2.0, consumables_t),
+            tanks: consumables_tanks(B, 2.0, consumables_t, &box_hull().table),
             density: 1.0,
         },
         ballast_tanks: tanks,
@@ -265,4 +265,64 @@ fn an_automatic_plan_with_openings_listed_works_the_angle_of_down_flooding_in_ev
             c.condition.downflooding_deg
         );
     }
+}
+
+/// Issue #631: under a transom stern the raked bottom cuts the aft end of the consumables pair.
+/// The pair is made longer, so the volume inside the hull still holds the stores; on a box hull it
+/// is the prism.
+#[test]
+fn the_consumables_tanks_hold_the_stores_inside_the_hull() {
+    use ovcd_core::stern_form::{HullDims, SternForm, SternFormInputs, geometry};
+    let volume = 60.0;
+    let boxed = consumables_tanks(B, 0.0, volume, &box_hull().table);
+    assert!(boxed.iter().all(|t| !t.is_cut()));
+    let prism = volume / B;
+    assert!(
+        boxed
+            .iter()
+            .all(|t| (t.space.length() - prism).abs() < 1e-12)
+    );
+    let stern = geometry(
+        &SternFormInputs {
+            form: SternForm::Transom,
+            run_length_m: None,
+            transom_height_m: None,
+            tunnel_crown_height_m: None,
+            propulsor_count: 2,
+            propeller_diameter_m: None,
+            max_unit_diameter_m: None,
+            parallel_shafts: true,
+        },
+        &HullDims {
+            loa: L,
+            beam: B,
+            depth: D,
+            design_draught: 3.0,
+        },
+    );
+    let mut spec = HullSpec {
+        loa: L,
+        beam: B,
+        depth: D,
+        bow_rake_length_m: 0.0,
+        bow_rake_rise_m: D,
+        stern: None,
+        shape: Default::default(),
+        downflooding_deg: None,
+        openings: Vec::new(),
+    };
+    spec.stern = Some(stern);
+    let hull = Hull::build(&spec).unwrap();
+    let tanks = consumables_tanks(B, 0.0, volume, &hull.table);
+    assert_eq!(tanks.len(), 2);
+    assert!(
+        tanks.iter().any(|t| t.is_cut()),
+        "the raked bottom cuts the pair"
+    );
+    let inside: f64 = tanks.iter().map(|t| t.volume_m3).sum();
+    assert!((inside - volume).abs() < 1e-6 * volume, "{inside}");
+    assert!(tanks[0].space.length() > prism);
+    // Full, the tanks hold the stores mass at density 1.
+    let full: f64 = tanks.iter().map(|t| t.fill(1.0).volume_m3).sum();
+    assert!((full - volume).abs() < 1e-6 * volume, "{full}");
 }

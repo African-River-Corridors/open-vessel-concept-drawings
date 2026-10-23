@@ -803,16 +803,52 @@ pub fn empty_fills(spaces: &[Space]) -> Vec<f64> {
 pub const CONSUMABLES_TANK_HEIGHT_M: f64 = 1.0;
 
 /// The consumables tanks of a self-propelled hull: one transverse pair on the bottom of the stern
-/// zone, each half the beam wide and [`CONSUMABLES_TANK_HEIGHT_M`] high, as long as `volume_m3`
-/// needs, from `x_aft`. A pair is the case IS Code 2008 Part B 3.1.4 asks for: at least one
-/// transverse pair or one centreline tank with a free surface. Empty for no volume.
-pub fn consumables_tanks(beam: f64, x_aft: f64, volume_m3: f64) -> Vec<Space> {
+/// zone, each half the beam wide and [`CONSUMABLES_TANK_HEIGHT_M`] high, from `x_aft`, clipped by
+/// the hull. A pair is the case IS Code 2008 Part B 3.1.4 asks for: at least one transverse pair or
+/// one centreline tank with a free surface. Issue #631: a raked stern bottom cuts the aft end of
+/// the pair, so the pair is made as long as its volume inside the hull needs to hold `volume_m3`
+/// (the stores mass is kept); never longer than the hull. Empty for no volume.
+pub fn consumables_tanks(
+    beam: f64,
+    x_aft: f64,
+    volume_m3: f64,
+    hull: &SectionsTable,
+) -> Vec<ClippedSpace> {
     let h = CONSUMABLES_TANK_HEIGHT_M;
     if volume_m3 <= 0.0 || beam <= 0.0 {
         return Vec::new();
     }
-    let length = volume_m3 / (beam * h);
-    pair("CT", SpaceKind::Consumables, (x_aft, x_aft + length), |s| {
-        rect(s, 0.0, beam / 2.0, 0.0, h)
-    })
+    let at = |length: f64| -> Vec<ClippedSpace> {
+        pair("CT", SpaceKind::Consumables, (x_aft, x_aft + length), |s| {
+            rect(s, 0.0, beam / 2.0, 0.0, h)
+        })
+        .iter()
+        .map(|t| clip(t, hull))
+        .collect()
+    };
+    let inside = |tanks: &[ClippedSpace]| tanks.iter().fold(0.0, |a, t| a + t.volume_m3);
+    // The prism length; longer only where the hull cuts the pair.
+    let prism = volume_m3 / (beam * h);
+    let tanks = at(prism);
+    if inside(&tanks) >= volume_m3 {
+        return tanks;
+    }
+    let most = hull
+        .sections
+        .last()
+        .map_or(prism, |s| s.x - x_aft)
+        .max(prism);
+    if inside(&at(most)) <= volume_m3 {
+        return at(most);
+    }
+    let (mut lo, mut hi) = (prism, most);
+    for _ in 0..60 {
+        let mid = 0.5 * (lo + hi);
+        if inside(&at(mid)) < volume_m3 {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+    at(hi)
 }
