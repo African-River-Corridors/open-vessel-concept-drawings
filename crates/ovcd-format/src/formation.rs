@@ -47,6 +47,10 @@ struct TugInputs {
     design_speed_kn: f64,
     margin: f64,
     allowance: f64,
+    /// The tug's sightline is a Blind Distance over the convoy (`tug_sightline_method`).
+    blind_distance: bool,
+    /// The tug's wheelhouse lifts (`tug_wheelhouse_type`).
+    elevating: bool,
 }
 
 fn number(option: &DesignOption, name: &str) -> Option<f64> {
@@ -81,6 +85,8 @@ fn tug_inputs(option: &DesignOption) -> Result<TugInputs, String> {
         design_speed_kn: number(option, "tug_design_speed_kn").unwrap_or(7.5),
         margin: number(option, "tug_installed_power_margin").unwrap_or(1.2),
         allowance: number(option, "formation_resistance_allowance").unwrap_or(1.0),
+        blind_distance: text_of("tug_sightline_method").as_deref() == Some("blind_distance"),
+        elevating: text_of("tug_wheelhouse_type").as_deref() != Some("fixed"),
     })
 }
 
@@ -463,6 +469,7 @@ fn build(
     }
     let r = last.ok_or("the sizing ran no pass")?;
     notes.extend(convergence_note(&sized));
+    let mut notes2: Vec<ovcd_core::text::Text> = Vec::new();
     if towed {
         notes.push(text!(
             "note-tow-method-unverified",
@@ -603,7 +610,102 @@ fn build(
         o.remove("equivalent_hull");
         o.insert("barges_towed".into(), json!(barges));
     }
+    // Issue #360: the tug's view over the barges ahead, when its sightline is a Blind Distance.
+    if tug.blind_distance
+        && let Some(s) = sightline(&tug, &r.dims, join, barge.0, v, &mut notes2)?
+        && let Some(o) = block.as_object_mut()
+    {
+        o.insert("sightline".into(), s);
+        if let Some(Value::Array(list)) = o.get_mut("notes") {
+            list.extend(notes2.iter().map(|n| json!(n.en)));
+        }
+    }
+    notes.extend(notes2);
     Ok(block)
+}
+
+/// The sightline of a pusher or an ATB tug over its barges (issue #360, spec 0007 "Wheelhouse,
+/// sightline and air draft"): the eye at the forward face of the wheelhouse, at mid-length of the tug
+/// (an Estimate), the floor lowered on the tug's deck; each barge's highest point light and laden
+/// (its air draft) at its forward end; the ES-TRIN 7.02(2) limit, light. `None` for a tow (the tug
+/// is ahead of its barge). With `notes` the warning when the lift is not enough.
+fn sightline(
+    tug: &TugInputs,
+    dims: &TugDims,
+    join: Join,
+    barge_length_m: f64,
+    v: &Value,
+    notes: &mut Vec<ovcd_core::text::Text>,
+) -> Result<Option<Value>, String> {
+    use ovcd_core::aft_arrangement::{
+        DEFAULT_WHEELHOUSE_EYE_ABOVE_FLOOR_M, DEFAULT_WHEELHOUSE_MAX_LIFT_M,
+    };
+    use ovcd_core::formation::{
+        ConvoySight, PUSHER_WHEELHOUSE_AT, convoy_obstructions, convoy_sightline,
+    };
+    use ovcd_core::wheelhouse::ES_TRIN_BLIND_DISTANCE_M;
+    let (first_aft_x, in_line) = match join {
+        Join::Pushed { counts } => (dims.length_m, counts.1),
+        Join::Atb { notch_depth_m, .. } => (dims.length_m - notch_depth_m, 1),
+        Join::Towed { .. } => return Ok(None),
+    };
+    let air = |key: &str| {
+        v["results"][key]
+            .as_f64()
+            .ok_or_else(|| format!("the result has no results.{key}"))
+    };
+    let light = convoy_obstructions(
+        first_aft_x,
+        barge_length_m,
+        in_line,
+        air("air_draft_light_m")?,
+    );
+    let laden = convoy_obstructions(
+        first_aft_x,
+        barge_length_m,
+        in_line,
+        air("air_draft_loaded_m")?,
+    );
+    let eye_height = DEFAULT_WHEELHOUSE_EYE_ABOVE_FLOOR_M;
+    let max_lift = if tug.elevating {
+        DEFAULT_WHEELHOUSE_MAX_LIFT_M
+    } else {
+        0.0
+    };
+    let sight = ConvoySight {
+        eye_x_m: PUSHER_WHEELHOUSE_AT * dims.length_m,
+        eye_lowered_m: dims.depth_m() - dims.draught_m + eye_height,
+        eye_height_m: eye_height,
+        max_lift_m: max_lift,
+        bow_x_m: first_aft_x + in_line as f64 * barge_length_m,
+    };
+    let limit = ES_TRIN_BLIND_DISTANCE_M;
+    let (s, laden_m) = convoy_sightline(&sight, &light, &laden, limit);
+    if !s.enough {
+        notes.push(text!(
+            "warn-formation-blind-distance-lift",
+            "The tug's view over the barges needs {needed} m of wheelhouse lift; the tug gives {max_lift} m. The Blind Distance light is {blind} m, more than {limit} m (ES-TRIN 7.02(2)).",
+            needed = Arg::fixed(s.lift_needed_m, 2),
+            max_lift = Arg::fixed(max_lift, 2),
+            blind = Arg::fixed(s.blind_distance_m, 1),
+            limit = Arg::fixed(limit, 0),
+        ));
+    }
+    let num = crate::eval::num;
+    Ok(Some(json!({
+        "limit_m": num(limit),
+        "eye_x_m": num(sight.eye_x_m),
+        "eye_lowered_above_water_m": num(sight.eye_lowered_m),
+        "eye_raised_above_water_m": num(s.eye_raised_m),
+        "floor_raised_above_water_m": num(s.floor_raised_m),
+        "lift_needed_m": num(s.lift_needed_m),
+        "lift_used_m": num(s.lift_used_m),
+        "max_lift_m": num(max_lift),
+        "bow_x_m": num(sight.bow_x_m),
+        "blind_distance_light_m": num(s.blind_distance_m),
+        "blind_distance_laden_m": num(laden_m),
+        "enough": s.enough,
+    })))
 }
 
 /// The Notch and the tug of an ATB as the drawings need them (`drawing.atb`, issue #363): from the

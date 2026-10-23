@@ -113,7 +113,8 @@ fn option_picks_one_option_and_an_unknown_name_is_refused() {
 }
 
 #[test]
-fn a_convoy_gets_no_drawings_and_the_outputs_panel_message() {
+fn a_convoy_gets_its_arrangement_plan_and_no_ga_views() {
+    // Issue #360: the GA views of one barge are not the convoy's; its arrangement plan is.
     let dir = temp("convoy");
     let (ok, _, stderr) = run(&[
         "draw",
@@ -121,12 +122,18 @@ fn a_convoy_gets_no_drawings_and_the_outputs_panel_message() {
         dir.to_str().unwrap(),
         &fixture("pushed_convoy.vdesign"),
     ]);
-    assert!(!ok);
+    assert!(ok, "{stderr}");
+    let mut names: Vec<String> = std::fs::read_dir(&dir)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    names.sort();
     assert!(
-        stderr.contains("no drawings of a pushed convoy yet"),
-        "{stderr}"
+        names.iter().all(|n| n.starts_with("option-1-arrangement-plan.")),
+        "{names:?}"
     );
-    assert!(!dir.exists(), "nothing is written");
+    assert_eq!(names.len(), 5, "{names:?}");
+    let _ = std::fs::remove_dir_all(&dir);
 }
 
 #[test]
