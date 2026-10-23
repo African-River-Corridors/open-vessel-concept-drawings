@@ -63,7 +63,7 @@ Each disagreement outside the grid error, in one bucket.
 | `es-trin/28.04(1)(a)/propulsion-redundancy` A craft over 110 m has two propulsors and a bow thruster, or one propulsor and a bow thruster with its own power that lets it proceed after a breakdown (finding #355) | block | 205 | 19 | 0 | 0 | yes | none | none |
 | `es-trin/7.02(3)/field-of-view` Helmsman's field of unobstructed vision at least 240 degrees, 140 degrees in the forward semicircle (finding #355) | warn | 0 | 0 | 0 | 0 | not evaluated | none | none |
 | `es-trin/7.12(2)/elevating-wheelhouse-stability` An elevating wheelhouse does not endanger the stability of the vessel (finding #355) | warn | 0 | 0 | 0 | 0 | not evaluated | none | none |
-| `es-trin/ESI-III-6.2.1/coupling-force` Coupling force between a pusher and pushed craft, F = 270 P_B L_S / B_S x 10^-3 kN, as the tensile strength to size the coupling (finding #355) | note | 0 | 0 | 0 | 0 | - | none | none |
+| `es-trin/ESI-III-6.2.1/coupling-force` Coupling force between a pusher and pushed craft, F = 270 P_B L_S / B_S x 10^-3 kN, as the tensile strength to size the coupling | note | 0 | 0 | 0 | 0 | - | none | none |
 | `es-trin/21.05(2)/no-downstream-towing-over-86m` A craft of length L exceeding 86 m shall not be authorised for towing downstream (finding #361) | warn | 0 | 0 | 0 | 0 | - | none | none |
 
 ### is2008-a@1.0.0
