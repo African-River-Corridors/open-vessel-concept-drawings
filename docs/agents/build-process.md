@@ -136,7 +136,7 @@ changes every day. So it is a separate activity, never a gate on a merge:
 
 Installers are built and published only on purpose (issue #173; `tools/release_plan.py` decides):
 
-During development the app makes 0.2.x patch releases only. Version 0.3 is reserved for the first release shared with expert reviewers, and any minor bump needs the maintainer.
+0.3 is a developer pre-release: it is for developers and testers, not for expert review. The first release shared with expert reviewers is 0.4. During development the app makes 0.3.x patch releases only, and any minor bump needs the maintainer.
 
 - **A calibration case outside its band** blocks a release unless that release's `CHANGELOG.md` entry names it
   and says why (`calibration/README.md`, "When a band blocks a release"). The `calibration-bands` job of
