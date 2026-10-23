@@ -5,7 +5,7 @@
 <!-- design-impact -->
 ### ticket/360-arrangement-plan (2026-10-23)
 
-Between `main 9fc7e39` and `this branch fb0696dc`.
+Between `main 9fc7e39` and `this branch 330424c1`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
