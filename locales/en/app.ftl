@@ -418,3 +418,9 @@ app-3d-kind-peak-ballast = Peak ballast
 app-3d-side-port = port
 app-3d-side-starboard = starboard
 app-3d-side-centre = centre
+app-3d-section = Section plane
+app-3d-section-x = Position of the section plane along the hull
+app-3d-section-at = at x = { $x } m
+app-3d-waterline = Waterline
+app-3d-waterline-none = None
+app-3d-waterline-draughts = draught { $mean } m (aft { $aft } m, forward { $fwd } m), trim { $trim } m

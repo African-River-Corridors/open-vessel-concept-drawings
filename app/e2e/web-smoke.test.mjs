@@ -268,6 +268,72 @@ describe("OVCD web smoke tests", () => {
     }
   });
 
+  it("moves the section plane and shows the waterline of each loading condition (issue #459)", async () => {
+    const b = await start();
+    await b.url(`${origin}/ovcd/app`);
+    await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+    await (await b.$("button=I understand")).click();
+    await until(b, "results", async () => (await outputs(b)).isExisting());
+    await b.execute(() => {
+      HTMLInputElement.prototype.click = function () {};
+    });
+    await (await b.$("button=Open")).click();
+    const picker = await b.$("[data-testid=file-picker]");
+    await picker.waitForExist({ timeout: 5000 });
+    await picker.setValue(BALLAST_FIXTURE);
+    await until(b, "the file name", async () => (await b.$("header")).getText().then((t) => t.includes("crude_integral_tanks_coastal.vdesign")));
+    const tab = (label) => b.$(`//button[@role="tab" and normalize-space()="${label}"]`);
+    await (await tab("Drawings")).click();
+    await (await tab("3D")).click();
+    await until(b, "the model", async () => (await (await b.$("[data-testid=model3d]")).getAttribute("data-status")) === "ready", 60000);
+    // The section plane: three stations; the drawn outline is the core's section_at, as f32.
+    await (await b.$("[data-testid=section-on]")).click();
+    for (const x of [10, 38, 66]) {
+      await b.execute((x) => {
+        const el = document.querySelector("[data-testid=section-x]");
+        el.value = String(x);
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+      }, x);
+      await until(b, `the outline at ${x}`, async () => {
+        const d = await (await b.$("[data-testid=model3d-canvas]")).getAttribute("data-section");
+        return d !== null && JSON.parse(d).x === x;
+      });
+      const drawn = JSON.parse(await (await b.$("[data-testid=model3d-canvas]")).getAttribute("data-section"));
+      const core = await b.execute(async (x) => (await window.__ovcdPlatform.sectionAt("Option 1", x)).rings, x);
+      assert.ok(core.length >= 1);
+      assert.deepEqual(drawn.rings, core.map((ring) => ring.map(([y, z]) => [Math.fround(y), Math.fround(z)])), `the outline at ${x}`);
+    }
+    await (await b.$("[data-testid=section-on]")).click();
+    await until(b, "the outline gone", async () => (await (await b.$("[data-testid=model3d-canvas]")).getAttribute("data-section")) === null);
+    // The waterline of each loading condition: its draughts are the results'.
+    const results = await b.execute(async () => {
+      const ev = await window.__ovcdPlatform.evaluate();
+      const c = ev.options[0].outcome.results.loading_conditions.conditions;
+      return c.map((x) => ({ name: x.name, draught: x.draught_m, aft: x.draught_aft_m ?? x.draught_m, fwd: x.draught_fwd_m ?? x.draught_m }));
+    });
+    assert.ok(results.length >= 3, "several loading conditions");
+    for (const c of results) {
+      await b.execute((name) => {
+        const el = document.querySelector("[data-testid=waterline-select]");
+        el.value = name;
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      }, c.name);
+      await until(b, `the waterline of ${c.name}`, async () => (await (await b.$("[data-testid=waterline-info]")).getAttribute("data-draught")) !== null);
+      const info = await b.$("[data-testid=waterline-info]");
+      assert.equal(Number(await info.getAttribute("data-draught")), c.draught, c.name);
+      assert.equal(Number(await info.getAttribute("data-aft")), c.aft, c.name);
+      assert.equal(Number(await info.getAttribute("data-fwd")), c.fwd, c.name);
+      const shown = JSON.parse(await (await b.$("[data-testid=model3d-canvas]")).getAttribute("data-shown"));
+      assert.ok(shown.some((g) => g === `waterline:${c.name}`), `the waterline mesh of ${c.name} is drawn`);
+    }
+    if (SHOTS) {
+      fs.mkdirSync(SHOTS, { recursive: true });
+      await (await b.$("[data-testid=section-on]")).click();
+      await new Promise((r) => setTimeout(r, 800));
+      await b.saveScreenshot(path.join(SHOTS, "web-3d-section.png"));
+    }
+  });
+
   it("gives the same results hashes and saved bytes in every language, and keeps the choice", async () => {
     const b = await start();
     await b.url(`${origin}/ovcd/app`);

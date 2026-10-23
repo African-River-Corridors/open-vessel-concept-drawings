@@ -665,6 +665,18 @@ describe("OVCD app smoke tests", () => {
     }
   });
 
+  it("moves the section plane and shows a waterline when the 3D model can be drawn (issue #459)", async () => {
+    await open(path.join(FIXTURES, "crude_integral_tanks_coastal.vdesign"), "crude_integral_tanks_coastal.vdesign");
+    await show("Drawings", "3D");
+    await until("the 3D view", async () => (await (await browser.$("[data-testid=model3d]")).getAttribute("data-status")) !== "loading", 60000);
+    if ((await (await browser.$("[data-testid=model3d]")).getAttribute("data-status")) !== "ready") return;
+    await (await browser.$("[data-testid=section-on]")).click();
+    await until("the outline", async () => (await (await browser.$("[data-testid=model3d-canvas]")).getAttribute("data-section")) !== null);
+    assert.ok(JSON.parse(await (await browser.$("[data-testid=model3d-canvas]")).getAttribute("data-section")).rings.length >= 1);
+    await until("a waterline", async () => (await browser.$$("[data-testid=waterline-info]")).length === 1);
+    assert.ok(Number(await (await browser.$("[data-testid=waterline-info]")).getAttribute("data-draught")) > 0);
+  });
+
   it("lists the ballast tanks and the ballast plan of a Design in the IS Code conditions (issue #426)", async () => {
     await open(path.join(FIXTURES, "crude_integral_tanks_coastal.vdesign"), "crude_integral_tanks_coastal.vdesign");
     await show("Stability & Propulsion", "Ballast tanks");
