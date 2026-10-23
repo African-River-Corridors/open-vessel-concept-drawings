@@ -471,3 +471,192 @@ fn a_new_self_propelled_option_passes_the_new_checks_and_a_typed_weak_engine_or_
     assert_eq!(row.len(), 1);
     assert_eq!(row[0]["outcome"], "warn", "{}", row[0]);
 }
+
+// ---- #355: the propeller Checks of the `ovcd` set -------------------------------------------------
+
+fn row_of(results: &Value, id: &str) -> Value {
+    let found = rows(results, id);
+    assert_eq!(found.len(), 1, "{id}: {found:?}");
+    found[0].clone()
+}
+
+#[test]
+fn the_propeller_checks_read_the_diameter_the_axis_and_the_blade_load_of_the_results() {
+    // The Stern Form's D_max, as a file saved before has it.
+    let r = results(&design(json!({
+        "propulsor_type": "shaft_open", "stern_form": "transom", "cargo": "LPG_propane",
+        "propeller_diameter_basis": "stern_form"
+    })));
+    let pw = &r["powering"];
+    let d = pw["propeller_diameter_m"].as_f64().unwrap();
+    // The axis is half a diameter above the base; the blade load is the delivered power per disc.
+    assert!((pw["shaft_axis_height_m"].as_f64().unwrap() - d / 2.0).abs() < 1e-12);
+    assert_eq!(pw["propeller_ducted"], false);
+    assert_eq!(pw["blade_load_limit_kw_m2"], 400.0);
+    // Hand value: installed power over one unit, through the shaft line (0.99) and the source,
+    // over pi D^2 / 4. The source efficiency is not known here, so bound it: at most the shaft power.
+    let disc = std::f64::consts::PI * d * d / 4.0;
+    let load = pw["blade_load_kw_m2"].as_f64().unwrap();
+    assert!(
+        load > 0.0 && load <= pw["installed_power_kw"].as_f64().unwrap() / disc,
+        "{load}"
+    );
+    // The diameter is the Stern Form's largest, so the Check passes at exactly 1.
+    let fits = row_of(&r, "ovcd/propulsion/propeller-fits-stern");
+    assert_eq!(fits["outcome"], "pass");
+    assert!(
+        (fits["value"].as_f64().unwrap() - 1.0).abs() < 1e-12,
+        "{fits}"
+    );
+    // Blade load: the row value is the load over the limit.
+    let blade = row_of(&r, "ovcd/propulsion/blade-load");
+    assert!(
+        (blade["value"].as_f64().unwrap() - load / 400.0).abs() < 1e-12,
+        "{blade}"
+    );
+    // Immersion: the lightest aft draught of the conditions, less the axis, over D and over 0.76.
+    let aft = r["loading_conditions"]["conditions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["draught_aft_m"].as_f64().unwrap())
+        .fold(f64::INFINITY, f64::min);
+    let imm = row_of(&r, "ovcd/propulsion/immersion-light");
+    let want = (aft - d / 2.0) / d / 0.76;
+    assert!(
+        (imm["value"].as_f64().unwrap() - want).abs() < 1e-12,
+        "{imm} {want}"
+    );
+    // D_max is the largest the design draught allows, so the axis is higher than the light draught
+    // immerses: a warning, not a block.
+    assert!(want < 1.0, "{want}");
+    assert_eq!(imm["outcome"], "warn");
+}
+
+fn lightest_aft(r: &Value) -> f64 {
+    r["loading_conditions"]["conditions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["draught_aft_m"].as_f64().unwrap())
+        .fold(f64::INFINITY, f64::min)
+}
+
+#[test]
+fn a_new_gas_option_sizes_its_propeller_to_the_light_draught_and_passes_the_immersion_check() {
+    // The maintainer's decision on #355: a default self-propelled hull passes at the light draught.
+    // A new gas Option: a transom stern with ducted azimuth units (limit 0.71).
+    let r = results(&design(json!({ "cargo": "LPG_propane" })));
+    assert_eq!(r["geometry"]["stern_form"], "transom");
+    let d = r["powering"]["propeller_diameter_m"].as_f64().unwrap();
+    let d_max = r["geometry"]["propeller_d_max_m"].as_f64().unwrap();
+    assert!(d < d_max, "{d} {d_max}");
+    // Rounded down to 0.05 m, and the axis (D/2 above the base) is 0.71 D under the lightest aft draught.
+    assert!(((d / 0.05).round() * 0.05 - d).abs() < 1e-9, "{d}");
+    let aft = lightest_aft(&r);
+    assert!(aft - d / 2.0 >= 0.71 * d, "{aft} {d}");
+    let imm = row_of(&r, "ovcd/propulsion/immersion-light");
+    assert_eq!(imm["outcome"], "pass", "{imm}");
+    assert_eq!(
+        row_of(&r, "ovcd/propulsion/propeller-fits-stern")["outcome"],
+        "pass"
+    );
+}
+
+#[test]
+fn the_stern_form_basis_and_a_typed_diameter_keep_their_diameter_and_the_warning() {
+    let legacy = results(&design(
+        json!({ "cargo": "LPG_propane", "propeller_diameter_basis": "stern_form" }),
+    ));
+    let d_max = legacy["geometry"]["propeller_d_max_m"].as_f64().unwrap();
+    assert_eq!(
+        legacy["powering"]["propeller_diameter_m"].as_f64(),
+        Some(d_max)
+    );
+    assert_eq!(
+        row_of(&legacy, "ovcd/propulsion/immersion-light")["outcome"],
+        "warn"
+    );
+    // A typed diameter is used as typed, though it warns.
+    let typed = results(&design(
+        json!({ "cargo": "LPG_propane", "propeller_diameter_m": 3.0 }),
+    ));
+    assert_eq!(
+        typed["powering"]["propeller_diameter_m"].as_f64(),
+        Some(3.0)
+    );
+    assert_eq!(
+        row_of(&typed, "ovcd/propulsion/immersion-light")["outcome"],
+        "warn"
+    );
+    // A tunnel stern keeps D_max: the Check does not apply there.
+    let tunnel = results(&design(
+        json!({ "cargo": "LPG_propane", "stern_form": "tunnel" }),
+    ));
+    assert_eq!(
+        tunnel["powering"]["propeller_diameter_m"].as_f64(),
+        tunnel["geometry"]["propeller_d_max_m"].as_f64()
+    );
+}
+
+#[test]
+fn a_ducted_propeller_has_the_ducted_limits_and_a_tunnel_stern_has_no_immersion_check() {
+    let ducted = results(&design(json!({
+        "propulsor_type": "shaft_nozzle", "stern_form": "transom", "cargo": "LPG_propane"
+    })));
+    assert_eq!(ducted["powering"]["blade_load_limit_kw_m2"], 500.0);
+    assert_eq!(ducted["powering"]["propeller_ducted"], true);
+    let d = ducted["powering"]["propeller_diameter_m"].as_f64().unwrap();
+    let aft = ducted["loading_conditions"]["conditions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["draught_aft_m"].as_f64().unwrap())
+        .fold(f64::INFINITY, f64::min);
+    let imm = row_of(&ducted, "ovcd/propulsion/immersion-light");
+    assert!((imm["value"].as_f64().unwrap() - (aft - d / 2.0) / d / 0.71).abs() < 1e-12);
+    let tunnel = results(&design(json!({
+        "propulsor_type": "shaft_open", "stern_form": "tunnel", "cargo": "LPG_propane"
+    })));
+    assert!(rows(&tunnel, "ovcd/propulsion/immersion-light").is_empty());
+    assert_eq!(rows(&tunnel, "ovcd/propulsion/blade-load").len(), 1);
+}
+
+#[test]
+fn a_typed_diameter_over_the_stern_forms_largest_warns() {
+    let r = results(&design(json!({
+        "propulsor_type": "shaft_open", "stern_form": "transom", "cargo": "LPG_propane",
+        "propeller_diameter_m": 4.5
+    })));
+    let fits = row_of(&r, "ovcd/propulsion/propeller-fits-stern");
+    assert_eq!(fits["outcome"], "warn");
+    assert!(
+        (fits["value"].as_f64().unwrap() - 4.5 / 3.705).abs() < 1e-9,
+        "{fits}"
+    );
+}
+
+#[test]
+fn a_file_with_no_specified_propulsor_has_no_propeller_numbers() {
+    let r = results(&design(
+        json!({ "cargo": "LPG_propane", "propulsor_type": "unspecified" }),
+    ));
+    assert!(r["powering"].is_null());
+    // The diameter is the Stern Form's own, so that Check reads 1; the other two have no Propulsor.
+    for id in [
+        "ovcd/propulsion/immersion-light",
+        "ovcd/propulsion/blade-load",
+    ] {
+        let all: Vec<_> = r["rule_trace"]["rows"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|row| row["rule"] == id)
+            .collect();
+        assert!(
+            all.iter()
+                .all(|row| row["outcome"] != "pass" && row["outcome"] != "fail"),
+            "{id}: {all:?}"
+        );
+    }
+}

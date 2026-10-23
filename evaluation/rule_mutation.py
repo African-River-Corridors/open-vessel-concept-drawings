@@ -118,18 +118,28 @@ def verdicts(trace: dict, rule_id: str) -> list[str]:
     return [r["outcome"] for r in trace["rows"] if r["rule"] == rule_id]
 
 
-def run(cases: list[dict], select: list[str], trace_of, rule_sets: tuple[str, ...] = ()) -> list[dict]:
+def run(cases: list[dict], select: list[str], trace_of, rule_sets: tuple[str, ...] = (),
+        expected_only: bool = False, near_only: bool = False) -> list[dict]:
     """Run every mutant of every selected set over `cases`. `trace_of(case, rule_sets, select)` gives
     a case's Rule Trace; `rule_sets` are set texts loaded at run time (a selected set not among them
     is a built-in one). Each result is a mutant (without its text) and `noticed_by`, the cases whose
-    verdict on the mutated Rule changed."""
+    verdict on the mutated Rule changed. With `expected_only`, a set that holds many Rules the corpus does not
+    cover (the `ovcd` set) is mutated only on the Rules some case expects a verdict for, and each mutant is run
+    only over the cases that expect that Rule. With `near_only` it runs only the base cases and the boundary
+    mutants made for that Rule, the ones that sit near its limit: the corpus is large and the rest cannot
+    notice a small step."""
     loaded = {f"{d['id']}@{d['version']}": t for t in rule_sets for d in [json.loads(t)]}
     baseline = {c["id"]: trace_of(c, rule_sets, tuple(select)) for c in cases}
     out = []
     for key in select:
         for m in mutants(key, loaded.get(key)):
             chosen = tuple(m["key"] if k == key else k for k in select)
-            noticed = [c["id"] for c in cases
+            over = [c for c in cases if m["rule"] in c["expected"]] if expected_only else cases
+            if near_only:
+                over = [c for c in over if "mutant" not in c or c["mutant"]["criterion"] == m["rule"]]
+            if expected_only and not over:
+                continue
+            noticed = [c["id"] for c in over
                        if verdicts(trace_of(c, rule_sets + (m["text"],), chosen), m["rule"])
                        != verdicts(baseline[c["id"]], m["rule"])]
             out.append({**{k: v for k, v in m.items() if k != "text"}, "set": key, "noticed_by": noticed})

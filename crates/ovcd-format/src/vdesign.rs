@@ -1015,6 +1015,12 @@ pub const LEGACY_FIXED_OTHER: &[LegacyFixedJson] = &[
         applies_to: AppliesTo::All,
         value: "null",
     },
+    // Issue #355: a file saved before takes the Stern Form's D_max as the default diameter.
+    LegacyFixedJson {
+        name: "propeller_diameter_basis",
+        applies_to: AppliesTo::All,
+        value: "\"stern_form\"",
+    },
     // Issue #351: the Propulsor factors apply only with a specified Propulsor, which a file saved
     // before never has; 1 is the plain actuator disc.
     LegacyFixedJson {
@@ -1280,6 +1286,11 @@ pub const HOLD_COVERINGS: &[&str] = &["covered", "open"];
 /// the aft face of the end space and the setback is added to it (LR 3.3.7 and 3.3.11).
 pub const OPENING_SETBACK_BASES: &[&str] = &["tank_end", "cargo_area"];
 
+/// What a default propeller diameter is sized to (issue #355): `stern_form`, the largest the Stern
+/// Form allows (D_max); `light_draught`, also no larger than keeps the shaft axis immersed at the
+/// lightest aft draught, at a transom or pram stern.
+pub const PROPELLER_DIAMETER_BASES: &[&str] = &["stern_form", "light_draught"];
+
 /// The Service Areas of an Option (spec 0004, "Service Area and default stacks"; ADR 0011).
 /// `ocean-only` is not offered.
 pub const SERVICE_AREAS: &[&str] = &["river-only", "coastal-and-river"];
@@ -1541,6 +1552,8 @@ pub const CHOICE_LABELS: &[(&str, &str)] = &[
     ("open", "Open"),
     ("tank_end", "From the tank end"),
     ("cargo_area", "From the cargo area"),
+    ("stern_form", "Largest the stern allows"),
+    ("light_draught", "Immersed at the light draught"),
     ("river-only", "River only"),
     ("coastal-and-river", "Coastal and river"),
     ("v_bottom", "V-bottom"),
@@ -2445,6 +2458,16 @@ pub const INPUTS: &[InputSpec] = &[
             "propeller_diameter_m",
             "Propeller diameter",
             NUM_OR_NONE,
+            Group::SternAndPropulsion,
+        ),
+        "propulsor_type",
+        SPECIFIED_PROPULSORS,
+    ),
+    when(
+        self_propelled(
+            "propeller_diameter_basis",
+            "Default propeller diameter sized to",
+            InputKind::Choice(PROPELLER_DIAMETER_BASES),
             Group::SternAndPropulsion,
         ),
         "propulsor_type",

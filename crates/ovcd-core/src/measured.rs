@@ -57,6 +57,13 @@ pub struct Measured {
     /// The coupling force between the pusher and the pushed craft (kN, ES-TRIN ESI-III-6 2.1);
     /// `None` without a pushed Formation that includes its pusher.
     pub coupling_force_kn: Option<f64>,
+    /// The propeller diameter over the largest the Stern Form allows; `None` with no Stern Form (issue #355).
+    pub diameter_over_max: Option<f64>,
+    /// The shaft axis submergence ratio at the lightest aft draught, over the limit of the type
+    /// (0.76 open, 0.71 ducted); `None` with no specified Propulsor or no loading condition.
+    pub immersion_over_limit: Option<f64>,
+    /// The blade load at the Installed Power over the limit of the type; `None` with no Propulsor.
+    pub blade_load_over_limit: Option<f64>,
     /// The assumed damages of a liquid bulk hull and what the damaged hull does (issue #341); empty for
     /// every other Cargo.
     pub damage: Vec<DamageVerdict>,
@@ -314,6 +321,9 @@ impl Measured {
             "wheelhouse.lift_enough" => self.lift_enough.is_some(),
             "powering.depth_over_draught" => self.depth_over_draught.is_some(),
             "formation.coupling_force" => self.coupling_force_kn.is_some(),
+            "propulsion.diameter_over_max" => self.diameter_over_max.is_some(),
+            "propulsion.immersion_over_limit" => self.immersion_over_limit.is_some(),
+            "propulsion.blade_load_over_limit" => self.blade_load_over_limit.is_some(),
             // Worked out from the Option's inputs, not from the result: the Option's own source
             // answers them. A candidate of the search has none.
             "propulsion.redundancy_28_04"
@@ -420,6 +430,29 @@ impl Measured {
                 .coupling_force_kn
                 .map(MeasureValue::Number)
                 .ok_or_else(|| "the Formation does not include its pusher".to_string());
+        }
+        for (id, value, why) in [
+            (
+                "propulsion.diameter_over_max",
+                self.diameter_over_max,
+                "the Option has no Stern Form",
+            ),
+            (
+                "propulsion.immersion_over_limit",
+                self.immersion_over_limit,
+                "the Option has no specified Propulsor or no loading condition",
+            ),
+            (
+                "propulsion.blade_load_over_limit",
+                self.blade_load_over_limit,
+                "the Option has no specified Propulsor",
+            ),
+        ] {
+            if m.id == id {
+                return value
+                    .map(MeasureValue::Number)
+                    .ok_or_else(|| why.to_string());
+            }
         }
         if m.id == "powering.depth_over_draught" {
             return self

@@ -330,6 +330,31 @@ pub fn run(function: &str, args: &Value) -> Result<Value, EvalError> {
                     .map_err(PyError::Value),
             )
         }
+        "stern_trace" => {
+            // The Rule Trace of a self-propelled Option with the measured values the case gives (the
+            // evaluation harness, issue #355). `inputs`: the Option's typed inputs; `measured`: the
+            // numbers a run reads from its results. `rule_sets` and `select` are as for `box_trace`.
+            let (library, keys) = trace_library(args)?;
+            let chosen: Vec<(&str, &str)> = keys
+                .iter()
+                .map(|k| k.split_once('@').unwrap_or((k.as_str(), "")))
+                .collect();
+            let object = |name: &str| -> Result<serde_json::Map<String, Value>, EvalError> {
+                args.get(name)
+                    .and_then(Value::as_object)
+                    .cloned()
+                    .ok_or_else(|| EvalError::BadInput(format!("`args.{name}` must be an object")))
+            };
+            py_result(
+                crate::trace::stern_trace(
+                    &object("inputs")?,
+                    &object("measured")?,
+                    &library,
+                    &chosen,
+                )
+                .map_err(PyError::Value),
+            )
+        }
         "liquid_trace" => {
             // The Rule Trace of a liquid bulk layout (the evaluation harness, issue #338). `rule_sets`
             // and `select` are as for `box_trace`.
