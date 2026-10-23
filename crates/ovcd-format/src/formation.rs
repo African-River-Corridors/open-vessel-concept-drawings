@@ -13,9 +13,10 @@ use crate::text_ids::TextIds;
 use crate::vdesign::DesignOption;
 use ovcd_core::atb::{TugTyped, notch_for_tug, tug_from_barge};
 use ovcd_core::formation::{
-    EquivalentHull, MAX_PASSES, POWER_TOLERANCE, Sized, TugDims, atb_equivalent_hull,
-    coupling_force_kn, pushed_equivalent_hull, pusher_beam_m, pusher_draught_m, pusher_length_m,
-    size_loop, tow_resistance_kn, towing_tug_beam_m, towing_tug_draught_m, towing_tug_length_m,
+    ENGINE_MARGIN, EquivalentHull, MAX_PASSES, POWER_TOLERANCE, SEA_MARGIN, Sized, TugDims,
+    atb_equivalent_hull, coupling_force_kn, pushed_equivalent_hull, pusher_beam_m,
+    pusher_draught_m, pusher_length_m, size_loop, tow_resistance_kn, towing_tug_beam_m,
+    towing_tug_draught_m, towing_tug_length_m,
 };
 use ovcd_core::machinery::{self, MachineryInputs, PowerSource};
 use ovcd_core::powering::{self, PoweringInputs};
@@ -493,6 +494,31 @@ fn build(
             bs = Arg::fixed(r.dims.beam_m, 1),
         ));
     }
+    // The service margins (issue #649): the still-water power in deep water at the design speed,
+    // with the sea margin and the engine margin, beside the installed power. They do not size the
+    // tug: its margin does.
+    let still = r.powering.environments.first().map(|e| {
+        (
+            e.name.clone(),
+            powering::needed_at(&e.points, tug.design_speed_kn),
+        )
+    });
+    let service_margins = still.as_ref().map(|(name, p0)| {
+        notes.push(text!(
+            "note-formation-service-margins",
+            "Service margins, shown and not used to size the tug: the still-water power in deep water at the design speed, {p0} kW, x the sea margin 1.15 x the engine margin 1/0.90 (MAN B&W, Basic Principles of Ship Propulsion, p. 27 and Fig. 17) = {total} kW, for an installed power of {installed} kW.",
+            p0 = Arg::fixed(*p0, 0),
+            total = Arg::fixed(p0 * SEA_MARGIN * ENGINE_MARGIN, 0),
+            installed = Arg::fixed(r.powering.installed_power_kw, 0),
+        ));
+        json!({
+            "environment": name,
+            "still_water_power_kw": crate::eval::num(*p0),
+            "sea_margin": crate::eval::num(SEA_MARGIN),
+            "engine_margin": crate::eval::num(ENGINE_MARGIN),
+            "power_with_margins_kw": crate::eval::num(p0 * SEA_MARGIN * ENGINE_MARGIN),
+        })
+    });
     let environments: Vec<Value> = r
         .powering
         .environments
@@ -560,6 +586,7 @@ fn build(
             "tolerance": crate::eval::num(POWER_TOLERANCE),
         },
         "environments": environments,
+        "service_margins": service_margins,
         "coupling_force_kn": crate::eval::num(force),
         "notes": notes.iter().map(|n| json!(n.en)).collect::<Vec<_>>(),
     });

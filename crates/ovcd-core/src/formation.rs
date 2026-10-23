@@ -13,6 +13,14 @@ pub const MAX_PASSES: usize = 5;
 /// The loop stops when the installed power moves by less than this share (spec 0007).
 pub const POWER_TOLERANCE: f64 = 0.01;
 
+/// The sea margin over the still-water power: "traditionally about 15 % of the propeller design PD
+/// power" (MAN B&W, Basic Principles of Ship Propulsion, p. 27). Shown beside the tug's sizing, not
+/// used in it (issue #649).
+pub const SEA_MARGIN: f64 = 1.15;
+/// The engine margin: the service point at 90 % of the specified MCR, "Engine margin (10 % of MP)"
+/// (MAN B&W, Basic Principles of Ship Propulsion, Fig. 17). Shown, not used to size (issue #649).
+pub const ENGINE_MARGIN: f64 = 1.0 / 0.90;
+
 /// The reference power of the pusher ratios (kW).
 const REF_PUSHER_KW: f64 = 1400.0;
 /// The reference power of the towing tug ratios (kW).

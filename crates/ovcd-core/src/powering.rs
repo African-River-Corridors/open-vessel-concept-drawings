@@ -220,7 +220,7 @@ fn fastest(points: &[PowerPoint], available_kw: f64) -> (f64, f64) {
 
 /// P_needed at the speed `v` of the points, interpolated; at the last allowed point if `v` is
 /// beyond the points the caps allow.
-fn needed_at(points: &[PowerPoint], v: f64) -> f64 {
+pub fn needed_at(points: &[PowerPoint], v: f64) -> f64 {
     let allowed: Vec<&PowerPoint> = points.iter().take_while(|p| !p.squat_limited).collect();
     let Some(last) = allowed.last() else {
         return 0.0;
