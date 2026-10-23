@@ -114,6 +114,10 @@ pub const DEFAULT_TANK_DOME_WALL_THICKNESS_MM: f64 = 25.0;
 /// vessels (designer estimates, not weighed ships). A factor this high says the plating thicknesses (12, 10 and
 /// 10 mm) are thin for a hull of this size. The legacy API keeps 1.4 (`BargeInputs::new`). The lightship does not use it.
 pub const GAS_HULL_STRUCTURE_FACTOR: f64 = 2.0;
+/// The share (%) by which the top-down hull steel of the lightship and the bottom-up hull steel that the
+/// cost prices may differ before the result warns (issue #404). An Estimate, to calibrate against the
+/// reference vessel library: no source gives a limit. The share is of the bottom-up steel.
+pub const STEEL_MASS_DISAGREEMENT_WARN_PCT: f64 = 20.0;
 /// Default aft void of a pushed barge (m).
 pub const DEFAULT_PUSHED_STERN_VOID_M: f64 = 3.0;
 
@@ -1695,6 +1699,9 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
     if let Some(s) = &sep {
         warnings.extend(s.warnings.iter().cloned());
     }
+    if let Some(b) = &detail.gas_basis {
+        warnings.extend(steel_mass_disagreement(&b.weights));
+    }
     let mut gm = None;
     // Issue #448: a draught of a few times 1e-324 m immerses nothing, so it has no GM either.
     let afloat = draft > 0.0 && hull.upright(draft, rho).is_ok();
@@ -1788,4 +1795,27 @@ pub fn compute(inp: &BargeCapacityInputs) -> Result<BargeCapacityResult, PyError
         checks,
         warnings,
     })
+}
+
+/// A warning when the top-down hull steel (the lightship) and the bottom-up hull steel (the cost) differ
+/// by more than [`STEEL_MASS_DISAGREEMENT_WARN_PCT`] of the bottom-up steel (issue #404). The cost keeps
+/// pricing the bottom-up steel; this only tells the user that the two masses disagree.
+pub fn steel_mass_disagreement(w: &WeightBreakdown) -> Option<Text> {
+    let (top, bottom, delta) = (w.steel_top_down, w.steel_bottom_up, w.steel_delta);
+    if !(top.is_finite() && bottom.is_finite() && delta.is_finite() && bottom > 0.0) {
+        return None;
+    }
+    let pct = delta / bottom * 100.0;
+    if pct.abs() <= STEEL_MASS_DISAGREEMENT_WARN_PCT {
+        return None;
+    }
+    Some(text!(
+        "warn-steel-mass-disagreement",
+        "The lightship uses {top_down} t of hull steel (top-down); the cost prices {bottom_up} t (bottom-up). They differ by {delta} t ({pct} %), more than the {limit} % limit (an Estimate). The cost keeps the bottom-up mass.",
+        top_down = Arg::fixed(top, 1),
+        bottom_up = Arg::fixed(bottom, 1),
+        delta = Arg::fixed(delta, 1),
+        pct = Arg::fixed(pct, 1),
+        limit = Arg::fixed(STEEL_MASS_DISAGREEMENT_WARN_PCT, 0),
+    ))
 }

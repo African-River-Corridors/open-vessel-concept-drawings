@@ -52,6 +52,7 @@ check-name-trim-in-range = trim in range
 warn-barge-pushed = PUSHED barge: crew, battery and propulsion are on the tug and are NOT in this hull's lightship, capacity or air draft. The tug is a separate vessel and must be costed and air-draft-gated separately.
 check-name-gm-positive = gm positive
 check-gm-positive = hopper intact GM { $gm } m >= 0.15 m (first-order; KG_light @0.5D)
+warn-steel-mass-disagreement = The lightship uses { $top_down } t of hull steel (top-down); the cost prices { $bottom_up } t (bottom-up). They differ by { $delta } t ({ $pct } %), more than the { $limit } % limit (an Estimate). The cost keeps the bottom-up mass.
 
 ## crates/ovcd-core/src/barge_cost.rs
 
