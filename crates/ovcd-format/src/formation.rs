@@ -681,13 +681,21 @@ fn sightline(
     };
     let limit = ES_TRIN_BLIND_DISTANCE_M;
     let (s, laden_m) = convoy_sightline(&sight, &light, &laden, limit);
-    if !s.enough {
+    if !s.enough && s.blind_distance_m.is_finite() {
         notes.push(text!(
             "warn-formation-blind-distance-lift",
             "The tug's view over the barges needs {needed} m of wheelhouse lift; the tug gives {max_lift} m. The Blind Distance light is {blind} m, more than {limit} m (ES-TRIN 7.02(2)).",
             needed = Arg::fixed(s.lift_needed_m, 2),
             max_lift = Arg::fixed(max_lift, 2),
             blind = Arg::fixed(s.blind_distance_m, 1),
+            limit = Arg::fixed(limit, 0),
+        ));
+    } else if !s.enough {
+        notes.push(text!(
+            "warn-formation-blind-distance-hidden",
+            "The tug's view over the barges needs {needed} m of wheelhouse lift; the tug gives {max_lift} m. At that height the barges hide the water ahead (ES-TRIN 7.02(2): at most {limit} m).",
+            needed = Arg::fixed(s.lift_needed_m, 2),
+            max_lift = Arg::fixed(max_lift, 2),
             limit = Arg::fixed(limit, 0),
         ));
     }

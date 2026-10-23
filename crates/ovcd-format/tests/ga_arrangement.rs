@@ -206,3 +206,17 @@ fn the_same_results_give_the_same_plan() {
         arrangement_plan_named(&o, None)
     );
 }
+
+#[test]
+fn a_fixed_wheelhouse_hidden_by_the_barges_says_so_in_words() {
+    let o = outcome(
+        convoy(2, 3),
+        true,
+        json!({ "tug_sightline_method": "blind_distance", "tug_wheelhouse_type": "fixed" }),
+    );
+    let f = &results(&o)["formation"];
+    assert_eq!(f["sightline"]["enough"], false);
+    let notes = f["notes"].to_string();
+    assert!(notes.contains("the barges hide the water"), "{notes}");
+    assert!(!notes.contains(" inf "), "{notes}");
+}
