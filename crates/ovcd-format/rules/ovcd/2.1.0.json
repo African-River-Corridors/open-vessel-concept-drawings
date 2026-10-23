@@ -112,6 +112,54 @@
       "since": "1.0.0"
     },
     {
+      "id": "ovcd/loading/air-draft",
+      "title": "The air draft of each IS Code loading condition is within the typed limit (a failed condition only: a condition within the limit has no check)",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-23",
+        "review": "#628"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "Air draft"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "2.1.0"
+    },
+    {
+      "id": "ovcd/loading/ballast-plan",
+      "title": "A ballast plan meets every stability criterion in each ballast condition (a failed condition only: a condition with a plan has no check)",
+      "origin": "physical",
+      "source": {},
+      "codified": {
+        "by": "agent",
+        "date": "2026-10-23",
+        "review": "#628"
+      },
+      "verified": false,
+      "kind": "check",
+      "measure": {
+        "id": "check.ok",
+        "args": {
+          "name": "Ballast plan"
+        }
+      },
+      "consequence": "block",
+      "sizes": false,
+      "evaluated": true,
+      "finding": null,
+      "since": "2.1.0"
+    },
+    {
       "id": "ovcd/capacity/intact-gm",
       "title": "First-order hold GM at the reported cargo at least 0.15 m (an estimate, not a stability check)",
       "origin": "tool-limit",

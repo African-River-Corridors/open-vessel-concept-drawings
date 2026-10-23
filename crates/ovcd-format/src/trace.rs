@@ -837,6 +837,10 @@ pub const CHECK_RULES: &[(&str, &str)] = &[
         "ovcd/capacity/air-draft-within-limit",
     ),
     ("intact gm at reported cargo", "ovcd/capacity/intact-gm"),
+    // The per-condition checks of the IS Code loading conditions (issue #426, part 2; #628). Each
+    // is in the results only when a condition fails it.
+    ("Air draft", "ovcd/loading/air-draft"),
+    ("Ballast plan", "ovcd/loading/ballast-plan"),
     (
         "Feasible arrangement",
         "ovcd/gas-arrangement/feasible-arrangement",
