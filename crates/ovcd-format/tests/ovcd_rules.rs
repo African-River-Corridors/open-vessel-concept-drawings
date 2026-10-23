@@ -72,13 +72,6 @@ fn every_check_of_a_result_reports_exactly_one_rule() {
             let rows = results["rule_trace"]["rows"].as_array().unwrap();
             for check in results["checks"].as_array().unwrap() {
                 let check_name = check["name"].as_str().unwrap();
-                // The per-condition checks "Air draft" and "Ballast plan" of the IS Code loading
-                // conditions (issue #426, part 2) are not linked to a Rule yet: a follow-up of the
-                // rules lane. No fixture failed them before the examples were saved in those
-                // conditions.
-                if ["Air draft", "Ballast plan"].contains(&check_name) {
-                    continue;
-                }
                 let id = rule_of_check(check_name)
                     .unwrap_or_else(|| panic!("{name}: no Rule for check `{check_name}`"));
                 seen.insert(check_name.to_string());

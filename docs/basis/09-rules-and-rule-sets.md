@@ -274,6 +274,8 @@ difference between the Rule and its text, or a known limit of its Measure.
 | `ovcd/capacity/cargo-zone-positive` | The cargo zone is longer than zero | physical | blocks | unverified | – |
 | `ovcd/capacity/air-draft-within-limit` | Light air draft (with ballast where carried) within the typed limit | physical | blocks | unverified | – |
 | `ovcd/capacity/intact-gm` | First-order hold GM at the reported cargo at least 0.15 m (an estimate, not a stability check) | tool-limit | warns | unverified | – |
+| `ovcd/loading/air-draft` | The air draft of each IS Code loading condition is within the typed limit (a failed condition only) | physical | blocks | unverified | – |
+| `ovcd/loading/ballast-plan` | A ballast plan meets every stability criterion in each ballast condition (a failed condition only) | physical | blocks | unverified | – |
 | `ovcd/gas-arrangement/feasible-arrangement` | Some tank arrangement passes every check on this hull | physical | blocks | unverified | – |
 | `ovcd/gas-arrangement/tank-l-over-d` | Tank length at most 7 inner shell diameters | tool-limit | blocks | unverified | – |
 | `ovcd/aft-block/thrusters-fit-beam` | The thrusters fit within the beam | physical | blocks | unverified | – |
