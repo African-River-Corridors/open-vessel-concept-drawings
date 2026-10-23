@@ -119,3 +119,53 @@ fn every_fixture_hull_mesh_is_closed_with_the_sections_volume_and_a_stable_hash(
     }
     assert!(meshed >= 10, "{meshed} Options meshed");
 }
+
+#[test]
+fn every_space_mesh_of_every_fixture_is_closed_and_holds_the_space_volume() {
+    // Issue #633: a Space the hull cuts is meshed as the Space inside the hull, so each Space mesh is
+    // closed and its volume is the Space's clipped volume (a fixed hull and Spaces: the ruled-quad
+    // error of a curved hull between its sections: 0.1 % for a pram stern, 0.5 % for the coarsely cut ShipD bow; the bound is 2 %).
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
+    let mut files: Vec<_> = std::fs::read_dir(&dir)
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .filter(|p| p.extension().is_some_and(|e| e == "vdesign"))
+        .collect();
+    files.sort();
+    let (mut spaces, mut cut) = (0, 0);
+    for path in files {
+        let text = std::fs::read_to_string(&path).unwrap();
+        let design = check(&text, &Profile::built_in())
+            .design
+            .expect("a valid fixture");
+        for option in &design.options {
+            let Ok(m) = option_meshes(option) else {
+                continue;
+            };
+            let model = ovcd_format::option_vessel_model(option).unwrap();
+            for g in m.groups.iter().filter(|g| g.layer == "space") {
+                let at = format!("{} / {} / {}", path.display(), option.name, g.id);
+                let part = Mesh {
+                    positions: m.positions.clone(),
+                    indices: m.indices[g.start as usize..(g.start + g.count) as usize].to_vec(),
+                    groups: Vec::new(),
+                };
+                if part.indices.is_empty() {
+                    continue;
+                }
+                closed(&part).unwrap_or_else(|e| panic!("{at}: not closed at {e}"));
+                let s = model.spaces.iter().find(|s| s.space.name == g.id).unwrap();
+                assert!(
+                    (part.volume() - s.volume_m3).abs() <= 2e-2 * s.volume_m3.max(1e-9) + 1e-5,
+                    "{at}: mesh {} vs {}",
+                    part.volume(),
+                    s.volume_m3
+                );
+                spaces += 1;
+                cut += usize::from(s.is_cut());
+            }
+        }
+    }
+    assert!(spaces >= 10, "{spaces} Space meshes");
+    assert!(cut >= 1, "a fixture has a Space the hull cuts");
+}

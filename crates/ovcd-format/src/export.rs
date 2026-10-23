@@ -230,155 +230,11 @@ pub fn hull_part(mesh: &Mesh) -> Mesh {
 
 /// The part of the closed `hull` below the waterplane, with the waterplane closed by a lid. The
 /// plane has the draught `aft` at x = `x_aft` and `fwd` at `x_fwd`, a straight line between (the
-/// floating position of a loading condition, trimmed). A vertex on the plane is below it. The cut
-/// points are shared by the two triangles of an edge, so the result is closed; the lid is the
-/// outline of the cut by ear clipping, counter-clockwise seen from above. A hull wholly below the
-/// plane is returned whole (with no lid); one wholly above gives an empty mesh.
+/// floating position of a loading condition, trimmed). See [`ovcd_core::mesh::clip_by`].
 pub fn clip_below(hull: &Mesh, x_aft: f64, fwd_x: f64, aft: f64, fwd: f64) -> Mesh {
-    let plane = |x: f64| aft + (fwd - aft) * (x - x_aft) / (fwd_x - x_aft);
-    let n = hull.positions.len() / 3;
-    let height: Vec<f64> = (0..n as u32)
-        .map(|i| {
-            let v = vertex(hull, i);
-            v[2] - plane(v[0])
-        })
-        .collect();
-    let mut out = Mesh::default();
-    let mut kept: BTreeMap<u32, u32> = BTreeMap::new();
-    let mut cuts: BTreeMap<(u32, u32), u32> = BTreeMap::new();
-    let mut take = |out: &mut Mesh, i: u32| -> u32 {
-        let next = (out.positions.len() / 3) as u32;
-        *kept.entry(i).or_insert_with(|| {
-            let k = 3 * i as usize;
-            out.positions.extend_from_slice(&hull.positions[k..k + 3]);
-            next
-        })
-    };
-    // The vertex where the edge a-b crosses the plane, once for each edge.
-    let mut cut = |out: &mut Mesh, a: u32, b: u32| -> u32 {
-        let key = (a.min(b), a.max(b));
-        if let Some(&i) = cuts.get(&key) {
-            return i;
-        }
-        let (lo, hi) = key;
-        let (pa, pb) = (vertex(hull, lo), vertex(hull, hi));
-        let (ha, hb) = (height[lo as usize], height[hi as usize]);
-        let t = ha / (ha - hb);
-        let p = [
-            pa[0] + t * (pb[0] - pa[0]),
-            pa[1] + t * (pb[1] - pa[1]),
-            pa[2] + t * (pb[2] - pa[2]),
-        ];
-        let i = (out.positions.len() / 3) as u32;
-        out.positions.extend(p.map(|v| v as f32));
-        cuts.insert(key, i);
-        i
-    };
-    for t in hull.indices.as_chunks::<3>().0 {
-        let inside = t.map(|i| height[i as usize] <= 0.0);
-        match inside.iter().filter(|b| **b).count() {
-            3 => {
-                let tri = t.map(|i| take(&mut out, i));
-                out.indices.extend(tri);
-            }
-            0 => {}
-            _ => {
-                // Sutherland-Hodgman against the plane: the polygon of 3 or 4 points.
-                let mut poly: Vec<u32> = Vec::new();
-                for k in 0..3 {
-                    let (a, b) = (t[k], t[(k + 1) % 3]);
-                    let (ia, ib) = (inside[k], inside[(k + 1) % 3]);
-                    if ia {
-                        poly.push(take(&mut out, a));
-                    }
-                    if ia != ib && height[a as usize] != 0.0 && height[b as usize] != 0.0 {
-                        poly.push(cut(&mut out, a, b));
-                    }
-                }
-                for k in 1..poly.len().saturating_sub(1) {
-                    let tri = [poly[0], poly[k], poly[k + 1]];
-                    if tri[0] != tri[1] && tri[1] != tri[2] && tri[2] != tri[0] {
-                        out.indices.extend(tri);
-                    }
-                }
-            }
-        }
-    }
-    lid(&mut out);
-    out
-}
-
-fn vertex(m: &Mesh, i: u32) -> [f64; 3] {
-    let k = 3 * i as usize;
-    [
-        f64::from(m.positions[k]),
-        f64::from(m.positions[k + 1]),
-        f64::from(m.positions[k + 2]),
-    ]
-}
-
-/// Close the open outline of `m` (edges in one triangle only, with no opposite) with triangles.
-fn lid(m: &mut Mesh) {
-    let mut edges: BTreeMap<(u32, u32), i32> = BTreeMap::new();
-    for t in m.indices.as_chunks::<3>().0 {
-        for (a, b) in [(t[0], t[1]), (t[1], t[2]), (t[2], t[0])] {
-            *edges.entry((a, b)).or_default() += 1;
-        }
-    }
-    // The lid runs each outline edge the other way: b to a.
-    let mut next: BTreeMap<u32, Vec<u32>> = BTreeMap::new();
-    for (&(a, b), &c) in &edges {
-        if c > 0 && !edges.contains_key(&(b, a)) {
-            next.entry(b).or_default().push(a);
-        }
-    }
-    let mut starts: Vec<u32> = next.keys().copied().collect();
-    starts.sort_unstable();
-    for s in starts {
-        while let Some(first) = next.get_mut(&s).and_then(Vec::pop) {
-            let mut ring = vec![s];
-            let mut at = first;
-            while at != s {
-                ring.push(at);
-                match next.get_mut(&at).and_then(Vec::pop) {
-                    Some(n) => at = n,
-                    None => break,
-                }
-            }
-            if ring.len() < 3 {
-                continue;
-            }
-            let pts: Vec<(f64, f64)> = ring
-                .iter()
-                .map(|&i| {
-                    let v = vertex(m, i);
-                    (v[0], v[1])
-                })
-                .collect();
-            // In the (x, y) plane the ring is counter-clockwise, or clockwise: mirror it for the ear
-            // clipper (which wants counter-clockwise) and turn the triangles back.
-            let area: f64 = (0..pts.len())
-                .map(|i| {
-                    let (p, q) = (pts[i], pts[(i + 1) % pts.len()]);
-                    p.0 * q.1 - q.0 * p.1
-                })
-                .sum();
-            let mirrored = area < 0.0;
-            let flat: Vec<(f64, f64)> = if mirrored {
-                pts.iter().map(|&(x, y)| (x, -y)).collect()
-            } else {
-                pts
-            };
-            for tri in ovcd_core::mesh::ear_clip(&flat) {
-                let [a, b, c] = tri.map(|k| ring[k]);
-                if mirrored {
-                    m.indices.extend([a, c, b]);
-                } else {
-                    m.indices.extend([a, b, c]);
-                }
-            }
-        }
-    }
+    ovcd_core::mesh::clip_by(hull, |p| {
+        p[2] - (aft + (fwd - aft) * (p[0] - x_aft) / (fwd_x - x_aft))
+    })
 }
 
 /// The unit normal of a triangle, or zero for one with no area.
@@ -410,7 +266,7 @@ pub fn stl_binary(mesh: &Mesh) -> Vec<u8> {
     out.extend_from_slice(&header);
     out.extend_from_slice(&(triangles.len() as u32).to_le_bytes());
     for t in triangles {
-        let (a, b, c) = (vertex(mesh, t[0]), vertex(mesh, t[1]), vertex(mesh, t[2]));
+        let (a, b, c) = (mesh.vertex(t[0]), mesh.vertex(t[1]), mesh.vertex(t[2]));
         for v in normal(a, b, c) {
             out.extend_from_slice(&v.to_le_bytes());
         }
