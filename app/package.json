@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/contrast.mjs && npm run test:unit && svelte-check --tsconfig ./tsconfig.json && vite build",
-    "test:unit": "node --test scripts/theme.test.mjs scripts/contrast.test.mjs scripts/chartTheme.test.mjs",
+    "test:unit": "node --test scripts/theme.test.mjs scripts/contrast.test.mjs scripts/chartTheme.test.mjs scripts/model3d.test.mjs",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "build:web": "svelte-check --tsconfig ./tsconfig.json && vite build --config vite.web.config.ts",
     "tauri": "tauri",
@@ -17,12 +17,14 @@
     "@fluent/bundle": "^0.18.0",
     "@tauri-apps/api": "^2.12.3",
     "@tauri-apps/plugin-dialog": "^2.8.2",
+    "three": "0.186.1",
     "uplot": "^1.6.32"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@tauri-apps/cli": "^2.12.2",
     "@tsconfig/svelte": "^5.0.8",
+    "@types/three": "0.186.0",
     "svelte": "^5.57.2",
     "svelte-check": "^4.7.6",
     "typescript": "^6.0.3",

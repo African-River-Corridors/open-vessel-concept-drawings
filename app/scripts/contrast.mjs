@@ -23,6 +23,10 @@ export const PAIRS = [
   ["white-ink", "blueprint", "text"], ["white-ink", "blueprint-deep", "text"], ["cream", "blueprint", "text"],
   ["rule-strong", "surface", "line"], ["rule-strong", "paper", "line"], ["accent", "paper", "line"],
   ["gilt-mark", "paper", "line"], ["gilt-mark", "surface", "line"],
+  ["space-cargo", "paper", "line"], ["space-cargo", "surface", "line"],
+  ["space-ballast", "paper", "line"], ["space-ballast", "surface", "line"],
+  ["space-void", "paper", "line"], ["space-void", "surface", "line"],
+  ["space-machinery", "paper", "line"], ["space-machinery", "surface", "line"],
 ];
 const TARGET = { text: 4.5, line: 3.0 };
 

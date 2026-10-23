@@ -73,6 +73,12 @@
   --accent-soft: #dfe6ea;     /* selected row, active sub-tab ground */
   --gilt-ink: #765825;        /* gilt as text on cream (AA) */
 
+  /* The 3D view: one colour per family of Space (issue #458). Each is 3:1 or more on --surface and --paper. */
+  --space-cargo: #9a4a1c;     /* cargo tanks and holds, slop tanks */
+  --space-ballast: #1f6f8b;   /* water ballast tanks */
+  --space-void: #6a4c93;      /* voids and cofferdams */
+  --space-machinery: #2f7a3d; /* pump rooms and machinery */
+
   /* Status. Always with a word and a shape; colour is never the only signal. */
   --pass: #2a6339;   --pass-soft: #e3eedc;
   --fail: #9e2a1c;   --fail-soft: #f7e0d6;
@@ -124,6 +130,7 @@
     --pass: #b9efc3;  --pass-soft: #1f4a4b;  --fail: #ffc6ba;  --fail-soft: #4e3448;
     --warn: #ffe3a3;  --warn-soft: #43473e;  --stale: #b9cfda;
     --src-class: #e0d4ff;
+    --space-cargo: #ffb27a;  --space-ballast: #8fd8f0;  --space-void: #cdb7ff;  --space-machinery: #a6e8a0;
     color-scheme: dark;
   }
 }
@@ -135,6 +142,7 @@
   --pass: #b9efc3;  --pass-soft: #1f4a4b;  --fail: #ffc6ba;  --fail-soft: #4e3448;
   --warn: #ffe3a3;  --warn-soft: #43473e;  --stale: #b9cfda;
   --src-class: #e0d4ff;
+  --space-cargo: #ffb27a;  --space-ballast: #8fd8f0;  --space-void: #cdb7ff;  --space-machinery: #a6e8a0;
   color-scheme: dark;
 }
 
