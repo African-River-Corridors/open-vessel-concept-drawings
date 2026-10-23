@@ -117,7 +117,7 @@ pub const GAS_HULL_STRUCTURE_FACTOR: f64 = 2.0;
 /// The share (%) by which the top-down hull steel of the lightship and the bottom-up hull steel that the
 /// cost prices may differ before the result warns (issue #404). An Estimate, to calibrate against the
 /// reference vessel library: no source gives a limit. The share is of the bottom-up steel.
-pub const STEEL_MASS_DISAGREEMENT_WARN_PCT: f64 = 15.0;
+pub const STEEL_MASS_DISAGREEMENT_WARN_PCT: f64 = 20.0;
 /// Default aft void of a pushed barge (m).
 pub const DEFAULT_PUSHED_STERN_VOID_M: f64 = 3.0;
 

@@ -1,5 +1,5 @@
 //! Issue #404 part B: a warning when the top-down hull steel (lightship) and the bottom-up hull steel
-//! (cost) differ by more than 15 % of the bottom-up steel. The 15 % is an Estimate.
+//! (cost) differ by more than 20 % of the bottom-up steel. The 20 % is an Estimate.
 //! Label: property
 
 use ovcd_core::barge_capacity::{STEEL_MASS_DISAGREEMENT_WARN_PCT, steel_mass_disagreement};
@@ -33,20 +33,20 @@ fn with_gap(pct: f64) -> WeightBreakdown {
 }
 
 #[test]
-fn the_limit_is_15_percent() {
-    assert_eq!(STEEL_MASS_DISAGREEMENT_WARN_PCT, 15.0);
+fn the_limit_is_20_percent() {
+    assert_eq!(STEEL_MASS_DISAGREEMENT_WARN_PCT, 20.0);
 }
 
 #[test]
 fn no_warning_at_or_below_the_limit_on_either_sign() {
-    for pct in [0.0, 14.9, 15.0, -14.9, -15.0] {
+    for pct in [0.0, 19.9, 20.0, -19.9, -20.0] {
         assert!(steel_mass_disagreement(&with_gap(pct)).is_none(), "{pct}");
     }
 }
 
 #[test]
 fn a_warning_above_the_limit_on_either_sign_with_both_figures_and_the_delta() {
-    for pct in [15.1, 40.0, -15.1, -30.0] {
+    for pct in [20.1, 40.0, -20.1, -30.0] {
         let t = steel_mass_disagreement(&with_gap(pct)).unwrap_or_else(|| panic!("{pct}"));
         assert_eq!(t.msg.as_ref().unwrap().id, "warn-steel-mass-disagreement");
         let en = t.to_string();
@@ -54,7 +54,7 @@ fn a_warning_above_the_limit_on_either_sign_with_both_figures_and_the_delta() {
         assert!(en.contains(&format!("{:.1} t of hull steel (top-down)", w.steel_top_down)), "{en}");
         assert!(en.contains(&format!("prices {:.1} t (bottom-up)", w.steel_bottom_up)), "{en}");
         assert!(en.contains(&format!("differ by {:.1} t", w.steel_delta)), "{en}");
-        assert!(en.contains("15 % limit (an Estimate)"), "{en}");
+        assert!(en.contains("20 % limit (an Estimate)"), "{en}");
     }
 }
 
