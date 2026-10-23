@@ -160,8 +160,9 @@ fn the_atb_powering_against_the_reference_vessels() {
     // Label: snapshot - the barge depths are estimates (the sheets give none), so the band is wide.
     // The model needs the still-water power in deep water at the service speed, with the tug's
     // margin; the published installed power also covers shallow water, seaway, bollard pull and the
-    // owner's margin. The ratio the model gives is 0.29 to 0.43 of the published power: a band of 0.2
-    // to 0.6 holds if the powering drifts either way.
+    // owner's margin. The ratio the model gives is 0.29 to 0.43 of the published power; with the
+    // service margins of #649 (sea 1.15, engine 1/0.90, MAN B&W) 0.31 to 0.46. A band of 0.2 to 0.6
+    // holds both if the powering drifts either way.
     let refs: [Reference; 3] = [
         (
             "Aveogan",
@@ -220,6 +221,43 @@ fn the_atb_powering_against_the_reference_vessels() {
         let f = &r["formation"];
         assert!(f.get("error").is_none(), "{name}: {f}");
         let ratio = num(f, &["tug", "installed_power_kw"]) / published_kw;
+        let with_margins = num(f, &["service_margins", "power_with_margins_kw"]) / published_kw;
+        println!(
+            "{name}: model installed / published {ratio:.3}; with the service margins {with_margins:.3}"
+        );
         assert!((0.2..=0.6).contains(&ratio), "{name}: ratio {ratio}");
+        assert!(
+            (0.2..=0.6).contains(&with_margins),
+            "{name}: with the margins {with_margins}"
+        );
+    }
+}
+
+#[test]
+fn the_service_margins_are_shown_and_the_tug_is_still_sized_with_its_own_margin() {
+    // Label: sourced - MAN B&W, Basic Principles of Ship Propulsion, p. 27 and Fig. 17: a sea margin
+    // of about 15 % of the propeller design power, and an engine margin of 10 % of the specified
+    // MCR (the service point at 90 %). Issue #649: shown beside the sizing, not used in it.
+    for kind in ["atb", "pushed_barge"] {
+        let r = results(kind, &[]);
+        let f = &r["formation"];
+        let m = &f["service_margins"];
+        let p0 = num(m, &["still_water_power_kw"]);
+        assert!(p0 > 0.0, "{kind}: {m}");
+        close(num(m, &["sea_margin"]), 1.15, "sea margin");
+        close(num(m, &["engine_margin"]), 1.0 / 0.90, "engine margin");
+        close(
+            num(m, &["power_with_margins_kw"]),
+            p0 * 1.15 / 0.90,
+            "power with the margins",
+        );
+        // The sizing is unchanged: the tug's installed power is the same still-water power x the
+        // tug's margin (1.20), rounded up to the engine table.
+        let installed = num(f, &["tug", "installed_power_kw"]);
+        assert!(
+            installed >= 1.2 * p0 * (1.0 - 1e-9),
+            "{kind}: {installed} vs {p0}"
+        );
+        assert_eq!(m["environment"], json!("Deep water"), "{kind}");
     }
 }

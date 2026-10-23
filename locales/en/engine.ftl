@@ -227,6 +227,7 @@ note-tow-method-unverified = The tow's resistance is the sum of the resistances 
 note-atb-method-unverified = The ATB's resistance is that of its Equivalent Hull (the barge and the tug as one hull, as long as the barge and the tug less the Notch the tug sits in) by the single-hull method, times the Formation resistance allowance. The method is unverified.
 note-formation-method-unverified = The Formation's resistance is that of its Equivalent Hull (the barges and the pusher as one hull) by the single-hull method, times the Formation resistance allowance. The method is unverified.
 note-formation-coupling-force = Coupling force between the pusher and the pushed craft: { $force } kN (ES-TRIN 2025/1, ESI-III-6 2.1: 270 x P_B x L_S / B_S, with P_B { $power } kW, L_S { $ls } m taken as the pusher length, B_S { $bs } m).
+note-formation-service-margins = Service margins, shown and not used to size the tug: the still-water power in deep water at the design speed, { $p0 } kW, x the sea margin 1.15 x the engine margin 1/0.90 (MAN B&W, Basic Principles of Ship Propulsion, p. 27 and Fig. 17) = { $total } kW, for an installed power of { $installed } kW.
 
 ## crates/ovcd-format/src/gas_fuel.rs
 
