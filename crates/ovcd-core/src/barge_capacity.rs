@@ -109,11 +109,11 @@ pub const DEFAULT_TANK_FORMING_ALLOWANCE_PCT: f64 = 5.0;
 pub const DEFAULT_TANK_DOME_WALL_THICKNESS_MM: f64 = 25.0;
 /// The internal structure of a gas barge hull as a multiple of its plating (issue #401, step 2). The bottom-up
 /// hull steel, which the capital budget prices, is the plating times this, plus the wing plate and the weather
-/// shield. An Estimate, fitted so that the bottom-up steel is about 0.115 t/m3 of L x B x D, between the
-/// top-down rate (0.10) and the 0.145 that the reference vessel library gives for 92 to 110 m cargo vessels
-/// (designer estimates, not weighed ships). A factor this high says the plating thicknesses (12, 10 and 10 mm)
-/// are thin for a hull of this size. The legacy API keeps 1.4 (`BargeInputs::new`). The lightship does not use it.
-pub const GAS_HULL_STRUCTURE_FACTOR: f64 = 2.3;
+/// shield. An Estimate, set so that the bottom-up steel is about 0.10 t/m3 of L x B x D (median over the case
+/// designs), the same as the top-down rate. The reference vessel library gives 0.145 for 92 to 110 m cargo
+/// vessels (designer estimates, not weighed ships). A factor this high says the plating thicknesses (12, 10 and
+/// 10 mm) are thin for a hull of this size. The legacy API keeps 1.4 (`BargeInputs::new`). The lightship does not use it.
+pub const GAS_HULL_STRUCTURE_FACTOR: f64 = 2.0;
 /// Default aft void of a pushed barge (m).
 pub const DEFAULT_PUSHED_STERN_VOID_M: f64 = 3.0;
 
