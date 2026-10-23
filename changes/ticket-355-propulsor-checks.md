@@ -6,7 +6,7 @@
 <!-- design-impact -->
 ### ticket/355-propulsor-checks (2026-10-23)
 
-Between `main 9fc7e39` and `this branch 19406c9e`.
+Between `main f3de587` and `this branch de0161af`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
