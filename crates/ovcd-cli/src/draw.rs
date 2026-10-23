@@ -213,6 +213,12 @@ fn draw_design(args: &[&str]) -> Result<(), String> {
             }
         };
         documents_of.extend(arrangement.map(|d| ("arrangement-plan", d)));
+        // The tug of a Formation that includes it gets its own GA.
+        documents_of.extend(
+            ovcd_format::tug_ga_named(&run.outcome, Some(&run.name))
+                .ok()
+                .map(|d| ("tug-ga", d)),
+        );
         let mut stem = slug(&run.name);
         let mut n = 2;
         while used.contains(&stem) {
