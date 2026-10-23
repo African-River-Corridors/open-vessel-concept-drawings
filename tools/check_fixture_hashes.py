@@ -4,7 +4,9 @@
     python3 tools/check_fixture_hashes.py <path to ovcd> [<fixtures directory>]
     python3 tools/check_fixture_hashes.py --wasmtime <path to wasmtime> <path to ovcd.wasm> [<fixtures directory>]
 
-The fixtures in crates/ovcd-format/tests/fixtures/*.vdesign store the results hash of each Option.
+The fixtures in crates/ovcd-format/tests/fixtures/*.vdesign store the results hash of each Option. With no
+fixtures directory given, the website examples (website/assets/examples/*.vdesign) are checked too: a
+results change that does not re-stamp them must fail here, not on the website.
 The hash depends on bit-identical maths on every system (spec 0001, "platform-identical maths").
 `cargo test` checks it on Linux. The release gate runs this on Windows and on Intel and Apple-silicon
 macOS, with the release binary, and on WebAssembly: the same CLI built for `wasm32-wasip1` and run
@@ -23,6 +25,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "crates" / "ovcd-format" / "tests" / "fixtures"
+EXAMPLES = ROOT / "website" / "assets" / "examples"
 NO_RESULTS_YET = {"pushed_convoy.vdesign"}      # convoy results are not available yet
 MIN_MATCHED = 6                                 # five computable fixtures, one of them with two Options
 
@@ -39,16 +42,21 @@ def command_for(binary: Path, fixtures: Path, wasmtime: Path | None, file: Path)
     """The command that runs one fixture: the binary itself, or the wasm module under wasmtime."""
     if wasmtime is None:
         return [str(binary), "run", "--json", str(file)]
-    # The module sees only the fixtures directory (same path inside as outside).
-    return [str(wasmtime), "run", "--dir", str(fixtures), str(binary), "run", "--json", str(file)]
+    # The module sees only the folder of the file (same path inside as outside).
+    return [str(wasmtime), "run", "--dir", str(file.parent), str(binary), "run", "--json", str(file)]
 
 
-def check(binary: Path, fixtures: Path, wasmtime: Path | None = None) -> list[str]:
-    """Problems found, one line each. Prints one line per Option."""
+def check(binary: Path, fixtures: Path, wasmtime: Path | None = None, also: tuple[Path, ...] = ()) -> list[str]:
+    """Problems found, one line each. Prints one line per Option. `also`: more folders of designs."""
     files = sorted(fixtures.glob("*.vdesign"))
     problems: list[str] = []
     if not files:
         return [f"no .vdesign fixtures in {fixtures}"]
+    for folder in also:
+        more = sorted(folder.glob("*.vdesign"))
+        if not more:
+            return [f"no .vdesign designs in {folder}"]
+        files += more
     matched = 0
     for f in files:
         r = subprocess.run(command_for(binary, fixtures, wasmtime, f), capture_output=True,
@@ -97,8 +105,9 @@ def main(argv: list[str]) -> int:
         return 2
     binary = find_binary(args[0])
     fixtures = Path(args[1]) if len(args) == 2 else FIXTURES
+    also = () if len(args) == 2 else (EXAMPLES,)
     print(f"check_fixture_hashes: {binary}" + (f" under {wasmtime}" if wasmtime else ""))
-    problems = check(binary, fixtures, wasmtime)
+    problems = check(binary, fixtures, wasmtime, also)
     for p in problems:
         print(f"check_fixture_hashes: FAIL: {p}", file=sys.stderr)
     if not problems:

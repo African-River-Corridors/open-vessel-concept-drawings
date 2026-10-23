@@ -178,3 +178,26 @@ def test_the_release_gate_runs_it_on_webassembly_with_a_pinned_wasmtime():
     assert check > build
     assert not any("--no-fail" in r or "|| true" in r for r in runs)
     assert "continue-on-error" not in str(job)
+
+
+def test_the_default_run_checks_the_website_examples_too(tmp_path):
+    # A stand-in that gives a stale hash only for a website example: the default run must fail on it.
+    script = tmp_path / "ovcd"
+    script.write_text(textwrap.dedent(f'''\
+        #!{sys.executable}
+        import json, sys
+        status = "differs" if "examples" in sys.argv[-1] else "matches"
+        print(json.dumps({{"options": [{{"name": "Option 1", "hash_status": status,
+                                         "results_hash": "ab" * 32, "results": {{"x": 1}}}}]}}))
+    '''))
+    script.chmod(script.stat().st_mode | stat.S_IEXEC)
+    r = subprocess.run([sys.executable, str(SCRIPT), str(script)], capture_output=True, text=True)
+    assert r.returncode == 1, r.stdout
+    assert any(p.name in r.stderr for p in chk.EXAMPLES.glob("*.vdesign")), r.stderr
+    assert "'differs'" in r.stderr
+
+
+def test_an_empty_examples_folder_fails(tmp_path):
+    empty = Path(tempfile.mkdtemp(dir=tmp_path))
+    problems = chk.check(fake_ovcd(tmp_path), fixtures(tmp_path, SIX), also=(empty,))
+    assert problems == [f"no .vdesign designs in {empty}"]
