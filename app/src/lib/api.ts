@@ -172,4 +172,5 @@ export const isWeb = () => platform().kind === "web";
 /** Save a drawing view as a download. false where the platform cannot (the desktop app, for now). */
 export const exportDrawing = (option: string, view: DrawingView, format: DrawingFormat) =>
   platform().exportDrawing(option, view, format);
-export const exportModel = (option: string, format: ModelFormat) => platform().exportModel(option, format);
+export const exportModel = (option: string, format: ModelFormat, below?: string) =>
+  platform().exportModel(option, format, below);

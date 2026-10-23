@@ -193,9 +193,11 @@ export async function createWebPlatform(): Promise<Platform> {
       else download(`${base}.dxf`, new Uint8Array(session.drawing_dxf(option, view)), "application/dxf");
       return true;
     },
-    exportModel: async (option: string, _format: ModelFormat) => {
+    exportModel: async (option: string, format: ModelFormat, below?: string) => {
       const base = `${fileNameOf(await currentSnapshot()).replace(/\.vdesign$/, "")}-${option}`;
-      download(`${base}.glb`, new Uint8Array(session.export_gltf(option)), "model/gltf-binary");
+      const bytes = new Uint8Array(session.export_model(option, format, below ?? ""));
+      const file = { gltf: [".glb", "model/gltf-binary"], stl: [".stl", "model/stl"], obj: [".obj", "model/obj"], "offsets-csv": [".csv", "text/csv"] }[format];
+      download(`${base}${below ? `-${below}` : ""}${file[0]}`, bytes, file[1]);
       return true;
     },
     meshes: async (option) => {

@@ -5,7 +5,7 @@ import type { Evaluation, Schema, Snapshot } from "../api";
 
 export type DrawingView = "side" | "plan" | "midship";
 export type DrawingFormat = "svg" | "pdf" | "dxf";
-export type ModelFormat = "gltf";
+export type ModelFormat = "gltf" | "stl" | "obj" | "offsets-csv";
 
 /** Issue #457: one named part of the Vessel Model meshes, `count` indices from `start`. */
 export interface MeshGroup {
@@ -80,7 +80,7 @@ export interface Platform {
   /** Save one drawing view as a file. Resolves false when this platform cannot (the desktop app, for now). */
   exportDrawing(option: string, view: DrawingView, format: DrawingFormat): Promise<boolean>;
   /** Issue #460: the Option's Vessel Model as a glTF binary, saved as a file. */
-  exportModel(option: string, format: ModelFormat): Promise<boolean>;
+  exportModel(option: string, format: ModelFormat, below?: string): Promise<boolean>;
   /** Issue #457: the Vessel Model of an Option for the 3D view. Vertex data stays typed. */
   meshes(option: string): Promise<Meshes>;
   sectionAt(option: string, x: number): Promise<SectionOutline>;

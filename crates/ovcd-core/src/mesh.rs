@@ -405,7 +405,7 @@ fn cross(o: (f64, f64), a: (f64, f64), b: (f64, f64)) -> f64 {
 /// Triangles of a simple counter-clockwise polygon by ear clipping, as index triples. A polygon with
 /// no area gives none. A corner on a straight edge is clipped as a flat ear when no other ear is
 /// left, so every edge of the polygon is in a triangle.
-fn ear_clip(ring: &[(f64, f64)]) -> Vec<[usize; 3]> {
+pub fn ear_clip(ring: &[(f64, f64)]) -> Vec<[usize; 3]> {
     let scale = ring
         .iter()
         .fold(0.0_f64, |m, p| m.max(p.0.abs()).max(p.1.abs()))

@@ -471,13 +471,30 @@ impl VesselRun {
     /// The meshes of the model (issue #456): the hull, decks, bulkheads, Spaces and the waterline of
     /// each floating position, one group each.
     pub fn meshes(&self) -> ovcd_core::mesh::Mesh {
-        let lines: Vec<(String, f64, f64)> = self
-            .waterlines
+        ovcd_core::mesh::vessel_meshes(&self.model, &self.waterline_draughts())
+    }
+
+    /// The floating positions as `(name, aft draught, forward draught)`.
+    fn waterline_draughts(&self) -> Vec<(String, f64, f64)> {
+        self.waterlines
             .iter()
             .map(|w| (w.name.clone(), w.draught_aft_m, w.draught_fwd_m))
-            .collect();
-        ovcd_core::mesh::vessel_meshes(&self.model, &lines)
+            .collect()
     }
+}
+
+/// A Vessel Model and its floating positions `(name, aft draught, forward draught)`.
+pub type ModelWaterlines = (
+    ovcd_core::vessel_model::VesselModel,
+    Vec<(String, f64, f64)>,
+);
+
+/// The Vessel Model of an Option and its floating positions `(name, aft draught, forward draught)`
+/// (issue #461): what the panel mesh export clips the hull at.
+pub fn option_model_waterlines(option: &DesignOption) -> Result<ModelWaterlines, String> {
+    let run = option_vessel_run(option)?;
+    let lines = run.waterline_draughts();
+    Ok((run.model, lines))
 }
 
 /// The meshes of an Option's Vessel Model (issue #456).
