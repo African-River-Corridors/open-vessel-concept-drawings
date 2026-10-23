@@ -4,10 +4,10 @@
 <!-- design-impact -->
 ### ticket/404-steel-warning (2026-10-23)
 
-Between `main aff1173` and `this branch 47b942e1`.
+Between `main e4b0ce9` and `this branch 7effe71d`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
-| sweep default depth gas 90x14 | `warnings[2]` | absent | The lightship uses 970.2 t of hull steel (top-down); the cost prices 778.7 t (bottom-up). They differ by 191.5 t (24.6 %), more than the 20 % limit (an Estimate). The cost keeps the bottom-up mass. | changed |
+| sweep default depth gas 90x14 | `warnings[2]` | absent | The lightship uses 970.2 t of hull steel (top-down); the cost prices 777.7 t (bottom-up). They differ by 192.5 t (24.7 %), more than the 20 % limit (an Estimate). The cost keeps the bottom-up mass. | changed |
 | sweep gas wide hull IGC_2G 110x24 | `warnings[2]` | absent | The lightship uses 1716.0 t of hull steel (top-down); the cost prices 1136.4 t (bottom-up). They differ by 579.6 t (51.0 %), more than the 20 % limit (an Estimate). The cost keeps the bottom-up mass. | changed |
 | sweep gas wide hull IGC_2G_EXACT 110x24 | `warnings[2]` | absent | The lightship uses 1716.0 t of hull steel (top-down); the cost prices 1136.4 t (bottom-up). They differ by 579.6 t (51.0 %), more than the 20 % limit (an Estimate). The cost keeps the bottom-up mass. | changed |
