@@ -129,7 +129,9 @@ fn a_convoy_gets_its_arrangement_plan_and_no_ga_views() {
         .collect();
     names.sort();
     assert!(
-        names.iter().all(|n| n.starts_with("option-1-arrangement-plan.")),
+        names
+            .iter()
+            .all(|n| n.starts_with("option-1-arrangement-plan.")),
         "{names:?}"
     );
     assert_eq!(names.len(), 5, "{names:?}");
