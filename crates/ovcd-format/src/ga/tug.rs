@@ -170,7 +170,9 @@ fn elevation(c: &mut Canvas, t: &TugDraw, labels: &mut Vec<(String, [f64; 2])>) 
     let (l, d) = (t.length, t.depth);
     c.polyline("OUTLINE", &[[0.0, d], [0.0, 0.0], [l, 0.0], [l, d]], false);
     c.line("OUTLINE", [0.0, d], [l, d], None);
-    c.line("WATER", [0.0, t.draught], [l, t.draught], None);
+    // The design waterline, a chain line named WL.
+    c.line("WATER", [0.0, t.draught], [l, t.draught], Some("chain"));
+    labels.push((label!("draw-wl", "WL"), [l * 0.25, t.draught]));
     // The push knees at the bow (a pusher or an ATB tug; a towing tug has none).
     if t.kind != "towing_tug" {
         c.polyline(
@@ -231,8 +233,16 @@ fn elevation(c: &mut Canvas, t: &TugDraw, labels: &mut Vec<(String, [f64; 2])>) 
     let (w0, w1, _, wh, floor, raised) = t.wheelhouse;
     rect(c, "OBJECT", w0, w1, floor, floor + wh);
     labels.push((label!("draw-wheelhouse", "WHEELHOUSE"), [w1, floor + wh]));
+    // Raised for the sightline: the same wheelhouse lifted, dashed, on its column (dashed) from the
+    // roof of the lowered wheelhouse.
     if let Some(f) = raised.filter(|f| *f > floor + 1e-6) {
-        rect(c, "CENTRE", w0, w1, f, f + wh);
+        rect(c, "HIDDEN", w0, w1, f, f + wh);
+        let inset = (w1 - w0) / 4.0;
+        if f > floor + wh {
+            for x in [w0 + inset, w1 - inset] {
+                c.line("HIDDEN", [x, floor + wh], [x, f], None);
+            }
+        }
         labels.push((label!("draw-wheelhouse-raised", "RAISED"), [w1, f + wh]));
     }
     // Dimensions.
@@ -244,14 +254,17 @@ fn elevation(c: &mut Canvas, t: &TugDraw, labels: &mut Vec<(String, [f64; 2])>) 
         ));
     }
     c.try_dim_vertical([0.0, 0.0], [0.0, d], DIM_OFFSET_MM);
-    labels.push((
-        label!(
-            "draw-draught",
-            "DRAUGHT {draught}",
-            draught = metres(t.draught)
-        ),
-        [l, t.draught],
-    ));
+    // The draught: keel to WL, at the bow.
+    if !c.try_dim_vertical([l, 0.0], [l, t.draught], -DIM_OFFSET_MM) {
+        labels.push((
+            label!(
+                "draw-draught",
+                "DRAUGHT {draught}",
+                draught = metres(t.draught)
+            ),
+            [l * 0.75, t.draught],
+        ));
+    }
 }
 
 fn plan_view(c: &mut Canvas, t: &TugDraw, dz: f64, labels: &mut Vec<(String, [f64; 2])>) {

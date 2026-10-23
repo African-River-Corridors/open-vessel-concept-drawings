@@ -23,6 +23,7 @@ draw-note-scope = FOR CONCEPT AND PRELIMINARY DESIGN ONLY, NOT FOR APPROVAL.
 draw-tug-atb = ATB TUG
 draw-tug-towing = TOWING TUG
 draw-tug-pusher = PUSHER
+draw-wl = WL
 draw-push-knees = PUSH KNEES
 draw-propeller = PROPELLER
 draw-rudder = RUDDER
