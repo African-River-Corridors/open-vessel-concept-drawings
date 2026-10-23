@@ -34,6 +34,10 @@ macro_rules! label {
     };
 }
 
+mod arrangement;
+
+pub use arrangement::{NO_ARRANGEMENT_PLAN, arrangement_plan_for, arrangement_plan_named};
+
 /// The three views of one Option, as drawing documents.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GaViews {
@@ -2796,9 +2800,20 @@ fn document(
         "FOR CONCEPT AND PRELIMINARY DESIGN ONLY, NOT FOR APPROVAL."
     ));
     notes.extend(failed_notes(&h.failed_checks));
+    place(notes, title_fields(h, title, sheet), from, &|n| build(h, n))
+}
+
+/// Lay one canvas out on an A3 sheet with its notes and title block fields, at the largest scale at
+/// which it fits, no larger than 1:`from`. Gives the document and the ratio it was drawn at.
+fn place(
+    notes: Vec<String>,
+    fields: Value,
+    from: u32,
+    build: &dyn Fn(u32) -> Canvas,
+) -> Result<(Value, u32), String> {
     let strip = strip_mm(notes.len());
     for n in RATIOS.into_iter().filter(|n| *n >= from) {
-        let canvas = build(h, n);
+        let canvas = build(n);
         let window = window_of(&canvas);
         if !fits(window, n, strip) {
             continue;
@@ -2826,7 +2841,7 @@ fn document(
                 "sheet": {"size": "A3", "orientation": "landscape"},
                 "layers": layers,
                 "status": "concept",
-                "title_block": {"template": "iso7200", "fields": title_fields(h, title, sheet)},
+                "title_block": {"template": "iso7200", "fields": fields},
                 "strips": [{"id": "notes", "edge": "bottom", "size_mm": strip, "content": "notes"}],
                 "notes": notes,
                 "viewports": [{

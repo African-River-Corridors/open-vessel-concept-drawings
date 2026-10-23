@@ -4,6 +4,20 @@
 # `text!` call and run the tool again. A number argument arrives as text, already rounded.
 
 
+## crates/ovcd-format/src/ga/arrangement.rs
+
+draw-coupling-points = COUPLING POINTS ({ $count })
+draw-overall-length = OVERALL LENGTH { $length }
+draw-overall-beam = OVERALL BEAM { $beam }
+draw-wheelhouse-raised = RAISED
+draw-sightline-light = SIGHTLINE, LIGHT
+draw-light-waterline = LIGHT WATERLINE
+draw-view-arrangement-plan = ARRANGEMENT PLAN
+draw-note-arrangement = { $view }. DIMENSIONS IN METRES. PROFILE IN THE LIGHT CONDITION.
+draw-note-barges = { $abreast } ABREAST BY { $in_line } IN LINE.
+draw-note-blind-distance = BLIND DISTANCE AHEAD OF THE BOW: LIGHT { $light } M, LADEN { $laden } M, LIMIT { $limit } M.
+draw-note-scope = FOR CONCEPT AND PRELIMINARY DESIGN ONLY, NOT FOR APPROVAL.
+
 ## crates/ovcd-format/src/ga.rs
 
 draw-double-bottom = DOUBLE BOTTOM
@@ -22,7 +36,6 @@ draw-cargo-tank-pair = CARGO TANKS (P AND S)
 draw-cargo-tank = CARGO TANK
 draw-centreline-bulkhead = CENTRELINE BULKHEAD
 draw-cargo-heating = CARGO HEATING FITTED
-draw-wheelhouse-raised = RAISED
 draw-thrusters = THRUSTERS ({ $count })
 draw-wheelhouse-block-top = WHEELHOUSE, BLOCK TOP { $height }
 draw-containers-block-top = CONTAINERS ({ $abreast } x { $rows }), BLOCK TOP { $height }
@@ -52,8 +65,6 @@ draw-owner = OPEN VESSEL CONCEPT DESIGN
 draw-note-rule-sets = RULE SETS: { $sets }.
 draw-note-rule-sets-count = { $count } RULE SETS.
 draw-note-dimensions = { $view }. DIMENSIONS IN METRES.
-draw-note-blind-distance = BLIND DISTANCE AHEAD OF THE BOW: LIGHT { $light } M, LADEN { $laden } M, LIMIT { $limit } M.
-draw-note-scope = FOR CONCEPT AND PRELIMINARY DESIGN ONLY, NOT FOR APPROVAL.
 draw-view-side-elevation = SIDE ELEVATION
 draw-view-plan = PLAN
 draw-view-midship-section = TYPICAL SECTION
