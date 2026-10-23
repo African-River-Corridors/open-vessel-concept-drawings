@@ -21,6 +21,11 @@ The files here are a sample of the Ship-D dataset, kept to benchmark OVCD's Ship
   header names.
 - **`reference.csv`:** the set, the row, the quantity and the dataset's ten values, as the dataset
   gives them (divided by powers of LOA; LCB and LCF measured aft from the stem).
+- **`artefacts.csv`:** the sampled hulls where the dataset's code departs from the definitions, with
+  the cause (`stern_ellipse` or `bulb_crossing`, described in `report.md`). Each was found by running
+  the dataset's code locally against OVCD's reading; the code is not kept here and not run in CI. The
+  test `each_listed_artefact_misses_by_the_definitions_and_the_dataset_code_reading_reproduces_it`
+  holds the evidence (issue #648).
 - **`report.md`:** written by `cargo run -p xtask -- shipd-benchmark`.
 
 `NOTICE` thanks the authors.

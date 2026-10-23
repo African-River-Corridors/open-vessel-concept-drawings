@@ -9,8 +9,8 @@
 
 use crate::{Result, root};
 use ovcd_core::shipd::{
-    BENCHMARK, DESIGN, DRAUGHT_FRACTIONS, FilletRow, Measures, NAMES, Resolution, ShipdParameters,
-    check, measures, sections,
+    BENCHMARK, DESIGN, DRAUGHT_FRACTIONS, FilletRow, Measures, NAMES, Reading, Resolution,
+    ShipdParameters, check, dataset_measures, measures, sections,
 };
 use std::fmt::Write as _;
 use std::path::Path;
@@ -227,10 +227,19 @@ fn measured(h: &Hull, r: Resolution) -> Result<Vec<Measures>> {
     Ok(measures(&table, loa, &draughts))
 }
 
+/// The hull's measures taken as the dataset takes its own (`dataset_measures`), with readings `r`.
+fn measured_as_dataset(h: &Hull, r: Resolution) -> Vec<Measures> {
+    let v = &h.p.0;
+    dataset_measures(&h.p, v[0], v[3] * v[0], v[4] * v[0], r)
+}
+
 /// The worst difference of one hull per quantity, as a share of its limit (1 = at the limit), and
 /// the draught where it is.
 pub(crate) fn compare(h: &Hull, r: Resolution) -> Result<[(f64, f64, f64, f64); 7]> {
-    let ours = measured(h, r)?;
+    Ok(worst_of(h, &measured(h, r)?))
+}
+
+fn worst_of(h: &Hull, ours: &[Measures]) -> [(f64, f64, f64, f64); 7] {
     let mut worst = [(0.0, 0.0, 0.0, 0.0); 7];
     for (k, (o, r)) in ours.iter().zip(&h.reference).enumerate() {
         for (q, (a, b)) in fields(o).iter().zip(fields(r)).enumerate() {
@@ -246,7 +255,146 @@ pub(crate) fn compare(h: &Hull, r: Resolution) -> Result<[(f64, f64, f64, f64); 
             }
         }
     }
-    Ok(worst)
+    worst
+}
+
+/// A hull the dataset's code measures off its own definitions, and why (`artefacts.csv`).
+struct Artefact {
+    set: String,
+    row: String,
+    cause: String,
+}
+
+/// The two places the dataset's code departs from the definitions, as a reading of the generator.
+fn reading_of(cause: &str) -> Result<Resolution> {
+    match cause {
+        "stern_ellipse" => Ok(Resolution {
+            stern_ellipse: Reading::DatasetCode,
+            ..BENCHMARK
+        }),
+        "bulb_crossing" => Ok(Resolution {
+            bulb_crossing: Reading::DatasetCode,
+            ..BENCHMARK
+        }),
+        _ => Err(format!("artefacts.csv: unknown cause {cause:?}")),
+    }
+}
+
+fn artefacts(dir: &Path) -> Result<Vec<Artefact>> {
+    Ok(read_csv(&dir.join("artefacts.csv"))?[1..]
+        .iter()
+        .map(|r| Artefact {
+            set: r[0].clone(),
+            row: r[1].clone(),
+            cause: r[2].clone(),
+        })
+        .collect())
+}
+
+/// What each artefact cause is, for the report.
+const CAUSES: [(&str, &str); 2] = [
+    (
+        "stern_ellipse",
+        "The stern taper is a quarter ellipse (`bit_EP_T` or `bit_EP_S` = 1) and the transom is wider \
+         than the midbody at that height. The definitions run the ellipse from the midbody \
+         half-breadth to the transom's. The dataset's code squares its vertical radius (`Ry = y_mid - \
+         y_transom`, here negative) inside the root, so its ellipse is mirrored: it starts at \
+         `2 y_transom - y_mid`, a step out from the midbody, and falls to the transom.",
+    ),
+    (
+        "bulb_crossing",
+        "Where the bow bulb meets the hull, the dataset's code takes the smallest root of the bow \
+         cubic that lies aft of the stem and of the bulb's front. When the real crossing lies forward \
+         of the bulb's front, the root it takes is the real part of a complex root (numpy orders a \
+         complex number by its real part first) or a root aft of `delta_bow`. Its waterline then runs \
+         at the bulb's width to `delta_bow`: wider than the hull where the bulb is wider, or one \
+         waterline just below the bulb's top with up to 30 % less area than its neighbours.",
+    ),
+];
+
+/// The gate: each hull's shape, measured as the dataset measures (`dataset_measures`), within the
+/// spec's limits. A hull outside passes the gate only when `artefacts.csv` lists it and its cause,
+/// read as the dataset's code reads it, brings it within the limits. Gives the pass table, the
+/// artefact table and the problems that fail the gate.
+fn shape_gate(hulls: &[Hull], listed: &[Artefact]) -> Result<(String, String, Vec<String>)> {
+    let mut rows = String::new();
+    let mut found = String::new();
+    let mut problems = Vec::new();
+    for set in SETS {
+        let of_set: Vec<&Hull> = hulls.iter().filter(|h| h.set == set).collect();
+        let (mut pass, mut excused) = (0, 0);
+        let mut per_q = [0usize; 7];
+        for h in &of_set {
+            let w = worst_of(h, &measured_as_dataset(h, BENCHMARK));
+            let inside = w.iter().all(|x| x.0 <= 1.0);
+            for (q, x) in w.iter().enumerate() {
+                if x.0 <= 1.0 {
+                    per_q[q] += 1;
+                }
+            }
+            let entry = listed.iter().find(|a| a.set == set && a.row == h.row);
+            match (inside, entry) {
+                (true, None) => pass += 1,
+                (true, Some(a)) => problems.push(format!(
+                    "{set} {}: listed as an artefact ({}) but within the limits: remove it from artefacts.csv",
+                    h.row, a.cause
+                )),
+                (false, None) => problems.push(format!(
+                    "{set} {}: outside the limits and not a listed artefact: {}",
+                    h.row,
+                    misses(&w)
+                )),
+                (false, Some(a)) => {
+                    let wa = worst_of(h, &measured_as_dataset(h, reading_of(&a.cause)?));
+                    let reproduced = wa.iter().all(|x| x.0 <= 1.0);
+                    let worst = wa.iter().fold(0.0_f64, |m, x| m.max(x.0));
+                    let _ = writeln!(
+                        found,
+                        "| {set} | {} | `{}` | {} | {} (worst {worst:.2} x the limit) |",
+                        h.row,
+                        a.cause,
+                        misses(&w),
+                        if reproduced { "within the limits" } else { "**still outside**" }
+                    );
+                    if reproduced {
+                        excused += 1;
+                    } else {
+                        problems.push(format!(
+                            "{set} {}: the dataset's code reading of `{}` does not reproduce it: {}",
+                            h.row,
+                            a.cause,
+                            misses(&wa)
+                        ));
+                    }
+                }
+            }
+        }
+        let n = of_set.len();
+        let _ = write!(rows, "| {set} | {n} | {pass} | {excused} |");
+        for c in per_q {
+            let _ = write!(rows, " {c} |");
+        }
+        rows.push('\n');
+    }
+    let mut head = String::from("| Set | Hulls | Pass | Dataset artefact | ");
+    head.push_str(&QUANTITIES.join(" | "));
+    head.push_str(" |\n|---|---|---|---|---|---|---|---|---|---|---|\n");
+    Ok((head + &rows, found, problems))
+}
+
+/// The quantities outside the limit, with their draught and size.
+fn misses(w: &[(f64, f64, f64, f64); 7]) -> String {
+    w.iter()
+        .enumerate()
+        .filter(|(_, x)| x.0 > 1.0 || x.0.is_nan())
+        .map(|(q, x)| {
+            format!(
+                "{} at T/Dd {:.2}: OVCD {:.6}, dataset {:.6} ({:.2} x the limit)",
+                QUANTITIES[q], x.1, x.2, x.3, x.0
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("; ")
 }
 
 /// The pass table and the list of hulls outside, at `levels`.
@@ -371,30 +519,60 @@ fn fillet_section(hulls: &[Hull]) -> Result<String> {
 pub(crate) fn benchmark() -> Result {
     let dir = folder();
     let hulls = load(&dir)?;
-    let mut report = format!(
-        "# ShipD benchmark\n\nWritten by `cargo run -p xtask -- shipd-benchmark` (issues #452 and #453, spec 0008 \
-         \"Benchmark against the dataset\"). The sample and its source are in `SOURCE.md`.\n\n\
-         Each sampled hull is built at L = 10 m as OVCD's ShipD-style Sections Table ({} even stations \
-         plus the knuckles and the ends of each height's waterline; points at {} even heights plus \
-         the knuckle heights) and measured upright at the \
-         dataset's ten draughts (T/Dd 0.12 to 1.0; at 1.0 a hair below the deck, where the closed \
-         section has its deck). A hull passes when, at every draught, its volume, waterplane area and \
-         waterline length are within 1 %, its LCB and LCF within 0.5 % of LOA, and its Ixx and Iyy \
-         within 2 % of the dataset's. The dataset integrates its waterlines by the trapezoid rule over \
-         strips (101 waterlines, 1000 points each) and interpolates between its waterlines; OVCD \
-         integrates its sections by Simpson's rule on the ruled surface between them: part of any \
-         difference is the dataset's. The tolerances are not loosened to make a hull pass; a hull \
-         outside is a finding, listed below with its numbers.\n\n",
-        BENCHMARK.stations, BENCHMARK.levels
+    let listed = artefacts(&dir)?;
+    let mut report = String::from(
+        "# ShipD benchmark\n\nWritten by `cargo run -p xtask -- shipd-benchmark` (issues #452, #453 and #648, \
+         spec 0008 \"Benchmark against the dataset\"). The sample and its source are in `SOURCE.md`.\n\n\
+         The benchmark compares OVCD's ShipD-style hull with the dataset's measures at its ten draughts \
+         (T/Dd 0.12 to 1.0), at L = 10 m. A hull passes when, at every draught, its volume, waterplane area \
+         and waterline length are within 1 %, its LCB and LCF within 0.5 % of LOA, and its Ixx and Iyy \
+         within 2 % of the dataset's. The tolerances are not loosened to make a hull pass.\n\n\
+         ## The gate: OVCD's shape, measured as the dataset measures\n\n\
+         The dataset took its measures from 101 waterlines with 1000 points each, by the trapezoid rule, \
+         and interpolated between waterlines. The gate measures OVCD's shape the same way \
+         (`ovcd_core::shipd::dataset_measures`), so it compares the shape, not the integration rule. \
+         Every hull must pass, except a hull listed in `artefacts.csv`: there the dataset's code departs \
+         from the definitions, and the gate requires that reading that one place as the code does brings \
+         the hull within the limits. Any other hull outside fails the gate.\n\n",
     );
-    let (rows, outside, counts) = table(&hulls, BENCHMARK)?;
+    let (rows, found, problems) = shape_gate(&hulls, &listed)?;
     report.push_str(&rows);
     report.push_str(
-        "\nThe last seven columns count the hulls within the limit for that quantity at every \
-         draught. The spec's pass is at least 95 % of each set.\n\n## Hulls outside\n\n",
+        "\nThe last seven columns count the hulls within the limit for that quantity at every draught.\n\n\
+         ## Hulls outside: the dataset's code\n\n",
+    );
+    for (cause, text) in CAUSES {
+        let _ = writeln!(report, "- `{cause}`: {text}");
+    }
+    if found.is_empty() {
+        report.push_str("\nNone.\n");
+    } else {
+        report.push_str(
+            "\n| Set | Row | Cause | Outside, by the definitions | Read as the dataset's code |\n|---|---|---|---|---|\n",
+        );
+        report.push_str(&found);
+    }
+    report.push_str("\n## Hulls outside for any other reason\n\n");
+    if problems.is_empty() {
+        report.push_str("None.\n");
+    } else {
+        for p in &problems {
+            let _ = writeln!(report, "- {p}");
+        }
+    }
+    let (rows, outside, _) = table(&hulls, BENCHMARK)?;
+    let _ = write!(
+        report,
+        "\n## OVCD's own integration\n\nFor information: the same comparison with OVCD's own hydrostatics, \
+         its Sections Table cut at {} even stations plus the knuckles and the ends of each height's \
+         waterline, and points at {} even heights plus the knuckle heights, integrated by Simpson's rule on \
+         the ruled surface between sections (at T/Dd 1.0 a hair below the deck, where the closed section has \
+         its deck). The hulls outside here are mostly at low draught, where the dataset's trapezoid rule over \
+         its first waterlines differs from OVCD's integral.\n\n{rows}\n",
+        BENCHMARK.stations, BENCHMARK.levels
     );
     if outside.is_empty() {
-        report.push_str("None.\n");
+        report.push_str("None outside.\n");
     } else {
         report.push_str("| Set | Row | Outside the limit | Where |\n|---|---|---|---|\n");
         report.push_str(&outside);
@@ -405,16 +583,14 @@ pub(crate) fn benchmark() -> Result {
         report,
         "\n## At a Design's cut\n\nFor information: a Design's ShipD hull is cut more coarsely ({} \
          even stations and {} even height levels, no waterline-end stations), so its hydrostatics \
-         and GZ curves stay fast. At that cut the same comparison gives:\n\n{rows}",
+         and GZ curves stay fast. At that cut OVCD's own integration gives:\n\n{rows}",
         DESIGN.stations, DESIGN.levels
     );
     std::fs::write(dir.join("report.md"), &report).map_err(|e| e.to_string())?;
     print!("{report}");
-    // The spec's pass line is for the sets without bulbs; Set 1 lists each hull outside.
-    for (set, (pass, n)) in SETS.iter().zip(counts) {
-        if !with_bulb(set) && 100 * pass < 95 * n {
-            return Err(format!("{set}: {pass} of {n} hulls pass: below 95 %"));
-        }
+    if problems.is_empty() {
+        Ok(())
+    } else {
+        Err(format!("the ShipD gate fails:\n{}", problems.join("\n")))
     }
-    Ok(())
 }
