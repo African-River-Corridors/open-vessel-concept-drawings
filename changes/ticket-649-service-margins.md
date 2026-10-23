@@ -4,7 +4,7 @@
 <!-- design-impact -->
 ### ticket/649-service-margins (2026-10-23)
 
-Between `main e4b0ce9` and `this branch dd6d9bb6`.
+Between `main bd497d9` and `this branch 7ab01434`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
