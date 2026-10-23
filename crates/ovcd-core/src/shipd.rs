@@ -61,6 +61,13 @@
 //!   are in the benchmark report. Where the bulb is wider than the hull at a height, so that the two
 //!   waterlines never meet, the waterline is the wider of the hull's and the bulb's narrowed to the
 //!   hull's half-breadth.
+//! - Two more places where the code departs from the definitions, kept as a [`Reading`] for the
+//!   benchmark only (issue #648; every Design takes the definitions): the stern ellipse
+//!   (`halfBeam_Stern` squares its vertical radius, so where the transom is wider than the midbody
+//!   the ellipse is mirrored) and the bow bulb's crossing with the hull (`gen_waterline_bow_BB` takes
+//!   the smallest root of the bow cubic, real or complex, aft of the stem and of the bulb's front;
+//!   numpy orders a complex number by its real part first, so the crossing may be a complex root's
+//!   real part or lie aft of `delta_bow`).
 //! - The bulb constraints (36 to 48): the index order follows the constraints PDF; for the three
 //!   "forward of `DELTA_BOW`" rows the code's order is at the base, at the design draught, at the
 //!   vertex, the PDF's is at the base, at the vertex, at the design draught. All three must hold, so
@@ -74,7 +81,7 @@ use crate::sections::{Section, SectionsError, SectionsTable};
 use alloc::vec::Vec;
 use core::f64::consts::PI;
 use core::fmt;
-use libm::{cos, fabs, sin, sqrt, tan};
+use libm::{acos, cbrt, cos, fabs, sin, sqrt, tan};
 
 /// The dataset's header names of the 45 parameters, in its column order.
 pub const NAMES: [&str; 45] = [
@@ -462,6 +469,64 @@ pub enum FilletRow {
     DatasetCode,
 }
 
+/// Which reading the generator takes at a place where the dataset's code does not do what the
+/// definitions say. (The bow-rake vertex test is not one of them: the module keeps it as the code
+/// has it, since the dataset's hulls were made with it.)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Reading {
+    /// The definitions. Every Design takes this.
+    Definition,
+    /// The dataset's code as written. For the benchmark only: it reproduces the dataset's values
+    /// where the code departs from the definitions, so a hull it reaches is shown to be the
+    /// dataset's, not OVCD's.
+    DatasetCode,
+}
+
+/// The real and imaginary parts of the roots of `a s^3 + b s^2 + c s + d` (a quadratic or a line
+/// when the leading coefficients are 0).
+fn cubic_roots(a: f64, b: f64, c: f64, d: f64) -> Vec<(f64, f64)> {
+    let scale = fabs(a) + fabs(b) + fabs(c) + fabs(d);
+    if fabs(a) <= 1e-14 * scale {
+        if fabs(b) <= 1e-14 * scale {
+            return if c == 0.0 {
+                Vec::new()
+            } else {
+                alloc::vec![(-d / c, 0.0)]
+            };
+        }
+        let disc = c * c - 4.0 * b * d;
+        return if disc >= 0.0 {
+            let r = sqrt(disc);
+            alloc::vec![((-c + r) / (2.0 * b), 0.0), ((-c - r) / (2.0 * b), 0.0)]
+        } else {
+            let im = sqrt(-disc) / (2.0 * fabs(b));
+            let re = -c / (2.0 * b);
+            alloc::vec![(re, im), (re, -im)]
+        };
+    }
+    // Depressed: s = t - B / 3, t^3 + p t + q = 0.
+    let (bb, cc, dd) = (b / a, c / a, d / a);
+    let shift = bb / 3.0;
+    let p = cc - bb * bb / 3.0;
+    let q = 2.0 * bb * bb * bb / 27.0 - bb * cc / 3.0 + dd;
+    let disc = q * q / 4.0 + p * p * p / 27.0;
+    if disc > 0.0 {
+        let r = sqrt(disc);
+        let (u, v) = (cbrt(-q / 2.0 + r), cbrt(-q / 2.0 - r));
+        let re = -(u + v) / 2.0 - shift;
+        let im = sqrt(3.0) / 2.0 * (u - v);
+        alloc::vec![(u + v - shift, 0.0), (re, im), (re, -im)]
+    } else if p == 0.0 {
+        alloc::vec![(-shift, 0.0); 3]
+    } else {
+        let m = 2.0 * sqrt(-p / 3.0);
+        let theta = acos((3.0 * q / (p * m)).clamp(-1.0, 1.0)) / 3.0;
+        (0..3)
+            .map(|k| (m * cos(theta - 2.0 * PI * f64::from(k) / 3.0) - shift, 0.0))
+            .collect()
+    }
+}
+
 /// The quartic in x through `(x0, y0)` and `(x1, y1)` with slopes `d0`, `d1` and the dataset's
 /// curvature row at `xc` (`6 x^2` where the second derivative has `6 x`): the five-by-five system
 /// solved by elimination with row pivoting.
@@ -512,6 +577,7 @@ pub struct Waterline {
     y_mid: f64,
     bow: BowLine,
     stern: SternLine,
+    stern_ellipse: Reading,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -779,13 +845,20 @@ impl Shape {
 
     /// The stern waterline at height `z`: from the midship half-breadth at `delta_stern` to the
     /// transom's, a quarter ellipse or a parabola.
-    fn stern_y(&self, x: f64, z: f64) -> f64 {
+    fn stern_y(&self, x: f64, z: f64, ellipse: Reading) -> f64 {
         let y_mid = self.mid.half_breadth(z);
         let y_t = self.transom_half_breadth(z);
         let d = self.delta_stern(z);
         let u = (x - d) / (self.stern_profile(z) - d);
         if self.stern_ellipse(z) {
-            (y_mid - y_t) * sqrt(fabs(1.0 - u * u)) + y_t
+            // The dataset's code squares the vertical radius inside the root, so where the transom
+            // is wider than the midbody its ellipse is mirrored: it starts at `2 y_t - y_mid`, a
+            // step out from the midbody, and falls to the transom.
+            let ry = match ellipse {
+                Reading::Definition => y_mid - y_t,
+                Reading::DatasetCode => fabs(y_mid - y_t),
+            };
+            ry * sqrt(fabs(1.0 - u * u)) + y_t
         } else {
             y_mid + (y_t - y_mid) * u * u
         }
@@ -825,6 +898,37 @@ impl Shape {
 
     /// The waterline at height `z` (the bulbs, where there are bulbs below `z`, are in it).
     pub fn waterline(&self, z: f64, row: FilletRow) -> Waterline {
+        self.waterline_with(z, row, Reading::Definition, Reading::Definition)
+    }
+
+    /// The dataset's code reading of where a bow bulb meets the hull at height `z`: the smallest
+    /// real part among the roots of the bow cubic less `y_b`, real or complex, that the code's
+    /// comparison puts at or aft of both the stem and the bulb's front `front`. (numpy orders a
+    /// complex number by its real part first, so a complex root passes on its real part, and a root
+    /// aft of `delta_bow` is kept.)
+    fn bow_crossing_dataset(&self, z: f64, y_b: f64, front: f64) -> Option<f64> {
+        let x_bow = self.bow_profile(z);
+        let h = self.delta_bow(z) - x_bow;
+        let (y, mh) = (self.mid.half_breadth(z), tan(self.drift(z)) * h);
+        // `bow_y` in s = (x - x_bow) / h: (mh - 2 y) s^3 + (3 y - 2 mh) s^2 + mh s.
+        let lo = x_bow.max(front);
+        cubic_roots(mh - 2.0 * y, 3.0 * y - 2.0 * mh, mh, -y_b)
+            .into_iter()
+            .map(|(re, im)| (x_bow + h * re, h * im))
+            .filter(|&(re, im)| re > lo || (re == lo && im >= 0.0))
+            .map(|(re, _)| re)
+            .reduce(f64::min)
+    }
+
+    /// [`Shape::waterline`] with a [`Reading`] for the stern ellipse and for the bow bulb's
+    /// crossing with the hull.
+    pub fn waterline_with(
+        &self,
+        z: f64,
+        row: FilletRow,
+        stern_ellipse: Reading,
+        bulb_crossing: Reading,
+    ) -> Waterline {
         let y_mid = self.mid.half_breadth(z);
         let bb = self.bb.filter(|b| z > 0.0 && z < b.top);
         let sb = self.sb.filter(|b| z > 0.0 && z < b.top);
@@ -842,7 +946,13 @@ impl Shape {
                 let x2 = self.delta_bow(z);
                 let y_b = b.ry_at(z);
                 let lo = self.bow_profile(z).max(start);
-                match first_root(|x| self.bow_y(x, z) - y_b, lo, x2) {
+                let crossing = match bulb_crossing {
+                    Reading::Definition => first_root(|x| self.bow_y(x, z) - y_b, lo, x2),
+                    Reading::DatasetCode => self
+                        .bow_crossing_dataset(z, y_b, start)
+                        .or_else(|| first_root(|x| self.bow_y(x, z) - y_b, lo, x2)),
+                };
+                match crossing {
                     None => BowLine::Wider,
                     Some(x_int) => {
                         let dx = fabs((x_int - start).min(x2 - x_int));
@@ -880,7 +990,7 @@ impl Shape {
                 let dx = fabs((x_int - x1).min(end - x_int));
                 let (xr0, xr1) = (x_int - dx * b.fillet / 2.0, x_int + dx * b.fillet / 2.0);
                 let h = xr1 - xr0;
-                let (y0, d0) = (self.stern_y(xr0, z), self.stern_dydx(xr0, z));
+                let (y0, d0) = (self.stern_y(xr0, z, stern_ellipse), self.stern_dydx(xr0, z));
                 let (y1, d1) = (b.half_width(z, xr1, true), b.slope(z, xr1, true));
                 let (coef, absolute) = if h <= 0.0 {
                     ([0.0; 5], false)
@@ -905,6 +1015,7 @@ impl Shape {
             y_mid,
             bow,
             stern,
+            stern_ellipse,
         }
     }
 
@@ -1099,14 +1210,14 @@ impl Waterline {
             match (&self.stern, &s.sb) {
                 (SternLine::Filleted(f), Some(b)) => {
                     if x <= f.xr0 {
-                        s.stern_y(x, z)
+                        s.stern_y(x, z, self.stern_ellipse)
                     } else if x < f.xr1 {
                         f.at(x, false)
                     } else {
                         b.half_width(z, x, true)
                     }
                 }
-                _ => s.stern_y(x, z),
+                _ => s.stern_y(x, z, self.stern_ellipse),
             }
         };
         // A fillet may dip a hair below the centre line.
@@ -1123,6 +1234,9 @@ pub struct Resolution {
     pub waterline_ends: bool,
     /// The curvature row of the bulb fillets.
     pub fillet_row: FilletRow,
+    /// The stern ellipse and the bow bulb's crossing with the hull.
+    pub stern_ellipse: Reading,
+    pub bulb_crossing: Reading,
 }
 
 /// A Design's cut: coarse enough that its hydrostatics and GZ curves stay fast. The benchmark's
@@ -1132,6 +1246,8 @@ pub const DESIGN: Resolution = Resolution {
     levels: 20,
     waterline_ends: false,
     fillet_row: FilletRow::Definition,
+    stern_ellipse: Reading::Definition,
+    bulb_crossing: Reading::Definition,
 };
 
 /// The benchmark's cut: fine enough that the comparison is of the shape, not of the cut.
@@ -1140,6 +1256,8 @@ pub const BENCHMARK: Resolution = Resolution {
     levels: 200,
     waterline_ends: true,
     fillet_row: FilletRow::Definition,
+    stern_ellipse: Reading::Definition,
+    bulb_crossing: Reading::Definition,
 };
 
 /// The constraints `p` fails at these dimensions, with their index and name.
@@ -1180,7 +1298,7 @@ pub fn sections(
     let heights = shape.heights(r.levels.max(1));
     let lines: Vec<Waterline> = heights
         .iter()
-        .map(|&z| shape.waterline(z, r.fillet_row))
+        .map(|&z| shape.waterline_with(z, r.fillet_row, r.stern_ellipse, r.bulb_crossing))
         .collect();
     // Stations in the dataset's x: even ones, the knuckles, and each waterline's two ends.
     let n = r.stations.max(2) - 1;
@@ -1266,6 +1384,117 @@ pub fn measures(table: &SectionsTable, loa: f64, draughts: &[f64]) -> Vec<Measur
                 ixx: i.i_t_m4 / l4,
                 iyy: i.i_l_m4 / l4,
                 waterline_length: i.l_wl_m / loa,
+            }
+        })
+        .collect()
+}
+
+/// The [`Measures`] of the ShipD hull `p` at the dataset's draughts, taken the way the dataset took
+/// its own (read from its `Calc_VolumeProperties` and the functions it calls; no code is copied):
+/// 101 waterlines, evenly from 1e-5 m to the depth; on each, 1000 points shared between the bow
+/// taper, the midbody and the stern taper by their length; the waterplane area, its centroid and
+/// its second moments by trapezoids between the points; the volume and the LCB by the trapezoid rule
+/// over the waterlines; each quantity at a draught by linear interpolation between waterlines. The
+/// benchmark compares OVCD's shape this way, so the comparison is of the shape, not of the
+/// integration rule. `r` gives the readings; its cut is not used.
+pub fn dataset_measures(
+    p: &ShipdParameters,
+    loa: f64,
+    beam: f64,
+    depth: f64,
+    r: Resolution,
+) -> Vec<Measures> {
+    const WATERLINES: usize = 101;
+    const POINTS: usize = 1000;
+    let s = Shape::new(p, loa, beam, depth);
+    let z0 = 1e-5;
+    let zs: Vec<f64> = (0..WATERLINES)
+        .map(|i| z0 + (depth - z0) * i as f64 / (WATERLINES - 1) as f64)
+        .collect();
+    let even = |a: f64, b: f64, n: usize| -> Vec<f64> {
+        if n == 1 {
+            return alloc::vec![a];
+        }
+        (0..n)
+            .map(|i| a + (b - a) * i as f64 / (n - 1) as f64)
+            .collect()
+    };
+    // Per waterline: area, LCF, Ixx, Iyy, waterline length.
+    let mut wp: Vec<[f64; 5]> = Vec::with_capacity(WATERLINES);
+    for &z in &zs {
+        let wl = s.waterline_with(z, r.fillet_row, r.stern_ellipse, r.bulb_crossing);
+        let (start, end) = wl.span();
+        let (db, ds) = (s.delta_bow(z), s.delta_stern(z));
+        let len = end - start;
+        let share = |a: f64| (fabs(a / len * POINTS as f64) as usize) + 1;
+        let (pb, mut ps) = (share(db - start), share(end - ds));
+        let pm = if pb + ps > POINTS {
+            ps -= pb + ps - POINTS;
+            0
+        } else {
+            POINTS - pb - ps
+        };
+        let mut xs = even(start, db, pb);
+        xs.extend_from_slice(&even(db, ds, pm + 2)[1..=pm]);
+        xs.extend(even(ds, end, ps));
+        // The ends of a waterline carry the stem's and the transom's half-breadth.
+        let eps = 1e-12 * loa;
+        let ys: Vec<f64> = xs
+            .iter()
+            .map(|&x| 2.0 * wl.half_breadth(&s, x.clamp(start + eps, end - eps)))
+            .collect();
+        let (mut area, mut moment) = (0.0, 0.0);
+        for j in 1..xs.len() {
+            let (dx, a, b) = (xs[j] - xs[j - 1], ys[j], ys[j - 1]);
+            area += 0.5 * (a + b) * dx;
+            if a + b > 0.0 {
+                moment += (xs[j - 1] + dx / 3.0 * (2.0 * a + b) / (a + b)) * 0.5 * (a + b) * dx;
+            }
+        }
+        let lcf = moment / area;
+        let (mut ixx, mut iyy) = (0.0, 0.0);
+        for j in 1..xs.len() {
+            let (dx, a, b) = (xs[j] - xs[j - 1], ys[j], ys[j - 1]);
+            if a + b > 0.0 {
+                let cx = xs[j - 1] + dx / 3.0 * (2.0 * a + b) / (a + b);
+                ixx += dx / 48.0 * (a + b) * (a * a + b * b);
+                iyy += dx * dx * dx * (a * a + 4.0 * a * b + b * b) / (36.0 * (a + b))
+                    + 0.5 * (a + b) * dx * (lcf - cx) * (lcf - cx);
+            }
+        }
+        wp.push([area, lcf, ixx, iyy, xs[xs.len() - 1] - xs[0]]);
+    }
+    let mut volume = alloc::vec![0.5 * wp[0][0] * zs[0]; WATERLINES];
+    let mut lcb = alloc::vec![0.0; WATERLINES];
+    let mut moment = 0.0;
+    for i in 1..WATERLINES {
+        let dz = zs[i] - zs[i - 1];
+        volume[i] = volume[i - 1] + 0.5 * (wp[i][0] + wp[i - 1][0]) * dz;
+        moment += 0.5 * (wp[i][0] * wp[i][1] + wp[i - 1][0] * wp[i - 1][1]) * dz;
+        lcb[i] = moment / volume[i];
+    }
+    let at = |f: &dyn Fn(usize) -> f64, t: f64| -> f64 {
+        let i = zs
+            .iter()
+            .rposition(|&z| z < t)
+            .unwrap_or(0)
+            .min(WATERLINES - 2);
+        let u = (t - zs[i]) / (zs[i + 1] - zs[i]);
+        f(i) + u * (f(i + 1) - f(i))
+    };
+    let (l2, l3) = (loa * loa, loa * loa * loa);
+    DRAUGHT_FRACTIONS
+        .iter()
+        .map(|fr| {
+            let t = fr * depth;
+            Measures {
+                volume: at(&|i| volume[i], t) / l3,
+                waterplane_area: at(&|i| wp[i][0], t) / l2,
+                lcb: at(&|i| lcb[i], t) / loa,
+                lcf: at(&|i| wp[i][1], t) / loa,
+                ixx: at(&|i| wp[i][2], t) / (l2 * l2),
+                iyy: at(&|i| wp[i][3], t) / (l2 * l2),
+                waterline_length: at(&|i| wp[i][4], t) / loa,
             }
         })
         .collect()

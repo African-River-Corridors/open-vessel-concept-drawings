@@ -1,18 +1,48 @@
 # ShipD benchmark
 
-Written by `cargo run -p xtask -- shipd-benchmark` (issues #452 and #453, spec 0008 "Benchmark against the dataset"). The sample and its source are in `SOURCE.md`.
+Written by `cargo run -p xtask -- shipd-benchmark` (issues #452, #453 and #648, spec 0008 "Benchmark against the dataset"). The sample and its source are in `SOURCE.md`.
 
-Each sampled hull is built at L = 10 m as OVCD's ShipD-style Sections Table (101 even stations plus the knuckles and the ends of each height's waterline; points at 200 even heights plus the knuckle heights) and measured upright at the dataset's ten draughts (T/Dd 0.12 to 1.0; at 1.0 a hair below the deck, where the closed section has its deck). A hull passes when, at every draught, its volume, waterplane area and waterline length are within 1 %, its LCB and LCF within 0.5 % of LOA, and its Ixx and Iyy within 2 % of the dataset's. The dataset integrates its waterlines by the trapezoid rule over strips (101 waterlines, 1000 points each) and interpolates between its waterlines; OVCD integrates its sections by Simpson's rule on the ruled surface between them: part of any difference is the dataset's. The tolerances are not loosened to make a hull pass; a hull outside is a finding, listed below with its numbers.
+The benchmark compares OVCD's ShipD-style hull with the dataset's measures at its ten draughts (T/Dd 0.12 to 1.0), at L = 10 m. A hull passes when, at every draught, its volume, waterplane area and waterline length are within 1 %, its LCB and LCF within 0.5 % of LOA, and its Ixx and Iyy within 2 % of the dataset's. The tolerances are not loosened to make a hull pass.
+
+## The gate: OVCD's shape, measured as the dataset measures
+
+The dataset took its measures from 101 waterlines with 1000 points each, by the trapezoid rule, and interpolated between waterlines. The gate measures OVCD's shape the same way (`ovcd_core::shipd::dataset_measures`), so it compares the shape, not the integration rule. Every hull must pass, except a hull listed in `artefacts.csv`: there the dataset's code departs from the definitions, and the gate requires that reading that one place as the code does brings the hull within the limits. Any other hull outside fails the gate.
+
+| Set | Hulls | Pass | Dataset artefact | Volume | Area_WP | LCB | LCF | Ixx | Iyy | WL_Length |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Constrained_Randomized_Set_2 | 100 | 100 | 0 | 100 | 100 | 100 | 100 | 100 | 100 | 100 |
+| Constrained_Randomized_Set_3 | 100 | 100 | 0 | 100 | 100 | 100 | 100 | 100 | 100 | 100 |
+| Constrained_Randomized_Set_1 | 100 | 94 | 6 | 97 | 97 | 100 | 97 | 97 | 97 | 100 |
+
+The last seven columns count the hulls within the limit for that quantity at every draught.
+
+## Hulls outside: the dataset's code
+
+- `stern_ellipse`: The stern taper is a quarter ellipse (`bit_EP_T` or `bit_EP_S` = 1) and the transom is wider than the midbody at that height. The definitions run the ellipse from the midbody half-breadth to the transom's. The dataset's code squares its vertical radius (`Ry = y_mid - y_transom`, here negative) inside the root, so its ellipse is mirrored: it starts at `2 y_transom - y_mid`, a step out from the midbody, and falls to the transom.
+- `bulb_crossing`: Where the bow bulb meets the hull, the dataset's code takes the smallest root of the bow cubic that lies aft of the stem and of the bulb's front. When the real crossing lies forward of the bulb's front, the root it takes is the real part of a complex root (numpy orders a complex number by its real part first) or a root aft of `delta_bow`. Its waterline then runs at the bulb's width to `delta_bow`: wider than the hull where the bulb is wider, or one waterline just below the bulb's top with up to 30 % less area than its neighbours.
+
+| Set | Row | Cause | Outside, by the definitions | Read as the dataset's code |
+|---|---|---|---|---|
+| Constrained_Randomized_Set_1 | 9764 | `bulb_crossing` | Volume at T/Dd 0.12: OVCD 0.001991, dataset 0.002032 (2.02 x the limit) | within the limits (worst 0.02 x the limit) |
+| Constrained_Randomized_Set_1 | 7207 | `bulb_crossing` | Area_WP at T/Dd 0.38: OVCD 0.180596, dataset 0.175834 (2.71 x the limit); LCF at T/Dd 0.38: OVCD 0.449671, dataset 0.460095 (2.08 x the limit); Ixx at T/Dd 0.38: OVCD 0.000749, dataset 0.000734 (1.01 x the limit); Iyy at T/Dd 0.38: OVCD 0.009462, dataset 0.008737 (4.15 x the limit) | within the limits (worst 0.16 x the limit) |
+| Constrained_Randomized_Set_1 | 5660 | `bulb_crossing` | Volume at T/Dd 0.25: OVCD 0.006113, dataset 0.006048 (1.08 x the limit) | within the limits (worst 0.02 x the limit) |
+| Constrained_Randomized_Set_1 | 5584 | `stern_ellipse` | Area_WP at T/Dd 1.00: OVCD 0.163771, dataset 0.174939 (6.38 x the limit); LCF at T/Dd 1.00: OVCD 0.462912, dataset 0.468370 (1.09 x the limit); Ixx at T/Dd 1.00: OVCD 0.000528, dataset 0.000636 (8.48 x the limit); Iyy at T/Dd 1.00: OVCD 0.009955, dataset 0.010312 (1.73 x the limit) | within the limits (worst 0.02 x the limit) |
+| Constrained_Randomized_Set_1 | 5319 | `stern_ellipse` | Area_WP at T/Dd 1.00: OVCD 0.196925, dataset 0.217625 (9.51 x the limit); LCF at T/Dd 1.00: OVCD 0.492782, dataset 0.517583 (4.96 x the limit); Ixx at T/Dd 1.00: OVCD 0.000683, dataset 0.000931 (13.32 x the limit); Iyy at T/Dd 1.00: OVCD 0.017108, dataset 0.018647 (4.13 x the limit) | within the limits (worst 0.04 x the limit) |
+| Constrained_Randomized_Set_1 | 1533 | `bulb_crossing` | Volume at T/Dd 0.25: OVCD 0.005906, dataset 0.005824 (1.41 x the limit) | within the limits (worst 0.01 x the limit) |
+
+## Hulls outside for any other reason
+
+None.
+
+## OVCD's own integration
+
+For information: the same comparison with OVCD's own hydrostatics, its Sections Table cut at 101 even stations plus the knuckles and the ends of each height's waterline, and points at 200 even heights plus the knuckle heights, integrated by Simpson's rule on the ruled surface between sections (at T/Dd 1.0 a hair below the deck, where the closed section has its deck). The hulls outside here are mostly at low draught, where the dataset's trapezoid rule over its first waterlines differs from OVCD's integral.
 
 | Set | Hulls | Pass | Volume | Area_WP | LCB | LCF | Ixx | Iyy | WL_Length |
 |---|---|---|---|---|---|---|---|---|---|
 | Constrained_Randomized_Set_2 | 100 | 95 (95 %) | 97 | 100 | 100 | 100 | 98 | 100 | 100 |
 | Constrained_Randomized_Set_3 | 100 | 98 (98 %) | 100 | 99 | 100 | 100 | 100 | 99 | 99 |
 | Constrained_Randomized_Set_1 | 100 | 82 (82 %) | 90 | 97 | 99 | 97 | 98 | 96 | 95 |
-
-The last seven columns count the hulls within the limit for that quantity at every draught. The spec's pass is at least 95 % of each set.
-
-## Hulls outside
 
 | Set | Row | Outside the limit | Where |
 |---|---|---|---|
@@ -55,7 +85,7 @@ The quartic fillet between a bulb and the hull has one curvature condition. OVCD
 
 ## At a Design's cut
 
-For information: a Design's ShipD hull is cut more coarsely (41 even stations and 20 even height levels, no waterline-end stations), so its hydrostatics and GZ curves stay fast. At that cut the same comparison gives:
+For information: a Design's ShipD hull is cut more coarsely (41 even stations and 20 even height levels, no waterline-end stations), so its hydrostatics and GZ curves stay fast. At that cut OVCD's own integration gives:
 
 | Set | Hulls | Pass | Volume | Area_WP | LCB | LCF | Ixx | Iyy | WL_Length |
 |---|---|---|---|---|---|---|---|---|---|

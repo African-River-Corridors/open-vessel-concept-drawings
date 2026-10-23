@@ -9,8 +9,8 @@
 //! property of the generator, not a sourced number.
 
 use ovcd_core::shipd::{
-    BENCHMARK, CONSTRAINTS, DESIGN, DRAUGHT_FRACTIONS, FilletRow, NAMES, Shape, ShipdError,
-    ShipdParameters, check, measures, sections,
+    BENCHMARK, CONSTRAINTS, DESIGN, DRAUGHT_FRACTIONS, FilletRow, Measures, NAMES, Reading,
+    Resolution, Shape, ShipdError, ShipdParameters, check, dataset_measures, measures, sections,
 };
 
 /// The set of the sample that has bulbs.
@@ -18,6 +18,7 @@ const BULB_SET: &str = "Constrained_Randomized_Set_1";
 
 const SAMPLE: &str = include_str!("../../../calibration/shipd/sample.csv");
 const REFERENCE: &str = include_str!("../../../calibration/shipd/reference.csv");
+const ARTEFACTS: &str = include_str!("../../../calibration/shipd/artefacts.csv");
 
 /// Row `n` (from 0) of the committed sample: its set, its dataset row and its 45 parameters.
 fn sample(n: usize) -> (String, String, [f64; 45]) {
@@ -415,4 +416,114 @@ fn the_table_is_closed_and_its_stations_run_aft_to_forward() {
     // Volume grows with the draught.
     let m = measures(&t, l, &[0.2 * d, 0.5 * d, 0.9 * d]);
     assert!(m[0].volume < m[1].volume && m[1].volume < m[2].volume);
+}
+
+/// The worst difference of `ours` from the dataset's measures of `set` `row`, as a share of the
+/// benchmark's limit (above 1 is outside).
+fn worst_share(ours: &[Measures], set: &str, row: &str) -> f64 {
+    let limits = [
+        (0.01, true),
+        (0.01, true),
+        (0.005, false),
+        (0.005, false),
+        (0.02, true),
+        (0.02, true),
+        (0.01, true),
+    ];
+    let mut worst = 0.0_f64;
+    for (o, r) in ours.iter().zip(reference(set, row)) {
+        let o = [
+            o.volume,
+            o.waterplane_area,
+            o.lcb,
+            o.lcf,
+            o.ixx,
+            o.iyy,
+            o.waterline_length,
+        ];
+        for q in 0..7 {
+            let (limit, relative) = limits[q];
+            let diff = if relative {
+                (o[q] - r[q]).abs() / r[q].abs()
+            } else {
+                (o[q] - r[q]).abs()
+            };
+            worst = worst.max(diff / limit);
+        }
+    }
+    worst
+}
+
+/// The parameters of the sampled hull `set` `row`.
+fn sampled(set: &str, row: &str) -> [f64; 45] {
+    SAMPLE
+        .lines()
+        .skip(1)
+        .map(|l| l.split(',').collect::<Vec<_>>())
+        .find(|c| c[0] == set && c[1] == row)
+        .map(|c| {
+            c[2..]
+                .iter()
+                .map(|x| x.parse().unwrap())
+                .collect::<Vec<f64>>()
+                .try_into()
+                .unwrap()
+        })
+        .unwrap()
+}
+
+#[test]
+fn fifteen_sampled_hulls_pass_the_shape_gate() {
+    // The gate of the benchmark (#648): the shape measured as the dataset measures, on the first five
+    // hulls of each set without bulbs and five bulb hulls; the full sample runs in the xtask.
+    for n in [
+        0, 1, 2, 3, 4, 100, 101, 102, 103, 104, 200, 201, 202, 203, 204,
+    ] {
+        let (set, row, v) = sample(n);
+        let (l, b, d) = dims(&v);
+        let w = worst_share(
+            &dataset_measures(&ShipdParameters(v), l, b, d, BENCHMARK),
+            &set,
+            &row,
+        );
+        assert!(w <= 1.0, "{set} {row}: {w:.3} x the limit");
+    }
+}
+
+#[test]
+fn each_listed_artefact_misses_by_the_definitions_and_the_dataset_code_reading_reproduces_it() {
+    // `calibration/shipd/artefacts.csv` (#648): a hull is excused from the gate only with this
+    // evidence. By the definitions it is outside the limits; read as the dataset's code reads the
+    // one place named by its cause, it is within them.
+    let mut n = 0;
+    for line in ARTEFACTS.lines().skip(1).filter(|l| !l.trim().is_empty()) {
+        let c: Vec<&str> = line.split(',').collect();
+        let (set, row, cause) = (c[0], c[1], c[2]);
+        let v = sampled(set, row);
+        let (l, b, d) = dims(&v);
+        let p = ShipdParameters(v);
+        let read = match cause {
+            "stern_ellipse" => Resolution {
+                stern_ellipse: Reading::DatasetCode,
+                ..BENCHMARK
+            },
+            "bulb_crossing" => Resolution {
+                bulb_crossing: Reading::DatasetCode,
+                ..BENCHMARK
+            },
+            _ => panic!("unknown cause {cause}"),
+        };
+        let by_definitions = worst_share(&dataset_measures(&p, l, b, d, BENCHMARK), set, row);
+        let by_code = worst_share(&dataset_measures(&p, l, b, d, read), set, row);
+        assert!(
+            by_definitions > 1.0,
+            "{set} {row}: within the limits by the definitions"
+        );
+        assert!(
+            by_code <= 1.0,
+            "{set} {row}: {cause} does not reproduce it ({by_code:.3})"
+        );
+        n += 1;
+    }
+    assert_eq!(n, 6);
 }
