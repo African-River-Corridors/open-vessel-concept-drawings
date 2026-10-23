@@ -177,6 +177,7 @@ pub fn simulate_params_of(option: &DesignOption) -> Result<Map<String, Value>, S
         "propulsor_type",
         "propulsor_count",
         "propeller_diameter_m",
+        "propeller_diameter_basis",
         "stern_block_mass_included",
         "battery_unit_energy_kwh",
         "installed_power_kw",

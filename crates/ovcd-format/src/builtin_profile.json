@@ -1106,7 +1106,12 @@
       "hard": { "gt": 0, "le": 10 },
       "soft": { "min": 0.8, "max": 3.5 },
       "status": "estimate",
-      "basis": "For a Propulsor type other than unspecified. none: the largest diameter the stern allows, D_max: 0.80 x the design draught under a tunnel (estimate), capped so the tunnels fit side by side inside the beam, and 0.65 x the design draught at a transom or pram stern (sourced: MAN); an azimuth unit at most 4.2 m, the largest Schottel SRP (SCHOTTEL Product Guide; the maintainer's decision on #352); spec 0007 and docs/research/stern-and-tugs.md"
+      "basis": "For a Propulsor type other than unspecified. none: the largest diameter the stern allows, D_max: 0.80 x the design draught under a tunnel (estimate), capped so the tunnels fit side by side inside the beam, and 0.65 x the design draught at a transom or pram stern (sourced: MAN); an azimuth unit at most 4.2 m, the largest Schottel SRP (SCHOTTEL Product Guide; the maintainer's decision on #352); spec 0007 and docs/research/stern-and-tugs.md. At a transom or pram stern propeller_diameter_basis may make it smaller"
+    },
+    "propeller_diameter_basis": {
+      "default": "light_draught",
+      "status": "estimate",
+      "basis": "What a default propeller diameter (propeller_diameter_m none) is sized to. light_draught: at a transom or pram stern, no larger than keeps the shaft axis under the water by 0.76 D (0.71 D ducted) at the lightest aft draught of the loading conditions, with the axis half a diameter above the base, rounded down to 0.05 m (Beveridge 1971, a guide; the maintainer's decision on #355), so a default hull passes ovcd/propulsion/immersion-light. Under a tunnel stern, and with no loading conditions, it is D_max. stern_form: D_max, the largest the stern allows. A file saved before keeps stern_form"
     },
     "propulsor_efficiency_factor": {
       "default_by_propulsor_type": { "azimuth_open": 0.8, "azimuth_ducted": 0.8, "shaft_open": 0.8, "shaft_nozzle": 0.437, "voith_schneider": 0.8, "pump_jet": 0.8 },
