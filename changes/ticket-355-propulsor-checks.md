@@ -6,7 +6,7 @@
 <!-- design-impact -->
 ### ticket/355-propulsor-checks (2026-10-23)
 
-Between `main e4b0ce9` and `this branch ffc2c30e`.
+Between `main 9fc7e39` and `this branch 19406c9e`.
 
 | Case | Quantity | Before | After | Change |
 |---|---|---|---|---|
@@ -27,10 +27,10 @@ Between `main e4b0ce9` and `this branch ffc2c30e`.
 | sweep CN-derived bulk 3 (130x17.2) | `powering.shaft_axis_height_m` | absent | 1.72 | changed |
 | sweep CN-derived liquid 1 (88x16.3) | `checks[13].message` | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 3.54 m of 6.00 m | blind distance ahead of the bow 250.0 m <= 250 m, light (ES-TRIN 7.02(2)); lift used 3.55 m of 6.00 m | changed |
 | sweep CN-derived liquid 1 (88x16.3) | `checks[22].message` | freeboard 3.01 m at the carried draught 2.69 m >= required 0.3 m | freeboard 3.05 m at the carried draught 2.65 m >= required 0.3 m | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `checks[23].message` | GM 6.09 m (fluid), max GZ 2.57 m at 29° | GM 6.17 m (fluid), max GZ 2.57 m at 29° | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `checks[24].message` | GM 6.10 m (fluid), max GZ 2.56 m at 29° | GM 6.19 m (fluid), max GZ 2.56 m at 29° | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `checks[25].message` | GM 12.70 m (fluid), max GZ 3.49 m at 28° | GM 13.08 m (fluid), max GZ 3.51 m at 27° | changed |
-| sweep CN-derived liquid 1 (88x16.3) | `checks[26].message` | GM 12.79 m (fluid), max GZ 3.48 m at 28° | GM 13.17 m (fluid), max GZ 3.50 m at 27° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[23].message` | GM 6.08 m (fluid), max GZ 2.56 m at 29° | GM 6.17 m (fluid), max GZ 2.57 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[24].message` | GM 6.09 m (fluid), max GZ 2.56 m at 29° | GM 6.18 m (fluid), max GZ 2.56 m at 29° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[25].message` | GM 12.69 m (fluid), max GZ 3.48 m at 28° | GM 13.07 m (fluid), max GZ 3.50 m at 27° | changed |
+| sweep CN-derived liquid 1 (88x16.3) | `checks[26].message` | GM 12.78 m (fluid), max GZ 3.48 m at 27° | GM 13.16 m (fluid), max GZ 3.49 m at 27° | changed |
 | sweep CN-derived liquid 1 (88x16.3) | `checks[3].message` | freeboard 3.01 m >= required 0.3 m | freeboard 3.05 m >= required 0.3 m | changed |
 | sweep CN-derived liquid 1 (88x16.3) | `powering.blade_load_kw_m2` | absent | 427.881368069 | changed |
 | sweep CN-derived liquid 1 (88x16.3) | `powering.blade_load_limit_kw_m2` | absent | 500 | changed |
@@ -41,8 +41,8 @@ Between `main e4b0ce9` and `this branch ffc2c30e`.
 | sweep CN-derived liquid 2 (130x16.3) | `checks[23].message` | freeboard 2.56 m at the carried draught 3.14 m >= required 0.3 m | freeboard 2.58 m at the carried draught 3.12 m >= required 0.3 m | changed |
 | sweep CN-derived liquid 2 (130x16.3) | `checks[24].message` | GM 3.82 m (fluid), max GZ 1.55 m at 26° | GM 3.85 m (fluid), max GZ 1.56 m at 26° | changed |
 | sweep CN-derived liquid 2 (130x16.3) | `checks[25].message` | GM 3.82 m (fluid), max GZ 1.55 m at 26° | GM 3.85 m (fluid), max GZ 1.56 m at 26° | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[26].message` | GM 10.44 m (fluid), max GZ 2.92 m at 25° | GM 10.62 m (fluid), max GZ 2.92 m at 25° | changed |
-| sweep CN-derived liquid 2 (130x16.3) | `checks[27].message` | GM 10.49 m (fluid), max GZ 2.91 m at 25° | GM 10.68 m (fluid), max GZ 2.92 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[26].message` | GM 10.43 m (fluid), max GZ 2.92 m at 25° | GM 10.62 m (fluid), max GZ 2.92 m at 25° | changed |
+| sweep CN-derived liquid 2 (130x16.3) | `checks[27].message` | GM 10.48 m (fluid), max GZ 2.91 m at 25° | GM 10.67 m (fluid), max GZ 2.92 m at 25° | changed |
 | sweep CN-derived liquid 2 (130x16.3) | `checks[4].message` | freeboard 2.56 m >= required 0.3 m | freeboard 2.58 m >= required 0.3 m | changed |
 | sweep CN-derived liquid 2 (130x16.3) | `powering.blade_load_kw_m2` | absent | 452.868361704 | changed |
 | sweep CN-derived liquid 2 (130x16.3) | `powering.blade_load_limit_kw_m2` | absent | 500 | changed |
@@ -50,4 +50,4 @@ Between `main e4b0ce9` and `this branch ffc2c30e`.
 | sweep CN-derived liquid 2 (130x16.3) | `powering.propeller_ducted` | absent | True | changed |
 | sweep CN-derived liquid 2 (130x16.3) | `powering.shaft_axis_height_m` | absent | 0.575 | changed |
 | sweep CN-derived liquid 2 (130x16.3) | `warnings[1]` | The blind distance needs 10.02 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | The blind distance needs 10.03 m of lift; the column gives 6.00 m. Raise the column or lower the cargo top. | changed |
-| ... | 73597 more changed quantities | | | |
+| ... | 73601 more changed quantities | | | |
