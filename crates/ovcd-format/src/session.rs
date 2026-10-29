@@ -1114,12 +1114,13 @@ impl DesignSession {
             .ok_or_else(|| format!("no Option named '{option}'"))
     }
 
-    /// A trimmed, non-empty name no Option has.
+    /// A trimmed, non-empty name no Option has, that the drawings can show (issue #660).
     fn free_name(&self, name: &str) -> Result<String, String> {
         let name = name.trim();
         if name.is_empty() {
             return Err("an Option needs a name".into());
         }
+        crate::ga::option_name_fits(name)?;
         if self.design.options.iter().any(|o| o.name == name) {
             return Err(format!(
                 "an Option named '{name}' exists; names must differ"

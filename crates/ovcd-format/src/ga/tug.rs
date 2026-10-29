@@ -380,17 +380,8 @@ pub fn tug_ga_for(results: &Value, option: Option<&str>) -> Result<Value, String
         "draw-note-scope",
         "FOR CONCEPT AND PRELIMINARY DESIGN ONLY, NOT FOR APPROVAL."
     ));
-    let mut fields = title_fields(&hull, &title, 1);
+    let mut fields = title_fields(&hull, &title, "TUG", 1, &what)?;
     fields["sheet_count"] = json!(1);
-    if let Some(number) = fields["document_number"].as_str() {
-        fields["document_number"] = json!(number.replace("-GA-1", "-TUG-1"));
-    }
-    let name = fields["supplementary_title"]
-        .as_str()
-        .and_then(|s| s.split(';').next())
-        .unwrap_or("OPTION")
-        .to_string();
-    fields["supplementary_title"] = json!(format!("{name}; {what}"));
     place(notes, fields, RATIOS[0], &|n| tug_canvas(&tug, n)).map(|(document, _)| document)
 }
 

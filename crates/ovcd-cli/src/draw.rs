@@ -229,7 +229,19 @@ fn draw_design(args: &[&str]) -> Result<(), String> {
         let mut set = serde_json::Map::new();
         for (view, document) in documents_of {
             if let Some(dir) = a.out {
-                write_outputs(&document, &format!("{stem}-{view}"), dir)?;
+                // A drawing the standard refuses does not stop the others (issue #660).
+                match ovcd_draw::run_value(&document, &ovcd_draw::NoFiles) {
+                    ovcd_draw::RunResult::Ok(norm) => {
+                        write_outputs(&document, &norm, &format!("{stem}-{view}"), dir)?;
+                    }
+                    ovcd_draw::RunResult::Errors(set) => {
+                        eprintln!(
+                            "the drawing {stem}-{view} breaks the standard (clause {}): this is a fault in `ovcd`, please report it",
+                            set.into_iter().collect::<Vec<_>>().join(", clause ")
+                        );
+                        failed = true;
+                    }
+                }
             }
             set.insert(view.to_string(), document);
         }
@@ -250,17 +262,13 @@ fn draw_design(args: &[&str]) -> Result<(), String> {
 }
 
 /// Write the drawing document, its normalised content, DXF, SVG and PDF.
-fn write_outputs(document: &serde_json::Value, stem: &str, out: &str) -> Result<(), String> {
-    let norm = match ovcd_draw::run_value(document, &ovcd_draw::NoFiles) {
-        ovcd_draw::RunResult::Ok(n) => n,
-        ovcd_draw::RunResult::Errors(set) => {
-            return Err(format!(
-                "the drawing {stem} breaks the standard (clause {}): this is a fault in `ovcd`, please report it",
-                set.into_iter().collect::<Vec<_>>().join(", clause ")
-            ));
-        }
-    };
-    let dxf = ovcd_draw::render::dxf::to_dxf(document, &norm, &ovcd_draw::NoFiles);
+fn write_outputs(
+    document: &serde_json::Value,
+    norm: &ovcd_draw::Normalised,
+    stem: &str,
+    out: &str,
+) -> Result<(), String> {
+    let dxf = ovcd_draw::render::dxf::to_dxf(document, norm, &ovcd_draw::NoFiles);
     for warning in &dxf.warnings {
         eprintln!("warning: {stem}: {warning}");
     }
@@ -279,10 +287,10 @@ fn write_outputs(document: &serde_json::Value, stem: &str, out: &str) -> Result<
         ),
         (
             format!("{stem}.svg"),
-            ovcd_draw::render::svg::to_svg(&norm, &ovcd_draw::render::svg::SvgOptions::default())
+            ovcd_draw::render::svg::to_svg(norm, &ovcd_draw::render::svg::SvgOptions::default())
                 .into_bytes(),
         ),
-        (format!("{stem}.pdf"), ovcd_draw::render::pdf::to_pdf(&norm)),
+        (format!("{stem}.pdf"), ovcd_draw::render::pdf::to_pdf(norm)),
     ];
     for (file, bytes) in files {
         let target = Path::new(out).join(&file);

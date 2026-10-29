@@ -409,11 +409,9 @@ pub fn arrangement_plan_for(results: &Value, option: Option<&str>) -> Result<Val
         "FOR CONCEPT AND PRELIMINARY DESIGN ONLY, NOT FOR APPROVAL."
     ));
     notes.extend(failed_notes(&a.hull.failed_checks));
-    let mut fields = title_fields(&a.hull, &title, 1);
+    let vessel = plain_capitals(&a.hull.vessel);
+    let mut fields = title_fields(&a.hull, &title, "AP", 1, &vessel)?;
     fields["sheet_count"] = json!(1);
-    if let Some(number) = fields["document_number"].as_str() {
-        fields["document_number"] = json!(number.replace("-GA-1", "-AP-1"));
-    }
     place(notes, fields, RATIOS[0], &|n| arrangement_canvas(&a, n)).map(|(document, _)| document)
 }
 

@@ -120,7 +120,8 @@ export interface Message {
   msg?: EngineMsg | null;
 }
 /** The hull views of a computed Option, drawn in Rust to the Drawing Format Standard, as SVG text. */
-export type HullViews = { side: string; plan: string; midship: string } | { message: string };
+/** A view the standard refuses is left out, and `message` says why; the others still show (issue #660). */
+export type HullViews = { side?: string; plan?: string; midship?: string; message?: string };
 export type Outcome =
   | { status: "results"; results: Record<string, unknown>; results_hash: string; views?: HullViews }
   | { status: "not_available" | "failed"; message: string; msg?: EngineMsg | null }
