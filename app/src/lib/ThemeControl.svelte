@@ -2,7 +2,7 @@
   import { applyTheme, loadTheme, saveTheme, type ThemeChoice } from "./theme";
   import { t } from "./i18n.svelte";
 
-  // Auto follows the operating system; Light and Dark override it. The choice is kept between runs.
+  // Dark is the default; Auto follows the operating system. The choice is kept between runs.
   const CHOICES: { id: ThemeChoice; label: string }[] = [
     { id: "auto", label: "app-theme-auto" },
     { id: "light", label: "app-theme-light" },

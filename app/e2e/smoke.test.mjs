@@ -33,6 +33,14 @@ const fileLabel = async () => (await browser.$$("header .meta"))[0].getText();
 const outputsText = async () => (await browser.$("[data-testid=outputs]")).getText();
 const cargoOutput = async () => (await browser.$("[data-testid=outputs] tr:first-child td")).getText();
 const field = (label) => browser.$(`input[aria-label="${label}"]`);
+/** Open Settings (app bar), do `act`, close it again. */
+async function inSettings(act) {
+  await (await browser.$("[data-testid=settings]")).click();
+  await until("the Settings dialog", async () => (await browser.$("[data-testid=settings-dialog]")).isExisting());
+  await act();
+  await (await browser.$("[data-testid=settings-close]")).click();
+  await until("Settings to close", async () => !(await browser.$("[data-testid=settings-dialog]").isExisting()));
+}
 
 /**
  * Click Open on a fixture (or any path) and wait for it to load. The file before may have the same
@@ -225,7 +233,7 @@ describe("OVCD app smoke tests", () => {
     await browser.pause(400);
   }
   const setTheme = async (name) => {
-    await (await browser.$(`button=${name}`)).click();
+    await inSettings(async () => (await browser.$(`button=${name}`)).click());
     const want = name === "Auto" ? null : name.toLowerCase();
     await until(`the ${name} theme`, async () => (await browser.execute(() => document.documentElement.dataset.theme ?? null)) === want);
   };
@@ -774,7 +782,7 @@ describe("OVCD app smoke tests", () => {
   });
 
   // The screenshot set of spec 248: every view of every tab, gas and dry bulk, in light and in dark,
-  // plus the first-run notice and one error state. The theme is set with the app-bar control.
+  // plus the first-run notice and one error state. The theme is set in Settings.
   for (const theme of ["Light", "Dark"]) {
     const t = theme.toLowerCase();
     for (const [cargo, fixture] of [["gas", "gas_igc_2g_exact.vdesign"], ["dry-bulk", "dry_bulk_box_hold.vdesign"]]) {
@@ -821,23 +829,34 @@ describe("OVCD app smoke tests", () => {
     });
   }
 
-  it("switches the theme from the app bar: Dark sets data-theme, Auto removes it", async () => {
+  it("switches the theme in Settings: Dark sets data-theme, Auto removes it", async () => {
     const theme = () => browser.execute(() => document.documentElement.dataset.theme ?? null);
-    await (await browser.$("button=Dark")).click();
+    await inSettings(async () => (await browser.$("button=Dark")).click());
     await until("the dark theme", async () => (await theme()) === "dark");
-    await (await browser.$("button=Auto")).click();
+    await inSettings(async () => (await browser.$("button=Auto")).click());
     await until("the theme attribute to go", async () => (await theme()) === null);
   });
 
-  it("switches the language from the app bar, keeps the choice on reload, and back to English", async () => {
+  it("keeps the language, theme and Defaults Profile in Settings, not in the app bar", async () => {
+    assert.equal(await browser.$("header [data-testid=language]").isExisting(), false);
+    assert.equal(await browser.$("header .theme").isExisting(), false);
+    assert.equal(await browser.$("button=Load from file").isExisting(), false);
+    await inSettings(async () => {
+      assert.ok(await browser.$("[data-testid=settings-dialog] [data-testid=language]").isExisting());
+      assert.ok(await browser.$("[data-testid=settings-dialog] .theme").isExisting());
+      assert.ok(await browser.$("[data-testid=settings-dialog]").$("button=Load from file").isExisting());
+    });
+  });
+
+  it("switches the language in Settings, keeps the choice on reload, and back to English", async () => {
     const lang = () => browser.execute(() => document.documentElement.lang);
-    await (await browser.$("[data-testid=language]")).selectByAttribute("value", "es");
+    await inSettings(async () => (await browser.$("[data-testid=language]")).selectByAttribute("value", "es"));
     await until("the header in Spanish", async () => (await browser.$("button=Abrir")).isExisting());
     assert.equal(await lang(), "es");
     await browser.refresh();
     await until("Spanish after a reload", async () => (await browser.$("button=Abrir")).isExisting());
     assert.equal(await lang(), "es");
-    await (await browser.$("[data-testid=language]")).selectByAttribute("value", "en");
+    await inSettings(async () => (await browser.$("[data-testid=language]")).selectByAttribute("value", "en"));
     await until("the header in English", async () => (await browser.$("button=Open")).isExisting());
     assert.equal(await lang(), "en");
   });

@@ -44,6 +44,10 @@ app-theme-auto = 自动
 app-theme-light = 浅色
 # status: draft
 app-theme-dark = 深色
+# status: draft
+app-settings = 设置
+# status: draft
+app-settings-close = 关闭
 
 ## Banners and common words
 

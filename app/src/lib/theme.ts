@@ -1,17 +1,18 @@
-// The colour theme: Auto follows the operating system, Light and Dark override it. The choice is
-// display state kept in local storage, per user. Storage can be empty or not available (a private
-// window, blocked site data): then the theme is Auto.
+// The colour theme: Dark (the default), Light, or Auto, which follows the operating system. The choice
+// is display state kept in local storage, per user. Storage can be empty or not available (a private
+// window, blocked site data): then the theme is Dark.
 export type ThemeChoice = "auto" | "light" | "dark";
 
 export const THEME_KEY = "ovcd.theme";
+export const DEFAULT_THEME: ThemeChoice = "dark";
 const CHOICES: readonly ThemeChoice[] = ["auto", "light", "dark"];
 
 export function loadTheme(): ThemeChoice {
   try {
     const saved = localStorage.getItem(THEME_KEY);
-    return CHOICES.find((c) => c === saved) ?? "auto";
+    return CHOICES.find((c) => c === saved) ?? DEFAULT_THEME;
   } catch {
-    return "auto";
+    return DEFAULT_THEME;
   }
 }
 

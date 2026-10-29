@@ -24,6 +24,8 @@ app-theme = Theme
 app-theme-auto = Auto
 app-theme-light = Light
 app-theme-dark = Dark
+app-settings = Settings
+app-settings-close = Close
 
 ## Banners and common words
 

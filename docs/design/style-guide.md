@@ -216,8 +216,12 @@ with a cross, warning a triangle, out of date a struck clock. Every icon button 
 
 **App bar.** 40 px high, on `--paper`, with a 2 px `--gilt-mark` rule under it (the frame). From the
 left: the mark (the 32 px app drawing) and "OVCD"; the file buttons (New, Open, Save, Save as); About;
-then, at the right, the panel toggles, the theme control, the file name with "(unsaved)", "Defaults:"
+then, at the right, the panel toggles, Settings, the file name with "(unsaved)", "Defaults:"
 and "Engine x.y.z" in `--ink-3`. The file name uses `--font-mono`.
+
+**Settings.** A dialog from the app bar, styled like the first-run notice. It holds the choices that
+change no result (the Display Language and the theme) and the Defaults Profile (its name, "Load from
+file", "Built-in"). Escape, Close or a click outside closes it.
 
 **Panel toggles.** "Input panel" and "Outputs panel" keep their words and their `aria-pressed`
 state. Pressed means the panel is in sight: `--accent-soft` ground and an `--accent` border. Not
@@ -319,10 +323,10 @@ midship-section drawing in white ink with its leaders. Along the foot: a title b
 
 ## 9 Light and dark
 
-- The app follows the operating system's setting (`prefers-color-scheme`).
-- A theme control in the app bar overrides it: **Auto**, **Light**, **Dark**. It sets
-  `data-theme="light"` or `data-theme="dark"` on `<html>`, or removes it for Auto.
-- The choice is kept between runs, like the panel state. The default is Auto.
+- The theme control in Settings: **Auto**, **Light**, **Dark**. Auto follows the operating
+  system's setting (`prefers-color-scheme`). The control sets `data-theme="light"` or
+  `data-theme="dark"` on `<html>`, or removes it for Auto.
+- The choice is kept between runs, like the panel state. The default is Dark.
 - The drawing sheet, the splash and the app icon are the same in both themes.
 
 ## 10 Motion

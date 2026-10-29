@@ -24,9 +24,9 @@ const unavailable = () => ({
   setItem() { throw new Error("blocked"); },
 });
 
-test("load: nothing saved is auto", () => {
+test("load: nothing saved is dark", () => {
   globalThis.localStorage = fakeStorage();
-  assert.equal(loadTheme(), "auto");
+  assert.equal(loadTheme(), "dark");
 });
 
 test("load: a saved light or dark choice comes back", () => {
@@ -36,9 +36,9 @@ test("load: a saved light or dark choice comes back", () => {
   }
 });
 
-test("load: junk in storage is auto", () => {
+test("load: junk in storage is dark", () => {
   globalThis.localStorage = fakeStorage({ [THEME_KEY]: "purple" });
-  assert.equal(loadTheme(), "auto");
+  assert.equal(loadTheme(), "dark");
 });
 
 test("save: writes the choice under ovcd.theme", () => {
@@ -48,9 +48,9 @@ test("save: writes the choice under ovcd.theme", () => {
   assert.equal(loadTheme(), "dark");
 });
 
-test("storage unavailable: load gives auto, save does not throw", () => {
+test("storage unavailable: load gives dark, save does not throw", () => {
   globalThis.localStorage = unavailable();
-  assert.equal(loadTheme(), "auto");
+  assert.equal(loadTheme(), "dark");
   assert.doesNotThrow(() => saveTheme("light"));
 });
 
