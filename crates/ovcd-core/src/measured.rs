@@ -54,6 +54,9 @@ pub struct Measured {
     pub lift_enough: Option<bool>,
     /// The depth of the design channel over the loaded draught (h/T); `None` with no channel.
     pub depth_over_draught: Option<f64>,
+    /// The Freeboard at the laden Draught (m): the Moulded Depth less the carried Draught (issue
+    /// #659). `None` when the result has no laden Draught.
+    pub freeboard_laden_m: Option<f64>,
     /// The coupling force between the pusher and the pushed craft (kN, ES-TRIN ESI-III-6 2.1);
     /// `None` without a pushed Formation that includes its pusher.
     pub coupling_force_kn: Option<f64>,
@@ -313,6 +316,7 @@ impl Measured {
             }
             "wheelhouse.lift_enough" => self.lift_enough.is_some(),
             "powering.depth_over_draught" => self.depth_over_draught.is_some(),
+            "freeboard.laden" => self.freeboard_laden_m.is_some(),
             "formation.coupling_force" => self.coupling_force_kn.is_some(),
             // Worked out from the Option's inputs, not from the result: the Option's own source
             // answers them. A candidate of the search has none.
@@ -420,6 +424,12 @@ impl Measured {
                 .coupling_force_kn
                 .map(MeasureValue::Number)
                 .ok_or_else(|| "the Formation does not include its pusher".to_string());
+        }
+        if m.id == "freeboard.laden" {
+            return self
+                .freeboard_laden_m
+                .map(MeasureValue::Number)
+                .ok_or_else(|| "the result has no laden draught".to_string());
         }
         if m.id == "powering.depth_over_draught" {
             return self

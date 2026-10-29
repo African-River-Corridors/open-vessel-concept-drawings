@@ -256,6 +256,7 @@ fn candidate_measured(
     r: &BargeCapacityResult,
     j: &JourneyDeratingResult,
     inp: &BargeCapacityInputs,
+    depth: f64,
     checks: &[Check],
     conditions: Vec<gs::Condition>,
 ) -> Measured {
@@ -263,6 +264,8 @@ fn candidate_measured(
     Measured {
         conditions,
         deadweight_t: Some(j.achievable_tonnage_t),
+        // The same Freeboard `freeboard_at_payload` checks (issue #659).
+        freeboard_laden_m: Some(depth - j.draft_at_achievable_m),
         downflooding_deg: inp.downflooding_angle_deg,
         downflooding_openings: !inp.downflooding_openings.is_empty(),
         tank: r.tank_rules.clone(),
@@ -969,7 +972,9 @@ fn full_measured(c: &Candidate, o: &FitOptions) -> Measured {
     let (stab, conditions) = stability_assessment(&c.result, &c.journey, &c.inputs, o);
     let mut checks = cheap_checks(&c.result, &c.journey, c.depth, o);
     checks.extend(stab);
-    candidate_measured(&c.result, &c.journey, &c.inputs, &checks, conditions)
+    candidate_measured(
+        &c.result, &c.journey, &c.inputs, c.depth, &checks, conditions,
+    )
 }
 
 /// Every check of a candidate: the cheap ones, then stability.
@@ -1242,7 +1247,7 @@ fn search(s: &mut Search<'_>, t_max: f64, stop_at_first_pass: bool) -> Result<Po
                     cheap.iter().filter(|k| k.is_error() && !k.ok).count()
                 } else {
                     failing_groups(&candidate_failures(
-                        &candidate_measured(&r, &j, &inp, &cheap, Vec::new()),
+                        &candidate_measured(&r, &j, &inp, d, &cheap, Vec::new()),
                         o,
                     ))
                     .len()
