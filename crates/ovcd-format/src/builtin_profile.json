@@ -156,7 +156,8 @@
       "unit": "-",
       "hard": { "ge": 0, "le": 10 },
       "soft": { "min": 1.0, "max": 2.5 },
-      "basis": "carried over from the original engine: the horizontal length of the bow rake as a multiple of the moulded depth. The bow void is this rake plus the forward separation or end bulkhead space"
+      "status": "estimate",
+      "basis": "carried over from the original engine: the horizontal length of the bow rake as a multiple of the moulded depth. The bow void is this rake plus the forward separation or end bulkhead space. No published source was found for the ratio, for any Service Area (issue #661). It scales with the depth, so on a deep hull whose depth is set by its tanks the rake takes a large share of the length: type bow_rake_length_m when the bow is known"
     },
     "pushed_stern_void_m": {
       "default": 3.0,
