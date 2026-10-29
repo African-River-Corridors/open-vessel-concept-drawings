@@ -2,7 +2,8 @@
   import type { Evaluation, OptionEvaluation } from "./api";
   import StaleWhy from "./StaleWhy.svelte";
   import { HYDROSTATICS, MAIN, POWERING, TANKS, exact, hasHydrostatics, hasPowering, hasTanks, show, textIds, valueAt, type Metric } from "./metrics";
-  import { checkName, say, t } from "./i18n.svelte";
+  import { checkName, num, say, t } from "./i18n.svelte";
+  import { CARGO_ONLY_CHECKS, FULL_LOAD_ROWS, consumablesInLoad } from "./loadBasis";
 
   // Outputs of the active Option, its checks and warnings, and a compare table of every Option.
   // The numbers are read from the engine's results object. While the active Option has a hard
@@ -72,6 +73,8 @@
   let warnings = $derived((valueAt(current?.results, ["warnings"]) as string[] | undefined) ?? []);
   let ids = $derived(textIds(current?.results));
   let softWarnings = $derived((activeEval?.messages ?? []).filter((m) => m.severity === "warning"));
+  // Issue #668: the full load of the Outputs carries consumables, the freeboard checks do not.
+  let consumables = $derived(consumablesInLoad(current?.results));
 
   function differs(m: Metric, c: Column): boolean {
     if (!current || c.name === current.name || !c.results || !current.results) return false;
@@ -102,7 +105,7 @@
                 {@const v = valueAt(current.results, m.path)}
                 {#if !(m.path[0] === "arrangement" && !hasTanks(current.results)) && !(m.path[0] === "powering" && !hasPowering(current.results)) && !(m.path[0] === "hydrostatics" && !hasHydrostatics(current.results))}
                   <tr>
-                    <th>{t(m.label)}</th>
+                    <th>{t(m.label)}{#if consumables !== null && FULL_LOAD_ROWS.includes(m.label)}<span class="basis" data-testid="full-load-mark">&nbsp;†</span>{/if}</th>
                     <td class="num" class:text={m.quantity === "text"} title={exact(m, v)}><span class:old={current.stale}>{show(m, v, ids)}</span>{#if v !== null && v !== undefined && m.unit}<span class="unit">&nbsp;{m.unit}</span>{/if}</td>
                   </tr>
                 {/if}
@@ -116,6 +119,9 @@
               {/if}
             </tbody>
           </table>
+          {#if consumables !== null}
+            <p class="note basis-note" data-testid="load-basis">† {t("app-load-basis-note", { consumables: num(consumables, 1) })}</p>
+          {/if}
         {/if}
       </section>
 
@@ -130,6 +136,7 @@
               <span class="tag"><span aria-hidden="true">{TAGS[c.tone].mark}</span> {t(TAGS[c.tone].label)}</span>
               <strong>{checkName(c.name, ids)}</strong>
               {#if c.message && c.message !== "OK"}<span class="msg">{say(c.message, ids)}</span>{/if}
+              {#if consumables !== null && CARGO_ONLY_CHECKS.includes(c.name)}<span class="msg basis" data-testid="cargo-only-basis">({t("app-check-basis-cargo-only")})</span>{/if}
             </li>
           {/each}
         </ul>
@@ -183,7 +190,19 @@
 
 <style>
   .panel { padding: var(--sp-2) var(--sp-3); font-size: var(--fs-13); line-height: var(--lh-ui); }
-  .cols { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(240px, 1.2fr) minmax(300px, 2fr); gap: var(--sp-5); align-items: start; }
+  /* Issue #669: the columns follow the panel's own width, not the window's. Outputs is as wide as its
+     table. Below the width the three need, Compare goes under Outputs and Checks; narrower still, one
+     column. A table wider than its column scrolls inside it, so no column runs over the next. */
+  .panel { container-type: inline-size; }
+  .cols { display: grid; grid-template-columns: auto minmax(240px, 1.2fr) minmax(300px, 2fr); gap: var(--sp-5); align-items: start; }
+  .cols > section { min-width: 0; overflow-x: auto; }
+  @container (max-width: 960px) {
+    .cols { grid-template-columns: auto minmax(0, 1fr); }
+    .cols > .compare { grid-column: 1 / -1; }
+  }
+  @container (max-width: 560px) {
+    .cols { grid-template-columns: minmax(0, 1fr); }
+  }
   h2 { font: 600 var(--fs-12) var(--font-ui); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-2); background: var(--surface-2); border-bottom: var(--lw-thin) solid var(--rule); margin: 0 0 var(--sp-2); padding: var(--sp-1) var(--sp-2); }
   .dim { color: var(--ink-3); }
   table { border-collapse: collapse; font-size: var(--fs-13); }
@@ -213,4 +232,7 @@
   .warn .tag { background: var(--warn-soft); color: var(--warn); }
   .msg { color: var(--ink-3); margin-left: var(--sp-1); }
   .fail .msg { color: var(--fail); }
+  .basis { color: var(--ink-3); }
+  /* The note wraps to the table's width; it never widens the Outputs column. */
+  .basis-note { color: var(--ink-2); margin: var(--sp-1) 0 0; width: 0; min-width: 100%; }
 </style>

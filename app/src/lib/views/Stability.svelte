@@ -2,7 +2,7 @@
   import uPlot from "uplot";
   import "uplot/dist/uPlot.min.css";
   import { onMount, untrack } from "svelte";
-  import { axisInkHooks, currentTokens, dashFor, hatchPattern, uiFont, watchTheme, type ChartTokens } from "../chartTheme";
+  import { axisInkHooks, currentTokens, dashFor, hatchPattern, placeLabels, uiFont, watchTheme, type ChartTokens } from "../chartTheme";
   import { language, num, say, t, ticks, type TextIds } from "../i18n.svelte";
 
   // The stability results of a gas Cargo, exactly as the engine gives them: a GZ curve per loading
@@ -150,13 +150,15 @@
       if (y < top || y > top + height) continue;
       names.push({ name: tr(c.name), x: Math.min(u.valToPos(last[0], "x", true), left + width) - 4 * k, y: y - 5 * k, ink: colour(c) });
     }
-    // Names that would meet are moved apart, upwards, so that each stays readable.
-    names.sort((p, q) => q.y - p.y);
-    for (let i = 1; i < names.length; i++) names[i].y = Math.min(names[i].y, names[i - 1].y - 13 * k);
-    for (const n of names) {
+    // Names that would meet are moved apart, up or down, and kept inside the plot (issue #667). A
+    // name with no room left is not written: the legend above the chart names every curve.
+    const at = placeLabels(names.map((n) => n.y), top + 12 * k, top + height - 2 * k, 13 * k);
+    names.forEach((n, i) => {
+      const y = at[i];
+      if (y === null) return;
       ctx.fillStyle = n.ink;
-      ctx.fillText(n.name, n.x, Math.max(n.y, top + 12 * k));
-    }
+      ctx.fillText(n.name, n.x, y);
+    });
     ctx.restore();
   }
 
