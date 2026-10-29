@@ -1,5 +1,6 @@
 // The desktop implementation: today's Tauri commands, unchanged.
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import type { Evaluation, Schema, Snapshot } from "../api";
 import type { MeshGroup, Platform, SectionOutline, SpaceInfo, Waterline } from "./types";
 
@@ -28,6 +29,10 @@ export const tauriPlatform: Platform = {
   evaluate: () => invoke<Evaluation>("evaluate"),
   newFile: () => invoke<Snapshot | null>("new_file"),
   openFile: () => invoke<Snapshot | null>("open_file"),
+  onOpenedFromOutside: async (opened, failed) => {
+    await listen("design-opened", () => opened());
+    await listen<string>("design-open-failed", (e) => failed(e.payload));
+  },
   save: () => invoke<Snapshot | null>("save"),
   saveAs: () => invoke<Snapshot | null>("save_as"),
   setInput: (option, name, value) => invoke<Snapshot>("set_input", { option, name, value }),

@@ -144,6 +144,8 @@ export const evaluate = () => platform().evaluate();
 /** Each of these returns null when the user cancels a dialog. */
 export const newFile = () => platform().newFile();
 export const openFile = () => platform().openFile();
+export const onOpenedFromOutside = (opened: () => void, failed: (reason: string) => void) =>
+  platform().onOpenedFromOutside(opened, failed);
 export const save = () => platform().save();
 export const saveAs = () => platform().saveAs();
 export const setInput = (option: string, name: string, value: unknown) =>
