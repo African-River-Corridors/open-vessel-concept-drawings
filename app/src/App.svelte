@@ -150,6 +150,12 @@
       }
       schema = await api.inputSchema();
       setInputLabels(Object.fromEntries(schema.inputs.map((i) => [i.name, i.label])));
+      // Listen before the first snapshot: a Design given to the app at launch is either in that
+      // snapshot already or announced after the listener is in place (#671).
+      await api.onOpenedFromOutside(
+        () => fileAction(api.snapshot, true),
+        (reason) => (error = reason),
+      );
       await adopt(await api.snapshot(), true);
     });
   });
