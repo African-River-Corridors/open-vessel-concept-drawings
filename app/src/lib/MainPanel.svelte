@@ -86,7 +86,7 @@
     const prior = lastGood[active]?.outcome;
     return outcome?.status === "not_run" && prior?.status === "results" ? (prior.views ?? null) : null;
   });
-  const drawing = (key: HullKey): string | null => (views && key in views ? (views as Record<HullKey, string>)[key] : null);
+  const drawing = (key: HullKey): string | null => views?.[key] ?? null;
   let message = $derived(outcome && (outcome.status === "not_available" || outcome.status === "failed") ? say(outcome.message, null, outcome.msg) : null);
   /** The engine's Message Ids of the shown results (ADR 0015). */
   let ids = $derived(((results as { text_ids?: TextIds } | null)?.text_ids ?? null));
@@ -131,7 +131,7 @@
           {/key}
         {:else if message}
           <p class="note">{message}</p>
-        {:else if views && "message" in views}
+        {:else if views?.message}
           <p class="note">{say(views.message, ids)}</p>
         {:else}
           <p class="note">{t("app-no-results-draw")}</p>
