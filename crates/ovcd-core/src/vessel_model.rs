@@ -589,6 +589,18 @@ fn weather_shield(r: &BargeCapacityResult) -> Option<WeatherShield> {
         z_top_m: top,
         thickness_m: thickness,
     })
+
+/// The Type C tank Spaces of a gas result (ADR 0021), each whole: the interior volume the capacity
+/// counts (`volume_per_tank`) at the middle of its axis. The results list them (spec 0009, D1).
+/// Empty for any other result.
+pub fn tank_spaces_of(c: &BargeCapacityInputs, r: &BargeCapacityResult) -> Vec<ClippedSpace> {
+    match (gas_tank_layout(c, r), r.gas_basis.as_ref()) {
+        (Some(layout), Some(g)) => tank_spaces(&layout, g.tanks.volume_per_tank)
+            .into_iter()
+            .map(ClippedSpace::prism)
+            .collect(),
+        _ => Vec::new(),
+    }
 }
 
 /// The wheelhouse's lift of a result with a stern block; `None` without one.
