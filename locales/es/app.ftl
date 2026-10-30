@@ -312,6 +312,10 @@ app-metric-light-draught = Calado en rosca
 # status: draft
 app-metric-freeboard = Francobordo
 # status: draft
+app-load-basis-note = El calado y el francobordo son de la plena carga: la carga y { $consumables } t de provisiones y combustible. Las verificaciones de francobordo toman solo la carga, así que su calado es un poco menor.
+# status: draft
+app-check-basis-cargo-only = solo la carga, sin provisiones ni combustible
+# status: draft
 app-metric-air-draft-loaded = Calado aéreo, cargado
 # status: draft
 app-metric-air-draft-light = Calado aéreo, en rosca

@@ -499,6 +499,130 @@ describe("OVCD web smoke tests", () => {
     assert.deepEqual([...tones].sort((x, y) => order[x] - order[y]), tones);
   });
 
+  /** Open a Design file through the picker, in a browser past the notice. */
+  async function openDesign(b, file) {
+    await b.execute(() => {
+      HTMLInputElement.prototype.click = function () {};
+    });
+    await (await b.$("button=Open")).click();
+    const picker = await b.$("[data-testid=file-picker]");
+    await picker.waitForExist({ timeout: 5000 });
+    await picker.setValue(file);
+    await until(b, "the file name", async () => (await b.$("header")).getText().then((t) => t.includes(path.basename(file))));
+    await until(b, "the checks", async () => (await b.$$("[data-testid=checks] [data-testid=check]")).length > 0);
+  }
+
+  it("keeps the Outputs, Checks and Compare columns apart, and the Outputs whole, at 1500, 1100 and 800 px (issue #669)", async () => {
+    const b = await start();
+    await b.url(`${origin}/ovcd/app`);
+    await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+    await (await b.$("button=I understand")).click();
+    await until(b, "results", async () => (await outputs(b)).isExisting());
+    await openDesign(b, FIXTURE);
+    for (const width of [1500, 1100, 800]) {
+      await b.setWindowSize(width, 950);
+      await new Promise((r) => setTimeout(r, 300));
+      const boxes = await b.execute(() =>
+        ["outputs", "checks", "compare"].map((id) => {
+          const section = document.querySelector(`[data-testid=${id}]`).closest("section");
+          const r = section.getBoundingClientRect();
+          return { id, left: r.left, right: r.right, top: r.top, bottom: r.bottom, overflowX: getComputedStyle(section).overflowX, hidden: section.scrollWidth - section.clientWidth };
+        }),
+      );
+      // No two columns share any area: each stacks under or sits beside the others.
+      for (let i = 0; i < boxes.length; i++) {
+        for (let j = i + 1; j < boxes.length; j++) {
+          const [p, q] = [boxes[i], boxes[j]];
+          const w = Math.min(p.right, q.right) - Math.max(p.left, q.left);
+          const h = Math.min(p.bottom, q.bottom) - Math.max(p.top, q.top);
+          assert.ok(w <= 0.5 || h <= 0.5, `${width} px: ${p.id} and ${q.id} overlap: ${JSON.stringify([p, q])}`);
+        }
+      }
+      // A table wider than its column scrolls inside it instead of running into the next one.
+      for (const box of boxes) assert.equal(box.overflowX, "auto", box.id);
+      // The Outputs values are never cut off: the column is as wide as its table.
+      assert.ok(boxes[0].hidden <= 1, `${width} px: ${boxes[0].hidden} px of the Outputs hidden`);
+      // The Outputs column is no wider than its table: a note under it wraps, it does not widen it.
+      const extra = await b.execute(() => {
+        const table = document.querySelector("[data-testid=outputs]");
+        return table.closest("section").clientWidth - table.getBoundingClientRect().width;
+      });
+      if (width !== 800) assert.ok(extra <= 2, `${width} px: the Outputs column is ${extra} px wider than its table`);
+    }
+    if (SHOTS) {
+      fs.mkdirSync(SHOTS, { recursive: true });
+      await (await outputs(b)).scrollIntoView();
+      await new Promise((r) => setTimeout(r, 800));
+      await b.saveScreenshot(path.join(SHOTS, "web-bottom-panel-800px.png"));
+    }
+  });
+
+  it("names the load of the laden draught and freeboard, and of the freeboard checks (issue #668)", async () => {
+    const b = await start();
+    await b.url(`${origin}/ovcd/app`);
+    await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+    await (await b.$("button=I understand")).click();
+    await until(b, "results", async () => (await outputs(b)).isExisting());
+    await openDesign(b, FIXTURE);
+    const consumables = await b.execute(async () => (await window.__ovcdPlatform.evaluate()).options[0].outcome.results.loading_conditions.consumables_t);
+    assert.ok(consumables > 0, "the gas fixture carries consumables");
+    const note = await (await b.$("[data-testid=load-basis]")).getText();
+    assert.ok(note.includes(`${consumables.toFixed(1)} t of stores and fuel`), note);
+    const marked = [];
+    for (const m of await b.$$("[data-testid=full-load-mark]")) marked.push(await m.parentElement().getText());
+    assert.deepEqual(marked.map((t) => t.replace(/\s*†$/, "")), ["Draught", "Freeboard"]);
+    const checks = [];
+    for (const c of await b.$$("[data-testid=check]")) {
+      if (await c.$("[data-testid=cargo-only-basis]").isExisting()) checks.push(await c.$("strong").getText());
+    }
+    assert.deepEqual(checks.sort(), ["freeboard at payload", "freeboard ok"]);
+    if (SHOTS) {
+      fs.mkdirSync(SHOTS, { recursive: true });
+      await new Promise((r) => setTimeout(r, 800));
+      await b.saveScreenshot(path.join(SHOTS, "web-load-basis.png"));
+    }
+    // A Design with no consumables in its results shows no label.
+    await openDesign(b, BALLAST_FIXTURE);
+    assert.equal(await (await b.$("[data-testid=load-basis]")).isExisting(), false);
+    assert.equal(await (await b.$("[data-testid=cargo-only-basis]")).isExisting(), false);
+  });
+
+  it("writes the GZ curve names apart from each other (issue #667)", async () => {
+    const b = await start();
+    await b.url(`${origin}/ovcd/app`);
+    await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+    await (await b.$("button=I understand")).click();
+    await until(b, "results", async () => (await outputs(b)).isExisting());
+    await openDesign(b, FIXTURE);
+    // Record every text the canvas writes, with where it writes it.
+    await b.execute(() => {
+      window.__written = [];
+      const fill = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (text, x, y, ...rest) {
+        window.__written.push({ text: String(text), y, align: this.textAlign });
+        return fill.call(this, text, x, y, ...rest);
+      };
+    });
+    const tab = (label) => b.$(`//button[@role="tab" and normalize-space()="${label}"]`);
+    await (await tab("Stability & Propulsion")).click();
+    await (await tab("Intact stability")).click();
+    const names = await b.execute(async () => (await window.__ovcdPlatform.evaluate()).options[0].outcome.results.stability.conditions.map((c) => c.name));
+    await until(b, "the curve names", async () => b.execute((n) => n.every((name) => window.__written.some((w) => w.text === name && w.align === "right")), names));
+    const { ys, dpr } = await b.execute((n) => {
+      const last = new Map();
+      for (const w of window.__written) if (w.align === "right" && n.includes(w.text)) last.set(w.text, w.y);
+      return { ys: [...last.values()], dpr: devicePixelRatio };
+    }, names);
+    assert.equal(ys.length, names.length, "every curve is named");
+    ys.sort((p, q) => p - q);
+    for (let i = 1; i < ys.length; i++) assert.ok(ys[i] - ys[i - 1] >= 13 * dpr - 1e-6, `names closer than a line: ${ys}`);
+    if (SHOTS) {
+      fs.mkdirSync(SHOTS, { recursive: true });
+      await new Promise((r) => setTimeout(r, 800));
+      await b.saveScreenshot(path.join(SHOTS, "web-intact-stability.png"));
+    }
+  });
+
   it("still loads when browser storage is blocked", async () => {
     // Blocking cookies and site data makes `localStorage` throw.
     const b = await start({ prefs: { "profile.default_content_setting_values.cookies": 2 } });

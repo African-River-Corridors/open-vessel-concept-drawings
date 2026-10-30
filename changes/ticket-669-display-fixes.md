@@ -1,0 +1,4 @@
+<!-- unreleased -->
+- App, bottom panel (issue #669): the Outputs, Checks and Compare columns follow the panel's width. Below the width the three need, Compare goes under the other two; narrower still, one column. A table wider than its column scrolls inside it, so no text runs over the next column.
+- App, bottom panel (issue #668): with the IS Code loading conditions, the Outputs draught and freeboard are for the full load, the cargo and the consumables (stores and fuel), and the two freeboard checks take the cargo alone. The panel now says so: Draught and Freeboard carry a † and a note under the Outputs table, and the two checks say "cargo alone, no stores or fuel". No number changes.
+- App, intact stability (issue #667): the names at the ends of the GZ curves no longer overlap. They move up or down to stay one line apart inside the plot; a plot too short for all of them writes the first ones only, and the legend above the chart names every curve.
