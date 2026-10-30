@@ -1277,6 +1277,13 @@ fn arrangement(inp: &BargeCapacityInputs, class: CargoClass) -> Result<Arrangeme
         && let Some(m) = &inp.machinery
     {
         aft_in.machinery = Some(m.clone());
+        // Issue #702: away from a tunnel stern the block lays out the Propulsor's own units.
+        if let Some((count, envelope)) =
+            crate::machinery::stern_block_units(m, inp.stern_geometry.as_ref())
+        {
+            aft_in.n_thrusters = count;
+            aft_in.thruster_envelope_m = envelope;
+        }
         // A gas-fuelled Power Source: the gas gensets and their rooms of issue #180.
         if m.power_source == crate::machinery::PowerSource::GasFuelled && !aft_in.is_gas_fuelled() {
             aft_in.propulsion = "gas_fuelled".to_string();

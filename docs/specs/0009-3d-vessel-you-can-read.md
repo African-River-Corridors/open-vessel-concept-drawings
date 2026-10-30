@@ -181,9 +181,9 @@ stays a Space, named in the view "Hold space (around tanks)" (IGC term).
   at the drive room as the mass items place them; rudders aft of each shaft propeller, where
   `rudders and steering gear` sits.
 - **y:** under a tunnel stern, `SternGeometry.tunnel_offsets_m` for every propulsor type; otherwise
-  `thruster_offsets_m`. **Count** = `propulsor_count`. Where `thruster_offsets_m` holds fewer (it is
-  clamped by the envelopes that fit), the layout returns a warning, and the ticket files the disagreement
-  as a finding.
+  `thruster_offsets_m`. **Count** = `propulsor_count`. Away from a tunnel stern, the stern block lays
+  out `propulsor_count` units at the Propulsor's own envelope (1.35 D) plus the clearance (#702), so the
+  two agree. Where the beam takes fewer, the layout spreads `propulsor_count` units and returns a warning.
 - Nozzle, azimuth leg and pod, rudder span and chord, bow thruster tunnel: sizes from D or from the
   bow thruster power with `estimate` rows in the basis (D2).
 - The layout goes into the results as `drawing.propulsors`, outside the results hash like the other
@@ -357,7 +357,8 @@ Taken with the maintainer, 2026-10-30:
 Open (for the build, not blocking):
 
 - Where `thruster_offsets_m` holds fewer units than `propulsor_count`, which one is right (#691
-  files the finding).
+  files the finding). Decided on #702 (option 1): the stern block takes `propulsor_count` units at
+  1.35 D.
 - The `estimate` ratios of D2: the ticket proposes each with its basis; the maintainer may change them.
 
 ## Build tickets
