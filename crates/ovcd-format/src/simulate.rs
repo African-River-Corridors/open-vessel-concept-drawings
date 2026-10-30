@@ -1047,11 +1047,88 @@ pub struct RunRules {
     pub inputs: ga::RuleInputs,
 }
 
+/// The step a default propeller diameter sized to the light draught is rounded down to (m).
+const PROPELLER_STEP_M: f64 = 0.05;
+/// The smallest propeller the light-draught sizing gives (m); below it the Stern Form's D stays and
+/// the immersion Check warns.
+const PROPELLER_MIN_M: f64 = 0.5;
+/// The most runs the light-draught sizing takes: a smaller propeller lightens the machinery, so the
+/// light draught moves a little after the first resize.
+const PROPELLER_SIZING_RUNS: usize = 4;
+
+/// Issue #355 (the maintainer's decision 6): a default propeller at a transom or pram stern is sized
+/// so its shaft axis is under the water by the immersion limit of its type at the lightest aft
+/// draught of the loading conditions, where the Stern Form's D_max would put it too high. The run is
+/// done again with that diameter, rounded down to 0.05 m, until it fits. A typed diameter, a tunnel
+/// stern, an unspecified Propulsor, no loading conditions, and `propeller_diameter_basis` `stern_form`
+/// (a file saved before) keep the Stern Form's diameter.
 fn simulate_measured(
     p: &Map<String, Value>,
     measured: &mut Measured,
     rules: &RunRules,
 ) -> R<Value> {
+    let ducted = match light_draught_sizing(p) {
+        Some(ducted) => ducted,
+        None => return simulate_once(p, measured, rules),
+    };
+    let limit = if ducted {
+        ovcd_core::powering::IMMERSION_DUCTED
+    } else {
+        ovcd_core::powering::IMMERSION_OPEN
+    };
+    let mut q = p.clone();
+    let mut run = 0;
+    loop {
+        let mut m = Measured::default();
+        let v = simulate_once(&q, &mut m, rules)?;
+        run += 1;
+        // The shaft axis is half a diameter above the base: D + D x limit <= T_aft at the light draught.
+        let fit = lightest_aft_draught(&v)
+            .map(|t| (t / (limit + 0.5) / PROPELLER_STEP_M).floor() * PROPELLER_STEP_M);
+        let d = v["powering"]["propeller_diameter_m"].as_f64();
+        match (fit, d) {
+            (Some(fit), Some(d))
+                if fit < d - 1e-9 && fit >= PROPELLER_MIN_M && run < PROPELLER_SIZING_RUNS =>
+            {
+                q.insert("propeller_diameter_m".to_string(), json!(fit));
+            }
+            _ => {
+                *measured = m;
+                return Ok(v);
+            }
+        }
+    }
+}
+
+/// Whether a run sizes its default propeller to the light draught, and if so whether it is ducted.
+fn light_draught_sizing(p: &Map<String, Value>) -> Option<bool> {
+    if !p.get("self_propelled").is_some_and(truthy)
+        || !p.get("propeller_diameter_m").is_none_or(Value::is_null)
+        || p.get("propeller_diameter_basis").and_then(Value::as_str) == Some("stern_form")
+        || !matches!(
+            p.get("stern_form").and_then(Value::as_str),
+            Some("transom" | "pram")
+        )
+    {
+        return None;
+    }
+    p.get("propulsor_type")
+        .and_then(Value::as_str)
+        .and_then(ovcd_core::propulsor::PropulsorType::from_key)
+        .map(|t| t.ducted())
+}
+
+/// The lightest aft draught of the loading conditions of a result (m); `None` with none.
+fn lightest_aft_draught(v: &Value) -> Option<f64> {
+    let t = v["loading_conditions"]["conditions"]
+        .as_array()?
+        .iter()
+        .filter_map(|c| c["draught_aft_m"].as_f64())
+        .fold(f64::INFINITY, f64::min);
+    t.is_finite().then_some(t)
+}
+
+fn simulate_once(p: &Map<String, Value>, measured: &mut Measured, rules: &RunRules) -> R<Value> {
     let vessel_id = match p.get("vessel") {
         None => "box_barge",
         Some(Value::String(s)) => s.as_str(),
@@ -1785,6 +1862,13 @@ fn powering_json(
         "design_speed_kn": num(get_or(p, "design_speed_kn", 9.7)?),
         "margin": num(get_or(p, "installed_power_margin", 1.2)?),
         "bollard_pull_t": num(pw.bollard_pull_t),
+        // Issue #355: the propeller the Rules of the propulsion read. The shaft axis is taken at
+        // half the diameter above the base (the propeller tip on the base, as the Stern Form's D_max).
+        "propeller_diameter_m": num(m.propeller_diameter_m),
+        "shaft_axis_height_m": num(m.propeller_diameter_m / 2.0),
+        "blade_load_kw_m2": num(pw.blade_load_kw_m2),
+        "blade_load_limit_kw_m2": num(pw.blade_load_limit_kw_m2),
+        "propeller_ducted": m.propulsor.ducted(),
         // The battery in force: typed, else from the trip (none without a battery or a route).
         "battery_energy_kwh": m.battery_energy_kwh.or(pw.battery_energy_kwh).map_or(Value::Null, num),
         "environments": pw.environments.iter().map(|e| json!({

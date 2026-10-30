@@ -267,6 +267,10 @@ input-propulsor-count = Propulsor count
 
 input-propeller-diameter-m = Propeller diameter
 
+input-propeller-diameter-basis = Default propeller diameter sized to
+choice-propeller-diameter-basis-stern-form = Largest the stern allows
+choice-propeller-diameter-basis-light-draught = Immersed at the light draught
+
 input-propulsor-efficiency-factor = Propulsor efficiency factor
 input-propulsor-efficiency-factor-default-by = propulsor_type
 

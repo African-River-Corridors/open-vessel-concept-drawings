@@ -39,6 +39,11 @@ pub const CHAIN_LOSS_5MW: f64 = 0.094;
 /// Diesel fuel on the engine load (g/kWh), today's value.
 pub const DIESEL_G_PER_KWH: f64 = 195.0;
 
+/// The least shaft axis submergence over the propeller diameter (Beveridge 1971, a guide): open and
+/// ducted (issue #355).
+pub const IMMERSION_OPEN: f64 = 0.76;
+pub const IMMERSION_DUCTED: f64 = 0.71;
+
 /// The shaft efficiency of a Propulsor type: a shaft line or a pump jet's shaft 0.99, an azimuth
 /// unit or a Voith Schneider rotor (gears to the rotor) 0.95.
 pub fn shaft_efficiency(t: PropulsorType) -> f64 {
@@ -168,6 +173,10 @@ pub struct Powering {
     /// The battery energy the trip asks for (kWh): the largest energy per trip of the environments
     /// x the reserve / the usable share. `None` without a battery Power Source or a trip length.
     pub battery_energy_kwh: Option<f64>,
+    /// The blade load of one unit at the Installed Power (kW per m^2 of disc), and the limit of its
+    /// type (issue #355).
+    pub blade_load_kw_m2: f64,
+    pub blade_load_limit_kw_m2: f64,
 }
 
 /// The power points of a curve.
@@ -305,11 +314,15 @@ pub fn compute(inp: &PoweringInputs, curves: &[EnvironmentCurve]) -> Powering {
     // At the bollard each unit takes its share of the Installed Power through the transmission.
     let eta_s = shaft_efficiency(inp.propulsor.propulsor_type);
     let pd_unit = installed / n * source_efficiency(inp.power_source, installed) * eta_s;
+    let (blade_load_kw_m2, blade_load_limit_kw_m2) =
+        crate::propulsor::blade_load(&inp.propulsor, pd_unit);
     Powering {
         installed_power_kw: installed,
         sized,
         environments,
         bollard_pull_t: bollard_pull(&inp.propulsor, pd_unit),
         battery_energy_kwh,
+        blade_load_kw_m2,
+        blade_load_limit_kw_m2,
     }
 }

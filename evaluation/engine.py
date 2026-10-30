@@ -52,3 +52,48 @@ def liquid_trace(inputs: dict, *, rule_sets: tuple[str, ...] = (), select: tuple
     if "error" in out:
         _raise(out["error"])
     return out["ok"]
+
+
+def stern_trace(inputs: dict, measured: dict, *, rule_sets: tuple[str, ...] = (),
+                select: tuple[str, ...] = ()) -> dict:
+    """The Rule Trace of a self-propelled Option (`kind: stern`, issue #355): `inputs` are its typed
+    inputs, `measured` the numbers a run reads from its results (the Blind Distance in each condition,
+    the speed in deep water in km/h, the Design Speed in kn, and the three propeller ratios). `rule_sets`
+    and `select` are as for `box_trace`. The trace is the JSON a run writes."""
+    out = raw("gas_stability", "stern_trace", dict(
+        inputs=dict(inputs), measured={k: float(v) for k, v in measured.items()},
+        rule_sets=list(rule_sets), select=list(select)))
+    if "error" in out:
+        _raise(out["error"])
+    return out["ok"]
+
+
+#: The limits the harness reads a propeller case against, open then ducted: the shaft immersion over the
+#: diameter (Beveridge 1971) and the blade load in kW per m2 of disc (Veth). They are the harness's own copy,
+#: so a change of the engine's number shows as a verdict that differs.
+IMMERSION = (0.76, 0.71)
+BLADE_LOAD = (400.0, 500.0)
+
+
+def stern_case_trace(i: dict, *, rule_sets: tuple[str, ...] = (), select: tuple[str, ...] = ()) -> dict:
+    """The Rule Trace of a `kind: stern` case: the typed inputs of a self-propelled craft, and the measured values
+    a run reads from its results. The propeller numbers of the case (diameter, the largest the stern allows,
+    the lightest aft draught, the blade load) are turned into the ratios the Measures give."""
+    ducted = bool(i["propeller_ducted"])
+    k = 1 if ducted else 0
+    d = float(i["propeller_diameter_m"])
+    inputs = {
+        "cargo": "LPG_propane", "hull_form": "raked_box", "formation": {"kind": "self_propelled"},
+        "length_overall_m": float(i["length_overall_m"]), "beam_m": float(i["beam_m"]),
+        "moulded_depth_m": float(i["depth_m"]), "bow_thruster": i["bow_thruster"],
+        "propulsor_count": int(i["propulsor_count"]),
+        "propulsor_type": "shaft_nozzle" if ducted else "shaft_open", "stern_form": "transom",
+    }
+    measured = {
+        "blind_distance_light_m": i["blind_distance_light_m"], "blind_distance_laden_m": i["blind_distance_laden_m"],
+        "speed_deep_water_kmh": i["speed_deep_water_kmh"], "design_speed_kn": i["design_speed_kn"],
+        "diameter_over_max": d / float(i["propeller_d_max_m"]),
+        "immersion_over_limit": (float(i["aft_draught_light_m"]) - d / 2.0) / d / IMMERSION[k],
+        "blade_load_over_limit": float(i["blade_load_kw_m2"]) / BLADE_LOAD[k],
+    }
+    return stern_trace(inputs, measured, rule_sets=rule_sets, select=select)

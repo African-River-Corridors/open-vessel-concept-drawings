@@ -30,12 +30,16 @@ WEATHER = "is2008/A.2.3/weather"
 
 
 def run_runner(*args):
+    args = list(args)
+    # A run on a copy of the box cases leaves out the stern cases, as it leaves out the box mutants (issue #355).
+    if "--cases" in args and "--stern-mutants" not in args:
+        args += ["--stern-mutants", str(Path(args[args.index("--cases") + 1]).parent / "no-stern-mutants.yaml")]
     return subprocess.run([sys.executable, str(EVAL / "run.py"), *args], capture_output=True, text=True)
 
 
 def corpus_copy(tmp_path):
     cases = tmp_path / "cases"
-    shutil.copytree(EVAL / "cases", cases)
+    shutil.copytree(EVAL / "cases", cases, ignore=shutil.ignore_patterns("stern_*.yaml"))
     shutil.copy(EVAL / "mutants.yaml", tmp_path / "mutants.yaml")
     return cases, tmp_path / "mutants.yaml", tmp_path / "results.md"
 
@@ -266,11 +270,14 @@ def test_the_real_corpus_notices_every_mutant_of_is2008_a():
     # 12 of `is2008-a`, and the mutants of the liquid bulk sets (issue #338): none is weak, but the two of
     # `marpol/23/accidental-oil-outflow` (issue #341): the evaluation harness has no draught, so it cannot work
     # out the mean oil outflow; `ovcd-core/tests/oil_outflow.rs` checks that Rule's method on the published
-    # tank barge of Res. MEPC.122(52) instead.
-    assert "Not noticed by any case: 2." in text
+    # tank barge of Res. MEPC.122(52) instead. A weak stern mutant (issue #355) is a coefficient of 0 moved
+    # by 0.01, which changes no limit.
     section = text.split("## Rule mutation", 1)[1].split("\n## ", 1)[0]
     unnoticed = [ln for ln in section.splitlines() if "none: weak corpus" in ln]
-    assert len(unnoticed) == 2 and all("`marpol/23/accidental-oil-outflow`" in ln for ln in unnoticed)
+    oil = [ln for ln in unnoticed if "`marpol/23/accidental-oil-outflow`" in ln]
+    stern = [ln for ln in unnoticed if ln not in oil]
+    assert len(oil) == 2
+    assert all("| 0.0 |" in ln and ln.startswith("| `solas/") for ln in stern), stern
     assert sum(1 for line in section.splitlines() if line.startswith("| `is2008/")) == 12
 
 
