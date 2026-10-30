@@ -40,6 +40,8 @@ export interface SpaceInfo {
   lcg_m: number;
   tcg_m: number;
   vcg_m: number;
+  /** A Type C tank's Tank Layout values (spec 0009); absent for any other Space. */
+  tank?: { outer_diameter_m: number; length_m: number; head_type: string; head_length_m: number };
 }
 
 /** The waterline of one floating position, and the index of its group in `Meshes.groups`. */

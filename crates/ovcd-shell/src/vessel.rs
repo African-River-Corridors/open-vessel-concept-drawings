@@ -100,7 +100,7 @@ pub(crate) fn space(k: &Kept, name: &str) -> Result<Value, String> {
         .find(|s| s.space.name == name)
         .ok_or_else(|| format!("no Space named '{name}'"))?;
     let (x, y, z) = s.centroid_m;
-    Ok(json!({
+    let mut out = json!({
         "name": s.space.name,
         "kind": s.space.kind.key(),
         "side": s.space.side.key(),
@@ -108,7 +108,24 @@ pub(crate) fn space(k: &Kept, name: &str) -> Result<Value, String> {
         "lcg_m": x,
         "tcg_m": y,
         "vcg_m": z,
-    }))
+    });
+    // A Type C tank (ADR 0021): its Tank Layout values, for the pick panel (spec 0009).
+    if let ovcd_core::compartments::SpaceShape::Tank {
+        axis_x0,
+        axis_x1,
+        outer_diameter,
+        head,
+        ..
+    } = &s.space.shape
+    {
+        out["tank"] = json!({
+            "outer_diameter_m": outer_diameter,
+            "length_m": axis_x1 - axis_x0,
+            "head_type": head.kind.key(),
+            "head_length_m": head.length_m,
+        });
+    }
+    Ok(out)
 }
 
 /// The waterline of each floating position: its draughts and trim, and the index of its mesh group.

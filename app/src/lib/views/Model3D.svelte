@@ -35,7 +35,10 @@
     { id: "deck", label: t("app-3d-layer-deck") },
     { id: "bulkhead", label: t("app-3d-layer-bulkhead") },
   ]);
+  /** A gas Design's hold is the space around its Type C tanks (IGC term; spec 0009). */
+  let hasTanks = $derived(spaces.some((s) => s.tank));
   const kindName = (kind: string) => {
+    if (kind === "cargo_hold" && hasTanks) return t("app-3d-kind-hold-around-tanks");
     const id = kindLabelId(kind);
     return id ? t(id) : kind;
   };
@@ -131,7 +134,8 @@
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute("position", new THREE.BufferAttribute(part.positions, 3));
         geometry.setIndex(new THREE.BufferAttribute(part.indices, 1));
-        const flat = flatShaded(g.layer);
+        // A tank is a Space but curved: smooth, like the domes (spec 0009).
+        const flat = flatShaded(g.layer) && !(g.layer === "space" && spaces.find((s) => s.name === g.id)?.tank);
         if (!flat) geometry.computeVertexNormals();
         const material = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, flatShading: flat, roughness: 0.85, metalness: 0, clippingPlanes: [plane] });
         const mesh = new THREE.Mesh(geometry, material);
@@ -223,6 +227,10 @@
         if (layer === "hull") return token("--model-hull");
         if (layer === "waterline") return token("--accent");
         if (layer === "deck") return token("--model-deck");
+        // A dome is part of its tank: the cargo colour (spec 0009).
+        if (layer === "dome") return token(FAMILY_TOKEN.cargo);
+        if (layer === "deck_item") return token(id.startsWith("wheelhouse") ? "--model-wheelhouse" : "--model-deck-item");
+        if (layer === "weather_shield") return token("--model-deck");
         return token("--ink-2");
       };
       function paint() {
@@ -564,6 +572,11 @@
           <dt>{t("app-3d-col-kind")}</dt><dd>{kindName(selected.kind)}, {sideName(selected.side)}</dd>
           <dt>{t("app-3d-col-volume")}</dt><dd data-testid="space-info-volume" data-value={selected.volume_m3}>{num(selected.volume_m3, 1)} m³</dd>
           <dt>{t("app-3d-col-centroid")}</dt><dd data-testid="space-info-centroid">{num(selected.lcg_m, 2)}, {num(selected.tcg_m, 2)}, {num(selected.vcg_m, 2)} m</dd>
+          {#if selected.tank}
+            <dt>{t("app-3d-tank-od")}</dt><dd data-testid="space-info-tank-od" data-value={selected.tank.outer_diameter_m}>{num(selected.tank.outer_diameter_m, 2)} m</dd>
+            <dt>{t("app-3d-tank-length")}</dt><dd data-testid="space-info-tank-length" data-value={selected.tank.length_m}>{num(selected.tank.length_m, 2)} m</dd>
+            <dt>{t("app-3d-tank-head")}</dt><dd data-testid="space-info-tank-head">{t(`app-3d-head-${selected.tank.head_type.replaceAll("_", "-")}`)}, {num(selected.tank.head_length_m, 2)} m</dd>
+          {/if}
         </dl>
       {:else if status !== "no-webgl"}
         <p class="note">{t("app-3d-pick-hint")}</p>

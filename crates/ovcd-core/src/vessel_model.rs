@@ -101,6 +101,22 @@ pub struct DeckItem {
     pub z_top_m: f64,
 }
 
+/// The weather shield over the tanks (issue #410), as the weights carry it (`weights.rs`) and the
+/// general arrangement draws it: a top plate over the cargo zone, the full beam wide, at the tank top
+/// plus the clearance; side walls at the hull sides and end walls at the ends of the zone, standing
+/// on the wing plate or on the deck where the deck is higher. All plates `thickness_m` thick.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct WeatherShield {
+    pub x_aft_m: f64,
+    pub x_fwd_m: f64,
+    pub half_width_m: f64,
+    /// The level its walls stand on, above the keel.
+    pub z_foot_m: f64,
+    /// The top of its top plate, above the keel.
+    pub z_top_m: f64,
+    pub thickness_m: f64,
+}
+
 /// The plan size of the wheelhouse lift column, square, over the wheelhouse width. An Estimate
 /// (spec 0009, D2; basis DR-A45): no published proportion is held.
 pub const LIFT_COLUMN_SIDE_OVER_WHEELHOUSE_WIDTH: f64 = 0.25;
@@ -115,6 +131,8 @@ pub struct VesselModel {
     pub spaces: Vec<ClippedSpace>,
     /// The Tank Layout of a gas hull, with its domes; `None` for any other hull.
     pub tank_layout: Option<TankLayout>,
+    /// The weather shield over the tanks of a gas hull (issue #410); `None` without one.
+    pub weather_shield: Option<WeatherShield>,
     pub outfit: Outfit,
     /// Frame stations; empty until phase 3.
     pub frames: Vec<f64>,
@@ -142,6 +160,7 @@ pub fn assemble(inp: &VesselModelInputs) -> VesselModel {
         decks: decks(c, &spaces),
         bulkheads: bulkheads(c, r),
         spaces: spaces.iter().map(|s| clip(s, &inp.hull)).collect(),
+        weather_shield: weather_shield(r),
         tank_layout,
         outfit: Outfit {
             deck_items: deck_items(r, &inp.hull),
@@ -519,4 +538,37 @@ fn deck_items(r: &BargeCapacityResult, table: &SectionsTable) -> Vec<DeckItem> {
         });
     }
     out
+}
+
+/// The weather shield of a gas result, when its inputs are set: a plate thickness, a wing tank, a
+/// wing plate under the tank top (the weights' condition), and a top above the deck (the general
+/// arrangement draws it only then). `None` otherwise.
+fn weather_shield(r: &BargeCapacityResult) -> Option<WeatherShield> {
+    let g = r.gas_basis.as_ref()?;
+    let i = &g.inputs;
+    let thickness = i.weather_shield_thickness / 1000.0;
+    if !(thickness > 0.0 && i.wing_tank_width? > 0.0 && i.wing_tank_height_ratio < 1.0) {
+        return None;
+    }
+    let od = g.tanks.outer_diameter;
+    let bottom =
+        crate::tanks::tank_bottom(i.double_bottom_height.unwrap_or(0.0), i.tank_support_height);
+    let wing_top = bottom + i.wing_tank_height_ratio * od;
+    let top = bottom + od + i.weather_shield_clearance;
+    if top <= i.depth {
+        return None;
+    }
+    let zone = crate::tanks::CargoZone::new(
+        i.loa,
+        i.bow_non_tank_length.unwrap_or(0.0),
+        i.stern_non_tank_length.unwrap_or(0.0),
+    );
+    Some(WeatherShield {
+        x_aft_m: zone.x_aft_m,
+        x_fwd_m: zone.x_fwd_m,
+        half_width_m: i.beam / 2.0,
+        z_foot_m: wing_top.max(i.depth),
+        z_top_m: top,
+        thickness_m: thickness,
+    })
 }

@@ -74,8 +74,9 @@ test("a group's slice holds its own vertices and its triangles re-indexed (issue
 });
 
 test("the flat parts are flat shaded, and a curved part is smooth (issue #683)", () => {
-  for (const layer of ["hull", "deck", "bulkhead", "space", "waterline", "deck_item"]) assert.equal(flatShaded(layer), true, layer);
+  for (const layer of ["hull", "deck", "bulkhead", "space", "waterline", "deck_item", "weather_shield"]) assert.equal(flatShaded(layer), true, layer);
   assert.equal(flatShaded("tank"), false);
+  assert.equal(flatShaded("dome"), false);
 });
 
 test("the default camera stands aft to starboard, 25 degrees up, and frames the box with 10 % margin (issue #683)", () => {

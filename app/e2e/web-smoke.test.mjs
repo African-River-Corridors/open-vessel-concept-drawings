@@ -286,6 +286,55 @@ describe("OVCD web smoke tests", () => {
     }
   });
 
+  it("draws the Type C tanks, their domes and the weather shield, and picks a tank's values from the core (issue #686)", async () => {
+    const b = await start();
+    await b.url(`${origin}/ovcd/app`);
+    await until(b, "the notice", async () => (await b.$("[data-testid=notice]")).isExisting());
+    await (await b.$("button=I understand")).click();
+    await until(b, "results", async () => (await outputs(b)).isExisting());
+    await b.execute(() => {
+      HTMLInputElement.prototype.click = function () {};
+    });
+    await (await b.$("button=Open")).click();
+    const picker = await b.$("[data-testid=file-picker]");
+    await picker.waitForExist({ timeout: 5000 });
+    await picker.setValue(FIXTURE);
+    await until(b, "the file name", async () => (await b.$("header")).getText().then((t) => t.includes("gas_igc_2g_self_propelled.vdesign")));
+    const tab = (label) => b.$(`//button[@role="tab" and normalize-space()="${label}"]`);
+    await (await tab("Drawings")).click();
+    await (await tab("3D")).click();
+    await until(b, "the model", async () => (await (await b.$("[data-testid=model3d]")).getAttribute("data-status")) !== "loading", 60000);
+    assert.equal(await (await b.$("[data-testid=model3d]")).getAttribute("data-status"), "ready");
+    const shown = async () => JSON.parse(await (await b.$("[data-testid=model3d-canvas]")).getAttribute("data-shown"));
+    // The domes, the weather shield and the Deck Items are drawn on open; the tanks are Spaces.
+    for (const g of ["dome:CT1C_dome", "dome:CT2C_dome", "weather_shield:weather_shield", "deck_item:unit_1", "deck_item:wheelhouse_raised"]) {
+      assert.ok((await shown()).includes(g), `${g} is drawn`);
+    }
+    await (await b.$("[data-testid=layer-kind-cargo_tank]")).click();
+    await until(b, "the tanks drawn", async () => (await shown()).includes("space:CT1C") && (await shown()).includes("space:CT2C"));
+    // The hold of a gas Design is named for what it is: the space around the tanks.
+    const rows = await b.execute(() =>
+      [...document.querySelectorAll("[data-testid=model3d-spaces] tbody tr")].map((r) => [r.querySelector("th").textContent.trim(), r.querySelector("td").textContent.trim()]),
+    );
+    assert.deepEqual(rows.find(([n]) => n === "H1C"), ["H1C", "Hold space (around tanks)"]);
+    assert.deepEqual(rows.find(([n]) => n === "CT1C"), ["CT1C", "Cargo tank"]);
+    // Pick a tank: its outer diameter and length are the core's.
+    await (await b.$('[data-testid="space-CT1C"]')).click();
+    await until(b, "the tank info", async () => (await b.$("[data-testid=space-info-tank-od]")).isExisting());
+    const core = await b.execute(async () => (await window.__ovcdPlatform.spaceInfo("Option 1", "CT1C")).tank);
+    assert.equal(Number(await (await b.$("[data-testid=space-info-tank-od]")).getAttribute("data-value")), core.outer_diameter_m);
+    assert.equal(Number(await (await b.$("[data-testid=space-info-tank-length]")).getAttribute("data-value")), core.length_m);
+    assert.equal(core.head_type, "hemisphere");
+    if (SHOTS) {
+      fs.mkdirSync(SHOTS, { recursive: true });
+      for (const theme of ["Light", "Dark"]) {
+        await (await b.$(`button=${theme}`)).click();
+        await new Promise((r) => setTimeout(r, 800));
+        await b.saveScreenshot(path.join(SHOTS, `web-3d-tanks-${theme.toLowerCase()}.png`));
+      }
+    }
+  });
+
   it("opens opaque, and the section plane clips the hull, its edges and the Spaces (issue #683)", async () => {
     const b = await start();
     await b.url(`${origin}/ovcd/app`);

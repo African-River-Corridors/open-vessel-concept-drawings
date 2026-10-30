@@ -1,0 +1,2 @@
+<!-- unreleased -->
+- Tank meshes (issue #686, spec 0009, ADR 0021): the 3D view and the meshes draw each Type C tank at its Tank Outer Diameter with its Tank Heads, each dome, and the weather shield when its inputs are set. Every mesh group carries a typed source (`PartSource::Tank`, `Dome`, `WeatherShield`). The tanks are drawn smooth in the cargo colour. A gas Design's `H1C` is named "Hold space (around tanks)". Picking a tank shows its outer diameter, length and head from the core. No result value changes.
